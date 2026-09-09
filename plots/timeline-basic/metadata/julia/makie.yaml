@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: timeline-basic
 created: '2026-09-09T20:17:57Z'
-updated: '2026-09-09T20:22:25Z'
+updated: '2026-09-09T20:36:06Z'
 generated_by: claude-sonnet
 workflow_run: 34398838977
 issue: 2443
@@ -12,128 +12,107 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeline-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 88
 review:
   strengths:
-  - 'Correct Imprint palette usage — Planning correctly uses brand green #009E73 as
-    the first series, and the implementation deliberately skips the semantic-red anchor
-    (position 5) for the neutral ''Launch'' category, jumping to cyan instead, exactly
-    as the palette guidance recommends.'
-  - Alternating above/below label placement combined with per-category color-coded
-    stems avoids overlap across all 10 events and clearly communicates chronological
-    progression.
-  - Both plot-light.png and plot-dark.png have correct theme-adaptive backgrounds
-    and chrome — no dark-on-dark or light-on-light legibility failures in either render.
-  - 'Clean, idiomatic Makie code: explicit font sizes throughout, KISS single-script
-    structure, hidespines!/hideydecorations! used correctly for a minimal timeline
-    look.'
+  - Clean, custom-built horizontal timeline with alternating above/below stems that
+    fully avoids label overlap across 10 events
+  - 'Both themes are fully theme-correct: identical data colors, correctly flipped
+    chrome, no legibility failures in either render'
+  - Realistic, well-paced software-project-milestone dataset with sensible phase ordering
+    and cadence
+  - Idiomatic use of Makie's figure-grid layout for the category legend (rowsize!
+    on fig.layout) rather than a generic overlay legend
   weaknesses:
-  - 'Significant unused vertical canvas space: ylims!(ax, -3.6, 3.6) is far larger
-    than the content actually drawn (stems reach only ±0.9, labels only ±1.1), leaving
-    roughly half the axis''s vertical range empty above and below the timeline. Combined
-    with the separate ''2024'' baseline row placed far below, this creates a large
-    dead-space gap between the event labels and the bottom of the figure. Tighten
-    ylims (e.g. -1.6 to 1.6) or otherwise reduce the empty margin so the plot area
-    fills more of the canvas.'
-  - Title renders at only ~23% of canvas width, well under the ~50-70% proportion
-    expected for a title of this length — increase titlesize (e.g. from 20 to ~26-28)
-    so the mandated title occupies a more proportionate share of the landscape canvas.
-  - Design excellence is solid but still reads as a well-configured default rather
-    than a highly polished, publication-ready timeline — consider tighter vertical
-    composition and slightly larger typography to elevate visual refinement (DE-01/DE-02).
+  - 'Palette for the 5 categories skips canonical position 5 (#AE3030) and jumps to
+    position 6 (#2ABCCD) for the last category ("Launch") without a clear semantic
+    justification — use IMPRINT_PALETTE[1:5] in canonical order (through #AE3030)
+    unless a category has a strong semantic color association that justifies reassignment'
+  - Design Excellence is solid but not exceptional — consider a stronger focal point
+    (e.g., emphasizing the "General Availability" launch milestone) for a clearer
+    story beyond simple chronology
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "timeline-basic · julia · makie · anyplot.ai" centered at top; a thin horizontal baseline runs across the middle of the canvas with a second thin horizontal rule near the bottom labeled "2024"; a horizontal legend below that with 5 colored circular swatches (Planning/Design/Build/Testing/Launch). All title, event-label, date, and legend text renders in dark ink and is clearly readable against the light background.
-      Data: 10 milestone events plotted as colored dots on the baseline, with thin vertical stems alternating above and below the line, each stem/dot colored by its category (Planning=green #009E73, Design=lavender, Build=blue, Testing=ochre, Launch=cyan). Event name + short date sits at the end of each stem. First series (Planning) is confirmed brand green #009E73.
-      Legibility verdict: PASS — all text readable, no overlaps observed; however there is a large empty vertical gap between the event-label area and the "2024" baseline row, and the title occupies a notably small fraction (~23%) of the canvas width.
+      Chrome: Bold centered title "timeline-basic · julia · makie · anyplot.ai" in dark ink; horizontal baseline; event labels (name + date) alternating above/below stems; "2024" caption below baseline; horizontal category legend at bottom. All clearly readable against the light background.
+      Data: 10 milestone markers/stems colored by category — Planning=#009E73 (green, first series correct), Design=#C475FD (lavender), Build=#4467A3 (blue), Testing=#BD8233 (ochre), Launch=#2ABCCD (cyan).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same layout as the light render; title, event labels, dates, baseline, "2024" label, and legend text all render in light ink (off-white/soft-gray) and are clearly legible against the dark background. No dark-on-dark or unreadable elements detected.
-      Data: Same 10 events with identical category colors as the light render (Planning green #009E73, Design lavender, Build blue, Testing ochre, Launch cyan) — confirmed data colors are unchanged between themes; only background/text/chrome flipped.
-      Legibility verdict: PASS — all text and data markers are clearly visible; same vertical-whitespace and title-proportion issues as the light render carry over identically since they are layout-driven, not theme-driven.
+      Chrome: Same title/labels/legend now in light ink against the dark surface; baseline rendered in a light muted tone. No dark-on-dark failures — all text (title, event labels, dates, "2024" caption, legend) is clearly legible.
+      Data: Identical category colors to the light render (green/lavender/blue/ochre/cyan) — only chrome flipped, confirming theme-adaptive tokens were threaded through correctly.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes, but title
-          occupies only ~23% of canvas width — clearly under the expected proportion
-          for this title length.
+        comment: All font sizes explicitly set, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements across the 10 alternating above/below
-          labels.
+        comment: Alternating label placement avoids all collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stems and markers well-sized for a sparse 10-point timeline.
+        comment: Markers/stems well-sized for 10 sparse events
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint categorical colors are distinguishable, CVD-safe, with stroke-highlighted
-          markers.
+        comment: Good hue separation, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: ylims (-3.6..3.6) are much larger than the drawn content (stems reach
-          only ±0.9-1.1), producing a large unused vertical gap between the event
-          area and the bottom axis/legend rows.
+        passed: true
+        comment: Balanced use of canvas, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis labeled '2024' is descriptive enough for a single-year timeline;
-          y-axis intentionally hidden as it carries no data meaning.
+        comment: Year caption plus per-event dates give clear temporal context
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series (Planning) is brand green #009E73; remaining categories
-          use canonical Imprint order with an intentional, semantically-justified
-          skip of the red anchor for ''Launch''; both themes theme-correct.'
+        passed: false
+        comment: Skips canonical position 5 (#AE3030), jumps to position 6 for 5th
+          category without semantic reason
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured, thoughtful default — color-coded categories and
-          clean typography, but not yet publication-level.
+        passed: true
+        comment: Custom-built timeline with thoughtful coloring, above default polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Spines removed and grid off, but the excessive empty vertical space
-          undercuts the sense of polish.
+        passed: true
+        comment: Spines hidden, no grid, generous whitespace, stroke-highlighted markers
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Color-coded phases and alternating stems create clear visual hierarchy
-          and a readable chronological narrative.
+        passed: true
+        comment: Alternating stems and category color create clear visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -143,28 +122,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct event-timeline chart with baseline, stems, and labeled markers.
+        comment: Correct horizontal event timeline
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Alternating label positions, clear date formatting, and category
-          color-coding with legend are all present.
+        comment: Dates, event names, category color-coding, alternating positions,
+          date formatting all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dates correctly mapped to x-position; all 10 events visible across
-          the full range.
+        comment: Chronological day-offset mapping correct, all events visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels match the
-          5 categories used in the data.
+        comment: Title format exact, legend labels match categories
     data_quality:
       score: 14
       max: 15
@@ -174,21 +151,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Covers multiple categories, varied spacing, and full-year span; no
-          edge case like a dense cluster of events.
+        comment: 10 milestones across 5 categories, but fairly uniform event weight
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible software-project milestone timeline.
+        comment: Realistic, neutral software-project scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Dates and phase ordering (Planning→Design→Build→Testing→Launch) are
-          realistic and internally consistent.
+        comment: Sensible milestone cadence and phase ordering
     code_quality:
       score: 10
       max: 10
@@ -198,31 +173,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Single flat script: imports, data, plot, save.'
+        comment: Flat imports/data/plot/save structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set; data is otherwise deterministic.
+        comment: Random.seed!(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Dates, Colors, Random all used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex, no fake functionality.
+        comment: Clean, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png with px_per_unit=2, current CairoMakie API.
+        comment: Current save API, correct filenames
     library_mastery:
       score: 7
       max: 10
@@ -232,21 +207,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of Axis/Legend/hidespines!/rowsize! grid layout.
+        comment: Good use of Axis, hidespines!, hideydecorations!, Legend with MarkerElement
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Makie's grid-based figure layout (rowsize!/Relative) and MarkerElement-based
-          custom legend, moderately distinctive to Makie.
-  verdict: REJECTED
+        comment: Legend composed into figure grid layout with rowsize! — distinctive
+          to Makie
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
-  patterns: []
+  patterns:
+  - data-generation
   dataprep:
   - time-series
   styling:
