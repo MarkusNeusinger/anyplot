@@ -75,18 +75,45 @@ const sparkX0 = 420;
 const sparkX1 = width - 60;
 const sparkHeight = 140;
 
-stocks.forEach((stock, i) => {
+// Pre-compute per-stock change so the standout mover can be highlighted.
+const changes = stocks.map((stock) => {
+  const values = stock.values;
+  const first = values[0];
+  const last = values[values.length - 1];
+  return ((last - first) / first) * 100;
+});
+const standoutIndex = changes.reduce(
+  (best, c, i) => (Math.abs(c) > Math.abs(changes[best]) ? i : best),
+  0,
+);
+
+// Idiomatic D3 data-join: one <g class="row"> per stock, data-bound.
+const rows = svg.selectAll("g.row").data(stocks).join("g").attr("class", "row");
+
+rows.each(function (stock, i) {
+  const row = d3.select(this);
   const y0 = marginTop + i * rowHeight;
   const values = stock.values;
   const n = values.length;
   const first = values[0];
   const last = values[n - 1];
-  const change = ((last - first) / first) * 100;
+  const change = changes[i];
   const up = change >= 0;
   const color = up ? t.palette[0] : t.palette[4];
   const arrow = up ? "▲" : "▼";
+  const isStandout = i === standoutIndex;
 
-  const row = svg.append("g");
+  // Subtle full-row tint calling out the largest absolute mover.
+  if (isStandout) {
+    row
+      .append("rect")
+      .attr("x", 0)
+      .attr("y", y0)
+      .attr("width", sparkX1)
+      .attr("height", rowHeight)
+      .attr("fill", color)
+      .attr("opacity", 0.05);
+  }
 
   // Divider between rows (table feel — not an axis of the sparkline itself)
   if (i > 0) {
@@ -100,14 +127,14 @@ stocks.forEach((stock, i) => {
       .attr("stroke-width", 1);
   }
 
-  // Label block
+  // Label block — the standout mover gets a bolder company name.
   row
     .append("text")
     .attr("x", labelX)
     .attr("y", y0 + 58)
     .attr("fill", t.ink)
     .style("font-size", "20px")
-    .style("font-weight", "600")
+    .style("font-weight", isStandout ? "700" : "600")
     .text(stock.name);
 
   row
@@ -196,4 +223,19 @@ stocks.forEach((stock, i) => {
     .attr("fill", color)
     .attr("stroke", t.pageBg)
     .attr("stroke-width", 1.5);
+
+  // Min/max markers — small faded dots, skipped where they'd sit on top of
+  // the first/last markers already drawn above.
+  const maxIdx = values.indexOf(vMax);
+  const minIdx = values.indexOf(vMin);
+  for (const idx of new Set([minIdx, maxIdx])) {
+    if (idx === 0 || idx === n - 1) continue;
+    row
+      .append("circle")
+      .attr("cx", x(idx))
+      .attr("cy", y(values[idx]))
+      .attr("r", 2.5)
+      .attr("fill", color)
+      .attr("opacity", 0.55);
+  }
 });
