@@ -281,7 +281,7 @@ new Chart(canvas, {
         max: yAxisMax,
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
-        title: { display: true, text: "Exam score", color: t.ink, font: { size: 16 } },
+        title: { display: true, text: "Exam score (points, 0-100)", color: t.ink, font: { size: 16 } },
       },
     },
   },
