@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: tree-phylogenetic
 created: '2026-09-09T20:42:36Z'
-updated: '2026-09-09T20:47:34Z'
+updated: '2026-09-09T20:57:22Z'
 generated_by: claude-sonnet
 workflow_run: 34402109457
 issue: 3070
@@ -12,54 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-phyl
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - 'Clear visual hierarchy: brand green (#009E73) highlights the ''Great apes (Hominidae)''
-    clade against muted gray for ''Other primates'', immediately drawing the eye to
-    the human-relevant lineage - genuine data storytelling via the muted semantic
-    anchor.'
-  - Scientifically accurate divergence times (Human-Chimp ~6 Mya, Hominidae ~15 Mya,
-    Catarrhini ~29 Mya, root ~43 Mya) match published mtDNA/nuclear phylogenomic estimates
-    for primates.
-  - Theme-adaptive chrome correctly implemented - both renders keep the brand green
-    and clade gray perceptually identical while background/text/grid flip appropriately
-    between light and dark.
-  - Clean, idiomatic ggplot2 composition of a custom cladogram from geom_segment/geom_point/geom_text
-    layers - a sensible native-grammar workaround given ggplot2 has no built-in phylo/newick
-    geom.
-  - Explicit font sizing throughout, well-proportioned title, no clipping at canvas
-    edges; landscape 3200x1800 canvas confirmed exact.
+  - 'Fixed the attempt-1 legend-glyph bug: show.legend = FALSE now on geom_text(),
+    so both legend keys render as clean point+line swatches with no stray italic ''a''
+    bleeding underneath, in both themes.'
+  - 'Fixed the attempt-1 element-prominence weakness: branch linewidth raised 1.1→1.4
+    and tip marker size raised 2.8→3.4, giving the sparse 7-tip tree appropriate visual
+    weight on the wide canvas.'
+  - 'Clear visual hierarchy and genuine data storytelling: brand green (#009E73) highlights
+    the ''Great apes (Hominidae)'' clade against the muted semantic-anchor gray for
+    ''Other primates'', immediately drawing the eye to the human-relevant lineage.'
+  - Scientifically accurate, neutral divergence times (Human-Chimp ~6 Mya, Hominidae
+    ~15 Mya, Catarrhini ~29 Mya, root ~43 Mya) consistent with published primate phylogenomic
+    estimates.
+  - 'Theme-adaptive chrome correctly implemented: data colors (brand green, muted
+    gray) are pixel-identical between renders while background/text/grid flip appropriately;
+    clean idiomatic ggplot2 composition of a custom cladogram from geom_segment/geom_point/geom_text
+    since ggplot2 has no built-in phylo geom.'
   weaknesses:
-  - 'Legend key glyphs show a stray faint italic ''a'' character bleeding underneath
-    the point+line key swatch for both ''Great apes (Hominidae)'' and ''Other primates''
-    entries, visible in both light and dark renders. Cause: geom_text() maps color
-    = clade and gets merged into the same legend as geom_point/geom_segment, so ggplot2
-    draws the default text-layer key glyph (a literal ''a'') on top of the point/line
-    glyph. Fix: add show.legend = FALSE to the geom_text() call so only the point+segment
-    layers contribute to the legend key.'
-  - No explicit branch-length scale bar beyond the x-axis ticks - the spec suggests
-    a scale bar to indicate substitution/divergence units; the current x-axis already
-    serves this role but a dedicated scale annotation would be a nice-to-have polish,
-    not a defect.
-  - Data is sparse (7 tips) - branch line width (1.1) and tip marker size (2.8) could
-    be slightly larger/more prominent per the density heuristic for small trees, giving
-    the tree a bit more visual weight on the wide canvas.
+  - No dedicated scale-bar annotation beyond the x-axis ticks - the spec suggests
+    a scale bar to indicate substitution/divergence units; the x-axis already serves
+    this role adequately, so this is a nice-to-have polish rather than a defect.
+  - 'Library Mastery is solid but not distinctive: the geom_segment/geom_point/geom_text
+    composition is the standard native-grammar workaround for trees in ggplot2 rather
+    than showcasing a more unique capability (e.g. ggplot2 extensions, custom stat,
+    or coord transform).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: Title "Primate Phylogeny · tree-phylogenetic · r · ggplot2 · anyplot.ai" in dark ink, clearly readable. X-axis label "Divergence time (millions of years ago)" and tick labels (40, 30, 20, 10, 0) in dark/soft-dark ink, all legible. Y-axis intentionally has no ticks/title (species names serve as the categorical axis). Subtle vertical major gridlines only. Legend "Clade" at bottom with two entries.
-      Data: Rectangular cladogram with right-angled branches. "Great apes (Hominidae)" clade (Human, Chimpanzee, Gorilla, Orangutan) rendered in brand green (#009E73); "Other primates" (Gibbon, Rhesus Macaque, Common Marmoset) rendered in muted gray. Tip labels are italic species names in matching clade color, placed to the right of each tip marker.
-      Legibility verdict: PASS - all title/axis/tick/legend text is clearly readable against the light background. Minor defect: a faint stray italic "a" character is visible bleeding under both legend key glyphs (a geom_text legend-merge artifact), but it does not impair overall readability.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "Primate Phylogeny · tree-phylogenetic · r · ggplot2 · anyplot.ai" in dark ink, clearly readable, occupies well under 70% of plot width. X-axis label "Divergence time (millions of years ago)" and tick labels (40, 30, 20, 10, 0) in dark/soft-dark ink, all legible. Y-axis intentionally has no ticks/title since species names serve as the categorical axis. Subtle vertical major gridlines present but not competing with data. Legend "Clade" at bottom with two clean entries (green point+line swatch for "Great apes (Hominidae)", gray point+line swatch for "Other primates") - the attempt-1 stray "a" glyph artifact is gone in both entries.
+      Data: Rectangular cladogram with right-angled branches. "Great apes (Hominidae)" clade (Human, Chimpanzee, Gorilla, Orangutan) rendered in brand green (#009E73) with linewidth 1.4 and marker size 3.4; "Other primates" (Gibbon, Rhesus Macaque, Common Marmoset) rendered in muted gray at the same weight. Italic species tip labels sit to the right of each tip marker, fully within canvas bounds.
+      Legibility verdict: PASS - all title/axis/tick/legend text is clearly readable against the light background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Title, x-axis label, and tick labels all rendered in light ink (white/light gray), clearly legible against the dark background - no dark-on-dark failures observed. Gridlines are subtle light vertical lines.
-      Data: Data colors are identical to the light render - the Great-apes clade is the same #009E73 green, and the "Other primates" clade uses the theme-adaptive muted gray token (correctly lighter in dark mode than in light mode, per the muted semantic-anchor definition). Only chrome flipped, as required.
-      Legibility verdict: PASS - all text reads clearly on the dark surface. Same minor stray "a" legend-glyph artifact reproduces here, in both legend entries.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title, x-axis label, and tick labels all rendered in light ink (white/light gray), clearly legible against the dark background - no dark-on-dark failures observed. Gridlines are subtle light vertical lines, visible but not dominant. Legend entries are clean (no stray glyph) here too.
+      Data: Data colors are identical to the light render - the Great-apes clade is the same #009E73 green with the same linewidth/marker size, and "Other primates" uses the theme-adaptive muted-gray token (correctly lighter in dark mode than in light mode, per the muted semantic-anchor definition). Only chrome flipped, as required.
+      Legibility verdict: PASS - all text reads clearly on the dark surface; brand green and muted gray both remain distinguishable and identical to the light render's data colors.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -67,23 +61,24 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; title, axis label, and ticks readable
-          in both themes; title fits without clipping.
+        comment: Explicit font sizes throughout (title 12pt, axis title 10pt, axis/legend
+          text 8pt); readable in both themes; title fits without clipping.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Main content fully readable, but both legend keys show a faint stray
-          'a' character bleeding under the point/line glyph (geom_text legend-merge
-          artifact) in both themes.
+        comment: Attempt-1 stray italic 'a' legend-glyph artifact fixed via show.legend
+          = FALSE on geom_text() - legend keys are now clean in both themes; no other
+          overlaps.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Branch lines (1.1) and tip markers (2.8) are visible and clear; could
-          be slightly more prominent given only 7 sparse tips.
+        comment: Branch linewidth raised to 1.4 and tip marker size to 3.4 per attempt-1
+          feedback, giving the sparse 7-tip tree appropriate prominence on the wide
+          canvas.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -97,7 +92,8 @@ review:
         max: 4
         passed: true
         comment: Balanced margins, plot fills a large share of the canvas, legend
-          sits directly below the plot, nothing cut off.
+          sits directly below the plot, nothing cut off; landscape 3200x1800 confirmed
+          exact.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -111,10 +107,10 @@ review:
         max: 2
         passed: true
         comment: 'First series is #009E73; second clade uses the theme-adaptive ''muted''
-          semantic anchor appropriately for the ''other/rest'' category; backgrounds
-          and chrome are theme-correct in both renders.'
+          semantic anchor appropriately; backgrounds and chrome are theme-correct
+          in both renders.'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -126,11 +122,11 @@ review:
           defaults; not yet at full publication-level polish.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Minimal grid, spines/ticks removed, generous whitespace; the stray
-          legend-glyph artifact undercuts otherwise careful refinement.
+        comment: Minimal grid, spines/ticks removed, generous whitespace; the attempt-1
+          stray legend-glyph artifact that undercut refinement is now fixed.
       - id: DE-03
         name: Data Storytelling
         score: 5
@@ -248,7 +244,7 @@ review:
         comment: Leverages ggplot2's layered grammar-of-graphics composability to
           construct a tree diagram from primitives; not using a truly unique ggplot2-only
           feature beyond that.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
