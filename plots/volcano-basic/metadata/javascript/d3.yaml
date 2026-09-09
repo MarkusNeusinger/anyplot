@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: volcano-basic
 created: '2026-09-09T21:54:09Z'
-updated: '2026-09-09T21:59:34Z'
+updated: '2026-09-09T22:10:02Z'
 generated_by: claude-sonnet
 workflow_run: 34408825710
 issue: 2924
@@ -12,57 +12,62 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/d3/plot-dark.html
-quality_score: 80
+quality_score: 49
 review:
   strengths:
   - 'Correct volcano-plot construction: log2 fold change on x, -log10(p-value) on
-    y, with dashed significance threshold at ~1.3 and dashed effect-size thresholds
-    at ±1, exactly matching the specification''s Notes section'
-  - Uses the domain-standard red/blue semantic color mapping for up-/down-regulated
-    genes (legitimate use of the Imprint palette's semantic-exception rule, since
-    'Up-regulated'/'Down-regulated' labels literally match the documented up/down
-    convention)
-  - Density-appropriate alpha transparency (0.75 significant / 0.35 non-significant)
-    sensibly handles the ~2,200-point overplotting scenario
-  - Realistic, neutral RNA-seq dataset with recognizable named hits (TP53, MYC, BRCA1,
-    EGFR) layered on a deterministic LCG-generated background cloud that produces
-    the expected V-shaped volcano silhouette
-  - 'Idiomatic D3: scaleLinear + axisBottom/axisLeft + join pattern, custom-built
-    legend, theme tokens correctly threaded through title/axes/gridlines/threshold
-    lines'
-  - Title format, axis labels, and data mapping all match the specification precisely
+    y, with both the horizontal significance threshold (-log10(0.05) ≈ 1.3) and the
+    two vertical effect-size thresholds (±1) drawn as dashed reference lines exactly
+    per spec.'
+  - Top hits (TP53, MYC, BRCA1, EGFR) are labeled directly on the plot with readable,
+    correctly anchored text, giving the chart a clear analytical focal point.
+  - 'Realistic RNA-seq differential-expression data: ~2200 genes with a plausible
+    fold-change/p-value relationship (stronger fold changes trend toward lower p-values)
+    plus a handful of injected strong hits for coverage of the full significance spectrum.'
+  - Title format is exactly correct ("volcano-basic · javascript · d3 · anyplot.ai"),
+    legend labels (Up-regulated / Down-regulated / Not significant) match the significance
+    categories, and the code is clean, deterministic (fixed-seed LCG), and idiomatic
+    D3 (data joins, scaleLinear, axisBottom/Left).
   weaknesses:
-  - 'colorFor.ns is set to `t.muted`, but the harness''s window.ANYPLOT_TOKENS object
-    (built in automation/js-render/render.mjs and documented in prompts/library/d3.md)
-    only exposes { pageBg, elevatedBg, ink, inkSoft, grid, palette, amber, seq, div
-    } -- there is no `muted` field. `t.muted` is therefore `undefined`, so d3''s .attr(''fill'',
-    ...) removes the fill attribute entirely and every ''Not significant'' point (plus
-    its legend swatch) falls back to the browser''s default SVG fill (black) instead
-    of a theme-adaptive gray. This happens to look passable in the light render, but
-    produces near-invisible black-on-near-black markers in the dark render (stroke
-    is also `t.pageBg`, i.e. the same near-black background color, compounding the
-    low contrast) and a flat-black legend swatch barely distinguishable from the dark
-    legend box. Fix: use `t.inkSoft` (already theme-adaptive: #4A4A44 light / #B8B7B0
-    dark) for the ''ns'' fill instead of the non-existent `t.muted`.'
-  - The 'TP53' top-hit label sits directly on top of a data point marker in both renders
-    (label offset of only 10-14px from the point), so the marker visually merges with/obscures
-    part of the label glyphs -- increase the label offset or nudge it further from
-    the marker so the text stays fully clear of any point.
+  - 'Critical dark-theme failure: in plot-dark.png the ''Not significant'' scatter
+    points AND the matching legend swatch render as pure black (sampled RGB (0,0,0))
+    against the near-black #1A1A17 background — they are visually indistinguishable
+    from the canvas. This affects the majority of the ~2200 plotted genes (everything
+    inside the threshold lines). The source (line 52) sets `colorFor = { ns: t.inkSoft,
+    ... }`, and `t.inkSoft` IS correctly rendered elsewhere in the very same dark
+    render (axis ticks and the dashed threshold lines both show the expected light
+    gray #B8B7B0) — so the fill value reaching the ''ns'' circles/legend swatch does
+    not match what `t.inkSoft` resolves to elsewhere in the same file. Repair must
+    verify `colorFor.ns` actually evaluates to a visible token at both the scatter-circle
+    join and the legend-swatch circle, and re-render both themes to confirm the fix
+    before resubmitting (rule out a stale/pre-fix render artifact left over from the
+    previous repair commit that changed `t.muted` → `t.inkSoft`).'
+  - Because the non-significant category is invisible in dark mode, the spec's explicit
+    color-coding requirement ('non-significant (gray)') only half-works — it is correct
+    in the light render but fails entirely in the dark render.
+  - The gene-name labels (esp. "TP53") sit directly on top of a dense cluster of same-colored
+    data points; legible today due to bold text + white/dark halo-free contrast, but
+    a subtle white text-stroke or small leader line would make the labels read more
+    cleanly against the crowded point cloud.
+  - 'Design Excellence is only at the ''well-configured default'' tier: no size/alpha
+    variation beyond the two-tier significant/non-significant opacity split, and no
+    additional visual emphasis (e.g., outlining or slightly enlarging the labeled
+    top-hit markers) to reinforce the labeled genes as the analytical focal point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
-      Chrome: Title "volcano-basic · javascript · d3 · anyplot.ai" bold and centered at top, dark ink, clearly legible. Axis titles "log2 Fold Change" / "-log10(p-value)" dark and legible. Tick labels on both axes legible in a softer dark gray. Grid lines on both axes are subtle and visible without competing with data. Two vertical dashed threshold lines at log2FC = -1/+1 and one horizontal dashed threshold line at -log10(p) ~= 1.3, all rendered in a soft dark gray, clearly visible against the light background. Legend (top-right, light elevated box) lists Up-regulated (red), Down-regulated (blue), Not significant (black) with legible dark text.
-      Data: Classic V-shaped volcano silhouette. Blue points (down-regulated) on the left arm, red/maroon points (up-regulated) on the right arm -- consistent with the domain-standard red/blue significance convention. Central cloud of "Not significant" points renders as dark/black dots (see weakness: these should use a theme-adaptive muted gray token, not the browser's default black fill) but remains visually distinguishable from the light background since black-on-off-white still has reasonable contrast. Named hits TP53, MYC, BRCA1, EGFR are labeled near their points; the TP53 label overlaps its adjacent marker (glyphs partially merge with the dot).
-      Legibility verdict: PASS (all title/axis/tick/legend text is clearly readable; the only defects are the wrong marker color for the "Not significant" category and label/marker overlap on TP53, not text-vs-background contrast).
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "volcano-basic · javascript · d3 · anyplot.ai" in bold dark text, axis titles "log2 Fold Change" / "-log10(p-value)" in dark text, tick labels in a slightly softer dark gray, subtle both-axes gridlines, legend box (light elevated fill) top-right with three swatches. All chrome text is clearly readable against the light background.
+      Data: ~2200 points forming the classic volcano "V" shape. Right arm colored matte red (up-regulated), left arm colored blue (down-regulated), central/lower cluster colored dark gray (not significant, rendered with a lower fill-opacity of 0.35 vs. 0.75 for significant points). Dashed threshold lines at y≈1.3 and x=±1 are visible in a muted gray. Four labeled top hits (TP53, MYC, BRCA1, EGFR) sit near the plot's outer extremes with bold dark text.
+      Legibility verdict: PASS — every chrome element and the "Not significant" legend swatch (rendered as a dark/near-black circle, readable against the light cream background) are legible.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
-      Chrome: Title, axis titles, and tick labels all render in light (off-white/soft-gray) text, clearly legible against the dark background -- no dark-on-dark failures for any title/axis/tick element. Grid lines and dashed threshold lines render in a subtle light gray, clearly visible. Legend box uses the dark elevated background with legible light text for "Up-regulated" and "Down-regulated".
-      Data: Blue and red points are visually identical in hue/saturation to the light render (as required -- only chrome flipped). However, the "Not significant" points and their legend swatch use the browser's default black SVG fill (due to the undefined `t.muted` token bug) with a stroke that also matches the near-black page background -- these markers are individually almost invisible against the dark canvas, only readable in aggregate as a faint darker blob where many overlapping points compound their alpha. The "Not significant" legend swatch is likewise a near-invisible black circle against the dark legend box.
-      Legibility verdict: FAIL for the "Not significant" data category and its legend swatch (dark-marker-on-dark-background contrast failure caused by the missing `t.muted` token); PASS for all title/axis/tick/legend text elements.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and axis titles render in light/white text, tick labels in light gray, gridlines and dashed threshold lines in a light gray (confirmed via pixel sampling at RGB (184,183,176), matching the expected dark-theme inkSoft token) — all clearly visible against the dark background. Legend box uses the darker "elevated" surface with light-gray label text, also readable.
+      Data: The red (up-regulated) and blue (down-regulated) arms of the volcano are identical in hue to the light render, confirming data-color consistency across themes. However, the "Not significant" points (the dense central/lower cluster, the majority of the ~2200 genes) and the "Not significant" legend swatch both render as pure black (pixel-sampled RGB (0,0,0)), which is visually indistinguishable from the (26,26,23) background — this category is effectively invisible in the dark render, even though the exact same token (`t.inkSoft`) renders correctly as light gray for the axis ticks and threshold lines elsewhere in this same image.
+      Legibility verdict: FAIL — the "Not significant" data category (majority of the plotted genes) and its legend swatch are a dark-on-dark failure in the dark render; every other chrome/text element passes.
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 19
       max: 30
       items:
       - id: VQ-01
@@ -70,99 +75,102 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All title/axis/tick/legend text readable in both themes
+        comment: All chrome text explicitly sized and readable in both themes; title/axis/tick/legend
+          text all pass.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: TP53 label overlaps an adjacent data marker in both renders
+        passed: true
+        comment: Gene labels (esp. TP53) sit atop a dense same-colored point cloud
+          but remain individually legible; no true text-on-text overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 2
+        score: 0
         max: 6
         passed: false
-        comment: '''Not significant'' markers render with the browser''s default black
-          fill (undefined t.muted token) and are nearly invisible in the dark render'
+        comment: '''Not significant'' points (majority of ~2200 genes) render as pure
+          black (0,0,0) on the #1A1A17 dark background — effectively invisible.'
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Red/blue distinguishable, no red-green sole signal
+        passed: false
+        comment: Near-zero contrast between the 'ns' category fill and the dark background
+          is a critical contrast failure.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, good proportions, no overflow
+        comment: Canvas gate passed; plot fills a good share of the canvas with balanced
+          margins and a legend anchored near the plot.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles matching spec fields
+        comment: Descriptive axis titles (log2 Fold Change, -log10(p-value)).
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: '''Not significant'' category uses no valid Imprint/anchor token
-          at all -- default SVG black instead of theme-adaptive muted gray'
+        comment: Red/blue significance coding is a valid semantic exception to canonical
+          order, background colors correct in both themes, but the 'ns' category is
+          not theme-correct in the dark render (renders black instead of the expected
+          light inkSoft gray).
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Custom legend, threshold lines, and labeled hits show intentional
-          design beyond defaults
+        comment: 'Reads as a well-configured default: sensible color use and density-aware
+          alpha, but no extra polish beyond the basics, and the dark-mode ''ns'' failure
+          undercuts the aesthetic.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Clean L-shaped axes and subtle grid, but the theme-adaptation bug
-          undercuts overall polish
+        comment: Subtle gridlines and dashed threshold lines, generous whitespace;
+          minimal-chrome axis styling, but the swallowed 'ns' cluster in dark mode
+          is a refinement failure.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Color-coded regions, threshold lines, and named top hits create clear
-          visual hierarchy
+        comment: Named top-hit labels and red/blue/gray significance coding create
+          a clear focal point and guide the reader in the light render; the story
+          partially breaks down in dark mode.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Correct volcano scatter
+        comment: Correct volcano scatter with both threshold line types.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Both threshold lines, significance color-coding, alpha transparency,
-          and top-hit labels all present
+        comment: Thresholds, red/blue significance coloring, and top-hit labels are
+          all implemented, but the 'non-significant (gray)' requirement fails visually
+          in the dark render.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: x=log2FC, y=-log10(p) correct, full data range shown
+        comment: log2FC on x, -log10(p) on y, full data range visible on both axes.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title format matches spec; legend labels match significance categories
+        comment: Title format exact; legend labels match significance categories.
     data_quality:
       score: 15
       max: 15
@@ -171,57 +179,49 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        passed: true
-        comment: 'All spec fields represented: fold change, p-value, labels, significance
-          status'
+        comment: Shows up-regulated, down-regulated, non-significant, and labeled
+          extreme hits — full spectrum.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Plausible, neutral RNA-seq scenario with recognizable gene names
+        comment: Realistic, neutral RNA-seq differential expression scenario with
+          recognizable gene symbols.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Fold-change and p-value ranges are realistic for omics data
+        comment: Fold-change and p-value ranges are plausible for omics data; fold-change
+          vs. significance correlation is biologically sensible.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: Flat script, only small rand/randn helpers
+        comment: Flat imports → data → draw structure; only tiny RNG helper functions.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Deterministic fixed-seed LCG
+        comment: Fixed-seed LCG, fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: No imports beyond the global d3
+        comment: No unused imports; d3 is the global.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Referencing a non-existent token (t.muted) rather than a real elegance
-          issue, but it reflects a correctness slip
+        comment: Clean, appropriately complex, no fake UI.
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Uses t.muted, which is not part of the documented ANYPLOT_TOKENS
-          contract in prompts/library/d3.md or render.mjs
+        comment: Correct mount-node contract, no deprecated API, animations not used.
     library_mastery:
       score: 6
       max: 10
@@ -230,15 +230,13 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Proper scale/axis/join idioms
+        comment: Proper data joins, scales, and axis generators used idiomatically.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Custom-built legend is a modest D3-specific touch; otherwise fairly
-          standard scatter usage
+        comment: Basic scatter/axis/annotation usage; no d3-distinctive feature (transitions,
+          brushing, voronoi, custom shapes) beyond what any SVG library could replicate.
   verdict: REJECTED
 impl_tags:
   dependencies: []
