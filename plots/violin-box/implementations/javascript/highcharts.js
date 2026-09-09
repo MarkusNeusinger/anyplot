@@ -226,6 +226,40 @@ const series = groups.flatMap((g, i) => {
           },
         ]
       : []),
+    // Stat chip: a Highcharts dataLabel badge (own background/border, not just
+    // text) surfacing the box's Q1/median/Q3 numerically — the core-bundle
+    // stand-in for highcharts-more's boxplot tooltip, made permanently visible.
+    {
+      type: "scatter",
+      data: [
+        {
+          x: st.median,
+          y: baseline,
+          custom: { q1: st.q1, median: st.median, q3: st.q3 },
+        },
+      ],
+      marker: { enabled: false },
+      enableMouseTracking: false,
+      showInLegend: false,
+      dataLabels: {
+        enabled: true,
+        align: "center",
+        verticalAlign: "middle",
+        y: -100,
+        format: "Q1 {point.custom.q1:.0f} · Med {point.custom.median:.0f} · Q3 {point.custom.q3:.0f}",
+        backgroundColor: t.elevatedBg,
+        borderColor: t.grid,
+        borderWidth: 1,
+        borderRadius: 4,
+        padding: 4,
+        style: {
+          color: t.inkSoft,
+          fontSize: "11px",
+          fontWeight: "500",
+          textOutline: "none",
+        },
+      },
+    },
   ];
 });
 
@@ -243,11 +277,18 @@ Highcharts.chart("container", {
     text: "violin-box · javascript · highcharts · anyplot.ai",
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
   },
+  subtitle: {
+    text: "Self-Study is bimodal — disengaged and independently-thriving students form two distinct peaks",
+    style: { color: t.inkSoft, fontSize: "14px" },
+  },
   xAxis: {
     type: "linear",
     min: gridMin,
     max: gridMax,
-    title: { text: "Exam Score", style: { color: t.inkSoft, fontSize: "16px" } },
+    title: {
+      text: "Exam Score (0–100)",
+      style: { color: t.inkSoft, fontSize: "16px" },
+    },
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
