@@ -5,8 +5,8 @@
 
 using CairoMakie
 using Colors
-using ColorSchemes
 using Random
+using Statistics
 
 Random.seed!(42)
 
@@ -72,8 +72,17 @@ for d in month_days
     )
 end
 
-# Spiral line — color encodes daily sales magnitude
-lines!(ax, x, y; color=daily_sales, colormap=IMPRINT_SEQ, linewidth=3.5)
+# Spiral line — color encodes daily sales magnitude. The range is clamped to
+# the 5th-95th percentile (rather than full min/max) so day-to-day variation
+# stays visible instead of being washed out by the single yearly holiday spike.
+color_range = (quantile(daily_sales, 0.05), quantile(daily_sales, 0.95))
+lines!(
+    ax, x, y;
+    color=daily_sales,
+    colormap=IMPRINT_SEQ,
+    colorrange=color_range,
+    linewidth=3.5,
+)
 
 # Label the start of each yearly cycle for orientation
 for cycle in 0:(n_years-1)
@@ -91,7 +100,7 @@ end
 
 Colorbar(
     fig[1, 2],
-    limits=(minimum(daily_sales), maximum(daily_sales)),
+    limits=color_range,
     colormap=IMPRINT_SEQ,
     label="Daily sales (USD thousands)",
     labelcolor=INK,
