@@ -168,26 +168,36 @@ export default function Chart() {
           <Typography sx={{ height: CELL_TITLE_H, fontSize: 15, fontWeight: 500, color: t.ink }}>
             Portfolio Sector Allocation
           </Typography>
-          <PieChart
-            width={CELL_W}
-            height={CHART_H}
-            colors={t.palette}
-            skipAnimation
-            slotProps={{ legend: { hidden: true } }}
-            sx={{ "& .MuiPieArcLabel-root": { fill: "#FFFFFF", fontSize: 15, fontWeight: 600 } }}
-            series={[
-              {
-                data: sectorAllocation,
-                innerRadius: Math.min(CELL_W, CHART_H) * 0.17,
-                outerRadius: Math.min(CELL_W, CHART_H) * 0.47,
-                paddingAngle: 2,
-                cx: CELL_W / 2,
-                cy: CHART_H / 2,
-                arcLabel: (item) => `${item.label} ${item.value}%`,
-                arcLabelMinAngle: 20,
-              },
-            ]}
-          />
+          <Box sx={{ display: "flex", alignItems: "center", height: CHART_H, gap: "24px" }}>
+            <PieChart
+              width={CHART_H}
+              height={CHART_H}
+              colors={t.palette}
+              skipAnimation
+              slotProps={{ legend: { hidden: true } }}
+              sx={{ "& .MuiPieArcLabel-root": { fill: "#FFFFFF", fontSize: 14, fontWeight: 600 } }}
+              series={[
+                {
+                  data: sectorAllocation,
+                  innerRadius: CHART_H * 0.17,
+                  outerRadius: CHART_H * 0.47,
+                  paddingAngle: 2,
+                  cx: CHART_H / 2,
+                  cy: CHART_H / 2,
+                  arcLabel: (item) => `${item.value}%`,
+                  arcLabelMinAngle: 15,
+                },
+              ]}
+            />
+            <Box sx={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {sectorAllocation.map((sector, i) => (
+                <Box key={sector.id} sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Box sx={{ width: 14, height: 14, borderRadius: "3px", bgcolor: t.palette[i] }} />
+                  <Typography sx={{ fontSize: 15, color: t.ink }}>{sector.label}</Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
         </Box>
       </Box>
     </Box>
