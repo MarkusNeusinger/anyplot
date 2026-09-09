@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: streamline-basic
 created: '2026-09-09T19:17:00Z'
-updated: '2026-09-09T19:21:26Z'
+updated: '2026-09-09T19:30:43Z'
 generated_by: claude-sonnet
 workflow_run: 34392576123
 issue: 2861
@@ -12,103 +12,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamlin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
   - Physically grounded vector field (superposed point vortices plus ambient wind,
     softened near cores) integrated with RK4 and traced forward/backward from upstream
     seeds — genuinely computes streamlines rather than faking a flow-like shape.
-  - Dual encoding of local speed via both color (imprint_seq gradient) and line width,
-    directly matching the subtitle's stated encoding.
+  - 'The DQ-03 scale mismatch from Attempt 1 is fixed: the subtitle now reads "counter-rotating
+    vortex pair" instead of "cyclone-anticyclone," so the phenomenon naming is consistent
+    with the 10 km domain.'
+  - Dual encoding of local speed via both Imprint imprint_seq color gradient and line
+    width, directly matching the subtitle's stated encoding; verified pixel-identical
+    data colors between light and dark renders.
   - Correct, well-documented workaround for Highcharts' auto-sorting on line/spline
-    series (uses 'scatter' + explicit lineWidth to preserve path order) — shows real
-    understanding of a core-bundle limitation.
-  - Theme-adaptive chrome is implemented correctly — both renders pass the theme-readability
-    checklist with no dark-on-dark or light-on-light issues, and data colors are identical
-    between themes.
-  - Title format exactly matches the mandated `{spec-id} · {language} · {library}
-    · anyplot.ai` string.
+    series (uses `scatter` + explicit `lineWidth` to preserve path order), plus a
+    hover-only tooltip formatter and marker reveal that add a Highcharts-idiomatic
+    interactive touch without cluttering the static PNG.
+  - 'Theme-adaptive chrome correctly implemented — both renders pass the theme-readability
+    checklist, backgrounds verified pixel-exact at #FAF8F1 / #1A1A17.'
   weaknesses:
-  - 'DQ-03: The subtitle frames this as ''wind circulation around a cyclone–anticyclone
-    pair'' but the domain spans only 10 km (x: -5..5, y: -2.8..2.8) — real atmospheric
-    cyclones/anticyclones operate at synoptic scales of hundreds of km. Either rename
-    the phenomenon to a small-scale flow (e.g. ''vortex pair in a channel flow'' /
-    ''wake eddies'') or rescale distances/units to match a synoptic system.'
-  - 'LM-02: No Highcharts-distinctive capability is showcased beyond the scatter-as-path
-    workaround — tooltip and mouse tracking are fully disabled (enableMouseTracking:
-    false, tooltip.enabled: false) for every series. Consider leaving a light, non-cluttering
-    interactive touch (e.g. a working tooltip in the HTML view) so the library''s
-    strengths show through, per the JS fairness rules this won''t affect the PNG.'
-  - 'CQ-01: Six helper functions (velocityAt, rk4Step, traceHalf, traceStreamline,
-    hexToRgb, mixHex) go well beyond the KISS ''Imports → Data → Plot → Save'' shape.
-    The RK4 field integration genuinely needs structure, but the color-mixing helpers
-    (hexToRgb/mixHex) could be simplified or inlined to cut the function count.'
-  - 'DE-01: Color encoding is a straight two-stop gradient between t.seq[0]/t.seq[1];
-    a slightly richer multi-stop imprint_seq treatment could push the aesthetic further
-    toward publication-ready.'
+  - Five helper functions (velocityAt, rk4Step, traceHalf, traceStreamline, mixHex)
+    still exceed the KISS "Imports → Data → Plot → Save" shape. The RK4 field integration
+    genuinely needs structure, but this is still a minor deduction.
+  - The added tooltip formatter and hover-reveal markers are a nice touch but still
+    fairly generic — no fully Highcharts-distinctive feature (e.g. a colorAxis-driven
+    legend, drilldown, or annotations API) is showcased.
+  - Only two of the 13 streamlines get meaningfully differentiated coloring at the
+    extremes; most mid-range streamlines cluster tightly around similar blue/green
+    tones, so the color encoding under-uses the available imprint_seq range for the
+    bulk of the data.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "streamline-basic · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "Wind circulation around a cyclone–anticyclone pair · color and thickness encode local speed" in soft grey below it. X-axis "Distance East (km)" and Y-axis "Distance North (km)" titles and tick labels render in soft dark grey, clearly legible. Faint horizontal gridlines only (y-axis), no vertical clutter. Legend at bottom center with two circular swatches: "Slower flow" (green) and "Faster flow" (blue-violet).
-      Data: 13 streamlines traced left-to-right across the domain, colored on a green→blue gradient by mean local speed, with line width thickening slightly for faster segments. Lines bow around two implied vortex cores near x=-2 and x=2, forming closed recirculation-bubble shapes typical of a vortex-in-a-stream flow. First/slow end of the color scale is #009E73 green as required.
-      Legibility verdict: PASS — all text clearly readable, no overlap, no clipping at the canvas edges.
+      Background: Warm off-white, verified pixel-exact at RGB(250,248,241) = #FAF8F1.
+      Chrome: Title "streamline-basic · javascript · highcharts · anyplot.ai" (dark ink, bold, ~34% of canvas width, well clear of edges) and subtitle "Streamlines around a counter-rotating vortex pair · color and thickness encode local speed" (soft grey) are both fully legible. Axis titles "Distance East (km)" / "Distance North (km)" and tick labels render in soft grey against the light background, clearly readable. Faint horizontal gridlines only (y-axis), subtle and non-competing. Legend at bottom center: "Slower flow" (green) / "Faster flow" (blue), both fully visible above the canvas bottom edge.
+      Data: 13 streamlines trace across the domain on a green (#009E73) → blue (#4467A3) imprint_seq gradient keyed to local mean speed, with line width thickening for faster segments. Streamlines bow into deflection troughs/crests around the two implied vortex cores near x=-2 and x=2, clearly revealing the field's circulation structure.
+      Legibility verdict: PASS — no light-on-light issues, no clipping at any edge.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title and subtitle render in light ink/soft-grey, fully legible against the dark background. Axis titles and tick labels are light-colored and readable; gridlines are faint and unobtrusive. Legend swatches and labels are legible in the dark theme.
-      Data: Same 13 streamlines, identical green→blue color gradient and line-width variation as the light render — confirmed pixel-for-pixel consistent data colors, only chrome (background/text/grid) flipped.
-      Legibility verdict: PASS — no dark-on-dark text, no unreadable elements; brand green remains clearly visible against the dark surface.
+      Background: Warm near-black, verified pixel-exact at RGB(26,26,23) = #1A1A17.
+      Chrome: Title, subtitle, axis titles, tick labels, and legend all render in light/soft-grey ink and remain fully legible against the dark background — no dark-on-dark failures anywhere.
+      Data: Confirmed via pixel sampling that streamline colors (e.g. RGB(68,103,163) blue, RGB(8,151,121) green) are identical to the light render at every sampled coordinate — only the chrome (background, gridlines, text) flips between themes, exactly as required.
+      Legibility verdict: PASS — both renders pass the theme-readability checklist.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (22/14/16/14px); readable in both themes;
-          title fits comfortably without clipping
+        comment: All font sizes explicitly set; title occupies only ~34% of canvas
+          width (well under the 50-70% guideline, no overflow); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or data
+        comment: No collisions between text, legend, and data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 13 streamlines with width 1.6-3.4px, well spaced, not cluttered nor
-          sparse
+        comment: Line widths (1.6-3.4px) adapted to speed, clearly visible, no clutter
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential gradient, CVD-safe, not red-green
+        comment: Green/blue gradient distinguishable, not red-green reliant
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a large, balanced share of the canvas; legend sits close
-          to the plot
+        comment: Plot fills most of the canvas with balanced margins, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (km)
+        comment: Descriptive axis labels with units (km)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq gradient for continuous speed data, correct light/dark
-          backgrounds, identical data colors across themes
+        comment: 'imprint_seq gradient for continuous speed data confirmed correct
+          polarity; pixel-verified backgrounds #FAF8F1/#1A1A17 and identical data
+          colors across themes'
     design_excellence:
       score: 16
       max: 20
@@ -118,21 +113,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Deliberate dual color+width speed encoding goes beyond defaults;
-          a richer multi-stop gradient could push further
+        comment: 'Strong design: dual color+width speed encoding, clearly above library
+          defaults'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle y-axis-only grid, no heavy chrome, generous whitespace
+        comment: Subtle y-axis-only grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Closed recirculation bubbles around the vortex pair are immediately
-          visible, color/width guide the eye to faster regions
+        comment: Deflection patterns and speed gradient clearly guide the eye to the
+          vortex-pair structure
     spec_compliance:
       score: 15
       max: 15
@@ -142,29 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine traced streamlines, not a proxy chart type
+        comment: Correct streamline plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Balanced density, velocity-magnitude color encoding, width varying
-          with field strength, distributed seed points
+        comment: Grid-based vector field, continuous traced streamlines, speed-scalar
+          encoding, distributed seeds all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to distance axes, full field extent shown
+        comment: X/Y correctly mapped, full domain shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels describe the
-          color encoding
+        comment: Title matches mandated format exactly; legend labels are correct
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -172,21 +166,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows deflection, recirculation bubbles, and far-field straight flow
-          — good structural variety
+        comment: Shows deflection, recirculation-like bowing, and speed variation;
+          not all streamlines show equally distinct edge cases
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral meteorological/fluid-dynamics scenario
+        comment: Neutral fluid-dynamics scenario (vortex pair in ambient wind)
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Values internally consistent but the 'cyclone-anticyclone' framing
-          implies a synoptic scale inconsistent with the 10 km domain
+        comment: 'Attempt-1 scale mismatch fixed: ''counter-rotating vortex pair''
+          naming is now consistent with the 10 km domain'
     code_quality:
       score: 9
       max: 10
@@ -196,35 +190,34 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Six helper functions exceed the KISS shape, though RK4 integration
-          genuinely needs structure
+        comment: Five helper functions exceed the KISS shape, though RK4 integration
+          genuinely needs some structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no RNG needed
+        comment: Fully deterministic, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only used globals
+        comment: No unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Complexity is appropriate for genuine field-line integration, no
-          fake functionality
+        comment: Clean, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, no explicit width/height
+        comment: Mount-node contract respected, animation disabled
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -232,16 +225,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Clever, well-reasoned use of scatter+lineWidth to bypass line/spline
-          auto-sorting
+        comment: Clever scatter+lineWidth workaround for Highcharts' line/spline auto-sorting
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: All interactivity is disabled; no Highcharts-distinctive feature
-          beyond the path workaround is showcased
-  verdict: REJECTED
+        passed: true
+        comment: 'Improved from Attempt 1: custom tooltip formatter and hover-reveal
+          markers add a real (if modest) interactive touch beyond the path workaround'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
