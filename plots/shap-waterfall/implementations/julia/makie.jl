@@ -69,6 +69,9 @@ ax = Axis(
     yticks             = (1:n, reverse(features)),
     yticklabelsize     = 13,
     yticklabelcolor    = INK_SOFT,
+    ylabel             = "Feature",
+    ylabelsize         = 14,
+    ylabelcolor        = INK,
     backgroundcolor    = PAGE_BG,
     topspinevisible    = false,
     rightspinevisible  = false,
@@ -97,9 +100,14 @@ for i in 1:(n - 1)
     )
 end
 
-# Base value and final prediction reference lines
-vlines!(ax, [base_value]; color = INK_SOFT, linestyle = :dash, linewidth = 1.5)
-vlines!(ax, [final_value]; color = INK, linestyle = :dash, linewidth = 1.5)
+# Base value and final prediction reference lines, stopped below the label
+# row (as plain lines! with an explicit y-extent) so the dashed lines never
+# cross through their own annotation text above.
+line_top = n + 0.4
+lines!(ax, [base_value, base_value], [0.2, line_top]; color = INK_SOFT, linestyle = :dash, linewidth = 1.5)
+lines!(ax, [final_value, final_value], [0.2, line_top]; color = INK, linestyle = :dash, linewidth = 1.5)
+scatter!(ax, [base_value], [line_top]; marker = :utriangle, markersize = 10, color = INK_SOFT)
+scatter!(ax, [final_value], [line_top]; marker = :utriangle, markersize = 10, color = INK)
 
 text!(
     ax, base_value, n + 0.9;
