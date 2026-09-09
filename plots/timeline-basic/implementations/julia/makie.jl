@@ -61,7 +61,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title              = title_str,
-    titlesize          = 20,
+    titlesize          = 27,
     titlecolor         = INK,
     backgroundcolor    = PAGE_BG,
     xlabel             = "2024",
@@ -80,7 +80,7 @@ ax = Axis(
 )
 
 hidespines!(ax, :l, :r, :t)
-ylims!(ax, -3.6, 3.6)
+ylims!(ax, -1.6, 1.6)
 
 # Baseline axis
 hlines!(ax, [0]; color = INK_SOFT, linewidth = 2)
