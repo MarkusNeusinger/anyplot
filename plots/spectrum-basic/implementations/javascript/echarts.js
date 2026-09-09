@@ -129,3 +129,7 @@ chart.setOption({
     },
   ],
 });
+
+chart.on("finished", () => {
+  window.__anyplotReady = true;
+});
