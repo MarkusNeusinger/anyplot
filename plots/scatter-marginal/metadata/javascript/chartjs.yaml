@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: scatter-marginal
 created: '2026-09-09T06:46:09Z'
-updated: '2026-09-09T06:50:22Z'
+updated: '2026-09-09T06:58:55Z'
 generated_by: claude-sonnet
 workflow_run: 34319752239
 issue: 2005
@@ -12,53 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/chartjs/plot-dark.html
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - CSS-grid mount layout aligns the main scatter and both marginal bar charts pixel-perfectly
-    by sharing fixed axis reserves (Y_AXIS_RESERVE, X_AXIS_RESERVE) and identical
-    domain min/max between scatter axes and histogram axes
-  - Custom afterBuildTicks hook (pruneBoundaryTicks) removes crowded boundary ticks
-    that Chart.js's linear scale would otherwise force at the exact min/max — a distinctive,
-    library-aware refinement
-  - Marker alpha (0.65) and marginal-bar alpha (0.4) follow the spec's guidance for
-    moderate transparency to reveal density without distracting from the main scatter
-  - Deterministic LCG + Box-Muller bivariate data generation with a realistic negative
-    correlation (engine displacement vs. fuel economy) is a plausible, neutral, real-world
-    dataset
-  - Theme tokens are threaded correctly through both the main chart and the (otherwise
-    chrome-less) marginal charts — background, ink, and grid colors flip correctly
-    between light and dark while data colors stay identical
-  - 'animation: false and single-canvas-per-cell mount contract are followed correctly
-    for the browser render harness'
+  - Correctly implements a jointplot-style composite (main scatter + top/right marginal
+    histograms) as three synchronized Chart.js instances with pixel-perfect axis alignment
+    via shared afterFit reserve widths
+  - Deterministic LCG + Box-Muller bivariate-normal data generation produces a realistic
+    negative correlation (engine displacement vs. fuel economy) with domain-appropriate
+    skew visible in both marginal histograms
+  - '''Nice number'' axis domain calculation (Heckbert''s algorithm) plus a custom
+    boundary-tick pruning hook produce clean, non-crowded tick labels on the main
+    scatter'
+  - 'Theme-adaptive chrome and the Imprint palette are correctly threaded through
+    all three chart instances in both light and dark renders — first series is #009E73
+    in both, backgrounds are theme-correct'
+  - Marginal histogram styling (translucent brand-tinted fill, thin border, hidden
+    ticks/grids/borders) correctly subordinates the marginals to the main scatter,
+    matching the spec's guidance
   weaknesses:
-  - Main scatter axis bounds are inherited directly from the histogram bin domain
-    (min - binWidth*0.5 / max + binWidth*0.5), producing non-round outer tick labels
-    ('0.9', '6.4' on X, '48.9' on Y) that look accidental rather than intentional
-    on a polished chart — consider rounding the outer domain to a 'nice' number while
-    keeping the histogram bins aligned inside it.
-  - Design excellence is mostly carried by technical alignment rather than visual
-    sophistication — the marginal bars are a single flat translucent fill with no
-    additional refinement (e.g. rounded corners, subtler outline) that would elevate
-    them beyond a functional default.
-  - No secondary visual cue (e.g. a light regression/trend indication or annotation)
-    is used to reinforce the visible negative correlation, leaving the data storytelling
-    at 'clear but unassisted'.
+  - Scatter markers use a flat fill with no edge stroke — a subtle white/pageBg edge
+    (per style guide 'Data Element Styling') would improve point definition in the
+    densest cluster around 2.5-3.5L displacement
+  - Data storytelling is implicit in the jointplot layout alone; no visual emphasis
+    (e.g., a subtle trend indicator or annotation calling out the negative correlation)
+    is added to guide the viewer to the insight
+  - Title occupies only ~35% of canvas width at the current 26px size — well below
+    the 50-70% guideline range; a slightly larger title would improve visual balance
+    without risking overflow given the short spec-id
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent) across the full mount, including the marginal chart cells.
-      Chrome: Bold serif title "scatter-marginal · javascript · chartjs · anyplot.ai" centered at top in dark ink; X-axis title "Engine Displacement (L)" and Y-axis title "Fuel Economy (mpg)" both dark and clearly readable; tick labels (0.9-6.4 on X, 15-48.9 on Y) in a softer dark gray, legible; grid lines are faint gray, visible but unobtrusive.
-      Data: Main scatter uses semi-transparent brand green (#009E73 at ~0.65 alpha) markers showing a clear negative correlation between displacement and fuel economy; top and right marginal histograms use a lighter, more transparent version of the same green, correctly aligned with the main plot's X and Y domains respectively.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "scatter-marginal · javascript · chartjs · anyplot.ai" in bold dark ink, clearly legible. X-axis label "Engine Displacement (L)" and Y-axis label "Fuel Economy (mpg)" both dark and legible, with matching font sizes. Tick labels (1-7 on X, 10-50 on Y) are readable, medium-gray. Grid lines are subtle and visible without competing with data.
+      Data: ~400 scatter points in brand green (#009E73) with light borderColor, moderate alpha showing a clear negative correlation. Top marginal histogram (distribution of Engine Displacement) and right marginal histogram (distribution of Fuel Economy) use a translucent brand-green fill with a slightly darker green border — both are subtle and clearly distinct from the main scatter series.
       Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent) across the full mount, matching across scatter and marginal cells.
-      Chrome: Same serif title now rendered in light/white ink, fully readable; axis titles and tick labels are switched to light tones (white title, softer light-gray ticks) and read clearly against the dark background; grid lines are faint light gray, subtle but visible.
-      Data: Scatter markers and marginal histogram bars are the identical brand-green hue and alpha as the light render (the change in apparent tone against the dark backdrop is the expected effect of alpha blending against a different background, not a change to the underlying color) — confirms data colors are unchanged between themes.
-      Legibility verdict: PASS — no dark-on-dark failures; all title, axis, and tick text is clearly visible against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels have flipped to light/white tones and are clearly legible against the dark background. Grid lines remain subtle but visible.
+      Data: Scatter points and both marginal histograms use the identical brand green (#009E73) and translucent variants as the light render — no color drift between themes.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed (tick labels, axis titles, and title are all light-colored and distinct from the near-black background).
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -66,47 +62,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; minor polish deduction for non-round
-          tick label values
+        comment: Font sizes explicitly set (title 26px, axis titles 16px, ticks 14px);
+          readable in both themes; no overflow or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, data, or legend elements
+        comment: No text or data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Marker size (5px) and alpha (0.65) well-suited to 400-point density
+        comment: Marker size/alpha (radius 5, alpha 0.65) reasonable for 400 points;
+          slightly dense in the central cluster but still distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue categorical use with strong contrast in both themes, no
-          red-green reliance
+        comment: Good contrast, alpha blending reveals density without relying on
+          hue-only distinctions
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Non-round axis bounds inherited from histogram domain (0.9-6.4, 15-48.9)
-          look unintentional; otherwise no clipping or overflow
+        passed: true
+        comment: Chart occupies the large majority of the canvas; marginal panels
+          sized proportionally; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (L, mpg)
+        comment: Both axis labels include units ('(L)', '(mpg)')
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds correct per theme; data colors
-          identical across themes'
+        comment: 'First series is #009E73 in both themes; backgrounds and chrome are
+          theme-correct in both renders'
     design_excellence:
       score: 12
       max: 20
@@ -115,23 +112,20 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Competent grid composition but visual palette/styling is minimal
-          (single translucent green)
+        comment: Above default — deliberate jointplot composition with subtle, coordinated
+          marginal styling, but stops short of publication-level polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Subtle grid and generous whitespace, but non-round axis bounds undercut
-          the polished feel
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Correlation and marginal distributions are clear, though unassisted
-          by any secondary emphasis
+        comment: Marginal panels have ticks/grids/borders fully suppressed and generous
+          whitespace; main scatter grid could be a touch more subtle
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        comment: The jointplot layout itself creates hierarchy (relationship + distributions),
+          but no explicit emphasis or annotation calls out the negative correlation
     spec_compliance:
       score: 15
       max: 15
@@ -140,50 +134,47 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Correct scatter-with-marginals composite
+        comment: Scatter plot with top/right marginal histograms, correctly positioned
+          lower-left with aligned axes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: Top and right marginal histograms aligned to main axes, moderate
-          transparency as recommended
+        comment: Marginal histograms present, axes aligned to main plot, moderate
+          marker transparency (0.65) as recommended
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: X/Y correctly mapped, full data range shown
+        comment: X/Y correctly assigned; axes show full data range via nice-number
+          domains
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title format matches spec exactly; legend correctly omitted for single
-          series
+        comment: Title format exact; legend correctly omitted for single-series scatter
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Shows joint scatter plus both marginal distributions
+        comment: Both marginals show meaningful, differently-shaped skewed distributions,
+          not flat or uniform
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Plausible, neutral automotive dataset (displacement vs fuel economy)
+        comment: Engine displacement vs. fuel economy is a real, neutral, comprehensible
+          automotive scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Realistic value ranges for both variables
+        comment: Displacement (1-6.3L) and fuel economy (15-48mpg) ranges and their
+          inverse relationship are realistic
     code_quality:
       score: 9
       max: 10
@@ -192,57 +183,51 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: Several helper functions, but each is justified by the composite
-          chart's needs
+        comment: Straightforward top-to-bottom flow, though several helper functions
+          (niceNum, histogram, pruneBoundaryTicks) are needed for the multi-chart
+          alignment this composite requires
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Deterministic seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: No imports; only the provided globals used
+        comment: No unused imports; only ANYPLOT_TOKENS and Chart global used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: No fake UI or simulated interactivity
+        comment: Appropriate complexity for a 3-panel synced composite; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Correct mount-node contract, animation disabled
+        comment: Correct mount-node contract, animation:false on all three charts
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Correct responsive/maintainAspectRatio/animation config, linear scales,
-          indexAxis for horizontal bar
+        comment: Correct use of scatter + bar chart types and Chart.js's scale hook
+          system to compose a chart type the library has no native support for
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: afterBuildTicks tick-pruning and afterFit fixed-reserve sizing are
-          advanced, library-specific techniques
+        comment: Uses Chart.js-specific afterBuildTicks/afterFit scale hooks for cross-chart
+          pixel alignment — a technique distinctive to this library's scale architecture
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - subplots
   - manual-ticks
+  - subplots
   patterns:
   - data-generation
   dataprep:
