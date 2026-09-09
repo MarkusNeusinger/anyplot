@@ -15,20 +15,68 @@ const iw = width - margin.left - margin.right;
 // instead of a uniform run of same-weight events.
 const categories = ["Platform", "Mobile", "Analytics", "Security"];
 const events = [
-  { date: new Date(2025, 0, 15), name: "Platform Beta Launch", category: "Platform", major: true },
-  { date: new Date(2025, 1, 3), name: "Design System v1", category: "Platform" },
+  {
+    date: new Date(2025, 0, 15),
+    name: "Platform Beta Launch",
+    category: "Platform",
+    major: true,
+  },
+  {
+    date: new Date(2025, 1, 3),
+    name: "Design System v1",
+    category: "Platform",
+  },
   { date: new Date(2025, 1, 20), name: "Mobile App v1.0", category: "Mobile" },
-  { date: new Date(2025, 2, 10), name: "Analytics Dashboard", category: "Analytics" },
-  { date: new Date(2025, 3, 5), name: "SOC 2 Certification", category: "Security" },
-  { date: new Date(2025, 4, 18), name: "API v2 Release", category: "Platform", major: true },
+  {
+    date: new Date(2025, 2, 10),
+    name: "Analytics Dashboard",
+    category: "Analytics",
+  },
+  {
+    date: new Date(2025, 3, 5),
+    name: "SOC 2 Certification",
+    category: "Security",
+  },
+  {
+    date: new Date(2025, 4, 18),
+    name: "API v2 Release",
+    category: "Platform",
+    major: true,
+  },
   { date: new Date(2025, 5, 2), name: "Webhook Support", category: "Platform" },
   { date: new Date(2025, 5, 30), name: "Offline Mode", category: "Mobile" },
-  { date: new Date(2025, 7, 12), name: "Predictive Insights", category: "Analytics", major: true },
-  { date: new Date(2025, 7, 28), name: "Custom Reports", category: "Analytics" },
-  { date: new Date(2025, 8, 22), name: "SSO Integration", category: "Security" },
-  { date: new Date(2025, 9, 30), name: "Platform GA Release", category: "Platform", major: true },
-  { date: new Date(2025, 10, 5), name: "Cross-Platform Sync", category: "Mobile" },
-  { date: new Date(2025, 11, 15), name: "Zero-Trust Rollout", category: "Security" },
+  {
+    date: new Date(2025, 7, 12),
+    name: "Predictive Insights",
+    category: "Analytics",
+    major: true,
+  },
+  {
+    date: new Date(2025, 7, 28),
+    name: "Custom Reports",
+    category: "Analytics",
+  },
+  {
+    date: new Date(2025, 8, 22),
+    name: "SSO Integration",
+    category: "Security",
+  },
+  {
+    date: new Date(2025, 9, 30),
+    name: "Platform GA Release",
+    category: "Platform",
+    major: true,
+  },
+  {
+    date: new Date(2025, 10, 5),
+    name: "Cross-Platform Sync",
+    category: "Mobile",
+  },
+  {
+    date: new Date(2025, 11, 15),
+    name: "Zero-Trust Rollout",
+    category: "Security",
+  },
 ];
 
 const color = d3.scaleOrdinal().domain(categories).range(t.palette);
@@ -43,7 +91,11 @@ const x = d3
   .range([0, iw]);
 
 // --- SVG mount ----------------------------------------------------------------
-const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
+const svg = d3
+  .select("#container")
+  .append("svg")
+  .attr("width", width)
+  .attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},0)`);
 
 // --- Timeline spine + month ticks --------------------------------------------
@@ -66,37 +118,26 @@ g.selectAll(".month-tick")
   .attr("stroke", t.grid)
   .attr("stroke-width", 1);
 
-// --- Layout: alternating sides with a collision-avoidance pass ---------------
-// Estimate each name label's rendered half-width (bold sans at its font size)
-// and, when two same-side labels would overlap horizontally, step the later
-// one further out along the stem so it lands on a fresh vertical tier instead
-// of colliding with its neighbor.
-function estimateHalfWidth(text, fontSize) {
-  return (text.length * fontSize * 0.58) / 2;
-}
-
+// --- Layout: alternating sides with a deterministic vertical stagger ---------
+// Each side (above/below) gets its own sequence of events in date order. The
+// stem length cycles through 3 fixed tiers by position within that sequence,
+// so any two events that are neighbors on the same side always land on a
+// different tier (guaranteed by construction, not by an estimated text width)
+// and never share a vertical level.
 const baseStem = 130;
 const tierStep = 60;
 const majorBonus = 40;
-const minGap = 16;
-const maxTier = 2;
+const tierCount = 3;
 
-const sideEnd = { above: -Infinity, below: -Infinity };
-const sideTier = { above: 0, below: 0 };
+const sideIndex = { above: 0, below: 0 };
 
 const laidOut = events.map((d, i) => {
   const cx = x(d.date);
   const side = i % 2 === 0 ? "above" : "below";
-  const halfWidth = estimateHalfWidth(d.name, d.major ? 18 : 16);
+  const tier = sideIndex[side] % tierCount;
+  sideIndex[side] += 1;
 
-  if (cx - halfWidth < sideEnd[side] + minGap) {
-    sideTier[side] = Math.min(sideTier[side] + 1, maxTier);
-  } else {
-    sideTier[side] = 0;
-  }
-  sideEnd[side] = cx + halfWidth;
-
-  const stemLen = baseStem + sideTier[side] * tierStep + (d.major ? majorBonus : 0);
+  const stemLen = baseStem + tier * tierStep + (d.major ? majorBonus : 0);
   return { ...d, cx, side, stemLen };
 });
 
