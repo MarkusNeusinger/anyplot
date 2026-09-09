@@ -204,11 +204,17 @@ export default function Chart() {
             label: "Survival probability",
             labelStyle: { fontSize: 15 },
             tickLabelStyle: { fontSize: 13 },
+            // The axis-title offset is driven by `tickFontSize` (not
+            // `tickLabelStyle.fontSize`) in MUI X's layout formula, so bump
+            // this well past the rendered "100%" tick-label width to clear
+            // the rotated title from the tick text without enlarging the
+            // ticks themselves.
+            tickFontSize: 42,
             valueFormatter: (v: number) => `${Math.round(v * 100)}%`,
           },
         ]}
         grid={{ horizontal: true }}
-        margin={{ top: 8, right: 24, bottom: 56, left: 78 }}
+        margin={{ top: 8, right: 24, bottom: 56, left: 112 }}
         skipAnimation
         slotProps={{
           legend: {
