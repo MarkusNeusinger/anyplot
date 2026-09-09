@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: silhouette-basic
 created: '2026-09-09T07:39:10Z'
-updated: '2026-09-09T07:43:05Z'
+updated: '2026-09-09T07:55:25Z'
 generated_by: claude-sonnet
 workflow_run: 34324477901
 issue: 2334
@@ -12,42 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouett
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Correct plot type and complete feature set: horizontal per-sample bars sorted
-    ascending within each cluster, distinct cluster colors, a dashed vertical line
-    at the overall average silhouette score, and per-cluster average annotations.'
-  - 'Both renders are fully legible with correct theme-adaptive chrome; backgrounds
-    match #FAF8F1 (light) / #1A1A17 (dark) exactly and text stays readable in both.'
-  - Palette order (green -> lavender -> blue) matches canonical Imprint order, appropriate
-    since the clusters are abstract k-means groups.
-  - 'Minimalist, legend-free design: cluster names and average scores are labeled
-    directly next to their bar group instead of a separate legend, a clean storytelling
-    choice.'
-  - Deterministic fixed-seed LCG data generation, matching the library guidance for
-    browser-only reproducibility.
+  - 'Correct plot type: horizontal per-sample bars grouped by cluster with a thin
+    gap between cluster blocks, matching the sklearn-style silhouette plot convention.'
+  - First categorical series is the mandated brand green (#009E73), and the 3-cluster
+    palette follows the canonical Imprint order (green, lavender, blue) exactly.
+  - 'Both required annotations from the spec are present and well-placed: a dashed
+    vertical line + label at the overall average silhouette score, and a per-cluster
+    label with its own average score positioned at the cluster''s vertical midpoint.'
+  - Negative silhouette values (potential misclassifications) are visibly rendered
+    as bars crossing left of zero, directly supporting the spec's 'identifying poorly
+    clustered samples' application.
+  - 'Theme handling is clean: chrome (title, axis labels, ticks, gridlines, avg-line
+    color) is fully token-driven and correctly adapts between the FAF8F1 light and
+    1A1A17 dark surfaces, while data colors stay identical across themes.'
+  - Idiomatic, distinctive ECharts usage — `markLine` for the reference average and
+    the `graphic` overlay API for cluster labels/annotations, computed from the same
+    layout constants as the grid so nothing drifts.
+  - Deterministic, dependency-free data generation via a small fixed-seed LCG + Box-Muller
+    gaussian, appropriate for the browser-only runtime.
   weaknesses:
-  - Graphic text positions (cluster-average labels and the avg-line label) are computed
-    from hardcoded pixel constants (1600, 900, 190, 60, 70, 90) duplicated from the
-    grid config instead of derived from window.ANYPLOT_SIZE or shared variables --
-    works correctly today but is fragile if canvas size or grid margins ever change.
-  - Design excellence is solid but still mostly default ECharts bar styling beyond
-    the custom annotations -- could push further with more refined typography or subtle
-    hierarchy treatments (e.g. slightly bolder emphasis on the avg line/label) for
-    extra polish.
+  - 'Sort-order glitch at the start of cluster 1 and cluster 2 (both themes): the
+    single lowest/most-negative sample of each cluster renders as an isolated bar
+    directly above that cluster''s longest (peak) bar, immediately after the gap divider
+    — producing a visible notch instead of a smooth monotonic descending curve. Cluster
+    0 (which happens to have no near-zero/negative values) does not show this. Likely
+    cause: `cluster.values.sort((a, b) => a - b)` sorts ascending, but combined with
+    `yAxis.inverse: true` and push order, the smallest element of each non-first cluster
+    lands at the top of its block instead of the bottom. Try sorting each cluster
+    descending (or reversing the per-cluster push order) so the largest value is pushed
+    first and the smallest lands adjacent to the following gap, keeping every cluster''s
+    bars in a single monotonic run.'
+  - 'Design excellence is solid but still fairly restrained: only the L-shaped axis
+    frame plus one dashed reference line and text callouts carry the visual hierarchy
+    — a bit more refinement (e.g. subtle background band per cluster, or hiding the
+    default x-axis tick marks) would lift it further.'
+  - Cluster-average annotation text (13px) is noticeably smaller than the axis label
+    sizes (14-16px) and may be borderline at mobile (~400px) scaled previews — consider
+    bumping it slightly for consistency.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches the required light-theme surface.
-      Chrome: Title "silhouette-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. X-axis "Silhouette coefficient" label and tick labels (-0.4 to 1) in soft ink, legible. Cluster name + average annotations ("Cluster 0 (setosa-like) avg 0.78", etc.) in soft ink at left, all readable against the light background. Dashed black vertical line marks the overall average (avg = 0.56), with a small label above it.
-      Data: Three horizontal bar bands, one per cluster, stacked top to bottom with thin gaps between groups. Cluster 0 is brand green (#009E73), Cluster 1 is lavender (#C475FD), Cluster 2 is blue (#4467A3) -- matches Imprint palette positions 1-3 in canonical order. Bars are sorted ascending within each cluster (a few short bars extend left of zero for negative silhouette scores), mimicking the classic silhouette-plot shape.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "silhouette-basic · javascript · echarts · anyplot.ai" is bold dark ink, centered, clearly legible. X-axis "Silhouette coefficient" label and tick labels (-0.4 .. 1) are dark/soft-ink and legible. Subtle vertical gridlines are visible but do not compete with the data. Y-axis tick labels are hidden by design; instead three bold cluster-name labels ("Cluster 0 (setosa-like)", "Cluster 1 (versicolor-like)", "Cluster 2 (virginica-like)") plus their "avg X.XX" sub-labels sit in the reserved left margin, clearly readable.
+      Data: Three horizontal-bar blocks, one per cluster, separated by thin blank gaps. Cluster 0 = brand green (#009E73), Cluster 1 = lavender (#C475FD), Cluster 2 = blue (#4467A3) — matches Imprint canonical order with green first. A black dashed vertical line marks the overall average (avg = 0.56), labeled above the plot. Each cluster's bars taper smoothly from long (near the plot top of the block) to short, with one isolated short bar crossing left of zero at the top of the cluster 1 and cluster 2 blocks (see Weaknesses).
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches the required dark-theme surface.
-      Chrome: Same title now in light/white ink, clearly readable against the dark background. Axis labels and tick labels switch to light ink and remain legible -- no dark-on-dark text anywhere. The dashed average line switches to white for contrast on the dark surface. Cluster annotations are in light-gray ink, fully readable.
-      Data: Identical bar colors to the light render (green #009E73, lavender #C475FD, blue #4467A3) -- confirms data colors are held constant across themes and only chrome (background, text, gridlines) flipped.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis label, tick labels, and cluster/avg text all flip to light ink (near-white/soft-gray) and remain fully legible. The average reference line flips from black to white-ish dashed, still clearly visible against the dark background. Gridlines are faint but present.
+      Data: Identical bar colors to the light render — same brand green / lavender / blue for clusters 0/1/2, and the same overall shape (including the same top-of-block negative-bar anomaly in clusters 1 and 2). Confirms data colors are theme-independent as required.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome text and the reference line read clearly against the near-black surface.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -58,73 +74,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes, sensible font sizes throughout
+        comment: All text readable in both themes at explicit font sizes; cluster-average
+          sub-labels (13px) are slightly small relative to the rest of the hierarchy.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/element collisions in either render
+        comment: No collisions between labels, annotations, or data.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bar density appropriate for ~170 stacked samples; distinguishable
-          rows
+        comment: Bar density and gaps appropriate for ~170 samples across 3 clusters.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; no red-green sole signal
+        comment: 3 distinct hue families, no red-green sole signal, adequate fill
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); good proportions, nothing cut off
+        comment: Good proportions and margins, nothing clipped; minor deduction for
+          the sort-order notch at cluster boundaries (see weaknesses).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive x-axis label with implicit units (coefficient is unitless
-          -0.4 to 1)
+        comment: X-axis descriptively labeled 'Silhouette coefficient'; Y-axis identity
+          conveyed via cluster labels.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order for abstract clusters, correct
-          theme backgrounds'
+        comment: 'First series is #009E73; canonical Imprint order for all 3 clusters;
+          backgrounds correct in both themes.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom cluster/avg annotations elevate it above generic defaults,
-          but overall styling stays close to default ECharts bar look
+        comment: Custom palette, intentional layout with reserved label margin and
+          reference line; above generic defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Minimal chrome, subtle gridlines, no legend clutter; not exceptionally
-          refined
+        comment: Subtle gridlines, generous whitespace; default x-axis tick marks
+          left on, minor chrome un-refined.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Avg line + per-cluster averages create clear hierarchy and guide
-          interpretation
+        comment: Average line + per-cluster averages guide the viewer, but the boundary
+          notch slightly undercuts the otherwise clean monotonic shape.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -132,50 +150,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct silhouette plot convention
+        comment: Correct silhouette-plot form.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Sorted bars, cluster grouping/colors, avg line, per-cluster annotations
-          all present
+        comment: Sorting, cluster colors, avg line, and per-cluster avg annotation
+          all present, but the sort-order glitch at cluster 1/2 boundaries breaks
+          strict monotonic ordering.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = silhouette coefficient, Y = samples grouped by cluster
+        comment: X = silhouette coefficient, Y = samples grouped/ordered by cluster.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed, direct labels used instead
+        comment: Title exactly matches the mandated format; no legend needed given
+          direct cluster labeling.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Positive and negative values, per-cluster and overall averages all
-          shown
+        comment: Covers cohesion/separation via per-sample bars, cluster averages,
+          overall average, and negative-value misclassification signal; minor deduction
+          for the ordering glitch.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris-analog clustering scenario, plausible and neutral
+        comment: Iris-like flower-measurement clustering framing is plausible and
+          neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 170 samples across 3 clusters, within spec's 50-500/2-10 range; realistic
-          silhouette value range
+        comment: 170 samples across 3 clusters, values within [-0.35, 0.98] — sensible
+          for the domain.
     code_quality:
       score: 10
       max: 10
@@ -185,35 +207,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; small RNG helpers are expected per echarts library guidance
+        comment: Only the small RNG helper functions required for browser-side reproducibility;
+          otherwise flat, linear script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42)
+        comment: Fixed seed (42) LCG, fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports, uses browser globals only
+        comment: No imports; uses only provided globals.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: 'Appropriate complexity, no fake UI (see weaknesses re: hardcoded
-          pixel constants)'
+        comment: Appropriate complexity, no fake UI/interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: animation:false set, mount-node contract followed, no explicit save
-          calls
+        comment: Follows the mount-node contract; animation disabled.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -221,15 +242,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of category axis, markLine, graphic overlays for annotations
-          ECharts has no built-in silhouette type for
+        comment: Correct use of category/value axes, markLine, and setOption.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: markLine + graphic text overlays are somewhat distinctive but not
-          showcasing more unique ECharts capabilities
+        comment: graphic overlay API for rich per-cluster text callouts driven by
+          shared layout math — a genuinely ECharts-specific technique.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -238,6 +258,8 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
+  - groupby-aggregation
   dataprep: []
   styling:
-  - minimal-chrome
+  - publication-ready
+  - grid-styling
