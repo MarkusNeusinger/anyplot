@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: spectrum-basic
 created: '2026-09-09T18:19:40Z'
-updated: '2026-09-09T18:37:30Z'
+updated: '2026-09-09T18:48:20Z'
 generated_by: claude-sonnet
 workflow_run: 34387737852
 issue: 2926
@@ -12,72 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/javascript/echarts/plot-dark.html
-quality_score: 77
+quality_score: 89
 review:
   strengths:
-  - 'Primary series correctly uses Imprint brand green #009E73 with fully theme-correct
-    chrome (title, axis labels, ticks, gridlines, 0 dB reference line) in both light
-    and dark renders — no dark-on-dark or light-on-light failures.'
-  - Log-frequency x-axis paired with a dB-scale y-axis directly follows the spec's
-    guidance for wide frequency ranges and power spectral density, with both axes
-    carrying descriptive units (Frequency (Hz), Power (dB)).
-  - 'Realistic, well-covered synthetic machinery-vibration dataset: three distinctly-sized
-    peaks (60 Hz running speed, 240 Hz gear mesh, 850 Hz bearing fault) riding a 1/f-shaped
-    noise floor with measurement jitter, generated deterministically via a fixed-seed
-    LCG.'
-  - Source code is clean, KISS-structured, and the latest commit correctly added a
-    legend block, per-peak text labels (with machinery role), and switched the peak-marker
-    borderColor to the canonical t.palette[1] (lavender) — the right fix for the prior
-    review's feedback.
+  - 'The critical rendering gaps from attempt 2 are fully resolved: the legend now
+    renders with theme-tokenized text ("Power spectrum", "Dominant frequencies"),
+    and all three peak labels ("60 Hz — running speed", "240 Hz — gear mesh", "850
+    Hz — bearing fault") render clearly above their ring markers in both themes.'
+  - 'Palette compliance is now correct: the primary series is Imprint brand green
+    #009E73 and the peak-highlight ring markers use the canonical position-2 lavender
+    (#C475FD) instead of the previous unlabeled red blend — no red-green ambiguity
+    remains.'
+  - Log-frequency x-axis (4–2048 Hz) with dB-scale y-axis, both explicitly unit-labeled,
+    directly matches the spec's guidance for wide frequency ranges and power spectral
+    density comparison.
+  - 'Realistic, well-covered machinery-vibration dataset: three distinctly-sized peaks
+    over a 1/f-shaped noise floor with jitter, generated deterministically via a fixed-seed
+    LCG, with peak roles now explicitly named — fulfilling the spec''s "annotating
+    dominant components" note.'
+  - 'Fully theme-correct chrome in both renders: warm off-white/near-black backgrounds,
+    all title/axis/tick/legend text readable with no dark-on-dark or light-on-light
+    failures.'
   weaknesses:
-  - 'CRITICAL — the legend block added in the latest commit (data: [''Power spectrum'',
-    ''Dominant frequencies''], top: 54) does not render at all in either plot-light.png
-    or plot-dark.png. A pixel scan of both renders confirms zero non-background pixels
-    anywhere between the title''s bottom edge (~y=81) and the plot''s top border (~y=188
-    native px) — the legend region is completely blank. With two named series on the
-    chart, the reddish-ringed markers are now fully unlabeled and unexplained to the
-    viewer.'
-  - 'CRITICAL — the per-peak text labels (label: { show: true, formatter: (params)
-    => params.name, ... }) added to the scatter series also do not render. Cropping
-    tightly around each of the three red-ringed peak markers shows no adjacent text
-    in either theme — the ''running speed / gear mesh / bearing fault'' identifiers
-    are entirely absent from the shipped image.'
-  - 'The scatter series'' itemStyle.borderColor is coded as t.palette[1] (#C475FD
-    lavender per automation/js-render/render.mjs), but the rendered ring color measured
-    directly from the PNG is a solid ~80%-opacity blend of #AE3030 (matte red, palette[4])
-    over the page background (#BD5856) — not lavender, and not a clean instance of
-    any single Imprint palette hex. This reproduces the exact ''peak markers use matte
-    red without semantic backing'' issue the prior review already flagged and this
-    commit was supposed to fix.'
-  - 'Net effect: this repair commit''s diff (legend, peak labels, corrected marker
-    color) is not reflected in the artifact under review at all — the rendered PNGs
-    are visually indistinguishable from what attempt 1 already rejected. This may
-    be a rendering/harness issue (option merge, timing, or a silent error while applying
-    legend/label config) rather than a logic error in the .js file itself; the code
-    should be re-rendered and re-verified before the next repair pass spends effort
-    on further code changes, since editing the source further won''t help if the render
-    pipeline itself isn''t picking up the changes.'
-  - Because the legend is absent and the marker color reads as red (the palette's
-    semantic anchor for 'bad/error/fault'), a viewer has no way to tell that only
-    the 850 Hz peak is an actual fault while 60 Hz and 240 Hz are normal operating
-    frequencies — the color story is misleading as currently rendered.
+  - 'A solid horizontal line at y=0 dB spans the full plot width in both renders,
+    bisecting the chart through the noise floor. This is the ECharts xAxis ''onZero''
+    default (the x-axis line renders at the y=0 crossing point instead of at the plot''s
+    bottom edge) rather than an intentional reference line — it isn''t labeled or
+    mentioned as a ''0 dB reference'', so it reads as an unexplained artifact. Fix
+    by setting `xAxis.axisLine.onZero: false` so the axis line sits at the bottom
+    of the chart where the tick labels already are.'
+  - No ECharts-distinctive annotation feature (markPoint/markLine) is used for the
+    peak highlights — they're built from a plain scatter series with a custom label
+    formatter, which is a generic pattern replicable in most charting libraries rather
+    than one that showcases ECharts' native annotation API.
+  - 'Design polish is solid but stops short of publication-grade: the area fill and
+    peak highlighting create a clear focal point, but there''s no additional visual
+    emphasis (e.g., differentiating the true fault peak at 850 Hz from the two normal
+    operating-frequency peaks) to sharpen the data story.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Machinery Vibration Spectrum · spectrum-basic · javascript · echarts · anyplot.ai" in dark ink, centered top, clearly readable. X-axis "Frequency (Hz)" on a log scale (ticks 4/10/100/1,000/2,048), Y-axis "Power (dB)" (ticks -35 to 5), both in dark/soft-dark text, fully legible. Subtle gray gridlines and a solid black 0 dB reference line. NO LEGEND IS RENDERED — a pixel-level scan of the region between the title and the plot's top border (rows ~41-94 CSS px) found zero non-background pixels; the legend block defined in the code (data: ["Power spectrum", "Dominant frequencies"]) is completely absent from the image.
-      Data: A green (#009E73) line with a translucent area fill tracing a 1/f-shaped noise floor, with three sharp peaks (~60/240/850 Hz). Each peak carries an open ring marker; sampling the ring's solid pixels gives hex #BD5856 — measured as an ~80%-opacity blend of matte red #AE3030 over the page background, NOT the #C475FD lavender the source code specifies via t.palette[1]. No text labels appear next to any of the three rings despite the code defining a label/formatter for them.
-      Legibility verdict: PASS for all rendered text (title, axes, ticks) — but two coded elements (legend, peak labels) render as nothing at all, which is a correctness/compliance failure rather than a legibility one.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Machinery Vibration Spectrum · spectrum-basic · javascript · echarts · anyplot.ai" centered top in dark ink. Legend below the title reads "Power spectrum" (green line+circle swatch) and "Dominant frequencies" (open lavender ring swatch), both dark and readable. X-axis "Frequency (Hz)" on a log scale with ticks 4/10/100/1,000/2,048; y-axis "Power (dB)" with ticks -35 to 5. Subtle gray gridlines. A solid horizontal line crosses the full plot width at y=0 dB (this is the x-axis line rendering at ECharts' default "onZero" position rather than at the plot bottom — see weaknesses).
+      Data: A green (#009E73) line with a light green translucent area fill traces a 1/f-shaped noise floor with three sharp peaks. Each peak is ringed by an open lavender (#C475FD) circle marker, labeled directly above it: "60 Hz — running speed", "240 Hz — gear mesh", "850 Hz — bearing fault". First series is correctly Imprint brand green; second series is the canonical position-2 lavender.
+      Legibility verdict: PASS — all title, legend, axis, tick, and peak-label text is clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and axis labels, now in light text, gridlines lighter-toned; all clearly readable, no dark-on-dark failures. Same legend gap confirmed by the identical pixel-scan (rows ~41-94 CSS px empty).
-      Data: Green line/fill and ring markers are colored identically to the light render (as required) — same #BD5856-measured ring hex, same absence of peak-name labels.
-      Legibility verdict: PASS for rendered text; same missing-legend and missing-label defects as the light render.
-
-    Both renders are internally consistent with each other (theme chrome flips correctly, data colors match across themes) but neither reflects the legend, peak-identification labels, or corrected lavender marker color that the latest commit added to the source file — these three additions do not appear in either shipped PNG.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, legend, and axis labels now rendered in light text, fully readable. Gridlines lighter-toned but still subtle. The same full-width horizontal line at y=0 dB is present (unchanged behavior from light render, confirming it's a structural axis artifact, not theme-dependent).
+      Data: Green line/fill and lavender peak-ring markers are pixel-identical in hue to the light render — only chrome (background, text, grid) flipped, as required. Peak labels render in light text, clearly visible against the dark surface with no dark-on-dark failures.
+      Legibility verdict: PASS — all title, legend, axis, tick, and peak-label text is clearly readable against the dark background; no dark-on-dark issues found.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -85,76 +71,77 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axes, and ticks all explicitly sized and readable in both
-          themes
+        comment: All font sizes explicitly set via theme tokens; readable in both
+          themes; title fits at ~70-75% width without clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text among the elements that do render
+        comment: Legend, title, axis text, and peak labels are all cleanly spaced
+          with no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line, area fill, and peak rings are all clearly visible at this density
+        comment: No-symbol line + area fill suits the ~1000-point density; 14px lavender
+          ring markers stand out clearly against the fill
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Green line vs. reddish-blend ring is a red/green-leaning pair; shape
-          (line vs. ring) provides some redundancy but the blended color reads ambiguously
+        passed: true
+        comment: Green line vs. lavender rings gives strong hue separation, no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a large, balanced share of the 3200x1800 canvas; nothing
-          clipped
+        comment: Balanced margins, plot area fills most of canvas, legend sits directly
+          above the plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Frequency (Hz) and Power (dB) both carry units
+        comment: '"Frequency (Hz)" and "Power (dB)" both include units'
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Measured ring color #BD5856 is an ~80% blend of matte red #AE3030
-          over the background, not the coded #C475FD lavender nor any clean Imprint
-          hex'
+        passed: true
+        comment: 'First series #009E73, second series canonical position-2 #C475FD
+          lavender, theme-correct chrome in both renders'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured default; the unresolved rendering glitch undercuts
-          polish
+        comment: Well-configured, thoughtful use of area fill and highlighted/labeled
+          peaks, but short of full publication polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Subtle grid and decent margins, but the broken legend/label elements
-          hurt overall refinement
+        comment: Subtle grid and generous whitespace, but the unlabeled full-width
+          y=0 axis line is an unrefined artifact
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Peaks are visually highlighted via rings, but with no legend and
-          no labels the viewer cannot tell what the rings mean or which peak is the
-          actual fault
+        passed: true
+        comment: Named peak labels give real identifying context beyond raw display,
+          though the true fault (850 Hz) isn't visually distinguished from the two
+          normal-operation peaks
     spec_compliance:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -162,27 +149,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct frequency-spectrum line plot with log frequency axis
+        comment: Correct frequency spectrum line plot
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Peak highlighting present via rings, but the coded 'annotating dominant
-          components' text does not render
+        passed: true
+        comment: Log frequency axis, dB power scale, and annotated dominant peaks
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Frequency on x, power in dB on y, full range shown
+        comment: Frequency on x, amplitude/power on y, full data range shown
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: Title format is correct, but the legend for the two named series
-          is completely absent from both renders
+        passed: true
+        comment: Title format correct with descriptive prefix; legend now renders
+          and labels match the two series
     data_quality:
       score: 15
       max: 15
@@ -192,21 +179,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Noise floor, three distinct peaks of differing width/amplitude, and
-          jitter all present
+        comment: Noise floor, three distinct peaks, and measurement jitter all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible machinery-vibration scenario
+        comment: Machinery vibration analysis is a real, neutral, comprehensible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: dB scale and frequency range are realistic for FFT-based vibration
-          analysis
+        comment: Frequency range and dB values are plausible for a vibration power
+          spectrum
     code_quality:
       score: 10
       max: 10
@@ -216,33 +202,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat data -> init -> option structure, no functions/classes
+        comment: Linear data-generation to option-build flow, no classes, minimal
+          helper for deterministic RNG
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG for deterministic jitter
+        comment: Fixed-seed LCG (state=42) for deterministic pseudo-noise
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only echarts global used
+        comment: No unused imports; only browser globals used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or interactivity
+        comment: Appropriate complexity, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Uses chart.setOption with animation: false per the mount-node contract'
+        comment: Correct mount-node contract, animation:false, chart.on('finished')
+          signal
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -250,20 +238,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct log axis, area-filled line series, scatter overlay
+        comment: Combines line+area and scatter series with theme-tokenized styling
+          through setOption; solid but standard usage
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: No ECharts-distinctive features (markPoint, markLine, visualMap,
-          dataZoom) used; peak highlighting is a generic scatter overlay that isn't
-          even rendering its labels
-  verdict: REJECTED
+        comment: Peak highlights use a generic scatter+label overlay rather than ECharts-distinctive
+          markPoint/markLine annotation API
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - log-scale
   patterns:
   - data-generation
   dataprep: []
