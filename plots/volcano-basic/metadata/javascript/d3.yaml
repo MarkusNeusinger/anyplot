@@ -1,0 +1,242 @@
+library: d3
+language: javascript
+specification_id: volcano-basic
+created: '2026-09-09T21:54:09Z'
+updated: '2026-09-09T22:21:32Z'
+generated_by: claude-sonnet
+workflow_run: 34408825710
+issue: 2924
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/d3/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Correct semantic color mapping using the Imprint palette exactly as the spec
+    requires: red (#AE3030, palette[4]) for significant up-regulated, blue (#4467A3,
+    palette[2]) for significant down-regulated, and a theme-adaptive gray (inkSoft)
+    for non-significant points'
+  - Threshold lines (horizontal significance cutoff at -log10(0.05)≈1.3, vertical
+    fold-change cutoffs at ±1) are clearly rendered as dashed reference lines exactly
+    matching the spec's required cutoffs
+  - Top-hit genes (TP53, MYC, BRCA1, EGFR) are highlighted with emphasis rings and
+    halo-stroked labels (paint-order stroke in page background color) that stay legible
+    even over the dense point cloud in both themes
+  - Deterministic fixed-seed LCG data generation with realistic gene names and a plausible
+    fold-change/p-value correlation (stronger effect sizes trend toward lower p-values)
+  - Clean idiomatic D3 data-join pattern for gridlines, points, emphasis rings, labels,
+    and legend; theme tokens (ink, inkSoft, grid, elevatedBg, pageBg) are correctly
+    threaded through axes, grid, text, and legend box in both renders
+  weaknesses:
+  - The dense 'not significant' point cluster in the valley bottom is still somewhat
+    visually cluttered even at fill-opacity 0.35 — consider a slightly smaller radius
+    (e.g. 4-5px instead of 6px) or lower alpha for the ns category specifically to
+    further reduce overplotting in that region
+  - Library Mastery is fairly generic scatter usage (scales + axis + join) — no D3-distinctive
+    technique beyond basic data-join and manual SVG overlay; acceptable for a static
+    PNG but doesn't showcase anything D3-only
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "volcano-basic · javascript · d3 · anyplot.ai" in dark ink, centered top, clearly readable. Axis labels "log2 Fold Change" (x) and "-log10(p-value)" (y) in dark ink, both legible. Tick labels in a softer dark gray, legible against the cream background. Grid lines (both axes, as expected for a scatter plot) are subtle, light gray, non-competing. Legend (top-right, subtle off-white box) with "Up-regulated" (red swatch), "Down-regulated" (blue swatch), "Not significant" (gray swatch) — all text dark and readable.
+      Data: Classic volcano "V" shape — gray non-significant cloud in the valley, blue down-regulated points fanning to the upper-left, red up-regulated points fanning to the upper-right. Dashed threshold lines at y≈1.3 and x=±1 clearly demarcate significance regions. Four top-hit genes (TP53, MYC, BRCA1, EGFR) are ringed and labeled with halo-stroked text, fully legible over the data.
+      Legibility verdict: PASS — no text is unreadable, no dark-on-light or light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels have flipped to light ink/soft-light gray and are clearly readable against the dark background. Grid lines are a subtle light gray at low opacity, visible but not dominant. Legend box has flipped to a dark elevated surface with light text, fully legible.
+      Data: Identical red (#AE3030) and blue (#4467A3) data colors to the light render — only chrome (background, text, grid, legend box) has flipped, confirming the Imprint data-color invariance rule. The gray "not significant" cluster correctly uses the dark-theme secondary-text token (lighter gray) so it remains visible against the near-black background. Top-hit rings and labels (white halo-stroke) are clearly visible and legible.
+      Legibility verdict: PASS — no dark-on-dark failures; all text and data elements are clearly distinguishable from the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (14/15/16/18/22px); readable at full
+          size in both themes; title fits comfortably without clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between text elements; hit-labels use a halo stroke to
+          stay legible over the point cloud
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers reasonably adapted to density (r=6, alpha 0.35/0.75 for 2200
+          points) but the ns cluster is still a bit cluttered
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red vs blue (not red-green), good contrast on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the majority of the canvas with balanced margins; legend
+          sits near the plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive axis labels: log2 Fold Change, -log10(p-value)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Legitimate semantic-exception use of Imprint palette[4] (#AE3030)
+          and palette[2] (#4467A3) per spec's explicit red/blue instruction; backgrounds
+          and chrome theme-correct in both renders
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        comment: Thoughtful semantic color choice and threshold demarcation clearly
+          above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: Subtle grid, L-shaped axis frame, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Threshold lines plus ringed/labeled top hits create a clear visual
+          hierarchy and focal points
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct volcano/scatter plot type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Both threshold lines, significance color coding, top-hit labels,
+          and density-appropriate alpha all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: log2FC on x, -log10(p) on y, all points visible within axis bounds
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels match data categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows ns/up/down status split plus labeled top hits across the significance
+          spectrum
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real RNA-seq differential expression scenario with real gene names,
+          neutral topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Fold-change and p-value ranges plausible for real differential-expression
+          data
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Small necessary helpers (LCG rand/randn, status classifier) required
+          since the browser has no seeded RNG; otherwise sequential
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No stray imports; only the global d3
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract correctly; no animation
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Correct use of scales, axes, and join pattern throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: Manual SVG overlay for emphasis rings and halo-stroked labels goes
+          beyond generic usage, though nothing uniquely D3-only
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
