@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: violin-box
 created: '2026-09-09T21:23:09Z'
-updated: '2026-09-09T21:28:09Z'
+updated: '2026-09-09T21:35:55Z'
 generated_by: claude-sonnet
 workflow_run: 34405898156
 issue: 2646
@@ -12,97 +12,94 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-bo
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
   - Combines a smooth KDE violin with a "cutout" box plot (box fill = page background)
     whose border, whiskers, and outliers use the group's series color — a more polished
-    treatment than a plain box drawn over the violin.
-  - Correct Tukey (1.5x IQR) box-plot statistics with whisker caps and outlier points,
-    fully satisfying the spec's median/quartile/whisker/outlier requirements.
+    embedded-box technique than drawing a plain box over the violin
+  - Correct Tukey (1.5×IQR) box-plot statistics with whisker caps and outlier points,
+    fully satisfying the spec's median/quartile/whisker/outlier requirements
   - '"Blended Learning" is deliberately generated as a two-component mixture so its
-    bimodal KDE visually motivates why the combined violin+box view is useful, a thoughtful
-    data-storytelling choice tied directly to the spec''s stated purpose.'
-  - 'First series correctly uses Imprint #009E73; data colors are identical between
-    light and dark renders, and chrome (background, text, grid) flips correctly in
-    both.'
-  - 'Idiomatic D3: d3.area + curveCatmullRom for the violin silhouette, d3.quantileSorted
-    for stats, the canonical KDE kernel-estimator pattern, per-group <g> layers with
-    .join().'
+    bimodal KDE visually motivates the combined violin+box view — a thoughtful data-storytelling
+    choice tied to the spec''s stated purpose'
+  - 'First series correctly uses Imprint #009E73 in canonical palette order (green,
+    lavender, blue); data colors identical between light/dark, chrome flips correctly
+    in both'
+  - 'Attempt-1 feedback fully addressed: tick/axis-label/title font sizes bumped (16/18/22px
+    → 18/20/22px) for better thumbnail legibility, and the clipScore helper was inlined
+    to trim the helper-function count'
+  - 'Idiomatic D3: d3.area + curveCatmullRom, d3.quantileSorted, canonical KDE kernel-estimator
+    pattern, per-group <g> layers with .join()'
   weaknesses:
-  - Uses six helper functions (makeRng, randomNormal, clipScore, kernelEpanechnikov,
-    kernelDensityEstimator, computeBoxStats) instead of a flat imports-to-data-to-plot
-    script; largely unavoidable since D3 has no built-in RNG or KDE/stats library
-    (unlike e.g. scipy.stats.gaussian_kde), but keep the helper surface as small as
-    possible.
-  - Tick/axis-label/title font sizes (16/18/22px) sit at the low end of the d3 guide's
-    14-22px range for a 3200px canvas; verify legibility once thumbnailed to the ~400px
-    catalog preview size.
+  - Still relies on five helper functions (RNG, KDE kernel/estimator, box stats) rather
+    than a flat script — largely unavoidable since D3 has no built-in RNG/stats/KDE
+    library, so not a blocking issue
+  - 'Design Excellence has room to grow: no explicit focal-group emphasis beyond the
+    palette order itself — a subtle size/opacity cue on one group could sharpen the
+    visual hierarchy further'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "violin-box · javascript · d3 · anyplot.ai" centered at top in bold dark text; x-axis "Teaching Method" and y-axis "Test Score (%)" labels present with units; y-axis ticks 0-100 by 10; subtle horizontal gridlines behind the data; all text renders in dark ink against the light background.
-      Data: Three violins - Traditional Lecture (green #009E73), Flipped Classroom (light purple), Blended Learning (slate blue) - each with a KDE silhouette, an embedded box (white/cream cutout fill matching the page background, colored border) showing quartiles, a black median line, whisker caps in the group color, and one visible outlier (green circle) below the Traditional Lecture violin. Blended Learning's violin visibly bulges both near its median and lower down, showing the intended bimodal shape.
-      Legibility verdict: PASS - all title, axis, and tick text is clearly readable against the light background; no light-on-light text.
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Title "violin-box · javascript · d3 · anyplot.ai" centered at top in bold dark text; "Teaching Method" (x) and "Test Score (%)" (y) axis labels present with units; y-axis ticks run 0-100 by 10; subtle horizontal gridlines sit behind the data. All text is clearly readable against the light background.
+      Data: Three violins — Traditional Lecture (green #009E73, first series correct), Flipped Classroom (lavender), Blended Learning (blue) — each show a KDE silhouette with an embedded box (cutout fill matching the page background, colored border) for quartiles, a black median line, whisker caps in the group color, and one visible outlier below Traditional Lecture. Blended Learning's violin visibly bulges near its median and again lower down, showing the intended bimodal shape.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Same title/axis labels, now in light/off-white text; gridlines subdued but visible; axis ticks and domain lines in a muted light tone.
-      Data: Same three violin colors and shapes as the light render (green, purple, slate blue), confirming data-color identity across themes. The embedded box fill flips to near-black (matching the dark page background) with the same colored border, and the median line flips to white for contrast against the black box - correct theme-adaptive chrome, no dark-on-dark failures on the median line or the box border/whiskers.
-      Legibility verdict: PASS - all title, axis, and tick text is clearly readable against the dark background; no dark-on-dark text.
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Same title and axis labels, now rendered in light/off-white text; gridlines are subdued but visible. No dark-on-dark failures — all text and ticks are legible.
+      Data: All three violin colors (green, lavender, blue) are identical to the light render, confirming data-color consistency across themes. The embedded box fill flips to near-black to match the page background while keeping the same colored border, and the median line flips to white for contrast — correct theme-adaptive chrome.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes, fully readable in both themes; 16/18/22px sit
-          at the low end of the guide's 14-22px range so will read small once thumbnailed
-          to ~400px.
+        comment: Explicit 18/20/22px sizes, readable in both themes; attempt-1 low-end
+          sizes were bumped up
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render.
+        comment: No collisions between text, violins, boxes, or outliers
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Violin fill opacity, box outline weight, and outlier marker size
-          are all well-chosen for the ~150-point-per-group density.
+        comment: Violin fill opacity, box cutout, whiskers, median, and outliers all
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue-gray trio is distinguishable, no red-green-only
-          signal.
+        comment: Good contrast, groups distinguishable without relying on red-green
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Nothing clipped, no overflow, title well within bounds, canvas gate
-          passed (3200x1800).
+        comment: Canvas gate passed; good proportions, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Teaching Method" and "Test Score (%)" are descriptive with units.'
+        comment: Descriptive axis labels with units (%)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; identical data colors across themes; correct
-          #FAF8F1/#1A1A17 backgrounds.'
+        comment: 'First series #009E73, canonical Imprint order, correct theme-adaptive
+          backgrounds'
     design_excellence:
       score: 13
       max: 20
@@ -112,22 +109,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Cutout box style with color-matched borders and whisker caps shows
-          real design intent beyond defaults.
+        comment: Cutout box (fill = page background) with color-matched border/whiskers
+          shows real design intent
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: L-shaped axis frame, single-axis subtle gridlines behind data, generous
-          whitespace.
+        comment: Clean L-shaped frame, subtle single-axis gridlines, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Deliberate bimodal 'Blended Learning' group gives the combined violin+box
-          view a clear reason to exist.
+        comment: Deliberate bimodal Blended Learning group gives the combined view
+          a clear reason to exist
     spec_compliance:
       score: 15
       max: 15
@@ -137,27 +133,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Violin with embedded box plot, as specified.
+        comment: Violin with embedded box, correctly combined
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Median, quartile box, whiskers, KDE shape, and outlier points all
-          present.
+        comment: Median, quartile box, whiskers, KDE shape, outliers all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Group on x, value on y, full 0-100 range shown.
+        comment: Groups on x, test score on y, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; no legend needed since
-          x-axis already labels each group.
+        comment: Title matches mandated format; no legend needed since x-axis already
+          labels each group
     data_quality:
       score: 15
       max: 15
@@ -167,55 +162,56 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Density shape, quartile box, whiskers, and outliers all shown.
+        comment: 'All aspects of violin+box shown: density, quartiles, whiskers, outliers'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Teaching-method test scores, plausible and neutral.
+        comment: Teaching-method test scores, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100% score range with sensible group means/spreads and proper clipping.
+        comment: 0-100 score scale, 150 points per group, 3 groups
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Six helper functions deviate from a flat script, though mostly required
-          since D3 has no built-in RNG/KDE/stats library.
+        comment: Five small helpers (RNG, KDE kernel/estimator, box stats) are largely
+          unavoidable given D3's lack of built-in RNG/stats/KDE; clipScore helper
+          was inlined per attempt-1 feedback
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42).
+        comment: Fixed-seed LCG (seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the provided d3 global is used.
+        comment: No extraneous imports; d3 global only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the chart type, no fake functionality.
+        comment: No fake UI or interactivity; clean structure
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Builds one <svg> into #container per the mount-node contract, no
-          animations.'
+        comment: 'Mounts into #container per contract, no animation, current d3 7.9
+          API'
     library_mastery:
       score: 9
       max: 10
@@ -226,14 +222,14 @@ review:
         max: 5
         passed: true
         comment: Canonical D3 KDE pattern, d3.area/curveCatmullRom, d3.quantileSorted,
-          scaleBand/scaleLinear, data joins.
+          data joins
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
         comment: Custom Epanechnikov kernel and per-group density-extent padding go
-          beyond a textbook example.
+          beyond a textbook example
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -246,4 +242,4 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - edge-highlighting
+  - publication-ready
