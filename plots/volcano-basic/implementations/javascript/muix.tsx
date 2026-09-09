@@ -1,7 +1,7 @@
 // anyplot.ai
 // volcano-basic: Volcano Plot for Statistical Significance
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-09
+// Quality: 89/100 | Created: 2026-09-09
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 

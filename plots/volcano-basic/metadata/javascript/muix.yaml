@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: volcano-basic
 created: '2026-09-09T22:05:48Z'
-updated: '2026-09-09T22:09:04Z'
+updated: '2026-09-09T22:17:04Z'
 generated_by: claude-sonnet
 workflow_run: 34409919021
 issue: 2924
@@ -12,38 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
   - Clean, correct volcano-plot structure with well-chosen semantic (not ordinal)
     color mapping, explicitly documented as an intentional deviation from canonical
-    Imprint order
-  - Threshold lines (p=0.05 horizontal, ±1 fold-change vertical) styled distinctly
-    with dashed amber strokes and a labeled horizontal cutoff
+    Imprint order and fully consistent with the style guide's semantic-exception rule
+  - Both vertical fold-change threshold lines are now labeled ("FC = -2", "FC = 2")
+    consistently with the horizontal p-value line, fixing the inconsistency flagged
+    in attempt 1
   - Alpha transparency and marker edge-stroke thoughtfully applied to mitigate overplotting
     in the dense 350-point dataset
   - Fully deterministic, dependency-free data generation with a realistic funnel-shaped
-    distribution
+    distribution; both renders theme-correct with no legibility failures
   weaknesses:
-  - Densest cluster of non-significant points near the origin has heavy point-on-point
-    stacking — consider slightly smaller markers or a touch more transparency there
-    to preserve individual-point legibility
-  - Vertical fold-change threshold lines are unlabeled while the horizontal p-value
-    line is labeled — consider adding a small label (e.g. "FC = 2") for consistency
-  - No labeling of top significant features by name (spec listed this as optional/"consider"),
+  - Densest cluster of non-significant points near the origin still has meaningful
+    point-on-point stacking - a touch more transparency or slightly smaller markers
+    there would preserve individual-point legibility
+  - No labeling of top significant features by name (spec lists this as optional/"consider"),
     which would add storytelling value for a genomics audience
+  - Visual refinement still relies mostly on MUI X defaults beyond the marker/line
+    styling already applied
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "volcano-basic · javascript · muix · anyplot.ai" in dark ink, clearly centered above the plot. Axis labels "log₂ Fold Change" and "−log₁₀(p-value)" with correct subscript typography. Tick labels dark and legible. Legend top-right with three color swatches (Not significant / Down-regulated / Up-regulated). Dashed amber horizontal line labeled "p = 0.05" and two unlabeled dashed amber vertical lines at ±1.
-      Data: ~350 points in three semantic colors — muted gray (non-significant, clustered near origin), matte blue (down-regulated, upper-left), matte red (up-regulated, upper-right). Markers have a thin light stroke to separate overlapping points; alpha transparency reduces overplotting.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "volcano-basic · javascript · muix · anyplot.ai" centered at top in dark ink, fully legible and not clipped. X-axis "log2 Fold Change" and Y-axis "-log10(p-value)" labels with correct subscript typography, dark ink on light background. Tick labels dense but readable. Legend top-right (Not significant / Down-regulated / Up-regulated) with matching swatches, clear of data. Dashed amber threshold lines labeled "p = 0.05", "FC = -2", "FC = 2".
+      Data: ~350 points in three semantic colors - muted gray (non-significant), matte blue (down-regulated, palette[2]), matte red (up-regulated, palette[4]) - forming the expected volcano funnel shape. Note: first categorical series is NOT brand green here by design - this is a documented semantic-exception case (domain convention: up=red, down=blue, non-sig=muted gray) sanctioned by the style guide.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same layout as light render; title, axis labels, tick labels, and legend text render in light ink, clearly legible against the dark surface. Grid lines subtle but visible. Marker stroke switches to a dark-contrast accent so points remain separated on the dark background.
-      Data: Point colors (gray/blue/red) identical to the light render — confirms only chrome flipped, not data colors.
-      Legibility verdict: PASS — no dark-on-dark failures observed on title, axis labels, ticks, legend, or the "p = 0.05" annotation.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title and axis labels render in light ink, clearly legible against the dark surface. Grid lines subtle but visible. Legend and both threshold-line labels crisp and legible. No dark-on-dark issues found.
+      Data: Point colors (gray/blue/red) are pixel-identical to the light render; only chrome flipped as required. Marker edge stroke correctly switches to a dark-compatible accent.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -54,35 +55,37 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels, legend, and threshold annotation
-          all clearly readable in both themes
+        comment: Title, axis labels, tick labels, legend, and all threshold-line labels
+          clearly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with other text or with data; legend clear of extreme
+        comment: No text collides with other text or data; legend clear of extreme
           points
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Alpha blending + edge stroke help, but densest gray cluster near
-          origin still has heavy point stacking
+        comment: Alpha blending + edge stroke handle the dense funnel reasonably well,
+          but the densest gray cluster near the origin still shows point-on-point
+          stacking
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/blue/gray coding avoids red-green CVD trap; adequate contrast
+        comment: Red/blue/gray coding avoids the red-green CVD trap; adequate contrast
           on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimension gate passed; no clipping or overflow; balanced margins
+        comment: Canvas gate passed (3200x1800); no clipping or overflow; balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -94,8 +97,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Correct theme backgrounds; documented semantic-exception color order;
-          identical data colors across themes
+        comment: Correct theme backgrounds; documented semantic-exception color mapping
+          matches style guide
     design_excellence:
       score: 12
       max: 20
@@ -106,20 +109,21 @@ review:
         max: 8
         passed: true
         comment: Thoughtful semantic color choice, edge-stroked markers, styled dashed
-          threshold lines; solid but not exceptional
+          threshold lines; solid but not exceptional polish
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace; axis chrome mostly MUI-default
+        comment: Subtle grid, generous whitespace; axis chrome still mostly MUI-default
+          beyond marker/line styling
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-coded significance plus threshold lines create a clear, guided
-          funnel narrative
+        comment: Color-coded significance plus fully-labeled threshold lines create
+          a clear, guided funnel narrative
     spec_compliance:
       score: 15
       max: 15
@@ -135,20 +139,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Threshold lines, three-way significance coloring, and alpha transparency
-          all present
+        comment: Horizontal p=0.05 line, vertical +/-1 fold-change lines (now both
+          labeled), three-way significance color coding, alpha transparency all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = log2FC, Y = -log10(p), axes cover full range with padding
+        comment: X = log2FC, Y = -log10(p), axes cover full data range with sensible
+          padding
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend labels clear
+        comment: Title matches required format exactly; legend labels clear and descriptive
     data_quality:
       score: 15
       max: 15
@@ -158,7 +163,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full up/down/non-significant spectrum with realistic funnel shape
+        comment: Shows the full up/down/non-significant spectrum with a realistic
+          funnel shape
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -171,7 +177,7 @@ review:
         max: 4
         passed: true
         comment: Fold-change and p-value ranges sensible for omics data; 350 genes
-          reasonable
+          reasonable dataset size
     code_quality:
       score: 10
       max: 10
@@ -205,9 +211,10 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Correctly follows harness contract
+        comment: Correctly follows harness contract (ANYPLOT_SIZE, skipAnimation,
+          default export)
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -219,20 +226,21 @@ review:
           surface
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses ChartsReferenceLine and sx marker stroke styling; appropriately
-          scoped
+        comment: Uses ChartsReferenceLine for all three threshold annotations (now
+          consistently labeled) and sx marker stroke styling
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - publication-ready
