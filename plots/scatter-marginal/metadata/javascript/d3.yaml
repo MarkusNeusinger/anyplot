@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: scatter-marginal
 created: '2026-09-09T06:44:32Z'
-updated: '2026-09-09T06:48:17Z'
+updated: '2026-09-09T06:56:03Z'
 generated_by: claude-sonnet
 workflow_run: 34319944404
 issue: 2005
@@ -12,43 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Custom Epanechnikov KDE overlaid on binned histograms for both marginals, precisely
-    aligned with the main scatter's x/y scales via shared domains
-  - 'Clear visual hierarchy: the Imprint teal (#009E73) main scatter reads as the
-    focal point while grey (inkSoft) marginal panels stay subordinate and non-distracting,
-    matching the spec''s guidance'
-  - Moderate point transparency (fill-opacity 0.65) reveals density in the correlated
-    cluster without turning it into a solid blob
-  - Realistic, plausibly-scaled dataset (daily sunlight hours vs. seedling height
-    in cm) with a believable noisy-linear relationship
-  - Seeded mulberry32 PRNG gives deterministic reproducibility; snippet strictly follows
-    the d3 mount-node contract (ANYPLOT_SIZE, ANYPLOT_TOKENS, single svg append, no
-    animation)
+  - Classic joint-plot composition — main scatter lower-left with top/right marginal
+    panels precisely axis-aligned — executed cleanly in raw D3
+  - KDE curves computed via Silverman's-rule bandwidth + Epanechnikov kernel, overlaid
+    on binned histograms in both marginals — a distinctive, non-trivial D3-level technique
+  - 'Theme-adaptive chrome correctly threaded through axis text, ticks, domain lines,
+    and title on both renders; brand green #009E73 is pixel-identical across light
+    and dark'
+  - Deterministic seeded PRNG (mulberry32 + Box-Muller) gives fully reproducible data
+    with no external dependency
+  - Realistic, neutral dataset (daily sunlight exposure vs. seedling growth) with
+    a clear, honest positive correlation and natural scatter
   weaknesses:
-  - Marginal panels have no bounding chrome (no axis line/border around the histogram+KDE
-    area), so the panel's own edges are only implied by whitespace — acceptable but
-    slightly less crisp than giving them a subtle baseline.
-  - The KDE bandwidth/kernel choice is the standard textbook Epanechnikov example
-    rather than a technique that showcases something distinctively d3 beyond what's
-    in common tutorials — keeps LM-02 from scoring higher.
-  - In the densest diagonal band (~x:5-7, ~y:60-80) many markers visually fuse into
-    a blob despite alpha blending; slightly smaller radius (e.g. r=4) in that region
-    would sharpen individual-point visibility without hurting the sparse tails.
+  - With n=320 points, marker alpha 0.65 and radius 4px sit above/below the VQ-03
+    density guidance for 300+ points (alpha 0.3-0.5, smaller radius) — the dense cluster
+    around 5-7h sunlight shows mild overplotting; slightly lower alpha or radius would
+    resolve it
+  - Data storytelling relies on composition alone — no trendline or correlation callout
+    — sufficient for the default tier but not yet 'excellent'
+  - Seedling height range (20-120 cm after 30 days) reads on the high end for a generic
+    'seedling'; narrowing the range or naming a fast-growing species would tighten
+    factual plausibility
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "scatter-marginal · javascript · d3 · anyplot.ai" in bold dark ink, clearly readable and well spaced above the top marginal panel. X-axis label "Daily Sunlight Exposure (hours)" and Y-axis label "Seedling Height after 30 Days (cm)" are dark, legible, appropriately sized. Tick labels along both axes are dark grey and legible. Subtle light-grey gridlines are visible but not distracting.
-      Data: Main scatter uses solid Imprint teal (#009E73) circles at moderate opacity, with a thin off-white stroke separating overlapping points. Top marginal shows a grey histogram of x (sunlight) with a dark grey KDE curve overlaid, aligned to the main x-axis. Right marginal shows a grey histogram of y (height) rotated to align with the main y-axis, with its own KDE curve. No clipping observed at any canvas edge; both marginal panels' curves stay comfortably inside their allotted width/height.
-      Legibility verdict: PASS
+      Background: warm off-white, matches #FAF8F1, not pure white.
+      Chrome: dark title "scatter-marginal · javascript · d3 · anyplot.ai" centered at top; dark axis titles "Daily Sunlight Exposure (hours)" and "Seedling Height after 30 Days (cm)"; dark-gray tick labels on both axes; thin subtle gray gridlines in the main panel; thin gray frame rects around the top and right marginal panels.
+      Data: main scatter of ~320 green (#009E73) points with moderate transparency showing a clear positive linear trend with natural scatter; top panel shows a gray histogram + darker-gray KDE curve of the x-distribution (unimodal, right-leaning tail); right panel shows a rotated gray histogram + KDE curve of the y-distribution (unimodal, slightly heavy near the center).
+      Legibility verdict: PASS — all text (title, axis titles, tick labels) is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now in light/white text, clearly readable against the dark background. Axis labels and tick labels are light-colored and legible; no dark-on-dark failures observed anywhere (tick text, axis titles, and title all correctly flip to light ink). Gridlines are still subtly visible.
-      Data: Scatter points remain the identical teal (#009E73) as the light render — only chrome (background, text, grid) flipped, confirming palette-compliant theme adaptation. Marginal histograms and KDE lines flip from dark-grey-on-light to light-grey/white-on-dark appropriately, staying legible.
-      Legibility verdict: PASS
+      Background: warm near-black, matches #1A1A17, not pure black.
+      Chrome: light/off-white title and axis titles; light-gray tick labels; subtle light-gray gridlines; the same panel-frame rects now in a light-gray stroke.
+      Data: identical green (#009E73) scatter points and gray histogram/KDE marginals — data colors are pixel-identical to the light render, only the chrome (background, text, grid, frame) flipped to the dark palette.
+      Legibility verdict: PASS — all text is light-colored against the dark background; no dark-on-dark failures observed; brand green remains clearly visible on the dark surface.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -59,71 +58,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (16px ticks, 18px axis titles, 26px title); all
-          text readable in both themes at full size
+        comment: Font sizes explicitly set (16-26px), readable in both themes, well-proportioned
+          title and balanced axis labels
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/element collisions; title, axis labels, panels all cleanly
-          separated
+        comment: No text or element collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: r=5, alpha=0.65 appropriate for 320 points, though the densest diagonal
-          band fuses somewhat
+        comment: Points visible but alpha 0.65 / r=4 slightly above density guidance
+          for 320 points, mild overplotting in dense cluster
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue teal on neutral background, good contrast, no red-green
-          reliance
+        comment: Good contrast, single-hue data plus neutral gray marginals, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas, symmetric gaps, marginal panels well-proportioned;
-          no clipping verified via crop inspection
+        comment: Balanced use of the square canvas, generous margins, marginal panels
+          well-aligned with the main axes
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units; title matches required format
+        comment: Descriptive axis labels with units (hours, cm)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, marginal plots use subtle inkSoft grey
-          per spec notes, backgrounds correctly themed'
+        comment: 'First series #009E73, correct light/dark backgrounds, theme-correct
+          chrome in both renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Coordinated multi-panel layout with deliberate teal/grey hierarchy;
-          above generic defaults
+        passed: true
+        comment: Publication-style joint-plot composition with thoughtful KDE overlays,
+          above a plain default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: No chrome on marginal panels, subtle gridlines, generous whitespace;
-          main axes still show standard domain lines
+        passed: true
+        comment: Subtle grid, L-shaped spines on the main plot, generous whitespace,
+          only intentional panel frames on marginals
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: Main scatter is the clear focal point; marginals support without
-          competing, joint+univariate story is legible
+        passed: true
+        comment: Visual hierarchy through composition guides the reader to the joint
+          + marginal relationship, though no explicit trendline/annotation
     spec_compliance:
       score: 15
       max: 15
@@ -132,44 +132,50 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct scatter-with-marginals composite
+        passed: true
+        comment: Correct scatter-with-marginals type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Lower-left main scatter, aligned top/right marginals, histogram+KDE
-          overlay, subtle marginal colors, alpha ~0.65 — all present
+        passed: true
+        comment: Main scatter lower-left, aligned top/right marginals, histogram+KDE
+          overlay, subtle marginal colors, moderate point alpha
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: X/Y correctly mapped, full data range shown with padding
+        passed: true
+        comment: X/Y correctly assigned, full data range visible on both axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches required format exactly; no legend needed for single
-          series
+        passed: true
+        comment: Title matches mandated format exactly; single series needs no legend
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        comment: Shows joint relationship plus both univariate distributions with
-          histogram+KDE
+        passed: true
+        comment: Shows joint correlation plus unimodal marginal shapes on both axes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Sunlight vs. seedling height is plausible, neutral, non-controversial
+        passed: true
+        comment: Neutral, comprehensible plant-growth scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        comment: Ranges (1-11 hrs, 20-120 cm) are sensible for the domain
+        passed: true
+        comment: Sunlight range plausible; seedling height range (20-120cm/30 days)
+          is generous for a generic seedling
     code_quality:
       score: 9
       max: 10
@@ -178,60 +184,62 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        comment: Flat top-level script but includes 4 small helper functions (PRNG,
-          normal sampler, kernel, KDE estimator) — necessary but adds structure
+        passed: true
+        comment: Several small helper functions (RNG, KDE, bandwidth) — necessary
+          for the technique but adds structure beyond flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Seeded mulberry32 PRNG (seed=42)
+        passed: true
+        comment: Seeded mulberry32 PRNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: No imports beyond the d3 global
+        passed: true
+        comment: Only the d3 global used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriate complexity, no fake interactivity
+        passed: true
+        comment: Appropriate complexity for KDE-based marginals, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Correct mount-node contract, no animation, current d3 7.9 API
+        passed: true
+        comment: Correctly builds svg from ANYPLOT_SIZE via the mount-node contract
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        comment: Idiomatic d3.bin, scaleLinear, axisBottom/Left, line generator with
-          curveBasis
+        passed: true
+        comment: Idiomatic d3 scales, axes, bin(), extent(), line generators, and
+          data joins
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        comment: Custom KDE overlay is a genuine d3-specific technique, though it
-          follows the well-known textbook Epanechnikov example pattern
+        passed: true
+        comment: Custom KDE with Silverman bandwidth selection is a distinctive low-level
+          D3 technique, hard to replicate as-is in higher-level chart libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - marginal-distributions
-  - kernel-density-estimation
-  - histogram
-  - scatter
-  - multi-panel-layout
+  - subplots
+  - layer-composition
   patterns:
   - data-generation
-  - shared-scale-alignment
   dataprep:
-  - binning
   - kde
+  - binning
   styling:
-  - publication-ready
   - alpha-blending
-  - theme-adaptive-chrome
+  - publication-ready
