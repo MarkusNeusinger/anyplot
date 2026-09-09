@@ -7,6 +7,7 @@ using CairoMakie
 using Colors
 using RDatasets
 using Random
+using Statistics
 
 Random.seed!(42)
 
@@ -34,6 +35,16 @@ species_names = unique(iris.Species)
 species_colors = Dict(sp => IMPRINT_PALETTE[i] for (i, sp) in enumerate(species_names))
 point_colors = [species_colors[sp] for sp in iris.Species]
 
+# Locate the most strongly correlated pair of variables to draw the eye
+# toward a focal insight, rather than treating every panel identically.
+cor_matrix = [cor(iris[!, variables[i]], iris[!, variables[j]]) for i in 1:n_vars, j in 1:n_vars]
+best_row, best_col, best_r = 1, 2, 0.0
+for i in 1:n_vars, j in 1:n_vars
+    if i != j && abs(cor_matrix[i, j]) > best_r
+        global best_row, best_col, best_r = i, j, abs(cor_matrix[i, j])
+    end
+end
+
 # --- Plot -------------------------------------------------------------------
 title_str = "scatter-matrix · julia · makie · anyplot.ai"
 
@@ -45,10 +56,14 @@ fig = Figure(
 
 Label(fig[1, 1:(n_vars + 1)], title_str; fontsize = 20, color = INK, font = :bold)
 
+axes = Matrix{Axis}(undef, n_vars, n_vars)
+
 for row in 1:n_vars, col in 1:n_vars
-    is_diag = row == col
-    show_y  = col == 1 && !is_diag
-    show_x  = row == n_vars
+    is_diag      = row == col
+    is_focal     = !is_diag && (row, col) in ((best_row, best_col), (best_col, best_row))
+    show_y       = col == 1 && !is_diag
+    show_x       = row == n_vars
+    spine_color  = is_focal ? IMPRINT_PALETTE[1] : INK_SOFT
 
     ax = Axis(
         fig[row + 1, col];
@@ -61,8 +76,8 @@ for row in 1:n_vars, col in 1:n_vars
         ylabelcolor      = INK,
         xlabelvisible    = show_x,
         ylabelvisible    = show_y,
-        xticklabelsize   = 9,
-        yticklabelsize   = 9,
+        xticklabelsize   = 10,
+        yticklabelsize   = 10,
         xticklabelcolor  = INK_SOFT,
         yticklabelcolor  = INK_SOFT,
         xticklabelsvisible = show_x,
@@ -71,15 +86,19 @@ for row in 1:n_vars, col in 1:n_vars
         yticksvisible    = show_y,
         xtickcolor       = INK_SOFT,
         ytickcolor       = INK_SOFT,
-        leftspinecolor   = INK_SOFT,
-        bottomspinecolor = INK_SOFT,
-        topspinevisible    = false,
-        rightspinevisible  = false,
+        leftspinecolor   = spine_color,
+        bottomspinecolor = spine_color,
+        topspinevisible    = is_focal,
+        rightspinevisible  = is_focal,
+        topspinecolor      = spine_color,
+        rightspinecolor    = spine_color,
+        spinewidth         = is_focal ? 2.5 : 1,
         xgridcolor         = GRID_COLOR,
         ygridcolor         = GRID_COLOR,
         xminorgridvisible  = false,
         yminorgridvisible  = false,
     )
+    axes[row, col] = ax
 
     if is_diag
         ax.yticklabelsvisible = false
@@ -102,7 +121,28 @@ for row in 1:n_vars, col in 1:n_vars
             markersize  = 7,
             strokewidth = 0,
         )
+        if is_focal
+            text!(
+                ax, 0.05, 0.95;
+                text      = "r = $(round(best_r, digits = 2))",
+                space     = :relative,
+                align     = (:left, :top),
+                color     = IMPRINT_PALETTE[1],
+                fontsize  = 12,
+                font      = :bold,
+            )
+        end
     end
+end
+
+# Distinctive Makie SPLOM idiom: explicitly guarantee identical per-column /
+# per-row ranges instead of relying on each Axis picking its own limits.
+for col in 1:n_vars
+    linkxaxes!(axes[:, col]...)
+end
+for row in 1:n_vars
+    off_diag_in_row = [axes[row, col] for col in 1:n_vars if col != row]
+    linkyaxes!(off_diag_in_row...)
 end
 
 legend_elements = [MarkerElement(color = species_colors[sp], marker = :circle, markersize = 14) for sp in species_names]
