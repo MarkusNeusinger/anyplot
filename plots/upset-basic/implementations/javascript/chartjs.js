@@ -1,7 +1,7 @@
 // anyplot.ai
 // upset-basic: UpSet Plot for Multi-Set Intersection Analysis
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-09
+// Quality: 87/100 | Created: 2026-09-09
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
