@@ -67,6 +67,15 @@ const peaks = harmonics.map((h) => {
   return nearest;
 });
 
+// Peak markers scale with harmonic prominence (linear amplitude, not dB) via a
+// sqrt scale, so marker *area* — not radius — tracks acoustic power. The
+// fundamental reads as the visually dominant peak; higher harmonics taper off.
+const peakAmpLinear = harmonics.map((h) => Math.pow(10, h.db / 20));
+const rScale = d3
+  .scaleSqrt()
+  .domain(d3.extent(peakAmpLinear))
+  .range([4.5, 10]);
+
 // --- SVG mount ----------------------------------------------------------------
 const svg = d3
   .select("#container")
@@ -128,10 +137,46 @@ g.selectAll("circle")
   .join("circle")
   .attr("cx", (d) => x(d.freq))
   .attr("cy", (d) => y(d.db))
-  .attr("r", 7)
+  .attr("r", (d, i) => rScale(peakAmpLinear[i]))
   .attr("fill", t.palette[0])
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 2.5);
+
+// --- Harmonic peak labels ----------------------------------------------------
+// Direct numeric labels ("440 Hz") on each harmonic, positioned above its
+// marker and then corrected with getBBox — real measured layout from the
+// browser's text engine, not an estimate — so labels never clip the plot
+// edges or collide with a neighbor even as marker radius/label width vary.
+const peakLabels = g
+  .selectAll(".peak-label")
+  .data(peaks)
+  .join("text")
+  .attr("class", "peak-label")
+  .attr("x", (d) => x(d.freq))
+  .attr("y", (d, i) => y(d.db) - rScale(peakAmpLinear[i]) - 10)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.ink)
+  .style("font-size", "13px")
+  .style("font-weight", "600")
+  .text((d, i) => `${harmonics[i].freq} Hz`);
+
+const labelNodes = peakLabels.nodes();
+labelNodes.forEach((node) => {
+  const bbox = node.getBBox();
+  if (bbox.x < 0) d3.select(node).attr("text-anchor", "start").attr("x", 0);
+  else if (bbox.x + bbox.width > iw)
+    d3.select(node).attr("text-anchor", "end").attr("x", iw);
+});
+for (let i = 1; i < labelNodes.length; i++) {
+  const prev = labelNodes[i - 1].getBBox();
+  const cur = labelNodes[i].getBBox();
+  const overlapsX = cur.x < prev.x + prev.width && cur.x + cur.width > prev.x;
+  const overlapsY = Math.abs(cur.y - prev.y) < prev.height + 4;
+  if (overlapsX && overlapsY) {
+    const sel = d3.select(labelNodes[i]);
+    sel.attr("y", parseFloat(sel.attr("y")) - (prev.height + 4));
+  }
+}
 
 // --- Axes --------------------------------------------------------------------
 const xTickValues = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
