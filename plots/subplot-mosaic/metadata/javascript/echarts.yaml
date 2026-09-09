@@ -1,0 +1,231 @@
+library: echarts
+language: javascript
+specification_id: subplot-mosaic
+created: '2026-09-09T19:44:18Z'
+updated: '2026-09-09T19:59:19Z'
+generated_by: claude-sonnet
+workflow_run: 34396038678
+issue: 3002
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/echarts/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Repair attempt directly addressed all three weaknesses from the previous review:
+    added a distinctive ECharts markLine/markPoint pair on the hero panel, and reduced
+    opacity on the three supporting quarterly tiles to reinforce the existing size-based
+    hierarchy instead of competing with it.'
+  - Mosaic layout (AAAA / BBCC / DEF) still exactly mirrors the spec's own suggested
+    example via six manually percent-positioned grid/xAxis/yAxis triples — the correct
+    idiomatic workaround since ECharts has no native subplot_mosaic API.
+  - 'Both renders remain fully theme-correct: identical data colors, correct #FAF8F1/#1A1A17
+    backgrounds, no clipping, no dark-on-dark/light-on-light failures.'
+  - Deterministic LCG(42), realistic and neutral web-analytics dataset with plausible
+    scales across all six panels.
+  weaknesses:
+  - The dimmed supporting tiles now use a single flat opacity (0.6) rather than distinct
+    desaturated tones per role, leaving some room for an even more deliberate color
+    system.
+  - No visualMap or dataZoom used; Library Mastery is strong but not maxed since only
+    two of ECharts' many distinctive decorators are exercised.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1
+      Chrome: main title, six panel titles, all axis labels and tick labels are dark and clearly readable against the light background
+      Data: first (hero) series is brand green #009E73 with a dashed "avg 9,534" markLine and a labeled "12,144" peak markPoint; middle row is purple bars + navy scatter at full opacity; bottom row is ochre/red/cyan tiles at reduced (~0.6) opacity
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17
+      Chrome: main title, panel titles, axis labels and ticks are light/soft-white and clearly readable against the dark background; no dark-on-dark text found
+      Data: identical colors and opacity treatment to the light render (green hero series with markLine/markPoint, purple/navy full-opacity middle row, ochre/red/cyan dimmed bottom row)
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All fontsizes explicit, well-proportioned in both themes, no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers/lines well adapted to each panel's data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced mosaic layout, good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units (%, min)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Bold hero panel vs. dimmed supporting tiles reads as an intentional
+          color system
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Hidden axis lines/ticks on tiles, subtle dashed average line, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak markPoint + average markLine plus dimmed tiles create a clear
+          focal point and reading order
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct mosaic subplot layout with varying sizes
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned in every panel
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, panel titles/labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Six distinct chart types across the mosaic cells
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic web-analytics scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible values and proportions across all panels
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports/data/option structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Multi-grid layout plus idiomatic markLine/markPoint
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: markLine (average) and markPoint (peak) are genuine ECharts-distinctive
+          features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
