@@ -39,26 +39,34 @@ circle_points <- function(cx, cy, radius, n = 200) {
   tibble::tibble(x = cx + radius * cos(theta), y = cy + radius * sin(theta))
 }
 
-radius <- 2.2
+# Radii scaled by sqrt(set_size) relative to the largest set, so circle area
+# is proportional to set size while the three-circle triangular layout stays intact.
+radius_python <- 2.2
+radius_sql    <- radius_python * sqrt(sql_total / python_total)
+radius_r      <- radius_python * sqrt(r_total / python_total)
+
 center_python <- c(0, 1.27)
 center_sql    <- c(-1.10, -0.635)
 center_r      <- c(1.10, -0.635)
 
 circles <- bind_rows(
-  circle_points(center_python[1], center_python[2], radius) |> mutate(set = "Python"),
-  circle_points(center_sql[1], center_sql[2], radius) |> mutate(set = "SQL"),
-  circle_points(center_r[1], center_r[2], radius) |> mutate(set = "R")
+  circle_points(center_python[1], center_python[2], radius_python) |> mutate(set = "Python"),
+  circle_points(center_sql[1], center_sql[2], radius_sql) |> mutate(set = "SQL"),
+  circle_points(center_r[1], center_r[2], radius_r) |> mutate(set = "R")
 ) |> mutate(set = factor(set, levels = c("Python", "SQL", "R")))
 
+total_n <- python_only + sql_only + r_only + python_sql_only + python_r_only + sql_r_only + all_three
+
 region_counts <- tibble::tibble(
-  x = c(0, -1.9, 1.9, -0.9, 0.9, 0, 0),
-  y = c(2.0, -1.35, -1.35, 0.9, 0.9, -1.15, 0.05),
-  count = c(python_only, sql_only, r_only, python_sql_only, python_r_only, sql_r_only, all_three)
-)
+  x = c(0, -1.81, 1.71, -0.88, 0.86, 0, 0),
+  y = c(2.0, -1.27, -1.18, 0.87, 0.83, -1.06, 0.04),
+  count = c(python_only, sql_only, r_only, python_sql_only, python_r_only, sql_r_only, all_three),
+  focal = c(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE)
+) |> mutate(pct_label = paste0(round(100 * count / total_n), "%"))
 
 set_name_labels <- tibble::tibble(
-  x = c(0, -1.9, 1.9),
-  y = c(3.15, -2.0, -2.0),
+  x = c(0, -1.81, 1.71),
+  y = c(3.15, -1.85, -1.90),
   label = c(
     paste0("Python (n=", python_total, ")"),
     paste0("SQL (n=", sql_total, ")"),
@@ -77,8 +85,16 @@ p <- ggplot() +
     color = INK, size = 4.6, fontface = "bold"
   ) +
   geom_text(
-    data = region_counts, aes(x = x, y = y, label = count),
+    data = filter(region_counts, !focal), aes(x = x, y = y, label = count),
     color = INK, size = 5.6, fontface = "bold"
+  ) +
+  geom_text(
+    data = filter(region_counts, focal), aes(x = x, y = y, label = count),
+    color = INK, size = 7.0, fontface = "bold"
+  ) +
+  geom_text(
+    data = region_counts, aes(x = x, y = y - 0.34, label = pct_label),
+    color = INK_SOFT, size = 3.2, fontface = "plain"
   ) +
   scale_fill_manual(values = IMPRINT_PALETTE) +
   coord_fixed(xlim = c(-3.6, 3.6), ylim = c(-3.6, 3.6), expand = FALSE) +
