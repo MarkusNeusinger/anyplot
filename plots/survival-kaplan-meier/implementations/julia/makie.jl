@@ -6,7 +6,6 @@
 using CairoMakie
 using Colors
 using Random
-using Statistics
 
 Random.seed!(42)
 
@@ -172,22 +171,22 @@ ax = Axis(
 band!(ax, xs_free, lo_free, hi_free;
     color = RGBAf(IMPRINT_PALETTE[1].r, IMPRINT_PALETTE[1].g, IMPRINT_PALETTE[1].b, 0.15))
 band!(ax, xs_prem, lo_prem, hi_prem;
-    color = RGBAf(IMPRINT_PALETTE[3].r, IMPRINT_PALETTE[3].g, IMPRINT_PALETTE[3].b, 0.15))
+    color = RGBAf(IMPRINT_PALETTE[2].r, IMPRINT_PALETTE[2].g, IMPRINT_PALETTE[2].b, 0.15))
 
 # Kaplan-Meier step curves
 lines!(ax, xs_free, ys_free; color = IMPRINT_PALETTE[1], linewidth = 3.0, label = "Free Tier")
-lines!(ax, xs_prem, ys_prem; color = IMPRINT_PALETTE[3], linewidth = 3.0, label = "Premium Tier")
+lines!(ax, xs_prem, ys_prem; color = IMPRINT_PALETTE[2], linewidth = 3.0, label = "Premium Tier")
 
 # Censoring marks
 scatter!(ax, cens_free, cens_y_free;
     marker = :vline, markersize = 14, color = IMPRINT_PALETTE[1], strokewidth = 0)
 scatter!(ax, cens_prem, cens_y_prem;
-    marker = :vline, markersize = 14, color = IMPRINT_PALETTE[3], strokewidth = 0)
+    marker = :vline, markersize = 14, color = IMPRINT_PALETTE[2], strokewidth = 0)
 
 # Median survival reference lines
 hlines!(ax, [0.5]; color = INK_SOFT, linewidth = 1.0, linestyle = :dot)
 median_free !== nothing && vlines!(ax, [median_free]; color = IMPRINT_PALETTE[1], linewidth = 1.0, linestyle = :dash)
-median_prem !== nothing && vlines!(ax, [median_prem]; color = IMPRINT_PALETTE[3], linewidth = 1.0, linestyle = :dash)
+median_prem !== nothing && vlines!(ax, [median_prem]; color = IMPRINT_PALETTE[2], linewidth = 1.0, linestyle = :dash)
 
 median_free_str = median_free === nothing ? "not reached" : "$(round(median_free; digits = 1)) mo"
 median_prem_str = median_prem === nothing ? "not reached" : "$(round(median_prem; digits = 1)) mo"
@@ -238,7 +237,7 @@ for (i, t) in enumerate(risk_times)
     text!(ax_risk, string(risk_free[i]);
         position = Point2f(t, 1.5), align = (halign, :center), color = IMPRINT_PALETTE[1], fontsize = 12)
     text!(ax_risk, string(risk_prem[i]);
-        position = Point2f(t, 0.5), align = (halign, :center), color = IMPRINT_PALETTE[3], fontsize = 12)
+        position = Point2f(t, 0.5), align = (halign, :center), color = IMPRINT_PALETTE[2], fontsize = 12)
 end
 
 rowsize!(fig.layout, 2, Relative(0.16))
