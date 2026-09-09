@@ -101,6 +101,11 @@ const TITLE = "scatter-marginal · javascript · muix · anyplot.ai";
 const TITLE_FONTSIZE = Math.round(22 * (TITLE.length > 67 ? 67 / TITLE.length : 1));
 
 const HIDE_AXIS_SX = { "& .MuiChartsAxis-root": { display: "none" } };
+// Thin background-colored strokes separate adjacent marks (bars) and
+// overlapping marks (scatter points) from one another — same edge color as
+// the page background so it reads as a "cutout" gap in both themes.
+const MARGIN_BAR_SX = { ...HIDE_AXIS_SX, "& .MuiBarElement-root": { stroke: t.pageBg, strokeWidth: 1 } };
+const SCATTER_MARKER_SX = { "& circle": { stroke: t.pageBg, strokeWidth: 1 } };
 
 // --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
@@ -139,7 +144,7 @@ export default function Chart() {
             xAxis={[{ scaleType: "band", data: centersX, categoryGapRatio: 0 }]}
             yAxis={[{ min: 0, max: maxCountX * 1.08 }]}
             series={[{ data: countsX, color: MARGINAL_FILL }]}
-            sx={HIDE_AXIS_SX}
+            sx={MARGIN_BAR_SX}
           />
         </div>
         <div style={{ gridColumn: 1, gridRow: 3 }}>
@@ -169,6 +174,7 @@ export default function Chart() {
               },
             ]}
             series={[{ data: points, markerSize: 10, color: MARKER_FILL }]}
+            sx={SCATTER_MARKER_SX}
           />
         </div>
         <div style={{ gridColumn: 3, gridRow: 3 }}>
@@ -182,7 +188,7 @@ export default function Chart() {
             yAxis={[{ scaleType: "band", data: centersY, categoryGapRatio: 0 }]}
             xAxis={[{ min: 0, max: maxCountY * 1.08 }]}
             series={[{ data: countsY, color: MARGINAL_FILL }]}
-            sx={HIDE_AXIS_SX}
+            sx={MARGIN_BAR_SX}
           />
         </div>
       </div>
