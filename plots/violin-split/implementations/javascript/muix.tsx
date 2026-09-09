@@ -89,7 +89,7 @@ const Y_MIN = Math.max(0, Math.floor(RAW_MIN - PAD));
 // boundary instead of piling up on it.
 const Y_MAX = Math.min(100, Math.ceil(RAW_MAX + PAD));
 
-const GRID_N = 140;
+const GRID_N = 220;
 const GRID_Y = Array.from(
   { length: GRID_N },
   (_, i) => Y_MIN + ((Y_MAX - Y_MIN) * i) / (GRID_N - 1),
@@ -147,6 +147,19 @@ function quartileStats(values: number[]) {
   return { q1: quantile(0.25), median: quantile(0.5), q3: quantile(0.75) };
 }
 
+// Largest control-vs-experimental median gap across categories — drives the
+// callout annotation that anchors the data-storytelling focal point.
+const GAP_INFO = CATEGORIES.map((cat) => {
+  const controlMedian = quartileStats(DATA[cat]["Control group"]).median;
+  const experimentalMedian = quartileStats(
+    DATA[cat]["Experimental group"],
+  ).median;
+  return {
+    category: cat,
+    gap: experimentalMedian - controlMedian,
+  };
+}).reduce((best, cur) => (Math.abs(cur.gap) > Math.abs(best.gap) ? cur : best));
+
 // --- Custom-drawn split violins (community @mui/x-charts has no built-in
 // violin mark — composed from ChartContainer's cartesian scales instead) ----
 function Violins() {
@@ -162,60 +175,96 @@ function Violins() {
         const cx = bandStart + bandwidth / 2;
         const halfWidthMax = bandwidth * 0.42;
 
+        const halves = SPLIT_GROUPS.map((grp, gi) => {
+          const values = DATA[cat][grp];
+          const density = kdeCurve(values, GRID_Y);
+          const { lo, hi, max } = trimToSupport(density, 0.01);
+          const side = gi === 0 ? -1 : 1;
+          const color = GROUP_COLORS[gi];
+
+          const points: [number, number][] = [];
+          for (let i = lo; i <= hi; i++) {
+            const w = (density[i] / max) * halfWidthMax;
+            points.push([cx + side * w, yScale(GRID_Y[i]) as number]);
+          }
+          const d =
+            `M ${cx} ${points[0][1]} ` +
+            points.map(([x, y]) => `L ${x} ${y}`).join(" ") +
+            ` L ${cx} ${points[points.length - 1][1]} Z`;
+
+          const { q1, median, q3 } = quartileStats(values);
+          const markerX = cx + side * 7;
+          // GRID_Y is ascending, so index `hi` is the higher score (top of
+          // chart, smaller pixel y) and `lo` is the lower score (bottom).
+          const yTop = yScale(GRID_Y[hi]) as number;
+          const yBottom = yScale(GRID_Y[lo]) as number;
+
+          return { grp, d, color, q1, median, q3, markerX, yTop, yBottom };
+        });
+
+        // Thin spine anchoring the two halves where they meet, spanning the
+        // combined vertical extent of both violins for this category.
+        const spineTop = Math.min(...halves.flatMap((h) => [h.yTop, h.yBottom]));
+        const spineBottom = Math.max(
+          ...halves.flatMap((h) => [h.yTop, h.yBottom]),
+        );
+
+        const isMaxGap = cat === GAP_INFO.category;
+
         return (
           <g key={cat}>
-            {SPLIT_GROUPS.map((grp, gi) => {
-              const values = DATA[cat][grp];
-              const density = kdeCurve(values, GRID_Y);
-              const { lo, hi, max } = trimToSupport(density, 0.01);
-              const side = gi === 0 ? -1 : 1;
-              const color = GROUP_COLORS[gi];
-
-              const points: [number, number][] = [];
-              for (let i = lo; i <= hi; i++) {
-                const w = (density[i] / max) * halfWidthMax;
-                points.push([cx + side * w, yScale(GRID_Y[i]) as number]);
-              }
-              const d =
-                `M ${cx} ${points[0][1]} ` +
-                points.map(([x, y]) => `L ${x} ${y}`).join(" ") +
-                ` L ${cx} ${points[points.length - 1][1]} Z`;
-
-              const { q1, median, q3 } = quartileStats(values);
-              const markerX = cx + side * 7;
-
-              return (
-                <g key={grp}>
-                  <path
-                    d={d}
-                    fill={color}
-                    fillOpacity={0.75}
-                    stroke={color}
-                    strokeWidth={1.5}
-                    strokeOpacity={0.95}
-                    strokeLinejoin="round"
-                  />
-                  <line
-                    x1={markerX}
-                    x2={markerX}
-                    y1={yScale(q1)}
-                    y2={yScale(q3)}
-                    stroke={t.pageBg}
-                    strokeWidth={5}
-                    strokeLinecap="round"
-                    opacity={0.85}
-                  />
-                  <circle
-                    cx={markerX}
-                    cy={yScale(median)}
-                    r={4.5}
-                    fill={t.pageBg}
-                    stroke={color}
-                    strokeWidth={1.5}
-                  />
-                </g>
-              );
-            })}
+            <line
+              x1={cx}
+              x2={cx}
+              y1={spineTop}
+              y2={spineBottom}
+              stroke={t.inkSoft}
+              strokeWidth={1}
+              opacity={0.4}
+            />
+            {halves.map(({ grp, d, color, q1, median, q3, markerX }) => (
+              <g key={grp}>
+                <path
+                  d={d}
+                  fill={color}
+                  fillOpacity={0.75}
+                  stroke={color}
+                  strokeWidth={1.5}
+                  strokeOpacity={0.95}
+                  strokeLinejoin="round"
+                />
+                <line
+                  x1={markerX}
+                  x2={markerX}
+                  y1={yScale(q1)}
+                  y2={yScale(q3)}
+                  stroke={t.pageBg}
+                  strokeWidth={5}
+                  strokeLinecap="round"
+                  opacity={0.85}
+                />
+                <circle
+                  cx={markerX}
+                  cy={yScale(median)}
+                  r={4.5}
+                  fill={t.pageBg}
+                  stroke={color}
+                  strokeWidth={1.5}
+                />
+              </g>
+            ))}
+            {isMaxGap && (
+              <text
+                x={cx}
+                y={spineTop - 12}
+                textAnchor="middle"
+                fontSize={13}
+                fontWeight={700}
+                fill={t.ink}
+              >
+                {`Largest gap: ${GAP_INFO.gap >= 0 ? "+" : ""}${GAP_INFO.gap.toFixed(1)} pt`}
+              </text>
+            )}
           </g>
         );
       })}
@@ -273,7 +322,8 @@ export default function Chart() {
         width={W}
         height={CHART_H}
         series={[]}
-        margin={{ top: 20, right: 50, bottom: 74, left: 96 }}
+        skipAnimation
+        margin={{ top: 36, right: 50, bottom: 74, left: 96 }}
         xAxis={[
           {
             id: CAT_AXIS_ID,
