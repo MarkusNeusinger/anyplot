@@ -1,0 +1,254 @@
+library: d3
+language: javascript
+specification_id: timeseries-decomposition
+created: '2026-09-09T20:29:41Z'
+updated: '2026-09-09T20:45:35Z'
+generated_by: claude-sonnet
+workflow_run: 34400814461
+issue: 2992
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'All three Attempt-1 fixes are cleanly applied: an explicit "Sales ($)" shared
+    y-axis unit label now exists, the four panels are built via a proper D3 data-join
+    (`svg.selectAll(''.panel'').data(panels).join(''g'')`) instead of a plain forEach,
+    and the trend now uses a decelerating `log1p` growth curve instead of the previous
+    unrealistic accelerating quadratic.'
+  - New "Holiday peak" callout (amber circle + label) on the Seasonal panel gives
+    the chart a clear focal point and directly answers the prior storytelling feedback.
+  - Correct 4-panel stacked additive decomposition (Original, Trend, Seasonal, Residual)
+    sharing one time axis, mathematically sound centered-moving-average + seasonal-averaging
+    implementation — a legitimate D3-only substitute for statsmodels in the browser.
+  - 'Density-appropriate encoding: continuous curveMonotoneX lines for Original/Trend/Seasonal
+    vs. a stem+dot plot for the noisy Residual component, plus a dashed zero-reference
+    line on the signed panels.'
+  - Theme-adaptive chrome threaded via ANYPLOT_TOKENS is verified pixel-identical
+    for data colors between light and dark renders; both are fully legible.
+  weaknesses:
+  - Title still occupies only ~43% of the 3200px canvas width at 27px — a slightly
+    larger/bolder title would balance the composition better against the large multi-panel
+    canvas.
+  - Series color order breaks strict Imprint canonical order (Original=palette[0],
+    Trend=palette[2], Seasonal=palette[1] instead of 0,1,2) for abstract categories
+    with no real-world color association — not a violation since all hues remain Imprint-sourced
+    and CVD-safe, but canonical order would be the stricter choice.
+  - Residual series uses an ad-hoc custom gray hex (`#6B6A63` light / `#A8A79F` dark)
+    rather than an existing ANYPLOT_TOKENS value (e.g. `inkSoft`) — visually fine
+    but introduces an off-token value not defined in the Imprint style guide.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "timeseries-decomposition · javascript · d3 · anyplot.ai" and a grey subtitle at top. Four vertically stacked panels labeled "Original", "Trend", "Seasonal", "Residual" in dark ink, each with dark tick labels on a warm off-white surface. Shared "Date" x-axis label at bottom and rotated "Sales ($)" y-axis unit label on the far left. Subtle vertical gridlines trace one date through all four panels; a dashed zero-reference line marks the signed Seasonal/Residual panels. An amber "Holiday peak" callout (circle + label) highlights a December seasonal spike.
+      Data: Original = brand green (#009E73), Trend = blue, Seasonal = lavender, Residual = grey stem+dot plot. First series correctly uses the brand green.
+      Legibility verdict: PASS — all title, panel-label, axis-label, and tick text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, subtitle, panel labels, "Date"/"Sales ($)" axis labels, and holiday-peak callout now render in light ink/amber against the dark surface; gridlines and axis domain lines shift to a lighter, low-contrast tone appropriate for dark chrome.
+      Data: Original/Trend/Seasonal/Residual colors are pixel-identical to the light render (green/blue/lavender/grey) — only chrome flipped, as required.
+      Legibility verdict: PASS — no dark-on-dark failures found; every text element (title, subtitle, panel labels, tick labels, axis labels, callout label) is clearly legible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes; title still a touch
+          small (~43% canvas width) relative to the 3200px canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions, incl. the new holiday-peak callout
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line/stem/dot sizing well adapted per panel; residual dots (r=3.2)
+          clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: No red-green as sole signal, adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Four panels use the 3200x1800 canvas efficiently, nothing cut off,
+          no AR-09 clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Shared 'Sales ($)' y-axis unit label now present (fixed from Attempt
+          1), plus 'Date' x-axis label
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is brand green #009E73, colors identical across themes,
+          backgrounds theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom per-component palette, refined typography, amber holiday-peak
+          callout add real polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Domain-only axis lines (no boxed spines), subtle vertical gridlines,
+          generous panel gaps
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Holiday-peak callout gives a clear focal point; color/width hierarchy
+          and dashed zero-line guide the reader (fixed from Attempt 1)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct time-series decomposition plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 4 labeled stacked panels, shared time axis, light gridlines, additive
+          decomposition
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=value per panel, all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; no legend needed, panels labeled directly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Growth trend, strong holiday seasonality, visible residual noise,
+          all decomposition aspects shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly retail sales, neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Decelerating log1p trend now realistic for mature 10-year retail
+          data (fixed from Attempt 1's accelerating quadratic)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Small helper functions (lcg, approxNormal, centeredMovingAverage)
+          justified by decomposition math and lack of browser RNG
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG(7)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; d3 is the sole global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct #container mount-node contract, no animation, current d3
+          7.x API'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Panels now built via proper data-join (selectAll('.panel').data(panels).join('g')),
+          fixing Attempt 1's forEach loop
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Low-level SVG composition of four synchronized panels, curveMonotoneX
+          smoothing, hand-built stem plot
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  - rolling-window
+  styling:
+  - alpha-blending

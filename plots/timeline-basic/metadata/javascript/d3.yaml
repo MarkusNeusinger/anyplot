@@ -1,0 +1,243 @@
+library: d3
+language: javascript
+specification_id: timeline-basic
+created: '2026-09-09T20:02:32Z'
+updated: '2026-09-09T20:46:51Z'
+generated_by: claude-sonnet
+workflow_run: 34397827702
+issue: 2443
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - All 14 events from the data array now render correctly with a visible marker,
+    stem, and both labels in both themes — the correctness bug from Attempt 3 (4/14
+    missing events) is fully fixed.
+  - 'Theme-adaptive chrome is threaded through every element: backgrounds match #FAF8F1/#1A1A17,
+    and all text/ticks flip to the correct ink token with no dark-on-dark or light-on-light
+    failures.'
+  - 'Categorical data colors are pixel-identical between light and dark renders, with
+    the first category (Platform) correctly mapped to Imprint #009E73 and the remaining
+    three categories following canonical palette order.'
+  - Major/minor milestone hierarchy (diamond vs. circle markers via d3.symbol, bolder
+    labels, longer stems) gives the timeline a genuine focal point and visual storytelling
+    device.
+  - Deterministic per-side tier cycling replaces the earlier over-engineered collision-avoidance
+    system with a simpler, provably-safe layout that guarantees no two same-side neighbors
+    share a vertical level.
+  - Title follows the exact mandated format with a sensible descriptive prefix; legend
+    order matches category color order.
+  weaknesses:
+  - 'Design excellence is good but not exceptional: the alternating tiered-stem layout
+    is a well-executed but still fairly standard timeline treatment — a subtler design
+    flourish (e.g. a connecting curve, or emphasis beyond size/weight for major milestones)
+    could push this further.'
+  - 'Library mastery is solid but not deeply distinctive: d3.symbol() diamond/circle
+    differentiation is a nice touch, but the implementation otherwise relies on common
+    scaleTime/scaleOrdinal/selection.join patterns without a more advanced D3-specific
+    technique (e.g. d3-force for label collision avoidance, or a custom axis).'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Product Roadmap · timeline-basic · javascript · d3 · anyplot.ai" in bold dark ink at top center; horizontal dark spine with subtle grey monthly tick marks running across the middle; bold dark-ink event-name labels and lighter soft-ink "Mon YYYY" date sub-labels alternating above/below the spine; centered bottom legend with 4 category swatches (Platform/Mobile/Analytics/Security). All chrome text is clearly readable against the light background.
+      Data: All 14 events render with a colored stem + marker (diamond for the 4 "major" milestones — Platform Beta Launch, API v2 Release, Predictive Insights, Platform GA Release — circle for the other 10). First category (Platform) uses Imprint #009E73 green; Mobile uses lavender, Analytics uses blue, Security uses ochre — matching canonical Imprint palette order.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same layout, spine, tick marks, and legend, with all chrome (title, event names, dates, legend text, spine, ticks) recolored to light-ink tones. No dark-on-dark failures observed anywhere.
+      Data: All 14 events render identically to the light render; marker/stem colors are pixel-identical between the two renders — confirming only chrome flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; sizes appropriate for major/minor
+          hierarchy
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Deterministic per-side tiering keeps all 14 labels clear of each
+          other
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 14 markers render with clear diamond/circle distinction — the
+          Attempt 3 missing-events bug is fixed
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Four perceptually distinct hues, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); no overflow or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches mandated format exactly; date labels are descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order; first series #009E73; backgrounds theme-correct
+          in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Diamond/circle major-minor hierarchy and stroke-ringed markers show
+          real design intent
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean spine, subtle month ticks, generous whitespace, no clutter
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Complete 14-event roadmap with major-milestone emphasis now tells
+          the full story; layout is still fairly standard for the genre
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct event-timeline chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Alternating labels, category color-coding, appropriate date formatting
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Dates correctly mapped along time scale; all events shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match category names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 14 defined events now visible in both renders
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral product-roadmap milestone data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 14 events across a 1-year span is well within the spec's 5-50 range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; simple map/each loops
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic in-memory data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Simplified deterministic tier-cycling layout replaced the earlier
+          over-engineered collision logic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts into #container per the harness contract, no animation'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic selection.join, scaleTime, scaleOrdinal usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: d3.symbol() diamond/circle hierarchy is a real distinctive technique,
+          but overall usage stays close to common D3 patterns
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling: []
