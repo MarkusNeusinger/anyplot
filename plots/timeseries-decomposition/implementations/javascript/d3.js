@@ -1,7 +1,7 @@
 // anyplot.ai
 // timeseries-decomposition: Time Series Decomposition Plot
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-09
+// Quality: 86/100 | Created: 2026-09-09
 
 const t = window.ANYPLOT_TOKENS;
 const theme = window.ANYPLOT_THEME === "dark" ? "dark" : "light";
