@@ -42,6 +42,22 @@ for (let i = 0; i < 650; i += 1) {
   }
 }
 
+// Label the top 3 most significant genes by name to add storytelling focus.
+[...upRegulated, ...downRegulated]
+  .sort((a, b) => b.value[1] - a.value[1])
+  .slice(0, 3)
+  .forEach((point) => {
+    point.label = {
+      show: true,
+      formatter: "{b}",
+      position: "top",
+      distance: 6,
+      color: t.ink,
+      fontSize: 12,
+      fontWeight: 600,
+    };
+  });
+
 // --- Init ---------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
