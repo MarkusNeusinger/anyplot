@@ -1,0 +1,256 @@
+library: makie
+language: julia
+specification_id: sparkline-basic
+created: '2026-09-09T18:24:43Z'
+updated: '2026-09-09T18:48:09Z'
+generated_by: claude-sonnet
+workflow_run: 34388137580
+issue: 1011
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 82
+review:
+  strengths:
+  - Area-fill-under-line + endpoint-dot convention (band! down to series minimum,
+    hollow ring at day 1, brand-filled halo dot at day 60) is a recognizable, polished
+    financial-sparkline pattern that goes beyond a bare line — good use of Makie's
+    band! primitive.
+  - 'Theme-adaptive chrome is fully correct: light background measures exactly #FAF8F1
+    (250,248,241) and dark measures exactly #1A1A17 (26,26,23) at multiple sample
+    points; data color (#009E73) is byte-identical between renders.'
+  - 'True minimalism honored: hidedecorations!() + hidespines!() remove all axes/ticks/gridlines
+    as the spec requires, and the title is the only chrome element.'
+  - 'Realistic, neutral data: cumulative-sum-of-steps random walk for ''daily active
+    users of a SaaS product'' produces a plausible mixed up/down trend with a clear
+    plateau and dip, not a monotonic or noise-only series.'
+  - 'Clean, idiomatic, reproducible code: Random.seed!(42), only used imports, no
+    functions/classes, current size= (not deprecated resolution=) kwarg for the PNG
+    save.'
+  weaknesses:
+  - 'The min/max highlight dots never render: pixel-scanned both plot-light.png and
+    plot-dark.png at full resolution (tolerance ±40 on RGB) for IMPRINT_PALETTE[3]
+    (#4467A3 blue, the idx_min marker) and IMPRINT_PALETTE[4] (#BD8233 ochre, the
+    idx_max marker) and found zero matching pixels in either file. The two scatter!
+    calls at lines ~63-70 execute but produce no visible output — likely markersize=16
+    rendering under/behind the band+line fill, or a units/z-order issue specific to
+    CairoMakie. This is dead code that silently fails; either fix the rendering (try
+    a larger markersize, an explicit strokecolor=PAGE_BG halo like the endpoint markers
+    use, or draw them after confirming z-order) or remove the two calls.'
+  - 'The first-point marker (hollow ring: fill=PAGE_BG, strokewidth=2, strokecolor=BRAND)
+    is visually indistinguishable from the line itself since the ring color matches
+    the line color exactly — at the canvas scale it just reads as a slightly thicker
+    patch where the line starts, not as a distinct ''reference point'' marker. Consider
+    a visibly different treatment (e.g. a muted/neutral stroke, or a small outlined
+    dot with the PAGE_BG halo used on the endpoint marker) so it reads as intentional.'
+  - 'Vertical canvas utilization is low: the line+fill only spans y=614 to y=1311
+    (~697px of the 1800px canvas height, ~39%), a byproduct of the 1.0x-range y-padding
+    on both sides (ylims tripling the effective vertical range vs. the data extent).
+    Combined with the title occupying only ~31% of canvas width, the chart reads as
+    a thin band inside a lot of empty canvas — consider tightening y_pad (e.g. 0.3-0.5x
+    range) to give the trend more visual presence.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, measured (250,248,241) = #FAF8F1, matches spec exactly.
+      Chrome: Only element is the title "sparkline-basic · julia · makie · anyplot.ai", bold, dark ink (#1A1A17-ish), clearly readable, positioned top-center. No axes, ticks, gridlines, or labels present (correct for a sparkline). Title occupies only ~31% of canvas width (996px of 3200px) — legible but visually small relative to the canvas.
+      Data: Single continuous brand-green (#009E73) line depicting a daily-active-users trend across 60 days: starts flat, dips to a trough, rises sharply into a plateau with a small notch, dips again, and ends on a modest rise. A soft green area fill (alpha ~0.22) shades from the line down to the series' own minimum, giving an area-chart "sparkline" feel. A larger brand-green dot with a light halo marks the final (most recent) data point clearly. The two intended min/max highlight dots (blue #4467A3, ochre #BD8233) do NOT appear anywhere in the image — confirmed by a full-resolution pixel scan (0 matching pixels). The first-point marker is present in code but visually blends into the line start (same green color) and is not distinguishable as a separate marker.
+      Legibility verdict: PASS (title and line both fully readable; no text legibility issues, but see weaknesses for missing/indistinct marker elements).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, measured (26,26,23) = #1A1A17, matches spec exactly.
+      Chrome: Title renders in light ink (near #F0EFE8), clearly readable against the dark background — no dark-on-dark issue. Same layout as light render, only chrome flipped.
+      Data: Brand-green line and area fill are byte-identical in hue to the light render (#009E73), confirming color consistency across themes. The endpoint dot is visible with a dark-background-colored halo. As in the light render, the blue/ochre min/max dots are absent from a full-resolution pixel scan, and the first-point ring marker is indistinguishable from the line.
+      Legibility verdict: PASS (all rendered text and the primary line/fill/endpoint marker are clearly readable in dark mode; no dark-on-dark failures found).
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title explicitly sized (26pt), fully readable in both themes; occupies
+          only ~31% of canvas width so it reads a bit small relative to the mandated-title
+          norm, but not clipped or squeezed
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Line, area fill, and endpoint marker are well-sized and clearly visible;
+          the two min/max highlight dots are completely invisible (0 matching pixels
+          found in a full-resolution scan of both renders)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue line/fill, good contrast against both backgrounds, no
+          red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: true
+        comment: Full width used but vertical extent only ~39% of canvas height (697/1800px)
+          due to generous y-padding, plus a proportionally small title — some wasted
+          canvas space
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels by design (spec-correct for a sparkline); title present
+          and correctly formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is exact #009E73, identical across themes; backgrounds
+          measure exactly #FAF8F1/#1A1A17; intended multi-color positions (3,4) chosen
+          correctly even though they fail to render'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        comment: Area-fill + endpoint-halo convention is a thoughtful, above-default
+          design choice recognizable from financial sparkline widgets, but broken
+          min/max markers and an indistinct first-point marker undercut the polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: Clean, spine-free, gridline-free presentation with a subtle alpha-blended
+          fill; some refinement lost to underused vertical space
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Area fill plus the highlighted final value creates a 'trend + current
+          state' focal point, but the intended min/max analytical highlight (per spec's
+          optional suggestion) does not actually appear
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct minimal single-line sparkline with no axes/labels/gridlines
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        comment: Fill-under-line and last-point reference implemented and visible;
+          min/max highlight and first-point reference are present in code but fail
+          to render distinctly
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: Sequential day index vs. value, full series shown across full width
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title exactly 'sparkline-basic · julia · makie · anyplot.ai'; no
+          legend needed for single series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: Trend shows dip, sharp rise, plateau-with-notch, dip, and rise —
+          good variety for a single-series sparkline
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Neutral, plausible SaaS daily-active-users scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Cumulative random-walk magnitude and starting value are realistic
+          for a DAU metric
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: Linear imports/data/plot/save script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        comment: The two idx_min/idx_max scatter! calls are dead code — they run without
+          error but produce zero visible pixels in either render
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) with current size=
+          kwarg, no deprecated calls
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Good use of Axis, hidedecorations!/hidespines!, ylims!/xlims!, and
+          band! for the fill
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: band! is a Makie-specific area-fill primitive not just a generic
+          fill_between port, plus PAGE_BG-stroked halo markers exploit CairoMakie's
+          compositing for a cutout look
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
