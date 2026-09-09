@@ -102,6 +102,32 @@ for (const v of variables) {
   domainByKey[v.key] = getDomain(records.map((r) => r[v.key]));
 }
 
+// Chart.js-specific technique: a registered plugin (beforeDraw hook) that
+// paints an accent stroke directly onto a chart's chartArea. Applied only to
+// the petal-length/petal-width cells — the strongest pairwise relationship in
+// the dataset — so the plugin system itself carries the focal-insight cue
+// rather than a CSS wrapper.
+const FOCUS_PAIR = new Set(["petal_length", "petal_width"]);
+const focusAccentPlugin = {
+  id: "focusAccent",
+  beforeDraw(chart, _args, opts) {
+    if (!opts?.active) return;
+    const { ctx, chartArea } = chart;
+    if (!chartArea) return;
+    ctx.save();
+    ctx.strokeStyle = opts.color;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(
+      chartArea.left + 1,
+      chartArea.top + 1,
+      chartArea.right - chartArea.left - 2,
+      chartArea.bottom - chartArea.top - 2,
+    );
+    ctx.restore();
+  },
+};
+Chart.register(focusAccentPlugin);
+
 // Per-variable stacked histogram counts (diagonal cells)
 function histogramBySpecies(key) {
   const { min, max } = domainByKey[key];
@@ -210,23 +236,34 @@ variables.forEach((rowVar, rowIdx) => {
   rowDiv.appendChild(rowLabel);
 
   variables.forEach((colVar, colIdx) => {
+    const isLeftCol = colIdx === 0;
+    const isBottomRow = rowIdx === N - 1;
+    const isDiagonal = rowVar.key === colVar.key;
+
     const cellWrap = document.createElement("div");
     cellWrap.style.position = "relative";
     cellWrap.style.flex = "1";
     cellWrap.style.minWidth = "0";
     cellWrap.style.background = t.elevatedBg;
-    cellWrap.style.border = `1px solid ${t.grid}`;
+    // Only edge cells (which anchor the row/column labels) and diagonal
+    // histograms keep a visible border; interior scatter cells stay
+    // borderless so the grid reads as one panel instead of 16 boxed tiles.
+    cellWrap.style.border =
+      isDiagonal || isLeftCol || isBottomRow
+        ? `1px solid ${t.grid}80`
+        : "1px solid transparent";
     cellWrap.style.borderRadius = "6px";
     cellWrap.style.overflow = "hidden";
+    if (isDiagonal) {
+      // A touch of breathing room around each diagonal histogram.
+      cellWrap.style.padding = "3px";
+    }
 
     const canvas = document.createElement("canvas");
     cellWrap.appendChild(canvas);
     rowDiv.appendChild(cellWrap);
 
-    const isLeftCol = colIdx === 0;
-    const isBottomRow = rowIdx === N - 1;
-
-    if (rowVar.key === colVar.key) {
+    if (isDiagonal) {
       // Diagonal: stacked histogram showing the univariate distribution
       const { binLabels, counts } = histogramBySpecies(rowVar.key);
       new Chart(canvas, {
@@ -261,8 +298,8 @@ variables.forEach((rowVar, rowIdx) => {
               ticks: {
                 display: isBottomRow,
                 color: t.inkSoft,
-                font: { size: 13 },
-                maxTicksLimit: 5,
+                font: { size: 14 },
+                maxTicksLimit: 4,
               },
               grid: { display: false },
             },
@@ -271,8 +308,8 @@ variables.forEach((rowVar, rowIdx) => {
               ticks: {
                 display: isLeftCol,
                 color: t.inkSoft,
-                font: { size: 13 },
-                maxTicksLimit: 4,
+                font: { size: 14 },
+                maxTicksLimit: 3,
               },
               grid: { color: t.grid },
             },
@@ -280,7 +317,12 @@ variables.forEach((rowVar, rowIdx) => {
         },
       });
     } else {
-      // Off-diagonal: pairwise scatter, colored by species
+      // Off-diagonal: pairwise scatter, colored by species. The
+      // petal-length/petal-width cells (the dataset's strongest pairwise
+      // correlation) get a touch more marker weight plus the focusAccent
+      // plugin outline to sharpen that focal relationship.
+      const isFocalPair =
+        FOCUS_PAIR.has(rowVar.key) && FOCUS_PAIR.has(colVar.key);
       new Chart(canvas, {
         type: "scatter",
         data: {
@@ -289,9 +331,9 @@ variables.forEach((rowVar, rowIdx) => {
             data: records
               .filter((r) => r.species === spec.name)
               .map((r) => ({ x: r[colVar.key], y: r[rowVar.key] })),
-            backgroundColor: `${spec.color}A6`,
-            pointRadius: 3,
-            pointHoverRadius: 4,
+            backgroundColor: `${spec.color}${isFocalPair ? "C2" : "A6"}`,
+            pointRadius: isFocalPair ? 4 : 3,
+            pointHoverRadius: isFocalPair ? 5 : 4,
           })),
         },
         options: {
@@ -301,6 +343,7 @@ variables.forEach((rowVar, rowIdx) => {
           plugins: {
             legend: { display: false },
             title: { display: false },
+            focusAccent: { active: isFocalPair, color: t.palette[0] },
             tooltip: {
               callbacks: {
                 label: (ctx) =>
@@ -315,8 +358,8 @@ variables.forEach((rowVar, rowIdx) => {
               ticks: {
                 display: isBottomRow,
                 color: t.inkSoft,
-                font: { size: 13 },
-                maxTicksLimit: 5,
+                font: { size: 14 },
+                maxTicksLimit: 4,
               },
               grid: { color: t.grid },
             },
@@ -326,8 +369,8 @@ variables.forEach((rowVar, rowIdx) => {
               ticks: {
                 display: isLeftCol,
                 color: t.inkSoft,
-                font: { size: 13 },
-                maxTicksLimit: 5,
+                font: { size: 14 },
+                maxTicksLimit: 4,
               },
               grid: { color: t.grid },
             },
