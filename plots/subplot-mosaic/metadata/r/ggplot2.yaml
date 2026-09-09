@@ -1,0 +1,241 @@
+library: ggplot2
+language: r
+specification_id: subplot-mosaic
+created: '2026-09-09T19:43:41Z'
+updated: '2026-09-09T20:27:48Z'
+generated_by: claude-sonnet
+workflow_run: 34396290808
+issue: 3002
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Patchwork design-string mosaic ("AAA\nBBC\nDEF") directly matches the spec's ASCII-art
+    layout requirement, with genuine cell spanning and asymmetric panel sizes
+  - Consistent single-hue Imprint green across all six panels reads as a coherent
+    analytics dashboard rather than six unrelated charts, and data colors are pixel-identical
+    between light and dark renders
+  - 'Good plot-type variety across cells: area+line trend, labeled bar chart, size-encoded
+    bubble scatter, and three small-multiple trend lines'
+  - Peak annotation ("2.8%") on the conversion-rate panel and the bubble-size legend
+    add a second data dimension and a clear focal point without any fake-interactivity
+    tricks
+  - Realistic, internally consistent web-analytics dataset (page views, device split,
+    bounce/session/conversion trends) with plausible relative magnitudes
+  - Explicit font sizing throughout (per-panel theme overrides) and clean KISS-ish
+    structure with set.seed(42) for reproducibility
+  weaknesses:
+  - Bubble-legend text in the "Page engagement" panel is set at ~6pt, and the small-multiple
+    panel titles at ~8.5pt — both are readable at native 3200x1800 but will be the
+    first elements to blur out once the PNG is scaled down to a ~400px mobile thumbnail;
+    consider nudging legend text up to ~7-7.5pt
+  - '"Daily page views" panel (top row) has generous unused vertical headroom above
+    the area fill relative to its cell height, and the bubble-chart legend sits with
+    a visible gap from the data rather than tight against it — minor layout balance
+    deduction, not a hard overflow'
+  - peak_label() introduces a tiny helper function; strict KISS (no functions/classes)
+    would inline the which.max lookup directly since it's used only once
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches spec.
+      Chrome: Title "subplot-mosaic · r · ggplot2 · anyplot.ai" bold black top-left, fully visible with no top-edge clipping. Six panel titles ("Daily page views", "Traffic by device", "Page engagement", "Bounce rate (%)", "Avg session (s)", "Conversion rate (%)") all dark ink, clearly legible. Axis tick labels dark gray, readable. Grid lines subtle horizontal-only major lines.
+      Data: All series render in Imprint green (#009E73) with alpha-blended fills/points; bar labels ("12,500", "8,700", "2,100") in dark ink; bubble-size legend ("Pageviews": 2,000/5,000/9,000) fully inside the canvas, not clipped; "2.8%" peak annotation in bold dark text.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches spec.
+      Chrome: Same title and panel titles now in light/white text, clearly legible against the dark background — no dark-on-dark failures observed. Axis tick labels light gray, readable. Grid lines subtle.
+      Data: Data colors identical to light render (#009E73 green, area fill alpha unchanged) — only chrome flipped as required. Bar value labels and the "2.8%" annotation now render in light ink, correctly readable against dark fill/background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All sizes explicit and readable at full res; legend text (~6pt) and
+          small-panel titles (~8.5pt) are the first to risk blur at mobile thumbnail
+          scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data across any of the six panels in either
+          theme
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers/lines/bars sized appropriately for each panel's data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue monochromatic scheme, no red-green reliance, good contrast
+          in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Mosaic fills canvas well; minor unused headroom in the top panel
+          and a small gap between the bubble legend and its data
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units (Bounce %, Avg session (s), Conversion
+          rate (%))
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/only series is #009E73 in both renders, identical data color,
+          correct theme-adaptive chrome and backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Cohesive monochromatic dashboard aesthetic across six distinct panel
+          types, clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: Spines removed via theme_minimal, subtle horizontal-only grid, generous
+          margins, no legend clutter on most panels
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        comment: Panel-size hierarchy (large overview, medium detail, small metric
+          trio) plus peak annotation and bubble-size encoding guide the viewer to
+          the key insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: patchwork design-string mosaic matches spec's ASCII-art layout requirement
+          exactly
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Varying sizes, asymmetric arrangement, mixed plot types (line/area,
+          bar, scatter/bubble) all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: X/Y correctly assigned in every panel, full data range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title format exactly matches mandated pattern; legend labels (Pageviews,
+          device names) match data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: Good variety of trend shapes and magnitudes across panels; device/page
+          breakdowns show real spread
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Neutral, plausible web-analytics dashboard scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Page views, device split, bounce/session/conversion values all realistic
+          and internally consistent
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        comment: Mostly flat imports->data->plot->save, but includes a small peak_label()
+          helper
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: ggplot2, patchwork, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Appropriate complexity for a 6-panel dashboard, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: ggsave with ragg::agg_png device, plot-{theme}.png naming
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Idiomatic ggplot2 geoms combined with patchwork composition, the
+          standard R approach to mosaic layouts
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: patchwork's design-string cell-spanning API is distinctive to the
+          R ecosystem and directly implements the spec's mosaic-string concept
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - patchwork
+  techniques:
+  - subplots
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - grid-styling
+  - minimal-chrome
