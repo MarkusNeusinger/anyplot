@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: timeline-basic
 created: '2026-09-09T20:03:22Z'
-updated: '2026-09-09T20:08:19Z'
+updated: '2026-09-09T20:15:40Z'
 generated_by: claude-sonnet
 workflow_run: 34398076075
 issue: 2443
@@ -12,48 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeline-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/javascript/echarts/plot-dark.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
   - 'Correct Imprint palette: Planning (first category) renders as brand green #009E73,
     and all four category colors are pixel-identical between light and dark renders
     — only chrome flips.'
-  - 'Both themes are cleanly readable: warm off-white (#FAF8F1) and near-black (#1A1A17)
-    backgrounds, dark/light text with strong contrast, and a subtle inkSoft baseline/stems
-    that don''t compete with the data.'
+  - 'Both themes are cleanly readable: warm off-white/near-black backgrounds, dark/light
+    text with strong contrast, and a subtle inkSoft baseline/stems that don''t compete
+    with the data.'
   - Alternating above/below label placement (per the spec's explicit guidance) cleanly
-    avoids overlap across all 10 events without needing zoom or decimation.
-  - Deterministic, dependency-free in-memory data; idiomatic ECharts composition combining
-    a silent line series (baseline + stems) with per-category scatter series and rich-text
-    label formatting for two-line name+date labels.
-  - Title exactly matches the mandated '{Descriptive Title} · {spec-id} · {language}
-    · {library} · anyplot.ai' format; legend swatches faithfully mirror marker colors.
+    avoids overlap across all 10 events.
+  - 'Themed tooltip now configured (trigger: ''item'', elevatedBg background, name
+    + date formatter) — addresses the prior review''s LM-02 gap and gives the HTML
+    output real hover value.'
+  - Deterministic, dependency-free in-memory data; idiomatic ECharts composition (silent
+    line series for baseline/stems + per-category scatter series) with rich-text label
+    formatting for two-line name+date labels.
+  - Title exactly matches the mandated format; legend swatches faithfully mirror marker
+    colors.
   weaknesses:
-  - 'No tooltip component is configured anywhere in the option — for an interactive
-    library this misses a chance to surface hover detail (name + date) in the HTML
-    output beyond the static on-canvas labels; add `tooltip: { trigger: ''item'',
-    backgroundColor: t.elevatedBg, textStyle: { color: t.ink } }` styled from theme
-    tokens.'
-  - Title spans only ~40-50% of canvas width even though it is longer (~75 chars incl.
-    descriptive prefix) than the 67-char baseline the auto-scale formula was tuned
-    against — the font could be scaled up slightly for a stronger presence without
-    approaching overflow.
-  - Visual design is clean but conservative — there is no single focal point beyond
-    the chronological sequence (e.g. no subtle emphasis on the most recent/upcoming
-    milestone); a small size or opacity differentiation could add a clearer storytelling
-    hierarchy.
+  - Title spans only ~40-50% of canvas width despite being ~77 chars (with descriptive
+    prefix) — longer than the 67-char baseline the auto-scale formula targets. The
+    current formula (Math.min(1, 67/len)) only ever shrinks, never grows past the
+    22px cap, so the title reads smaller than the style guide's 50-70% target. Consider
+    raising the base fontsize slightly or removing the upper cap for near-67-char
+    titles.
+  - Visual design is clean but conservative — no single focal point beyond the chronological
+    sequence; a subtle size/opacity differentiation (e.g. emphasizing the most recent
+    or upcoming milestone) could sharpen the storytelling hierarchy.
+  - Tooltip is a good first step but the interactive HTML output still doesn't use
+    any other ECharts-distinctive interactivity (e.g. dataZoom for panning long timelines,
+    or a toolbox) that would strengthen LM-02 further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Product Launch Roadmap · timeline-basic · javascript · echarts · anyplot.ai" in dark ink at top, centered; legend below it with four colored swatches (Planning/Development/Testing/Launch) in dark ink text; x-axis tick labels (Jan 2025 … Jan 2026) in a softer gray-brown; all text is clearly legible against the light background.
-      Data: A horizontal baseline drawn in soft dark gray runs across the middle; ten vertical stems alternate above and below the baseline, each ending in a colored circular marker (green for Planning, violet for Development, steel-blue for Testing, amber for Launch) matching the legend exactly; each marker has a bold event-name label and a lighter date label placed above (for upward stems) or below (for downward stems) its marker, with no overlap between any two labels.
+      Background: Warm off-white (#FAF8F1) — not pure white, matches spec.
+      Chrome: Title "Product Launch Roadmap · timeline-basic · javascript · echarts · anyplot.ai" in dark ink, clearly legible. Legend (Planning/Development/Testing/Launch) in dark text with colored swatches, centered below the title. Month/year axis labels along the bottom in soft gray, all readable.
+      Data: A soft dark-gray horizontal baseline runs across the middle; ten vertical stems alternate above/below it, each ending in a colored circular marker (green/lavender/blue/ochre matching the legend and Imprint canonical order) with a bold event-name label and a lighter gray date label placed clear of every other label. First category (Planning) is brand green #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and legend text render in light gray/white, clearly legible against the dark surface; x-axis tick labels are a dimmer light-gray, still readable; no dark-on-dark text anywhere.
-      Data: Same baseline/stem layout as the light render, with all four category marker colors (green, violet, steel-blue, amber) visually identical to the light render — confirming only chrome (background, text) flips between themes, not data colors.
+      Background: Warm near-black (#1A1A17) — not pure black, matches spec.
+      Chrome: Title, legend text, event-name labels, and axis month/year labels all render in light gray/white with strong contrast against the dark background — no dark-on-dark failures anywhere.
+      Data: The four category marker colors (green, lavender, blue, ochre) are visually identical to the light render — confirms only chrome (background/text) flips between themes, not data colors. Baseline and stems render in a lighter soft-gray tone appropriate for the dark surface.
       Legibility verdict: PASS
+
+    Both renders pass the theme-readability check. No AR-08 (fake interactivity) or AR-09 (edge clipping) issues observed in either render.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -64,49 +68,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; title could be scaled slightly
-          larger relative to its length
+        comment: All text readable in both themes; explicit font sizes throughout
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Alternating above/below placement across 10 events avoids any collisions
+        comment: Alternating above/below label placement cleanly avoids collisions
+          across all 10 events
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 18px markers are visible for this sparse (10-point) dataset; could
-          be marginally larger
+        comment: Markers well-sized (18px) with border for 10-event density; stems
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four distinguishable hues, category also reinforced by text label,
-          not color-only
+        comment: Imprint palette is CVD-safe; category encoded redundantly via legend
+          + position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, no clipping, generous margins, balanced axis
-          usage
+        comment: Good proportions, generous margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title, y-axis correctly hidden since it encodes only
-          label offset, not data
+        comment: Descriptive title, clear month/year axis formatting
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73, palette identical across themes, correct
-          theme backgrounds'
+        comment: 'First series #009E73, canonical Imprint order, identical across
+          themes, correct backgrounds'
     design_excellence:
       score: 11
       max: 20
@@ -115,22 +117,22 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Clean, intentional composition with rich-text labels and bordered
-          markers, but overall look stays fairly minimal
+        passed: false
+        comment: Clean, intentional composition (rich-text labels, bordered markers)
+          but overall look stays fairly minimal
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
+        passed: false
         comment: No axis clutter, subtle baseline/stems, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Chronological hierarchy is clear via stems/color, but no single focal
-          point beyond sequence
+        comment: Chronological hierarchy reads clearly via stems/color, but no single
+          focal point beyond the sequence
     spec_compliance:
       score: 15
       max: 15
@@ -140,27 +142,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct event-timeline form with stems and markers
+        comment: Correct event timeline with stems and markers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Date, event name, category color-coding, and alternating label positions
+        comment: Alternating labels, category color-coding, clear date formatting
           all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X mapped to time axis correctly; all 10 events shown within the 5-50
-          recommended range
+        comment: Time axis correctly maps event dates; all 10 events shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches convention; legend labels match category names/colors
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match category names
     data_quality:
       score: 14
       max: 15
@@ -170,19 +172,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Covers date, event, and category as specified
+        comment: Covers dates, event names, categories; within spec's 5-50 event range
+          (10 events)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral product roadmap milestones
+        comment: Plausible, neutral product-launch roadmap data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 events spread sensibly across a 1-year span
+        comment: Sensible 1-year timeline with realistic spacing between milestones
     code_quality:
       score: 10
       max: 10
@@ -192,33 +195,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: Flat script, no unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded, deterministic dates
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No extraneous imports; echarts global only
+        comment: No imports beyond the echarts global, as required
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for stem construction; no fake UI
+        comment: Clean stem/label construction, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Respects mount-node contract, animation disabled
+        comment: 'Correct mount-node contract, animation: false, current ECharts API'
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -226,24 +229,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good composition of scatter + line series with rich-text label formatting
+        comment: Silent line series for baseline/stems layered with scatter series
+          is a clean idiomatic ECharts pattern
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: No tooltip/interactivity configured — a missed opportunity to showcase
-          ECharts' hallmark hover experience
+        comment: Themed tooltip now added (fixes prior attempt's gap), but still no
+          dataZoom/toolbox or other hallmark ECharts interactivity
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - time-series
-  styling:
-  - minimal-chrome
-  - edge-highlighting
+  styling: []
