@@ -1,7 +1,3 @@
-// anyplot.ai
-// subplot-grid: Subplot Grid Layout
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 82/100 | Created: 2026-09-09
 //# anyplot-orientation: landscape
 // anyplot.ai
 // subplot-grid: Subplot Grid Layout
@@ -12,6 +8,7 @@ import { LineChart } from "@mui/x-charts/LineChart";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { PieChart } from "@mui/x-charts/PieChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { Box, Typography } from "@mui/material";
 
 const t = window.ANYPLOT_TOKENS;
@@ -46,6 +43,8 @@ const closingPrices = dayLabels.map(() => {
   price += (rng() - 0.47) * 2.4;
   return Math.round(price * 100) / 100;
 });
+
+const peakPrice = Math.max(...closingPrices);
 
 const tradingVolume = dayLabels.map(() => Math.round(420_000 + rng() * 380_000));
 
@@ -111,7 +110,15 @@ export default function Chart() {
             xAxis={[{ scaleType: "point", data: dayLabels, label: "Trading Day" }]}
             yAxis={[{ label: "Price ($)" }]}
             series={[{ data: closingPrices, label: "Close", showMark: false, curve: "monotoneX" }]}
-          />
+          >
+            <ChartsReferenceLine
+              y={peakPrice}
+              label={`Peak $${peakPrice.toFixed(2)}`}
+              labelAlign="end"
+              lineStyle={{ stroke: t.amber, strokeDasharray: "4 4" }}
+              labelStyle={{ fill: t.amber, fontSize: 12, fontWeight: 600 }}
+            />
+          </LineChart>
         </Box>
 
         {/* Top-right: bar chart — volume, shares the day-index axis with price */}
@@ -128,7 +135,7 @@ export default function Chart() {
             slotProps={{ legend: { hidden: true } }}
             margin={{ left: 56, right: 16, top: 8, bottom: 40 }}
             xAxis={[{ scaleType: "band", data: dayLabels, label: "Trading Day" }]}
-            yAxis={[{ valueFormatter: (v: number) => `${Math.round(v / 1000)}K` }]}
+            yAxis={[{ label: "Volume (K)", valueFormatter: (v: number) => `${Math.round(v / 1000)}` }]}
             series={[{ data: tradingVolume, label: "Volume" }]}
           />
         </Box>
@@ -148,7 +155,7 @@ export default function Chart() {
             margin={{ left: 64, right: 20, top: 8, bottom: 40 }}
             xAxis={[{ label: "Volume (shares)", valueFormatter: (v: number) => `${Math.round(v / 1000)}K` }]}
             yAxis={[{ label: "Price ($)" }]}
-            series={[{ data: priceVolumePoints, markerSize: 6 }]}
+            series={[{ data: priceVolumePoints, markerSize: 9 }]}
           />
         </Box>
 
@@ -167,8 +174,8 @@ export default function Chart() {
             series={[
               {
                 data: sectorAllocation,
-                innerRadius: CHART_H * 0.14,
-                outerRadius: CHART_H * 0.42,
+                innerRadius: Math.min(CELL_W, CHART_H) * 0.17,
+                outerRadius: Math.min(CELL_W, CHART_H) * 0.47,
                 paddingAngle: 2,
                 cx: CELL_W / 2,
                 cy: CHART_H / 2,
