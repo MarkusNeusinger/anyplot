@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: scatter-matrix
 created: '2026-09-09T06:44:03Z'
-updated: '2026-09-09T06:48:11Z'
+updated: '2026-09-09T06:58:02Z'
 generated_by: claude-sonnet
 workflow_run: 34319896220
 issue: 2035
@@ -12,108 +12,104 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/javascript/chartjs/plot-dark.html
-quality_score: 86
+quality_score: 93
 review:
   strengths:
-  - 'Correct 4x4 SPLOM structure: stacked-by-species histograms on the diagonal, symmetric
-    pairwise scatter off-diagonal, matching the specification exactly'
-  - Shared per-variable domains keep the same variable's X range (as a column) and
-    Y range (as a row) consistent, so the matrix reads coherently across cells
-  - Correct Imprint palette order (green/lavender/blue) with alpha-blended markers
-    (hex `A6` suffix) to reduce overplotting in dense scatter cells
-  - Variable names appear only once along the left edge and bottom edge (not repeated
-    per cell), matching the spec's edge-labeling requirement
-  - Realistic, neutral iris-like flower dataset showing both between-species clustering
-    and a genuine within-species petal-length -> petal-width correlation
-  - Theme-adaptive chrome correctly threaded through legend, labels, ticks, and cell
-    borders via ANYPLOT_TOKENS; data colors identical between light and dark renders
+  - 'Correct Imprint palette in canonical order — Setosa is #009E73 (position 1),
+    Versicolor lavender (position 2), Virginica blue (position 3) — identical across
+    both themes.'
+  - 'Both renders fully theme-correct: warm off-white #FAF8F1 light background with
+    dark text, warm near-black #1A1A17 dark background with light text, no dark-on-dark
+    or light-on-light failures anywhere across the 16 sub-charts.'
+  - 'Full spec feature coverage: diagonal cells show stacked-by-species histograms
+    (univariate distributions), off-diagonal cells show pairwise scatter colored by
+    species, variable names appear along the left (rotated) and bottom edges only,
+    and the matrix is symmetric (transposed pairs mirror correctly).'
+  - 'Distinctive Chart.js technique: a registered `focusAccent` plugin (beforeDraw
+    hook) draws an outline around the petal_length/petal_width cell pair — the dataset''s
+    strongest pairwise correlation — creating a genuine focal point via the plugin
+    system rather than a CSS overlay.'
+  - Deterministic seeded LCG data generator produces realistic iris-like clustering
+    with plausible within- and between-species correlation structure.
+  - 'Correct mount-node/API contract: one canvas per cell, `animation:false`, `maintainAspectRatio:false`,
+    no filesystem calls, alpha-blended markers to manage overplotting.'
   weaknesses:
-  - 'Library Mastery is generic: the grid-of-16-Chart.js-instances approach is essentially
-    the only way to build a SPLOM in Chart.js and isn''t distinctive to the library
-    — consider a Chart.js-specific touch (e.g. per-cell custom tooltip formatting,
-    a shared crosshair plugin, or chartArea styling) to raise LM-02'
-  - 'Design Excellence: every cell (including interior off-diagonal ones) has a full
-    rounded border/box, giving a slightly utilitarian ''boxed-in'' look rather than
-    a refined SPLOM feel — consider removing borders on interior cells or lightening
-    them further, and adding a touch more breathing room around the diagonal histograms'
-  - Tick labels (histogram counts, scatter axis numbers) become hard to read once
-    the PNG is scaled down to mobile-thumbnail width (~400px) — consider bumping tick
-    font size slightly or reducing maxTicksLimit further so labels stay legible at
-    small sizes
-  - 'Data storytelling is default: species color-coding is the only emphasis technique
-    — consider a subtle visual cue (e.g. slightly larger/more opaque markers for the
-    diagonal-adjacent petal length/width relationship, the strongest correlation in
-    the dataset) to sharpen the focal insight'
-  - 'CQ-01 KISS: helper functions (makeLcg, randNormal, getDomain, histogramBySpecies)
-    are reasonable for a 4x4 grid but move away from a flat imports->data->plot script
-    structure'
+  - 'CQ-01: Several helper functions (makeLcg, randNormal, getDomain, histogramBySpecies)
+    deviate from a flat top-to-bottom KISS script — justified by the matrix''s data-generation
+    and per-cell layout needs, but still a structural deduction versus pure inline
+    code.'
+  - In-cell tick labels (14px) across the 16 sub-charts become quite small at the
+    ~400px mobile thumbnail scale — the title, legend, and edge axis labels stay legible,
+    but exact tick values inside individual cells are hard to read at that size. Largely
+    inherent to a dense 4x4 grid chart type, but still a minor legibility concession
+    worth trimming further if feasible (e.g. maxTicksLimit already reduces count;
+    consider slightly larger tick font for edge cells only).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent) page background with each of the 16 grid cells drawn on a very slightly lighter elevated panel with a thin subtle border and rounded corners.
-      Chrome: Title "scatter-matrix · javascript · chartjs · anyplot.ai" is bold dark ink, clearly legible and centered at top. A centered legend row (Setosa/Versicolor/Virginica swatches + labels) sits below the title in dark ink. Row variable labels (rotated, vertical) appear only on the far-left edge; column variable labels appear only along the bottom edge. Tick labels are soft dark gray, readable at full resolution, though small on tightly-packed diagonal histogram cells.
-      Data: Diagonal cells show stacked histograms of each variable split by species; off-diagonal cells show scatter plots colored by species. First series (Setosa) renders in Imprint brand green #009E73, Versicolor in lavender #C475FD, Virginica in blue #4467A3 — all semi-transparent to handle overlap.
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "scatter-matrix · javascript · chartjs · anyplot.ai" in dark ink, clearly visible and centered. Legend row (Setosa/Versicolor/Virginica swatches + labels) fully readable. Rotated row labels ("Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)") along the left edge and matching column labels along the bottom edge are all legible. Tick labels only appear on the leftmost column and bottom row (correct SPLOM convention), in soft gray, readable against the light background. Subtle horizontal/vertical gridlines visible but not dominant.
+      Data: First series (Setosa) is brand green #009E73, Versicolor is lavender, Virginica is blue — matches Imprint canonical order. Diagonal cells show stacked histograms by species; off-diagonal cells show pairwise scatter with alpha-blended markers. The petal_length/petal_width cell pair (both mirrored positions) carries a green accent border highlighting the strongest correlation.
+      Legibility verdict: PASS — all text readable, no overlap, no clipping at canvas edges.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent) page background with cell panels on a slightly lighter elevated dark surface, same thin border/rounded-corner treatment as light mode.
-      Chrome: Title and legend text render in light off-white ink, clearly legible against the dark background. Row/column variable labels and tick labels are light gray, all readable — no dark-on-dark or light-on-light failures observed anywhere in the grid.
-      Data: Same three species colors (#009E73 green, #C475FD lavender, #4467A3 blue) as the light render — confirmed identical; only the chrome (background, borders, text) flips between themes.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, legend, row/column labels, and tick labels all rendered in light ink/soft-gray tones, clearly visible against the dark surface — no dark-on-dark failures anywhere. Gridlines remain subtly visible. The same green accent border around the focal petal_length/petal_width pair is present and reads well on the dark surface.
+      Data: Colors are identical to the light render (green/lavender/blue) — only chrome (background, text, grid) flipped, as required. Brand green #009E73 remains clearly legible on the dark background.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues, no clipping.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable at full size in both themes;
-          tick labels get small once scaled to ~400px mobile width
+        comment: All font sizes explicit, well-proportioned; edge labels/title/legend
+          read clearly at desktop and 400px thumbnail; individual in-cell tick numbers
+          get small at extreme thumbnail scale, inherent to the dense 4x4 grid type
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data anywhere in the 16-cell grid
+        comment: No text or data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 150-point scatter cells use small radius-3 markers with alpha to
-          manage overplotting; well adapted but not perfectly optimal in the densest
-          cells
+        comment: Marker size and alpha well-tuned for 50 pts/species per cell; focal
+          pair gets slightly larger markers
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Species colors distinguishable with adequate alpha, no red-green-only
-          signaling
+        comment: Green/lavender/blue Imprint categorical set, not red-green reliant
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Grid fills the square canvas well with balanced margins; nothing
-          cut off
+        comment: Square 2400x2400, no cut-off, balanced grid proportions, title fits
+          without clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Variable labels include units (cm)
+        comment: Descriptive labels with units (cm) on every edge
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for the rest, theme-correct
-          chrome in both renders'
+        comment: Canonical Imprint order, correct theme-adaptive backgrounds in both
+          renders
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -121,22 +117,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Rounded elevated cell panels, centered legend, thoughtful color use
-          — clearly above library defaults but not yet publication-tier
+        comment: Custom focusAccent plugin, restrained border treatment (only edge/diagonal
+          cells bordered) show intentional polish above generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid and generous outer whitespace, but every cell (including
-          interior ones) carries a full border, giving a slightly boxed-in look
+        comment: Subtle grid, borderless interior cells read as one panel, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Species color-coding creates visual hierarchy showing clusters and
-          correlation, but no additional emphasis technique on the strongest relationship
+        comment: Focus accent on strongest correlation pair (petal_length/petal_width)
+          creates a clear, well-reasoned focal point
     spec_compliance:
       score: 15
       max: 15
@@ -146,26 +142,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot matrix with histogram diagonal
+        comment: Correct scatter plot matrix / SPLOM structure
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Diagonal distributions, off-diagonal scatter, edge labels, categorical
-          color encoding, transparency, symmetric matrix all present
+          color grouping, symmetric matrix — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned per row/column, full data range visible
+        comment: Per-variable shared domain used consistently as X range in columns
+          and Y range in rows
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match species names
+        comment: Title matches mandated format exactly; legend labels match species
+          names
     data_quality:
       score: 15
       max: 15
@@ -175,20 +173,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows clustering, within-species correlation, and distribution shape
-          across all variable pairs
+        comment: All aspects of scatter-matrix type demonstrated across 4 variables
+          x 3 species
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, real-world iris-like flower measurement scenario
+        comment: Iris-like flower measurements, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sepal/petal measurement ranges and species differences are realistic
+        comment: Sensible cm-range values for sepal/petal measurements
     code_quality:
       score: 9
       max: 10
@@ -198,26 +196,26 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Uses several helper functions (LCG, normal sampling, domain, histogram)
-          — reasonable for the grid complexity but deviates from a flat script
+        comment: Small helper functions (LCG, domain, histogram binning) deviate from
+          flat script but are justified by the matrix's construction needs
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG (seed=42)
+        comment: Seeded LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; browser globals only
+        comment: No imports beyond globals; nothing unused
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for a 4x4 dynamic grid, no fake functionality
+        comment: Appropriate complexity for a 16-panel matrix, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
@@ -226,29 +224,30 @@ review:
         comment: Correct mount-node contract, animation disabled, current Chart.js
           API
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper scatter/bar chart types, stacked histogram config, responsive
+          options set correctly
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct scatter/bar chart configs, proper scales/plugins usage, standard
-          per-cell canvas pattern for building a grid
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Manual 16-chart grid construction is essentially the only way to
-          build a SPLOM in Chart.js — not a distinctive library feature
-  verdict: REJECTED
+        comment: Custom registered plugin (beforeDraw hook) for focal-pair highlighting
+          is a genuine Chart.js-specific technique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
   - custom-legend
+  - custom-plugin
   patterns:
   - data-generation
   - iteration-over-groups
