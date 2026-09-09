@@ -77,7 +77,7 @@ const waterfallAnnotations = {
     }
     ctx.setLineDash([]);
 
-    ctx.font = "600 15px Arial, sans-serif";
+    ctx.font = `600 15px ${Chart.defaults.font.family}`;
     ctx.textBaseline = "middle";
     ctx.textAlign = "left";
     rows.forEach((row, i) => {
@@ -153,7 +153,7 @@ new Chart(canvas, {
     scales: {
       x: {
         min: 0,
-        max: Math.ceil((Math.max(...rows.map((r) => Math.max(r.start, r.end))) * 1.2) / 10) * 10,
+        max: Math.ceil((Math.max(...rows.map((r) => Math.max(r.start, r.end))) * 1.1) / 10) * 10,
         ticks: { color: t.inkSoft, font: { size: 14 }, callback: (v) => `${v}%` },
         grid: { color: t.grid },
         title: { display: true, text: "Predicted Approval Probability", color: t.ink, font: { size: 16 } },
