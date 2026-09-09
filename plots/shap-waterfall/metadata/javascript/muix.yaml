@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: shap-waterfall
 created: '2026-09-09T07:52:26Z'
-updated: '2026-09-09T07:56:41Z'
+updated: '2026-09-09T08:03:39Z'
 generated_by: claude-sonnet
 workflow_run: 34325189924
 issue: 5237
@@ -15,22 +15,23 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-wate
 quality_score: 86
 review:
   strengths:
-  - Data is internally consistent — the 14 SHAP contributions sum exactly from base_value
-    (0.55) to final_value (0.135), and rows are correctly ordered by descending absolute
-    SHAP magnitude
-  - Correctly implements a floating-bar waterfall using MUI X's stacked-bar workaround
-    (transparent offset series + colored increase/decrease series), which is the standard
-    technique given the library has no native floating-bar mode
+  - 'Data is internally consistent: the 14 SHAP contributions sum exactly from base_value
+    (0.55) to final_value (0.135), correctly ordered by descending absolute SHAP magnitude'
+  - Correctly implements a floating-bar waterfall via MUI X's stacked-bar workaround
+    (transparent offset series topped by a colored increase/decrease series) — the
+    standard technique given the library has no native floating-bar mode
   - Base value and final prediction are both shown as labeled dashed reference lines
     (ChartsReferenceLine), directly satisfying the spec's 'labeled reference lines'
     requirement
-  - Custom SVG connector lines (via useXScale/useYScale hooks) trace the cumulative
-    staircase between segments, a distinctive and idiomatic use of MUI X's lower-level
-    hook API
+  - Custom SVG connector lines built via useXScale/useYScale hooks trace the cumulative
+    staircase between segments — a distinctive, idiomatic use of MUI X's lower-level
+    hook API satisfying the spec's connector-line suggestion
   - Red/blue color mapping for positive/negative SHAP values matches both the spec's
-    explicit instruction and the real-world SHAP library convention
-  - 'Both renders use exact theme-correct backgrounds (#FAF8F1 light / #1A1A17 dark
-    verified by pixel sample), and canvas is exactly 3200x1800'
+    explicit instruction and the real-world SHAP library convention, using the Imprint
+    palette's semantic-red anchor (#AE3030) and blue (#4467A3) correctly
+  - 'Both renders use theme-correct backgrounds (#FAF8F1 light / #1A1A17 dark) with
+    all chrome (title, axis labels, ticks, reference-line labels, legend) correctly
+    flipped and legible — no dark-on-dark or light-on-light issues'
   - Clean, deterministic in-memory data; no unused imports; skipAnimation set correctly
     per the harness contract
   weaknesses:
@@ -38,25 +39,26 @@ review:
     Records, Existing Loan Count) are narrower than the 30px barLabel cutoff and render
     with no visible SHAP value at all — the spec requires the numeric value 'on or
     beside each bar segment', so these should get a value placed beside the bar (e.g.
-    an offset text label to the right of the segment) instead of being suppressed
-    entirely.
+    an offset text label to the right of the segment, or a leader line) instead of
+    being suppressed entirely. This was flagged in the previous review and the repair
+    pass did not change the implementation.
   - The smallest bar segments (a few px wide) are hard to individually distinguish
-    without their value labels — consider a minimum visible segment width or a leader-line
-    label for very small SHAP magnitudes.
+    without their value labels — consider a minimum visible segment width or leader-line
+    labels for very small SHAP magnitudes
   - 'Design excellence is solid but not exceptional: the layout is a fairly conventional
-    stacked horizontal bar chart with two reference lines; there isn''t much beyond
-    that in terms of visual hierarchy or emphasis technique.'
+    stacked horizontal bar chart with two reference lines; there isn''t much additional
+    visual hierarchy or emphasis technique beyond that'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1, verified by pixel sample) — matches the style guide exactly.
-      Chrome: Title "Loan Default Risk · shap-waterfall · javascript · muix · anyplot.ai" is bold dark text, clearly legible. Y-axis feature names (Credit Score, Payment History, ... Existing Loan Count) are dark gray, all readable. X-axis "Predicted Default Probability" label and tick values (0.00-0.70) are readable. Dashed reference lines labeled "Base rate 0.55" and "Prediction 0.135" are visible with soft dark-gray text. Bottom legend shows red "Increases risk" and blue "Decreases risk" swatches with readable labels.
-      Data: First 7 rows (largest |SHAP|) show blue bars (Credit Score -0.140 down to Employment Length -0.030) with white value labels. Two red bars follow (+0.025, +0.020) with white labels. The remaining 5 small segments (Delinquencies, Loan Purpose, Home Ownership, Public Records, Existing Loan Count) are thin colored slivers with NO visible value text (label suppressed below 30px bar width). Faint dashed gray connector lines link consecutive segment ends, tracing the cumulative staircase.
-      Legibility verdict: PASS (all rendered text is readable against the light background; the only gap is the intentionally-suppressed labels on the smallest bars, which is a data-completeness issue, not a legibility/contrast issue).
+      Background: Warm off-white, matching #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "Loan Default Risk · shap-waterfall · javascript · muix · anyplot.ai" is clearly legible. The 14 y-axis feature names (Credit Score down to Existing Loan Count) are dark gray and all readable. The x-axis "Predicted Default Probability" label and tick values (0.00-0.70) are readable. Dashed reference lines labeled "Base rate 0.55" and "Prediction 0.135" are visible with soft dark-gray/black text. Bottom legend shows red "Increases risk" and blue "Decreases risk" swatches with readable labels.
+      Data: The 7 largest segments (Credit Score -0.140 through Employment Length -0.030) are blue bars with white numeric value labels. Two red bars follow (+0.025, +0.020) with white labels. The remaining 5 small segments (Delinquencies, Loan Purpose, Home Ownership, Public Records, Existing Loan Count) render as thin colored slivers with NO visible value text (label suppressed below the 30px bar-width cutoff). Faint dashed gray connector lines link consecutive segment ends, tracing the cumulative staircase from base to prediction.
+      Legibility verdict: PASS (all rendered text is readable against the light background; the only gap is the intentionally-suppressed labels on the smallest bars, a data-completeness/SC-02 issue, not a legibility/contrast issue).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17, verified by pixel sample) — matches the style guide exactly, not pure black.
-      Chrome: Title, y-axis feature names, x-axis label/ticks, reference-line labels, and legend text all render in light gray/white and are clearly legible against the dark background — no dark-on-dark failures observed.
-      Data: Data colors (red for "Increases risk", blue for "Decreases risk") are visually identical to the light render — only the chrome (background, text, grid) flipped, as required. Same 5 smallest segments lack visible value labels, mirroring the light render.
+      Background: Warm near-black, matching #1A1A17 — not pure black.
+      Chrome: Title, y-axis feature names, x-axis label/ticks, reference-line labels, and legend text all render in light gray/white and remain clearly legible against the dark background — no dark-on-dark failures observed.
+      Data: Data colors (red for "Increases risk", blue for "Decreases risk") are identical to the light render — only the chrome (background, text, grid) flipped, as required. The same 5 smallest segments lack visible value labels, mirroring the light render.
       Legibility verdict: PASS (no dark-on-dark or contrast issues found; theme adaptation is correctly threaded through title, axes, legend, and reference lines).
   criteria_checklist:
     visual_quality:
@@ -68,7 +70,8 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All rendered text legible in both themes; fonts explicitly sized
+        comment: All rendered text legible in both themes; fonts explicitly sized;
+          title scaled for length
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -87,26 +90,30 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Red/blue with white labels, redundant legend text, good contrast
+        comment: Red/blue with white labels and redundant legend text, good contrast
+          in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800 canvas, no overflow, well-proportioned title
+        comment: Exact 3200x1800 canvas, no overflow or cut-off, well-proportioned
+          title and legend placement
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis label with units (Predicted Default Probability)
+        comment: Descriptive x-axis label 'Predicted Default Probability'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette positions used semantically (matte red / blue), backgrounds
-          theme-correct on both renders
+        comment: Imprint palette positions used semantically (matte red for increases-risk
+          / blue for decreases-risk, per spec's explicit red/blue instruction and
+          the real SHAP-library convention); backgrounds and chrome theme-correct
+          on both renders
     design_excellence:
       score: 13
       max: 20
@@ -117,20 +124,21 @@ review:
         max: 8
         passed: true
         comment: Custom reference lines, connector lines, and bar labels go beyond
-          defaults
+          generic defaults, but overall composition is conventional
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Minimal spines, subtle vertical grid, generous margins, unboxed legend
+        comment: Minimal spines, subtle vertical grid, generous margins, unboxed custom
+          legend
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Base/prediction markers and connector lines guide the reader through
-          the cumulative flow
+        comment: Base/prediction reference lines and connector lines guide the reader
+          through the cumulative flow from base rate to prediction
     spec_compliance:
       score: 14
       max: 15
@@ -140,27 +148,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct waterfall via stacked-bar technique
+        comment: Correct horizontal waterfall via stacked-bar technique
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Base/final reference lines, ordering, and connector line all present;
-          numeric values missing on ~5 smallest segments
+        comment: Base/final reference lines, descending-magnitude ordering, and connector
+          lines all present; numeric values still missing on ~5 smallest segments
+          (unaddressed since attempt 1)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Features on y-axis, probability on x-axis, all rows shown
+        comment: Features on y-axis, probability on x-axis, all 14 rows shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title matches mandated format with descriptive prefix; legend labels
-          match semantics
+          match increase/decrease semantics
     data_quality:
       score: 13
       max: 15
@@ -170,8 +179,8 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: All waterfall aspects present but value display incomplete for smallest
-          segments
+        comment: Shows both positive and negative SHAP contributions across a realistic
+          range of magnitudes, but value display is incomplete for the smallest segments
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -183,8 +192,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Probability values and SHAP magnitudes are sensible and mutually
-          consistent
+        comment: Probability values and SHAP magnitudes are sensible and arithmetically
+          consistent (base 0.55 + sum of SHAP values = final 0.135)
     code_quality:
       score: 10
       max: 10
@@ -194,8 +203,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small helper function and connector component are justified by the
-          technique
+        comment: Imports → data → chart component; small helper function and connector
+          component are justified by the floating-bar technique
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -213,13 +222,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity
+        comment: No fake UI, appropriate complexity for the waterfall technique
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows harness mount contract, skipAnimation set
+        comment: Follows harness mount contract, skipAnimation set, current MUI X
+          API
     library_mastery:
       score: 9
       max: 10
@@ -237,7 +247,7 @@ review:
         max: 5
         passed: true
         comment: useXScale/useYScale hooks and ChartsReferenceLine are distinctive
-          MUI X features, well applied
+          MUI X features, well applied for the custom connector overlay
   verdict: APPROVED
 impl_tags:
   dependencies: []
