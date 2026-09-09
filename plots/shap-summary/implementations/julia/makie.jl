@@ -1,7 +1,7 @@
 # anyplot.ai
 # shap-summary: SHAP Summary Plot
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 89/100 | Created: 2026-09-09
+# Quality: 92/100 | Created: 2026-09-09
 
 using CairoMakie
 using Makie
