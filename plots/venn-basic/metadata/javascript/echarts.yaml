@@ -1,0 +1,248 @@
+library: echarts
+language: javascript
+specification_id: venn-basic
+created: '2026-09-09T21:19:52Z'
+updated: '2026-09-09T21:35:00Z'
+generated_by: claude-sonnet
+workflow_run: 34405381151
+issue: 2444
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/echarts/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'All three previously flagged weaknesses were fixed: circle radii now scale by
+    sqrt(set total / average total) for a proportional/Euler-style hint, overlap alpha
+    was bumped to 0.55 (documented rationale: lightness alone keeps 1/2/3-way overlaps
+    distinguishable under CVD simulation), and set-name labels now carry the same
+    page-background stroke halo as region-count labels for consistent styling'
+  - New focal-point treatment on the triple-overlap region (subtle ring + larger bold
+    count) gives the diagram a clear point of emphasis instead of treating all seven
+    regions identically - directly addresses the prior data-storytelling gap
+  - 'Data is fully self-consistent across all seven regions: Python 55+30+20+15=120,
+    JavaScript 40+30+15+15=100, SQL 40+20+15+15=90, all matching the declared set
+    totals'
+  - 'Correct Imprint palette usage (first series #009E73) with fully theme-correct
+    chrome (warm off-white/near-black backgrounds, ink-colored text, page-bg circle
+    separators) and identical data colors across both renders'
+  - Because ECharts has no native Venn/Euler chart type, the implementation correctly
+    builds the diagram from the graphic.elements API (circles + styled text) rather
+    than faking an unsupported chart type
+  weaknesses:
+  - Circle-radius scaling communicates relative set size but the overlap lens areas
+    themselves are still hand-placed rather than computed to be truly area-proportional
+    - acceptable given the spec's "when possible" qualifier and ECharts having no
+    Euler-diagram solver, but worth noting as a ceiling on SC-01 sophistication
+  - The triple-overlap focal ring is a thin, easy-to-miss stroke at default viewing
+    size - a slightly heavier stroke or subtle fill tint would strengthen the visual-hierarchy
+    payoff further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1-style cream), not pure white.
+      Chrome: title "venn-basic · javascript · echarts · anyplot.ai" bold dark ink, centered top, fully readable; set labels (Python 120, JavaScript 100, SQL 90) bold dark ink with light stroke halo; region counts (55, 30, 40, 20, 15, 40, 15) dark ink with light stroke halo, all inside their correct lens/petal.
+      Data: three circles - Python (#009E73 green, largest, sqrt-scaled), JavaScript (lavender/purple, mid), SQL (blue, smallest) - each at 0.55 alpha with cream page-bg stroke separating them; overlap regions show alpha-blended hues distinguishable by lightness; a subtle dark ring highlights the triple-overlap (15) at the center as a focal point.
+      Legibility verdict: PASS - no light-on-light issues, all text and region counts clearly readable.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17-style), not pure black.
+      Chrome: same title, set labels, and region counts now rendered in light ink (theme flipped correctly); circle separator strokes and the triple-overlap ring flipped to dark-theme (near-black/light) tokens correctly.
+      Data: identical data colors to the light render (#009E73 green confirmed unchanged, same lavender and blue) - only chrome (background, ink, strokes) flipped; overlap blends remain distinguishable.
+      Legibility verdict: PASS - no dark-on-dark failures, brand green and all text remain clearly visible.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes with stroke-halo contrast
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/element collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All seven regions and their counts clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Alpha bumped to 0.55 so overlap regions stay distinguishable by lightness
+          under CVD simulation - fixes prior weakness
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title, correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Imprint palette order, theme-correct backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Proportional radii + focal ring elevate it beyond a textbook symmetric
+          Venn
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Consistent stroke-halo styling across set labels and region counts
+          - fixes prior inconsistency
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New focal ring + bold count on the triple-overlap gives clear visual
+          hierarchy - fixes prior gap
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3-set Venn, now with sqrt-scaled radii honoring the spec's
+          proportional note
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Set labels, sizes, pairwise and triple overlaps, transparency all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All region counts sum correctly to each set's declared total
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; direct on-circle labeling substitutes for a
+          legend appropriately
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All seven regions shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral programming-language skills survey
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible survey-scale values (15-120)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Small geometry helper functions justified by the Venn layout math,
+          no over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the echarts global used, no extra imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: echarts.init/setOption with animation:false, mount-node contract
+          respected
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct use of graphic.elements since ECharts has no native Venn
+          type
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Good custom graphic composition, but no ECharts-unique feature beyond
+          the graphic API itself
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - publication-ready
