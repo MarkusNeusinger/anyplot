@@ -5,7 +5,6 @@
 
 using CairoMakie
 using Colors
-using ColorSchemes
 using Random
 
 Random.seed!(42)
@@ -23,14 +22,24 @@ const BRAND      = colorant"#009E73"  # position 1 — ALWAYS first series
 const IMPRINT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])  # sequential — degree encoding
 
 # --- Data: differential-expression gene sets across sequencing experiments ---
+# Most genes are assay-specific hits (drawn independently per set), but a
+# "pan-omics" subset of broadly-active genes shows up across most assays —
+# a realistic biological pattern that also produces genuine degree-4/5
+# intersections rather than the top-15 being dominated by degree <= 3.
 set_names = ["RNA-seq", "ChIP-seq", "ATAC-seq", "Proteomics", "Methylation"]
 n_sets = length(set_names)
 n_genes = 3000
 membership_probs = [0.34, 0.27, 0.21, 0.16, 0.11]
+hub_frac = 0.10   # fraction of genes that are broadly-active "pan-omics" hits
+hub_prob = 0.75   # per-set membership probability for those hub genes
 
 membership = falses(n_genes, n_sets)
-for j in 1:n_sets, i in 1:n_genes
-    membership[i, j] = rand() < membership_probs[j]
+for i in 1:n_genes
+    is_hub = rand() < hub_frac
+    for j in 1:n_sets
+        p = is_hub ? hub_prob : membership_probs[j]
+        membership[i, j] = rand() < p
+    end
 end
 keep = [any(view(membership, i, :)) for i in 1:n_genes]
 membership = membership[keep, :]
@@ -80,7 +89,9 @@ ax_bars = Axis(
     fig[1, 2];
     ylabel = "Intersection size",
     ylabelcolor = INK,
+    ylabelsize = 14,
     yticklabelcolor = INK_SOFT,
+    yticklabelsize = 12,
     xticksvisible = false,
     xticklabelsvisible = false,
     backgroundcolor = PAGE_BG,
@@ -97,7 +108,9 @@ ax_setbars = Axis(
     fig[2, 1];
     xlabel = "Set size",
     xlabelcolor = INK,
+    xlabelsize = 14,
     xticklabelcolor = INK_SOFT,
+    xticklabelsize = 12,
     yticksvisible = false,
     yticklabelsvisible = false,
     xreversed = true,
@@ -115,6 +128,7 @@ ax_matrix = Axis(
     fig[2, 2];
     yticks = (1:n_sets, reverse(set_names_sorted)),
     yticklabelcolor = INK_SOFT,
+    yticklabelsize = 12,
     xticksvisible = false,
     xticklabelsvisible = false,
     backgroundcolor = PAGE_BG,
@@ -133,6 +147,18 @@ ylims!(ax_matrix, 0.3, n_sets + 0.7)
 
 # Intersection size bars — colored by degree (how many sets overlap)
 barplot!(ax_bars, 1:n_show, top_counts; color = bar_colors, width = 0.65)
+ylims!(ax_bars, 0, maximum(top_counts) * 1.15)
+
+# Callout on the single largest intersection to sharpen the "aha"
+text!(
+    ax_bars, 1, top_counts[1];
+    text = string(top_counts[1]),
+    align = (:center, :bottom),
+    offset = (0, 4),
+    fontsize = 13,
+    color = INK,
+    font = :bold,
+)
 
 # Set size bars — single series, brand color
 barplot!(ax_setbars, set_y, set_sizes_sorted; direction = :x, color = BRAND, width = 0.65)
@@ -174,7 +200,9 @@ Colorbar(
     colormap = IMPRINT_SEQ,
     label = "Sets in intersection",
     labelcolor = INK,
+    labelsize = 14,
     ticklabelcolor = INK_SOFT,
+    ticklabelsize = 12,
     ticks = deg_min:deg_max,
     width = 18,
 )
