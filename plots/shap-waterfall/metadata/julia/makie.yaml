@@ -1,0 +1,260 @@
+library: makie
+language: julia
+specification_id: shap-waterfall
+created: '2026-09-09T07:46:04Z'
+updated: '2026-09-09T08:03:23Z'
+generated_by: claude-sonnet
+workflow_run: 34324972083
+issue: 5237
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Features are correctly ranked by descending absolute SHAP magnitude, with the
+    largest contributor (Debt-to-Income Ratio) at the top, matching the spec's ordering
+    requirement.
+  - 'Cumulative waterfall math is verifiably correct: base_value (18.4) + sum of shap_values
+    (9.7) = final_value (28.1), and the displayed ''Prediction: 28.1%'' matches exactly.'
+  - Base value and final prediction are shown as clearly labeled dashed reference
+    lines with triangle markers, satisfying the spec's 'labeled reference lines or
+    annotations' requirement.
+  - Dotted connector lines between consecutive segments effectively emphasize the
+    cumulative flow, exactly as suggested in the spec notes.
+  - 'Semantic red/blue bar coloring for positive/negative SHAP values directly matches
+    the spec''s explicit color mandate, drawn from Imprint palette anchors (#AE3030,
+    #4467A3) rather than arbitrary colors.'
+  - Numeric SHAP value labels are adaptively aligned (left for positive, right for
+    negative) beside each bar, avoiding collision with the bar itself.
+  - Theme tokens (PAGE_BG, INK, INK_SOFT) are threaded through every chrome element
+    — title, axis labels, ticks, grid, and text annotations — and both renders are
+    fully legible.
+  - Clean, deterministic, single-file script with correct canonical title format and
+    correct save API (plot-$(THEME).png, px_per_unit=2).
+  weaknesses:
+  - 'The ''Base value: 18.4%'' and especially ''Prediction: 28.1%'' labels sit extremely
+    close above their own dashed reference line and triangle marker (only ~0.1-0.5
+    data units of vertical gap, since line_top = n+0.4 while the labels sit at n+0.5
+    and n+0.9). In both renders the marker/line visually touches or intrudes into
+    the text (most visible as the line cutting between ''Predict'' and ''ion''). Increase
+    the gap — e.g. raise line_top to n+0.7 or move the text further up to n+1.1/n+1.3
+    — so the marker and text no longer visually collide.'
+  - The y-axis label 'Feature' is somewhat redundant since the tick labels already
+    display each feature name directly; consider omitting it or replacing it with
+    something more specific.
+  - Library Mastery is fairly generic — beyond barplot!(fillto=...) for the floating
+    bars, the implementation doesn't showcase much Makie-distinctive capability (e.g.
+    more advanced GridLayout composition, custom recipes). Fine for this spec, but
+    leaves room for a more idiomatic-Makie flourish.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "shap-waterfall · julia · makie · anyplot.ai" in bold dark ink, clearly legible. X-axis label "Predicted Default Probability (%)" and y-axis feature-name ticks are dark/soft-dark and fully readable. Subtle vertical gridlines at 20/30/40. Bottom spine visible, top/left/right spines hidden.
+      Data: 10 horizontal floating bars ranked by descending |SHAP| from top (Debt-to-Income Ratio) to bottom (Number of Credit Inquiries). Positive-contribution bars are matte red (#AE3030), negative-contribution bars are blue (#4467A3) — consistent with the spec's explicit red/blue mandate. Dotted connector lines link consecutive cumulative segments. Dashed reference lines with upward triangle markers mark "Base value: 18.4%" and "Prediction: 28.1%" (bold). Numeric SHAP labels (e.g. "+7.2", "-3.8") sit beside each bar, aligned away from the bar body. Legend at the bottom reads "Increases prediction" / "Decreases prediction" with matching swatches.
+      Legibility verdict: PASS (all text readable; minor concern — the "Base value"/"Prediction" labels sit very close to their own reference-line marker, close to touching but not unreadable).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, and ticks now rendered in light ink (#F0EFE8) / soft light-grey (#B8B7B0), clearly legible against the dark background. Gridlines remain subtle. No dark-on-dark or light-on-light failures observed.
+      Data: Identical bar colors, layout, connector lines, reference-line markers, and numeric labels as the light render — confirms data colors are theme-invariant, only chrome flipped.
+      Legibility verdict: PASS (same minor label/marker proximity concern as the light render, otherwise fully readable).
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at full and reduced size; minor
+          tightness near reference-line labels
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Base value / Prediction dashed lines and triangle markers sit right
+          beneath their own labels, visually touching the text in both renders
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 well-spaced bars, connector lines and markers all clearly visible,
+          appropriate for sparse data
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/blue semantic coding is CVD-safe (not red-green); adequate contrast
+          in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); title ~45% width, balanced axis labels,
+          no overflow or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis label includes units (%); descriptive title in canonical format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Semantic red/blue drawn from Imprint anchors as explicitly mandated
+          by spec; backgrounds correct in both themes
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom semantic palette, triangle reference markers, adaptive label
+          alignment; slightly undercut by the label/marker proximity issue
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines cleaned, subtle grid, generous whitespace; minor refinement
+          loss from line-through-text look
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Connector lines and bold final-prediction label create a clear narrative
+          flow from base to prediction
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal SHAP waterfall
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Ranking, cumulative flow, connectors, reference lines, numeric labels,
+          red/blue coding all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = predicted probability, Y = features, all 10 features shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Canonical title format; legend labels match bar semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 features spanning positive and negative contributions, base and
+          final values shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral credit-scoring scenario with realistic feature
+          names
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Probability values and SHAP magnitudes are internally consistent
+          and realistic (base 18.4% + sum 9.7 = 28.1%)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Printf all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — correct current API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic floating-bar barplot! with fillto/direction=:x, Legend
+          as a GridLayout row with rowsize!
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Some layout composition via GridLayout row sizing, but mostly standard
+          primitives
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns: []
+  dataprep:
+  - cumulative-sum
+  styling:
+  - publication-ready
+  - minimal-chrome
