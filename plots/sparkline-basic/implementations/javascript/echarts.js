@@ -15,6 +15,9 @@ const lcg = () => {
 };
 
 const POINTS = 26;
+// One shared walk generator (rather than inlining the loop per metric) avoids
+// repeating the same random-walk math six times — DRY across metrics, not the
+// default "no functions" style.
 const walk = (start, drift, volatility) => {
   const series = [start];
   for (let i = 1; i < POINTS; i += 1) {
@@ -56,6 +59,8 @@ const CONTENT_TOP = 110;
 const CONTENT_BOTTOM = 50;
 const CARD_W = (SIZE.width - 2 * MARGIN - (COLS - 1) * GAP) / COLS;
 const CARD_H = (SIZE.height - CONTENT_TOP - CONTENT_BOTTOM - (ROWS - 1) * GAP) / ROWS;
+const HEADER_H = 70; // label + value + trend text block above each sparkline
+const SPARK_RATIO = 5; // width:height for the line itself — spec calls for 4:1-8:1
 
 const grid = [];
 const xAxis = [];
@@ -68,8 +73,10 @@ cards.forEach((card, i) => {
   const col = i % COLS;
   const x0 = MARGIN + col * (CARD_W + GAP);
   const y0 = CONTENT_TOP + row * (CARD_H + GAP);
-  const sparkTop = y0 + 70;
-  const sparkHeight = CARD_H - 70 - 12;
+  // Keep the sparkline itself compact (per SPARK_RATIO) and center it, with
+  // the freed vertical space as padding, in the space below the text header.
+  const sparkHeight = (CARD_W - 8) / SPARK_RATIO;
+  const sparkTop = y0 + HEADER_H + (CARD_H - HEADER_H - sparkHeight) / 2;
 
   graphic.push(
     {
@@ -92,7 +99,7 @@ cards.forEach((card, i) => {
       top: y0 + 32,
       style: {
         text: `${card.trendUp ? "▲" : "▼"} ${Math.abs(card.deltaPct).toFixed(1)}%`,
-        fontSize: 13,
+        fontSize: 15,
         fill: card.color,
       },
     },
@@ -121,7 +128,12 @@ cards.forEach((card, i) => {
       symbolSize: 9,
       label: { show: false },
       itemStyle: { color: card.color, borderColor: t.pageBg, borderWidth: 1.5 },
-      data: [{ coord: [POINTS - 1, card.last] }],
+      data: [
+        { coord: [POINTS - 1, card.last] }, // latest value: filled dot
+        // series max/min: hollow rings, a lighter secondary emphasis
+        { type: "max", symbolSize: 6, itemStyle: { color: t.pageBg, borderColor: card.color, borderWidth: 1.5 } },
+        { type: "min", symbolSize: 6, itemStyle: { color: t.pageBg, borderColor: card.color, borderWidth: 1.5 } },
+      ],
     },
   });
 });
@@ -138,7 +150,7 @@ chart.setOption({
     text: "sparkline-basic · javascript · echarts · anyplot.ai",
     left: "center",
     top: 40,
-    textStyle: { color: t.ink, fontSize: 22 },
+    textStyle: { color: t.ink, fontSize: 28 },
   },
   grid,
   xAxis,
