@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' sparkline-basic: Basic Sparkline
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 80/100 | Created: 2026-09-09
+#' Quality: 80/100 | Updated: 2026-09-09
 
 library(ggplot2)
 library(ragg)
@@ -29,28 +29,33 @@ closing_price <- 142 + 14 * sin(2 * pi * day / 45 - 1) + cumsum(rnorm(n_points, 
 trend <- data.frame(day = day, closing_price = closing_price)
 i_min <- which.min(closing_price)
 i_max <- which.max(closing_price)
+i_first <- 1
 i_last <- n_points
 
 # --- Plot -----------------------------------------------------------------
 # geom_ribbon fills the area under the line for the classic sparkline look;
-# geom_point marks the series extremes and the latest value — the only
-# highlights the spec allows before it stops being "basic".
+# geom_point marks the series extremes, the starting point, and the latest
+# value — the only highlights the spec allows before it stops being "basic".
+# Narrow side margins let the mark span nearly the full canvas width, and
+# aspect.ratio ~0.18 keeps the panel a compact 5-6:1 band while still filling
+# a healthy share of the fixed 3200x1800 canvas height.
 p <- ggplot(trend, aes(x = day, y = closing_price)) +
   geom_ribbon(aes(ymin = min(closing_price), ymax = closing_price), fill = BRAND, alpha = 0.12) +
-  geom_line(color = BRAND, linewidth = 1.6, lineend = "round") +
-  geom_point(data = trend[i_min, ], color = LOW_MARK, size = 3.2) +
-  geom_point(data = trend[i_max, ], color = HIGH_MARK, size = 3.2) +
-  geom_point(data = trend[i_last, ], color = BRAND, size = 3.6) +
-  scale_x_continuous(expand = expansion(mult = c(0.01, 0.03))) +
-  scale_y_continuous(expand = expansion(mult = c(0.18, 0.18))) +
+  geom_line(color = BRAND, linewidth = 1.9, lineend = "round") +
+  geom_point(data = trend[i_first, ], shape = 21, color = INK, fill = PAGE_BG, size = 3.2, stroke = 1.2) +
+  geom_point(data = trend[i_min, ], color = LOW_MARK, size = 3.8) +
+  geom_point(data = trend[i_max, ], color = HIGH_MARK, size = 3.8) +
+  geom_point(data = trend[i_last, ], color = BRAND, size = 4.2) +
+  scale_x_continuous(expand = expansion(mult = c(0.02, 0.02))) +
+  scale_y_continuous(expand = expansion(mult = c(0.12, 0.12))) +
   labs(title = "sparkline-basic · r · ggplot2 · anyplot.ai") +
   theme_void(base_size = 8) +
   theme(
-    aspect.ratio = 0.16, # thin horizontal band — the sparkline's defining shape
+    aspect.ratio = 0.18, # compact ~5.5:1 band — the sparkline's defining shape
     plot.background = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background = element_rect(fill = PAGE_BG, color = NA),
-    plot.title = element_text(color = INK, size = 12, hjust = 0.5, margin = margin(b = 30)),
-    plot.margin = margin(t = 30, r = 140, b = 30, l = 140)
+    plot.title = element_text(color = INK, size = 15, hjust = 0.5, margin = margin(b = 24)),
+    plot.margin = margin(t = 30, r = 40, b = 30, l = 40)
   )
 
 # --- Save -------------------------------------------------------------------
