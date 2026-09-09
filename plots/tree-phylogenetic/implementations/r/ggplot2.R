@@ -126,12 +126,13 @@ p <- ggplot() +
   geom_segment(
     data = branch_lines,
     aes(x = x, xend = xend, y = y, yend = yend, color = clade),
-    linewidth = 1.1, lineend = "round"
+    linewidth = 1.4, lineend = "round"
   ) +
-  geom_point(data = tips, aes(x = x, y = y, color = clade), size = 2.8) +
+  geom_point(data = tips, aes(x = x, y = y, color = clade), size = 3.4) +
   geom_text(
     data = tips, aes(x = x, y = y, label = label, color = clade),
-    hjust = 0, nudge_x = 1, size = 3.5, fontface = "italic"
+    hjust = 0, nudge_x = 1, size = 3.5, fontface = "italic",
+    show.legend = FALSE
   ) +
   scale_color_manual(values = c("Great apes (Hominidae)" = BRAND,
                                  "Other primates" = INK_MUTED)) +
