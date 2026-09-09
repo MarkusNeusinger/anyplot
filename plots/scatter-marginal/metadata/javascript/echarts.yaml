@@ -1,0 +1,246 @@
+library: echarts
+language: javascript
+specification_id: scatter-marginal
+created: '2026-09-09T06:50:25Z'
+updated: '2026-09-09T07:03:01Z'
+generated_by: claude-sonnet
+workflow_run: 34320138318
+issue: 2005
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Correct Imprint palette and theme-adaptive chrome in both renders — brand green
+    #009E73 identical across themes, backgrounds/text/grid all theme-correct'
+  - Marginal histograms are properly axis-aligned with the main scatter via three
+    linked ECharts grids, exactly matching the spec's alignment requirement
+  - Idiomatic, well-reasoned use of a custom renderItem (api.coord + clipRectByRect)
+    to draw true value-axis-aligned histogram bars, with a code comment correctly
+    explaining why ECharts' built-in bar series can't do this
+  - 'Attempt 1 feedback (overplotting, missing edge definition) was precisely addressed:
+    symbolSize 12→10, opacity 0.65→0.55, and a new theme-adaptive borderColor: t.pageBg
+    edge stroke that gives each point a subtle cutout definition in both themes'
+  - Deterministic, realistic commute-distance-vs-time data with a plausible positive
+    correlation and unimodal marginal distributions; no auto-reject issues, no edge
+    clipping
+  weaknesses:
+  - Design Excellence still reads as a well-executed, spec-compliant composition rather
+    than a fully bespoke design statement — the marker edge stroke helps, but the
+    marginal histograms remain a single flat gray fill with no additional visual interest
+    (e.g. a subtle gradient or slightly higher-contrast outline) to push it further
+  - Marginal histograms are plainly unimodal — data with a touch more shape variation
+    (mild skew asymmetry or a secondary bump) would more fully demonstrate the marginal-distribution
+    feature, though the current data is already realistic and this is a minor nice-to-have
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white.
+      Chrome: Title "scatter-marginal · javascript · echarts · anyplot.ai" centered top in dark ink, clearly readable. Axis labels "Commute Distance (km)" / "Commute Time (min)" are dark and legible; tick labels are soft gray. Grid lines are thin and subtle, not competing with data. No legend (correctly omitted for a single series).
+      Data: Main scatter (lower-left grid) shows brand-green (#009E73) semi-transparent points (opacity 0.55, symbolSize 10, with a subtle page-background-colored edge stroke for definition) forming a clear positive correlation between distance (~1-26 km) and time (~3-60 min). Top marginal is a muted-gray (inkSoft) step histogram of the x-distribution; right marginal is the same muted gray for the y-distribution, rotated 90°. Both marginals are pixel-aligned to the main plot's axis ranges via linked ECharts grids.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black.
+      Chrome: Title and axis labels render in light/near-white text, clearly visible against the dark surface — no dark-on-dark failures. Tick labels are a lighter gray, still legible. Grid lines remain subtle but visible.
+      Data: Data marker color is identical #009E73 green to the light render (only chrome flipped, as required). The marker edge stroke now reads as page-background-dark, giving the same cutout definition effect. Marginal histograms remain the same muted gray fill, still legible against the near-black background.
+      Legibility verdict: PASS
+
+    Both renders pass the theme-readability check with no legibility failures. First categorical series is #009E73 in both themes, confirming palette consistency.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, well-proportioned, readable in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Attempt-1 overplotting fixed: symbolSize 12→10, opacity 0.65→0.55,
+          plus a theme-adaptive edge stroke (borderColor: t.pageBg) gives clean point
+          definition even in the dense central band'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Scatter + both marginals fill the canvas well, balanced margins,
+          nothing cut off, no canvas-gate failure
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 identical across themes, backgrounds/chrome
+          theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: New edge stroke adds polish over attempt 1, but still reads as a
+          competently-executed default rather than a fully bespoke design statement
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines reduced to L-shape, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Marginal histograms add real distributional insight alongside the
+          correlation trend
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Scatter with top+right marginal histograms
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Lower-left main plot, aligned marginals, subtle marginal color, moderate-transparency
+          points
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, no legend needed (single series)
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Correlation plus skewed unimodal marginal distributions; not multimodal
+          but realistic for this domain
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Commute distance vs. time, real neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible average commute speed implied by the data
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear structure; helper functions are necessary (LCG RNG, custom
+          histogram renderer)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Custom renderItem is a legitimate, necessary technique, not over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Multi-grid layout with linked axis ranges + custom renderItem is
+          the correct escape hatch for a chart type ECharts has no built-in series
+          for
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Pixel-space custom renderer (api.coord + clipRectByRect) driving
+          value-aligned marginal bars is distinctive to ECharts
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
