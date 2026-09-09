@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: violin-split
 created: '2026-09-09T21:44:25Z'
-updated: '2026-09-09T21:49:32Z'
+updated: '2026-09-09T21:56:58Z'
 generated_by: claude-sonnet
 workflow_run: 34407614993
 issue: 1949
@@ -12,53 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-sp
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
   - 'Correct split-violin technique: hand-drawn KDE silhouettes meet cleanly at each
-    category''s center line, using Chart.js''s own scales for pixel mapping — the
-    code comment correctly explains why Chart.js''s line-fill can''t produce a horizontally-varying
-    silhouette, so drawing it directly in an afterDraw plugin is the right call.'
-  - 'First series is the mandated brand green #009E73 (Control) and the second series
-    uses Imprint position 2 (#C475FD lavender) for the New method cohort, identical
-    across both themes; chrome (background, text, grid) flips correctly between light
-    and dark.'
-  - Quartile/median markers (IQR tick + median circle) satisfy the spec's 'inner box
-    plot or quartile markers' note and read clearly against both fills.
+    category''s center line, using Chart.js''s own scales for pixel mapping.'
+  - 'First series is the mandated brand green #009E73 (Control) and the second uses
+    Imprint position 2 (#C475FD lavender) for New method, identical across both themes;
+    all chrome flips correctly between light and dark.'
+  - Quartile/median markers (IQR tick + median circle) satisfy the spec's inner quartile-marker
+    requirement and read clearly against both fills in both themes.
+  - Y-axis title now reads "Exam score (points, 0-100)" with explicit units, fixing
+    the Attempt 1 weakness.
   - Realistic, neutral dataset (exam scores, control vs. new teaching method) with
-    genuine comparative variation — Math shows no measurable difference while Science
-    shows a clear gain, giving the split violin real analytical value instead of every
-    category looking the same.
-  - Deterministic seeded LCG PRNG, animation disabled per the mount-node contract,
-    no stray DOM nodes.
+    genuine comparative variation across subjects (e.g. Math shows no measurable difference
+    while Science shows a clear gain).
+  - 'Deterministic seeded LCG PRNG, animation: false set, single canvas mounted, no
+    stray DOM nodes.'
   weaknesses:
-  - Y-axis title 'Exam score' has no unit (e.g., '/100' or 'points') — VQ-06 wants
-    an explicit unit for full marks.
-  - The violin and marker rendering is entirely custom canvas drawing in an afterDraw
-    plugin hook with an empty data.datasets — functionally correct and justified by
-    Chart.js's lack of a native violin type, but it means Chart.js's own data-binding/legend
-    machinery is bypassed, which caps idiomatic-usage credit.
+  - No explicit emphasis or annotation on the Science-subject gap, which is the chart's
+    clearest insight — a small callout or emphasized marker there would sharpen the
+    data storytelling further.
+  - Rendering is 100% custom canvas drawing via an afterDraw plugin with an empty
+    data.datasets array — correct and justified given Chart.js has no native violin
+    type, but it bypasses Chart.js's dataset-binding pipeline, which caps idiomatic-usage
+    credit.
   - Heavy helper-function decomposition (PRNG, stats, KDE, quantile, two draw functions)
-    is reasonable given the custom-violin requirement but moves away from the KISS
-    'imports → data → plot → save' ideal.
-  - No explicit callout of the standout Science-subject gap, which is the chart's
-    clearest story beat — a small annotation or emphasis there would push Data Storytelling
-    further.
+    is reasonable given the custom-violin requirement but moves away from the strict
+    KISS 'imports -> data -> plot -> save' ideal.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "violin-split · javascript · chartjs · anyplot.ai" and italic subtitle explaining the encoding are dark and crisp near the top; legend swatches ("Control" green, "New method" purple) sit centered below the subtitle; x-axis category labels (Reading, Writing, Math, Science, History) and "Subject" title are dark and legible; y-axis tick labels (10-110) and "Exam score" title are dark and legible; subtle horizontal gridlines are visible but unobtrusive.
-      Data: Five split violins, left half green (#009E73, Control), right half purple/lavender (#C475FD, New method) — halves meet exactly at each category's center line with no gap or seam. Black IQR ticks with white-filled, colored-stroke median circles sit inside each half. Math shows the two halves nearly identical (no treatment effect); Science shows the purple half clearly shifted higher (largest effect).
-      Legibility verdict: PASS — all text reads clearly against the light background, no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "violin-split · javascript · chartjs · anyplot.ai" and italic subtitle "Left = control · right = new method · width = density (KDE) · tick = IQR & median" in dark ink at top; legend swatches (green "Control", lavender "New method") below that; x-axis category labels (Reading, Writing, Math, Science, History) and axis title "Subject"; y-axis title "Exam score (points, 0-100)" and tick labels 10-110; subtle horizontal gridlines. All text is dark and clearly readable against the light background.
+      Data: Five split violins — left half brand green (#009E73, Control), right half Imprint lavender (#C475FD, New method), meeting exactly at each category's center line with no gap. Black IQR ticks with white-filled, colored-stroke median circles sit inside each half. Math shows near-identical control/treatment distributions; Science shows the clearest treatment gain.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, subtitle, legend text, axis titles, and tick labels all render in light/off-white tones, clearly visible against the dark surface. IQR ticks switch to white for contrast against the dark background while the median-circle fill uses the dark page background so it reads as a hollow ring. Gridlines are faint but present.
-      Data: Same green (#009E73) and purple (#C475FD) fills as the light render — colors are identical between themes, only chrome flipped. Same shapes, same relative center-line meeting, same Math/Science contrast.
-      Legibility verdict: PASS — no dark-on-dark failures; all text and data elements are clearly distinguishable from the near-black background.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title/subtitle/legend/axis structure, all rendered in light ink (white/light-grey) against the dark background. No dark-on-dark text found anywhere — title, subtitle, legend, axis titles, and tick labels are all clearly legible.
+      Data: Colors are identical to the light render (green #009E73, lavender #C475FD) — only chrome flipped. IQR ticks now render in white, median-circle fill uses the dark page background so the colored stroke stands out.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -66,51 +62,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, subtitle 14px, legend
-          16px, ticks 14px, axis titles 16px); readable in both themes, no overflow.
+        comment: All font sizes explicit; readable in both themes, well-proportioned,
+          no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend, title, subtitle, ticks, and markers are all clear of each
-          other and of the data.
+        comment: No overlap between text, markers, or violin shapes
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 130-sample-per-group violins with 0.55 alpha fill and clear stroke
-          are well-sized for this density; markers are distinct.
+        comment: Violin fills, IQR ticks, and median markers clearly visible against
+          both fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple pair is CVD-safe; white-filled median circle with colored
-          stroke plus black IQR tick adds redundant contrast.
+        comment: Green/lavender pair distinguishable, redundant white-fill/colored-stroke
+          marker encoding beyond hue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Violins fill most of the canvas with balanced margins; no cut-off
-          content confirmed at all four edges.
+        comment: Plot fills a large, balanced share of the canvas; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: '''Subject'' and ''Exam score'' are descriptive but ''Exam score''
-          has no explicit unit.'
+        passed: true
+        comment: Y-axis now reads 'Exam score (points, 0-100)' with explicit units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second series Imprint position 2 (#C475FD),
-          identical across themes; backgrounds and chrome are theme-correct in both
-          renders.'
+        comment: 'First series #009E73, second #C475FD (Imprint position 2), identical
+          across themes; backgrounds theme-correct'
     design_excellence:
       score: 14
       max: 20
@@ -120,23 +112,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Hand-built violin silhouettes with intentional marker design and
-          a guiding subtitle — clearly above a configured default.
+        comment: Hand-built violin silhouettes, intentional marker design, guiding
+          subtitle — clearly above a configured default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-only subtle grid, no x-grid, no visible chart border/spines, generous
-          whitespace.
+        comment: Y-only subtle grid, no x-grid, generous whitespace, but not every
+          detail is polished
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color contrast plus per-half median markers guide the reader, and
-          the Math/Science contrast tells a real story, though it isn't explicitly
-          annotated.
+        comment: Color contrast plus per-half median markers guide the reader and
+          the Math/Science contrast tells a real story, but there is no explicit callout
+          of that insight
     spec_compliance:
       score: 15
       max: 15
@@ -146,28 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine split violin with left/right halves per category.
+        comment: Correct split violin plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors with legend, halves meet at center line, inner quartile/median
-          markers, alpha transparency — all spec notes satisfied.
+        comment: Distinct colors with legend, halves meet at center, inner quartile/median
+          markers, alpha transparency all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = subject category, Y = exam score, all data visible within axis
-          bounds.
+        comment: X = subject category, Y = exam score, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches the mandated pattern; legend labels
-          match the two cohorts.
+        comment: Title format correct; legend labels 'Control' / 'New method' match
+          the data semantics
     data_quality:
       score: 15
       max: 15
@@ -177,21 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows near-identical distributions (Math), moderate gains (Reading/Writing/History),
-          and a large gain (Science) — good range of comparative shapes.
+        comment: Distinct distribution shapes and effect sizes per subject, including
+          a near-null case (Math) and a strong effect (Science)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, real-world education scenario (control vs. new teaching
-          method).
+        comment: Neutral, comprehensible education scenario (control vs. new teaching
+          method)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores clamped to a plausible 20-100 exam range with realistic spreads.
+        comment: Scores clamped to a plausible 20-100 range, sample sizes and spreads
+          are realistic
     code_quality:
       score: 9
       max: 10
@@ -202,34 +194,32 @@ review:
         max: 3
         passed: true
         comment: Necessarily decomposed into PRNG/stats/KDE/draw helpers given the
-          custom-violin requirement, but strays from the flat imports-data-plot-save
-          ideal.
+          custom-violin requirement
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (2026).
+        comment: Deterministic seeded LCG (seed 2026)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only globals actually used.
+        comment: No unused imports; only browser globals used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a library with no native violin type;
-          no fake UI or fake-interactivity code.
+        comment: No fake UI/interactivity, appropriate complexity for a custom violin
+          renderer
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Mounts one canvas to #container, animation: false set, current Chart.js
-          API.'
+        comment: 'Mounts canvas correctly, animation: false, current Chart.js API'
     library_mastery:
       score: 6
       max: 10
@@ -239,23 +229,21 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Correctly uses Chart.js's scale/plugin system for pixel mapping,
-          but bypasses the dataset-driven rendering pipeline entirely (empty datasets
-          array).
+        comment: 'Correctly uses Chart.js''s scale/plugin system, but bypasses the
+          dataset-driven rendering pipeline (empty datasets: [])'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Creative use of Chart.js's afterDraw plugin hook and scale.getPixelForValue
-          to build a chart type the library doesn't natively support.
-  verdict: REJECTED
+        comment: Creative use of the afterDraw plugin hook plus scale.getPixelForValue
+          to build a chart type Chart.js doesn't natively support
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - custom-legend
-  - patches
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
