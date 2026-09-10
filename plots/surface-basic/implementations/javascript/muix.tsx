@@ -1,3 +1,7 @@
+// anyplot.ai
+// surface-basic: Basic 3D Surface Plot
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 77/100 | Created: 2026-09-10
 //# anyplot-orientation: landscape
 // anyplot.ai
 // surface-basic: Basic 3D Surface Plot
