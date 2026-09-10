@@ -60,22 +60,27 @@ defect_size_um <- c(
 az <- 35 * pi / 180
 el <- 20 * pi / 180
 
-x_rot  <- x * cos(az) + y * sin(az)
-y_rot  <- -x * sin(az) + y * cos(az)
-z_rot  <- z
-depth  <- y_rot * sin(el) + z_rot * cos(el) # larger = closer to viewer
-y_tilt <- y_rot * cos(el) - z_rot * sin(el)
+project <- function(px, py, pz) {
+  x_rot <- px * cos(az) + py * sin(az)
+  y_rot <- -px * sin(az) + py * cos(az)
+  list(proj_x = x_rot, proj_y = y_rot * cos(el) - pz * sin(el))
+}
+
+proj  <- project(x, y, z)
+depth <- (-x * sin(az) + y * cos(az)) * sin(el) + z * cos(el) # larger = closer
 
 points_df <- tibble(
-  proj_x         = x_rot,
-  proj_y         = y_tilt,
+  proj_x         = proj$proj_x,
+  proj_y         = proj$proj_y,
   depth          = depth,
   defect_size_um = defect_size_um
 ) %>%
   mutate(
     depth_norm  = rescale(depth, to = c(0, 1)),
-    point_size  = 2.2 + depth_norm * 3.3,
-    point_alpha = 0.45 + depth_norm * 0.5
+    # Power curve (not linear) spreads size/alpha further apart across depth,
+    # so overlapping points in the densest cluster cores separate more clearly.
+    point_size  = 1.8 + depth_norm^1.3 * 3.0,
+    point_alpha = 0.32 + depth_norm^1.3 * 0.55
   ) %>%
   arrange(depth)
 
@@ -85,12 +90,10 @@ xr  <- range(x) * pad
 yr  <- range(y) * pad
 zr  <- range(z) * pad
 
-corners        <- expand.grid(cx = xr, cy = yr, cz = zr)
-corners_x_rot  <- corners$cx * cos(az) + corners$cy * sin(az)
-corners_y_rot  <- -corners$cx * sin(az) + corners$cy * cos(az)
-corners_z_rot  <- corners$cz
-corners$proj_x <- corners_x_rot
-corners$proj_y <- corners_y_rot * cos(el) - corners_z_rot * sin(el)
+corners       <- expand.grid(cx = xr, cy = yr, cz = zr)
+corner_proj   <- project(corners$cx, corners$cy, corners$cz)
+corners$proj_x <- corner_proj$proj_x
+corners$proj_y <- corner_proj$proj_y
 
 edge_from <- c(1, 3, 5, 7, 1, 2, 5, 6, 1, 2, 3, 4)
 edge_to   <- c(2, 4, 6, 8, 3, 4, 7, 8, 5, 6, 7, 8)
@@ -106,12 +109,41 @@ tip_idx  <- c(2, 3, 5) # X, Y, Z edges all start at corner 1
 dir_x    <- corners$proj_x[tip_idx] - corners$proj_x[1]
 dir_y    <- corners$proj_y[tip_idx] - corners$proj_y[1]
 dir_len  <- sqrt(dir_x^2 + dir_y^2)
+unit_x   <- dir_x / dir_len
+unit_y   <- dir_y / dir_len
 label_gap <- 1.8
 
 axis_labels <- tibble(
   label = c("X (mm)", "Y (mm)", "Z (mm)"),
-  x     = corners$proj_x[tip_idx] + dir_x / dir_len * label_gap,
-  y     = corners$proj_y[tip_idx] + dir_y / dir_len * label_gap
+  x     = corners$proj_x[tip_idx] + unit_x * label_gap,
+  y     = corners$proj_y[tip_idx] + unit_y * label_gap
+)
+
+# --- Numeric tick references along each axis edge (mid/high mm values) -------
+# Reviewers noted the box had no coordinate scale; nudge each tick label
+# perpendicular to its edge so it reads as a ruler mark, not edge clutter.
+# The low end (-15) sits at the shared tri-axis corner for all three axes, so
+# it is skipped here — labeling it three times over would just overlap.
+tick_vals   <- c(0, 15)
+tick_nudge  <- 0.9
+tick_x_proj <- project(tick_vals, rep(yr[1], 2), rep(zr[1], 2))
+tick_y_proj <- project(rep(xr[1], 2), tick_vals, rep(zr[1], 2))
+tick_z_proj <- project(rep(xr[1], 2), rep(yr[1], 2), tick_vals)
+
+tick_labels <- tibble(
+  label = as.character(rep(tick_vals, 3)),
+  x = c(tick_x_proj$proj_x, tick_y_proj$proj_x, tick_z_proj$proj_x) -
+    rep(unit_y, each = 2) * tick_nudge,
+  y = c(tick_x_proj$proj_y, tick_y_proj$proj_y, tick_z_proj$proj_y) +
+    rep(unit_x, each = 2) * tick_nudge
+)
+
+# --- Zone callouts, linking the projected scatter back to the CT-scan narrative
+zone_proj <- project(zone_x, zone_y, zone_z)
+zone_labels <- tibble(
+  label = c("Zone A", "Zone B", "Zone C"),
+  x     = zone_proj$proj_x,
+  y     = zone_proj$proj_y + 2.4
 )
 
 # --- Plot ---------------------------------------------------------------------
@@ -127,9 +159,19 @@ p <- ggplot() +
         size = point_size, alpha = point_alpha)
   ) +
   geom_text(
+    data = tick_labels,
+    aes(x = x, y = y, label = label),
+    color = INK_SOFT, size = 2.2, alpha = 0.85
+  ) +
+  geom_text(
     data = axis_labels,
     aes(x = x, y = y, label = label),
     color = INK_SOFT, size = 3.2, fontface = "bold"
+  ) +
+  geom_text(
+    data = zone_labels,
+    aes(x = x, y = y, label = label),
+    color = INK, size = 2.9, fontface = "italic"
   ) +
   scale_color_gradient(low = IMPRINT_SEQ_LOW, high = IMPRINT_SEQ_HIGH,
                         name = "Defect size (µm)") +
