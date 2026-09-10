@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: scatter-3d
 created: '2026-09-10T00:14:51Z'
-updated: '2026-09-10T00:32:10Z'
+updated: '2026-09-10T00:45:11Z'
 generated_by: claude-sonnet
 workflow_run: 34419989589
 issue: 1945
@@ -12,150 +12,121 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 78
+quality_score: 91
 review:
   strengths:
-  - Genuinely 3D scatter achieved within ggplot2's 2D grammar via a hand-rolled orthographic
-    rotate-then-project transform (az=35°, el=20°) applied consistently to points,
-    the bounding wireframe, and all labels — a legitimate technique, not a fallback
-    to another library
-  - 'Depth cues are well executed: point size and alpha both scale with a power curve
-    (depth_norm^1.3) of projected depth, and points are drawn back-to-front (arrange(depth))
-    so nearer defects appear larger, more opaque, and correctly occluding'
-  - 'Realistic, neutral, specific dataset: CT-scanned porosity defects in a 3D-printed
-    titanium bracket, three weak layer-adhesion zones plus background noise, mm coordinates
-    and micrometre defect sizes are all plausible for the domain'
-  - 'Correct sequential Imprint gradient (#009E73 → #4467A3) for the 4th variable
-    (defect size), correct light/dark chrome tokens, and the categorical/continuous
-    rules from the style guide are respected in both renders'
-  - Clean theme_void-based composition with generous margins, no clipped content (canvas
-    gate passed at 3200×1800), and a caption that supplies real-world context and
-    the axis scale (±15 mm) in prose
+  - Clever native ggplot2 solution for 3D scatter via orthographic projection (rotate-then-project
+    math) plus a wireframe bounding box, avoiding any workaround/fallback to another
+    library — directly satisfies the 'no native 3D, don't fall back' library rule.
+  - Depth-based point sizing and alpha (power-curve mapping of projected depth) gives
+    a genuine sense of occlusion/perspective in a static 2D render of ~185 points.
+  - Thoughtful zone callouts (Zone A/B/C) with hand-tuned leader-line offsets that
+    dodge the dense clusters and the axis-tip labels — strong data storytelling for
+    a CT-scan defect narrative.
+  - 'Correct Imprint sequential gradient (#009E73 to #4467A3) for the defect-size
+    color encoding, identical across both themes; chrome (background, ink, wireframe)
+    flips correctly for light/dark.'
+  - Realistic, neutral, well-scaled dataset (CT-scanned porosity defects in a titanium
+    bracket) with plausible defect-size distribution and point count within the 50-500
+    spec range.
   weaknesses:
-  - The numeric tick labels ('0', '15') and the 'Zone A' / 'Zone B' / 'Zone C' callouts
-    added in the previous repair pass are NOT visible anywhere in either render —
-    verified by cropping and zooming into all three box tips (X, Y, Z) and both point
-    clusters at 2-3x magnification in both plot-light.png and plot-dark.png. This
-    means the prior review's explicit ask ('the box had no coordinate scale') is still
-    unmet in the actual rendered output even though the code now computes tick_labels/zone_labels
-    tibbles and adds geom_text() layers for them.
-  - Root cause is very likely that zone_labels are positioned at the projected zone
-    center (+2.4 y-offset), which lands directly inside the corresponding dense, fully-packed
-    point cluster — with 55+ overlapping alpha-blended circles per zone, there is
-    no visual gap for text to show through, and it does not appear to draw over the
-    points despite being the last layer added. Recommend either moving each zone label
-    well outside its cluster with a short leader line/segment back to the centroid,
-    or verifying at the R level (print the tibble; check for accidental NA/Inf) that
-    the geom_text layer is actually receiving rows.
-  - The 'X (mm)' axis title itself overlaps several scatter points near the bottom
-    vertex in both themes — the label sits too close to the box tip; increase label_gap
-    so it clears the point cloud, especially since the X-tip region is where several
-    background-noise points happen to land.
-  - Tick labels for Y and Z axes were checked directly adjacent to their axis titles
-    (where the '15' tick should sit, given tick value 15 is close to the ~17 axis
-    extent) and are equally absent — this isn't only a cluster-overlap problem, so
-    the geom_text(data = tick_labels, ...) layer needs to be debugged independently
-    of the zone-label fix.
-  - Uses a custom project() helper function, which is a mild KISS deviation (project
-    rules generally favor no functions/classes in these single-purpose scripts) —
-    acceptable here since it avoids repeating the same 6-line rotation formula four
-    times, but flagging for awareness.
+  - 'Minor label/marker crowding: the ''0'' tick label near the shared tri-axis origin
+    sits almost touching a data point in both renders — nudge tick_nudge slightly
+    higher so the label fully clears the marker.'
+  - The project() helper is a function, a mild deviation from the KISS 'no functions/classes'
+    guidance — could be inlined as vectorized mutate() calls, though it is reasonably
+    justified by the repeated rotation math being applied to three separate point
+    sets (data, box corners, ticks).
+  - The wireframe box draws all 12 edges with uniform color/alpha and no hidden-line
+    differentiation — a subtly fainter treatment for edges that would be occluded
+    in a true 3D view could sell the depth illusion even more convincingly.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — correct.
-      Chrome: Title "scatter-3d · r · ggplot2 · anyplot.ai" centered at top, dark ink, fully legible. Caption below the plot in soft ink, legible. Axis titles "X (mm)", "Y (mm)", "Z (mm)" in bold dark text at the three visible box tips — legible, BUT "X (mm)" partially overlaps a cluster of data points near the bottom vertex (confirmed at 2x zoom). Legend "Defect size (µm)" with tick values 25/50/75/100/125 is fully legible. The numeric axis tick labels ("0", "15") that the code computes are NOT visible anywhere on the wireframe edges (checked near all three tips at 2-3x zoom) — functionally absent from the render. The "Zone A" / "Zone B" / "Zone C" callout labels are likewise not visible anywhere, including directly inside the two dense point clusters where their computed coordinates place them.
-      Data: First/low end of the color scale is Imprint green (#009E73), high end is Imprint blue (#4467A3) — correct sequential gradient, colors read clearly against the light background. Two dense point clusters (one larger combining two nearby zones, one smaller) are visible with clear depth-based size/alpha variation.
-      Legibility verdict: PASS for title/axis-titles/legend/caption; FAIL for tick labels and zone callouts (present in code, invisible in render).
+      Background: Warm off-white (#FAF8F1), consistent across the whole canvas.
+      Chrome: Title "scatter-3d · r · ggplot2 · anyplot.ai" centered at top in dark ink, clearly readable. A projected cube wireframe (thin gray lines) represents the 3D bounding box, with bold axis titles "X (mm)", "Y (mm)", "Z (mm)" placed past the box tips, plus small "0"/"15" tick numerals along the edges. Three italic zone callouts ("Zone A", "Zone B", "Zone C") with thin leader lines point into the dense clusters. A caption below the plot describes the CT-scan context. A vertical color-gradient legend "Defect size (µm)" sits to the right of the plot, labeled 25-125.
+      Data: Circular points colored on a green-to-blue sequential gradient (#009E73 low, #4467A3 high), first/low color matches the mandated brand green. Two dense clusters (Zone A/B) and one sparser cluster (Zone C) are visible, plus scattered background points, with point size and opacity varying by projected depth to suggest occlusion.
+      Legibility verdict: PASS — all title, axis, tick, callout, and legend text is clearly readable against the light background; no light-on-light issues found. One minor near-touch between a "0" tick label and an adjacent point (not a legibility failure, just tight spacing).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — correct.
-      Chrome: Title, caption, axis titles, and legend text all render in light ink, fully legible against the dark background — no dark-on-dark failures. Same "X (mm)" / point-cluster overlap issue as light render, confirmed at 2x zoom. Same total absence of tick labels ("0"/"15") and zone callouts ("Zone A/B/C") — checked in the identical crop regions as the light render, with identical result.
-      Data: Colors are pixel-identical to the light render (green-to-blue sequential gradient) — only chrome flipped, as required. Cluster shapes and depth cues match the light render exactly.
-      Legibility verdict: PASS for title/axis-titles/legend/caption; FAIL for tick labels and zone callouts (same missing-content issue as light render, ruling out a theme-specific cause).
+      Background: Warm near-black (#1A1A17), consistent across the whole canvas.
+      Chrome: Same layout as the light render — title, wireframe box, axis titles, tick numerals, zone callouts, caption, and legend — all now rendered in light ink (#F0EFE8 for primary text, #B8B7B0 for secondary/wireframe) against the dark background.
+      Data: Identical green-to-blue gradient colors and point positions/sizes/alphas as the light render — confirms data colors are unchanged between themes, only chrome flipped.
+      Legibility verdict: PASS — all text (title, axis titles, tick numerals, zone labels, caption, legend) is clearly light-colored against the dark background with no dark-on-dark failures. The brand green remains clearly visible on the dark surface. Same minor tick/point near-touch as in the light render, not a legibility issue.
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
-        passed: false
-        comment: Title/axis-titles/legend/caption fully readable in both themes, but
-          the added tick-number and zone-callout text is completely invisible in the
-          rendered PNGs despite being in the code
+        passed: true
+        comment: All text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 2
-        max: 6
-        passed: false
-        comment: '''X (mm)'' axis title overlaps data points near the bottom vertex;
-          zone-callout text is fully buried under 55+ overlapping scatter points with
-          no visible gap, in both themes'
-      - id: VQ-03
-        name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Depth-aware size/alpha helps separate overlapping points, though
-          the two dense cluster cores still merge into indistinct blobs
+        comment: One minor near-touch between a '0' tick label and a data point in
+          both renders; not severe
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Depth-based size/alpha keeps the ~185-point dense clusters readable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential gradient, no red-green sole signal, adequate
-          contrast on both backgrounds
+        comment: Green-blue sequential gradient is CVD-safe, no red-green as sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800), good margins, nothing clipped at
-          the canvas edge, but the axis-title/point overlap is a layout issue
+        comment: Canvas gate passed (3200x1800); good proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X/Y/Z (mm) axis titles present with units; numeric-scale absence
-          scored under VQ-01/SC-02 to avoid double counting
+        comment: X/Y/Z (mm) and Defect size (µm) — descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint sequential gradient (#009E73 to #4467A3), correct PAGE_BG
-          for both themes, data colors identical across themes'
+        comment: 'imprint_seq gradient (#009E73 -> #4467A3), correct backgrounds both
+          themes'
     design_excellence:
-      score: 13
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom orthographic 3D projection, depth-based size/alpha, deliberate
-          typography hierarchy — clearly sophisticated intent
+        comment: Custom projection technique, custom palette, intentional depth hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: theme_void, generous whitespace, subtle wireframe — refined, though
-          the axis-title/data overlap dents polish
+        comment: theme_void, no spines/grid clutter, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Depth cues do guide the eye, but the zone-callout narrative device
-          (the whole point of the 'Zone A/B/C' additions) fails to render, so it adds
-          nothing in practice
+        passed: true
+        comment: Zone callouts with hand-tuned leaders create a clear narrative and
+          focal points
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -163,28 +134,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Legitimate 3D scatter via projection, matches spec intent
+        comment: Legitimate projection-based 3D scatter, no fallback to another library
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: '''Clear axis labels with units'' partially met (units present, numeric
-          scale invisible); transparency for dense data and color-encoded 4th variable
-          both met'
+        passed: true
+        comment: x/y/z/color all present, transparency used for density
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z and color(defect size) all correctly mapped
+        comment: X/Y/Z correctly mapped and labeled, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches the mandated pattern; legend clearly
-          labeled
+        comment: Title matches mandated format exactly; legend labeled clearly
     data_quality:
       score: 14
       max: 15
@@ -194,22 +162,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Covers spatial clustering across all 3 dims plus a 4th color variable;
-          the zone-narrative device meant to add coverage doesn't render
+        comment: Spatial clustering, color encoding, wireframe reference frame all
+          present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CT-scanned porosity in a titanium bracket — specific, plausible,
-          neutral engineering scenario
+        comment: CT-scanned porosity defects in a titanium bracket — plausible and
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 185 points, ±15 mm coordinate range, 10-130 µm defect sizes — sensible
-          for the domain
+        comment: 185 points within 50-500 range, defect sizes plausible (10-140 µm)
     code_quality:
       score: 9
       max: 10
@@ -219,33 +186,32 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Defines a project() helper — mild deviation from the no-functions
-          norm, though justified by 4x reuse of the same rotation formula
+        comment: One small project() helper for rotation math — minor deviation from
+          no-functions guidance
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: dplyr/tibble/scales/ragg all actually used
+        comment: All imports (ggplot2, dplyr, tibble, scales, ragg) used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity, appropriately complex for a manual 3D projection
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ggsave/ragg::agg_png at the correct landscape
-          dimensions
+        comment: ggsave + ragg::agg_png, plot-{theme}.png naming
     library_mastery:
       score: 8
       max: 10
@@ -255,30 +221,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic grammar-of-graphics layering (geom_segment/geom_point/geom_text,
-          scale_*, coord_fixed) applied to a non-native 3D use case
+        comment: 'Correct grammar-of-graphics usage: geom_point/geom_segment/geom_text,
+          scale_color_gradient, coord_fixed'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: scale_size_identity()/scale_alpha_identity() to pass precomputed
-          per-point aesthetics, coord_fixed(clip='off') for label overflow — distinctive,
-          correct usage
-  verdict: REJECTED
+        comment: Projection-based 3D workaround is a distinctive, well-executed technique
+          given ggplot2's grammar constraints
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
-  - annotations
   - colorbar
+  - annotations
   - layer-composition
   patterns:
   - data-generation
-  - matrix-construction
   dataprep:
   - normalization
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
   - custom-colormap
