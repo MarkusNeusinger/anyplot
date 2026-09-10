@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: line-3d-trajectory
 created: '2026-09-10T00:17:28Z'
-updated: '2026-09-10T00:21:34Z'
+updated: '2026-09-10T00:42:07Z'
 generated_by: claude-sonnet
 workflow_run: 34420238522
 issue: 3182
@@ -12,46 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 49
 review:
   strengths:
-  - Correct, idiomatic Axis3 usage with full per-panel and per-spine theme-adaptive
-    styling
-  - Data colored by time with the Imprint sequential colormap (green→blue), matching
-    the spec's time-progression encoding, with a properly labeled colorbar
+  - Theme-adaptive chrome is fully correct in both renders — backgrounds, ink, grid,
+    and spine colors all flip correctly with no dark-on-dark or light-on-light failures
   - 'First categorical color (start marker) is exactly Imprint brand green #009E73,
     identical between light and dark renders'
-  - Theme-adaptive chrome correctly implemented — all text legible in both themes,
-    backgrounds match Imprint spec values exactly
+  - Correct, idiomatic Axis3 usage with the Imprint sequential colormap (green→blue)
+    for time progression, paired with a properly labeled colorbar
   - Clean, deterministic RK4 integration of the classic Lorenz system with correct
-    textbook parameters
+    textbook parameters (sigma=10, rho=28, beta=8/3), no RNG needed
   weaknesses:
-  - Axis labels are generic single letters "X"/"Y"/"Z" with no additional context
+  - 'CRITICAL: The second/perturbed trajectory line (traj2_line, color = IMPRINT_PALETTE[2]
+    #C475FD) and its fork-point scatter marker are completely invisible in BOTH plot-light.png
+    and plot-dark.png. Verified with an exhaustive pixel scan of the full 3200x1800
+    canvas in each render: zero pixels matching the lavender/purple hue exist anywhere.
+    The code computes and draws this second trajectory but nothing visibly renders.'
+  - 'CRITICAL: The Legend(fig[2, 1:2], ...) describing the diverged path is also completely
+    absent from both renders — the canvas ends immediately after the X/Y axis tick
+    labels near the bottom edge, with no legend row visible at all. This points to
+    row 2 of the Figure''s GridLayout being collapsed to near-zero height (likely
+    because Axis3''s default vertical sizing consumes the full 900px figure height,
+    leaving nothing for the legend row). Try explicit rowsize!(fig.layout, 2, ...)
+    tuning or reduce Axis3''s effective height — and visually confirm the legend actually
+    appears in the saved PNG before resubmitting.'
+  - Because of the two issues above, the 'multiple trajectories to compare paths'
+    enhancement added since attempt 1 has zero visible effect — the rendered plot
+    still shows only a single spiral with a green start dot, the same core weakness
+    flagged in the previous (rejected) review ('only a single trajectory is shown').
+    The added integration/fork-detection/legend code is real but currently produces
+    no visual value.
+  - Axis labels are still generic single letters 'X'/'Y'/'Z' with no additional context
     — acceptable given the Lorenz system has no physical units, but scores low on
     the strict VQ-06 rubric
-  - The 3D bounding box + colorbar leave some unused whitespace on the sides/top of
-    the canvas — consider enlarging the Axis3 relative width (colsize!) or tightening
-    figure margins
-  - Only a single trajectory is shown; the spec notes multiple trajectories with different
-    initial conditions as a nice-to-have for comparison — not required, but would
-    strengthen data storytelling
-  - Dense self-overlap of the line near the attractor's inner spiral is inherent to
-    the math but could be softened slightly with alpha < 1 on the line
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark)
-      Chrome: Title "line-3d-trajectory · julia · makie · anyplot.ai" bold dark text at top; X/Y/Z axis labels and numeric tick labels dark/soft-dark; colorbar labeled "Time" with dark label/tick text — all clearly readable
-      Data: Lorenz attractor trajectory colored by time via green→blue sequential (imprint_seq) colormap; start point marked with solid green dot matching IMPRINT_PALETTE[1] = #009E73
-      Legibility verdict: PASS
+      Chrome: Title "line-3d-trajectory · julia · makie · anyplot.ai" bold dark text at top; X/Y/Z axis labels and numeric tick labels dark/soft-dark; colorbar labeled "Time" with dark label/tick text — all clearly readable. NO legend is visible anywhere in the canvas — the render ends right after the axis tick labels near the bottom edge.
+      Data: Lorenz attractor trajectory colored by time via green→blue sequential (imprint_seq) colormap; start point marked with a solid green dot matching IMPRINT_PALETTE[1] = #009E73. The code also draws a second (perturbed) trajectory tail and fork marker in lavender (#C475FD, IMPRINT_PALETTE[2]) — an exhaustive pixel scan of the full 3200x1800 PNG found ZERO pixels matching that color anywhere. Only the single green→blue trajectory is actually visible.
+      Legibility verdict: PASS for all rendered chrome; FAIL for feature completeness (second trajectory + legend are silently missing)
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 (not pure black, not light)
-      Chrome: Title, axis labels, tick labels, and colorbar label/ticks all rendered in light ink — clearly visible against dark background; no dark-on-dark failures
-      Data: Same green→blue gradient and green start marker as light render — data colors identical across themes, only chrome flipped
-      Legibility verdict: PASS
+      Chrome: Title, axis labels, tick labels, and colorbar label/ticks all rendered in light ink — clearly visible against dark background; no dark-on-dark failures. Same as light render, NO legend is visible anywhere.
+      Data: Same green→blue gradient and green start marker as light render — data colors identical across themes, only chrome flipped. Same pixel scan of the dark PNG also found ZERO lavender pixels — the second trajectory and its fork marker are equally invisible here.
+      Legibility verdict: PASS for all rendered chrome; FAIL for feature completeness (second trajectory + legend are silently missing)
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 19
       max: 30
       items:
       - id: VQ-01
@@ -59,20 +68,22 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes
+        comment: All font sizes explicitly set; title/axis/tick/colorbar text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/text or text/data collisions
+        comment: No collisions among the elements that are actually rendered
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 0
         max: 6
-        passed: true
-        comment: linewidth=2.5 reasonable; inner-loop self-overlap is inherent to
-          the attractor's math
+        passed: false
+        comment: Second (perturbed) trajectory line and fork marker are completely
+          invisible in both renders — zero lavender pixels found in an exhaustive
+          scan of both 3200x1800 PNGs
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -81,10 +92,11 @@ review:
         comment: Sequential gradient, good contrast, not red-green reliant
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 1
         max: 4
-        passed: true
-        comment: Reasonable canvas use but some unused whitespace on sides/top
+        passed: false
+        comment: Legend row (fig[2, 1:2]) is entirely absent from the saved canvas
+          in both themes — likely collapsed to zero height by the Figure's GridLayout
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
@@ -97,33 +109,36 @@ review:
         max: 2
         passed: true
         comment: 'First series #009E73, imprint_seq used correctly for time data,
-          theme-correct backgrounds'
+          theme-correct backgrounds; chosen second-series color is palette-compliant
+          even though it fails to render'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Thoughtful per-panel/spine theming and coherent color story, above
-          bare default
+        comment: Thoughtful per-panel/spine theming for what IS visible, but the broken
+          two-trajectory feature undermines overall polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid, theme-adaptive spines/panels, generous whitespace
+        comment: Subtle grid and theme-adaptive spines, but the abrupt cutoff where
+          the missing legend row should be reads as a layout defect
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Color gradient + start marker create a clear focal point for time
-          progression
+        passed: false
+        comment: Intended focal story — chaotic divergence/fork between two trajectories
+          — is completely lost since the second path never renders; viewer only sees
+          a single spiral
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -134,34 +149,35 @@ review:
         comment: Correct 3D connected-line trajectory
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Sequential connection and color-by-time gradient present; multi-trajectory
-          is optional
+        comment: Core sequential connected-line requirement met; the attempted multi-trajectory
+          comparison enhancement is broken
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z correctly mapped, full trajectory visible
+        comment: X/Y/Z correctly mapped, full visible trajectory shown
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format correct; labeled colorbar replaces redundant single-series
-          legend
+        passed: false
+        comment: Title format correct, but the Legend is completely absent from both
+          renders despite being coded
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Classic Lorenz butterfly with both wings and spiraling behavior
+        comment: Classic Lorenz butterfly with both wings and spiraling behavior;
+          the chaotic-sensitivity comparison intended to add coverage isn't visible
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -175,7 +191,7 @@ review:
         passed: true
         comment: Standard textbook Lorenz parameters (sigma=10, rho=28, beta=8/3)
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -183,13 +199,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear top-to-bottom script, no functions/classes
+        comment: Linear top-to-bottom script, single reused integration function,
+          no classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic ODE integration, fixed initial condition
+        comment: Deterministic ODE integration, fixed initial conditions
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -198,10 +215,12 @@ review:
         comment: Only CairoMakie and Colors, both used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity for RK4 integration, no fake functionality
+        passed: false
+        comment: The second-trajectory/fork/legend code is real (not fake UI) but
+          currently produces zero visible output — effectively dead code until the
+          render bug is fixed
       - id: CQ-05
         name: Output & API
         score: 1
@@ -209,30 +228,33 @@ review:
         passed: true
         comment: Saves plot-$(THEME).png via current API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Good use of Axis3, lines! with colormap, linked Colorbar
+        comment: Good use of Axis3, lines! with colormap, linked Colorbar, but the
+          Legend/GridLayout row sizing is mishandled
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
         comment: Leverages Makie-distinctive Axis3 controls (elevation/azimuth, per-panel/spine
-          theming)
+          theming); Legend usage undermined by the layout bug
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
   - colorbar
+  - custom-legend
   patterns:
   - data-generation
   dataprep: []
   styling:
   - custom-colormap
+  - alpha-blending

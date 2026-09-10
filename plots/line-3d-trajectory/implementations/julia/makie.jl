@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-3d-trajectory: 3D Line Plot for Trajectory Visualization
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 87/100 | Created: 2026-09-10
+# Quality: 49/100 | Created: 2026-09-10
 
 using CairoMakie
 using Colors
