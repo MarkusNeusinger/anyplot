@@ -1,0 +1,268 @@
+library: muix
+language: javascript
+specification_id: contour-3d
+created: '2026-09-10T00:21:14Z'
+updated: '2026-09-10T01:08:49Z'
+generated_by: claude-sonnet
+workflow_run: 34420295489
+issue: 3230
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/muix/plot-dark.html
+quality_score: 82
+review:
+  strengths:
+  - 'Genuine data-driven contour geometry: every grid point is a real (x, y, z) scatter
+    datum feeding the ScatterChart''s own zAxis piecewise colorMap, and the filled
+    bands/isolines are computed with a proper marching-triangles algorithm rather
+    than being faked or hard-coded.'
+  - Colors are correctly built from the Imprint sequential ramp (t.seq, green -> blue)
+    and are identical between light and dark; both renders are theme-correct chrome-wise
+    with no legibility failures.
+  - A genuine computed critical point (global yield optimum) is located from the grid
+    and annotated on the surface, giving the plot a clear focal point that matches
+    the spec's 'optimization landscape with critical points' application.
+  - 'Clean, uncluttered layout: title, axis labels (with units), and the piecewise
+    legend with custom band labels are all legible with generous margins and no clipping
+    at the canvas edges in either theme.'
+  - Realistic, neutral synthetic dataset (chemical-process yield vs. temperature/pressure)
+    with sensible domain ranges and a deterministic closed-form response-surface formula
+    -- fully reproducible with no RNG needed.
+  weaknesses:
+  - 'Core spec gap (SC-01/SC-02): despite the title ''3D contour plot'', the render
+    is strictly top-down -- z only drives fill color, never screen position, so there
+    is no elevation/perspective at all. The ''projected onto base plane'' layer is
+    just the same isoline paths copied with a constant diagonal pixel offset (30,
+    30 in screen space), not an actual base-plane projection under a tilted surface.
+    Since the whole render already goes through a custom `slots.scatter` SVG renderer
+    with full access to each point''s (x, y, z), an isometric/oblique skew applied
+    only to the surface layer (e.g. screenX = xScale(x) - z*k*cos(theta), screenY
+    = yScale(y) - z*k*sin(theta)), while leaving the isolines at the literal, untransformed
+    base, would give a genuine tilted-surface-with-shadow look and satisfy the spec''s
+    ''preserve the surface geometry'' requirement.'
+  - Spec Notes item 'Enable rotation for interactive libraries to explore the 3D structure'
+    is not implemented -- there is no rotation control, and none is meaningful until
+    the render actually has a 3D/tilted transform to rotate.
+  - Sample-point markers (r=4, band-colored fill with theme-background stroke) are
+    subtle against same-colored bands -- a fixed contrasting stroke (e.g. t.ink at
+    higher width) or slightly larger radius would make the 'real data' overlay read
+    more clearly as data points rather than blending into the fill.
+  - Considerable custom low-level geometry code (marching-triangles fill/cut logic,
+    polygon and segment path builders) is present for a criterion that rewards simple,
+    function-free scripts (CQ-01) -- understandable given the library workaround,
+    but still a real deduction under that rubric.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "contour-3d · javascript · muix · anyplot.ai" centered at top in dark ink, clearly readable. X-axis "Temperature (°C)" and Y-axis "Pressure (bar)" labels present with units, dark tick labels on both axes, all legible against the light background. Piecewise legend ("Yield (%)" title + 8 swatches labeled "< 52" through "> 86") sits at the right with comfortable margin from the canvas edge -- confirmed via a pixel crop, no clipping.
+      Data: Filled elevation bands run from Imprint sequential green (low yield, edges of the domain) through teal/blue to the darkest blue (high yield, center) -- first/lowest band uses the brand-green end of t.seq as required for sequential data. Solid dark isolines trace the level curves on the surface; a second, offset+dashed grey isoline layer represents the base-plane projection. A sparse ~9x9 grid of small white-ringed circles overlays real sample points, colored via the chart's own colorGetter. A ringed dot with "Optimum 91.1%" label marks the computed global maximum near the domain center.
+      Legibility verdict: PASS -- no light-on-light text anywhere.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black, not light.
+      Chrome: Same title, axis labels/ticks, and legend, all rendered in light ink/inkSoft tokens against the dark background -- clearly readable, no dark-on-dark failures observed. Legend swatch colors and labels remain crisp.
+      Data: Band and isoline colors are pixel-identical to the light render (confirmed by side-by-side band hues and legend swatch colors) -- only chrome (background, text, sample-point stroke, isoline ink) flipped for the theme, as required. Optimum marker/label and sample points remain visible and legible.
+      Legibility verdict: PASS -- no dark-on-dark text anywhere; brand-adjacent sequential palette (green -> blue) still reads clearly on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, ticks, and legend all explicitly sized and readable
+          in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, or data elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Contour bands/isolines are clear; sample-point markers are a bit
+          subtle against same-colored bands.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue ramp, not red-green-only, adequate contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: No clipping/overflow at canvas edges (verified via pixel crop of
+          legend/title); good margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (°C, bar); mandated title format
+          followed exactly.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses Imprint imprint_seq (t.seq) for the continuous data; correct
+          theme backgrounds in both renders.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Custom Imprint gradient bands, refined piecewise legend, and a deliberate
+          focal annotation -- above generic defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: No boxed axis frame/spines, subtle band boundaries as implicit grid,
+          generous whitespace around chrome.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Clear focal point (optimum callout) and color-hierarchy guide the
+          viewer toward the high-yield region.
+    spec_compliance:
+      score: 10
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 2
+        max: 5
+        passed: false
+        comment: Rendered as a strictly top-down 2D filled contour -- z only maps
+          to color, never to screen position, so no 3D surface geometry/elevation
+          is actually shown despite the spec-mandated '3D contour plot' type.
+      - id: SC-02
+        name: Required Features
+        score: 2
+        max: 4
+        passed: false
+        comment: Colormap + regular-interval isolines + a colorbar/legend are present;
+          base-plane projection is only a constant-offset dashed copy of the same
+          isolines (not a real projection under a tilted surface); rotation is entirely
+          absent.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=temperature, Y=pressure, both axes show the full data domain.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{spec-id} · {language} · {library} · anyplot.ai' exactly;
+          legend labels (band ranges, axis title) are correct.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: Filled bands, on-surface isolines, projected reference layer, colorbar/legend,
+          and sample-point overlay are all present.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Chemical-process yield-vs-(temperature, pressure) response surface
+          -- plausible, neutral, non-controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Temperature 150-250°C, pressure 10-50 bar, yield ~20-95% -- all sensible
+          for the stated domain.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        comment: Several helper functions (triangulation, path builders) -- justified
+          by the marching-triangles workaround, but a real departure from a function-free
+          script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Fully deterministic closed-form formula, no RNG needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: Only ScatterChart, PiecewiseColorLegend, ChartsText imported -- all
+          used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Complexity is proportionate to the underlying algorithm; no fake
+          UI/interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: Default-exported component, harness-owned output, current MUI X API
+          (zAxis colorMap, slots.scatter).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        comment: Uses the library's own zAxis/colorGetter pipeline correctly, but
+          almost entirely bypasses native scatter marks via a fully custom slot renderer
+          -- a necessary but non-idiomatic workaround for a chart type MUI X doesn't
+          natively support.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: Creative, correct use of zAxis piecewise colorMap, PiecewiseColorLegend
+          with custom label formatter, and the colorGetter contract inside a custom
+          slots.scatter renderer.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - colorbar
+  - custom-legend
+  - patches
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - interpolation
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - publication-ready
