@@ -74,15 +74,15 @@ const zTip = project(0, 0, 13);
 // single pixels-per-unit scale (echarts cartesian has no built-in aspect lock)
 const allX = points.map((p) => p[0]).concat([originP[0], xTip[0], yTip[0], zTip[0]]);
 const allY = points.map((p) => p[1]).concat([originP[1], xTip[1], yTip[1], zTip[1]]);
-const padX = (Math.max(...allX) - Math.min(...allX)) * 0.15;
-const padY = (Math.max(...allY) - Math.min(...allY)) * 0.15;
+const padX = (Math.max(...allX) - Math.min(...allX)) * 0.12;
+const padY = (Math.max(...allY) - Math.min(...allY)) * 0.08;
 const xAxisMin = Math.min(...allX) - padX;
 const xAxisMax = Math.max(...allX) + padX;
 const yAxisMin = Math.min(...allY) - padY;
 const yAxisMax = Math.max(...allY) + padY;
 
-const marginTop = 160;
-const marginBottom = 70;
+const marginTop = 110;
+const marginBottom = 50;
 const marginLeft = 130;
 const marginRight = 210;
 const availW = size.width - marginLeft - marginRight;
@@ -137,7 +137,7 @@ const option = {
     orient: "vertical",
     right: 30,
     top: "middle",
-    text: ["High density", "Low density"],
+    text: ["High density (g/cm³)", "Low density (g/cm³)"],
     textStyle: { color: t.inkSoft, fontSize: 13 },
     itemWidth: 14,
     itemHeight: 140,
@@ -194,11 +194,11 @@ const option = {
       // Rock samples, positioned by isometric projection, colored by density
       type: "scatter",
       data: points,
-      symbolSize: 16,
+      symbolSize: 11,
       itemStyle: {
-        opacity: 0.85,
+        opacity: 0.75,
         borderColor: t.pageBg,
-        borderWidth: 1.2,
+        borderWidth: 1,
       },
       z: 2,
     },
@@ -211,20 +211,41 @@ chart.setOption(option);
 // real data coordinates converted to pixels, not a decorative overlay.
 const toPixel = (dataPoint) => chart.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, dataPoint);
 const axisLabels = [
-  { tip: xTip, text: "SiO₂ (wt%)", dx: 15, dy: -8 },
-  { tip: yTip, text: "Fe₂O₃ (wt%)", dx: 85, dy: -8 },
-  { tip: zTip, text: "MgO (wt%)", dx: -135, dy: -8 },
+  { point: xTip, text: "SiO₂ (wt%)", dx: 15, dy: -8, font: "16px sans-serif" },
+  { point: yTip, text: "Fe₂O₃ (wt%)", dx: 85, dy: -8, font: "16px sans-serif" },
+  { point: zTip, text: "MgO (wt%)", dx: -135, dy: -8, font: "16px sans-serif" },
 ];
 
+// Numeric tick labels partway along each guide (interpolated from that
+// variable's real min/max) so the composition scale reads directly off the
+// static PNG without needing the interactive tooltip.
+function tickValue([lo, hi], frac) {
+  return lo + (frac / 10) * (hi - lo);
+}
+const tickSpecs = [
+  { axisVec: [1, 0, 0], range: siO2Range, ticks: [{ t: 3, dx: 6, dy: -2 }, { t: 8, dx: 10, dy: -8 }] },
+  { axisVec: [0, 1, 0], range: fe2O3Range, ticks: [{ t: 3, dx: 10, dy: 2 }, { t: 8, dx: 10, dy: 2 }] },
+  { axisVec: [0, 0, 1], range: mgORange, ticks: [{ t: 3, dx: -32, dy: -2 }, { t: 8, dx: -36, dy: -8 }] },
+];
+const tickLabels = tickSpecs.flatMap((spec) =>
+  spec.ticks.map(({ t: frac, dx, dy }) => ({
+    point: project(spec.axisVec[0] * frac, spec.axisVec[1] * frac, spec.axisVec[2] * frac),
+    text: `${tickValue(spec.range, frac).toFixed(0)}%`,
+    dx,
+    dy,
+    font: "11px sans-serif",
+  }))
+);
+
 chart.setOption({
-  graphic: axisLabels.map((a) => {
-    const pixel = toPixel([a.tip[0], a.tip[1]]);
+  graphic: [...axisLabels, ...tickLabels].map((a) => {
+    const pixel = toPixel([a.point[0], a.point[1]]);
     return {
       type: "text",
       left: pixel[0] + a.dx,
       top: pixel[1] + a.dy,
       silent: true,
-      style: { text: a.text, fill: t.inkSoft, font: "16px sans-serif" },
+      style: { text: a.text, fill: t.inkSoft, font: a.font },
     };
   }),
 });
