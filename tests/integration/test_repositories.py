@@ -438,7 +438,8 @@ class TestFeedbackRepository:
         await repo.create({"reaction": "thumbs_up", "ip_hash": "aaa"})
         await repo.create({"reaction": "thumbs_down", "ip_hash": "aaa"})
 
-        since = datetime.now(timezone.utc) - timedelta(minutes=1)
+        # tz-naive UTC, as the repository contract asks (created_at is TIMESTAMP WITHOUT TIME ZONE).
+        since = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(minutes=1)
         assert await repo.count_recent_by_ip("aaa", since) == 3
         assert await repo.count_recent_by_ip("aaa", since, messages_only=True) == 1
 

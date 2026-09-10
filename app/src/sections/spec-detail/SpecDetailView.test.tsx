@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeContext, type ThemeContextValue } from 'src/hooks/useLayoutContext';
 import { SpecDetailView } from 'src/sections/spec-detail/SpecDetailView';
-import { render, screen, userEvent, waitFor } from 'src/test-utils';
+import { fireEvent, render, screen, userEvent, waitFor } from 'src/test-utils';
 import type { Implementation } from 'src/types';
 
 const darkThemeValue: ThemeContextValue = {
@@ -249,9 +249,11 @@ describe('SpecDetailView', () => {
       await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
 
       const down = screen.getByRole('button', { name: /thumbs down/i });
-      expect(down).toHaveAttribute('aria-disabled', 'true');
+      expect(down).toBeDisabled();
       await user.click(screen.getByRole('button', { name: /thumbs up/i }));
-      await user.click(down);
+      // The disabled thumb rejects pointer events; a synthetic click stands in
+      // for a user who works around the UI (e.g. via devtools).
+      fireEvent.click(down);
 
       expect(fetchSpy).toHaveBeenCalledTimes(1);
       expect(screen.getByRole('button', { name: /thumbs up/i })).toHaveAttribute(

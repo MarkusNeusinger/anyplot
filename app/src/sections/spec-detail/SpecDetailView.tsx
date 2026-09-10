@@ -267,7 +267,11 @@ export function SpecDetailView({
       };
     }
     if (locked) {
-      return { ...overlayBtnSx, opacity: 0.45, cursor: 'default', '&:hover': {} };
+      // Keep the overlay surface under the disabled thumb; MUI would drop it.
+      return {
+        ...overlayBtnSx,
+        '&.Mui-disabled': { bgcolor: overlayBtnSx.bgcolor, opacity: 0.45 },
+      };
     }
     return overlayBtnSx;
   };
@@ -283,20 +287,24 @@ export function SpecDetailView({
     const active = vote === reaction;
     const locked = !!vote && !active;
     return (
+      // A natively disabled button emits no pointer events, so the tooltip
+      // listens on a wrapping span (MUI's documented pattern for this case).
       <Tooltip title={locked ? '.rated()' : verb} disableFocusListener>
-        <IconButton
-          onClick={(e: React.MouseEvent) => {
-            (e.currentTarget as HTMLElement).blur();
-            handleVote(reaction);
-          }}
-          aria-label={label}
-          aria-pressed={active}
-          aria-disabled={locked}
-          sx={thumbSx(active, locked, activeColor)}
-          size="medium"
-        >
-          {active ? <Filled fontSize="small" /> : <Outlined fontSize="small" />}
-        </IconButton>
+        <span style={{ display: 'inline-flex' }}>
+          <IconButton
+            onClick={(e: React.MouseEvent) => {
+              (e.currentTarget as HTMLElement).blur();
+              handleVote(reaction);
+            }}
+            aria-label={label}
+            aria-pressed={active}
+            disabled={locked}
+            sx={thumbSx(active, locked, activeColor)}
+            size="medium"
+          >
+            {active ? <Filled fontSize="small" /> : <Outlined fontSize="small" />}
+          </IconButton>
+        </span>
       </Tooltip>
     );
   };

@@ -462,12 +462,16 @@ class FeedbackRepository(BaseRepository[Feedback]):
         if language is not None:
             filters.append(Feedback.language == language)
         # One partition per session; a session-less row is its own partition
-        # (the primary key stands in for the missing session id).
+        # (the primary key stands in for the missing session id). The id is
+        # also the tiebreaker, so two rows sharing a created_at rank the same
+        # way on every run.
         partition = func.coalesce(Feedback.session_id, cast(Feedback.id, String))
         ranked = (
             select(
                 Feedback.reaction.label("reaction"),
-                func.row_number().over(partition_by=partition, order_by=Feedback.created_at.desc()).label("rank"),
+                func.row_number()
+                .over(partition_by=partition, order_by=(Feedback.created_at.desc(), Feedback.id.desc()))
+                .label("rank"),
             )
             .where(*filters)
             .subquery()
