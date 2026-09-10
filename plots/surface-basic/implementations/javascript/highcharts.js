@@ -76,7 +76,10 @@ const series = bandsData
       name: `${loEdge.toFixed(2)} to ${hiEdge.toFixed(2)}`,
       color,
       data,
-      marker: { symbol: "square", radius: 6, fillColor: color, lineWidth: 0 },
+      // A thin ink-toned stroke keeps every band visible even when its fill
+      // is near-identical to the page background (the middle diverging band
+      // sits within ~1 RGB unit of both #FAF8F1 and #1A1A17).
+      marker: { symbol: "square", radius: 6, fillColor: color, lineWidth: 1, lineColor: t.inkSoft },
     };
   })
   .filter((s) => s.data.length > 0);
@@ -94,11 +97,20 @@ Highcharts.chart("container", {
       // Highcharts lays out the title/legend/axes, so the radius is derived
       // from the rendered axis scale (toPixels) rather than guessed margins.
       load: function () {
-        const xPx = Math.abs(this.xAxis[0].toPixels(xs[1]) - this.xAxis[0].toPixels(xs[0]));
-        const yPx = Math.abs(this.yAxis[0].toPixels(ys[1]) - this.yAxis[0].toPixels(ys[0]));
-        const radius = Math.max(2, (Math.min(xPx, yPx) / 2) * 0.98);
-        this.series.forEach((s) => s.update({ marker: { radius } }, false));
-        this.redraw();
+        const chart = this;
+        // The y-axis title + tick labels reserve real width on the plot
+        // area's left edge; nothing reserves matching width on the right by
+        // default, so the tiled grid sits flush against the right canvas
+        // edge while the left keeps a full margin. Mirror the (larger) left
+        // margin onto the right before sizing markers, so both edges match.
+        if (chart.plotLeft > chart.marginRight) {
+          chart.update({ chart: { marginRight: chart.plotLeft } }, true);
+        }
+        const xPx = Math.abs(chart.xAxis[0].toPixels(xs[1]) - chart.xAxis[0].toPixels(xs[0]));
+        const yPx = Math.abs(chart.yAxis[0].toPixels(ys[1]) - chart.yAxis[0].toPixels(ys[0]));
+        const radius = Math.max(2, (Math.min(xPx, yPx) / 2) * 0.96);
+        chart.series.forEach((s) => s.update({ marker: { radius } }, false));
+        chart.redraw();
       },
     },
   },
