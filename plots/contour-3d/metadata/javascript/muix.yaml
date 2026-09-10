@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: contour-3d
 created: '2026-09-10T00:21:14Z'
-updated: '2026-09-10T00:25:46Z'
+updated: '2026-09-10T00:32:34Z'
 generated_by: claude-sonnet
 workflow_run: 34420295489
 issue: 3230
@@ -18,28 +18,38 @@ review:
   - Both light and dark renders are visually polished and theme-correct (identical
     data-band colors, theme-adaptive chrome, no dark-on-dark or light-on-light failures)
   - Contour extraction (marching squares) and base-plane projection are technically
-    well-executed and match the spec's notes
+    well-executed and match the spec's notes on projected contours
   weaknesses:
-  - 'AR-05 NO_LIBRARY: the implementation contains zero `@mui/x-charts` imports or
-    component usage — it is a hand-rolled SVG renderer (isometric projection + marching-squares
-    contours) wrapped in a plain React component, not a MUI X Charts implementation'
-  - Should either return NOT_FEASIBLE (community @mui/x-charts has no 3D/surface/contour/heatmap
-    primitive) or rework using an actual MUI X component (e.g. ScatterChart with per-point
-    color mapping) instead of a custom SVG renderer
+  - 'AR-05 NO_LIBRARY (unresolved from attempt 1): the implementation still contains
+    zero `@mui/x-charts` imports or component usage -- `grep -n "^import"` on muix.tsx
+    returns nothing. It is a hand-rolled SVG renderer (isometric projection + marching-squares
+    contour extraction) wrapped in a plain React component, not a MUI X Charts implementation.
+    This repair attempt did not change the fundamental approach from attempt 1, which
+    was already rejected for this exact reason.'
+  - 'Per prompts/library/muix.md''s own guidance (''When MUI X can''t express the
+    spec''): community @mui/x-charts has no 3D/surface/contour/heatmap primitive,
+    so the correct outcome is to return NOT_FEASIBLE with a one-line reason -- not
+    to hand-build a custom SVG rendering pipeline that bypasses the library entirely
+    (the doc explicitly forbids shelling out to D3/Chart.js-style custom rendering
+    instead of taking the NOT_FEASIBLE escape hatch).'
+  - If a MUI X-based approach is attempted instead of NOT_FEASIBLE, it must actually
+    import and render a community `@mui/x-charts` component (e.g. `ScatterChart` with
+    per-point color mapping as a 2D proxy) -- styling tokens and a `Chart()` React
+    component alone do not satisfy AR-05.
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white, consistent with #FAF8F1.
-      Chrome: title "contour-3d · javascript · muix · anyplot.ai" top-left in dark ink; axis captions "Temperature 150-250C" and "Pressure 10-50 bar" near front edges of the surface; colorbar labeled "Yield (%)" with ticks 91 down to 47. All clearly readable against the light background.
-      Data: isometric saddle-shaped surface shaded in 8 discrete bands from green (low yield ~47%) to blue (high yield ~91%), solid dark contour lines on the surface, dashed contour lines projected onto the base plane.
+      Chrome: title "contour-3d · javascript · muix · anyplot.ai" top-left in dark ink; axis captions "Temperature 150-250°C" and "Pressure 10-50 bar" near the front edges of the surface; colorbar labeled "Yield (%)" with ticks from 91 down to 47. All text is clearly readable against the light background.
+      Data: an isometric saddle-shaped surface shaded in 8 discrete bands from green (low yield ~47%) to blue (high yield ~91%), solid dark contour lines drawn on the surface, and matching dashed contour lines projected onto the base plane below.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black, consistent with #1A1A17.
-      Chrome: title, axis captions, and colorbar label are light-colored and clearly legible; surface contour lines are light gray instead of dark navy; colorbar border lightened. No dark-on-dark issues.
-      Data: identical green-to-blue banded shading as the light render; only chrome flipped.
+      Chrome: title, axis captions, and colorbar label are light-colored and clearly legible; surface contour lines render as light gray instead of dark navy; colorbar border lightened to match the dark theme. No dark-on-dark or light-on-light issues found.
+      Data: identical green-to-blue banded shading and identical band boundaries as the light render; only chrome (background, text, grid/contour stroke colors) flipped, as required.
       Legibility verdict: PASS
 
-    NOTE: Visual/theme legibility is not the deciding factor for this review. The implementation is Auto-Rejected under AR-05 (NO_LIBRARY) because it contains zero @mui/x-charts imports or component usage -- confirmed via `grep -n "^import" muix.tsx` returning nothing. Per quality-criteria.md, AR-05 sets Score = 0 before quality scoring begins, regardless of visual polish.
+    NOTE: Visual/theme legibility is NOT the deciding factor for this review. The implementation is Auto-Rejected under AR-05 (NO_LIBRARY): `grep -n "^import"` on muix.tsx returns nothing -- there is no `@mui/x-charts` import or component usage anywhere in the file. Per quality-criteria.md, AR-05 sets Score = 0 before quality scoring begins, regardless of visual polish. This is unchanged from the attempt-1 review, which flagged the identical issue.
   criteria_checklist:
     visual_quality:
       score: 0
