@@ -1,3 +1,7 @@
+#' anyplot.ai
+#' surface-basic: Basic 3D Surface Plot
+#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 82/100 | Created: 2026-09-10
 # anyplot.ai
 # surface-basic: Basic 3D Surface Plot
 # Library: ggplot2 | R
