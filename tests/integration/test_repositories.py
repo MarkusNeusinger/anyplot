@@ -427,3 +427,63 @@ class TestFeedbackRepository:
         assert await repo.count_recent_by_ip("aaa", since) == 2
         assert await repo.count_recent_by_ip("bbb", since) == 1
         assert await repo.count_recent_by_ip("ccc", since) == 0
+
+    async def test_count_recent_by_ip_messages_only(self, test_session):
+        """Reaction-only rows are skipped when counting message-bearing entries."""
+        from datetime import datetime, timedelta, timezone
+
+        repo = FeedbackRepository(test_session)
+
+        await repo.create({"message": "one", "ip_hash": "aaa"})
+        await repo.create({"reaction": "thumbs_up", "ip_hash": "aaa"})
+        await repo.create({"reaction": "thumbs_down", "ip_hash": "aaa"})
+
+        # tz-naive UTC, as the repository contract asks (created_at is TIMESTAMP WITHOUT TIME ZONE).
+        since = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(minutes=1)
+        assert await repo.count_recent_by_ip("aaa", since) == 3
+        assert await repo.count_recent_by_ip("aaa", since, messages_only=True) == 1
+
+    async def test_has_plot_vote(self, test_session):
+        """A session's earlier 👍/👎 on the same implementation is found; others are not."""
+        repo = FeedbackRepository(test_session)
+        vote = {"spec_id": "scatter-basic", "library_id": "matplotlib", "language": "python", "session_id": "s1"}
+        await repo.create({**vote, "reaction": "thumbs_up"})
+        await repo.create({**vote, "reaction": "bug", "library_id": "plotly"})
+
+        assert await repo.has_plot_vote("s1", "scatter-basic", "matplotlib", "python") is True
+        assert await repo.has_plot_vote("s1", "scatter-basic", "matplotlib", None) is True
+        assert await repo.has_plot_vote("s1", "scatter-basic", "matplotlib", "r") is False
+        assert await repo.has_plot_vote("s1", "scatter-basic", "plotly", "python") is False
+        assert await repo.has_plot_vote("s2", "scatter-basic", "matplotlib", "python") is False
+
+    async def test_reaction_counts_per_implementation(self, test_session):
+        """Counts 👍/👎 per (spec, library), newest row per session wins."""
+        from datetime import datetime, timedelta
+
+        repo = FeedbackRepository(test_session)
+        base = datetime(2026, 9, 10, 12, 0, 0)
+        vote = {"spec_id": "scatter-basic", "library_id": "matplotlib", "language": "python"}
+
+        # Session s1 changes its mind: 👍 then 👎 — only the 👎 counts.
+        await repo.create({**vote, "reaction": "thumbs_up", "session_id": "s1", "created_at": base})
+        await repo.create(
+            {**vote, "reaction": "thumbs_down", "session_id": "s1", "created_at": base + timedelta(seconds=5)}
+        )
+        # Session s2 and a session-less row both like it.
+        await repo.create({**vote, "reaction": "thumbs_up", "session_id": "s2", "created_at": base})
+        await repo.create({**vote, "reaction": "thumbs_up", "created_at": base})
+        # Other implementation, other spec, page-level widget row: all ignored.
+        await repo.create({**vote, "library_id": "plotly", "reaction": "thumbs_up", "session_id": "s3"})
+        await repo.create({**vote, "spec_id": "bar-basic", "reaction": "thumbs_up", "session_id": "s3"})
+        await repo.create({"spec_id": "scatter-basic", "reaction": "thumbs_up", "session_id": "s3"})
+        await repo.create({**vote, "reaction": "bug", "session_id": "s4"})
+
+        counts = await repo.reaction_counts("scatter-basic", "matplotlib")
+        assert counts == {"thumbs_up": 2, "thumbs_down": 1}
+
+        assert await repo.reaction_counts("scatter-basic", "matplotlib", language="python") == counts
+        assert await repo.reaction_counts("scatter-basic", "matplotlib", language="r") == {
+            "thumbs_up": 0,
+            "thumbs_down": 0,
+        }
+        assert await repo.reaction_counts("scatter-basic", "plotly") == {"thumbs_up": 1, "thumbs_down": 0}

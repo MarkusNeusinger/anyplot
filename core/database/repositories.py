@@ -420,13 +420,69 @@ class FeedbackRepository(BaseRepository[Feedback]):
     model = Feedback
     updatable_fields = frozenset({"status"})
 
-    async def count_recent_by_ip(self, ip_hash: str, since: datetime) -> int:
+    async def count_recent_by_ip(self, ip_hash: str, since: datetime, messages_only: bool = False) -> int:
         """Count entries from this IP hash since the given UTC datetime — used for rate limiting.
-        `since` must be tz-naive UTC because feedback.created_at is TIMESTAMP WITHOUT TIME ZONE."""
-        result = await self.session.execute(
-            select(func.count(Feedback.id)).where(Feedback.ip_hash == ip_hash, Feedback.created_at >= since)
-        )
+        `since` must be tz-naive UTC because feedback.created_at is TIMESTAMP WITHOUT TIME ZONE.
+        With `messages_only`, reaction-only rows are left out so a handful of 👍/👎 taps
+        never blocks the free-text form."""
+        stmt = select(func.count(Feedback.id)).where(Feedback.ip_hash == ip_hash, Feedback.created_at >= since)
+        if messages_only:
+            stmt = stmt.where(Feedback.message.is_not(None))
+        result = await self.session.execute(stmt)
         return result.scalar_one() or 0
+
+    async def has_plot_vote(self, session_id: str, spec_id: str, library_id: str, language: str | None) -> bool:
+        """True iff this session already left a 👍/👎 on this implementation.
+
+        One vote per image per session: the router drops later votes from the
+        same session silently, so a visitor cannot flip up/down at will.
+        """
+        stmt = select(func.count(Feedback.id)).where(
+            Feedback.session_id == session_id,
+            Feedback.spec_id == spec_id,
+            Feedback.library_id == library_id,
+            Feedback.reaction.in_(("thumbs_up", "thumbs_down")),
+        )
+        if language is not None:
+            stmt = stmt.where(Feedback.language == language)
+        result = await self.session.execute(stmt)
+        return (result.scalar_one() or 0) > 0
+
+    async def reaction_counts(self, spec_id: str, library_id: str, language: str | None = None) -> dict[str, int]:
+        """Count 👍/👎 for one implementation — `{"thumbs_up": n, "thumbs_down": n}`.
+
+        The router already refuses a second vote per session, but the table is
+        append-only and rows from before that guard (or without it) may repeat,
+        so only the newest row per session counts. Rows without a session id
+        cannot be de-duplicated and count once each. `language` narrows the
+        lookup when the same library id exists in more than one language.
+        """
+        thumbs = ("thumbs_up", "thumbs_down")
+        filters = [Feedback.spec_id == spec_id, Feedback.library_id == library_id, Feedback.reaction.in_(thumbs)]
+        if language is not None:
+            filters.append(Feedback.language == language)
+        # One partition per session; a session-less row is its own partition
+        # (the primary key stands in for the missing session id). The id is
+        # also the tiebreaker, so two rows sharing a created_at rank the same
+        # way on every run.
+        partition = func.coalesce(Feedback.session_id, cast(Feedback.id, String))
+        ranked = (
+            select(
+                Feedback.reaction.label("reaction"),
+                func.row_number()
+                .over(partition_by=partition, order_by=(Feedback.created_at.desc(), Feedback.id.desc()))
+                .label("rank"),
+            )
+            .where(*filters)
+            .subquery()
+        )
+        result = await self.session.execute(
+            select(ranked.c.reaction, func.count().label("count")).where(ranked.c.rank == 1).group_by(ranked.c.reaction)
+        )
+        counts = dict.fromkeys(thumbs, 0)
+        for row in result.all():
+            counts[row.reaction] = row.count
+        return counts
 
     async def list_recent(self, limit: int = 100) -> list[Feedback]:
         """List most recent entries first — for admin/triage tooling."""

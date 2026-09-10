@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { langFromPath, paths, RESERVED_TOP_LEVEL, specPath } from 'src/routes/paths';
+import {
+  langFromPath,
+  paths,
+  RESERVED_TOP_LEVEL,
+  specIdFromPath,
+  specPath,
+} from 'src/routes/paths';
 
 describe('specPath', () => {
   it('builds the cross-language hub path', () => {
@@ -33,6 +39,23 @@ describe('langFromPath', () => {
 
   it('returns undefined when the first segment is a reserved route', () => {
     expect(langFromPath('/plots/python')).toBeUndefined();
+  });
+});
+
+describe('specIdFromPath', () => {
+  it('returns the first segment of a spec route', () => {
+    expect(specIdFromPath('/scatter-basic')).toBe('scatter-basic');
+    expect(specIdFromPath('/scatter-basic/python/altair')).toBe('scatter-basic');
+  });
+
+  it('returns undefined for the root path', () => {
+    expect(specIdFromPath('/')).toBeUndefined();
+    expect(specIdFromPath('')).toBeUndefined();
+  });
+
+  it('returns undefined when the first segment is a reserved route', () => {
+    expect(specIdFromPath('/stats')).toBeUndefined();
+    expect(specIdFromPath('/about/team')).toBeUndefined();
   });
 });
 

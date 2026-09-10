@@ -140,6 +140,70 @@ class TestFeedbackRouter:
         assert kwargs["ip_hash"]  # sha256 hex, not raw IP
         assert "198.51.100.7" not in kwargs["ip_hash"]
 
+    def test_plot_vote_persists_library_and_language(self, client):
+        """A 👍 from the plot overlay carries the implementation it is about."""
+        instance = AsyncMock()
+        instance.count_recent_by_ip = AsyncMock(return_value=0)
+        instance.has_plot_vote = AsyncMock(return_value=False)
+        instance.create = AsyncMock(return_value=None)
+
+        with patch("api.routers.feedback.FeedbackRepository", return_value=instance):
+            response = client.post(
+                "/feedback",
+                json={
+                    "reaction": "thumbs_down",
+                    "spec_id": "scatter-basic",
+                    "library_id": "matplotlib",
+                    "language": "python",
+                    "session_id": "s1",
+                },
+            )
+
+        assert response.status_code == 200
+        instance.has_plot_vote.assert_awaited_once_with("s1", "scatter-basic", "matplotlib", "python")
+        kwargs = instance.create.await_args.args[0]
+        assert kwargs["library_id"] == "matplotlib"
+        assert kwargs["language"] == "python"
+
+    def test_second_plot_vote_from_same_session_is_silently_dropped(self, client):
+        """One 👍/👎 per image per session — a repeat returns 200 but writes nothing."""
+        instance = AsyncMock()
+        instance.count_recent_by_ip = AsyncMock(return_value=0)
+        instance.has_plot_vote = AsyncMock(return_value=True)
+        instance.create = AsyncMock(return_value=None)
+
+        with patch("api.routers.feedback.FeedbackRepository", return_value=instance):
+            response = client.post(
+                "/feedback",
+                json={
+                    "reaction": "thumbs_up",
+                    "spec_id": "scatter-basic",
+                    "library_id": "matplotlib",
+                    "language": "python",
+                    "session_id": "s1",
+                },
+            )
+
+        assert response.status_code == 200
+        assert response.json() == {"status": "ok"}
+        instance.create.assert_not_awaited()
+
+    def test_page_level_reaction_skips_the_vote_guard(self, client):
+        """The floating widget's 👍 names no library, so it is never treated as a plot vote."""
+        instance = AsyncMock()
+        instance.count_recent_by_ip = AsyncMock(return_value=0)
+        instance.has_plot_vote = AsyncMock(return_value=True)
+        instance.create = AsyncMock(return_value=None)
+
+        with patch("api.routers.feedback.FeedbackRepository", return_value=instance):
+            response = client.post(
+                "/feedback", json={"reaction": "thumbs_up", "spec_id": "scatter-basic", "session_id": "s1"}
+            )
+
+        assert response.status_code == 200
+        instance.has_plot_vote.assert_not_awaited()
+        instance.create.assert_awaited_once()
+
     def test_rate_limit_returns_429(self, client):
         """Should return 429 when the rate-limit query reports too many recent entries."""
         instance = AsyncMock()
@@ -148,6 +212,37 @@ class TestFeedbackRouter:
 
         with patch("api.routers.feedback.FeedbackRepository", return_value=instance):
             response = client.post("/feedback", json={"message": "hi"}, headers={"x-forwarded-for": "198.51.100.8"})
+
+        assert response.status_code == 429
+        instance.create.assert_not_awaited()
+        # Free-text entries are throttled on message-bearing rows only.
+        assert instance.count_recent_by_ip.await_args.kwargs == {"messages_only": True}
+
+    def test_reaction_only_uses_the_looser_limit(self, client):
+        """Five recent rows block a message, but a plot vote still goes through."""
+        instance = AsyncMock()
+        instance.count_recent_by_ip = AsyncMock(return_value=5)
+        instance.create = AsyncMock(return_value=None)
+
+        with patch("api.routers.feedback.FeedbackRepository", return_value=instance):
+            response = client.post(
+                "/feedback", json={"reaction": "thumbs_up"}, headers={"x-forwarded-for": "198.51.100.8"}
+            )
+
+        assert response.status_code == 200
+        instance.create.assert_awaited_once()
+        assert instance.count_recent_by_ip.await_args.kwargs == {}
+
+    def test_reaction_only_rate_limit_returns_429(self, client):
+        """Reaction-only entries are still capped, just higher than free text."""
+        instance = AsyncMock()
+        instance.count_recent_by_ip = AsyncMock(return_value=30)
+        instance.create = AsyncMock(return_value=None)
+
+        with patch("api.routers.feedback.FeedbackRepository", return_value=instance):
+            response = client.post(
+                "/feedback", json={"reaction": "thumbs_up"}, headers={"x-forwarded-for": "198.51.100.8"}
+            )
 
         assert response.status_code == 429
         instance.create.assert_not_awaited()

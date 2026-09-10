@@ -38,7 +38,7 @@ By participating, you agree to our [Code of Conduct](../CODE_OF_CONDUCT.md).
 
 Found a problem with a plot (specification or implementation)?
 
-1. **From anyplot.ai**: Click "report issue" on any spec or implementation page
+1. **From anyplot.ai**: Click "report issue ↗" on a spec page, or "report" in the footer
 2. **From GitHub**: Use the [Report Plot Issue](https://github.com/MarkusNeusinger/anyplot/issues/new?template=report-plot-issue.yml) template
 3. **Select affected libraries** (or leave empty if all/unsure)
 4. **Choose a category** (optional): Visual, Data, Functional, or Other
