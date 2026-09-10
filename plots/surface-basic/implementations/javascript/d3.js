@@ -24,14 +24,17 @@ const Z_SCALE = EXTENT * 0.65;
 const zWorld = (z) => z * Z_SCALE;
 
 // --- 3D projection: azimuth spin around Z, then elevation tilt around X ----
-const AZIMUTH = (-35 * Math.PI) / 180;
-const ELEVATION = (26 * Math.PI) / 180;
-const cosAz = Math.cos(AZIMUTH);
-const sinAz = Math.sin(AZIMUTH);
-const cosEl = Math.cos(ELEVATION);
-const sinEl = Math.sin(ELEVATION);
+// Mutable so drag-to-rotate (below) can update the view and re-project.
+let azimuth = (-35 * Math.PI) / 180;
+let elevation = (26 * Math.PI) / 180;
+const MIN_ELEVATION = (6 * Math.PI) / 180;
+const MAX_ELEVATION = (80 * Math.PI) / 180;
 
-function project(x, y, z) {
+function project(x, y, z, az, el) {
+  const cosAz = Math.cos(az);
+  const sinAz = Math.sin(az);
+  const cosEl = Math.cos(el);
+  const sinEl = Math.sin(el);
   // spin around the vertical (z) axis
   const x1 = x * cosAz - y * sinAz;
   const y1 = x * sinAz + y * cosAz;
@@ -42,152 +45,191 @@ function project(x, y, z) {
   return { sx: x1, sy: y2, depth };
 }
 
-// Bounding box in projected model space, used to fit the surface into iw x ih.
-// x/y use independent scale factors (a stylized isometric-like projection, not
-// a physical camera) so the surface fills the available canvas on both axes.
-const corners = [];
-for (const x of [-EXTENT, EXTENT]) {
-  for (const y of [-EXTENT, EXTENT]) {
-    for (const z of [zWorld(zMin), zWorld(zMax)]) corners.push(project(x, y, z));
-  }
-}
-const sxExtent = d3.extent(corners, (d) => d.sx);
-const syExtent = d3.extent(corners, (d) => d.sy);
-const fitScaleX = 0.92 * (iw / (sxExtent[1] - sxExtent[0]));
-const fitScaleY = 0.92 * (ih / (syExtent[1] - syExtent[0]));
-const sxCenter = (sxExtent[0] + sxExtent[1]) / 2;
-const syCenter = (syExtent[0] + syExtent[1]) / 2;
 const originX = margin.left + iw / 2;
 const originY = margin.top + ih / 2;
-const toScreen = (p) => [originX + (p.sx - sxCenter) * fitScaleX, originY + (p.sy - syCenter) * fitScaleY];
 
-// --- SVG mount ---------------------------------------------------------------
-const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
-
-// --- Color scale (diverging: amplitude has a meaningful zero midpoint) ------
-const absMax = Math.max(Math.abs(zMin), Math.abs(zMax));
-const color = d3.scaleSequential(d3.interpolateRgbBasis(t.div)).domain([-absMax, absMax]);
-
-// --- Surface mesh: one quad per grid cell, painter's algorithm back-to-front
-const quads = [];
-for (let i = 0; i < GRID_N - 1; i++) {
-  for (let j = 0; j < GRID_N - 1; j++) {
-    const cellCorners = [
-      [xs[i], ys[j], zGrid[i][j]],
-      [xs[i + 1], ys[j], zGrid[i + 1][j]],
-      [xs[i + 1], ys[j + 1], zGrid[i + 1][j + 1]],
-      [xs[i], ys[j + 1], zGrid[i][j + 1]],
-    ];
-    const projected = cellCorners.map(([x, y, z]) => project(x, y, zWorld(z)));
-    const avgZ = (zGrid[i][j] + zGrid[i + 1][j] + zGrid[i + 1][j + 1] + zGrid[i][j + 1]) / 4;
-    const avgDepth = d3.mean(projected, (p) => p.depth);
-    quads.push({ points: projected.map(toScreen), value: avgZ, depth: avgDepth });
-  }
-}
-quads.sort((a, b) => a.depth - b.depth);
-
-const lineGen = d3.line();
-svg
-  .append("g")
-  .attr("class", "surface")
-  .selectAll("path")
-  .data(quads)
-  .join("path")
-  .attr("d", (d) => lineGen(d.points) + "Z")
-  .attr("fill", (d) => color(d.value))
-  .attr("stroke", t.pageBg)
-  .attr("stroke-width", 0.6)
-  .attr("stroke-opacity", 0.5);
-
-// --- Axis triad (drawn from the bounding-box corner nearest the viewer) -----
 const axisCorner = [-EXTENT, -EXTENT, zWorld(zMin)];
 const axisEnds = {
   x: [EXTENT, -EXTENT, zWorld(zMin)],
   y: [-EXTENT, EXTENT, zWorld(zMin)],
   z: [-EXTENT, -EXTENT, zWorld(zMax)],
 };
-const originScreen = toScreen(project(...axisCorner));
 
+// --- SVG mount ---------------------------------------------------------------
+const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
+const surfaceG = svg.append("g").attr("class", "surface");
 const axisG = svg.append("g").attr("class", "axes");
-for (const key of ["x", "y", "z"]) {
-  const endScreen = toScreen(project(...axisEnds[key]));
-  axisG
-    .append("line")
-    .attr("x1", originScreen[0])
-    .attr("y1", originScreen[1])
-    .attr("x2", endScreen[0])
-    .attr("y2", endScreen[1])
-    .attr("stroke", t.inkSoft)
-    .attr("stroke-width", 1.5);
-}
 
-// Ticks + labels for x and y (world-plane ticks, below the axis) and z (height
-// ticks, offset sideways since the z-axis renders near-vertical)
+// --- Color scale (diverging: amplitude has a meaningful zero midpoint) ------
+const absMax = Math.max(Math.abs(zMin), Math.abs(zMax));
+const color = d3.scaleSequential(d3.interpolateRgbBasis(t.div)).domain([-absMax, absMax]);
+
+const lineGen = d3.line();
 const tickCounts = 5;
-function drawTicks(worldToPoint, domainValues, labelFn, { dx = 0, dy = "1.1em", anchor = "middle" } = {}) {
-  for (const v of domainValues) {
-    const p = toScreen(project(...worldToPoint(v)));
-    axisG
-      .append("text")
-      .attr("x", p[0])
-      .attr("y", p[1])
-      .attr("dx", dx)
-      .attr("dy", dy)
-      .attr("text-anchor", anchor)
-      .attr("fill", t.inkSoft)
-      .style("font-size", "13px")
-      .text(labelFn(v));
-  }
-}
 const xTicks = d3.scaleLinear().domain([-EXTENT, EXTENT]).ticks(tickCounts);
 const yTicks = d3.scaleLinear().domain([-EXTENT, EXTENT]).ticks(tickCounts);
 const zTicks = d3.scaleLinear().domain([zMin, zMax]).ticks(tickCounts);
-drawTicks((v) => [v, -EXTENT, zWorld(zMin)], xTicks, (v) => v.toFixed(0));
-drawTicks((v) => [-EXTENT, v, zWorld(zMin)], yTicks, (v) => v.toFixed(0));
-drawTicks((v) => [-EXTENT, -EXTENT, zWorld(v)], zTicks, (v) => v.toFixed(1), {
-  dx: -10,
-  dy: "0.35em",
-  anchor: "end",
-});
 
-// Axis titles — placed relative to each axis line's own screen midpoint (a
-// fixed world-space offset can wrap around the rotated view and land on top
-// of the surface, so the offset is applied in screen space instead).
-const xAxisEndScreen = toScreen(project(...axisEnds.x));
-const yAxisEndScreen = toScreen(project(...axisEnds.y));
-const zAxisEndScreen = toScreen(project(...axisEnds.z));
-const midpoint = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-const [xMidX, xMidY] = midpoint(originScreen, xAxisEndScreen);
-const [yMidX, yMidY] = midpoint(originScreen, yAxisEndScreen);
-const [zMidX, zMidY] = midpoint(originScreen, zAxisEndScreen);
-const xLabelScreen = [xMidX, xMidY + 70];
-const yLabelScreen = [yMidX - 30, yMidY + 60];
-const zLabelScreen = [zMidX - 55, zMidY];
-axisG
-  .append("text")
-  .attr("x", xLabelScreen[0])
-  .attr("y", xLabelScreen[1])
-  .attr("text-anchor", "middle")
-  .attr("fill", t.ink)
-  .style("font-size", "15px")
-  .text("Position X (m)");
-axisG
-  .append("text")
-  .attr("x", yLabelScreen[0])
-  .attr("y", yLabelScreen[1])
-  .attr("text-anchor", "middle")
-  .attr("fill", t.ink)
-  .style("font-size", "15px")
-  .text("Position Y (m)");
-axisG
-  .append("text")
-  .attr("x", zLabelScreen[0])
-  .attr("y", zLabelScreen[1])
-  .attr("text-anchor", "middle")
-  .attr("fill", t.ink)
-  .style("font-size", "15px")
-  .attr("transform", `rotate(-90 ${zLabelScreen[0]} ${zLabelScreen[1]})`)
-  .text("Wave Amplitude");
+// Re-projects and redraws the surface + axis triad for the current
+// azimuth/elevation — called once up front and again on every drag step.
+function render() {
+  const proj = (x, y, z) => project(x, y, z, azimuth, elevation);
+
+  // Bounding box in projected model space, used to fit the surface into iw x
+  // ih. x/y use independent scale factors (a stylized isometric-like
+  // projection, not a physical camera) so the surface fills the canvas.
+  const corners = [];
+  for (const x of [-EXTENT, EXTENT]) {
+    for (const y of [-EXTENT, EXTENT]) {
+      for (const z of [zWorld(zMin), zWorld(zMax)]) corners.push(proj(x, y, z));
+    }
+  }
+  const sxExtent = d3.extent(corners, (d) => d.sx);
+  const syExtent = d3.extent(corners, (d) => d.sy);
+  const fitScaleX = 0.92 * (iw / (sxExtent[1] - sxExtent[0]));
+  const fitScaleY = 0.92 * (ih / (syExtent[1] - syExtent[0]));
+  const sxCenter = (sxExtent[0] + sxExtent[1]) / 2;
+  const syCenter = (syExtent[0] + syExtent[1]) / 2;
+  const toScreen = (p) => [originX + (p.sx - sxCenter) * fitScaleX, originY + (p.sy - syCenter) * fitScaleY];
+
+  // --- Surface mesh: one quad per grid cell, painter's algorithm back-to-front
+  const quads = [];
+  for (let i = 0; i < GRID_N - 1; i++) {
+    for (let j = 0; j < GRID_N - 1; j++) {
+      const cellCorners = [
+        [xs[i], ys[j], zGrid[i][j]],
+        [xs[i + 1], ys[j], zGrid[i + 1][j]],
+        [xs[i + 1], ys[j + 1], zGrid[i + 1][j + 1]],
+        [xs[i], ys[j + 1], zGrid[i][j + 1]],
+      ];
+      const projected = cellCorners.map(([x, y, z]) => proj(x, y, zWorld(z)));
+      const avgZ = (zGrid[i][j] + zGrid[i + 1][j] + zGrid[i + 1][j + 1] + zGrid[i][j + 1]) / 4;
+      const avgDepth = d3.mean(projected, (p) => p.depth);
+      quads.push({ points: projected.map(toScreen), value: avgZ, depth: avgDepth });
+    }
+  }
+  quads.sort((a, b) => a.depth - b.depth);
+
+  surfaceG
+    .selectAll("path")
+    .data(quads)
+    .join("path")
+    .attr("d", (d) => lineGen(d.points) + "Z")
+    .attr("fill", (d) => color(d.value))
+    .attr("stroke", t.pageBg)
+    .attr("stroke-width", 0.6)
+    .attr("stroke-opacity", 0.5);
+
+  // --- Axis triad (drawn from the bounding-box corner nearest the viewer) ---
+  axisG.selectAll("*").remove();
+  const originScreen = toScreen(proj(...axisCorner));
+  const axisEndScreen = {};
+  for (const key of ["x", "y", "z"]) {
+    axisEndScreen[key] = toScreen(proj(...axisEnds[key]));
+    axisG
+      .append("line")
+      .attr("x1", originScreen[0])
+      .attr("y1", originScreen[1])
+      .attr("x2", axisEndScreen[key][0])
+      .attr("y2", axisEndScreen[key][1])
+      .attr("stroke", t.inkSoft)
+      .attr("stroke-width", 1.5);
+  }
+
+  // Ticks + labels for x and y (world-plane ticks, below the axis) and z
+  // (height ticks, offset sideways since the z-axis renders near-vertical)
+  function drawTicks(worldToPoint, domainValues, labelFn, { dx = 0, dy = "1.1em", anchor = "middle" } = {}) {
+    for (const v of domainValues) {
+      const p = toScreen(proj(...worldToPoint(v)));
+      axisG
+        .append("text")
+        .attr("x", p[0])
+        .attr("y", p[1])
+        .attr("dx", dx)
+        .attr("dy", dy)
+        .attr("text-anchor", anchor)
+        .attr("fill", t.inkSoft)
+        .style("font-size", "13px")
+        .text(labelFn(v));
+    }
+  }
+  drawTicks((v) => [v, -EXTENT, zWorld(zMin)], xTicks, (v) => v.toFixed(0));
+  drawTicks((v) => [-EXTENT, v, zWorld(zMin)], yTicks, (v) => v.toFixed(0));
+  drawTicks((v) => [-EXTENT, -EXTENT, zWorld(v)], zTicks, (v) => v.toFixed(1), {
+    dx: -10,
+    dy: "0.35em",
+    anchor: "end",
+  });
+
+  // Axis titles — placed just outside the surface's screen-space bounding
+  // box (the projection is linear in x/y/z, so every surface point provably
+  // projects inside the convex hull of the 8 corner projections, i.e. inside
+  // this box). Each label is pushed along the ray from the box center
+  // through its axis's screen midpoint until it exits the box, then a fixed
+  // padding further — guaranteed to land in empty background space no
+  // matter how the view has been rotated.
+  const screenCorners = corners.map(toScreen);
+  const boxMinX = d3.min(screenCorners, (p) => p[0]);
+  const boxMaxX = d3.max(screenCorners, (p) => p[0]);
+  const boxMinY = d3.min(screenCorners, (p) => p[1]);
+  const boxMaxY = d3.max(screenCorners, (p) => p[1]);
+  const boxCenter = [(boxMinX + boxMaxX) / 2, (boxMinY + boxMaxY) / 2];
+  const midpoint = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  function edgeLabel(mid, padding) {
+    const dx = mid[0] - boxCenter[0];
+    const dy = mid[1] - boxCenter[1];
+    const tx = dx !== 0 ? ((dx > 0 ? boxMaxX : boxMinX) - boxCenter[0]) / dx : Infinity;
+    const ty = dy !== 0 ? ((dy > 0 ? boxMaxY : boxMinY) - boxCenter[1]) / dy : Infinity;
+    const t = Math.min(tx, ty);
+    const len = Math.hypot(dx, dy) || 1;
+    return [boxCenter[0] + t * dx + (dx / len) * padding, boxCenter[1] + t * dy + (dy / len) * padding];
+  }
+  const xLabelScreen = edgeLabel(midpoint(originScreen, axisEndScreen.x), 40);
+  const yLabelScreen = edgeLabel(midpoint(originScreen, axisEndScreen.y), 40);
+  const zLabelScreen = edgeLabel(midpoint(originScreen, axisEndScreen.z), 40);
+  axisG
+    .append("text")
+    .attr("x", xLabelScreen[0])
+    .attr("y", xLabelScreen[1])
+    .attr("text-anchor", "middle")
+    .attr("fill", t.ink)
+    .style("font-size", "15px")
+    .text("Position X (m)");
+  axisG
+    .append("text")
+    .attr("x", yLabelScreen[0])
+    .attr("y", yLabelScreen[1])
+    .attr("text-anchor", "middle")
+    .attr("fill", t.ink)
+    .style("font-size", "15px")
+    .text("Position Y (m)");
+  axisG
+    .append("text")
+    .attr("x", zLabelScreen[0])
+    .attr("y", zLabelScreen[1])
+    .attr("text-anchor", "middle")
+    .attr("fill", t.ink)
+    .style("font-size", "15px")
+    .attr("transform", `rotate(-90 ${zLabelScreen[0]} ${zLabelScreen[1]})`)
+    .text("Wave Amplitude");
+}
+render();
+
+// --- Drag-to-rotate: classic D3 technique for exploring a 3D surface from
+// different angles (the spec explicitly asks interactive libraries for this).
+// The static PNG capture happens before any pointer event fires, so the
+// screenshot is unaffected; only the interactive HTML output responds.
+svg.style("cursor", "grab").call(
+  d3
+    .drag()
+    .on("start", () => svg.style("cursor", "grabbing"))
+    .on("drag", (event) => {
+      azimuth += event.dx * 0.008;
+      elevation = Math.max(MIN_ELEVATION, Math.min(MAX_ELEVATION, elevation - event.dy * 0.008));
+      render();
+    })
+    .on("end", () => svg.style("cursor", "grab")),
+);
 
 // --- Colorbar (2D legend for the height/color mapping) ----------------------
 const barX = width - margin.right + 90;
@@ -238,7 +280,7 @@ svg
 
 // --- Title -------------------------------------------------------------------
 const title = "Wave Interference Surface · surface-basic · javascript · d3 · anyplot.ai";
-const baselineFontSize = 22;
+const baselineFontSize = 25;
 const titleFontSize = title.length > 67 ? Math.round(baselineFontSize * (67 / title.length)) : baselineFontSize;
 svg
   .append("text")
