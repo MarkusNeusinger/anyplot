@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-3d-trajectory: 3D Line Plot for Trajectory Visualization
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-09-10
+// Quality: 86/100 | Created: 2026-09-10
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;

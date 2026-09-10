@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: line-3d-trajectory
 created: '2026-09-10T00:13:44Z'
-updated: '2026-09-10T00:18:17Z'
+updated: '2026-09-10T00:28:48Z'
 generated_by: claude-sonnet
 workflow_run: 34419468335
 issue: 3182
@@ -12,53 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 86
 review:
   strengths:
-  - Genuine from-scratch 3D-to-2D perspective projection (yaw/pitch rotation + perspective
-    divide) built from d3-scale/d3-shape/d3-array primitives -- a distinctive, non-trivial
-    use of D3's low-level flexibility
-  - Time-progression color gradient (Imprint imprint_seq, brand green to blue) combined
-    with depth-based opacity and stroke-width creates a genuine sense of depth and
-    temporal direction in a static 2D projection
-  - Deterministic RK4-integrated Lorenz attractor with the classic textbook parameters
-    (sigma=10, rho=28, beta=8/3) -- factually correct and produces the recognizable
-    double-wing butterfly shape
-  - Theme-adaptive chrome (ink, inkSoft, grid tokens) is correctly threaded through
-    axes, ticks, floor grid, and legend in both renders; data colors are identical
-    between light and dark
+  - Genuine drag-driven 3D re-projection (d3.drag handler recomputes YAW/PITCH and
+    redraws on every frame) — real interactivity, not simulated
+  - Physically accurate Lorenz attractor generated via in-memory RK4 integration with
+    the classic chaotic parameter set (sigma=10, rho=28, beta=8/3)
+  - 'Thoughtful depth cues: stroke width and opacity scale with projected camera depth,
+    so near segments read bolder/more opaque and far segments fade back'
+  - Time-progression colorbar correctly uses the Imprint sequential palette (imprint_seq)
+    and is identical between light and dark renders
+  - Explicit font sizes throughout and consistent theme-token usage (t.ink / t.inkSoft
+    / t.grid) for all chrome elements in both themes
   weaknesses:
-  - The specification explicitly calls interactive rotation 'essential' and 'critical'
-    for exploring a 3D trajectory, but this implementation renders a single fixed
-    viewpoint with no rotation at all -- d3-drag could recompute YAW/PITCH on mouse-drag
-    and re-project on every frame for genuine (not simulated) interactivity in the
-    HTML output.
-  - Axis labels are bare single letters 'X', 'Y', 'Z' with no further descriptor --
-    generic per the style guide's axis-label criterion; a short subtitle or parenthetical
-    noting these are Lorenz state variables would read better.
-  - There is a large empty gap between the right edge of the plotted attractor/frame
-    and the colorbar legend (roughly a third of the canvas width) -- the legend reads
-    as isolated rather than anchored near the plot; pull it closer or widen the plot
-    area.
-  - The trajectory is drawn in CHUNK=20-point segments, each with one flat color/opacity/width
-    -- this can produce faint banding/stepping along the curve instead of a perfectly
-    smooth depth gradient; a smaller chunk size (or per-vertex gradient stroking)
-    would smooth this out.
+  - Fixed initial camera angle (YAW=-0.95, PITCH=0.42) presents the attractor as a
+    single spiraling vortex rather than the Lorenz attractor's iconic two-lobe 'butterfly'
+    structure — a different default rotation would make the chaotic wing-switching
+    immediately recognizable and improve data storytelling
+  - X-axis and Y-axis tick labels cluster near the shared origin corner at the bottom
+    of the frame, making it slightly harder to tell at a glance which number belongs
+    to which axis
+  - Axis tick label font-size (12px) is noticeably smaller than the axis title font-size
+    (17px) — could be bumped slightly (e.g. to 13-14px) for better proportional balance
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
-      Chrome: Title "Lorenz Attractor · line-3d-trajectory · javascript · d3 · anyplot.ai" in dark ink, centered, clearly legible. X/Y/Z axis labels and numeric tick labels (in soft dark gray) are all readable against the light background. Floor grid lines are faint and subtle, not competing with the data. Legend title "Time" and the "t = 0" / "t = end" labels next to the vertical colorbar are legible.
-      Data: A single Lorenz-attractor trajectory rendered as a continuous ribbon of chunked line segments colored along a green-to-blue sequential gradient (Imprint imprint_seq, brand green #009E73 through blue), with opacity and stroke width both reduced for segments further from the camera to convey depth. The classic double-lobe "butterfly" shape is clearly visible, with the short green tail (t=0) near the bottom-left floor and the trajectory winding through both wings toward the blue (t=end) coloring.
-      Legibility verdict: PASS -- all text is readable, no dark-on-light or light-on-light failures observed.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Lorenz Attractor · line-3d-trajectory · javascript · d3 · anyplot.ai" in dark ink, bold, centered top. "Drag to rotate" subtitle in soft gray below it. Three axis lines (X (state), Y (state), Z (state)) drawn as a 3D reference frame with tick dots and numeric tick labels in soft gray, axis titles in dark ink. A subtle floor grid in light gray sits beneath the trajectory. A vertical colorbar legend labeled "Time" with "t = end" (top, blue) and "t = 0" (bottom, green) sits at the upper right.
+      Data: A single continuous 3D trajectory (Lorenz attractor) rendered as many connected line chunks, colored along a green-to-blue sequential gradient representing time progression, with line width/opacity varying by projected depth (nearer segments bolder, farther segments thinner/fainter).
+      Legibility verdict: PASS — all title, subtitle, axis labels, tick labels, and legend text are clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
-      Chrome: Title, axis labels, and tick labels all render in light/off-white text, clearly legible against the dark background. Floor grid lines are faint light strokes at low opacity, still visible. Legend text and colorbar labels are legible in light gray/white.
-      Data: The same green-to-blue trajectory renders with identical hex values to the light version -- only the chrome (background, text, grid, axis-frame strokes) flipped to the dark-theme tokens. No dark-on-dark text failures; every label is clearly distinguishable from the near-black background.
-      Legibility verdict: PASS -- all text is readable in both themes, and the data colors are confirmed identical between the two renders.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title and subtitle now in light/white text, clearly visible against the dark background. Axis lines, tick labels, and axis titles rendered in light gray/white, fully legible. Floor grid rendered in a dim gray, subtle but visible. Colorbar legend text in light gray, readable.
+      Data: The trajectory and colorbar gradient colors (green-to-blue) are pixel-identical to the light render — confirms only chrome (background, text, grid) flips between themes, data colors are constant.
+      Legibility verdict: PASS — no dark-on-dark failures; all text elements (title, subtitle, axis titles, tick labels, legend text) are clearly legible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -66,127 +57,127 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (12px ticks, 17px axis labels, 21px
-          title, 13-14px legend); readable in both themes; title occupies ~40% width,
-          well within bounds
+        comment: All font sizes explicitly set; readable in both themes; tick labels
+          slightly small relative to axis titles
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Generally clean; a couple of Z-axis tick markers sit close to where
-          the trajectory passes but text stays readable
+        comment: No hard overlap, but X/Y tick labels cluster near the shared origin
+          corner
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Depth-adaptive width (1.8-3.4px) and opacity (0.5-1.0) for 1601 points
-          is well-judged, though CHUNK=20 segmenting introduces faint banding
+        comment: 1601 points, chunked with depth-scaled width/opacity — well adapted
+          to density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential gradient, no red-green reliance, good contrast
-          on both surfaces
+        comment: Green-to-blue sequential gradient, CVD-safe, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills a good portion of the canvas but there is a sizable empty
-          gap between the attractor/frame and the isolated colorbar legend on the
-          right
+        comment: 3D frame + labels occupy a large majority of the canvas; some empty
+          space within the frame around the compact trajectory core
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Axis labels are bare 'X'/'Y'/'Z' single letters -- generic, no further
-          descriptor even though these are Lorenz state variables
+        passed: true
+        comment: X/Y/Z (state) labels are as descriptive as dimensionless Lorenz state
+          variables allow
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct use of imprint_seq (brand green -> blue) for continuous time
-          data; theme-correct backgrounds and chrome in both renders
+        comment: imprint_seq used for continuous time encoding; theme-correct backgrounds
+          and chrome in both renders
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        comment: Custom perspective-projected 3D engine with depth shading goes well
-          beyond a configured default, though minimalist single-letter axis labels
-          hold it back from top marks
+        passed: true
+        comment: Custom gradient palette, depth shading, intentional hierarchy — above
+          library defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
-        comment: Subtle floor grid, corner-anchored axis frame instead of a full box,
-          generous whitespace
+        passed: true
+        comment: Subtle floor grid, generous whitespace, refined typography
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
-        comment: Depth shading and time-color gradient together create clear visual
-          hierarchy, guiding the eye through the chaotic trajectory's evolution and
-          wing-switching
+        passed: true
+        comment: Color + depth create visual hierarchy, but the chosen viewing angle
+          obscures the attractor's iconic double-wing structure
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct 3D connected-line trajectory plot via custom perspective
-          projection
+        passed: true
+        comment: Correct 3D connected-line trajectory plot
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        comment: Sequential color-by-time and depth-based width/opacity implemented
-          well; interactive rotation, which the spec calls essential/critical, is
-          entirely absent
+        passed: true
+        comment: Sequential connection, color gradient for time, genuine interactive
+          rotation, 1601 points within spec's 100-2000 range
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: X/Y/Z correctly mapped and labeled, full data range shown via axis
-          frame and ticks
+        passed: true
+        comment: X/Y/Z correctly mapped to Lorenz state variables, full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches '{Descriptive Title} · {spec-id} · {language} · {library}
-          · anyplot.ai' format exactly; colorbar legend labels (t=0/t=end) correctly
-          describe the continuous encoding
+        passed: true
+        comment: Title format correct with descriptive prefix; legend labels (Time,
+          t=0, t=end) match data
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 4
         max: 6
-        comment: Full classic double-wing Lorenz attractor shape shown, including
-          initial transient and steady chaotic oscillation
+        passed: true
+        comment: Long integration window covers wing-switching, but the current angle
+          doesn't clearly surface the double-lobe structure
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Well-known, neutral scientific/mathematical scenario
+        passed: true
+        comment: Real, neutral scientific scenario (chaotic dynamical system)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Classic textbook Lorenz parameters (sigma=10, rho=28, beta=8/3) producing
-          the standard attractor
+        passed: true
+        comment: Classic Lorenz parameters (sigma=10, rho=28, beta=8/3) — factually
+          standard chaotic regime
     code_quality:
       score: 9
       max: 10
@@ -195,60 +186,61 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        comment: Several small helper functions (lorenzDeriv, rk4Step, toCamera, toRawScreen,
-          projectUVW) deviate from the strict no-functions ideal, but are reasonably
-          justified by the RK4 integration and 3D projection math
+        passed: true
+        comment: Small helper functions (lorenzDeriv, rk4Step, redraw) are used but
+          necessary for the numerical integration and projection
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fully deterministic RK4 integration from a fixed initial condition
+        passed: true
+        comment: Deterministic fixed initial condition, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Only the d3 global is used, no unused imports
+        passed: true
+        comment: Only the d3 global is used, no extraneous imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriate complexity for the math involved, no fake UI or simulated
-          interactivity
+        passed: true
+        comment: Clean, no fake functionality, genuine interactivity implemented properly
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: 'Correctly mounts a single svg into #container per the harness contract,
-          no animation'
+        passed: true
+        comment: 'Renders into #container per the D3 mount contract'
     library_mastery:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        comment: Idiomatic use of d3-scale (scaleLinear, scaleSequential), d3-shape
-          (line + curveCatmullRom), d3-array (extent, mean, range), d3-format
+        passed: true
+        comment: Idiomatic data joins, scales, and drag behavior
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 4
         max: 5
-        comment: A bespoke 3D perspective-projection renderer with depth-based shading
-          is a genuinely distinctive technique that showcases D3's low-level flexibility
-          and could not be easily replicated in a high-level charting library
-  verdict: REJECTED
+        passed: true
+        comment: Genuine drag-driven re-projection is a distinctive D3 capability,
+          hard to replicate cleanly in most other libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
   - colorbar
-  - custom-legend
   - manual-ticks
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
-  - custom-colormap
-  - alpha-blending
   - gradient-fill
+  - alpha-blending
