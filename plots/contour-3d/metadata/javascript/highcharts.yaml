@@ -1,0 +1,272 @@
+library: highcharts
+language: javascript
+specification_id: contour-3d
+created: '2026-09-10T00:25:02Z'
+updated: '2026-09-10T00:44:11Z'
+generated_by: claude-sonnet
+workflow_run: 34419915993
+issue: 3230
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/highcharts/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - 'CRITICAL FIX from attempt 1: isoline and legend-swatch colors now blend toward
+    a fixed literal neutral (NEUTRAL_MID) instead of the theme-dependent `t.ink` token,
+    so every elevation level renders in the exact same hue in both plot-light.png
+    and plot-dark.png -- verified by comparing the isoline rings and legend swatches
+    side by side.'
+  - 'The spec''s ''enable rotation for interactive libraries'' requirement is now
+    satisfied: a pointer-drag handler recomputes azimuth/elevation and reprojects
+    every series (mesh, isolines, ticks, legend) live via chart.series[].setData()/redraw(),
+    a genuine interactive feature exposed in the HTML export.'
+  - The Z-axis title now reads 'Elevation (m)' -- the missing-units weakness from
+    attempt 1 is fixed.
+  - 'Continues to show genuine technical creativity working around Highcharts core''s
+    missing chart3d/colorAxis modules: hand-rolled orthographic projection, marching-triangles
+    isoline extraction, and a manual colorbar legend, all well-commented explaining
+    the constraint.'
+  - Correct title format, deterministic seed-free data generation (the classic 'peaks'
+    response surface), no fake interactivity, and isolines drawn both on the surface
+    and projected onto the base plane as required by the spec.
+  weaknesses:
+  - The gray wireframe mesh still creates moderate visual clutter where it crosses
+    the colored isolines, especially around the saddle region near X=0 -- individual
+    contour loops are legible but take a moment to trace out from the crossing mesh
+    lines. A further alpha reduction or slightly larger MESH_STRIDE would sharpen
+    the focal point further.
+  - 'Library Mastery is capped by necessity: the implementation relies on generic
+    `line`/`scatter` series with manual 3D math rather than any Highcharts-distinctive
+    high-level API, since chart3d/colorAxis are unavailable in the core bundle --
+    unavoidable given the constraint, but it caps LM-02.'
+  - The mandated title occupies only ~30% of the plot width at the current 22px size
+    -- well under the ~50-70% guideline for a title this length. Not a violation (no
+    overflow/clipping), but a slightly larger title would strengthen the visual hierarchy.
+  - The 'peaks' math function reinterpreted as terrain elevation is a plausible, neutral
+    scenario but remains a generic synthetic dataset rather than a distinctly memorable
+    real-world example.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- correct light chrome.
+      Chrome: Title "contour-3d · javascript · highcharts · anyplot.ai" and subtitle "Terrain elevation relative to sea level, with isolines on the surface and projected onto the base plane · drag to rotate" are dark navy/gray and clearly legible against the light background. The Z-axis title "Elevation (m)" (now with units) and X/Y axis titles are dark and legible. Tick labels (-3/0/3 on X and Y, 8.0/0.0/-6.5 on Z) and the "Elevation levels" legend header + six swatch value labels (5.7, 3.4, 1.1, -1.1, -3.4, -5.7) are all dark-on-light and readable.
+      Data: A gray wireframe mesh (the "peaks" surface) fills the plot with six colored isoline rings/arcs threaded through it -- the two highest levels (5.7, 3.4) render as dark navy-blue, the mid levels (1.1, -1.1) are small/faint near the saddle, and the two lowest levels (-3.4, -5.7) render as dark maroon/brick red, with matching dotted projections of the same isolines onto the base plane below. Legend swatches on the right show the same six colors from dark navy (5.7) down through slate (1.1) to dark red (-5.7).
+      Legibility verdict: PASS (all text is readable; no dark-on-light failures).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- correct dark chrome.
+      Chrome: Title, subtitle, axis titles, tick labels, and legend text all switch to light-on-dark and remain clearly legible; no dark-on-dark failures observed.
+      Data: The wireframe/isoline layout is identical to the light render, and critically the isoline and legend-swatch colors are now pixel-identical to the light render -- the top two isolines remain the same dark navy-blue and the valley isolines remain the same dark maroon/brick red, matching the legend swatches exactly. This confirms the attempt-1 CRITICAL finding (colors blending toward theme-dependent `t.ink`) has been fixed by blending toward a fixed neutral midpoint instead.
+      Legibility verdict: PASS for both text/chrome and data-color consistency -- data colors are identical across themes as required; only chrome (background, text) correctly flips.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set, readable in both themes; Elevation
+          axis now has units. Minor: Z-axis tick numbers sit near dense mesh lines.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text-on-text collisions; isolines read clearly above the mesh
+          thanks to thicker stroke/contrast, with only minor clutter in the saddle
+          region.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Isoline rings have strong contrast against the thin, low-alpha mesh;
+          legend swatches clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Diverging blue/red (not red-green) with good contrast; no CVD-unsafe
+          sole-hue signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot, axes, and legend use the large majority of the canvas with
+          balanced margins; nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Elevation axis now reads 'Elevation (m)' with units; X/Y are unitless
+          coordinate axes, which is appropriate for this math surface.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'FIXED from attempt 1: isoline/legend colors now blend toward a fixed
+          neutral midpoint, so data colors are pixel-identical between light and dark
+          renders; backgrounds correctly theme-adaptive.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Genuine engineering sophistication (hand-rolled projection, marching-triangles
+          isolines, manual colorbar, theme-invariant blending math) clearly above
+          a configured default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minimal chrome (no axis boxes/spines), thinned/low-alpha mesh; some
+          crossing-line clutter keeps it short of perfect.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-coded isolines and legend create clear peak/valley focal points
+          via color contrast, guiding the reader without needing annotations.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 3D contour surface with isolines, reasonable given Highcharts core's
+          lack of a 3D module.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid size, surface isolines, base-plane projection, colorbar, and
+          now interactive drag-to-rotate are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y/Z correctly mapped; full data range shown via ticks.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the required format exactly; colorbar legend correctly
+          labeled.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Surface shape, isolines, base-plane projection, and colorbar all
+          present and legible.
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: The 'peaks' response surface reinterpreted as terrain elevation is
+          plausible and neutral, though still a synthetic math function.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Elevation range and units are sensible and internally consistent.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Multiple helper functions, justified by the genuine complexity of
+          manual 3D projection, isoline extraction, and live reprojection.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No stray imports; browser globals only.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the constraint; genuine interactivity,
+          no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled everywhere.
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Necessarily bypasses Highcharts' high-level 3D/colorAxis APIs (unavailable
+          in this bundle) in favor of generic line/scatter series.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Marching-triangles isoline extraction, manual colorbar, and live
+          pointer-driven reprojection are creative, but don't leverage Highcharts-specific
+          distinctive features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - colorbar
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - custom-colormap
+  - alpha-blending
