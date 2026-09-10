@@ -42,7 +42,7 @@ project_y <- function(x, y, z) x * up_axis[1]    + y * up_axis[2]    + z * z_lif
 depth_toward_camera <- function(x, y, z) x * view_dir[1] + y * view_dir[2] + z * z_lift * view_dir[3]
 
 # --- Data: ripple surface z = sin(sqrt(x^2 + y^2)) -----------------------------
-grid_n <- 20
+grid_n <- 30
 x_vals <- seq(-6, 6, length.out = grid_n)
 y_vals <- seq(-6, 6, length.out = grid_n)
 z_fun  <- function(x, y) sin(sqrt(x^2 + y^2))
@@ -124,11 +124,20 @@ y_breaks <- c(-6, -3, 0, 3, 6)
 z_breaks <- c(-1, 0, 1)
 
 ticks <- rbind(
-  data.frame(x = x_breaks, y = -9.6, z = floor_z, label = x_breaks),
-  data.frame(x = -9.6, y = y_breaks, z = floor_z, label = y_breaks)
+  data.frame(x = x_breaks, y = -9.6, z = floor_z, label = x_breaks, axis = "x"),
+  data.frame(x = -9.6, y = y_breaks, z = floor_z, label = y_breaks, axis = "y")
 )
 ticks$px <- project_x(ticks$x, ticks$y, ticks$z)
 ticks$py <- project_y(ticks$x, ticks$y, ticks$z)
+
+# The X-tick and Y-tick label columns sit on the mesh's near side, where the
+# wireframe's screen footprint is widest, so a couple of low-value ticks
+# ("-3"/"-6") land inside the mesh's silhouette instead of clearing it. Nudge
+# each column sideways, away from the vertical Z axis, by a fixed screen
+# offset (same lateral-offset trick used for z_ticks below) - harmless for
+# the ticks that already clear the mesh, since it just adds margin.
+tick_clearance <- 5.5
+ticks$px <- ticks$px + ifelse(ticks$axis == "x", tick_clearance, -tick_clearance)
 
 # Z ticks sit on the vertical axis line itself; nudge the label text
 # (not the axis line) sideways into the open gap left of the mesh, well past
