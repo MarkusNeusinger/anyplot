@@ -35,7 +35,9 @@ function rk4Step(state: number[], dt: number) {
   const k2 = lorenzDerivative(state.map((v, i) => v + (dt / 2) * k1[i]));
   const k3 = lorenzDerivative(state.map((v, i) => v + (dt / 2) * k2[i]));
   const k4 = lorenzDerivative(state.map((v, i) => v + dt * k3[i]));
-  return state.map((v, i) => v + (dt / 6) * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]));
+  return state.map(
+    (v, i) => v + (dt / 6) * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]),
+  );
 }
 
 function simulate(initial: number[]) {
@@ -43,7 +45,8 @@ function simulate(initial: number[]) {
   const points: number[][] = [];
   for (let i = 0; i < STEPS; i++) {
     state = rk4Step(state, DT);
-    if (i >= TRANSIENT && (i - TRANSIENT) % SUBSAMPLE === 0) points.push(state.slice());
+    if (i >= TRANSIENT && (i - TRANSIENT) % SUBSAMPLE === 0)
+      points.push(state.slice());
   }
   return points;
 }
@@ -104,13 +107,24 @@ const FONT = "Inter, system-ui, sans-serif";
 // for chart types outside the built-in series set. --------------------------
 function Trajectories() {
   const { left, top, width, height: areaHeight } = useDrawingArea();
-  const xOf = (sx: number) => left + ((sx - (SX_MIN - PAD_X)) / (SX_MAX + PAD_X - (SX_MIN - PAD_X))) * width;
+  const xOf = (sx: number) =>
+    left +
+    ((sx - (SX_MIN - PAD_X)) / (SX_MAX + PAD_X - (SX_MIN - PAD_X))) * width;
   const yOf = (sy: number) =>
-    top + areaHeight - ((sy - (SY_MIN - PAD_Y)) / (SY_MAX + PAD_Y - (SY_MIN - PAD_Y))) * areaHeight;
+    top +
+    areaHeight -
+    ((sy - (SY_MIN - PAD_Y)) / (SY_MAX + PAD_Y - (SY_MIN - PAD_Y))) *
+      areaHeight;
 
-  const toPolyline = (pts: { sx: number; sy: number }[]) => pts.map((p) => `${xOf(p.sx)},${yOf(p.sy)}`).join(" ");
+  const toPolyline = (pts: { sx: number; sy: number }[]) =>
+    pts.map((p) => `${xOf(p.sx)},${yOf(p.sy)}`).join(" ");
 
   const startPx = { x: xOf(projectedA[0].sx), y: yOf(projectedA[0].sy) };
+  // The padding (PAD_X/PAD_Y) reserves a data-free margin around the projected
+  // bounding box, so the top-left corner of the drawing area is guaranteed
+  // clear of trajectory lines — a safe spot for the "shared start" label,
+  // reached via a leader line from the actual start marker.
+  const labelAnchor = { x: left + 14, y: top + 22 };
 
   // Small axis-orientation gizmo fixed near the corner — a bounding-box axis
   // frame would fight the attractor's irregular, self-crossing shape.
@@ -124,15 +138,45 @@ function Trajectories() {
 
   return (
     <g>
-      <polyline points={toPolyline(projectedA)} fill="none" stroke={t.palette[0]} strokeWidth={2} opacity={0.9} />
-      <polyline points={toPolyline(projectedB)} fill="none" stroke={t.palette[1]} strokeWidth={2} opacity={0.9} />
+      <polyline
+        points={toPolyline(projectedA)}
+        fill="none"
+        stroke={t.palette[0]}
+        strokeWidth={1.5}
+        opacity={0.55}
+      />
+      <polyline
+        points={toPolyline(projectedB)}
+        fill="none"
+        stroke={t.palette[1]}
+        strokeWidth={1.5}
+        opacity={0.55}
+      />
       <circle cx={startPx.x} cy={startPx.y} r={6} fill={t.ink} />
-      <text x={startPx.x + 12} y={startPx.y - 12} fill={t.inkSoft} style={{ fontSize: 14, fontFamily: FONT }}>
+      <line
+        x1={startPx.x}
+        y1={startPx.y}
+        x2={labelAnchor.x}
+        y2={labelAnchor.y}
+        stroke={t.inkSoft}
+        strokeWidth={1}
+        strokeDasharray="3,3"
+        opacity={0.7}
+      />
+      <text
+        x={labelAnchor.x}
+        y={labelAnchor.y}
+        fill={t.inkSoft}
+        style={{ fontSize: 14, fontFamily: FONT }}
+      >
         shared start
       </text>
 
       {gizmoAxes.map((a) => {
-        const tip = { x: gizmoOrigin.x + a.dir.sx * ARM, y: gizmoOrigin.y - a.dir.sy * ARM };
+        const tip = {
+          x: gizmoOrigin.x + a.dir.sx * ARM,
+          y: gizmoOrigin.y - a.dir.sy * ARM,
+        };
         return (
           <g key={a.label}>
             <line
@@ -155,14 +199,38 @@ function Trajectories() {
           </g>
         );
       })}
+      <text
+        x={gizmoOrigin.x}
+        y={gizmoOrigin.y + 20}
+        fill={t.inkSoft}
+        textAnchor="middle"
+        style={{
+          fontSize: 10,
+          fontStyle: "italic",
+          fontFamily: FONT,
+          opacity: 0.85,
+        }}
+      >
+        normalized units
+      </text>
 
       <g transform={`translate(${left + width - 300}, ${top + 6})`}>
         <rect x={0} y={0} width={14} height={14} fill={t.palette[0]} />
-        <text x={20} y={12} fill={t.inkSoft} style={{ fontSize: 14, fontFamily: FONT }}>
+        <text
+          x={20}
+          y={12}
+          fill={t.inkSoft}
+          style={{ fontSize: 14, fontFamily: FONT }}
+        >
           Trajectory A · x₀ = 0.1000
         </text>
         <rect x={0} y={24} width={14} height={14} fill={t.palette[1]} />
-        <text x={20} y={36} fill={t.inkSoft} style={{ fontSize: 14, fontFamily: FONT }}>
+        <text
+          x={20}
+          y={36}
+          fill={t.inkSoft}
+          style={{ fontSize: 14, fontFamily: FONT }}
+        >
           Trajectory B · x₀ = 0.1001
         </text>
       </g>
@@ -185,7 +253,14 @@ export default function Chart() {
         flexDirection: "column",
       }}
     >
-      <div style={{ height: TITLE_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        style={{
+          height: TITLE_H,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <span style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>
           line-3d-trajectory · javascript · muix · anyplot.ai
         </span>
