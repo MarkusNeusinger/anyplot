@@ -67,6 +67,12 @@ ax = Axis3(
     xspinecolor_1      = INK_SOFT,
     yspinecolor_1      = INK_SOFT,
     zspinecolor_1      = INK_SOFT,
+    xspinecolor_2      = INK_SOFT,
+    yspinecolor_2      = INK_SOFT,
+    zspinecolor_2      = INK_SOFT,
+    xspinecolor_3      = INK_SOFT,
+    yspinecolor_3      = INK_SOFT,
+    zspinecolor_3      = INK_SOFT,
     xgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
     zgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
@@ -83,8 +89,10 @@ ax = Axis3(
 # Shaded surface preserving the terrain's 3D geometry
 surf = surface!(ax, easting, northing, z; colormap = IMPRINT_SEQ, shading = NoShading)
 
-# Isolines traced directly on the surface at their true elevation
-contour3d!(ax, easting, northing, z; levels = 8, color = INK, linewidth = 1.5)
+# Isolines traced directly on the surface at their true elevation. Fewer,
+# more widely spaced levels avoid two rings crowding into a near-solid disc
+# on the shorter secondary peak.
+contour3d!(ax, easting, northing, z; levels = 6, color = INK, linewidth = 1.5)
 
 Colorbar(
     fig[1, 2], surf;
