@@ -103,14 +103,38 @@ const frameCorners = [
   [Z_CORNER_X, Z_CORNER_Y, zMax],
 ];
 
+// --- Axis tick spacing (needed before the fit, so label anchors can be
+// included in the extent that determines scale/origin) ----------------------
+const xTick = (xMax - xMin) * 0.35;
+const yTick = (yMax - yMin) * 0.35;
+const zTick = (zMax - zMin) * 0.35;
+
 // --- Fit the projected bounding box into the mount, leaving title room -----
-// Fit to the union of the trajectory's own footprint AND the axis frame: the
-// Lorenz curve never visits every (xMax, yMax, zMax)-style corner
-// simultaneously, so fitting the data cube's 8 corners alone leaves the
-// rendered curve far smaller than the canvas, while fitting the curve alone
-// under-budgets space for the frame (which sits off to one side). PAD adds a
-// small multiplicative margin for tick labels/axis titles beyond that union.
-const extentPoints = points.concat(frameCorners);
+// Fit to the union of the trajectory's own footprint, the axis frame, AND
+// the tick-label anchor positions: the Lorenz curve never visits every
+// (xMax, yMax, zMax)-style corner simultaneously, so fitting the data cube's
+// 8 corners alone leaves the rendered curve far smaller than the canvas,
+// while fitting the curve alone under-budgets space for the frame (which
+// sits off to one side). Critically, the tick labels themselves sit further
+// out than the frame corners (by `*2.2` of the tick spacing) — the Y axis,
+// which lands at the box's farthest-right corner, was landing off-canvas
+// because only the frame corners (not the label anchors) were fit to the
+// canvas. Including the label anchors here guarantees they land inside
+// [SIDE_MARGIN, size.width - SIDE_MARGIN] (and the vertical equivalent).
+// The fixed margins below then only need to cover the small constant-pixel
+// axis-title offset (`[+-34, +-34]`) and glyph half-width beyond each anchor.
+const labelAnchorPoints = [
+  [xMin, CORNER_X + xTick * 2.2, zMin],
+  [(xMin + xMax) / 2, CORNER_X + xTick * 2.2, zMin],
+  [xMax, CORNER_X + xTick * 2.2, zMin],
+  [xMax + yTick * 2.2, yMin, zMin],
+  [xMax + yTick * 2.2, (yMin + yMax) / 2, zMin],
+  [xMax + yTick * 2.2, yMax, zMin],
+  [Z_CORNER_X, Z_CORNER_Y - zTick * 2.2, zMin],
+  [Z_CORNER_X, Z_CORNER_Y - zTick * 2.2, (zMin + zMax) / 2],
+  [Z_CORNER_X, Z_CORNER_Y - zTick * 2.2, zMax],
+];
+const extentPoints = points.concat(frameCorners, labelAnchorPoints);
 const extentProjected = extentPoints.map((p) => projectRaw(p[0], p[1], p[2]));
 const sxs = extentProjected.map((c) => c.screenX);
 const sys = extentProjected.map((c) => c.screenY);
@@ -119,12 +143,12 @@ const boxH = Math.max(...sys) - Math.min(...sys);
 const boxCx = (Math.max(...sxs) + Math.min(...sxs)) / 2;
 const boxCy = (Math.max(...sys) + Math.min(...sys)) / 2;
 
-const TOP_MARGIN = 120;
-const SIDE_MARGIN = 140;
-const BOTTOM_MARGIN = 90;
+const TOP_MARGIN = 150;
+const SIDE_MARGIN = 190;
+const BOTTOM_MARGIN = 150;
 const drawW = size.width - 2 * SIDE_MARGIN;
 const drawH = size.height - TOP_MARGIN - BOTTOM_MARGIN;
-const PAD = 1.22; // headroom for tick labels + axis titles beyond the frame
+const PAD = 1.08; // small headroom beyond the label anchors for glyph half-width
 const scale = Math.min(drawW / (boxW * PAD), drawH / (boxH * PAD));
 const originX = size.width / 2 - boxCx * scale;
 const originY = TOP_MARGIN + drawH / 2 + boxCy * scale;
@@ -176,9 +200,6 @@ const trajectoryElements = segments.map((s) => {
 
 // --- Axis frame: three edges of the bounding box, ticks + labels -----------
 const AXIS_COLOR = t.inkSoft;
-const xTick = (xMax - xMin) * 0.35;
-const yTick = (yMax - yMin) * 0.35;
-const zTick = (zMax - zMin) * 0.35;
 const axisElements = [];
 
 function axisLine(p1, p2) {
