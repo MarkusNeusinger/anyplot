@@ -1,8 +1,7 @@
 // anyplot.ai
 // contour-3d: 3D Contour Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-10
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 66/100 | Created: 2026-09-10
 
 // Community @mui/x-charts has no 3D/surface primitive. A genuine surrogate
 // built from real MUI X pieces: a ChartContainer with a `zAxis` piecewise

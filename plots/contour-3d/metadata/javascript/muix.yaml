@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: contour-3d
 created: '2026-09-10T00:21:14Z'
-updated: '2026-09-10T00:32:34Z'
+updated: '2026-09-10T00:50:18Z'
 generated_by: claude-sonnet
 workflow_run: 34420295489
 issue: 3230
@@ -12,224 +12,275 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/muix/plot-dark.html
-quality_score: 0
+quality_score: 66
 review:
   strengths:
-  - Both light and dark renders are visually polished and theme-correct (identical
-    data-band colors, theme-adaptive chrome, no dark-on-dark or light-on-light failures)
-  - Contour extraction (marching squares) and base-plane projection are technically
-    well-executed and match the spec's notes on projected contours
+  - 'Theme handling is flawless: identical elevation-band colors between light and
+    dark renders, only chrome (title, axis labels, tick labels, contour-line stroke
+    color) flips; no dark-on-dark or light-on-light failures.'
+  - Genuine, non-trivial @mui/x-charts integration this round (ChartContainer, useXScale/useYScale
+    hooks, PiecewiseColorLegend bound to a real zAxis piecewise colorMap, ChartsXAxis/ChartsYAxis)
+    -- a real step up from attempts 1 and 2, which had zero library imports and were
+    auto-rejected for it.
+  - Correct Imprint sequential colormap (green to blue) for the single-polarity yield
+    data, with a properly band-labeled legend serving as the requested colorbar.
+  - Deterministic, realistic response-surface data (chemical-process yield vs. temperature/pressure)
+    with a well-chosen saddle/critical-point shape matching the spec's optimization-landscape
+    example.
+  - No edge clipping, no text overlap, clean canvas usage at the correct 3200x1800
+    resolution.
   weaknesses:
-  - 'AR-05 NO_LIBRARY (unresolved from attempt 1): the implementation still contains
-    zero `@mui/x-charts` imports or component usage -- `grep -n "^import"` on muix.tsx
-    returns nothing. It is a hand-rolled SVG renderer (isometric projection + marching-squares
-    contour extraction) wrapped in a plain React component, not a MUI X Charts implementation.
-    This repair attempt did not change the fundamental approach from attempt 1, which
-    was already rejected for this exact reason.'
-  - 'Per prompts/library/muix.md''s own guidance (''When MUI X can''t express the
-    spec''): community @mui/x-charts has no 3D/surface/contour/heatmap primitive,
-    so the correct outcome is to return NOT_FEASIBLE with a one-line reason -- not
-    to hand-build a custom SVG rendering pipeline that bypasses the library entirely
-    (the doc explicitly forbids shelling out to D3/Chart.js-style custom rendering
-    instead of taking the NOT_FEASIBLE escape hatch).'
-  - If a MUI X-based approach is attempted instead of NOT_FEASIBLE, it must actually
-    import and render a community `@mui/x-charts` component (e.g. `ScatterChart` with
-    per-point color mapping as a 2D proxy) -- styling tokens and a `Chart()` React
-    component alone do not satisfy AR-05.
+  - 'Core spec miss: the render is a flat, straight-overhead 2D filled-contour plot.
+    No 3D projection, tilt, or elevation transform exists anywhere in the code --
+    x/y coordinates pass straight through xScale/yScale, and z only drives fill color.
+    The spec explicitly requires a 3D contour plot to ''preserve the surface geometry''
+    unlike a 2D contour plot that ''flattens the visualization'' -- this implementation
+    performs exactly the flattening the spec says to avoid.'
+  - The 'project contours onto the base plane' spec note is implemented as a 14px
+    diagonal SVG offset with no depth cue, so in the rendered PNG it reads as a faint
+    near-duplicate of the solid on-surface contour lines rather than a legible base-plane
+    reference distinct from the surface.
+  - Spec note 'enable rotation for interactive libraries to explore the 3D structure'
+    is unaddressed -- there is no 3D structure in the HTML output to rotate; it is
+    a static, flat SVG scene.
+  - series={[]} is passed to ChartContainer -- no @mui/x-charts series/plot component
+    (LinePlot, ScatterPlot, BarPlot, etc.) ever renders the actual data. The library's
+    role is reduced to scale/legend/axis scaffolding around a 100% hand-rolled marching-triangles
+    SVG renderer for the bands and isolines, which is the same fundamental approach
+    (a custom geometry algorithm drawing the entire visual payload) that was auto-rejected
+    in attempts 1 and 2 for not using the library -- now wrapped in more library plumbing
+    but still with no library-rendered data marks. The prior review's explicit suggested
+    fix (rebuild using a genuine data-driven component, e.g. ScatterChart with color-mapped
+    points) was not adopted.
+  - Given community @mui/x-charts has no contour/heatmap/surface mark type (confirmed
+    across two prior AR-05 rejections and the library guide's own 'When MUI X can't
+    express the spec' section), NOT_FEASIBLE remains the most honest outcome for this
+    spec/library pairing rather than a hand-built geometry engine wrapped in library
+    scaffolding.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1.
-      Chrome: title "contour-3d · javascript · muix · anyplot.ai" top-left in dark ink; axis captions "Temperature 150-250°C" and "Pressure 10-50 bar" near the front edges of the surface; colorbar labeled "Yield (%)" with ticks from 91 down to 47. All text is clearly readable against the light background.
-      Data: an isometric saddle-shaped surface shaded in 8 discrete bands from green (low yield ~47%) to blue (high yield ~91%), solid dark contour lines drawn on the surface, and matching dashed contour lines projected onto the base plane below.
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "contour-3d · javascript · muix · anyplot.ai" centered top in dark ink; "Temperature (°C)" / "Pressure (bar)" axis labels and numeric tick labels in dark/soft-dark ink; a "Yield (%)" label and a vertical PiecewiseColorLegend with 8 band swatches and range labels (e.g. "< 52" ... "> 86") on the right. All chrome text is clearly legible against the light background.
+      Data: An elliptical set of 8 filled elevation bands running from green (~#009E73, low yield, edges of the domain) through teal/blue to a deep blue core (~#4467A3, high yield, center around 200°C/28 bar), with solid dark contour lines tracing each band boundary and faint gray dashed lines offset slightly diagonally (the "base-plane projection," barely distinguishable from the solid lines at normal viewing scale). The plot is rendered as a flat top-down view -- there is no visible 3D tilt, perspective, or elevation offset; only color communicates the z-value.
+      Legibility verdict: PASS (all text readable; no light-on-light issues).
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17.
-      Chrome: title, axis captions, and colorbar label are light-colored and clearly legible; surface contour lines render as light gray instead of dark navy; colorbar border lightened to match the dark theme. No dark-on-dark or light-on-light issues found.
-      Data: identical green-to-blue banded shading and identical band boundaries as the light render; only chrome (background, text, grid/contour stroke colors) flipped, as required.
-      Legibility verdict: PASS
-
-    NOTE: Visual/theme legibility is NOT the deciding factor for this review. The implementation is Auto-Rejected under AR-05 (NO_LIBRARY): `grep -n "^import"` on muix.tsx returns nothing -- there is no `@mui/x-charts` import or component usage anywhere in the file. Per quality-criteria.md, AR-05 sets Score = 0 before quality scoring begins, regardless of visual polish. This is unchanged from the attempt-1 review, which flagged the identical issue.
+      Background: Warm near-black, matches #1A1A17 -- not pure black, not light.
+      Chrome: Same title/axis-label/tick-label/legend layout, now rendered in light ink (#F0EFE8-ish) and legend text in soft light gray, fully legible against the dark background. Contour-line strokes flip from dark ink to light gray/white so they remain visible against the darker band colors. No dark-on-dark failures observed anywhere (title, axis, ticks, legend, contour strokes all readable).
+      Data: Identical band colors and identical band boundaries/isoline geometry to the light render -- only chrome (background, text, contour-line stroke color) flipped, as required. Same flat top-down framing with no 3D depth cue, same faint offset "projected" dashed lines.
+      Legibility verdict: PASS (all text readable; no dark-on-dark issues).
   criteria_checklist:
     visual_quality:
-      score: 0
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 7
         max: 8
-        passed: false
-        comment: N/A - AR-05 auto-reject overrides quality scoring
+        passed: true
+        comment: Title, axis labels, tick labels, and legend text are all readable
+          in both themes at explicit, appropriately-sized font settings.
       - id: VQ-02
         name: No Overlap
-        score: 0
+        score: 6
         max: 6
-        passed: false
-        comment: N/A - AR-05 auto-reject overrides quality scoring
+        passed: true
+        comment: No collisions between text, legend, or data elements in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 0
+        score: 4
         max: 6
         passed: false
-        comment: N/A - AR-05 auto-reject overrides quality scoring
+        comment: Elevation bands and on-surface isolines are clear, but the 'projected
+          onto base plane' dashed lines are only a 14px diagonal offset from the solid
+          lines and read as a faint near-duplicate rather than a legible distinct
+          reference layer.
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: N/A - AR-05 auto-reject overrides quality scoring
+        passed: true
+        comment: Sequential imprint_seq green-to-blue colormap; adequate contrast
+          between bands, CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 0
+        score: 4
         max: 4
-        passed: false
-        comment: N/A - AR-05 auto-reject overrides quality scoring
+        passed: true
+        comment: Correct 3200x1800 canvas, good margins, nothing cut off, balanced
+          proportions.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: N/A - AR-05 auto-reject overrides quality scoring
+        passed: true
+        comment: Descriptive axis labels with units (°C, bar); title matches the mandated
+          format.
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: N/A - AR-05 auto-reject overrides quality scoring
+        passed: true
+        comment: imprint_seq used for continuous data; both theme backgrounds correct;
+          data colors identical across themes.
     design_excellence:
-      score: 0
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 0
+        score: 4
         max: 8
         passed: false
-        comment: N/A - AR-05 auto-reject
+        comment: Professional color banding and clean legend, but the overall visual
+          is a flat filled-contour look, not the more sophisticated 3D surface rendering
+          the spec calls for.
       - id: DE-02
         name: Visual Refinement
-        score: 0
+        score: 3
         max: 6
         passed: false
-        comment: N/A - AR-05 auto-reject
+        comment: No grid clutter and generous whitespace, but chrome is largely default
+          MUI X axis styling with limited customization beyond the color bands.
       - id: DE-03
         name: Data Storytelling
-        score: 0
+        score: 3
         max: 6
         passed: false
-        comment: N/A - AR-05 auto-reject
+        comment: The blue high-yield core does create a focal point, but without any
+          3D depth the 'landscape' framing from the spec doesn't come through.
     spec_compliance:
-      score: 0
+      score: 8
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 0
+        score: 1
         max: 5
         passed: false
-        comment: N/A - AR-05 auto-reject
+        comment: Renders as a flat, straight-overhead 2D filled-contour plot -- no
+          3D projection, tilt, or depth transform anywhere in the code, contradicting
+          the spec's explicit 'preserve the surface geometry, unlike 2D contour plots
+          that flatten the visualization' requirement.
       - id: SC-02
         name: Required Features
-        score: 0
+        score: 1
         max: 4
         passed: false
-        comment: N/A - AR-05 auto-reject
+        comment: Sequential colormap and colorbar present; base-plane projection attempted
+          but barely legible; 'enable rotation to explore the 3D structure' is entirely
+          unaddressed since there is no 3D structure.
       - id: SC-03
         name: Data Mapping
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: N/A - AR-05 auto-reject
+        passed: true
+        comment: Temperature/pressure correctly mapped to x/y, full domain shown,
+          z correctly encoded via color bands within the 2D framing used.
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: N/A - AR-05 auto-reject
+        passed: true
+        comment: Title matches the mandated format; legend band labels are clear and
+          correctly ranged.
     data_quality:
-      score: 0
+      score: 11
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 0
+        score: 2
         max: 6
         passed: false
-        comment: N/A - AR-05 auto-reject
+        comment: Contour bands and isolines are covered, but the plot type's defining
+          feature -- 3D surface geometry -- is entirely absent.
       - id: DQ-02
         name: Realistic Context
-        score: 0
+        score: 5
         max: 5
-        passed: false
-        comment: N/A - AR-05 auto-reject
+        passed: true
+        comment: Plausible, neutral chemical-process yield-vs-temperature/pressure
+          response surface.
       - id: DQ-03
         name: Appropriate Scale
-        score: 0
+        score: 4
         max: 4
-        passed: false
-        comment: N/A - AR-05 auto-reject
+        passed: true
+        comment: Temperature 150-250°C, pressure 10-50 bar, yield ~47-91% are all
+          sensible domain values.
     code_quality:
-      score: 0
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
+        score: 1
         max: 3
         passed: false
-        comment: N/A - AR-05 auto-reject
+        comment: A hand-rolled marching-triangles contour algorithm plus multiple
+          SVG-path helper functions -- justified by the geometry but far from a KISS
+          single-component chart.
       - id: CQ-02
         name: Reproducibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: N/A - AR-05 auto-reject
+        passed: true
+        comment: Fully deterministic, formula-based data, no RNG.
       - id: CQ-03
         name: Clean Imports
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'N/A - AR-05 auto-reject: zero imports at all, none from @mui/x-charts'
+        passed: true
+        comment: All 6 @mui/x-charts imports are used.
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: N/A - AR-05 auto-reject
+        passed: true
+        comment: No fake UI/functionality; the geometry code is genuinely computed
+          and correct.
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: N/A - AR-05 auto-reject
+        passed: true
+        comment: Default-exported component, skipAnimation set, sized from window.ANYPLOT_SIZE
+          per the harness contract.
     library_mastery:
-      score: 0
+      score: 2
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 0
+        score: 1
         max: 5
         passed: false
-        comment: No MUI X API used at all
+        comment: series={[]} means no @mui/x-charts plot/series component ever renders
+          the data; ChartContainer is used only for scale/legend/axis scaffolding
+          around a fully custom SVG renderer -- the same core gap flagged in attempts
+          1 and 2, now with more library plumbing wrapped around it.
       - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 1
         max: 5
         passed: false
-        comment: No MUI X API used at all
+        comment: PiecewiseColorLegend and the scale hooks are genuine MUI X features,
+          but they support the custom renderer rather than being the mechanism that
+          draws the data itself.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - 3d-projection
   - colorbar
-  - annotations
+  - layer-composition
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
   - custom-colormap
   - alpha-blending
+  - publication-ready
