@@ -68,7 +68,7 @@ function project(x, y, z) {
 const corners = [];
 for (const cx of [-1, 1]) for (const cy of [-1, 1]) for (const cz of [-1, 1]) corners.push(project(cx, cy, cz));
 
-const margin = { top: 110, right: 260, bottom: 90, left: 90 };
+const margin = { top: 100, right: 180, bottom: 80, left: 90 };
 const screenX = d3.scaleLinear().domain(d3.extent(corners, (c) => c.sx)).range([margin.left, width - margin.right]);
 const screenY = d3.scaleLinear().domain(d3.extent(corners, (c) => c.sy)).range([height - margin.bottom, margin.top]);
 
@@ -76,6 +76,9 @@ const projected = points.map((d) => ({ ...d, ...project(normX(d.recency), normY(
 const depthExtent = d3.extent(projected, (d) => d.depth);
 const radiusScale = d3.scaleLinear().domain(depthExtent).range([6, 11]);
 const opacityScale = d3.scaleLinear().domain(depthExtent).range([0.55, 0.92]);
+// Push the "Champions" segment forward as the focal cluster by keeping it at
+// full size/opacity while slightly de-emphasizing the two background segments.
+const emphasis = (segIndex) => (segIndex === 0 ? 1 : 0.82);
 
 const color = d3.scaleOrdinal().domain(segments.map((s) => s.name)).range(t.palette);
 
@@ -89,44 +92,77 @@ const axes = [
   { label: "Monetary ($ avg order)", from: [-1, -1, -1], to: [-1, -1, 1], scale: normZ, format: (v) => `$${d3.format(".0f")(v)}` },
 ];
 
-const axisGroup = svg.append("g");
-axes.forEach((axis) => {
+// The three axes share one corner; offset tick labels and axis titles
+// perpendicular to each axis line, pointing away from that shared tripod
+// center, so labels never crowd the axis line or a neighboring title.
+const axisEndsPx = axes.map((axis) => {
   const p0 = project(...axis.from);
   const p1 = project(...axis.to);
+  return { x0: screenX(p0.sx), y0: screenY(p0.sy), x1: screenX(p1.sx), y1: screenY(p1.sy) };
+});
+const tripodCenter = {
+  x: d3.mean([axisEndsPx[0].x0, ...axisEndsPx.map((e) => e.x1)]),
+  y: d3.mean([axisEndsPx[0].y0, ...axisEndsPx.map((e) => e.y1)]),
+};
+
+const axisGroup = svg.append("g");
+axes.forEach((axis, i) => {
+  const { x0, y0, x1, y1 } = axisEndsPx[i];
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const len = Math.hypot(dx, dy) || 1;
+  const dir = { x: dx / len, y: dy / len };
+  let perp = { x: -dir.y, y: dir.x };
+  const mid = { x: (x0 + x1) / 2, y: (y0 + y1) / 2 };
+  if (perp.x * (mid.x - tripodCenter.x) + perp.y * (mid.y - tripodCenter.y) < 0) {
+    perp = { x: -perp.x, y: -perp.y };
+  }
+  const anchorFor = (vx) => (vx > 0.35 ? "start" : vx < -0.35 ? "end" : "middle");
+
   axisGroup
     .append("line")
-    .attr("x1", screenX(p0.sx))
-    .attr("y1", screenY(p0.sy))
-    .attr("x2", screenX(p1.sx))
-    .attr("y2", screenY(p1.sy))
+    .attr("x1", x0)
+    .attr("y1", y0)
+    .attr("x2", x1)
+    .attr("y2", y1)
     .attr("stroke", t.inkSoft)
-    .attr("stroke-width", 1.5);
+    .attr("stroke-width", 1.2);
 
   axis.scale.ticks(4).forEach((value) => {
     const tPos = axis.scale(value);
-    const point = axis.from.map((v, i) => (axis.to[i] !== v ? tPos : v));
+    const point = axis.from.map((v, idx) => (axis.to[idx] !== v ? tPos : v));
     const pr = project(...point);
+    const px = screenX(pr.sx);
+    const py = screenY(pr.sy);
     axisGroup
       .append("circle")
-      .attr("cx", screenX(pr.sx))
-      .attr("cy", screenY(pr.sy))
-      .attr("r", 2.5)
+      .attr("cx", px)
+      .attr("cy", py)
+      .attr("r", 2)
       .attr("fill", t.grid);
+    const lx = px + perp.x * 16;
+    const ly = py + perp.y * 16;
     axisGroup
       .append("text")
-      .attr("x", screenX(pr.sx))
-      .attr("y", screenY(pr.sy) + 18)
-      .attr("text-anchor", "middle")
+      .attr("x", lx)
+      .attr("y", ly)
+      .attr("dy", "0.32em")
+      .attr("text-anchor", anchorFor(perp.x))
       .attr("fill", t.inkSoft)
       .style("font-size", "13px")
       .text(axis.format(value));
   });
 
-  const pEnd = project(...axis.to);
+  // Titles stay "middle"-anchored (long strings would overflow the canvas
+  // edge under a directional anchor near the tripod's outer corners) and are
+  // only nudged perpendicular to the axis, clear of the last tick label.
+  const tx = x1 + perp.x * 24;
+  const ty = y1 + perp.y * 24;
   axisGroup
     .append("text")
-    .attr("x", screenX(pEnd.sx))
-    .attr("y", screenY(pEnd.sy) - 14)
+    .attr("x", tx)
+    .attr("y", ty)
+    .attr("dy", "0.32em")
     .attr("text-anchor", "middle")
     .attr("fill", t.ink)
     .style("font-size", "15px")
@@ -143,14 +179,30 @@ svg
   .attr("class", "point")
   .attr("cx", (d) => screenX(d.sx))
   .attr("cy", (d) => screenY(d.sy))
-  .attr("r", (d) => radiusScale(d.depth))
+  .attr("r", (d) => radiusScale(d.depth) * emphasis(d.segIndex))
   .attr("fill", (d) => color(d.segment))
-  .attr("fill-opacity", (d) => opacityScale(d.depth))
+  .attr("fill-opacity", (d) => opacityScale(d.depth) * emphasis(d.segIndex))
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 0.75);
 
 // --- Legend -------------------------------------------------------------------
-const legend = svg.append("g").attr("transform", `translate(${width - margin.right + 40}, ${margin.top + 30})`);
+// Placed inside the plot's own empty upper-mid-right region (above the "At
+// Risk" cluster, beside "Champions") rather than the far outer margin, so it
+// reads as part of the composition instead of an isolated corner element.
+const innerWidth = width - margin.left - margin.right;
+const legendX = margin.left + innerWidth * 0.6;
+const legendY = margin.top + 6;
+const legend = svg.append("g").attr("transform", `translate(${legendX}, ${legendY})`);
+legend
+  .append("rect")
+  .attr("x", -16)
+  .attr("y", -22)
+  .attr("width", 176)
+  .attr("height", segments.length * 34 + 16)
+  .attr("rx", 8)
+  .attr("fill", t.elevatedBg)
+  .attr("stroke", t.grid)
+  .attr("stroke-width", 1);
 segments.forEach((seg, i) => {
   const row = legend.append("g").attr("transform", `translate(0, ${i * 34})`);
   row.append("circle").attr("r", 8).attr("cx", 8).attr("cy", 0).attr("fill", color(seg.name));
