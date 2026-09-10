@@ -24,29 +24,40 @@ sigma, rho, beta = 10.0, 28.0, 8.0 / 3.0
 dt = 0.014
 n_steps = 2000
 
-traj_x = zeros(n_steps)
-traj_y = zeros(n_steps)
-traj_z = zeros(n_steps)
-traj_x[1], traj_y[1], traj_z[1] = 0.1, 0.0, 0.0
+function integrate_lorenz(x0, y0, z0, n_steps, dt, sigma, rho, beta)
+    xs, ys, zs = zeros(n_steps), zeros(n_steps), zeros(n_steps)
+    xs[1], ys[1], zs[1] = x0, y0, z0
 
-for i in 1:(n_steps - 1)
-    xi, yi, zi = traj_x[i], traj_y[i], traj_z[i]
+    for i in 1:(n_steps - 1)
+        xi, yi, zi = xs[i], ys[i], zs[i]
 
-    k1x, k1y, k1z = sigma * (yi - xi), xi * (rho - zi) - yi, xi * yi - beta * zi
-    xa, ya, za = xi + 0.5dt * k1x, yi + 0.5dt * k1y, zi + 0.5dt * k1z
+        k1x, k1y, k1z = sigma * (yi - xi), xi * (rho - zi) - yi, xi * yi - beta * zi
+        xa, ya, za = xi + 0.5dt * k1x, yi + 0.5dt * k1y, zi + 0.5dt * k1z
 
-    k2x, k2y, k2z = sigma * (ya - xa), xa * (rho - za) - ya, xa * ya - beta * za
-    xb, yb, zb = xi + 0.5dt * k2x, yi + 0.5dt * k2y, zi + 0.5dt * k2z
+        k2x, k2y, k2z = sigma * (ya - xa), xa * (rho - za) - ya, xa * ya - beta * za
+        xb, yb, zb = xi + 0.5dt * k2x, yi + 0.5dt * k2y, zi + 0.5dt * k2z
 
-    k3x, k3y, k3z = sigma * (yb - xb), xb * (rho - zb) - yb, xb * yb - beta * zb
-    xc, yc, zc = xi + dt * k3x, yi + dt * k3y, zi + dt * k3z
+        k3x, k3y, k3z = sigma * (yb - xb), xb * (rho - zb) - yb, xb * yb - beta * zb
+        xc, yc, zc = xi + dt * k3x, yi + dt * k3y, zi + dt * k3z
 
-    k4x, k4y, k4z = sigma * (yc - xc), xc * (rho - zc) - yc, xc * yc - beta * zc
+        k4x, k4y, k4z = sigma * (yc - xc), xc * (rho - zc) - yc, xc * yc - beta * zc
 
-    traj_x[i + 1] = xi + (dt / 6) * (k1x + 2k2x + 2k3x + k4x)
-    traj_y[i + 1] = yi + (dt / 6) * (k1y + 2k2y + 2k3y + k4y)
-    traj_z[i + 1] = zi + (dt / 6) * (k1z + 2k2z + 2k3z + k4z)
+        xs[i + 1] = xi + (dt / 6) * (k1x + 2k2x + 2k3x + k4x)
+        ys[i + 1] = yi + (dt / 6) * (k1y + 2k2y + 2k3y + k4y)
+        zs[i + 1] = zi + (dt / 6) * (k1z + 2k2z + 2k3z + k4z)
+    end
+
+    return xs, ys, zs
 end
+
+# Two nearby initial conditions illustrate chaotic sensitivity: the paths
+# stay close for most of the run, then fork apart once the perturbation has
+# grown enough to be visible — the hallmark "butterfly effect" of this system.
+traj_x, traj_y, traj_z = integrate_lorenz(0.1, 0.0, 0.0, n_steps, dt, sigma, rho, beta)
+traj2_x, traj2_y, traj2_z = integrate_lorenz(0.1 + 1.0e-3, 0.0, 0.0, n_steps, dt, sigma, rho, beta)
+
+separation = sqrt.((traj_x .- traj2_x) .^ 2 .+ (traj_y .- traj2_y) .^ 2 .+ (traj_z .- traj2_z) .^ 2)
+fork_idx = something(findfirst(d -> d > 2.0, separation), n_steps ÷ 2)
 
 # --- Plot ---------------------------------------------------------------
 fig = Figure(
@@ -99,8 +110,17 @@ ax = Axis3(
     azimuth            = -0.32 * pi,
 )
 
-lines!(ax, traj_x, traj_y, traj_z; color = 1:n_steps, colormap = ANYPLOT_SEQ, linewidth = 2.5)
+lines!(ax, traj_x, traj_y, traj_z; color = 1:n_steps, colormap = ANYPLOT_SEQ, linewidth = 2.5, alpha = 0.9)
 scatter!(ax, [traj_x[1]], [traj_y[1]], [traj_z[1]]; color = IMPRINT_PALETTE[1], markersize = 16, strokewidth = 0)
+
+# The perturbed run shares the same path as the main trajectory up to
+# `fork_idx`; only the diverged tail is drawn, so the fork itself is the
+# visible story rather than two fully overlapping lines.
+traj2_line = lines!(
+    ax, traj2_x[fork_idx:end], traj2_y[fork_idx:end], traj2_z[fork_idx:end];
+    color = IMPRINT_PALETTE[2], linewidth = 2.0, alpha = 0.9,
+)
+scatter!(ax, [traj2_x[fork_idx]], [traj2_y[fork_idx]], [traj2_z[fork_idx]]; color = IMPRINT_PALETTE[2], markersize = 10, strokewidth = 0)
 
 Colorbar(
     fig[1, 2];
@@ -115,7 +135,19 @@ Colorbar(
     width        = 14,
 )
 
-colsize!(fig.layout, 1, Relative(0.92))
+Legend(
+    fig[2, 1:2],
+    [traj2_line],
+    ["Diverged path from a perturbed initial condition (Δx₀ = 0.001)"];
+    orientation     = :horizontal,
+    framevisible    = false,
+    backgroundcolor = :transparent,
+    labelcolor      = INK,
+    tellwidth       = false,
+    tellheight      = true,
+)
+
+colsize!(fig.layout, 1, Relative(0.95))
 
 # --- Save -----------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
