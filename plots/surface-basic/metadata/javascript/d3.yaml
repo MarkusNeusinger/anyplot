@@ -1,0 +1,270 @@
+library: d3
+language: javascript
+specification_id: surface-basic
+created: '2026-09-10T01:03:58Z'
+updated: '2026-09-10T01:24:48Z'
+generated_by: claude-sonnet
+workflow_run: 34423117268
+issue: 1013
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/javascript/d3/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - Drag-to-rotate interactivity now implemented (d3.drag() updates azimuth/elevation
+    and re-projects the surface, axes, and ticks live) — directly resolves the spec's
+    explicit rotation requirement flagged in attempt 1.
+  - The attempt-1 'Position X (m)' label-on-surface overlap is fixed — no axis title
+    now sits on top of the colored mesh in either render.
+  - Genuine bespoke 3D-to-2D projection (azimuth spin + elevation tilt) with a painter's-algorithm
+    back-to-front quad sort for correct depth occlusion — the standard, idiomatic
+    D3 technique for 3D surfaces since D3 has no native 3D module.
+  - Correct use of the diverging Imprint colormap (imprint_div) for signed amplitude
+    data, with a theme-adaptive midpoint and identical data colors between light and
+    dark renders.
+  - Well-constructed colorbar (linearGradient + d3.axisRight) with correct direction,
+    clear 'Amplitude' label, and no edge clipping in either render.
+  - Full theme-adaptive chrome with no dark-on-dark/light-on-light failures.
+  - Deterministic, plausible, neutral data (standing-wave interference, sin(x)*cos(y))
+    at an appropriate 38x38 grid density within the spec's 30-50 range.
+  weaknesses:
+  - 'The three axis titles (''Position X (m)'', ''Position Y (m)'', ''Wave Amplitude'')
+    all collapse onto nearly the same screen column at the far-left margin of the
+    canvas, disconnected from the diagonal axis lines they label (the X and Y axis
+    lines run to the upper-right and lower-right respectively, ending at their ''4''
+    tick labels there). This happens because the current azimuth/elevation view puts
+    the box center almost exactly at the near-corner origin, so the outward-ray-cast
+    label placement (edgeLabel()) degenerates and pushes all three titles out through
+    the same top-left region instead of each exiting near its own axis line. Every
+    label is still individually legible, but a reader can no longer tell which title
+    belongs to which line from position alone — they read as a disconnected sidebar
+    list rather than axis labels. Fix: after computing an axis title''s placement,
+    bias it toward the midpoint of that specific axis segment (e.g. blend the edgeLabel()
+    result with the screen-space normal offset from the axis line''s own midpoint)
+    rather than relying solely on the ray from the full bounding-box center, so each
+    title stays visually anchored near its own line regardless of rotation.'
+  - Title still runs slightly under the 50-70% width target (~48% of canvas width)
+    — better than attempt 1's ~41%, but a touch more fontsize headroom would strengthen
+    the visual hierarchy.
+  - The 'Wave Amplitude' z-axis title (rotated -90 degrees, vertical) sits close to
+    the z-axis tick labels (0.5 / 0.0 / -0.5) in the same left-margin region — not
+    clipped or unreadable, but the vertical spacing is tighter than ideal given both
+    now occupy the same narrow left strip.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Wave Interference Surface · surface-basic · javascript · d3 · anyplot.ai" in bold dark ink, top-center, fully readable. Axis triad drawn in dark-ink lines with soft-ink tick labels along both ground-plane diagonals and the vertical amplitude axis. Axis titles "Position X (m)", "Position Y (m)", "Wave Amplitude" are all legible individually, but all three land in the same narrow column at the far-left canvas margin, away from the axis lines they describe (see weaknesses). Colorbar at right, labeled "Amplitude", with readable tick values (0.5, 0.0, -0.5).
+      Data: 38x38-cell 3D surface mesh showing a clear sin(x)*cos(y) standing-wave interference pattern, colored with the red(negative)-neutral-blue(positive) diverging Imprint colormap (imprint_div), painter's-algorithm depth-sorted so occlusion reads correctly.
+      Legibility verdict: PASS (all text readable against the light background; no light-on-light failures; the axis-title clustering is a placement/association issue, not a contrast/legibility one).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout as the light render, now rendered in light ink (title/axis titles ~#F0EFE8, ticks in a lighter soft-ink) — clearly readable throughout, no dark-on-dark failures. Same axis-title clustering issue as the light render (identical layout, just re-themed).
+      Data: Same red/blue diverging surface, confirmed pixel-identical data colors to the light render — only chrome (background, text, axis-triad lines) flips between themes.
+      Legibility verdict: PASS (all text readable against the dark background; no dark-on-dark failures).
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All title/axis/tick/colorbar text readable in both themes; no dark-on-dark
+          or light-on-light failures
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Attempt-1 'Position X (m)'-on-surface overlap is fixed; z-axis title
+          sits close to (but not clipped by) the z tick labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Mesh quads and diverging colors clearly visible; painter's-algorithm
+          depth sort reads correctly in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/blue diverging scale, not a red-green pairing; adequate contrast
+          for CVD
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Axis titles for X, Y, and Z all collapse to the same left-margin
+          column, disconnected from their axis lines; title still ~48% width (target
+          50-70%)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis titles are descriptive with units ('Position X (m)', 'Wave Amplitude');
+          title format matches spec
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_div used correctly for signed continuous data; backgrounds
+          match #FAF8F1/#1A1A17; data colors identical across themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Bespoke azimuth/elevation projection with painter's-algorithm depth
+          sorting is genuinely sophisticated, not a generic default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle mesh borders, minimal axis triad, generous whitespace; slightly
+          undercut by the left-margin label clustering
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Diverging colors clearly highlight amplitude peaks and troughs across
+          the wave-interference surface
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3D surface plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Rotation now implemented via d3.drag() updating azimuth/elevation
+          and re-rendering live — resolves attempt 1's missing interactivity
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y/z correctly mapped, full grid shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive} · surface-basic · javascript · d3 ·
+          anyplot.ai'; colorbar legend labeled correctly
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Full surface, axis triad, and colorbar all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Standing-wave interference over a membrane is a plausible, neutral
+          physical scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 38x38 grid within spec's 30-50 range; amplitude values sensible for
+          a normalized wave field
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; a couple of small helper functions (project, drawTicks,
+          edgeLabel) kept proportionate to the 3D-projection problem
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic grid + trig function, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used, no extraneous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; drag interactivity is real, not simulated
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts into #container per the harness contract; produces plot-{theme}.png/.html
+          via the harness, no manual file writes'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of d3.drag, d3.scaleSequential/interpolateRgbBasis,
+          d3.axisRight, d3.line for the projected quads
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Drag-to-rotate + painter's-algorithm depth sort + gradient colorbar
+          are genuinely distinctive D3 techniques for 3D surfaces
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - colorbar
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
