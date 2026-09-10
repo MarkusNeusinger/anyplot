@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: line-3d-trajectory
 created: '2026-09-10T00:12:23Z'
-updated: '2026-09-10T00:16:13Z'
+updated: '2026-09-10T00:22:32Z'
 generated_by: claude-sonnet
 workflow_run: 34419857256
 issue: 3182
@@ -12,46 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Genuinely creative hand-rolled 3D-to-2D orthographic projection built entirely
-    from ggplot2 primitives (geom_segment/geom_path/geom_text) instead of falling
-    back to another library — respects the 'native capabilities only' rule while still
-    delivering a real 3D trajectory visualization.
-  - Depth-based alpha blending (near segments opaque, far segments faded) gives genuine
-    depth cueing to the static 2D render.
-  - 'Correct imprint_seq continuous gradient (#009E73 to #4467A3) mapped to time-in-trajectory,
-    identical between light and dark themes as required.'
-  - Physically accurate Lorenz attractor generated via RK4 integration with canonical
-    sigma=10, rho=28, beta=8/3 parameters and a burn-in period to discard the transient.
-  - Minimal 3-edge axis-box style keeps visual focus on the trajectory; theme_void
-    chrome (title, axis labels, legend) is properly theme-adaptive in both renders.
+  - Hand-rolled 3D-to-2D orthographic projection (RK4-integrated Lorenz attractor)
+    built entirely from native ggplot2 geoms (geom_segment/geom_path/geom_text) instead
+    of falling back to another library — respects the 'native capabilities only' rule
+    while delivering a genuine 3D trajectory visualization.
+  - Depth-based alpha blending (near segments opaque, far segments faded) gives real
+    depth cueing to the static 2D projection.
+  - 'Correct Imprint imprint_seq continuous gradient (#009E73 to #4467A3) mapped to
+    elapsed time, identical between light and dark renders.'
+  - 'Physically accurate Lorenz attractor: canonical sigma=10, rho=28, beta=8/3 parameters,
+    RK4 integration, and a burn-in period that discards the transient before the state
+    settles onto the attractor.'
+  - Minimal 3-edge axis-box style with theme_void keeps visual focus on the trajectory;
+    theme-adaptive chrome (title, axis labels, tick labels, legend) is correct and
+    fully readable in both renders.
   weaknesses:
-  - Title (plot.title, hjust=0.5) centers on the panel area excluding the legend gutter,
-    so it reads as visually left-shifted relative to the full canvas — consider accounting
-    for legend width when centering, or center-justify against the full plot instead.
-  - Noticeable empty space in the bottom-right and top-right quadrants around the
-    legend; tightening plot.margin or repositioning the legend could balance whitespace
-    better.
-  - The 'Y' axis-title label sits close to a trajectory line crossing in both renders
-    (no actual pixel overlap, but tight clearance) — nudge the label position slightly
-    further from the projected corner.
+  - Noticeable empty whitespace in the bottom-right and top-right quadrants around
+    the legend in both renders — tightening plot.margin or repositioning the legend
+    would balance canvas usage better.
+  - plot.title uses hjust=0.5, which centers the title within the panel area excluding
+    the legend gutter, so it reads as slightly left-of-center relative to the full
+    canvas width — use plot.title.position = "plot" to center against the full plot
+    width.
+  - The 'Y' axis-title label sits close to a trajectory-line crossing point in both
+    renders (no actual pixel overlap, but tight clearance) — nudge it slightly further
+    from the projected corner for more breathing room.
   - Only a single trajectory is drawn; the spec's Notes mention multiple trajectories
-    with different colors can help compare paths (an optional enhancement, not a required
-    feature).
+    with different colors can help compare paths or initial conditions — an optional
+    enhancement, not a required feature.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Lorenz Attractor · line-3d-trajectory · r · ggplot2 · anyplot.ai" in dark ink, clearly legible. Bold "X"/"Y"/"Z" axis-title labels in dark ink at the ends of the three projected axis edges. Tick labels (numeric values along X, Y, Z) in a softer gray, all legible. Legend titled "Time (s)" with a vertical continuous color bar and tick labels (0, 4, 8, 12) in soft gray, legend title in dark ink.
-      Data: A butterfly-shaped Lorenz attractor trajectory rendered as a continuous line, colored on a green (#009E73) to blue (#4467A3) gradient representing elapsed time, with near-camera segments more opaque and far segments faded for depth cueing.
-      Legibility verdict: PASS — all text is dark-on-light and clearly readable, no light-on-light issues.
+      Chrome: Title "Lorenz Attractor · line-3d-trajectory · r · ggplot2 · anyplot.ai" in dark ink, clearly legible, spanning roughly two-thirds of the canvas width. Bold "X"/"Y"/"Z" axis-title labels in dark ink at the projected axis ends; numeric tick labels (e.g. -20..20 on X/Y, 10..40 on Z) in soft gray. Legend titled "Time (s)" with a vertical continuous color bar and tick labels (0, 4, 8, 12) in soft gray. All chrome text is clearly readable against the light background — no light-on-light issues found.
+      Data: A butterfly-shaped Lorenz attractor trajectory rendered as a continuous line on a green (#009E73) to blue (#4467A3) gradient encoding elapsed time, with depth-based alpha (near segments opaque, far segments faded) giving a sense of 3D depth. First/only series correctly starts at Imprint position 1 (#009E73).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title in light/white ink, clearly legible. Bold "X"/"Y"/"Z" axis-title labels in white. Axis lines and tick labels rendered in a soft light gray, all legible against the dark background. Legend "Time (s)" title in light ink, tick labels in soft gray.
-      Data: Same butterfly-shaped Lorenz attractor trajectory with the identical green-to-blue time gradient and depth-based alpha fading as the light render — data colors match exactly, only chrome (background/text/axis colors) flipped.
-      Legibility verdict: PASS — all text is light-on-dark and clearly readable; no dark-on-dark failures observed.
+      Chrome: Title, axis-title labels ("X"/"Y"/"Z"), tick labels, and legend text ("Time (s)") are all rendered in light ink / soft light gray, clearly legible against the dark surface. No dark-on-dark failures observed anywhere (title, ticks, axis labels, legend all pass).
+      Data: The trajectory uses the identical green-to-blue time gradient and identical depth-based alpha fading as the light render — data colors are pixel-for-pixel consistent between themes; only the chrome (background, text, axis-line color) flipped as expected.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 26
@@ -62,48 +65,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at explicit font sizes
+        comment: All font sizes explicitly set via element_text/geom_text; title,
+          axis labels, ticks, legend all readable in both themes; title occupies ~65%
+          of width, well within bounds
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: '''Y'' axis-title label sits close to a trajectory crossing but no
-          pixels overlap'
+        comment: No actual pixel overlap, but the 'Y' axis-title label sits close
+          to a trajectory-line crossing in both renders
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Line width and depth-based alpha appropriate for a 2000-point dense
-          trajectory
+        comment: 2000-point trajectory with linewidth=0.7 and depth-based alpha is
+          clearly visible without overplotting
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential gradient, CVD-safe, good contrast on both
-          backgrounds
+        comment: Green-to-blue sequential gradient is CVD-safe with good contrast
+          against both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: No clipping; title reads slightly off-center due to legend gutter,
-          some empty space bottom-right
+        comment: Good use of canvas overall, but noticeable empty whitespace bottom-right/top-right
+          around the legend, and title reads slightly left-of-center relative to full
+          canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches mandated format with descriptive prefix; X/Y/Z labels
-          clear
+        comment: X/Y/Z are the standard, expected notation for Lorenz-attractor state-space
+          coordinates; legend carries proper units ('Time (s)')
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Uses imprint_seq gradient (#009E73 to #4467A3); correct theme backgrounds
+        comment: 'Uses exact imprint_seq stops (#009E73 -> #4467A3) for time, correct
+          polarity (single-polarity/sequential); backgrounds and chrome theme-correct
           in both renders'
     design_excellence:
       score: 15
@@ -115,20 +122,21 @@ review:
         max: 8
         passed: true
         comment: Custom hand-built 3D projection and depth cueing show real design
-          thought
+          intent, above a configured default but short of full publication polish
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: theme_void, minimal 3-edge axis box, generous whitespace
+        comment: theme_void, minimal 3-edge axis box, generous whitespace, no visible
+          grid clutter
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-by-time and depth alpha create hierarchy and a clear spiral
-          focal point
+        comment: Color-by-time plus depth alpha create visual hierarchy and a clear
+          spiral focal point that guides the eye
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +146,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 3D trajectory achieved via projection, matching spec intent within
-          ggplot2's constraints
+        comment: Best achievable 3D trajectory rendering within ggplot2's 2D grammar
+          via manual orthographic projection; captures the required trajectory shape
+          and structure
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sequential connected line, color-by-time gradient, transparency for
-          depth all present
+        comment: Sequential connected line, color encoding time progression, 2000
+          points, smooth curve all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z all represented with ticks and axis labels
+        comment: x/y/z correctly projected and shown; full data range visible via
+          axis box and ticks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend clearly labeled 'Time (s)'
+        comment: Title format matches '{Descriptive Title} · {spec-id} · {language}
+          · {library} · anyplot.ai'; legend title and units correct
     data_quality:
       score: 15
       max: 15
@@ -168,20 +179,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full Lorenz attractor with burn-in, 2000 points within spec range
+        comment: Shows the full settled attractor with multiple windings around both
+          lobes after discarding the initial transient
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Canonical chaotic attractor explicitly named in the spec, neutral
-          subject matter
+        comment: Lorenz attractor is a standard, neutral, scientifically real example
+          of a 3D trajectory
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Canonical sigma/rho/beta parameters and sensible time step/duration
+        comment: Canonical Lorenz parameters (sigma=10, rho=28, beta=8/3) with RK4
+          integration produce a factually correct attractor shape
     code_quality:
       score: 9
       max: 10
@@ -191,36 +204,37 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Helper functions (RK4 step, projection) are justified by the ODE
-          integration and camera math, but add structure beyond a typical plotting
-          script
+        comment: A few small helper functions (project_x/project_y/depth_of/lorenz_rhs/rk4_step)
+          are used, justified by the RK4 integration and projection math, but deviate
+          from the pure imports->data->plot->save ideal
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present; trajectory itself is deterministic
+        comment: set.seed(42) and fully deterministic RK4 integration
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg, both used
+        comment: Only ggplot2 and ragg imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity; clear comments explaining the projection
-          technique
+        comment: No fake functionality; appropriate complexity for a from-scratch
+          3D projection
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png at correct dimensions
+        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct landscape
+          dimensions
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -228,14 +242,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of geom_segment/geom_path/geom_text/scale_color_gradient/theme_void
+        comment: Layered geoms (geom_segment/geom_path/geom_text) with mapped continuous
+          color/alpha aesthetics follow ggplot2's grammar idiomatically
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Hand-rolled orthographic 3D projection using only ggplot2 grammar
-          is a genuinely distinctive technique
+        comment: Uses ggplot2-specific continuous aesthetic mapping (color=t, alpha=depth_norm)
+          driven directly from data columns rather than manual per-segment color computation,
+          though the underlying projection technique itself is library-agnostic
   verdict: APPROVED
 impl_tags:
   dependencies: []
