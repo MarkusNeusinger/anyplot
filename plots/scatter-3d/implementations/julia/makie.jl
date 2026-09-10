@@ -1,7 +1,7 @@
 # anyplot.ai
 # scatter-3d: 3D Scatter Plot
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 81/100 | Created: 2026-09-10
+# Quality: 87/100 | Created: 2026-09-10
 
 using CairoMakie
 using Colors

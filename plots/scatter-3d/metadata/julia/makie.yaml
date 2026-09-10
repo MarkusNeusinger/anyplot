@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: scatter-3d
 created: '2026-09-10T00:32:49Z'
-updated: '2026-09-10T00:36:52Z'
+updated: '2026-09-10T00:46:57Z'
 generated_by: claude-sonnet
 workflow_run: 34420911237
 issue: 1945
@@ -12,57 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 81
+quality_score: 87
 review:
   strengths:
-  - 'Correct Imprint palette usage: categorical color order (green/lavender/blue)
-    with Idle mapped to brand green #009E73, identical data colors across both themes.'
-  - 'Full theme-adaptive chrome: background, ink, grid, tick colors, and even the
-    3D panel walls (xy/xz/yz) use a distinct ELEVATED_BG token so the box reads with
-    depth in both light and dark renders.'
-  - 'Idiomatic use of Axis3 (not a 2D scatter faked into 3D): explicit azimuth/elevation
-    camera angle, aspect=(1,1,1), and per-panel coloring are distinctive Makie features.'
-  - 'Clean, deterministic, single-purpose script: Random.seed!(42), no functions/classes,
-    only used imports (CairoMakie, Colors, Random), correct plot-$(THEME).png output
-    at the canonical 3200x1800 canvas.'
-  - Descriptive, unit-bearing axis labels (Vibration (mm/s), Temperature (°C), Pressure
-    (bar)) and a plausible industrial sensor-monitoring dataset with three clearly
-    separated clusters.
+  - Cluster centers/spreads now make Idle and Normal genuinely overlap in the vibration/temperature
+    plane, so pressure (the third axis) is load-bearing — a real fix over attempt
+    1's fully-separable-in-2D layout
+  - Alpha transparency (0.85) plus a subtle theme-matched marker stroke now reveals
+    within-cluster density that attempt 1's opaque markers hid
+  - 'Correct Imprint palette: canonical categorical order with Idle mapped to brand
+    green #009E73, pixel-identical data colors across both themes'
+  - Full theme-adaptive chrome including distinct elevated-panel coloring for the
+    3D box walls (xy/xz/yz), consistent in both light and dark renders
+  - Idiomatic Axis3 usage — deliberate azimuth/elevation camera framing and aspect=(1,1,1),
+    genuinely 3D rather than a faked 2D plot
+  - 'Clean, deterministic, single-purpose script: seeded RNG, no functions/classes,
+    only used imports, correct plot-$(THEME).png output at the canonical 3200x1800
+    canvas'
   weaknesses:
-  - Large unbalanced dead-space in the bottom-left quadrant of the canvas (roughly
-    a third of the frame) because the Axis3 box is pushed toward the right/center
-    at this azimuth/elevation — reduces overall composition balance (VQ-05, DE-02).
-    Try a wider aspect adjustment, a slightly different azimuth, or nudging the figure/axis
-    padding so the 3D box fills more of the canvas.
-  - The three clusters are separated monotonically along all three axes at once (Idle=low/low/low,
-    Normal=mid/mid/mid, Stress=high/high/high), so any single 2D projection (e.g.
-    Vibration vs Temperature) would already separate them just as cleanly. This under-demonstrates
-    the actual value of a 3D scatter — consider a dataset where at least one pair
-    of dimensions overlaps for two groups so the third axis is doing real disambiguating
-    work.
-  - No transparency/alpha used on the markers despite within-cluster point overlap
-    in the 3D projection — a light alpha (e.g. 0.85) would help reveal density where
-    points overlap, per the spec's 'consider point transparency for dense datasets'
-    note.
-  - Distinctive-feature usage is solid but not pushed further — e.g. no colorbar/continuous
-    4th-variable encoding (spec explicitly calls out 'color (numeric, optional) -
-    Fourth variable') was attempted; the categorical color choice is valid but leaves
-    one spec-suggested avenue unexplored.
+  - The bottom-left quadrant of the canvas (below the legend, left of the temperature-axis
+    edge of the Axis3 box) is still largely empty at this azimuth/elevation — the
+    camera-angle tweak (1.1pi->1.275pi azimuth, 0.18pi->0.15pi elevation) shifted
+    the composition but did not close the dead zone flagged in attempt 1; try a further
+    azimuth sweep or increase Figure padding/aspect so the box's left corner reaches
+    closer to the canvas edge
+  - Within the Stress cluster especially, many markers still visually overlap despite
+    the new 0.85 alpha — consider markersize ~10-12 for this point count, or a slightly
+    lower alpha (~0.7), to better reveal density
+  - The spec's suggested optional 'color (numeric) as fourth variable' encoding remains
+    unexplored in favor of categorical grouping — a valid choice, but a spec-highlighted
+    avenue is still untried
+  - Title 'scatter-3d · julia · makie · anyplot.ai' renders at only ~20% of canvas
+    width — well under the ~50-70% target proportion; a larger titlesize would use
+    the available canvas better without any overflow risk
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), matches the light-theme token; the 3D panel walls (xy/xz/yz) use a slightly lighter elevated tone that gives the box subtle depth without looking pure white.
-      Chrome: Title "scatter-3d · julia · makie · anyplot.ai" is dark ink, bold, centered above the 3D box, fully visible with no clipping. Axis labels "Vibration (mm/s)", "Temperature (°C)", "Pressure (bar)" are dark ink and legible. Tick labels on all three axes are a softer gray ink, clearly legible against the light panel backgrounds. Grid lines are faint but visible. A top-left legend lists Idle / Normal / Stress with colored swatches, fully readable, no overlap with data or axes.
-      Data: Three distinct point clusters in green (#009E73, Idle), lavender (#C475FD, Normal), and blue (#4467A3, Stress) — matches the canonical Imprint categorical order with the first series in brand green. Markers have a thin light-colored stroke that helps them stand out from the panel background.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1-consistent), with subtly lighter "elevated" tone on the 3D panel walls (xy/xz/yz) that gives the Axis3 box visible depth.
+      Chrome: Title "scatter-3d · julia · makie · anyplot.ai" in dark ink, bold, centered, fully visible (though narrower than the 50-70% width target). Axis labels ("Vibration (mm/s)", "Temperature (°C)", "Pressure (bar)") are dark ink and legible; tick labels use a softer gray ink, clearly readable against the light panels. Top-left legend (Idle/Normal/Stress) fully readable with no overlap onto data.
+      Data: Three point clusters render in green (#009E73, Idle), lavender (#C475FD, Normal), and blue (#4467A3, Stress), each now with visible alpha blending (0.85) and a thin theme-matched marker stroke. The Idle and Normal clusters visibly overlap when projected onto the vibration/temperature plane and are separated mainly by height (pressure), demonstrating genuine 3D disambiguation.
+      Legibility verdict: PASS (all text readable against the light background; no light-on-light issues). Note: bottom-left quadrant of the canvas (below legend) is largely empty — a layout/composition issue, not a legibility issue.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent) canvas; the 3D panel walls use a lighter elevated dark tone, again giving the box visible depth against the outer background.
-      Chrome: Title, axis labels, and legend text all render in a light off-white ink, clearly visible against the dark background — no dark-on-dark failures observed anywhere (title, axis titles, tick labels, legend text all pass). Tick labels use a softer light-gray ink and remain legible on the dark panel surfaces. Grid lines are faint but visible, consistent with the light render's subtlety.
-      Data: Colors are pixel-identical to the light render — same green/lavender/blue for Idle/Normal/Stress — confirming only chrome flipped between themes, not the data-color-encoding.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark or light-on-light failures.
+      Background: Warm near-black (#1A1A17-consistent), with the same lighter elevated tone on the panel walls preserving visible depth.
+      Chrome: Title, axis labels, tick labels, and legend text all render in light ink and are clearly visible against the dark background — no dark-on-dark failures observed anywhere.
+      Data: Data colors (green #009E73 Idle, lavender #C475FD Normal, blue #4467A3 Stress) are pixel-identical to the light render, confirming only chrome flipped between themes.
+      Legibility verdict: PASS (all text readable against the dark background). Same bottom-left dead-space composition issue persists as in the light render, unrelated to legibility.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -70,52 +67,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (14/20/12), fully readable in both themes; may
-          get tight at 400px mobile scale.
+        comment: All text readable in both themes; title narrower than target proportion
+          but not a legibility issue
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/legend/data collisions in either render.
+        comment: No text/legend collisions with data or with each other
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: markersize=14 with a thin stroke is visible; some within-cluster
-          point overlap in the 3D projection that a light alpha would help reveal.
+        comment: Alpha 0.85 helps, but Stress cluster markers still overlap noticeably
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue Imprint triple is distinguishable, no red-green-only
-          signal.
+        comment: Green/lavender/blue are CVD-distinguishable, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Correct 3200x1800 canvas and no clipping, but a large unbalanced
-          dead-space occupies the bottom-left quadrant of the frame at this camera
-          angle.
+        passed: true
+        comment: Camera-angle tweak did not fully close the bottom-left dead zone
+          flagged in attempt 1, but no clipping/overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All three axis labels carry units; title matches the mandated format
-          exactly.
+        comment: Descriptive axis labels with units on all three axes
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is brand green #009E73, canonical Imprint order, correct
-          theme-adaptive backgrounds in both renders.'
+        comment: Canonical Imprint order, Idle = brand green, correct theme backgrounds
+          both renders
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -123,26 +116,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Distinct elevated-panel coloring and deliberate camera angle show
-          intent, but the composition's dead-space undercuts the polish.
+        comment: Elevated panel coloring and deliberate camera angle show intent,
+          but dead-space undercuts polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Grid is subtle and consistent, transparent legend background is a
-          nice touch; whitespace is not generous so much as unbalanced.
+        comment: Subtle grid, transparent legend, and new alpha blending are refined;
+          composition balance still imperfect
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Three clusters are clearly separated, but since they're separated
-          monotonically along all three axes at once, the plot doesn't demonstrate
-          a case where 3D uniquely resolves ambiguity that a 2D projection would leave
-          unclear.
+        comment: Reworked cluster centers now make the third axis genuinely load-bearing
+          — clear improvement over attempt 1
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -150,53 +141,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine Axis3 3D scatter, not a faked 2D projection.
+        comment: Correct 3D scatter via Axis3
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Clear labeled axes and color-encoded grouping present; no point transparency
-          for overlap, and continuous numeric color-as-4th-variable (spec's suggested
-          option) is not explored.
+        comment: Axis labels with units, marker transparency for overlap now present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y/z correctly mapped to vibration/temperature/pressure; axes show
-          the full data range.
+        comment: x/y/z correctly mapped, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'scatter-3d · julia · makie · anyplot.ai'; legend labels
-          (Idle/Normal/Stress) match the semantic grouping.
+        comment: Title matches required format; legend labels match categories
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Covers x/y/z plus a categorical 4th grouping via color, but the perfectly-correlated
-          cluster layout doesn't showcase the unique value of the third axis.
+        comment: Third-axis disambiguation now demonstrated; optional numeric 4th-variable
+          color encoding still unused
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral industrial sensor-monitoring scenario (vibration/temperature/pressure
-          by operating mode).
+        comment: Plausible, neutral industrial sensor-monitoring dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Value ranges (0-8 mm/s, 40-100°C, 1-5 bar) are sensible for the domain.
+        comment: Sensible vibration/temperature/pressure value ranges
     code_quality:
       score: 10
       max: 10
@@ -206,32 +192,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes.
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42).
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random all used.
+        comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI/interactivity.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit=2) matches the current
-          library convention.
+        comment: Saves plot-$(THEME).png at canonical canvas size
     library_mastery:
       score: 7
       max: 10
@@ -241,15 +226,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct Axis3/scatter!/axislegend usage, per-group loop for a legend.
+        comment: Per-group scatter! loop for categorical legend is the idiomatic Makie
+          pattern
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom azimuth/elevation, per-panel (xy/xz/yz) coloring, and aspect=(1,1,1)
-          are genuinely Makie-Axis3-specific touches; could push further with a continuous
-          colormap or interactive-style camera choice.
+        comment: Custom azimuth/elevation and per-panel coloring are genuine Axis3
+          touches; could push further (e.g. continuous colormap)
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -260,4 +245,5 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
+  - alpha-blending
   - edge-highlighting
