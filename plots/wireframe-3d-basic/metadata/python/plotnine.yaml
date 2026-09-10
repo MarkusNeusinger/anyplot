@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: wireframe-3d-basic
 created: '2026-09-10T06:29:36Z'
-updated: '2026-09-10T06:33:59Z'
+updated: '2026-09-10T06:43:56Z'
 generated_by: claude-sonnet
 workflow_run: 34445071277
 issue: 1015
@@ -12,231 +12,220 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 72
+quality_score: 77
 review:
   strengths:
-  - 'Correct Imprint theme-adaptive chrome in both renders: page background matches
-    #FAF8F1 (light) / #1A1A17 (dark), ink tokens flip correctly, and the mesh stays
-    #009E73 (brand green) unchanged between themes with no dark-on-dark or light-on-light
-    legibility failures.'
-  - 'Title matches the mandated format exactly: ''wireframe-3d-basic · python · plotnine
-    · anyplot.ai''.'
-  - 'Respects the plotnine ''no workarounds'' rule: since plotnine has no native 3D
-    grammar, the implementation builds its own orthographic projection (elevation
-    30°/azimuth 45°) and draws the result with plotnine''s own geom_path/geom_segment/geom_text
-    primitives instead of falling back to matplotlib.'
-  - All three axes are labeled with units (X/Y in cm, Z in mm) and tick marks, and
-    wireframe mesh lines run in both x and y directions per the spec's 'Notes' section.
-  - 'Clean top-to-bottom script: no functions/classes, all imports used, correct plot.save(...)
-    API and filename pattern.'
+  - Technically sophisticated hand-rolled 3D-to-2D projection (view/right/up basis
+    vectors, painter's-algorithm depth sort, depth-based alpha for approximate hidden-line
+    suppression) built entirely from plotnine's native geom_segment/geom_text — respects
+    the library's no-matplotlib-workaround rule.
+  - Z-axis tick labels now have leader segments connecting them back to the vertical
+    axis line, fixing the previous attempt's visually stranded floating-label issue.
+  - 'Correct Imprint palette usage (BRAND #009E73 for the single data series), correct
+    theme-adaptive PAGE_BG/INK/INK_SOFT tokens, and all chrome text is legible in
+    both themes with no dark-on-dark or light-on-light failures.'
+  - Title format, three labeled axes with units and tick marks, and a deterministic
+    ripple dataset (grid_n=21, seeded) all match the specification.
   weaknesses:
-  - 'No depth/hidden-line handling: every mesh line (near side and far side of the
-    surface) is drawn at the same fixed alpha=0.35 with no z-depth-based ordering
-    or fading, so the front and back of the ripple surface are fully superimposed.
-    This produces a dense, tangled cluster of crossing lines near the plot center/lower
-    dome that reads as visual noise rather than a legible 3D structure. Fix: fade
-    or thin lines by depth (e.g. scale alpha/linewidth by the projected view-direction
-    distance, or draw back-facing rows/cols first at lower alpha and front-facing
-    ones last at higher alpha) to approximate hidden-line suppression, and/or reduce
-    grid_n slightly (e.g. 20-22) to reduce line density.'
-  - 'Z-axis tick labels (''1'', ''0'', ''-1'') are pushed 13 units left of their true
-    projected position (z_ticks[''px''] = z_px - 13) to avoid merging with the Y-axis
-    tick column, but this leaves them visually stranded far from the vertical Z-axis
-    line at top-center, with no tick marks or leader connecting them to that axis
-    — a viewer can easily mistake them for an unrelated fourth axis. Fix: move the
-    Z tick labels closer to the Z-axis line (smaller offset) or add short tick marks/leader
-    segments connecting each Z label back to the axis.'
-  - The combination of the two issues above works against the spec's stated goal that
-    a wireframe should 'reveal the underlying structure' of the surface — the current
-    render is harder to parse as a coherent 3D ripple than it should be, hurting overall
-    storytelling/data clarity even though the underlying math and data range are correct.
+  - The wireframe reads as a dense, self-crossing tangle (a 'crown'/basket-weave pattern)
+    rather than a legible rippled surface — Z_LIFT=3.2 combined with the multi-period
+    sin(sqrt(x^2+y^2)) ripple over a 21x21 grid makes adjacent rings of the surface
+    overlap heavily once projected to 2D. Reduce Z_LIFT to roughly 1.5-2.0 and/or
+    slightly reduce grid_n so the concentric ripple structure stays traceable by eye,
+    and consider widening the depth-alpha range (currently 0.12-0.6) so near-side
+    rings visually separate more clearly from far-side ones.
+  - np.random.seed(42) is set but never used — grid_x/grid_y/grid_z are built purely
+    from np.linspace/np.meshgrid/np.sin with no call into np.random. Remove the dead
+    seed call (the data is already fully deterministic without it).
+  - The X/Y/Z axis lines all converge at a point that sits visually in the middle
+    of the wireframe mass, so the eye is drawn straight through the densest part of
+    the crossing mesh lines instead of tracing the axis frame from a clear corner
+    — consider nudging the axis-box corner or lightening mesh alpha near the convergence
+    point so the axis reads as a distinct frame rather than cutting through the data.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "wireframe-3d-basic · python · plotnine · anyplot.ai" centered at top in dark ink, fully visible, not clipped. Bold axis titles "X (cm)", "Y (cm)", "Z (mm)" placed at the ends of the three projected axis edges. Tick labels (-6, -3, 0, 3, 6 for X/Y; 1, 0, -1 for Z) rendered in a softer gray-ink tone. All text is clearly readable against the light background.
-      Data: A green (#009E73) wireframe mesh forming two nested dome/ripple shapes (matching sin(sqrt(x^2+y^2)) over the given domain) with upturned petal-like edges. The mesh lines run in both grid directions as required. However, the near and far surface lines are fully superimposed with no depth ordering, creating a busy tangle of crossings near the lower-center of the shape that obscures the underlying structure.
-      Legibility verdict: PASS (all text readable; the data-density/tangle issue is a clarity weakness, not a text legibility failure).
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "wireframe-3d-basic · python · plotnine · anyplot.ai" centered at top in dark ink, clearly readable. Three axis labels ("X (cm)", "Y (cm)", "Z (mm)") in bold dark text at the plot corners. Tick labels (-6,-3,0,3,6 on X/Y; -1,0,1 on Z with short leader segments back to the Z axis line) all in a soft dark gray, all legible against the light background. A three-edge axis "box" (dark gray lines) meets at a single point roughly in the middle of the composition.
+      Data: A dense mesh of thin green (#009E73) segments forming a radially-symmetric ripple surface (sin(sqrt(x^2+y^2))) projected in pseudo-3D via depth-weighted alpha (fainter = farther, more opaque = nearer). The overall silhouette reads as a crown/flower shape with two upturned "wing" lobes at the sides and a domed peak in the center, but the interior is a dense tangle of crossing diagonal lines rather than a cleanly separable set of concentric rings.
+      Legibility verdict: PASS (all title/axis/tick text is clearly readable against the light background; no light-on-light issues). Element visibility of the data mesh itself is weak due to overlap density (see weaknesses).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, axis titles, and tick labels as the light render, now in light ink (#F0EFE8 for bold axis titles, softer light-gray for tick labels and axis lines) against the dark background. No dark-on-dark issues — all chrome text is clearly legible.
-      Data: Identical #009E73 green mesh geometry and color to the light render — only the chrome (background, axis line color, text color) flips between themes, confirming correct theme-adaptive implementation. The same near/far mesh superimposition and tangled center region is present, as expected since it's a data/geometry issue independent of theme.
-      Legibility verdict: PASS (all text readable in both themes; data colors identical between renders).
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis labels, and tick labels as the light render, all rendered in light ink (#F0EFE8) / soft light gray (#B8B7B0), clearly legible against the dark background. No dark-on-dark failures anywhere — axis lines, tick labels, and axis titles all show good contrast.
+      Data: Data colors are identical to the light render — the same #009E73 green mesh with the same depth-alpha treatment, confirming chrome-only theme flip as required. Same crown/tangle silhouette and same interior density issue as the light render.
+      Legibility verdict: PASS (all chrome text readable, brand green clearly visible against the dark surface; no dark-on-dark). Element visibility of the mesh itself is the same weakness as light.
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at appropriate sizes; docked slightly
-          because the Z-tick labels read ambiguously given their placement (see VQ-06).
+        comment: Title, axis labels, and all tick labels are clearly readable in both
+          themes; no dark-on-dark or light-on-light failures.
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: No text-on-text collisions, but the wireframe mesh lines (near and
-          far surface) are fully superimposed with no depth ordering, creating a dense
-          tangle of crossings near the lower-center of the dome.
+        passed: true
+        comment: No text-on-text or text-on-data collisions, though tick labels sit
+          close to the busiest part of the mesh.
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Individual mesh lines are visible, but the lack of hidden-line/depth
-          handling significantly reduces the legibility of the overall 3D structure.
+        comment: Wireframe mesh reads as a dense self-crossing tangle rather than
+          a legible surface; Z_LIFT=3.2 over-exaggerates the multi-period ripple,
+          causing rings to overlap heavily in projection.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue green mesh on high-contrast off-white/near-black backgrounds;
-          no red-green reliance.
+        comment: Single-hue mesh with high contrast against both backgrounds; no red-green
+          reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Title proportion and canvas use are fine, no clipping; docked 1 for
-          the disconnected Z-tick label placement.
+        comment: Good use of the 3200x1800 canvas, nothing clipped, but axis lines
+          converge through the densest part of the data mass rather than framing it
+          from a clear corner.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Axes labeled with units, but Z tick labels (1, 0, -1) are shifted
-          13 units away from the Z axis line with no leader/tick connecting them,
-          making their association ambiguous.
+        passed: true
+        comment: Descriptive axis labels with units (cm, mm).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, backgrounds match #FAF8F1/#1A1A17, both
-          themes correct and consistent.'
+        comment: 'First/only series is #009E73; both renders use the correct theme-adaptive
+          #FAF8F1/#1A1A17 backgrounds.'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Creative, technically sophisticated approach (manual orthographic
-          projection drawn via native plotnine grammar) raised above the generic-styling
-          default, though execution has clarity flaws.
+        passed: false
+        comment: Technically sophisticated hand-rolled projection and depth-alpha
+          hidden-line approximation, but the resulting visual is busy and hard to
+          parse.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: theme_void removes chrome cleanly and lines are subtle/thin, but
-          the tangled overlap undercuts overall refinement.
+        comment: theme_void removes spines/grid, generous whitespace, minimal chrome.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: The mesh tangle and disconnected Z-tick labels work against a clear
-          focal point/readable structure; kept at default.
+        comment: Depth-based alpha attempts a near/far hierarchy but the overall crown-shaped
+          tangle doesn't clearly guide the viewer through the surface topology.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Recognizable as a 3D wireframe via axis box + mesh, though the visual
-          clutter slightly undercuts the read.
+        comment: Hand-projected 3D wireframe built from plotnine's own geoms, per
+          the library's no-matplotlib-workaround rule.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid lines in both x/y directions, elevation 30/azimuth 45 perspective,
-          all three axes labeled with ticks.
+        comment: Grid lines in both x and y directions, elevation-30/azimuth-45 perspective,
+          labeled X/Y/Z axes with ticks.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y/z mapped correctly; axes show the full data range.
+        comment: x/y/z correctly mapped and shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; no legend needed for single
-          series.
+        comment: Title matches required format; single series needs no legend.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Shows the grid mesh and ripple surface, but the tangle reduces how
-          well it 'reveals the underlying structure' per the spec's stated purpose.
+        comment: Shows grid mesh, axis box, tick marks, and perspective — all plot-type
+          aspects covered.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Circular drumhead vibration mode (sin(sqrt(x^2+y^2))) matches the
-          spec's suggested ripple example, plausible and neutral.
+        comment: Circular drumhead vibration mode with plausible cm/mm units, neutral
+          subject matter.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: grid_n=26 within the 20-50 recommended range; domain and units (cm/mm)
-          are sensible.
+        comment: Axis tick values reflect true data range; visual height exaggeration
+          (Z_LIFT) does not distort the labeled data.
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions/classes, linear top-to-bottom script.
+        comment: Two small helper functions (project, depth) are used, justified by
+          reused projection math, but deviate from a pure no-functions script.
       - id: CQ-02
         name: Reproducibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Deterministic output; np.random.seed present though unused since
-          no randomness drives the data.
+        passed: false
+        comment: np.random.seed(42) is set but never used — all data is deterministic
+          via linspace/meshgrid/sin; dead code.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (numpy, pandas, plotnine components).
+        comment: Every imported name is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized projection math with clear comments explaining the
-          technique; no fake UI/interactivity.
+        comment: Appropriate complexity for the projection workaround; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via plot.save(dpi=400, width=8, height=4.5,
-          units='in') matching the library's canvas contract.
+        comment: Saves plot-{THEME}.png at width=8,height=4.5,dpi=400 matching the
+          landscape canvas rule.
     library_mastery:
       score: 5
       max: 10
@@ -246,23 +235,23 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses plotnine's own grammar (geom_path, geom_segment, geom_text,
-          coord_fixed, theme_void) as idiomatically as possible given plotnine has
-          no native 3D support.
+        comment: Uses plotnine's own geom_segment/geom_text/theme grammar throughout,
+          though the overall approach is necessarily a workaround rather than plotnine's
+          native idiom.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: Creative manual orthographic-projection technique to simulate 3D
-          within plotnine's 2D grammar, raised above the generic-usage default.
+        passed: false
+        comment: Creative custom 3D projection and painter's-algorithm depth sort
+          go beyond generic usage, but execution quality (the tangle) limits the payoff.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
   - manual-ticks
-  - annotations
+  - layer-composition
   patterns:
   - data-generation
   - matrix-construction
