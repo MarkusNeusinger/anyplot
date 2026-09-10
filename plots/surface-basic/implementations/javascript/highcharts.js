@@ -1,7 +1,7 @@
 // anyplot.ai
 // surface-basic: Basic 3D Surface Plot
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 70/100 | Created: 2026-09-10
+// Quality: 81/100 | Created: 2026-09-10
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
