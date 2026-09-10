@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: contour-3d
 created: '2026-09-10T00:25:58Z'
-updated: '2026-09-10T00:30:50Z'
+updated: '2026-09-10T00:42:43Z'
 generated_by: claude-sonnet
 workflow_run: 34419524881
 issue: 3230
@@ -15,50 +15,59 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3
 quality_score: 88
 review:
   strengths:
-  - Manual marching-squares isoline extraction is applied both on the terrain surface
-    and re-projected onto a floor plane, directly matching the spec's request to reference
-    contours on the base plane as well as the surface
-  - Custom oblique projection with a bounding-box fit (including LABEL_MARGIN) so
-    axis titles and ticks land inside the canvas instead of clipping
-  - Filled elevation bands use the Imprint sequential ramp (imprint_seq) sampled at
-    each band midpoint, discrete and correctly identical between light/dark renders
-  - Careful camera-facing corner selection for the X/Y/Z axis frames so ticks trail
-    behind the terrain instead of crossing it
+  - Drag-to-rotate camera now satisfies the spec's "enable rotation for interactive
+    libraries" requirement -- mousedown/mousemove updates ELEVATION/AZIMUTH, re-fits
+    the projection, and re-projects every graphic element and axis frame live in the
+    HTML output
+  - Marching-squares isolines are drawn both on the terrain surface and re-projected
+    onto a floor plane, directly matching the spec's request to reference contours
+    on the base plane as well as the surface
+  - Custom oblique projection with a bounding-box fit (including a label margin) keeps
+    axis titles/ticks inside the canvas instead of clipping, and re-fits correctly
+    after rotation
+  - Filled elevation bands correctly use the Imprint sequential ramp, pixel-identical
+    between light/dark renders
+  - The three axis frames (Easting, Northing, Elevation) are now built from a single
+    declarative drawAxis composer instead of three repeated call sequences, reducing
+    the helper-function sprawl flagged in the previous review
   - Piecewise visualMap legend clearly communicates the six elevation bands with real
     units (m)
   weaknesses:
-  - No dynamic rotation of the 3D scene — the spec's Notes explicitly ask to 'Enable
-    rotation for interactive libraries to explore the 3D structure', but this custom-canvas
-    projection is entirely static (fixed ELEVATION/AZIMUTH, no drag-to-orbit). Since
-    echarts-gl is not installed, true grid3D rotation isn't available; if feasible,
-    wire a mousedown/mousemove handler that updates ELEVATION/AZIMUTH and calls chart.setOption
-    again to re-project, otherwise this is an acceptable library-constraint tradeoff
-    but still a spec gap worth closing if possible.
-  - 'CQ-01 KISS: the implementation carries 15+ helper functions (projection math,
-    marching squares, axis/tick/label builders) — far more structure than the median
-    plot. Understandable given the lack of echarts-gl support for true 3D surfaces,
-    but consider consolidating the axis-drawing helpers (axisLine/tickMark/tickLabel/axisTitle)
-    since they are only used for three near-identical axis frames.'
-  - The per-cell quad mesh (36x36 grid, ~1225 polygons with only fill and no stroke)
-    creates a faint but visible diamond/crosshatch seam pattern across the whole terrain
-    surface in both renders — likely an antialiasing artifact between adjacent same-color
-    quads rather than an intentional wireframe. Consider giving quads a stroke matching
-    their own fill color to blend seams, or reducing GRID_N slightly.
+  - 'The per-quad flat coloring (average of a cell''s 4 corner values, assigned to
+    a discrete visualMap band) doesn''t align with the smooth marching-squares isoline
+    drawn on top of it -- at the 36x36 grid resolution this produces a visible sawtooth/triangle-wave
+    pattern running alongside every contour line in both renders (e.g. crop of the
+    light render around the 663-767m/559-663m boundary), which reads as rendering
+    noise rather than a clean isoline. The previous review''s fix (stroking each quad
+    with its own fill color) removed the fine antialiasing grain between same-band
+    quads but did not address this coarser boundary-quantization mismatch. Fix: either
+    color each quad via bilinear interpolation of its 4 corner values instead of a
+    flat per-cell average (so the color gradient is smooth and the drawn isoline aligns
+    with where the color actually crosses the band boundary), or increase GRID_N so
+    the piecewise-constant quantization step is fine enough to track the true isoline.'
+  - Z-axis tick labels are still only 13px against bold 17px axis titles -- readable
+    but on the small side at full 3200x1800 resolution; consider 14-15px to match
+    the visual weight of the rest of the chrome.
+  - 'CQ-01: still a large amount of custom helper-function scaffolding (projection
+    math, marching squares, floor/axis builders, drag handlers) -- understandable
+    given no echarts-gl is available for true grid3D, but worth a second pass to see
+    if any of the axis-frame config objects can be generated instead of hand-written
+    per axis.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "Terrain Elevation · contour-3d · javascript · echarts · anyplot.ai" in dark ink, centered top. Axis titles "Northing (km)", "Easting (km)", "Elevation (m)" in bold dark ink; tick labels (-5..5, 140/450/770) in soft grey-ink. Piecewise legend at top-right lists six elevation bands (e.g. "663-767 m") with matching color swatches, text in soft ink.
-      Data: A single terrain surface built from three overlapping Gaussian hills, filled in six discrete bands sampled from the Imprint sequential ramp — green at the base (142-247 m) transitioning to blue at the peak (663-767 m). Darker isolines mark each band boundary on the surface, and the same isolines (dashed, lighter) are re-projected onto a floor plane below the terrain for reference.
-      Legibility verdict: PASS — all title, axis, tick, and legend text is clearly readable against the light background; no light-on-light text.
+      Background: Warm off-white, matches #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "Terrain Elevation · contour-3d · javascript · echarts · anyplot.ai" centered top in dark ink at a comfortable size. Bold dark axis titles "Northing (km)", "Easting (km)", "Elevation (m)"; lighter soft-ink tick labels along all three axis frames. Piecewise legend top-right lists six elevation bands (142-247 m through 663-767 m) with matching color swatches, fully inside the canvas.
+      Data: A single terrain surface (three overlapping Gaussian hills) filled in six discrete bands sampled from the Imprint sequential ramp, green at the base rising to blue at the peak. Darker isolines mark each band boundary on the surface; the same isolines are re-projected as dashed lines onto a floor plane below the terrain for spatial reference. On close inspection, the isolines are accompanied by a visible sawtooth/triangle-wave pattern where the flat per-quad cell coloring doesn't perfectly track the smooth marching-squares line (see weaknesses).
+      Legibility verdict: PASS (all text clearly readable against the light background; no light-on-light issues)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Same title and axis titles now in light ink, tick labels in lighter soft-ink grey, all clearly legible. Legend swatches and text unchanged in position, text color flipped to light ink. Floor plane background flips to a dark elevated surface with light-grey dashed isolines.
-      Data: Terrain surface colors (green-to-blue band ramp) are pixel-identical to the light render — only the chrome (background, text, floor plane, axis lines) adapts to the dark theme, as required.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all text and isolines remain visible against the near-black background.
+      Background: Warm near-black, matches #1A1A17 -- not pure black, not light.
+      Chrome: Same layout as the light render; title, axis titles, tick labels, legend text, floor plane, and axis lines all flip to light ink / lighter surfaces and remain clearly legible. No dark-on-dark failures.
+      Data: Band colors are pixel-identical to the light render -- only chrome adapted, as required. The same sawtooth pattern along contour boundaries is present here too (confirming it's a data-rendering artifact, not a theme-specific bug).
+      Legibility verdict: PASS (all text clearly readable against the dark background; no dark-on-dark issues)
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -66,77 +75,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All titles/axis/tick/legend text readable in both themes; tick labels
-          are a touch small at 13px relative to the chart's scale.
+        comment: Legible in both themes; Z-axis tick labels slightly small at 13px
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text/data collisions observed; legend sits clear of the terrain
-          in both renders.
+        comment: No collisions; legend clear of terrain
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Bands, isolines, and floor projection are all visible; faint crosshatch
-          seam artifact across the surface from unbordered quads slightly reduces
-          clarity.
+        comment: Sawtooth pattern where flat per-quad coloring doesn't track the smooth
+          marching-squares isoline
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential blue-green ramp, not reliant on red/green as sole signal.
+        comment: Sequential ramp, not red/green dependent
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Bounding-box fit keeps the whole scene, legend, and axis titles inside
-          the canvas with no clipping or overflow.
+        comment: Bounding-box fit avoids clipping/overflow, re-fits correctly after
+          rotation
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive axis titles with units: Northing (km), Easting (km),
-          Elevation (m).'
+        comment: Units present (km, m)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous elevation bands sampled from imprint_seq; backgrounds
-          correctly #FAF8F1/#1A1A17; data colors identical across themes.'
+        comment: imprint_seq for continuous elevation, correct theme backgrounds
     design_excellence:
-      score: 17
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Custom camera projection, floor-plane reference contours, and a piecewise
-          legend go well beyond generic defaults.
+        comment: Custom camera projection, floor-plane reference, piecewise legend,
+          drag-to-rotate; polish undercut by the sawtooth banding
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Clean chrome and generous whitespace; minor visual noise from the
-          dense per-cell quad seams.
+        comment: Clean chrome but the quad/isoline mismatch reads as visible surface
+          noise
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Color gradient, on-surface isolines, and floor projection together
-          create a clear hierarchy pointing to the terrain peak.
+        comment: Clear hierarchy toward the terrain peak, slightly muddied by the
+          banding artifact
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -144,29 +148,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct 3D contour plot: filled elevation bands plus isolines on
-          a 3D surface.'
+        comment: 'Correct 3D contour: filled bands + isolines on a 3D surface'
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Colormap, on-surface contour lines, floor-plane projection, and colorbar/legend
-          are all present, but the spec's 'Enable rotation for interactive libraries'
-          is not implemented — the scene is fully static.
+        passed: true
+        comment: Colormap, on-surface isolines, floor projection, colorbar, and now
+          drag-to-rotate all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z correctly mapped and full data range shown on all three axes.
+        comment: X/Y/Z correctly mapped, full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the required format with a descriptive prefix; legend
-          labels (elevation band ranges) are clear.
+        comment: Title format correct, legend labels clear
     data_quality:
       score: 15
       max: 15
@@ -176,62 +177,56 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows the full surface, banded fill, on-surface isolines, and floor-plane
-          reference contours.
+        comment: Surface, bands, on-surface isolines, floor projection
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Synthetic terrain elevation from three hills, plausible and neutral
-          geospatial context.
+        comment: Plausible synthetic terrain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Elevation range (140-770 m) and km-scale footprint are sensible for
-          terrain.
+        comment: Sensible elevation/footprint scale
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 2
         max: 3
-        passed: false
-        comment: 15+ helper functions (projection, marching squares, axis/tick/label
-          builders) — necessary given no echarts-gl support, but far from a flat KISS
-          script.
+        passed: true
+        comment: Axis-frame builders consolidated into a single drawAxis composer,
+          but still substantial helper scaffolding overall
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no RNG.
+        comment: Fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only provided globals used.
+        comment: No unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Complexity is proportionate to a genuinely hard problem (manual 3D
-          contour without GL); no fake UI.
+        comment: Complexity proportionate to a genuinely hard problem, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: animation:false set, echarts.init with no explicit size/dpr, respects
-          the mount-node contract.
+        comment: Follows the mount-node contract (animation:false, no explicit size/dpr)
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -239,29 +234,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ECharts' custom series + renderItem, the documented idiomatic
-          escape hatch when no built-in chart type fits and echarts-gl is unavailable.
+        comment: Custom series + renderItem is the documented idiomatic escape hatch
+          without echarts-gl
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Combines custom renderItem, piecewise visualMap, and graphic elements
-          — distinctive, advanced ECharts usage.
-  verdict: REJECTED
+        comment: Custom renderItem + piecewise visualMap + graphic elements + hand-rolled
+          drag-to-rotate camera
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
   - colorbar
   - manual-ticks
-  - custom-legend
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
-  - publication-ready
   - custom-colormap
   - alpha-blending
