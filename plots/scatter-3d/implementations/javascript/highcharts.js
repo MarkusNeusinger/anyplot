@@ -76,6 +76,11 @@ function divergingColor(value) {
   const frac = Math.min(Math.max((value + TEMP_RANGE) / (2 * TEMP_RANGE), 0), 1);
   return frac < 0.5 ? lerpHex(t.div[0], t.div[1], frac / 0.5) : lerpHex(t.div[1], t.div[2], (frac - 0.5) / 0.5);
 }
+// Light alpha blending so overlapping sensors in the denser clusters stay legible.
+const POINT_ALPHA = 0.82;
+function withAlpha(rgb, alpha) {
+  return rgb.replace("rgb(", "rgba(").replace(")", `,${alpha})`);
+}
 
 const sensorPoints = sensors.map((s) => {
   const { px, py } = project(s.x, s.y, s.z);
@@ -84,7 +89,7 @@ const sensorPoints = sensors.map((s) => {
     x: px,
     y: py,
     colorValue: s.colorValue,
-    color: divergingColor(s.colorValue),
+    color: withAlpha(divergingColor(s.colorValue), POINT_ALPHA),
     origX: s.x,
     origY: s.y,
     origZ: s.z,
@@ -102,10 +107,20 @@ for (let x = 0; x <= X_MAX; x += X_MAX / 4) floorLines.push(gridLine([x, 0, 0], 
 
 const heightAxisLine = gridLine([0, 0, 0], [0, Y_MAX, 0]);
 
+// Numeric tick marks along the height axis so absolute values are readable,
+// not just the "↑ Rack height (m)" direction label.
+const HEIGHT_TICKS = [0, 1.5, 3];
+const heightTickLines = HEIGHT_TICKS.map((h) => gridLine([-0.9, h, 0], [0.9, h, 0]));
+const heightTickLabels = HEIGHT_TICKS.map((h) => {
+  const p = project(-1.6, h, 0);
+  return { x: p.px, y: p.py, name: `${h}m` };
+});
+
 const axisLabelPoints = [
   { p: project(X_MAX, 0, 0), text: "Aisle position (m) →" },
   { p: project(0, 0, Z_MAX), text: "← Row depth (m)" },
-  { p: project(0, Y_MAX, 0), text: "↑ Rack height (m)" },
+  // Sits a bit past the topmost tick (Y_MAX) so it doesn't collide with it.
+  { p: project(0, Y_MAX + 0.5, 0), text: "↑ Rack height (m)" },
 ].map((d) => ({ x: d.p.px, y: d.p.py, name: d.text }));
 
 // --- Chart --------------------------------------------------------------------
@@ -117,7 +132,7 @@ const axisLabelPoints = [
 function drawColorLegend(chart) {
   const barWidth = 220;
   const barHeight = 14;
-  const barX = chart.chartWidth - barWidth - 40;
+  const barX = chart.chartWidth - barWidth - 60;
   const barY = 56;
   chart.renderer
     .text("Δ Temp vs. 22°C setpoint", barX, barY - 8)
@@ -192,6 +207,28 @@ Highcharts.chart("container", {
       enableMouseTracking: false,
       showInLegend: false,
     },
+    ...heightTickLines.map((line) => ({
+      type: "line",
+      data: line,
+      color: t.inkSoft,
+      lineWidth: 1.5,
+      marker: { enabled: false },
+      enableMouseTracking: false,
+      showInLegend: false,
+    })),
+    {
+      type: "scatter",
+      name: "Height ticks",
+      data: heightTickLabels,
+      marker: { enabled: false },
+      enableMouseTracking: false,
+      showInLegend: false,
+      dataLabels: {
+        enabled: true,
+        format: "{point.name}",
+        style: { color: t.inkSoft, fontSize: "12px", fontWeight: "normal", textOutline: "none" },
+      },
+    },
     {
       type: "scatter",
       name: "Axis labels",
@@ -212,8 +249,10 @@ Highcharts.chart("container", {
       showInLegend: false,
       // Fill is the diverging color, which equals PAGE_BG right at the
       // midpoint — an inkSoft stroke (not PAGE_BG) keeps near-zero-deviation
-      // points from vanishing into the background.
-      marker: { lineColor: t.inkSoft, lineWidth: 1 },
+      // points from vanishing into the background. Explicit circle symbol
+      // avoids Highcharts' default per-series-index symbol cycling (which
+      // otherwise lands this series on squares).
+      marker: { symbol: "circle", lineColor: t.inkSoft, lineWidth: 1 },
     },
   ],
 });
