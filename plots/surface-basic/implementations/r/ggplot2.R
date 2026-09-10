@@ -87,7 +87,7 @@ p <- ggplot(mesh_df, aes(x = x, y = y, group = group, fill = z)) +
   theme(
     plot.background = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major = element_line(color = INK, linewidth = 0.2),
+    panel.grid.major = element_line(color = adjustcolor(INK, alpha.f = 0.2), linewidth = 0.2),
     panel.grid.minor = element_blank(),
     axis.ticks = element_blank(),
     axis.line = element_blank(),
