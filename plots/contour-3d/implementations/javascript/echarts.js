@@ -24,7 +24,10 @@ function elevation(x, y) {
   return HILLS.reduce((sum, h) => {
     const dx = x - h.cx;
     const dy = y - h.cy;
-    return sum + h.height * Math.exp(-(dx * dx + dy * dy) / (2 * h.spread * h.spread));
+    return (
+      sum +
+      h.height * Math.exp(-(dx * dx + dy * dy) / (2 * h.spread * h.spread))
+    );
   }, BASE_ELEVATION);
 }
 
@@ -38,7 +41,10 @@ const zMid = (zMin + zMax) / 2;
 // --- Contour levels: 5 interior thresholds -> 6 filled elevation bands -----
 const N_LEVELS = 5;
 const N_BANDS = N_LEVELS + 1;
-const levels = Array.from({ length: N_LEVELS }, (_, k) => zMin + (zSpan * (k + 1)) / (N_LEVELS + 1));
+const levels = Array.from(
+  { length: N_LEVELS },
+  (_, k) => zMin + (zSpan * (k + 1)) / (N_LEVELS + 1),
+);
 const bandBoundaries = [zMin, ...levels, zMax];
 
 function hexToRgb(hex) {
@@ -53,7 +59,9 @@ function lerpColor(hexA, hexB, frac) {
 }
 // Imprint sequential ramp (green -> blue), sampled at each band's midpoint
 // so the filled bands read as discrete steps rather than a smooth gradient.
-const bandColors = Array.from({ length: N_BANDS }, (_, b) => lerpColor(t.seq[0], t.seq[1], (b + 0.5) / N_BANDS));
+const bandColors = Array.from({ length: N_BANDS }, (_, b) =>
+  lerpColor(t.seq[0], t.seq[1], (b + 0.5) / N_BANDS),
+);
 const pieces = bandColors.map((color, b) => ({
   min: bandBoundaries[b],
   max: bandBoundaries[b + 1],
@@ -65,13 +73,19 @@ const pieces = bandColors.map((color, b) => ({
 // A flatter elevation (24 deg, vs. a more common 30) keeps the projected
 // footprint closer to the mount's own 16:9 proportions — a steeper camera
 // left much of the canvas empty on either side of a comparatively small,
-// tall silhouette.
-const ELEVATION = (24 * Math.PI) / 180;
-const AZIMUTH = (45 * Math.PI) / 180;
-const sinAz = Math.sin(AZIMUTH);
-const cosAz = Math.cos(AZIMUTH);
-const sinEl = Math.sin(ELEVATION);
-const cosEl = Math.cos(ELEVATION);
+// tall silhouette. ELEVATION/AZIMUTH are mutable (not const): dragging the
+// mount re-orbits the camera, which is the spec's "enable rotation for
+// interactive libraries" applied to a custom (non-echarts-gl) projection.
+let ELEVATION = (24 * Math.PI) / 180;
+let AZIMUTH = (45 * Math.PI) / 180;
+let sinAz, cosAz, sinEl, cosEl;
+function updateTrig() {
+  sinAz = Math.sin(AZIMUTH);
+  cosAz = Math.cos(AZIMUTH);
+  sinEl = Math.sin(ELEVATION);
+  cosEl = Math.cos(ELEVATION);
+}
+updateTrig();
 const ZSCALE = 0.6; // compresses height relative to the x/y footprint
 // The base plane sits below the lowest terrain point so its projected
 // footprint never overlaps the terrain's screen area, regardless of paint
@@ -90,21 +104,9 @@ function projectRaw(x, y, zData) {
 // --- Fit the projected bounding box (terrain + floor plane) into the mount -
 // LABEL_MARGIN extends the fitted box beyond the data cube so the axis
 // titles (anchored past the last tick, see below) still land inside the
-// canvas instead of being clipped at the mount edge.
+// canvas instead of being clipped at the mount edge. Re-run after every
+// camera change since rotating shifts the projected bounding box.
 const LABEL_MARGIN = 2.4;
-const corners = [];
-for (const x of [-RANGE - LABEL_MARGIN, RANGE + LABEL_MARGIN]) {
-  for (const y of [-RANGE - LABEL_MARGIN, RANGE + LABEL_MARGIN]) {
-    for (const z of [FLOOR_Z, zMax]) corners.push(projectRaw(x, y, z));
-  }
-}
-const sxs = corners.map((c) => c.screenX);
-const sys = corners.map((c) => c.screenY);
-const boxW = Math.max(...sxs) - Math.min(...sxs);
-const boxH = Math.max(...sys) - Math.min(...sys);
-const boxCx = (Math.max(...sxs) + Math.min(...sxs)) / 2;
-const boxCy = (Math.max(...sys) + Math.min(...sys)) / 2;
-
 const TOP_MARGIN = 65;
 const BOTTOM_MARGIN = 35;
 const LEFT_MARGIN = 90;
@@ -112,9 +114,26 @@ const RIGHT_MARGIN = 220; // room for the piecewise elevation legend
 const drawW = size.width - LEFT_MARGIN - RIGHT_MARGIN;
 const drawH = size.height - TOP_MARGIN - BOTTOM_MARGIN;
 const PAD = 1.05; // small extra breathing room now that LABEL_MARGIN covers the titles
-const scale = Math.min(drawW / (boxW * PAD), drawH / (boxH * PAD));
-const originX = LEFT_MARGIN + drawW / 2 - boxCx * scale;
-const originY = TOP_MARGIN + drawH / 2 + boxCy * scale;
+
+let scale, originX, originY;
+function fitProjection() {
+  const corners = [];
+  for (const x of [-RANGE - LABEL_MARGIN, RANGE + LABEL_MARGIN]) {
+    for (const y of [-RANGE - LABEL_MARGIN, RANGE + LABEL_MARGIN]) {
+      for (const z of [FLOOR_Z, zMax]) corners.push(projectRaw(x, y, z));
+    }
+  }
+  const sxs = corners.map((c) => c.screenX);
+  const sys = corners.map((c) => c.screenY);
+  const boxW = Math.max(...sxs) - Math.min(...sxs);
+  const boxH = Math.max(...sys) - Math.min(...sys);
+  const boxCx = (Math.max(...sxs) + Math.min(...sxs)) / 2;
+  const boxCy = (Math.max(...sys) + Math.min(...sys)) / 2;
+  scale = Math.min(drawW / (boxW * PAD), drawH / (boxH * PAD));
+  originX = LEFT_MARGIN + drawW / 2 - boxCx * scale;
+  originY = TOP_MARGIN + drawH / 2 + boxCy * scale;
+}
+fitProjection();
 
 function toPixel(x, y, zData) {
   const { screenX, screenY } = projectRaw(x, y, zData);
@@ -125,6 +144,8 @@ function projectIdx(i, j, zData) {
 }
 
 // --- Marching squares: extract isolines at a given elevation level ---------
+// Operates entirely in data space (x, y, z) — independent of the camera, so
+// it only needs to run once regardless of how the scene is later rotated.
 function marchingSquares(level) {
   const segments = [];
   for (let i = 0; i < GRID_N - 1; i += 1) {
@@ -160,12 +181,18 @@ function marchingSquares(level) {
         2: [[bottom, right]],
         3: [[left, right]],
         4: [[right, top]],
-        5: [[left, bottom], [right, top]],
+        5: [
+          [left, bottom],
+          [right, top],
+        ],
         6: [[bottom, top]],
         7: [[left, top]],
         8: [[top, left]],
         9: [[top, bottom]],
-        10: [[bottom, left], [top, right]],
+        10: [
+          [bottom, left],
+          [top, right],
+        ],
         11: [[top, right]],
         12: [[right, left]],
         13: [[right, bottom]],
@@ -180,7 +207,10 @@ function marchingSquares(level) {
   }
   return segments;
 }
-const contoursByLevel = levels.map((level) => ({ level, segments: marchingSquares(level) }));
+const contoursByLevel = levels.map((level) => ({
+  level,
+  segments: marchingSquares(level),
+}));
 
 // --- Draw items: terrain quads (visualMap-colored) + surface contour lines -
 // One custom series so both share a single z2 stacking order: each isoline
@@ -190,12 +220,16 @@ const contoursByLevel = levels.map((level) => ({ level, segments: marchingSquare
 const drawItems = [];
 for (let i = 0; i < GRID_N - 1; i += 1) {
   for (let j = 0; j < GRID_N - 1; j += 1) {
-    const avg = (zGrid[i][j] + zGrid[i + 1][j] + zGrid[i + 1][j + 1] + zGrid[i][j + 1]) / 4;
+    const avg =
+      (zGrid[i][j] + zGrid[i + 1][j] + zGrid[i + 1][j + 1] + zGrid[i][j + 1]) /
+      4;
     drawItems.push({ kind: "quad", i, j, value: avg });
   }
 }
 contoursByLevel.forEach(({ level, segments }) => {
-  segments.forEach((seg) => drawItems.push({ kind: "line", level, value: level, ...seg }));
+  segments.forEach((seg) =>
+    drawItems.push({ kind: "line", level, value: level, ...seg }),
+  );
 });
 
 const LINE_COLOR = t.ink;
@@ -209,11 +243,15 @@ function renderItem(params, api) {
       projectIdx(item.i + 1, item.j + 1, zGrid[item.i + 1][item.j + 1]),
       projectIdx(item.i, item.j + 1, zGrid[item.i][item.j + 1]),
     ];
+    const color = api.visual("color");
     return {
       type: "polygon",
       z2: 1000 + item.i + item.j,
       shape: { points },
-      style: { fill: api.visual("color") },
+      // Stroking each quad with its own fill color (instead of leaving it
+      // bare) blends the antialiasing seam between adjacent same-color
+      // quads into a smooth surface instead of a faint crosshatch texture.
+      style: { fill: color, stroke: color, lineWidth: 1 },
     };
   }
   const p1 = toPixel(item.x1, item.y1, item.level);
@@ -228,62 +266,81 @@ function renderItem(params, api) {
 }
 
 // --- Floor plane: the same isolines projected down, for orientation -------
-const floorElements = [
-  {
-    type: "polygon",
-    shape: {
-      points: [
-        toPixel(-RANGE, -RANGE, FLOOR_Z),
-        toPixel(RANGE, -RANGE, FLOOR_Z),
-        toPixel(RANGE, RANGE, FLOOR_Z),
-        toPixel(-RANGE, RANGE, FLOOR_Z),
-      ],
-    },
-    style: { fill: t.elevatedBg, stroke: t.grid, lineWidth: 1.5 },
-    silent: true,
-  },
-];
-contoursByLevel.forEach(({ segments }) => {
-  segments.forEach((seg) => {
-    const p1 = toPixel(seg.x1, seg.y1, FLOOR_Z);
-    const p2 = toPixel(seg.x2, seg.y2, FLOOR_Z);
-    floorElements.push({
-      type: "line",
-      shape: { x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1] },
-      style: { stroke: t.inkSoft, lineWidth: 1.2, opacity: 0.55, lineDash: [4, 4] },
+function buildFloorElements() {
+  const floorElements = [
+    {
+      type: "polygon",
+      shape: {
+        points: [
+          toPixel(-RANGE, -RANGE, FLOOR_Z),
+          toPixel(RANGE, -RANGE, FLOOR_Z),
+          toPixel(RANGE, RANGE, FLOOR_Z),
+          toPixel(-RANGE, RANGE, FLOOR_Z),
+        ],
+      },
+      style: { fill: t.elevatedBg, stroke: t.grid, lineWidth: 1.5 },
       silent: true,
+    },
+  ];
+  contoursByLevel.forEach(({ segments }) => {
+    segments.forEach((seg) => {
+      const p1 = toPixel(seg.x1, seg.y1, FLOOR_Z);
+      const p2 = toPixel(seg.x2, seg.y2, FLOOR_Z);
+      floorElements.push({
+        type: "line",
+        shape: { x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1] },
+        style: {
+          stroke: t.inkSoft,
+          lineWidth: 1.2,
+          opacity: 0.55,
+          lineDash: [4, 4],
+        },
+        silent: true,
+      });
     });
   });
-});
+  return floorElements;
+}
 
 // --- Axis frame: ground (X, Y) + elevation (Z) edges, ticks + labels -------
 // Camera-facing corner selection matches the elevation-24/azimuth-45 camera:
 // X/Y ticks sit on the far-bottom corner (+RANGE, +RANGE) so they trail
 // behind the terrain instead of crossing it; Z sits on (+RANGE, -RANGE),
 // which the azimuth collapses to a single vertical screen line clear of
-// the hills.
+// the hills. Four generic drawing primitives (line/tick/label/title) feed a
+// single `drawAxis` composer so the three axis frames below are declarative
+// config objects rather than three repeated call sequences.
 const AXIS_COLOR = t.inkSoft;
 const TICK_LEN = RANGE * 0.07;
-const axisElements = [];
 
-function axisLine(p1, p2) {
+function axisLine(out, p1, p2) {
   const points = [p1, p2].map(([x, y, z]) => toPixel(x, y, z));
-  axisElements.push({ type: "polyline", shape: { points }, style: { stroke: AXIS_COLOR, lineWidth: 2, fill: "none" }, silent: true });
-}
-function tickMark(base, outward) {
-  axisLine(base, outward);
-}
-function tickLabel(pos, text, align) {
-  const [px, py] = toPixel(...pos);
-  axisElements.push({
-    type: "text",
-    style: { text, x: px, y: py, fill: t.inkSoft, fontSize: 13, align: align || "center", verticalAlign: "middle" },
+  out.push({
+    type: "polyline",
+    shape: { points },
+    style: { stroke: AXIS_COLOR, lineWidth: 2, fill: "none" },
     silent: true,
   });
 }
-function axisTitle(pos, text, offset) {
+function tickLabel(out, pos, text, align) {
   const [px, py] = toPixel(...pos);
-  axisElements.push({
+  out.push({
+    type: "text",
+    style: {
+      text,
+      x: px,
+      y: py,
+      fill: t.inkSoft,
+      fontSize: 13,
+      align: align || "center",
+      verticalAlign: "middle",
+    },
+    silent: true,
+  });
+}
+function axisTitle(out, pos, text, offset) {
+  const [px, py] = toPixel(...pos);
+  out.push({
     type: "text",
     style: {
       text,
@@ -298,41 +355,86 @@ function axisTitle(pos, text, offset) {
     silent: true,
   });
 }
+function drawAxis(out, cfg) {
+  axisLine(out, cfg.line[0], cfg.line[1]);
+  cfg.ticks.forEach((v) => {
+    const { from, to } = cfg.tickPos(v);
+    axisLine(out, from, to);
+    tickLabel(out, cfg.labelPos(v), cfg.tickText(v), cfg.align);
+  });
+  axisTitle(out, cfg.titlePos, cfg.title, cfg.titleOffset);
+}
 
 const CORNER_X = RANGE;
 const CORNER_Y = RANGE;
 const groundZ = FLOOR_Z;
-const axisTicksXY = [-5, -2.5, 0, 2.5, 5];
-
-// Titles stay centered at v=0 (the axis midpoint) but sit at a larger
-// outward distance than the tick labels — a farther "row" rather than the
-// same point, which is what caused the title to collide with the "0" tick
-// label. (Anchoring titles past the last tick instead was tried and
-// rejected: at this camera's azimuth the two ground axes share a corner, so
-// both titles converged on nearly the same screen position beyond it.)
-axisLine([-RANGE, CORNER_Y, groundZ], [RANGE, CORNER_Y, groundZ]);
-axisTicksXY.forEach((v) => {
-  tickMark([v, CORNER_Y, groundZ], [v, CORNER_Y + TICK_LEN, groundZ]);
-  tickLabel([v, CORNER_Y + TICK_LEN * 2.4, groundZ], String(v));
-});
-axisTitle([0, CORNER_Y + TICK_LEN * 4.8, groundZ], "Easting (km)", [0, 0]);
-
-axisLine([CORNER_X, -RANGE, groundZ], [CORNER_X, RANGE, groundZ]);
-axisTicksXY.forEach((v) => {
-  tickMark([CORNER_X, v, groundZ], [CORNER_X + TICK_LEN, v, groundZ]);
-  tickLabel([CORNER_X + TICK_LEN * 2.4, v, groundZ], String(v));
-});
-axisTitle([CORNER_X + TICK_LEN * 4.8, 0, groundZ], "Northing (km)", [0, 0]);
-
 const Z_CORNER_X = RANGE;
 const Z_CORNER_Y = -RANGE;
-axisLine([Z_CORNER_X, Z_CORNER_Y, FLOOR_Z], [Z_CORNER_X, Z_CORNER_Y, zMax]);
+const axisTicksXY = [-5, -2.5, 0, 2.5, 5];
 const zTicks = [zMin, zMid, zMax].map((v) => Math.round(v / 10) * 10);
-zTicks.forEach((v) => {
-  tickMark([Z_CORNER_X, Z_CORNER_Y, v], [Z_CORNER_X, Z_CORNER_Y - TICK_LEN, v]);
-  tickLabel([Z_CORNER_X, Z_CORNER_Y - TICK_LEN * 2.4, v], String(Math.round(v)), "center");
-});
-axisTitle([Z_CORNER_X, Z_CORNER_Y, zMax], "Elevation (m)", [0, -40]);
+
+function buildAxisElements() {
+  const out = [];
+  // Titles stay centered at v=0 (the axis midpoint) but sit at a larger
+  // outward distance than the tick labels — a farther "row" rather than the
+  // same point, which is what caused the title to collide with the "0" tick
+  // label. (Anchoring titles past the last tick instead was tried and
+  // rejected: at this camera's azimuth the two ground axes share a corner,
+  // so both titles converged on nearly the same screen position beyond it.)
+  drawAxis(out, {
+    line: [
+      [-RANGE, CORNER_Y, groundZ],
+      [RANGE, CORNER_Y, groundZ],
+    ],
+    ticks: axisTicksXY,
+    tickPos: (v) => ({
+      from: [v, CORNER_Y, groundZ],
+      to: [v, CORNER_Y + TICK_LEN, groundZ],
+    }),
+    labelPos: (v) => [v, CORNER_Y + TICK_LEN * 2.4, groundZ],
+    tickText: (v) => String(v),
+    title: "Easting (km)",
+    titlePos: [0, CORNER_Y + TICK_LEN * 4.8, groundZ],
+    titleOffset: [0, 0],
+  });
+
+  drawAxis(out, {
+    line: [
+      [CORNER_X, -RANGE, groundZ],
+      [CORNER_X, RANGE, groundZ],
+    ],
+    ticks: axisTicksXY,
+    tickPos: (v) => ({
+      from: [CORNER_X, v, groundZ],
+      to: [CORNER_X + TICK_LEN, v, groundZ],
+    }),
+    labelPos: (v) => [CORNER_X + TICK_LEN * 2.4, v, groundZ],
+    tickText: (v) => String(v),
+    title: "Northing (km)",
+    titlePos: [CORNER_X + TICK_LEN * 4.8, 0, groundZ],
+    titleOffset: [0, 0],
+  });
+
+  drawAxis(out, {
+    line: [
+      [Z_CORNER_X, Z_CORNER_Y, FLOOR_Z],
+      [Z_CORNER_X, Z_CORNER_Y, zMax],
+    ],
+    ticks: zTicks,
+    tickPos: (v) => ({
+      from: [Z_CORNER_X, Z_CORNER_Y, v],
+      to: [Z_CORNER_X, Z_CORNER_Y - TICK_LEN, v],
+    }),
+    labelPos: (v) => [Z_CORNER_X, Z_CORNER_Y - TICK_LEN * 2.4, v],
+    tickText: (v) => String(Math.round(v)),
+    align: "center",
+    title: "Elevation (m)",
+    titlePos: [Z_CORNER_X, Z_CORNER_Y, zMax],
+    titleOffset: [0, -40],
+  });
+
+  return out;
+}
 
 // --- Init + option -----------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -349,7 +451,9 @@ chart.setOption({
     trigger: "item",
     formatter: (params) => {
       const item = drawItems[params.dataIndex];
-      return item.kind === "quad" ? `Elevation: <b>${Math.round(item.value)} m</b>` : null;
+      return item.kind === "quad"
+        ? `Elevation: <b>${Math.round(item.value)} m</b>`
+        : null;
     },
   },
   visualMap: {
@@ -365,7 +469,7 @@ chart.setOption({
     itemGap: 8,
     textStyle: { color: t.inkSoft, fontSize: 13 },
   },
-  graphic: { elements: [...floorElements, ...axisElements] },
+  graphic: { elements: [...buildFloorElements(), ...buildAxisElements()] },
   series: [
     {
       type: "custom",
@@ -374,4 +478,53 @@ chart.setOption({
       data: drawItems.map((item) => ({ value: [item.value] })),
     },
   ],
+});
+
+// --- Drag-to-rotate: the spec asks interactive libraries to enable rotation
+// of the 3D structure. echarts-gl (true grid3D) isn't installed, so this
+// custom-canvas projection re-orbits the camera by hand: a drag updates
+// AZIMUTH/ELEVATION, re-fits the projection, and re-projects every element.
+// Inert for the static PNG capture (no pointer events fire in headless
+// screenshotting), but live in the shipped interactive HTML page.
+const zr = chart.getZr();
+zr.setCursorStyle("grab");
+let dragging = false;
+let lastX = 0;
+let lastY = 0;
+const MIN_ELEVATION = (4 * Math.PI) / 180;
+const MAX_ELEVATION = (80 * Math.PI) / 180;
+
+function rerender() {
+  updateTrig();
+  fitProjection();
+  chart.setOption({
+    graphic: { elements: [...buildFloorElements(), ...buildAxisElements()] },
+    series: [{ data: drawItems.map((item) => ({ value: [item.value] })) }],
+  });
+}
+
+zr.on("mousedown", (e) => {
+  dragging = true;
+  lastX = e.offsetX;
+  lastY = e.offsetY;
+  zr.setCursorStyle("grabbing");
+});
+zr.on("mousemove", (e) => {
+  if (!dragging) return;
+  AZIMUTH += (e.offsetX - lastX) * 0.006;
+  ELEVATION = Math.min(
+    MAX_ELEVATION,
+    Math.max(MIN_ELEVATION, ELEVATION - (e.offsetY - lastY) * 0.006),
+  );
+  lastX = e.offsetX;
+  lastY = e.offsetY;
+  rerender();
+});
+zr.on("mouseup", () => {
+  dragging = false;
+  zr.setCursorStyle("grab");
+});
+zr.on("globalout", () => {
+  dragging = false;
+  zr.setCursorStyle("grab");
 });
