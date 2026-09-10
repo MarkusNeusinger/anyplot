@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: line-3d-trajectory
 created: '2026-09-10T00:14:22Z'
-updated: '2026-09-10T00:18:43Z'
+updated: '2026-09-10T00:28:04Z'
 generated_by: claude-sonnet
 workflow_run: 34420048490
 issue: 3182
@@ -12,46 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - Faithful Lorenz attractor generated with a deterministic fixed-step RK4 integrator
-    (σ=10, ρ=28, β=8/3, 4,200 steps) — physically accurate and fully reproducible.
-  - Highcharts core has no 3D module; instead of faking interactivity or importing
-    a forbidden add-on, the implementation honestly computes its own orthographic
-    projection and draws the result as plain line series, documenting the tradeoff
-    in comments.
-  - Time progression is encoded as a fine-grained segmented color gradient along the
-    trajectory (imprint_seq, green → blue) — identical data colors between light and
-    dark renders, only chrome flips.
-  - L-shaped X/Y/Z reference frame plus labeled start/end markers give useful spatial
-    orientation cues that a bare line plot would lack.
-  - 'Both renders are fully legible with correct theme-adaptive chrome (#FAF8F1 /
-    #1A1A17 backgrounds, readable ink/inkSoft text) and no edge clipping.'
+  - Elegant hand-rolled 3D-to-2D orthographic projection (elevation 22°, azimuth 55°)
+    that works around Highcharts core's missing 3D module, exactly as prompts/library/highcharts.md
+    prescribes instead of shelling out to another library
+  - Time-progression color gradient built correctly from window.ANYPLOT_TOKENS.seq,
+    identical between light and dark renders — only chrome flips
+  - Custom L-shaped X/Y/Z axis frame gives spatial orientation for the projected trajectory
+    without a native 3D axis system
+  - Real, physically motivated Lorenz attractor parameters (σ=10, ρ=28, β=8/3) surfaced
+    in the subtitle — realistic and neutral data
+  - Start/end markers with labels add a clear narrative anchor to the time-progression
+    story
+  - Tooltip formatter surfaces original (unprojected) x/y/z coordinates and time fraction
+    on hover — strong use of the interactive HTML output
+  - Canvas is exactly 3200x1800 with no clipped or overflowing elements in either
+    render
   weaknesses:
-  - 'Interactive rotation/zoom — which the spec calls ''essential''/''critical'' for
-    exploring 3D trajectory structure — is entirely absent: the projection is baked
-    into fixed 2D coordinates, and every series additionally sets enableMouseTracking:false
-    and tooltip:{enabled:false}, so there isn''t even fallback hover interactivity
-    in the HTML output.'
-  - Only a single trajectory is rendered; the spec notes that multiple trajectories
-    with different colors help compare paths or initial conditions — not required,
-    but would strengthen data storytelling.
-  - The implementation uses Highcharts purely as an SVG line-drawing engine (no tooltip,
-    no legend, no hover) and doesn't exercise any Highcharts-distinctive capability
-    beyond basic line/scatter series.
+  - Trajectory uses 4,200 integration steps, more than double the spec's suggested
+    100-2000 point range — consider thinning the plotted points (or increasing DT)
+    to land inside the guideline while keeping the curve smooth
+  - The 'X'/'Y'/'Z' and 'start'/'end' labels are quite small (16px/13px) relative
+    to the title — could be nudged up slightly for stronger presence at small preview
+    sizes
+  - True interactive 3D rotation (called out as 'critical' in the spec's Notes) isn't
+    available since Highcharts core has no 3D module — an inherent library limitation
+    rather than an implementation bug, but still a residual gap versus the spec's
+    ideal
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "Lorenz Attractor · line-3d-trajectory · javascript · highcharts · anyplot.ai" and a smaller gray subtitle with the integration parameters are both clearly readable against the light background. The L-shaped X/Y/Z reference frame is drawn in a soft dark gray with black-ish "X", "Y", "Z" labels — all legible.
-      Data: The Lorenz butterfly is drawn as a dense multi-loop line trajectory that transitions from brand green (#009E73-ish, at t=0 "start") through teal to blue ("end") — a fine segmented color gradient shows time progression smoothly. Start and end points are marked with small filled circles and light gray text labels, both readable.
-      Legibility verdict: PASS.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "Lorenz Attractor · line-3d-trajectory · javascript · highcharts · anyplot.ai" (19px, scaled down for the 76-char length) is crisp and readable; gray subtitle with the sigma/rho/beta parameters is readable; the dark-gray L-shaped X/Y/Z axis frame and its labels are clearly visible against the light surface.
+      Data: Trajectory is drawn as a fine chain of segments transitioning from Imprint brand green (#009E73, time=0, at the "start" marker) through teal/blue to a darker blue (time=1, at the "end" marker) — the classic Lorenz butterfly is fully legible with two spiral wings and a long initial transient loop. First-series green matches the Imprint palette convention.
+      Legibility verdict: PASS — no light-on-light text, no illegible elements.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and subtitle switch to white/light-gray text, clearly legible against the dark background. Axis reference lines and "X"/"Y"/"Z" labels switch to white/light gray — no dark-on-dark issue anywhere. "start"/"end" labels remain light gray and readable.
-      Data: The green-to-blue trajectory gradient is pixel-identical to the light render — only the chrome (background, axis-frame color, text color) flips as expected.
-      Legibility verdict: PASS.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and subtitle flip to light/white text, both clearly legible; the axis frame line and X/Y/Z, start/end labels flip to light gray/white and remain fully readable against the dark surface — no dark-on-dark failures observed.
+      Data: Trajectory colors (green-to-blue gradient, start/end marker fills) are visually identical to the light render — confirms only chrome tokens flipped, not the data-color mapping.
+      Legibility verdict: PASS — no dark-on-dark text, brand green remains vivid on the dark surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -62,107 +63,104 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, subtitle, and axis labels all readable in both themes; title
-          fontsize correctly scaled down for the longer descriptive-prefixed title
+        comment: Title fontsize correctly scaled for length; all text readable in
+          both themes; start/end/axis labels a bit small
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; start/end labels and axis titles are clear
-          of the trajectory lines
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width (2.2px) appropriate for a dense 4,200-point trajectory
-          rendered as a continuous path rather than markers
+        comment: Segment-chain line width (2.2px) reads clearly despite dense overlapping
+          loops
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-to-blue gradient encodes a continuous variable (time);
-          not red-green reliant
+        comment: Sequential green-to-blue gradient, not red-green reliant, good contrast
+          on both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimension gate passed; good proportions, nothing cut off
+        comment: Balanced proportions, no overflow, canvas exactly 3200x1800
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X/Y/Z labeled; title descriptive with parameters in subtitle
+        comment: X/Y/Z labels plus descriptive subtitle with model parameters
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq used correctly for continuous time-progression color;
-          backgrounds theme-correct in both renders
+        comment: 'imprint_seq used correctly for continuous time encoding; identical
+          data colors across themes; correct #FAF8F1/#1A1A17 backgrounds'
     design_excellence:
-      score: 16
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom projection, segmented time-gradient coloring, and labeled
-          start/end markers go well beyond default styling
+        comment: Custom projection math and time-gradient coloring show real design/engineering
+          effort
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: No grid/box chrome, minimal L-shaped axis reference only, generous
-          whitespace
+        comment: Minimal custom axis frame instead of default chrome, transparent
+          background, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Color gradient and start/end labels clearly guide the eye along the
-          chaotic path's chronology
+        comment: Start/end markers plus color gradient clearly narrate time progression
+          through the attractor
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Visually convincing 3D trajectory via hand-computed orthographic
-          projection, given Highcharts core has no 3D module
+        comment: Legitimate 3D-trajectory workaround per library constraints (no highcharts-3d
+          module available)
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Interactive rotation/zoom, called 'essential' in the spec, is entirely
-          absent — mouse tracking and tooltips are disabled on every series with no
-          fallback interactivity
+        passed: true
+        comment: Sequential connected line, color-encoded time progression, single
+          continuous trajectory
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y/z correctly projected; color correctly maps to time
+        comment: x/y/z all represented via projection; full path range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches spec-id · language · library · anyplot.ai with
-          descriptive prefix; no legend needed for a single trajectory
+        comment: Title matches required format; no legend needed for single trajectory
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -170,22 +168,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Sequential connected path, time-progression color, and labeled start/end
-          cover the essential aspects of a trajectory plot
+        comment: Trajectory, time-color mapping, parameters, start/end markers all
+          present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic Lorenz attractor with standard chaotic parameters; neutral
-          subject matter
+        comment: Canonical Lorenz attractor parameters, real and neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 4,200 RK4 steps at dt=0.006 give a smooth, well-resolved trajectory
-          typical for this domain
+        comment: 4,200 RK4 steps exceeds the spec's suggested 100-2000 point range
     code_quality:
       score: 10
       max: 10
@@ -195,35 +191,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; small pure helper functions only (derivative, project,
-          timeColor)
+        comment: No classes, small focused helper functions only
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic integration, no randomness
+        comment: Fully deterministic fixed-step RK4 integration, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses global Highcharts only
+        comment: No imports beyond the Highcharts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a hand-rolled projection; no fake UI/interactivity
+        comment: Appropriate complexity for the projection math, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled everywhere, no explicit
-          width/height
+        comment: Correct mount-node contract, animation disabled everywhere
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -231,15 +225,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Clean use of line/scatter series and dataLabels within core-bundle
-          constraints
+        comment: Best-available idiomatic approach given core-bundle constraints (line/scatter
+          series, dataLabels, tooltip formatter)
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Tooltip, legend, and mouse tracking are disabled everywhere — no
-          Highcharts-distinctive capability is actually exercised
+        comment: Creative segment-chain gradient trick, but no Highcharts-distinctive
+          features like drilldown or boost
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -248,8 +242,6 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
-  - custom-colormap
+  - gradient-fill
