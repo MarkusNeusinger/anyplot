@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 wireframe-3d-basic: Basic 3D Wireframe Plot
 Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 72/100 | Created: 2026-09-10
@@ -13,11 +13,11 @@ from plotnine import (
     coord_fixed,
     element_rect,
     element_text,
-    geom_path,
     geom_segment,
     geom_text,
     ggplot,
     labs,
+    scale_alpha_continuous,
     theme,
     theme_void,
 )
@@ -52,9 +52,17 @@ def project(x, y, z):
     return px, py
 
 
+def depth(x, y, z):
+    """Distance along the camera's view direction — larger means closer to
+    the viewer, so it doubles as a painter's-algorithm draw-order key and as
+    the source for depth-based alpha (approximates hidden-line suppression
+    since plotnine has no real depth buffer)."""
+    return x * view_dir[0] + y * view_dir[1] + z * Z_LIFT * view_dir[2]
+
+
 # Data — circular drumhead vibration mode: displacement z = sin(sqrt(x^2 + y^2))
 np.random.seed(42)
-grid_n = 26
+grid_n = 21  # kept modest (20-22) so depth-faded lines stay legible, not a tangle
 x_vals = np.linspace(-6, 6, grid_n)
 y_vals = np.linspace(-6, 6, grid_n)
 grid_x, grid_y = np.meshgrid(x_vals, y_vals)
@@ -64,19 +72,39 @@ z_min, z_max = float(grid_z.min()), float(grid_z.max())
 floor_z = z_min - 0.3
 ceil_z = z_max + 0.3
 
-# Wireframe mesh lines running in both x and y directions (per spec)
-mesh_rows = []
-for j in range(grid_n):
-    px, py = project(grid_x[:, j], grid_y[:, j], grid_z[:, j])
-    for i in range(grid_n):
-        mesh_rows.append({"px": px[i], "py": py[i], "line": f"col_{j}"})
+grid_px, grid_py = project(grid_x, grid_y, grid_z)
+grid_depth = depth(grid_x, grid_y, grid_z)
+
+# Wireframe mesh as individual edges (not whole rows/columns) so each edge can
+# carry its own depth-based alpha: far-side edges fade low, near-side edges
+# stay opaque, which reads as an approximate hidden-line-suppressed surface
+# instead of a flat tangle of fully superimposed lines.
+edges = []
 for i in range(grid_n):
-    px, py = project(grid_x[i, :], grid_y[i, :], grid_z[i, :])
-    for j in range(grid_n):
-        mesh_rows.append({"px": px[j], "py": py[j], "line": f"row_{i}"})
-mesh = pd.DataFrame(mesh_rows)
-mesh_cols = mesh[mesh["line"].str.startswith("col_")]
-mesh_rows_df = mesh[mesh["line"].str.startswith("row_")]
+    for j in range(grid_n - 1):
+        edges.append(
+            {
+                "px": grid_px[i, j],
+                "py": grid_py[i, j],
+                "pxend": grid_px[i, j + 1],
+                "pyend": grid_py[i, j + 1],
+                "edge_depth": (grid_depth[i, j] + grid_depth[i, j + 1]) / 2,
+            }
+        )
+for j in range(grid_n):
+    for i in range(grid_n - 1):
+        edges.append(
+            {
+                "px": grid_px[i, j],
+                "py": grid_py[i, j],
+                "pxend": grid_px[i + 1, j],
+                "pyend": grid_py[i + 1, j],
+                "edge_depth": (grid_depth[i, j] + grid_depth[i + 1, j]) / 2,
+            }
+        )
+# Sort back-to-front so later (nearer, higher-alpha) edges paint over earlier
+# (farther, lower-alpha) ones — plotnine draws geom_segment rows in data order.
+mesh_edges = pd.DataFrame(edges).sort_values("edge_depth", ignore_index=True)
 
 # Axis box: three edges meeting at the front-left-bottom corner
 axis_lines = pd.DataFrame(
@@ -105,12 +133,19 @@ ticks = pd.concat(
 )
 ticks["px"], ticks["py"] = project(ticks["x"], ticks["y"], ticks["z"])
 
-# Z ticks sit on the vertical axis line itself; nudge the label text (not the
-# axis line) sideways past the Y-axis tick column so the two groups don't merge.
-z_ticks = pd.DataFrame({"x": -6, "y": -6, "z": z_breaks, "label": [f"{v:g}" for v in z_breaks]})
-z_px, z_py = project(z_ticks["x"], z_ticks["y"], z_ticks["z"])
-z_ticks["px"] = z_px - 13
-z_ticks["py"] = z_py
+# Z ticks sit on the vertical axis line itself. A short leader segment (tick
+# mark) connects each label back to the axis line so it reads as belonging to
+# the Z axis rather than as a stray fourth axis (previously offset -13 with
+# no connector, leaving the labels visually stranded).
+Z_TICK_LEADER = 1.2
+Z_TICK_LABEL_GAP = 0.6
+z_axis_px, z_axis_py = project(-6, -6, z_breaks)
+z_ticks = pd.DataFrame(
+    {"px": z_axis_px - Z_TICK_LEADER - Z_TICK_LABEL_GAP, "py": z_axis_py, "label": [f"{v:g}" for v in z_breaks]}
+)
+z_tick_leaders = pd.DataFrame(
+    {"px": z_axis_px, "py": z_axis_py, "pxend": z_axis_px - Z_TICK_LEADER, "pyend": z_axis_py}
+)
 
 axis_labels = pd.DataFrame(
     {
@@ -125,11 +160,18 @@ axis_labels["px"], axis_labels["py"] = project(axis_labels["x"], axis_labels["y"
 # Plot
 plot = (
     ggplot()
-    + geom_path(aes("px", "py", group="line"), mesh_cols, color=BRAND, size=0.3, alpha=0.35)
-    + geom_path(aes("px", "py", group="line"), mesh_rows_df, color=BRAND, size=0.3, alpha=0.35)
+    + geom_segment(
+        aes(x="px", y="py", xend="pxend", yend="pyend", alpha="edge_depth"),
+        mesh_edges,
+        color=BRAND,
+        size=0.3,
+        show_legend=False,
+    )
+    + scale_alpha_continuous(range=(0.12, 0.6))
     + geom_segment(aes(x="px", y="py", xend="pxend", yend="pyend"), axis_lines, color=INK_SOFT, size=0.6)
+    + geom_segment(aes(x="px", y="py", xend="pxend", yend="pyend"), z_tick_leaders, color=INK_SOFT, size=0.6)
     + geom_text(aes("px", "py", label="label"), ticks, color=INK_SOFT, size=3.3)
-    + geom_text(aes("px", "py", label="label"), z_ticks, color=INK_SOFT, size=3.3)
+    + geom_text(aes("px", "py", label="label"), z_ticks, color=INK_SOFT, size=3.3, ha="right")
     + geom_text(aes("px", "py", label="label"), axis_labels, color=INK, size=3.6, fontweight="bold")
     + labs(title="wireframe-3d-basic · python · plotnine · anyplot.ai")
     + coord_fixed(ratio=1)
