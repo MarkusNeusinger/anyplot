@@ -22,10 +22,10 @@ const size = window.ANYPLOT_SIZE;
 // filled quads and painted back-to-front, the same technique used for the
 // hand-rolled axis frame in scatter-3d — here driving the fill itself.
 const GRID_N = 30;
-const X_MIN = -6;
-const X_MAX = 6;
-const Y_MIN = -6;
-const Y_MAX = 6;
+const X_MIN = -3;
+const X_MAX = 3;
+const Y_MIN = -3;
+const Y_MAX = 3;
 const HEIGHT_SCALE = 3.2; // visually exaggerates the [-1, 1] function range
 
 const grid = [];
@@ -128,7 +128,7 @@ const pyMax = rawPyMax + padY * 2.8; // extra headroom for the z-axis label
 const originPoint = project(X_MIN, Y_MIN, 0);
 const xEndPoint = project(X_MAX, Y_MIN, 0);
 const yEndPoint = project(X_MIN, Y_MAX, 0);
-const heightEndPoint = project(X_MIN, Y_MIN, heightMax / HEIGHT_SCALE);
+const heightEndPoint = project(X_MIN, Y_MIN, heightMax);
 const farCorner = project(X_MAX, Y_MAX, 0);
 
 function IsoFrame() {
@@ -225,6 +225,7 @@ export default function Chart() {
       <ContinuousColorLegend
         axisDirection="z"
         axisId="heightColor"
+        direction="row"
         position={{ horizontal: "middle", vertical: "bottom" }}
         length="26%"
         thickness={10}
