@@ -1,3 +1,7 @@
+// anyplot.ai
+// scatter-3d: 3D Scatter Plot
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 87/100 | Created: 2026-09-10
 //# anyplot-orientation: landscape
 // anyplot.ai
 // scatter-3d: 3D Scatter Plot
