@@ -1,0 +1,258 @@
+library: echarts
+language: javascript
+specification_id: scatter-3d
+created: '2026-09-10T00:22:33Z'
+updated: '2026-09-10T00:38:38Z'
+generated_by: claude-sonnet
+workflow_run: 34419795124
+issue: 1945
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/echarts/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - Creative isometric axonometric 3D projection built entirely from core echarts
+    primitives (scatter + line + graphic text) — a strong technical workaround given
+    echarts-gl is unavailable
+  - Correct Imprint sequential palette (imprint_seq) for the continuous density variable,
+    identical data colors between light/dark themes — only chrome flips
+  - Deterministic LCG + Box-Muller data generation with geologically realistic SiO2/Fe2O3/MgO/density
+    values forming three plausible igneous rock groups
+  - Per-axis tick labels are computed from real data ranges (not decorative), so the
+    static PNG reads correctly without needing the interactive tooltip
+  - 'Clean minimal chrome: no unnecessary borders, subtle ink-soft axis guides, title
+    fontsize scaled to the mandated title length'
+  weaknesses:
+  - No depth-based sort/rendering order for overlapping markers — nearer points aren't
+    guaranteed to draw over farther ones, undermining the 3D occlusion cue; consider
+    sorting series data by a computed depth value or fading opacity by depth
+  - Data storytelling relies solely on the density color gradient — the three rock
+    clusters (basalt/granite/peridotite-like groups) aren't labeled or annotated,
+    so viewers must infer the geological grouping themselves
+  - Axis tick labels are quite small (11px) relative to the 3200x1800 canvas — a modest
+    bump would help legibility at the 400px mobile thumbnail scale
+  - The three axis guides run from each variable's own minimum (not true zero) to
+    just past its max, so the layout reads more like three windowed scales meeting
+    at a point rather than a grounded 3D box — a subtle floor/backplane grid would
+    strengthen the 3D metaphor and reduce visual similarity to a ternary plot
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white.
+      Chrome: Title "Rock Sample Composition · scatter-3d · javascript · echarts · anyplot.ai" is centered at top in dark ink, clearly legible. Three axis guide lines (dark ink-soft gray) converge at a point near bottom-center, labeled "MgO (wt%)" (left tip), "Fe2O3 (wt%)" (top tip), and "SiO2 (wt%)" (right tip), with small percentage tick labels ("5%", "13%", "6%", "12%", "51%", "70%") placed along each guide. A vertical colorbar legend sits on the right, labeled "High density (g/cm³)" / "Low density (g/cm³)" in ink-soft gray.
+      Data: Three clusters of circular markers, each positioned near one axis tip, colored on a teal (low density) to blue (high density) sequential gradient with white/pageBg borders to separate overlapping points.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black.
+      Chrome: Same title, axis labels, and tick labels rendered in light gray/off-white, all clearly legible against the dark background — no dark-on-dark failures observed. Axis guide lines switch to a lighter gray, remaining visible but subtle.
+      Data: Marker colors (teal-to-blue density gradient) are identical to the light render — confirmed only chrome (background, text, guide-line color) flipped between themes.
+      Legibility verdict: PASS — all text is clearly readable against the dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels all explicitly sized and readable
+          in both themes; 11px tick labels are on the small side for the canvas.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text overlap; some marker-on-marker overlap within dense cluster
+          centers is inherent to the data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Markers appropriately sized (11px, alpha 0.75) for ~120 points, but
+          no depth-sorted draw order, so occlusion doesn't consistently follow the
+          3D projection.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Teal-to-blue sequential gradient has adequate contrast and is not
+          red-green dependent.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Title, colorbar, and axis labels
+          all fit within bounds, no overflow or clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: All three axes labeled with descriptive names and units (wt%); colorbar
+          labeled with units (g/cm³).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Continuous density variable uses imprint_seq; identical data colors
+          between light/dark; backgrounds match theme tokens.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom isometric projection math and title fontsize scaling show
+          real design effort beyond defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minimal chrome and generous whitespace, but no distinguishing treatment
+          (e.g. legend) for the three rock groups.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Clusters are visible but unlabeled; no annotation calls out the geological
+          grouping or guides interpretation.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Static isometric 3D scatter is the correct fallback given echarts-gl
+          is unavailable; slight risk of visual similarity to a ternary layout.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Color encodes the optional 4th variable (density); rotation is correctly
+          omitted since the library can't support it without echarts-gl.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y/z correctly mapped via isometric projection; tick labels expose
+          real data ranges on all three axes.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format with descriptive prefix; colorbar legend
+          correctly labeled.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows x, y, z, and a color-encoded 4th variable — full feature coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Igneous rock composition (SiO2/Fe2O3/MgO/density) is realistic and
+          neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Weight percentages and density values are geologically sensible.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions (project, norm, gaussian, tickValue) are
+          used, but justified by the projection math.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG PRNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only browser globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity; complexity matches the projection
+          technique.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Respects the mount-node contract; animation:false set; no explicit
+          size/devicePixelRatio passed to echarts.init.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Combines scatter, line, visualMap, and graphic series idiomatically.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: convertToPixel + graphic elements for custom axis/tick labels is
+          a distinctive, well-chosen echarts technique.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - colorbar
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting

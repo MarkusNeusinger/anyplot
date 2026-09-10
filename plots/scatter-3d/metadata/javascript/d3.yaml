@@ -1,0 +1,255 @@
+library: d3
+language: javascript
+specification_id: scatter-3d
+created: '2026-09-10T00:09:31Z'
+updated: '2026-09-10T00:32:17Z'
+generated_by: claude-sonnet
+workflow_run: 34419600692
+issue: 1945
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Custom axonometric 3D-to-2D projection (yaw/pitch rotation matrix) built from
+    scratch, since D3 has no native 3D scene graph — a genuinely distinctive, library-specific
+    technique
+  - 'New focal-point emphasis: the Champions cluster is kept at full size/opacity
+    while the two background segments are intentionally de-emphasized, giving the
+    composition clear visual hierarchy (addresses the prior ''no focal point'' weakness)'
+  - Legend redesigned as a boxed, elevated-bg card placed near the data mass instead
+    of an isolated far-margin element (addresses the prior 'isolated legend' weakness)
+  - Tick labels now offset perpendicular to each axis, pointing away from the shared
+    tripod origin, fixing the previous '$200' tick crowding the axis line/title
+  - Realistic, neutral RFM (Recency/Frequency/Monetary) customer-segmentation scenario
+    with three visually distinct, well-separated clusters
+  - Palette compliant and theme-correct in both renders; all axis labels carry units
+  - Deterministic seeded RNG (mulberry32), clean idiomatic D3 throughout
+  weaknesses:
+  - 'Canvas utilization: tightening the margins and moving the legend inward helped,
+    but the region between the tripod''s shared origin and the Champions cluster is
+    still comparatively empty — repositioning the camera yaw/pitch (not just margins)
+    would balance the three clusters across the frame more evenly'
+  - Tick dot styling remains fairly plain — consider scaling tick-dot radius by depth
+    (matching the marker depth-cueing) for a touch more polish
+  - Design excellence is strong but not yet publication-tier (DE-01); a bespoke color/opacity
+    treatment for the axis tripod itself (e.g. subtle gradient or thickness cueing)
+    could push it further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Customer Segments in 3D Feature Space · scatter-3d · javascript · d3 · anyplot.ai" in bold dark ink, centered near the top, fully visible and not clipped. Three bold dark axis-title labels ("Frequency (orders/yr)", "Monetary ($ avg order)", "Recency (days)") sit at the far end of their respective projected axis edges, now offset perpendicular to the axis so they clear the last tick label. Soft dark-grey tick labels ($50/$100/$150/$200, 50/100/150, 5/10/15/20/25) run along the three axis lines, each offset perpendicular and away from the shared tripod origin — the previous "$200" tick crowding the axis line/title is resolved. A boxed legend (rounded rect, elevated-bg fill, subtle border) sits inside the plot's own upper-mid-right region, close to the Champions cluster, listing Champions/At Risk/New Customers with colored dots.
+      Data: Three clearly separated clusters — a dense green (Champions) cluster upper-left rendered at full size/opacity (the new focal-point emphasis), a blue-grey (New Customers) cluster near the axis origin and a lavender (At Risk) cluster along the bottom-right, both slightly smaller/lower-opacity than Champions per the 0.82x de-emphasis weighting. Markers have a subtle light stroke and vary in size/opacity by projected depth (painter's-algorithm ordering).
+      Legibility verdict: PASS — all title, axis-title, tick-label, and legend text is clearly readable against the light background; no light-on-light issues found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis-title, tick-label, and legend text, all rendered in light ink/off-white tones against the dark background. Axis lines and tick dots are light-colored and clearly visible against the dark surface. Legend box uses the dark-theme elevated background with a visible border.
+      Data: Identical cluster layout and identical marker colors (green / lavender / blue-grey) to the light render, including the same focal-point emphasis on the Champions cluster — only the chrome (background, text, axis lines, legend box) flipped to the dark theme; data-color identity is preserved exactly.
+      Legibility verdict: PASS — no dark-on-dark failures; every text element (title, axis titles, tick labels, legend) is clearly legible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (px), title scales with length, readable
+          in both themes; tick labels could grow slightly for extra mobile margin
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: The previous '$200' tick crowding the axis line/title is fixed by
+          the new perpendicular tick-label offset; no remaining collisions found
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Depth-scaled marker size/opacity (6-11px, 0.55-0.92 alpha) plus the
+          new emphasis weighting for ~180 points is well adapted to medium density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three well-separated hues, no red-green-only signal, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Margins tightened and legend now lives inside the plot's own space;
+          region between tripod origin and Champions cluster still comparatively empty
+          since camera yaw/pitch wasn't adjusted
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: All three axis labels carry units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order for the rest, identical data
+          colors across themes, theme-correct chrome/backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom axonometric projection with depth cueing plus new focal-point
+          emphasis; still short of the top tier
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend redesigned into a boxed, elevated-bg card near the data instead
+          of an isolated corner element; tick dots slightly subtler (r=2 vs 2.5)
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Champions cluster now explicitly pushed forward as the focal point
+          (full size/opacity) while the other two segments are intentionally de-emphasized
+          (0.82x), giving the composition a clear visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3D scatter plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Units on all axes, depth/opacity cueing, honest static projection
+          given D3's lack of native 3D
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All three RFM dimensions correctly mapped to the three projected
+          axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match the three segments
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Three distinct, differently-spread clusters demonstrate the clustering
+          use case well
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible RFM customer-segmentation business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Recency/frequency/monetary ranges are realistic for e-commerce customer
+          data
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script; small helper functions (mulberry32, gaussian,
+          project) are necessary for the 3D math and reused per-point
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded mulberry32 RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global d3
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a from-scratch 3D projection, no fake
+          functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, data-join rendering, no animation
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic scales, extent, format, and selection.data().join() usage
+          throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Hand-built axonometric projection and painter's-algorithm depth sort
+          is a genuinely D3-specific workaround for the lack of native 3D support
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - edge-highlighting
