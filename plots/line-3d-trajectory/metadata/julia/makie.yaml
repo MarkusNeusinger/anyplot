@@ -1,0 +1,254 @@
+library: makie
+language: julia
+specification_id: line-3d-trajectory
+created: '2026-09-10T00:17:28Z'
+updated: '2026-09-10T00:53:51Z'
+generated_by: claude-sonnet
+workflow_run: 34420238522
+issue: 3182
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Correct Imprint palette usage: first (main) trajectory colored via the imprint_seq
+    gradient starting at #009E73, diverged trajectory uses canonical palette position
+    2 (#C475FD)'
+  - 'Genuine data storytelling: two nearby initial conditions (Δx0 = 0.001) are integrated
+    and only the diverged tail of the perturbed run is drawn, avoiding a fully-overlapping
+    duplicate line while making the butterfly-effect fork the visual focal point'
+  - 'Full theme-adaptive chrome: panel backgrounds, spines, grid, tick/axis label
+    colors, and legend all correctly flip between the FAF8F1/1A1A17 tokens with data
+    colors held identical across renders'
+  - 'Physically correct data: classic Lorenz parameters (sigma=10, rho=28, beta=8/3)
+    with a deterministic custom RK4 integrator (no randomness needed, fully reproducible)'
+  - Colorbar encodes time progression as the spec explicitly suggests, with a clear
+    'Time' label
+  - Title and legend format are spec-compliant; legend text clearly explains the second
+    trajectory
+  weaknesses:
+  - 'VQ-05: Whitespace is imbalanced — the 3D axis box sits with a large empty margin
+    on the left while the colorbar hugs the right edge, and there is a large empty
+    gap between the bottom of the 3D plot and the legend row. Tightening colsize!/rowsize!
+    or centering the Axis3 within its column would balance margins better.'
+  - 'VQ-06: X/Y/Z axis labels are minimal single letters with no additional context
+    (acceptable convention for Lorenz phase-space coordinates, but a small caption
+    or axis label like ''X (state variable)'' would score higher).'
+  - 'CQ-01: The `integrate_lorenz` helper function deviates from the strict KISS ''Imports
+    -> Data -> Plot -> Save, no functions'' structure — justified here since RK4 integration
+    needs a loop, but a fully inlined version would score higher on this axis.'
+  - The inner spiral of the attractor (left wing) is visually dense with many overlapping
+    loops; a slightly thinner linewidth or lower alpha in that region could reduce
+    clutter without losing the shape.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "line-3d-trajectory · julia · makie · anyplot.ai" is bold dark text, clearly readable, centered near the top. X/Y/Z axis labels and tick labels render in dark ink / soft grey, all legible. Grid lines on the 3D panels are subtle light grey, visible but not dominant. The horizontal legend below the plot ("Diverged path from a perturbed initial condition (Δx0 = 0.001)") is dark text on the light background, fully readable. Colorbar labeled "Time" on the right has readable ticks (0, 10, 20).
+      Data: Main Lorenz trajectory is drawn as a continuous line colored by a sequential gradient starting at #009E73 (brand green) at t=0 and transitioning toward blue as time progresses — a green filled circle marks the start point. The diverged trajectory (second nearby initial condition) is a dashed lavender/purple line (#C475FD-family), with a matching lavender dot marking the fork point. Both wings of the classic Lorenz "butterfly" attractor are visible, and the fork between the two trajectories is clearly visible as a color/style-distinct dashed overlay near the top-right lobe.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels are rendered in light off-white/soft-grey tones, clearly legible against the dark background. Grid lines remain subtle (low-alpha light grey). Legend text below the plot is light-colored and fully readable on the dark background. Colorbar label and ticks are light-colored and legible.
+      Data: The main trajectory's color gradient (green -> blue) and the diverged trajectory's lavender dashed line are visually identical in hue to the light render — confirming data colors are held constant between themes. Both are clearly distinguishable against the dark panel background, with no color shifted or washed out.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all title/axis/tick/legend text is clearly visible against the dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes; title fits
+          comfortably without overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps; data-line self-crossing is inherent to the attractor
+          geometry, not a rendering defect
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines and start/fork markers are clearly visible; inner spiral is
+          visually dense with overlapping loops
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/blue gradient vs. lavender dashed line gives strong non-red-green
+          contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: true
+        comment: Plot fills most of the canvas but margins are imbalanced (large gap
+          left of axis box, gap before legend row)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: true
+        comment: X/Y/Z are minimal single-letter labels, standard for phase-space
+          coordinates but not descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series starts at #009E73, second series uses canonical palette
+          position 2; imprint_seq gradient for continuous time; theme-correct chrome
+          in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful gradient + palette use, clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, theme-matched panels; whitespace not perfectly balanced
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Deliberate two-trajectory fork narrative (butterfly effect) with
+          clear focal point and explanatory legend
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3D connected-line trajectory plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Color gradient for time progression, multiple trajectories, alpha/linewidth
+          for overlap all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y/Z correctly mapped, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format compliant; legend label matches the diverged-path data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both attractor wings, forking behavior, and time progression all
+          shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Lorenz attractor is a real, neutral, well-known scientific system
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Classic textbook Lorenz parameters (sigma=10, rho=28, beta=8/3)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One helper function (RK4 integrator) deviates from strict no-functions
+          KISS structure, though justified
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic ODE integration, no randomness needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie and Colors, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for RK4 integration, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with correct px_per_unit
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Axis3, lines!, scatter!, Colorbar, Legend and layout sizing used
+          idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Axis3 elevation/azimuth control and GridLayout-based colorbar/legend
+          placement are Makie-distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - colorbar
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
