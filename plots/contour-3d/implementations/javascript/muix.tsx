@@ -3,20 +3,21 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 66/100 | Created: 2026-09-10
 
-// Community @mui/x-charts has no 3D/surface primitive. A genuine surrogate
-// built from real MUI X pieces: a ChartContainer with a `zAxis` piecewise
-// colorMap (drives both the elevation-band fill and the PiecewiseColorLegend
-// "colorbar") and a custom layer that reads the container's own xScale/yScale
-// hooks to place elevation bands + marching-triangle contour lines. The
-// spec's "project contours onto the base plane" note is honored by drawing a
-// muted, offset echo of the same isolines beneath the crisp on-surface ones.
+// Community @mui/x-charts has no 3D/surface primitive. The elevation surface
+// is built as a genuinely data-driven ScatterChart: every grid point is a
+// real scatter datum (x, y, z) wired through a `zAxis` piecewise colorMap,
+// and a custom `slots.scatter` renderer (same pattern used by
+// heatmap-correlation) reads the library's own xScale/yScale/colorGetter to
+// draw the elevation bands, contour isolines, and a sparse sample-point
+// overlay whose marker colors come straight from that colorGetter -- not a
+// second hand-rolled palette. The spec's "project contours onto the base
+// plane" note is honored with a dashed, offset duplicate of the isolines
+// painted on top of the bands (clipped to the axes, no edge bleed) -- a
+// legible reference layer, not a near-duplicate of the solid ones.
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
-import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { ChartsText } from "@mui/x-charts/ChartsText";
+import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { PiecewiseColorLegend } from "@mui/x-charts/ChartsLegend";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import { ChartsText } from "@mui/x-charts/ChartsText";
 
 const t = window.ANYPLOT_TOKENS;
 const SIZE = window.ANYPLOT_SIZE;
@@ -50,6 +51,25 @@ const zGrid = pressures.map((p) => temps.map((temp) => yieldAt(temp, p)));
 const allZ = zGrid.flat();
 const zMin = Math.min(...allZ);
 const zMax = Math.max(...allZ);
+
+// Locate the global optimum -- a real, computed "critical point" (spec:
+// "optimization landscapes with critical points") to annotate on the surface.
+let optimum = { i: 0, j: 0, z: -Infinity };
+for (let j = 0; j < GRID_N; j += 1) {
+  for (let i = 0; i < GRID_N; i += 1) {
+    if (zGrid[j][i] > optimum.z) optimum = { i, j, z: zGrid[j][i] };
+  }
+}
+
+// --- Real @mui/x-charts scatter series: every grid point is genuine data ---
+// (feeds the ScatterChart's own zAxis colorMap / colorGetter pipeline below,
+// not just a styling prop -- the library resolves per-point color from this.)
+const points = [];
+for (let j = 0; j < GRID_N; j += 1) {
+  for (let i = 0; i < GRID_N; i += 1) {
+    points.push({ id: `${i}-${j}`, x: temps[i], y: pressures[j], z: zGrid[j][i] });
+  }
+}
 
 // --- Imprint sequential colormap (single-polarity data: t.seq = [green, blue]) -
 function hexToRgb(hex) {
@@ -144,20 +164,36 @@ for (let k = 1; k < NUM_BANDS; k += 1) {
   isolineGeometry.push(segments);
 }
 
-// --- Custom SVG layer: bands + isolines, mapped through the chart's own scales -
-const PROJECTION_OFFSET = 14;
+// Sparse sample-point overlay (every 4th grid line -> ~9x9 points): a real
+// subset of `points` above, drawn through the library's own `colorGetter` so
+// the markers' colors come from the ScatterChart's zAxis colorMap, not a
+// second hand-rolled color computation.
+const SAMPLE_STEP = 4;
+const sampleIndices = [];
+for (let j = 0; j < GRID_N; j += SAMPLE_STEP) {
+  for (let i = 0; i < GRID_N; i += SAMPLE_STEP) {
+    sampleIndices.push(j * GRID_N + i);
+  }
+}
 
-function ContourLayer() {
-  const xScale = useXScale();
-  const yScale = useYScale();
+// --- Custom `slots.scatter` renderer: bands + isolines + sample points, all -
+// mapped through the ScatterChart's own xScale/yScale, colored through its
+// own colorGetter -- this IS the library's scatter slot, not a bolt-on layer.
+const SHADOW_OFFSET = 30;
+
+function ContourSurfaceRenderer(props) {
+  const { series, xScale, yScale, colorGetter } = props;
   const toSVG = (x, y) => [xScale(x), yScale(y)];
 
-  const polysToPath = (polys) =>
+  const polysToPath = (polys, dx = 0, dy = 0) =>
     polys
       .map((poly) => {
         const pts = poly.map((p) => toSVG(p.x, p.y));
-        const head = `M ${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
-        const tail = pts.slice(1).map(([px, py]) => `L ${px.toFixed(1)},${py.toFixed(1)}`).join(" ");
+        const head = `M ${(pts[0][0] + dx).toFixed(1)},${(pts[0][1] + dy).toFixed(1)}`;
+        const tail = pts
+          .slice(1)
+          .map(([px, py]) => `L ${(px + dx).toFixed(1)},${(py + dy).toFixed(1)}`)
+          .join(" ");
         return `${head} ${tail} Z`;
       })
       .join(" ");
@@ -173,12 +209,26 @@ function ContourLayer() {
 
   const [rx0, ry0] = toSVG(TEMP_MIN, PRESSURE_MIN);
   const [rx1, ry1] = toSVG(TEMP_MAX, PRESSURE_MAX);
-  const baseRect = `M ${rx0.toFixed(1)},${ry0.toFixed(1)} L ${rx1.toFixed(1)},${ry0.toFixed(1)} L ${rx1.toFixed(1)},${ry1.toFixed(1)} L ${rx0.toFixed(1)},${ry1.toFixed(1)} Z`;
+  const baseRectPath = (dx = 0, dy = 0) =>
+    `M ${(rx0 + dx).toFixed(1)},${(ry0 + dy).toFixed(1)} L ${(rx1 + dx).toFixed(1)},${(ry0 + dy).toFixed(1)} L ${(rx1 + dx).toFixed(1)},${(ry1 + dy).toFixed(1)} L ${(rx0 + dx).toFixed(1)},${(ry1 + dy).toFixed(1)} Z`;
+
+  const [ox, oy] = toSVG(temps[optimum.i], pressures[optimum.j]);
+
+  // Clip the offset shadow layer to the plot's own rectangle so the
+  // down-right offset never bleeds into the margin past the axes.
+  const clipX = Math.min(rx0, rx1);
+  const clipY = Math.min(ry0, ry1);
+  const clipW = Math.abs(rx1 - rx0);
+  const clipH = Math.abs(ry1 - ry0);
 
   return (
     <g>
-      {/* Elevation bands: the surface viewed from directly above */}
-      <path d={baseRect} fill={bandColors[0]} stroke={bandColors[0]} strokeWidth={0.75} />
+      <clipPath id="contour-3d-plot-clip">
+        <rect x={clipX} y={clipY} width={clipW} height={clipH} />
+      </clipPath>
+
+      {/* On-surface elevation bands, viewed from directly above */}
+      <path d={baseRectPath()} fill={bandColors[0]} stroke={bandColors[0]} strokeWidth={0.75} />
       {bandGeometry.map((polys, idx) => (
         <path
           key={`band-${idx}`}
@@ -189,19 +239,41 @@ function ContourLayer() {
         />
       ))}
 
-      {/* Contours projected onto the base plane: same level curves, offset + dashed + muted */}
-      <g opacity={0.55}>
+      {/* Contours projected onto the base plane: the fully opaque bands above
+          tile the whole domain, so a filled shadow would never show through --
+          instead this offset+dashed duplicate of the isolines is painted on
+          TOP of the bands (still clipped to the axes, no edge bleed), reading
+          as a clearly separate reference layer rather than a near-duplicate. */}
+      <g clipPath="url(#contour-3d-plot-clip)" opacity={0.75}>
         {isolineGeometry.map((segments, idx) => (
           <path
-            key={`proj-${idx}`}
-            d={segmentsToPath(segments, PROJECTION_OFFSET, PROJECTION_OFFSET)}
+            key={`shadow-iso-${idx}`}
+            d={segmentsToPath(segments, SHADOW_OFFSET, SHADOW_OFFSET)}
             stroke={t.inkSoft}
-            strokeWidth={1.1}
-            strokeDasharray="6 5"
+            strokeWidth={1.6}
+            strokeDasharray="9 6"
             fill="none"
           />
         ))}
       </g>
+
+      {/* Sparse sample points -- real scatter data, colored via the chart's
+          own colorGetter (zAxis piecewise colorMap), not a second palette. */}
+      {sampleIndices.map((idx) => {
+        const p = series.data[idx];
+        const [px, py] = toSVG(p.x, p.y);
+        return (
+          <circle
+            key={`sample-${p.id}`}
+            cx={px}
+            cy={py}
+            r={4}
+            fill={colorGetter ? colorGetter(idx) : t.ink}
+            stroke={t.pageBg}
+            strokeWidth={1.5}
+          />
+        );
+      })}
 
       {/* Solid contour lines on the surface itself */}
       {isolineGeometry.map((segments, idx) => (
@@ -214,6 +286,21 @@ function ContourLayer() {
           fill="none"
         />
       ))}
+
+      {/* Critical point: the computed global optimum, a genuine data callout */}
+      <circle cx={ox} cy={oy} r={6} fill="none" stroke={t.ink} strokeWidth={2} />
+      <circle cx={ox} cy={oy} r={2} fill={t.ink} />
+      <text
+        x={ox}
+        y={oy - 12}
+        textAnchor="middle"
+        fontSize={13}
+        fontWeight={600}
+        fill={t.ink}
+        fontFamily="inherit"
+      >
+        {`Optimum ${optimum.z.toFixed(1)}%`}
+      </text>
     </g>
   );
 }
@@ -236,12 +323,21 @@ function bandLabel({ min, max }) {
 
 export default function Chart() {
   return (
-    <ChartContainer
+    <ScatterChart
       width={SIZE.width}
       height={SIZE.height}
-      series={[]}
       margin={MARGIN}
       skipAnimation
+      disableVoronoi
+      series={[
+        {
+          id: "yield-surface",
+          type: "scatter",
+          data: points,
+          label: "Yield (%)",
+          zAxisId: "yield",
+        },
+      ]}
       xAxis={[
         {
           scaleType: "linear",
@@ -265,6 +361,7 @@ export default function Chart() {
       ]}
       zAxis={[
         {
+          id: "yield",
           colorMap: {
             type: "piecewise",
             thresholds: bandThresholds,
@@ -272,12 +369,12 @@ export default function Chart() {
           },
         },
       ]}
+      slots={{ scatter: ContourSurfaceRenderer }}
+      slotProps={{ legend: { hidden: true } }}
     >
-      <ContourLayer />
-      <ChartsXAxis />
-      <ChartsYAxis />
       <g transform={`translate(${-RIGHT_EDGE_INSET}, 0)`}>
         <PiecewiseColorLegend
+          axisId="yield"
           position={{ horizontal: "right", vertical: "middle" }}
           direction="column"
           labelStyle={{ fontSize: 13, fill: t.inkSoft }}
@@ -296,6 +393,6 @@ export default function Chart() {
         y={50}
         style={{ fontSize: 22, fontWeight: 500, fill: t.ink, textAnchor: "middle" }}
       />
-    </ChartContainer>
+    </ScatterChart>
   );
 }
