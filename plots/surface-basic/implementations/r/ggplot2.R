@@ -74,14 +74,14 @@ mesh_df <- bind_rows(lapply(seq_along(quads), function(g) {
 
 # --- Plot ----------------------------------------------------------------------
 p <- ggplot(mesh_df, aes(x = x, y = y, group = group, fill = z)) +
-  geom_polygon(color = INK_SOFT, linewidth = 0.1, alpha = 0.95) +
+  geom_polygon(color = adjustcolor(INK_SOFT, alpha.f = 0.45), linewidth = 0.07, alpha = 0.95) +
   scale_fill_gradient(low = "#009E73", high = "#4467A3", name = "Height (z)") +
   coord_fixed() +
   labs(
     title = "surface-basic · r · ggplot2 · anyplot.ai",
-    subtitle = "Isometric projection · elevation 30° · azimuth -35°",
+    subtitle = "Isometric projection · elevation 30° · azimuth -35° · vertical axis blends Y-depth and Z-height",
     x = "X (projected)",
-    y = "Height (projected)"
+    y = "Y-depth + Height (z), projected"
   ) +
   theme_minimal(base_size = 8) +
   theme(
