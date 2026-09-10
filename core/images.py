@@ -17,6 +17,7 @@ Usage as CLI:
 """
 
 import logging
+import time
 from io import BytesIO
 from pathlib import Path
 
@@ -385,6 +386,26 @@ def create_responsive_variants(
 # =============================================================================
 
 
+def _is_cached_font(path: Path) -> bool:
+    """A usable cache entry is a file with bytes in it — see `_get_monolisa_font_path`."""
+    return path.is_file() and path.stat().st_size > 0
+
+
+# Seconds before a failed font download is attempted again, per cache file.
+# A failed attempt (no credentials, no network) costs a full client timeout,
+# and until 2026-09-10 the 0-byte file it left behind was, by accident, what
+# stopped every later render from retrying. The failure is remembered here
+# instead, in-process, so the cost is one attempt per cooldown — not one per
+# render, and not "never again" for the life of the instance.
+_FONT_DOWNLOAD_RETRY_AFTER = 600.0
+_font_download_failed_at: dict[str, float] = {}
+
+
+def _download_recently_failed(cache_filename: str) -> bool:
+    failed_at = _font_download_failed_at.get(cache_filename)
+    return failed_at is not None and time.monotonic() - failed_at < _FONT_DOWNLOAD_RETRY_AFTER
+
+
 def _get_monolisa_font_path(local_only: bool = False, italic: bool = False) -> Path | None:
     """Get path to MonoLisa font, downloading from GCS if needed.
 
@@ -400,36 +421,46 @@ def _get_monolisa_font_path(local_only: bool = False, italic: bool = False) -> P
     gcs_blob = MONOLISA_ITALIC_FONT_PATH if italic else MONOLISA_FONT_PATH
     cached_font = FONT_CACHE_DIR / cache_filename
 
-    # Return cached font if exists
-    if cached_font.exists():
+    # Return the cached font if it exists AND has content. An interrupted
+    # download leaves a 0-byte file behind (two of them, dated 2026-08-17, sat
+    # in a local cache until 2026-09-10); `exists()` accepted it, PIL failed to
+    # open it on every render, and the card silently fell back to DejaVu. An
+    # empty file is treated as missing so the download below replaces it.
+    if _is_cached_font(cached_font):
         return cached_font
 
     if local_only:
         # If italic was requested but isn't cached, fall through to upright cache.
         if italic:
             upright_cached = FONT_CACHE_DIR / "MonoLisaVariableNormal.ttf"
-            if upright_cached.exists():
+            if _is_cached_font(upright_cached):
                 return upright_cached
         return None
 
-    # Try to download from GCS
-    try:
-        from google.cloud import storage
+    # Try to download from GCS — once per cooldown, see _FONT_DOWNLOAD_RETRY_AFTER.
+    if not _download_recently_failed(cache_filename):
+        try:
+            from google.cloud import storage
 
-        FONT_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+            FONT_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
-        client = storage.Client()
-        bucket = client.bucket(GCS_STATIC_BUCKET)
-        blob = bucket.blob(gcs_blob)
-        blob.download_to_filename(str(cached_font))
-        logger.info(f"Downloaded MonoLisa font to {cached_font}")
-        return cached_font
-    except Exception as e:
-        logger.warning(f"Could not load MonoLisa font from GCS ({gcs_blob}): {e}")
-        # Italic missing → fall back to upright so we still get *some* MonoLisa.
-        if italic:
-            return _get_monolisa_font_path(local_only=local_only, italic=False)
-        return None
+            client = storage.Client()
+            bucket = client.bucket(GCS_STATIC_BUCKET)
+            blob = bucket.blob(gcs_blob)
+            blob.download_to_filename(str(cached_font))
+            logger.info(f"Downloaded MonoLisa font to {cached_font}")
+            return cached_font
+        except Exception as e:
+            logger.warning(f"Could not load MonoLisa font from GCS ({gcs_blob}): {e}")
+            # `download_to_filename` opens the target before it fetches, so a
+            # failure that is not a 404 leaves a 0-byte file behind. Drop it:
+            # nothing may ever mistake it for the font.
+            cached_font.unlink(missing_ok=True)
+            _font_download_failed_at[cache_filename] = time.monotonic()
+    # Italic missing → fall back to upright so we still get *some* MonoLisa.
+    if italic:
+        return _get_monolisa_font_path(local_only=local_only, italic=False)
+    return None
 
 
 def _get_font(

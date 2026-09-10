@@ -829,6 +829,53 @@ class TestBrandingFunctions:
 class TestGetMonolisaFontPath:
     """Tests for _get_monolisa_font_path GCS font download."""
 
+    @pytest.fixture(autouse=True)
+    def _forget_download_failures(self):
+        """The download cooldown is process-wide state; no test inherits another's failure."""
+        import core.images
+
+        core.images._font_download_failed_at.clear()
+        yield
+        core.images._font_download_failed_at.clear()
+
+    def test_empty_cached_file_counts_as_missing(self, tmp_path: Path) -> None:
+        """A 0-byte leftover of a failed download is not the font."""
+        from unittest.mock import patch
+
+        import core.images
+
+        (tmp_path / "MonoLisaVariableNormal.ttf").touch()
+
+        with patch("core.images.FONT_CACHE_DIR", tmp_path):
+            assert core.images._get_monolisa_font_path(local_only=True) is None
+
+    def test_failed_download_leaves_no_file_and_is_not_retried_at_once(self, tmp_path: Path) -> None:
+        """A failed download must not leave a 0-byte file behind (PIL would fail
+        on it for the life of the instance) and must not be retried on the very
+        next render — one attempt per cooldown."""
+        from unittest.mock import MagicMock, patch
+
+        import core.images
+
+        target = tmp_path / "MonoLisaVariableNormal.ttf"
+
+        def leave_empty_file(filename: str) -> None:
+            Path(filename).touch()  # what download_to_filename does before it fails
+            raise RuntimeError("403 Forbidden")
+
+        mock_client = MagicMock()
+        mock_client.bucket.return_value.blob.return_value.download_to_filename.side_effect = leave_empty_file
+
+        with (
+            patch("core.images.FONT_CACHE_DIR", tmp_path),
+            patch("google.cloud.storage.Client", return_value=mock_client) as client_cls,
+        ):
+            assert core.images._get_monolisa_font_path() is None
+            assert not target.exists()
+            assert core.images._get_monolisa_font_path() is None
+
+        assert client_cls.call_count == 1
+
     def test_returns_cached_font_without_gcs_call(self, tmp_path: Path) -> None:
         """Should return cached font path without calling GCS when file exists."""
         from unittest.mock import patch
@@ -1005,9 +1052,11 @@ class TestTextShaping:
 
         from PIL import ImageChops
 
-        from core.images import FONT_CACHE_DIR, create_home_og_image
+        from core.images import FONT_CACHE_DIR, _is_cached_font, create_home_og_image
 
-        if not (FONT_CACHE_DIR / "MonoLisaVariableItalic.ttf").exists():
+        # `_is_cached_font`, not `exists()`: a 0-byte leftover of an interrupted
+        # download would pass the skip and then fail the pixel comparison.
+        if not _is_cached_font(FONT_CACHE_DIR / "MonoLisaVariableItalic.ttf"):
             pytest.skip("MonoLisa italic not cached locally — swash rendering cannot be verified")
 
         with_features = create_home_og_image(theme="light")

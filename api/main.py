@@ -9,15 +9,16 @@ from dotenv import load_dotenv  # noqa: E402, I001
 
 load_dotenv()
 
+import asyncio  # noqa: E402
 import logging  # noqa: E402
-from contextlib import asynccontextmanager  # noqa: E402
+from contextlib import asynccontextmanager, suppress  # noqa: E402
 
 from fastapi import FastAPI, HTTPException, Request, Response  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from starlette.middleware.gzip import GZipMiddleware  # noqa: E402
 
 from api.analytics import classify_asset, track_asset_fetch, track_bot_fetch  # noqa: E402
-from api.cache import cache_key, set_cache  # noqa: E402
+from api.cache import cache_key, get_or_set_cache  # noqa: E402
 from api.exceptions import (  # noqa: E402
     AnyplotException,
     anyplot_exception_handler,
@@ -70,6 +71,13 @@ logger = logging.getLogger(__name__)
 mcp_http_app = mcp_server.http_app(path="/", stateless_http=True)
 
 
+# Strong reference to the running prewarm task. asyncio keeps only a weak
+# reference to a task, so without this the prewarm could be garbage-collected
+# mid-flight; it also gives the shutdown path something to cancel before the
+# DB engine goes away.
+_prewarm_task: asyncio.Task[None] | None = None
+
+
 async def _prewarm_cache() -> None:
     """Populate the in-memory cache for the endpoints the frontend hits on
     page load: the four AppDataProvider metadata calls (/stats, /libraries,
@@ -81,8 +89,17 @@ async def _prewarm_cache() -> None:
     The cache lives per Cloud Run instance, so every new instance that comes
     up from autoscale or a cold start would otherwise force its first user
     to wait on the full DB roundtrip — which is exactly the user-reported
-    "manchmal echt lange" on the NumbersStrip and the /specs page. Prewarming
-    runs once per process startup so the first request hits a warm cache.
+    "manchmal echt lange" on the NumbersStrip and the /specs page.
+
+    It runs as a BACKGROUND task, scheduled by `_start_prewarm` from the
+    lifespan, not awaited there. uvicorn runs the lifespan to completion
+    before it binds the socket, so an awaited prewarm sat inside every cold
+    start: a stable 2.0–3.6 s of an ~11 s start (197 starts measured on
+    2026-09-10), paid by Cloud Run's startup probe and by whichever request
+    was already pinned to the starting instance. Each key goes through
+    `get_or_set_cache`, so a request that arrives first computes the key
+    itself under the per-key lock and the prewarm finds it cached; the two
+    never run the same query twice or reset each other's refresh clock.
 
     Failures here are non-fatal: log and continue. A failed prewarm just
     means the first user request takes the cold-cache path it would have
@@ -100,11 +117,27 @@ async def _prewarm_cache() -> None:
     )
     for key, factory in refreshers:
         try:
-            result = await factory()
-            set_cache(cache_key(key), result)
+            await get_or_set_cache(cache_key(key), factory)
             logger.info("Cache prewarm: %s OK", key)
         except Exception:
             logger.warning("Cache prewarm failed for %s — falling back to lazy load", key, exc_info=True)
+
+
+def _start_prewarm() -> asyncio.Task[None]:
+    """Schedule `_prewarm_cache` as a task and keep the strong reference."""
+    global _prewarm_task
+    _prewarm_task = asyncio.create_task(_prewarm_cache(), name="cache-prewarm")
+    return _prewarm_task
+
+
+async def _stop_prewarm() -> None:
+    """Cancel a prewarm that is still running, so it cannot touch a closed DB engine."""
+    global _prewarm_task
+    task, _prewarm_task = _prewarm_task, None
+    if task is not None and not task.done():
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
 
 
 @asynccontextmanager
@@ -125,7 +158,10 @@ async def lifespan(app: FastAPI):
         try:
             await init_db()
             logger.info("Database connection initialized")
-            await _prewarm_cache()
+            # Scheduled, not awaited: the port opens while the prewarm runs.
+            # `init_db()` stays awaited above — a request must never arrive
+            # before the engine exists. See `_prewarm_cache` for the numbers.
+            _start_prewarm()
         except Exception as e:
             logger.error(f"Failed to initialize database: {e}")
 
@@ -134,8 +170,10 @@ async def lifespan(app: FastAPI):
         logger.info("MCP server initialized")
         yield
 
-    # Cleanup database connection
+    # Cleanup: stop a prewarm that is still in flight BEFORE the engine it
+    # would query is disposed.
     logger.info("Shutting down anyplot API...")
+    await _stop_prewarm()
     await close_db()
 
 

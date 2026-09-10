@@ -5,7 +5,22 @@ substitutions:
   _MEMORY: 1Gi
   _CPU: "1"
   _MIN_INSTANCES: "1"
-  _MAX_INSTANCES: "3"
+  # max=1, deliberately. Every scale-out was a cold start that a live request
+  # paid for: measured 2026-08-29..09-10, Cloud Run started 464 extra instances
+  # (16-54 a day) while the warm one sat at a concurrency of ~2, because a page
+  # load fans out 4-6 API calls in the same instant — and it pinned one call of
+  # each burst to the new instance for the full 9-13 s start. That was 8-37
+  # browser requests a day with referer anyplot.ai, median 11.3 s, on the four
+  # calls the start page makes. With a single instance a burst queues on the
+  # warm one for milliseconds instead. The instance can carry it: request p50
+  # 32 ms, CPU p95 6 %, more than 9 concurrent requests in ~2 minutes a day,
+  # no 429 in the window. Raising --concurrency on its own would not have
+  # helped (the starts never came from the concurrency target); it is raised
+  # below so the cap has headroom. If 429s ever appear, max=2 is the next
+  # step, not a bigger limit. Min stays 1: the start classes that remain
+  # (deploys, Google's roughly daily instance replacement) are exactly what a
+  # warm instance is for.
+  _MAX_INSTANCES: "1"
   # Cloudflare Access (Zero Trust) for /debug/* — the team domain is stable;
   # the AUD must be filled in once the Self-hosted Application is created in
   # the Cloudflare Zero Trust dashboard. With AUD unset (or with no email
@@ -86,7 +101,13 @@ steps:
       # next deploy, which is the trade already accepted for the secrets.
       - "--update-env-vars=^|^ENVIRONMENT=production|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GCS_BUCKET=anyplot-images|CF_ACCESS_TEAM_DOMAIN=${_CF_ACCESS_TEAM_DOMAIN}|CF_ACCESS_AUD=${_CF_ACCESS_AUD}|ADMIN_ALLOWED_EMAILS=${_ADMIN_ALLOWED_EMAILS}"
       - "--cpu-throttling"
-      - "--concurrency=15"
+      # 40, not 15: with _MAX_INSTANCES=1 this limit is the only capacity the
+      # service has, and 15 was a default nobody had measured against. On this
+      # async stack everything cached answers in milliseconds; the one CPU-heavy
+      # path, OG image compositing, runs in a worker thread behind its own
+      # two-slot semaphore (api/routers/og_images.py), so 40 in-flight requests
+      # cannot become 40 concurrent PIL renders.
+      - "--concurrency=40"
       - "--timeout=600"
       # Deploy WITHOUT routing traffic: the smoke step probes this revision on
       # its tag URL first, and only the promote step below shifts traffic — so a
