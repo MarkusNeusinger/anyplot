@@ -1,0 +1,248 @@
+library: chartjs
+language: javascript
+specification_id: line-3d-trajectory
+created: '2026-09-10T00:09:26Z'
+updated: '2026-09-10T00:22:06Z'
+generated_by: claude-sonnet
+workflow_run: 34419277981
+issue: 3182
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/chartjs/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Legend swatches for "Orbit start" and "Re-entry (impact)" now correctly show their
+    green/red marker colors, fixing the Attempt 1 defect (dataset-level backgroundColor
+    now matches pointBackgroundColor).
+  - Axis tick labels are now displayed with maxTicksLimit, giving the static PNG a
+    sense of scale that was previously missing.
+  - Honest, well-documented isometric-projection technique for approximating a 3D
+    trajectory within Chart.js's 2D-only chart types, instead of reaching for a workaround
+    library.
+  - Per-segment color gradient (segment.borderColor) correctly encodes elapsed time
+    using the Imprint seq scale, verified identical between light/dark renders.
+  - Distinct shape-coded start/re-entry markers (circle vs. triangle) plus semantically
+    correct palette[4] matte-red for the "impact" role.
+  - Fully deterministic, clean, appropriately-scoped code with no fake interactivity.
+  weaknesses:
+  - The static projection still offers no rotation/zoom, so the plot only partially
+    satisfies the spec's emphasis on "interactive rotation and zoom" for exploring
+    3D trajectories — this is an inherent Chart.js ceiling (no native 3D chart type),
+    not a code defect, and is already honestly documented in the header comment.
+  - 'tension: 0 produces straight line segments between points rather than "smooth
+    lines" per the spec''s note; mitigated by the high point count (260), which reads
+    as smooth in practice.'
+  - Tick label font (11px) is noticeably smaller than the axis title font (16px) and
+    legend font (15px) — slightly below the ~14px chartjs.md guideline — a minor size-hierarchy
+    imbalance rather than a legibility failure.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white — correct.
+      Chrome: Title "line-3d-trajectory · javascript · chartjs · anyplot.ai" in dark ink, fully legible. Legend row below title with six entries ("Orbit start", "Re-entry (impact)", "Orbit (color = elapsed time)", "X axis", "Y axis", "Z axis (altitude)") — the "Orbit start" swatch is now a solid green box and "Re-entry (impact)" a solid matte-red box, correctly matching their marker colors (this was the flat-gray-box bug flagged in Attempt 1 — now fixed). Axis titles "Projected X–Y plane" (bottom) and "Altitude (Z)" (left, rotated) are dark and readable; tick labels (-10..10 / -5..10) are now visible in a soft ink tone, giving the static PNG a sense of scale that was previously missing.
+      Data: Isometrically-projected decaying-orbit spiral — a thick line sweeping from a wide outer loop (brand green #009E73) through progressively tighter loops shifting to blue (#4467A3) as it spirals inward, using the Imprint sequential scale to encode elapsed time. A large green circle marks orbit start (outer loop); a red triangle marks re-entry/impact (innermost loop). Three dashed/dotted reference lines (X, Y, Z) radiate from a shared origin with distinct dash patterns.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black — correct.
+      Chrome: Same title, axis titles, legend, and tick labels rendered in light ink (#F0EFE8 / #B8B7B0), all clearly readable against the dark surface — no dark-on-dark failures. The legend swatch fix reproduces correctly here too (green/red boxes, not flat near-black rectangles).
+      Data: Identical green→blue gradient orbit line and identical green-circle/red-triangle markers as the light render — data colors confirmed identical between themes; only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit; readable in both themes; tick font (11px)
+          slightly small relative to axis-title/legend font
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3px line and radius-11 markers well-sized for a 260-point trajectory;
+          distinct marker shapes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential gradient plus shape-coded markers avoids relying on hue
+          alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: No canvas-gate failure; good proportions, no overflow/clipping in
+          either theme
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Honest projected-axis labels rather than misleading raw X/Y
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Legend swatches now correctly match marker colors (palette[0]/palette[4]);
+          seq gradient correct; theme chrome correct in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Isometric projection + gradient + dual-marker shapes + differentiated
+          dash patterns is a thoughtful design, above default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid removed, generous whitespace, legend swatch bug now fixed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear narrative (decaying orbit to re-entry) with legible focal point
+          (red triangle) and time-encoded gradient
+    spec_compliance:
+      score: 12
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct honest workaround for Chart.js's lack of native 3D, but static
+          rendering only partially satisfies spec's rotation/zoom emphasis
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Sequential connected line, time-color encoding, single trajectory
+          all present; tension:0 gives straight segments mitigated by high point count
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y/Z correctly projected; tick labels now visible, giving the static
+          PNG a sense of scale
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly correct; legend labels and swatch colors now
+          both correct
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers trajectory, time-color encoding, start/end markers; multi-trajectory
+          comparison (optional) not shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Decaying satellite orbit spiraling to re-entry is a plausible, neutral
+          physics scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Radius/altitude/revolution values are sensible and visually legible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; small appropriately-scoped pure helper functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic parametric generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality; projection technique transparently documented
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false, current Chart.js
+          4.x API'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of dataset order, segment.borderColor callback, point-only
+          datasets
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-segment gradient coloring via the segment callback is a genuine
+          Chart.js-specific feature
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - gradient-fill
