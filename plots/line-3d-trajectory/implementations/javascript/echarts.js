@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-3d-trajectory: 3D Line Plot for Trajectory Visualization
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 78/100 | Created: 2026-09-10
+// Quality: 88/100 | Created: 2026-09-10
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
