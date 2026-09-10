@@ -252,6 +252,11 @@ class Feedback(Base):
     # Context captured automatically with the message
     path: Mapped[str | None] = mapped_column(String(500), nullable=True)
     spec_id: Mapped[str | None] = mapped_column(String(MAX_SPEC_ID_LENGTH), nullable=True)
+    # Set only by the 👍/👎 buttons on a plot: the implementation the reaction
+    # is about, so votes can be counted per image (spec × language × library).
+    # Page-level feedback from the floating widget leaves both NULL.
+    library_id: Mapped[str | None] = mapped_column(String(MAX_LIBRARY_ID_LENGTH), nullable=True)
+    language: Mapped[str | None] = mapped_column(String(MAX_LANGUAGE_ID_LENGTH), nullable=True)
     user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
     viewport: Mapped[str | None] = mapped_column(String(20), nullable=True)
     session_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
@@ -273,6 +278,9 @@ class Feedback(Base):
         # does not propose dropping them.
         Index("ix_feedback_created_at", text("created_at DESC")),
         Index("ix_feedback_ip_hash_created_at", "ip_hash", text("created_at DESC")),
+        # Per-image vote counts (migration a7c3e9d1f5b8): reactions are looked up
+        # by the implementation they belong to.
+        Index("ix_feedback_spec_library", "spec_id", "library_id"),
     )
 
 

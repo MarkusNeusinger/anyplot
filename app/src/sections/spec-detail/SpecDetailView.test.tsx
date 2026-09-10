@@ -1,8 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeContext, type ThemeContextValue } from 'src/hooks/useLayoutContext';
 import { SpecDetailView } from 'src/sections/spec-detail/SpecDetailView';
-import { render, screen, userEvent } from 'src/test-utils';
+import { render, screen, userEvent, waitFor } from 'src/test-utils';
 import type { Implementation } from 'src/types';
 
 const darkThemeValue: ThemeContextValue = {
@@ -38,6 +38,7 @@ const implC = makeImpl({
 });
 
 const defaultProps = {
+  specId: 'scatter-basic',
   specTitle: 'Basic Scatter Plot',
   selectedLibrary: 'matplotlib',
   currentImpl: implB,
@@ -46,16 +47,28 @@ const defaultProps = {
   codeCopied: null,
   downloadDone: null,
   viewMode: 'preview' as const,
-  reportUrl: 'https://github.com/example/anyplot/issues/new?template=report-plot-issue.yml',
   onImageLoad: vi.fn(),
   onCopyCode: vi.fn(),
   onDownload: vi.fn(),
   onViewModeChange: vi.fn(),
-  onReport: vi.fn(),
   onTrackEvent: vi.fn(),
 };
 
+const okResponse = () =>
+  new Response(JSON.stringify({ status: 'ok' }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+
 describe('SpecDetailView', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('renders image with correct alt text', () => {
     render(<SpecDetailView {...defaultProps} />);
     const img = screen.getByRole('img');
@@ -171,5 +184,121 @@ describe('SpecDetailView', () => {
     render(<SpecDetailView {...defaultProps} currentImpl={null} />);
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /copy code/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /thumbs up/i })).not.toBeInTheDocument();
+  });
+
+  describe('plot vote', () => {
+    it('renders 👍 and 👎 over the plot and no report action', () => {
+      render(<SpecDetailView {...defaultProps} />);
+      expect(screen.getByRole('button', { name: /thumbs up/i })).toHaveAttribute(
+        'aria-pressed',
+        'false'
+      );
+      expect(screen.getByRole('button', { name: /thumbs down/i })).toHaveAttribute(
+        'aria-pressed',
+        'false'
+      );
+      expect(screen.queryByRole('link', { name: /report issue/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /report issue/i })).not.toBeInTheDocument();
+    });
+
+    it('renders both thumbs on the interactive surface too', () => {
+      render(
+        <SpecDetailView
+          {...defaultProps}
+          currentImpl={implC}
+          selectedLibrary="plotly"
+          viewMode="interactive"
+        />
+      );
+      expect(screen.getByRole('button', { name: /thumbs up/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /thumbs down/i })).toBeInTheDocument();
+    });
+
+    it('submits a thumbs_up for the current implementation and inks the button', async () => {
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(okResponse());
+      const user = userEvent.setup();
+      render(<SpecDetailView {...defaultProps} />);
+
+      const up = screen.getByRole('button', { name: /thumbs up/i });
+      await user.click(up);
+
+      // Optimistic highlight + toast are applied immediately.
+      expect(up).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByText('>>> .liked')).toBeInTheDocument();
+
+      await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
+      expect(String(fetchSpy.mock.calls[0][0])).toMatch(/\/feedback$/);
+      const body = JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string);
+      expect(body).toMatchObject({
+        message: null,
+        reaction: 'thumbs_up',
+        spec_id: 'scatter-basic',
+        library_id: 'matplotlib',
+        language: 'python',
+      });
+      expect(typeof body.session_id).toBe('string');
+    });
+
+    it('locks the vote: neither thumb posts again once one is chosen', async () => {
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(okResponse());
+      const user = userEvent.setup();
+      render(<SpecDetailView {...defaultProps} />);
+
+      await user.click(screen.getByRole('button', { name: /thumbs up/i }));
+      await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
+
+      const down = screen.getByRole('button', { name: /thumbs down/i });
+      expect(down).toHaveAttribute('aria-disabled', 'true');
+      await user.click(screen.getByRole('button', { name: /thumbs up/i }));
+      await user.click(down);
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole('button', { name: /thumbs up/i })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      );
+      expect(down).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('rolls the highlight back when the submit fails', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 500 }));
+      const user = userEvent.setup();
+      render(<SpecDetailView {...defaultProps} />);
+
+      const down = screen.getByRole('button', { name: /thumbs down/i });
+      await user.click(down);
+      await waitFor(() => expect(down).toHaveAttribute('aria-pressed', 'false'));
+      expect(screen.queryByText('>>> .disliked')).not.toBeInTheDocument();
+    });
+
+    it('remembers the vote per implementation across remounts and library switches', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(okResponse());
+      const user = userEvent.setup();
+      const { rerender, unmount } = render(<SpecDetailView {...defaultProps} />);
+
+      await user.click(screen.getByRole('button', { name: /thumbs up/i }));
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: /thumbs up/i })).toHaveAttribute(
+          'aria-pressed',
+          'true'
+        )
+      );
+
+      // Another library of the same spec starts unrated.
+      rerender(<SpecDetailView {...defaultProps} currentImpl={implA} selectedLibrary="altair" />);
+      expect(screen.getByRole('button', { name: /thumbs up/i })).toHaveAttribute(
+        'aria-pressed',
+        'false'
+      );
+
+      // Coming back — even after a full remount — shows the earlier vote.
+      unmount();
+      render(<SpecDetailView {...defaultProps} />);
+      expect(screen.getByRole('button', { name: /thumbs up/i })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      );
+    });
   });
 });

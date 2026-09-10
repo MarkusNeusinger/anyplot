@@ -5,14 +5,17 @@
  * Toggles between static preview (PNG) and interactive HTML iframe.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DownloadIcon from '@mui/icons-material/Download';
-import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import ThumbDownOutlinedIcon from '@mui/icons-material/ThumbDownOutlined';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Skeleton from '@mui/material/Skeleton';
@@ -20,15 +23,20 @@ import Tooltip from '@mui/material/Tooltip';
 
 import { API_URL } from 'src/constants';
 import { useTheme } from 'src/hooks/useLayoutContext';
+import { useLocalStorage } from 'src/hooks/useLocalStorage';
+import { useQuickReaction } from 'src/hooks/useQuickReaction';
 import { colors, fontSize, overlayButtonSx, typography } from 'src/theme';
 import type { Implementation } from 'src/types';
+import { PLOT_VOTES_KEY, type QuickReaction, voteKey, type VoteTarget } from 'src/utils/feedback';
 import { buildDetailSrcSet, DETAIL_SIZES } from 'src/utils/responsiveImage';
 import { selectPreviewHtml, selectPreviewUrl } from 'src/utils/themedPreview';
 
 const INITIAL_WIDTH = 1600;
 const INITIAL_HEIGHT = 900;
+const VOTE_TOAST_MS = 1200;
 
 interface SpecDetailViewProps {
+  specId: string;
   specTitle: string;
   selectedLibrary: string;
   currentImpl: Implementation | null;
@@ -37,16 +45,15 @@ interface SpecDetailViewProps {
   codeCopied: string | null;
   downloadDone: string | null;
   viewMode: 'preview' | 'interactive';
-  reportUrl: string;
   onViewModeChange: (mode: 'preview' | 'interactive') => void;
   onImageLoad: () => void;
   onCopyCode: (impl: Implementation) => void;
   onDownload: (impl: Implementation) => void;
-  onReport: () => void;
   onTrackEvent: (event: string, props?: Record<string, string | undefined>) => void;
 }
 
 export function SpecDetailView({
+  specId,
   specTitle,
   selectedLibrary,
   currentImpl,
@@ -55,12 +62,10 @@ export function SpecDetailView({
   codeCopied,
   downloadDone,
   viewMode,
-  reportUrl,
   onViewModeChange,
   onImageLoad,
   onCopyCode,
   onDownload,
-  onReport,
   onTrackEvent,
 }: SpecDetailViewProps) {
   const sortedImpls = [...implementations].sort((a, b) => a.library_id.localeCompare(b.library_id));
@@ -82,6 +87,51 @@ export function SpecDetailView({
       setOrigin({ x: 50, y: 50 });
     }
   }, [selectedLibrary]);
+
+  // 👍 / 👎 on the plot — one tap rates THIS implementation, once: the vote is
+  // final for the session, so nobody can flip up/down at will (the server
+  // drops repeat votes from the same session for the same image as well).
+  // The visitor's own vote is kept per spec/language/library in localStorage
+  // so the thumb stays inked when they come back or flip through the carousel;
+  // the server row is what gets counted (FeedbackRepository.reaction_counts).
+  const submitReaction = useQuickReaction();
+  const [votes, setVotes] = useLocalStorage<Record<string, QuickReaction>>(PLOT_VOTES_KEY, {});
+  const voteTarget = useMemo<VoteTarget | null>(
+    () =>
+      currentImpl
+        ? { specId, language: currentImpl.language, libraryId: currentImpl.library_id }
+        : null,
+    [specId, currentImpl]
+  );
+  const vote = voteTarget ? (votes[voteKey(voteTarget)] ?? null) : null;
+  const [voteToast, setVoteToast] = useState<QuickReaction | null>(null);
+  const voteToastTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const handleVote = useCallback(
+    (reaction: QuickReaction) => {
+      if (!voteTarget || vote) return;
+      const key = voteKey(voteTarget);
+      // Optimistic: ink the thumb now, roll back only if the server refused.
+      setVotes(prev => ({ ...prev, [key]: reaction }));
+      setVoteToast(reaction);
+      if (voteToastTimerRef.current) clearTimeout(voteToastTimerRef.current);
+      voteToastTimerRef.current = setTimeout(() => setVoteToast(null), VOTE_TOAST_MS);
+      void submitReaction(reaction, voteTarget).then(ok => {
+        if (ok) return;
+        setVotes(prev => {
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+        setVoteToast(null);
+      });
+    },
+    [voteTarget, vote, setVotes, submitReaction]
+  );
+  useEffect(() => {
+    return () => {
+      if (voteToastTimerRef.current) clearTimeout(voteToastTimerRef.current);
+    };
+  }, []);
 
   // Interactive iframe state — scaled to fit container
   const interactiveContainerRef = useRef<HTMLDivElement>(null);
@@ -196,11 +246,107 @@ export function SpecDetailView({
   const previewHtml = selectPreviewHtml(currentImpl, isDark);
   const interactiveAvailable = !!previewHtml;
 
-  // Overlay action buttons (report/copy/download/open/preview/raw) sit on top
+  // Overlay action buttons (vote/copy/download/open/preview/raw) sit on top
   // of the preview image — shared theme-aware style, see src/theme/tokens.ts.
   const overlayBtnSx = overlayButtonSx(isDark);
   const proxyUrl = (url: string) =>
     `${API_URL}/proxy/html?url=${encodeURIComponent(url)}&origin=${encodeURIComponent(window.location.origin)}`;
+
+  // 👍 sits top-left, 👎 bottom-left — the two corners the plot content
+  // rarely uses — so rating an image is one obvious tap without covering the
+  // title or the legend. The chosen thumb stays inked (green / matte red) so
+  // the choice reads as committed, not merely hovered, and the other thumb
+  // fades out once a vote is in. The same elements are rendered on both the
+  // static and the interactive surface.
+  const thumbSx = (active: boolean, locked: boolean, activeColor: string) => {
+    if (active) {
+      return {
+        ...overlayBtnSx,
+        color: activeColor,
+        '&:hover': { ...overlayBtnSx['&:hover'], color: activeColor },
+      };
+    }
+    if (locked) {
+      return { ...overlayBtnSx, opacity: 0.45, cursor: 'default', '&:hover': {} };
+    }
+    return overlayBtnSx;
+  };
+  const thumbButton = (
+    reaction: QuickReaction,
+    label: string,
+    verb: string,
+    activeColor: string,
+    Outlined: typeof ThumbUpOutlinedIcon,
+    Filled: typeof ThumbUpIcon
+  ) => {
+    if (!currentImpl) return null;
+    const active = vote === reaction;
+    const locked = !!vote && !active;
+    return (
+      <Tooltip title={locked ? '.rated()' : verb} disableFocusListener>
+        <IconButton
+          onClick={(e: React.MouseEvent) => {
+            (e.currentTarget as HTMLElement).blur();
+            handleVote(reaction);
+          }}
+          aria-label={label}
+          aria-pressed={active}
+          aria-disabled={locked}
+          sx={thumbSx(active, locked, activeColor)}
+          size="medium"
+        >
+          {active ? <Filled fontSize="small" /> : <Outlined fontSize="small" />}
+        </IconButton>
+      </Tooltip>
+    );
+  };
+  const thumbUpButton = thumbButton(
+    'thumbs_up',
+    'Thumbs up',
+    '.like()',
+    colors.primary,
+    ThumbUpOutlinedIcon,
+    ThumbUpIcon
+  );
+  const thumbDownButton = thumbButton(
+    'thumbs_down',
+    'Thumbs down',
+    '.dislike()',
+    colors.error,
+    ThumbDownOutlinedIcon,
+    ThumbDownIcon
+  );
+  // Centre toast, same shape as the `.copied` / `.downloaded` confirmations.
+  const toastText = voteToast
+    ? voteToast === 'thumbs_up'
+      ? '>>> .liked'
+      : '>>> .disliked'
+    : currentImpl && codeCopied === currentImpl.library_id
+      ? '>>> .copied'
+      : currentImpl && downloadDone === currentImpl.library_id
+        ? '>>> .downloaded'
+        : null;
+  const toast = toastText && (
+    <Box
+      sx={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        bgcolor: 'rgba(0,0,0,0.7)',
+        color: '#fff',
+        px: 1.5,
+        py: 0.5,
+        borderRadius: 1,
+        fontFamily: typography.fontFamily,
+        fontSize: fontSize.sm,
+        pointerEvents: 'none',
+        zIndex: 2,
+      }}
+    >
+      {toastText}
+    </Box>
+  );
 
   return (
     <Box sx={{ maxWidth: { xs: '100%', md: 1200, lg: 1400, xl: 1600 }, mx: 'auto' }}>
@@ -245,21 +391,13 @@ export function SpecDetailView({
             />
           </Box>
 
+          {toast}
+
           <Box sx={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 0.5 }}>
-            <Tooltip title=".report()" disableFocusListener>
-              <IconButton
-                component="a"
-                href={reportUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={onReport}
-                aria-label="Report issue"
-                sx={overlayBtnSx}
-                size="medium"
-              >
-                <FlagOutlinedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            {thumbUpButton}
+          </Box>
+          <Box sx={{ position: 'absolute', bottom: 8, left: 8, display: 'flex', gap: 0.5 }}>
+            {thumbDownButton}
           </Box>
 
           <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
@@ -371,28 +509,7 @@ export function SpecDetailView({
             </Box>
           )}
 
-          {currentImpl &&
-            (codeCopied === currentImpl.library_id || downloadDone === currentImpl.library_id) && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  bgcolor: 'rgba(0,0,0,0.7)',
-                  color: '#fff',
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: 1,
-                  fontFamily: typography.fontFamily,
-                  fontSize: fontSize.sm,
-                  pointerEvents: 'none',
-                  zIndex: 2,
-                }}
-              >
-                {codeCopied === currentImpl.library_id ? '>>> .copied' : '>>> .downloaded'}
-              </Box>
-            )}
+          {toast}
 
           <Box
             onClick={e => e.stopPropagation()}
@@ -404,23 +521,19 @@ export function SpecDetailView({
               gap: 0.5,
             }}
           >
-            <Tooltip title=".report()" disableFocusListener>
-              <IconButton
-                component="a"
-                href={reportUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e: React.MouseEvent) => {
-                  (e.currentTarget as HTMLElement).blur();
-                  onReport();
-                }}
-                aria-label="Report issue"
-                sx={overlayBtnSx}
-                size="medium"
-              >
-                <FlagOutlinedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            {thumbUpButton}
+          </Box>
+          <Box
+            onClick={e => e.stopPropagation()}
+            sx={{
+              position: 'absolute',
+              bottom: 8,
+              left: 8,
+              display: zoomed ? 'none' : 'flex',
+              gap: 0.5,
+            }}
+          >
+            {thumbDownButton}
           </Box>
 
           <Box
