@@ -1,0 +1,264 @@
+library: muix
+language: javascript
+specification_id: line-3d-trajectory
+created: '2026-09-10T00:21:49Z'
+updated: '2026-09-10T00:35:07Z'
+generated_by: claude-sonnet
+workflow_run: 34420423568
+issue: 3182
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/muix/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Overplotting fix works: strokeOpacity dropped from 0.9 to 0.55 and strokeWidth
+    from 2 to 1.5, so the dense inner spiral now reads as layered winding rings instead
+    of a solid blob.'
+  - The 'shared start' label was moved to a clear corner of the drawing area (via
+    useDrawingArea's padded bounds) and connected with a dashed leader line, fully
+    resolving the prior overlap with Trajectory B's spiral.
+  - Added an italic 'normalized units' caption near the axis gizmo, giving the reader
+    a magnitude reference that was missing before.
+  - 'Correct Imprint palette use — Trajectory A is brand green (#009E73), Trajectory
+    B is lavender (palette[1]); backgrounds are theme-correct (#FAF8F1 light / #1A1A17
+    dark) in both renders, data colors identical across themes.'
+  - Deterministic RK4 Lorenz integration with a realistic perturbation (x0=0.1000
+    vs 0.1001) directly illustrates chaotic sensitivity to initial conditions — a
+    strong, spec-aligned data choice.
+  - 'Idiomatic MUI X usage: composes a custom SVG overlay via ChartContainer + useDrawingArea,
+    the library''s documented pattern for chart types (3D projections) outside the
+    built-in series set.'
+  - Clean, deterministic, single-purpose code — no unused imports, no fake interactivity,
+    skipAnimation set correctly.
+  weaknesses:
+  - The innermost loops of Trajectory B are still fairly dense even at opacity 0.55
+    — a small further reduction (~0.4-0.45) on just the tightest coils would let the
+    very center resolve even more cleanly, though this is no longer a hard readability
+    problem.
+  - The visualization is entirely custom SVG drawn over an empty ChartContainer, so
+    it doesn't showcase MUI X's own series/tooltip/legend components — a real constraint
+    of doing 3D projection on a 2D-only community library, not an oversight.
+  - True interactive rotation (the spec calls it 'essential' for exploring 3D structure)
+    isn't available — only a fixed isometric camera angle — an inherent MUI X community-surface
+    limitation rather than something this implementation could add.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "line-3d-trajectory · javascript · muix · anyplot.ai" in bold dark ink, clearly legible, comfortably sized within the plot width. Legend (top right) with two color swatches and descriptive labels ("Trajectory A · x0=0.1000", "Trajectory B · x0=0.1001") in soft dark gray, fully legible and clear of the data. Axis gizmo (bottom left) with X/Y/Z labels plus a new italic "normalized units" caption, all in soft dark gray, legible. "shared start" annotation now sits in the clear top-left corner of the drawing area, connected to the actual start point by a dashed leader line — no longer crossed by trajectory lines.
+      Data: Trajectory A is brand green (#009E73), Trajectory B is lavender/purple (palette[1]) — both densely wound near a shared origin, diverging into two separate "butterfly wing" loops, classic Lorenz-attractor shape. With opacity reduced to 0.55 and strokeWidth to 1.5, the inner loops now show distinct concentric winding rings instead of a solid blob, though the innermost coils are still fairly tight.
+      Legibility verdict: PASS (all chrome text clearly readable, no overlap issues remain).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Title in light off-white ink, legend and gizmo labels (including the new "normalized units" caption) in light soft gray — all clearly legible against the dark background, no dark-on-dark issues. "shared start" text sits in the clear top-left corner with its dashed leader line, fully legible with no crossing lines.
+      Data: Trajectory colors are identical to the light render (green #009E73 and lavender palette[1]), confirming the palette rule that only chrome flips between themes. Same improved winding-ring visibility in the dense inner loops as the light render.
+      Legibility verdict: PASS (no dark-on-dark failures, no label-overlap concerns).
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, legend, gizmo labels, and the now-relocated 'shared start'
+          label are all readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: '''shared start'' label moved to a clear corner with a leader line
+          — the prior overlap with Trajectory B''s spiral is fully resolved.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Opacity reduced from 0.9 to 0.55 and strokeWidth from 2 to 1.5 —
+          inner loops now show distinct winding rings instead of a solid blob; innermost
+          coils are still fairly tight.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green + lavender pair (Imprint positions 1-2) is CVD-safe and contrasts
+          well on both surfaces.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing clipped at canvas edges, title well-sized,
+          canvas dimension gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title excellent; the new 'normalized units' caption near the gizmo
+          resolves the prior missing-scale-reference gap.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is brand green #009E73, second is Imprint lavender;
+          theme-correct backgrounds in both renders; data colors identical across
+          themes.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom isometric 3D->2D projection, fixed camera angle, orientation
+          gizmo, and a hand-built legend go well beyond generic defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No spines/grid clutter, transparent chart area, generous whitespace;
+          the tuned alpha/stroke values add polish over the prior attempt.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Shared-start marker (now clearly annotated via leader line) and diverging
+          wings visually narrate the butterfly-effect story the spec calls for.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3D trajectory plot, achieved via the documented MUI X composition
+          pattern since community MUI X has no native 3D series.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Sequential connected lines and multi-trajectory color comparison
+          satisfy the spec; true interactive rotation isn't implemented, an inherent
+          MUI X community-surface limitation.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y/Z correctly projected and normalized; full data range visible
+          without clipping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels are descriptive
+          and match the data.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Connected sequential path, multiple comparable trajectories; no time-progression
+          color gradient, but that's an explicit spec alternative, not a gap.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Lorenz attractor is exactly the canonical example the spec names,
+          neutral subject matter.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ~1800 points per trajectory, within the spec's 100-2000 point range.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions are necessary for the RK4 integration and projection
+          math, not superfluous abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic RK4 integration, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ChartContainer and useDrawingArea imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the math involved, no fake UI/interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: export default component, skipAnimation set, sized from window.ANYPLOT_SIZE
+          — correct harness contract.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly applies the ChartContainer + useDrawingArea composition
+          pattern MUI X documents for chart types outside the built-in series set.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Doesn't showcase native MUI X series/tooltip/legend richness since
+          the visualization is custom SVG; the useDrawingArea hook usage itself is
+          a modest distinctive touch.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
