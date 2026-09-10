@@ -111,7 +111,7 @@ dir_y    <- corners$proj_y[tip_idx] - corners$proj_y[1]
 dir_len  <- sqrt(dir_x^2 + dir_y^2)
 unit_x   <- dir_x / dir_len
 unit_y   <- dir_y / dir_len
-label_gap <- 1.8
+label_gap <- 8.2 # generous clearance so axis titles clear nearby data points
 
 axis_labels <- tibble(
   label = c("X (mm)", "Y (mm)", "Z (mm)"),
@@ -125,7 +125,7 @@ axis_labels <- tibble(
 # The low end (-15) sits at the shared tri-axis corner for all three axes, so
 # it is skipped here — labeling it three times over would just overlap.
 tick_vals   <- c(0, 15)
-tick_nudge  <- 0.9
+tick_nudge  <- 1.4
 tick_x_proj <- project(tick_vals, rep(yr[1], 2), rep(zr[1], 2))
 tick_y_proj <- project(rep(xr[1], 2), tick_vals, rep(zr[1], 2))
 tick_z_proj <- project(rep(xr[1], 2), rep(yr[1], 2), tick_vals)
@@ -139,11 +139,27 @@ tick_labels <- tibble(
 )
 
 # --- Zone callouts, linking the projected scatter back to the CT-scan narrative
-zone_proj <- project(zone_x, zone_y, zone_z)
+# Each callout sits well outside its dense point cluster, with a thin leader
+# segment back to the cluster centroid, so the label never lands on top of
+# 55+ overlapping alpha-blended points. Offsets are hand-tuned per zone (not
+# a single radial push-out) because Zone B's cluster sits almost exactly
+# along the same sightline as the X-axis tip/title, so pushing it further
+# out along that line would just collide with "X (mm)" instead.
+zone_proj    <- project(zone_x, zone_y, zone_z)
+zone_off_x   <- c(-6.5, -8.5, 6.5)
+zone_off_y   <- c(7.5, -6.5, 7.5)
+
 zone_labels <- tibble(
   label = c("Zone A", "Zone B", "Zone C"),
-  x     = zone_proj$proj_x,
-  y     = zone_proj$proj_y + 2.4
+  x     = zone_proj$proj_x + zone_off_x,
+  y     = zone_proj$proj_y + zone_off_y
+)
+
+zone_leaders <- tibble(
+  x    = zone_proj$proj_x,
+  y    = zone_proj$proj_y,
+  xend = zone_proj$proj_x + zone_off_x * 0.82,
+  yend = zone_proj$proj_y + zone_off_y * 0.82
 )
 
 # --- Plot ---------------------------------------------------------------------
@@ -161,17 +177,22 @@ p <- ggplot() +
   geom_text(
     data = tick_labels,
     aes(x = x, y = y, label = label),
-    color = INK_SOFT, size = 2.2, alpha = 0.85
+    color = INK_SOFT, size = 2.6, alpha = 0.9
   ) +
   geom_text(
     data = axis_labels,
     aes(x = x, y = y, label = label),
     color = INK_SOFT, size = 3.2, fontface = "bold"
   ) +
+  geom_segment(
+    data = zone_leaders,
+    aes(x = x, y = y, xend = xend, yend = yend),
+    color = INK_SOFT, linewidth = 0.3, alpha = 0.7
+  ) +
   geom_text(
     data = zone_labels,
     aes(x = x, y = y, label = label),
-    color = INK, size = 2.9, fontface = "italic"
+    color = INK, size = 3.1, fontface = "italic"
   ) +
   scale_color_gradient(low = IMPRINT_SEQ_LOW, high = IMPRINT_SEQ_HIGH,
                         name = "Defect size (µm)") +
