@@ -178,7 +178,22 @@ jobs:
           LANGUAGE: ${{ steps.lang.outputs.language }}
         run: |
           mkdir -p plot_images
-          gsutil -m cp "gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}/*" plot_images/ 2>/dev/null || true
+          # Retried: a single lost transfer used to be swallowed here (`2>/dev/null
+          # || true`), and the next step then failed on an empty directory with
+          # no label set — no watchdog case matches that, so the PR sat until
+          # someone re-dispatched the review by hand (#11360 on 2026-09-05,
+          # #11678 on 2026-09-09; staging was complete both times). Keep stderr:
+          # a transfer blip and a missing staging folder need different answers.
+          SRC="gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}/*"
+          for attempt in 1 2 3; do
+            if gsutil -m cp "$SRC" plot_images/ 2> /tmp/gsutil.err \
+               && [ -f plot_images/plot-light.png ] && [ -f plot_images/plot-dark.png ]; then
+              break
+            fi
+            GERR=$(head -c 300 /tmp/gsutil.err | tr '\n' ' ')
+            echo "::warning::staging download incomplete (attempt ${attempt}/3): ${GERR:-no error output}"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+          done
           ls -la plot_images/
 
       - name: Verify both theme renders exist
