@@ -132,7 +132,12 @@ z_breaks <- pretty(c(floor_z, ceil_z), n = 4); z_breaks <- z_breaks[z_breaks >= 
 
 # Large offsets keep the x-tick and y-tick label clusters from colliding near
 # the shared corner — both grow away from the box along their own axis line.
-tick_gap <- 0.3 * (x_max - x_min)
+# 0.45x the axis range clears the surface's projected silhouette even for the
+# negative-side ticks nearest the tall part of the mesh (0.3x left "-4"/"-2"
+# sitting on top of the surface after the Z_LIFT projection); the matching
+# Z_TICK_OFFSET below is widened in step so the two label columns don't swap
+# one collision (with the mesh) for another (with each other).
+tick_gap <- 0.45 * (x_max - x_min)
 ticks <- rbind(
   data.frame(x = x_breaks, y = y_min - tick_gap, z = floor_z, label = x_breaks),
   data.frame(x = x_min - tick_gap, y = y_breaks, z = floor_z, label = y_breaks)
@@ -141,9 +146,12 @@ ticks$px <- project_x(ticks$x, ticks$y, ticks$z)
 ticks$py <- project_y(ticks$x, ticks$y, ticks$z)
 
 # Z ticks sit on the vertical axis line itself; nudge the label text
-# (not the axis line) sideways into the open gap left of the mesh.
+# (not the axis line) sideways into the open gap left of the mesh. Widened
+# alongside tick_gap above so the z-tick column stays clear of both the mesh
+# and the (now farther-out) y-tick label column.
+Z_TICK_OFFSET <- 4.5
 z_ticks <- data.frame(x = x_min, y = y_min, z = z_breaks, label = z_breaks)
-z_ticks$px <- project_x(z_ticks$x, z_ticks$y, z_ticks$z) - 2.4
+z_ticks$px <- project_x(z_ticks$x, z_ticks$y, z_ticks$z) - Z_TICK_OFFSET
 z_ticks$py <- project_y(z_ticks$x, z_ticks$y, z_ticks$z)
 
 axis_labels <- data.frame(
