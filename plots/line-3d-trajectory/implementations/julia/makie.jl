@@ -115,12 +115,14 @@ scatter!(ax, [traj_x[1]], [traj_y[1]], [traj_z[1]]; color = IMPRINT_PALETTE[1], 
 
 # The perturbed run shares the same path as the main trajectory up to
 # `fork_idx`; only the diverged tail is drawn, so the fork itself is the
-# visible story rather than two fully overlapping lines.
+# visible story rather than two fully overlapping lines. A dashed style
+# (on top of the distinct lavender color) keeps the diverged path readable
+# even where it briefly re-overlaps the main spiral.
 traj2_line = lines!(
     ax, traj2_x[fork_idx:end], traj2_y[fork_idx:end], traj2_z[fork_idx:end];
-    color = IMPRINT_PALETTE[2], linewidth = 2.0, alpha = 0.9,
+    color = IMPRINT_PALETTE[2], linewidth = 3.0, linestyle = :dash, alpha = 1.0,
 )
-scatter!(ax, [traj2_x[fork_idx]], [traj2_y[fork_idx]], [traj2_z[fork_idx]]; color = IMPRINT_PALETTE[2], markersize = 10, strokewidth = 0)
+scatter!(ax, [traj2_x[fork_idx]], [traj2_y[fork_idx]], [traj2_z[fork_idx]]; color = IMPRINT_PALETTE[2], markersize = 14, strokewidth = 0)
 
 Colorbar(
     fig[1, 2];
@@ -148,6 +150,8 @@ Legend(
 )
 
 colsize!(fig.layout, 1, Relative(0.95))
+rowsize!(fig.layout, 1, Auto(1.0))
+rowsize!(fig.layout, 2, Fixed(70))
 
 # --- Save -----------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
