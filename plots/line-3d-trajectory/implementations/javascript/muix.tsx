@@ -1,3 +1,7 @@
+// anyplot.ai
+// line-3d-trajectory: 3D Line Plot for Trajectory Visualization
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 83/100 | Created: 2026-09-10
 //# anyplot-orientation: landscape
 // anyplot.ai
 // line-3d-trajectory: 3D Line Plot for Trajectory Visualization
