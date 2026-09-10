@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-3d: 3D Scatter Plot
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 80/100 | Created: 2026-09-10
+// Quality: 89/100 | Created: 2026-09-10
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
