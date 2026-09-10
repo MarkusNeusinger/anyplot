@@ -10,21 +10,21 @@
   burst queues on the warm one for milliseconds. The limit has headroom: request
   p50 is 32 ms, CPU p95 6 %, more than 9 concurrent requests occur in about two
   minutes a day, and the window saw no 429. `api/cloudbuild.yaml` pins it; if 429s
-  ever appear, max 2 is the next step.
+  ever appear, max 2 is the next step. (#11828)
 - **The startup cache prewarm no longer blocks the port.** uvicorn runs the
   lifespan to completion before it binds the socket, so the six awaited prewarm
   queries added a stable ~2.5 s to every cold start (2.0–3.6 s of an ~11 s start,
   measured over 197 starts). The prewarm is now a background task that runs each
   key through `get_or_set_cache`, so it shares the per-key lock with a request that
   arrives first instead of duplicating its query, and it is cancelled on shutdown
-  before the DB engine closes.
+  before the DB engine closes. (#11828)
 - **OG image compositing runs in a worker thread, at most two at once.** The
   collage and branded-image endpoints called PIL inline in the event loop, which
   stalled every other request on the instance for the 1–3 s a render takes, and a
   handful of concurrent collages produced the 647 MiB memory peak of 2026-08-26
   against the 1 GiB limit. With a single instance both would hit the whole
   service; the renders now go through `asyncio.to_thread` behind a two-slot
-  semaphore.
+  semaphore. (#11828)
 
 ### Fixed
 
@@ -36,8 +36,8 @@
   failed locally instead of skipping). Empty files now count as missing, a failed
   download deletes its leftover, and the failure is remembered in-process for ten
   minutes so a GCS outage costs one attempt per cooldown rather than one per
-  render.
+  render. (#11828)
 - **`docs/reference/performance.md` describes the live services again.** The
   infrastructure table still listed the frontend at min-instances=1 with 256Mi
   (it has scaled to zero on 512Mi since 2026-08-29) and Cloud SQL as `db-g1-small`
-  (it is `db-custom-1-3840` on a 3-year commitment).
+  (it is `db-custom-1-3840` on a 3-year commitment). (#11828)
