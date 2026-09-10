@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: contour-3d
 created: '2026-09-10T00:14:34Z'
-updated: '2026-09-10T00:19:36Z'
+updated: '2026-09-10T00:41:05Z'
 generated_by: claude-sonnet
 workflow_run: 34419717862
 issue: 3230
@@ -12,9 +12,13 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 93
 review:
   strengths:
+  - 'Attempt-1 weakness fully resolved: the ''-4'' x-tick and ''-2'' y-tick labels,
+    which previously projected onto the mesh interior, now land cleanly in the open
+    background in both renders — verified by pixel-level crops around the axis crossing
+    and the left tick columns'
   - 'Creative, correct workaround for ggplot2''s lack of 3D grammar: hand-rolled orthographic
     camera (view/right/up basis vectors), painter''s-algorithm depth sorting of surface
     quads, and bilinear interpolation to lift contour isolines onto the surface —
@@ -23,49 +27,36 @@ review:
     drawn both on the surface and projected onto the base plane (dashed), and a colorbar
     for the value scale'
   - Realistic, neutral data context (point-charge electric field intensity, plausible
-    kV/m and meter scales) on a 40x40 grid, within the spec's 30x50 size range
-  - 'Theme-adaptive chrome is correctly threaded through: PAGE_BG/INK/INK_SOFT tokens
-    flip correctly, data colors (green-to-blue sequential fill) are identical between
+    kV/m and meter scales) on a 40x40 grid, within the spec's 30-50 size range
+  - 'Theme-adaptive chrome correctly threaded through: PAGE_BG/INK/INK_SOFT tokens
+    flip correctly, data colors (green-to-blue sequential fill) identical between
     light and dark renders'
-  - Clean axis box (three edges from the front-bottom-left corner) with descriptive,
-    unit-bearing axis labels (x (m), y (m), E (kV/m)) and a title in the exact mandated
-    format
   - Canvas is exactly 3200x1800, code is reproducible (set.seed), imports are all
-    used, and the file saves via ragg::agg_png with the correct plot-{THEME}.png pattern
+    used, saves via ragg::agg_png with the correct plot-{THEME}.png pattern
   weaknesses:
-  - 'Tick-label / surface collision (both themes, identical): the negative-side x-tick
-    (''-4'') and y-tick (''-2'') labels project to screen positions that fall INSIDE
-    the visual footprint of the tall surface peak, so they render on top of the mesh/contour
-    lines near the crossing of the two axis lines rather than beside the axis like
-    the other ticks. This reads as confusing duplicate labels sitting on the data
-    itself. Root cause: `tick_gap <- 0.3 * (x_max - x_min)` is a single scalar offset
-    in data space, but after the perspective-like projection with `Z_LIFT = 1.3` the
-    negative-side ticks (near the tall part of the surface) end up projected closer
-    to the peak''s screen silhouette than the positive-side ticks. Fix: either increase
-    `tick_gap` enough that even the negative-side ticks clear the peak''s projected
-    silhouette, or compute per-tick offsets based on the local surface height at that
-    tick''s (x, y) rather than a single flat-plane gap, or draw the tick-label layer
-    with a small halo/background rect so any residual overlap stays legible against
-    the mesh.'
-  - 'Minor: the two projection/interpolation helper functions (`project_x`/`project_y`,
-    `interp_z`) are a departure from the usual ''no functions'' KISS baseline — reasonable
-    and well-commented given the constraint that ggplot2 has no native 3D grammar,
-    but worth flagging under CQ-01.'
+  - 'Minor: the projection/interpolation helper functions (project_x/project_y, interp_z,
+    field_intensity) depart from the strict ''no functions'' KISS baseline — reasonable
+    and well-commented given ggplot2 has no native 3D grammar, but still worth a small
+    CQ-01 deduction'
+  - The stepped sequential legend (scale_fill_steps, n.breaks=7) renders with fairly
+    subtle band boundaries at this data range — consider slightly higher contrast
+    between steps if a future iteration wants the discrete contour-band read to be
+    more immediately obvious at a glance
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches spec.
-      Chrome: Title "contour-3d · r · ggplot2 · anyplot.ai" in dark ink, centered, fully visible, correctly sized. Axis box with three edges (x, y, z) in soft ink-gray, meeting at the front-bottom-left corner. Axis labels "x (m)", "y (m)", "E (kV/m)" in bold dark ink, clearly placed away from the mesh. Tick labels (0, 2, 4 on x/y; 0, 1, 2, 3 on z; negative ticks -2, -4) in soft ink-gray. Legend "E (kV/m)" with stepped color swatches (0.5 through 3.0) to the right, fully inside the canvas. Legibility verdict: mostly PASS, but the "-4" (x-tick) and "-2" (y-tick) labels are rendered directly on top of the blue/green mesh surface near the axis crossing, overlapping data (see Weaknesses) — text itself stays legible (dark-on-surface has enough contrast) but the placement is confusing.
-      Data: A single smooth hill (electric-field-intensity peak) rendered as a projected wireframe/quad mesh, sequential fill from #009E73 (green, low) to #4467A3 (blue, high). Black contour isolines wrap the surface at regular intervals, and matching dashed isolines are projected onto the flat base plane below the surface for reference — matches the spec's "project contours onto the base plane" note.
-      Legibility verdict: PASS overall, with the noted tick/mesh overlap being a placement defect rather than a contrast/readability failure.
+      Background: Warm off-white (#FAF8F1), matches spec — not pure white.
+      Chrome: Title "contour-3d · r · ggplot2 · anyplot.ai" in dark ink, centered, fully visible, comfortably sized (~38% width, well clear of overflow). Axis box with three edges (x, y, z) in soft warm ink-gray, meeting at the front-bottom-left corner. Axis labels "x (m)", "y (m)", "E (kV/m)" in bold dark ink, clearly placed away from the mesh. Tick labels (0, 2, 4, -2, -4 on x/y; 3, 2, 1, 0, -1 on z) in soft ink-gray — verified via pixel crops that every tick, including the previously-colliding "-4"/"-2" pair, now sits cleanly in open background, off the mesh silhouette. Legend "E (kV/m)" with stepped color swatches (0.5 through 3.0) fully inside the canvas at the right edge, no clipping.
+      Data: A single smooth hill (electric-field-intensity peak) rendered as a projected quad mesh, sequential fill from #009E73 (green, low) to #4467A3 (blue, high). Dark contour isolines wrap the surface at regular intervals, with matching dashed isolines projected onto the flat base plane for reference.
+      Legibility verdict: PASS — all text readable, no overlap with data or other text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches spec.
-      Chrome: Same title, now in light ink (#F0EFE8), clearly readable. Axis lines and tick labels flip to light ink-soft gray, axis titles bold light ink — no dark-on-dark anywhere. Legend text/title flip to light ink as expected.
-      Data: Identical green-to-blue sequential fill and mesh geometry as the light render — confirms data colors are held constant across themes, only chrome flipped.
-      Legibility verdict: PASS for all chrome; same "-4"/"-2" tick-on-mesh overlap issue reproduces identically here (text remains legible against the surface, but placement duplicates/collides with the data region) — this is a placement bug independent of theme, not a dark-on-dark contrast failure.
+      Background: Warm near-black (#1A1A17), matches spec — not pure black.
+      Chrome: Same title, now in light ink (#F0EFE8), clearly readable. Axis lines and tick labels flip to light ink-soft gray, axis titles bold light ink. Legend text/title flip to light ink. No dark-on-dark anywhere.
+      Data: Identical green-to-blue sequential fill and mesh geometry as the light render — data colors held constant across themes, only chrome flipped.
+      Legibility verdict: PASS — same clean tick placement as the light render, no dark-on-dark or light-on-light failures.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -73,23 +64,22 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes; the tick labels
-          sitting on the mesh remain legible, just confusingly placed
+        comment: All text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: The '-4' x-tick and '-2' y-tick labels project onto the interior
-          of the surface mesh near the axis crossing in both renders, colliding with
-          data (see weaknesses for root cause and fix)
+        passed: true
+        comment: Attempt-1 tick/mesh collision fixed (tick_gap 0.3->0.45, Z_TICK_OFFSET
+          2.4->4.5); verified via pixel crops that all ticks clear the mesh silhouette
+          in both renders
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 40x40 mesh density is well matched to line weight (linewidth 0.05-0.35),
-          contour isolines clearly distinguishable
+        comment: 40x40 mesh density well matched to line weight, contour isolines
+          clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -98,17 +88,17 @@ review:
         comment: Green-to-blue sequential scale, good contrast, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions and no clipping, but the tick-placement math error
-          is a layout computation defect
+        comment: 3200x1800 canvas gate passed, good proportions, no clipping, tick-placement
+          defect from attempt 1 resolved
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: x (m), y (m), E (kV/m) — descriptive with units
+        comment: x (m), y (m), E (kV/m) - descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -117,12 +107,12 @@ review:
         comment: 'imprint_seq-compliant gradient (#009E73 to #4467A3), correct theme
           backgrounds, identical data colors across themes'
     design_excellence:
-      score: 15
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
         comment: Genuine camera math, depth sorting, and stepped color banding for
@@ -136,11 +126,11 @@ review:
           lines
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear peak focal point and value hierarchy via contour bands, somewhat
-          undercut by the confusing overlapping tick text
+        comment: Clear peak focal point and value hierarchy via contour bands, no
+          longer undercut by tick-text collision
     spec_compliance:
       score: 15
       max: 15
@@ -204,7 +194,7 @@ review:
         max: 3
         passed: true
         comment: A few small helper functions for camera projection/interpolation
-          — justified by the lack of native 3D grammar, but a departure from the strict
+          - justified by lack of native 3D grammar, but a departure from the strict
           no-function baseline
       - id: CQ-02
         name: Reproducibility
@@ -247,8 +237,8 @@ review:
         max: 5
         passed: true
         comment: Hand-rolled orthographic camera, painter's-algorithm depth sort,
-          bilinear interpolation for isoline height — clearly beyond generic usage
-  verdict: REJECTED
+          bilinear interpolation for isoline height - clearly beyond generic usage
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
