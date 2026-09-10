@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 wireframe-3d-basic: Basic 3D Wireframe Plot
 Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 77/100 | Created: 2026-09-10
@@ -43,7 +43,7 @@ right_axis = np.cross(view_dir, world_up)
 right_axis /= np.linalg.norm(right_axis)
 up_axis = np.cross(right_axis, view_dir)
 
-Z_LIFT = 3.2  # visual height exaggeration so the shallow membrane displacement reads clearly
+Z_LIFT = 1.8  # visual height exaggeration so the shallow membrane displacement reads clearly
 
 
 def project(x, y, z):
@@ -61,7 +61,6 @@ def depth(x, y, z):
 
 
 # Data — circular drumhead vibration mode: displacement z = sin(sqrt(x^2 + y^2))
-np.random.seed(42)
 grid_n = 21  # kept modest (20-22) so depth-faded lines stay legible, not a tangle
 x_vals = np.linspace(-6, 6, grid_n)
 y_vals = np.linspace(-6, 6, grid_n)
@@ -106,13 +105,17 @@ for j in range(grid_n):
 # (farther, lower-alpha) ones — plotnine draws geom_segment rows in data order.
 mesh_edges = pd.DataFrame(edges).sort_values("edge_depth", ignore_index=True)
 
-# Axis box: three edges meeting at the front-left-bottom corner
+# Axis box: three edges meeting at the (x=6, y=-6) corner. This corner sits off
+# the camera's azimuth-45 view axis (unlike the diagonally opposite (-6, -6)
+# corner, which projects to dead screen-center and would drag the axis frame
+# straight through the densest part of the mesh), so the frame reads as a
+# distinct side reference instead of cutting through the data.
 axis_lines = pd.DataFrame(
     {
-        "x": [-6, -6, -6],
+        "x": [6, 6, 6],
         "y": [-6, -6, -6],
         "z": [floor_z, floor_z, floor_z],
-        "xend": [6, -6, -6],
+        "xend": [-6, 6, 6],
         "yend": [-6, 6, -6],
         "zend": [floor_z, floor_z, ceil_z],
     }
@@ -127,7 +130,7 @@ z_breaks = np.array([-1, 0, 1])
 ticks = pd.concat(
     [
         pd.DataFrame({"x": x_breaks, "y": -9.6, "z": floor_z, "label": [f"{v:g}" for v in x_breaks]}),
-        pd.DataFrame({"x": -9.6, "y": y_breaks, "z": floor_z, "label": [f"{v:g}" for v in y_breaks]}),
+        pd.DataFrame({"x": 9.6, "y": y_breaks, "z": floor_z, "label": [f"{v:g}" for v in y_breaks]}),
     ],
     ignore_index=True,
 )
@@ -139,7 +142,7 @@ ticks["px"], ticks["py"] = project(ticks["x"], ticks["y"], ticks["z"])
 # no connector, leaving the labels visually stranded).
 Z_TICK_LEADER = 1.2
 Z_TICK_LABEL_GAP = 0.6
-z_axis_px, z_axis_py = project(-6, -6, z_breaks)
+z_axis_px, z_axis_py = project(6, -6, z_breaks)
 z_ticks = pd.DataFrame(
     {"px": z_axis_px - Z_TICK_LEADER - Z_TICK_LABEL_GAP, "py": z_axis_py, "label": [f"{v:g}" for v in z_breaks]}
 )
@@ -149,7 +152,7 @@ z_tick_leaders = pd.DataFrame(
 
 axis_labels = pd.DataFrame(
     {
-        "x": [9.4, -6, -6],
+        "x": [-9.4, 6, 6],
         "y": [-6, 9.4, -6],
         "z": [floor_z, floor_z, ceil_z + 1.0],
         "label": ["X (cm)", "Y (cm)", "Z (mm)"],
@@ -167,7 +170,7 @@ plot = (
         size=0.3,
         show_legend=False,
     )
-    + scale_alpha_continuous(range=(0.12, 0.6))
+    + scale_alpha_continuous(range=(0.08, 0.85))
     + geom_segment(aes(x="px", y="py", xend="pxend", yend="pyend"), axis_lines, color=INK_SOFT, size=0.6)
     + geom_segment(aes(x="px", y="py", xend="pxend", yend="pyend"), z_tick_leaders, color=INK_SOFT, size=0.6)
     + geom_text(aes("px", "py", label="label"), ticks, color=INK_SOFT, size=3.3)
