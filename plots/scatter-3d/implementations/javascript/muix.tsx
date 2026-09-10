@@ -114,6 +114,18 @@ const pyMin = Math.min(...cellCorners.map((c) => c.py)) - PAD;
 const pyMax = Math.max(...cellCorners.map((c) => c.py)) + PAD * 1.6;
 
 // --- Color axis: continuous Imprint sequential scale over the energy field -
+// The scatter series has no direct opacity prop, so a slight fill-opacity is
+// baked into the colorMap stops themselves to reduce occlusion where the
+// dense upper fragment cluster overlaps.
+const withAlpha = (hex, alpha) => {
+  const n = parseInt(hex.slice(1), 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+const MARKER_ALPHA = 0.85;
+
 const energyValues = atoms.map((atom) => atom.energy);
 const energyMin = Math.min(...energyValues);
 const energyMax = Math.max(...energyValues);
@@ -125,7 +137,7 @@ const zAxis = [
       type: "continuous",
       min: energyMin,
       max: energyMax,
-      color: [t.seq[0], t.seq[1]],
+      color: [withAlpha(t.seq[0], MARKER_ALPHA), withAlpha(t.seq[1], MARKER_ALPHA)],
     },
   },
 ];
@@ -231,7 +243,7 @@ function Iso3DFrame() {
         x={depthLegendX}
         y={depthLegendY - 22}
         fill={t.inkSoft}
-        fontSize={14}
+        fontSize={16}
         fontFamily="system-ui, sans-serif"
       >
         Marker size = depth
@@ -243,7 +255,7 @@ function Iso3DFrame() {
             x={18}
             y={5}
             fill={t.inkSoft}
-            fontSize={13}
+            fontSize={15}
             fontFamily="system-ui, sans-serif"
           >
             {item.tier}
@@ -272,9 +284,9 @@ export default function Chart() {
     >
       <text
         x={size.width / 2}
-        y={36}
+        y={38}
         textAnchor="middle"
-        fontSize={22}
+        fontSize={26}
         fontWeight={600}
         fill={t.ink}
         fontFamily="system-ui, sans-serif"
@@ -291,7 +303,7 @@ export default function Chart() {
         thickness={10}
         minLabel={() => `${energyMin.toFixed(1)} eV · core`}
         maxLabel={() => `${energyMax.toFixed(1)} eV · edge`}
-        labelStyle={{ fontSize: 13, fill: t.inkSoft }}
+        labelStyle={{ fontSize: 15, fill: t.inkSoft }}
       />
       <ChartsTooltip trigger="item" />
     </ChartContainer>
