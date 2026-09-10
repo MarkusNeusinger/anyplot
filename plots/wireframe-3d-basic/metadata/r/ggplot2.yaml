@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: wireframe-3d-basic
 created: '2026-08-24T12:45:01Z'
-updated: '2026-09-10T06:38:58Z'
+updated: '2026-09-10T06:51:25Z'
 generated_by: claude-sonnet
 workflow_run: 34445087987
 issue: 1015
@@ -16,44 +16,51 @@ quality_score: 87
 review:
   strengths:
   - 'Genuinely sophisticated 3D-in-2D engineering: manual perspective projection (elevation
-    30°, azimuth 45°) combined with a painter''s-algorithm hidden-line removal (quads
-    sorted back-to-front, opaque fill occluding farther mesh lines) — a real technical
-    achievement given ggplot2 has no native 3D grammar.'
-  - Depth-based alpha fading on mesh edges (bolder near the camera, softer far away)
-    adds a convincing depth cue without introducing a second hue.
-  - Single-series brand green (#009E73) is used consistently and is pixel-identical
-    between light and dark renders; only chrome (axis lines, floor plane, tick/label
-    colors) flips correctly between themes.
-  - All three axes (X, Y, Z) are clearly labeled with tick marks, a floor reference
-    plane grounds the surface spatially, and the title matches the required '{spec-id}
-    · r · ggplot2 · anyplot.ai' format exactly.
-  - Data (ripple function z = sin(sqrt(x²+y²))) matches the spec's suggested example
-    precisely, with a sensible axis range and deterministic generation.
+    30°, azimuth 45°) combined with painter''s-algorithm hidden-line removal implemented
+    purely in ggplot2 grammar (geom_polygon + geom_segment + geom_text).'
+  - Grid resolution raised from 20x20 to 30x30 this attempt, now solidly mid-range
+    within the spec's recommended 20x20-50x50 window, with no legibility cost thanks
+    to the opaque-fill occlusion trick.
+  - Depth-based alpha fading on mesh edges adds a convincing depth cue without introducing
+    a second hue.
+  - Single-series brand green (#009E73) is pixel-identical between light and dark
+    renders; only chrome (background, axis lines, tick/axis labels) flips between
+    themes, with no dark-on-dark or light-on-light failures.
+  - All three axes clearly labeled (bold X/Y/Z) with tick marks; title matches the
+    required '{spec-id} · {language} · {library} · anyplot.ai' format exactly.
+  - Data (ripple function z = sin(sqrt(x²+y²))) matches the spec's own suggested example
+    with a sensible axis range and floor plane for spatial grounding.
   weaknesses:
-  - X-axis and Y-axis tick labels ('-6' and '-3', mirrored on both the left and right
-    sides) are positioned inside the wireframe's screen footprint and visually overlap
-    mesh strands crossing directly through the glyphs, confirmed by close crops in
-    both light and dark renders. Push the '-3'/'-6' tick anchors further outside the
-    mesh's projected footprint (matching the offset technique already used for the
-    '0'/'3'/'6' ticks and the Z-tick labels) so no tick text sits on top of mesh lines.
-  - Grid resolution (20x20) sits at the very bottom of the spec's recommended 20x20-50x50
-    range; a modest bump (e.g. 28-32) would add surface fidelity without hurting legibility
-    now that hidden-line removal keeps the mesh readable.
+  - 'The X/Y tick-label overlap flagged in Attempt 1 is still present after repair,
+    confirmed by pixel-cropped close-up on both renders: the ''-6'' and ''-3'' labels
+    (mirrored on both sides of the Z axis) still have wireframe mesh strands crossing
+    directly through the glyphs. The applied fix (tick_clearance <- 5.5 px lateral
+    offset) was too small to clear the mesh''s silhouette, and bumping grid_n from
+    20 to 30 in the same commit made the local mesh denser, so roughly the same number
+    of strands now cross the labels as before. Increase tick_clearance substantially
+    (try 15-20 instead of 5.5) and re-check against the denser 30x30 mesh specifically
+    at the ''-6''/''-3'' positions, since those are the values whose screen-projected
+    position lands deepest inside the mesh''s near-side footprint.'
+  - The '-6'/'-3' tick labels still read as floating mid-plot rather than clearly
+    outside the mesh silhouette, which softens the layout/canvas cleanliness slightly
+    (minor, secondary to the overlap itself).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "wireframe-3d-basic · r · ggplot2 · anyplot.ai" centered at top in dark ink, clearly readable. Axis lines (front-left-bottom corner box) in medium-dark gray. "X", "Y", "Z" axis labels in bold dark ink at the far ends of each axis line. Tick labels (-6, -3, 0, 3, 6 for X and Y; -1, 0, 1 for Z) in a softer gray.
-      Data: A single ripple surface z = sin(sqrt(x^2+y^2)) rendered as a green (#009E73) wireframe mesh of diamond-shaped quads, with nearer quads occluding farther mesh lines (hidden-line removal) and edge opacity fading with depth. A faint floor plane outline grounds the surface. First (only) series is the brand green.
-      Legibility verdict: PASS overall, with one caveat — the X/Y tick labels "-6" and "-3" (appearing mirrored on both the left and right sides of the Z axis) sit directly on top of the wireframe mesh, with thin green mesh lines crossing through the glyphs. The numbers remain decipherable (dark-gray text has enough contrast against both the pale background and the thin green lines) but the overlap is a real, confirmed layout flaw, not just proximity.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "wireframe-3d-basic · r · ggplot2 · anyplot.ai" centered at top in dark ink, clearly readable. Bold "X"/"Y"/"Z" axis labels and axis-box edges in dark ink/gray, all clearly legible. Floor-plane diamond outline faint but visible. Z-axis tick labels ("1", "0", "-1") sit cleanly clear of the mesh with no overlap (verified via crop). X/Y-axis tick labels ("-6", "-3", "0", "3", "6", mirrored on both sides of the Z axis) are readable, but the "-6" and "-3" instances have thin green mesh strands crossing directly through the glyphs (verified via cropped close-up) — text remains decipherable but the overlap is real.
+      Data: Single ripple surface z = sin(sqrt(x²+y²)) rendered as a green (#009E73) wireframe mesh of diamond-shaped quads with painter's-algorithm hidden-line removal (nearer quads occlude farther mesh lines via opaque page-background fill) and depth-based edge-opacity fading (bolder near camera, softer far away). This is the sole data color, correctly matching the Imprint first-series green.
+      Legibility verdict: PASS overall, with a caveat — the "-6"/"-3" tick label / mesh-line overlap (VQ-02) persists from Attempt 1 despite a repair attempt.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title in light ink, clearly readable. Axis lines in light gray, "X"/"Y"/"Z" labels in bold near-white, tick labels in a softer light gray. No dark-on-dark failures observed — all chrome text has strong contrast against the near-black background.
-      Data: Identical green (#009E73) wireframe mesh, same shape, same depth-fade behavior as the light render — confirms data colors are unchanged between themes; only the chrome (background, axis lines, text colors) flipped.
-      Legibility verdict: PASS overall, with the same caveat as the light render — "-6" and "-3" tick labels overlap the mesh lines (confirmed via cropped close-up), though the light-gray text against the dark green lines remains legible.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, same layout. Axis-box lines, "X"/"Y"/"Z" labels, and all tick labels correctly flip to light gray/near-white with strong contrast against the dark background — no dark-on-dark failures detected anywhere.
+      Data: Wireframe mesh color is pixel-identical green (#009E73) to the light render — confirmed only chrome flipped, data color did not shift.
+      Legibility verdict: PASS overall, with the same "-6"/"-3" tick-label / mesh-line overlap caveat as the light render (confirmed via cropped close-up) — legibility itself still holds, but the overlap is unresolved.
+
+    Both renders viewed and analyzed above; a targeted pixel crop of the tick-label region was taken on both PNGs to confirm the overlap status precisely (screenshot evidence, not just visual estimate).
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -61,51 +68,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text sized explicitly and readable in both themes; slightly reduced
-          clarity where '-6'/'-3' tick glyphs are crossed by mesh lines.
+        comment: All text readable in both themes; mesh lines cross through '-6'/'-3'
+          glyphs but do not obscure legibility
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: 'Confirmed overlap: X/Y tick labels ''-6'' and ''-3'' sit inside
-          the mesh''s projected footprint with mesh strands crossing through the text
-          in both renders.'
+        comment: X/Y tick labels ('-6'/'-3') still overlap mesh strands in both renders
+          — same issue flagged in Attempt 1; the applied tick_clearance=5.5 fix plus
+          the grid_n 20->30 density bump did not clear it
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Mesh line weight and density appropriate for a 20x20 grid; hidden-line
-          removal keeps the structure readable.
+        comment: Mesh density/line weight appropriate for the denser 30x30 grid
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue data color, grayscale chrome, no red-green reliance, CVD-safe.
+        comment: Single hue, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good margins, nothing clipped, title well within bounds; minor deduction
-          for tick labels floating mid-air inside the plot rather than clearly outside
-          it.
+        comment: No clipping, good margins; '-6'/'-3' tick labels float mid-plot rather
+          than clearly outside the mesh silhouette
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X/Y/Z clearly labeled with tick marks; title matches required format
-          exactly.
+        comment: X/Y/Z labeled, title format exact
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series is #009E73; backgrounds match #FAF8F1/#1A1A17;
-          chrome flips correctly, data color identical between themes.'
+        comment: Brand green sole data color, correct backgrounds, correct chrome
+          flip
     design_excellence:
       score: 17
       max: 20
@@ -115,22 +119,21 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Custom perspective projection with painter's-algorithm hidden-line
-          removal and depth-based alpha fading — well above generic defaults.
+        comment: Custom perspective projection + painter's-algorithm hidden-line removal
+          + depth-fade
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: theme_void chrome, subtle floor plane, generous whitespace; tick
-          placement keeps it from full marks.
+        comment: theme_void chrome, subtle floor plane, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: z-exaggeration (z_lift) makes the shallow ripple read clearly; hidden-line
-          removal creates a strong sense of solid form.
+        comment: Z-exaggeration and hidden-line removal create a clear, solid-looking
+          focal form
     spec_compliance:
       score: 15
       max: 15
@@ -140,51 +143,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly renders as a 3D wireframe mesh, matching the spec's see-through-mesh
-          definition.
+        comment: Correct 3D wireframe
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid lines in both directions, consistent line color, elev 30/azim
-          45 perspective, labeled axes with ticks — all present.
+        comment: Grid lines both directions, consistent line color, elev 30/azim 45,
+          labeled axes with ticks
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z correctly mapped; full data range shown.
+        comment: X/Y/Z correctly mapped and projected
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; no legend needed for single series.
+        comment: Title matches required format exactly; no legend needed (single series)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows the full wireframe mesh concept well; grid_n=20 is at the low
-          end of the spec's recommended 20-50 range.
+        comment: grid_n now 30, solidly mid the spec's 20-50 recommended range (up
+          from 20, the previous review's ding)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic, neutral ripple function example matching the spec's own
-          suggestion.
+        comment: Matches the spec's own suggested ripple example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible domain (-6 to 6) and resulting z range for a ripple demo.
+        comment: Sensible axis ranges and z-exaggeration for legibility
     code_quality:
       score: 9
       max: 10
@@ -194,33 +195,32 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: A few small helper functions for the projection math, but justified
-          — no classes, flat script otherwise.
+        comment: Small projection helper functions, justified by the manual 3D-projection
+          workaround ggplot2 requires
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present; surface itself is deterministic.
+        comment: set.seed(42) present (data itself is deterministic)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg, both used.
+        comment: Only ggplot2 + ragg imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Complexity is appropriate to the hard problem of faking 3D in a grammar-of-graphics
-          library; no fake UI.
+        comment: No fake UI/interactivity; appropriate complexity for the technique
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png as required.
+        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct canvas size
     library_mastery:
       score: 8
       max: 10
@@ -230,16 +230,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composes geom_polygon/geom_segment/geom_text and theme_void idiomatically
-          to build a scene ggplot2 has no native primitive for.
+        comment: Composes geom_polygon/geom_segment/geom_text + theme_void idiomatically
+          for a scene ggplot2 has no native primitive for
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
         comment: Full painter's-algorithm hidden-line removal implemented purely in
-          ggplot2 grammar — a distinctive, library-specific workaround well beyond
-          generic usage.
+          ggplot2 grammar
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -255,4 +254,3 @@ impl_tags:
   styling:
   - minimal-chrome
   - alpha-blending
-  - publication-ready
