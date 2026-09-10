@@ -11,7 +11,10 @@ const THEME    = get(ENV, "ANYPLOT_THEME", "light")
 const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
-const MIDPOINT = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
+# Nudged slightly off the exact page-background color (rather than the plain
+# #FAF8F1/#1A1A17 tokens) so near-zero surface regions stay visually distinct
+# from the Axis3 panel walls, which are also filled with PAGE_BG.
+const MIDPOINT = THEME == "light" ? colorant"#EDE8DA" : colorant"#2B2B26"
 
 # Imprint diverging colormap — the wave field oscillates above and below the
 # z=0 plane, a signed deviation rather than a single-polarity magnitude
@@ -77,14 +80,15 @@ ax = Axis3(
     aspect             = (1, 1, 0.6),
     azimuth            = 1.25 * pi,
     elevation          = 0.18 * pi,
-    protrusions        = (60, 60, 10, 60),
+    protrusions        = (40, 40, 10, 40),
+    viewmode           = :stretch,
 )
 
 surf = surface!(ax, x, y, z; colormap = IMPRINT_DIV, colorrange = (-1, 1))
 
 Colorbar(
     fig[1, 2], surf;
-    label = "z", width = 22,
+    label = "Amplitude (z)", width = 22,
     labelcolor = INK, ticklabelcolor = INK_SOFT, tickcolor = INK_SOFT,
     leftspinecolor = INK_SOFT, rightspinecolor = INK_SOFT,
     topspinecolor = INK_SOFT, bottomspinecolor = INK_SOFT,
