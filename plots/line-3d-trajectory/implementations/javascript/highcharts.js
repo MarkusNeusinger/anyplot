@@ -58,7 +58,12 @@ const project = (px, py, pz) => {
   return [xr, zScreen];
 };
 
-const projected = path.map(([px, py, pz]) => project(px, py, pz));
+// Each projected point carries its pre-projection coordinates and time
+// fraction under `custom` so the tooltip can surface them on hover.
+const projectedPoints = path.map(([px, py, pz], i) => {
+  const [sx, sy] = project(px, py, pz);
+  return { x: sx, y: sy, custom: { ox: px, oy: py, oz: pz, frac: i / (path.length - 1) } };
+});
 
 // --- Color: time progression along the imprint_seq colormap ----------------
 const hexToRgb = (hex) => {
@@ -78,19 +83,20 @@ const timeColor = (frac) => {
 // Highcharts core has no per-point line-color gradient, so a fine segment
 // chain is how a single line reads as a smooth time gradient.
 const SEGMENTS = 140;
-const pointsPerSegment = Math.ceil(projected.length / SEGMENTS);
+const pointsPerSegment = Math.ceil(projectedPoints.length / SEGMENTS);
 const trajectorySeries = [];
 for (let s = 0; s < SEGMENTS; s += 1) {
   const start = Math.max(0, s * pointsPerSegment - 1);
-  const end = Math.min(projected.length, (s + 1) * pointsPerSegment);
+  const end = Math.min(projectedPoints.length, (s + 1) * pointsPerSegment);
   if (end - start < 2) continue;
   trajectorySeries.push({
     type: "line",
-    data: projected.slice(start, end),
+    data: projectedPoints.slice(start, end),
     color: timeColor(s / (SEGMENTS - 1)),
     lineWidth: 2.2,
-    marker: { enabled: false },
-    enableMouseTracking: false,
+    marker: { enabled: false, states: { hover: { enabled: true, radius: 4, lineWidth: 1 } } },
+    enableMouseTracking: true,
+    stickyTracking: false,
     showInLegend: false,
   });
 }
@@ -116,8 +122,8 @@ const axisFrameSeries = [
 const [xTitleX, xTitleY] = project(xMax + xPad * 2.2, yMin - yPad, floorZ);
 const [yTitleX, yTitleY] = project(xMin - xPad, yMax + yPad * 2.2, floorZ);
 const [zTitleX, zTitleY] = project(xMin - xPad, yMin - yPad, topZ * 1.08);
-const [startX, startY] = projected[0];
-const [endX, endY] = projected[projected.length - 1];
+const startP = projectedPoints[0];
+const endP = projectedPoints[projectedPoints.length - 1];
 
 const labelSeries = [
   {
@@ -140,8 +146,8 @@ const labelSeries = [
   {
     type: "scatter",
     data: [
-      { x: startX, y: startY, name: "start", marker: { enabled: true, radius: 6, fillColor: timeColor(0), lineColor: t.pageBg, lineWidth: 1.5 } },
-      { x: endX, y: endY, name: "end", marker: { enabled: true, radius: 6, fillColor: timeColor(1), lineColor: t.pageBg, lineWidth: 1.5 } },
+      { x: startP.x, y: startP.y, name: "start", marker: { enabled: true, radius: 6, fillColor: timeColor(0), lineColor: t.pageBg, lineWidth: 1.5 } },
+      { x: endP.x, y: endP.y, name: "end", marker: { enabled: true, radius: 6, fillColor: timeColor(1), lineColor: t.pageBg, lineWidth: 1.5 } },
     ],
     enableMouseTracking: false,
     showInLegend: false,
@@ -156,7 +162,16 @@ const labelSeries = [
 ];
 
 // --- Axis bounds: fit every projected coordinate with padding --------------
-const allPoints = [...projected, corner, xEnd, yEnd, zEnd, [xTitleX, xTitleY], [yTitleX, yTitleY], [zTitleX, zTitleY]];
+const allPoints = [
+  ...projectedPoints.map((p) => [p.x, p.y]),
+  corner,
+  xEnd,
+  yEnd,
+  zEnd,
+  [xTitleX, xTitleY],
+  [yTitleX, yTitleY],
+  [zTitleX, zTitleY],
+];
 const allX = allPoints.map((p) => p[0]);
 const allY = allPoints.map((p) => p[1]);
 const boundsPadX = (Math.max(...allX) - Math.min(...allX)) * 0.06;
@@ -198,7 +213,17 @@ Highcharts.chart("container", {
     title: { text: null },
   },
   legend: { enabled: false },
-  tooltip: { enabled: false },
+  tooltip: {
+    enabled: true,
+    backgroundColor: t.elevatedBg,
+    borderColor: t.inkSoft,
+    borderRadius: 4,
+    style: { color: t.ink, fontSize: "12px" },
+    formatter() {
+      const c = this.point.custom;
+      return `<b>t = ${(c.frac * 100).toFixed(0)}%</b><br/>x: ${c.ox.toFixed(2)}<br/>y: ${c.oy.toFixed(2)}<br/>z: ${c.oz.toFixed(2)}`;
+    },
+  },
   plotOptions: { series: { animation: false } },
   series: [...trajectorySeries, ...axisFrameSeries, ...labelSeries],
 });
