@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: scatter-3d
 created: '2026-09-10T00:25:36Z'
-updated: '2026-09-10T00:30:13Z'
+updated: '2026-09-10T00:45:30Z'
 generated_by: claude-sonnet
 workflow_run: 34420181788
 issue: 1945
@@ -15,104 +15,104 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3
 quality_score: 84
 review:
   strengths:
-  - Clever, well-documented axonometric-projection workaround for a genuine 3D scatter
-    given Highcharts core has no 3D module; z-depth is conveyed convincingly via marker-size
-    falloff for farther points.
-  - Hand-rolled diverging color interpolation plus a custom-drawn gradient legend
-    correctly reuses the Imprint `t.div` stops, working around the fact that core
-    `scatter` doesn't compose `colorAxis`.
-  - Clear, descriptive axis-direction labels ("Aisle position (m) →", "← Row depth
-    (m)", "↑ Rack height (m)") orient the viewer despite the native axes being hidden.
-  - Deterministic LCG-seeded data with three realistic clusters — including a visibly
-    hotter "Row B" aisle — tells a coherent data-center thermal story.
-  - 'Both themes render correctly: identical data colors between light/dark, correct
-    background tokens, and all chrome remains readable in both.'
+  - Honest axonometric projection technique substitutes for Highcharts core's missing
+    3D module exactly as prescribed in prompts/library/highcharts.md, rather than
+    faking rotation or shelling out to another library.
+  - 'Correctly builds the diverging imprint_div colormap from window.ANYPLOT_TOKENS
+    with a theme-adaptive midpoint that pixel-matches the page background in both
+    themes (verified #FAF8F1 light / #1A1A17 dark), and adds an inkSoft marker stroke
+    so near-zero-deviation points never vanish into the surface.'
+  - Depth-based marker sizing (farther sensors render smaller) gives an extra honest
+    depth cue on top of the isometric projection.
+  - Custom color-scale legend is hand-drawn via chart.renderer since colorAxis doesn't
+    compose onto plain scatter series in core Highcharts — an idiomatic use of the
+    SVG renderer rather than a hack.
+  - Deterministic LCG-seeded data generation, clean imports, no external dependencies.
+  - 'Both renders are theme-correct end to end: background, title, axis labels, tick
+    labels, and legend text all use the correct tokens with no dark-on-dark or light-on-light
+    failures.'
   weaknesses:
-  - The "3D" effect is a static isometric projection with no scale/ticks on the rack-height
-    axis — it's just a bare vertical line, so viewers can't read absolute height values,
-    weakening the 3D-orientation goal called out in the spec.
-  - Sensor markers render as squares, an unintended side-effect of Highcharts' default
-    per-series-index symbol cycling (the sensor series happens to land on index 2
-    of the symbol set) rather than an explicit choice — a plain circle would read
-    more conventionally as a scatter point.
-  - The custom legend's right-edge label ("+4°C") sits very close to the canvas edge
-    (chart.chartWidth - barWidth - 40) — no clipping observed, but there is little
-    safety margin.
-  - Heavy helper-function decomposition (projection math, color interpolation, custom
-    legend renderer) departs from the flat-script KISS style; understandable given
-    the workaround's complexity but worth noting.
-  - No point-transparency/alpha is applied despite the spec's suggestion for dense
-    datasets — with 140 points overlapping in places, slight alpha blending would
-    help reveal internal structure.
+  - The '1.5m' height-axis tick label sits directly on top of a nearby data marker
+    in both light and dark renders (confirmed by pixel crop) — nudge the tick label
+    position (e.g. further left/down) or move the tick mark itself so it doesn't collide
+    with the data area.
+  - Title occupies only ~43% of canvas width at 19px — comfortably legible and not
+    a violation, but there's headroom to size it up a point or two for stronger visual
+    presence without risking overflow.
+  - No visual callout marks the 'hot aisle' cluster (Row B) that the data was deliberately
+    built to demonstrate — a subtle annotation or label would sharpen the data-storytelling
+    focal point.
+  - Relies on several helper functions (LCG, gaussian, project, color interpolation)
+    for the projection math — necessary given the custom 3D emulation, but further
+    from the plain Imports→Data→Plot→Save KISS shape than a simpler chart.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correctly not pure white.
-      Chrome: Dark bold title "Data Center Thermal Sensors · scatter-3d · javascript · highcharts · anyplot.ai" reads clearly at top; the diagonal floor wireframe grid is a subtle light gray; the three axis-direction labels ("Aisle position (m) →", "← Row depth (m)", "↑ Rack height (m)") are gray (inkSoft) and clearly legible; the hand-drawn Δ-Temp gradient legend (top right) has readable dark labels and a red-white-blue gradient bar with "-4°C"/"+4°C" endpoints.
-      Data: ~140 square markers colored on a red (cold) to white to blue (warm) diverging scale, matching the "Δ Temp vs. 22°C setpoint" legend; markers nearer the viewer (larger, lower-z) are visibly bigger than farther ones, giving a real depth cue; near-white points keep a thin gray stroke so they don't vanish into the background.
-      Legibility verdict: PASS — all title, axis-label, and legend text is clearly readable against the light background; no light-on-light text found.
+      Background: Warm off-white, confirmed pixel-exact #FAF8F1.
+      Chrome: Bold dark title "Data Center Thermal Sensors · scatter-3d · javascript · highcharts · anyplot.ai" fully visible near the top with comfortable margin (no clipping). Axis direction labels "Aisle position (m) →", "← Row depth (m)", "↑ Rack height (m)" and height-axis tick labels "0m", "1.5m", "3m" all render in dark ink, clearly legible. A hand-drawn diverging color-scale legend ("Δ Temp vs. 22°C setpoint", -4°C to +4°C) sits top-right with readable labels. One issue: the "1.5m" tick label overlaps a nearby data marker.
+      Data: ~140 circular sensor points arranged via an isometric floor-grid projection into three visible clusters, colored on a red–white–blue diverging scale (imprint_div) for temperature deviation, with a thin ink-soft stroke keeping near-zero (white) points visible against the background. Farther points render smaller for a depth cue.
+      Legibility verdict: PASS (all chrome and data readable; only flaw is the tick/marker overlap noted above, which does not block readability).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correctly not pure black.
-      Chrome: Title renders in white/light text, fully legible; floor wireframe grid switches to a dim gray line still visible against the dark surface; axis-direction labels remain legible in light gray; the Δ-Temp legend text and gradient bar are unchanged in position and equally readable, with light-colored numeric labels.
-      Data: The sensor marker colors and sizes are visually identical to the light render (same red/white/blue diverging mapping and same size-by-depth pattern) — only the chrome (background, grid, text colors) flipped, as required.
-      Legibility verdict: PASS — no dark-on-dark failures; all text (title, axis labels, legend, tick-like annotations) stays clearly visible against the near-black background.
+      Background: Warm near-black, confirmed pixel-exact #1A1A17.
+      Chrome: Title and axis labels render in light ink, fully legible against the dark surface; no dark-on-dark failures found anywhere (title, direction labels, tick labels, and legend text all switch correctly). The color-scale legend's white midpoint correctly darkens in this theme (pixel-sampled at #1A1A17, matching the page background exactly per the diverging-colormap spec) while the red and blue ends stay identical to the light render.
+      Data: Same ~140 points in the same screen positions with byte-identical colors to the light render (only chrome flipped, as required) — confirmed the data-color stops (#AE3030 / #4467A3) are unchanged between themes.
+      Legibility verdict: PASS (same "1.5m" tick/marker overlap as light, but text remains readable — no dark-on-dark issue).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Title, axis-direction labels, and legend text all read clearly in
-          both themes at sensible font sizes
+        comment: All font sizes explicit and readable in both themes; the 1.5m tick
+          label overlapping a marker keeps this from a perfect score
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions; some marker-on-marker
-          overlap in dense cluster areas is a data-density issue, not text overlap
+        comment: 1.5m height-axis tick label overlaps a data marker in both renders;
+          text stays readable so it's a minor, not severe, overlap
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Marker radius scales with depth (10px near, 5px far), keeping points
-          visible without dominating the plot
+        comment: Depth-scaled markers with alpha 0.82 and ink-soft stroke stay visible
+          even in denser cluster areas
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-blue diverging scale (not red-green) with adequate contrast and
-          a stroke outline on near-white points
+        comment: Diverging red-white-blue scale plus stroke outline avoids relying
+          on hue alone near the midpoint
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas is exactly 3200x1800, good proportions and whitespace; legend's
-          right-edge label sits close to the canvas edge with little margin; rack-height
-          axis has no tick scale
+        comment: Content bounding box spans ~98% of width and ~92% of height; nothing
+          cut off, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis-direction labels with units (m, °C); title matches
-          required format with a descriptive prefix
+        comment: Axis direction labels carry units (m); title fully descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Continuous Δ-temp encoding correctly built from imprint_div stops;
-          correct theme-adaptive backgrounds in both renders
+        comment: 'Correctly uses imprint_div stops from ANYPLOT_TOKENS with theme-adaptive
+          midpoint; backgrounds pixel-verified #FAF8F1/#1A1A17; chrome theme-correct
+          in both renders'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -120,82 +120,79 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom axonometric projection, hand-rolled diverging color interpolation,
-          and a hand-drawn gradient legend show real design effort
+        comment: Thoughtful axonometric projection, depth cueing, and hand-built color
+          legend clearly go beyond a configured default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Native axes hidden, floor grid kept subtle, generous whitespace;
-          square markers are an unintended default (Highcharts' per-series symbol
-          cycling) rather than a deliberate refinement
+        comment: Subtle grid, hidden native axes, generous whitespace; docked a couple
+          points for the tick/marker overlap
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: The hotter 'Row B' cluster reads clearly through color, and size-by-depth
-          reinforces the spatial narrative
+        comment: Color and size create visual hierarchy showing hot vs. cold clusters,
+          though no explicit callout marks the 'hot aisle' insight
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Correct 3D-scatter intent, but delivered as a static 2D isometric
-          projection (no true z-axis/rotation) — a documented, reasonable workaround
-          given Highcharts core has no 3D module, still a real compromise vs. the
-          spec
+        comment: Legitimate axonometric-projection scatter substitutes for Highcharts
+          core's missing 3D module, as prescribed by the library rules
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: x/y/z spatial encoding plus the optional 4th color variable are all
-          present; tooltip exposes original (non-projected) values
+        comment: x/y/z axes, 4th-variable color encoding, point count in spec range,
+          transparency for density all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y/z map correctly to aisle/height/depth; tooltip surfaces true
-          (un-projected) coordinates
+        comment: Aisle/row-depth/height all mapped through the projection and exposed
+          in tooltips
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches spec-id/language/library/anyplot.ai convention
-          with a descriptive prefix; custom legend substitutes appropriately for the
-          disabled series legend
+        comment: Title matches the mandated format with descriptive prefix; no redundant
+          native legend since color legend covers the single series
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Covers clustering and 4th-variable color encoding well, but the rack-height
-          axis lacks tick marks/scale, so absolute height values aren't readable
+        comment: Three distinguishable clusters with different temperature biases
+          and a height-correlated deviation term
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Data-center thermal-sensor scenario is plausible and neutral
+        comment: Data-center thermal sensor scenario is neutral, comprehensible, and
+          realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Aisle (42m), row depth (20m), rack height (3m), and ±4°C deviation
-          are all sensible real-world magnitudes
+        comment: Aisle/row/rack dimensions and °C deviations are physically plausible
+          for a data hall
     code_quality:
       score: 9
       max: 10
@@ -205,36 +202,36 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several helper functions (projection, color interpolation, custom
-          legend) — justified by the workaround's complexity but not a flat script
+        comment: Several helper functions are used for the projection math and color
+          interpolation, justified by the custom 3D emulation but less minimal than
+          a plain script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42) makes the data fully deterministic
+        comment: Seeded LCG (seed=42), fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only the provided globals are used
+        comment: No unused imports; only the Highcharts global is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity or UI; complexity is proportionate to the projection
-          workaround
+        comment: No fake UI or interactivity; comments explain non-obvious workarounds
+          (colorAxis limitation, PAGE_BG-matching midpoint)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the mount-node contract; animation disabled on both chart
-          and series
+        comment: Correct mount-node contract, animation disabled, no deprecated API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -242,28 +239,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of core scatter/line series, dataLabels, and chart.renderer
-          within the constraints of no 3D module
+        comment: Correct Highcharts.chart/series usage plus renderer-based extension
+          for the legend, working within the core-bundle constraint
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Custom chart.renderer legend and manual colorAxis-equivalent interpolation
-          are distinctive, well-reasoned uses of core Highcharts capabilities
+        comment: Uses Highcharts' SVG renderer API (chart.renderer.text/rect with
+          gradient fill) and the events.load hook, both fairly distinctive to this
+          library's architecture
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
   - colorbar
-  - custom-legend
-  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
+  - alpha-blending
   - custom-colormap
-  - gradient-fill
+  - edge-highlighting
