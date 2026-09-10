@@ -5,9 +5,11 @@
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 140, right: 250, bottom: 60, left: 70 };
+const margin = { top: 140, right: 170, bottom: 60, left: 70 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
+const cx0 = margin.left + iw / 2;
+const cy0 = margin.top + ih / 2;
 
 // --- Data: Lorenz attractor, integrated with RK4 (in-memory, deterministic) -
 const SIGMA = 10;
@@ -44,9 +46,9 @@ const simulated = [{ x: 1, y: 1, z: 1 }];
 for (let i = 1; i <= SIM_STEPS; i++) simulated.push(rk4Step(simulated[i - 1], SIM_DT));
 const points = simulated.filter((_, i) => i % DOWNSAMPLE === 0);
 
-// --- 3D -> 2D projection: normalize, rotate (isometric-ish view), perspective
-// divide. "up" on screen is data z (classic Lorenz convention), "right" is
-// data x, "depth" is data y.
+// --- 3D -> 2D projection: normalize, rotate (interactively, via drag), then
+// perspective-divide. "up" on screen is data z (classic Lorenz convention),
+// "right" is data x, "depth" is data y.
 const xExtent = d3.extent(points, (p) => p.x);
 const yExtent = d3.extent(points, (p) => p.y);
 const zExtent = d3.extent(points, (p) => p.z);
@@ -62,17 +64,17 @@ const toUVW = (p) => ({
   w: (p.y - yMid) / maxRange,
 });
 
-const YAW = -0.95; // rotation around the vertical (v) axis
-const PITCH = 0.42; // rotation around the horizontal (u) axis
+let YAW = -0.95; // rotation around the vertical (v) axis — mutable, drag-controlled
+let PITCH = 0.42; // rotation around the horizontal (u) axis — mutable, drag-controlled
 const CAM_DIST = 3.4; // perspective camera distance, in normalized units
 
-function toCamera(p) {
-  const cosY = Math.cos(YAW);
-  const sinY = Math.sin(YAW);
+function toCamera(p, yaw, pitch) {
+  const cosY = Math.cos(yaw);
+  const sinY = Math.sin(yaw);
   const u1 = p.u * cosY + p.w * sinY;
   const w1 = -p.u * sinY + p.w * cosY;
-  const cosP = Math.cos(PITCH);
-  const sinP = Math.sin(PITCH);
+  const cosP = Math.cos(pitch);
+  const sinP = Math.sin(pitch);
   const v2 = p.v * cosP - w1 * sinP;
   const w2 = p.v * sinP + w1 * cosP;
   return { cx: u1, cy: v2, cz: w2 };
@@ -83,7 +85,7 @@ function toRawScreen(c) {
   return { sx: c.cx * k, sy: -c.cy * k, depth: c.cz };
 }
 
-// Reference-frame corner + axis extents (padded slightly beyond the data)
+// Reference-frame corner extents (padded slightly beyond the data)
 const PAD = 1.0;
 const uLo = ((xExtent[0] - xMid) / maxRange) * PAD;
 const uHi = ((xExtent[1] - xMid) / maxRange) * PAD;
@@ -91,148 +93,174 @@ const vLo = ((zExtent[0] - zMid) / maxRange) * PAD;
 const vHi = ((zExtent[1] - zMid) / maxRange) * PAD;
 const wLo = ((yExtent[0] - yMid) / maxRange) * PAD;
 const wHi = ((yExtent[1] - yMid) / maxRange) * PAD;
-
-// Fit the scale to the trajectory + the axis-frame endpoints together, so the
-// reference frame never overflows the plot area while the curve still fills
-// most of it.
-const trajectoryRaw = points.map((p) => toRawScreen(toCamera(toUVW(p))));
-const frameCorners = [
+const origin = { u: uLo, v: vLo, w: wLo };
+const FRAME_CORNERS = [
   { u: uLo, v: vLo, w: wLo },
   { u: uHi, v: vLo, w: wLo },
   { u: uLo, v: vHi, w: wLo },
   { u: uLo, v: vLo, w: wHi },
-].map((p) => toRawScreen(toCamera(p)));
-const allRaw = trajectoryRaw.concat(frameCorners);
-const sxExtent = d3.extent(allRaw, (p) => p.sx);
-const syExtent = d3.extent(allRaw, (p) => p.sy);
-const SCALE = 0.9 * Math.min(iw / (sxExtent[1] - sxExtent[0]), ih / (syExtent[1] - syExtent[0]));
-const sxMid = (sxExtent[0] + sxExtent[1]) / 2;
-const syMid = (syExtent[0] + syExtent[1]) / 2;
-const cx0 = margin.left + iw / 2;
-const cy0 = margin.top + ih / 2;
+];
+const axisSpecs = [
+  { end: { u: uHi, v: vLo, w: wLo }, extent: xExtent, mid: xMid, axis: "u", label: "X (state)" },
+  { end: { u: uLo, v: vLo, w: wHi }, extent: yExtent, mid: yMid, axis: "w", label: "Y (state)" },
+  { end: { u: uLo, v: vHi, w: wLo }, extent: zExtent, mid: zMid, axis: "v", label: "Z (state)" },
+];
 
-const projectUVW = (p) => {
-  const s = toRawScreen(toCamera(p));
-  return { x: cx0 + (s.sx - sxMid) * SCALE, y: cy0 + (s.sy - syMid) * SCALE, depth: s.depth };
-};
-const project = (raw) => projectUVW(toUVW(raw));
+// Fit the scale to the trajectory + the axis-frame endpoints together (for the
+// CURRENT yaw/pitch), so the reference frame never overflows the plot area
+// while the curve still fills most of it. Recomputed on every rotation so the
+// scene stays framed as the user drags.
+function computeFit(yaw, pitch) {
+  const cam = (p) => toRawScreen(toCamera(p, yaw, pitch));
+  const trajectoryRaw = points.map((p) => cam(toUVW(p)));
+  const frameRaw = FRAME_CORNERS.map(cam);
+  const allRaw = trajectoryRaw.concat(frameRaw);
+  const sxExtent = d3.extent(allRaw, (p) => p.sx);
+  const syExtent = d3.extent(allRaw, (p) => p.sy);
+  const scale = 0.9 * Math.min(iw / (sxExtent[1] - sxExtent[0]), ih / (syExtent[1] - syExtent[0]));
+  const sxMid = (sxExtent[0] + sxExtent[1]) / 2;
+  const syMid = (syExtent[0] + syExtent[1]) / 2;
+  const toPixel = (s) => ({ x: cx0 + (s.sx - sxMid) * scale, y: cy0 + (s.sy - syMid) * scale, depth: s.depth });
+  return {
+    projectUVW: (p) => toPixel(cam(p)),
+    trajectoryPixels: trajectoryRaw.map(toPixel),
+  };
+}
 
 // --- SVG mount ----------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
-
-// --- Floor grid (reference plane at the base of the attractor) ----------
 const floor = svg.append("g");
-const GRID_LINES = 6;
-for (let i = 0; i <= GRID_LINES; i++) {
-  const u = uLo + ((uHi - uLo) * i) / GRID_LINES;
-  const a = projectUVW({ u, v: vLo, w: wLo });
-  const b = projectUVW({ u, v: vLo, w: wHi });
-  floor
-    .append("line")
-    .attr("x1", a.x)
-    .attr("y1", a.y)
-    .attr("x2", b.x)
-    .attr("y2", b.y)
-    .attr("stroke", t.grid)
-    .attr("stroke-width", 1);
-}
-for (let i = 0; i <= GRID_LINES; i++) {
-  const w = wLo + ((wHi - wLo) * i) / GRID_LINES;
-  const a = projectUVW({ u: uLo, v: vLo, w });
-  const b = projectUVW({ u: uHi, v: vLo, w });
-  floor
-    .append("line")
-    .attr("x1", a.x)
-    .attr("y1", a.y)
-    .attr("x2", b.x)
-    .attr("y2", b.y)
-    .attr("stroke", t.grid)
-    .attr("stroke-width", 1);
-}
-
-// --- Axis frame (corner-anchored X / Y / Z reference lines + ticks) -----
 const axes = svg.append("g");
-const origin = { u: uLo, v: vLo, w: wLo };
-const axisSpecs = [
-  { end: { u: uHi, v: vLo, w: wLo }, extent: xExtent, mid: xMid, axis: "u", label: "X" },
-  { end: { u: uLo, v: vLo, w: wHi }, extent: yExtent, mid: yMid, axis: "w", label: "Y" },
-  { end: { u: uLo, v: vHi, w: wLo }, extent: zExtent, mid: zMid, axis: "v", label: "Z" },
-];
+const trajectory = svg.append("g").attr("fill", "none");
 
-for (const spec of axisSpecs) {
-  const p0 = projectUVW(origin);
-  const p1 = projectUVW(spec.end);
-  axes
-    .append("line")
-    .attr("x1", p0.x)
-    .attr("y1", p0.y)
-    .attr("x2", p1.x)
-    .attr("y2", p1.y)
-    .attr("stroke", t.inkSoft)
-    .attr("stroke-width", 2);
-
-  const ticks = d3.scaleLinear().domain(spec.extent).ticks(4);
-  for (const tickVal of ticks) {
-    const n = (tickVal - spec.mid) / maxRange;
-    const tickPoint = { ...origin, [spec.axis]: n };
-    const tp = projectUVW(tickPoint);
-    axes
-      .append("circle")
-      .attr("cx", tp.x)
-      .attr("cy", tp.y)
-      .attr("r", 2.5)
-      .attr("fill", t.inkSoft);
-    axes
-      .append("text")
-      .attr("x", tp.x)
-      .attr("y", tp.y + 16)
-      .attr("text-anchor", "middle")
-      .attr("fill", t.inkSoft)
-      .style("font-size", "12px")
-      .text(d3.format(".0f")(tickVal));
-  }
-
-  axes
-    .append("text")
-    .attr("x", p1.x)
-    .attr("y", p1.y - 12)
-    .attr("text-anchor", "middle")
-    .attr("fill", t.ink)
-    .style("font-size", "17px")
-    .style("font-weight", "600")
-    .text(spec.label);
-}
-
-// --- Trajectory: chunked, time-colored, depth-shaded segments -----------
 const seqColor = d3.scaleSequential(d3.interpolateRgbBasis(t.seq)).domain([0, points.length - 1]);
-const depthExtent = d3.extent(trajectoryRaw, (p) => p.depth);
-const opacityScale = d3.scaleLinear().domain(depthExtent).range([1, 0.5]);
-const widthScale = d3.scaleLinear().domain(depthExtent).range([3.4, 1.8]);
 const line = d3
   .line()
   .x((p) => p.x)
   .y((p) => p.y)
   .curve(d3.curveCatmullRom.alpha(0.5));
+const CHUNK = 8;
+const GRID_LINES = 6;
 
-const CHUNK = 20;
-const trajectory = svg.append("g").attr("fill", "none");
-for (let start = 0; start < points.length - 1; start += CHUNK) {
-  const end = Math.min(start + CHUNK, points.length - 1);
-  const chunkPoints = points.slice(start, end + 1).map(project);
-  const mid = Math.floor((start + end) / 2);
-  const avgDepth = d3.mean(chunkPoints, (p) => p.depth);
+function redraw() {
+  const { projectUVW, trajectoryPixels } = computeFit(YAW, PITCH);
+
+  // Floor grid (reference plane at the base of the attractor)
+  const floorSegments = [];
+  for (let i = 0; i <= GRID_LINES; i++) {
+    const u = uLo + ((uHi - uLo) * i) / GRID_LINES;
+    floorSegments.push([projectUVW({ u, v: vLo, w: wLo }), projectUVW({ u, v: vLo, w: wHi })]);
+  }
+  for (let i = 0; i <= GRID_LINES; i++) {
+    const w = wLo + ((wHi - wLo) * i) / GRID_LINES;
+    floorSegments.push([projectUVW({ u: uLo, v: vLo, w }), projectUVW({ u: uHi, v: vLo, w })]);
+  }
+  floor
+    .selectAll("line")
+    .data(floorSegments)
+    .join("line")
+    .attr("x1", (d) => d[0].x)
+    .attr("y1", (d) => d[0].y)
+    .attr("x2", (d) => d[1].x)
+    .attr("y2", (d) => d[1].y)
+    .attr("stroke", t.grid)
+    .attr("stroke-width", 1);
+
+  // Axis frame (corner-anchored X / Y / Z reference lines + ticks)
+  axes.selectAll("*").remove();
+  for (const spec of axisSpecs) {
+    const p0 = projectUVW(origin);
+    const p1 = projectUVW(spec.end);
+    axes
+      .append("line")
+      .attr("x1", p0.x)
+      .attr("y1", p0.y)
+      .attr("x2", p1.x)
+      .attr("y2", p1.y)
+      .attr("stroke", t.inkSoft)
+      .attr("stroke-width", 2);
+
+    const ticks = d3.scaleLinear().domain(spec.extent).ticks(4);
+    for (const tickVal of ticks) {
+      const n = (tickVal - spec.mid) / maxRange;
+      const tickPoint = { ...origin, [spec.axis]: n };
+      const tp = projectUVW(tickPoint);
+      axes.append("circle").attr("cx", tp.x).attr("cy", tp.y).attr("r", 2.5).attr("fill", t.inkSoft);
+      axes
+        .append("text")
+        .attr("x", tp.x)
+        .attr("y", tp.y + 16)
+        .attr("text-anchor", "middle")
+        .attr("fill", t.inkSoft)
+        .style("font-size", "12px")
+        .text(d3.format(".0f")(tickVal));
+    }
+
+    axes
+      .append("text")
+      .attr("x", p1.x)
+      .attr("y", p1.y - 12)
+      .attr("text-anchor", "middle")
+      .attr("fill", t.ink)
+      .style("font-size", "17px")
+      .style("font-weight", "600")
+      .text(spec.label);
+  }
+
+  // Trajectory: chunked, time-colored, depth-shaded segments
+  const depthExtent = d3.extent(trajectoryPixels, (p) => p.depth);
+  const opacityScale = d3.scaleLinear().domain(depthExtent).range([1, 0.5]);
+  const widthScale = d3.scaleLinear().domain(depthExtent).range([3.4, 1.8]);
+  const chunks = [];
+  for (let start = 0; start < trajectoryPixels.length - 1; start += CHUNK) {
+    const end = Math.min(start + CHUNK, trajectoryPixels.length - 1);
+    const chunkPoints = trajectoryPixels.slice(start, end + 1);
+    const mid = Math.floor((start + end) / 2);
+    const avgDepth = d3.mean(chunkPoints, (p) => p.depth);
+    chunks.push({
+      d: line(chunkPoints),
+      color: seqColor(mid),
+      opacity: opacityScale(avgDepth),
+      width: widthScale(avgDepth),
+    });
+  }
   trajectory
-    .append("path")
-    .attr("d", line(chunkPoints))
-    .attr("stroke", seqColor(mid))
-    .attr("stroke-opacity", opacityScale(avgDepth))
-    .attr("stroke-width", widthScale(avgDepth))
+    .selectAll("path")
+    .data(chunks)
+    .join("path")
+    .attr("d", (c) => c.d)
+    .attr("stroke", (c) => c.color)
+    .attr("stroke-opacity", (c) => c.opacity)
+    .attr("stroke-width", (c) => c.width)
     .attr("stroke-linecap", "round")
     .attr("stroke-linejoin", "round");
+
+  return { projectUVW, trajectoryPixels };
 }
 
+// --- Interactive rotation (genuine, drag-driven re-projection) ----------
+const drag = d3
+  .drag()
+  .on("start", () => svg.style("cursor", "grabbing"))
+  .on("drag", (event) => {
+    YAW += event.dx * 0.006;
+    PITCH = Math.max(-1.4, Math.min(1.4, PITCH - event.dy * 0.006));
+    redraw();
+  })
+  .on("end", () => svg.style("cursor", "grab"));
+svg.style("cursor", "grab").call(drag);
+
+const initialFit = redraw();
+
 // --- Colorbar legend (time progression along the trajectory) ------------
-const legend = svg.append("g").attr("transform", `translate(${width - margin.right + 90},${margin.top})`);
+// Anchored to the actual right edge of the projected scene (not a fixed
+// offset), so it sits close to the plot instead of floating in empty space.
+const sceneRightEdge = d3.max(
+  initialFit.trajectoryPixels.concat(FRAME_CORNERS.map(initialFit.projectUVW)),
+  (p) => p.x,
+);
+const legendX = Math.min(sceneRightEdge + 50, width - 110);
+const legend = svg.append("g").attr("transform", `translate(${legendX},${margin.top})`);
 const barHeight = ih * 0.55;
 const barWidth = 16;
 const gradientId = "time-gradient";
@@ -294,3 +322,12 @@ svg
   .style("font-size", "21px")
   .style("font-weight", "600")
   .text("Lorenz Attractor · line-3d-trajectory · javascript · d3 · anyplot.ai");
+
+svg
+  .append("text")
+  .attr("x", width / 2)
+  .attr("y", 78)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "13px")
+  .text("Drag to rotate");
