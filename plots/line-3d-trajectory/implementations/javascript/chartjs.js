@@ -31,14 +31,35 @@ for (let i = 0; i < POINT_COUNT; i++) {
   const origX = radius * Math.cos(angle);
   const origY = radius * Math.sin(angle);
   const origZ = ALTITUDE_START * Math.pow(1 - progress, 1.3);
-  trajectory.push({ ...project(origX, origY, origZ), origX, origY, origZ, progress });
+  trajectory.push({
+    ...project(origX, origY, origZ),
+    origX,
+    origY,
+    origZ,
+    progress,
+  });
 }
 
 const origin = { ...project(0, 0, 0), origX: 0, origY: 0, origZ: 0 };
 const axisLength = RADIUS_START + 1.2;
-const xAxisEnd = { ...project(axisLength, 0, 0), origX: axisLength, origY: 0, origZ: 0 };
-const yAxisEnd = { ...project(0, axisLength, 0), origX: 0, origY: axisLength, origZ: 0 };
-const zAxisEnd = { ...project(0, 0, axisLength), origX: 0, origY: 0, origZ: axisLength };
+const xAxisEnd = {
+  ...project(axisLength, 0, 0),
+  origX: axisLength,
+  origY: 0,
+  origZ: 0,
+};
+const yAxisEnd = {
+  ...project(0, axisLength, 0),
+  origX: 0,
+  origY: axisLength,
+  origZ: 0,
+};
+const zAxisEnd = {
+  ...project(0, 0, axisLength),
+  origX: 0,
+  origY: 0,
+  origZ: axisLength,
+};
 
 // --- Color: elapsed time mapped through the Imprint sequential scale ------
 function lerpChannel(a, b, ratio) {
@@ -111,6 +132,7 @@ new Chart(canvas, {
         data: [trajectory[0]],
         showLine: false,
         pointRadius: 11,
+        backgroundColor: t.palette[0],
         pointBackgroundColor: t.palette[0],
         pointBorderColor: t.pageBg,
         pointBorderWidth: 2,
@@ -122,6 +144,7 @@ new Chart(canvas, {
         showLine: false,
         pointRadius: 11,
         pointStyle: "triangle",
+        backgroundColor: t.palette[4],
         pointBackgroundColor: t.palette[4],
         pointBorderColor: t.pageBg,
         pointBorderWidth: 2,
@@ -158,15 +181,35 @@ new Chart(canvas, {
         type: "linear",
         grid: { display: false },
         border: { color: t.grid },
-        ticks: { display: false },
-        title: { display: true, text: "Projected X–Y plane", color: t.ink, font: { size: 16 } },
+        ticks: {
+          display: true,
+          color: t.inkSoft,
+          font: { size: 11 },
+          maxTicksLimit: 5,
+        },
+        title: {
+          display: true,
+          text: "Projected X–Y plane",
+          color: t.ink,
+          font: { size: 16 },
+        },
       },
       y: {
         type: "linear",
         grid: { display: false },
         border: { color: t.grid },
-        ticks: { display: false },
-        title: { display: true, text: "Altitude (Z)", color: t.ink, font: { size: 16 } },
+        ticks: {
+          display: true,
+          color: t.inkSoft,
+          font: { size: 11 },
+          maxTicksLimit: 5,
+        },
+        title: {
+          display: true,
+          text: "Altitude (Z)",
+          color: t.ink,
+          font: { size: 16 },
+        },
       },
     },
   },
