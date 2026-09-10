@@ -24,11 +24,14 @@ const IMPRINT_PALETTE = [
 
 # --- Data ----------------------------------------------------------------------
 # Sensor readings from a machine feature space (vibration, temperature,
-# pressure), forming three distinct clusters by operating mode.
+# pressure), forming three clusters by operating mode. Idle and Normal
+# deliberately overlap in vibration/temperature (the third axis, pressure,
+# is what actually separates them) so the 3D view carries information a
+# single 2D projection would not.
 n_per_mode = 60
 modes = ["Idle", "Normal", "Stress"]
-centers = [(1.0, 40.0, 1.0), (3.5, 65.0, 2.6), (6.5, 92.0, 4.4)]
-spreads = [(0.35, 3.0, 0.25), (0.5, 4.0, 0.35), (0.7, 5.0, 0.5)]
+centers = [(1.0, 55.0, 1.2), (1.5, 58.0, 3.0), (6.5, 92.0, 4.6)]
+spreads = [(0.4, 3.5, 0.2), (0.45, 3.5, 0.3), (0.7, 5.0, 0.4)]
 
 vibration = Float64[]
 temperature = Float64[]
@@ -83,8 +86,8 @@ ax = Axis3(
     xzpanelcolor      = ELEVATED_BG,
     yzpanelcolor      = ELEVATED_BG,
     backgroundcolor   = PAGE_BG,
-    azimuth           = 1.1 * pi,
-    elevation         = 0.18 * pi,
+    azimuth           = 1.275 * pi,
+    elevation         = 0.15 * pi,
     aspect            = (1, 1, 1),
 )
 
@@ -92,7 +95,7 @@ for (i, name) in enumerate(modes)
     sel = mode_idx .== i
     scatter!(
         ax, vibration[sel], temperature[sel], pressure[sel];
-        color = IMPRINT_PALETTE[i], markersize = 14,
+        color = (IMPRINT_PALETTE[i], 0.85), markersize = 14,
         strokewidth = 0.5, strokecolor = PAGE_BG, label = name,
     )
 end
