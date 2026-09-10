@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: surface-basic
 created: '2026-09-10T01:14:05Z'
-updated: '2026-09-10T01:18:32Z'
+updated: '2026-09-10T01:28:47Z'
 generated_by: claude-sonnet
 workflow_run: 34423831690
 issue: 1013
@@ -12,97 +12,99 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - Theme-adaptive chrome correctly threaded through every Axis3 element (ticks, spines,
-    grid, panels) and the Colorbar for both light and dark renders
-  - Exact required title format and fully deterministic, RNG-free data generation
-    (sin(x)*cos(y)*exp(-decay))
-  - 'Idiomatic Makie 3D API usage: Axis3 + surface! + a linked Colorbar(fig[1,2],
-    surf), with tuned azimuth/elevation/aspect for a legible viewing angle'
-  - Correct use of the Imprint diverging colormap for signed continuous data, with
-    identical data colors between themes
+  - 'All three attempt-1 weaknesses were fixed: protrusions tightened (60->40) + viewmode=:stretch
+    so the surface fills noticeably more of the 3200x1800 frame, the diverging colormap''s
+    midpoint (#EDE8DA/#2B2B26) is now nudged off the exact page background so near-zero
+    regions no longer blend into the panel walls, and the colorbar label now reads
+    "Amplitude (z)" matching the z-axis label'
+  - Theme-adaptive chrome is threaded through every Axis3 element (ticks, spines,
+    grid, panels) and the linked Colorbar for both light and dark renders, with no
+    dark-on-dark or light-on-light failures
+  - 'Idiomatic Makie 3D API usage: Axis3 + surface! + Colorbar(fig[1,2], surf), with
+    a tuned azimuth/elevation/aspect that gives a legible viewing angle on the wave
+    surface'
+  - Deterministic, RNG-free data generation (sin(x)*cos(y)*exp(-decay)) with a correct
+    diverging Imprint colormap choice for signed continuous data, and identical data
+    colors between light and dark renders
   weaknesses:
-  - Large unused vertical whitespace above and below the 3D surface -- the plot content
-    fills well under half the canvas height; tune camera zoom, protrusions, or aspect
-    so the surface uses more of the 3200x1800 frame
-  - The diverging colormap's white midpoint equals the exact page background color,
-    so near-zero (z is approximately 0) surface regions visually blend into the panel
-    walls and canvas background -- most visible in the light render's saddle regions.
-    Consider a midpoint slightly distinct from the page background, or add a subtle
-    wireframe/edge highlight for depth cues
-  - Colorbar label 'z' is less descriptive than the z-axis label 'Amplitude (z)' --
-    align the two for consistency
+  - Vertical whitespace above and below the surface is reduced but still noticeable
+    -- the surface content occupies roughly the middle ~60% of canvas height; a further
+    camera zoom or aspect tweak could use even more of the frame
+  - The diverging colormap's midpoint (#EDE8DA/#2B2B26) deviates from the style guide's
+    literal theme-background midpoint (#FAF8F1/#1A1A17) -- a reasonable readability
+    tradeoff given the Axis3 panel-wall blending it fixes, but worth flagging as a
+    minor palette-compliance deviation
+  - Near-zero surface regions (the saddle areas) are still somewhat low-contrast against
+    the panel walls, particularly in the dark render -- a subtle wireframe or edge
+    stroke on the surface would sharpen the depth cue further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 -- correct, not pure white.
-      Chrome: Title "surface-basic · julia · makie · anyplot.ai" is bold, dark ink, clearly visible at top center. Axis labels x, y, and "Amplitude (z)" are dark ink and readable. Tick labels (-5/0/5 on x/y, -0.5/0.0/0.5 on z) are soft gray and legible. Colorbar on the right is labeled "z" with ticks -1.0 to 1.0, all readable against the light background. Grid lines on the cube walls are subtle but visible.
-      Data: Diverging red-white-blue surface (Imprint #AE3030 to background-tinted white to #4467A3) representing the signed amplitude. Near-zero regions of the surface are a very light gray that sits close to the page background color, causing a mild blending effect in the saddle areas, but the overall peaks (blue) and troughs (red) remain clearly distinguishable.
-      Legibility verdict: PASS (all text readable; minor midtone-surface blending noted as a design weakness, not a legibility failure).
+      Background: Warm off-white, matches #FAF8F1 - correct, not pure white, not dark.
+      Chrome: Title "surface-basic · julia · makie · anyplot.ai" is bold, dark ink, clearly visible at top center, well within canvas bounds (~35% width). Axis labels x, y, and "Amplitude (z)" are dark ink and readable. Tick labels (-5/0/5 on x/y, -0.5/0.0/0.5 on z) are soft gray and legible. Colorbar on the right is now labeled "Amplitude (z)" (consistent with the z-axis label) with ticks -1.0 to 1.0, all readable against the light background. Grid lines on the cube walls are subtle but visible. No text overlap or clipping.
+      Data: Diverging red-white-blue surface (Imprint #AE3030 to a nudged off-background midpoint to #4467A3) representing signed amplitude. Peaks (blue) and troughs (red) are clearly distinguishable; near-zero saddle regions are a light tan that is now visibly distinct from the page background/panel walls, though still fairly low-contrast.
+      Legibility verdict: PASS (all text readable, no light-on-light failures).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 -- correct, not pure black.
-      Chrome: Title is bold, light/white text, clearly visible against the dark background. Axis labels and tick labels are light gray and readable, with no dark-on-dark failures observed. Colorbar labels and ticks are light-colored and legible on the dark background. Grid lines are subtle but present.
-      Data: Same diverging red-white-blue palette as the light render -- data colors are identical between themes, confirming only chrome changed. Near-zero surface regions render as dark gray, again blending somewhat into the near-black background/panels, mirroring the light-theme observation.
+      Background: Warm near-black, matches #1A1A17 - correct, not pure black, not light.
+      Chrome: Title is bold, light/white text, clearly visible against the dark background. Axis labels and tick labels are light gray/white and readable, no dark-on-dark failures observed. Colorbar label "Amplitude (z)" and ticks are light-colored and legible. Grid lines are subtle but present.
+      Data: Same diverging red-white-blue palette as the light render - data colors are identical between themes, confirming only chrome flipped. Near-zero surface regions render as a dark gray-blue that is distinguishable from the near-black background, though the contrast is still somewhat subtle in the deepest saddle areas.
       Legibility verdict: PASS (all text readable in both themes; no dark-on-dark or light-on-light text failures found).
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; tick label fonts (12px) are on
-          the smaller side for a 3D plot and may be tight at mobile scale.
+        comment: Explicit font sizes, all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements observed.
+        comment: No collisions between text, data, or colorbar
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Near-zero (z~0) surface regions use a colormap midpoint equal to
-          the page background, causing those mid-value patches to visually blend into
-          the panel walls / canvas background, most noticeable in the light render.
+        comment: Peaks/troughs clearly visible; near-zero saddle regions still low-contrast
+          against panel walls
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-blue diverging scale with neutral midpoint; safe for red-green
-          CVD, no red-green used as sole signal.
+        comment: Red/blue diverging pair with lightness separation, no red-green sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
         passed: true
-        comment: Correct canvas size (3200x1800, gate passed), but large unused vertical
-          whitespace above/below the 3D surface -- content occupies well under half
-          the canvas height.
+        comment: Whitespace above/below surface reduced vs. attempt 1 but still present;
+          no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: x, y, and 'Amplitude (z)' are all present and descriptive.
+        comment: x, y, Amplitude (z) all descriptive; title matches required format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint diverging colormap (#AE3030 to theme-adaptive midpoint to
-          #4467A3) correctly used for signed continuous data; page backgrounds match
-          #FAF8F1/#1A1A17 exactly.'
+        comment: Correct imprint_div endpoints and theme backgrounds; midpoint intentionally
+          nudged off literal token for readability
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -110,27 +112,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Theme-adaptive chrome, tuned camera azimuth/elevation and aspect
-          ratio, custom diverging colormap -- above generic defaults, though the composition
-          has excess dead space.
+        comment: Custom diverging colormap and tuned camera angle beyond generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid lines subtle (alpha 0.15), spines/ticks softened, panel walls
-          blended with background for a minimal cube -- but this same choice contributes
-          to the midtone-blending issue in VQ-03.
+        comment: Subtle grid opacity and soft spine colors; not heavily refined beyond
+          that
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Diverging colormap creates a visible hierarchy between peaks and
-          troughs, guiding the eye, but there is no explicit annotation or emphasis
-          beyond the automatic color mapping.
+        passed: true
+        comment: Color encodes signed amplitude with colorbar guide; no additional
+          focal-point emphasis
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -138,29 +136,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implemented as a 3D surface plot via Axis3 + surface!.
+        comment: Correct 3D surface via surface!
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid data (45x45), colormap for height variation, axis labels, and
-          a colorbar are all present per the spec notes.
+        comment: Smooth colormap, x/y/z labels, colorbar all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x, y, z correctly mapped; axes show the full -6..6 domain and true
-          z-range.
+        comment: 45x45 grid within spec's 30-50 range, x/y/z correctly mapped
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title exactly matches the required 'surface-basic · julia · makie
-          · anyplot.ai' format; colorbar label 'z' is slightly inconsistent with the
-          more descriptive z-axis label 'Amplitude (z)'.
+        comment: Title format exact; colorbar serves as the legend for continuous
+          z
     data_quality:
       score: 15
       max: 15
@@ -170,22 +165,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows the full grid surface with both positive and negative amplitude
-          regions, plus a colorbar for the value scale.
+        comment: Damped standing-wave field shows full height variation across the
+          domain
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Damped standing-wave function (sin(x)*cos(y)*exp(-decay)) is a realistic,
-          neutral, textbook example of a two-variable surface.
+        comment: Classic two-variable function surface, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: z range approximately -1..1 and x/y range -6..6 are sensible, well-scaled
-          values.
+        comment: Sensible amplitude and domain ranges
     code_quality:
       score: 10
       max: 10
@@ -195,50 +188,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes.
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic -- no RNG used at all.
+        comment: Deterministic, no RNG needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie and Colors imported, both used.
+        comment: Only CairoMakie and Colors, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the plot type, no fake UI.
+        comment: No fake functionality, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png with px_per_unit=2, current Makie API.
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current API
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Idiomatic Axis3 + surface! + linked Colorbar(fig[1,2], surf); correct
-          3D API usage.
+        comment: Axis3 + surface! + linked Colorbar is the idiomatic Makie 3D pattern
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Distinctive use of azimuth/elevation camera control, aspect ratio
-          tuning, and protrusions for spacing -- genuine Makie-specific mastery beyond
-          defaults.
+        comment: colsize! relative sizing, protrusions tuning, viewmode=:stretch are
+          Makie-specific layout controls
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -251,4 +242,3 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
-  - publication-ready
