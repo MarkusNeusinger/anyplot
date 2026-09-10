@@ -1,0 +1,247 @@
+library: highcharts
+language: javascript
+specification_id: line-3d-trajectory
+created: '2026-09-10T00:14:22Z'
+updated: '2026-09-10T00:28:04Z'
+generated_by: claude-sonnet
+workflow_run: 34420048490
+issue: 3182
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Elegant hand-rolled 3D-to-2D orthographic projection (elevation 22°, azimuth 55°)
+    that works around Highcharts core's missing 3D module, exactly as prompts/library/highcharts.md
+    prescribes instead of shelling out to another library
+  - Time-progression color gradient built correctly from window.ANYPLOT_TOKENS.seq,
+    identical between light and dark renders — only chrome flips
+  - Custom L-shaped X/Y/Z axis frame gives spatial orientation for the projected trajectory
+    without a native 3D axis system
+  - Real, physically motivated Lorenz attractor parameters (σ=10, ρ=28, β=8/3) surfaced
+    in the subtitle — realistic and neutral data
+  - Start/end markers with labels add a clear narrative anchor to the time-progression
+    story
+  - Tooltip formatter surfaces original (unprojected) x/y/z coordinates and time fraction
+    on hover — strong use of the interactive HTML output
+  - Canvas is exactly 3200x1800 with no clipped or overflowing elements in either
+    render
+  weaknesses:
+  - Trajectory uses 4,200 integration steps, more than double the spec's suggested
+    100-2000 point range — consider thinning the plotted points (or increasing DT)
+    to land inside the guideline while keeping the curve smooth
+  - The 'X'/'Y'/'Z' and 'start'/'end' labels are quite small (16px/13px) relative
+    to the title — could be nudged up slightly for stronger presence at small preview
+    sizes
+  - True interactive 3D rotation (called out as 'critical' in the spec's Notes) isn't
+    available since Highcharts core has no 3D module — an inherent library limitation
+    rather than an implementation bug, but still a residual gap versus the spec's
+    ideal
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "Lorenz Attractor · line-3d-trajectory · javascript · highcharts · anyplot.ai" (19px, scaled down for the 76-char length) is crisp and readable; gray subtitle with the sigma/rho/beta parameters is readable; the dark-gray L-shaped X/Y/Z axis frame and its labels are clearly visible against the light surface.
+      Data: Trajectory is drawn as a fine chain of segments transitioning from Imprint brand green (#009E73, time=0, at the "start" marker) through teal/blue to a darker blue (time=1, at the "end" marker) — the classic Lorenz butterfly is fully legible with two spiral wings and a long initial transient loop. First-series green matches the Imprint palette convention.
+      Legibility verdict: PASS — no light-on-light text, no illegible elements.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and subtitle flip to light/white text, both clearly legible; the axis frame line and X/Y/Z, start/end labels flip to light gray/white and remain fully readable against the dark surface — no dark-on-dark failures observed.
+      Data: Trajectory colors (green-to-blue gradient, start/end marker fills) are visually identical to the light render — confirms only chrome tokens flipped, not the data-color mapping.
+      Legibility verdict: PASS — no dark-on-dark text, brand green remains vivid on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title fontsize correctly scaled for length; all text readable in
+          both themes; start/end/axis labels a bit small
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Segment-chain line width (2.2px) reads clearly despite dense overlapping
+          loops
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue gradient, not red-green reliant, good contrast
+          on both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced proportions, no overflow, canvas exactly 3200x1800
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X/Y/Z labels plus descriptive subtitle with model parameters
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq used correctly for continuous time encoding; identical
+          data colors across themes; correct #FAF8F1/#1A1A17 backgrounds'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom projection math and time-gradient coloring show real design/engineering
+          effort
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal custom axis frame instead of default chrome, transparent
+          background, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Start/end markers plus color gradient clearly narrate time progression
+          through the attractor
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Legitimate 3D-trajectory workaround per library constraints (no highcharts-3d
+          module available)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sequential connected line, color-encoded time progression, single
+          continuous trajectory
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y/z all represented via projection; full path range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; no legend needed for single trajectory
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Trajectory, time-color mapping, parameters, start/end markers all
+          present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Canonical Lorenz attractor parameters, real and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: 4,200 RK4 steps exceeds the spec's suggested 100-2000 point range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes, small focused helper functions only
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic fixed-step RK4 integration, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the Highcharts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the projection math, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled everywhere
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Best-available idiomatic approach given core-bundle constraints (line/scatter
+          series, dataLabels, tooltip formatter)
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Creative segment-chain gradient trick, but no Highcharts-distinctive
+          features like drilldown or boost
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - gradient-fill
