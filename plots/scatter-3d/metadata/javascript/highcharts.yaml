@@ -1,0 +1,265 @@
+library: highcharts
+language: javascript
+specification_id: scatter-3d
+created: '2026-09-10T00:25:36Z'
+updated: '2026-09-10T00:45:30Z'
+generated_by: claude-sonnet
+workflow_run: 34420181788
+issue: 1945
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/highcharts/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - Honest axonometric projection technique substitutes for Highcharts core's missing
+    3D module exactly as prescribed in prompts/library/highcharts.md, rather than
+    faking rotation or shelling out to another library.
+  - 'Correctly builds the diverging imprint_div colormap from window.ANYPLOT_TOKENS
+    with a theme-adaptive midpoint that pixel-matches the page background in both
+    themes (verified #FAF8F1 light / #1A1A17 dark), and adds an inkSoft marker stroke
+    so near-zero-deviation points never vanish into the surface.'
+  - Depth-based marker sizing (farther sensors render smaller) gives an extra honest
+    depth cue on top of the isometric projection.
+  - Custom color-scale legend is hand-drawn via chart.renderer since colorAxis doesn't
+    compose onto plain scatter series in core Highcharts — an idiomatic use of the
+    SVG renderer rather than a hack.
+  - Deterministic LCG-seeded data generation, clean imports, no external dependencies.
+  - 'Both renders are theme-correct end to end: background, title, axis labels, tick
+    labels, and legend text all use the correct tokens with no dark-on-dark or light-on-light
+    failures.'
+  weaknesses:
+  - The '1.5m' height-axis tick label sits directly on top of a nearby data marker
+    in both light and dark renders (confirmed by pixel crop) — nudge the tick label
+    position (e.g. further left/down) or move the tick mark itself so it doesn't collide
+    with the data area.
+  - Title occupies only ~43% of canvas width at 19px — comfortably legible and not
+    a violation, but there's headroom to size it up a point or two for stronger visual
+    presence without risking overflow.
+  - No visual callout marks the 'hot aisle' cluster (Row B) that the data was deliberately
+    built to demonstrate — a subtle annotation or label would sharpen the data-storytelling
+    focal point.
+  - Relies on several helper functions (LCG, gaussian, project, color interpolation)
+    for the projection math — necessary given the custom 3D emulation, but further
+    from the plain Imports→Data→Plot→Save KISS shape than a simpler chart.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, confirmed pixel-exact #FAF8F1.
+      Chrome: Bold dark title "Data Center Thermal Sensors · scatter-3d · javascript · highcharts · anyplot.ai" fully visible near the top with comfortable margin (no clipping). Axis direction labels "Aisle position (m) →", "← Row depth (m)", "↑ Rack height (m)" and height-axis tick labels "0m", "1.5m", "3m" all render in dark ink, clearly legible. A hand-drawn diverging color-scale legend ("Δ Temp vs. 22°C setpoint", -4°C to +4°C) sits top-right with readable labels. One issue: the "1.5m" tick label overlaps a nearby data marker.
+      Data: ~140 circular sensor points arranged via an isometric floor-grid projection into three visible clusters, colored on a red–white–blue diverging scale (imprint_div) for temperature deviation, with a thin ink-soft stroke keeping near-zero (white) points visible against the background. Farther points render smaller for a depth cue.
+      Legibility verdict: PASS (all chrome and data readable; only flaw is the tick/marker overlap noted above, which does not block readability).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, confirmed pixel-exact #1A1A17.
+      Chrome: Title and axis labels render in light ink, fully legible against the dark surface; no dark-on-dark failures found anywhere (title, direction labels, tick labels, and legend text all switch correctly). The color-scale legend's white midpoint correctly darkens in this theme (pixel-sampled at #1A1A17, matching the page background exactly per the diverging-colormap spec) while the red and blue ends stay identical to the light render.
+      Data: Same ~140 points in the same screen positions with byte-identical colors to the light render (only chrome flipped, as required) — confirmed the data-color stops (#AE3030 / #4467A3) are unchanged between themes.
+      Legibility verdict: PASS (same "1.5m" tick/marker overlap as light, but text remains readable — no dark-on-dark issue).
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicit and readable in both themes; the 1.5m tick
+          label overlapping a marker keeps this from a perfect score
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: 1.5m height-axis tick label overlaps a data marker in both renders;
+          text stays readable so it's a minor, not severe, overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Depth-scaled markers with alpha 0.82 and ink-soft stroke stay visible
+          even in denser cluster areas
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Diverging red-white-blue scale plus stroke outline avoids relying
+          on hue alone near the midpoint
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Content bounding box spans ~98% of width and ~92% of height; nothing
+          cut off, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis direction labels carry units (m); title fully descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correctly uses imprint_div stops from ANYPLOT_TOKENS with theme-adaptive
+          midpoint; backgrounds pixel-verified #FAF8F1/#1A1A17; chrome theme-correct
+          in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful axonometric projection, depth cueing, and hand-built color
+          legend clearly go beyond a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, hidden native axes, generous whitespace; docked a couple
+          points for the tick/marker overlap
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color and size create visual hierarchy showing hot vs. cold clusters,
+          though no explicit callout marks the 'hot aisle' insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Legitimate axonometric-projection scatter substitutes for Highcharts
+          core's missing 3D module, as prescribed by the library rules
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: x/y/z axes, 4th-variable color encoding, point count in spec range,
+          transparency for density all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Aisle/row-depth/height all mapped through the projection and exposed
+          in tooltips
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format with descriptive prefix; no redundant
+          native legend since color legend covers the single series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Three distinguishable clusters with different temperature biases
+          and a height-correlated deviation term
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Data-center thermal sensor scenario is neutral, comprehensible, and
+          realistic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Aisle/row/rack dimensions and °C deviations are physically plausible
+          for a data hall
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions are used for the projection math and color
+          interpolation, justified by the custom 3D emulation but less minimal than
+          a plain script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the Highcharts global is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or interactivity; comments explain non-obvious workarounds
+          (colorAxis limitation, PAGE_BG-matching midpoint)
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, no deprecated API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Highcharts.chart/series usage plus renderer-based extension
+          for the legend, working within the core-bundle constraint
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Highcharts' SVG renderer API (chart.renderer.text/rect with
+          gradient fill) and the events.load hook, both fairly distinctive to this
+          library's architecture
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - colorbar
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - custom-colormap
+  - edge-highlighting
