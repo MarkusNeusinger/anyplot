@@ -7,7 +7,7 @@ Backend API response time measurements for anyplot-backend (Cloud Run, europe-we
 | Component | Config | Notes |
 |-----------|--------|-------|
 | Cloud Run (backend) | 1 vCPU, 1Gi RAM, min-instances=1, max-instances=1, concurrency 40 | gen2, startup-cpu-boost=true. Single instance since 2026-09-10: every scale-out was a 9-13 s cold start that a live request paid for (see `api/cloudbuild.yaml`) |
-| Cloud Run (frontend) | 1 vCPU, 512Mi RAM, min-instances=0, max-instances=3, concurrency 15 | nginx serving SPA; scales to zero since 2026-08-29, crawler traffic keeps the instance alive |
+| Cloud Run (frontend) | 1 vCPU, 512Mi RAM, min-instances=0, max-instances=1, concurrency 80 | nginx serving SPA; scales to zero since 2026-08-29, crawler traffic keeps the instance alive; one instance since 2026-09-11 (see `app/cloudbuild.yaml`) |
 | Cloud SQL | `db-custom-1-3840`, PostgreSQL 18, PD-SSD 10GB | 1 vCPU, 3.75GB RAM; 3-year commitment until 2029-04-01 |
 | Cache | In-memory TTLCache, 86400s TTL (24h), max 1000 entries | Per-instance, stampede-protected, stale-while-revalidate |
 
