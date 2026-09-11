@@ -829,6 +829,53 @@ class TestBrandingFunctions:
 class TestGetMonolisaFontPath:
     """Tests for _get_monolisa_font_path GCS font download."""
 
+    @pytest.fixture(autouse=True)
+    def _forget_download_failures(self):
+        """The download cooldown is process-wide state; no test inherits another's failure."""
+        import core.images
+
+        core.images._font_download_failed_at.clear()
+        yield
+        core.images._font_download_failed_at.clear()
+
+    def test_empty_cached_file_counts_as_missing(self, tmp_path: Path) -> None:
+        """A 0-byte leftover of a failed download is not the font."""
+        from unittest.mock import patch
+
+        import core.images
+
+        (tmp_path / "MonoLisaVariableNormal.ttf").touch()
+
+        with patch("core.images.FONT_CACHE_DIR", tmp_path):
+            assert core.images._get_monolisa_font_path(local_only=True) is None
+
+    def test_failed_download_leaves_no_file_and_is_not_retried_at_once(self, tmp_path: Path) -> None:
+        """A failed download must not leave a 0-byte file behind (PIL would fail
+        on it for the life of the instance) and must not be retried on the very
+        next render — one attempt per cooldown."""
+        from unittest.mock import MagicMock, patch
+
+        import core.images
+
+        target = tmp_path / "MonoLisaVariableNormal.ttf"
+
+        def leave_empty_file(filename: str) -> None:
+            Path(filename).touch()  # what download_to_filename does before it fails
+            raise RuntimeError("403 Forbidden")
+
+        mock_client = MagicMock()
+        mock_client.bucket.return_value.blob.return_value.download_to_filename.side_effect = leave_empty_file
+
+        with (
+            patch("core.images.FONT_CACHE_DIR", tmp_path),
+            patch("google.cloud.storage.Client", return_value=mock_client) as client_cls,
+        ):
+            assert core.images._get_monolisa_font_path() is None
+            assert not target.exists()
+            assert core.images._get_monolisa_font_path() is None
+
+        assert client_cls.call_count == 1
+
     def test_returns_cached_font_without_gcs_call(self, tmp_path: Path) -> None:
         """Should return cached font path without calling GCS when file exists."""
         from unittest.mock import patch
@@ -851,13 +898,14 @@ class TestGetMonolisaFontPath:
         import core.images
 
         mock_blob = MagicMock()
+        # The client writes into a `.part` file that is then renamed into place.
+        mock_blob.download_to_filename.side_effect = lambda filename: Path(filename).write_bytes(b"font bytes")
         mock_bucket = MagicMock()
         mock_bucket.blob.return_value = mock_blob
         mock_client = MagicMock()
         mock_client.bucket.return_value = mock_bucket
 
         with (
-            patch.object(type(tmp_path / "MonoLisaVariableNormal.ttf"), "exists", return_value=False),
             patch("core.images.FONT_CACHE_DIR", tmp_path),
             patch("google.cloud.storage.Client", return_value=mock_client),
         ):
@@ -868,6 +916,66 @@ class TestGetMonolisaFontPath:
         mock_bucket.blob.assert_called_once_with("fonts/MonoLisaVariableNormal.ttf")
         mock_blob.download_to_filename.assert_called_once()
         assert result == tmp_path / "MonoLisaVariableNormal.ttf"
+        assert result.read_bytes() == b"font bytes"
+        assert not (tmp_path / "MonoLisaVariableNormal.ttf.part").exists()
+
+    def test_concurrent_misses_download_once_and_never_lose_the_font(self, tmp_path: Path) -> None:
+        """Renders run in worker threads, two at a time. Two threads that miss the
+        cache in the same instant must end up with ONE download and a usable
+        font — the second waits on the lock and then finds the cache — and a
+        failing peer must never delete a font a successful one published."""
+        import threading
+        import time
+        from concurrent.futures import ThreadPoolExecutor
+        from unittest.mock import MagicMock, patch
+
+        import core.images
+
+        started = threading.Event()
+
+        def slow_download(filename: str) -> None:
+            started.set()
+            time.sleep(0.05)  # long enough for the second thread to queue on the lock
+            Path(filename).write_bytes(b"font bytes")
+
+        mock_blob = MagicMock()
+        mock_blob.download_to_filename.side_effect = slow_download
+        mock_client = MagicMock()
+        mock_client.bucket.return_value.blob.return_value = mock_blob
+
+        with (
+            patch("core.images.FONT_CACHE_DIR", tmp_path),
+            patch("google.cloud.storage.Client", return_value=mock_client),
+            ThreadPoolExecutor(max_workers=2) as pool,
+        ):
+            first = pool.submit(core.images._get_monolisa_font_path)
+            started.wait(timeout=1)
+            second = pool.submit(core.images._get_monolisa_font_path)
+            results = {first.result(timeout=5), second.result(timeout=5)}
+
+        assert results == {tmp_path / "MonoLisaVariableNormal.ttf"}
+        assert mock_blob.download_to_filename.call_count == 1
+        assert (tmp_path / "MonoLisaVariableNormal.ttf").read_bytes() == b"font bytes"
+
+        # A later failure (cooldown expired, GCS down) must not touch the
+        # published file: only its own `.part` is removed.
+        core.images._font_download_failed_at.clear()
+        (tmp_path / "MonoLisaVariableNormal.ttf").unlink()
+        (tmp_path / "MonoLisaVariableItalic.ttf").write_bytes(b"italic bytes")
+
+        def fail_after_opening(filename: str) -> None:
+            Path(filename).touch()
+            raise RuntimeError("403 Forbidden")
+
+        mock_blob.download_to_filename.side_effect = fail_after_opening
+        with (
+            patch("core.images.FONT_CACHE_DIR", tmp_path),
+            patch("google.cloud.storage.Client", return_value=mock_client),
+        ):
+            assert core.images._get_monolisa_font_path() is None
+
+        assert (tmp_path / "MonoLisaVariableItalic.ttf").read_bytes() == b"italic bytes"
+        assert not (tmp_path / "MonoLisaVariableNormal.ttf.part").exists()
 
     def test_returns_none_on_gcs_exception(self, tmp_path: Path) -> None:
         """Should return None gracefully when GCS download fails."""
@@ -1005,9 +1113,11 @@ class TestTextShaping:
 
         from PIL import ImageChops
 
-        from core.images import FONT_CACHE_DIR, create_home_og_image
+        from core.images import FONT_CACHE_DIR, _is_cached_font, create_home_og_image
 
-        if not (FONT_CACHE_DIR / "MonoLisaVariableItalic.ttf").exists():
+        # `_is_cached_font`, not `exists()`: a 0-byte leftover of an interrupted
+        # download would pass the skip and then fail the pixel comparison.
+        if not _is_cached_font(FONT_CACHE_DIR / "MonoLisaVariableItalic.ttf"):
             pytest.skip("MonoLisa italic not cached locally — swash rendering cannot be verified")
 
         with_features = create_home_og_image(theme="light")

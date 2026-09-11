@@ -2,8 +2,10 @@
 
 import asyncio
 import logging
+from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
+from typing import Any, TypeVar
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -71,6 +73,25 @@ def _image_to_bytes(img: Image.Image) -> bytes:
     return buf.getvalue()
 
 
+_R = TypeVar("_R")
+
+# PIL compositing is CPU-bound and takes 1–3 s per card. Called inline from an
+# `async def`, it held the event loop for that long and stalled every other
+# request on the instance — and since 2026-09-10 the service runs as ONE
+# instance (api/cloudbuild.yaml), so that stall would be the whole service.
+# The renders therefore go to a worker thread. The semaphore caps how many run
+# at once: a collage holds six decoded PNGs, and a few concurrent collages are
+# what produced the 647 MiB peak of 2026-08-26 against the 1 GiB limit. Two
+# slots keep that bounded whatever the request concurrency limit says.
+_RENDER_SLOTS = asyncio.Semaphore(2)
+
+
+async def _render(fn: Callable[..., _R], /, *args: Any, **kwargs: Any) -> _R:
+    """Run a synchronous PIL render off the event loop, at most two at a time."""
+    async with _RENDER_SLOTS:
+        return await asyncio.to_thread(fn, *args, **kwargs)
+
+
 router = APIRouter(prefix="/og", tags=["og-images"])
 
 
@@ -85,7 +106,9 @@ async def get_home_og_image(request: Request) -> Response:
     track_og_image(request, page="home", filters=filters)
 
     return Response(
-        content=_get_static_og_image(), media_type="image/png", headers={"Cache-Control": "public, max-age=86400"}
+        content=await _render(_get_static_og_image),
+        media_type="image/png",
+        headers={"Cache-Control": "public, max-age=86400"},
     )
 
 
@@ -95,7 +118,9 @@ async def get_plots_og_image(request: Request) -> Response:
     track_og_image(request, page="plots")
 
     return Response(
-        content=_get_static_og_image(), media_type="image/png", headers={"Cache-Control": "public, max-age=86400"}
+        content=await _render(_get_static_og_image),
+        media_type="image/png",
+        headers={"Cache-Control": "public, max-age=86400"},
     )
 
 
@@ -167,8 +192,8 @@ async def get_branded_impl_image(
         # Fetch the original plot image
         image_bytes = await _fetch_image(impl.preview_url)
 
-        # Create branded image
-        branded_bytes = create_branded_og_image(image_bytes, spec_id=spec_id, library=library)
+        # Create branded image (worker thread, see _render)
+        branded_bytes = await _render(create_branded_og_image, image_bytes, spec_id=spec_id, library=library)
 
         # Cache the result
         set_cache(key, branded_bytes)
@@ -225,8 +250,8 @@ async def get_spec_collage_image(
         # off the trailing token, and the spec_id is now in the section title.
         labels = [impl.library_id for impl in selected_impls]
 
-        # Create collage
-        collage_bytes = create_og_collage(images, labels=labels, spec_id=spec_id)
+        # Create collage (worker thread, see _render)
+        collage_bytes = await _render(create_og_collage, images, labels=labels, spec_id=spec_id)
 
         # Cache the result
         set_cache(key, collage_bytes)
