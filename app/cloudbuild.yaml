@@ -83,15 +83,29 @@ steps:
       # Measurements behind this: #10812.
       - '--min-instances'
       - '0'
+      # max=1, with concurrency 80 below: one nginx is the whole capacity, and
+      # that is plenty — static files answer in milliseconds, memory sits at
+      # 15 MiB p99 of 512Mi, and the only requests that ever held a slot for
+      # long were bot requests proxied to the API while the API cold-started (~11 s;
+      # api/cloudbuild.yaml explains why that is gone). Under the old 15-slot
+      # limit one forged-UA burst on 2026-09-09 filled the instance and started
+      # two more, each a 0.26 s cold start nobody needed (50 AUTOSCALING starts
+      # in the ten days to 2026-09-10). A second instance was never for
+      # capacity; with max=1 a burst queues here for milliseconds instead of
+      # spreading over instances. Owner decision 2026-09-11: one instance per
+      # service in both projects.
       - '--max-instances'
-      - '3'
+      - '1'
       - '--port'
       - '8080'
       - '--execution-environment'
       - 'gen2'
       - '--cpu-throttling'
+      # 80, not 15: nginx serves static files and proxies the rest, and the API
+      # behind it caps its own work at 40 in flight. 15 was a default that
+      # turned every crawler burst into a scale-out (see --max-instances above).
       - '--concurrency'
-      - '15'
+      - '80'
       # Deploy WITHOUT routing traffic: the smoke step probes this revision on
       # its tag URL first, and only the promote step below shifts traffic — so
       # a broken nginx.conf never serves visitors or crawlers, not even between
