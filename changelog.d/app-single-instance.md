@@ -8,4 +8,4 @@
   proxied bot request open for as long as the API takes to answer. With the API
   on one warm instance those waits are milliseconds, and one nginx with 80 slots
   absorbs the burst without a cold start. `min-instances` stays 0; the API behind
-  it caps its own work at 40 in flight.
+  it caps its own work at 40 in flight. (#11829)
