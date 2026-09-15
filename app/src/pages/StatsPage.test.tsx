@@ -25,6 +25,25 @@ vi.mock('src/hooks', () => ({
   }),
 }));
 
+// Mirrors core.constants.SUPPORTED_LIBRARIES (15 entries).
+const ALL_LIBRARY_IDS = [
+  'altair',
+  'bokeh',
+  'chartjs',
+  'd3',
+  'echarts',
+  'ggplot2',
+  'highcharts',
+  'letsplot',
+  'makie',
+  'matplotlib',
+  'muix',
+  'plotly',
+  'plotnine',
+  'pygal',
+  'seaborn',
+];
+
 const mockDashboard = {
   total_specs: 142,
   total_implementations: 987,
@@ -32,6 +51,9 @@ const mockDashboard = {
   total_lines_of_code: 245_600,
   avg_quality_score: 82.5,
   coverage_percent: 73,
+  // Denominator of the coverage matrix — served by the API, never hardcoded
+  // in the page (it used to be a stale literal 9).
+  total_libraries: 15,
   library_stats: [
     {
       id: 'matplotlib',
@@ -78,6 +100,12 @@ const mockDashboard = {
         matplotlib: { score: 90, has_impl: true },
         plotly: { score: null, has_impl: false },
       },
+    },
+    // A fully covered spec — 15/15, the state the matrix renders as solid green.
+    {
+      spec_id: 'line-basic',
+      title: 'Basic Line Plot',
+      libraries: Object.fromEntries(ALL_LIBRARY_IDS.map(id => [id, { score: 90, has_impl: true }])),
     },
   ],
   top_implementations: [
@@ -227,6 +255,73 @@ describe('StatsPage', () => {
     expect(screen.getByText(/82[.,]5/)).toBeInTheDocument();
     // coverage_percent: 73 => "73%"
     expect(screen.getByText('73%')).toBeInTheDocument();
+  });
+
+  it('scales the coverage matrix by total_libraries, not a hardcoded count', async () => {
+    mockFetchSuccess();
+
+    render(<StatsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('specifications')).toBeInTheDocument();
+    });
+
+    // total_specs (142) * total_libraries (15) = 2130 possible implementations,
+    // and one of the two matrix rows is short of full coverage.
+    expect(screen.getByText(/987 of 2,?130 possible/)).toBeInTheDocument();
+    expect(screen.getByText(/1 below 15\/15/)).toBeInTheDocument();
+    expect(screen.getByText('complete (15/15)')).toBeInTheDocument();
+  });
+
+  it('labels each coverage cell with its count out of the full library set', async () => {
+    mockFetchSuccess();
+
+    render(<StatsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Basic Scatter Plot: 1/15')).toBeInTheDocument();
+    });
+
+    expect(screen.getByLabelText('Basic Line Plot: 15/15')).toBeInTheDocument();
+  });
+
+  it('falls back to library_stats when an older payload omits total_libraries', async () => {
+    // Frontend-before-API deploy: the cached/older dashboard has no
+    // total_libraries, so the denominator has to come from library_stats.
+    const legacyDashboard: Record<string, unknown> = {
+      ...mockDashboard,
+      library_stats: ALL_LIBRARY_IDS.map(id => ({
+        id,
+        name: id,
+        impl_count: 10,
+        avg_score: 85,
+        min_score: 60,
+        max_score: 98,
+        score_buckets: { '85-90': 5 },
+        loc_buckets: { '40-60': 5 },
+        avg_loc: 78,
+      })),
+    };
+    delete legacyDashboard.total_libraries;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        if (url.includes('/insights/visitors')) {
+          return Promise.resolve({ ok: true, json: () => Promise.resolve({ points: [] }) });
+        }
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(legacyDashboard) });
+      })
+    );
+
+    render(<StatsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Basic Scatter Plot: 1/15')).toBeInTheDocument();
+    });
+
+    expect(screen.getByLabelText('Basic Line Plot: 15/15')).toBeInTheDocument();
+    expect(screen.getByText(/987 of 2,?130 possible/)).toBeInTheDocument();
+    expect(screen.getByText(/1 below 15\/15/)).toBeInTheDocument();
   });
 
   it('renders top implementation cards', async () => {
