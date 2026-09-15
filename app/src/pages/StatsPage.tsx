@@ -100,24 +100,30 @@ function formatNum(n: number): string {
   return n.toLocaleString();
 }
 
-// Coverage matrix cell size. Bigger than the original 10px so the three states
-// below stay distinguishable (and tappable) on a phone.
-const COVERAGE_CELL_PX = 14;
+// Coverage matrix geometry: a 16px visual mark centred in a 24px hit area, so
+// every cell is a WCAG 2.2 SC 2.5.8 sized target (24x24, non-overlapping)
+// while the marks themselves stay a dense strip rather than a chunky grid.
+const COVERAGE_MARK_PX = 16;
+const COVERAGE_TARGET_PX = 24;
 
 /**
  * Per-cell styling of the coverage matrix: complete specs read as a solid
- * brand-green block, anything short of full coverage carries an amber outline
- * so the (few) incomplete specs are the ones that stand out.
+ * brand-green block, anything short of full coverage carries an ink outline
+ * (dashed when nothing is implemented yet) so the (few) incomplete specs are
+ * the ones that stand out. The stroke is ink rather than amber because amber
+ * clears neither WCAG 1.4.11 on the cream background nor the style guide's
+ * light-bg caveat (`docs/reference/style-guide.md`, "Light-bg WCAG caveat"),
+ * and here the stroke is the only thing marking a state.
  */
 function coverageCellStyle(count: number, total: number): Record<string, string> {
   if (count >= total) return { backgroundColor: colors.success, border: '1px solid transparent' };
   if (count === 0)
-    return { backgroundColor: 'var(--bg-elevated)', border: `1px dashed ${colors.warning}` };
+    return { backgroundColor: 'var(--bg-elevated)', border: '1px dashed var(--ink)' };
   // brand green (#009E73) scaled by how much of the library set is covered
   const intensity = total > 0 ? count / total : 0;
   return {
     backgroundColor: `rgba(0, 158, 115, ${0.2 + intensity * 0.6})`,
-    border: `1px solid ${colors.warning}`,
+    border: '1px solid var(--ink)',
   };
 }
 
@@ -546,23 +552,37 @@ export function StatsPage() {
           possible
           {incompleteSpecs > 0 && ` · ${incompleteSpecs} below ${libCount}/${libCount}`}
         </Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '3px' }}>
+        {/* Each link fills a 24px square (SC 2.5.8) and paints the 16px mark
+            with its own background, so the visible strip stays dense while the
+            tap target is the full square. */}
+        <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
           {coverageCells.map(({ row, count }) => (
             <Tooltip key={row.spec_id} title={`${row.title}: ${count}/${libCount}`} arrow>
               <Link
                 component={RouterLink}
                 to={specPath(row.spec_id)}
                 sx={{
-                  display: 'block',
-                  width: COVERAGE_CELL_PX,
-                  height: COVERAGE_CELL_PX,
-                  borderRadius: '3px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: COVERAGE_TARGET_PX,
+                  height: COVERAGE_TARGET_PX,
                   textDecoration: 'none',
-                  boxSizing: 'border-box',
-                  ...coverageCellStyle(count, libCount),
-                  '&:hover': { outline: `2px solid ${colors.success}`, outlineOffset: '1px' },
+                  '& > span': {
+                    width: COVERAGE_MARK_PX,
+                    height: COVERAGE_MARK_PX,
+                    borderRadius: '3px',
+                    boxSizing: 'border-box',
+                    ...coverageCellStyle(count, libCount),
+                  },
+                  '&:hover > span': {
+                    outline: `2px solid ${colors.success}`,
+                    outlineOffset: '1px',
+                  },
                 }}
-              />
+              >
+                <span />
+              </Link>
             </Tooltip>
           ))}
         </Box>
@@ -577,8 +597,8 @@ export function StatsPage() {
             <Box key={label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <Box
                 sx={{
-                  width: COVERAGE_CELL_PX,
-                  height: COVERAGE_CELL_PX,
+                  width: COVERAGE_MARK_PX,
+                  height: COVERAGE_MARK_PX,
                   borderRadius: '3px',
                   boxSizing: 'border-box',
                   ...coverageCellStyle(count, libCount),

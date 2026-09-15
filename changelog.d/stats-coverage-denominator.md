@@ -11,10 +11,11 @@
 
 ### Changed
 
-- **Coverage cells read as three states, not a gradient.** Cells grew from 10 px
-  to 14 px and full coverage now renders as solid brand green while anything
-  short of it carries an amber outline (dashed when a spec has no
-  implementation at all), with a labelled legend replacing the less/more ramp.
+- **Coverage cells read as three states, not a gradient.** The mark grew from
+  10 px to 16 px inside a 24 px hit area (WCAG 2.2 SC 2.5.8), and full coverage
+  now renders as solid brand green while anything short of it carries an ink
+  outline (dashed when a spec has no implementation at all), with a labelled
+  legend replacing the less/more ramp.
   The interesting signal is which specs are *not* complete, and those are the
   minority — the old opacity ramp made them the hardest cells to pick out. The
   summary line also names how many specs are below full coverage.

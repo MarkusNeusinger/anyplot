@@ -285,6 +285,45 @@ describe('StatsPage', () => {
     expect(screen.getByLabelText('Basic Line Plot: 15/15')).toBeInTheDocument();
   });
 
+  it('falls back to library_stats when an older payload omits total_libraries', async () => {
+    // Frontend-before-API deploy: the cached/older dashboard has no
+    // total_libraries, so the denominator has to come from library_stats.
+    const legacyDashboard: Record<string, unknown> = {
+      ...mockDashboard,
+      library_stats: ALL_LIBRARY_IDS.map(id => ({
+        id,
+        name: id,
+        impl_count: 10,
+        avg_score: 85,
+        min_score: 60,
+        max_score: 98,
+        score_buckets: { '85-90': 5 },
+        loc_buckets: { '40-60': 5 },
+        avg_loc: 78,
+      })),
+    };
+    delete legacyDashboard.total_libraries;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        if (url.includes('/insights/visitors')) {
+          return Promise.resolve({ ok: true, json: () => Promise.resolve({ points: [] }) });
+        }
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(legacyDashboard) });
+      })
+    );
+
+    render(<StatsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Basic Scatter Plot: 1/15')).toBeInTheDocument();
+    });
+
+    expect(screen.getByLabelText('Basic Line Plot: 15/15')).toBeInTheDocument();
+    expect(screen.getByText(/987 of 2,?130 possible/)).toBeInTheDocument();
+    expect(screen.getByText(/1 below 15\/15/)).toBeInTheDocument();
+  });
+
   it('renders top implementation cards', async () => {
     mockFetchSuccess();
 
