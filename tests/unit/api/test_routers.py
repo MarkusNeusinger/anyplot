@@ -2135,6 +2135,9 @@ class TestInsightsRouter:
             assert data["total_lines_of_code"] == 500
             assert data["total_interactive"] == 0
             assert len(data["library_stats"]) == len(SUPPORTED_LIBRARIES)
+            # Denominator behind coverage_percent — the stats page renders the
+            # matrix against this instead of hardcoding a library count.
+            assert data["total_libraries"] == len(SUPPORTED_LIBRARIES)
             assert isinstance(data["coverage_matrix"], list)
             assert isinstance(data["score_distribution"], dict)
             assert isinstance(data["tag_distribution"], dict)

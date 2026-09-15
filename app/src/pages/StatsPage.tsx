@@ -77,6 +77,7 @@ interface DashboardData {
   total_lines_of_code: number;
   avg_quality_score: number | null;
   coverage_percent: number;
+  total_libraries: number;
   library_stats: LibraryStats[];
   coverage_matrix: CoverageRow[];
   top_implementations: TopImpl[];
@@ -97,6 +98,27 @@ function formatNum(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toLocaleString();
+}
+
+// Coverage matrix cell size. Bigger than the original 10px so the three states
+// below stay distinguishable (and tappable) on a phone.
+const COVERAGE_CELL_PX = 14;
+
+/**
+ * Per-cell styling of the coverage matrix: complete specs read as a solid
+ * brand-green block, anything short of full coverage carries an amber outline
+ * so the (few) incomplete specs are the ones that stand out.
+ */
+function coverageCellStyle(count: number, total: number): Record<string, string> {
+  if (count >= total) return { backgroundColor: colors.success, border: '1px solid transparent' };
+  if (count === 0)
+    return { backgroundColor: 'var(--bg-elevated)', border: `1px dashed ${colors.warning}` };
+  // brand green (#009E73) scaled by how much of the library set is covered
+  const intensity = total > 0 ? count / total : 0;
+  return {
+    backgroundColor: `rgba(0, 158, 115, ${0.2 + intensity * 0.6})`,
+    border: `1px solid ${colors.warning}`,
+  };
 }
 
 // Shorter labels for the fixed-width (80px) library column so every row stays
@@ -159,6 +181,16 @@ export function StatsPage() {
         </Typography>
       </Box>
     );
+
+  // Coverage denominator comes from the API (the canonical supported-library
+  // count); library_stats is the fallback for a stale/cached payload so the
+  // matrix never silently reverts to a hardcoded number.
+  const libCount = data.total_libraries || data.library_stats.length || 1;
+  const coverageCells = (data.coverage_matrix ?? []).map(row => ({
+    row,
+    count: Object.values(row.libraries).filter(c => c.has_impl).length,
+  }));
+  const incompleteSpecs = coverageCells.filter(c => c.count < libCount).length;
 
   const dailyImpls = data.daily_impls ?? [];
   const maxDaily = Math.max(...dailyImpls.map(d => d.count), 1);
@@ -510,65 +542,59 @@ export function StatsPage() {
             mb: 1,
           }}
         >
-          {data.coverage_percent}% · {data.total_implementations} of {data.total_specs * 9} possible
+          {data.coverage_percent}% · {data.total_implementations} of {data.total_specs * libCount}{' '}
+          possible
+          {incompleteSpecs > 0 && ` · ${incompleteSpecs} below ${libCount}/${libCount}`}
         </Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '2px' }}>
-          {data.coverage_matrix.map(row => {
-            const count = Object.values(row.libraries).filter(c => c.has_impl).length;
-            const intensity = count / 9;
-            return (
-              <Tooltip key={row.spec_id} title={`${row.title}: ${count}/9`} arrow>
-                <Link
-                  component={RouterLink}
-                  to={specPath(row.spec_id)}
-                  sx={{
-                    display: 'block',
-                    width: 10,
-                    height: 10,
-                    borderRadius: '2px',
-                    bgcolor:
-                      count === 0
-                        ? 'var(--bg-elevated)'
-                        : // brand green (#009E73) — was an off-palette Tailwind green
-                          `rgba(0, 158, 115, ${0.15 + intensity * 0.7})`,
-                    textDecoration: 'none',
-                    '&:hover': { outline: `1px solid ${colors.success}` },
-                  }}
-                />
-              </Tooltip>
-            );
-          })}
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-          <Typography
-            sx={{
-              fontFamily: typography.fontFamily,
-              fontSize: fontSize.micro,
-              color: semanticColors.mutedText,
-            }}
-          >
-            less
-          </Typography>
-          {[0, 0.25, 0.5, 0.75, 1].map(v => (
-            <Box
-              key={v}
-              sx={{
-                width: 8,
-                height: 8,
-                borderRadius: '1px',
-                bgcolor: `rgba(0, 158, 115, ${0.15 + v * 0.7})`,
-              }}
-            />
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '3px' }}>
+          {coverageCells.map(({ row, count }) => (
+            <Tooltip key={row.spec_id} title={`${row.title}: ${count}/${libCount}`} arrow>
+              <Link
+                component={RouterLink}
+                to={specPath(row.spec_id)}
+                sx={{
+                  display: 'block',
+                  width: COVERAGE_CELL_PX,
+                  height: COVERAGE_CELL_PX,
+                  borderRadius: '3px',
+                  textDecoration: 'none',
+                  boxSizing: 'border-box',
+                  ...coverageCellStyle(count, libCount),
+                  '&:hover': { outline: `2px solid ${colors.success}`, outlineOffset: '1px' },
+                }}
+              />
+            </Tooltip>
           ))}
-          <Typography
-            sx={{
-              fontFamily: typography.fontFamily,
-              fontSize: fontSize.micro,
-              color: semanticColors.mutedText,
-            }}
-          >
-            more
-          </Typography>
+        </Box>
+        {/* Legend — three states, not a gradient: the interesting signal is
+            "which specs are NOT complete", and those are the minority. */}
+        <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1.5, mt: 0.75 }}>
+          {[
+            { label: `complete (${libCount}/${libCount})`, count: libCount },
+            { label: 'partial', count: Math.max(libCount - 1, 1) },
+            { label: 'none', count: 0 },
+          ].map(({ label, count }) => (
+            <Box key={label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box
+                sx={{
+                  width: COVERAGE_CELL_PX,
+                  height: COVERAGE_CELL_PX,
+                  borderRadius: '3px',
+                  boxSizing: 'border-box',
+                  ...coverageCellStyle(count, libCount),
+                }}
+              />
+              <Typography
+                sx={{
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.micro,
+                  color: semanticColors.mutedText,
+                }}
+              >
+                {label}
+              </Typography>
+            </Box>
+          ))}
         </Box>
 
         {/* Timeline — daily implementation updates over the last 28 days.
