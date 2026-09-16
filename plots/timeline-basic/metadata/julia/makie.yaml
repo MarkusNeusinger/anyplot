@@ -1,0 +1,230 @@
+library: makie
+language: julia
+specification_id: timeline-basic
+created: '2026-09-09T20:17:57Z'
+updated: '2026-09-09T20:36:06Z'
+generated_by: claude-sonnet
+workflow_run: 34398838977
+issue: 2443
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Clean, custom-built horizontal timeline with alternating above/below stems that
+    fully avoids label overlap across 10 events
+  - 'Both themes are fully theme-correct: identical data colors, correctly flipped
+    chrome, no legibility failures in either render'
+  - Realistic, well-paced software-project-milestone dataset with sensible phase ordering
+    and cadence
+  - Idiomatic use of Makie's figure-grid layout for the category legend (rowsize!
+    on fig.layout) rather than a generic overlay legend
+  weaknesses:
+  - 'Palette for the 5 categories skips canonical position 5 (#AE3030) and jumps to
+    position 6 (#2ABCCD) for the last category ("Launch") without a clear semantic
+    justification — use IMPRINT_PALETTE[1:5] in canonical order (through #AE3030)
+    unless a category has a strong semantic color association that justifies reassignment'
+  - Design Excellence is solid but not exceptional — consider a stronger focal point
+    (e.g., emphasizing the "General Availability" launch milestone) for a clearer
+    story beyond simple chronology
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold centered title "timeline-basic · julia · makie · anyplot.ai" in dark ink; horizontal baseline; event labels (name + date) alternating above/below stems; "2024" caption below baseline; horizontal category legend at bottom. All clearly readable against the light background.
+      Data: 10 milestone markers/stems colored by category — Planning=#009E73 (green, first series correct), Design=#C475FD (lavender), Build=#4467A3 (blue), Testing=#BD8233 (ochre), Launch=#2ABCCD (cyan).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title/labels/legend now in light ink against the dark surface; baseline rendered in a light muted tone. No dark-on-dark failures — all text (title, event labels, dates, "2024" caption, legend) is clearly legible.
+      Data: Identical category colors to the light render (green/lavender/blue/ochre/cyan) — only chrome flipped, confirming theme-adaptive tokens were threaded through correctly.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Alternating label placement avoids all collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers/stems well-sized for 10 sparse events
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good hue separation, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced use of canvas, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Year caption plus per-event dates give clear temporal context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Skips canonical position 5 (#AE3030), jumps to position 6 for 5th
+          category without semantic reason
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom-built timeline with thoughtful coloring, above default polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines hidden, no grid, generous whitespace, stroke-highlighted markers
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Alternating stems and category color create clear visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal event timeline
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Dates, event names, category color-coding, alternating positions,
+          date formatting all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Chronological day-offset mapping correct, all events visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact, legend labels match categories
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 10 milestones across 5 categories, but fairly uniform event weight
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral software-project scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible milestone cadence and phase ordering
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat imports/data/plot/save structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Current save API, correct filenames
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of Axis, hidespines!, hideydecorations!, Legend with MarkerElement
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Legend composed into figure grid layout with rowsize! — distinctive
+          to Makie
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - minimal-chrome
+  - edge-highlighting

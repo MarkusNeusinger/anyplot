@@ -1,0 +1,243 @@
+library: chartjs
+language: javascript
+specification_id: scatter-3d
+created: '2026-09-10T00:12:52Z'
+updated: '2026-09-10T00:29:30Z'
+generated_by: claude-sonnet
+workflow_run: 34419413213
+issue: 1945
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/chartjs/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'All three attempt-1 weaknesses were directly and correctly fixed: the "Temperature
+    (°C)" label no longer collides with a data bubble, 0.8 alpha is now applied to
+    combat overplotting, and WORLD_SCALE 10→13 substantially raised canvas utilization'
+  - Creative isometric-projection 3D scatter built entirely on Chart.js's canvas plugin
+    system, staying within the library's no-3D-scale constraint without reaching for
+    an external library
+  - Continuous PM2.5 variable correctly encoded with imprint_seq, identical between
+    light/dark renders, with a properly labeled colorbar
+  - 'Deterministic seeded LCG, self-contained single-file snippet, animation: false
+    for a clean capture'
+  weaknesses:
+  - The bottom-center bubble cluster (highest-PM2.5, high-temperature/low-humidity
+    readings) still shows meaningful point-on-point overlap even with 0.8 alpha -
+    consider shrinking the bubble radius range slightly or nudging alpha down further
+    for that specific density band
+  - No interactive rotation, though this is an inherent Chart.js limitation (no native
+    3D scale) rather than an implementation oversight - the spec's "where library
+    supports it" clause applies
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - correct light theme surface.
+      Chrome: Title "scatter-3d · javascript · chartjs · anyplot.ai" in dark ink, centered top, legible. Three isometric axis spines (Altitude (m) 0-2000 top/vertical, Humidity (%) 20-95 bottom-left, Temperature (°C) 5-35 bottom-right), each with bold label + lighter sub-range, all in dark ink. Colorbar on the right labeled "PM2.5 (µg/m³)" with legible min/max labels (4/58). No bubble overlaps the "Temperature (°C)" label anymore (attempt-1 collision fixed).
+      Data: ~160 bubbles sized and colored by PM2.5 using imprint_seq (green -> blue), first-series-adjacent continuous colormap, 0.8 alpha applied. Cube + labels fill a substantially larger share of the 3200x1800 canvas than attempt 1.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - correct dark theme surface.
+      Chrome: Same title/axis-label structure, now in light ink - clearly legible, no dark-on-dark anywhere. Grid lines light gray and subtle. Colorbar and its min/max labels legible.
+      Data: Bubble colors (green -> blue gradient, alpha) pixel-identical to the light render - only chrome flipped. Axis-label/bubble overlap from attempt 1 is resolved here too.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All chrome text readable in both themes; attempt-1 bubble/label overlap
+          is fixed
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Axis-label overlap resolved, but densest bottom-center cluster still
+          shows point-on-point overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 0.8 alpha now applied per feedback, improves discrimination in the
+          dense cluster
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Adequate contrast, sequential palette, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: WORLD_SCALE 10->13 fix substantially raises canvas fill
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: All three axes carry units and explicit ranges
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Continuous PM2.5 correctly uses imprint_seq; theme-correct chrome
+          in both renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom isometric projection, colorbar and axis-label plugins clearly
+          above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, minimal spine styling, better canvas utilization than
+          attempt 1
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color+size double-encode PM2.5, improved scale makes the density
+          pattern easier to read
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Best-effort correct 3-axis isometric scatter given Chart.js's lack
+          of native 3D
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Point transparency for the dense dataset (attempt 1's gap) is now
+          implemented
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y/Z correctly mapped to temperature/altitude/humidity with visible
+          ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches convention; colorbar substitutes for legend
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows correlated multivariate relationships across all encoded dimensions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral air-quality sensor scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All value ranges physically realistic
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small helper functions, justified by the isometric-projection
+          math
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; no imports needed
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount contract, animation: false, no savefig-style calls'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic use of Chart.js plugin API (afterDatasetsDraw/afterDraw)
+          and mixed dataset types
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom canvas-native plugins for 3D axis labels and colorbar remain
+          distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - colorbar
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending

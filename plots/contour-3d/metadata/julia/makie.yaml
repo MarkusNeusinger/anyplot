@@ -1,0 +1,260 @@
+library: makie
+language: julia
+specification_id: contour-3d
+created: '2026-09-10T00:27:23Z'
+updated: '2026-09-10T01:01:52Z'
+generated_by: claude-sonnet
+workflow_run: 34420105064
+issue: 3230
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 81
+review:
+  strengths:
+  - 'The theme-adaptation bug from attempt 1 is genuinely fixed: pixel-sampling the
+    vertical axis spine confirms it now renders as INK_SOFT (#4A4A44 light / #B8B7B0
+    dark) in both themes instead of staying hard-coded black'
+  - 'Correct use of the Imprint sequential colormap (#009E73 to #4467A3) for elevation,
+    appropriate since terrain height is single-polarity data'
+  - Theme-adaptive chrome is threaded through every Axis3 element (background, title,
+    axis/tick labels, all three spine/grid indices, panels, colorbar)
+  - contour3d! traced directly on the surface at true elevation gives a clear, coherent
+    terrain-map narrative with a strong focal point at the main peak
+  - Canvas is exactly 3200x1800 (canvas gate passed); title format and colorbar labeling
+    comply with spec
+  - Realistic, neutral synthetic terrain data (three peaks + ripple) at a plausible
+    mountain-elevation scale, fully deterministic (no RNG)
+  weaknesses:
+  - 'The z-axis spine (vertical box edge, with arrowhead) still rises from the tallest
+    peak straight up to the top of the canvas in both renders, visually piercing the
+    mountain like a flagpole. The color-theming bug behind it is fixed, but the geometric
+    collision with the data remains: pick an azimuth/elevation where that box edge
+    lands outside the surface''s silhouette, or reduce protrusions so it doesn''t
+    read as stuck into the summit.'
+  - The two smaller peaks (amplitude 900 at (-2, -1.5) and amplitude 600 at (0.5,
+    -2.5)) sit close enough together that they merge into a stacked 'double-mound'
+    shape with a small cap sitting on a wider base -- it's a continuous, correctly-rendered
+    surface (no z-fighting or disconnection), but the silhouette reads as slightly
+    odd. Spacing the two peak centers further apart, or reducing the smaller peak's
+    amplitude relative to its width, would give a cleaner secondary summit.
+  - Title text occupies only roughly a quarter of the axis width at titlesize=20,
+    below the ~50-70% guideline for the mandated title string -- a slightly larger
+    titlesize would strengthen the visual hierarchy.
+  - Optional spec suggestion to also project contours onto the base plane was not
+    implemented -- would add reference value but is not required.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- correct, not pure white.
+      Chrome: Title "contour-3d · julia · makie · anyplot.ai" in bold dark ink, clearly visible near the top. Axis labels "Easting (km)", "Northing (km)", "Elevation (m)" and their tick labels are all dark/soft-ink and legible. Colorbar on the right labeled "Elevation (m)" with readable ticks. A thin vertical box-edge line with an arrowhead rises from the main peak to the top of the canvas -- rendered in soft ink gray, not pure black, so it is themed correctly, but it visually crosses through the surface data.
+      Data: 3D terrain surface shaded green (low elevation) to blue (high elevation) via the Imprint sequential colormap, with black contour isolines traced on the surface at 6 levels. First/only data color family starts at brand green #009E73 as required. A secondary, smaller peak in the foreground shows two nested contour rings forming a stacked "double-mound" shape -- verified by pixel sampling to be a continuous, correctly-shaded surface (no gap or floating disc), just an unusual silhouette from two nearby Gaussian bumps.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- correct, not pure black.
+      Chrome: Title, axis labels, and tick labels all flip to light ink (#F0EFE8 / #B8B7B0) and remain clearly readable -- no dark-on-dark failures found. Colorbar labels and ticks likewise flip correctly. The vertical box-edge spine line at the peak now measures as INK_SOFT dark-theme value (#B8B7B0) via direct pixel sampling, confirming it correctly follows the theme token instead of staying black as it did in the previous attempt.
+      Data: Same green-to-blue sequential gradient and contour isolines (now rendered in white/light ink) as the light render -- data colors are identical between themes, only chrome flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All text readable in both themes, but title occupies only ~25-30%
+          of axis width, below the 50-70% guideline for the mandated title string
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: The vertical z-axis spine (now correctly themed) still visually pierces
+          through/behind the tallest peak, colliding with the surface data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Surface, contour isolines, and colorbar all clearly visible; secondary
+          peak's double-mound shape is slightly visually busy but not a rendering
+          glitch
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue gradient is CVD-safe per the Imprint spec
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); minor deductions for the undersized
+          title and the axis spine reaching the canvas top edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (km, m)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct theme backgrounds, imprint_seq colormap, and chrome is now
+          fully theme-adaptive (attempt-1 bug fixed)
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thorough theme-token coverage across every Axis3 element, undercut
+          by the spine-through-peak collision and busy secondary peak
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid is subtle and consistently themed, but the intersecting z-axis
+          spine is an unresolved refinement miss
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Clear focal point at the main peak via colorbar and contour rings;
+          the secondary double-mound peak slightly muddies the narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3D contour plot (surface + isolines)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sequential colormap, regular-interval contour lines, and colorbar
+          all present; optional base-plane projection omitted but not required
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Easting/Northing/Elevation correctly mapped to x/y/z, axes show full
+          data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches 'contour-3d · julia · makie · anyplot.ai'; colorbar
+          clearly labeled
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Surface, isolines, and colorbar cover the plot type well; missing
+          the optional base-plane contour projection
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral synthetic mountain-terrain survey
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Elevation range (0-1600m) over a 10km extent is a sensible mountain-terrain
+          scale
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level script, no functions/classes beyond the elevation
+          formula
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no RNG needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie and Colors imported, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis3 spine/tick theming is now complete across all three edge indices,
+          fixing the prior gap
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Axis3/surface!/contour3d!/Colorbar usage; viewing-angle
+          choice still causes the spine/data collision
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: surface! + contour3d! combination with full per-edge Axis3 theming
+          is a deep, distinctive use of the API
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - 3d-projection
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling

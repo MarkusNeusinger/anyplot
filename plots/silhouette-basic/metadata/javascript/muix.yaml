@@ -1,0 +1,267 @@
+library: muix
+language: javascript
+specification_id: silhouette-basic
+created: '2026-09-09T07:50:31Z'
+updated: '2026-09-09T08:05:48Z'
+generated_by: claude-sonnet
+workflow_run: 34325342493
+issue: 2334
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Clever stacked-with-null-padding trick renders one horizontally-sorted bar per
+    sample while giving every segment its own solid Imprint color, with the first
+    segment (Champions) correctly on #009E73'
+  - 'Strong data storytelling: segments are ordered top-to-bottom from best to worst
+    average silhouette score (Champions → Loyal → At-Risk → Lost), and both an overall-average
+    reference line and per-segment average reference lines give the viewer instant
+    focal points'
+  - 'Thoughtful per-theme contrast handling: a stroke halo is added to the colored
+    segment-average labels only in light theme (where pastel violet/blue would otherwise
+    sit below WCAG contrast on the cream background), while dark theme is left clean
+    since it already reads well'
+  - Y-axis tick labels are disabled in favor of direct per-segment labeling, avoiding
+    80 unreadable overlapping category ticks — a sensible trade-off for this sample
+    count
+  - Deterministic, dependency-free data generation via a tiny seeded LCG + Box-Muller
+    normal sampler, appropriate for a browser-only environment with no numpy/sklearn
+    equivalent
+  - Title auto-shrinks proportionally to its own length, and canvas dimensions (2400×2400
+    square) pass the pipeline's gate cleanly
+  weaknesses:
+  - 'The file header is malformed/duplicated: lines 1-9 contain two overlapping ''//
+    anyplot.ai'' header blocks (one with a stale ''Quality: 88/100'' and specific
+    version pins, one with ''Quality: pending''), and the ''//# anyplot-orientation:
+    square'' directive is sandwiched between them on line 4 instead of being the very
+    first line as the muix library doc requires — clean up to a single header block
+    with the orientation directive at the top.'
+  - Segment-average reference-line labels (e.g. 'Champions · avg 0.65') sit directly
+    on their own dashed guide line at fairly large font size relative to the ~14px
+    CSS row height per sample — comfortably readable in this review but leaves little
+    margin; consider a slightly smaller label font or a small vertical offset from
+    the line for extra breathing room.
+  - Legend swatches and layout rely entirely on MUI X defaults (plain square swatches,
+    default spacing beyond itemGap) — a bit more custom legend styling would push
+    Design Excellence further above 'strong' into 'publication-ready' territory.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Dark-ink title "silhouette-basic · javascript · muix · anyplot.ai" top-left; dark-ink axis titles "Silhouette coefficient" (x) and "Customers (by segment)" (y, rotated); grey tick labels along the x-axis (-0.6 to 1.0); light vertical gridlines; a black dashed vertical reference line labeled "Overall avg 0.28" near the bottom; four dashed horizontal per-segment reference lines each carrying a bold colored label ("Champions · avg 0.65", "Loyal · avg 0.35", "At-Risk · avg 0.10", "Lost · avg -0.06") with a thin dark stroke halo added around the violet/blue label text for contrast against the cream background. All chrome text is clearly legible; no light-on-light issues observed.
+      Data: 80 thin horizontal bars grouped into four color-coded segments — Champions (Imprint green #009E73, positions ~+0.17 to +0.9), Loyal (violet), At-Risk (steel blue, spanning negative to positive), Lost (amber, mostly near zero/negative) — sorted descending within each segment band. First categorical series is the mandated brand green.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout as light — title, axis titles and tick labels are rendered in light/white ink and clearly legible against the dark background; the overall-average reference line and its label flip to white/light dashed styling; the per-segment reference lines keep the same green/violet/blue/amber label colors but drop the stroke halo (not needed here, since these hues already have sufficient contrast on near-black) — no dark-on-dark failures observed for any text element.
+      Data: Bar colors are visually identical to the light render — same green, violet, steel blue, and amber for the four segments, same sort order and same reference-line positions — confirming only chrome (not data colors) changed between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title auto-scaled, axis 16px, ticks
+          14px, segment labels 14-15px); legible in both themes with a light-theme
+          contrast halo on pastel labels
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No colliding text; segment-average labels sit close to their own
+          guide line and bar rows, tight but readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 80 thin bars are all individually visible with clean edges (borderRadius
+          0), no overplotting since each sample gets its own row
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Four distinct Imprint hues (green/violet/blue/amber), not reliant
+          on red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills the 2400x2400 canvas well, balanced margins, legend near
+          the plot, no cut-off content, canvas-size gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Silhouette coefficient'' and ''Customers (by segment)'' are descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 (Champions); backgrounds are theme-correct
+          #FAF8F1/#1A1A17; data colors identical across themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful contrast-halo technique and semantic best-to-worst segment
+          ordering go clearly above a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-axis line/ticks disabled, subtle vertical-only gridlines, generous
+          whitespace via direct labeling instead of 80 tick labels
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Best-to-worst segment ordering plus overall + per-segment average
+          reference lines give an immediate, guided narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct silhouette plot: horizontal bars grouped by cluster'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sorted-within-cluster bars, distinct per-cluster colors, overall
+          average vertical line, per-cluster average annotation all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = silhouette coefficient, Y = sample grouped by cluster, all 80
+          samples shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels match segment
+          names
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows well-separated (Champions), moderate (Loyal/At-Risk) and poorly-separated/misclassified
+          (Lost, negative scores) clusters
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible RFM customer-segmentation scenario with sensible
+          segment names
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Silhouette values correctly bounded within [-1, 1]; 80 samples is
+          within the spec's 50-500 range
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data generation followed by a single component, no unnecessary
+          classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42) makes generation deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only BarChart, ChartsReferenceLine, Box, Typography are imported
+          and all are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Duplicated/malformed header block (lines 1-9, stale quality score,
+          misplaced orientation directive) needs cleanup
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Respects the harness contract: default export, skipAnimation set,
+          sized from window.ANYPLOT_SIZE'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic band-scale BarChart with stacked null-padded series and
+          multiple ChartsReferenceLine instances
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: The stack-with-null-padding trick for per-sample coloring and multiple
+          reference-line annotations are distinctive MUI X usage beyond a basic bar
+          chart
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready

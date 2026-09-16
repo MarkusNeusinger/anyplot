@@ -1,0 +1,260 @@
+library: highcharts
+language: javascript
+specification_id: scatter-matrix
+created: '2026-09-09T07:07:13Z'
+updated: '2026-09-09T07:22:28Z'
+generated_by: claude-sonnet
+workflow_run: 34320669413
+issue: 2035
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Headline-pair highlighting: a custom statistic (worst-case standardized centroid
+    distance across all cultivar pairs) selects the most cleanly separated variable
+    pair, which is then spotlighted with a translucent plotBand tint and slightly
+    larger/outlined markers on both symmetric cells — turns an inherently generic
+    SPLOM into a chart with a clear focal point and a real story.'
+  - 'Solid multi-axis engineering around genuine Highcharts limitations: per-axis
+    offset:0 to prevent label-stacking drift across 16 axis pairs, explicit tickPositions
+    instead of tickAmount to avoid silent ''nice number'' rounding that would desync
+    plotLines from the true edge, and plotLines instead of lineWidth for edge lines
+    that render correctly per-cell. All documented inline with the specific failure
+    mode each workaround avoids.'
+  - 'Correct, symmetric matrix: diagonal histograms, off-diagonal scatter for every
+    pair, tick/axis labels only on the outer edges, upper and lower triangles show
+    the same relationships transposed as required by the spec.'
+  - 'Theme-correct Imprint palette throughout: first cultivar (Hybrid Tea) is #009E73,
+    data colors identical between light/dark renders, only chrome (grid, ticks, plotBand
+    tint) adapts per theme.'
+  - Deterministic, seeded data generation (mulberry32 PRNG) with a realistic, neutral
+    rose-cultivar dataset across plausible measurement ranges.
+  weaknesses:
+  - Code carries more helper functions than a typical KISS implementation (mulberry32,
+    randNormal, histogram, stdDev, pairSeparation, tickFormatter) — largely justified
+    by the n×n programmatic grid and the headline-pair statistic, but CQ-01 loses
+    a point for the added surface area.
+  - At the ~400px mobile thumbnail scale, the 16-cell grid's tick labels (e.g. '46.1',
+    '116.0') become quite small and harder to read — an inherent tradeoff of a dense
+    scatter-matrix layout rather than a font-sizing mistake, but worth flagging.
+  - Highcharts has no native SPLOM series, so the multi-axis-grid workaround is solid
+    but necessarily a 'second-best' idiom compared to what a library with a built-in
+    pairplot type would offer — LM-01 held to 4/5 rather than 5/5 for this reason.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold black title "scatter-matrix · javascript · highcharts · anyplot.ai" top-left, fully visible with no clipping. Gray subtitle "Rose cultivar bloom measurements · n=135, colored by cultivar" beneath it, readable. 4x4 grid: diagonal cells are gray histograms (Bloom Diameter, Petal Count, Stem Length, Fragrance Score distributions); off-diagonal cells are scatter plots colored by cultivar. Axis tick labels and axis titles appear only on the bottom row and left column, all in dark ink, clearly legible against the light background. Subtle gray gridlines visible but not dominant. Legend (Hybrid Tea / Floribunda / Climbing) top-right with colored dot swatches, readable. The Bloom Diameter × Stem Length cell pair (both symmetric occurrences) has a faint pale-green tint highlighting it as the "headline" (best-separated) pair, with correspondingly larger/outlined markers.
+      Data: First series (Hybrid Tea) is Imprint brand green #009E73, second (Floribunda) is a magenta/purple, third (Climbing) is a muted blue — all three clusters are visually distinct in every off-diagonal cell, showing clear pairwise correlation and cultivar separation.
+      Legibility verdict: PASS — all text (title, subtitle, axis labels, tick labels, legend) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title is now white/off-white, subtitle light gray, axis labels and tick labels light gray — all clearly legible against the dark background. Gridlines are subtle light gray, visible but unobtrusive. The headline-pair cells show the same pale-green tint (now reading as a darker forest-green tint against the near-black background) with the same emphasized markers.
+      Data: Colors are identical to the light render — same green/magenta/blue for the three cultivars — confirming only chrome (background, text, grid, tint opacity rendering) flips between themes, not data colors.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/legend text is light-colored and reads clearly against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes; readable in both themes at full size. Tick labels
+          get small at ~400px mobile thumbnail given the 16-cell density, but that
+          is inherent to the plot type, not a sizing mistake.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions anywhere in the grid.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker radius 3.6-4.6px with 0.7-0.8 fill opacity handles n=135 well;
+          slight cluster-center overplotting in a couple of tight clusters.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/magenta/blue categorical encoding, no red-green-only signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed (no /tmp/anyplot-canvas-gate.txt); proportions
+          and margins are clean, no overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (e.g. 'Bloom Diameter (cm)', 'Stem
+          Length (cm)').
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; both renders theme-correct backgrounds; data
+          colors identical across themes.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Headline-pair statistical selection + tinted spotlight is a genuinely
+          sophisticated design decision beyond default styling.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axis lines removed (lineWidth:0, plotLines for edges), subtle grid,
+          generous whitespace via 3% gaps between cells.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Headline-pair tint + emphasized markers gives the viewer a clear
+          entry point into an otherwise generic 16-cell grid.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot matrix / SPLOM with diagonal distributions.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal histograms, off-diagonal scatter, edge-only axis labels,
+          color-encoded grouping — all spec notes covered.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped per cell with sensible padding.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches spec exactly; legend labels match cultivar names.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4 variables, 3 groups, 135 points, symmetric matrix, headline pair
+          — full coverage of the plot type's capabilities.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Rose cultivar bloom measurements — plausible, neutral domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Bloom diameter, petal count, stem length, fragrance score all in
+          sensible ranges for the domain.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions (PRNG, histogram, stdDev, pairSeparation)
+          — justified by the n×n grid construction but adds surface area vs a minimal
+          implementation.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded mulberry32(42) PRNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global Highcharts.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the task, no fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows mount-node contract correctly, animation disabled, no explicit
+          width/height.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Solid core-bundle workaround for the missing native SPLOM series
+          type, correctly navigating Highcharts axis-offset and tick-rounding quirks.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Programmatic multi-axis grid plus statistically-driven headline-pair
+          highlighting is distinctive beyond basic API usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - faceting
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting

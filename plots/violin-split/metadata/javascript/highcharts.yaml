@@ -1,0 +1,261 @@
+library: highcharts
+language: javascript
+specification_id: violin-split
+created: '2026-09-09T21:51:59Z'
+updated: '2026-09-09T22:09:15Z'
+generated_by: claude-sonnet
+workflow_run: 34408524770
+issue: 1949
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/highcharts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'The attempt-1 flattened-edge-category bug is fully fixed and pixel-verified:
+    measuring the rendered PNG, the green ''before'' dip depth is 143-144px and the
+    purple ''after'' bump height is 147-148px on ALL four clinic rows, including the
+    previously-broken edges (Clinic A''s ''before'' half, Clinic D''s ''after'' half)
+    — the added startOnTick/endOnTick: false correctly stopped Highcharts from rounding
+    the yAxis min/max and clipping the outer rows'' padding'
+  - 'Correct Imprint palette: ''Before treatment'' renders in #009E73 and ''After
+    treatment'' in the next palette color, identical between light and dark renders'
+  - 'Theme-adaptive chrome is fully correct: #FAF8F1 light / #1A1A17 dark backgrounds,
+    all title/axis/tick/legend text is legible in both themes with no dark-on-dark
+    or light-on-light failures'
+  - 'Clever, self-contained workaround for the core-bundle-only constraint: builds
+    the split violin from plain ''area'' series with per-category ''threshold'', avoiding
+    highcharts-more/boxplot entirely, plus a from-scratch deterministic LCG + Box-Muller
+    + Gaussian KDE implementation'
+  - Adds inner median markers (diamond scatter points) per half-violin, directly answering
+    the spec's suggestion to 'consider adding inner box plot or quartile markers'
+  - Realistic, neutral data story (patient recovery scores before/after treatment
+    across 4 clinics) with sensible 0-100 scale and plausible before/after shift,
+    and now all 4 clinics clearly show both halves so the before/after comparison
+    reads consistently across the whole chart
+  weaknesses:
+  - 'Design excellence is solid but not yet distinctive: the area fills read as a
+    clean but fairly literal reuse of a standard KDE ridge plot; consider a stronger
+    visual anchor (e.g. a data label on each median marker, or a subtle connector
+    between the before/after medians) to sharpen the before/after storytelling'
+  - Several small hand-written statistics helpers (rand, normal, std, median, kde)
+    are unavoidable given the no-import/self-contained constraint, but this pushes
+    Code Elegance/KISS toward the lower end versus specs that can call a library function
+    directly
+  - The split-violin uses a horizontal top/bottom split (score on x, category rows
+    on y) rather than the canonical vertical left/right split; this is an explicitly-documented,
+    valid orientation variant within the core-bundle constraint, but still a minor
+    deviation from the archetypal split-violin form
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "violin-split · javascript · highcharts · anyplot.ai" in bold dark ink at top-center, subtitle "Patient recovery scores before vs. after treatment, by clinic" below it in soft grey. X-axis "Recovery Score" (0-100, gridded every 5) at the bottom in soft grey. Y-axis has no title; instead four category labels ("Clinic A" through "Clinic D") sit at each row's baseline. Legend ("Before treatment" green swatch, "After treatment" purple swatch) is centered below the x-axis title. All text is dark-on-light and clearly readable; no light-on-light issues.
+      Data: Four horizontal rows (one per clinic), each split into a green "Before treatment" density that bulges below its baseline and a purple "After treatment" density that bulges above its baseline, meeting cleanly at the row's centerline. Small dark diamond markers sit on each baseline marking the before/after medians. All four rows — including the top row (Clinic D) and bottom row (Clinic A) — now show both halves with full, comparable amplitude (pixel-measured: green dip 143-144px, purple bump 147-148px on every row); the attempt-1 defect where the outer rows' outward-facing half was flattened is resolved.
+      Legibility verdict: PASS (all text readable, no visibility defects remaining).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title/subtitle/axis/legend content as the light render, now rendered in light grey/white ink against the dark background. Grid lines are subtle vertical lines, still visible but unobtrusive. No dark-on-dark failures — every label is clearly legible.
+      Data: Identical green (#009E73) and purple hues to the light render — confirmed unchanged between themes, only chrome flipped. Same fix confirmed: all four rows show both halves at full, comparable amplitude with no flattening on the edge categories.
+      Legibility verdict: PASS for text and for data visibility — the previous half-violin visibility defect no longer reproduces in either render.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, all readable in both themes, no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions; median diamonds sit cleanly
+          on the baselines
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Pixel-measured: green dip depth 143-144px and purple bump height
+          147-148px on all 4 rows, including the previously-flattened Clinic A/Clinic
+          D edges — fix confirmed quantitatively'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple distinguishable, not a red-green pairing, adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas usage, balanced margins, nothing cut off now that the
+          yAxis padding bug is fixed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Recovery Score axis descriptive; category labels self-explanatory
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second series next Imprint color, correct
+          theme-adaptive backgrounds in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Creative core-bundle-only ridge-plot solution with median markers,
+          above a plain default but not yet publication-grade
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle vertical grid, no y grid, generous whitespace between rows
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Row-per-clinic layout with median markers now guides the before/after
+          comparison consistently across all 4 clinics
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Valid split-violin variant using a horizontal top/bottom split instead
+          of the classic left/right split; explicitly documented and acceptable, small
+          deduction for deviating from canonical form
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Halves meet at the centerline and both halves are now visibly rendered
+          for all 4 categories
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = recovery score, Y = category + split-group offset, correctly
+          mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels match split_group semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows category, value, split_group, and median markers per half,
+          now visible for all categories
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible clinical before/after recovery scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 score scale, n=180 per group, within spec's 30-500 range
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small stats/KDE helper functions, necessary given the no-import/self-contained
+          browser constraint
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports used or needed
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Highcharts.chart("container", ...) call, animation disabled,
+          no explicit width/height
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of area/threshold/scatter series and plotOptions given
+          the core-bundle constraint
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Repurposing area+threshold to fake a violin under core-bundle-only
+          constraints is a genuinely Highcharts-specific workaround
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending

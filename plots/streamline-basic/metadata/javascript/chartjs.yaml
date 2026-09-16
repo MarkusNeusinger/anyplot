@@ -1,0 +1,252 @@
+library: chartjs
+language: javascript
+specification_id: streamline-basic
+created: '2026-09-09T18:57:07Z'
+updated: '2026-09-09T19:09:13Z'
+generated_by: claude-sonnet
+workflow_run: 34391569420
+issue: 2861
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/javascript/chartjs/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Physically grounded vector field (potential flow past a cylinder) traced with
+    RK4 integration, producing genuinely smooth, tangent streamlines rather than a
+    naive polyline approximation
+  - Streamline color encodes average velocity magnitude via the Imprint imprint_seq
+    gradient, and line width scales with the same field-strength ratio, directly matching
+    both optional-encoding notes in the spec
+  - 18 seed points distributed across the domain (skipping the degenerate y=0 stagnation
+    streamline) give even coverage of the flow topology without visual clutter
+  - Data colors (streamline gradient, cylinder outline/fill) are identical between
+    light and dark renders; only chrome (background, title, ticks, cylinder stroke
+    tone) adapts to theme
+  - Clean single-file implementation with no imports, fully deterministic (no RNG),
+    correctly using the mount-node/canvas/animation:false harness contract
+  weaknesses:
+  - No colorbar/legend communicates what the color gradient encodes (velocity magnitude)
+    — a viewer without the title/notes can't decode blue-vs-green meaning; consider
+    a small colorbar or legend annotation
+  - Streamline packing right above/below the cylinder (y in [-0.3, 0.3] band) is noticeably
+    denser than the outer bands, giving slightly uneven visual rhythm — consider seed
+    spacing proportional to local streamline curvature
+  - 'Design Excellence is solid but not exceptional: the cylinder fill/stroke is fairly
+    plain (flat muted gray) and could carry a touch more polish (e.g. subtle stroke
+    width taper) to match the sophistication of the flow-field rendering itself'
+  - Chart.js's generic line-chart idiom is used to fake a streamline plot (many single-purpose
+    line datasets) — effective, but LM-01 idiomatic-usage credit is capped since this
+    isn't the library's designed use case
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Flow Around a Cylinder · streamline-basic · javascript · chartjs · anyplot.ai" in dark ink at top, comfortably within plot width (~55%) with no clipping. X-axis labeled "x" (-3.2 to 3.2), Y-axis labeled "y" (-1.8 to 1.8), both with dark axis-title text and muted soft-ink tick labels. Grid lines are thin and subtle, visible but not competing with data. No legend (appropriately suppressed given ~19 datasets).
+      Data: 18 streamlines curve smoothly around a circular cylinder (radius 1, centered at origin), drawn with an RK4-traced potential-flow field. Color runs from brand green (#009E73-family, near the stagnation streamlines close to y=0) through teal to blue (far-field streamlines), encoding average velocity magnitude along each path — a continuous imprint_seq gradient, not arbitrary hues. Line width thickens slightly for higher-speed streamlines. The cylinder itself is outlined in a muted gray-brown stroke with a faint translucent fill, rendered beneath the streamlines. Flow pattern is physically correct: streamlines bunch and accelerate near the cylinder's top/bottom (higher local speed → thicker, bluer lines) and relax to nearly straight, thin, green lines far from the body.
+      Legibility verdict: PASS — all text (title, axis titles, tick labels) is clearly dark-on-light and unobstructed by data.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title and axis text now rendered in light/white ink, fully legible against the dark background. Tick labels use a lighter soft-ink tone. Grid lines are still subtle but visibly present against the dark surface. Cylinder stroke switches to a light gray/near-white tone (appropriate theme-adaptive chrome flip) while its fill stays a faint translucent overlay.
+      Data: The streamline gradient (green → teal → blue) and line widths are pixel-identical to the light render — only the cylinder outline color and background/text chrome changed, confirming data colors are theme-invariant as required.
+      Legibility verdict: PASS — no dark-on-dark issues; title, axis labels, and tick labels all read clearly against the near-black surface, and the brand green remains vivid on both surfaces.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout; title auto-scales for length; readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, streamlines, or the cylinder
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 18 streamlines are clearly visible; slightly denser packing near
+          the cylinder's top/bottom band vs. outer streamlines
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq gradient is CVD-safe and not a sole red-green signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); title well within bounds, no overflow
+          or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title, clear x/y axis titles
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Continuous velocity encoding correctly uses imprint_seq; backgrounds
+          match theme tokens in both renders; data colors identical across themes
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Physically accurate flow field with elegant speed-based color/width
+          encoding, above generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, no unnecessary chrome; cylinder styling is functional
+          but plain
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point (the cylinder), color/width hierarchy guides the
+          eye along the flow
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: RK4-traced continuous streamlines correctly represent the vector
+          field, not discrete arrows
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced density, velocity-magnitude color encoding, width-as-field-strength,
+          distributed seed points — all spec notes covered
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y axes correctly scaled and cover full domain
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches spec exactly; legend appropriately suppressed
+          given ~19 datasets
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows flow topology, obstacle interaction, speed variation; no colorbar
+          to decode the gradient
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic, neutral, real-world-plausible potential-flow-past-a-cylinder
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Unit-radius cylinder with a sensible surrounding domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A handful of small helper functions (velocity, rk4Step, traceStreamline,
+          speedColor) — justified by the physics but adds structure beyond a minimal
+          script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed or present
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity; appropriate complexity for
+          the physics
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, no filesystem calls
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct workaround for Chart.js's lack of a native streamline type
+          using linear-scale line datasets, since a plugin/other library isn't allowed
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-dataset dynamic color/width computed from simulated physics goes
+          beyond generic bar/line usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending

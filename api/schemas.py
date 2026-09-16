@@ -162,6 +162,10 @@ class FeedbackRequest(BaseModel):
     contact: str | None = None
     path: str | None = None
     spec_id: str | None = None
+    # The implementation a 👍/👎 on a plot refers to; page-level feedback from
+    # the floating widget sends neither.
+    library_id: str | None = None
+    language: str | None = None
     viewport: str | None = None
     session_id: str | None = None
     # Honeypot field — real users never fill this in. Bots auto-fill all

@@ -1,0 +1,256 @@
+library: d3
+language: javascript
+specification_id: subplot-grid
+created: '2026-09-09T19:04:29Z'
+updated: '2026-09-09T19:17:17Z'
+generated_by: claude-sonnet
+workflow_run: 34391991282
+issue: 2782
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/d3/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Fully addresses the prior review''s VQ-04 flag: down days now carry a diagonal
+    hatch texture in the histogram and a triangle marker shape in the scatter, layered
+    on top of the red/green color coding, so the up/down encoding survives red-green
+    color-vision deficiency.'
+  - Cohesive financial-dashboard narrative — one stock's price line, volume bars,
+    returns histogram, and volume-vs-return scatter form a connected story rather
+    than four unrelated demo charts, with the price line correctly anchored to brand
+    green as the headline series.
+  - Genuinely different plot type per cell (line, bar, histogram, scatter) with independently
+    scaled axes sized to each metric — squarely satisfies the spec's core "different
+    plot types in each cell" requirement.
+  - Deterministic in-browser data generation via a fixed-seed LCG, with theme-adaptive
+    chrome (ink/inkSoft/grid/pageBg) threaded consistently through all four panels
+    and identical data colors across light/dark renders.
+  - Idiomatic, non-repetitive d3 usage across the grid — scaleBand, scaleLinear, d3.bin(),
+    d3.symbol(), d3.format — instead of copy-pasting one chart four times.
+  weaknesses:
+  - The spec asks for "configurable" grid dimensions and support for both shared AND
+    independent axes; only a fixed 2x2 layout with fully independent axes is demonstrated
+    — no shared/linked scale is shown (e.g. a common day-index x-domain rendered consistently
+    across cells would illustrate the shared-axis capability the spec calls out).
+    Minor, does not block approval.
+  - 'CQ-01: the panel, styleAxis, legend, and makeLcg helper functions add structure
+    beyond a fully flat "no functions" script — justified by the 4x repetition across
+    cells, but still a small deduction versus the KISS ideal.'
+  - Tick label font-size (13px CSS) sits at the low end of the 14-22px range the d3
+    library prompt recommends for readability at full 3200px width; bumping to 14px
+    would give a bit more headroom without changing the layout.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Centered bold title "subplot-grid . javascript . d3 . anyplot.ai" in dark ink; each of the four cells has a bold dark subtitle ("Stock Price ($)", "Trading Volume", "Daily Returns Distribution", "Volume vs. Daily Return"); axis tick labels are dark gray and clearly legible; gridlines are subtle light-gray horizontal lines (and vertical too in the scatter cell) that don't compete with the data.
+      Data: Top-left is a green (#009E73) price line over 60 trading days with $-formatted y-axis ticks. Top-right is a lavender/purple bar chart of trading volume with SI-formatted y-axis (500k, 1.0M, 1.5M, 2.0M, 2.5M). Bottom-left is a green/red histogram of daily returns -- up-day bars solid green, down-day bars now rendered with a diagonal red hatch pattern (not flat red) -- with a small two-row legend in the top-right of the panel that doesn't collide with the tallest bars. Bottom-right is a green-circle/red-triangle scatter of volume vs. daily return with a matching legend in the top-left corner, clear of the data cloud. First categorical series (price line) is confirmed #009E73.
+      Legibility verdict: PASS -- all titles, subtitles, axis labels, tick labels, and legend text are clearly readable against the light background; no overlap or clipping observed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title and subtitle structure, now rendered in light ink/off-white; tick labels are light gray and clearly legible; gridlines are subtle and visible without dominating.
+      Data: All four panels use identical data colors to the light render -- green price line, lavender/purple volume bars, green/hatched-red histogram bars, green-circle/red-triangle scatter markers. Only the chrome (background, text, grid) flipped; no data hue drifted between themes.
+      Legibility verdict: PASS -- no dark-on-dark failures observed; every title, axis label, tick label, and legend entry is clearly visible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Readable in both themes; tick label size (13px CSS) is at the low
+          end of the recommended 14-22px range
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render, including the histogram
+          and scatter legends
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line, bars, hatch pattern, and scatter markers all sized appropriately
+          for a 60-point series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Prior VQ-04 finding fixed: hatch texture + triangle/circle shapes
+          give a redundant non-color cue for up/down'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Clean 2x2 grid, generous gutters, no overflow or clipping; canvas
+          gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive titles with units ($, %, M) on every panel
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series brand green, finance semantic exception (green=up, matte
+          red=down) correctly applied, theme backgrounds correct
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Hatch texture, shape redundancy, and a cohesive single-stock dashboard
+          concept show real design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped axes (no top/right spine), subtle gridlines, generous whitespace
+          between cells
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Price line as green focal series ties the four panels into one narrative
+          about a single stock
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-panel subplot grid
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Distinct plot type per cell with independent axes; shared-axis capability
+          and configurable grid dims not separately demonstrated
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct on all four panels; axes cover full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match Up day/Down day
+          categories
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Line, bar, histogram, and scatter each showcase a distinct facet
+          of the same dataset
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral financial-dashboard scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price, volume, and return ranges are all realistic for a mid-cap
+          stock
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Small helper functions (panel, styleAxis, legend, makeLcg) justified
+          by 4x repetition but still a deduction vs. fully flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used, no stray imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation left running
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Recommended d3 patterns throughout: scaleBand/scaleLinear, axisBottom/axisLeft,
+          d3.format'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: d3.bin() histogram construction, d3.symbol() shape marks, and a custom
+          SVG hatch pattern
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting

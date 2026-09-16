@@ -1,0 +1,236 @@
+library: ggplot2
+language: r
+specification_id: volcano-basic
+created: '2026-09-09T21:56:12Z'
+updated: '2026-09-09T22:08:49Z'
+generated_by: claude-sonnet
+workflow_run: 34409269516
+issue: 2924
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Directly addresses both prior weaknesses: the non-significant cluster is now
+    visibly translucent instead of a solid blob, and top-hit genes are labeled per
+    the spec''s "consider labeling" note.'
+  - New "191 down" / "187 up" annotate() callouts add a clear narrative focal point
+    without cluttering the plot.
+  - Theme-adaptive chrome remains fully correct in both renders — no dark-on-dark/light-on-light
+    failures, no edge clipping, labels well clear of the canvas border even for the
+    extreme GENE2140 point.
+  - Clean, reproducible, KISS-structured R code; the comment explaining the ggrepel-unavailable
+    workaround is exactly the kind of non-obvious rationale worth keeping in the file.
+  weaknesses:
+  - The central non-significant cloud is lighter now but still dense enough near the
+    origin to read as a soft blob — could go slightly further (e.g. size ~0.8) if
+    a future pass revisits this.
+  - The manual rank-based label nudge is a reasonable workaround, but it isn't a distinctive
+    ggplot2-specific technique — Library Mastery is capped by the missing ggrepel
+    dependency rather than the implementation's choices.
+  - Visual refinement still reads primarily as tuned theme_minimal rather than a fully
+    bespoke chrome (e.g., axis line still drawn continuously rather than a more minimal
+    treatment).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Title "volcano-basic · r · ggplot2 · anyplot.ai", "Status" legend (gray/red/blue), x-axis "Log2 Fold Change", y-axis "-Log10 (p-value)" via plotmath — all clearly readable in dark ink against the light background.
+      Data: Dense translucent gray cloud (Not significant, alpha 0.22) near origin; blue down-regulated points (#4467A3) fan left past the left dashed threshold; red up-regulated points (#AE3030) fan right past the right dashed threshold; dashed threshold lines at ±1 log2FC and -log10(0.05); bold "191 down"/"187 up" count callouts; italic gene-name labels (GENE2373, GENE1044, GENE815, GENE952, GENE2157, GENE2140) on top-hit points with no overlap.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Same title, legend, axis labels, count callouts, and gene labels now in light ink — fully legible, no dark-on-dark failures. Grid lines faint but visible.
+      Data: Colors confirmed identical to light render (#AE3030 red, #4467A3 blue, muted gray not-significant) — only chrome flipped between themes, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, callouts, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Non-significant cluster is translucent and readable, still dense
+          near origin
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/blue/gray with adequate contrast, not sole signal (position also
+          encodes status)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, canvas dimension gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with correct units/notation
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Semantic red/blue/muted exception justified by spec + domain convention;
+          correct theme backgrounds both renders
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Semantic colors, dual marker sizing, callout annotations show intent;
+          short of full custom design language
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid/whitespace tuned but still close to theme_minimal defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Count callouts and top-hit gene labels create a clear focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct volcano plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Threshold lines, color coding, labeling all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: log2FC on x, -log10(p) on y, correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly, legend labels match spec
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All plot-type aspects shown: thresholds, coloring, labeling, counts'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral RNA-seq differential expression scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Fold-change and p-value magnitudes sensible for omics data
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used packages imported
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: dplyr chains, case_when, expression() plotmath axis label
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Manual label nudge workaround rather than a distinctive native ggplot2
+          technique (ggrepel unavailable in CI)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

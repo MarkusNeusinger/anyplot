@@ -1,0 +1,264 @@
+library: echarts
+language: javascript
+specification_id: upset-basic
+created: '2026-09-09T21:04:01Z'
+updated: '2026-09-09T21:19:49Z'
+generated_by: claude-sonnet
+workflow_run: 34403926466
+issue: 5250
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Multi-grid ECharts composition (topBar, leftBar, matrix grids sharing aligned
+    axes) faithfully reproduces the canonical UpSet layout: horizontal set-size bars,
+    vertical intersection-size bars, and a dot matrix with connecting lines.'
+  - 'Attempt-1 weaknesses are both resolved: a discrete ''Intersection degree'' gradient
+    legend (built via graphic text + LinearGradient rect, labeled ''1 set'' / ''5
+    sets'') now decodes the degree color-coding, and the top intersection bar is highlighted
+    with a border plus a ''456'' value label, giving the chart a clear focal point.'
+  - Custom renderItem series for the connecting lines and membership dots is the idiomatic
+    ECharts approach given there is no native UpSet chart type; filled-vs-open circle
+    convention (not color alone) faithfully reproduces canonical UpSet plots and is
+    CVD-safe.
+  - Degree-based sequential color gradient on the intersection bars is a genuine value-add
+    matching the spec's suggestion to distinguish intersection degree, correctly interpolating
+    between the two imprint_seq stops and now explained via the added legend.
+  - Fully deterministic, dependency-free, KISS top-level script; theme-adaptive chrome
+    is correct — data colors are identical between light and dark renders, only chrome
+    (background, ink, grid, dot fill) flips, and both renders pass the legibility
+    check.
+  weaknesses:
+  - Grid layout still uses hard-coded pixel offsets (left/right/top/bottom in the
+    grid array) rather than ECharts' containLabel/percentage sizing — acceptable for
+    this fixed-size render harness, but less robust/idiomatic than a self-adjusting
+    layout.
+  - Legend gradient labels ('1 set' / '5 sets') and axis name text sit at fontSize
+    10-12, noticeably smaller than the rest of the chrome — legible but could be bumped
+    a point or two for better balance with the 12-15px used elsewhere.
+  - Design still leans mostly on the shared token defaults beyond the new legend and
+    top-bar highlight — a touch more polish (e.g. subtle alternating row shading in
+    the matrix, or a data-driven annotation on the second-largest intersection) would
+    push it from competent to distinctive.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matching the light-theme spec.
+      Chrome: Title "upset-basic · javascript · echarts · anyplot.ai" is centered at the top in dark ink, clearly legible. "Intersection size" (rotated, left of top bars) and "Set size" (bottom-left, below horizontal bars) axis names are readable in a softer ink tone. Tick labels (0-500 on the intersection axis; 1,200/600/0 on the set-size axis; Email/App/Loyalty/Social/Newsletter row labels) all have clear contrast against the light background. A new top-right legend reads "Intersection degree" over a green-to-teal gradient swatch labeled "1 set" / "5 sets".
+      Data: Twelve intersection bars sorted descending by size, colored on the green-to-teal imprint_seq gradient keyed to intersection degree; the largest bar (456, single-set Email) is outlined with a dark border and a bold value label above it. Five horizontal set-size bars on the left are solid brand green (#009E73), decreasing Email > App > Loyalty > Social > Newsletter. The dot matrix below uses solid black-ink filled circles for set membership and open (light-fill, gray-stroke) circles for non-membership, connected by black vertical lines where an intersection spans multiple sets.
+      Legibility verdict: PASS — all text, including the new legend labels, is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matching the dark-theme spec.
+      Chrome: Same title, axis names, tick labels, and the "Intersection degree" legend are now rendered in light ink tones, clearly legible against the dark background. Grid lines remain subtle but visible.
+      Data: The intersection-bar gradient, the highlighted top bar with its "456" label, and the brand-green set-size bars are pixel-identical in hue to the light render — confirmed unchanged. The membership dots flip from black-ink fill/stroke to a light off-white fill/stroke (theme-adaptive ink token) while keeping the same filled-vs-open convention and connecting lines, now rendered in white.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout; all text including the new legend
+          labels reads clearly in both themes, though legend text at fontSize 10 is
+          a touch small.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render; the added legend and top-bar
+          label do not collide with anything.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Dot sizes (r=15 filled / r=10 open) and bar widths are appropriate
+          for the 12-column x 5-row density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Membership relies on filled-vs-open shape, not color alone; sequential
+          gradient is CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Multi-grid layout is well-proportioned with no overlap or clipping;
+          canvas gate passed (no gate file present).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Intersection size'' and ''Set size'' are descriptive; title matches
+          required format exactly.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Set-size bars use palette[0] brand green; intersection bars use imprint_seq
+          gradient; backgrounds correct in both themes.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Added gradient legend and highlighted top bar show real design thought,
+          but the rest of the composition still leans on default token styling.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean, no spines on the matrix, subtle grid lines, but minimal customization
+          beyond shared token defaults and the new legend.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Descending sort plus the highlighted, labeled top bar create a clear
+          focal point; the degree color gradient is now explained via the legend,
+          restoring its storytelling value.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct UpSet plot: matrix, set-size bars, intersection-size bars.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sorted intersections, connecting lines, degree-based color, set totals
+          — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Rows=sets, columns=intersections; axes correctly scaled.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required 'upset-basic · javascript · echarts · anyplot.ai'
+          format; new legend labels the degree gradient.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all UpSet aspects: set sizes, intersection sizes, membership
+          matrix, degree encoding.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Marketing-engagement channels (Email/App/Loyalty/Social/Newsletter)
+          are plausible and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 5 sets, 3200 elements — within the spec's 4-15 sets / 100-10,000
+          elements range.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level script; only tiny helper functions (lcg, seqColor).
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG, fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only the provided globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; appropriate complexity for the composite
+          layout.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false, current API.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Multi-grid/multi-axis composition with gridId linkage is advanced
+          idiomatic ECharts; hard-coded pixel grid offsets keep it just short of top
+          marks.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom renderItem series for lines/dots and a graphic-based gradient
+          legend are genuinely distinctive ECharts techniques for a chart type with
+          no native support.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - gradient-fill
+  - edge-highlighting

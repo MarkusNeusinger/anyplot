@@ -1,0 +1,259 @@
+library: chartjs
+language: javascript
+specification_id: tree-phylogenetic
+created: '2026-09-09T20:37:58Z'
+updated: '2026-09-09T20:50:30Z'
+generated_by: claude-sonnet
+workflow_run: 34401341786
+issue: 3070
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Creative, plugin-free solution: builds a proper rectangular cladogram from Chart.js''s
+    core `scatter` type using per-branch line datasets, with no reliance on unavailable
+    tree/dendrogram plugins.'
+  - Branch lengths are drawn proportionally via a genuine cumulative-distance layout
+    (parentX + length), matching the spec's requirement for accurate evolutionary-distance
+    representation.
+  - Biologically accurate, neutral primate topology (Strepsirrhini/Haplorhini split,
+    Platyrrhini, Cercopithecidae, Hominoidea down to Hominini) with realistic branch-length
+    values.
+  - Clade coloring is redundantly encoded via both branch color and matching leaf-label
+    text color, keeping it CVD-safe, and the first categorical series correctly uses
+    Imprint palette position 1 (#009E73).
+  - 'Distinctive library usage: dynamic tick generation via `afterBuildTicks` and
+    a per-tick color callback that colors each leaf''s tick label to match its clade
+    — goes well beyond the basic skeleton.'
+  - 'Theme-adaptive chrome is correct in both renders: backbone branches, grid, and
+    text all flip appropriately between light and dark while clade data colors stay
+    identical.'
+  weaknesses:
+  - No explicit y-axis title (e.g. 'Species') — leaf names on the tick labels imply
+    it, but an explicit axis title would fully satisfy VQ-06.
+  - X-axis label 'Relative evolutionary distance' doesn't state a unit (e.g. 'substitutions
+    per site' as suggested in the spec notes) — currently just a unitless relative
+    scale.
+  - The four highlighted clades are all given equal visual weight — consider a stronger
+    single focal point (e.g. emphasizing the Hominini/human lineage) per the spec's
+    'highlight specific lineages for emphasis' note.
+  - Unclassified backbone branches (Tarsier, Gibbon, and internal connectors) render
+    in a neutral ink color with no legend entry — acceptable, but a brief 'unclassified'
+    legend note would remove any ambiguity.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Title "tree-phylogenetic · javascript · chartjs · anyplot.ai" in dark ink at top, italic gray subtitle beneath it, dark x-axis title "Relative evolutionary distance", subtle vertical gridlines at each integer tick (0-7), bottom legend with 4 colored circular swatches (Strepsirrhini, Platyrrhini, Cercopithecidae, Hominidae). All text is clearly readable against the light background — no light-on-light issues.
+      Data: A rectangular cladogram (elbow-connector tree) of 12 primate species, branch lengths proportional to evolutionary distance, growing left (root, x=0) to right (leaf tips). Four clades are color-coded: Strepsirrhini in Imprint brand green (#009E73, palette position 1), Platyrrhini in lavender, Cercopithecidae in blue, Hominidae (great apes) in ochre; unclassified backbone branches (Tarsier, Gibbon, internal connectors) are dark ink/near-black. Leaf-tip markers are circular dots colored to match their clade, and species-name labels on the right are colored identically to their branch/marker for redundant encoding.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Same title/subtitle/axis-title/legend layout, now rendered in light/white ink; gridlines are subtle light lines on the dark surface; unclassified backbone branches flip from dark ink to light gray/off-white (theme-adaptive `inkSoft` token) so they remain visible against the dark background instead of disappearing. No dark-on-dark text was found — all titles, tick labels, and legend text are clearly legible.
+      Data: Identical topology and branch-length proportions to the light render. All four clade colors (green, lavender, blue, ochre) are pixel-identical to the light render — confirmed only chrome (background, backbone lines, text, grid) changed between themes, not the categorical data colors.
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at explicit font sizes; no light-on-light
+          or dark-on-dark issues
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data/legend collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse data (12 leaves) has prominent 5px leaf markers and clearly
+          visible branch lines
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Clade colors are redundantly encoded via matching text labels, not
+          color alone; no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, generous margins, nothing cut off, correct 3200x1800
+          canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: X-axis has a descriptive title but no unit; y-axis has no explicit
+          axis title (species names imply it)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, canonical Imprint order, correct theme-adaptive
+          backgrounds in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful clade coloring, custom legend, and dynamic per-tick label
+          coloring show real design intent
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal chrome, subtle grid, generous whitespace, y-axis grid/border
+          removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clade coloring guides the eye, but all 4 clades get equal emphasis
+          rather than one clear focal point
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct rectangular cladogram/phylogenetic tree
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Proportional branch lengths and clade highlighting present; axis
+          serves as a scale reference but doesn't state units (e.g. substitutions
+          per site)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = cumulative branch length, Y = leaf order, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels match clade
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows topology, proportional branch lengths, clade highlighting,
+          and backbone structure
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Biologically accurate, real-world primate phylogeny; neutral subject
+          matter
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Divergence values (0-6.5) are sensible relative evolutionary-distance
+          units
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Only the necessary recursive layout/collect helpers, no over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded tree data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global Chart.js
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate recursive complexity for tree layout, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, current Chart.js API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of scatter+showLine per segment, staying within core
+          Chart.js (no plugins)
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: afterBuildTicks custom tick generation and per-tick color callback
+          function are genuinely distinctive, beyond the basic skeleton
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - publication-ready
+  - edge-highlighting

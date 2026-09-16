@@ -130,6 +130,9 @@ class DashboardResponse(BaseModel):
     total_lines_of_code: int
     avg_quality_score: float | None
     coverage_percent: float
+    # Number of supported libraries — the denominator behind `coverage_percent`
+    # and the per-spec coverage cells. Served so clients never hardcode it.
+    total_libraries: int
 
     library_stats: list[LibraryDashboardStats]
     coverage_matrix: list[CoverageRow]
@@ -386,6 +389,7 @@ async def _build_dashboard(repo: SpecRepository, impl_repo: ImplRepository) -> D
         total_lines_of_code=total_loc,
         avg_quality_score=round(sum(all_scores) / len(all_scores), 1) if all_scores else None,
         coverage_percent=round(coverage, 1),
+        total_libraries=len(SUPPORTED_LIBRARIES),
         library_stats=lib_stats,
         coverage_matrix=coverage_rows,
         top_implementations=top_impls,

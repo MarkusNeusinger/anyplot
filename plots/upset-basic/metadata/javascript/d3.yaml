@@ -1,0 +1,245 @@
+library: d3
+language: javascript
+specification_id: upset-basic
+created: '2026-09-09T20:59:34Z'
+updated: '2026-09-09T21:04:28Z'
+generated_by: claude-sonnet
+workflow_run: 34403681637
+issue: 5250
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Correct, idiomatic UpSet plot structure: horizontal set-size bars, vertical intersection-cardinality
+    bars, and a dot-matrix with connecting lines, matching the UpSet convention precisely.'
+  - Sets are sorted by size (descending) and intersections are sorted by count (descending),
+    exactly matching the spec's default sort requirement.
+  - Degree-based color legend (continuous gradient with '1 set' / '3 sets' endpoints)
+    adds real analytical value beyond a flat single-color bar chart.
+  - Both light and dark renders are fully legible with no clipping; theme tokens (background,
+    ink, grid, palette[0]) are threaded through correctly.
+  - Realistic, neutral bug-tracking dataset (Crash, UI/UX, Performance, Security,
+    Data Loss, Compatibility) with element/set counts inside the spec's ranges.
+  - Alternating row stripes and generous margins keep the dense 6-row x 18-column
+    matrix readable.
+  weaknesses:
+  - Matrix dots and connecting lines are built with imperative forEach + append calls
+    rather than D3's idiomatic .data().join() binding pattern — functionally correct
+    but doesn't showcase D3's core data-binding paradigm.
+  - Design excellence is solid but not exceptional — the layout and legend are competent
+    rather than visually striking; consider a bolder focal treatment for the top 2-3
+    intersections to sharpen the storytelling.
+  - Minor tick-label size mismatch between the 'Set Size' axis (12px) and 'Intersection
+    Size' axis (13px) — negligible but worth aligning.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches the spec target exactly.
+      Chrome: Title "upset-basic · javascript · d3 · anyplot.ai" is bold, centered, dark ink, fully within bounds. Row labels (Crash, UI/UX, Performance, Security, Data Loss, Compatibility) are dark and legible on the left. Axis labels "Set Size" and "Intersection Size" and their tick numbers are soft dark gray, all readable. Degree-color legend top right ("1 set" / "3 sets" with a green-to-blue gradient bar and "Intersection degree" caption) is fully visible, not clipped.
+      Data: First categorical series (horizontal set-size bars) uses Imprint green #009E73. Vertical intersection bars are colored by degree along a green→teal→blue sequential gradient. Filled black dots + connecting lines in the matrix show set membership per intersection; hollow dots with light gray outlines show non-membership. Alternating light row stripes aid matrix readability.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no dark-on-light or light-on-light failures observed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches the spec target exactly.
+      Chrome: Title, row labels, axis labels, and tick numbers all render in light/soft-white ink and are clearly legible against the dark background. No dark-on-dark failures observed. The degree-color legend text and gradient remain fully visible.
+      Data: Data colors are identical to the light render — same green #009E73 set-size bars, same green→teal→blue degree gradient for intersection bars. Filled dots switch to an off-white fill and connecting lines to off-white (chrome-appropriate), while hollow dot outlines use the dark-theme grid tone — only chrome adapts, not the categorical/sequential data colors.
+      Legibility verdict: PASS — all text and matrix elements are clearly readable against the dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; row labels
+          slightly larger than axis ticks but within tolerance.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, bars, or matrix dots in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Dot radii (9px filled / 5px hollow) and bar widths are clearly visible
+          at this density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue degree gradient plus black/white fill markers avoid
+          red-green-only signaling; good contrast on both surfaces.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: No canvas gate failure; title, legend, and 'Set Size' label all comfortably
+          within bounds with no clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Set Size'' and ''Intersection Size'' are descriptive; title matches
+          the required format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series uses palette[0] (#009E73); degree scale uses t.seq via
+          interpolateRgbBasis; backgrounds are theme-correct in both renders.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom gradient legend and alternating row stripes show intentional
+          polish beyond defaults, though not a standout design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal chrome, no unnecessary frames, generous margins; grid limited
+          to subtle axis ticks.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Degree coloring draws the eye to complex intersections, but the presentation
+          is fairly literal rather than strongly guided.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct matrix-based UpSet layout with all three panels.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Set-size bars, intersection bars, dot matrix, connecting lines, degree
+          coloring, size-descending sort — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Rows = sets, columns = intersections, bar lengths map to counts correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; degree legend labeled clearly.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Exercises all upset-plot features including multi-set degree >1.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Bug-category tagging scenario is plausible and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 450 elements across 6 sets, within the spec's 100-10,000 / 4-15 ranges.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, only small helper functions where needed.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses the global d3 only, per harness contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; appropriate complexity for a custom compound
+          chart.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts a single svg into #container, no animation, matches the harness
+          contract.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Scales/axes are idiomatic, but the matrix is built with imperative
+          forEach + append rather than D3's .data().join() binding pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom compound chart with a hand-built linearGradient legend and
+          scaleSequential degree coloring — showcases D3's low-level flexibility.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - custom-colormap

@@ -1,0 +1,257 @@
+library: muix
+language: javascript
+specification_id: tree-phylogenetic
+created: '2026-09-09T20:51:48Z'
+updated: '2026-09-09T21:09:43Z'
+generated_by: claude-sonnet
+workflow_run: 34402871424
+issue: 3070
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/muix/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Mathematically correct phylogram layout: x is the true cumulative branch length
+    from the root, not topological depth, so evolutionary distance is faithfully represented
+    on the axis'
+  - 'Clade highlighting now implemented per the spec''s ''color-code clades or highlight
+    specific lineages'' note: the Homininae subtree (Human/Chimpanzee/Gorilla) is
+    drawn with a distinct color, thicker strokes, and an italic ''African apes'' callout
+    that creates a clear focal point'
+  - 'Elegant technique: a custom BranchLayer component reads the chart''s own useXScale/useYScale
+    hooks so hand-drawn branches, tip markers (ScatterPlot), and labels stay pixel-perfect
+    aligned at any render size — a well-engineered workaround since no MUI X chart
+    type natively draws trees'
+  - 'Clean, minimal chrome: no grid, no y-axis spine, single bottom x-axis with units
+    — appropriate for a tree diagram'
+  - Fully deterministic, realistic primate mtDNA phylogeny with a plausible topology
+    and branch-length scale
+  - 'Correct theme adaptation: identical data colors (brand green + blue) across light/dark,
+    all chrome (title, axis, tick and leaf labels) correctly token-driven with no
+    dark-on-dark or light-on-light failures'
+  weaknesses:
+  - 'Palette Compliance (VQ-07): the highlighted clade uses t.palette[2] (blue #4467A3),
+    skipping t.palette[1] (lavender #C475FD) with no stated semantic reason (the style
+    guide''s semantic-exception list doesn''t cover ''closely-related clade = blue'').
+    Use palette[1] as the second color, or state a semantic justification, to keep
+    canonical ordering.'
+  - 'Composition is still right-skewed: only Marmoset and Lemur reach near the x-axis
+    maximum, so a large block in the upper-right/mid-right of the canvas stays empty
+    across most rows (Human/Chimpanzee/Gorilla/Orangutan/Gibbon). This is inherent
+    to the tree''s branch lengths, but tightening the x-domain further or breaking/compressing
+    the long Marmoset/Lemur branches would balance the whitespace better.'
+  - Leaf tip markers (markerSize=8) are on the small side for only 8 sparse data points
+    on a 2400x2400 canvas — slightly larger markers would better match the data-density
+    heuristic for very sparse plots.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: title "tree-phylogenetic · javascript · muix · anyplot.ai" centered at top in dark ink; bottom x-axis labeled "Evolutionary distance (substitutions per site)" with ticks 0.00-0.36 in dark ink; no grid, no y-axis spine. All chrome clearly visible against the light background.
+      Data: the Homininae clade (Human, Chimpanzee, Gorilla) is drawn in blue (#4467A3) with slightly thicker branch strokes and tip markers, plus an italic "African apes" callout label; the remaining five species (Orangutan, Gibbon, Rhesus Macaque, Marmoset, Lemur) are drawn in brand green (#009E73). Species labels are in dark ink next to their tips. Branch lengths are visibly proportional to evolutionary distance, with Marmoset and Lemur extending far to the right as the most divergent taxa.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: same title, axis label, and ticks, now rendered in light/near-white text against the dark background. No dark-on-dark text anywhere; all chrome legible.
+      Data: the clade highlight remains the identical blue (#4467A3) and the rest remain the identical brand green (#009E73) as the light render — only chrome flipped, confirming data-color consistency across themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis label 16px, ticks
+          14px, leaf labels 16px); fully readable in both themes, no clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, branches, markers, or the clade callout
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers and branch lines clearly visible, but markerSize=8 is on
+          the small side for only 8 sparse leaves on a 2400x2400 canvas
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/blue two-color scheme is CVD-safe and high-contrast on both
+          surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Nothing clipped; margins/domain tightened since last review, but
+          composition is still right-skewed with empty space in the upper-right for
+          short-branch rows
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis descriptive with units (substitutions per site)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Correct theme-adaptive chrome and brand-green first series, but the
+          clade highlight uses palette[2] (blue) instead of the next canonical palette[1]
+          (lavender) with no stated semantic reason
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Well-engineered custom overlay with a two-color clade accent, still
+          a fairly flat, simple composition overall
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Spines/grid cleanly removed, generous whitespace, but that whitespace
+          remains unevenly distributed to the right
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: The clade highlight plus 'African apes' callout now creates a clear
+          focal point and visual hierarchy that guides the viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct rectangular phylogram with proportional branch lengths
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Tree structure, species labels, proportional branch lengths, distance
+          scale, and now clade highlighting all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = cumulative distance, Y = leaf slot, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; direct leaf labels make a legend unnecessary
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Topology, proportional lengths, distance scale, and clade/lineage
+          highlighting are all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral primate mtDNA phylogeny with plausible topology
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Branch lengths and relative divergence order are plausible for primate
+          mtDNA
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: One recursive layout() helper is the minimal necessary structure
+          for a tree
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded in-memory data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every import is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity for the tree layout
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Default export, sized from ANYPLOT_SIZE, skipAnimation set
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct community-only composition via ChartContainer + ScatterPlot
+          + ChartsXAxis
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Creative use of useXScale/useYScale hooks to build a custom SVG overlay
+          synced to the chart's own scales
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - tree-layout
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome

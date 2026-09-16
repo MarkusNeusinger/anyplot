@@ -1,0 +1,261 @@
+library: echarts
+language: javascript
+specification_id: surface-basic
+created: '2026-09-10T01:08:25Z'
+updated: '2026-09-10T01:13:29Z'
+generated_by: claude-sonnet
+workflow_run: 34423296746
+issue: 1013
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Clever isometric 3D projection (axonometric transform + painter's-algorithm depth
+    sort of quad facets via a custom renderItem series) works around echarts-gl not
+    being available, rather than faking or skipping the 3D surface
+  - Sequential Imprint colorbar (t.seq) is correctly used for the continuous height
+    field instead of the categorical palette, with color direction matching the surface's
+    visual elevation (blue high, green low) consistently in both themes
+  - Axis labels and tick labels are anchored to real data coordinates via chart.convertToPixel,
+    not decorative overlays, so they stay correct regardless of layout
+  - Realistic, neutral response-surface-methodology data (chemical yield vs. temperature/pressure)
+    with a clear single optimum and deterministic generation (no RNG)
+  - 'Theme-adaptive chrome is threaded correctly end to end: backgrounds, ink/inkSoft
+    text, and facet stroke color (matches page background to create the mesh-line
+    look) all flip correctly between light and dark with identical data colors'
+  weaknesses:
+  - Pressure axis only shows two tick labels (3 bar, 5 bar) — the 1 bar minimum tick
+    is dropped entirely to avoid overlapping the temperature axis's shared origin
+    label ('150°C'), rather than offsetting one of the two labels so both axes show
+    their full range
+  - The spec's 'enable rotation to explore the surface from different angles' note
+    isn't met — the projection is a fixed isometric viewpoint with no interactive
+    rotate, even in the HTML output. This is a consequence of echarts-gl being disallowed
+    in this repo rather than a flaw in this implementation's approach, but it's worth
+    noting for spec coverage
+  - The manual projection pipeline (yieldAt, project, toPixel helpers plus the facet-sort
+    step) is meaningfully more code/structure than a typical KISS single-series chart,
+    though the complexity is justified by the lack of a native 3D surface type in
+    ECharts without echarts-gl
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Yield Response Surface · surface-basic · javascript · echarts · anyplot.ai" is dark and clearly readable at top center. "Pressure (bar)" and "Temperature (°C)" axis titles are dark gray and legible. Tick labels (150°C, 200°C, 250°C, 3 bar, 5 bar) are smaller gray text, clearly legible against the light background. Colorbar title "Yield (%)" in dark ink, "High yield (%)" / "Low yield (%)" labels in softer gray, both legible.
+      Data: The surface is a smooth dome (paraboloid response surface) colored with a blue-to-green sequential gradient (Imprint imprint_seq) — blue at the peak (high yield), green toward the edges (low yield). No categorical brand-green single-series color is used, which is correct since this is continuous height data, not a categorical series. Thin light-colored mesh lines outline each quad facet, giving a clear 3D wireframe-over-surface look. Two thin axis-guide lines run from the origin along temperature/pressure ground directions.
+      Legibility verdict: PASS — all text is dark-on-light and clearly readable, no overlaps.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis titles, and tick labels all render in light gray/white tones, clearly legible against the dark background. No dark-on-dark failures observed — every label is legible. Colorbar text is legible light-gray on dark.
+      Data: Same blue-to-green sequential gradient as the light render — data colors are identical between themes as required, only chrome (background, text, mesh-line stroke color which follows page background) flips. Mesh lines are now dark, still visible as fine facet boundaries against the colored surface.
+      Legibility verdict: PASS — all text is light-on-dark and clearly readable, no dark-on-dark issues, no overlaps.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at proportionate sizes; minor deduction
+          only for the dropped 1 bar tick label rather than a legibility fault
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or legend/colorbar
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 34x34 facet mesh reads clearly at this density; mesh-line stroke
+          matches page background for a clean wireframe look
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Blue-green sequential ramp (imprint_seq), not red-green reliant,
+          adequate contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Title ~35% width, well-balanced margins, no overflow or clipping,
+          gridScale keeps isometric angles undistorted
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (°C), Pressure (bar), Yield (%) all descriptive with
+          units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous data correctly uses imprint_seq (not the categorical
+          palette); backgrounds match #FAF8F1/#1A1A17; data colors identical across
+          themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom isometric 3D projection with painter's-algorithm facet sort
+          — well beyond default styling, though not a from-scratch design language
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No chartjunk, subtle theme-matched mesh lines, generous whitespace,
+          restrained axis guides instead of a full box
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dome shape plus colorbar direction clearly communicates the yield
+          optimum as a focal point
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine 3D surface visualization via isometric projection, not a
+          2D substitute
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Axis labels for x/y/z present and colorbar included; interactive
+          rotation from the spec notes is not implemented (constrained by echarts-gl
+          being disallowed in this repo, not an implementation oversight)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=temperature, Y=pressure, Z/color=yield, full data range shown with
+          padding
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; colorbar clearly
+          labeled
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 34x34 grid within the spec's 30-50 range, smooth continuous surface
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral chemical process response-surface scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Yield percentages in a sensible 30-92% range for the domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions (yieldAt, project, toPixel) are used, more
+          structure than typical, but justified by the manual 3D projection this library
+          lacks natively
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No extraneous imports; only the provided echarts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity is proportionate to a genuinely hard problem; no fake/simulated
+          interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false, no explicit size/devicePixelRatio'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of custom series + renderItem + visualMap + graphic overlays
+          — the idiomatic ECharts path available without echarts-gl
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Hand-built isometric projection and painter's algorithm is a distinctive,
+          non-generic solution to this library's 3D limitation
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - colorbar
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - gradient-fill

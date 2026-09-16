@@ -1,0 +1,244 @@
+library: chartjs
+language: javascript
+specification_id: sparkline-basic
+created: '2026-09-09T18:13:11Z'
+updated: '2026-09-09T18:39:17Z'
+generated_by: claude-sonnet
+workflow_run: 34386864047
+issue: 1011
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/chartjs/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Fixed the attempt-1 blocker: y-padding dropped from dataRange*3.2 to dataRange*0.18,
+    so the trend line now fills the great majority of the 1800px canvas height instead
+    of being squeezed into a thin middle band'
+  - Added min-point highlighting (amber dot) alongside the existing last-point highlight,
+    directly addressing the prior review's feature-coverage request for the spec's
+    optional 'highlight min/max points' feature
+  - Curve tension reduced from 0.35 to 0.15, removing the bezier-overshoot risk flagged
+    previously while keeping a subtly smoothed, elegant line
+  - 'Still a precise, minimalist sparkline: no axes/ticks/gridlines/legend, deterministic
+    seeded LCG data, exact mandated title, animation disabled per the mount-node contract'
+  weaknesses:
+  - 'The amber min-highlight dot has very low contrast in the light render: sampled
+    pixel (221,204,119) against the (250,248,241) page background is only ~1.5:1 contrast
+    ratio, so the min marker is nearly invisible in plot-light.png even though the
+    same color reads clearly on the dark background. Use a darker/more saturated amber
+    (or a contrasting pageBg-colored ring) specifically tuned for the light theme
+    so the min highlight is legible in both renders.'
+  - pointBorderColor is set to t.pageBg for every point, which erases the outline
+    on the low-contrast amber dot in light mode (no crisp edge to fall back on). A
+    theme-adaptive border (e.g. t.ink at low opacity, or a fixed dark ring) would
+    keep the 'punched-through' look on the green endpoint while giving the amber marker
+    a visible edge.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - not pure white, not dark.
+      Chrome: Title "sparkline-basic · javascript · chartjs · anyplot.ai" is bold, dark ink, centered near the top, and fully legible. No axes, ticks, gridlines, or legend - matches the spec's minimalism requirement.
+      Data: A single brand-green (#009E73) line runs the full width of the canvas with a gentle noisy upward drift, now filling the great majority of the canvas height (fixed from attempt 1's excessive vertical padding). The line ends in a large green dot (last point, which also happens to be the data max) with a light-colored border. A small amber/khaki dot marks the data minimum near the start of the series.
+      Legibility issue: the amber min-marker dot (sampled RGB 221,204,119) is very low-contrast against the off-white background (~1.5:1 contrast ratio) - it is present but hard to spot at a glance, unlike the prominent green endpoint dot.
+      Legibility verdict: PASS overall (title and line fully legible); the amber accent marker is a borderline FAIL on its own for contrast, noted as a weakness rather than a hard block since it doesn't affect text or the primary data line.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - not pure black, not light.
+      Chrome: Title renders in light-colored text, clearly visible against the dark background - no dark-on-dark issue.
+      Data: The line and endpoint dot are the identical brand green (#009E73) as the light render - only chrome (background/text) flipped, confirming palette consistency across themes. The amber min-marker dot (same RGB 221,204,119) has strong contrast here against the near-black background and is clearly visible - this is a theme-asymmetric issue, good in dark, weak in light.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Only text element is the title; explicit 22px font, fully readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, line, or markers
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: false
+        comment: Green line and endpoint dot are prominent, but the amber min-marker
+          dot is nearly invisible against the light-mode background (~1.5:1 contrast)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Amber accent color fails basic contrast against the off-white surface
+          in light mode even though it works well in dark mode
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Attempt-1 y-padding issue fixed; the line now fills the vast majority
+          of the canvas height with good margins and no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed per spec; title descriptive and correctly formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, identical across themes; backgrounds and
+          chrome are theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Punched endpoint dot, smoothed curve, and now dual highlight logic
+          (min + last) show clear design intent, though not yet flawless
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Whitespace now well-balanced after the padding fix, but the low-contrast
+          amber accent undercuts overall polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Min and last/max highlights together tell a clearer 'range and trend'
+          story than attempt 1's single endpoint marker
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly implemented as a minimal sparkline line chart
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: No axes/labels/gridlines as required; min/max highlighting now present
+          but the min marker is barely visible in light mode, weakening the feature's
+          delivery
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Index-to-value mapping correct, all 45 points shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend correctly omitted for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows trend shape, endpoint value, and now min highlighting - covers
+          the spec's optional features
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily website sessions - real, neutral, comprehensible business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Session counts (4000-9000+ range) are realistic for a mid-size site
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unnecessary imports/dependencies
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI/functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current Chart.js
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Chart.js line chart with per-point styling arrays
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-point pointRadius/pointBackgroundColor arrays for dual highlight
+          categories are reasonably Chart.js-specific
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting

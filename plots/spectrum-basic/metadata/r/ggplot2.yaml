@@ -1,0 +1,250 @@
+library: ggplot2
+language: r
+specification_id: spectrum-basic
+created: '2026-09-09T18:20:37Z'
+updated: '2026-09-09T18:32:47Z'
+generated_by: claude-sonnet
+workflow_run: 34387990726
+issue: 2926
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Distinctive ribbon-vs-noise-floor technique: geom_ribbon shades the band between
+    the trace and a dashed noise-floor reference line, visually emphasizing energy
+    above baseline at each peak.'
+  - Peak annotations (440/880/1320/2150 Hz) with point markers and text labels correctly
+    identify the fundamental and harmonics using the nearest FFT bin's actual recovered
+    amplitude.
+  - Correct use of scale_x_log10 with comma-formatted breaks, matching the spec's
+    guidance to use a log frequency axis for wide-range spectra.
+  - 'Clean theme-adaptive chrome: identical data color (#009E73) between light and
+    dark renders, correct PAGE_BG/INK tokens, all text legible in both themes.'
+  - Realistic, neutral synthetic signal (concert A4 = 440 Hz plus decaying harmonics
+    and noise) that plausibly mirrors a real spectrum-analyzer workflow.
+  weaknesses:
+  - Above ~500 Hz the noisy bins render as a dense, near-solid smear where the line
+    (alpha=0.9) and ribbon overlap heavily — lower the geom_line alpha slightly (e.g.
+    ~0.6-0.7) in that region or thin the linewidth to reduce the overplotted look.
+  - Visual hierarchy relies entirely on the four peak callouts; the fundamental (440
+    Hz, clearly the tallest peak) isn't visually distinguished from the harmonic callouts
+    beyond height, so the labels read as equally weighted at a glance.
+  - Library mastery is solid (log scale, layered geoms with a secondary peak-label
+    dataset) but doesn't yet showcase a more distinctly ggplot-specific technique
+    (e.g. a custom scale transform, annotation layer with geom_segment leader lines,
+    or facet-based decomposition).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "spectrum-basic · r · ggplot2 · anyplot.ai" top-left in dark ink, fully legible. Y-axis title "Amplitude (dB)" and x-axis title "Frequency (Hz)" in dark ink, both readable. Tick labels (0, -25, -50, -75 on y; 20, 50, 100, 200, 500, 1,000, 2,000, 4,000 on x, comma-formatted) in soft dark gray, all legible. Horizontal gridlines at each y break are thin and subtle against the light background; x has no gridlines (removed), which is a deliberate, clean choice. Axis lines are soft gray, ticks removed.
+      Data: Single-series green (#009E73) line tracing the FFT magnitude spectrum in dB, with a semi-transparent green ribbon shading the area between the trace and a dashed noise-floor reference line. Four peaks (440, 880, 1320, 2150 Hz) are marked with green dots and dark-ink text labels sitting just above each dot, none overlapping each other or the trace.
+      Legibility verdict: PASS — no light-on-light or illegible text found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and axis titles render in light/off-white ink, fully legible against the dark background. Tick labels render in a lighter soft gray, clearly legible — no dark-on-dark failures observed. Gridlines flip to a light, subtle line consistent with the theme-adaptive INK token; ticks removed as in the light render.
+      Data: Data colors are identical to the light render — the same #009E73 green line, ribbon fill, peak dots, and dashed noise-floor line — confirming only chrome (background, text, grid) flipped between themes.
+      Legibility verdict: PASS — no dark-on-dark or illegible text found.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at appropriate sizes (title 12pt,
+          axis titles 10pt, tick labels 8pt).
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Peak callouts (880 Hz / 1320 Hz in particular) sit close but remain
+          clearly separated; no collisions with trace or axes.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Above ~500 Hz the dense noise bins with line alpha=0.9 create a near-solid
+          smear against the ribbon fill; would benefit from reduced alpha or thinner
+          linewidth in that region.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue series with strong contrast against both backgrounds;
+          no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Title, axes, and labels stay within
+          bounds; no clipping or overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Frequency (Hz)" and "Amplitude (dB)" are descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series uses #009E73; backgrounds match #FAF8F1/#1A1A17;
+          identical data color across themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Ribbon-vs-noise-floor shading and dashed reference line show real
+          design thought beyond a default line plot.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, only y gridlines kept, generous whitespace, ticks
+          removed.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Peak callouts and ribbon fill create focal points, though the fundamental
+          isn't visually distinguished from harmonics beyond height.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct frequency-spectrum line plot.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Log frequency axis, dB amplitude scale, units on both axes, peak
+          annotations all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=frequency, y=amplitude_db, full spectrum range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format "spectrum-basic · r · ggplot2 · anyplot.ai";
+          no legend needed for single series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows full spectrum, noise floor, and harmonic peak structure.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Concert-pitch fundamental plus decaying harmonics and noise is realistic
+          and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: dB range and 0-4000 Hz span (Nyquist for fs=8000) are sensible for
+          the domain.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No top-level functions/classes; flat script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) used.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, scales, ragg all used; no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{theme}.png via ragg::agg_png at correct dimensions.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic layered grammar-of-graphics use (geom_ribbon + geom_hline
+          + geom_line + geom_point + geom_text) with theme_minimal base.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Secondary peak-label dataset with inherit.aes=FALSE and scale_x_log10
+          with custom breaks show above-basic mastery, though no more advanced ggplot-specific
+          technique is used.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - fourier-transform
+  styling:
+  - alpha-blending

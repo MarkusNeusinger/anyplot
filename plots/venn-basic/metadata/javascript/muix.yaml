@@ -1,0 +1,258 @@
+library: muix
+language: javascript
+specification_id: venn-basic
+created: '2026-09-09T21:32:50Z'
+updated: '2026-09-09T21:43:31Z'
+generated_by: claude-sonnet
+workflow_run: 34406849927
+issue: 2444
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/muix/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Triple-overlap callout badge (new this attempt) creates a clear visual focal point
+    that directly addresses the prior review's 'no visual emphasis' weakness — the
+    pageBg-filled circle with an ink stroke isolates the '18' from the darker blended
+    region behind it, in both themes.
+  - Varied circle stroke widths (3 / 2.25 / 1.5 for Python / SQL / Statistics) add
+    a subtle layered depth cue that replaces the previously flat, uniform circle styling
+    — directly fixes the prior 'flat uniform styling' weakness.
+  - Larger title (fontSize 22→26) gives the header more visual presence on the 2400×2400
+    canvas without overflowing or crowding the plot area.
+  - 'Correct set-theory arithmetic carried over unchanged: onlyA/onlyB/onlyC and pairwise-minus-triple
+    values are computed programmatically and match the displayed regions exactly (55/38/30
+    solo, 27/20/12 pairwise, 18 triple).'
+  - 'First series (Python) uses brand green #009E73; data colors are pixel-identical
+    between light/dark renders; page background samples exactly #FAF8F1 (light) and
+    #1A1A17 (dark).'
+  weaknesses:
+  - 'Title still comparatively small relative to canvas: at fontSize 26 it spans roughly
+    ~38% of the 2400px width, below the style guide''s 50–70% target. This is a short,
+    un-prefixed title (44 chars, no descriptive prefix), so there''s headroom to push
+    fontSize to ~32-34 without risking overflow or crowding.'
+  - 'LM-02 Distinctive Features remains generic: the implementation leans entirely
+    on the documented ChartContainer + useDrawingArea escape hatch for hand-placed
+    SVG, without reaching for any other MUI X-distinctive capability (e.g. a coordinated
+    tooltip/legend layer) to add value beyond the static overlay.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Sampled pixel (250,248,241) = #FAF8F1 exactly — warm off-white, not pure white, not dark.
+      Chrome: Title "venn-basic · javascript · muix · anyplot.ai" centered at top in dark ink (fontSize 26, up from 22 in the prior attempt), fully legible. No axes (not applicable to a Venn diagram). No legend box — set names are labeled in place inside each circle instead.
+      Data: Three overlapping circles — Python (top, brand green #009E73, heaviest 3px stroke), SQL (bottom-left, lavender/purple, 2.25px stroke), Statistics (bottom-right, blue, 1.5px stroke) — the new per-circle stroke-width variation replaces the previous uniform 2px stroke. Solo-region counts (55/38/30) and set labels sit inside each circle; pairwise-overlap counts (27, 20, 12) sit in their lens regions; the triple-overlap count (18) now sits inside a new pageBg-filled, ink-stroked callout circle that pops it out from the darkest blended core region as a clear focal point. All text uses a white-fill/light-stroke halo so it stays readable against every fill color and overlap blend. Fills use ~0.55 opacity so overlaps visibly darken.
+      Legibility verdict: PASS — every title, set-label, and count is clearly readable; no light-on-light text found; the "27"/"20"/"18" cluster near the callout badge has clean spacing with no overlap (verified via a cropped close-up).
+
+    Dark render (plot-dark.png):
+      Background: Sampled pixel (26,26,23) = #1A1A17 exactly — warm near-black, not pure black, not light.
+      Chrome: Same title, now in light ink, fully legible against the dark background at the larger fontSize 26. Same in-circle labeling scheme, no separate legend.
+      Data: Same three circles in the same hues and same stroke-width hierarchy (green/purple/blue, 3/2.25/1.5px) and same solo/pairwise/triple counts (55/38/30, 27/20/12, 18) — data colors are pixel-identical to the light render, confirming only chrome flipped. The triple-overlap callout badge now renders as a near-black fill with a light ink stroke, still popping the "18" out from the lighter blended overlap region behind it.
+      Legibility verdict: PASS — no dark-on-dark failures; all text (title, set labels, region counts, callout badge count) is clearly visible against both the page background and the circle fills; close-up crop confirms no overlap around the callout badge.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Stroke-halo text readable against every fill/overlap in both themes;
+          title larger than the prior attempt (26 vs 22) but still on the smaller
+          side proportionally.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions; new callout badge for the triple
+          overlap sits cleanly clear of the adjacent pairwise counts (verified via
+          close-up crop).
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Circles and overlaps clearly visible with appropriate alpha (0.55);
+          only 3 sets so no overplotting concerns.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Adequate contrast via text halo and the new callout badge; not reliant
+          on red-green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Circles and new callout badge fit well within the square canvas,
+          no overflow or clipping; balanced composition.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for a Venn diagram; title matches required format
+          exactly.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is brand green #009E73; identical data colors across
+          themes; backgrounds sample exactly #FAF8F1 / #1A1A17.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: The new triple-overlap callout badge and per-circle stroke-weight
+          hierarchy add deliberate polish beyond the prior flat treatment.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Varied stroke widths (3/2.25/1.5) directly fix the prior 'flat uniform
+          styling' weakness; whitespace and strokes remain clean.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The callout badge gives the diagram a clear focal point on the most
+          meaningful (triple) intersection, on top of the existing area-proportional
+          sizing.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct three-set proportional Venn diagram.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct transparent colors, counts in every region, 3-set limit
+          respected.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All solo/pairwise/triple values computed correctly and displayed
+          in the right regions.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; in-place labels substitute correctly
+          for a legend.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows solo, pairwise, and triple overlaps — full feature set of a
+          3-set Venn.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Skill overlap across a data team is plausible and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Set sizes (80-120) and overlaps are sensible and internally consistent.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: One small helper component (VennMarks) required by the composition
+          pattern; the new badge/stroke logic stays inline, no unnecessary abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded in-memory data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only Box, Typography, ChartContainer, useDrawingArea imported, all
+          used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for hand-placed SVG marks; no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Default-exports Chart component per harness contract; skipAnimation
+          set; no manual mount/save calls.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Textbook use of the documented ChartContainer + useDrawingArea composition
+          pattern for an unsupported chart type.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Good use of theme tokens and drawing-area geometry, but still doesn't
+          reach for other MUI X-distinctive capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-svg-overlay
+  - proportional-sizing
+  - drawing-area-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - text-halo
+  - edge-highlighting

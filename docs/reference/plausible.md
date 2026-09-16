@@ -130,7 +130,7 @@ https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
 | `plot_rotate` | `spec` | SpecsListPage.tsx | User clicks image on specs page to rotate library |
 | `open_interactive` | `spec`, `library` | SpecOverview.tsx, SpecDetailView.tsx | User opens interactive HTML view |
 | `suggest_spec` | - | SpecsListPage.tsx | User clicks the `spec.suggest()` link on the specs list page. The mirror link on the landing page emits `nav_click` with `source: suggest_spec_link` instead. |
-| `report_issue` | `spec`, `library`? | SpecPage.tsx | User clicks "report issue" link |
+| `report_issue` | `spec`, `library`? | SpecPage.tsx | User clicks the "report issue ↗" link on a spec hub page. The in-plot `.report()` flag was replaced by the 👍/👎 vote buttons, so `library` is now only set when the hub page has a library selected. |
 | `tag_click` | `param`, `value`, `source` | SpecTabs.tsx, StatsPage.tsx | User clicks a tag chip to filter (`source` ∈ `spec_detail`, `stats`) |
 | `theme_toggle` | `to` | MastheadRule.tsx | User cycles tri-state theme mode (`to` ∈ `system`, `light`, `dark`). The cycle order is `system → light → dark → system`. |
 | `view_mode_change` | `mode`, `library` | SpecDetailView.tsx | User toggles preview ↔ interactive view inside a spec detail. `mode` ∈ `preview`, `interactive`. Fires on every toggle in either direction (cf. `open_interactive`, which only fires when the interactive HTML is opened in a new tab). |
@@ -141,7 +141,7 @@ https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
 | `map_node_pin` | `spec` | MapPage.tsx | Touch device only: first tap on a node opens the preview panel + pin marker without navigating. A second tap on the same node fires `map_node_click` and navigates. |
 | `map_search_select` | `spec` | MapPage.tsx | User picks a result from the `/map` search dropdown (`⌘K` / `Ctrl+K` opens it). The camera flies to the node and the preview panel opens. |
 | `feedback_opened` | `path` | FeedbackWidget.tsx | User clicks the floating feedback FAB and the quick mini-stack of 👍 / 👎 / 💬 appears (issue #5662). `path` is `window.location.pathname + search` at open time. |
-| `feedback_submitted` | `path`, `reaction`?, `has_contact`, `spec_id`?, `mode` | FeedbackWidget.tsx | User submits a feedback entry. `reaction` ∈ `thumbs_up`, `thumbs_down`, `bug`, `idea` (omitted if none selected). `mode` is `"quick"` for a one-tap 👍/👎 from the mini-stack, `"full"` for a submit from the detailed dialog. `has_contact` is `"true"`/`"false"` — the contact field is now a free-form name/email/handle, not strictly an email. `spec_id` is set when the current route resolves to a spec page. |
+| `feedback_submitted` | `path`, `reaction`?, `has_contact`, `spec_id`?, `library`?, `mode` | FeedbackWidget.tsx, SpecDetailView.tsx (via useQuickReaction.ts) | User submits a feedback entry. `reaction` ∈ `thumbs_up`, `thumbs_down`, `bug`, `idea` (omitted if none selected). `mode` is `"quick"` for a one-tap 👍/👎 from the mini-stack, `"full"` for a submit from the detailed dialog, and `"plot_overlay"` for a 👍 (top-left) / 👎 (bottom-left) tap directly on the plot in a spec detail view — that one also carries `library`, because the vote is about one implementation and the server stores `library_id` + `language` with it. `has_contact` is `"true"`/`"false"` — the contact field is now a free-form name/email/handle, not strictly an email. `spec_id` is set when the current route resolves to a spec page. |
 
 ### Diagnostics
 
@@ -456,7 +456,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 |----------|-------------|----------------|
 | `spec` | Plot specification ID | `copy_code`, `download_image`, `plot_rotate`, `external_link`, `internal_link`, `open_interactive`, `report_issue`, `tag_click`, `og_image_view` |
 | `language` | Language slug (`python`, `r`, `julia`, `javascript`) | `og_image_view` |
-| `library` | Library name (matplotlib, seaborn, etc.) | `copy_code`, `download_image`, `external_link`, `internal_link`, `open_interactive`, `tab_toggle`, `og_image_view` |
+| `library` | Library name (matplotlib, seaborn, etc.) | `copy_code`, `download_image`, `external_link`, `internal_link`, `open_interactive`, `tab_toggle`, `og_image_view`, `feedback_submitted` (plot-overlay votes only) |
 | `method` | Action method (card, image, tab, click, space, doubletap) | `copy_code`, `random_filter` |
 | `page` | Page context (home, plots, spec_overview, spec_detail) | `copy_code`, `download_image`, `og_image_view` |
 | `platform` | Bot/platform name (twitter, whatsapp, teams, etc.) | `og_image_view` |

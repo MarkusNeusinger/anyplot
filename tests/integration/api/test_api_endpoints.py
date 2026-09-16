@@ -268,8 +268,10 @@ class TestFeedbackEndpoint:
             "message": "Bug on mobile",
             "reaction": "bug",
             "contact": "user@example.com",
-            "path": "/scatter-basic",
+            "path": "/scatter-basic/python/matplotlib",
             "spec_id": "scatter-basic",
+            "library_id": "matplotlib",
+            "language": "python",
             "viewport": "375x812",
             "session_id": "abc-123",
         }
@@ -287,6 +289,8 @@ class TestFeedbackEndpoint:
         assert row.reaction == "bug"
         assert row.contact == "user@example.com"
         assert row.spec_id == "scatter-basic"
+        assert row.library_id == "matplotlib"
+        assert row.language == "python"
         assert row.viewport == "375x812"
         assert row.session_id == "abc-123"
 
@@ -337,3 +341,27 @@ class TestFeedbackEndpoint:
 
         blocked = await client.post("/feedback", json={"message": "spam-blocked"}, headers=headers)
         assert blocked.status_code == 429
+
+        # A 👍 on a plot is not blocked by the free-text limit — its own cap is looser.
+        vote = await client.post(
+            "/feedback",
+            json={"reaction": "thumbs_up", "spec_id": "scatter-basic", "library_id": "matplotlib"},
+            headers=headers,
+        )
+        assert vote.status_code == 200
+
+    async def test_one_plot_vote_per_session_and_image(self, client, test_db_with_data):
+        """A second 👍/👎 from the same session on the same image is dropped silently."""
+        vote = {"spec_id": "scatter-basic", "library_id": "matplotlib", "language": "python", "session_id": "s1"}
+        first = await client.post("/feedback", json={**vote, "reaction": "thumbs_up"})
+        flipped = await client.post("/feedback", json={**vote, "reaction": "thumbs_down"})
+        other_image = await client.post("/feedback", json={**vote, "library_id": "plotly", "reaction": "thumbs_down"})
+        assert (first.status_code, flipped.status_code, other_image.status_code) == (200, 200, 200)
+
+        from sqlalchemy import select
+
+        from core.database.models import Feedback
+
+        result = await test_db_with_data.execute(select(Feedback).order_by(Feedback.library_id))
+        rows = list(result.scalars().all())
+        assert [(r.library_id, r.reaction) for r in rows] == [("matplotlib", "thumbs_up"), ("plotly", "thumbs_down")]

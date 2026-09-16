@@ -1,0 +1,267 @@
+library: highcharts
+language: javascript
+specification_id: surface-basic
+created: '2026-09-10T01:26:19Z'
+updated: '2026-09-10T01:44:24Z'
+generated_by: claude-sonnet
+workflow_run: 34423645895
+issue: 1013
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/javascript/highcharts/plot-dark.html
+quality_score: 81
+review:
+  strengths:
+  - 'Both weaknesses flagged in the previous review are fixed: the near-zero diverging
+    band ("-0.14 to 0.14") is now visible via a 1px inkSoft stroke on every marker
+    (pixel-verified via cropped inspection — every cell, including near-background-colored
+    ones, has a clear border), and the right margin now matches the left (100px vs
+    98px, pixel-measured) instead of the grid touching the canvas edge.'
+  - Correct diverging Imprint palette (t.div) for signed data with a meaningful zero;
+    data colors are pixel-identical between light and dark renders (only chrome flips),
+    matching the style guide's continuous-data rule.
+  - 'Idiomatic, well-documented Highcharts technique: chart.events.load computes marker
+    radius from axis.toPixels() after real layout, and mirrors plotLeft onto marginRight
+    so the tiled grid sits symmetrically instead of guessing margins.'
+  - 'Honest engineering: code comments explicitly document why a true 3D surface/heatmap
+    can''t be used (only the core Highcharts bundle is vendored, no highcharts-3d/colorAxis/heatmap
+    module) instead of faking 3D or interactivity.'
+  - Clean theme-adaptive chrome throughout (title, subtitle, axis, legend), animation
+    disabled on chart and series, credits watermark removed, fully deterministic in-memory
+    data generation.
+  weaknesses:
+  - The 7-band discretization is visibly blocky (each band spans ~0.29 z-units) rather
+    than a smooth gradient — the spec's 'smooth colormap' note is only partially satisfied.
+    A finer band count (e.g. 12-16) or a per-point interpolated fillColor (still per-marker,
+    no colorAxis module needed) would read closer to a continuous surface.
+  - No true 3D surface or interactive rotation, as the code comments document — this
+    is a hard constraint of the core-only Highcharts bundle (no highcharts-3d module
+    loaded), not something further repair can address, and was already weighed into
+    the SC-01/SC-02 scores.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 (sampled RGB 250,248,241 at canvas corner). Not pure white, not dark.
+      Chrome: Title "surface-basic · javascript · highcharts · anyplot.ai" and subtitle "Response surface z = sin(x)·cos(y), sampled on a 34×34 grid — color encodes height" in dark ink, both clearly legible. X/Y axis titles ("x", "y") and tick labels in soft dark gray, all legible. Legend "Height z" with 7 range labels sits below the plot; all 7 swatches are now visibly bordered squares (verified via pixel crop) — including the "-0.14 to 0.14" band whose fill nearly matches the page background but is now outlined with a 1px ink-toned stroke, unlike the previous attempt where that band vanished entirely.
+      Data: 34x34 grid of square markers tiled edge-to-edge across x,y in [-4.5, 4.5], colored by a 7-band diverging red-blue (Imprint div) scale keyed to z = sin(x)*cos(y). The tiling now reads as a continuous surface with a clear sinusoidal ridge/valley pattern — no illusory gaps. Margins are now symmetric: pixel-measured left margin is 100px, right margin is 98px (previously the grid touched the absolute right canvas edge with zero margin).
+      Legibility verdict: PASS for all text and all data elements — no invisible bands, no clipped edges.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 (sampled RGB 26,26,23). Not pure black, not light.
+      Chrome: Title and subtitle in light ink, clearly legible against the dark background — no dark-on-dark failure. Axis titles/ticks and legend text in soft light gray, all legible.
+      Data: Identical red-blue diverging hues and identical grid layout/values as the light render — data colors are correctly unchanged between themes (only chrome flipped). Same fixed tiling with visible borders on every cell (including the near-black middle band) and the same symmetric left/right margins.
+      Legibility verdict: PASS for all text and all data elements — the same fixes hold in both themes, confirming the border-stroke and margin-mirroring logic is theme-independent.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Title/axis/tick text all legible against both #FAF8F1 and #1A1A17
+          backgrounds; no dark-on-dark or light-on-light failures.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text overlaps with other text or data elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Fixed: the near-zero diverging band is now visible via a 1px inkSoft
+          border on every marker (pixel-verified); the 34x34 grid tiles edge-to-edge
+          with no gaps. Minor deduction because 7-band discretization is blockier
+          than a true smooth colormap.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe red-blue diverging hue ramp; the previously-vanishing middle
+          band (an accessibility failure) is now bordered and visible in both themes.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Fixed: right margin now matches left (100px vs 98px, pixel-measured)
+          instead of the grid touching the canvas edge. Nothing clipped; plot area
+          well utilized.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: x/y axis titled (correct notation for a mathematical function surface);
+          z represented via legend title 'Height z'; mandated title format present.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses t.div diverging stops correctly for signed data with a meaningful
+          zero; backgrounds match #FAF8F1/#1A1A17; data colors identical across themes.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Manual diverging color banding, legend-as-colorbar, and now a fully
+          intact/complete tiled surface (no visible defects) show design thought clearly
+          above library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/gridlines removed, symmetric margins (fixed), consistent per-cell
+          border. Only the coarse 7-band step keeps this from a perfect score.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: The sin*cos ridge/valley pattern now reads as a continuous, symmetric
+          focal structure since the invisible middle band no longer breaks visual
+          continuity.
+    spec_compliance:
+      score: 10
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 2
+        max: 5
+        passed: false
+        comment: Not a true 3D surface and no rotation — implemented as a flat tiled-scatter
+          pseudo-heatmap because the core Highcharts bundle has no highcharts-3d/colorAxis/heatmap
+          module (documented in code comments). Unchanged from previous review; not
+          addressable by further repair.
+      - id: SC-02
+        name: Required Features
+        score: 2
+        max: 4
+        passed: false
+        comment: Height mapped via discrete 7-band color (not a smooth colormap) and
+          no interactive rotation, both requested by the spec's Notes.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x maps to x-axis, y maps to y-axis, full -4.5..4.5 domain shown on
+          both axes.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'surface-basic · javascript · highcharts · anyplot.ai';
+          legend band labels are clear numeric ranges.
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 4
+        max: 6
+        passed: false
+        comment: Full 34x34 grid covers the whole domain, but discretizing into 7
+          bands reduces effective coverage of the continuous height signal.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: z = sin(x)*cos(y) response surface is a neutral, textbook-plausible
+          example matching the spec's own suggested applications.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Domain +/-4.5 and value range [-1,1] are sensible, well-scaled for
+          a trig response surface.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Four small helper functions (hexToRgb/rgbToHex/lerpColor/divergingColor)
+          are used, but they are a minimal, necessary color-interpolation utility
+          forced by the missing colorAxis module.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic math, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the global Highcharts is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity; complexity matches the constraint
+          it is solving.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: No explicit width/height; animation disabled on chart and series;
+          credits disabled — correct mount-node contract.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic use of chart.events.load + axis.toPixels() to size markers
+          after real layout, plus mirroring plotLeft onto marginRight for symmetric
+          margins — a genuinely idiomatic Highcharts layout technique.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: The toPixels-driven dynamic radius and legend-as-colorbar are distinctive
+          touches, though the overall approach is a workaround rather than a native
+          Highcharts strength.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap

@@ -75,7 +75,7 @@
 
     <!-- Preload MonoLisa Code Basic Latin (most used, variable font = all weights) -->
     <link rel="preload" href="https://storage.googleapis.com/anyplot-static/fonts/v3/code/0-MonoLisaCode-normal.woff2" as="font" type="font/woff2" crossorigin>
-    <!-- Preload Basic Latin italic — the editorial script variant (`<em>` + ss01). Without this the font arrives too late under `font-display: optional` and the page renders with the upright fallback. -->
+    <!-- Preload Basic Latin italic — the editorial script variant (`<em>` + ss01). The face is `font-display: swap`, so without the preload the hero tagline first paints in the upright fallback and then swaps to script. -->
     <link rel="preload" href="https://storage.googleapis.com/anyplot-static/fonts/v3/code/1-MonoLisaCode-italic.woff2" as="font" type="font/woff2" crossorigin>
     <!-- Preload Latin-1 Supplement for ä, ö, ü, ß etc. -->
     <link rel="preload" href="https://storage.googleapis.com/anyplot-static/fonts/v3/code/2-MonoLisaCode-normal.woff2" as="font" type="font/woff2" crossorigin>

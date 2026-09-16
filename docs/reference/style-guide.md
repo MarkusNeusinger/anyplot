@@ -1216,8 +1216,9 @@ The design system is implemented across:
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>anyplot.ai — any library. one plot.</title>
   <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
-  <!-- MonoLisa Code basic-latin preload (variable font, all weights in one file) -->
+  <!-- MonoLisa Code preloads, as in app/index.html: Basic Latin upright, Basic Latin italic (the script voice, ss01), Latin-1 Supplement (ä ö ü ß) -->
   <link rel="preload" href="https://storage.googleapis.com/anyplot-static/fonts/v3/code/0-MonoLisaCode-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="https://storage.googleapis.com/anyplot-static/fonts/v3/code/1-MonoLisaCode-italic.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="https://storage.googleapis.com/anyplot-static/fonts/v3/code/2-MonoLisaCode-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     :root {

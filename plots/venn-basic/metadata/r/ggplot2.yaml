@@ -1,0 +1,249 @@
+library: ggplot2
+language: r
+specification_id: venn-basic
+created: '2026-09-09T21:17:40Z'
+updated: '2026-09-09T21:30:25Z'
+generated_by: claude-sonnet
+workflow_run: 34405628291
+issue: 2444
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Area-proportional circle radii (scaled by sqrt(set_size / max_set_size)) give
+    the diagram real information content beyond a generic three-equal-circles layout
+  - All seven regions (3 exclusive, 3 pairwise, 1 triple) are correctly computed via
+    inclusion-exclusion and labeled with both count and percentage, matching the spec's
+    request for counts/percentages in each region
+  - 'Clear visual hierarchy: the triple-overlap count is bolded and rendered larger
+    (size 7.0) than the other region counts (5.6), guiding the eye to the most notable
+    intersection'
+  - 'Clean theme-adaptive chrome: PAGE_BG/INK/INK_SOFT tokens correctly flip between
+    light and dark renders while the Imprint fill colors stay identical'
+  - theme_void() + explicit plot.margin keeps the diagram uncluttered with generous,
+    balanced whitespace
+  - Realistic, neutral data scenario (Python/SQL/R skill overlap across job candidates)
+    with internally consistent set arithmetic
+  weaknesses:
+  - circle_points() is a custom helper function — the KISS structure guideline for
+    R implementations prefers a flat Imports → Data → Plot → Save script; consider
+    inlining the three seq()/cos()/sin() blocks or accepting the minor deduction for
+    the (justified) reuse
+  - The two smallest labels (percentage sub-labels at size 3.2, e.g. '6%' in the top-right
+    and center regions) sit close to the smallest-comfortable size band — a slightly
+    larger size or more contrast against INK_SOFT would improve mobile legibility
+  - The circle-overlap coloring (alpha-blended green/lavender/blue) keeps most pairwise
+    and triple regions within a similar blue-purple hue family — distinguishable because
+    every region is numerically labeled, but leans on those labels rather than hue
+    alone
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "venn-basic · r · ggplot2 · anyplot.ai" centered at top in dark ink, comfortably sized (~50% of width). Three set-name labels ("Python (n=120)", "SQL (n=95)", "R (n=70)") in bold dark text sit just outside/at the edge of their circles. Region counts (67, 37, 27, 28, 13, 18, 12) in bold dark text, with smaller percentage sub-labels below each in a softer gray. All text reads clearly against both the off-white page background and the pastel circle fills.
+      Data: Three overlapping circles filled with the Imprint palette — Python = #009E73 (brand green, largest circle, area-proportional to n=120), SQL = #C475FD (lavender, medium), R = #4467A3 (blue, smallest, proportional to n=70). Overlap regions show alpha-blended combinations (teal-lavender, teal-blue, purple-blue, and a deeper blue at the triple intersection).
+      Legibility verdict: PASS — no light-on-light text, no clipping observed at the canvas edges (verified at both full resolution and the 400px thumbnail).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and set-name labels, now rendered in light ink (#F0EFE8) and soft gray percentages (#B8B7B0) — both clearly legible against the dark page and against the darker, more saturated circle fills used in this theme.
+      Data: Same three Imprint hues (#009E73 green, #C475FD lavender, #4467A3 blue) applied to the same circle geometry; circle areas and region layout are pixel-identical to the light render. The alpha-blended overlap shades read slightly differently only because they composite against the dark page background, which is expected/inherent to this alpha-blending technique — no data value in the fill scale changed between themes.
+      Legibility verdict: PASS — no dark-on-dark text found; all numbers, percentages, and set labels are clearly visible in light ink against the dark circle fills and page background. Brand green Python circle remains clearly identifiable.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes and at 400px thumbnail;
+          smallest percentage sub-labels are on the small side
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collides with other text or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Circles and region fills clearly visible at both densities
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Every region carries an explicit numeric label, so identification
+          never relies on hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagram fills a well-balanced majority of the 2400x2400 canvas, no
+          cut-off elements
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes needed for a Venn diagram; set labels carry n=
+          counts
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
+          in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Area-proportional circles + custom size hierarchy is clearly above
+          library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void, no grid, generous balanced margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bolded, larger triple-overlap count creates a clear focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3-set Venn diagram with overlapping circles
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Counts, percentages, transparency, proportional area, set totals
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Region labels correctly positioned relative to circle geometry
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact match; no separate legend needed since labels
+          sit on circles
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 7 regions of a 3-set Venn shown with distinct, non-degenerate
+          values
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible tech-skill-overlap scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Inclusion-exclusion arithmetic checked and internally consistent
+          (all exclusive counts non-negative, percentages sum to 100%)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear script, but defines a small circle_points() helper
+          reused 3x
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no randomness needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2/dplyr/ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No over-engineering, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_polygon + coord_fixed + theme_void + dplyr piping is correct,
+          idiomatic ggplot2
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Manual polygon-based Venn is a generic geometric technique, not ggplot2-unique,
+          though well executed
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

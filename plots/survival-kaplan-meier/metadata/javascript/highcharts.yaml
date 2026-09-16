@@ -1,0 +1,251 @@
+library: highcharts
+language: javascript
+specification_id: survival-kaplan-meier
+created: '2026-09-09T19:56:02Z'
+updated: '2026-09-09T20:01:08Z'
+generated_by: claude-sonnet
+workflow_run: 34396901914
+issue: 2441
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/javascript/highcharts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Rigorous statistics implemented from scratch: proper Kaplan-Meier estimator with
+    Greenwood confidence intervals and a Mantel-Cox log-rank test (with its own erf
+    approximation) — no shortcuts or fabricated numbers.'
+  - 'Creative, correct workaround for the missing highcharts-more module: hand-built
+    step-shaped confidence-band polygons via the core SVGRenderer, plus a custom SVGRenderer.prototype.symbols.tick
+    shape for censored observations — idiomatic use of Highcharts'' low-level API
+    rather than faking the feature.'
+  - Full theme-adaptive chrome in both renders; categorical data colors (green/lavender)
+    are pixel-identical between light and dark, and all text remains legible on both
+    backgrounds.
+  - 'Clear data storytelling: two comparably-sized groups with a visible survival
+    gap, per-group median markers, a median reference line, and the log-rank p-value
+    surfaced directly in the subtitle.'
+  - Exact spec-mandated title format and legend labels matching the two bearing groups;
+    step function (not smoothed) correctly represents discrete event times.
+  weaknesses:
+  - The two 95% CI bands overlap for roughly months 13-27 and blend into a slightly
+    muddy gray-green patch; a touch less fill opacity or a thin outline stroke on
+    each band would keep group identity crisper through the overlap.
+  - The script leans on several small helper functions (kaplanMeier, logRankTest,
+    bandOutline, survivalAt, medianSurvival) rather than a flatter top-to-bottom script
+    — justified by the underlying statistics, but more structure than the CQ-01 'no
+    functions' ideal.
+  - The spec's optional 'at-risk table below the plot' suggestion is omitted; not
+    required, but would round out a clinical-style KM plot.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "survival-kaplan-meier · javascript · highcharts · anyplot.ai" in bold dark ink, clearly visible; subtitle with the log-rank χ² and p-value in soft gray; x-axis "Months in Service" and y-axis "Survival Probability" titles and percent-formatted tick labels all in dark/soft-dark ink, fully legible; subtle light gridlines; legend below the plot with "Standard Bearing" / "Reinforced Bearing" swatches, clearly readable.
+      Data: Two step curves — green (Standard Bearing) and lavender/purple (Reinforced Bearing) — first series confirmed as brand green #009E73. Shaded confidence bands in matching translucent colors trail each curve, overlapping into a blended gray-green zone mid-plot. White vertical tick marks along each curve indicate censored observations. A black dashed horizontal "Median" line sits at 50%, with thin dotted vertical lines in each series' color marking that group's median survival time.
+      Legibility verdict: PASS — all text reads clearly against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, subtitle, axis titles, tick labels, and legend now rendered in off-white / light-gray ink; gridlines subtle and still visible against the dark surface.
+      Data: The same green and lavender curves and confidence bands appear with identical hex values to the light render — only the chrome (background, text, grid) flipped. Censoring tick marks are still white and clearly visible against the dark background. The median dashed line and per-group dotted median markers are rendered in light tones and remain legible.
+      Legibility verdict: PASS — no dark-on-dark failures; all text and data elements are clearly distinguishable from the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set from tokens (title 22px, axis titles
+          16px, ticks/legend 14px); readable in both themes, no overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap; legend, axis labels, and title are all clear of
+          the plot area
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3px step lines are prominent; censoring tick markers are small but
+          distinct against the line
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender pairing is CVD-safe and high-contrast; not reliant
+          on red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills a large, balanced portion of the canvas; legend sits
+          close to the plot, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Months in Service" and "Survival Probability" (percent-formatted
+          ticks) are descriptive with implicit units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 (brand green), second is Imprint position
+          2 (#C475FD); backgrounds and chrome are theme-correct in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Confidence bands, custom censoring markers, and per-group median
+          lines go clearly beyond a configured default, though short of full publication
+          polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: Subtle grid and minimal chrome; some refinement visible (thin lines,
+          generous whitespace) but not maximally polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        comment: The p-value subtitle plus per-group median markers and diverging
+          curves give the viewer a clear, guided comparison
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct step-function Kaplan-Meier survival plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Step function, CI bands, censoring ticks, group comparison + legend,
+          median annotation, and log-rank p-value are all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = time (months), Y = survival probability; axes cover the full
+          0-60 month / 0-100% range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the exact mandated format; legend labels match the
+          two group names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both events and censoring, two visibly different survival trajectories
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible reliability-engineering scenario (bearing time-to-failure)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Failure rates and resulting ~22/~47 month medians over a 60-month
+          study are realistic for mechanical components
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        comment: Flat top-level script but relies on several small helper functions,
+          needed for the KM/log-rank math
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG RNG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only window globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or interactivity; complexity is justified by the statistics
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Highcharts.chart("container", ...) call with animation disabled
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of the core API: tokens-driven theming, plotOptions,
+          plotLines, and correct animation/credits setup'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: Custom SVGRenderer symbol registration and hand-drawn path overlays
+          are genuinely distinctive to Highcharts' renderer API
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kaplan-meier-estimation
+  - log-rank-test
+  styling:
+  - publication-ready
+  - alpha-blending

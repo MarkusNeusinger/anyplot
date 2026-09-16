@@ -1,0 +1,244 @@
+library: chartjs
+language: javascript
+specification_id: subplot-grid
+created: '2026-09-09T18:58:16Z'
+updated: '2026-09-09T19:13:34Z'
+generated_by: claude-sonnet
+workflow_run: 34391740221
+issue: 2782
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/chartjs/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Shared x-axis config (identical tick callback + title) explicitly reused across
+    Panels 1 & 2, directly demonstrating the spec's 'shared axes for comparison' requirement
+    — called out in an explanatory caption
+  - Elevated card panels (rounded corners, dedicated background) plus a gradient area
+    fill under the closing-price line add real visual polish beyond default Chart.js
+    styling
+  - Gain/loss semantic-exception coloring on the return histogram with a custom-built
+    legend (generateLabels) clearly communicating the color mapping
+  - Deterministic LCG-based data generation, fully reproducible
+  - All four panels correctly theme-adaptive; data colors identical between light
+    and dark renders
+  - Canvas gate passed; animation disabled on all four charts; mount-node contract
+    respected
+  weaknesses:
+  - At the 400px mobile thumbnail, tick labels across all four panels become quite
+    small/dense — inherent to a 4-panel dashboard but could be tightened further (e.g.
+    fewer x tick labels)
+  - Scatter markers (radius 4.5px) are only moderately prominent for a sparse ~60-point
+    dataset — could be sized larger per the sparse-data heuristic
+  - Dashboard still reads as four largely independent panels without one dominant
+    focal point beyond the gain/loss coloring; a stronger visual hierarchy would push
+    storytelling further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) page background with slightly lighter elevated card backgrounds (#FFFDF6-ish) behind each of the 4 rounded panels.
+      Chrome: Bold dark-ink title "subplot-grid · javascript · chartjs · anyplot.ai" centered at top, italic soft-ink caption explaining the shared/independent axis split, dark panel titles ("Closing Price", "Trading Volume", "Daily Return Distribution", "Price vs. Volume"), soft-ink axis titles and tick labels — all clearly legible against the light background.
+      Data: Panel 1 green line with a soft green gradient area fill under the closing price; Panel 2 blue volume bars; Panel 3 green/red gain-loss histogram bars with a custom legend ("Gain (≥0%)" / "Loss (<0%)"); Panel 4 lavender scatter of price vs. volume. First series is Imprint brand green (#009E73) as required.
+      Legibility verdict: PASS — no light-on-light issues found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) page background with subtly lighter elevated card backgrounds behind each panel.
+      Chrome: All titles, caption, axis titles and tick labels flip to light ink and remain fully readable; no dark-on-dark failures observed anywhere in the four panels or the legend.
+      Data: Green line + gradient fill, blue bars, green/red histogram bars, and lavender scatter points are pixel-identical in hue to the light render — only chrome (background, text, grid, card fill) flipped, confirming correct theme-adaptive implementation.
+      Legibility verdict: PASS — no dark-on-dark issues found.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Readable in both themes at full res; mobile-thumbnail tick labels
+          are dense but this is an inherent 4-panel-dashboard tradeoff
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Scatter markers slightly small (4.5px) for a sparse ~60-point panel
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe palette, redundant text labels on gain/loss legend
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); good proportions; nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units ($, Shares, Sessions, Return %)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series brand green; correct gain/loss semantic exception; correct
+          theme backgrounds
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Elevated cards + gradient fill lift it above defaults, but overall
+          still a fairly conventional dashboard layout
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Rounded card framing, generous gaps and per-chart-type grid choices;
+          no further typographic refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Caption + gain/loss coloring guide the reader, but no single dominant
+          focal point across the 4 panels
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct subplot-grid with distinct plot types per cell
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Now explicitly demonstrates shared x-axis (Panels 1-2, identical
+          tick/title config) alongside independent axes (Panels 3-4) — fixes attempt
+          1's gap
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct in all four panels
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match data semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Price, volume, return distribution, and price/volume correlation
+          all covered
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral financial trading dashboard
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible price/volume/return magnitudes
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Minimal helpers (lcg, gaussian, makeCell), no over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only used globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false on all 4 charts
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of mixed chart types, per-axis config, canvas gradient
+          callback
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Gradient area fill, custom generateLabels legend, tick-skipping callback,
+          categoryPercentage/barPercentage tuning
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - gradient-fill
+  - alpha-blending

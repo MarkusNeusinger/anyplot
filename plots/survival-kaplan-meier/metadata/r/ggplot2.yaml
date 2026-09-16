@@ -1,0 +1,233 @@
+library: ggplot2
+language: r
+specification_id: survival-kaplan-meier
+created: '2026-09-09T19:48:55Z'
+updated: '2026-09-09T19:52:21Z'
+generated_by: claude-sonnet
+workflow_run: 34396658350
+issue: 2441
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - Stairstep confidence bands built with geom_rect (not geom_ribbon) — correctly
+    represents the step function instead of a misleading linear-interpolated ribbon
+  - 'Faithful, idiomatic KM implementation: survival::survfit/survdiff, curves anchored
+    at t=0/surv=1, censored observations marked with conventional cross ticks'
+  - Theme-correct chrome in both renders; Imprint palette applied in canonical order
+    with identical data colors across light/dark
+  - 'Clean layout: horizontal-only gridlines, in-plot legend that never collides with
+    the data, descriptive axis labels with units and percentage y-axis formatting'
+  - Log-rank test p-value included as subtitle, adding immediate statistical context
+    to the visual comparison
+  weaknesses:
+  - Censoring tick marks overlap/cluster tightly in dense regions (~20-24 months for
+    both arms), making individual censoring events hard to distinguish
+  - Overlapping CI bands where the two curves cross (~5-9 months) create a slightly
+    muddied blended color region
+  - No median-survival annotation or at-risk table, both suggested (not required)
+    by the spec — would strengthen data storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1
+      Chrome: Title, subtitle (log-rank p-value), axis titles, tick labels, and legend all in dark ink on the light surface — all readable
+      Data: Standard care = brand green #009E73, New therapy = lavender #C475FD; matching semi-transparent CI stairstep bands; cross-shaped censoring ticks
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17
+      Chrome: Title, subtitle, axis titles, tick labels, and legend flipped to light ink on the dark surface — all readable, no dark-on-dark failures
+      Data: Colors identical to light render (green #009E73, lavender #C475FD) — only chrome flipped
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes, explicit font sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend never collides with curve data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Censoring ticks cluster tightly in dense regions (~20-24 months)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender pairing is CVD-safe, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas passed gate, good proportions, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units, percent-formatted y-axis
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, correct theme backgrounds both renders
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Consistent custom palette, elevated legend background, clean composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Vertical gridlines dropped, subtle horizontal grid, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: p-value subtitle gives statistical context; no additional emphasis
+          annotation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Kaplan-Meier step plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Step function, CI bands, censoring ticks, group colors+legend, log-rank
+          p-value all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on x, survival probability on y, axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Mandated title format, legend labels match arm names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Covers step function, CI, censoring, multi-group comparison, statistical
+          test
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral clinical trial framing (Standard care vs New therapy)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 220 patients, 36-month follow-up — sensible clinical trial scale
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2/dplyr/survival/ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with ragg::agg_png device, plot-{THEME}.png
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct survival::survfit/survdiff usage, proper ggplot2 grammar
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: geom_rect stairstep CI bands instead of misleading geom_ribbon interpolation
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - survival-analysis
+  styling:
+  - alpha-blending
+  - publication-ready

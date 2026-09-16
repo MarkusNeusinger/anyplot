@@ -7,11 +7,14 @@ Tests the main API endpoints:
 - Hello endpoint (/hello/{name})
 """
 
+import asyncio
+from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
+from api.cache import clear_cache
 from api.main import app, fastapi_app
 from api.version import APP_VERSION
 from core.constants import LIBRARIES_METADATA
@@ -376,13 +379,16 @@ class TestPrewarmCache:
     the first request to a fresh instance pays the full DB roundtrip and
     the user-visible NumbersStrip + /specs page sit on placeholders. The
     hook populates the four metadata caches plus the two heavy user-facing
-    payloads (unfiltered gallery `filter:all` and /specs/map) before the
-    app starts serving.
+    payloads (unfiltered gallery `filter:all` and /specs/map). It runs as a
+    background task so the port opens while it works — uvicorn binds only
+    after the lifespan returns, and an awaited prewarm sat inside every
+    cold start (2.0–3.6 s of ~11 s, measured 2026-09-10).
     """
 
     async def test_prewarm_populates_all_caches(self) -> None:
         from api.main import _prewarm_cache
 
+        clear_cache()  # get_or_set_cache skips the factory on a hit; start from empty
         with (
             patch("api.main._refresh_stats", new=AsyncMock(return_value="STATS")) as m_stats,
             patch("api.main._refresh_libraries", new=AsyncMock(return_value="LIBS")) as m_libs,
@@ -390,7 +396,7 @@ class TestPrewarmCache:
             patch("api.main._refresh_specs_list", new=AsyncMock(return_value="SPECS")) as m_specs,
             patch("api.main._refresh_specs_map", new=AsyncMock(return_value="MAP")) as m_map,
             patch("api.main._refresh_filter_all", new=AsyncMock(return_value="FILTER")) as m_filter,
-            patch("api.main.set_cache") as m_set,
+            patch("api.cache.set_cache") as m_set,
         ):
             await _prewarm_cache()
 
@@ -409,6 +415,7 @@ class TestPrewarmCache:
         endpoints just fall back to lazy load on the first user request."""
         from api.main import _prewarm_cache
 
+        clear_cache()
         with (
             patch("api.main._refresh_stats", new=AsyncMock(side_effect=RuntimeError("db down"))),
             patch("api.main._refresh_libraries", new=AsyncMock(return_value="LIBS")) as m_libs,
@@ -416,7 +423,7 @@ class TestPrewarmCache:
             patch("api.main._refresh_specs_list", new=AsyncMock(return_value="SPECS")) as m_specs,
             patch("api.main._refresh_specs_map", new=AsyncMock(return_value="MAP")) as m_map,
             patch("api.main._refresh_filter_all", new=AsyncMock(return_value="FILTER")) as m_filter,
-            patch("api.main.set_cache") as m_set,
+            patch("api.cache.set_cache") as m_set,
         ):
             await _prewarm_cache()  # must not raise
 
@@ -427,6 +434,67 @@ class TestPrewarmCache:
         m_filter.assert_awaited_once()
         cached_keys = {call.args[0] for call in m_set.call_args_list}
         assert cached_keys == {"libraries", "languages", "specs_list", "specs_map", "filter:all"}
+
+    async def test_prewarm_shares_the_per_key_lock_with_requests(self) -> None:
+        """A key a request already computed is not computed again by the
+        prewarm — it goes through get_or_set_cache, not a bare set_cache, so
+        the two never duplicate the DB work or reset each other's refresh
+        clock."""
+        from api.cache import set_cache
+        from api.main import _prewarm_cache
+
+        clear_cache()
+        set_cache("stats", "ALREADY-THERE")
+        with (
+            patch("api.main._refresh_stats", new=AsyncMock(return_value="STATS")) as m_stats,
+            patch("api.main._refresh_libraries", new=AsyncMock(return_value="LIBS")),
+            patch("api.main._refresh_languages", new=AsyncMock(return_value="LANGS")),
+            patch("api.main._refresh_specs_list", new=AsyncMock(return_value="SPECS")),
+            patch("api.main._refresh_specs_map", new=AsyncMock(return_value="MAP")),
+            patch("api.main._refresh_filter_all", new=AsyncMock(return_value="FILTER")),
+        ):
+            await _prewarm_cache()
+
+        m_stats.assert_not_awaited()
+        clear_cache()
+
+    async def test_lifespan_does_not_wait_for_the_prewarm(self) -> None:
+        """Startup finishes while the prewarm is still running (that is the
+        whole point: the port opens without it), and shutdown cancels what is
+        left before the DB engine is closed."""
+        import api.main as main
+
+        started = asyncio.Event()
+        release = asyncio.Event()
+
+        async def slow_prewarm() -> None:
+            started.set()
+            await release.wait()
+
+        @asynccontextmanager
+        async def noop_lifespan(_app):
+            yield
+
+        mcp_stub = MagicMock()
+        mcp_stub.lifespan = noop_lifespan
+        close_db = AsyncMock()
+
+        with (
+            patch("api.main.is_db_configured", return_value=True),
+            patch("api.main.init_db", new=AsyncMock()),
+            patch("api.main.close_db", new=close_db),
+            patch("api.main.mcp_http_app", mcp_stub),
+            patch("api.main._prewarm_cache", new=slow_prewarm),
+        ):
+            async with main.lifespan(fastapi_app):
+                # Startup returned; the prewarm is running, not finished.
+                await asyncio.wait_for(started.wait(), timeout=1)
+                assert main._prewarm_task is not None
+                assert not main._prewarm_task.done()
+
+        # Shutdown cancelled the prewarm and only then closed the engine.
+        assert main._prewarm_task is None
+        close_db.assert_awaited_once()
 
     async def test_prewarm_filter_all_key_matches_endpoint_cache_key(self) -> None:
         """The prewarm must write the exact key the /plots/filter endpoint

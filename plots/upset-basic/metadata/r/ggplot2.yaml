@@ -1,0 +1,253 @@
+library: ggplot2
+language: r
+specification_id: upset-basic
+created: '2026-09-09T21:04:30Z'
+updated: '2026-09-09T21:14:37Z'
+generated_by: claude-sonnet
+workflow_run: 34404168661
+issue: 5250
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - Correct three-panel UpSet composition (horizontal set-size bars, top intersection-cardinality
+    bars, dot-matrix) assembled with patchwork::plot_layout, matching the canonical
+    UpSet layout precisely
+  - Intersection degree is encoded through a genuine continuous imprint_seq gradient
+    (brand green → blue) on the connected dots and lines, giving real visual hierarchy
+    without chartjunk
+  - Realistic genomics dataset built from a shared latent liability so higher-order
+    intersections naturally emerge — good coverage across degrees 1–6, from single-set
+    exclusives to the full 6-way overlap
+  - Theme-adaptive chrome and Imprint palette are fully correct and identical in structure
+    across both renders; no clipping, no overlap, no dark-on-dark/light-on-light failures
+  - Subtle alternating row striping in the matrix panel aids row-tracking readability
+    without adding visual clutter
+  weaknesses:
+  - Axis titles "Set Size" and "Elements" could add explicit units/context (e.g. "Set
+    Size (genes)") for full clarity, though the implied count semantics are acceptable
+    for this plot type
+  - Data storytelling relies mainly on size-sorting plus degree-color; no callout
+    highlights the single most notable intersection (not spec-required, but would
+    push distinctiveness further)
+  - The degree legend uses a continuous colorbar for an inherently discrete integer
+    variable (1–6); a discretely stepped legend would communicate “degree” slightly
+    more precisely, though the current gradient is still clear and spec-compliant
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "upset-basic · r · ggplot2 · anyplot.ai" in dark ink at top-left; horizontal set-size bar chart on the left ("Set Size" axis, reversed 750→0 scale); vertical intersection-size bar chart on top ("Elements" axis); dot-matrix in the center with set-name row labels (RNA-seq, ATAC-seq, ChIP-seq, Proteomics, Methylation, SNP-array); a boxed "Sets combined" gradient legend (1–6) on the right.
+      Data: First/lowest-degree dots and all set-size/intersection bars render in brand green (#009E73); connected-dot lines shift from green to blue (#4467A3) as intersection degree increases, culminating in a deep-blue 6-way intersection column on the right; unconnected dots are shown as small muted-gray circles with alpha ~0.28 to indicate non-membership.
+      Legibility verdict: PASS — title, axis titles, tick labels, row labels, and legend text are all clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, same panel layout (set-size bars left, intersection bars top, dot-matrix center, legend right), all text and axis lines now rendered in light ink/gray tones appropriate for the dark surface; matrix row striping shows as a slightly lighter charcoal band on alternating rows.
+      Data: Data colors are pixel-identical to the light render — green for low-degree/single-set bars and dots, transitioning to blue for higher-degree intersections; unconnected dots remain muted gray, still distinguishable against the dark background.
+      Legibility verdict: PASS — all titles, axis labels, tick labels, row labels, and legend text are clearly visible in light color against the dark background; no dark-on-dark failures detected; brand green and blue both remain visually distinct from the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes; no overflow
+          or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Dot sizes (member 3.4 vs non-member 2.6@alpha 0.28) and line widths
+          well adapted to the 15x6 matrix density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue gradient plus muted-gray non-membership dots give strong
+          contrast, not reliant on hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced 3-panel proportions, blank corner is conventional UpSet
+          layout, legend adjacent to plot, no cut-off content
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Set Size" and "Elements" are descriptive for count-based UpSet
+          axes'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/degree-1 series is #009E73; continuous degree encoding correctly
+          uses imprint_seq (green→blue); theme-correct backgrounds/chrome in both
+          renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful degree-gradient coloring and clean multi-panel composition,
+          clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Ticks removed, grid minimized to single subtle axis per panel, generous
+          whitespace, subtle row striping
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size-sorted bars plus degree-color create clear visual hierarchy,
+          though no explicit callout on the standout intersection
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct UpSet plot with all three canonical panels
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sorted-by-size intersections, connected/unconnected dots, degree
+          shading, horizontal + vertical bars all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Rows=sets, columns=intersections, bar values match matrix correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches mandated pattern; legend labels match
+          degree semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows the full degree range (1 through 6-way overlap) with varied
+          intersection sizes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible genomics differential-expression scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Set sizes and intersection counts are proportionally sensible for
+          2500 genes across 6 assays
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no functions/classes, clear section comments
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) used
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, patchwork, ragg all actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality; complexity matches the multi-panel construction
+          needed
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave via ragg::agg_png at 8x4.5in/400dpi → exact 3200x1800 canvas
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ggplot2 grammar plus patchwork composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: patchwork::plot_layout with a custom ASCII design string and plot_annotation
+          for a shared title spanning panels is distinctive to the ggplot2/patchwork
+          ecosystem
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - patchwork
+  techniques:
+  - colorbar
+  - subplots
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - custom-colormap

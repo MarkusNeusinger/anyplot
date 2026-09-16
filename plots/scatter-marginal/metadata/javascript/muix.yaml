@@ -1,0 +1,252 @@
+library: muix
+language: javascript
+specification_id: scatter-marginal
+created: '2026-09-09T06:59:18Z'
+updated: '2026-09-09T07:12:23Z'
+generated_by: claude-sonnet
+workflow_run: 34320917759
+issue: 2005
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/muix/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Three-panel composite (top histogram, main scatter, right histogram) shares exact
+    axis domains and matched margins, achieving precise bin-to-axis alignment across
+    three separate MUI X chart instances — a real engineering solution to the library's
+    lack of native joint/marginal-plot support.
+  - Alpha-blended brand-green scatter points (0.65) reveal density in the 400-point
+    cloud, while marginal histograms use a subdued fill (0.32) that stays out of the
+    main plot's way, matching the spec's transparency and 'subtle marginal colors'
+    guidance closely.
+  - Deterministic seeded LCG + Box-Muller data generation produces a realistic, plausible
+    rainfall-vs-crop-yield relationship with a clear positive correlation and appropriate
+    agronomic scale.
+  - 'Theme handling is clean: identical data colors between light and dark renders,
+    both fully legible with correct #FAF8F1 / #1A1A17 backgrounds and thin page-background-colored
+    strokes separating overlapping marks/bars in both themes.'
+  weaknesses:
+  - X-axis tick labels are dense (every 50 mm, 19 labels) and become visually crowded/small
+    at the ~400px mobile thumbnail size — consider thinning the tick interval or constraining
+    tick count for small viewports.
+  - Design excellence is solid but not exceptional — no additional storytelling element
+    (e.g. a regression/trend line, correlation coefficient annotation, or highlighted
+    outlier) that would elevate the composite from 'info-complete' to 'insight-forward'.
+  - 'Minor header hygiene: the file''s leading comment block appears duplicated (two
+    ''// anyplot.ai'' header stacks) with the ''//# anyplot-orientation: square''
+    directive sandwiched between them instead of on its own line at the very top as
+    the style guide specifies — functionally harmless (the harness''s regex is multiline)
+    but worth cleaning up on the next touch.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), consistent across the title band, the two marginal-histogram panels, and the main scatter panel.
+      Chrome: Bold dark title "scatter-marginal · javascript · muix · anyplot.ai" centered at top, fully visible with no clipping. Axis titles "Annual Rainfall (mm)" (x) and "Crop Yield (t/ha)" (y) in dark ink, clearly readable. Tick labels in a slightly softer dark gray, readable; x-axis ticks (350–1,250 by 50s) are numerous and a bit small/dense at mobile thumbnail size but still legible at full resolution. Grid lines are thin and subtle, visible without dominating.
+      Data: Main scatter uses semi-transparent brand-green (#009E73-derived) circles with a thin off-white stroke separating overlapping points, clearly showing a positive rainfall/yield correlation with realistic scatter. Top and right marginal panels show histograms in a lighter, more transparent green, correctly binned and aligned to the main plot's x/y domains, with no axis chrome (intentionally minimal).
+      Legibility verdict: PASS — no light-on-light text; all chrome elements read clearly against the off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), consistent across title band, marginal panels, and main scatter panel.
+      Chrome: Title renders in white/light text, fully visible. Axis titles and tick labels render in light ink/soft-light tones, clearly legible against the dark background — no dark-on-dark failures observed. Grid lines are subtle light gray, visible but unobtrusive.
+      Data: Scatter points and marginal histogram bars use the identical brand-green hue and alpha values as the light render (only chrome — background/text/grid — flipped, as required). Density pattern and correlation read identically to the light version.
+      Legibility verdict: PASS — no dark-on-dark text; brand green remains vivid and clearly distinguishable from the near-black surface in both the scatter and the marginal bars.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, fully readable in both themes at
+          full resolution; x-axis tick labels (19 values, every 50mm) get visually
+          dense/small at the ~400px mobile thumbnail.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/label collisions; overlapping scatter points are natural
+          and mitigated with alpha + stroke.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker size (10) and alpha (0.65) well-tuned for 400-point density;
+          histogram bars clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue encoding, good contrast against both backgrounds, no red-green
+          reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Main scatter lower-left with top/right marginals precisely aligned;
+          no clipping at any canvas edge (verified via crops); canvas gate passed
+          at 2400x2400.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis labels descriptive with units (mm, t/ha).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series is Imprint brand green (t.palette[0]); backgrounds correct
+          in both themes; data colors identical between renders.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Custom alpha-blended palette and intentional main/marginal hierarchy;
+          above generic defaults but no extra polish (e.g. annotations, reference
+          lines).
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: Subtle grid, generous whitespace, hidden marginal axes; default MUI
+          X axis lines remain on the main plot.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        comment: Layout itself creates a clear focal point (main scatter emphasized
+          over subdued marginals), but no additional guiding element like a trend
+          line or callout.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter-with-marginal-distributions composite.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Lower-left main plot, top/right histograms, aligned axes, subtle
+          marginal color, alpha ~0.65 points — all spec notes satisfied.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = rainfall, Y = yield, both axes show full padded data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; no legend needed for single
+          series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows joint relationship plus both univariate marginal distributions
+          with visible shape/skew.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral agronomic dataset (rainfall vs. crop yield).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Rainfall 400-1250mm, yield 2.5-8 t/ha — sensible real-world magnitudes.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; small focused helper functions only.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG + Box-Muller, fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only BarChart and ScatterChart imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; appropriate complexity for the composite
+          layout.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct harness contract: default-exported component, skipAnimation
+          on both chart types, sized from ANYPLOT_SIZE.'
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Idiomatic use of band-scale axes, labelStyle/tickLabelStyle, margin
+          control, and sx overrides within the community API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        comment: Combining three chart instances via CSS grid to approximate a joint-plot
+          is a reasonable workaround for a chart type MUI X doesn't natively support,
+          but doesn't showcase library-unique features beyond that.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting

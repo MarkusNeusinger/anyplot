@@ -1,0 +1,254 @@
+library: ggplot2
+language: r
+specification_id: shap-summary
+created: '2026-09-09T07:28:49Z'
+updated: '2026-09-09T07:44:09Z'
+generated_by: claude-sonnet
+workflow_run: 34323612237
+issue: 2923
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - 'Repair attempt fixed the attempt-1 VQ-03 weakness: geom_jitter now uses shape=21
+    with an INK_SOFT stroke, so mid-value points (fill ≈ PAGE_BG at the diverging
+    midpoint) stay visible as a faint ring instead of vanishing into the background'
+  - New ★ prefix on the top-driver feature's y-axis label directly addresses the attempt-1
+    DE-03 feedback and gives the chart a clear focal point without adding clutter
+  - 'Correct spec-mandated blue=low/red=high diverging convention drawn from the Imprint
+    palette (#4467A3 blue, #AE3030 matte red), with the diverging midpoint correctly
+    theme-adaptive per the imprint_div formula'
+  - Features correctly sorted by mean |SHAP value| (most important at top); realistic,
+    neutral synthetic house-price dataset with plausible per-feature shapes (increasing/decreasing/hump)
+    and a sensible $k-scaled x-axis
+  - Theme-adaptive chrome, dashed zero-reference line, vertical jitter, and the exact
+    3200×1800 canvas are all correctly implemented and pixel-consistent data colors
+    across both renders
+  weaknesses:
+  - In the dark render, the diverging colorbar's mid-section renders at ~#1A1A17 (the
+    theme's PAGE_BG, per the imprint_div spec) sitting inside the elevated legend
+    card (#242420) — the two near-black tones create a visible dark 'hole' in the
+    middle of the gradient swatch that reads as a rendering glitch rather than a deliberate
+    neutral zone; consider giving the colorbar rect itself a thin INK_SOFT border/stroke
+    (independent of the data-point fix) so the gradient stays legible as a continuous
+    scale in dark mode
+  - The make_feature() helper function is reused for all 8 features — still deviates
+    from the CQ-01 'no functions, straight top-to-bottom script' KISS default from
+    attempt 1 (understandable DRY tradeoff, but unaddressed)
+  - Design Excellence is still close to a conventional SHAP beeswarm layout beyond
+    the new star callout and color reasoning — no further visual hierarchy techniques
+    (e.g. subtle row shading/emphasis band) were added on top of the label-prefix
+    fix
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1, not pure white.
+      Chrome: dark-ink title "shap-summary . r . ggplot2 . anyplot.ai" top-left (~67% of the panel width, within the 50-70% guideline); eight dark-ink y-axis feature labels (top feature prefixed with a star), gray x-axis title "SHAP Value (Impact on Predicted Price)" with $k-formatted ticks, dashed gray zero line, subtle per-row horizontal gridlines, and a "Feature value" High/Low colorbar legend on an elevated cream card. All chrome text is clearly legible against the light background.
+      Data: diverging blue (#4467A3, low) to red (#AE3030, high) fill on jittered circular points with a thin gray stroke; first-series/brand green is not applicable here since this is a continuous diverging scale, not categorical. Mid-value points show as faint pale rings rather than disappearing, thanks to the shape=21 stroke.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17, not pure black.
+      Chrome: title/axis/tick text flips to off-white/light-gray ink, gridlines and zero line flip to light tones, legend card flips to the dark elevated surface (#242420) with light text. All chrome text is clearly legible against the dark background; no dark-on-dark chrome failures.
+      Data: point fill colors are pixel-identical to light render (#4467A3 / #AE3030 diverging ends) — only chrome changed, confirming correct theme-adaptive implementation. One notable soft spot: the colorbar swatch's mid-section (fill = PAGE_BG = #1A1A17 per the imprint_div formula) sits inside the slightly-lighter dark legend card (#242420) and reads as a near-black "hole" in the middle of the gradient — harder to read as a continuous scale than the light-mode equivalent, though the scatter points themselves stay visible via their stroke ring.
+      Legibility verdict: PASS (chrome text fully legible; the colorbar-gradient softness noted above is a design/contrast nit, not a text-legibility failure).
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All chrome text legible in both themes at correct sizes matching
+          the style-guide table
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; dense point clustering is expected beeswarm behavior
+          mitigated by jitter+alpha
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Attempt-1 fix (shape=21 + INK_SOFT stroke) keeps mid-value points
+          visible as faint rings instead of vanishing into PAGE_BG
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red-blue diverging scale, not red-green; used for continuous data
+          only
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas, nothing clipped, title ~67% of panel width
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive x-axis title with units and $k-formatted ticks
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Imprint diverging endpoints and backgrounds correct, but dark-theme
+          colorbar mid-band (PAGE_BG) blends into the elevated legend card as a near-invisible
+          dark band
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful color reasoning and dollar-formatted ticks, but layout
+          stays close to a conventional SHAP beeswarm
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-only grid, reasonable margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: New star callout on the top-driver feature plus zero-line and color
+          direction add a clear focal point, up from attempt 1
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct jittered horizontal beeswarm scatter
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Importance sort, diverging color, zero line, vertical jitter all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=shap_value, y=feature (sorted), fill=normalized feature value
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labeled Feature value
+          with High/Low
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows importance order, direction/magnitude, and per-feature distribution
+          shape
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral house-price features
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: SHAP values and feature ranges are realistic for real-estate pricing
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: make_feature() helper reused for all 8 features; DRY but deviates
+          from the no-functions default (unchanged from attempt 1)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No over-engineering, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic geom_jitter, scale_fill_gradient2, guide_colorbar, label_dollar
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: shape=21 stroke compensation and star-prefix label substitution are
+          ggplot2-specific touches beyond generic usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting

@@ -45,6 +45,17 @@ export function langFromPath(pathname: string): string | undefined {
 }
 
 /**
+ * Parse the spec id from a pathname, returns undefined for the root path or
+ * when the first segment is a reserved top-level route.
+ */
+export function specIdFromPath(pathname: string): string | undefined {
+  const segments = pathname.split('/').filter(Boolean);
+  if (segments.length === 0) return undefined;
+  if (RESERVED_TOP_LEVEL.has(segments[0])) return undefined;
+  return segments[0];
+}
+
+/**
  * Central route registry — the single source of truth for app URLs.
  * Components navigate via `paths.*` instead of hardcoded strings; spec-detail
  * URLs go through `specPath` (also exposed as `paths.spec`).

@@ -1,0 +1,257 @@
+library: plotnine
+language: python
+specification_id: wireframe-3d-basic
+created: '2026-09-10T06:29:36Z'
+updated: '2026-09-10T06:55:43Z'
+generated_by: claude-sonnet
+workflow_run: 34445071277
+issue: 1015
+language_version: 3.13.15
+library_version: 0.15.8
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - Faithful adherence to plotnine's "no 3D workaround" rule — implements genuine
+    camera-projection math (elevation 30°/azimuth 45°) instead of faking 3D or falling
+    back to matplotlib, exactly as the library rules require.
+  - 'Depth-based alpha combined with painter''s-algorithm edge sorting creates a convincing
+    hidden-line-suppression effect: near-side mesh reads crisp, far-side mesh recedes,
+    giving real visual hierarchy.'
+  - 'Correct theme-adaptive chrome: identical brand-green mesh color across light/dark
+    renders, INK/INK_SOFT correctly applied to axis lines, ticks and labels, both
+    plot backgrounds match spec exactly (#FAF8F1 / #1A1A17).'
+  - Deterministic, well-commented code that explains non-obvious choices, e.g. picking
+    the (x=6, y=-6) axis corner specifically because it stays off the camera's view
+    axis instead of cutting through the densest part of the mesh.
+  - Physically plausible "drumhead vibration" framing with sensible cm/mm units and
+    a well-chosen 21x21 grid density that stays legible instead of turning into a
+    tangle.
+  weaknesses:
+  - In the upper-right region, the X-axis tick label '0' (and to a lesser extent '3')
+    lands very close to the Z-axis tick labels ('1'/'0'), crowding that area — increase
+    the separation between the X-tick offset (currently y=-9.6) and the Z-axis tick/leader
+    cluster, e.g. by pushing X-ticks further out or nudging Z-tick leaders away from
+    the axis corner.
+  - The far/top ridge of the wireframe fades to alpha≈0.08 in the depth cue, verging
+    on invisible in both renders — raise the alpha floor in scale_alpha_continuous
+    (e.g. to ~0.18-0.20) so the distant surface stays faintly legible instead of nearly
+    disappearing.
+  - Two small top-level helper functions (project, depth) deviate from the CQ-01 'no
+    functions' default — justified here by the manual 3D-projection math, but keep
+    them minimal if further edits are made.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct light-theme surface — not pure white.
+      Chrome: Title "wireframe-3d-basic · python · plotnine · anyplot.ai" centered at top in dark ink, clearly legible. Axis labels "X (cm)", "Y (cm)", "Z (mm)" in bold dark ink at the ends of their respective axis lines. Tick labels (-6..6 on X and Y, -1/0/1 on Z) rendered in soft grey ink; all are individually legible, though the X=0 and X=3 ticks sit close to the Z-axis tick cluster in the upper-right, creating a crowded (but not fully overlapping) area.
+      Data: Wireframe mesh in brand green (#009E73), forming a rippled "drumhead" bowl shape with grid lines in both x and y directions. Depth-based alpha makes near-side lines fully opaque and far-side (top ridge) lines fade to near-invisibility (~0.08 alpha) — a deliberate depth cue, though the top ridge borders on too faint.
+      Legibility verdict: PASS (all text readable; minor tick crowding noted as a weakness, not a legibility failure).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct dark-theme surface — not pure black.
+      Chrome: Title, axis labels, and tick labels flip to light ink (#F0EFE8 for labels, #B8B7B0 for axis lines/ticks) and remain clearly readable against the dark background — no dark-on-dark failures observed.
+      Data: Mesh color is identical brand green (#009E73) to the light render — only chrome (background, ink) flipped, as required. Same depth-fade behavior and same faint top ridge as in the light render.
+      Legibility verdict: PASS (all text readable against the dark background; same minor tick-crowding note as light render).
+  criteria_checklist:
+    visual_quality:
+      score: 23
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All text readable in both themes; X/Z tick labels crowd together
+          in the upper-right region
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: X-axis tick '0' sits very close to Z-axis tick '1', near-collision
+          but not a full overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Depth-fade alpha floor (~0.08) makes the far/top ridge of the mesh
+          nearly invisible in both renders
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue mesh against ink chrome, strong contrast, no red-green
+          reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed; good overall proportions; minor crowding
+          in tick region
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X (cm), Y (cm), Z (mm) all descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series uses #009E73, identical across themes; backgrounds
+          match #FAF8F1 / #1A1A17 exactly'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Genuine camera-projection math, painter's-algorithm depth sorting,
+          deliberate axis-corner placement — well above generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void, minimal partial axis frame, generous whitespace, no chart
+          junk
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Depth-fade creates clear near/far hierarchy and a legible focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct wireframe representation via legitimate manual 3D-to-2D projection,
+          per plotnine's no-3D-native-support rule
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid lines in both x/y directions, elevation 30/azimuth 45 camera,
+          all three axes labeled with ticks
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y/Z correctly mapped and shown across full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; no legend needed for single
+          series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers grid mesh, camera projection, axis frame and ticks; only a
+          partial (not full-box) axis frame
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral 'drumhead vibration' framing with sensible cm/mm
+          units
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: X/Y range -6..6 cm, Z displacement ~-1..1 mm, physically sensible
+          for the described context
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two small helper functions (project, depth) used, justified by the
+          manual projection math
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic linspace/meshgrid, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a manual 3D projection, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png at correct landscape dimensions
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Faithful use of plotnine's own geoms (geom_segment, geom_text, theme_void)
+          to build the projection rather than any workaround
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom camera-projection + depth-sorted alpha painter's algorithm
+          is a genuinely distinctive technique for a library with no native 3D support
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

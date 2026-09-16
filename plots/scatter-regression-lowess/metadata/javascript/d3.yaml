@@ -1,0 +1,258 @@
+library: d3
+language: javascript
+specification_id: scatter-regression-lowess
+created: '2026-09-09T06:46:30Z'
+updated: '2026-09-09T07:01:26Z'
+generated_by: claude-sonnet
+workflow_run: 34320231041
+issue: 2855
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/javascript/d3/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - 'Correct plot type and full spec compliance: LOWESS curve is visually distinct
+    (solid lavender line vs. green points), smoothing fraction (0.35) and marker alpha
+    (0.55) both sit inside the spec''s recommended ranges, and the fitted curve is
+    smooth with no overfitting oscillation.'
+  - Realistic, neutral agronomic dataset (nitrogen rate vs. grain yield) with a genuinely
+    non-monotonic response (rise, plateau, slight over-fertilization decline) that
+    gives LOWESS a real reason to exist over a linear fit.
+  - 'Clean theme handling: Imprint palette correct (green points, palette[1] curve,
+    identical between light/dark), warm off-white/near-black backgrounds correct,
+    all chrome (axes, gridlines, legend, title) readable in both renders with no dark-on-dark
+    or light-on-light issues.'
+  - Title auto-scales its font size to the mandated string length, axis labels are
+    descriptive with units, and the legend clearly labels both the scatter series
+    and the LOWESS fit including its frac parameter.
+  - Deterministic, dependency-free implementation (custom seeded LCG + tricube-weighted
+    local linear regression) that follows the D3 mount-node contract correctly.
+  weaknesses:
+  - 'The ''optimal-rate'' annotation added in this attempt''s fix (dashed vertical
+    line at the curve''s peak, a hollow lavender-ring marker circle, and an ''Optimal
+    ≈ 148 kg/ha'' text label — lines 137-154) does not appear anywhere in either rendered
+    PNG. Verified by recomputing the exact peak location from the implementation''s
+    own RNG/LOWESS algorithm (peak ≈ x=148.4, y=6.81) and cropping both plot-light.png
+    and plot-dark.png tightly around that pixel: only the ordinary green data points
+    and the purple curve are visible — no dashed guide line, no ringed marker, no
+    text. The code appends these elements unconditionally right after the curve path
+    and before the legend (which DOES render), so this isn''t a thrown exception halting
+    the script; the elements are simply not visibly present in the final screenshot.
+    This is dead/non-functional code shipping to production — either fix whatever
+    is suppressing these three appended elements (check stacking/transform context,
+    confirm `t.palette[1]` and `t.ink` resolve to valid color strings at that point
+    in execution, and re-screenshot to confirm the annotation actually appears) or
+    remove the block entirely rather than leaving inert code in the snippet.'
+  - Because the intended focal-point annotation never renders, the chart has no actual
+    visual-hierarchy device beyond the curve itself — the subtitle provides some narrative
+    framing, but the deliberate data-storytelling attempt (highlighting the optimal
+    nitrogen rate) delivers no visible benefit to the viewer.
+  - 'Distinctive-feature usage is modest for D3: aside from the (non-rendering) annotation,
+    the implementation is a fairly standard scatter + line-fit composition close to
+    the library skeleton pattern, without leaning on any D3-specific capability beyond
+    scales/axes/join.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Nitrogen Fertilization Response · scatter-regression-lowess · javascript · d3 · anyplot.ai" is centered and bold at the top, with a lighter subtitle below it ("Locally weighted regression smooths a noisy, non-monotonic yield response"). X-axis labeled "Nitrogen Applied (kg/ha)" (0-280ish), Y-axis labeled "Grain Yield (t/ha)" (0-8+). Subtle horizontal gridlines only (y-axis), no vertical gridlines, axis domain lines and tick labels rendered in a soft dark ink. A legend in the upper right lists "Field observations" (green dot) and "LOWESS fit (frac = 0.35)" (lavender line). All text is clearly legible against the light background — no light-on-light issues.
+      Data: 140 semi-transparent green (#009E73) points forming a rising-then-plateauing-then-slightly-declining cloud, with a solid lavender (#C475FD) LOWESS curve smoothly tracing the central tendency through the noise, peaking around x≈148-150. No visible peak-marker circle, dashed guide line, or "Optimal ≈ ... kg/ha" text label at that peak, despite this annotation being present in the source code (see weaknesses) — confirmed by cropping tightly around the algorithmically-computed peak pixel location.
+      Legibility verdict: PASS (all chrome legible; the missing annotation is a content/rendering defect, not a legibility failure).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title/subtitle/axis labels/legend layout as the light render, now rendered in light ink tones (off-white/soft gray) that read clearly against the dark background. Gridlines are a subtle light-on-dark hairline, still visible but not dominant.
+      Data: Same 140 green (#009E73) points and lavender (#C475FD) LOWESS curve as the light render — data colors are identical between themes, only chrome (background/text/grid) flipped, as required. Same absence of the peak annotation (dashed line/marker/text) confirmed at the same computed pixel location as the light render.
+      Legibility verdict: PASS (no dark-on-dark text; every title/axis/tick/legend element is clearly readable).
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes, title auto-scaled to length, fully readable
+          in both themes with no dark-on-dark/light-on-light issues
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers and curve clearly distinguishable; intended peak marker meant
+          to highlight a key point never renders
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender pairing has good contrast, not a red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 3200x1800 canvas, no overflow or clipping, balanced proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct backgrounds, consistent data colors
+          across themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Custom palette and typography hierarchy present, but the one deliberate
+          hierarchy device (peak annotation) fails to render
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Domain spines removed, subtle y-only gridlines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtitle gives some narrative framing, but the intended focal-point
+          annotation (optimal nitrogen rate) never appears on screen
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Scatter + LOWESS regression curve
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct curve color, frac=0.35 and alpha=0.55 within recommended
+          ranges, smooth non-oscillating fit, descriptive title mentions LOWESS
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format, legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Genuinely non-monotonic relationship (rise, plateau, decline) that
+          justifies LOWESS over a linear fit
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Nitrogen fertilization vs. grain yield is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible agronomic value ranges for both axes
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes, small necessary helper functions only
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded deterministic LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3, no extraneous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Ships a block of code (peak annotation) that never manifests visually
+          — dead functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct #container mount contract'
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic scales/axes/join pattern, curveMonotoneX for the fit line
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Custom tricube-weighted LOWESS implementation shows some technical
+          craft, but overall composition stays close to a standard scatter+line pattern
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - publication-ready

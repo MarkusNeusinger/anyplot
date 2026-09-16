@@ -1,0 +1,255 @@
+library: highcharts
+language: javascript
+specification_id: sparkline-basic
+created: '2026-09-09T18:24:21Z'
+updated: '2026-09-09T18:39:42Z'
+generated_by: claude-sonnet
+workflow_run: 34387888786
+issue: 1011
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'The repair fully resolves the attempt-1 weakness: the areaspline now occupies
+    roughly the middle third of the canvas height (padded yAxis min/max by a full
+    data-range, capped fill threshold near the data minimum), restoring the sparkline''s
+    defining compact, wide-and-short silhouette with generous, balanced whitespace
+    above and below'
+  - 'Flawless theme adaptation: identical Imprint green (#009E73) line, gradient fill,
+    and last-point marker across both renders — only chrome (title ink, min/max marker
+    fill via t.ink) flips; backgrounds are exactly the correct warm off-white (#FAF8F1)
+    / near-black (#1A1A17)'
+  - 'Faithful ''no chrome'' execution: xAxis/yAxis hidden, no ticks, no gridlines,
+    no legend — matches the spec''s core minimalism requirement'
+  - 'Thoughtful optional-feature coverage: soft gradient area fill (28%→2% opacity),
+    neutral ink-colored dots (not semantic red/green) marking min/max so they don''t
+    imply a value judgement on a neutral extremum, and an emphasized last point with
+    an ''80.1K'' current-value label positioned with enough right margin to avoid
+    clipping'
+  - Deterministic, seeded LCG data generator producing a plausible Daily Active Users
+    trend (30K-90K range); clean single-purpose script with correct mandated title
+    format and auto-shrinking fontsize for the long title string
+  weaknesses:
+  - Only the last point carries a value label — the spec's 'highlight first/last points
+    for reference' note is only half-applied (the first point is not marked with its
+    own label, only a neutral dot). Low priority since the note is explicitly optional.
+  - 'The gradient fill and per-point marker overrides are nice touches but not deeply
+    distinctive to Highcharts specifically — a more library-unique feature (e.g. Highcharts''
+    built-in `chart.type: ''sparkline preset''`-style compactness via `plotOptions`
+    inheritance, or a rendered `Highcharts.SparklineSeriesOptions` helper) could push
+    Library Mastery higher.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1), confirmed — not pure white, not dark.
+      Chrome: title "Daily Active Users · sparkline-basic · javascript · highcharts · anyplot.ai" in dark ink, top-left aligned, fully readable and comfortably contained within the top margin (not clipped). No axes, ticks, gridlines, or legend present (by design, per spec). A small dark dot marks the series minimum, another marks the maximum; the last point is a larger brand-green dot with a bold "80.1K" data label to its right, fully visible before the right canvas edge.
+      Data: a single brand-green (#009E73) areaspline line with a soft green-to-transparent gradient fill beneath it, tracing a 60-day upward trend with local dips and peaks. The line/fill band now occupies roughly the middle third of the canvas height, with large balanced whitespace above and below — the compact "wide and short" sparkline silhouette the spec calls for. First/primary series color is #009E73, confirmed.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17), confirmed — not pure black, not light.
+      Chrome: title in light ink (#F0EFE8), clearly readable against the dark surface — no dark-on-dark issue. Min/max marker dots flip to a light/white fill (still t.ink-derived) so they remain visible on the dark background; the "80.1K" label is in light ink and fully legible.
+      Data: identical line shape, brand-green line/gradient fill, band proportions, and last-point marker color to the light render — only the chrome (title, min/max dot fill, label ink) flipped. Confirmed.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title and '80.1K' value label readable in both themes; title fontsize
+          auto-scales for the long mandated string
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, data label, markers, and the line/fill
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 60-point line with thin 2.5px stroke, well-sized reference dots and
+          last-point marker, appropriate for the density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: High contrast green line against both surfaces; not reliant on red/green
+          alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Attempt-1 weakness fully resolved: yAxis padded by a full data-range
+          and fill threshold capped near the data minimum, so the band now occupies
+          roughly the middle third of the canvas with balanced whitespace top/bottom
+          — nothing cut off or overflowing'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title present and correctly formatted; axes intentionally hidden
+          per spec's minimalism requirement
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; both backgrounds theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Restoring the compact silhouette plus the gradient fill and neutral
+          marker treatment now reads as a genuinely refined sparkline rather than
+          a full-canvas area chart
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Chrome-free, subtle gradient, generous and now-intentional whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Last-point value callout and min/max reference dots create clear
+          visual hierarchy pointing at the current value and trend range
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct single-line, axis-free sparkline with the compact identity
+          now restored
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: No axes/labels/gridlines, compact wide-and-short band achieved within
+          the fixed canvas, optional min/max and last-point highlights and area fill
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 60 values plotted correctly, no truncation
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; no legend
+          needed for single series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Implements area fill, min/max highlight, and last-point emphasis;
+          missing only the optional first-point highlight
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily Active Users metric, plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 30K-90K range is sensible for a DAU metric
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, only a small deterministic LCG helper
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; only browser globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity, appropriately complex
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Renders via Highcharts.chart('container', …) with animation disabled,
+          per mount-node contract
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic areaspline + dataLabels + per-point marker override usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Highcharts.color().setOpacity() gradient fill and per-point marker
+          overrides are nice touches but not deeply distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - gradient-fill
+  - alpha-blending

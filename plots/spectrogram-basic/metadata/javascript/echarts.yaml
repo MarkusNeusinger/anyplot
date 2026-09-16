@@ -1,0 +1,248 @@
+library: echarts
+language: javascript
+specification_id: spectrogram-basic
+created: '2026-09-09T18:18:51Z'
+updated: '2026-09-09T18:33:35Z'
+generated_by: claude-sonnet
+workflow_run: 34387558144
+issue: 2927
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'The Review 1 blocking issue is fully fixed: the visualMap colorbar and its "0
+    dB"/"-80 dB" labels now sit cleanly in the right margin (grid.right widened, visualMap
+    moved to right: 20), with zero overlap onto the heatmap in either theme.'
+  - New subtitle ("Linear chirp 200 Hz → 3000 Hz rising through a broadband noise
+    floor") adds a storytelling anchor that names what the viewer is looking at, lifting
+    Design Excellence above a bare heatmap+colorbar.
+  - Hand-rolled STFT (Hann window + radix-2 Cooley-Tukey FFT) with a deterministic
+    LCG noise generator produces a textbook linear-chirp spectrogram entirely in-memory,
+    with no RNG and no external DSP dependency.
+  - Correct use of the Imprint sequential colormap (t.seq, brand green → blue) via
+    visualMap, with data colors identical between the light and dark renders and fully
+    theme-correct chrome in both.
+  - Evenly-sampled, non-overlapping axis tick labels (Time in seconds, Frequency in
+    Hz) with clear units and a well-balanced canvas fill (~65-70%).
+  weaknesses:
+  - 'Design Excellence is still close to a well-configured default: the layout/coloring
+    itself wasn''t restyled this round, only the subtitle was added and the margin
+    bug was fixed. A markLine or thin annotation tracing the chirp ridge would push
+    Data Storytelling further.'
+  - The chirp signal is clean but the only feature shown is a single rising tone plus
+    flat broadband noise; a second overlapping harmonic or a brief amplitude modulation
+    would demonstrate more of what a spectrogram can reveal (Feature Coverage).
+  - Library Mastery is still generic beyond the idiomatic heatmap+visualMap pattern
+    (progressive rendering aside); no ECharts-distinctive feature (e.g. custom tooltip
+    formatter for dB values, markLine/markArea) has been added yet.
+  - fft() and nextNoise() are necessary helper functions for a from-scratch STFT,
+    but they remain a deviation from the flat import→data→plot KISS script structure
+    expected elsewhere in the catalog.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "spectrogram-basic · javascript · echarts · anyplot.ai" centered at top, with a lighter dark-ink subtitle "Linear chirp 200 Hz → 3000 Hz rising through a broadband noise floor" beneath it. "Time (s)" axis title below the x-axis, "Frequency (Hz)" rotated along the y-axis, both in dark ink. Evenly-sampled, non-overlapping tick labels (0.00–2.80 s / 0–3719 Hz). The visualMap colorbar sits cleanly in the right margin, fully clear of the heatmap, labeled "0 dB" (top) / "-80 dB" (bottom) with a green-to-blue-violet gradient swatch — no overlap onto plot data (Review 1's blocking issue is fixed).
+      Data: Speckled teal-green noise floor (Imprint sequential low end) crossed by a smooth blue-violet diagonal chirp ridge (Imprint sequential high end) rising from ~200 Hz at t=0 to ~2900 Hz at t≈2.9 s — exactly matching the described chirp.
+      Legibility verdict: PASS — all title, subtitle, axis, tick, and colorbar text is clearly readable against the light background; no light-on-light text found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout as the light render, with title/subtitle/axis titles now in light ink and tick/colorbar text in a softer light gray. Colorbar remains cleanly clear of the heatmap in the right margin.
+      Data: The teal-green noise floor and blue-violet chirp ridge are visually identical to the light render (verified by direct crop comparison of the colorbar region) — only chrome flipped, confirming the sequential data colors are theme-independent.
+      Legibility verdict: PASS — no dark-on-dark text anywhere; all chrome elements are clearly legible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes; unchanged
+          from Review 1's 7/8 assessment
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: The Review 1 visualMap/heatmap overlap is fully fixed — colorbar
+          and its dB labels now sit cleanly in the margin
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap cell density and chirp ridge contrast are optimal for the
+          canvas size
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential ramp is CVD-safe with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Widened right grid margin fixed the crowding; plot now fills ~65-70%
+          of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Time (s)" and "Frequency (Hz)" both carry units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint imprint_seq colormap used correctly; theme-correct chrome
+          in both renders, data colors identical
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured default heatmap+colorbar; no restyling beyond the
+          margin fix
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Deliberate minimalism (hidden ticks/splitlines) is no longer undercut
+          by the colorbar crowding from Review 1
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New subtitle names the chirp trajectory, reinforcing the visual focal
+          point; a markLine on the ridge would push this to 6
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct time-frequency heatmap spectrogram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Perceptually-uniform sequential colormap, dB-scale colorbar, time/frequency
+          axis labels all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on x, frequency on y, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; colorbar labeled correctly
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean chirp + realistic noise floor; lacks a second overlapping frequency
+          component
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible signal-processing scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sample rate, frequency range, and dB floor are all physically sensible
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: fft()/nextNoise() helpers are necessary for a from-scratch STFT but
+          deviate from flat-script KISS
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG, no Math.random
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; browser globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a hand-rolled STFT, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract followed correctly, animation disabled
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic heatmap + continuous visualMap pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: progressive rendering aside, still a generic heatmap+visualMap setup
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap

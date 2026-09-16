@@ -1,0 +1,237 @@
+library: highcharts
+language: javascript
+specification_id: venn-basic
+created: '2026-09-09T21:22:34Z'
+updated: '2026-09-09T21:34:15Z'
+generated_by: claude-sonnet
+workflow_run: 34405878172
+issue: 2444
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Set-name labels now correctly use t.ink instead of raw palette hues, resolving
+    the attempt-1 WCAG contrast issue completely in both themes
+  - Mathematically proportional circle sizing (radius proportional to sqrt of set
+    size) keeps circle area faithful to the underlying counts
+  - All seven regions (three exclusives, three pairwise overlaps, one triple overlap)
+    are individually labeled with counts, none clipped or overlapping
+  - Clever use of Highcharts' core SVG renderer to construct a Venn diagram that has
+    no native series type in the loaded core bundle
+  - Canonical Imprint palette order, correct theme-adaptive chrome, identical data
+    colors across both renders
+  - Clean, deterministic, dependency-free code with no fake interactivity
+  weaknesses:
+  - Design polish remains competent but standard for a Venn layout - no additional
+    visual-hierarchy device was added since attempt 1's feedback suggested one; this
+    is a minor polish opportunity, not a blocker
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1
+      Chrome: Title "venn-basic · javascript · highcharts · anyplot.ai" centered at top in dark ink, fully legible and not clipped. Set-name labels (Hiking, Cycling, Swimming) now rendered in dark ink (t.ink) instead of raw palette hues, resolving the attempt-1 contrast defect.
+      Data: Three overlapping circles at ~55% fill opacity - green Hiking (#009E73), lavender Cycling, blue Swimming - with dark-ink count labels (70, 50, 45, 25, 15, 10, 10) in all seven regions, including the darker triple-overlap wedge.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17
+      Chrome: Title and all set-name/region-count labels flip to light ink and remain clearly legible against the canvas and the darker overlap fills. No dark-on-dark issues.
+      Data: Circle colors and blended overlap tones are identical to the light render - confirms only chrome (background + text ink) flips between themes, not data colors.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes; attempt-1 low-contrast set-name
+          labels now fixed
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Circle strokes, fills, and count labels all clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Set-name labels now use t.ink; light-mode contrast issue fully resolved
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas confirmed, nothing clipped, no canvas-gate
+          failure
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: N/A axes for Venn diagram; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, correct theme backgrounds, identical data
+          colors across themes
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Proportional sqrt-scaled circle areas and blended overlap tones show
+          above-default thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean minimal chrome, generous whitespace, but nothing beyond required
+          elements
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Set-size hierarchy visible via circle size, but no additional emphasis
+          device
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3-set Venn diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Proportional areas, per-region counts, alpha transparency
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 7 regions correctly derived and labeled
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; colored strokes + ink labels serve
+          as inline legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All exclusive/pairwise/triple regions represented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible outdoor-activity survey
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Set sizes and overlaps sum consistently to a plausible 225-respondent
+          survey
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, single renderer helper function
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No external dependencies
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount contract, animation disabled both places
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly falls back to core SVG renderer instead of forbidden add-on
+          module
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Hand-building an unsupported chart type via renderer.circle/renderer.text
+          is distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-svg-shapes
+  - annotations
+  - proportional-sizing
+  patterns:
+  - data-generation
+  - renderer-primitives
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending

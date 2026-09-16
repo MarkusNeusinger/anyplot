@@ -1,0 +1,256 @@
+library: muix
+language: javascript
+specification_id: spectrogram-basic
+created: '2026-09-09T18:30:05Z'
+updated: '2026-09-09T18:43:55Z'
+generated_by: claude-sonnet
+workflow_run: 34388575690
+issue: 2927
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Correctly implements the Imprint sequential colormap (t.seq[0] to t.seq[1]) as
+    a custom two-stop gradient for the heatmap cells and colorbar, with data colors
+    identical between light and dark renders.
+  - Builds a genuine time-frequency heatmap via ChartContainer + useXScale/useYScale/useDrawingArea
+    hooks (MUI X community has no native heatmap component) backed by a real deterministic
+    STFT (Cooley-Tukey FFT, Hann window, seeded LCG signal) rather than faked/randomized
+    cell data.
+  - 'Theme-adaptive chrome is correct in both renders: warm off-white / near-black
+    backgrounds, dark-on-light and light-on-dark text all readable, no clipped elements
+    at any canvas edge.'
+  - The chirp signal against the noise floor gives an immediate, legible focal point
+    that matches the spec's description of a spectrogram.
+  - Axes and colorbar are labeled with units (Time (s), Frequency (Hz), Power (dB))
+    and the title follows the exact mandated format.
+  weaknesses:
+  - Colorbar shows only the two endpoint labels (-6 dB / -66 dB) with no intermediate
+    tick marks — a scientific dB colorbar benefits from 3-5 graduated labels so readers
+    can map color to value without interpolating by eye.
+  - Axis tick labels (the numeric values along X/Y) rely on MUI X's default font size
+    — only the title, axis labels, and colorbar text have an explicit fontSize — so
+    the implementation doesn't earn full marks for fully explicit sizing.
+  - The X-axis renders 25 tick labels at 0.1 s spacing, which reads a bit dense/busy;
+    thinning to every 0.2-0.5 s would give a cleaner look.
+  - Example data shows a single clean chirp only; a faint secondary harmonic or brief
+    amplitude dip would better demonstrate the range of features a spectrogram can
+    reveal.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white, not dark — matches the required light-theme surface.
+      Chrome: Title "spectrogram-basic · javascript · muix · anyplot.ai" centered at top in dark ink, fully visible with no clipping. "Frequency (Hz)" rotated label on the far left, "Time (s)" centered below the x-axis, "Power (dB)" rotated label to the right of the colorbar. All chrome text renders in dark ink against the light background and is clearly legible; grid lines are absent (clean, minimal chrome) and axis ticks are dark and readable.
+      Data: A time-frequency heatmap using a two-stop Imprint sequential gradient — brand green (#009E73-family) for low power (noise floor, most of the canvas) blending to blue-purple for high power (the chirp ridge). A single diagonal streak rises from ~150 Hz at t=0 to ~1600 Hz at t=2.4s, clearly visible against the textured green noise-floor background. Colorbar on the right shows the gradient from -6 dB (top, blue) to -66 dB (bottom, green).
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black, not light — matches the required dark-theme surface.
+      Chrome: Same title, axis labels, and colorbar text, now rendered in light/off-white ink against the dark background. All chrome elements (title, "Frequency (Hz)", "Time (s)", "Power (dB)", axis ticks, colorbar dB labels) are clearly legible — no dark-on-dark failures observed anywhere, including near the canvas edges.
+      Data: Same diagonal chirp heatmap; the green-to-blue-purple gradient colors are visually identical to the light render (only the page/chrome flipped), confirming the data palette does not change between themes.
+      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title, axis labels, and colorbar text have explicit font sizes and
+          are readable in both themes; axis tick numbers rely on MUI X default sizing
+          rather than an explicit tickLabelStyle, so not fully 'explicit'.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements; dense x-axis ticks stay non-overlapping.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 153 time frames x 128 frequency bins render as a continuous, well-resolved
+          heatmap; the chirp ridge is clearly distinguishable from the noise floor.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue gradient is CVD-safe; not a red-green-only encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills the large majority of the canvas with balanced margins;
+          nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Frequency (Hz), Time (s), Power (dB) — descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses imprint_seq (t.seq[0] to t.seq[1]) for the continuous heatmap;
+          backgrounds are theme-correct in both renders; data colors identical across
+          themes.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Fully custom-rendered heatmap with brand-aligned gradient and clean
+          typography — above a configured default, short of publication-ready polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid, spines removed, generous whitespace, but the colorbar has
+          only two labels and the x-axis is tick-dense — some refinement missing.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The rising chirp against the noise floor is an immediate, clear focal
+          point.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct time-frequency heatmap spectrogram.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Perceptually-appropriate sequential colormap, colorbar with dB units,
+          labeled time/frequency axes all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=frequency, color=power — correctly mapped and fully visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; no legend needed for a
+          single heatmap series.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows the chirp ridge plus a textured noise floor; would score higher
+          with a second component (harmonic/amplitude variation).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible acoustic/vibration-style chirp signal, neutral scientific
+          context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 150-1600 Hz chirp within the 2000 Hz Nyquist limit of a 4000 Hz sample
+          rate; -6 to -66 dB range is realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data/STFT -> React sub-components -> default export,
+          appropriately flat for a React/muix implementation.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG (seed=42), no Math.random.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ChartContainer/ChartsXAxis/ChartsYAxis/hooks imported, all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; complexity (manual FFT) is appropriate
+          since MUI X has no native heatmap.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct harness contract: default-exported component, skipAnimation-free
+          but static (no animation), sized to ANYPLOT_SIZE.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses ChartContainer plus the documented useXScale/useYScale/useDrawingArea
+          hooks — the recommended MUI X pattern for custom content synced to the chart's
+          scales.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages MUI X's scale-context hooks for a custom mark type, a pattern
+          fairly specific to this library's composition model.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - gradient-fill

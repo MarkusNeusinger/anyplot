@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' wireframe-3d-basic: Basic 3D Wireframe Plot
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 89/100 | Created: 2026-08-24
+#' Quality: 87/100 | Updated: 2026-09-10
 
 library(ggplot2)
 library(ragg)
@@ -18,7 +18,7 @@ BRAND    <- "#009E73"
 # --- Camera: orthographic projection (elevation 30, azimuth 45) ---------------
 # ggplot2 has no 3D grammar, so the mesh is projected to 2D screen coordinates
 # ourselves (the same technique any static 3D renderer uses under the hood),
-# then drawn with plain geom_path/geom_segment/geom_text.
+# then drawn with plain geom_polygon/geom_segment/geom_text.
 elev <- 30 * pi / 180
 azim <- 45 * pi / 180
 
@@ -39,21 +39,71 @@ up_axis <- c(
 z_lift <- 3.5  # visual height exaggeration so the shallow ripple reads clearly
 project_x <- function(x, y, z) x * right_axis[1] + y * right_axis[2] + z * z_lift * right_axis[3]
 project_y <- function(x, y, z) x * up_axis[1]    + y * up_axis[2]    + z * z_lift * up_axis[3]
+depth_toward_camera <- function(x, y, z) x * view_dir[1] + y * view_dir[2] + z * z_lift * view_dir[3]
 
 # --- Data: ripple surface z = sin(sqrt(x^2 + y^2)) -----------------------------
-grid_n <- 15
+grid_n <- 30
 x_vals <- seq(-6, 6, length.out = grid_n)
 y_vals <- seq(-6, 6, length.out = grid_n)
+z_fun  <- function(x, y) sin(sqrt(x^2 + y^2))
 
-surface <- expand.grid(x = x_vals, y = y_vals)
-surface$z  <- sin(sqrt(surface$x^2 + surface$y^2))
-surface$px <- project_x(surface$x, surface$y, surface$z)
-surface$py <- project_y(surface$x, surface$y, surface$z)
+z_range <- range(outer(x_vals, y_vals, z_fun))
+floor_z <- z_range[1] - 0.3
+ceil_z  <- z_range[2] + 0.3
 
-z_min <- min(surface$z)
-z_max <- max(surface$z)
-floor_z <- z_min - 0.3
-ceil_z  <- z_max + 0.3
+# --- Mesh quads with painter's-algorithm hidden-line removal ------------------
+# Each grid cell becomes a filled quad. Quads are drawn back-to-front (farthest
+# from the camera first) with an opaque page-background fill, so nearer quads
+# occlude the grid lines sitting behind them - the same trick base R's persp()
+# uses instead of a real z-buffer. This lets the mesh resolution sit inside the
+# spec's recommended 20x20-50x50 range without the interior crosshatching a
+# flat semi-transparent wireframe produces.
+n_cells <- (grid_n - 1)^2
+mesh <- data.frame(
+  quad_id = integer(n_cells * 4),
+  corner  = integer(n_cells * 4),
+  px      = numeric(n_cells * 4),
+  py      = numeric(n_cells * 4)
+)
+quad_depth <- numeric(n_cells)
+
+row  <- 1
+quad <- 1
+for (i in seq_len(grid_n - 1)) {
+  for (j in seq_len(grid_n - 1)) {
+    cx <- c(x_vals[i], x_vals[i + 1], x_vals[i + 1], x_vals[i])
+    cy <- c(y_vals[j], y_vals[j],     y_vals[j + 1],  y_vals[j + 1])
+    cz <- z_fun(cx, cy)
+    idx <- row:(row + 3)
+    mesh$quad_id[idx] <- quad
+    mesh$corner[idx]  <- 1:4
+    mesh$px[idx] <- project_x(cx, cy, cz)
+    mesh$py[idx] <- project_y(cx, cy, cz)
+    quad_depth[quad] <- mean(depth_toward_camera(cx, cy, cz))
+    row  <- row + 4
+    quad <- quad + 1
+  }
+}
+
+# Farthest quad gets draw_rank 1 (painted first); nearest gets n_cells (painted
+# last, on top). The fill itself must stay fully opaque for the occlusion to
+# work - only the edge colour's alpha channel is faded with depth, as a subtle
+# depth cue (bolder edges up close, softer far away).
+draw_rank      <- rank(quad_depth, ties.method = "first")
+mesh$draw_rank <- draw_rank[mesh$quad_id]
+fade           <- 0.55 + 0.45 * (mesh$draw_rank - 1) / (n_cells - 1)
+brand_rgb      <- col2rgb(BRAND) / 255
+mesh$edge_color <- rgb(brand_rgb[1], brand_rgb[2], brand_rgb[3], alpha = fade)
+mesh <- mesh[order(mesh$draw_rank, mesh$corner), ]
+
+# --- Floor reference plane (spatial grounding) ---------------------------------
+floor_plane <- data.frame(
+  x = c(-6, 6, 6, -6),
+  y = c(-6, -6, 6, 6),
+  z = floor_z
+)
+floor_plane$px <- project_x(floor_plane$x, floor_plane$y, floor_plane$z)
+floor_plane$py <- project_y(floor_plane$x, floor_plane$y, floor_plane$z)
 
 # --- Axis box: three edges meeting at the front-left-bottom corner ------------
 axis_lines <- data.frame(
@@ -74,11 +124,20 @@ y_breaks <- c(-6, -3, 0, 3, 6)
 z_breaks <- c(-1, 0, 1)
 
 ticks <- rbind(
-  data.frame(x = x_breaks, y = -9.6, z = floor_z, label = x_breaks),
-  data.frame(x = -9.6, y = y_breaks, z = floor_z, label = y_breaks)
+  data.frame(x = x_breaks, y = -9.6, z = floor_z, label = x_breaks, axis = "x"),
+  data.frame(x = -9.6, y = y_breaks, z = floor_z, label = y_breaks, axis = "y")
 )
 ticks$px <- project_x(ticks$x, ticks$y, ticks$z)
 ticks$py <- project_y(ticks$x, ticks$y, ticks$z)
+
+# The X-tick and Y-tick label columns sit on the mesh's near side, where the
+# wireframe's screen footprint is widest, so a couple of low-value ticks
+# ("-3"/"-6") land inside the mesh's silhouette instead of clearing it. Nudge
+# each column sideways, away from the vertical Z axis, by a fixed screen
+# offset (same lateral-offset trick used for z_ticks below) - harmless for
+# the ticks that already clear the mesh, since it just adds margin.
+tick_clearance <- 5.5
+ticks$px <- ticks$px + ifelse(ticks$axis == "x", tick_clearance, -tick_clearance)
 
 # Z ticks sit on the vertical axis line itself; nudge the label text
 # (not the axis line) sideways into the open gap left of the mesh, well past
@@ -98,10 +157,10 @@ axis_labels$py <- project_y(axis_labels$x, axis_labels$y, axis_labels$z)
 
 # --- Plot -----------------------------------------------------------------
 p <- ggplot() +
-  geom_path(data = surface, aes(px, py, group = y),
-            color = BRAND, linewidth = 0.3, alpha = 0.35, lineend = "round") +
-  geom_path(data = surface, aes(px, py, group = x),
-            color = BRAND, linewidth = 0.3, alpha = 0.35, lineend = "round") +
+  geom_polygon(data = floor_plane, aes(px, py),
+               fill = NA, color = INK_SOFT, linewidth = 0.4, alpha = 0.4) +
+  geom_polygon(data = mesh, aes(px, py, group = draw_rank, colour = I(edge_color)),
+               fill = PAGE_BG, linewidth = 0.25) +
   geom_segment(data = axis_lines, aes(x = px, y = py, xend = pxend, yend = pyend),
                color = INK_SOFT, linewidth = 0.6) +
   geom_text(data = ticks, aes(px, py, label = label),

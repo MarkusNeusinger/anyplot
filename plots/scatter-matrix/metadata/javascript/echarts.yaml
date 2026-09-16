@@ -1,0 +1,255 @@
+library: echarts
+language: javascript
+specification_id: scatter-matrix
+created: '2026-09-09T06:50:15Z'
+updated: '2026-09-09T07:03:23Z'
+generated_by: claude-sonnet
+workflow_run: 34320279117
+issue: 2035
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/javascript/echarts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Well-engineered N x N multi-grid composition (ECharts has no native SPLOM chart
+    type) with shared per-column/per-row axis ranges so the matrix reads as a coherent,
+    symmetric grid
+  - Custom edge-safe tick formatter fixes the prior label-collision bug where a regular
+    split-line tick (e.g. '2.5') collided with a forced min/max edge label (e.g. '2.7')
+  - Axis labels now carry units ('Sepal Length (cm)', etc.) shown only on the bottom
+    row and left column, keeping the grid uncluttered
+  - 'Theme-adaptive chrome is correct in both renders: data colors (green/purple/blue)
+    are pixel-identical between light and dark, only background/text/grid flip'
+  - Realistic, scientifically plausible iris-like dataset (3 species x 40 points x
+    4 variables) that clearly demonstrates correlation (petal length vs. width), clustering
+    (species separation), and per-variable distributions on the diagonal
+  weaknesses:
+  - Diagonal histogram bars touch the very top edge of their cell (yAxis max is set
+    to the exact maxCount with no padding) — add ~5-10% headroom to the histogram
+    y-axis max so the tallest bar doesn't look clipped against the cell border
+  - Aesthetic sophistication leans on default ECharts styling beyond the required
+    palette/theme tokens — consider subtler split-line grid or refined legend/title
+    vertical rhythm to push Design Excellence beyond 'well-configured default'
+  - No explicit visual emphasis on the strongest relationship (e.g. petal length vs.
+    petal width, which shows near-perfect species separation) — optional polish for
+    a future revision, not a spec requirement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "scatter-matrix · javascript · echarts · anyplot.ai" centered at top in dark ink; legend (Setosa/Versicolor/Virginica swatches) centered below it; axis titles with units ("Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)") shown only on the bottom row and left column; tick labels in soft dark gray; thin light-gray gridlines per cell.
+      Data: 4x4 grid of panels. Diagonal cells show green (#009E73) histograms of each variable's distribution across all 120 points. Off-diagonal cells show scatter points colored by species — Setosa green, Versicolor light purple, Virginica slate blue — with small markers and partial transparency to handle overplotting. Species clusters are clearly separable in most panels (especially petal length/width).
+      Legibility verdict: PASS — all titles, axis labels, tick labels, and legend text are clearly readable against the light background; no light-on-light text.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, legend, and axis-label layout as the light render, now rendered in light ink/soft-gray text against the dark background; gridlines are a dim gray, still visible but subtle.
+      Data: Colors are pixel-identical to the light render — green histogram, and green/purple/blue scatter points in the same positions and hues. Only the chrome (background, text, grid) flipped to the dark theme; no data recoloring.
+      Legibility verdict: PASS — title, axis labels, tick labels, and legend text are all clearly legible light-on-dark; no dark-on-dark failures observed anywhere in the grid.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (11/14/22px); readable at full size
+          in both themes; title fits the mandated long format without clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Custom edge-safe formatter prevents split-line ticks from colliding
+          with forced min/max edge labels; no overlap anywhere in the grid
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: symbolSize=6 with opacity 0.6 handles ~40 points/species per cell
+          well; some residual overplotting where species overlap is expected for this
+          data
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three hue-distinct, CVD-safe colors (green/purple/blue); no red-green
+          pairing
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Matrix fills most of the 2400x2400 canvas with balanced margins;
+          diagonal histogram bars touch the top of their cell with no headroom
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis names include units, e.g. 'Sepal Length (cm)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Setosa/histograms) is #009E73; Versicolor/Virginica
+          follow canonical Imprint order; both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured, tokenized design but relies on default ECharts chrome
+          beyond the required palette; not yet publication-level polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Redundant axis lines/ticks removed on interior cells, subtle gridlines
+          — above pure defaults but not perfected
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-coded species create clear visual hierarchy and reveal separation
+          across most panel pairs, though no explicit callout of the strongest relationship
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct N x N scatter matrix with diagonal histograms
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal distributions, off-diagonal scatter, edge-only axis labels,
+          color-coded groups, alpha/size tuned for overplotting, symmetric layout
+          — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Per-column/per-row shared ranges keep X/Y mapping correct and consistent
+          across the whole grid
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels (Setosa/Versicolor/Virginica) match
+          the data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Demonstrates correlation, species clustering, and per-variable distributions
+          across the full matrix
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, real-world botanical (iris-like) scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Value ranges match real iris measurements plausibly
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data -> layout -> option flow; small utility functions are proportionate
+          to the N x N grid's genuine complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42) for deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only window globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a manually-composed SPLOM; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: echarts.init with no explicit size/devicePixelRatio; animation:false;
+          correct mount-node contract
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Multi-grid/multi-cartesian composition is the idiomatic ECharts approach
+          since there is no native SPLOM series type
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Manual N x N grid-array composition with per-cell axis binding is
+          a genuinely ECharts-specific technique, not a trivial port from another
+          library
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - publication-ready

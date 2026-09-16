@@ -1,0 +1,254 @@
+library: echarts
+language: javascript
+specification_id: subplot-grid
+created: '2026-09-09T19:04:45Z'
+updated: '2026-09-09T19:24:18Z'
+generated_by: claude-sonnet
+workflow_run: 34392240213
+issue: 2782
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/echarts/plot-dark.html
+quality_score: 82
+review:
+  strengths:
+  - Clean 2x2 subplot-grid layout with four genuinely different chart types (line,
+    bar, histogram, scatter) sharing a coherent financial-dashboard narrative
+  - Top row (price/volume) shares x-axis date domain and column width for direct visual
+    comparison, while the bottom row correctly uses independent axes for unrelated
+    domains (return bins vs. volume) per the spec's shared/independent axes requirement
+  - 'Correct Imprint palette usage: brand green first, theme-correct chrome in both
+    renders, identical data colors across light/dark'
+  - Thoughtful, well-justified semantic color exception (finance profit/loss green/red)
+    that is redundant with x-axis position rather than being the sole signal
+  - Deterministic Mulberry32-seeded data generation, formatted axis labels ($, M,
+    %), and clean KISS script structure with no dead imports
+  weaknesses:
+  - 'The ''Period high'' markPoint on the price line and the ''Peak volume'' markPoint
+    on the volume bars never render — verified by pixel-sampling both PNGs (no white
+    label pixels anywhere near the price peak at ~1/2 or the 2.6M volume spikes in
+    either theme). The code and comments describe these as intentional highlight features
+    but they are 100% invisible; investigate whether `animation: false` combined with
+    markPoint''s default enter-animation is suppressing them entirely, or fix/remove
+    the dead config.'
+  - The intended 'guide the viewer to the peak' storytelling device is absent because
+    of the broken markPoints, leaving the four panels informative but without the
+    emphasis the code clearly intended to add.
+  - Main title occupies only ~28% of canvas width, noticeably smaller than the other
+    panel titles suggest is available — consider a modest size bump for better top-of-canvas
+    balance (soft/cosmetic, not a hard violation).
+  - '''Shared axes'' between the top-row price and volume charts is only implicit
+    (same date categories, same column width) — no visual cue (e.g. aligned gridlines,
+    shared crosshair) makes that relationship explicit to a casual viewer.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), consistent across the full 3200x1800 canvas including behind all four subplot cells.
+      Chrome: Main title "subplot-grid · javascript · echarts · anyplot.ai" in dark ink, centered top. Each of the 4 cells has its own left-aligned dark-ink subtitle ("Closing Price ($)", "Daily Volume", "Daily Returns Distribution", "Volume vs. Return"). Axis tick labels are medium-gray, gridlines are faint gray horizontal lines. All text is clearly readable against the light background — no light-on-light issues found.
+      Data: Top-left is a green (#009E73) line with a light green area fill tracing a stock's closing price over ~60 trading days ($135-$153 range). Top-right is a blue/indigo bar chart of daily trading volume (0-3.0M). Bottom-left is a 10-bin histogram of daily returns, colored red for negative bins and green for positive bins (finance semantic convention, redundant with x-axis position). Bottom-right is a cyan scatter of volume vs. return. First series color is confirmed #009E73 green.
+      Verified defect: pixel-sampled the region around the price-line peak (~1/2, ~$152.7) and the two >2.5M volume bars for pure-white (255,255,255) pixels, which the code's markPoint label color (`#fff`) would produce — zero found in either region. The "Period high" and "Peak volume" markPoint annotations configured in the code do not render at all.
+      Legibility verdict: PASS (all chrome text legible; the missing markPoints are a content/feature bug, not a legibility issue)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), consistent across the canvas.
+      Chrome: Same title and subtitle text now rendered in light ink (near-white/off-white), clearly legible against the dark background — no dark-on-dark failures found anywhere (title, subtitles, tick labels, axis names all readable). Gridlines are faint light-gray, correctly inverted from the light theme.
+      Data: Identical colors to the light render — green price line/area, blue volume bars, red/green histogram bins, cyan scatter dots — confirming data colors are theme-invariant as required. Brand green #009E73 remains clearly visible against the dark surface.
+      Verified defect: same pixel-sampling method applied to the dark render's price-peak and volume-peak regions — zero pure-white pixels found, confirming the markPoint labels are absent in this theme too (consistent failure, not theme-specific).
+      Legibility verdict: PASS (all rendered chrome/text readable; markPoint absence is a rendering bug affecting both themes equally, not a dark-mode-specific legibility problem)
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All titles/axis/tick labels readable in both themes at explicit font
+          sizes; no dark-on-dark or light-on-light issues
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions across any of the 4 cells
+      - id: VQ-03
+        name: Element Visibility
+        score: 3
+        max: 6
+        passed: false
+        comment: Line/bar/scatter marks are well-sized, but the 'Period high' and
+          'Peak volume' markPoint annotations are completely invisible in both renders
+          (pixel-verified)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green histogram bins are redundant with x-axis sign position,
+          not the sole signal; good contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas, no cutoff, well-balanced 2x2 grid spacing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Units included ($, M, %), descriptive axis names on bottom row
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green first series, correct theme-adaptive backgrounds, identical
+          data colors across themes
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Formatted currency/volume/percent axes, area fill, coherent dashboard
+          concept beyond generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minimal chrome, subtle gridlines, no legend clutter, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Coherent price->volume->distribution->correlation narrative, undercut
+          by the non-rendering peak-highlight annotations
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 2x2 subplot grid with 4 distinct chart types
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Configurable grid, mixed shared/independent axes, distinct type per
+          cell, per-cell titles, consistent spacing
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct x/y mapping in every cell, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; no legend needed given single-series-per-cell
+          design
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers mixed plot types and axis sharing, though the shared-axis
+          relationship is only implicit
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral synthetic stock dataset
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible price/volume/return ranges for the domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded Mulberry32 PRNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; echarts global only
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Ships a markPoint block that never visually manifests — dead-in-practice
+          feature code
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, no explicit size/devicePixelRatio
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper multi-grid/multi-axis indexing, containLabel, formatter functions
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Attempted markPoint highlight is a distinctive touch but never renders,
+          undermining the credit
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  - time-series
+  styling:
+  - alpha-blending
+  - publication-ready

@@ -1,0 +1,258 @@
+library: ggplot2
+language: r
+specification_id: spiral-timeseries
+created: '2026-09-09T19:02:43Z'
+updated: '2026-09-09T19:20:28Z'
+generated_by: claude-sonnet
+workflow_run: 34391943855
+issue: 5243
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Native coord_radial() with inner.radius produces a true Archimedean spiral via
+    continuous theta/radius mapping instead of the manual sin/cos trigonometry used
+    in the previous attempt — directly addresses the LM-02 feedback from Review 1.
+  - The +0.3°C/year warming trend flagged as unrealistic in Review 1 is now +0.05°C/year,
+    a scientifically plausible pace, fixing DQ-03.
+  - Bold outer ring clearly highlights the most recent cycle, addressing the Review
+    1 request for a storytelling focal point.
+  - 'Full spec compliance: earliest data at center expanding outward, monthly radial
+    spokes, per-cycle year labels for orientation, and a continuous colorbar with
+    units.'
+  - Theme-adaptive chrome is correct and legible in both light and dark renders; data
+    colors are identical across themes.
+  - Clean, reproducible KISS code (set.seed(42), only used imports, ragg::agg_png,
+    linewidth not size).
+  weaknesses:
+  - Subtitle claims 'outer rings trend warmer', but the +0.05°C/year trend compounds
+    to only +0.15°C over the full 4-year span — invisible against the rnorm(sd=1.8)
+    noise floor and the ~30°C seasonal amplitude. The claim is not visually verifiable
+    in either render; soften the subtitle to not promise a trend the color scale can't
+    show, or drop that clause.
+  - 'Canvas whitespace is still mildly unbalanced: the circular spiral does not fill
+    the square canvas, leaving noticeably more empty space around the legend column
+    (top-right and bottom-right) than around the plot on the left — nudge the legend
+    vertically toward the panel center or slightly enlarge r_max to reduce the gap.'
+  - Design excellence is solid but still fairly plain (a single 2-stop continuous
+    gradient, no additional annotation beyond the subtitle) — short of the top-tier
+    'Nature/Science' polish bar.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-like), not pure white — correct.
+      Chrome: Title "spiral-timeseries · r · ggplot2 · anyplot.ai" in dark ink at top, clearly legible, spanning ~70-75% of canvas width (expected for the mandated title). Subtitle "Bold outer ring = most recent cycle; outer rings trend warmer" in softer dark gray beneath it, also legible. Four year labels ("2021"-"2024") sit in soft dark gray at the top of each ring for orientation. Faint concentric circles (cycle boundaries) and 12 radial spokes (month subdivisions) are visible but subtle, not competing with the data. A colorbar legend "Avg temp (°C)" sits at top-right in a slightly elevated cream box with dark title text and softer tick labels (0/10/20).
+      Data: Single continuous Archimedean spiral colored on the imprint_seq green-to-blue gradient (green = colder, blue = warmer), earliest year (2021) at the center expanding outward to the boldest, thickest outer ring (2024, most recent). Data colors are clearly distinguishable from the light background.
+      Legibility verdict: PASS — all text (title, subtitle, year labels, legend) is readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-like), not pure black — correct.
+      Chrome: Title and subtitle render in light ink/light gray, clearly legible against the dark surface. Year labels remain legible in light gray. Rings and spokes stay faint but visible in light gray. The colorbar legend box uses the elevated dark surface with light title text and light-gray ticks.
+      Data: The green-to-blue spiral gradient is pixel-identical to the light render — confirmed only chrome (background, text, grid, legend box) flipped; data colors unchanged. Bold outer 2024 ring still clearly distinguishable from the thinner earlier rings.
+      Legibility verdict: PASS — no dark-on-dark failures; all text remains legible, brand green segments of the gradient still read clearly.
+
+    Both renders pass the theme-readability check (5c). No AR-09 edge clipping observed in either render — title, subtitle, year labels, and legend all sit fully within the canvas with comfortable margins.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (length-scaled title formula, explicit
+          legend/label sizes); readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Spiral line clearly visible; bold outer ring appropriately emphasized;
+          decorative rings/spokes intentionally subtle
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe sequential imprint_seq gradient
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Margins tightened since Review 1, but the circular spiral still leaves
+          noticeably more empty space around the legend column than around the panel
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No Cartesian axes needed for a polar spiral; colorbar carries units,
+          title fully descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous scale uses exact imprint_seq stops (#009E73 -> #4467A3);
+          theme-correct chrome in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Native polar composition with coherent gradient, above library defaults,
+          but still a fairly simple 2-stop gradient
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void, subtle grid, elevated legend box; refined but unremarkable
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Bold outer ring is a genuine storytelling improvement, but the subtitle's
+          'outer rings trend warmer' claim is not visually verifiable (trend is far
+          below the noise floor), which undercuts trust in the annotation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Archimedean spiral time series via coord_radial
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Color-encoded magnitude, month-subdivision spokes, cycle-start year
+          labels, colorbar with units all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Radius/angle mapping correctly places earliest data at center, expanding
+          outward
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend correct
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 4 full cycles with seasonal amplitude, noise, and a subtle trend
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily average temperature, real-world plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Warming trend reduced from +0.3°C/year to +0.05°C/year, now a realistic
+          annual rate — fixes the Review 1 finding
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat procedural script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tibble, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ragg::agg_png, linewidth (not deprecated size), correct plot-{THEME}.png
+          filename, square 2400x2400 canvas
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Native coord_radial() replaces the manual trigonometry from Review
+          1 — correct grammar-of-graphics layering
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Exploits coord_radial()'s inner.radius plus a continuous theta/radius
+          mapping to render a true spiral — a genuinely ggplot2-idiomatic technique,
+          not a full 5 since coord_radial itself is a documented standard function
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - colorbar
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - minimal-chrome
+  - custom-colormap
+  - alpha-blending

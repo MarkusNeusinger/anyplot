@@ -1,0 +1,263 @@
+library: highcharts
+language: javascript
+specification_id: spiral-timeseries
+created: '2026-09-09T19:09:06Z'
+updated: '2026-09-09T19:13:58Z'
+generated_by: claude-sonnet
+workflow_run: 34392194232
+issue: 5243
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Genuine Archimedean spiral construction (radius scales linearly with point index/theta)
+    with the earliest data placed at the center, exactly matching the spec's core
+    geometric requirement
+  - 'Value encoded via the correct imprint_seq gradient (#009E73 to #4467A3), verified
+    pixel-identical between light and dark renders'
+  - Hand-built colorbar drawn via chart.renderer since the core Highcharts bundle
+    has no colorAxis/heatmap module -- a smart, idiomatic workaround given the core-bundle-only
+    constraint
+  - Radial day-of-week spokes plus dotted per-cycle rings deliver exactly the 'radial
+    grid lines mark subdivisions within each cycle' requirement from the spec
+  - Cycle-start labels ('Week 1' ... 'Week 8') are clearly placed and never collide
+    with the spiral, spokes, or each other
+  - 'Both renders are fully theme-correct: chrome (background, text, grid) flips between
+    #FAF8F1 and #1A1A17 while data colors stay identical'
+  - Realistic, neutral dataset (website page views) shows clear daily and weekly seasonality
+    plus a gradual growth trend, well within the spec's 2-10 cycle / 100-3000 point
+    bounds
+  weaknesses:
+  - Innermost ring (Week 1) markers are tightly packed since point density per unit
+    arc length is naturally higher near the origin -- scaling marker radius down slightly
+    toward the center would improve clarity there
+  - The manually drawn colorbar sits in the bottom-right canvas corner, somewhat detached
+    from the spiral body -- nudging it closer to the plot would tie the composition
+    together more tightly
+  - Data storytelling relies entirely on the color gradient to communicate the growth
+    trend; a small annotation calling out the week-over-week growth would sharpen
+    the insight further (not spec-required, minor polish only)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "spiral-timeseries · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "Website page views · every 2 hours · 8 weekly cycles" in softer ink, both clearly legible. "Week 1" through "Week 8" labels sit to the left of each cycle's start spoke in dark, readable text. The manual colorbar bottom-right ("Page views", range 33-149) uses dark ink text on the light background. Radial spokes and dotted concentric rings render as subtle light-gray lines.
+      Data: An Archimedean spiral of ~670 small circular markers, colored on the imprint_seq gradient from #009E73 (green, near center / low values) to #4467A3 (blue, outer rings / high values), connected by a faint gray structure line. Color visibly shifts outward as the week-over-week growth trend raises values.
+      Legibility verdict: PASS -- all text (title, subtitle, week labels, colorbar) is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black, not light.
+      Chrome: Title and subtitle render in light ink (white/off-white), clearly visible against the dark background. "Week 1"-"Week 8" labels and the colorbar text ("Page views", 33/149) are also light-colored and easily readable. Radial spokes and dotted rings remain visible as subtle light-gray lines against the dark surface.
+      Data: Same spiral geometry and marker positions as the light render. Marker colors are identical to the light render (#009E73 → #4467A3 gradient) -- only the chrome (background, text, grid) flipped.
+      Legibility verdict: PASS -- no dark-on-dark failures; every title, label, and tick is clearly visible against the dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, subtitle 14px, labels
+          14px, colorbar 12-13px); well-proportioned and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Week labels, colorbar text, and spiral markers never collide
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers (radius 4) are visible throughout; innermost ring is tightly
+          packed due to the geometry, but circles remain individually distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential gradient, not red-green, good contrast on
+          both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Spiral fills roughly 65-70% of the square canvas with balanced margins;
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No literal x/y axes (by design for a spiral layout), but colorbar
+          ('Page views', 33-149) and cycle labels provide clear descriptive context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Confirmed marker gradient exactly matches imprint_seq (#009E73 ->
+          #4467A3); backgrounds match #FAF8F1/#1A1A17; chrome theme-correct in both
+          renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom radial geometry, intentional color hierarchy, and a bespoke
+          colorbar go clearly beyond a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes fully hidden, grid reduced to subtle dotted rings/spokes, generous
+          whitespace around the spiral
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color gradient and radial alignment visually surface both the weekly
+          seasonality and the growth trend, guiding the reader without extra annotation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine Archimedean spiral (radius linear in point index), matching
+          the spec exactly
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Value-to-color encoding, radial subdivision grid, cycle-start labels,
+          center-outward expansion, and colorbar are all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Angle maps time-within-cycle, radius maps elapsed time, color maps
+          value magnitude
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'spiral-timeseries · javascript · highcharts
+          · anyplot.ai'; colorbar substitutes correctly for a legend per the spec
+          notes
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows daily peak pattern, weekday/weekend dip, and week-over-week
+          growth simultaneously
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Website page views is a neutral, comprehensible, real-world scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 33-149 views per 2-hour bucket with a modest ~3.5/week growth trend
+          is a plausible small/medium-site traffic magnitude
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Data -> geometry -> chart flow; the two small color-math helpers
+          are necessary utilities, not over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed = 42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; only the provided Highcharts/token globals are
+          used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a custom spiral projection; no fake UI
+          or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected, animation disabled on chart and series
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of scatter/line series and chart.renderer within the
+          core-bundle-only constraint
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Direct SVG renderer API for the manual colorbar is a Highcharts-specific
+          capability not trivially replicated in other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - polar-projection
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  - normalization
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - minimal-chrome

@@ -1,0 +1,263 @@
+library: muix
+language: javascript
+specification_id: subplot-mosaic
+created: '2026-09-09T19:53:28Z'
+updated: '2026-09-09T20:08:43Z'
+generated_by: claude-sonnet
+workflow_run: 34397034203
+issue: 3002
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/muix/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Faithful, elegant CSS Grid recreation of matplotlib's subplot_mosaic ASCII pattern
+    — the MOSAIC array + mosaicRect()/cellSize() helpers correctly derive row/col
+    spans, mirroring the spec's dominant-panel example exactly (wide overview top,
+    two medium detail panels, three small KPI panels).
+  - 'Clear visual hierarchy: the 30-day pageview trend dominates (44% height), two
+    medium detail panels (device sessions, channel scatter) sit in the middle, and
+    three small gauge KPIs anchor the bottom — a genuine dashboard storytelling structure.'
+  - 'Correct Imprint palette discipline: first series is brand green (#009E73) in
+    every panel, the four-channel scatter uses canonical palette order (green/lavender/blue/ochre),
+    and data colors are byte-identical between light and dark renders — only chrome
+    flips.'
+  - Deterministic, self-contained data generation via a small seeded LCG (no Math.random,
+    no network) — fully reproducible.
+  - 'Smart focal-point emphasis on the Sessions by Device panel: the leading device
+    (Mobile) stays brand green while the others mute to a soft ink tone, calling out
+    the takeaway without extra annotation infrastructure.'
+  - Title format, axis labels (with units — %, s, Day of Month), and scatter legend
+    all match the spec and style-guide contract precisely; title fontsize correctly
+    scaled down via the length-based formula for the long mandated string.
+  weaknesses:
+  - Scatter markers (markerSize=5) in the Bounce Rate vs. Session Duration panel are
+    modest for ~140 combined points across 4 channels — slightly larger markers (or
+    a touch more alpha contrast) would improve legibility at mobile widths.
+  - The de-emphasized Sessions by Device bars reuse the chrome token t.inkSoft (secondary
+    text color) rather than a dedicated data-muted anchor — visually fine and the
+    ANYPLOT_TOKENS contract has no separate 'muted' data token to reach for, but it's
+    worth noting the role overlap.
+  - The scatter panel's horizontal grid line only renders at the 200 tick (0 and 400
+    coincide with the frame) — a second faint gridline (e.g. at 100/300) would make
+    the grid styling read as more intentional rather than incidental.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-range) across the full canvas, consistent behind all six mosaic panels.
+      Chrome: Title "Website Analytics Dashboard · subplot-mosaic · javascript · muix · anyplot.ai" in bold dark ink, centered at top. Panel captions ("Pageviews — Last 30 Days", "Sessions by Device", "Bounce Rate vs. Session Duration, by Channel", "Conversion Rate", "Uptime SLA", "Support CSAT") in medium-weight dark-soft ink. Axis tick labels and axis titles ("Day of Month", "Bounce Rate (%)", "Duration (s)") all rendered in dark ink, clearly legible against the cream background.
+      Data: Panel A is a smooth brand-green line (pageviews trending 42k→50k) with no markers. Panel B is a 3-bar chart (Desktop/Mobile/Tablet) where Mobile (the leading device) is brand green and the other two bars are a muted gray-ink tone — a deliberate focal-point choice. Panel C is a 4-color scatter (Organic=green, Paid=lavender, Direct=blue, Referral=ochre) with a legend at top-right of the panel. Panels D/E/F are brand-green gauge arcs over light-gray track arcs, each with a bold percentage value beneath.
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light text found anywhere.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-range) across the full canvas, matching the dark surface token.
+      Chrome: Title and panel captions flip to light ink/off-white tones, fully readable against the dark background. Axis tick labels and axis titles are rendered in a lighter secondary-ink tone — no dark-on-dark text anywhere; every label, tick, and legend entry is clearly visible.
+      Data: All data colors are pixel-identical to the light render — the pageview line, the Mobile-highlighted bar, the 4-channel scatter colors, and the gauge arc green are unchanged. Only the gauge track arc and de-emphasized bars swap to a darker/lighter chrome-appropriate neutral, consistent with the theme.
+      Legibility verdict: PASS — no dark-on-dark failures; title, captions, ticks, axis labels, and legend text are all legible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes at full res;
+          title fontsize correctly scaled down via length formula for the long mandated
+          string.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions anywhere across the 6 panels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Line, bars, and gauges well-sized; scatter markers (size 5) slightly
+          modest for the ~140-point combined dataset.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast; scatter channels use alpha blending and 4 distinct
+          hues, no red-green-only signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no drift file); mosaic fills the canvas with
+          balanced margins and no wasted space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (%, s) and Day of Month.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 everywhere; channel scatter uses canonical
+          Imprint order; backgrounds and chrome are theme-correct in both renders.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Intentional mosaic hierarchy, custom gauge styling via gaugeClasses,
+          focal-point color emphasis — well above a configured default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle single gridline, no spine clutter, generous gaps between panels;
+          scatter grid could use one more subtle line.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear hierarchy (dominant trend → detail panels → KPIs) plus explicit
+          Mobile-lead emphasis in the device chart.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Mosaic layout with varying panel sizes, matching the spec's exact
+          dashboard example.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: String-pattern layout, spanning via repeated letters, consistent
+          spacing, per-cell plot-type diversity (line/bar/scatter/gauge x3) all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned in every panel; all data visible within axis
+          bounds.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches spec-id · language · library · anyplot.ai
+          (with descriptive prefix); scatter legend labels match channel data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Covers the spec''s full dashboard example: dominant wide panel,
+          two medium detail panels, three small KPI panels, each with distinct plot
+          types.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Website analytics scenario — neutral, comprehensible, business-appropriate.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Pageview counts, session splits, bounce rate/duration ranges, and
+          KPI values are all realistic for a web analytics dashboard.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Straightforward imports → data → layout-math helpers → component
+          flow; helper functions are justified for mosaic geometry, not over-structured.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42) produces fully deterministic data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only LineChart/BarChart/ScatterChart/Gauge/gaugeClasses imported,
+          all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the mosaic-grid math; no fake UI or simulated
+          interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Default-exports the Chart component per the muix harness contract;
+          skipAnimation set on every chart.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: High-level MUI X props used throughout (xAxis/yAxis config, colorMap,
+          margin, grid, slotProps) rather than manual/low-level drawing.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Combines four distinct MUI X chart families (Line/Bar/Scatter/Gauge)
+          in one composed layout with custom Gauge arc styling via gaugeClasses sx
+          overrides — a feature set fairly distinctive to MUI X's component ecosystem.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending

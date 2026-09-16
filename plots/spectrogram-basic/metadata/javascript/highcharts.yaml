@@ -1,0 +1,257 @@
+library: highcharts
+language: javascript
+specification_id: spectrogram-basic
+created: '2026-09-09T18:23:12Z'
+updated: '2026-09-09T18:34:37Z'
+generated_by: claude-sonnet
+workflow_run: 34388064632
+issue: 2927
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Colorbar now labels four dB values (0, -20, -40, -60) instead of only the two
+    endpoints from Attempt 1 — the requested repair was applied cleanly and readers
+    can now estimate intermediate values along the gradient.
+  - Manual heatmap rendering via the SVG renderer (r.rect) combined with an invisible,
+    matched-axis scatter overlay recovers a genuine native Highcharts tooltip — a
+    legitimate, non-faked workaround for the core bundle's missing heatmap module
+    rather than a shortcut to another library.
+  - Real Hann-windowed direct-DFT STFT computed over a deterministic swept-sine chirp
+    signal; the diagonal frequency ramp reads instantly and is a textbook-appropriate
+    example for the spec.
+  - Correct imprint_seq (green->blue) continuous colormap for single-polarity dB power
+    data, matching the style guide's continuous-data rule.
+  - Theme-adaptive chrome threaded correctly through title, subtitle, axis labels,
+    tick labels, and colorbar text from window.ANYPLOT_TOKENS; both renders fully
+    legible with identical data colors.
+  weaknesses:
+  - The hand-rolled heatmap still needs several small helper functions (hexToRgb,
+    lerp, powerFill, frameTime, binFreq, clearDrawn/drawAll) to draw cells, axis text,
+    and the colorbar manually — justified by the missing heatmap module, but a touch
+    more structural complexity than a basic spec ideally needs.
+  - Design excellence is still close to a functional/engineering-driven look rather
+    than a polished editorial one; a subtle focal annotation near the ridge's peak
+    amplitude or a slightly refined colorbar frame would push aesthetic sophistication
+    further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "Swept-Sine Test Tone · spectrogram-basic · javascript · highcharts · anyplot.ai" with a gray subtitle describing the chirp parameters below it. "Frequency (Hz)" axis title top-left, "Time (s)" axis title bottom-center, dark tick labels along both axes (0-1,607 Hz; 0.01-1.98 s). Vertical "Power" colorbar on the right now labeled with FOUR dB values (0, -20, -40, -60 dB), up from only the two endpoints in Attempt 1. All chrome elements clearly readable against the light background.
+      Data: Dense grid of green-to-blue cells forms a diagonal band rising from lower-left to upper-right — the chirp's instantaneous frequency sweep. Colors run from #009E73 (quiet) to a blue (#4467A3, loud), matching the Imprint imprint_seq stops.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title/subtitle/axis-title/tick-label/colorbar layout, now in light cream/gray text — all crisp and legible, no dark-on-dark occurrences. Colorbar again shows four dB tick labels.
+      Data: The green-to-blue diagonal heatmap band and colorbar gradient are pixel-identical to the light render, confirming only chrome flipped between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (TITLE_FS computed, 14-16px axis/tick
+          text); readable in both themes; title width is conservative, no overflow.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, subtitle, axis text, ticks, colorbar
+          labels, or data cells.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap cells sized to fill the plot area cleanly; diagonal ridge
+          clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential gradient is CVD-safe, no red-green-only
+          signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Attempt-1 weakness (colorbar only 2 endpoint labels) fixed: now
+          4 evenly spaced dB labels (0/-20/-40/-60). Plot fills a large, balanced
+          share of the canvas.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (s), Frequency (Hz), Power (dB) — all descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (t.seq[0]=#009E73 -> t.seq[1]) used for single-polarity
+          dB data; backgrounds theme-correct; chrome theme-correct in both renders.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Real engineering effort (hand-drawn heatmap + colorbar) but visual
+          language stays close to a functional heatmap rather than an editorially
+          polished chart.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Hidden axis chrome, generous margins, no grid clutter, clean colorbar
+          frame.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Diagonal chirp ridge is an immediate, clear focal point guiding the
+          eye across time.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine time-frequency heatmap (spectrogram).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Perceptually-informed sequential colormap, dB-scaled colorbar with
+          units, time (s) and frequency (Hz) axes all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on x, frequency on y, full data range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with a descriptive prefix; colorbar
+          labeled correctly, no separate legend needed.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full frequency sweep from 150 Hz to 1600 Hz across 2s captures the
+          essential spectrogram feature (a moving ridge).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Swept-sine calibration tone is a real, neutral, comprehensible audio-engineering
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sample rate, frequency range, and dB dynamic range (-60 to 0 dB)
+          are all physically sensible.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small helper functions are necessary given the manual heatmap/STFT
+          workaround required by the missing colorAxis module.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the Highcharts global; nothing unused.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity; complexity is proportional
+          to the workaround needed.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Uses the harness mount-node contract correctly; animation disabled
+          everywhere.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly avoids the forbidden heatmap add-on module by staying within
+          the core renderer/scatter API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Invisible matched-axis scatter overlay recovers genuine native Highcharts
+          tooltips over a hand-drawn heatmap — a distinctive, non-trivial technique.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap

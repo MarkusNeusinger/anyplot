@@ -11,5 +11,6 @@
   code blocks look as before. The OG-image renderer loads the v3 Code TTFs from
   the same prefix, sets only the `wght` axis of the now two-axis font, and draws
   the tagline with `ss01`. Family names in CSS are `'MonoLisa Code'` and
-  `'MonoLisa Text'` (new `--text` token). The v2 files stay in the bucket until
-  the cutover is verified, then move to their own domain. (#11836)
+  `'MonoLisa Text'` (new `--text` token). The v2 files stay in the bucket; their
+  removal is a separate, explicitly authorized step after the cutover is
+  verified live. (#11836)

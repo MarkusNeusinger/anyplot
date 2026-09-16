@@ -1,0 +1,246 @@
+library: chartjs
+language: javascript
+specification_id: waffle-basic
+created: '2026-09-09T21:55:29Z'
+updated: '2026-09-09T22:10:21Z'
+generated_by: claude-sonnet
+workflow_run: 34409023906
+issue: 998
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/javascript/chartjs/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - 'Correctly fixed the previous bottom-heavy layout bug: hiding the dummy bar chart''s
+    x/y scales reclaims the full chart.chartArea below the title, and the grid+legend
+    group is now properly vertically centered rather than pinned to the top.'
+  - Added a deliberate focal-point technique to the legend (bold, slightly larger
+    text for the largest category), strengthening data storytelling with no extra
+    clutter.
+  - 'Full Imprint palette compliance -- canonical order starting at brand green #009E73,
+    identical data colors between light/dark renders, theme-correct backgrounds (#FAF8F1
+    / #1A1A17) in both.'
+  - Data sums exactly to 100%, so every square maps to exactly 1% with zero rounding
+    drift; categories sorted descending gives the grid a natural size-based reading
+    order.
+  - 'Clean, self-contained, deterministic code -- no unused imports, no unnecessary
+    functions, animation: false set correctly, correct mount-node contract usage.'
+  weaknesses:
+  - 'Layout: fixing the scale-hiding bug increased the available chartArea height,
+    but gridSize = Math.min(gridBoxW, areaH) is still capped by gridBoxW (canvas width
+    minus legend column minus gutter), which is now the binding constraint on a square
+    canvas. The result: roughly 40% of the canvas height sits empty (split above and
+    below the centered grid+legend group). Fix: reduce the legend''s width footprint
+    so gridBoxW grows closer to areaH, or stack the legend below/above the grid instead
+    of beside it in square orientation, or scale up the whole grid+legend composition
+    as a unit so its bounding box''s larger dimension matches areaH.'
+  - 'Design Excellence: styling is still functional-but-plain outside of the one focal-weight
+    legend touch -- no distinctive typographic hierarchy, color texture, or spacing
+    refinement beyond that.'
+  - 'Library Mastery: the plugin-based drawing is competent Chart.js usage (correct
+    API for an unsupported chart type) but the actual cell/legend rendering is generic
+    canvas 2D work; leaning further into Chart.js-specific mechanisms would strengthen
+    the distinctive-feature case.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Bold dark title "waffle-basic · javascript · chartjs · anyplot.ai" centered at top, fully legible. Legend labels (dark ink) fully readable. Grid+legend group is vertically centered in the canvas but occupies only ~55-60% of canvas height, leaving ~40% empty margin split top/bottom.
+      Data: 10x10 grid of 100 squares, colored by category in descending share order: green (Digital ads, 32%, first series = required #009E73), lavender (Content & SEO, 24%), blue (Events, 18%), ochre (Sponsorships, 14%), matte red (Email & CRM, 8%), cyan (Other, 4%). Legend shows swatch + label + percentage, with the first (largest) entry bold-weighted as a focal point.
+      Legibility verdict: PASS (all text readable; layout has unused canvas space but is not a legibility issue)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Title and legend render in light/off-white ink, fully legible against the dark background, no dark-on-dark failures anywhere. Same centered-but-undersized composition and same top/bottom whitespace as the light render.
+      Data: Identical colors to light render, confirming only chrome flips between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text/data/legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Grid squares clearly visible with consistent gaps
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct Imprint palette colors, no red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Grid+legend now centered (previous bug fixed) but still occupies
+          only ~55-60% of canvas height; grid size is width-constrained not height-constrained
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: N/A axes; title descriptive and correctly formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order, correct theme backgrounds
+          both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Functional with a focal-weight legend touch, still fairly plain overall;
+          empty margins undercut composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Tighter legend row spacing, but unfilled vertical space keeps composition
+          from reading as polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Descending order plus bold focal legend entry gives explicit intentional
+          focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 10x10 waffle grid
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid, legend with percentages, contrasting colors all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Values sum to 100, one square per percentage point
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches spec-id · language · library · anyplot.ai; legend
+          labels match data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers all core waffle-chart aspects
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral marketing budget allocation
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible percentage values, 6 categories within 2-6 typical range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond global Chart
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a plugin-based workaround, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false set
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Plugin afterDraw anchored to chart.chartArea with scales explicitly
+          hidden is the correct Chart.js idiom
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Generic canvas 2D work; focal-weight legend touch is a minor distinctive
+          element
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling: []

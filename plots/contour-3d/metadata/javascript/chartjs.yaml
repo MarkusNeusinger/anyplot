@@ -1,0 +1,272 @@
+library: chartjs
+language: javascript
+specification_id: contour-3d
+created: '2026-09-10T00:07:08Z'
+updated: '2026-09-10T00:11:10Z'
+generated_by: claude-sonnet
+workflow_run: 34419159627
+issue: 3230
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Builds a full hand-rolled 3D pipeline (elevation/azimuth camera, right/up/forward
+    basis, perspective divide) entirely inside a Chart.js plugin, since Chart.js has
+    no native 3D chart type — an idiomatic use of the plugin escape hatch rather than
+    reaching for another library.
+  - Implements marching squares from scratch to compute isolines at 11 regular thresholds,
+    drawn both on the tilted surface and projected flat onto the base plane, directly
+    satisfying the spec's 'project contours onto the base plane' note.
+  - Painter's-algorithm depth sorting (drawItems sorted back-to-front by average projected
+    depth) produces a convincing, artifact-free occluded 3D surface purely on a 2D
+    canvas.
+  - Axis box is placed at the projected-farthest cube corner so it sits behind the
+    mesh rather than cutting through it, with ticks and axis titles (X/Y/Z) correctly
+    billboarded outward from the box.
+  - Sequential Imprint colormap (t.seq) is used correctly for the continuous height
+    data, with an explicit f(x,y) colorbar/gradient key; data colors are pixel-identical
+    between light and dark renders — only chrome flips.
+  - Data tells a clear, neutral story (two local maxima joined by a saddle ridge)
+    matching the spec's own 'optimization landscape' application example.
+  - Deterministic, in-memory data generation with no RNG; clean scatter-chart host
+    with animation disabled per the mount-node contract.
+  weaknesses:
+  - No interactive rotation of the 3D structure — the camera (elev=30, azim=-52) is
+    fixed in both the PNG and the HTML detail view, so the spec's 'enable rotation
+    for interactive libraries' note is not met. This is a real Chart.js core limitation
+    (no orbit-controls primitive) rather than an oversight, but it is worth exploring
+    a minimal drag-to-rotate handler in the HTML view (updating azim/elev and re-running
+    the existing project() pipeline on pointermove) since the math to do so is already
+    in the file.
+  - Axis tick labels and the diagonal X/Y axis lines cross directly over the mesh
+    and floor near the plot's back corner where 'Y', 'Z' labels, and the '4' / '0.17'
+    / '-4' ticks cluster within a small area — legible but visually tight; a touch
+    more offset (perpX/perpY multiplier) would give it breathing room.
+  - The projection/marching-squares/depth-sort machinery is a lot of helper functions
+    and math for a KISS-scored entry (bump, heightFn, project, edgeXY, etc.) — justified
+    by the problem's inherent complexity (no 3D primitive in Chart.js), but it's dense
+    compared to a typical single-dataset Chart.js snippet.
+  - At small (~400px) thumbnail scale the 13px axis tick labels and thin dashed isolines
+    will likely become hard to distinguish; consider whether a slightly heavier line
+    weight or fewer displayed z-ticks would hold up better at gallery-thumbnail size.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches the required light-theme surface.
+      Chrome: Title "contour-3d · javascript · chartjs · anyplot.ai" in bold dark ink, fully visible and not clipped. X/Y/Z axis lines, ticks, and axis-letter labels render in a soft warm-brown ink tone against the light background; all readable. Bottom-left colorbar ("f(x, y)" with 0.17 / 1.55 / 2.93 tick labels) fully within canvas bounds.
+      Data: A two-peaked landscape (saddle ridge between them) rendered as a depth-sorted, contour-banded 3D surface shaded from Imprint green (#009E73, low values) to blue (#4467A3-ish, high values), with thin dark isolines both on the tilted surface and projected flat onto the base plane as a reference contour map.
+      Legibility verdict: PASS — all text is dark-on-light and readable; no light-on-light failures. Minor crowding of "Y" / tick labels near the back axis-box corner, but nothing unreadable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches the required dark-theme surface.
+      Chrome: Same title, now in light/white ink, fully visible. Axis lines and tick labels render in a light warm-gray tone against the dark background — no dark-on-dark failure anywhere (axis text, title, and colorbar labels all clearly legible).
+      Data: Identical green-to-blue sequential surface colors and isoline geometry as the light render — only the chrome (background, ink, axis-line tint) flipped, confirming color-token discipline.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light issues found in either render.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title/axis/colorbar text readable in both themes; minor risk of thin
+          isolines + 13px ticks losing legibility at gallery-thumbnail scale
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Tick labels crowd slightly near the back axis-box corner (Y label,
+          4/-4/0.17 ticks close together) but remain distinct
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Depth-sorted quads render cleanly with no z-fighting or gaps; isolines
+          visible against both bands
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-blue Imprint colormap, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas suits the projected bounding box; no clipping;
+          content well-centered with margin
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X, Y, Z axis labels present; title matches required format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq used for continuous data; backgrounds #FAF8F1/#1A1A17
+          correct; data colors identical across themes'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom perspective camera, band coloring, and floor projection show
+          real design intent, not defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No chart-junk, subtle isolines, generous whitespace; axis box is
+          minimal and behind the mesh
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Two-peak saddle landscape with color-graded elevation creates a clear
+          focal point and hierarchy
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine 3D contour surface with isolines, correctly implemented
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Regular-interval isolines, base-plane projection, and colorbar present;
+          interactive rotation is missing (Chart.js has no orbit-control primitive)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y/Z map correctly to the grid function; full data range shown via
+          axis ticks
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; colorbar acts as the legend
+          for continuous z
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Surface, contour bands, isolines, floor projection, and colorbar
+          all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Optimization-landscape framing (two maxima + saddle) matches spec's
+          own example application, neutral content
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Z range ~0.17-2.93 is sensible for a normalized landscape function
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Many small helper functions (projection math, marching squares) —
+          justified by the problem but dense for the KISS bar
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided Chart global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity matches the problem; no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses the plugin beforeDatasetsDraw/afterDatasetsDraw hooks — the
+          correct Chart.js extension point for custom rendering beyond core chart
+          types
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Genuinely distinctive use of Chart.js as a canvas host for a custom
+          3D renderer; docked slightly for the missing interactive rotation
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - colorbar
+  - contour-lines
+  - depth-sorting
+  - surface-plot
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - custom-plugin
+  dataprep:
+  - grid-generation
+  styling:
+  - publication-ready
+  - sequential-colormap

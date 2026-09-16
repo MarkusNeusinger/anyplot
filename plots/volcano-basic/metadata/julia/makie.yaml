@@ -1,0 +1,241 @@
+library: makie
+language: julia
+specification_id: volcano-basic
+created: '2026-09-09T22:02:04Z'
+updated: '2026-09-09T22:17:42Z'
+generated_by: claude-sonnet
+workflow_run: 34409708602
+issue: 2924
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'All spec-required features are present: horizontal significance threshold at
+    -log10(0.05), vertical fold-change thresholds at ±1, three-way semantic color
+    coding, top-gene labeling, and density-appropriate alpha transparency'
+  - 'Theme-adaptive chrome is fully correct in both renders — backgrounds match #FAF8F1/#1A1A17
+    exactly, all text uses INK/INK_SOFT tokens, and nothing is dark-on-dark or light-on-light'
+  - The red=up/blue=down/muted=non-significant convention is a well-established domain
+    standard for volcano plots, and the code documents this as an intentional Imprint
+    semantic exception rather than an unexplained deviation
+  - 'Realistic RNA-seq data generation: independent noise term prevents a deterministic
+    ''V'' shape, producing a plausible scattered cloud typical of real differential-expression
+    results'
+  - Clean, idiomatic Makie code — KISS structure, exact 3200×1800 canvas via resolution=(1600,900)+px_per_unit=2,
+    only used imports, seeded RNG
+  weaknesses:
+  - Gene-label annotations (fontsize=11) sit noticeably smaller than the rest of the
+    type hierarchy — bump to ~13-14 for better mobile-width legibility
+  - Title occupies only ~20-25% of canvas width, below the 50-70% comfortable range
+    — consider raising titlesize slightly (e.g. 22-24) since the current title text
+    is short
+  - The dense non-significant/down/up clouds overlap moderately near the threshold
+    boundaries — a slightly lower alpha (e.g. 0.35) on the non-significant layer would
+    reduce midfield clutter without hiding the signal
+  - Library Mastery is solid but conventional — all primitives used (scatter!, hlines!/vlines!,
+    text!, axislegend) are Makie basics; a more distinctive Makie-specific touch (e.g.
+    a custom Label subtitle, or linked axis decorations) would strengthen LM-02
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "volcano-basic · julia · makie · anyplot.ai" is bold dark text, clearly visible; axis titles "log2(Fold Change)" and "-log10(p-value)" are dark and legible; tick labels are a softer dark gray, readable; subtle light-gray gridlines on both axes; dashed threshold lines (horizontal at ~1.3, vertical at ±1) are dark gray and visible without dominating; legend box (top-right, off-white fill, thin border) lists Non-significant/Down-regulated/Up-regulated with matching swatches; six top genes (Gene1146, Gene1164, Gene1799, Gene472, Gene1547, Gene1368) are labeled in dark text next to their points.
+      Data: Gray dots (non-significant) form the central "non-signal" mass, blue dots occupy the upper-left "down-regulated" wing, red dots occupy the upper-right "up-regulated" wing. First series in the legend is gray/muted, not brand green — this is an intentional, documented semantic exception (domain-standard volcano-plot convention) rather than an oversight.
+      Legibility verdict: PASS — all title, axis, tick, legend, and annotation text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis titles are light/off-white and clearly visible; tick labels are a softer light gray, readable; gridlines are subtle light gray on the dark surface; dashed threshold lines are light gray, visible; legend box uses the dark elevated fill (#242420-equivalent) with light text and a light border, fully legible; gene labels are rendered in light text, clearly visible against the dark background.
+      Data: The blue (down-regulated), red (up-regulated), and muted-gray (non-significant) point colors are identical to the light render — only the chrome (background, text, grid, legend frame) flipped, exactly as required.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every text element (title, axis labels, ticks, legend, gene annotations) is clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; gene-label annotations at fontsize=11
+          are a touch small relative to the rest of the hierarchy
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markersize 7-8 with density-tuned alpha (0.45 non-sig, 0.75 significant)
+          suits ~2200 points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/blue/gray carry redundant positional (x-axis side) encoding,
+          not color alone; legend labels confirm meaning
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 3200x1800 canvas, no overflow or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: log2(Fold Change) / -log10(p-value) are descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Backgrounds correct both themes; red=up/blue=down/muted=non-sig is
+          a documented, well-justified semantic exception for this domain-standard
+          plot type
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        comment: Custom semantic palette and density-aware alpha show intent, but
+          overall treatment is a fairly standard volcano-plot presentation
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: Top/right spines removed, subtle low-alpha gridlines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        comment: Threshold lines plus labeled top genes give a clear focal point and
+          guide the reader to the most significant hits
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct volcano plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thresholds, tri-color significance coding, top-feature labeling,
+          and alpha-transparency all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=log2FC, y=-log10(p) correctly mapped, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match category semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All volcano-plot facets represented: significance, effect size,
+          thresholds, labeling'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible RNA-seq scenario, neutral generic gene names, non-deterministic
+          scatter shape
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: n=2200 within the 100-10000 typical range; fold-change/p-value magnitudes
+          realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via current CairoMakie API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Correct use of scatter!/hlines!/vlines!/text!/axislegend recipes
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: text! gene labeling and RGBAf-based grid alpha are nice touches but
+          all primitives used are Makie basics
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

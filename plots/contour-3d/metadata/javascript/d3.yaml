@@ -1,0 +1,255 @@
+library: d3
+language: javascript
+specification_id: contour-3d
+created: '2026-09-10T00:12:08Z'
+updated: '2026-09-10T00:30:05Z'
+generated_by: claude-sonnet
+workflow_run: 34419331042
+issue: 3230
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Genuine hand-rolled 3D camera projection (elevation/azimuth, painter's-algorithm
+    depth sort) with real drag-to-orbit interaction — fulfills the spec's rotation
+    requirement authentically rather than faking it
+  - Correct diverging Imprint colormap (red ↔ neutral ↔ blue) applied to the signed
+    objective surface, with data colors identical between light and dark renders
+  - 'Implements both spec asks simultaneously: contour bands projected onto the floor
+    AND isolines draped directly on the true 3D surface geometry'
+  - Maximum/Minimum critical points are directly labeled with halo-stroked text for
+    legibility, sharpening the data story beyond color/contour alone
+  - 'Idiomatic, correct d3 usage: d3.contours() marching squares, d3.scaleSequential
+    + interpolateRgbBasis, d3.drag() — no forbidden color schemes'
+  weaknesses:
+  - Canvas utilization is borderline (~45-50% of the 3200x1800 canvas) with noticeable
+    empty whitespace in the top-right (between title and colorbar) and bottom-right
+    quadrants — enlarge the 3D scene or tighten margins to use more of the canvas
+  - Axis labels 'Parameter X' / 'Parameter Y' / 'Objective Value' are descriptive
+    but carry no units — consider adding a unit or a one-word domain qualifier if
+    the objective function has a natural interpretation
+  - The surface isolines create some visual clutter near the two peaks where many
+    thin white contour rings overlap densely — consider slightly fewer bands or a
+    thinner stroke there for extra polish
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 (not pure white, not dark).
+      Chrome: Title "Optimization Landscape · contour-3d · javascript · d3 · anyplot.ai" is dark, bold, centered at top, fully readable. "Parameter X", "Parameter Y", and "Objective Value" axis labels are dark bold text, clearly legible against the light background. Tick labels (numeric, e.g. "2.0", "0", "-2", "4") are medium-gray, subtle but readable. The right-side colorbar has a dark bold "Objective Value" title and gray tick labels, all legible.
+      Data: A 3D surface with one blue peak (labeled "Maximum") and one red valley (labeled "Minimum"), shaded with a diverging red-neutral-blue continuous colormap. White isolines are draped on the true surface at each contour level, and the same contour bands are also projected flat onto a floor plane beneath the surface for reference. The colorbar confirms the mapping: blue = positive values (top, +3.0), red = negative values (bottom, -3.0).
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 (not pure black, not light).
+      Chrome: Title is light/near-white, bold, centered at top, fully readable. Axis labels ("Parameter X", "Parameter Y", "Objective Value") are light-colored and clearly legible against the dark background. Tick labels are light gray, subtle but readable. Colorbar title and tick labels are light-colored, all legible. No dark-on-dark text was found anywhere.
+      Data: Confirmed identical to the light render — same blue peak (Maximum) / red valley (Minimum) surface, same diverging colormap stops, same floor-projected contour bands and surface isolines. Only the chrome (background, axis/tick/title text color, isoline halo color) flips between themes; the data-color mapping itself is unchanged.
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (13-22px); readable at full size in
+          both themes; title fits without clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions found; axis labels, tick labels, and extrema labels
+          stay clear of each other
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 42x42 grid gives clear surface detail; isolines and extrema markers
+          are prominent and well-sized
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Diverging red/blue with strong luminance contrast, CVD-safe, not
+          relying on hue alone (contour bands + labels reinforce)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Plot + colorbar occupy roughly 45-50% of the canvas; noticeable empty
+          whitespace top-right and bottom-right
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: Descriptive labels (Parameter X/Y, Objective Value) but no units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct imprint_div diverging colormap on signed continuous data;
+          theme-correct chrome and backgrounds in both renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong, thoughtful design: true camera projection, colorbar, halo-stroked
+          labels; slight clutter from dense overlapping isolines near peaks keeps
+          it below publication-perfect'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle axis frame, generous whitespace, refined stroke halos on labels;
+          minor clutter from isoline density
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Labeled Maximum/Minimum critical points plus diverging color coding
+          create a clear, immediate focal point on the two extrema
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Genuine 3D contour plot: shaded surface with draped isolines, preserving
+          surface geometry as the spec requires'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Contour lines at regular intervals (isolines), floor projection,
+          rotation via drag-to-orbit, and colorbar are all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y/Z correctly mapped; axes show the full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches the mandated format with descriptive prefix;
+          colorbar serves as the value legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both a maximum and a minimum extremum, full positive/negative
+          range, contour bands and isolines together
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Optimization-landscape objective field directly matches the spec's
+          suggested application; neutral, plausible scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values (-2.6 to 3.2) are sensible for a normalized objective function;
+          no impossible relationships
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Small helper functions (gaussian, cross, normalize, dot, render)
+          are necessary for the 3D projection math and drag re-render, not gratuitous
+          abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic closed-form data, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity; the drag-to-orbit is real
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: svg sized from window.ANYPLOT_SIZE, current d3 v7 API throughout
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.contours(), d3.scaleSequential + interpolateRgbBasis, d3.drag(),
+          d3.ticks()/d3.format() all used idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Hand-built 3D camera projection, painter's-algorithm depth sorting,
+          and marching-squares contours draped on a projected surface are distinctive
+          to d3's low-level data-join model
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - colorbar
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending

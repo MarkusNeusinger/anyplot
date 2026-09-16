@@ -1,0 +1,255 @@
+library: chartjs
+language: javascript
+specification_id: venn-basic
+created: '2026-09-09T21:22:15Z'
+updated: '2026-09-09T21:40:14Z'
+generated_by: claude-sonnet
+workflow_run: 34404886816
+issue: 2444
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/chartjs/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Overlap geometry is now genuinely data-derived: solveDistanceForArea binary-searches
+    the center distance so each pairwise lens area matches the real intersection count
+    (fixing attempt 1''s fixed 0.42 factor), and the third circle is trilaterated
+    so all three pairwise overlaps hold simultaneously'
+  - Full 3-set Venn with all 7 regions (3 exclusive, 3 pairwise, 1 triple) shown with
+    correct, internally-consistent counts derived via inclusion-exclusion from the
+    raw totals
+  - Correct Imprint palette order across all three circles (green/lavender/blue) with
+    identical data colors between light and dark renders; only chrome flips
+  - Thinner, matched-opacity strokes (1.5px) address attempt 1's heavy-stroke feedback
+    and read as more refined against the alpha-blended fills
+  - Idiomatic, well-justified use of Chart.js's native afterDatasetsDraw plugin hook
+    to render custom canvas geometry, with a clear code comment explaining why a bubble-dataset
+    approach was rejected (auto-reserved radius padding) — no unsupported community
+    plugin or workaround
+  - All text legible in both themes, including at the 400px thumbnail scale; layout
+    auto-fits the triangle+circles into the chart area with margin reserved for the
+    outward-radiating set-name labels
+  - Realistic, neutral survey data (reading-habit genres) at a sensible scale, fully
+    deterministic with no RNG
+  weaknesses:
+  - Region caption text (13px, e.g. 'Fiction & Memoir', 'Nonfiction & Memoir') is
+    tight at the 400px thumbnail scale — legible but small; consider bumping to 14-15px
+    for more comfortable mobile reading
+  - The overlap counts stack fairly densely in the triple-overlap zone (three number+caption
+    pairs within a small lens) — slightly more vertical spacing between the 'Fiction
+    & Memoir' / 'Nonfiction & Memoir' pair and the 'All three' label beneath would
+    ease visual scanning
+  - No explicit callout or color emphasis on the most interesting figure (e.g. the
+    35-reader triple-overlap) — the plot presents all regions with equal visual weight
+    rather than guiding the eye to a specific insight
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1 — correct light chrome.
+      Chrome: title "venn-basic · javascript · chartjs · anyplot.ai" and subtitle "Reading habits of 500 surveyed adults" render in bold dark ink / softer gray, both fully readable. Three set-name labels ("Fiction readers", "Nonfiction readers", "Memoir readers") in bold dark text radiate outward from the cluster, clear of the circles.
+      Data: three overlapping circles — Fiction (brand green #009E73, bottom-left), Nonfiction (lavender, bottom-right), Memoir (blue, top) — sized proportionally to their totals (280/210/150). Overlap regions blend into darker teal/violet/slate tones. Seven region labels show counts (160, 80, 55, 60, 25, 35, 35) with smaller gray captions beneath, all legible against their fills, confirmed readable at both full size and the 400px thumbnail.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17 — correct dark chrome.
+      Chrome: title, subtitle, and set-name labels render in light/off-white text, fully legible against the dark surface — no dark-on-dark failures observed on any element.
+      Data: identical green/lavender/blue circle colors to the light render (only chrome flipped, as required); overlap fills read as muted teal/purple/slate against the dark background. Region count numbers (white/light) and captions (light gray) remain clearly legible over the semi-transparent overlap fills, including in the darkest triple-overlap zone.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes and at 400px thumbnail; small region
+          captions (13px) are tight at extreme scale-down
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Circles and alpha-blended overlaps clearly visible and distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/blue hues are CVD-distinct; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 2400x2400 square canvas, nothing cut off, labels fit with
+          margin
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: N/A axes for a Venn diagram; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Imprint order (green/lavender/blue); identical data colors
+          across themes; correct backgrounds
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Genuine geometric solver (lens-area bisection + trilateration) drives
+          the layout, not a fixed constant
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No axes/grid/legend chrome, generous whitespace, thinner matched-opacity
+          strokes than attempt 1
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Circle size and central triple-overlap create a natural focal hierarchy,
+          but no explicit emphasis on a specific insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3-set proportional Venn diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 3 sets, area-proportional circles and overlaps, counts per region,
+          alpha transparency, readable labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Set sizes and intersection sizes correctly mapped to circle/lens
+          areas
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; direct circle labeling substitutes for a separate
+          legend appropriately
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Now covers full 3-set case including triple overlap, addressing attempt
+          1's gap
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible reading-habit survey data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 500 respondents with internally-consistent, sensible subset sizes
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions needed for real geometry (lens area, bisection,
+          trilateration); complexity is justified and well-commented
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic in-memory data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; complexity matches the genuine geometric problem
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false set'
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Native afterDatasetsDraw plugin hook used exactly as the library
+          rules recommend for unsupported chart types
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine proportional-Venn geometry solver (lens-area equations +
+          trilateration) built entirely on Chart.js's plugin/draw-hook architecture
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

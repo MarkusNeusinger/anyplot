@@ -595,6 +595,7 @@ export function SpecPage() {
               />
 
               <SpecDetailView
+                specId={specData.id}
                 specTitle={specData.title}
                 selectedLibrary={selectedLibrary || ''}
                 currentImpl={currentImpl}
@@ -603,17 +604,10 @@ export function SpecPage() {
                 codeCopied={codeCopied}
                 downloadDone={downloadDone}
                 viewMode={viewMode}
-                reportUrl={buildReportUrl()}
                 onViewModeChange={handleViewModeChange}
                 onImageLoad={() => setImageLoaded(true)}
                 onCopyCode={handleCopyCode}
                 onDownload={handleDownload}
-                onReport={() =>
-                  trackEvent('report_issue', {
-                    spec: specId,
-                    library: selectedLibrary || undefined,
-                  })
-                }
                 onTrackEvent={trackEvent}
               />
 

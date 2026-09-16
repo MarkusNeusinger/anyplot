@@ -1,0 +1,260 @@
+library: highcharts
+language: javascript
+specification_id: waffle-basic
+created: '2026-09-09T22:05:36Z'
+updated: '2026-09-09T22:18:44Z'
+generated_by: claude-sonnet
+workflow_run: 34409899156
+issue: 998
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Repair loop directly addressed the prior review: a custom squareRounded SVG symbol
+    replaces the plain scatter square, giving the grid a deliberate tile-like depth
+    in both themes'
+  - New point-level dataLabels stamp each department's percentage onto its leading
+    square using Highcharts' dataLabels API — a genuine Highcharts-specific touch
+    that also adds a redundant (non-hue) cue for colorblind readers
+  - 'Correct Imprint palette use: first series is brand green #009E73, remaining 4
+    departments follow canonical positions 2-5 (lavender, blue, ochre, matte red),
+    identical across light and dark renders'
+  - 'Theme chrome fully threaded through tokens: title/subtitle/legend text and page
+    background are correct and readable in both #FAF8F1 and #1A1A17 renders, no dark-on-dark
+    or light-on-light failures'
+  - Data sums exactly to 100 (34+22+18+15+11) and renders as a clean 10x10 grid of
+    100 equal squares, matching the spec's core requirement
+  - Legend labels bake in category name and percentage ("Engineering — 34%") directly
+    into the series name, and legend swatch radius now matches the rounded square
+    markers for visual consistency
+  - Clean, deterministic, KISS-structured code with no fake interactivity and explicit
+    font sizes for every text element
+  weaknesses:
+  - 'DE-01/DE-02: The rounded-square refinement and dataLabels are real but modest
+    improvements — the grid still reads mostly as well-configured default styling
+    rather than a fully bespoke, publication-grade composition. Consider a subtle
+    inner highlight/shadow on the squares or a touch more breathing room between blocks
+    for a more polished, less generic feel.'
+  - 'LM-02: The dataLabels touch is Highcharts-specific but still fairly restrained.
+    A tooltip or point-level interaction detail visible in the HTML output (called
+    out honestly in review notes, not required for the PNG) would showcase more of
+    the library''s distinctive strengths.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "waffle-basic · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "Annual budget allocation by department — each square = 1%" in softer grey, both clearly legible. Legend sits centered below the grid with 5 entries ("Engineering — 34%", "Marketing — 22%", "Operations — 18%", "Sales — 15%", "Support — 11%") in dark-grey text with small rounded-square swatches matching the grid markers.
+      Data: A 10x10 grid of 100 equal, gently rounded square cells, filled contiguously in blocks by department in descending size order (34 green, 22 lavender, 18 blue, 15 ochre, 11 red). The leading square of each block now carries a white, dark-outlined percentage label ("34%", "22%", "18%", "15%", "11%") readable against every fill color. First series renders in brand green #009E73. Squares have a thin page-background gap between them giving a tile-mosaic look.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title and subtitle flip to light ink/grey and remain fully readable against the dark surface; legend text is light grey, swatches unchanged.
+      Data: Same 100-square rounded grid in the same block layout, order, and percentage-label placement; the five data colors (green, lavender, blue, ochre, red) and the white outlined percentage labels are pixel-identical to the light render — only the surrounding chrome (background, text) flipped as expected.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed in either render.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title/subtitle/legend/dataLabels all use explicit font sizes and
+          are readable in both themes with no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or square overlap in either render; new dataLabels sit cleanly
+          inside their squares
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 100 squares sized appropriately for the 10x10 grid, clearly visible,
+          none too small or crowded
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Percentage dataLabels on lead squares now give a redundant non-hue
+          cue on top of the text-labeled legend, addressing the borderline n=5 CVD-distance
+          concern
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid occupies roughly two-thirds of the square canvas with balanced
+          margins around title/subtitle and legend
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis titles needed for a waffle grid; descriptive title and subtitle
+          carry the context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, remaining series follow canonical Imprint
+          order, backgrounds and chrome are theme-correct in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Custom squareRounded SVG symbol and lead-square dataLabels are a
+          real, deliberate refinement over the prior flat scatter-square look, but
+          still short of full publication-grade polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Rounded squares plus matching rounded legend swatches show intentional
+          refinement; still modest overall — no additional depth/shadow treatment
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Departments ordered largest-to-smallest, creating a clear size-based
+          reading hierarchy across the contiguous blocks
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct waffle chart via 10x10 square grid
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 100-square grid, distinct colors, legend with percentages, values
+          sum to 100 and rounded to whole squares
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 100 cells map correctly to the 5 departments in the intended
+          order
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches spec exactly; legend labels match department
+          names and percentages
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 categories with varied proportions (34/22/18/15/11) fully exercise
+          the grid layout
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible department budget-allocation scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sum exactly to 100 and are realistic whole-number percentages
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data -> grid-index computation -> chart call, no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the Highcharts global is used, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately simple, no fake UI or over-engineering; new dataLabels/symbol
+          additions are small and purposeful
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current Highcharts
+          API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct, idiomatic use of Highcharts.chart with a scatter series,
+          custom SVG symbol, and dataLabels
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Point-level dataLabels stamping percentages is a genuine Highcharts-specific
+          feature now leveraged, though a more ambitious interactive touch in the
+          HTML output would push this further
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting

@@ -1,0 +1,238 @@
+library: echarts
+language: javascript
+specification_id: timeseries-decomposition
+created: '2026-09-09T20:33:19Z'
+updated: '2026-09-09T20:46:41Z'
+generated_by: claude-sonnet
+workflow_run: 34401070274
+issue: 2992
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Both attempt-1 weaknesses fully resolved: explicit unit-labeled y-axis titles
+    on every panel, and two storytelling annotations ("Peak season", "Largest outlier")
+    giving clear visual focal points'
+  - Correct classical additive decomposition (centered 12-month moving average trend,
+    seasonal-index averaging, residual) implemented from scratch and deterministically
+    via a fixed-seed LCG
+  - Multi-grid ECharts layout with linked axisPointer produces a synced crosshair/tooltip
+    across all four stacked panels - a genuinely distinctive ECharts capability
+  - Correct Imprint palette in canonical order (green/lavender/blue/ochre), identical
+    across light/dark, with theme-correct chrome in both renders
+  weaknesses:
+  - Aesthetic sophistication is solid/professional but not yet visually distinctive
+    beyond currency formatting and per-panel color coding
+  - Still relies on several small helper functions (makeXAxis, makeYAxis, makePanelLabel,
+    dollarFormatter) rather than a fully flat script, though reasonably justified
+    by 4-panel DRY reuse
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - PASS
+      Chrome: Title centered at top in dark ink; four panel labels (Original, Trend, Seasonal, Residual) bold dark text top-left of each panel; explicit y-axis titles with units (Revenue (USD), Deviation (USD), Residual (USD)); dollar-formatted y-axis ticks; year ticks (2014-2023) only under bottom panel; "Peak season" and "Largest outlier" annotation labels in dark ink - all clearly readable
+      Data: Original = brand green #009E73, Trend = lavender, Seasonal = blue, Residual = ochre - matches Imprint canonical order, first series is #009E73
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - PASS
+      Chrome: Title, panel labels, axis titles, tick labels, and both annotation callouts render in light/white text, fully legible against the dark background - no dark-on-dark issues found
+      Data: Colors identical to light render (green/lavender/blue/ochre) - confirms only chrome flips between themes
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes at appropriate sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, annotations, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line widths appropriate for 120-point monthly series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinguishable hues, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, proportions clean, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Explicit y-axis titles with units now present on every panel (fixed
+          from attempt 1)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order, first series #009E73, theme-correct backgrounds'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Solid and professional but not visually distinctive beyond currency
+          formatting and color coding
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Minimal chrome (axis line only on shared bottom axis), subtle grid,
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Peak season and largest outlier markPoint annotations create clear
+          focal points (fixed from attempt 1)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Four vertically stacked subplots as specified
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Original, Trend, Seasonal, Residual all present with shared time
+          axis and grid lines
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped, all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; panel labels substitute for legend (single
+          series per panel)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 120 monthly points, 10 full seasonal cycles
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral e-commerce revenue growth with holiday seasonality
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue values ($24k-$66k) sensible for the domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Several small helper functions instead of a flat script, though justified
+          by 4-panel DRY reuse
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mount-node contract respected, animation: false set'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic multi-grid layout for stacked panels
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Linked axisPointer, markLine, and markPoint annotations are genuinely
+          ECharts-distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - time-series
+  dataprep:
+  - time-series
+  - rolling-window
+  styling:
+  - minimal-chrome
+  - publication-ready

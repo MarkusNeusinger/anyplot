@@ -1,0 +1,231 @@
+library: highcharts
+language: javascript
+specification_id: violin-box
+created: '2026-09-09T21:33:43Z'
+updated: '2026-09-09T21:47:21Z'
+generated_by: claude-sonnet
+workflow_run: 34406614840
+issue: 2646
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/javascript/highcharts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'All three attempt-1 weaknesses were fixed directly and precisely: unit hint on
+    the x-axis, a subtitle calling out the bimodal insight, and a Highcharts-distinctive
+    dataLabels stat chip'
+  - Manual construction of violin + box + whiskers + outliers purely from core area/line/scatter
+    series (no highcharts-more) fully replicates the required plot type within the
+    library's real constraints
+  - Theme-adaptive box fill (t.ink) and median line (t.pageBg) invert cleanly between
+    light/dark so contrast is always maintained
+  - Categorical palette correctly applied in canonical order with brand green first,
+    identical across both renders
+  - New stat chips are well-positioned (no overlap with violin geometry or each other)
+    and theme-adaptive (elevatedBg/grid/inkSoft tokens)
+  weaknesses:
+  - 'Design Excellence is solid but not top-tier: chrome/whitespace could be pushed
+    further (e.g. a subtler grid or refined tick density) for a true publication-grade
+    feel'
+  - Only Group Study shows an outlier tooltip in this sample; Self-Study and Tutored
+    have none, so the outlier/tooltip path is only exercised once
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1
+      Chrome: title "violin-box · javascript · highcharts · anyplot.ai" in bold dark ink; subtitle "Self-Study is bimodal — disengaged and independently-thriving students form two distinct peaks" in soft dark gray; x-axis title "Exam Score (0–100)" now carries the unit hint; category labels (Self-Study, Group Study, Tutored) and tick labels all fully legible
+      Data: violins colored in Imprint canonical order (green, lavender, blue), first series #009E73; dark charcoal box (Q1-Q3) with white median tick; new dataLabel stat chips above each violin peak show "Q1 59 · Med 70 · Q3 81" style summaries; one purple outlier dot on Group Study
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17
+      Chrome: title, subtitle, and axis title in light cream/gray text; tick and category labels in softer light gray; no dark-on-dark failures
+      Data: identical violin hues to light render; box fill inverts to light cream with dark median tick; stat chips use dark elevated background with light text, readable against page background; same outlier dot visible on Group Study
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions, including new stat chips
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Box/median/whiskers/outliers all clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Adequate contrast, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, good proportions, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed: x-axis title now includes unit hint (0-100)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order, first series #009E73, theme-correct chrome'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Stat chips add a thoughtful data layer, restrained execution
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minimal chrome, generous whitespace, not maximal polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Fixed: subtitle now explicitly calls out the bimodal insight'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Violin with embedded box plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Box, median, quartiles, whiskers, KDE shape, outliers all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Groups on category axis, values on continuous axis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, no legend needed (groups labeled on axis)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows density, box, quartiles, whiskers, outliers
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral exam-score-by-study-method scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 exam score scale is sensible
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Necessary helper functions substituting for numpy/scipy in browser
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG PRNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond global Highcharts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Creative constrained use of core area/line/scatter series
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Fixed: dataLabels stat chip with custom background/border/format
+          is Highcharts-distinctive'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - minimal-chrome

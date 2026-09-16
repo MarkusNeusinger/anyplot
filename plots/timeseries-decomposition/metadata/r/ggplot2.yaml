@@ -1,0 +1,254 @@
+library: ggplot2
+language: r
+specification_id: timeseries-decomposition
+created: '2026-09-09T20:33:52Z'
+updated: '2026-09-09T20:45:30Z'
+generated_by: claude-sonnet
+workflow_run: 34401324173
+issue: 2992
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'All four review-1 weaknesses are cleanly fixed: canonical palette order restored
+    (Trend=lavender #C475FD, Seasonal=blue #4467A3), grid lines now genuinely faint
+    via a hand-blended INK/PAGE_BG color, title fontsize trimmed further so it no
+    longer presses against the panel edge, and Residual markers bumped from size 1.6
+    to 2.1 for better visibility'
+  - Four required decomposition components (Original, Trend, Seasonal, Residual) shown
+    as clean vertically stacked facets sharing a continuous time axis, exactly per
+    spec, with bold strip labels naming each component
+  - Theme-adaptive chrome is correctly threaded through backgrounds, strip labels,
+    axis text, and title in both renders — no dark-on-dark or light-on-light failures,
+    and data colors are pixel-identical between themes
+  - 'Thoughtful design choices: dashed zero-reference line on the Residual facet aids
+    interpretation, free_y per-facet scaling lets each component''s pattern read clearly
+    despite wildly different value ranges, and an adaptive title-fontsize formula
+    accounts for the square canvas'
+  - Realistic, neutral synthetic dataset (10 years of monthly retail sales with plausible
+    growth + seasonality + noise), fully reproducible via set.seed(42) and base R
+    decompose()
+  - Clean, idiomatic ggplot2/tidyverse code (facet_wrap, pivot_longer, scale_x_date)
+    with no unnecessary dependencies, no functions/classes, and canvas dimensions
+    matching the square target exactly
+  weaknesses:
+  - Only horizontal (y) grid lines are shown; panel.grid.major.x is fully blanked.
+    The spec's 'light grid lines to aid reading values across time' could be read
+    as wanting some cross-facet date alignment cue — consider a very faint vertical
+    grid line at the major date breaks if a future revision wants to lean into that
+    reading, though the current choice is defensible and not a hard requirement.
+  - Data storytelling stays close to standard faceted decomposition; a subtle annotation
+    or shaded band calling out one notable seasonal peak/trough would sharpen the
+    visual hierarchy further, though it's not required by the spec.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-range), consistent across the full canvas and all four facet panels.
+      Chrome: Bold dark title "timeseries-decomposition · r · ggplot2 · anyplot.ai" fully visible at the top, comfortably within the panel width (no clipping, no crowding against the edge). Bold dark strip labels ("Original", "Trend", "Seasonal", "Residual") sit above each facet. Axis titles ("Date", "Retail Sales (thousands $)") and tick labels render in dark ink, clearly legible. Horizontal grid lines are now genuinely faint (hand-blended INK/PAGE_BG), visible but unobtrusive.
+      Data: Original = brand green (#009E73) rising/cyclical line; Trend = lavender (#C475FD) smooth rising line; Seasonal = blue (#4467A3) repeating cyclical line; Residual = muted-grey scatter points (size 2.1, alpha 0.75) around a dashed zero-reference line. Canonical Imprint palette order (position 1/2/3) is correctly used for the three abstract, non-semantic categories.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-range), consistent across canvas and facets.
+      Chrome: Title and all four strip labels flip to light/white text, fully legible against the dark background — no dark-on-dark failures. Axis titles and tick labels flip to light ink tones and remain clearly readable. Grid lines remain faint and unobtrusive, same treatment as light render.
+      Data: Green/lavender/blue/grey data colors are pixel-identical to the light render — only chrome (background, text, grid, strip backgrounds) changed, confirming correct theme-adaptive implementation.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title no longer tight against panel edge; all chrome readable in
+          both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, strips, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Residual markers bumped to size 2.1, clearly visible; lines appropriately
+          weighted
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/blue/grey combination is CVD-safe, no red-green sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Title comfortably within bounds, free_y scaling per facet, generous
+          panel spacing, canvas exactly 2400x2400
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (Retail Sales (thousands $))
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order restored (position 1/2/3 for Original/Trend/Seasonal);
+          both renders theme-correct backgrounds
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom per-component palette mapping, hand-blended faint grid color,
+          adaptive title-fontsize formula for square canvas
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid now genuinely subtle (fixed from review 1), generous panel spacing,
+          clean minimal theme
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Facet ordering mirrors the natural decomposition narrative; dashed
+          zero-reference line anchors residual reading
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct vertically-stacked decomposition plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Original/Trend/Seasonal/Residual all present, shared time axis, clear
+          component labels, light grid lines
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=date, y=value, correctly faceted by component
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; no legend needed since facet
+          strips already label each series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Uses real decompose() on a proper 10-year monthly ts() object, showing
+          all four aspects
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral retail sales scenario with growth + seasonality
+          + noise
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible value ranges and component magnitudes for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tidyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{theme}.png via ragg::agg_png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: facet_wrap, scale_x_date, theme_minimal used idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: free_y scales, zero-reference line, base R decompose() are nice touches
+          beyond generic faceting
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  patterns:
+  - data-generation
+  - wide-to-long
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling
+  - alpha-blending

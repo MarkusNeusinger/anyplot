@@ -1,0 +1,251 @@
+library: d3
+language: javascript
+specification_id: survival-kaplan-meier
+created: '2026-09-09T19:43:31Z'
+updated: '2026-09-09T19:59:33Z'
+generated_by: claude-sonnet
+workflow_run: 34396162558
+issue: 2441
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'All five weaknesses from the attempt-1 review are directly and correctly fixed:
+    censoring ticks are now clearly visible (10px half-height, stroke-width 2.75),
+    median survival time is annotated with dashed guide lines and halo-protected labels
+    for both groups, the y-axis domain/spine is hidden to match the minimal x-axis
+    treatment, CI band edges now carry a subtle stroke to keep overlapping bands visually
+    separable, and a log-rank test p-value is displayed in the legend area'
+  - Correct step-function Kaplan-Meier estimator with real Greenwood variance-based
+    95% confidence bands (not approximated) — mathematically rigorous, and the log-rank
+    test is a genuine chi-square computation, not a hardcoded value
+  - 'Median survival annotations meaningfully improve data storytelling — the horizontal
+    50% reference line plus per-group dashed drop-lines and ''Median: X.Xmo'' labels
+    let the viewer read off the key clinical comparison at a glance'
+  - 'Theme-adaptive chrome is correct and consistent in both light and dark renders;
+    data colors are identical across themes; first categorical series is #009E73 as
+    required'
+  - Clean two-group comparison with legend including sample size per group (n=95)
+    and the log-rank p-value, all correctly formatted per spec
+  - Deterministic, reproducible data generated via a seeded LCG (no network fetches,
+    self-contained browser-side simulation)
+  weaknesses:
+  - Where the two groups' 95% CI bands overlap (~months 5-12), the translucent fills
+    still blend into a slightly muddied intermediate tone despite the new band-edge
+    strokes — a further opacity reduction or a dashed/dotted stroke variant per group
+    could sharpen the separation even more, though this is now a minor polish item
+    rather than a functional problem
+  - The spec's optional at-risk table below the plot is still not present — not required
+    for approval, but would further strengthen feature coverage in a future iteration
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white.
+      Chrome: Title "survival-kaplan-meier · javascript · d3 · anyplot.ai" is dark, bold, centered, fully visible with no clipping (~40% of canvas width). X-axis label "Time Since Enrollment (months)" and Y-axis label "Survival Probability" are dark and clearly readable, both fully within the canvas margins. Tick labels (0-35 on x, 0%-100% on y) are dark gray and legible. Horizontal gridlines only, subtle, at 0/20/40/60/80/100%. Legend top-right with colored line swatches and text "Standard Therapy (n=95)" / "Novel Therapy (n=95)", plus an italic "Log-rank test: p < 0.001" line beneath, fully readable, no overlap with curve data or the median annotations.
+      Data: Two step-function survival curves — Standard Therapy in Imprint green (#009E73) declining to ~17% by month 36, Novel Therapy in Imprint purple (second Imprint palette color) declining more slowly to ~42% by month 36. Both curves show shaded 95% CI bands with a subtle stroked edge (new since attempt 1) in matching colors, and clearly visible vertical tick marks (larger than attempt 1) marking censored observations along each curve. New in this attempt: a dashed horizontal 50%-survival reference line plus per-group dashed vertical drop-lines and halo-protected text labels "Median: 12.4mo" (green) and "Median: 30.2mo" (purple), both legible against the curve/band clutter behind them. First categorical series is correctly #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), not pure black.
+      Chrome: Title, axis labels, and tick labels all render in light/white text, clearly legible against the dark background — no dark-on-dark failures observed. Gridlines are subtle light gray, still visible but not dominant. Legend text and the log-rank p-value line are light-colored and readable, swatches match the curve colors.
+      Data: Same two curves with identical colors to the light render (#009E73 green and Imprint purple) — confirms only chrome flipped, data colors unchanged. CI bands (with stroked edges), censoring ticks, and the median annotation lines/labels are all equally visible against the dark background, with the halo behind the median text still providing contrast.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (14/15/16/20/24px), well-proportioned title,
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend, axis labels, median annotations, and curves do not collide;
+          halo-protected median text stays readable over crossing lines
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Curves and bands well-sized; censoring tick marks now clearly visible
+          (10px half-height, stroke-width 2.75, up from 7px/2 in attempt 1)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple combination is CVD-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills canvas well, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time axis has units, y-axis descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second series canonical Imprint order, correct
+          theme backgrounds in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful composite of bands, step curves, censoring ticks, and
+          median drop-lines with halo text — clearly above a bare default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: y-axis domain now hidden, subtle y-only grid, generous whitespace,
+          stroked band edges; minor blend remains in the CI overlap zone
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Median annotations plus the log-rank p-value give the viewer an immediate,
+          quantified takeaway rather than raw curves alone
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Kaplan-Meier step-function survival plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Step function, CI bands, censoring marks, group colors + legend,
+          median annotation, and log-rank p-value all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on x, survival probability on y, correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact, legend labels match groups with n
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows censoring, CI bands, group divergence, median crossover, and
+          significance test — comprehensive
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral clinical trial scenario, comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Hazard/dropout rates and 36-month follow-up are plausible for a trial
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions needed for the KM estimator, log-rank test, and
+          median lookup; reasonable given the statistical complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG, deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, current D3 API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic scales, area/line generators, axis components
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Bespoke composite of area (CI band) + step line + tick overlay +
+          annotation layer, a genuinely custom D3 composition
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - survival-analysis
+  styling:
+  - alpha-blending
+  - grid-styling

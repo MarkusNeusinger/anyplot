@@ -1,0 +1,234 @@
+library: d3
+language: javascript
+specification_id: venn-basic
+created: '2026-09-09T21:14:47Z'
+updated: '2026-09-09T21:32:29Z'
+generated_by: claude-sonnet
+workflow_run: 34405136159
+issue: 2444
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Area-proportional circle radii via d3.scaleSqrt, and internally consistent region
+    math — verified each set total (145/120/95) exactly equals the sum of its regions
+    (only + pairwise + triple)
+  - 'Deliberate visual hierarchy: stroke-width scales with set size (heavier outline
+    on the dominant Python circle) and the triple-overlap count is rendered larger/bolder
+    as a clear focal point'
+  - 'Correct Imprint palette — first series is #009E73 (Python), remaining series
+    follow canonical palette order; backgrounds and ink/halo text tokens are theme-correct
+    in both light and dark renders'
+  - Idiomatic D3 usage — proper data joins (.data().join()) for circles, region text,
+    and legend groups; scales used for radius and stroke-width instead of hardcoded
+    values
+  - Clean, well-integrated legend (swatch + name + set size) positioned close to the
+    diagram; balanced canvas utilization with no wasted whitespace
+  weaknesses:
+  - Title occupies only ~35-40% of canvas width — legible and well-centered, but reads
+    slightly small relative to the diagram; could grow 1-2px for tighter visual balance
+    with the large venn geometry
+  - Region labels show only raw counts, not percentages — spec allows either but percentages
+    would add extra context (optional nice-to-have, not a compliance gap since counts
+    are explicitly permitted)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Bold dark title "venn-basic · javascript · d3 · anyplot.ai" centered at top, clearly readable. Legend at bottom with three colored square swatches and labels "Python (145)", "JavaScript (120)", "SQL (95)" in dark, readable text.
+      Data: Three overlapping circles form a symmetric three-circle Venn diagram - green (Python, bottom-left), purple/lavender (JavaScript, bottom-right), blue (SQL, top). First series is the Imprint green #009E73. Region counts (70, 40, 50, 35, 20, 15, 20) are rendered as halo-stroked text that reads clearly over every fill color, including the darker double/triple-overlap zones. Circle radii are visibly proportional to set size (Python's circle is largest, SQL's is smallest), and the Python circle has a visibly heavier stroke as a deliberate focal cue.
+      Legibility verdict: PASS - all text (title, region counts, legend) is clearly readable against the light background and against the colored circle fills.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title is now light/white and clearly visible against the dark background. Legend text at the bottom is also light-colored and fully readable; swatch colors are unchanged from the light render.
+      Data: The three circles retain identical data colors to the light render (green #009E73, purple, blue) - only the chrome (background, title, legend text) flipped. Region halo-text (70, 40, 50, 35, 20, 15, 20) remains crisp and readable against every fill color, with no dark-on-dark or light-on-light failures anywhere.
+      Legibility verdict: PASS - no dark-on-dark or light-on-light issues detected; all chrome and data-region text is clearly legible.
+
+    Both renders confirm identical data colors and layout with only chrome flipping between themes, matching the venn-basic spec's requirement for distinct, transparency-blended circles with readable region counts.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (26/32px region labels, 17px legend,
+          26px title); readable in both themes via theme-adaptive ink/halo text
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps other text or data; halo-stroked labels stay legible
+          even in triple-overlap region
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Circles and region counts sized appropriately for the canvas; area-proportional
+          radii make relative set sizes clear
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple/blue distinguishable without relying on hue alone; region
+          counts + legend labels reinforce set identity
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagram fills most of the square canvas with balanced margins; title
+          top, legend bottom, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Legend shows descriptive set names with sizes; no generic axis labels
+          needed for a Venn diagram
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; remaining series follow Imprint canonical
+          order; backgrounds and chrome are theme-correct in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Thoughtful use of proportional radii, halo text, and size-scaled
+          stroke weight - clearly above defaults, not quite publication-tier polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: Clean composition, generous whitespace, halo text for readability
+          over variable fills - well-polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Visual hierarchy via heavier stroke on the dominant set and a larger
+          bold triple-overlap count creates a clear focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct 3-set Venn diagram with area-proportional circles
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: 3 sets, proportional area, counts displayed, transparency for overlaps,
+          readable text against all fills - all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: 'Region math verified correct: each set total equals sum of its regions'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title format exactly matches spec; legend labels match set names
+          and sizes
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        comment: 'Shows all region types: exclusive, pairwise, and triple overlap'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Neutral, plausible scenario - programming language skill overlap
+          among surveyed engineers
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: All values and proportions are internally consistent and realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: Simple linear script; two tiny pure geometry helper functions are
+          reused 3-6 times each, a reasonable DRY exception
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Fully deterministic, hardcoded in-memory data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: Only the global d3 is used, no extraneous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Clean, appropriately complex for a custom Venn layout, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: 'Mounts correctly to #container, uses current d3 v7 selection/join
+          API'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        comment: Expert use of d3 scales (scaleSqrt, scaleLinear) and data joins for
+          circles, labels, and legend
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 4
+        comment: D3 has no built-in Venn layout; the custom trigonometric circle-packing
+          geometry driven by scales showcases D3's low-level flexibility, something
+          a high-level charting library couldn't replicate this directly
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - publication-ready

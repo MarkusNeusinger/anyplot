@@ -1,0 +1,254 @@
+library: highcharts
+language: javascript
+specification_id: upset-basic
+created: '2026-09-09T21:10:43Z'
+updated: '2026-09-09T21:23:01Z'
+generated_by: claude-sonnet
+workflow_run: 34404410009
+issue: 5250
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/highcharts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'The degree color gradient on the top bars is now decoded by a compact swatch
+    legend ("Degree: 1 set / 2 sets / 3 sets / 4 sets") placed in the top panel''s
+    own margin, fully resolving the prior attempt''s unexplained-gradient weakness'
+  - 'Removing the non-monotonic per-column tick-label row under the matrix (now `labels:
+    { enabled: false }` with a documented rationale comment) eliminates the broken-axis
+    misread while keeping the descriptive "Sets per intersection" axis title'
+  - WGBS (the smallest set) now appears as a filled dot in one of the top-12 shown
+    intersections, giving full six-set feature coverage in the displayed data
+  - Highcharts has no native UpSet series; composing three separately-instantiated
+    charts (column, bar, scatter+line) with matching pixel margins into one aligned
+    matrix remains a clever, correctly-executed solution
+  - 'Both renders are fully theme-correct: identical data colors (degree gradient,
+    set-size bars), correctly flipped chrome, no legibility failures in either theme'
+  - Data generation uses two correlated biological signatures rather than flat independent
+    draws, producing realistic, varied overlaps across degrees 1 through 4
+  weaknesses:
+  - Several small helper functions (makeLCG, hexToRgb, lerpColor, degreeColor, makeDiv)
+    remain in use; justified given the three-instance composition and reproducible-RNG
+    needs, but it is a step away from the flattest KISS baseline other JS snippets
+    follow
+  - The new degree legend text is quite small (12px) and sits close to the top-right
+    canvas edge; still fully legible in both renders, but there is little margin for
+    a lower-resolution export before it starts to crowd the edge
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Title "upset-basic · javascript · highcharts · anyplot.ai" in bold dark text top-left; subtitle in muted grey below it ("Top 12 of 62 observed intersections among 774 genes across 6 assays, sorted by size"). Axis titles ("Set size", "Intersection size", "Sets per intersection"), tick labels, data labels, and the new "Degree: 1 set / 2 sets / 3 sets / 4 sets" swatch legend (top-right) are all dark-on-light and clearly readable. No light-on-light failures observed.
+      Data: Top vertical bar chart shows intersection cardinality (67 down to 19), bars colored on a green→blue sequential gradient keyed to intersection degree (1 to 4 sets), matching the new legend exactly. Left horizontal bars show set sizes in solid ink-black, sorted largest-first (RNA-seq 392 → WGBS 146). The 6×12 dot matrix shows grey background dots with filled black dots connected by black vertical lines indicating set membership per intersection; WGBS now has a filled dot in column 11, confirming full six-set coverage in the displayed intersections. First categorical/brand color (#009E73) appears on the degree-1 bars as expected.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Same title, subtitle, axis titles, tick labels, data labels, and degree legend, all flipped to light-colored text on the dark background. No dark-on-dark failures observed — every text element (title, subtitle, both axis titles per panel, all six set-name row labels, tick labels, data-value labels, legend text) was checked individually and reads clearly.
+      Data: The green→blue degree gradient on the top bars is pixel-identical to the light render, confirming the data-color palette does not shift with theme. Left bars and matrix dots/connectors flip from black to off-white, matching the theme-adaptive chrome contract. WGBS's filled dot in column 11 is visible against the dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; new legend
+          text is small (12px) but legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend sits cleanly in the top panel's own margin, no collisions
+          with bars, ticks, or data labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Matrix dots, connector lines, and bars are all clearly visible; the
+          previously ambiguous tick-label row is gone, removing the readability concern
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue degree encoding plus filled/unfilled dot
+          shape gives a non-color-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; three-pane composite proportions are balanced,
+          nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive titles with units ("Set size", "Intersection size", "Sets
+          per intersection")
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 on degree-1 bars, imprint_seq gradient for
+          degree encoding, theme-correct backgrounds in both renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Three pixel-synced Highcharts instances composed into a cohesive
+          UpSet layout, now with a decoded degree-color encoding
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal spines/ticks, subtle single-axis grids, generous whitespace,
+          no chart-junk
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Sorted-by-size ordering, degree gradient now decoded via legend,
+          and full WGBS coverage together create a clear, legible hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct UpSet composite: top intersection bars, left set-size bars,
+          dot matrix with connectors'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sorted-by-size intersections, connected dots, degree shading, and
+          now a legend decoding it
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Sets in rows, intersections in columns, sizes correctly mapped to
+          bar lengths
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; degree legend labels match
+          the data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All six sets now appear as filled dots within the top-12 shown intersections,
+          including WGBS
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Genomic assay overlap scenario is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 774 genes, 6 assays, 62 intersections — sensible scale within spec's
+          100-10,000 element range
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small helper functions remain, justified by the three-instance
+          composition and RNG needs
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the Highcharts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity, appropriate complexity for the composite layout
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness-driven mount-node contract respected, animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of core column/bar/scatter+line series types and theming
+          tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Manually pixel-syncing three separate Highcharts.chart() instances
+          into one aligned composite is a genuinely distinctive workaround for a plot
+          type the core bundle lacks natively
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - subplots
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - publication-ready
+  - gradient-fill

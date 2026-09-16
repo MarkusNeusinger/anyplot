@@ -1,0 +1,248 @@
+library: echarts
+language: javascript
+specification_id: sparkline-basic
+created: '2026-09-09T18:25:49Z'
+updated: '2026-09-09T18:43:26Z'
+generated_by: claude-sonnet
+workflow_run: 34387377492
+issue: 1011
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Genuine small-multiples dashboard built on ECharts' multi-grid API (gridIndex-based
+    xAxis/yAxis/grid arrays) — six independent mini line charts sharing one canvas,
+    a real showcase of library capability rather than six copy-pasted charts.
+  - Semantic color mapping (brand green for a 'good' trend, matte red for a 'bad'
+    trend, computed per metric via goodWhenUp) correctly applies the finance up/down
+    semantic exception from the style guide instead of blindly cycling the categorical
+    palette.
+  - markPoint highlights the latest value (filled dot) plus the series min/max (hollow
+    rings), directly satisfying the spec's optional 'highlight min/max' and 'highlight
+    first/last' notes.
+  - Deterministic seeded LCG for reproducible data; data colors are pixel-identical
+    between light and dark renders — only chrome flips, exactly as required.
+  - Clean theme-adaptive chrome throughout (ink/inkSoft tokens for text, transparent
+    background over pageBg) with no axes, ticks, or gridlines — matches the sparkline
+    spec's minimalism requirement.
+  weaknesses:
+  - Noticeable empty band below every sparkline (roughly a third of each card's height)
+    makes the composition feel top-heavy; tighten HEADER_H/CARD_H allocation or grow
+    sparkHeight toward the shorter end of the spec's 4:1-8:1 ratio range to reduce
+    the dead space.
+  - KPI label/value/delta text is sized for full-resolution viewing and shrinks close
+    to the edge of legibility on the 400px mobile thumbnail given six tiles share
+    the canvas — consider nudging label/value fontsize up slightly.
+  - Adjacent grid columns leave a tight gap (e.g. the 'Active Users' value and the
+    'Server Latency' label) — comfortable with the current labels but would collide
+    if a metric name or formatted value ran longer.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 target.
+      Chrome: Centered bold title "sparkline-basic · javascript · echarts · anyplot.ai" in dark ink at the top. A 2x3 grid of KPI tiles (Revenue, Active Users, Server Latency / Conversion Rate, Churn Rate, New Signups), each with a soft-gray metric label (top-left), a large bold value (top-right), and a small colored trend delta (▲/▼ + percent) beneath the value. All text is dark ink on the cream background — clearly legible, no light-on-light issues.
+      Data: Each tile holds one thin sparkline with a light area fill beneath it, no axes/ticks/gridlines. Rising "good" metrics (Revenue, Active Users, Conversion Rate, New Signups) use the brand green #009E73 for both line/fill and the trend delta; "bad-when-rising" metrics (Server Latency, Churn Rate) use a matte red instead — a deliberate finance-style semantic exception, not the default categorical order. A filled dot marks the latest value; hollow rings mark the series min/max.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 target.
+      Chrome: Same title, now in light ink (#F0EFE8-ish) against the dark background — clearly readable. KPI labels use a muted light-gray secondary tone, values are bright and bold. No dark-on-dark text anywhere; every label/value/tick is legible.
+      Data: Line color, area-fill color, and marker colors are pixel-identical to the light render (same brand green / matte red per tile) — only the chrome (background, text tones) flipped, as required. The green and red both read clearly against the dark surface.
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Readable in both themes at full size; shrinks close to the legibility
+          edge on the 400px thumbnail given six tiles share the canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line weight and marker size appropriate for ~26-point sparse series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red pairing is the sanctioned finance semantic exception, drawn
+          from the CVD-optimized Imprint palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas, nothing clipped, but a visible empty band
+          persists below each sparkline
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes by design (per spec); title present and descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First-series brand green #009E73, correct backgrounds in both themes,
+          identical data colors across themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Cohesive dashboard-tile design with intentional color semantics beyond
+          generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No spines/gridlines, subtle area fill, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bold value + colored trend badge per tile creates a clear focal point
+          per metric
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Small-multiples sparkline layout is an explicitly listed application
+          in the spec
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: No axes/gridlines, compact 5:1 ratio, min/max highlight, area fill
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Each series correctly plots its own sequential values
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the exact mandated format
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers most optional spec features; explicit first-point marker not
+          separately implemented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral SaaS KPI dashboard context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic magnitudes for revenue, users, latency, rates, signups
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two small helper functions (lcg, walk) used for justified DRY across
+          6 series
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided echarts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set, harness-managed output, current API
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-grid gridIndex pattern, markPoint, graphic overlays
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Multi-grid small-multiples + markPoint extremes highlighting is a
+          genuine ECharts-specific showcase
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

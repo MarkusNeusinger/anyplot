@@ -1,0 +1,258 @@
+library: ggplot2
+language: r
+specification_id: scatter-matrix
+created: '2026-09-09T06:50:09Z'
+updated: '2026-09-09T07:19:11Z'
+generated_by: claude-sonnet
+workflow_run: 34320470412
+issue: 2035
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'The row-axis-range defect flagged in attempt 2 (shared per-row y-scale extending
+    far past each variable''s real data range, squashing the diagonal KDE ribbons
+    and off-diagonal scatter into a fraction of panel height) is now resolved: every
+    row''s axis tightly tracks the variable''s actual data range and the diagonal
+    density curves fill nearly the full panel height as intended by the 0.9-of-range
+    rescale formula.'
+  - Hand-built symmetric SPLOM via facet_grid(row_var ~ col_var, scales = "free",
+    switch = "both") with a labeller correctly avoids the unavailable GGally dependency
+    while placing variable names only on the left/bottom edges, exactly matching the
+    spec's 'edge-only labels, symmetric matrix' requirement.
+  - Diagonal KDE ribbons + off-diagonal scatter, colored by Iris species, clearly
+    reveal real clustering structure (setosa fully separated from versicolor/virginica
+    in petal measurements), giving the plot a genuine data story.
+  - Theme-adaptive chrome is correctly threaded through both renders (backgrounds,
+    strip fills, text, grid all flip correctly); Imprint palette used in canonical
+    order (green/lavender/blue), CVD-safe, and identical hex values in both themes.
+  - Clean, function-free code with set.seed(42), correct ragg::agg_png save pattern,
+    and correct 2400x2400 square canvas (passes the post-render dimension gate).
+  weaknesses:
+  - With a 4x4 grid of panels on a 2400x2400 canvas, tick-label text (6.5pt) is legible
+    at full resolution but will be very small when the image is scaled down to a ~400px
+    mobile thumbnail - an inherent tension of the scatter-matrix format that could
+    be mitigated with slightly larger tick fonts or fewer gridlines.
+  - Scatter markers (size = 1.3, alpha = 0.6) are appropriately sized to avoid overplotting
+    in the small panels, but in the densest overlap regions (e.g. versicolor/virginica
+    in Sepal Width vs Sepal Length) individual points are hard to distinguish - could
+    benefit from a touch more alpha contrast or slightly larger points now that panel
+    space is no longer wasted.
+  - Visual refinement relies mostly on theme_minimal() with token overrides rather
+    than deeper customization (e.g. panel border, alternating panel shading, or per-axis
+    minor gridlines) - solid but not maximally polished.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1
+      Chrome: Bold dark title "scatter-matrix · r · ggplot2 · anyplot.ai" centered at top, fully visible with no clipping; strip labels (variable names: Sepal Length (cm), Sepal Width (cm), Petal Length (cm), Petal Width (cm)) placed on the left and bottom edges only, on a slightly elevated off-white strip background; dark tick numbers on all 16 panels; "Species" legend at bottom with green/lavender/blue swatches and setosa/versicolor/virginica labels - all clearly readable against the light background
+      Data: setosa = green (#009E73, first series per Imprint canonical order), versicolor = lavender (#C475FD), virginica = blue (#4467A3). Off-diagonal cells show alpha-blended scatter (size 1.3, alpha 0.6) for each variable pair; diagonal cells show per-species KDE ribbons (alpha 0.35) that now fill nearly the full panel height, clearly reading as three overlapping distributions. Each row's y-axis tightly tracks that variable's real data range (e.g. Sepal Length row spans roughly 4.3-8, not the 0-8 spread flagged in the previous attempt), so panel space is used efficiently and the density peaks are no longer squashed against the bottom.
+      Legibility verdict: PASS - all text readable at full resolution in both themes; small tick text at 400px mobile scale is a soft weakness (see review weaknesses) but not a legibility failure at native size.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17
+      Chrome: Title, strip labels, and tick numbers all rendered in light ink colors (#F0EFE8 / #B8B7B0), clearly legible against the dark background - no dark-on-dark failures anywhere; grid lines are thin and faint light lines, subtle but visible; legend swatches and text also legible
+      Data: Colors are identical hex values to the light render (green/lavender/blue) - only the chrome (background, strip fills, text, grid) flips between themes, as required. The perceived brightness of the alpha-blended fills differs slightly from light mode purely because alpha-compositing interacts with a darker backdrop, which is expected behavior for translucent marks and not a palette violation.
+      Legibility verdict: PASS - same row-axis-range fix applies here (the defect was data/scale-driven, not theme-specific), and all chrome text is fully readable against the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Explicit font sizes, fully readable in both themes at native resolution;
+          16-panel grid makes tick text (6.5pt) very small once scaled to a ~400px
+          mobile thumbnail
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, strips, legend, or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers and KDE ribbons individually visible; densest overlap regions
+          (versicolor/virginica) are slightly hard to separate by eye
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette, adequate contrast, no red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Attempt-2''s row-axis-range waste is fixed: each row''s shared y-scale
+          now tightly tracks real data range, panel space well used, correct 2400x2400
+          canvas, nothing cut off'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units (cm), correct mandated title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, correct theme-adaptive backgrounds, both
+          renders theme-correct, identical data hex values across themes
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom hand-built SPLOM with intentional edge-only labeling and rescaled
+          diagonal densities now renders as designed; still fairly close to theme_minimal
+          defaults overall
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Previously-wasted axis space is gone, grid subtle, spines effectively
+          removed via theme_minimal, panel spacing generous
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Species clustering and separation are now clearly visible across
+          nearly every panel since the diagonal densities and off-diagonal scatter
+          both use their full panel height
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot matrix / SPLOM
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal distributions, off-diagonal scatter, edge-only labels, color
+          encoding, symmetric matrix, small/transparent points all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct across all pairs
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match species
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All pairwise combinations plus diagonals for 4 variables
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic iris dataset, real-world plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 150 points across 3 species, sensible for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Diagonal rescale logic's comment now matches the rendered output
+          - the fix actually achieves full-height density curves as documented
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{theme}.png via ragg::agg_png
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: facet_grid free-scale limits are now correctly controlled per row,
+          resolving the prior scale-training bug
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Free per-row/per-column scales, outside strip placement, and a manually
+          rescaled per-species KDE ribbon all working as intended
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - layer-composition
+  patterns:
+  - dataset-loading
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - publication-ready

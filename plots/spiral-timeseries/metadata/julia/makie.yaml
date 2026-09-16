@@ -1,0 +1,235 @@
+library: makie
+language: julia
+specification_id: spiral-timeseries
+created: '2026-09-09T19:06:39Z'
+updated: '2026-09-09T19:24:55Z'
+generated_by: claude-sonnet
+workflow_run: 34392444022
+issue: 5243
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Correct canonical square canvas (2400x2400), no AR-09 clipping, both themes render
+    cleanly with proper chrome flip
+  - 'Faithful spiral-timeseries geometry: earliest data closest to center, constant
+    radial growth per cycle (true Archimedean spiral), color encodes magnitude via
+    imprint_seq'
+  - Radial month-boundary grid lines and 'Year N' cycle-start labels give clear orientation
+    without cluttering the minimalist design
+  - Colorbar is clearly labeled with units, uses the sequential imprint_seq colormap
+    correctly, and is CVD-safe
+  - 'Clean, idiomatic Makie code: hidedecorations!/hidespines! for minimal chrome,
+    DataAspect for correct circular geometry, Statistics.quantile for a thoughtful
+    color-range choice'
+  weaknesses:
+  - The 5th-95th percentile color clamp still leaves most of the spiral a near-uniform
+    green with color variation concentrated in short high-value arcs near each cycle's
+    holiday peak — the weekly +/-10% oscillation and back-to-school bump are barely
+    distinguishable in color. Try a narrower/adaptive normalization (e.g. clamp closer
+    to the non-holiday trend band) so mid-range day-to-day variation reads more clearly.
+  - Data storytelling could go further to visually distinguish the weekly ripple and
+    back-to-school bump — e.g. modest line-width variation keyed to value, per the
+    spec's 'line thickness should encode value magnitude' note — rather than relying
+    on color alone.
+  - Library mastery could lean on more distinctive Makie features (e.g. a band!/ribbon
+    fill under the spiral, or scatter! markers at cycle-start points) to differentiate
+    further from a generic polar-line plot.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "spiral-timeseries · julia · makie · anyplot.ai" centered at top, clearly readable. Four "Year N" labels in soft dark gray sit along the vertical axis inside each spiral band, all legible. Subtle light-gray radial grid lines (month boundaries) span from the inner spiral out to its outer edge at ~12 evenly spaced angles, faint but visible, not competing with the data. A thin vertical colorbar on the right is labeled "Daily sales (USD thousands)" with tick labels 40/50/60/70/80, all in dark/soft-dark text, clearly legible.
+      Data: A continuous Archimedean spiral of 4 revolutions (4 years), earliest data at the center, expanding outward. The line is brand green (#009E73) for the vast majority of its length, transitioning smoothly to blue (#4467A3) in a short arc just before each cycle boundary (the holiday sales peak near day 350 of each year), most visibly in years 3 and 4. Line width (~3.5px doubled) is prominent for the data density (~1460 points).
+      Legibility verdict: PASS — all text (title, year labels, colorbar label/ticks) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title is rendered in light off-white text, clearly visible against the dark background. "Year N" labels use the lighter soft-ink token and remain legible. Radial grid lines are faint light-gray, still visible but subtle. Colorbar label and tick text use light-toned tokens and are clearly readable against the dark canvas — no dark-on-dark failures observed anywhere (title, labels, ticks all correctly flipped to light ink).
+      Data: Identical spiral geometry and identical green-to-blue color mapping as the light render — confirmed the data colors (green #009E73 to blue #4467A3) are unchanged between themes; only the chrome (background, text, grid) flipped.
+      Legibility verdict: PASS — all text elements read clearly on the dark surface; no dark-on-dark or contrast failures found.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, year labels, colorbar label/ticks all readable in both themes
+          at correct sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions observed
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Spiral line clearly visible; color-range clamp still leaves most
+          of the line a near-uniform green, slightly reducing magnitude legibility
+          for non-peak days
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq green-to-blue sequential colormap is CVD-safe, no red-green
+          sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (2400x2400); no clipping or overflow; well-proportioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Colorbar labeled with units; title correct; radial geometry appropriately
+          unlabeled for a spiral
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (#009E73 -> #4467A3) used correctly; backgrounds and
+          chrome theme-correct in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Custom spiral geometry and thoughtful percentile-based color clamp
+          show clear design intent beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: All spines/ticks hidden, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Color highlights the holiday spike and year labels aid orientation,
+          but weekly/back-to-school patterns are not visually distinguished
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct Archimedean spiral time series
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Radial month grid lines, cycle-start labels, color-encoded magnitude,
+          colorbar, constant per-cycle radial growth, earliest data at center — all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: Angle=day-of-year, radius=cycle progression, color=value — correctly
+          mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title matches mandated format; colorbar clearly labeled
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: Trend, weekly pattern, back-to-school bump, and holiday peak all
+          present in the synthetic data, though not all are visually distinguishable
+          via color
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Plausible, neutral retail sales scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: USD-thousands daily sales scale (30-80) is domain-plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: CairoMakie, Colors, Random, Statistics — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: No fake UI/interactivity, appropriate complexity for the geometry
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2)
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Colorbar, cgrad, DataAspect, hidedecorations!/hidespines! used idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: Custom polar-style geometry with continuous cgrad mapping; could
+          push further with band!/scatter! accents
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - time-series
+  styling:
+  - custom-colormap
+  - minimal-chrome
+  - alpha-blending
