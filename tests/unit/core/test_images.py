@@ -844,7 +844,7 @@ class TestGetMonolisaFontPath:
 
         import core.images
 
-        (tmp_path / "MonoLisaVariableNormal.ttf").touch()
+        (tmp_path / "MonoLisaCodeUpright.ttf").touch()
 
         with patch("core.images.FONT_CACHE_DIR", tmp_path):
             assert core.images._get_monolisa_font_path(local_only=True) is None
@@ -857,7 +857,7 @@ class TestGetMonolisaFontPath:
 
         import core.images
 
-        target = tmp_path / "MonoLisaVariableNormal.ttf"
+        target = tmp_path / "MonoLisaCodeUpright.ttf"
 
         def leave_empty_file(filename: str) -> None:
             Path(filename).touch()  # what download_to_filename does before it fails
@@ -883,7 +883,7 @@ class TestGetMonolisaFontPath:
         import core.images
 
         # Create fake cached font in tmp_path
-        fake_font = tmp_path / "MonoLisaVariableNormal.ttf"
+        fake_font = tmp_path / "MonoLisaCodeUpright.ttf"
         fake_font.write_bytes(b"fake font data")
 
         with patch("core.images.FONT_CACHE_DIR", tmp_path):
@@ -913,11 +913,11 @@ class TestGetMonolisaFontPath:
 
         # Verify GCS interactions
         mock_client.bucket.assert_called_once_with("anyplot-static")
-        mock_bucket.blob.assert_called_once_with("fonts/MonoLisaVariableNormal.ttf")
+        mock_bucket.blob.assert_called_once_with("fonts/v3/desktop/MonoLisaCodeUpright.ttf")
         mock_blob.download_to_filename.assert_called_once()
-        assert result == tmp_path / "MonoLisaVariableNormal.ttf"
+        assert result == tmp_path / "MonoLisaCodeUpright.ttf"
         assert result.read_bytes() == b"font bytes"
-        assert not (tmp_path / "MonoLisaVariableNormal.ttf.part").exists()
+        assert not (tmp_path / "MonoLisaCodeUpright.ttf.part").exists()
 
     def test_concurrent_misses_download_once_and_never_lose_the_font(self, tmp_path: Path) -> None:
         """Renders run in worker threads, two at a time. Two threads that miss the
@@ -953,15 +953,15 @@ class TestGetMonolisaFontPath:
             second = pool.submit(core.images._get_monolisa_font_path)
             results = {first.result(timeout=5), second.result(timeout=5)}
 
-        assert results == {tmp_path / "MonoLisaVariableNormal.ttf"}
+        assert results == {tmp_path / "MonoLisaCodeUpright.ttf"}
         assert mock_blob.download_to_filename.call_count == 1
-        assert (tmp_path / "MonoLisaVariableNormal.ttf").read_bytes() == b"font bytes"
+        assert (tmp_path / "MonoLisaCodeUpright.ttf").read_bytes() == b"font bytes"
 
         # A later failure (cooldown expired, GCS down) must not touch the
         # published file: only its own `.part` is removed.
         core.images._font_download_failed_at.clear()
-        (tmp_path / "MonoLisaVariableNormal.ttf").unlink()
-        (tmp_path / "MonoLisaVariableItalic.ttf").write_bytes(b"italic bytes")
+        (tmp_path / "MonoLisaCodeUpright.ttf").unlink()
+        (tmp_path / "MonoLisaCodeItalic.ttf").write_bytes(b"italic bytes")
 
         def fail_after_opening(filename: str) -> None:
             Path(filename).touch()
@@ -974,8 +974,8 @@ class TestGetMonolisaFontPath:
         ):
             assert core.images._get_monolisa_font_path() is None
 
-        assert (tmp_path / "MonoLisaVariableItalic.ttf").read_bytes() == b"italic bytes"
-        assert not (tmp_path / "MonoLisaVariableNormal.ttf.part").exists()
+        assert (tmp_path / "MonoLisaCodeItalic.ttf").read_bytes() == b"italic bytes"
+        assert not (tmp_path / "MonoLisaCodeUpright.ttf.part").exists()
 
     def test_returns_none_on_gcs_exception(self, tmp_path: Path) -> None:
         """Should return None gracefully when GCS download fails."""
@@ -984,7 +984,7 @@ class TestGetMonolisaFontPath:
         import core.images
 
         with (
-            patch.object(type(tmp_path / "MonoLisaVariableNormal.ttf"), "exists", return_value=False),
+            patch.object(type(tmp_path / "MonoLisaCodeUpright.ttf"), "exists", return_value=False),
             patch("core.images.FONT_CACHE_DIR", tmp_path),
             patch("google.cloud.storage.Client", side_effect=Exception("GCS unavailable")),
         ):
@@ -1011,6 +1011,52 @@ class TestGetMonolisaFontPath:
         assert cache_dir.exists()
 
 
+class TestSetVariableWeight:
+    """Tests for _set_variable_weight — the `wght` axis on a one- or two-axis variable font."""
+
+    def test_sets_weight_and_keeps_other_axes_at_default(self) -> None:
+        """MonoLisa v3 has `wght` + `GRAD`; only `wght` moves, GRAD stays at its default."""
+        from unittest.mock import MagicMock
+
+        import core.images
+
+        font = MagicMock()
+        font.get_variation_axes.return_value = [
+            {"name": b"Weight", "minimum": 1, "default": 400, "maximum": 1000},
+            {"name": b"Grade", "minimum": -50, "default": 0, "maximum": 50},
+        ]
+
+        core.images._set_variable_weight(font, 700)
+
+        font.set_variation_by_axes.assert_called_once_with([700, 0])
+
+    def test_single_axis_font_still_works(self) -> None:
+        """A v2-style single `wght` axis gets exactly one value."""
+        from unittest.mock import MagicMock
+
+        import core.images
+
+        font = MagicMock()
+        font.get_variation_axes.return_value = [{"name": b"Weight", "minimum": 100, "default": 400, "maximum": 900}]
+
+        core.images._set_variable_weight(font, 300)
+
+        font.set_variation_by_axes.assert_called_once_with([300])
+
+    def test_non_variable_font_is_left_alone(self) -> None:
+        """Static fonts raise on the axes query; that must not propagate."""
+        from unittest.mock import MagicMock
+
+        import core.images
+
+        font = MagicMock()
+        font.get_variation_axes.side_effect = OSError("not a variable font")
+
+        core.images._set_variable_weight(font, 700)
+
+        font.set_variation_by_axes.assert_not_called()
+
+
 class TestTextShaping:
     """Tests for libraqm text shaping detection and the feature-drawing helper."""
 
@@ -1026,7 +1072,7 @@ class TestTextShaping:
     def test_environment_has_text_shaping(self) -> None:
         """The rendering environment must have libraqm.
 
-        Without it every OG card silently loses MonoLisa's italic `ss02`
+        Without it every OG card silently loses MonoLisa's italic `ss01`
         swashes and all kerning — exactly the production regression this
         module guards against. A red test here means the Pillow wheel (or the
         container image) lost libraqm, not that the test is wrong.
@@ -1044,10 +1090,10 @@ class TestTextShaping:
         draw = MagicMock()
         with patch("core.images.has_text_shaping", return_value=True):
             core.images._draw_text_with_features(
-                draw, (0, 0), "— any library.", font=None, fill="#000000", features=["ss02"]
+                draw, (0, 0), "— any library.", font=None, fill="#000000", features=["ss01"]
             )
 
-        assert draw.text.call_args.kwargs["features"] == ["ss02"]
+        assert draw.text.call_args.kwargs["features"] == ["ss01"]
 
     def test_warns_once_when_shaping_unavailable(self, caplog) -> None:
         """Should fall back to plain text AND log the degradation exactly once."""
@@ -1059,10 +1105,10 @@ class TestTextShaping:
         draw = MagicMock()
         with patch("core.images.has_text_shaping", return_value=False), caplog.at_level(logging.WARNING):
             core.images._draw_text_with_features(
-                draw, (0, 0), "— any library.", font=None, fill="#000000", features=["ss02"]
+                draw, (0, 0), "— any library.", font=None, fill="#000000", features=["ss01"]
             )
             core.images._draw_text_with_features(
-                draw, (0, 40), "— any library.", font=None, fill="#000000", features=["ss02"]
+                draw, (0, 40), "— any library.", font=None, fill="#000000", features=["ss01"]
             )
 
         # Features dropped, text still drawn
@@ -1083,7 +1129,7 @@ class TestTextShaping:
         draw.text.side_effect = [KeyError("unsupported"), None]
         with patch("core.images.has_text_shaping", return_value=True), caplog.at_level(logging.WARNING):
             core.images._draw_text_with_features(
-                draw, (0, 0), "— any library.", font=None, fill="#000000", features=["ss02"]
+                draw, (0, 0), "— any library.", font=None, fill="#000000", features=["ss01"]
             )
 
         assert draw.text.call_count == 2  # feature attempt + plain fallback
@@ -1101,12 +1147,12 @@ class TestTextShaping:
         assert "features" not in draw.text.call_args.kwargs
 
     def test_home_og_image_renders_swashes(self) -> None:
-        """The home card must differ with and without `ss02` — proof the swashes land.
+        """The home card must differ with and without `ss01` — proof the swashes land.
 
         Guards the production regression directly: when the feature is dropped
         the card still renders, so only a pixel comparison catches it. Skipped
         where MonoLisa is not cached locally (no GCS access): the DejaVu
-        fallback has no `ss02`, so both renders would legitimately match.
+        fallback has no `ss01`, so both renders would legitimately match.
         """
         from io import BytesIO
         from unittest.mock import patch
@@ -1117,7 +1163,7 @@ class TestTextShaping:
 
         # `_is_cached_font`, not `exists()`: a 0-byte leftover of an interrupted
         # download would pass the skip and then fail the pixel comparison.
-        if not _is_cached_font(FONT_CACHE_DIR / "MonoLisaVariableItalic.ttf"):
+        if not _is_cached_font(FONT_CACHE_DIR / "MonoLisaCodeItalic.ttf"):
             pytest.skip("MonoLisa italic not cached locally — swash rendering cannot be verified")
 
         with_features = create_home_og_image(theme="light")
@@ -1133,7 +1179,7 @@ class TestTextShaping:
         plain = Image.open(BytesIO(without_features)).convert("RGB")
         diff_box = ImageChops.difference(swashed, plain).getbbox()
 
-        assert diff_box is not None, "`ss02` changed no pixel — the swashes are not being applied"
+        assert diff_box is not None, "`ss01` changed no pixel — the swashes are not being applied"
         # The tagline is the only line drawn with features, so the diff must sit
         # in the headline block and nowhere else (eyebrow row ends at y≈100).
         assert diff_box[1] > 100, f"unexpected diff outside the tagline block: {diff_box}"

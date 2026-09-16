@@ -103,7 +103,7 @@ COPY --chown=appuser:appuser api/ ./api/
 COPY --chown=appuser:appuser core/ ./core/
 
 # Fail the build if Pillow cannot shape text. Without it Pillow falls back to
-# its BASIC layout engine: the OG cards lose MonoLisa's italic `ss02` swashes
+# its BASIC layout engine: the OG cards lose MonoLisa's italic `ss01` swashes
 # and all kerning, and nothing in the response signals it — the only symptom is
 # an off-brand PNG (#10813). This runs in the RUNTIME stage on purpose: the
 # check is only meaningful against the image that actually serves. In the

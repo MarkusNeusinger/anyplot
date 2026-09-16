@@ -1,24 +1,41 @@
 /*
- * MonoLisa (variable) — brand typeface for the anyplot design system.
+ * MonoLisa 3.000 (variable: wght + GRAD) — brand typeface for the anyplot
+ * design system. Two families: MonoLisa Code (monospaced, used everywhere)
+ * and MonoLisa Text (proportional sibling, registered for experiments).
  * Proprietary, © FaceType Foundry. The .ttf binaries are fetched at sync time
  * from the anyplot GCS bucket into this directory and gitignored (this CSS is
  * committed); they are shipped only into the private claude.ai/design project,
  * never committed to the (public) repo.
  *
  * Re-fetch (see .design-sync/NOTES.md):
- *   curl -sSfo MonoLisaVariableNormal.ttf https://storage.googleapis.com/anyplot-static/fonts/MonoLisaVariableNormal.ttf
- *   curl -sSfo MonoLisaVariableItalic.ttf https://storage.googleapis.com/anyplot-static/fonts/MonoLisaVariableItalic.ttf
+ *   for f in MonoLisaCodeUpright MonoLisaCodeItalic MonoLisaTextUpright MonoLisaTextItalic; do
+ *     curl -sSfo $f.ttf https://storage.googleapis.com/anyplot-static/fonts/v3/desktop/$f.ttf
+ *   done
  */
 @font-face {
-  font-family: 'MonoLisa';
-  src: url('./MonoLisaVariableNormal.ttf') format('truetype');
+  font-family: 'MonoLisa Code';
+  src: url('./MonoLisaCodeUpright.ttf') format('truetype');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'MonoLisa';
-  src: url('./MonoLisaVariableItalic.ttf') format('truetype');
+  font-family: 'MonoLisa Code';
+  src: url('./MonoLisaCodeItalic.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MonoLisa Text';
+  src: url('./MonoLisaTextUpright.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MonoLisa Text';
+  src: url('./MonoLisaTextItalic.ttf') format('truetype');
   font-weight: 100 900;
   font-style: italic;
   font-display: swap;

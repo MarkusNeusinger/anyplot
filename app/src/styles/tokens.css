@@ -35,10 +35,15 @@
   --ink-muted: #6b6a63;
   --rule: rgba(26, 26, 23, 0.15);
 
-  /* Typography stacks — MonoLisa-only experiment (serif/sans aliased to mono) */
-  --serif: 'MonoLisa', 'MonoLisa Fallback', Consolas, Menlo, Monaco, 'DejaVu Sans Mono', monospace;
-  --sans: 'MonoLisa', 'MonoLisa Fallback', Consolas, Menlo, Monaco, 'DejaVu Sans Mono', monospace;
-  --mono: 'MonoLisa', 'MonoLisa Fallback', 'JetBrains Mono', Consolas, monospace;
+  /* Typography stacks — MonoLisa Code everywhere (serif/sans aliased to mono).
+     `--text` is MonoLisa Text, the proportional sibling: registered for
+     experiments, unused by default (nothing is fetched until a rule uses it). */
+  --serif:
+    'MonoLisa Code', 'MonoLisa Fallback', Consolas, Menlo, Monaco, 'DejaVu Sans Mono', monospace;
+  --sans:
+    'MonoLisa Code', 'MonoLisa Fallback', Consolas, Menlo, Monaco, 'DejaVu Sans Mono', monospace;
+  --mono: 'MonoLisa Code', 'MonoLisa Fallback', 'JetBrains Mono', Consolas, monospace;
+  --text: 'MonoLisa Text', 'MonoLisa Code', 'MonoLisa Fallback', system-ui, sans-serif;
 
   /* Layout — three-tier widths (style-guide §6.1) */
   --gutter: 24px;
@@ -67,10 +72,27 @@
   --code-operator: #1a1a17; /* ink */
 }
 
-/* MonoLisa script variant (italic ss02) — test */
+/* MonoLisa script variant: `ss01` only changes glyphs set in `font-style:
+   italic`, so enabling it globally turns every italic into the script voice
+   (v3 tag; it was `ss02` in v2, which in v3 means "alt i r"). */
 html {
-  font-feature-settings: 'ss02';
+  font-feature-settings: 'ss01';
 }
+
+/* Code surfaces keep MonoLisa's coding ligatures (`->`, `!=`, `===`). v3 moved
+   them from `liga` (on by default) to `dlig` (off by default), so without this
+   rule code blocks would lose the ligatures they had under v2. */
+pre,
+code,
+kbd,
+samp {
+  font-feature-settings: 'ss01', 'dlig';
+}
+
+/* Experiment hook, off by default: MonoLisa's GRAD axis darkens or lightens
+   the strokes without changing widths — e.g. `html { font-variation-settings:
+   'GRAD' 15; }` under `[data-theme='dark']` to compensate for thin-looking
+   light-on-dark text. Documented in docs/reference/style-guide.md §5.1. */
 
 /* Defense-in-depth against page-level horizontal scroll on mobile. `clip`
    (not `hidden`) so the masthead's `position: sticky` keeps working — `hidden`

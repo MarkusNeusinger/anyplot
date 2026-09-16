@@ -353,16 +353,19 @@ Layout:
 
 ### Font
 
-Uses **MonoLisa** variable font (commercial, not in repo):
-- Downloaded from GCS: `gs://anyplot-static/fonts/MonoLisaVariableNormal.ttf`
-- Italic variant (`MonoLisaVariableItalic.ttf`) for the tagline swashes
-- Cached locally in `/tmp/anyplot-fonts/`
+Uses **MonoLisa Code 3.000** variable font (commercial, not in repo):
+- Downloaded from GCS: `gs://anyplot-static/fonts/v3/desktop/MonoLisaCodeUpright.ttf`
+- Italic variant (`MonoLisaCodeItalic.ttf`) for the tagline swashes
+- Cached locally in `/tmp/anyplot-fonts/v3/` (the version is part of the path
+  so a warm container never serves an older file under the same name)
+- Two variable axes (`wght`, `GRAD`); the renderer sets only `wght` and leaves
+  `GRAD` at its default of 0
 - Fallback: DejaVuSansMono-Bold
 
 ### Text shaping (libraqm)
 
 The home card draws its `— any library.` line with the OpenType stylistic set
-`ss02`, which turns MonoLisa Italic into its script forms. Pillow can only apply
+`ss01` (`ss02` in MonoLisa 2), which turns MonoLisa Italic into its script forms. Pillow can only apply
 OpenType features and kerning when it is built with libraqm; without it, Pillow
 silently switches to its BASIC layout engine and the card renders unkerned and
 without swashes — the response stays a valid 200 PNG, so nothing else signals

@@ -9,13 +9,16 @@
  */
 
 export const typography = {
-  // Single-typeface system: MonoLisa everywhere (with standard monospace fallbacks);
-  // serif/sans kept as aliases so existing imports still resolve
+  // Single-typeface system: MonoLisa Code everywhere (with standard monospace fallbacks);
+  // serif/sans kept as aliases so existing imports still resolve.
+  // `text` is MonoLisa Text (proportional sibling) — registered for experiments, unused by default.
   fontFamily:
-    '"MonoLisa", "MonoLisa Fallback", Consolas, Menlo, Monaco, "DejaVu Sans Mono", monospace',
-  serif: '"MonoLisa", "MonoLisa Fallback", Consolas, Menlo, Monaco, "DejaVu Sans Mono", monospace',
-  sans: '"MonoLisa", "MonoLisa Fallback", Consolas, Menlo, Monaco, "DejaVu Sans Mono", monospace',
-  mono: '"MonoLisa", "MonoLisa Fallback", "JetBrains Mono", Consolas, monospace',
+    '"MonoLisa Code", "MonoLisa Fallback", Consolas, Menlo, Monaco, "DejaVu Sans Mono", monospace',
+  serif:
+    '"MonoLisa Code", "MonoLisa Fallback", Consolas, Menlo, Monaco, "DejaVu Sans Mono", monospace',
+  sans: '"MonoLisa Code", "MonoLisa Fallback", Consolas, Menlo, Monaco, "DejaVu Sans Mono", monospace',
+  mono: '"MonoLisa Code", "MonoLisa Fallback", "JetBrains Mono", Consolas, monospace',
+  text: '"MonoLisa Text", "MonoLisa Code", "MonoLisa Fallback", system-ui, sans-serif',
 } as const;
 
 export const colors = {

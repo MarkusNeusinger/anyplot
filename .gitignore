@@ -274,4 +274,5 @@ ds-bundle/
 # proprietary brand font (MonoLisa, © FaceType Foundry) — fetched at sync time, never committed
 # (the @font-face CSS at app/.designsync-fonts/monolisa.css IS committed)
 app/.designsync-fonts/*.ttf
+app/.designsync-fonts/*.otf
 app/.designsync-fonts/*.woff2

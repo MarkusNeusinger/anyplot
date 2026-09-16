@@ -28,12 +28,12 @@ Style with the `var(--*)` tokens, not invented hex. The vocabulary (all defined 
 - **Surfaces** — warm off-white, *never* pure `#fff`: `--bg-page`, `--bg-surface`, `--bg-elevated`
 - **Ink** (warm grayscale text) + hairlines: `--ink`, `--ink-soft`, `--ink-muted`, `--rule`
 - **imprint palette — 8 categorical hues, reserved for PLOTS/charts, not UI chrome:** `--imprint-green` (`#009E73`, the brand), `--imprint-lavender`, `--imprint-blue`, `--imprint-ochre`, `--imprint-red`, `--imprint-cyan`, `--imprint-rose`, `--imprint-lime`; `--imprint-amber` = warning.
-- **Type stacks:** `--mono` ( = `--serif` = `--sans`, all MonoLisa); **code surface:** `--code-bg`, `--code-text`, `--code-border` (+ `--code-comment`/`-keyword`/`-string`/… syntax tokens)
+- **Type stacks:** `--mono` ( = `--serif` = `--sans`, all MonoLisa Code); `--text` (MonoLisa Text, proportional — experiments only, unused by default); **code surface:** `--code-bg`, `--code-text`, `--code-border` (+ `--code-comment`/`-keyword`/`-string`/… syntax tokens)
 - **Layout:** `--gutter` (24px), `--max` (1240px — paper/reading width), `--max-catalog` (2200px — plot grids)
 
 ## Typography — one typeface, two voices
 
-**MonoLisa everywhere** — body, UI, nav, buttons, logo, headlines. There is no second font. The editorial accent is **italic**, which auto-triggers MonoLisa's `ss02` script set (enabled globally via `font-feature-settings: "ss02"` on `html`). So: upright = structure/prose/labels; `font-style: italic` = emphasis/taglines/title accents (renders as flowing script). Bold (700) only at display sizes.
+**MonoLisa Code everywhere** — body, UI, nav, buttons, logo, headlines. There is no second font in use (MonoLisa Text is registered but reserved for experiments). The editorial accent is **italic**, which auto-triggers MonoLisa's `ss01` script set (enabled globally via `font-feature-settings: "ss01"` on `html`; v3 tag — `ss02` was the v2 tag and now means "alt i r"). So: upright = structure/prose/labels; `font-style: italic` = emphasis/taglines/title accents (renders as flowing script). Bold (700) only at display sizes. Code surfaces (`pre`, `code`) add `dlig` for the coding ligatures.
 
 ## Color discipline (the core rule)
 
