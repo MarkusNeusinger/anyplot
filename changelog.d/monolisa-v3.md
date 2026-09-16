@@ -12,4 +12,4 @@
   the same prefix, sets only the `wght` axis of the now two-axis font, and draws
   the tagline with `ss01`. Family names in CSS are `'MonoLisa Code'` and
   `'MonoLisa Text'` (new `--text` token). The v2 files stay in the bucket until
-  the cutover is verified, then move to their own domain.
+  the cutover is verified, then move to their own domain. (#11836)
