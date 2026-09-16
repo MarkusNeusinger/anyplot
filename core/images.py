@@ -56,11 +56,16 @@ RESPONSIVE_SIZES = [1200, 800, 400]
 RESPONSIVE_FORMATS: list[tuple[str, str, dict]] = [("png", "PNG", {}), ("webp", "WEBP", {"quality": 80})]
 WEBP_FULL_QUALITY = 85
 
-# GCS bucket for static assets (fonts)
+# GCS bucket for static assets (fonts). MonoLisa 3.000 (Code family, variable
+# wght + GRAD); the cache dir carries the version so a warm container never
+# serves an older file under the same name.
 GCS_STATIC_BUCKET = "anyplot-static"
-MONOLISA_FONT_PATH = "fonts/MonoLisaVariableNormal.ttf"
-MONOLISA_ITALIC_FONT_PATH = "fonts/MonoLisaVariableItalic.ttf"
-FONT_CACHE_DIR = Path("/tmp/anyplot-fonts")
+MONOLISA_FONT_PATH = "fonts/v3/desktop/MonoLisaCodeUpright.ttf"
+MONOLISA_ITALIC_FONT_PATH = "fonts/v3/desktop/MonoLisaCodeItalic.ttf"
+FONT_CACHE_DIR = Path("/tmp/anyplot-fonts/v3")
+# OpenType stylistic set that turns MonoLisa Italic into its script forms
+# (`ss01` since v3; it was `ss02` in v2, which now means "alt i r").
+MONOLISA_SCRIPT_FEATURE = "ss01"
 
 # =============================================================================
 # Design tokens — match docs/reference/style-guide.md (§4 Color System)
@@ -396,9 +401,8 @@ def _get_monolisa_font_path(local_only: bool = False, italic: bool = False) -> P
     Returns:
         Path to font file, or None if unavailable.
     """
-    cache_filename = "MonoLisaVariableItalic.ttf" if italic else "MonoLisaVariableNormal.ttf"
     gcs_blob = MONOLISA_ITALIC_FONT_PATH if italic else MONOLISA_FONT_PATH
-    cached_font = FONT_CACHE_DIR / cache_filename
+    cached_font = FONT_CACHE_DIR / Path(gcs_blob).name
 
     # Return cached font if exists
     if cached_font.exists():
@@ -407,7 +411,7 @@ def _get_monolisa_font_path(local_only: bool = False, italic: bool = False) -> P
     if local_only:
         # If italic was requested but isn't cached, fall through to upright cache.
         if italic:
-            upright_cached = FONT_CACHE_DIR / "MonoLisaVariableNormal.ttf"
+            upright_cached = FONT_CACHE_DIR / Path(MONOLISA_FONT_PATH).name
             if upright_cached.exists():
                 return upright_cached
         return None
@@ -432,6 +436,24 @@ def _get_monolisa_font_path(local_only: bool = False, italic: bool = False) -> P
         return None
 
 
+def _set_variable_weight(font: ImageFont.FreeTypeFont, weight: int) -> None:
+    """Set the `wght` axis of a variable font, leaving every other axis at its default.
+
+    `set_variation_by_axes` takes one value per axis in the font's own order.
+    MonoLisa v2 had a single `wght` axis; v3 adds `GRAD` (typographic color),
+    so a bare `[weight]` would raise on v3 and silently keep the default weight.
+    Resolving the axes by tag keeps this correct for either file.
+    """
+    try:
+        axes = font.get_variation_axes()
+        values = [
+            weight if axis["name"] in (b"wght", "wght", b"Weight", "Weight") else axis["default"] for axis in axes
+        ]
+        font.set_variation_by_axes(values)
+    except Exception:
+        logger.debug("Font variation not supported for MonoLisa at weight=%d", weight)
+
+
 def _get_font(
     size: int = 32, weight: int = 700, local_only: bool = False, italic: bool = False
 ) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
@@ -450,11 +472,7 @@ def _get_font(
     if monolisa_path:
         try:
             font = ImageFont.truetype(str(monolisa_path), size)
-            # Set variable font weight (MonoLisa supports 100-1000)
-            try:
-                font.set_variation_by_axes([weight])
-            except Exception:
-                logger.debug("Font variation not supported for MonoLisa at weight=%d", weight)
+            _set_variable_weight(font, weight)
             return font
         except OSError:
             logger.warning("Failed to load MonoLisa font from %s", monolisa_path)
@@ -977,13 +995,13 @@ _SHAPING_WARNED = False
 def _draw_text_with_features(
     draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str, *, font, fill, features: list[str] | None = None
 ) -> None:
-    """Draw text with optional OpenType features (e.g. `ss02` for MonoLisa Italic swashes).
+    """Draw text with optional OpenType features (e.g. `ss01` for MonoLisa Italic swashes).
 
     Falls back to plain `draw.text(...)` when Pillow is built without libraqm
     (no feature support) or when the font doesn't supply the requested feature —
     but says so in the log rather than degrading silently, which is how the
     production OG cards lost their italic swashes unnoticed (issue: OG image
-    served without MonoLisa `ss02`).
+    served without MonoLisa's script set).
     """
     if not features:
         draw.text(xy, text, font=font, fill=fill)
@@ -1069,7 +1087,12 @@ def create_home_og_image(
     # Line 2 — italic `— any library.`, same left edge as the wordmark
     accent_y = block_top + wm_size + line_gap_headline
     _draw_text_with_features(
-        draw, (block_left, accent_y), accent_text, font=accent_font, fill=theme_dict["ink"], features=["ss02"]
+        draw,
+        (block_left, accent_y),
+        accent_text,
+        font=accent_font,
+        fill=theme_dict["ink"],
+        features=[MONOLISA_SCRIPT_FEATURE],
     )
 
     # Line 3 — mono accent `from .md to art.` (centered in canvas, big gap above)

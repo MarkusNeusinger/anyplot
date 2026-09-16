@@ -103,7 +103,7 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
               fontFamily: typography.serif,
               fontWeight: 400,
               fontStyle: 'italic',
-              fontFeatureSettings: '"ss02"',
+              fontFeatureSettings: '"ss01"',
               whiteSpace: 'nowrap',
               fontSize: '0.75em',
             }}

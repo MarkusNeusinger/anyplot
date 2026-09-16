@@ -113,7 +113,7 @@ async def lifespan(app: FastAPI):
     logger.info("Starting anyplot API...")
 
     # Text shaping decides whether the OG cards carry MonoLisa's italic swashes
-    # (`ss02`) and kerning at all — log it once so a degraded image is visible
+    # (`ss01`) and kerning at all — log it once so a degraded image is visible
     # in Cloud Run logs instead of only in a pixel diff of the served PNG.
     if has_text_shaping():
         logger.info("Text shaping (libraqm): available")

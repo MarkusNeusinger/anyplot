@@ -42,12 +42,12 @@ anyplot.ai is a considered reference work styled like a code editor over a paper
 
 **3. Code is the native register.** Section headers carry shell prompts (`❯ libraries`, `$ plots`, `~/anyplot/`), action buttons read as method calls (`.copy()`, `.open()`, `.download()`), the hero headline types itself with a blinking cursor. The site speaks the dialect of its visitors. This is not skinning — it's the framing device. Removing the editorial paper underneath would over-tip into "developer toy"; removing the terminal layer would feel sterile and product-marketing-y. The two layers depend on each other.
 
-**4. One typeface, two voices.** The entire site is set in **MonoLisa** — body, UI, navigation, prompts, buttons, logo, display headlines, everything. The editorial accent is not a second font but MonoLisa's **italic + `ss02` stylistic set** (the script variant), enabled globally via `font-feature-settings: "ss02"`. Whenever text is set in `font-style: italic`, it renders as a flowing script that carries the emotional/editorial register while staying on the monospace grid.
+**4. One typeface, two voices.** The entire site is set in **MonoLisa Code** — body, UI, navigation, prompts, buttons, logo, display headlines, everything. The editorial accent is not a second font but MonoLisa's **italic + `ss01` stylistic set** (the script variant), enabled globally via `font-feature-settings: "ss01"`. Whenever text is set in `font-style: italic`, it renders as a flowing script that carries the emotional/editorial register while staying on the monospace grid.
 
-- **Roman (upright MonoLisa)** — default for all prose, labels, navigation, buttons, code, logo. Bold weights (700) for display sizes.
-- **Script (italic MonoLisa + ss02)** — accents only: hero sub-headlines (`— any library.`), section titles (`libraries`, `specs`), taglines (`steal like an artist.`), emphasized words (`<em>your</em>`). Reserve for semantic emphasis, not decoration.
+- **Roman (upright MonoLisa Code)** — default for all prose, labels, navigation, buttons, code, logo. Bold weights (700) for display sizes.
+- **Script (italic MonoLisa Code + ss01)** — accents only: hero sub-headlines (`— any library.`), section titles (`libraries`, `specs`), taglines (`steal like an artist.`), emphasized words (`<em>your</em>`). Reserve for semantic emphasis, not decoration.
 
-This is a stricter system than the typical 3-font stack and depends on MonoLisa's breadth (all weights 100–900, italic with ss02) rather than bringing in a separate serif. The trade-off: no Fraunces editorial warmth; in exchange, a single coherent voice.
+This is a stricter system than the typical 3-font stack and depends on MonoLisa's breadth (all weights 100–900, italic with ss01) rather than bringing in a separate serif. The trade-off: no Fraunces editorial warmth; in exchange, a single coherent voice. MonoLisa 3 ships a proportional sibling, **MonoLisa Text**; it is registered (`--text`) for experiments but not part of the system until a decision says where it belongs.
 
 **5. Generous vertical rhythm.** Section padding is 80px vertical on desktop. Hero sections get 80–100px. Cards have 24–28px internal padding. The layout should feel **unhurried**, like a journal you read cover to cover rather than a dashboard you scan.
 
@@ -481,36 +481,42 @@ Using them in navigation or buttons breaks the color hierarchy.
 ### 5.1 Font Families
 
 ```css
---serif: 'MonoLisa', 'MonoLisa Fallback', Consolas, Menlo, Monaco, 'DejaVu Sans Mono', monospace;
---sans:  'MonoLisa', 'MonoLisa Fallback', Consolas, Menlo, Monaco, 'DejaVu Sans Mono', monospace;
---mono:  'MonoLisa', 'MonoLisa Fallback', 'JetBrains Mono', Consolas, monospace;
+--serif: 'MonoLisa Code', 'MonoLisa Fallback', Consolas, Menlo, Monaco, 'DejaVu Sans Mono', monospace;
+--sans:  'MonoLisa Code', 'MonoLisa Fallback', Consolas, Menlo, Monaco, 'DejaVu Sans Mono', monospace;
+--mono:  'MonoLisa Code', 'MonoLisa Fallback', 'JetBrains Mono', Consolas, monospace;
+--text:  'MonoLisa Text', 'MonoLisa Code', 'MonoLisa Fallback', system-ui, sans-serif;
 ```
 
-The `--serif` and `--sans` variables are kept as aliases to `--mono` so existing imports resolve, but all three resolve to the same MonoLisa stack. The editorial accent comes from **italic + `ss02` stylistic set**, not from a second font. `ss02` is enabled globally on `html` via `font-feature-settings: "ss02"` — it only affects glyphs rendered with `font-style: italic`, so upright text is unaffected.
+The `--serif` and `--sans` variables are kept as aliases to `--mono` so existing imports resolve, but all three resolve to the same MonoLisa Code stack. `--text` is MonoLisa Text, the proportional sibling introduced in MonoLisa 3: registered for experiments, unused by default (the browser fetches nothing for a family no rule uses). The editorial accent comes from **italic + `ss01` stylistic set**, not from a second font. `ss01` is enabled globally on `html` via `font-feature-settings: "ss01"` — it only affects glyphs rendered with `font-style: italic`, so upright text is unaffected.
+
+**OpenType features in use (v3 tags — they changed from v2):**
+- `ss01` — script variant, italic only. Was `ss02` in v2; in v3 `ss02` means "alt i r", so never carry the old tag forward.
+- `dlig` — coding ligatures (`->`, `!=`, `===`). v2 shipped them under `liga` (on by default); v3 moved them to `dlig` (off by default). `tokens.css` re-enables them on `pre`, `code`, `kbd`, `samp` only, so prose never ligates.
+- `GRAD` (variable axis, −50…50) — typographic color without width change. Off (0) everywhere; the hook for a dark-mode experiment (`font-variation-settings: 'GRAD' 15` under `[data-theme='dark']`) is documented in `tokens.css`.
 
 **Loading:**
-- **MonoLisa 2.017**: commercial license required. Self-hosted on GCS (`gs://anyplot-static/fonts/`) as 64 Unicode-range subsets (woff2, variable 100–900 weights, normal + italic). The italic subsets ship with the `ss02` feature table intact — critical for the script variant. CORS restricted to `anyplot.ai` + localhost.
+- **MonoLisa 3.000**: commercial license required. Self-hosted on GCS (`gs://anyplot-static/fonts/v3/{code,text}/`) as 70 Unicode-range subsets per family (woff2, variable `wght` 100–900 + `GRAD`, normal + italic), plus the four variable TTFs under `fonts/v3/desktop/` for the OG-image renderer and design-sync. The italic subsets ship with the `ss01` feature table intact — critical for the script variant. CORS restricted to `anyplot.ai` + localhost. `app/src/styles/fonts.css` is generated from the order page's builder CSS by `automation/scripts/monolisa_fonts_css.py`; a font update is a re-run, never a hand edit.
 - **MonoLisa Fallback**: `@font-face` with `local('Consolas'), local('Menlo'), local('Monaco'), local('DejaVu Sans Mono')` + size-adjust metrics — prevents CLS while the webfont loads.
 - **No Google Fonts**: Fraunces and Inter were removed in favor of MonoLisa-only. ~40–60 KB transfer + one handshake saved.
 
 ### 5.2 Type Roles
 
-The key rule: **mono is the default, italic-ss02 is the editorial accent.** Everything is MonoLisa. Upright for structure, italic (which triggers ss02 script glyphs) for emphasis. No second font.
+The key rule: **mono is the default, italic-ss01 is the editorial accent.** Everything is MonoLisa. Upright for structure, italic (which triggers ss01 script glyphs) for emphasis. No second font.
 
 | Element                | Variant           | Size                       | Weight | Notes                                                           |
 |------------------------|-------------------|----------------------------|--------|-----------------------------------------------------------------|
 | Display headlines      | mono + script     | `clamp(44, 4.5vw, 76px)`   | 400–700| Hero H1 mixes upright bold (code token) + italic-script (prose accent). |
-| Section titles         | mono italic + ss02| `clamp(36, 4.5vw, 56px)`   | 300–400| Script variant on title word. Preceded by a shell prompt.       |
+| Section titles         | mono italic + ss01| `clamp(36, 4.5vw, 56px)`   | 300–400| Script variant on title word. Preceded by a shell prompt.       |
 | Shell prompt prefix    | mono upright      | 0.6× section-title size    | 500    | `❯` `$` `~/path/` — `--ink-muted`, sits before the title.        |
 | Body paragraph         | mono upright      | 14–16px                    | 300–400| Default body text. Lowercase preferred.                         |
 | Intro / lede           | mono upright      | 18–19px                    | 300–500| Paragraph under H1. Subtitle (`one spec · every library…`) at 500. |
-| Tagline                | mono italic + ss02| 18–22px                    | 400    | Script variant, e.g. `steal like an artist.`                    |
+| Tagline                | mono italic + ss01| 18–22px                    | 400    | Script variant, e.g. `steal like an artist.`                    |
 | Eyebrow / Kicker       | mono upright      | 11px                       | 400    | Lowercase, tracked `.08em`, preceded by a 18×1px green rule.    |
 | UI labels & buttons    | mono upright      | 12–13px                    | 500    | Buttons lowercase, e.g. `browse plots →`.                       |
 | Navigation links       | mono upright      | 14px                       | 500    | Active state: green `•` prefix.                                 |
 | Code / logo            | mono upright      | context-dependent          | 700    | Logo: `any.plot()` with green dot and ghosted `()`.             |
 | Stats / numerals       | mono upright      | 24–32px                    | 600    | Quiet support — no italic/green accents on numerals anymore.    |
-| Emphasis in body       | mono italic + ss02| inherits                   | inherit| `<em>your</em>` reads as script within upright prose.           |
+| Emphasis in body       | mono italic + ss01| inherits                   | inherit| `<em>your</em>` reads as script within upright prose.           |
 | Inline code in prose   | mono upright      | inherits ×0.95             | 500    | Background `--bg-elevated`, padding 2–4px, radius 3px.          |
 
 ### 5.3 Display Type Construction
@@ -540,15 +546,15 @@ steal like an artist._▌             │                             │
 
 **H1 construction (two lines):**
 - Line 1: `any.plot()` — MonoLisa Bold (700), upright, with `.` in `--imprint-green` (circle via `scale(1.3)`), ghosted `()` at opacity 0.45. This matches the NavBar logo exactly for brand consistency.
-- Line 2: `— any library.` — MonoLisa italic + `ss02`, weight 400, same 0.75em size as `any.plot()` so heights align. The script variant reads as the editorial subline.
+- Line 2: `— any library.` — MonoLisa italic + `ss01`, weight 400, same 0.75em size as `any.plot()` so heights align. The script variant reads as the editorial subline.
 - Size: `clamp(2.75rem, 4.5vw, 4.75rem)` on the H1 container, with `0.75em` on both spans.
 
 **Layer hierarchy (top to bottom, left column):**
 1. **Eyebrow** — `— the open plot catalogue`, lowercase, 11px MonoLisa upright, `--imprint-green`, tracked `.08em`, preceded by 18×1px green rule.
 2. **H1** — see above.
 3. **Subtitle** — `one spec · every library · always current.`, MonoLisa upright weight 500, 18px, `--ink`. Must fit on one line (`whiteSpace: nowrap` + stepped responsive size).
-4. **Intro prose** — 4–6 lines MonoLisa upright weight 300, `--ink-soft`, 18px. `<em>your</em>` renders as italic-ss02 script accent inline.
-5. **Tagline** — `steal like an artist.`, MonoLisa italic + `ss02`, 22px. Typed out by TypewriterText (see §8.1) at ~68ms/char, with a trailing green block cursor that fades 2.5s after typing completes.
+4. **Intro prose** — 4–6 lines MonoLisa upright weight 300, `--ink-soft`, 18px. `<em>your</em>` renders as italic-ss01 script accent inline.
+5. **Tagline** — `steal like an artist.`, MonoLisa italic + `ss01`, 22px. Typed out by TypewriterText (see §8.1) at ~68ms/char, with a trailing green block cursor that fades 2.5s after typing completes.
 6. **CTAs** — primary black pill `browse plots →`, two stacked text-links next to it: `or connect via mcp →`, `or clone on github →`. Lowercase throughout.
 7. **NumbersStrip** — single `borderTop`, five quiet stats (1.5rem MonoLisa weight 600 in `--ink-soft`), labels 12px `--ink-muted`. Hangs directly under the hero inside the same 88svh section so the libraries peek below.
 
@@ -567,12 +573,12 @@ CSS sketch:
 .hero-h1 .parens    { font-weight: 400; opacity: 0.45; }
 .hero-h1 .accent    {
   font-style: italic;
-  font-feature-settings: "ss02";   /* script variant */
+  font-feature-settings: "ss01";   /* script variant */
   font-weight: 400;
   font-size: 0.75em;
   white-space: nowrap;
 }
-.hero-tagline       { font-style: italic; font-feature-settings: "ss02"; }
+.hero-tagline       { font-style: italic; font-feature-settings: "ss01"; }
 .hero-cursor        { width: 0.55em; background: var(--imprint-green); animation: blink 1s steps(2) infinite; transition: opacity 0.6s; }
 @keyframes blink { 50% { opacity: 0; } }
 ```
@@ -655,7 +661,7 @@ $ plots
 
 - **Prefix glyph**: `❯` is the default everywhere (navigation, list, editorial). `$` may be used for explicit action/list sections if it adds meaning; `~/path/` for hierarchical/about/meta sections. Earlier drafts used `§` in places (landing, about, libraries) — those have all been migrated to `❯`. No new glyph enters the system.
 - **Prefix font**: MonoLisa weight 500, color `--ink-muted`, scaled to ~0.6× the title size
-- **Title font**: MonoLisa italic + `ss02` stylistic set, 1.6–2rem weight 400; the `<em>` child is rendered in `--imprint-green` (script accent), the rest of the h2 stays `--ink`
+- **Title font**: MonoLisa italic + `ss01` stylistic set, 1.6–2rem weight 400; the `<em>` child is rendered in `--imprint-green` (script accent), the rest of the h2 stays `--ink`
 - **Spacing**: header wrapper is `pt: 2.5` (20px), `pb: 1.5` (12px) to sit the underline close to the baseline, `mb: 4` (32px) under the rule before content resumes. Sections wrap in `<Box component="section" sx={{ py: { xs: 2, md: 3 } }}>` so the page rhythm is uniform across editorial pages.
 - **Underline**: 1px solid `--rule`, full container width
 - **Component**: reuse `app/src/components/SectionHeader.tsx` — it encodes the pt/pb/mb/border rules above. Do not re-implement.
@@ -1173,7 +1179,7 @@ For CSS:
 - **Pure white or pure black backgrounds**: harsh, removes the warmth, makes plots look awkward against them.
 - **Branded loading spinners**: a plain loading indicator is fine. A branded animated logo is overkill.
 - **Generic stock imagery**: no isometric illustrations, no people high-fiving, no laptop-on-desk hero shots. Plots are our imagery.
-- **A second typeface**: no Space Grotesk, no Poppins, no Fraunces, no Inter. MonoLisa is the only face; italic + `ss02` is the only "second voice." Reaching for a serif for warmth or a sans for legal text undoes the single-face discipline.
+- **A second typeface**: no Space Grotesk, no Poppins, no Fraunces, no Inter. MonoLisa is the only face; italic + `ss01` is the only "second voice." Reaching for a serif for warmth or a sans for legal text undoes the single-face discipline.
 
 ### 10.2 Brand
 
@@ -1210,9 +1216,9 @@ The design system is implemented across:
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>anyplot.ai — any library. one plot.</title>
   <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
-  <!-- MonoLisa basic-latin preload (variable font, all weights in one file) -->
-  <link rel="preload" href="https://storage.googleapis.com/anyplot-static/fonts/0-MonoLisa-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="https://storage.googleapis.com/anyplot-static/fonts/2-MonoLisa-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <!-- MonoLisa Code basic-latin preload (variable font, all weights in one file) -->
+  <link rel="preload" href="https://storage.googleapis.com/anyplot-static/fonts/v3/code/0-MonoLisaCode-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="https://storage.googleapis.com/anyplot-static/fonts/v3/code/2-MonoLisaCode-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     :root {
       /* imprint palette — 8 categorical hues + 3 semantic anchors */
@@ -1237,10 +1243,10 @@ The design system is implemented across:
       --ink-muted:   #6B6A63;
       --rule:        rgba(26, 26, 23, 0.10);
 
-      /* Typography — MonoLisa only. serif/sans aliased for compatibility. */
-      --serif: 'MonoLisa', 'MonoLisa Fallback', Consolas, Menlo, Monaco, monospace;
-      --sans:  'MonoLisa', 'MonoLisa Fallback', Consolas, Menlo, Monaco, monospace;
-      --mono:  'MonoLisa', 'MonoLisa Fallback', 'JetBrains Mono', Consolas, monospace;
+      /* Typography — MonoLisa Code only. serif/sans aliased for compatibility. */
+      --serif: 'MonoLisa Code', 'MonoLisa Fallback', Consolas, Menlo, Monaco, monospace;
+      --sans:  'MonoLisa Code', 'MonoLisa Fallback', Consolas, Menlo, Monaco, monospace;
+      --mono:  'MonoLisa Code', 'MonoLisa Fallback', 'JetBrains Mono', Consolas, monospace;
 
       /* Layout */
       --gutter: 24px;
@@ -1258,8 +1264,8 @@ The design system is implemented across:
       --rule:        rgba(240, 239, 232, 0.10);
     }
 
-    /* Global: enable ss02 so any italic text renders as the script variant. */
-    html { font-feature-settings: "ss02"; }
+    /* Global: enable ss01 so any italic text renders as the script variant. */
+    html { font-feature-settings: "ss01"; }
 
     body {
       font-family: var(--mono);
@@ -1301,7 +1307,7 @@ Eventually, once the project is mature, consider writing a JOSS (Journal of Open
 **Non-web visual identity:**
 
 - **GitHub profile images**: square variant of the logo: `any.plot()` in MonoLisa Bold, centered, on warm off-white background (`#FAF8F1`). Green dot at `#009E73`. Maintain 1em padding from edges.
-- **OG / Twitter card images**: 1200×630px. Top-left: `anyplot.ai` logo in MonoLisa Bold. Center-left: page title in MonoLisa — bold upright for the subject, italic + ss02 script for one accent word. Center-right: representative plot screenshot or palette strip. Bottom: minimal meta in mono.
+- **OG / Twitter card images**: 1200×630px. Top-left: `anyplot.ai` logo in MonoLisa Bold. Center-left: page title in MonoLisa — bold upright for the subject, italic + ss01 script for one accent word. Center-right: representative plot screenshot or palette strip. Bottom: minimal meta in mono.
 - **Presentations**: black or warm off-white backgrounds. MonoLisa throughout — upright for body, italic-script for section dividers. Brand green only for emphasis. Every plot in the deck uses imprint.
 - **T-shirts / merch (if ever)**: dark t-shirt, `any.plot()` in white with green dot, centered on chest. No taglines, no URLs, no GitHub handles. One variant only.
 

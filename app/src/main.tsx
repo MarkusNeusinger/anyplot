@@ -1,6 +1,6 @@
 // Import design tokens (CSS custom properties for theming + dark mode)
 import 'src/styles/tokens.css';
-// Import web fonts - MonoLisa from GCS, Fraunces + Inter from Google Fonts
+// Import web fonts - MonoLisa Code + Text from GCS (no Google Fonts)
 import 'src/styles/fonts.css';
 
 import React from 'react';

@@ -17,15 +17,16 @@ This is an **app-shape** sync — the *source* is the `app/` website (`anyplot-w
 
 ## MonoLisa fonts (re-fetch on a fresh clone)
 
-MonoLisa is proprietary (© FaceType Foundry, CORS-locked GCS) and is **NOT in this public repo**. The variable ttf are fetched at sync time into `app/.designsync-fonts/` (the `.ttf`/`.woff2` binaries are gitignored; only the `@font-face` CSS there is committed) and shipped only to the private design project — never committed. `app/.designsync-fonts/monolisa.css` (the `@font-face`, committed) references them. On a fresh clone, re-fetch before building:
+MonoLisa is proprietary (© FaceType Foundry, CORS-locked GCS) and is **NOT in this public repo**. The variable ttf (v3: MonoLisa Code + MonoLisa Text, upright + italic) are fetched at sync time into `app/.designsync-fonts/` (the `.ttf`/`.woff2` binaries are gitignored; only the `@font-face` CSS there is committed) and shipped only to the private design project — never committed. `app/.designsync-fonts/monolisa.css` (the `@font-face`, committed) references them. On a fresh clone, re-fetch before building:
 
 ```sh
 mkdir -p app/.designsync-fonts && cd app/.designsync-fonts
-curl -sSfo MonoLisaVariableNormal.ttf https://storage.googleapis.com/anyplot-static/fonts/MonoLisaVariableNormal.ttf
-curl -sSfo MonoLisaVariableItalic.ttf https://storage.googleapis.com/anyplot-static/fonts/MonoLisaVariableItalic.ttf
+for f in MonoLisaCodeUpright MonoLisaCodeItalic MonoLisaTextUpright MonoLisaTextItalic; do
+  curl -sSfo "$f.ttf" "https://storage.googleapis.com/anyplot-static/fonts/v3/desktop/$f.ttf"
+done
 ```
 
-The variable ttf cover the full glyph range (normal + italic, weights 100–900, the `ss02` script set intact). CORS is browser-only, so `curl` works even though browser fetches are restricted to `anyplot.ai`.
+The variable ttf cover the full glyph range (upright + italic, axes `wght` 1–1000 and `GRAD` −50…50, the `ss01` script set intact in the italics). CORS is browser-only, so `curl` works even though browser fetches are restricted to `anyplot.ai`.
 
 ## Known render warns
 - None. (`[RENDER_THIN]` on Footer in an early pass was fixed by collapsing its preview to a single cell — its two variants differed only in a hidden link href.)
