@@ -114,10 +114,18 @@ async def _refresh_sitemap() -> str:
 # HTML template for search/social crawlers. Meta tags drive social previews;
 # the {body} slot carries what search engines index (headings, code, links,
 # JSON-LD) — an empty body reads as a thin page and wastes the crawl.
+#
+# The icon links are absolute and mirror app/index.html: a crawler never
+# receives index.html, so without them Google's only candidate was the
+# /favicon.ico fallback. The files live in app/public/ and are served by the
+# app's nginx, whichever host (anyplot.ai, python.anyplot.ai) proxied the bot.
 BOT_HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
+    <link rel="icon" href="https://anyplot.ai/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="https://anyplot.ai/favicon.svg" />
+    <link rel="apple-touch-icon" href="https://anyplot.ai/apple-touch-icon.png" />
     <title>{title}</title>
     <meta name="description" content="{description}" />
     <meta name="robots" content="{robots_content}" />
@@ -212,7 +220,7 @@ _HOME_JSONLD = {
             "@type": "Organization",
             "name": "anyplot",
             "url": "https://anyplot.ai",
-            "logo": "https://anyplot.ai/og-image.png",
+            "logo": "https://anyplot.ai/icon-512.png",
             "description": (
                 f"Open plot catalogue with AI-generated implementations across {_LIBRARY_COUNT} "
                 f"libraries in {_LANGUAGE_LIST}."
