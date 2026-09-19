@@ -273,6 +273,13 @@ class TestRenderBotHtml:
         assert 'rel="canonical"' in result
         assert url in result
 
+    def test_has_site_icon_links(self) -> None:
+        """Crawlers never receive index.html, so the bot head declares the icons itself."""
+        result = _render_bot_html(title="t", description="d", image="i", url="u")
+        assert '<link rel="icon" href="https://anyplot.ai/favicon.ico" sizes="48x48" />' in result
+        assert '<link rel="icon" type="image/svg+xml" href="https://anyplot.ai/favicon.svg" />' in result
+        assert '<link rel="apple-touch-icon" href="https://anyplot.ai/apple-touch-icon.png" />' in result
+
     def test_default_body_and_nav(self) -> None:
         result = _render_bot_html(title="t", description="d", image="i", url="u")
         assert "<h1>t</h1><p>d</p>" in result
