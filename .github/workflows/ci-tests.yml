@@ -89,7 +89,7 @@ jobs:
 
     - name: Install uv
       if: steps.check.outputs.should_test == 'true'
-      uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+      uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4  # v10.1.0
 
     - name: Install dependencies
       if: steps.check.outputs.should_test == 'true'
@@ -150,7 +150,7 @@ jobs:
 
     - name: Upload coverage to Codecov
       if: steps.check.outputs.should_test == 'true' && github.actor != 'dependabot[bot]'
-      uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f  # v6
+      uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5  # v7.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage.xml
@@ -240,7 +240,7 @@ jobs:
 
     - name: Upload frontend coverage to Codecov
       if: steps.check.outputs.should_test == 'true'
-      uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f  # v6
+      uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5  # v7.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./app/coverage/coverage-final.json
