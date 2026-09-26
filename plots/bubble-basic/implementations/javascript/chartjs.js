@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: pending | Updated: 2026-09-26
+// Quality: 88/100 | Updated: 2026-09-26
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic LCG) ------------------------------------
