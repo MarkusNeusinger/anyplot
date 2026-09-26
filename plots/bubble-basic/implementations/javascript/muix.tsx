@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Updated: 2026-09-26
+// Quality: 83/100 | Updated: 2026-09-26
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
