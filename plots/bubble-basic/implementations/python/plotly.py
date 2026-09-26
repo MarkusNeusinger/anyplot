@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-28
+Quality: 90/100 | Updated: 2026-09-26
 """
 
 import os
@@ -55,7 +55,7 @@ fig.add_trace(
             "size": revenue_m,
             "sizemode": "area",
             "sizeref": sizeref,
-            "sizemin": 5,
+            "sizemin": 3,
             "color": revenue_m,
             "colorscale": imprint_seq,
             "colorbar": {
@@ -66,7 +66,7 @@ fig.add_trace(
                 "y": 0.5,
                 "bgcolor": ELEVATED_BG,
                 "bordercolor": INK_SOFT,
-                "borderwidth": 1,
+                "borderwidth": 0.5,
             },
             "opacity": 0.75,
             "line": {"width": 1.5, "color": PAGE_BG},
@@ -126,7 +126,7 @@ fig.update_layout(
         "font": {"size": 10, "color": INK_SOFT},
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
-        "borderwidth": 1,
+        "borderwidth": 0.5,
         "x": 0.02,
         "y": 0.98,
         "xanchor": "left",
