@@ -105,7 +105,7 @@ const legendGraphics = [
     style: {
       text: `${Math.round(sample.value)}`,
       fill: t.inkSoft,
-      fontSize: 13,
+      fontSize: 16,
     },
   })),
 ];
@@ -164,11 +164,14 @@ chart.setOption({
     itemWidth: 16,
     calculable: false,
     hoverLink: false,
+    // Reversed stop order (blue=low, green=high) so the gradient's "high" end
+    // lands on brand green — matching the standout series below, which is the
+    // chart's highest-efficiency point and is also drawn in brand green.
     text: ["High growth / R&D $", "Low growth / R&D $"],
     textGap: 12,
-    textStyle: { color: t.inkSoft, fontSize: 13 },
-    inRange: { color: t.seq },
-    outOfRange: { color: t.seq },
+    textStyle: { color: t.inkSoft, fontSize: 16 },
+    inRange: { color: [...t.seq].reverse() },
+    outOfRange: { color: [...t.seq].reverse() },
   },
   series: [
     {
