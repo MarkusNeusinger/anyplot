@@ -120,6 +120,27 @@ describe('FeedbackWidget', () => {
     expect(textarea).toHaveValue('try me');
   });
 
+  it('reopening the mini-stack clears a lingering Thanks toast', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ status: 'ok' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) });
+
+    render(<FeedbackWidget />);
+    const fab = screen.getByRole('button', { name: /open feedback/i });
+    await user.click(fab);
+    await user.click(await screen.findByRole('button', { name: /quick thumbs up/i }));
+    expect(await screen.findByText(/^Thanks!/)).toBeInTheDocument();
+
+    // Toast and stack share the slot above the FAB — never both at once.
+    await user.click(fab);
+    expect(await screen.findByRole('button', { name: /quick thumbs up/i })).toBeInTheDocument();
+    expect(screen.queryByText(/^Thanks!/)).toBeNull();
+  });
+
   it('a second FAB click closes the mini-stack', async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) });
     render(<FeedbackWidget />);

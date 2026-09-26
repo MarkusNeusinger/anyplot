@@ -129,4 +129,14 @@ describe('SpecsListPage', () => {
     const fetchUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
     expect(fetchUrl).toContain('/plots/filter');
   });
+
+  it('renders the scroll-to-top button (hidden until scrolled)', async () => {
+    mockFetchSuccess();
+    render(<SpecsListPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('2 specifications')).toBeInTheDocument();
+    });
+    expect(screen.getByLabelText(/scroll to top/i)).toBeInTheDocument();
+  });
 });

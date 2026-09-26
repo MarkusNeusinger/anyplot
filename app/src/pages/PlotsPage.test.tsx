@@ -74,6 +74,11 @@ describe('PlotsPage', () => {
     expect(screen.getByTestId('helmet')).toBeInTheDocument();
   });
 
+  it('renders the scroll-to-top button (hidden until scrolled)', () => {
+    render(<PlotsPage />);
+    expect(screen.getByLabelText(/scroll to top/i)).toBeInTheDocument();
+  });
+
   describe('global keyboard shortcuts', () => {
     it('triggers random navigation on Space when nothing interactive is focused', () => {
       render(<PlotsPage />);

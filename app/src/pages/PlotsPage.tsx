@@ -3,18 +3,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
-import Fab from '@mui/material/Fab';
 
+import { ScrollToTopFab } from 'src/components/ScrollToTopFab';
 import type { ImageSize } from 'src/constants';
 import { isFiltersEmpty, useAnalytics, useFilterState, useInfiniteScroll } from 'src/hooks';
 import { useAppData, useHomeState } from 'src/hooks';
 import { specPath } from 'src/routes/paths';
 import { FilterBar } from 'src/sections/plots-gallery/FilterBar';
 import { ImagesGrid } from 'src/sections/plots-gallery/ImagesGrid';
-import { colors } from 'src/theme';
 import type { PlotImage } from 'src/types';
 
 export function PlotsPage() {
@@ -90,7 +88,6 @@ export function PlotsPage() {
     const stored = localStorage.getItem('imageSize');
     return stored === 'normal' || stored === 'compact' ? stored : 'normal';
   });
-  const [showScrollTop, setShowScrollTop] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -110,15 +107,6 @@ export function PlotsPage() {
       setSearchParams(next, { replace: true });
     }
   }, [searchParams, setSearchParams]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
-    };
-    // passive: true — handler doesn't preventDefault.
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const handleCardClick = useCallback(
     (img: PlotImage) => {
@@ -237,23 +225,7 @@ export function PlotsPage() {
         </Alert>
       )}
 
-      <Fab
-        size="small"
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        sx={{
-          position: 'fixed',
-          bottom: 24,
-          right: 24,
-          bgcolor: 'var(--bg-surface)',
-          color: 'var(--ink-muted)',
-          opacity: showScrollTop ? 1 : 0,
-          visibility: showScrollTop ? 'visible' : 'hidden',
-          transition: 'opacity 0.3s, visibility 0.3s',
-          '&:hover': { bgcolor: 'var(--bg-elevated)', color: colors.primary },
-        }}
-      >
-        <KeyboardArrowUpIcon />
-      </Fab>
+      <ScrollToTopFab />
     </Box>
   );
 }
