@@ -51,7 +51,8 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   route into the service can be measured *before* the switch is thrown; `off-seen` is the
   state every path that must keep working has to reach first. Exempt, as exact paths with no
   prefixes: `/health` (the deploy smoke reaches the candidate on its `run.app` tag URL, which
-  never passes the edge) and `/debug/cache/invalidate` (`sync-postgres.yml` posts to the
+  never passes the edge) and, until #11214 gave its caller the header,
+  `/debug/cache/invalidate` (`sync-postgres.yml` posts to the
   direct URL by design, because Cloudflare's bot challenge answers an unauthenticated curl
   POST with a 403 HTML page; that endpoint carries its own constant-time token), plus
   `OPTIONS`, which a browser cannot attach a custom header to. `/seo-proxy/…` is deliberately
@@ -64,7 +65,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `secrets.compare_digest` raises `TypeError` on a non-ASCII `str` while a header arrives
   latin-1-decoded from the wire: comparing strings handed any caller a one-byte way to turn a
   cheap 401 or 403 into an unhandled, logged 500 — including on `/debug/cache/invalidate`,
-  which is exempt from the gate precisely because it has its own lock. The Cloudflare Worker
+  which was exempt from the gate precisely because it has its own lock. The Cloudflare Worker
   behind `anyplot.ai/api/*` now has
   its source in `infra/cloudflare/`, because a Worker subrequest to a host in the same zone
   bypasses that zone's Transform Rules — so the Worker stamps the header itself, deleting
@@ -145,8 +146,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 ### Fixed
 
 - **The API host stamps its own security headers, `/_health` stops dropping the site's,
-  and the CSP is now guarded by a test that also explains why `script-src` still says
-  `'unsafe-inline'`** — api.anyplot.ai is a separate origin with no nginx in front of it,
+  and the CSP is guarded by a test that pins what a nonce later replaced** — api.anyplot.ai is a separate origin with no nginx in front of it,
   so it inherited none of `app/security-headers.conf`: only `/proxy/html` set
   `nosniff` and a `Referrer-Policy`, on that one response. An outermost middleware now
   `setdefault`s both on every response that leaves through the stack — CORS preflights, the
@@ -163,16 +163,16 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   'none'` and `base-uri 'self'`, that a `report-to` group it names is actually defined by a
   `Reporting-Endpoints` header (reports to an undeclared group go nowhere, and nowhere reads
   exactly like "no violations"), and that the
-  three sha256 hashes the policy holds in reserve still describe `app/index.html`'s
-  inline scripts. Those hashes are in reserve rather than in force for a measured
+  three sha256 hashes the policy held in reserve still described `app/index.html`'s
+  inline scripts. Those hashes stayed in reserve rather than in force for a measured
   reason: mounted over the live production bundle through a local proxy, a hash-only
   `script-src` blocks exactly one script — the inline one **Cloudflare JavaScript
   Detections injects at the edge**, whose body carries a per-response ray id and so has
   no fixed hash. With `'unsafe-inline'` its hidden iframe appears, with hashes it does
-  not and the console reads "The action has been blocked". Hardening would have silently
-  cost bot detection on a site whose origin gate leans on the edge; the way out is a
-  nonce (Cloudflare stamps its injected script with the nonce it parses from this
-  header), which needs an nginx `sub_filter` no test here can prove. All of it is
+  not and the console reads "The action has been blocked". Hardening with hashes would
+  have silently cost bot detection on a site whose origin gate leans on the edge; the way
+  out was a nonce (Cloudflare stamps its injected script with the nonce it parses from
+  this header), which #11220 shipped a day later with an nginx `sub_filter`. All of it is
   written down at the directive it explains. (#11213)
 
 - **The IndexNow workflow no longer waits eight minutes behind an edge 403** — its
@@ -237,27 +237,23 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   reports the outcome after the attempt and returns non-zero instead of aborting the
   scan under `set -e`, so one failed `gh workflow run` no longer leaves every later PR
   unscanned. (#11198)
-- **The API image installs `libraqm0`, which is what actually restores text shaping —
-  and unblocks a deploy pipeline that has been red since 2026-08-30** — #10813 added a
-  build-time assertion on `features.check('raqm')` on the understanding that the locked
-  Pillow 12.3.0 manylinux wheel bundles libraqm. It does not: the wheel `dlopen()`s
-  libraqm at runtime, so in a bare `python:3.13-slim` the check is `False` and both
-  HarfBuzz and FriBiDi report no version at all. The assertion therefore failed every
-  build of this image, and the `deploy-api` trigger has been failing since that merge —
-  the serving revision is still the one built on 2026-08-28, so nothing merged since has
-  shipped. Installing the Debian `libraqm0` package (32 KB plus its HarfBuzz/FriBiDi
-  dependencies) turns the check `True`, verified in the built image. The assertion also
-  moves to the runtime stage, where it checks the image that actually serves: in the
+- **OG cards render MonoLisa's italic swashes in production again — the API image installs
+  `libraqm0`, after the guard added on the way had blocked every deploy since 2026-08-30** —
+  the live `api.anyplot.ai/og/home.png` was pixel-identical to a render forced onto Pillow's
+  BASIC layout engine: the deployed container's Pillow had no libraqm, so the `ss02`
+  stylistic set on `— any library.` was dropped and no text was kerned, while the helper
+  that draws feature runs swallowed the exception and the endpoint kept returning a valid
+  200 PNG. The fallback now warns once per process and the API logs the shaping capability
+  at startup. The build-time assertion on `features.check('raqm')` that came with it assumed
+  the locked Pillow 12.3.0 manylinux wheel bundles libraqm. It does not: the wheel
+  `dlopen()`s libraqm at runtime, so in a bare `python:3.13-slim` the check is `False` and
+  both HarfBuzz and FriBiDi report no version at all. The assertion therefore failed every
+  build of this image and the `deploy-api` trigger stayed red, so nothing merged after
+  2026-08-28 shipped until the Debian `libraqm0` package (32 KB plus its HarfBuzz/FriBiDi
+  dependencies) turned the check `True`, verified in the built image. The assertion also
+  moved to the runtime stage, where it checks the image that actually serves: in the
   builder stage it would pass on a venv whose runtime never got the library, which is
-  exactly the false green the guard exists to prevent. (#10813)
-- **OG cards render without MonoLisa's italic swashes in production** — the live
-  `api.anyplot.ai/og/home.png` is pixel-identical to a render forced onto Pillow's
-  BASIC layout engine, which means the deployed container's Pillow has no libraqm:
-  the `ss02` stylistic set on `— any library.` is dropped and no text is kerned. The
-  helper that draws feature runs swallowed the exception, so the degradation was
-  invisible in the logs and the endpoint kept returning a valid 200 PNG. The fallback
-  now warns once per process, the API logs the shaping capability at startup, and
-  `api/Dockerfile` fails the build outright when Pillow lands without libraqm. (#10813)
+  exactly the false green the guard exists to prevent. (#10813, #10821)
 
 ### Changed
 
@@ -340,7 +336,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   a builder stage and copies only the finished venv across with `COPY --chown`, which
   sets ownership as the layer is written. Measured: 1.62 GB to 693 MB. Less Artifact
   Registry growth per deploy and a shorter deploy rollout; `min-instances 1` already
-  covers the user-facing cold start.
+  covers the user-facing cold start. (#10821)
 - **The API deploy smoke-tests a candidate revision before it takes traffic** — the
   pipeline deployed straight onto live traffic, so a broken image served users until
   someone noticed. It now deploys with `--no-traffic --tag=candidate` and a
@@ -349,7 +345,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   for the fail-closed admin gate), and only then shifts traffic to exactly the revision
   it smoked — never `--to-latest`, which could promote a concurrent build's unsmoked
   revision. Adopted verbatim from the sibling repo kurrentschrift, which has had this
-  net since its first deploy.
+  net since its first deploy. (#10821)
 - **`anyplot-app` scales to zero** — the frontend service ran a permanently warm
   instance for ~EUR 8.30/month while 99.56% of the paid time was idle. It is a static
   nginx image that boots in ~0.26 s, and a 7-day request trace at one-minute resolution
@@ -404,16 +400,18 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   the test suite pins both ends — 403 without the header, 503 (the endpoint's own
   fail-closed answer) with it. A missing repository secret fails that step with a message
   naming it, rather than leaving the cache to go quietly stale. The second door the gate
-  still does not close — a crawler user agent reaching the prerendered pages through the
-  APP service's raw `run.app` URL — is now measured rather than suspected (a Googlebot UA
-  gets HTTP 200 and the correct canonical), and `api/origin_gate.py` records the two facts
-  that decide how it can be closed: Cloud Run answers a foreign `Host` header with its own
-  404, so a host rule in `app/nginx.conf` would be a real boundary rather than theatre —
-  and `bot-serving-check.yml` probes exactly that origin and cannot spoof the host either,
-  so the exception it needs has to be the shared secret, which means templating the app's
-  nginx, attaching the secret to `anyplot-app`, and a Cloudflare Transform Rule for the
-  `anyplot.ai` host that does not exist yet. Four coordinated changes, two in the dashboard,
-  one able to lock out every visitor if it lands out of order. (#11214)
+  did not close — a crawler user agent reaching the prerendered pages through the APP
+  service's raw `run.app` URL — was measured rather than suspected (a Googlebot UA got
+  HTTP 200 and the correct canonical), and `api/origin_gate.py` records the two facts that
+  decide how it can be closed: Cloud Run answers a foreign `Host` header with its own 404,
+  so a host rule in `app/nginx.conf` would be a real boundary rather than theatre — and
+  `bot-serving-check.yml` probes exactly that origin and cannot spoof the host either, so
+  the exception it needs has to be the shared secret: templating the app's nginx,
+  attaching the secret to `anyplot-app`, and a Cloudflare Transform Rule for the
+  `anyplot.ai` host. Four coordinated changes, two in the dashboard, one able to lock out
+  every visitor if it landed out of order — #11221 shipped the app's gate switched off, and
+  the Transform Rule now covers `anyplot.ai`, `www.anyplot.ai` and `api.anyplot.ai`
+  (#11222). (#11214)
 
 - **`click` 8.3.1 → 8.3.3 closes PYSEC-2026-2132** — the only advisory `pip-audit`
   reports against the resolved runtime dependency set (`uv export --no-dev`), which now

@@ -9,7 +9,7 @@
   correction may reflow the very line the title runs over, and counted rather
   than set-differenced so a second copy of a title cannot slip in behind the
   first: a title the base lacks is an ADDED bullet and is still refused, a
-  title it has is a CHANGED one and passes.
+  title it has is a CHANGED one and passes. (#11219)
 
 ### Added
 
@@ -19,4 +19,4 @@
   the released section and points nowhere, and nothing caught it. The
   complaint names the file and the line; a placeholder quoted in backticks is
   prose about the rule, not a reference, and passes. The README example no
-  longer hands the writer a placeholder to leave behind.
+  longer hands the writer a placeholder to leave behind. (#11219)

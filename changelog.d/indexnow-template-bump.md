@@ -6,7 +6,7 @@
   removes the constant's assignment line. Any other change to that file
   submits nothing. Google learns of a bump from the sitemap's `lastmod`, but
   the IndexNow engines never read it, so the retitling of all 5,172 spec pages
-  in #11844 had to be submitted by hand.
+  in #11844 had to be submitted by hand. (#11849)
 
 ### Fixed
 
@@ -16,4 +16,4 @@
   The full list now takes only `.yaml` metadata files, and the diff counts an
   implementation file only beside its metadata `.yaml`. The full list drops
   from 5,187 to 5,182 URLs, the size of the sitemap. The 10 stale `.gitkeep`
-  placeholders in five fully implemented spec directories are gone as well.
+  placeholders in five fully implemented spec directories are gone as well. (#11849)

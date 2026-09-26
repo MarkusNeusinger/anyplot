@@ -12,7 +12,7 @@
   `no-store`, `sub_filter` clears `ETag` and `Last-Modified` on its own, and
   `index.html` is now excluded from build-time precompression, because
   `gzip_static` would otherwise serve an unstamped `.gz` and quietly block
-  every inline script on the page.
+  every inline script on the page. (#11220)
 
 ### Changed
 
@@ -21,7 +21,7 @@
   that same response's header, fetched with `--compressed` so a precompressed
   shell cannot slip past. A lost stamp leaves a page that looks healthy to every
   other probe and runs no inline script at all, so it is worth the one extra
-  curl.
+  curl. (#11220)
 
 ### Fixed
 
@@ -34,4 +34,4 @@
   would additionally pair an old `nonce="…"` with a fresh header. Both routes
   now send the shell's `Cache-Control` and re-include the security-header
   snippet beside it, since an `add_header` of their own would otherwise have
-  dropped the whole inherited set.
+  dropped the whole inherited set. (#11220)

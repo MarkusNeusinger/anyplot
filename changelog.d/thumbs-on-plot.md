@@ -12,7 +12,7 @@
   per image per session: the choice is remembered in localStorage and the other
   thumb fades out, and the server drops a repeat vote from the same session for
   the same implementation silently, so nobody can flip up and down at will.
-  Supersedes the stale PR #8126, which placed both thumbs top-left.
+  Supersedes the stale PR #8126, which placed both thumbs top-left. (#11827)
 
 ### Changed
 
@@ -20,10 +20,10 @@
   5 per minute per IP, now counted over message-bearing rows only; a 👍/👎 tap
   is capped at 30 per minute, so flipping through the library carousel and
   rating several plots no longer trips the free-text limit or blocks a message
-  written right after.
+  written right after. (#11827)
 
 ### Removed
 
 - **The `.report()` flag over the plot.** Reporting stays on the spec hub page
   (`report issue ↗`) and via the GitHub issue template; the in-plot flag was
-  the least-used overlay action and its corner now belongs to the vote.
+  the least-used overlay action and its corner now belongs to the vote. (#11827)

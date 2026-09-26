@@ -7,7 +7,7 @@
   `/insights/dashboard` now serves `total_libraries` (the canonical
   `SUPPORTED_LIBRARIES` size that already backs `coverage_percent`) and the page
   renders against it, so the denominator follows the library set instead of
-  drifting from it.
+  drifting from it. (#11835)
 
 ### Changed
 
@@ -18,4 +18,4 @@
   legend replacing the less/more ramp.
   The interesting signal is which specs are *not* complete, and those are the
   minority — the old opacity ramp made them the hardest cells to pick out. The
-  summary line also names how many specs are below full coverage.
+  summary line also names how many specs are below full coverage. (#11835)

@@ -40,4 +40,7 @@
 - **`docs/reference/performance.md` describes the live services again.** The
   infrastructure table still listed the frontend at min-instances=1 with 256Mi
   (it has scaled to zero on 512Mi since 2026-08-29) and Cloud SQL as `db-g1-small`
-  (it is `db-custom-1-3840` on a 3-year commitment). (#11828)
+  (it is `db-custom-1-3840` on a 3-year commitment). #11828 and #11829 then edited
+  the same frontend row from different branches, so it still carried
+  max-instances=3 and concurrency 15 after both had merged; a follow-up aligned it
+  with `app/cloudbuild.yaml` (one instance, concurrency 80). (#11828, #11830)
