@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bubble-basic: Basic Bubble Chart
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: pending | Updated: 2026-09-26
+Library: bokeh 3.10.0 | Python 3.13.15
+Quality: 85/100 | Created: 2026-09-26
 """
 
 import os
