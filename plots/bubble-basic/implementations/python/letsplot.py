@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bubble-basic: Basic Bubble Chart
-Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-28
+Library: letsplot 4.11.0 | Python 3.13.15
+Quality: 91/100 | Updated: 2026-09-26
 """
 
 import os
