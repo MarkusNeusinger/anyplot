@@ -223,7 +223,9 @@ export function PlotsPage() {
                 spec: singleSpec,
               })
             }
-            aria-label={`Compare all implementations of ${specTitles[singleSpec] || singleSpec}`}
+            // Starts with the visible text (WCAG 2.5.3 Label in Name), so a
+            // speech-input user can say what they see; the rest names the target.
+            aria-label={`${singleSpec}.compare() — all implementations of ${specTitles[singleSpec] || singleSpec}`}
             sx={{
               display: 'inline-flex',
               alignItems: 'baseline',
@@ -246,7 +248,7 @@ export function PlotsPage() {
             {/* One tone on purpose: the house two-tone subject (opacity 0.7)
                 drops to ~3.7:1 on the light background, below WCAG AA. */}
             <Box component="span">{`${singleSpec}.compare()`}</Box>
-            <Box component="span" className="hub-arrow">
+            <Box component="span" className="hub-arrow" aria-hidden="true">
               →
             </Box>
           </Box>

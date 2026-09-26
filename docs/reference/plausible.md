@@ -68,10 +68,11 @@ records the same gallery filters without `/plots` (`/lib/matplotlib`).
 **Examples (spec routes)**:
 - `/scatter-basic?language=python` → `https://anyplot.ai/scatter-basic/language/python`
 
-One spec is therefore recorded under up to three paths: the gallery view
-(`/plots/spec/{spec_id}`), the hub (`/{spec_id}`) and its implementation
-pages (`/{spec_id}/{language}/{library}`). Filter Pages by "contains
-`{spec_id}`" to see them together.
+One spec is therefore recorded under three families of paths: gallery views
+filtered to it (`/plots/spec/{spec_id}`, plus any other filter segments), the
+hub (`/{spec_id}`, and `/{spec_id}/language/{language}` when the carousel is
+scoped) and its implementation pages (`/{spec_id}/{language}/{library}`).
+Filter Pages by "contains `{spec_id}`" to see them together.
 
 **Benefits**:
 - Plausible shows popular filter combinations
@@ -169,11 +170,11 @@ but crawlers never run JavaScript and `app/nginx.conf` short-circuits bot user
 agents with `return 202` on `/api/event`, so nothing they do appears here — this
 event covers humans only.
 
-### Landing page navigation (`nav_click`)
+### Navigation clicks (`nav_click`)
 
-A single event captures every clickable surface on the chrome and the new
-editorial landing page so we can answer "where do users go from `/` and via
-which UI element". One event, one event-property pair: `source` (which UI
+A single event captures every clickable surface on the chrome, the editorial
+landing page and the gallery so we can answer "where do users go, from which
+page, and via which UI element". One event, one event-property pair: `source` (which UI
 element was clicked) + `target` (where it leads). Some sources additionally
 carry `spec`, `library`, or `value` for richer breakdowns.
 
@@ -517,7 +518,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `report_issue` | Custom Event | Track issue report clicks |
 | `tag_click` | Custom Event | Track tag filter clicks |
 | `plot_rotate` | Custom Event | Track plot image rotation on specs page |
-| `nav_click` | Custom Event | Track which UI element on landing/chrome leads users off the root |
+| `nav_click` | Custom Event | Track which UI element on the chrome, the landing page or the gallery leads users where |
 | `theme_toggle` | Custom Event | Track dark/light theme switches |
 | `view_mode_change` | Custom Event | Track preview ↔ interactive toggles in spec detail |
 | `library_click` | Custom Event | Track library-card clicks on the libraries page |

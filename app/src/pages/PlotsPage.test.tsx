@@ -82,8 +82,9 @@ describe('PlotsPage', () => {
       state.specsData = [MANHATTAN];
       state.specTitles = { 'manhattan-gwas': MANHATTAN.title };
       render(<PlotsPage />);
+      // The accessible name starts with the visible text (WCAG 2.5.3 Label in Name).
       const link = screen.getByRole('link', {
-        name: 'Compare all implementations of Manhattan Plot for GWAS',
+        name: 'manhattan-gwas.compare() — all implementations of Manhattan Plot for GWAS',
       });
       expect(link).toHaveAttribute('href', '/manhattan-gwas');
       expect(link).toHaveTextContent('manhattan-gwas.compare()');
@@ -93,7 +94,7 @@ describe('PlotsPage', () => {
       state.activeFilters = [{ category: 'spec', values: ['manhattan-gwas'] }];
       state.specsData = [MANHATTAN];
       render(<PlotsPage />);
-      fireEvent.click(screen.getByRole('link', { name: /compare all implementations/i }));
+      fireEvent.click(screen.getByRole('link', { name: /all implementations of/i }));
       expect(mockTrackEvent).toHaveBeenCalledWith('nav_click', {
         source: 'gallery_spec_hub',
         target: '/manhattan-gwas',
@@ -117,7 +118,7 @@ describe('PlotsPage', () => {
       state.activeFilters = filters;
       state.specsData = [MANHATTAN, { id: 'scatter-basic', title: 'Basic Scatter Plot' }];
       render(<PlotsPage />);
-      expect(screen.queryByRole('link', { name: /compare all implementations/i })).toBeNull();
+      expect(screen.queryByRole('link', { name: /all implementations of/i })).toBeNull();
     });
   });
 
