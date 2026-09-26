@@ -8,4 +8,7 @@
   watchdog's cron-liveness rescue moves from >10 h to >26 h of silence: at 10 h
   it would have re-dispatched a second run every day, while 26 h first fires at
   the 06:00 UTC scan after a dropped night tick, which replaces the missed run
-  rather than adding one. (#11848)
+  rather than adding one. The rescue's clock also starts at the workflow's
+  last enable instead of only its newest run, so re-enabling after a pause no
+  longer reads the weeks of deliberate silence as starvation and dispatches a
+  run hours before the first scheduled tick. (#11848)
