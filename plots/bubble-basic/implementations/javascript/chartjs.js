@@ -27,8 +27,8 @@ for (let i = 0; i < N; i++) {
 const sizeValues = products.map((p) => p.salesVolume);
 const sizeMin = Math.min(...sizeValues);
 const sizeMax = Math.max(...sizeValues);
-const R_MIN = 6;
-const R_MAX = 42;
+const R_MIN = 7;
+const R_MAX = 38;
 
 function bubbleRadius(size) {
   // area-proportional (not radius-proportional) to avoid overstating large values
@@ -107,6 +107,29 @@ const sizeLegend = {
   },
 };
 
+// --- Depth-cue glow for the best-value bubble (drawn under the datasets) --
+// A soft radial falloff behind the highlighted bubble gives it a subtle
+// "lifted" depth cue beyond the flat ring/opacity treatment alone.
+const bestValueGlow = {
+  id: "bestValueGlow",
+  beforeDatasetsDraw(chart) {
+    const { ctx, scales } = chart;
+    const p = products[bestValueIndex];
+    const px = scales.x.getPixelForValue(p.price);
+    const py = scales.y.getPixelForValue(p.quality);
+    const r = bubbleRadius(p.salesVolume);
+    ctx.save();
+    const glow = ctx.createRadialGradient(px, py, r * 0.5, px, py, r * 2.2);
+    glow.addColorStop(0, hexToRgba(t.palette[0], 0.3));
+    glow.addColorStop(1, hexToRgba(t.palette[0], 0));
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(px, py, r * 2.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  },
+};
+
 // --- Standout annotation plugin (points at the best-value product) --------
 const standoutAnnotation = {
   id: "standoutAnnotation",
@@ -148,14 +171,14 @@ new Chart(canvas, {
         data: bubbleData,
         // Scriptable options single out the best-value bubble (full opacity,
         // brand-green ring) while the rest stay at the spec-range overlap alpha.
-        // Ordinary bubbles get a soft ink stroke (not a page-bg-matched one) so
-        // overlapping bubbles in dense clusters stay separable from each other,
-        // not only from the page.
+        // Ordinary bubbles get a higher-contrast ink stroke (not a page-bg-matched
+        // one) so overlapping bubbles in the dense clusters stay separable from
+        // each other, not only from the page.
         backgroundColor: (ctx) =>
-          hexToRgba(t.palette[0], ctx.dataIndex === bestValueIndex ? 0.9 : 0.45),
+          hexToRgba(t.palette[0], ctx.dataIndex === bestValueIndex ? 0.9 : 0.58),
         borderColor: (ctx) =>
-          ctx.dataIndex === bestValueIndex ? t.palette[0] : hexToRgba(t.ink, 0.3),
-        borderWidth: (ctx) => (ctx.dataIndex === bestValueIndex ? 2.5 : 1.25),
+          ctx.dataIndex === bestValueIndex ? t.palette[0] : hexToRgba(t.ink, 0.45),
+        borderWidth: (ctx) => (ctx.dataIndex === bestValueIndex ? 2.5 : 1.5),
       },
     ],
   },
@@ -193,5 +216,5 @@ new Chart(canvas, {
       },
     },
   },
-  plugins: [sizeLegend, standoutAnnotation],
+  plugins: [bestValueGlow, sizeLegend, standoutAnnotation],
 });
