@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 91/100 | Created: 2026-08-24
+// Quality: 87/100 | Updated: 2026-09-26
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
@@ -81,16 +81,33 @@ g.append("text")
   .style("font-size", "16px")
   .text("Revenue Growth Rate (%)");
 
+// --- Force-directed decluttering (d3-specific) -------------------------------
+// A collision force gently nudges overlapping bubbles apart from their true
+// (funding, growth) position so the densest funding cluster (100-150) stays
+// individually legible instead of stacking 3-4 deep. The x/y forces pull each
+// node strongly back toward its real data coordinate, so the declutter only
+// perturbs points enough to relieve local crowding.
+data.forEach((d) => {
+  d.x = x(d.funding);
+  d.y = y(d.growth);
+});
+const declutter = d3.forceSimulation(data)
+  .force("x", d3.forceX((d) => x(d.funding)).strength(0.85))
+  .force("y", d3.forceY((d) => y(d.growth)).strength(0.85))
+  .force("collide", d3.forceCollide((d) => r(d.team) + 1.5))
+  .stop();
+for (let i = 0; i < 150; i++) declutter.tick();
+
 // --- Bubbles --------------------------------------------------------------
 g.selectAll("circle.bubble").data(data).join("circle")
   .attr("class", "bubble")
-  .attr("cx", (d) => x(d.funding))
-  .attr("cy", (d) => y(d.growth))
+  .attr("cx", (d) => d.x)
+  .attr("cy", (d) => d.y)
   .attr("r", (d) => r(d.team))
   .attr("fill", t.palette[0])
   .attr("fill-opacity", 0.48)
   .attr("stroke", t.pageBg)
-  .attr("stroke-width", 1);
+  .attr("stroke-width", 1.5);
 
 // --- Trend annotation -------------------------------------------------------
 // Least-squares fit of growth vs. funding, drawn as a dashed guide so the
@@ -108,21 +125,47 @@ g.append("line")
   .attr("y1", y(slope * fundingMin + intercept))
   .attr("x2", x(fundingMax))
   .attr("y2", y(slope * fundingMax + intercept))
-  .attr("stroke", t.inkSoft)
-  .attr("stroke-width", 2)
+  .attr("stroke", t.palette[0])
+  .attr("stroke-width", 2.5)
   .attr("stroke-dasharray", "8,6")
-  .attr("stroke-opacity", 0.6);
+  .attr("stroke-opacity", 0.75);
 
 const trendLabelX = x(fundingMin) + (x(fundingMax) - x(fundingMin)) * 0.62;
-const trendLabelY = y(slope * (fundingMin + (fundingMax - fundingMin) * 0.62) + intercept) - 16;
-g.append("text")
+const trendLabelY = y(slope * (fundingMin + (fundingMax - fundingMin) * 0.62) + intercept) - 22;
+const trendLabel = g.append("text")
   .attr("x", trendLabelX)
   .attr("y", trendLabelY)
   .attr("text-anchor", "middle")
-  .attr("fill", t.inkSoft)
-  .style("font-size", "14px")
-  .style("font-style", "italic")
+  .attr("fill", t.ink)
+  .style("font-size", "16px")
+  .style("font-weight", "500")
   .text("Growth slows as funding scales up");
+
+// A background card anchors the trend annotation against the busy bubble
+// field behind it, with a brand-green accent bar tying the callout to the
+// trend line it explains, so the story reads at a glance.
+const trendPad = 10;
+const trendBBox = trendLabel.node().getBBox();
+const cardX = trendBBox.x - trendPad;
+const cardY = trendBBox.y - trendPad * 0.6;
+const cardW = trendBBox.width + trendPad * 2;
+const cardH = trendBBox.height + trendPad * 1.2;
+g.insert("rect", () => trendLabel.node())
+  .attr("x", cardX)
+  .attr("y", cardY)
+  .attr("width", cardW)
+  .attr("height", cardH)
+  .attr("fill", t.elevatedBg)
+  .attr("stroke", t.grid)
+  .attr("stroke-width", 1.5)
+  .attr("rx", 8);
+g.insert("rect", () => trendLabel.node())
+  .attr("x", cardX)
+  .attr("y", cardY)
+  .attr("width", 4)
+  .attr("height", cardH)
+  .attr("fill", t.palette[0])
+  .attr("rx", 2);
 
 // --- Size legend ------------------------------------------------------------
 const teamMedian = d3.median(data, (d) => d.team);
@@ -152,16 +195,22 @@ legend.append("text")
   .style("font-size", "14px")
   .text("Team Size (employees)");
 
+// Legend circles echo the real bubble treatment (brand-green tint, not a
+// generic gray outline) and step up in stroke weight/opacity from small to
+// large, giving the reference set a touch of visual hierarchy of its own.
 const baselineY = 110;
 const legendX = [60, 140, 210];
 legendValues.forEach((v, i) => {
+  const emphasis = 0.4 + i * 0.3;
   legend.append("circle")
     .attr("cx", legendX[i])
     .attr("cy", baselineY - legendR[i])
     .attr("r", legendR[i])
-    .attr("fill", "none")
-    .attr("stroke", t.inkSoft)
-    .attr("stroke-width", 1.5);
+    .attr("fill", t.palette[0])
+    .attr("fill-opacity", 0.12 + i * 0.06)
+    .attr("stroke", t.palette[0])
+    .attr("stroke-opacity", emphasis)
+    .attr("stroke-width", 1 + i * 0.5);
   legend.append("text")
     .attr("x", legendX[i])
     .attr("y", baselineY + 22)
