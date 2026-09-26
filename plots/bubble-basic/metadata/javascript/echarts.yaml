@@ -2,9 +2,9 @@ library: echarts
 language: javascript
 specification_id: bubble-basic
 created: '2026-08-24T17:58:24Z'
-updated: '2026-08-24T18:13:00Z'
+updated: '2026-09-26T23:12:16Z'
 generated_by: claude-sonnet
-workflow_run: 32759157170
+workflow_run: 36277399391
 issue: 755
 language_version: 22.23.2
 library_version: 6.1.0
@@ -12,125 +12,129 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/echarts/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - Standout bubble (best revenue-growth-per-R&D-dollar company) is drawn as a separate,
-    fully-opaque, ink-outlined series with a direct label, giving the chart a clear
-    focal point that was missing in attempt 1
-  - Market-share field was reframed as a 'Relative Market Index' scored independently
-    per company (0-100) and the code explicitly documents this is not a literal share
-    of one shared 100% pie, fixing the aggregate-realism weakness from attempt 1
-  - Bubble size scaled by sqrt(value) so on-screen AREA (not radius) is proportional
-    to the index value, exactly matching the spec's explicit requirement
-  - Transparency (opacity 0.6) plus a subtle pageBg/ink edge stroke handles the heavy
-    overlap among 65 bubbles while keeping individual bubbles distinguishable
-  - Custom size legend built from ECharts graphic elements (three reference bubbles
-    labeled with min/mid/max index values) clearly explains the size encoding, satisfying
-    the spec's legend requirement
-  - 'Both renders are theme-correct: #FAF8F1 light / #1A1A17 dark backgrounds, theme-adaptive
-    ink tokens throughout, first series is brand green #009E73, identical data colors
-    across themes'
-  - Deterministic fixed-seed LCG generates data in-memory, correct for the browser
-    runtime with no filesystem/network access
-  - Canvas gate passed (3200x1800), animation disabled, no explicit width/height/devicePixelRatio
-    passed to echarts.init
+  - Bubble diameter is scaled by sqrt(value) so on-screen AREA is proportional to
+    the market index, matching the spec's explicit requirement, and is backed by a
+    clear 3-sample size legend (9 / 54 / 100) built from graphic elements.
+  - Bubbles are drawn in descending-size painter's order so small bubbles in the dense
+    low-spend cluster stay visible on top of large ones instead of disappearing underneath
+    them.
+  - Idiomatic use of a continuous visualMap on a derived 4th dimension (growth earned
+    per R&D dollar) gives the dense bubble cloud a real color gradient instead of
+    relying on alpha alone to separate overlapping bubbles — genuine ECharts mastery
+    beyond default usage.
+  - 'Clear data-storytelling focal point: the best growth-per-R&D-dollar company is
+    drawn as a separate, fully-opaque, ink-outlined, labeled series in brand green,
+    giving the chart a clear guided read.'
+  - 'Theme-adaptive chrome is correct in both renders (background #FAF8F1 / #1A1A17,
+    ink/inkSoft/grid tokens threaded through title, axes, legend text), and data colors
+    (brand green standout, sequential gradient) are identical between light and dark.'
+  - Canvas is exactly 3200×1800 with generous margins; no title, axis, or legend text
+    is clipped at any edge in either render.
+  - Deterministic in-memory data via a tiny fixed-seed LCG, appropriate 0.68 alpha
+    for overlap handling per the spec's notes, and a minimal, class-free, single-purpose
+    script.
   weaknesses:
-  - Densest cluster (bottom-left, low R&D spend / low growth) merges into an indistinct
-    green blob where individual bubble boundaries are hard to trace — a touch more
-    opacity contrast or slight jitter would help element visibility there
-  - Library mastery is solid but still fairly generic scatter + manual graphic legend;
-    a more ECharts-distinctive technique (e.g. visualMap-driven sizing/legend) would
-    push Library Mastery further
-  - 'Design excellence is good but not yet publication-level: a bespoke color treatment
-    (e.g. subtle color gradient tied to growth-per-R&D ratio) beyond the single standout
-    label would elevate the aesthetic further'
+  - The continuous color-legend's bottom label ('Low growth / R&D $') sits with very
+    little vertical breathing room above the rotated y-axis title ('Revenue Growth
+    Rate (%)') in the left margin — not overlapping in either render, but tight enough
+    to warrant a few more px of gap (increase visualMap `top`/reduce `itemHeight`,
+    or nudge the y-axis `nameGap`).
+  - The size-legend value labels (16px) read noticeably smaller than the title (22px)
+    at thumbnail scale — bumping to ~18px would balance the visual hierarchy slightly
+    better without touching the layout.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "bubble-basic · javascript · echarts · anyplot.ai" centered at top in bold dark ink (~35% of plot width, well within the 50-70% guideline). Axis titles "R&D Investment ($M)" (x) and "Revenue Growth Rate (%)" (y) in dark ink, both clearly readable. Tick labels in medium-gray ink. Grid lines thin and subtle on both axes. A "Relative Market Index" size legend at the right edge shows three reference bubbles labeled 9, 54, 100, fully within canvas bounds. All chrome elements are dark-on-light and legible.
-      Data: All ~65 data bubbles are brand-green (#009E73) at 60% opacity with a thin off-white edge stroke for definition where bubbles overlap; diameter scales with sqrt(value) so area is proportional to the index. One bubble (lowest R&D spend, positive growth) is drawn fully opaque with a thick dark-ink outline and a bold "Best growth per R&D $" label above it, creating a clear focal point.
-      Legibility verdict: PASS — no light-on-light issues, all text readable.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "bubble-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. X-axis "R&D Investment ($M)" and y-axis "Revenue Growth Rate (%)" titles and numeric tick labels are all dark/soft-ink on the light background and fully readable. A vertical continuous color-legend bar sits in the upper-left with "High growth / R&D $" / "Low growth / R&D $" labels in dark gray text — readable, though the bottom label sits close to (not overlapping) the rotated y-axis title below it. A "Relative Market Index" size legend with three reference circles (9 / 54 / 100) sits fully inside the right margin with no clipping.
+      Data: ~65 bubbles form a rising diagonal cloud from bottom-left to top-right. The bulk of bubbles are colored on a blue→teal→green continuous gradient (sequential Imprint scale, reversed so green = high efficiency) with ~0.68 opacity and thin off-white borders that keep overlapping bubbles distinguishable. One bubble in the lower-left is drawn fully opaque with a heavy dark outline and the brand green (#009E73) fill, labeled "Best growth per R&D $" — a clear focal point in the same green as index 1 of the palette.
+      Legibility verdict: PASS — no light-on-light or unreadable text found in this render.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Identical title/axis/legend layout, now rendered in light ink (near-white primary text, light-gray secondary/tick/legend text) — all clearly legible. No dark-on-dark failures observed anywhere (title, axis labels, tick labels, legend text, standout label all use theme-adaptive ink tokens).
-      Data: Data bubbles use the identical brand-green hue as the light render (confirmed — only chrome flipped), now with a thin dark-ink edge stroke instead of off-white on regular bubbles, and a light-ink outline on the standout bubble. Bubble sizing and positions are pixel-identical to the light render.
-      Legibility verdict: PASS — no dark-on-dark issues, all text and data clearly distinguishable from the background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis titles, and tick labels are rendered in light/off-white ink and are clearly legible against the dark background. The color-legend and size-legend text switch to light gray/white and remain fully readable; no dark-on-dark failures observed anywhere (title, axis labels, tick labels, legend text, and the "Best growth per R&D $" annotation are all light-colored on the dark surface).
+      Data: The bubble cloud's blue→teal→green gradient and the standout bubble's brand-green fill are visually identical to the light render — only the chrome (background, ink, grid, borders) has flipped, confirming the categorical/continuous data colors are theme-invariant as required.
+      Legibility verdict: PASS — all chrome text is light-on-dark and clearly readable; no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title comfortably fits at ~35% of
-          width; readable in both themes
+        comment: Explicit font sizes throughout (22/16/14/13pt); all text readable
+          in both themes and still legible at 400px thumbnail scale.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text overlap; standout label placed in clear space
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Alpha-blending and edge strokes work well, but the densest cluster
-          still merges into an indistinct blob
+        comment: No actual text/data collisions, but the color-legend bottom label
+          and the y-axis title sit with very tight vertical spacing in the left margin.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Alpha blending + white borders + painter's-order sorting + continuous
+          color keep the dense 65-bubble cluster fully separable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe single-hue encoding with edge strokes
+        comment: Blue-to-green sequential gradient plus brand-green highlight is CVD-safe;
+          no red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, legend near plot, good canvas utilization
+        comment: Canvas exactly 3200x1800, generous margins, nothing clipped or overflowing
+          on either edge.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units
+        comment: Both axes descriptive with units ($M, %).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, theme-correct chrome in both renders'
+        comment: 'Standout series uses #009E73; main cloud uses reversed Imprint sequential
+          scale; backgrounds correct in both themes.'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom graphic legend and standout treatment go beyond default, but
-          overall look is still a single-hue scatter
+        passed: true
+        comment: 'Intentional layered composition: continuous color-mapped cloud plus
+          a distinctly styled standout series, custom graphic-based size legend.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid, generous whitespace, thoughtful edge strokes, but not
-          fully polished in the densest region
+        passed: true
+        comment: Subtle grid lines, soft axis lines, generous whitespace and margins;
+          no default ECharts chrome left untouched.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: New standout-bubble focal point with direct label creates clear visual
-          hierarchy, addressing attempt 1's weakness
+        passed: true
+        comment: 'Clear guided read: color encodes an efficiency story across the
+          cloud, and one bubble is explicitly called out as the standout performer.'
     spec_compliance:
       score: 15
       max: 15
@@ -140,25 +144,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bubble chart
+        comment: Correct bubble chart (x/y position + size-encoded scatter).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-correct sizing, alpha within spec range, legend present
+        comment: Area-scaled bubbles, alpha transparency for overlap, and a size legend
+          are all present per the spec notes.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y/size correctly mapped, all data visible
+        comment: x=R&D spend, y=growth rate, size=market index all correctly mapped;
+          axes cover full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact, legend labels match the reframed index field
+        comment: Title matches the mandated format exactly; legends (size + color)
+          are clearly labeled.
     data_quality:
       score: 15
       max: 15
@@ -168,20 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full range of x/y/size values plus a highlighted outlier
+        comment: Covers x, y, size, and an extra derived color dimension — full coverage
+          of the bubble-chart form plus more.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral business scenario (R&D spend vs. growth vs. market index)
+        comment: R&D-spend-vs-growth market analysis is plausible and neutral, no
+          real company names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Reframed as an independent relative index, fixing the aggregate market-share
-          realism issue from attempt 1
+        comment: R&D 5-100M, growth 1-30%, index 8-100 are all sensible ranges for
+          the domain.
     code_quality:
       score: 10
       max: 10
@@ -191,53 +200,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script with small scaling helpers, no classes
+        comment: No classes; only two small, purposeful helper functions (rand, diameterFor).
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG
+        comment: Fixed-seed LCG makes the browser-generated data deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only globals used
+        comment: No imports; only the provided globals are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity for the visual payoff; no fake/simulated interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled
+        comment: Correct mount-node contract, animation:false, no explicit size/devicePixelRatio
+          passed to echarts.init.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct scatter + graphic usage but doesn't leverage ECharts' more
-          advanced patterns (e.g. visualMap)
+        passed: true
+        comment: Standard scatter series with symbolSize function, grid, and axis
+          config used exactly as ECharts intends.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        passed: false
-        comment: Custom graphic-based legend plus z-ordered overlay series for the
-          standout bubble, distinctive to ECharts' graphic component API
+        passed: true
+        comment: Continuous visualMap tied to a derived data dimension, graphic-element
+          custom legend, and explicit z-ordering are genuinely distinctive ECharts
+          techniques, just short of a perfect score given the tight legend spacing
+          noted in VQ-02.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
   - annotations
   - custom-legend
   patterns:
@@ -245,4 +258,5 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - custom-colormap
   - edge-highlighting
