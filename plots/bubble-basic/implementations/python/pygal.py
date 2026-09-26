@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bubble-basic: Basic Bubble Chart
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-09-26
+Library: pygal 3.1.3 | Python 3.13.15
+Quality: 84/100 | Created: 2026-09-26
 """
 
 import os
