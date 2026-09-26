@@ -4,11 +4,13 @@ run-name: "Scheduled regen (${{ github.event.inputs.specification_id || github.e
 # Picks the N oldest specs (by most-recent implementation `updated` timestamp)
 # and re-dispatches `bulk-generate.yml` for each. Default N=1 per cron tick.
 #
-# Schedule: every 2 hours, skipping the fixed 18:00–21:59 UTC window so runs
-# never start during the user's evening. The window was sized for Berlin
-# summer time (CEST, UTC+2 → 20:00–23:59 local); Actions cron is always UTC,
-# so under winter time (CET, UTC+1) it covers 19:00–22:59 local instead —
-# accepted drift, not a bug. That gives 10 ticks per day.
+# Schedule: once per day at 02:17 UTC (04:17 Berlin under CEST, 03:17 under
+# CET — Actions cron is always UTC). Until 2026-09 it ticked every 2 hours
+# (10× per day); the owner cut it to one tick when re-enabling the workflow
+# after the gap backfill, so the scheduled regen takes one spec per night
+# and leaves the Claude rate limit to interactive work during the day. The
+# night slot also stays clear of the fixed 18:00–21:59 UTC quiet window that
+# the watchdog's rescue avoids.
 #
 # The tick fires at minute 17 (not :00) on purpose: GitHub's scheduler is
 # most overloaded at the top of the hour and delays/drops `schedule` events
@@ -16,19 +18,20 @@ run-name: "Scheduled regen (${{ github.event.inputs.specification_id || github.e
 # streaks of silently dropped ticks for exactly this workflow while
 # less-frequent crons kept firing. As a second line of defence,
 # watchdog-stuck-jobs.yml re-dispatches this workflow when main has seen
-# no new run for >10 h outside the quiet window.
+# no new run for >26 h outside the quiet window — the missed night's run,
+# not an extra one.
 #
 # bulk-generate is serialised via its own concurrency group. Default model is
 # Sonnet for higher implementation quality; can be overridden per manual run.
 #
 # Triggers:
-#   - schedule: 10× daily (UTC, every 2 hours, skipping the 18–21 UTC window) → Sonnet
+#   - schedule: once daily at 02:17 UTC → Sonnet
 #   - workflow_dispatch: manual, with inputs for spec id, model, count, dry-run
 #     (also used by the watchdog's cron-liveness rescue, with all defaults)
 
 on:
   schedule:
-    - cron: '17 0,2,4,6,8,10,12,14,16,22 * * *'
+    - cron: '17 2 * * *'
   workflow_dispatch:
     inputs:
       specification_id:

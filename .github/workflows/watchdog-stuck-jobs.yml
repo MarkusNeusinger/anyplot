@@ -14,7 +14,7 @@ run-name: "Watchdog: scan ${{ github.event_name == 'workflow_dispatch' && '(manu
 #   3. spec-ready issues with `generate:<lib>` or `impl:<lib>:failed` and
 #      no open PR for that (spec, lib) pair after the staleness window.
 #   4. daily-regen's cron silently starved by GitHub's scheduler (no run
-#      for >10 h outside the quiet window) — re-dispatched manually.
+#      for >26 h outside the quiet window) — re-dispatched manually.
 #
 # Retries are bounded per-cause via marker labels:
 #   - `ai-review-rescued`            (review failures)
@@ -369,27 +369,32 @@ jobs:
           done < <(echo "$ISS_JSON" | jq -c '.[]')
 
           ##### C) Cron-liveness: rescue a starved daily-regen schedule ######
-          # GitHub silently drops `schedule` ticks for daily-regen (the
-          # repo's most frequent cron) during scheduler overload — observed
-          # as multi-day gaps while this watchdog and bot-serving-check kept
-          # firing. daily-regen ticks are ≤6 h apart (2 h cadence plus the
-          # 18–21 UTC quiet window), so a >10 h silence means the schedule
-          # is starved; re-dispatch it manually with default inputs.
+          # GitHub silently drops `schedule` ticks for daily-regen during
+          # scheduler overload — observed as multi-day gaps (back when it
+          # was the repo's most frequent cron, every 2 h) while this watchdog
+          # and bot-serving-check kept firing. daily-regen now ticks once a
+          # day at 02:17 UTC, so a healthy gap never exceeds ~24 h; the
+          # 06:00 UTC scan is the first to see a dropped tick (~27 h 43 m
+          # since the previous night), hence >26 h means the schedule is
+          # starved and the missed night's run is re-dispatched manually
+          # with default inputs. A threshold near 10 h would fire a second
+          # run every day.
           # Hours 17–21 UTC are skipped so the rescue never launches a
           # pipeline into the fixed 18–21 UTC quiet window the cron itself
           # deliberately avoids (17 included because bulk-generate starts
           # immediately after dispatch and would spill into it). Like the
           # cron, the window is UTC-fixed: it matches Berlin evening under
           # CEST and sits an hour earlier in local terms under CET.
-          LIVENESS_HOURS=10
+          LIVENESS_HOURS=26
           HOUR=$(date -u +%-H)
           # A manually disabled daily-regen is a deliberate pause (e.g. while a
           # sequential backfill owns the rate limit), not a starved schedule:
           # its cron does not tick at all, so the gap grows without bound, and
           # `gh workflow run` on a disabled workflow fails with HTTP 422 — which
           # under `set -e` takes the whole scan down after A and B already ran.
-          REGEN_STATE=$(gh api "repos/${GH_REPO}/actions/workflows/daily-regen.yml" \
-            --jq '.state' 2>/dev/null || echo unknown)
+          REGEN_META=$(gh api "repos/${GH_REPO}/actions/workflows/daily-regen.yml" \
+            --jq '"\(.state) \(.updated_at)"' 2>/dev/null || echo "unknown -")
+          read -r REGEN_STATE REGEN_UPDATED <<< "$REGEN_META"
           if [[ "$REGEN_STATE" != "active" ]]; then
             echo "::notice::daily-regen liveness: workflow state is '${REGEN_STATE}', not active — rescue skipped"
           elif (( HOUR >= 17 && HOUR <= 21 )); then
@@ -405,6 +410,21 @@ jobs:
               echo "::warning::daily-regen liveness: no runs found on main — skipping rescue"
             else
               last_sec=$(date -u -d "$LAST" +%s)
+              ref_label="newest run on main"
+              # The clock starts at the newer of that run and the workflow's
+              # last state change. Re-enabling after a deliberate pause bumps
+              # `updated_at` (a push to the file does not: on 2026-09-26 it
+              # still read the 08-18 disable although the file changed 09-13),
+              # so the first scans after an enable don't read the pre-pause
+              # silence as starvation and dispatch a run hours before the
+              # first scheduled tick — two runs on day one.
+              if [[ "$REGEN_UPDATED" != "-" ]]; then
+                upd_sec=$(date -u -d "$REGEN_UPDATED" +%s 2>/dev/null || echo 0)
+                if (( upd_sec > last_sec )); then
+                  last_sec=$upd_sec
+                  ref_label="workflow enabled"
+                fi
+              fi
               # Fresh timestamp: NOW from the top of the script is stale by
               # however long the A/B scans took.
               now_c=$(date -u +%s)
@@ -414,7 +434,7 @@ jobs:
                 echo "::warning::daily-regen: no new run on main for ${gap_hm} (> ${LIVENESS_HOURS}h) — schedule starved, re-dispatching"
                 dispatch "daily-regen: cron starved (${gap_hm} silent)" daily-regen.yml || true
               else
-                echo "daily-regen liveness: newest run on main created ${gap_hm} ago — healthy"
+                echo "daily-regen liveness: ${ref_label} ${gap_hm} ago — healthy"
               fi
             fi
           fi
