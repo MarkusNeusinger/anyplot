@@ -1,15 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: seaborn 0.13.2 | Python 3.13.15
-Quality: 91/100 | Updated: 2026-09-26
-
-Regen from quality 91. Addressed:
-- smallest bubbles (Population ~1-2M) risked shrinking to a few pixels at
-  mobile preview width -> raised sizes= floor 40 -> 60
-- alpha 0.72 sat just above the spec's recommended 0.5-0.7 overlap range ->
-  lowered to 0.65
-- added a subtle lowess trend line (sns.regplot) to make the inverse
-  spending/mortality relationship an explicit visual cue for storytelling
+Quality: 89/100 | Updated: 2026-09-26
 """
 
 import os
