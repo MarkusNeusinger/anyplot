@@ -35,6 +35,18 @@ from automation.scripts.label_manager import (
 ### `workflow_cli.py`
 CLI interface for use in GitHub Actions shell steps.
 
+### `spec_pr_guard.py`
+Fail-closed file allowlist for the spec PR that the merge job in `spec-create.yml`
+merges: the diff of the PR head against its merge base with `main` may only add or
+modify `plots/{spec-id}/specification.md`, `specification.yaml`, and `.gitkeep`
+placeholders, as regular 100644 files. Standard library only; the merge job runs it
+with the runner's `python3`.
+
+```bash
+python3 automation/scripts/spec_pr_guard.py --spec-id scatter-basic --head <40-char sha>
+# exit 0 = clean, 1 = violations (one per line), 2 = could not decide
+```
+
 ## Usage in Workflows
 
 ### Option 1: Direct CLI (Recommended)

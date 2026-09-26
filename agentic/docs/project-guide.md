@@ -662,16 +662,26 @@ spec-create.yml
     |-- Creates: plots/{specification-id}/specification.md
     |-- Creates: plots/{specification-id}/specification.yaml
     |-- Validates: checks for duplicates (closes issue if duplicate detected)
-    |-- Creates PR: specification/{specification-id} -> main
+    |-- Claude opens PR as claude[bot]: specification/{specification-id} -> main
     +-- Posts: spec analysis comment (waits for approval)
     |
-    v (maintainer adds `approved` label)
+    v (repository owner adds `approved` label)
     |
 spec-create.yml (merge job)
-    |-- Merges PR to main
-    |-- sync-postgres.yml triggers (updates database)
+    |-- Verifies PR (fail closed): Claude app author, head/base branch,
+    |   issue reference, diff limited to the spec files
+    |-- Enables auto-merge (GITHUB_TOKEN, no --admin); waits <= 15 min for MERGED
+    |-- Dispatches sync-postgres.yml (updates database)
     +-- Adds `spec-ready` label
 ```
+
+The spec PR comes from the Claude GitHub App token that claude-code-action
+mints for the Claude step, not from `GITHUB_TOKEN`: since GitHub's 2026-06-11
+change, runs on a PR that `GITHUB_TOKEN` opens or updates wait at
+`action_required` for a human, so the required checks never ran and the merge
+was refused (#11847). A merge made with `GITHUB_TOKEN` triggers no `push`
+workflows, which is why the merge job dispatches `sync-postgres.yml` itself.
+The file allowlist lives in `automation/scripts/spec_pr_guard.py`.
 
 **Flow B: Generate Implementation**
 
@@ -743,7 +753,7 @@ Issue ready for maintainer review
 | **notify-deployment.yml** | Deployment notifications |
 | **util-claude.yml** | Claude utility workflow |
 | **daily-regen.yml** | Scheduled: picks the oldest specs, runs spec polish + cross-library similarity audit, then dispatches bulk-generate |
-| **auto-update-pr-branches.yml** | When `main` advances, updates open PRs that have auto-merge enabled |
+| **auto-update-pr-branches.yml** | When `main` advances, updates open PRs that have auto-merge enabled, except Dependabot and spec (`specification/`) PRs — its `GITHUB_TOKEN` merge commit would hold their CI at `action_required` |
 | **watchdog-stuck-jobs.yml** | Periodic safety net: detects and unsticks stalled impl-pipeline PRs |
 | **bot-serving-check.yml** | Daily synthetic monitor for the nginx bot -> seo-proxy path; routes and titles derived from `api/routers/seo.py` and the spec files, and a failure opens/comments the fixed-title issue "Bot serving check is red" (closed again by the next green run) |
 
@@ -853,13 +863,14 @@ These are set automatically by `impl-review.yml` after AI evaluation and used by
    - Analyzes the request, assigns spec ID (e.g., `scatter-3d-animated`)
    - Creates branch: `specification/{specification-id}`
    - Generates: `plots/{specification-id}/specification.md` + `specification.yaml`
-   - Creates PR: `specification/{specification-id}` -> `main`
+   - Claude opens the PR `specification/{specification-id}` -> `main` as `claude[bot]`, so CI runs without a manual approval
    - Posts comment with spec analysis (waits for approval)
-4. Maintainer reviews spec and adds `approved` label
+4. Repository owner reviews spec and adds `approved` label (only the owner's label triggers the merge)
 5. **`spec-create.yml` merge job triggers:**
-   - Merges PR to main
+   - Verifies the PR (Claude app author, branch, issue reference, only spec files changed); refuses with an issue comment otherwise
+   - Enables auto-merge; GitHub squash-merges once the required checks pass
+   - Dispatches `sync-postgres.yml` once the merge has landed
    - Adds `spec-ready` label
-   - `sync-postgres.yml` triggers automatically
 
 **Specification is now in main, ready for implementations.**
 
