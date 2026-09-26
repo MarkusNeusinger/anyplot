@@ -162,13 +162,13 @@ async def _fetch_image(url: str) -> bytes:
     """Fetch a plot render for an OG card, preferring its 800px derivative.
 
     The OG layouts need no more: the branded card's plot box is 1068x338 px and
-    a collage slot's 277x156 px, while originals run to ~4800 px wide. Decoded,
-    a full-size branded source is a median 22 MiB and a collage's six are
-    150-200 MiB (up to ~430 MiB); glibc keeps those freed blocks in the render
-    threads' arenas, so every such cache miss ratchets the resident size up for
-    good. If the derivative cannot be fetched, the original is used and a
-    warning is logged, so a naming change cannot switch the shortcut off
-    unnoticed.
+    a collage slot's 277x156 px, while originals are typically ~4800 px wide
+    (up to ~5900). Decoding originals costs tens to hundreds of MiB per render,
+    and glibc keeps those freed blocks in the render threads' arenas, so every
+    such cache miss ratchets the resident size up for good. If the derivative
+    cannot be fetched, the original is used and a warning is logged, so a
+    renamed derivative shows up in the logs instead of silently switching the
+    shortcut off.
     """
     client = _get_http_client()
     small_url = _og_source_url(url)
@@ -178,7 +178,14 @@ async def _fetch_image(url: str) -> bytes:
             response.raise_for_status()
             return response.content
         except Exception as exc:
-            logger.warning("OG source %s unavailable (%s); falling back to full-size %s", small_url, exc, url)
+            reason = str(exc).splitlines()[0] if str(exc) else ""
+            logger.warning(
+                "OG source %s unavailable (%s: %s); falling back to full-size %s",
+                small_url,
+                type(exc).__name__,
+                reason,
+                url,
+            )
     response = await client.get(url)
     response.raise_for_status()
     return response.content

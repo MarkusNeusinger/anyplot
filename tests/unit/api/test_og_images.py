@@ -37,7 +37,7 @@ DARK_URL = f"{GCS_IMPL}/plot-dark.png"
 LEGACY_URL = f"{GCS_IMPL}/plot.png"
 
 
-def _http_client(statuses: dict[str, int]) -> AsyncMock:
+def _fake_http_client(statuses: dict[str, int]) -> AsyncMock:
     """A stand-in for the shared httpx client: `get(url)` answers with the status
     mapped to that URL (404 for any URL not listed) and FAKE_PNG as the body."""
 
@@ -190,7 +190,7 @@ class TestFetchImage:
     )
     async def test_fetch_image_requests_800px_variant_first(self, url, expected, caplog) -> None:
         """A full-size render is never downloaded when its 800px derivative exists."""
-        mock_client = _http_client({expected: 200})
+        mock_client = _fake_http_client({expected: 200})
 
         with patch("api.routers.og_images._get_http_client", return_value=mock_client):
             result = await og_images_module._fetch_image(url)
@@ -202,7 +202,7 @@ class TestFetchImage:
     async def test_fetch_image_falls_back_to_original_with_warning(self, caplog) -> None:
         """A missing 800px derivative falls back to the original, and says so."""
         small_url = f"{GCS_IMPL}/plot-light_800.png"
-        mock_client = _http_client({small_url: 404, LIGHT_URL: 200})
+        mock_client = _fake_http_client({small_url: 404, LIGHT_URL: 200})
 
         with (
             patch("api.routers.og_images._get_http_client", return_value=mock_client),
@@ -231,7 +231,7 @@ class TestFetchImage:
 
     async def test_fetch_image_raises_when_original_also_fails(self) -> None:
         """If the fallback fails as well, the HTTP error reaches the endpoint (502)."""
-        mock_client = _http_client({})
+        mock_client = _fake_http_client({})
 
         with (
             patch("api.routers.og_images._get_http_client", return_value=mock_client),
@@ -245,7 +245,7 @@ class TestFetchImage:
     async def test_fetch_image_does_not_resuffix_a_variant(self, width) -> None:
         """A URL that already names a size variant is fetched as given."""
         variant = f"{GCS_IMPL}/plot-light_{width}.png"
-        mock_client = _http_client({variant: 200})
+        mock_client = _fake_http_client({variant: 200})
 
         with patch("api.routers.og_images._get_http_client", return_value=mock_client):
             result = await og_images_module._fetch_image(variant)
@@ -256,7 +256,7 @@ class TestFetchImage:
     async def test_fetch_image_non_png_url(self) -> None:
         """A non-PNG URL has no derivative and is fetched as given."""
         url = "https://storage.example.com/scatter/image.jpg"
-        mock_client = _http_client({url: 200})
+        mock_client = _fake_http_client({url: 200})
 
         with patch("api.routers.og_images._get_http_client", return_value=mock_client):
             result = await og_images_module._fetch_image(url)
@@ -326,7 +326,7 @@ class TestBrandedImplImage:
         mock_repo = MagicMock()
         mock_repo.get_by_id = AsyncMock(return_value=spec)
         small_url = f"{GCS_IMPL}/plot-light_800.png"
-        http = _http_client({small_url: 200, LIGHT_URL: 200})
+        http = _fake_http_client({small_url: 200, LIGHT_URL: 200})
 
         with (
             patch("api.routers.og_images.track_og_image"),
@@ -494,7 +494,7 @@ class TestSpecCollageImage:
         mock_repo.get_by_id = AsyncMock(return_value=spec)
         # Top six by quality; the seventh (pygal) is not fetched at all.
         expected = {f"{base}/{lib}/plot-light_800.png" for lib in libraries[:6]}
-        http = _http_client(dict.fromkeys(expected, 200))
+        http = _fake_http_client(dict.fromkeys(expected, 200))
 
         with (
             patch("api.routers.og_images.track_og_image"),
