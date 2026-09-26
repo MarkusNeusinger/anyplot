@@ -13,4 +13,4 @@
   implementations, and a failed fetch falls back to the original with a
   logged warning instead of a silent `pass`. In a replay of production
   traffic, retained memory stays flat at about +45 MiB and the render peak
-  drops to about 157 MiB from 430-580 MiB.
+  drops to about 157 MiB from 430-580 MiB. (#11867)
