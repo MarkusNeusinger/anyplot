@@ -190,9 +190,9 @@ plot.
   `0.0.0+unknown` when the installed dist-info is missing — silently, in a field `/health`,
   `/openapi.json` and the MCP server all report), the OG disk fallback
   `api/static/og-image.png` survived the runtime stage's COPY, and the process runs as uid
-  1000. Two hadolint steps gate both Dockerfiles at threshold `warning` with three named
-  exceptions in `api/Dockerfile` (two since #11211, set inline on the instructions they
-  excuse), so a warning of any other code blocks. Change detection
+  1000. Two hadolint steps gate both Dockerfiles at threshold `warning` with named
+  exceptions in `api/Dockerfile` — three at first, two (DL3008, DL3025) since #11211 set
+  them inline on the instructions they excuse — so a warning of any other code blocks. Change detection
   excludes `plots/**`: the plot pipeline's PRs touch nothing the image serves. Adopted from the
   sibling repo kurrentschrift, which added the same job after its `pyproject.toml` fell out
   of the runtime stage. (#11205)
@@ -203,8 +203,8 @@ plot.
   `.github/workflows/indexnow-submit.yml` maps every push to `main` that touches `plots/`
   onto the affected `/{spec}` and `/{spec}/{language}/{library}` URLs and POSTs them to
   `api.indexnow.org` (10,000 per request; a deleted implementation is submitted too).
-  `workflow_dispatch` with `scope=sitemap` submits every page the checkout holds — each spec
-  hub and implementation, the rule the sitemap follows — for the initial load. Google does
+  `workflow_dispatch` with `scope=sitemap` submits every page the checkout holds — the static
+  pages, each spec hub and each implementation page — for the initial load. Google does
   not take part and keeps reading the sitemap. The protocol is free.
   (#11202)
 
