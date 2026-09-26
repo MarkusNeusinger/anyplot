@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 85/100 | Created: 2026-05-28
+Quality: pending | Updated: 2026-09-26
 """
 
 import os
@@ -24,30 +24,32 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data — City comparison: population density vs avg commute time, bubble = green space (%)
+# Data — Transit coverage vs congestion, bubble = vehicle registrations per 1,000 residents
 np.random.seed(42)
 n_cities = 50
 
-# Uniform spread across density range to avoid lower-left clustering
-population_density = np.concatenate(
-    [np.random.uniform(1500, 5000, 15), np.random.uniform(5000, 9000, 20), np.random.uniform(9000, 14000, 15)]
+# Uniform spread across the coverage range to avoid clustering
+transit_coverage = np.concatenate(
+    [np.random.uniform(10, 35, 15), np.random.uniform(35, 65, 20), np.random.uniform(65, 95, 15)]
 )
-np.random.shuffle(population_density)
+np.random.shuffle(transit_coverage)
 
-commute_time = 15 + population_density / 750 + np.random.normal(0, 2.8, n_cities)
-green_space_pct = np.clip(52 - population_density / 380 + np.random.normal(0, 9, n_cities), 5, 55)
+congestion_index = np.clip(85 - transit_coverage * 0.65 + np.random.normal(0, 6, n_cities), 15, 95)
+vehicle_registrations = np.clip(200 + congestion_index * 4 + np.random.normal(0, 60, n_cities), 150, 700)
 
-# Area-scaled bubble sizing via 8 tiers (pygal has no per-point size API)
-gs_min, gs_max = green_space_pct.min(), green_space_pct.max()
-bubble_norm = (green_space_pct - gs_min) / (gs_max - gs_min)
+# Area-scaled bubble sizing via 5 tiers (pygal has no per-point size API) —
+# fewer, wider-spaced tiers than a previous 8-tier pass to keep adjacent
+# bubbles visually distinguishable and the bottom legend compact.
+vr_min, vr_max = vehicle_registrations.min(), vehicle_registrations.max()
+bubble_norm = (vehicle_registrations - vr_min) / (vr_max - vr_min)
 
-n_tiers = 8
+n_tiers = 5
 tier_bins = np.clip(np.digitize(bubble_norm, np.linspace(0, 1, n_tiers + 1)[1:-1]), 0, n_tiers - 1)
 
 # sqrt scaling for perceptual area accuracy
-tier_sizes = [int(12 + 62 * ((t + 0.5) / n_tiers) ** 0.5) for t in range(n_tiers)]
+tier_sizes = [int(14 + 60 * ((t + 0.5) / n_tiers) ** 0.5) for t in range(n_tiers)]
 
-# anyplot imprint_seq: #009E73 (brand green) → #4467A3 (blue), 8 equidistant stops
+# anyplot imprint_seq: #009E73 (brand green) → #4467A3 (blue), 5 equidistant stops
 tier_colors = tuple(
     "#{:02X}{:02X}{:02X}".format(
         round(0x00 + (0x44 - 0x00) * i / (n_tiers - 1)),
@@ -57,19 +59,19 @@ tier_colors = tuple(
     for i in range(n_tiers)
 )
 
-# ANYPLOT_AMBER marks the focal city (9th color in the series cycle)
+# ANYPLOT_AMBER marks the focal city (6th color in the series cycle)
 ANYPLOT_AMBER = "#DDCC77"
 style_colors = tier_colors + (ANYPLOT_AMBER,)
 
-# Tier labels serve as the size legend (green-space percentage ranges)
-bin_edges_pct = np.linspace(gs_min, gs_max, n_tiers + 1)
-tier_labels = [f"{bin_edges_pct[t]:.0f}–{bin_edges_pct[t + 1]:.0f}% green" for t in range(n_tiers)]
+# Tier labels serve as the size legend (vehicle-registration ranges)
+bin_edges_vr = np.linspace(vr_min, vr_max, n_tiers + 1)
+tier_labels = [f"{bin_edges_vr[t]:.0f}–{bin_edges_vr[t + 1]:.0f} vehicles/1,000" for t in range(n_tiers)]
 
-# Focal city: highest commute time — visual anchor for data storytelling
-focal_idx = int(np.argmax(commute_time))
+# Focal city: highest congestion despite the data spread — visual anchor for data storytelling
+focal_idx = int(np.argmax(congestion_index))
 focal_tier = int(tier_bins[focal_idx])
 
-# Group cities by green-space tier, excluding focal city
+# Group cities by vehicle-registration tier, excluding focal city
 tier_data = {t: [] for t in range(n_tiers)}
 for i in range(n_cities):
     if i == focal_idx:
@@ -77,23 +79,23 @@ for i in range(n_cities):
     t = int(tier_bins[i])
     tier_data[t].append(
         {
-            "value": (round(float(population_density[i]), 1), round(float(commute_time[i]), 1)),
+            "value": (round(float(transit_coverage[i]), 1), round(float(congestion_index[i]), 1)),
             "label": (
-                f"Density: {population_density[i]:,.0f}/km²  |  "
-                f"Commute: {commute_time[i]:.1f} min  |  "
-                f"Green space: {green_space_pct[i]:.0f}%"
+                f"Transit coverage: {transit_coverage[i]:.0f}%  |  "
+                f"Congestion index: {congestion_index[i]:.0f}  |  "
+                f"Vehicles: {vehicle_registrations[i]:.0f}/1,000"
             ),
         }
     )
 
 focal_point_data = [
     {
-        "value": (round(float(population_density[focal_idx]), 1), round(float(commute_time[focal_idx]), 1)),
+        "value": (round(float(transit_coverage[focal_idx]), 1), round(float(congestion_index[focal_idx]), 1)),
         "label": (
-            f"★ Peak Congestion  |  "
-            f"Density: {population_density[focal_idx]:,.0f}/km²  |  "
-            f"Commute: {commute_time[focal_idx]:.1f} min  |  "
-            f"Green space: {green_space_pct[focal_idx]:.0f}%"
+            f"★ Congestion Hotspot  |  "
+            f"Transit coverage: {transit_coverage[focal_idx]:.0f}%  |  "
+            f"Congestion index: {congestion_index[focal_idx]:.0f}  |  "
+            f"Vehicles: {vehicle_registrations[focal_idx]:.0f}/1,000"
         ),
     }
 ]
@@ -126,20 +128,20 @@ chart = pygal.XY(
     height=1800,
     style=custom_style,
     title="bubble-basic · python · pygal · anyplot.ai",
-    x_title="Population Density (people/km²)",
-    y_title="Avg Commute Time (min)",
+    x_title="Public Transit Coverage (%)",
+    y_title="Traffic Congestion Index",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
+    legend_at_bottom_columns=3,
     legend_box_size=36,
     stroke=False,
     dots_size=20,
     show_x_guides=True,
     show_y_guides=True,
-    x_value_formatter=lambda x: f"{x:,.0f}",
-    value_formatter=lambda x: f"{x:.1f}",
+    x_value_formatter=lambda x: f"{x:.0f}%",
+    value_formatter=lambda x: f"{x:.0f}",
     margin_top=80,
-    margin_bottom=200,
+    margin_bottom=160,
     margin_left=100,
     margin_right=80,
     tooltip_border_radius=8,
@@ -153,7 +155,7 @@ for t in range(n_tiers):
     chart.add(tier_labels[t], tier_data[t] if tier_data[t] else [], dots_size=tier_sizes[t])
 
 # Focal city rendered last in ANYPLOT_AMBER — stands out as a visual anchor
-chart.add("★ Peak Congestion", focal_point_data, dots_size=tier_sizes[focal_tier] + 8)
+chart.add("★ Congestion Hotspot", focal_point_data, dots_size=tier_sizes[focal_tier] + 8)
 
 # Save
 chart.render_to_file(f"plot-{THEME}.html")
