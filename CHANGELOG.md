@@ -34,8 +34,71 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+## [3.3.0] — 2026-09-27 — Through the front door
+
+anyplot 3.3 lets requests and releases reach production only through the front door. Both
+origins now refuse what the Cloudflare edge did not stamp — the API's direct `*.run.app` URL
+behind a shared-secret gate, the site's own nginx behind the same gate, shipped switched off
+so that arming it is a measurement rather than a leap — and `script-src` trades
+`'unsafe-inline'` for a per-request nonce. Both services deploy through a candidate revision
+that is smoke-tested before it takes traffic, and both images are built and container-tested
+before merge. The API runs as one warm instance, so a page load no longer pays for a scale-out
+cold start, and IndexNow plus titles that name their languages and libraries carry the
+catalogue beyond Google.
+Behind that: a deploy trigger that sat red for two days while every PR check stayed green, the
+gap backfill that brought 314 of 324 specs to all fifteen libraries, and 👍/👎 directly on the
+plot.
+
 ### Added
 
+- **The gallery links a spec's own page when it is filtered to that spec.**
+  `/plots?spec=manhattan-gwas` shows the same implementations as
+  `/manhattan-gwas` but never linked to it; getting there meant opening an
+  implementation page first. A `{spec_id}.compare() →` link in the style
+  guide's explicit-subject form now sits above the grid whenever exactly one
+  known spec is filtered. Its click saves the scroll position like a card click
+  does and is tracked as `nav_click` with `source: gallery_spec_hub`; its
+  accessible name leads with the visible words, without the `.()` a screen
+  reader would spell out. (#11845)
+- **👍 / 👎 directly on the plot.** A spec detail view now carries a thumbs-up
+  button top-left and a thumbs-down button bottom-left over the image — both
+  on the static preview and the interactive surface — so rating an
+  implementation is one tap instead of a trip through the floating feedback
+  menu. The tap inks the thumb, flashes `>>> .liked` / `>>> .disliked` in the
+  centre like `.copied` does, and posts a reaction-only entry to `/feedback`
+  with `library_id` and `language` (a new Alembic revision adds both columns
+  and a `(spec_id, library_id)` index), so votes can be counted per image later
+  via `FeedbackRepository.reaction_counts` — nothing is displayed yet. One vote
+  per image per session: the choice is remembered in localStorage and the other
+  thumb fades out, and the server drops a repeat vote from the same session for
+  the same implementation silently, so nobody can flip up and down at will.
+  Supersedes the stale PR #8126, which placed both thumbs top-left. (#11827)
+- **`.claude/guardrails.md`, the long version of the working rules.** `CLAUDE.md`
+  is loaded into every session and pays its cost on every turn, so it states each
+  rule as one line; the incident that produced a rule, the recipe it implies and
+  the numbers that make it credible now live in a companion file that is read
+  only when someone hits the situation. Three sections to start with: the two
+  lines every delegate brief has to spell out, the pattern for a prod runbook the
+  harness classifier refuses (one script in the scratchpad, one `! bash` line for
+  the owner, rollback as its own script, a read-back from the session afterwards),
+  and why a one-token substitution is not an exemption from the Edit/Write rule.
+  `tests/unit/test_agent_instructions.py` pins the split: every section maps to a
+  binding one-liner in `CLAUDE.md`, and the companion file has to say that
+  `CLAUDE.md` outranks it. (#11605)
+- **CI builds the app image and runs the gate against it.** `app/Dockerfile` was
+  hadolinted but never built before Cloud Build, which is after the merge — and
+  what it produces is not a program that fails to import but an nginx whose
+  config is now RENDERED at container start. The new job in `ci-image.yml` runs
+  the real image three ways: off, armed, and armed with no secret, checking the
+  403, the exempt path, each verdict, and that the secret reaches neither the
+  refusal page nor the container log. (#11221)
+- **`check` refuses a fragment that still says `(#NNNNN)`.** The reference is
+  appended by `/pull_request` when the PR opens, so a fragment is written
+  without one — but the placeholder shipped as written reads as a reference in
+  the released section and points nowhere, and nothing caught it. The
+  complaint names the file and the line; a placeholder quoted in backticks is
+  prose about the rule, not a reference, and passes. The README example no
+  longer hands the writer a placeholder to leave behind. (#11219)
 - **A shared-secret origin gate closes the direct `*.run.app` door, and the apex Worker's
   source moves into the repository** — the API runs on Cloud Run with `ingress=all`, so it
   answers on two addresses: `api.anyplot.ai`, which Cloudflare proxies, and the raw
@@ -143,8 +206,489 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   load. Google does not take part and keeps reading the sitemap. The protocol is free.
   (#11202)
 
+### Changed
+
+- **The R pipeline runtime installs `patchwork`, and the ggplot2 prompt names it.**
+  `.github/actions/setup-r/action.yml`, which `impl-generate` and `impl-repair`
+  use, adds `patchwork` to the packages it installs, and
+  `prompts/library/ggplot2.md` lists it for composing several ggplot objects
+  into one mosaic or grid layout; `subplot-mosaic`, `upset-basic` and
+  `waffle-basic` use it. The change arrived inside the `subplot-mosaic`
+  implementation PR: a repair attempt edited both files beside the plot,
+  although the repair prompt stages only the implementation file, and nothing
+  in review, merge or the changelog gate refused a pipeline PR touching paths
+  outside `plots/`. (#11725)
+- **The scheduled regen runs once a day instead of ten times.** `daily-regen.yml`
+  now ticks at 02:17 UTC only (it ticked every 2 hours outside the 18–21 UTC quiet
+  window), so it regenerates one spec per night and leaves the Claude rate limit
+  to interactive work during the day. The workflow had been paused since
+  2026-08-18 for the gap backfill and is re-enabled with this cadence. The
+  watchdog's cron-liveness rescue moves from >10 h to >26 h of silence: at 10 h
+  it would have re-dispatched a second run every day, while 26 h first fires at
+  the 06:00 UTC scan after a dropped night tick, which replaces the missed run
+  rather than adding one. The rescue's clock also starts at the workflow's
+  last enable instead of only its newest run, so re-enabling after a pause no
+  longer reads the weeks of deliberate silence as starvation and dispatches a
+  run hours before the first scheduled tick. (#11848)
+- **A `TEMPLATE_LAST_CHANGED` bump now reaches Bing, Yandex, Seznam, Naver and
+  Yep.** `indexnow-submit.yml` also runs on pushes that touch
+  `api/routers/seo.py`, and submits the full URL list when the diff adds or
+  removes the constant's assignment line. Any other change to that file
+  submits nothing. Google learns of a bump from the sitemap's `lastmod`, but
+  the IndexNow engines never read it, so the retitling of all 5,172 spec pages
+  in #11844 had to be submitted by hand. (#11849)
+- **Search results for a plot now name its languages and its other
+  libraries.** A hub's title and H1 read `{title} in Python, R, Julia and
+  JavaScript`; an implementation page's read `{title} in plotnine (Python)`,
+  and its meta description adds "also in 14 other libraries". A lead
+  paragraph under each H1 names the libraries by language and, on an
+  implementation page, links the hub with the hub's own title. A searcher
+  reported that "manhattan plot python" returned "Manhattan Plot for GWAS -
+  plotnine" with nothing to say that seven other Python libraries had the same
+  plot: the hub's title never named a language, so a single implementation
+  page outranked it. Languages now follow the registry order (Python first)
+  everywhere on both page types. `TEMPLATE_LAST_CHANGED` moves to 2026-09-26,
+  which also signals the library-first meta descriptions of 2026-09-02 that
+  shipped without a bump. (#11844)
+- **The favicon is drawn from the real MonoLisa outlines.** An SVG favicon
+  loads no webfonts, so the `<text>` mark always rendered in the viewer's
+  system monospace. `scripts/generate_favicon.py` outlines the `ap` monogram
+  from MonoLisa Bold into plain paths on an opaque paper ground (a transparent
+  icon with dark ink vanished on dark result pages) and rasterizes the ICO and
+  PNG siblings from that one SVG. (#11838)
+- **The site's typeface is MonoLisa 3.000: MonoLisa Code everywhere, MonoLisa
+  Text registered for experiments.** The v3 webfonts (70 Unicode-range subsets
+  per family, variable `wght` + `GRAD`) live under `gs://anyplot-static/fonts/v3/`
+  and `app/src/styles/fonts.css` is now generated from the order page's builder
+  CSS by `automation/scripts/monolisa_fonts_css.py`, so the next font update is
+  a re-run. Two v2 → v3 breaking changes are absorbed: the script italic is
+  `ss01` (the old `ss02` tag now means "alt i r"), and the coding ligatures
+  moved from `liga` to `dlig`, which `tokens.css` re-enables on `pre`/`code` so
+  code blocks look as before. The OG-image renderer loads the v3 Code TTFs from
+  the same prefix, sets only the `wght` axis of the now two-axis font, and draws
+  the tagline with `ss01`. Family names in CSS are `'MonoLisa Code'` and
+  `'MonoLisa Text'` (new `--text` token). The v2 files stay in the bucket; their
+  removal is a separate, explicitly authorized step after the cutover is
+  verified live. (#11836)
+- **Coverage cells read as three states, not a gradient.** The mark grew from
+  10 px to 16 px inside a 24 px hit area (WCAG 2.2 SC 2.5.8), and full coverage
+  now renders as solid brand green while anything short of it carries an ink
+  outline (dashed when a spec has no implementation at all), with a labelled
+  legend replacing the less/more ramp.
+  The interesting signal is which specs are *not* complete, and those are the
+  minority — the old opacity ramp made them the hardest cells to pick out. The
+  summary line also names how many specs are below full coverage. (#11835)
+- **`anyplot-app` runs as a single instance with concurrency 80 (was max 3,
+  concurrency 15).** A static nginx never needed a second instance for capacity —
+  its files answer in milliseconds and it sits at 15 MiB of memory — yet every
+  crawler burst filled the 15 slots and started one or two more instances (50
+  AUTOSCALING starts in the ten days to 2026-09-10), because nginx holds a
+  proxied bot request open for as long as the API takes to answer. With the API
+  on one warm instance those waits are milliseconds, and one nginx with 80 slots
+  absorbs the burst without a cold start. `min-instances` stays 0; the API behind
+  it caps its own work at 40 in flight. (#11829)
+- **`anyplot-api` runs as a single instance: min 1, max 1, concurrency 40.** Every
+  scale-out was a cold start that a live request paid for. Between 2026-08-29 and
+  09-10 Cloud Run started 464 extra instances (16–54 a day) while the warm one sat
+  at a concurrency of ~2, because a page load fans out 4–6 API calls in the same
+  instant, and it pinned one call of each burst to the new instance for its full
+  9–13 s start — 8 to 37 browser requests a day with referer anyplot.ai, median
+  11.3 s, on `/libraries`, `/languages`, `/stats` and `/specs`. With one instance a
+  burst queues on the warm one for milliseconds. The limit has headroom: request
+  p50 is 32 ms, CPU p95 6 %, more than 9 concurrent requests occur in about two
+  minutes a day, and the window saw no 429. `api/cloudbuild.yaml` pins it; if 429s
+  ever appear, max 2 is the next step. (#11828)
+- **The startup cache prewarm no longer blocks the port.** uvicorn runs the
+  lifespan to completion before it binds the socket, so the six awaited prewarm
+  queries added a stable ~2.5 s to every cold start (2.0–3.6 s of an ~11 s start,
+  measured over 197 starts). The prewarm is now a background task that runs each
+  key through `get_or_set_cache`, so it shares the per-key lock with a request that
+  arrives first instead of duplicating its query, and it is cancelled on shutdown
+  before the DB engine closes. (#11828)
+- **OG image compositing runs in a worker thread, at most two at once.** The
+  collage and branded-image endpoints called PIL inline in the event loop, which
+  stalled every other request on the instance for the 1–3 s a render takes, and a
+  handful of concurrent collages produced the 647 MiB memory peak of 2026-08-26
+  against the 1 GiB limit. With a single instance both would hit the whole
+  service; the renders now go through `asyncio.to_thread` behind a two-slot
+  semaphore. (#11828)
+- **Reaction-only feedback has its own rate limit.** Free-text entries stay at
+  5 per minute per IP, now counted over message-bearing rows only; a 👍/👎 tap
+  is capped at 30 per minute, so flipping through the library carousel and
+  rating several plots no longer trips the free-text limit or blocks a message
+  written right after. (#11827)
+- **The Edit/Write rule now says what it outranks.** Auto mode hands a delegated
+  agent a reminder that prescribes editing files with `sed`, heredocs and short
+  scripts, and it arrives later in the context than `CLAUDE.md`, so it reads as
+  the more recent instruction — three agents in the sibling repository followed
+  it in one day, two of them for the single-token substitution that fills a PR
+  number into a changelog fragment. `CLAUDE.md` now states the precedence
+  explicitly, and the delegation rule adds the second line a brief has to carry:
+  all `git` stays inside the agent's own worktree, because a `git checkout -b` in
+  the shared checkout moves a ref the owner's working tree is sitting on. (#11605)
+- **`/open-pr` knows what "ready to merge" means since the review ruleset
+  changed.** `review_on_push` is `false` in the "Automated Copilot Code Review"
+  ruleset since 2026-09-03, so a fix push starts no Copilot run and the absence
+  of a `copilot-*` check on the new head SHA is normal, not a reason to keep
+  waiting — the skill's gotcha still claimed the opposite. The merge-on-request
+  conditions are now written down: non-Copilot checks completed and green
+  (deduped by name, newest wins, so a superseded run is not read as red), a
+  Copilot review that actually exists on the PR — the head check run only says
+  whether a round is still running, since a run reaches `completed` with
+  conclusion `cancelled` and delivers nothing — and zero unresolved threads.
+  `mergeable=UNKNOWN` is GitHub still computing; a conflict (`CONFLICTING`,
+  `mergeStateStatus` `DIRTY`) gets no CI at all and is reported, not waited out.
+  Merging stays the owner's call. (#11605)
+- **Commit-message and PR-body files are named after the branch.** The scratchpad
+  is shared by every agent of one session, so a generic `commitmsg.txt` or
+  `prbody.md` gets overwritten by a parallel agent and a later re-read commits
+  someone else's text. `/open-pr` now derives the name from the branch and says
+  the part that makes it safe: write and consume the file in the same step — it
+  is scratch input to one command, not a record. (#11605)
+- **A numeric UI rule is verified against the measured result.**
+  `/verify-frontend` gains § 3b: a floor, a minimum size or a cap is read off the
+  element in the browser, never off the code that computed it. The case is a
+  14 px x-height floor whose planner sized lines from an average advance — the
+  plan met the floor and the rendered page came out at 13.9 px, because the
+  frame's own padding was never in the budget. (#11605)
+- **Shortening a text that carries claims is now a checklist.** `/write-docs`
+  gains the claim-by-claim diff duty: shortening drops qualifiers before it drops
+  sentences, which is how a privacy section lost an overstated retention period,
+  a condition on the right to object and part of a list of rights inside an
+  otherwise good edit. The owner's own sentences stay verbatim, and a claim that
+  cannot be supported is removed rather than softened. (#11605)
+- **The three callers that reach the app origin without the edge now carry the
+  header themselves.** The pre-traffic smoke in `app/cloudbuild.yaml` reads
+  `ORIGIN_SECRET` inside the step rather than through `availableSecrets`, which
+  resolves at build start; `bot-serving-check.yml` sends it from the repository
+  secret and reads `/_health` first, so a missing or half-rotated secret fails
+  with a message naming itself instead of reporting ~36 crawler checks as a
+  broken site; and the apex Worker stamps its `/api/event` branch. A `Host` rule
+  would have been a real boundary here — `anyplot.ai` is a Cloud Run domain
+  mapping, so `$host` does tell the edge from the raw URL — but the bot monitor
+  cannot spoof a Host either, and any exception it could present instead is
+  public with this repository. (#11221)
+- **The frontend deploy smoke checks the nonce before promoting.** The
+  candidate has to serve a shell whose `<script>` tags all carry the nonce from
+  that same response's header, fetched with `--compressed` so a precompressed
+  shell cannot slip past. A lost stamp leaves a page that looks healthy to every
+  other probe and runs no inline script at all, so it is worth the one extra
+  curl. (#11220)
+- **The privacy policy says what the code actually does, per store.** The section had drifted
+  behind a year of features: it promised "no personal data (names, emails, etc.)" while the
+  feedback widget asks for exactly that ("Name or email (optional)") and keeps it, with the
+  message, the page, the user agent and an IP hash, in a table nothing prunes on a timer. It
+  also had no legal basis, no jurisdiction, and a rights list missing restriction, objection
+  and the complaint to a supervisory authority. Each store now carries its own retention —
+  Cloud Logging's 30 days, a feedback entry until it is deleted by hand — because a single
+  blanket figure is the qualifier a shortening pass loses first. Plausible is described by the
+  property that matters (no cookies, no cross-site identifier, no IP stored, the browser
+  talking only to our domain) rather than the false one it used to claim (the script is
+  Plausible's, only served from here), Cloudflare's edge processing of the IP is named, and
+  the "all services in the EU" line no longer swallows a global CDN and a separate analytics
+  service. The crawler body in `api/routers/seo.py` mirrored the same wrong sentence and was
+  corrected with it. (#11217)
+- **The API deploy gets the three edges the frontend deploy already had** — the candidate
+  rollout `api/cloudbuild.yaml` invented was then improved in `app/cloudbuild.yaml` (#11207)
+  and the improvements never came back. Three of them do now. `:latest` waits on `promote`
+  instead of on `build-image`: it used to reach the registry before the candidate had been
+  deployed, let alone smoked, so a build whose smoke failed still left `:latest` naming the
+  image that failed it. The smoke re-asserts the `candidate` tag AFTER its probes as well as
+  before — the tag is shared across builds, so a concurrent one could move it mid-smoke and
+  this build would promote a revision it only believed it had probed; a competing build only
+  ever tags its own revision, so ours at both ends means the tag was never reassigned while
+  the probes ran. That detects an observed reassignment rather than proving where a probe
+  landed: `status.traffic` is control-plane state, and tag-URL propagation can lag it, which
+  is the residual `app/cloudbuild.yaml` already documents at its own smoke step. And the
+  probes stop piping into `grep -q`, which exits at the first match and SIGPIPEs
+  curl — the form only ever passed because `-ceu` carries no `pipefail`, so a later hardening
+  pass adding it would have turned every deploy red. They go through the same `expect` helper
+  `app/cloudbuild.yaml` uses, which fetches to a file and names the probe and the missing
+  needle when it fails; `/health` keeps a bare variant because reaching it without the origin
+  header is exactly what its gate exemption has to prove. (#11212)
+- **The agent instructions say what the Copilot review ruleset now does: one review per PR, not
+  one per push** — review-on-push was turned off in the "Automated Copilot Code Review" ruleset of
+  both repositories on 2026-09-03, so the bot runs once when a PR opens or leaves draft and a push
+  triggers nothing. `CLAUDE.md`'s PR follow-through and `agentic/commands/pull_request.md` now say
+  so, and say not to re-request one per push: each request is a full re-read of the whole diff, and
+  the bot then surfaces "previously missed" findings in files the push never touched — which draws
+  another push, and another request (the sibling repo's
+  [kurrentschrift#406](https://github.com/MarkusNeusinger/kurrentschrift/pull/406) collected ~15 in
+  a day over a one-line docstring fix). A fresh review is requested only after a substantive
+  rework, and a PR that is green with no open threads needs no further round. (#11216)
+- **Every PR now adds a `changelog.d/` fragment instead of a bullet in `CHANGELOG.md`** — the
+  shared `[Unreleased]` section is the one place sibling PRs reliably conflict each other, and on
+  the night of 2026-09-02/03 it did so three times in a row: each time a hand-resolved rebase for
+  text neither branch disagreed about. The `.gitattributes` line-ending rules do nothing for it, and
+  a union merge driver would not fix it either — GitHub's own mergeability check ignores merge
+  drivers, and a branch that MOVES changelog lines comes out of a union rebase with the block
+  duplicated. Fragments remove the shared spot rather than healing it: a PR writes
+  `changelog.d/<slug>.md` in the changelog's own format (`### Category` over bold-titled bullets)
+  and touches `CHANGELOG.md` not at all, so two PRs never meet at the same line. `tools/changelog`
+  is the standard-library tool behind it — `check` (also the CI job "Changelog (fragment)", which
+  refuses a missing fragment AND a bullet written into `[Unreleased]`), `preview`, and `release`,
+  which folds every fragment under the new version heading newest-first, bumps `pyproject.toml`,
+  `uv.lock` and `app/package.json`, repoints the compare links at the bottom of the file — a step
+  `release.md` called easy to forget, so it is no longer a step — and deletes the fragments. The
+  exemptions are the ones this repository already had, now enforced rather than remembered:
+  catalogue-only PRs under `plots/`, the automated plot pipeline and Dependabot (both by author, so
+  the gate never sits red on a bot batch), and the `skip-changelog` label. What the tool
+  deliberately does NOT touch is the release's two aggregate lines — the italic *Catalog* line and
+  the single **Dependencies:** bullet — because those summarize a window rather than a PR and are
+  written at cut time. Ported from the sibling repo kurrentschrift, where the same tool has run
+  since 2026-08-30. (#11215)
+- **The API image build gets a `.dockerignore` that is actually read, loses 69 MB of dead
+  weight and ships its own bytecode** — `api/.dockerignore` never did anything: Docker reads
+  the ignore file from the build CONTEXT, and both the Cloud Build step and the pre-merge
+  image job build with `.` at the repo root. The file said so itself — it excluded `*.md`
+  while the builder's `COPY … README.md` succeeded on every build — and the result was a
+  context of roughly 230 MB per build, a 120 MB `.git` and a 69 MB `plots/` foremost. The
+  replacement lives at the root and is an **allowlist** (`api`, `core`, `pyproject.toml`,
+  `uv.lock`, `README.md`): a denylist that misses a new directory only makes the context
+  quietly fatter, while an allowlist that misses one fails at the COPY line. The context
+  cannot instead be narrowed to `api/`, which is why this shape: the image needs `core/` and
+  the lock files, and they live above it. `COPY plots/ ./plots/` is gone from the runtime
+  stage — it was 16.6 MB of every pulled image (69.2 MB unpacked, 9,166 files; layer 10 of
+  the `latest` manifest) for a directory nothing reads, because the implementations this API
+  serves come from Postgres; `ci-image.yml` already said as much where it explains why
+  `plots/**` is not a build trigger. `UV_COMPILE_BYTECODE=1` plus a `compileall` over `api`
+  and `core` in the runtime stage put `.pyc` in the image, which takes ~1.8 s off every cold
+  start (`import api.main` measured at 3.56–4.43 s with nothing cached against 1.79–2.26 s
+  with bytecode present) at the price of a bigger venv layer (686.6 MB unpacked / 210.3 MB
+  compressed against 493.1 / 142.3). `uv` itself is pinned — the resolver that reads
+  `uv.lock` was the unpinned link in the dependency chain, though the image as a whole
+  stays unreproducible on purpose: `python:3.13-slim` is a mutable tag and the apt packages
+  are deliberately unversioned — and `UV_PYTHON` names the interpreter so uv can never
+  quietly download a managed CPython that the runtime stage does not have at the same path.
+  With the pin, hadolint's DL3013 exception disappears; the remaining two (DL3008, DL3025)
+  move out of the workflow's file-wide `ignore:` and onto the exact instructions they excuse,
+  so a new occurrence elsewhere in the file is caught instead of swallowed. (#11211)
+- **The frontend deploys through a candidate revision instead of straight onto live
+  traffic** — `app/cloudbuild.yaml` now follows the same candidate-rollout pattern as
+  `api/cloudbuild.yaml`: deploy with `--no-traffic --tag=candidate
+  --revision-suffix=b$BUILD_ID`, smoke the candidate on its tag URL, then `update-traffic`
+  to exactly that revision (the chains were not identical at the time — this one pushed
+  `:latest` only after the promotion, where the API still pushed it alongside the deploy;
+  the API caught up in #11212). The service
+  carries the whole crawler path in `app/nginx.conf` — the `$is_bot` map, the `location =`
+  bypasses, the `@seo_proxy` upstream — and that is the file whose breakage served every
+  bot an HTTP 502 for four weeks in 2026 while humans, Plausible and CI all saw a healthy
+  site; until now a typo in it went live unchecked and the daily bot-serving monitor was
+  the only net, a night later. The smoke probes both halves of the split (a browser UA
+  must get `<div id="root">`, Googlebot must get the prerendered page — asserted on the
+  `<link rel="canonical">`, which the SPA shell carries not at all and whose value names
+  the route) on the home page and a deep route, plus `robots.txt` and `llms.txt` from the
+  `location =` bypasses and the latter's UTF-8 charset. The candidate tag is re-asserted
+  after the probes as well as before, so a concurrent build moving it mid-smoke fails this
+  build instead of getting it promoted on someone else's evidence. `:latest` moves only
+  after this build's promotion, so the tag can no longer name an image that was never
+  rolled out, and the build timeout goes to 20 min to leave room for a cold candidate.
+  (#11207)
+- **The `babysit-pipeline` skill gains the backfill scheduler and the driver's per-spec
+  liveness check** — `run_queue.sh <queue-dir> [slots]` keeps N `run_spec.sh` drivers
+  in flight over a queue file, skips libraries already on main and confirmed gaps,
+  harvests every driver's result into the ledger, holds launches on throttle signs
+  (GitHub quota, ≥3 distinct generate pairs failing within 25 min, rate-limit
+  signatures in failed logs), and re-queues outage-hit specs from a rescue list only
+  once nothing for them is in flight. `run_spec.sh` now reads liveness per spec (its
+  own generate runs and open `implementation/<spec>/*` PRs) instead of "any impl-*
+  run active", which had produced false PARTIAL verdicts with several drivers in
+  flight. `SKILL.md` §5 documents the slot-count rule, the reporting cycle, and new
+  gotchas from the 2026-09-02 run: a provider outage reads like a capability cliff, the
+  order in which to rescue an outage-hit spec, and the stuck-PR-object symptom behind
+  "Head branch is out of date". (#11201)
+- **CodeQL moves to an advanced-setup workflow that skips `plots/**`** — the default
+  setup scanned five languages on every push to an `implementation/*` branch and every
+  impl-* pull request; during the 4-slot backfill of 2026-09-02 up to 23 CodeQL runs
+  waited in the runner queue at once, ahead of the pipeline's own jobs. The new
+  `.github/workflows/codeql.yml` keeps the same languages and weekly schedule but ignores
+  `plots/**` both as a trigger and inside the analysis, so pipeline PRs no longer start
+  a scan. Default setup has to be switched off in the repository settings for the
+  workflow's uploads to be accepted. (#11200)
+- **The API image is built in two stages and drops two thirds of its weight** — the
+  single-stage `api/Dockerfile` produced a 1.6 GB image (502 MB compressed in Artifact
+  Registry) of which 277 MB compressed was ballast in two layers: `build-essential`,
+  which never compiled anything because all 108 packages this image installs ship
+  wheels, and a `chown -R appuser:appuser /app` that ran after the venv was in place
+  and so rewrote the whole environment into a second layer. The build now installs into
+  a builder stage and copies only the finished venv across with `COPY --chown`, which
+  sets ownership as the layer is written. Measured: 1.62 GB to 693 MB. Less Artifact
+  Registry growth per deploy and a shorter deploy rollout; `min-instances 1` already
+  covers the user-facing cold start. (#10821)
+- **The API deploy smoke-tests a candidate revision before it takes traffic** — the
+  pipeline deployed straight onto live traffic, so a broken image served users until
+  someone noticed. It now deploys with `--no-traffic --tag=candidate` and a
+  deterministic `--revision-suffix`, probes that revision on its tag URL (`/health`,
+  `/libraries`, `/languages`, `/plots/filter` for the database path, and `/debug/status`
+  for the fail-closed admin gate), and only then shifts traffic to exactly the revision
+  it smoked — never `--to-latest`, which could promote a concurrent build's unsmoked
+  revision. Adopted verbatim from the sibling repo kurrentschrift, which has had this
+  net since its first deploy. (#10821)
+- **`anyplot-app` scales to zero** — the frontend service ran a permanently warm
+  instance for ~EUR 8.30/month while 99.56% of the paid time was idle. It is a static
+  nginx image that boots in ~0.26 s, and a 7-day request trace at one-minute resolution
+  shows the longest gap between requests is 11 minutes, against Cloud Run's ~15-minute
+  idle window — so the instance is in practice never reclaimed and visitors keep the
+  same time to first byte. `anyplot-api` keeps `min-instances=1`: its cold start is
+  ~11.6 s and its traffic does leave gaps over 15 minutes. (#10812)
+- **The API deploy configures the revision additively — `--update-secrets` and
+  `--update-env-vars`, not the `--set-` forms** — both `--set-` flags replace their whole set,
+  so anything attached to the service out of band is stripped from every revision the pipeline
+  creates. `ORIGIN_SECRET` is exactly such a binding — attached by hand to arm the origin gate,
+  removed by hand to roll back — and a secret-backed variable lives in the same revision
+  environment as a literal one, so either flag was a way to silently disarm the gate on the
+  next deploy. It cannot simply be listed in the flag instead: Cloud Run refuses a deploy
+  naming a secret that does not exist, which would break every build until the rollout creates
+  it. The cost is that a variable dropped from either line is no longer removed automatically.
+  (#11208)
+- **The analytics middleware moves inside `CORSMiddleware`** — a consequence of where the
+  origin gate has to sit. The gate belongs inside CORS, so its 403 still carries the headers
+  a browser needs to read it as a 403 rather than as an opaque network error, and outside
+  the bot counter, so a refused request can never fire an outbound Plausible event —
+  `track_asset_fetch` fires per request for anything with a crawler user agent, so a caller
+  on the direct URL could otherwise turn each of its own refusals into one. Those two are
+  only simultaneously possible with the counter inside CORS. The cache-header middleware
+  stays outside CORS, where its `setdefault` for the /og/ cards depends on being. `api/main.py`
+  now carries the stack order and the reason for each position. (#11208)
+- **The frontend declares the Node version it is actually built with, and something
+  enforces it** — `app/package.json` asked for `node >=20` while the image that produces
+  the deployed bundle builds on Node 22 and CI tests on Node 24, so the only version the
+  manifest still admitted was the one nothing tests and that reached end of life in April
+  2026. The floor moves to `>=22.12.0` — the version the build path actually requires
+  (Vite and rolldown declare `^20.19.0 || >=22.12.0`, so `>=22` would have advertised
+  22.0–22.11 as supported and let Vite's own engine check reject them instead) — `app/.nvmrc`
+  names 22 for `nvm use` and `setup-node`, and `app/.npmrc` sets `engine-strict=true` so an
+  npm install in `app/` refuses an unsupported runtime at install time rather than failing
+  later inside the build with a message that never mentions the version (yarn 1, the app's
+  package manager, checks `engines` itself). `docs/development.md` said "Node.js 20+" and now
+  matches. Same pin as the sibling repo kurrentschrift. (#11206)
+- **Dependencies:** 15 Dependabot PRs — four security updates close eight advisories, one
+  rated critical and three high: `anyio` 4.11.0 → 4.14.2 (#11837), `tornado` 6.5.7 → 6.5.8
+  (#10852), `browserslist` 4.28.2 → 4.28.8 (#10853) and `@humanfs/node` 0.16.7 → 0.16.8
+  (#11196); `plotly` 6.9.0 → 7.0.0, a major version (#10819), and `fastmcp` 4.0.0b3 → 4.0.2,
+  out of beta (#10820, #11634); the grouped python-minor bumps (#10818, #11634) also carry
+  `mcp` 2.0.0 → 2.1.1, `anthropic` 1.0.0 → 1.3.0, `statsmodels` 0.14.6 → 0.15.0 and `kaleido`
+  1.3.0 → 1.4.0; npm in `app/`: MUI 9.3.1 → 9.4.0 (#10815) and the react (#10814, #11632) and
+  npm-minor (#10817, #11633) groups; GitHub Actions: `claude-code-action` 1.0.199 → 1.0.216 and
+  `setup-r` 2.12.1 → 2.13.0 (#10816, #11635).
+
+### Removed
+
+- **The `.report()` flag over the plot.** Reporting stays on the spec hub page
+  (`report issue ↗`) and via the GitHub issue template; the in-plot flag was
+  the least-used overlay action and its corner now belongs to the vote. (#11827)
+
 ### Fixed
 
+- **IndexNow no longer submits `/{spec}/python/` redirects.** Both the full
+  list and the per-push diff took every file under `metadata/<language>/` as
+  a page, so a `.gitkeep` became an empty library and a URL that answers 301.
+  The full list now takes only `.yaml` metadata files, and the diff counts an
+  implementation file only beside its metadata `.yaml`. The full list drops
+  from 5,187 to 5,182 URLs, the size of the sitemap. The 10 stale `.gitkeep`
+  placeholders in five fully implemented spec directories are gone as well. (#11849)
+- **`docs/reference/plausible.md` describes the recorded gallery paths again.**
+  Filter pageviews have been recorded under `/plots/...` since 2026-07-10, but
+  the doc still showed the old root paths and missed the `lang` and `language`
+  categories. `docs/reference/seo.md` also still said the `/{spec_id}/{language}`
+  crawler redirect pointed at a `/seo-proxy/` path. (#11845)
+- **Google had no clean image to show as a result's thumbnail.** The only
+  preferred-image signal was `og:image`, the text-heavy branded card. Both page
+  types now carry a `WebPage` node (`CollectionPage` on the hub) whose
+  `primaryImageOfPage` is the exact URL of the render in the body, and the
+  implementation's `SoftwareSourceCode` node is marked as the page's main
+  entity. `og:image` stays the card for link previews. (#11844)
+- **Scroll-to-top button no longer hides under the feedback button.** On
+  `/plots` and `/specs` it sat in the feedback button's bottom-right corner —
+  fully covered on desktop, a 28 px overlap on phones. It now sits 8 px to the
+  left of the feedback button on the same row, rises with it above the footer
+  on phones, and the quick-feedback "Thanks!" appears above the button instead
+  of in that slot. One `ScrollToTopFab` replaces the copy each page carried,
+  and every floating button reads its position from one shared corner geometry
+  (`theme/floating-actions.ts`), so they cannot drift into each other again.
+  (#11843)
+- **Google showed no icon for anyplot.ai.** Crawlers are routed to the bot HTML
+  from `api/routers/seo.py`, whose `<head>` declared no icon, and Google's
+  `/favicon.ico` fallback returned 404. The bot template now carries the same
+  icon links as `app/index.html`, and `app/public/` ships a real `favicon.ico`
+  (16, 32, 48 px) and an `apple-touch-icon.png`. `Organization.logo` points at
+  the new square `icon-512.png` instead of the 1200×630 banner. (#11838)
+- **Coverage matrix on the stats page counted against 9 libraries instead of
+  15.** Every cell tooltip read `15/9` for a fully covered spec, and the
+  "possible implementations" total was short by the same factor, because the
+  page carried a hardcoded library count from back when nine were supported.
+  `/insights/dashboard` now serves `total_libraries` (the canonical
+  `SUPPORTED_LIBRARIES` size that already backs `coverage_percent`) and the page
+  renders against it, so the denominator follows the library set instead of
+  drifting from it. (#11835)
+- **An empty MonoLisa cache file no longer disables the brand font.** A failed
+  download leaves a 0-byte file under `/tmp/anyplot-fonts/` (the client opens the
+  target before it fetches), which `_get_monolisa_font_path` accepted as the
+  cached font; PIL then failed to open it on every render and the OG cards
+  silently fell back to DejaVu for the life of the instance (and the swash test
+  failed locally instead of skipping). Empty files now count as missing, a failed
+  download deletes its leftover, and the failure is remembered in-process for ten
+  minutes so a GCS outage costs one attempt per cooldown rather than one per
+  render. (#11828)
+- **`docs/reference/performance.md` describes the live services again.** The
+  infrastructure table still listed the frontend at min-instances=1 with 256Mi
+  (it has scaled to zero on 512Mi since 2026-08-29) and Cloud SQL as `db-g1-small`
+  (it is `db-custom-1-3840` on a 3-year commitment). #11828 and #11829 then edited
+  the same frontend row from different branches, so it still carried
+  max-instances=3 and concurrency 15 after both had merged; a follow-up aligned it
+  with `app/cloudbuild.yaml` (one instance, concurrency 80). (#11828, #11830)
+- **`impl-review` retries the staging download instead of reviewing an empty directory** — the
+  step swallowed a lost `gsutil cp` (`2>/dev/null || true`), the render check right after it
+  then failed on nothing, and because that failure set no `ai-review-failed` label, no watchdog
+  case picked the PR up: it waited for a manual re-dispatch (#11360 on 2026-09-05, #11678 on
+  2026-09-09, staging complete both times). The download now tries three times with a short
+  backoff, stops as soon as both theme renders are on disk, and keeps `gsutil`'s stderr in a
+  warning per failed attempt, so a transfer blip heals in the same run and a genuinely empty
+  staging folder still fails loudly at the render check. (#11697)
+- **A re-dispatched `impl-merge` run can finish the bookkeeping of a PR that is already merged** —
+  the merge step has long treated "already merged" as success and continued to promotion,
+  labels, issue close and the Postgres sync, which is the whole point of dispatching the
+  workflow again after a run that crashed post-merge. It never got there: the completeness
+  check before it fetched the PR branch, and `gh pr merge --delete-branch` had removed that
+  branch at the merge, so the re-run died on `couldn't find remote ref`. Seen on #11295
+  (2026-09-05): the GCP auth step failed 5 s after the squash, the images stayed in staging
+  while the metadata on main already pointed at production, and the re-dispatch could not
+  repair it. The check now reads the files from `origin/main` when the PR is merged — where
+  the squash commit put them — and no longer tries to close a merged PR when they are absent. (#11307)
+- **The Worker deploy recipe now uploads a module Cloudflare can find.**
+  `infra/cloudflare/README.md`'s `curl` example named the multipart part
+  `worker.js=@infra/cloudflare/anyplot-api-proxy.js;type=application/javascript+module`,
+  but curl defaults the part's `filename` to the local file's basename
+  (`anyplot-api-proxy.js`) unless told otherwise, and Cloudflare resolves the
+  metadata's `main_module: "worker.js"` against that filename, not the form
+  field — so the API answered `400 — Uncaught Error: No such module:
+  worker.js` (observed live 2026-09-04). The example now sets
+  `filename=worker.js` explicitly, with a sentence explaining why. (#11222)
+- **The README's "needs a redeploy" callout is replaced with the deployed
+  state.** The Worker was redeployed from the current `.js` after #11221, the
+  Transform Rule now covers `anyplot.ai`, `www.anyplot.ai`, and
+  `api.anyplot.ai`, and `/api/event` measured `off-seen` — the callout named a
+  pending step that had already happened. (#11222)
+- **The python.anyplot.ai spec routes sent the SPA shell with no
+  `Cache-Control` at all.** `try_files /index.html =404` answers with the shell
+  as a file inside that location, so it never reaches `location =
+  /index.html` and never inherited its `no-store` — measured against a local
+  nginx while the main host answered correctly on the same path. A stale shell
+  asks for `/assets/` hashes a later deploy no longer has; with the nonce it
+  would additionally pair an old `nonce="…"` with a fresh header. Both routes
+  now send the shell's `Cache-Control` and re-include the security-header
+  snippet beside it, since an `add_header` of their own would otherwise have
+  dropped the whole inherited set. (#11220)
+- **Correcting a bullet in `[Unreleased]` no longer reads as adding one.**
+  The fragment gate compared bullet SETS, so re-wording an entry the base
+  already carried was indistinguishable from writing a new one and got the
+  same refusal — "gained a bullet, it belongs in a fragment" — for a change
+  that added nothing. A bullet is now identified by its bold title
+  (`tools/changelog`, `bullet_title`), collapsed over the line breaks so a
+  correction may reflow the very line the title runs over, and counted rather
+  than set-differenced so a second copy of a title cannot slip in behind the
+  first: a title the base lacks is an ADDED bullet and is still refused, a
+  title it has is a CHANGED one and passes. (#11219)
 - **The API host stamps its own security headers, `/_health` stops dropping the site's,
   and the CSP is guarded by a test that pins what a nonce later replaced** — api.anyplot.ai is a separate origin with no nginx in front of it,
   so it inherited none of `app/security-headers.conf`: only `/proxy/html` set
@@ -174,7 +718,6 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   out was a nonce (Cloudflare stamps its injected script with the nonce it parses from
   this header), which #11220 shipped a day later with an nginx `sub_filter`. All of it is
   written down at the directive it explains. (#11213)
-
 - **The IndexNow workflow no longer waits eight minutes behind an edge 403** — its
   key-file readiness loop treated every non-200 as "not deployed yet"; a GitHub runner
   that Cloudflare's bot management answers with 403 would have slept the full budget on
@@ -255,138 +798,45 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   builder stage it would pass on a venv whose runtime never got the library, which is
   exactly the false green the guard exists to prevent. (#10813, #10821)
 
-### Changed
-
-- **The API image build gets a `.dockerignore` that is actually read, loses 69 MB of dead
-  weight and ships its own bytecode** — `api/.dockerignore` never did anything: Docker reads
-  the ignore file from the build CONTEXT, and both the Cloud Build step and the pre-merge
-  image job build with `.` at the repo root. The file said so itself — it excluded `*.md`
-  while the builder's `COPY … README.md` succeeded on every build — and the result was a
-  context of roughly 230 MB per build, a 120 MB `.git` and a 69 MB `plots/` foremost. The
-  replacement lives at the root and is an **allowlist** (`api`, `core`, `pyproject.toml`,
-  `uv.lock`, `README.md`): a denylist that misses a new directory only makes the context
-  quietly fatter, while an allowlist that misses one fails at the COPY line. The context
-  cannot instead be narrowed to `api/`, which is why this shape: the image needs `core/` and
-  the lock files, and they live above it. `COPY plots/ ./plots/` is gone from the runtime
-  stage — it was 16.6 MB of every pulled image (69.2 MB unpacked, 9,166 files; layer 10 of
-  the `latest` manifest) for a directory nothing reads, because the implementations this API
-  serves come from Postgres; `ci-image.yml` already said as much where it explains why
-  `plots/**` is not a build trigger. `UV_COMPILE_BYTECODE=1` plus a `compileall` over `api`
-  and `core` in the runtime stage put `.pyc` in the image, which takes ~1.8 s off every cold
-  start (`import api.main` measured at 3.56–4.43 s with nothing cached against 1.79–2.26 s
-  with bytecode present) at the price of a bigger venv layer (686.6 MB unpacked / 210.3 MB
-  compressed against 493.1 / 142.3). `uv` itself is pinned — the resolver that reads
-  `uv.lock` was the unpinned link in the dependency chain, though the image as a whole
-  stays unreproducible on purpose: `python:3.13-slim` is a mutable tag and the apt packages
-  are deliberately unversioned — and `UV_PYTHON` names the interpreter so uv can never
-  quietly download a managed CPython that the runtime stage does not have at the same path.
-  With the pin, hadolint's DL3013 exception disappears; the remaining two (DL3008, DL3025)
-  move out of the workflow's file-wide `ignore:` and onto the exact instructions they excuse,
-  so a new occurrence elsewhere in the file is caught instead of swallowed. (#11211)
-
-- **The frontend deploys through a candidate revision instead of straight onto live
-  traffic** — `app/cloudbuild.yaml` now follows the same candidate-rollout pattern as
-  `api/cloudbuild.yaml`: deploy with `--no-traffic --tag=candidate
-  --revision-suffix=b$BUILD_ID`, smoke the candidate on its tag URL, then `update-traffic`
-  to exactly that revision (the chains were not identical at the time — this one pushed
-  `:latest` only after the promotion, where the API still pushed it alongside the deploy;
-  the API caught up in #11212). The service
-  carries the whole crawler path in `app/nginx.conf` — the `$is_bot` map, the `location =`
-  bypasses, the `@seo_proxy` upstream — and that is the file whose breakage served every
-  bot an HTTP 502 for four weeks in 2026 while humans, Plausible and CI all saw a healthy
-  site; until now a typo in it went live unchecked and the daily bot-serving monitor was
-  the only net, a night later. The smoke probes both halves of the split (a browser UA
-  must get `<div id="root">`, Googlebot must get the prerendered page — asserted on the
-  `<link rel="canonical">`, which the SPA shell carries not at all and whose value names
-  the route) on the home page and a deep route, plus `robots.txt` and `llms.txt` from the
-  `location =` bypasses and the latter's UTF-8 charset. The candidate tag is re-asserted
-  after the probes as well as before, so a concurrent build moving it mid-smoke fails this
-  build instead of getting it promoted on someone else's evidence. `:latest` moves only
-  after this build's promotion, so the tag can no longer name an image that was never
-  rolled out, and the build timeout goes to 20 min to leave room for a cold candidate.
-  (#11207)
-
-- **The `babysit-pipeline` skill gains the backfill scheduler and the driver's per-spec
-  liveness check** — `run_queue.sh <queue-dir> [slots]` keeps N `run_spec.sh` drivers
-  in flight over a queue file, skips libraries already on main and confirmed gaps,
-  harvests every driver's result into the ledger, holds launches on throttle signs
-  (GitHub quota, ≥3 distinct generate pairs failing within 25 min, rate-limit
-  signatures in failed logs), and re-queues outage-hit specs from a rescue list only
-  once nothing for them is in flight. `run_spec.sh` now reads liveness per spec (its
-  own generate runs and open `implementation/<spec>/*` PRs) instead of "any impl-*
-  run active", which had produced false PARTIAL verdicts with several drivers in
-  flight. `SKILL.md` §5 documents the slot-count rule, the reporting cycle, and new
-  gotchas from the 2026-09-02 run: a provider outage reads like a capability cliff, the
-  order in which to rescue an outage-hit spec, and the stuck-PR-object symptom behind
-  "Head branch is out of date". (#11201)
-- **CodeQL moves to an advanced-setup workflow that skips `plots/**`** — the default
-  setup scanned five languages on every push to an `implementation/*` branch and every
-  impl-* pull request; during the 4-slot backfill of 2026-09-02 up to 23 CodeQL runs
-  waited in the runner queue at once, ahead of the pipeline's own jobs. The new
-  `.github/workflows/codeql.yml` keeps the same languages and weekly schedule but ignores
-  `plots/**` both as a trigger and inside the analysis, so pipeline PRs no longer start
-  a scan. Default setup has to be switched off in the repository settings for the
-  workflow's uploads to be accepted. (#11200)
-- **The API image is built in two stages and drops two thirds of its weight** — the
-  single-stage `api/Dockerfile` produced a 1.6 GB image (502 MB compressed in Artifact
-  Registry) of which 277 MB compressed was ballast in two layers: `build-essential`,
-  which never compiled anything because all 108 packages this image installs ship
-  wheels, and a `chown -R appuser:appuser /app` that ran after the venv was in place
-  and so rewrote the whole environment into a second layer. The build now installs into
-  a builder stage and copies only the finished venv across with `COPY --chown`, which
-  sets ownership as the layer is written. Measured: 1.62 GB to 693 MB. Less Artifact
-  Registry growth per deploy and a shorter deploy rollout; `min-instances 1` already
-  covers the user-facing cold start. (#10821)
-- **The API deploy smoke-tests a candidate revision before it takes traffic** — the
-  pipeline deployed straight onto live traffic, so a broken image served users until
-  someone noticed. It now deploys with `--no-traffic --tag=candidate` and a
-  deterministic `--revision-suffix`, probes that revision on its tag URL (`/health`,
-  `/libraries`, `/languages`, `/plots/filter` for the database path, and `/debug/status`
-  for the fail-closed admin gate), and only then shifts traffic to exactly the revision
-  it smoked — never `--to-latest`, which could promote a concurrent build's unsmoked
-  revision. Adopted verbatim from the sibling repo kurrentschrift, which has had this
-  net since its first deploy. (#10821)
-- **`anyplot-app` scales to zero** — the frontend service ran a permanently warm
-  instance for ~EUR 8.30/month while 99.56% of the paid time was idle. It is a static
-  nginx image that boots in ~0.26 s, and a 7-day request trace at one-minute resolution
-  shows the longest gap between requests is 11 minutes, against Cloud Run's ~15-minute
-  idle window — so the instance is in practice never reclaimed and visitors keep the
-  same time to first byte. `anyplot-api` keeps `min-instances=1`: its cold start is
-  ~11.6 s and its traffic does leave gaps over 15 minutes. (#10812)
-- **The API deploy configures the revision additively — `--update-secrets` and
-  `--update-env-vars`, not the `--set-` forms** — both `--set-` flags replace their whole set,
-  so anything attached to the service out of band is stripped from every revision the pipeline
-  creates. `ORIGIN_SECRET` is exactly such a binding — attached by hand to arm the origin gate,
-  removed by hand to roll back — and a secret-backed variable lives in the same revision
-  environment as a literal one, so either flag was a way to silently disarm the gate on the
-  next deploy. It cannot simply be listed in the flag instead: Cloud Run refuses a deploy
-  naming a secret that does not exist, which would break every build until the rollout creates
-  it. The cost is that a variable dropped from either line is no longer removed automatically.
-  (#11208)
-- **The analytics middleware moves inside `CORSMiddleware`** — a consequence of where the
-  origin gate has to sit. The gate belongs inside CORS, so its 403 still carries the headers
-  a browser needs to read it as a 403 rather than as an opaque network error, and outside
-  the bot counter, so a refused request can never fire an outbound Plausible event —
-  `track_asset_fetch` fires per request for anything with a crawler user agent, so a caller
-  on the direct URL could otherwise turn each of its own refusals into one. Those two are
-  only simultaneously possible with the counter inside CORS. The cache-header middleware
-  stays outside CORS, where its `setdefault` for the /og/ cards depends on being. `api/main.py`
-  now carries the stack order and the reason for each position. (#11208)
-- **The frontend declares the Node version it is actually built with, and something
-  enforces it** — `app/package.json` asked for `node >=20` while the image that produces
-  the deployed bundle builds on Node 22 and CI tests on Node 24, so the only version the
-  manifest still admitted was the one nothing tests and that reached end of life in April
-  2026. The floor moves to `>=22.12.0` — the version the build path actually requires
-  (Vite and rolldown declare `^20.19.0 || >=22.12.0`, so `>=22` would have advertised
-  22.0–22.11 as supported and let Vite's own engine check reject them instead) — `app/.nvmrc`
-  names 22 for `nvm use` and `setup-node`, and `app/.npmrc` sets `engine-strict=true` so an
-  npm install in `app/` refuses an unsupported runtime at install time rather than failing
-  later inside the build with a message that never mentions the version (yarn 1, the app's
-  package manager, checks `engines` itself). `docs/development.md` said "Node.js 20+" and now
-  matches. Same pin as the sibling repo kurrentschrift. (#11206)
-
 ### Security
 
+- **The site's own origin has a gate now, and it ships switched off.** The API's
+  shared-secret gate closed one of two doors; `anyplot-app` stood with
+  `ingress=all` beside it, serving the whole site from its `*.run.app` URL with
+  no bot challenge, no WAF and no rate limit — and relaying any crawler user
+  agent through `@seo_proxy` into a repository query and a Plausible event.
+  `app/origin-gate.conf.template` is the nginx half: the base image's own
+  envsubst entrypoint renders the maps with the secret before nginx starts, and
+  every server block refuses what the Cloudflare edge did not stamp.
+  `ORIGIN_GATE` unset means off, `on` means 403, and armed with no secret fails
+  CLOSED — the map keys are tagged so an empty value cannot become "match
+  anything". The header is consumed by that server and never forwarded: every
+  `proxy_pass` clears it, so the Plausible hops cannot hand a third party the
+  key both services take. Nothing is armed by merging: the rollout, the
+  hostnames the Transform Rule has to cover and the rollback are in
+  `infra/cloudflare/README.md`. (#11221)
+- **`X-Origin-Gate` on `/_health` makes arming a measurement rather than a
+  leap.** The same five verdicts the API reports — `off`, `off-seen`, `ok`,
+  `missing`, `mismatch` — for the request they were asked with, never the value.
+  Ask every route into the container while the gate is still off and arm only
+  once each one that must keep working reports the header arriving. The apex
+  Worker's path cannot be asked that way, so `/api/event` reports it too: that
+  is the one path the Worker sends to this container, a Worker subrequest skips
+  its own zone's Transform Rules, and arming it blind would have answered every
+  Plausible pageview on the site with a 403. (#11221)
+- **`script-src` drops `'unsafe-inline'` for a per-request nonce.** nginx mints
+  one from `$request_id` — 16 random bytes as 32 hex digits — sends it in the
+  policy and stamps the same value onto every `<script>` tag of the shell with
+  `sub_filter`, in both server blocks. The measurement that stopped the hash
+  version a day earlier is what makes this the right shape: Cloudflare
+  JavaScript Detections injects an inline script at the edge whose body carries
+  a per-response ray id, so it has no listable hash — but Cloudflare documents
+  that it copies a nonce out of the response header onto that script, which a
+  hash could never be. Cache safety comes from three sides: the shell is
+  `no-store`, `sub_filter` clears `ETag` and `Last-Modified` on its own, and
+  `index.html` is now excluded from build-time precompression, because
+  `gzip_static` would otherwise serve an unstamped `.gz` and quietly block
+  every inline script on the page. (#11220)
 - **The origin gate loses its last real exemption: the cache flush now carries the edge's
   header instead of being waved through** — `/debug/cache/invalidate` was exempt because
   `sync-postgres.yml` has no front door to come through: it posts from a GitHub runner to
@@ -412,7 +862,6 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   every visitor if it landed out of order — #11221 shipped the app's gate switched off, and
   the Transform Rule now covers `anyplot.ai`, `www.anyplot.ai` and `api.anyplot.ai`
   (#11222). (#11214)
-
 - **`click` 8.3.1 → 8.3.3 closes PYSEC-2026-2132** — the only advisory `pip-audit`
   reports against the resolved runtime dependency set (`uv export --no-dev`), which now
   comes back clean. A transitive dependency, so the fix is a lock-file bump with no
@@ -420,6 +869,14 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   minimal one that clears the advisory; `click` 8.5.0 exists and is left to Dependabot,
   where a minor bump of the library behind every console script gets its own PR and its
   own CI run. (#11206)
+
+*Catalog: 966 new implementations across 146 specs — the gap backfill of 2026-09-01 to 09-10
+(ECharts 145, D3 145, Chart.js 144, Highcharts 144, MUI X Charts 144, Makie 144, ggplot2 99,
+plotnine 1) — and 1 regeneration, daily-regen having been paused for the backfill; 314 of 324
+specs now at full 15-library coverage (174 at v3.2.0), the other 10 short by 12 recorded gaps
+(Chart.js 4, plotnine 4, Highcharts 2, MUI X Charts 2); 1 new spec (line-tanabe-sugano, not yet
+implemented); 4,848 implementations over 325 specs; 27,367 stale GCS objects (old-layout renders,
+python/highcharts orphans, staging leftovers) moved to an archive prefix on 2026-09-16.*
 
 ## [3.2.0] — 2026-08-29 — Findable by assistants
 
@@ -1599,7 +2056,8 @@ interactive HTML previews.
   Actions workflows (spec creation, impl generation, AI review, auto-merge); Cloud Run +
   Cloud SQL + GCS; 1,081 unit tests.
 
-[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v3.2.0...HEAD
+[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v3.3.0...HEAD
+[3.3.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.2.0...v3.3.0
 [3.2.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/MarkusNeusinger/anyplot/compare/v2.4.0...v3.0.0
