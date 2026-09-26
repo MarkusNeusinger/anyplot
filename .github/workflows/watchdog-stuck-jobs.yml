@@ -14,7 +14,7 @@ run-name: "Watchdog: scan ${{ github.event_name == 'workflow_dispatch' && '(manu
 #   3. spec-ready issues with `generate:<lib>` or `impl:<lib>:failed` and
 #      no open PR for that (spec, lib) pair after the staleness window.
 #   4. daily-regen's cron silently starved by GitHub's scheduler (no run
-#      for >10 h outside the quiet window) — re-dispatched manually.
+#      for >26 h outside the quiet window) — re-dispatched manually.
 #
 # Retries are bounded per-cause via marker labels:
 #   - `ai-review-rescued`            (review failures)
@@ -369,19 +369,23 @@ jobs:
           done < <(echo "$ISS_JSON" | jq -c '.[]')
 
           ##### C) Cron-liveness: rescue a starved daily-regen schedule ######
-          # GitHub silently drops `schedule` ticks for daily-regen (the
-          # repo's most frequent cron) during scheduler overload — observed
-          # as multi-day gaps while this watchdog and bot-serving-check kept
-          # firing. daily-regen ticks are ≤6 h apart (2 h cadence plus the
-          # 18–21 UTC quiet window), so a >10 h silence means the schedule
-          # is starved; re-dispatch it manually with default inputs.
+          # GitHub silently drops `schedule` ticks for daily-regen during
+          # scheduler overload — observed as multi-day gaps (back when it
+          # was the repo's most frequent cron, every 2 h) while this watchdog
+          # and bot-serving-check kept firing. daily-regen now ticks once a
+          # day at 02:17 UTC, so a healthy gap never exceeds ~24 h; the
+          # 06:00 UTC scan is the first to see a dropped tick (~27 h 43 m
+          # since the previous night), hence >26 h means the schedule is
+          # starved and the missed night's run is re-dispatched manually
+          # with default inputs. A threshold near 10 h would fire a second
+          # run every day.
           # Hours 17–21 UTC are skipped so the rescue never launches a
           # pipeline into the fixed 18–21 UTC quiet window the cron itself
           # deliberately avoids (17 included because bulk-generate starts
           # immediately after dispatch and would spill into it). Like the
           # cron, the window is UTC-fixed: it matches Berlin evening under
           # CEST and sits an hour earlier in local terms under CET.
-          LIVENESS_HOURS=10
+          LIVENESS_HOURS=26
           HOUR=$(date -u +%-H)
           # A manually disabled daily-regen is a deliberate pause (e.g. while a
           # sequential backfill owns the rate limit), not a starved schedule:
