@@ -2,60 +2,65 @@ library: pygal
 language: python
 specification_id: bubble-basic
 created: 2025-12-14 11:08:57+00:00
-updated: '2026-05-28T18:00:13Z'
+updated: '2026-09-26T22:48:40Z'
 generated_by: claude-sonnet
-workflow_run: 26591082721
+workflow_run: 36276639562
 issue: 755
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.15
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/pygal/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Full spec compliance — correct bubble chart with x/y/size dimensions, area-scaled
-    tier sizing, transparency, and a size/color legend
-  - Clever tier-based sizing workaround for pygal's lack of per-point size API, with
-    sqrt scaling for perceptual area accuracy
-  - 'Effective focal point: amber (#DDCC77) Peak Congestion city immediately draws
-    the eye as the visual anchor'
-  - 'Both light and dark themes render correctly — #FAF8F1 / #1A1A17 backgrounds,
-    theme-adaptive chrome, all text readable in both renders'
-  - 'imprint_seq colormap correctly applied: #009E73 → #4467A3 gradient across 8 tiers
-    encodes green space as a continuous variable'
-  - 'Perfect code quality: np.random.seed(42), clean imports, KISS structure, HTML
-    + PNG outputs both saved'
-  - Realistic and neutral city-comparison scenario with plausible data relationships
-    (density → commute ↑, density → green space ↓)
+  - 'First series correctly uses brand green #009E73; the 4 size tiers interpolate
+    along the imprint_seq green→blue gradient exactly as prescribed for continuous/binned
+    data, and the focal bubble uses ANYPLOT_AMBER as an out-of-pool accent'
+  - Area-scaled bubble sizing (sqrt of normalized value) gives perceptually accurate
+    size differences instead of naive radius scaling
+  - Alpha=0.70 transparency directly follows the spec's guidance to handle overlapping
+    bubbles, with opacity_hover=0.95 for interactive emphasis
+  - The highest-congestion city is pulled out as a dedicated amber '★ Congestion Hotspot'
+    series, giving the chart a clear focal point and a data story (inverse coverage/congestion
+    relationship)
+  - 'Both renders are theme-correct: #FAF8F1/#1A1A17 backgrounds, ink and grid tokens
+    flip correctly, and data colors are identical between light and dark'
+  - Rich per-point tooltips (coverage/congestion/vehicle values formatted with units)
+    are a genuine value-add for the HTML detail view, appropriately not penalized
+    for being invisible in the static PNG
+  - Reproducible via np.random.seed(42), clean imports, correct plot-{THEME}.png/.html
+    output naming
   weaknesses:
-  - 'DE-02 limited by pygal: no spine removal possible via the API, so top/right frame
-    lines remain — reduces visual refinement score'
-  - 'Legend crowding: 9 entries (8 tiers + amber focal) in 4 columns at the bottom
-    is functional but somewhat dense; consider reducing to 5 tiers or abbreviating
-    tier labels to free vertical space for the plot area'
-  - The green → blue gradient across 8 tiers produces visually similar mid-range bubbles;
-    size differences between adjacent tiers are subtle and can be hard to distinguish
-    without the legend
-  - 'DE-01: design is thoughtful but the overall aesthetic still reads as a pygal
-    default — no additional polishing touches (e.g. no stroke on markers for separation
-    on overlapping bubbles) that would push it to a higher aesthetic tier'
+  - Bubble size is quantized into only 4 discrete tiers (a pygal API constraint, noted
+    in the code comments) rather than continuous per-point sizing, so the size legend
+    maps ranges rather than exact values — acceptable given the library limitation
+    but a real loss of precision for the third dimension
+  - Dense clusters (~35–40% and ~65–75% transit coverage) have heavy bubble overlap
+    where several same-tier bubbles nearly fuse into a single blob even at alpha=0.70
+    — consider a touch more transparency or slight jitter in those clusters
+  - Color tier and size tier encode the exact same underlying variable (vehicle registrations),
+    so color is fully redundant with size rather than adding independent information
+    — a reasonable legibility aid but not additional data storytelling
+  - Visual refinement is mostly limited to palette/opacity tuning; pygal's default
+    grid and chrome otherwise carry the look, so it reads as polished but not deeply
+    customized
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correctly applied, not pure white.
-      Chrome: Title "bubble-basic · python · pygal · anyplot.ai" is dark text, clearly readable, spans ~55% of plot width. X-axis label "Population Density (people/km²)" and Y-axis label "Avg Commute Time (min)" both dark and readable with units. Tick labels (2,000–13,000 on x; 16.0–32.0 on y) are dark and legible. Subtle grid lines in both directions.
-      Data: 50 city bubbles rendered in an 8-tier imprint_seq gradient from brand green (#009E73) at the low end to blue (#4467A3) at the high end, encoding green space percentage. The amber (#DDCC77) Peak Congestion focal city at the upper right (~12,500 density, ~32 min commute) stands out clearly. Bubble sizes scale from small (low green space) to large (high green space) via sqrt area scaling.
-      Legibility verdict: PASS — all text elements are readable against the light background; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1), matches spec exactly.
+      Chrome: Title "bubble-basic · python · pygal · anyplot.ai" centered at top in dark ink, fully visible, not clipped. X-axis title "Public Transit Coverage (%)" and Y-axis title "Traffic Congestion Index" both dark and legible. Tick labels (10%-90% on x, 20-90 on y) dark and readable. Gridlines are faint dashed lines, subtle but visible. Legend at bottom in 3 columns with small color swatches and text, all readable.
+      Data: ~50 bubbles arranged in a downward-sloping band (higher transit coverage -> lower congestion). First/lowest size tier is brand green (#009E73), then a teal, a blue-teal, and blue for increasing vehicle-registration tiers, plus one large amber (#DDCC77) bubble marked as the "Congestion Hotspot" near the top-left. Bubbles are alpha-blended (~0.70) so overlaps show as darker blended regions rather than hard occlusion.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correctly applied, not pure black.
-      Chrome: Title, axis labels, tick labels all rendered in light text (#F0EFE8 tone), clearly readable against the dark background. Grid lines subtle but visible. No dark-on-dark failures observed.
-      Data: Bubble colors are identical to the light render — the imprint_seq gradient from #009E73 to #4467A3 is unchanged, and the amber Peak Congestion bubble is the same #DDCC77. Only the chrome (background, text, grid) flips to the dark theme.
-      Legibility verdict: PASS — all text is light-colored and readable on the dark surface; brand green #009E73 remains clearly visible.
+      Background: Warm near-black (#1A1A17), matches spec exactly.
+      Chrome: Same title and axis titles now rendered in light ink (near-white), fully visible against the dark background, no dark-on-dark issues anywhere (title, axis titles, tick labels, and legend text are all light-colored and clearly legible). Gridlines are faint light dashed lines, subtle but visible on the dark surface. Legend swatches and text at bottom are readable.
+      Data: Same bubble layout and identical data colors as the light render (green/teal/blue-teal/blue tiers, amber hotspot bubble) — only the chrome (background, text, grid) flipped, confirming palette compliance across themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -63,53 +68,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
-          legend=44) and proportions are good. Legend text is on the smaller side
-          but legible.
+        comment: Explicit font sizes (title 66, axis 56, ticks 44, legend 44), all
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap. Bubble-to-bubble data overlap is expected and handled
-          with 70% opacity.
+        comment: No text collisions; bubble overlap is a data-driven design choice
+          per spec notes, not a text issue
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bubbles well-visible with dots_size 27–72 range across tiers. Opacity
-          0.70 handles overlap appropriately for 50 points.
+        comment: Alpha=0.70 handles overlap reasonably, but a few dense clusters nearly
+          fuse into single blobs
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green→blue) is perceptually uniform and CVD-safe. Amber
-          focal point is distinct under all CVD types.
+        comment: Green-to-blue sequential ramp plus amber accent; no red-green-only
+          encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas 3200×1800 correctly used. Good data coverage. Bottom legend
-          with 9 entries and margin_bottom=200 works but reduces vertical plot area
-          slightly.
+        comment: 3200x1800 canvas gate passed; no clipping, good margins, balanced
+          proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Population Density (people/km²)'', Y: ''Avg Commute Time (min)''
-          — both descriptive with units.'
+        comment: Descriptive axis titles with unit (%) on x-axis
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (#009E73 → #4467A3) used correctly for continuous green-space
-          variable. Amber (#DDCC77) for focal semantic role. Backgrounds #FAF8F1/#1A1A17.
-          Theme-adaptive INK/INK_MUTED for all chrome.'
+        comment: 'First series #009E73; imprint_seq-style green→blue gradient for
+          the binned continuous variable; correct theme backgrounds both renders'
     design_excellence:
       score: 12
       max: 20
@@ -119,25 +120,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Thoughtful design: imprint_seq gradient for continuous encoding,
-          amber focal point, custom font family. Above defaults but not at publication
-          level — no marker stroke for overlap definition, limited by pygal''s styling
-          options.'
+        comment: Custom sequential palette, area-accurate sizing, and a highlighted
+          focal bubble show real design intent
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Opacity set, custom fonts, tier legend organized. Pygal doesn't support
-          spine removal, so top/right frame lines remain. Standard grid.
+        comment: Subtle grid and tuned opacity, but otherwise relies on pygal defaults
+          for chrome
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: amber Peak Congestion focal point immediately
-          draws attention. The positive density→commute correlation is visible. The
-          imprint_seq color gradient encodes the green-space story.'
+        comment: Amber 'Congestion Hotspot' bubble gives a clear focal point and narrative
+          anchor on top of the visible trend
     spec_compliance:
       score: 15
       max: 15
@@ -147,29 +145,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bubble chart using pygal.XY with stroke=False and per-series
-          dots_size for variable bubble sizes.
+        comment: Correct XY bubble chart with x, y, and size all encoded
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-scaled sizing (sqrt), transparency (opacity=0.70), size/color
-          legend, min visible, max not overwhelming — all present.
+        comment: Size legend, alpha transparency, area scaling, and bounded min/max
+          bubble sizes all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=population density, Y=commute time, size=green space tier. All
-          50 points visible across full data range.
+        comment: x=coverage, y=congestion correctly mapped; axes show the full data
+          range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'bubble-basic · python · pygal · anyplot.ai'. Legend
-          shows all 8 tiers with range labels plus amber focal entry.
+        comment: Title matches the mandated format exactly; legend labels are clear
+          tier ranges
     data_quality:
       score: 14
       max: 15
@@ -179,23 +176,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows all bubble chart aspects — scatter positioning, size variation,
-          color encoding of third variable, focal point annotation. Adjacent tier
-          size differences are subtle.
+        comment: All three dimensions shown; size is quantized into 4 tiers rather
+          than fully continuous
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: City comparison (density vs commute, green space as bubble) is a
-          classic, neutral, real-world bubble chart use case.
+        comment: City transit/congestion/vehicle-ownership data is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Density 1,500–14,000/km², commute 15–32 min, green space 5–55% —
-          all realistic for major cities.
+        comment: Coverage 10-95%, congestion 15-95, vehicles 150-700/1000 all realistic
     code_quality:
       score: 10
       max: 10
@@ -205,36 +199,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean top-level flow: imports → data → style → chart build → save.
-          No functions or classes.'
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, numpy, pygal, pygal.style.Style — all used.
+        comment: os, sys, numpy, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Tier workaround is appropriate given pygal's API limitation. sys.path
-          manipulation is well-commented. No over-engineering.
+        comment: No fake UI; tiering logic is a documented workaround for a real API
+          limitation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png using current pygal
-          API.
+        comment: Saves plot-{THEME}.png and .html via render_to_png/render_to_file
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -242,27 +234,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of Style object, per-series dots_size, legend_at_bottom_columns,
-          x_value_formatter, tooltip_fancy_mode. Tier workaround is a necessary compromise.
+        comment: Proper Style object usage, XY chart, per-series dots_size as the
+          idiomatic workaround for no per-point size API
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses pygal's interactive HTML export, tooltip_fancy_mode with rich
-          labels, legend_at_bottom layout, and creative tier-based sizing to work
-          around the per-point size limitation.
+        comment: Fancy tooltip mode with detailed, formatted per-point labels is a
+          genuine pygal-specific strength
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
   - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - binning
-  - normalization
   styling:
+  - custom-colormap
   - alpha-blending
+  - publication-ready
