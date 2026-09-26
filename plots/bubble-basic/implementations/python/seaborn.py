@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-28
@@ -19,8 +19,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# anyplot palette — canonical order, first series always #009E73
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+# Imprint palette — canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data — Countries: healthcare spending vs child mortality, bubble = population
 np.random.seed(42)
@@ -31,7 +31,7 @@ tier_params = [
     ("Upper-Middle Income", 950, 3200, 14, 5, 12),
     ("High Income", 3200, 8500, 5, 2, 12),
 ]
-tier_colors = {t[0]: ANYPLOT_PALETTE[i] for i, t in enumerate(tier_params)}
+tier_colors = {t[0]: IMPRINT_PALETTE[i] for i, t in enumerate(tier_params)}
 
 rows = []
 for tier, s_min, s_max, m_ctr, m_std, n in tier_params:
@@ -79,7 +79,7 @@ sns.scatterplot(
     size="Population (M)",
     hue="Income Tier",
     hue_order=hue_order,
-    sizes=(50, 1200),
+    sizes=(40, 900),
     alpha=0.72,
     palette=tier_colors,
     edgecolor=PAGE_BG,
@@ -97,13 +97,13 @@ title_fontsize = max(8, round(12 * ratio))
 ax.set_xlabel("Healthcare Spending ($ / year)", fontsize=10, color=INK)
 ax.set_ylabel("Child Mortality (per 1,000 births)", fontsize=10, color=INK)
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, length=0)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8)
-ax.xaxis.grid(True, alpha=0.08, linewidth=0.5)
+ax.xaxis.grid(True, alpha=0.15, linewidth=0.8)
 
 # Move legend first, then configure the resulting object to avoid losing changes
 sns.move_legend(ax, "upper right", frameon=True)
