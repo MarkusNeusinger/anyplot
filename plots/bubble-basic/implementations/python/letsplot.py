@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: letsplot 4.11.0 | Python 3.13.15
 Quality: 88/100 | Updated: 2026-09-26
@@ -16,6 +16,7 @@ from lets_plot import (
     element_rect,
     element_text,
     geom_point,
+    geom_smooth,
     ggplot,
     ggsave,
     ggsize,
@@ -69,8 +70,20 @@ df = pd.DataFrame(rows)
 # Plot
 plot = (
     ggplot(df, aes(x="payroll", y="win_pct", size="attendance", color="conference"))
+    + geom_smooth(
+        aes(x="payroll", y="win_pct"),
+        method="lm",
+        se=False,
+        color=INK_SOFT,
+        linetype="dashed",
+        size=0.8,
+        alpha=0.6,
+        inherit_aes=False,
+        show_legend=False,
+        tooltips="none",
+    )
     + geom_point(
-        alpha=0.65,
+        alpha=0.55,
         tooltips=layer_tooltips()
         .format("payroll", "${.0f}M")
         .format("win_pct", "{.1f}%")
@@ -80,12 +93,12 @@ plot = (
         .line("Win Rate|@win_pct")
         .line("Avg. Attendance|@attendance"),
     )
-    + scale_size_area(max_size=22, name="Avg. Attendance (K)", breaks=[15, 25, 35, 45])
+    + scale_size_area(max_size=19, name="Avg. Attendance (K)", breaks=[15, 25, 35, 45])
     + scale_color_manual(values=IMPRINT_PALETTE[:2], name="Conference")
     + scale_x_continuous(expand=[0.02, 5])
     + guides(
         color=guide_legend(nrow=1, override_aes={"size": 7}),
-        size=guide_legend(nrow=1, override_aes={"color": IMPRINT_PALETTE[0], "alpha": 0.65}),
+        size=guide_legend(nrow=1, override_aes={"color": IMPRINT_PALETTE[0], "alpha": 0.55}),
     )
     + labs(x="Team Payroll (Million USD)", y="Win Rate (%)", title="bubble-basic · python · letsplot · anyplot.ai")
     + theme_minimal()
@@ -96,9 +109,9 @@ plot = (
         # with panel_border=element_blank() (lets-plot 4.11.0 quirk).
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_border=element_blank(),
-        axis_title=element_text(size=12, color=INK),
+        axis_title=element_text(size=13, color=INK),
         axis_text=element_text(size=10, color=INK_SOFT),
-        plot_title=element_text(size=16, color=INK),
+        plot_title=element_text(size=18, color=INK),
         plot_margin=[30, 20, 20, 20],
         legend_title=element_text(size=10, color=INK),
         legend_text=element_text(size=10, color=INK_SOFT),
@@ -106,6 +119,8 @@ plot = (
         panel_grid_major=element_line(size=0.3, color=RULE),
         panel_grid_minor=element_blank(),
         legend_position="bottom",
+        legend_box="horizontal",
+        legend_spacing=20,
     )
     + ggsize(800, 450)
 )
