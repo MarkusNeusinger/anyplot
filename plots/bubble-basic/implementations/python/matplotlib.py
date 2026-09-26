@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-28
@@ -9,6 +9,7 @@ import os
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
 # Theme tokens
@@ -19,7 +20,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+# Imprint palette — 8 hues, canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data — tech company metrics: revenue vs growth with market cap as bubble size
 np.random.seed(42)
@@ -47,7 +49,7 @@ sectors = np.array(
     + ["Cloud/SaaS", "Cloud/SaaS", "Semiconductors", "E-Commerce", "Semiconductors", "E-Commerce"]
 )
 sector_names = ["Cloud/SaaS", "E-Commerce", "Semiconductors", "Social Media"]
-sector_colors = ANYPLOT_PALETTE[:4]
+sector_colors = IMPRINT_PALETTE[:4]
 
 # Scale bubble sizes by area for accurate visual perception (tuned for 3200×1800 canvas)
 size_scaled = (market_cap / market_cap.max()) * 580 + 30
@@ -87,33 +89,43 @@ for idx, label, offset in annotations:
         va="bottom",
         xytext=offset,
         textcoords="offset points",
-        arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.0, "connectionstyle": "arc3,rad=0.2"},
+        arrowprops={"arrowstyle": "-|>", "color": INK_SOFT, "lw": 1.1, "connectionstyle": "arc3,rad=0.2"},
         path_effects=[pe.withStroke(linewidth=2.5, foreground=PAGE_BG)],
     )
 
-# Size legend — lower left to avoid data overlap
+# Size legend — a real inset panel (matplotlib-native technique), lower left
 legend_caps = [25, 100, 300]
-legend_handles = [
-    ax.scatter([], [], s=(v / market_cap.max()) * 580 + 30, c=INK_MUTED, alpha=0.5, edgecolors=PAGE_BG, linewidths=0.8)
-    for v in legend_caps
-]
-size_legend = ax.legend(
-    legend_handles,
-    [f"${v}B" for v in legend_caps],
-    title="Market Cap",
-    title_fontsize=8,
-    fontsize=8,
+legend_ax = inset_axes(
+    ax,
+    width="20%",
+    height="30%",
     loc="lower left",
-    framealpha=0.95,
-    facecolor=ELEVATED_BG,
-    edgecolor=INK_SOFT,
-    scatterpoints=1,
-    labelspacing=1.4,
-    borderpad=0.9,
+    bbox_to_anchor=(0.015, 0.04, 1, 1),
+    bbox_transform=ax.transAxes,
+    borderpad=0,
 )
-plt.setp(size_legend.get_title(), color=INK_SOFT)
-plt.setp(size_legend.get_texts(), color=INK_SOFT)
-ax.add_artist(size_legend)
+legend_ax.set_facecolor(ELEVATED_BG)
+legend_ax.set_xlim(0, 1)
+legend_ax.set_ylim(0, 1)
+legend_ax.set_xticks([])
+legend_ax.set_yticks([])
+for spine in legend_ax.spines.values():
+    spine.set_color(INK_SOFT)
+    spine.set_linewidth(0.8)
+legend_ax.set_title("Market Cap", fontsize=8, color=INK_SOFT, loc="left", pad=4)
+for cap, y in zip(legend_caps, (0.18, 0.5, 0.84), strict=True):
+    legend_ax.scatter(
+        0.28,
+        y,
+        s=(cap / market_cap.max()) * 580 + 30,
+        color=INK_MUTED,
+        alpha=0.5,
+        edgecolors=PAGE_BG,
+        linewidths=0.8,
+        transform=legend_ax.transAxes,
+        clip_on=False,
+    )
+    legend_ax.text(0.55, y, f"${cap}B", fontsize=8, color=INK_SOFT, va="center", transform=legend_ax.transAxes)
 
 # Sector color legend — upper right
 sector_legend = ax.legend(
@@ -131,11 +143,14 @@ sector_legend = ax.legend(
 plt.setp(sector_legend.get_title(), color=INK_SOFT)
 plt.setp(sector_legend.get_texts(), color=INK_SOFT)
 
-# Style
-title = "bubble-basic · python · matplotlib · anyplot.ai"
+# Style — descriptive prefix gives the chart a single focal point (spec asks for a
+# realistic scenario; title fontsize scales down since the prefix pushes past the
+# 67-char baseline the style-guide default is tuned for)
+title = "Tech Sector Landscape · bubble-basic · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 ax.set_xlabel("Annual Revenue ($B)", fontsize=10, color=INK, labelpad=8)
 ax.set_ylabel("Revenue Growth Rate (%)", fontsize=10, color=INK, labelpad=8)
-ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=12)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=12)
 ax.tick_params(axis="both", labelsize=8, labelcolor=INK_SOFT, length=0)
 
 for spine in ax.spines.values():
