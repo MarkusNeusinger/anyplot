@@ -12,7 +12,7 @@
   page outranked it. Languages now follow the registry order (Python first)
   everywhere on both page types. `TEMPLATE_LAST_CHANGED` moves to 2026-09-26,
   which also signals the library-first meta descriptions of 2026-09-02 that
-  shipped without a bump.
+  shipped without a bump. (#11844)
 
 ### Fixed
 
@@ -21,4 +21,4 @@
   types now carry a `WebPage` node (`CollectionPage` on the hub) whose
   `primaryImageOfPage` is the exact URL of the render in the body, and the
   implementation's `SoftwareSourceCode` node is marked as the page's main
-  entity. `og:image` stays the card for link previews.
+  entity. `og:image` stays the card for link previews. (#11844)
