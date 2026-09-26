@@ -1,7 +1,7 @@
 # anyplot.ai
 # bubble-basic: Basic Bubble Chart
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 88/100 | Created: 2026-05-28
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 94/100 | Updated: 2026-09-26
 
 using CairoMakie
 using Colors
@@ -15,14 +15,14 @@ const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
-const BRAND       = colorant"#009E73"
+const IMPRINT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])  # sequential — brand green -> blue
 
 # Data — product portfolio with a visible narrative:
 #   higher price correlates with better ratings (premium positioning),
-#   but mid-range products (~$150–$280) capture the highest sales volume
+#   but mid-range products (~$150-280) capture the highest sales volume
 n          = 65
 price_norm = rand(n)                          # uniform [0, 1]
-price      = 20.0 .+ 480.0 .* price_norm     # $20–$500
+price      = 20.0 .+ 480.0 .* price_norm     # $20-$500
 
 # Rating rises with price (r ≈ 0.65): premium commands better quality perception
 quality = clamp.(1.5 .+ 2.5 .* price_norm .+ 0.45 .* randn(n), 1.5, 4.5)
@@ -71,27 +71,44 @@ ax = Axis(
     ygridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
-scatter!(ax, price, quality;
-    color       = RGBAf(BRAND.r, BRAND.g, BRAND.b, 0.6f0),
-    markersize  = marker_sizes,
-    strokewidth = 1.0,
-    strokecolor = RGBAf(BRAND.r, BRAND.g, BRAND.b, 0.9f0),
+# Highlight the mid-range sweet spot where sales peak — makes the DE-03
+# narrative explicit instead of leaving it implicit in the data alone.
+vspan!(ax, 150.0, 280.0; color = RGBAf(INK.r, INK.g, INK.b, 0.06))
+text!(ax, 215.0, 4.55;
+    text     = "peak sales zone",
+    align    = (:center, :bottom),
+    fontsize = 12,
+    color    = INK_SOFT,
 )
 
-# Size legend — reference bubbles showing annual sales scale
+# Dual-encode annual sales through both bubble size (area) and fill color
+# (Imprint sequential ramp) — a second visual hierarchy device beyond size
+# alone, addressing DE-01's monochromatic-only critique.
+scatter!(ax, price, quality;
+    color       = sales,
+    colormap    = IMPRINT_SEQ,
+    colorrange  = (s_min, s_max),
+    markersize  = marker_sizes,
+    alpha       = 0.75,
+    strokewidth = 1.0,
+    strokecolor = RGBAf(INK.r, INK.g, INK.b, 0.35),
+)
+
+# Size + color legend — reference bubbles show both encodings of annual sales
 ref_vals = [10, 40, 70, 100]
 ref_norm = clamp.((Float64.(ref_vals) .- s_min) ./ (s_max - s_min), 0.0, 1.0)
 ref_ms   = 10.0 .+ 55.0 .* sqrt.(ref_norm)
+ref_cols = [(c = get(IMPRINT_SEQ, t); RGBAf(c.r, c.g, c.b, 0.75f0)) for t in ref_norm]
 
 legend_elems = [
     MarkerElement(
-        color       = RGBAf(BRAND.r, BRAND.g, BRAND.b, 0.6f0),
+        color       = ref_cols[i],
         marker      = :circle,
-        markersize  = ms,
+        markersize  = ref_ms[i],
         strokewidth = 1.0,
-        strokecolor = RGBAf(BRAND.r, BRAND.g, BRAND.b, 0.9f0),
+        strokecolor = RGBAf(INK.r, INK.g, INK.b, 0.35),
     )
-    for ms in ref_ms
+    for i in eachindex(ref_ms)
 ]
 
 Legend(fig[1, 2], legend_elems, string.(ref_vals) .* " units", "Annual Sales";
