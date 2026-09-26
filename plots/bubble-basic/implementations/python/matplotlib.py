@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: matplotlib 3.11.2 | Python 3.13.15
-Quality: 93/100 | Updated: 2026-09-26
+Quality: 91/100 | Updated: 2026-09-26
 """
 
 import os
