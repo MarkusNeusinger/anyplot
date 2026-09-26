@@ -1,11 +1,9 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 92/100 | Created: 2026-05-28
+Quality: pending | Updated: 2026-09-26
 """
 
-import base64
-import io
 import os
 import time
 from pathlib import Path
@@ -15,7 +13,6 @@ from bokeh.io import output_file, save
 from bokeh.models import BoxAnnotation, ColumnDataSource, HoverTool, Label, LinearColorMapper, Range1d
 from bokeh.plotting import figure
 from bokeh.transform import transform
-from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -144,9 +141,8 @@ p.yaxis.major_tick_line_color = INK_SOFT
 p.xaxis.minor_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
 
-p.xgrid.grid_line_color = INK
+p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = INK
-p.xgrid.grid_line_alpha = 0.12
 p.ygrid.grid_line_alpha = 0.12
 
 # Size legend — anchored above the main data cluster (top region is empty due to correlation)
@@ -176,7 +172,7 @@ p.add_layout(
         x=legend_cx,
         y=legend_top - y_range * 0.01,
         text="Green Space",
-        text_font_size="30pt",
+        text_font_size="38pt",
         text_font_style="bold",
         text_color=INK,
         text_align="center",
@@ -201,7 +197,7 @@ for i, (sz, lbl, gv) in enumerate(zip(ref_sizes, ref_labels, ref_green, strict=T
             x=legend_cx + x_range * 0.01,
             y=ly,
             text=lbl,
-            text_font_size="26pt",
+            text_font_size="34pt",
             text_baseline="middle",
             text_color=INK_SOFT,
         )
@@ -211,8 +207,9 @@ for i, (sz, lbl, gv) in enumerate(zip(ref_sizes, ref_labels, ref_green, strict=T
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Save PNG via headless Chrome — use captureBeyondViewport so browser chrome
-# overhead (~139px) doesn't truncate the canvas height
+# Save PNG via headless Chrome — pin the viewport exactly via CDP, since
+# --window-size sets the OUTER window and still reserves a phantom title-bar
+# height even headless, which would shrink the screenshot below H.
 W, H = 3200, 1800
 opts = Options()
 for arg in (
@@ -227,7 +224,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
-screenshot = driver.execute_cdp_cmd("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": True})
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
-Image.open(io.BytesIO(base64.b64decode(screenshot["data"]))).save(f"plot-{THEME}.png")
