@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: plotly 7.1.0 | Python 3.13.15
 Quality: 88/100 | Updated: 2026-09-26
@@ -68,17 +68,8 @@ fig.add_trace(
             "cmin": cmin,
             "cmax": cmax,
             "colorscale": imprint_seq,
-            "colorbar": {
-                "title": {"text": "Revenue<br>($ millions)", "font": {"size": 12, "color": INK}},
-                "tickfont": {"size": 10, "color": INK_SOFT},
-                "thickness": 16,
-                "len": 0.65,
-                "y": 0.5,
-                "bgcolor": ELEVATED_BG,
-                "bordercolor": INK_SOFT,
-                "borderwidth": 0.5,
-            },
-            "opacity": 0.75,
+            "showscale": False,
+            "opacity": 0.65,
             "line": {"width": 1.5, "color": PAGE_BG},
         },
         hovertemplate=(
@@ -90,10 +81,10 @@ fig.add_trace(
     )
 )
 
-# Size legend — three reference bubbles, tinted along imprint_seq so the swatch
-# color matches what a real data bubble of that revenue would render (avoids a
-# flat-green swatch implying a value that the colorbar would actually show as blue)
-for size_label in [100, 500, 1500]:
+# Size legend — three reference bubbles (anchored near the data's min/mid/max
+# revenue), tinted along imprint_seq so the swatch color matches what a real
+# data bubble of that revenue would render
+for size_label in [100, 600, 2000]:
     t = max(0.0, min(1.0, (size_label - cmin) / (cmax - cmin)))
     r, g, b = (imprint_seq_rgb[0] + (imprint_seq_rgb[1] - imprint_seq_rgb[0]) * t).round().astype(int)
     fig.add_trace(
@@ -107,7 +98,7 @@ for size_label in [100, 500, 1500]:
                 "sizeref": sizeref,
                 "sizemin": 9,
                 "color": f"#{r:02X}{g:02X}{b:02X}",
-                "opacity": 0.75,
+                "opacity": 0.65,
                 "line": {"width": 1.5, "color": PAGE_BG},
             },
             name=f"${size_label}M",
@@ -150,7 +141,7 @@ fig.update_layout(
         "xanchor": "left",
         "yanchor": "top",
     },
-    margin={"l": 80, "r": 160, "t": 80, "b": 60},
+    margin={"l": 80, "r": 60, "t": 80, "b": 60},
     annotations=[
         {
             "x": rd_pct[10],
