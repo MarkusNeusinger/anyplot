@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: altair 6.3.0 | Python 3.13.15
-Quality: 86/100 | Created: 2026-09-26
+Quality: 88/100 | Created: 2026-09-26
 """
 
 import os

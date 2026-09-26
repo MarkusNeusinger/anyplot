@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: bubble-basic
 created: 2025-12-14 11:07:38+00:00
-updated: '2026-09-26T22:36:24Z'
+updated: '2026-09-26T22:43:29Z'
 generated_by: claude-sonnet
 workflow_run: 36276413067
 issue: 755
@@ -12,38 +12,10 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
-  strengths:
-  - 'First categorical series is #009E73 (Seed) and the remaining Stage colors follow
-    the Imprint canonical order (purple, blue, ochre) — VQ-07 compliant in both themes.'
-  - Bubble size is encoded by area via alt.Size with a legend that shows concrete
-    Employees values (50/200/500/900), satisfying the spec's 'include a size legend'
-    and 'scale by area' requirements.
-  - Alpha 0.6 (0.9 for the top-3 labeled bubbles) manages overlap well per the spec's
-    transparency guidance, and a white/PAGE_BG stroke keeps individual bubbles distinguishable
-    in dense clusters.
-  - 'Layered composition adds data-storytelling: the three highest-revenue companies
-    are labeled directly on the chart with collision-avoiding dy offsets, and a deliberate
-    high-funding/low-revenue outlier is included to demonstrate the chart''s full
-    dynamic range.'
-  - Theme-adaptive chrome is threaded correctly end to end — title/axis/tick/legend
-    colors, gridColor/gridOpacity, and PAGE_BG/ELEVATED_BG all branch on ANYPLOT_THEME,
-    and both renders land exactly on the padded 3200×1800 canvas.
-  - 'Clean altair code: no helper functions, np.random.seed(42) for reproducibility,
-    only imports that are actually used, correct plot-{THEME}.png/.html output naming.'
-  weaknesses:
-  - Employees (the bubble-size column) ranges ~15–900, well outside the specification's
-    recommended 10–100 size-column range — it's realistic as a headcount metric, but
-    a strict reading of the spec's data guidance is not met; consider rescaling or
-    picking a size variable closer to the recommended range.
-  - 'Design Excellence is solid but not exceptional: the legend/annotation styling
-    is competent rather than distinctive, and the visual hierarchy relies mainly on
-    the three text labels rather than additional emphasis techniques (e.g. size/opacity
-    contrast for the outlier).'
-  - Library Mastery is good but conventional — encodes size/color/tooltip via the
-    standard Altair API; no distinctive Altair-only feature (e.g. selection/interactive
-    filtering, faceting, or a custom Vega-Lite transform) is demonstrated beyond layering.
+  strengths: []
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
