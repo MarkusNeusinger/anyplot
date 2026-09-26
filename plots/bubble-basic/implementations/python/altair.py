@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 87/100 | Created: 2026-05-29
+Library: altair 6.3.0 | Python 3.13.15
+Quality: 88/100 | Created: 2026-09-26
 """
 
 import os
@@ -19,8 +19,9 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-stage_colors = ANYPLOT_PALETTE[:4]
+# Imprint palette (canonical order)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+stage_colors = IMPRINT_PALETTE[:4]
 
 # Data — tech startup metrics: funding vs revenue, sized by employees, colored by stage
 np.random.seed(42)
@@ -71,11 +72,9 @@ bubbles = (
     alt.Chart(df)
     .mark_circle(stroke=PAGE_BG, strokeWidth=1.5)
     .encode(
-        x=alt.X(
-            "Funding ($M):Q", scale=alt.Scale(domain=[0, 85], nice=False), axis=alt.Axis(domainWidth=0, tickSize=6)
-        ),
+        x=alt.X("Funding ($M):Q", scale=alt.Scale(domain=[0, 85], nice=False), axis=alt.Axis(domain=False, tickSize=6)),
         y=alt.Y(
-            "Revenue ($M):Q", scale=alt.Scale(domain=[0, 110], nice=False), axis=alt.Axis(domainWidth=0, tickSize=6)
+            "Revenue ($M):Q", scale=alt.Scale(domain=[0, 110], nice=False), axis=alt.Axis(domain=False, tickSize=6)
         ),
         size=alt.Size(
             "Employees:Q",
@@ -85,7 +84,7 @@ bubbles = (
                 titleFontSize=10,
                 labelFontSize=10,
                 values=[50, 200, 500, 900],
-                symbolFillColor=ANYPLOT_PALETTE[0],
+                symbolFillColor=IMPRINT_PALETTE[0],
                 symbolStrokeColor=PAGE_BG,
                 symbolOpacity=0.65,
                 direction="vertical",
@@ -114,7 +113,7 @@ _labeled = df[df["label"] != ""].sort_values("Revenue ($M)", ascending=False).re
 _dy_offsets = [-15, 12, -15]
 _annotation_layers = [
     alt.Chart(_labeled.iloc[[k]])
-    .mark_text(align="right", dx=-10, dy=_dy_offsets[k], fontSize=10, fontWeight="bold")
+    .mark_text(align="right", dx=-10, dy=_dy_offsets[k], fontSize=12, fontWeight="bold")
     .encode(x="Funding ($M):Q", y="Revenue ($M):Q", text="label:N", color=alt.value(INK))
     for k in range(len(_labeled))
 ]
@@ -141,7 +140,6 @@ chart = (
     )
     .configure_view(fill=PAGE_BG, strokeWidth=0, continuousWidth=620, continuousHeight=320)
     .configure_axis(
-        domainColor=INK_SOFT,
         tickColor=INK_SOFT,
         gridColor=INK,
         gridOpacity=0.15,
