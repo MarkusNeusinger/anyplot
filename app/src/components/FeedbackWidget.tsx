@@ -17,9 +17,11 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
 
 import { useAnalytics } from 'src/hooks';
+import { useFooterLift } from 'src/hooks/useFooterLift';
 import { useLocalStorage } from 'src/hooks/useLocalStorage';
 import { apiPost, endpoints } from 'src/lib/api';
 import { specIdFromPath } from 'src/routes/paths';
+import { FAB_GAP, FAB_INSET, FAB_SIZE, FAB_SLOT_ABOVE, MINI_FAB_SIZE } from 'src/theme';
 import { FEEDBACK_SESSION_KEY, newFeedbackSessionId } from 'src/utils/feedback';
 
 const MAX_MESSAGE_LENGTH = 500;
@@ -28,8 +30,8 @@ const THANKS_TIMEOUT_MS = 1200;
 // Floating quick-action buttons sit on the page background so they read as
 // chips rather than coloured CTAs — the main FAB stays the only primary mark.
 const miniFabSx = {
-  width: 40,
-  height: 40,
+  width: MINI_FAB_SIZE,
+  height: MINI_FAB_SIZE,
   bgcolor: 'var(--bg-surface)',
   color: 'var(--ink)',
   opacity: 0.85,
@@ -66,58 +68,9 @@ export function FeedbackWidget() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Number of pixels the footer currently overlaps the viewport — used to lift
-  // the FAB stack so it cannot drift over the footer's last-line links once the
-  // page is fully scrolled. When the footer is offscreen, lift stays at 0 and
-  // the FAB sits at its normal corner position.
-  const [lift, setLift] = useState(0);
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const footer = document.querySelector('footer');
-    if (!footer) return;
-    let rafId = 0;
-    const update = () => {
-      // Only narrow mobile viewports actually collide — at MUI's sm breakpoint
-      // and above the footer's last link sits well left of the FAB column.
-      if (window.innerWidth >= 600) {
-        setLift(0);
-        return;
-      }
-      const r = footer.getBoundingClientRect();
-      setLift(Math.max(0, window.innerHeight - r.top));
-    };
-    const schedule = () => {
-      if (rafId) return;
-      rafId = window.requestAnimationFrame(() => {
-        rafId = 0;
-        update();
-      });
-    };
-    update();
-    window.addEventListener('scroll', schedule, { passive: true });
-    window.addEventListener('resize', schedule);
-    // On a direct deep link to a spec page the page is initially short — data
-    // and images stream in over the next ~hundred ms — so on first paint the
-    // footer sits high in the layout and the FAB lifts dramatically before
-    // settling. Watch the body for size changes so the FAB drops back to the
-    // corner once content stabilises.
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(schedule) : null;
-    ro?.observe(document.body);
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', schedule);
-      window.removeEventListener('resize', schedule);
-      ro?.disconnect();
-    };
-  }, []);
-  // Default FAB center on xs is 32px from viewport bottom (bottom 12 + half of
-  // 40). Once the footer enters far enough to cross that line, lift the stack
-  // so the footer's top edge runs exactly through the FAB centre.
-  const FAB_CENTER_FROM_BOTTOM_XS = 32;
-  const liftTransform =
-    lift > FAB_CENTER_FROM_BOTTOM_XS
-      ? `translateY(-${lift - FAB_CENTER_FROM_BOTTOM_XS}px)`
-      : 'none';
+  // Lifts the FAB stack clear of the footer's links on narrow viewports; the
+  // scroll-to-top button beside it applies the same transform.
+  const liftTransform = useFooterLift();
 
   const [sessionId, setSessionId] = useLocalStorage<string>(FEEDBACK_SESSION_KEY, '');
 
@@ -160,6 +113,8 @@ export function FeedbackWidget() {
     if (mode === 'closed') {
       setMode('quick');
       setError(null);
+      // The toast shares the slot above the FAB with the quick stack.
+      setThanksVisible(false);
       trackEvent('feedback_opened', { path: getCurrentPath() || undefined });
     } else {
       setMode('closed');
@@ -267,12 +222,12 @@ export function FeedbackWidget() {
         aria-expanded={mode !== 'closed'}
         sx={{
           position: 'fixed',
-          bottom: { xs: 12, sm: 16 },
-          right: { xs: 12, sm: 16 },
+          bottom: FAB_INSET,
+          right: FAB_INSET,
           zIndex: 1300,
-          width: { xs: 40, sm: 48 },
-          height: { xs: 40, sm: 48 },
-          minHeight: { xs: 40, sm: 48 },
+          width: FAB_SIZE,
+          height: FAB_SIZE,
+          minHeight: FAB_SIZE,
           bgcolor: 'var(--bg-surface)',
           color: 'primary.main',
           opacity: { xs: 0.75, sm: 0.85 },
@@ -291,12 +246,12 @@ export function FeedbackWidget() {
             aria-label="Quick feedback"
             sx={{
               position: 'fixed',
-              right: { xs: 12, sm: 20 },
-              bottom: { xs: 60, sm: 72 },
+              right: FAB_SLOT_ABOVE.right,
+              bottom: FAB_SLOT_ABOVE.bottom,
               zIndex: 1301,
               display: 'flex',
               flexDirection: 'column',
-              gap: 1,
+              gap: `${FAB_GAP}px`,
               alignItems: 'center',
               transform: liftTransform,
             }}
@@ -338,14 +293,17 @@ export function FeedbackWidget() {
         </ClickAwayListener>
       )}
 
-      {thanksVisible && (
+      {/* Above the FAB, where the tapped 👍/👎 was — the slot left of the FAB
+          belongs to the scroll-to-top button. The mode guard covers a POST
+          that resolves after the quick stack was reopened into that slot. */}
+      {thanksVisible && mode === 'closed' && (
         <Box
           role="status"
           aria-live="polite"
           sx={{
             position: 'fixed',
-            right: { xs: 60, sm: 76 },
-            bottom: { xs: 16, sm: 22 },
+            right: FAB_INSET,
+            bottom: FAB_SLOT_ABOVE.bottom,
             bgcolor: 'var(--bg-elevated)',
             transform: liftTransform,
             color: 'var(--ink)',

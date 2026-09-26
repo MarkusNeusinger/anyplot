@@ -3,12 +3,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import Box from '@mui/material/Box';
-import Fab from '@mui/material/Fab';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 
+import { ScrollToTopFab } from 'src/components/ScrollToTopFab';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { GITHUB_URL } from 'src/constants';
 import { useAnalytics } from 'src/hooks';
@@ -48,7 +47,6 @@ export function SpecsListPage() {
   const [loading, setLoading] = useState(true);
   const [rotationIndex, setRotationIndex] = useState<Record<string, number>>({});
   const [expandedDescs, setExpandedDescs] = useState<Record<string, boolean>>({});
-  const [showScrollTop, setShowScrollTop] = useState(false);
 
   // Fetch all images
   useEffect(() => {
@@ -112,16 +110,6 @@ export function SpecsListPage() {
   if (specList.length > 0 && Object.keys(rotationIndex).length === 0) {
     setRotationIndex(initRotationIndices(specList));
   }
-
-  // Show/hide scroll-to-top button based on scroll position
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
-    };
-    // passive: true — handler doesn't preventDefault.
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   // Handle image click - rotate to next implementation
   const handleImageClick = useCallback(
@@ -400,24 +388,7 @@ export function SpecsListPage() {
         </Box>
       </Box>
 
-      {/* Floating scroll-to-top button */}
-      <Fab
-        size="small"
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        sx={{
-          position: 'fixed',
-          bottom: 24,
-          right: 24,
-          bgcolor: 'var(--bg-surface)',
-          color: semanticColors.mutedText,
-          opacity: showScrollTop ? 1 : 0,
-          visibility: showScrollTop ? 'visible' : 'hidden',
-          transition: 'opacity 0.3s, visibility 0.3s',
-          '&:hover': { bgcolor: 'var(--bg-elevated)', color: colors.primary },
-        }}
-      >
-        <KeyboardArrowUpIcon />
-      </Fab>
+      <ScrollToTopFab />
     </>
   );
 }

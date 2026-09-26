@@ -28,7 +28,8 @@ src/
                      useForceGraphSimulation, …) — barrel in index.ts
   lib/               Third-party/client isolation: api.ts (apiGet/apiPost,
                      ApiError, endpoints registry, fetchWithAuth)
-  theme/             tokens.ts (design tokens), palette/typography/components
+  theme/             tokens.ts (design tokens), floating-actions.ts (bottom-right
+                     FAB corner geometry), palette/typography/components
                      option modules, create-theme.ts; index.ts re-exports all
   utils/             Pure helpers (filters, fuzzySearch, responsiveImage, …)
   constants/         Domain constants (libraries, language maps); re-exports CONFIG

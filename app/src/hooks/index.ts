@@ -21,6 +21,7 @@ export type {
   MapGraphData,
 } from 'src/hooks/useForceGraphSimulation';
 export { useLatestRelease } from 'src/hooks/useLatestRelease';
+export { useFooterLift } from 'src/hooks/useFooterLift';
 export * from 'src/hooks/useFeaturedSpecs';
 export * from 'src/hooks/usePlotOfTheDay';
 export * from 'src/hooks/useTypewriter';
