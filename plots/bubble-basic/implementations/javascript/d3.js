@@ -42,7 +42,7 @@ const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.t
 const x = d3.scaleLinear().domain([0, d3.max(data, (d) => d.funding)]).nice().range([0, iw]);
 const y = d3.scaleLinear().domain(d3.extent(data, (d) => d.growth)).nice().range([ih, 0]);
 const teamExtent = d3.extent(data, (d) => d.team);
-const r = d3.scaleSqrt().domain(teamExtent).range([8, 34]);
+const r = d3.scaleSqrt().domain(teamExtent).range([8, 28]);
 
 // --- Gridlines --------------------------------------------------------------
 const gridX = g.append("g")
@@ -85,18 +85,20 @@ g.append("text")
 // A collision force gently nudges overlapping bubbles apart from their true
 // (funding, growth) position so the densest funding cluster (100-150) stays
 // individually legible instead of stacking 3-4 deep. The x/y forces pull each
-// node strongly back toward its real data coordinate, so the declutter only
-// perturbs points enough to relieve local crowding.
+// node back toward its real data coordinate; the anchor strength is loosened
+// (0.85 -> 0.7) and the collision padding widened (1.5 -> 4px) so the
+// densest cluster gets enough room to actually separate instead of just
+// nudging against its neighbors.
 data.forEach((d) => {
   d.x = x(d.funding);
   d.y = y(d.growth);
 });
 const declutter = d3.forceSimulation(data)
-  .force("x", d3.forceX((d) => x(d.funding)).strength(0.85))
-  .force("y", d3.forceY((d) => y(d.growth)).strength(0.85))
-  .force("collide", d3.forceCollide((d) => r(d.team) + 1.5))
+  .force("x", d3.forceX((d) => x(d.funding)).strength(0.7))
+  .force("y", d3.forceY((d) => y(d.growth)).strength(0.7))
+  .force("collide", d3.forceCollide((d) => r(d.team) + 4))
   .stop();
-for (let i = 0; i < 150; i++) declutter.tick();
+for (let i = 0; i < 220; i++) declutter.tick();
 
 // --- Bubbles --------------------------------------------------------------
 g.selectAll("circle.bubble").data(data).join("circle")
