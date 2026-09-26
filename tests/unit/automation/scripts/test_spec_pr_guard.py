@@ -73,16 +73,29 @@ class TestCheckRawDiff:
         raw = entry(f"plots/{SPEC}/specification.md") + entry(f"plots/{SPEC}/specification.yaml")
         assert check_raw_diff(raw, SPEC) == []
 
+    @pytest.mark.parametrize("missing", ["specification.md", "specification.yaml"])
+    def test_a_spec_pr_without_both_files_is_a_violation(self, missing: str) -> None:
+        present = "specification.yaml" if missing == "specification.md" else "specification.md"
+        raw = entry(f"plots/{SPEC}/{present}") + entry(f"plots/{SPEC}/metadata/python/.gitkeep")
+        violations = check_raw_diff(raw, SPEC)
+        assert len(violations) == 1
+        assert f"plots/{SPEC}/{missing}: missing" in violations[0]
+
     def test_placeholders_and_a_modified_spec_pass(self) -> None:
         raw = (
             entry(f"plots/{SPEC}/specification.md", status="M", old_mode="100644")
+            + entry(f"plots/{SPEC}/specification.yaml", status="M", old_mode="100644")
             + entry(f"plots/{SPEC}/implementations/python/.gitkeep")
             + entry(f"plots/{SPEC}/metadata/python/.gitkeep")
         )
         assert check_raw_diff(raw, SPEC) == []
 
     def test_one_stray_file_is_a_violation(self) -> None:
-        raw = entry(f"plots/{SPEC}/specification.md") + entry(".github/workflows/ci-tests.yml", "M", "100644")
+        raw = (
+            entry(f"plots/{SPEC}/specification.md")
+            + entry(f"plots/{SPEC}/specification.yaml")
+            + entry(".github/workflows/ci-tests.yml", "M", "100644")
+        )
         (violation,) = check_raw_diff(raw, SPEC)
         assert '".github/workflows/ci-tests.yml"' in violation
         assert "outside" in violation
@@ -99,14 +112,17 @@ class TestCheckRawDiff:
         ],
     )
     def test_only_regular_added_or_modified_files_pass(self, status: str, old_mode: str, new_mode: str) -> None:
-        raw = entry(f"plots/{SPEC}/specification.md", status, old_mode, new_mode)
+        raw = entry(f"plots/{SPEC}/specification.md", status, old_mode, new_mode) + entry(
+            f"plots/{SPEC}/specification.yaml"
+        )
         assert len(check_raw_diff(raw, SPEC)) == 1
 
     def test_an_empty_diff_is_a_violation(self) -> None:
         assert check_raw_diff("", SPEC) == ["the pull request changes no files"]
 
     def test_a_path_is_quoted_so_it_cannot_break_out_of_the_comment(self) -> None:
-        (violation,) = check_raw_diff(entry("x`\n## injected"), SPEC)
+        raw = entry("x`\n## injected") + entry(f"plots/{SPEC}/specification.md") + entry(f"plots/{SPEC}/specification.yaml")
+        (violation,) = check_raw_diff(raw, SPEC)
         assert violation.startswith('"x\\u0060\\n## injected"')
         assert "`" not in violation and "\n" not in violation
 

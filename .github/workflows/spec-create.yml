@@ -376,8 +376,12 @@ jobs:
           SPEC_ID=$(echo "$TITLE" | sed -n 's/^\[\([a-z0-9-]*\)\].*/\1/p')
 
           if [[ -z "$SPEC_ID" ]]; then
-            echo "::error::Could not extract specification ID from title: $TITLE"
-            exit 1
+            # A duplicate stops Claude before it renames the issue, so there is no
+            # id to extract. Hand over to the validate step, which closes the issue
+            # as a duplicate or fails with an issue comment.
+            echo "::warning::No specification ID in the issue title: $TITLE"
+            echo "specification_id=" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
           # Reserved spec slugs collide with top-level frontend routes.
@@ -407,8 +411,9 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
         run: |
-          # Check if specification directory was actually created
-          if [ ! -d "plots/${SPEC_ID}" ]; then
+          # Check if specification directory was actually created (an empty id
+          # means Claude never renamed the issue, which a duplicate also does)
+          if [ -z "$SPEC_ID" ] || [ ! -d "plots/${SPEC_ID}" ]; then
             echo "::warning::Specification directory not created - likely a duplicate"
 
             # Get Claude's comment to find duplicate info
@@ -541,8 +546,8 @@ jobs:
   # group and cancels the older pending run when another one queues, so the
   # shared `spec-merge-main` group this job used to have cancelled 7 of 10 batch
   # approvals on 2026-06-10. Spec PRs change disjoint directories and the main
-  # ruleset is not strict, so there is nothing to serialise across issues; the
-  # workflow-level group still serialises the runs of one issue.
+  # ruleset is not strict, so there is nothing to serialize across issues; the
+  # workflow-level group still serializes the runs of one issue.
   merge:
     if: >
       github.event.label.name == 'approved' &&

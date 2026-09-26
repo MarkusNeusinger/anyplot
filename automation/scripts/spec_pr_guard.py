@@ -88,6 +88,13 @@ def check_raw_diff(raw: str, spec_id: str) -> list[str]:
             violations.append(f"{shown}: mode {old_mode} -> {new_mode} (only regular 100644 files are allowed)")
     if not fields:
         violations.append("the pull request changes no files")
+    else:
+        # A spec PR that lacks either canonical file would still be labelled
+        # spec-ready, and no plots/-only check or the database sync would catch it.
+        paths = set(fields[1::2])
+        for name in ("specification.md", "specification.yaml"):
+            if f"plots/{spec_id}/{name}" not in paths:
+                violations.append(f"plots/{spec_id}/{name}: missing (a spec PR carries both specification files)")
     return violations
 
 

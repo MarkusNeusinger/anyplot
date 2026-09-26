@@ -35,7 +35,8 @@ branch state matches what the PR description claims.
    text); add and commit the fragment if missing, and run
    `uv run python -m tools.changelog check --base origin/main`, which is the same check the CI job
    "Changelog (fragment)" makes. Exempt: catalogue-only PRs (everything under `plots/`), automated
-   pipeline PRs (`github-actions[bot]`: spec-create, impl-*, auto-polish, daily-regen) and
+   pipeline PRs (`github-actions[bot]`: impl-*, daily-regen; spec-create and auto-polish open theirs
+   as `claude[bot]` and pass as `plots/`-only) and
    Dependabot bumps — those are aggregated at release time — plus a PR labelled `skip-changelog`.
    This rule is duplicated in `CLAUDE.md` and `.github/copilot-instructions.md`; keep all three in
    sync.
