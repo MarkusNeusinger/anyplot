@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-28
+Library: plotly 7.1.0 | Python 3.13.15
+Quality: 90/100 | Updated: 2026-09-26
 """
 
 import os
@@ -38,6 +38,17 @@ rd_pct[10], pmf[10], revenue_m[10] = 22, 92, 920  # efficient innovator
 
 # Bubble sizing via sizeref (Plotly's idiomatic area-based scaling)
 sizeref = 2.0 * float(revenue_m.max()) / (46.0**2)
+cmin, cmax = float(revenue_m.min()), float(revenue_m.max())
+
+
+def imprint_seq_color(value: float) -> str:
+    """Interpolate a revenue value into the imprint_seq (green→blue) colorscale."""
+    t = max(0.0, min(1.0, (value - cmin) / (cmax - cmin)))
+    c0 = np.array([0x00, 0x9E, 0x73])
+    c1 = np.array([0x44, 0x67, 0xA3])
+    r, g, b = (c0 + (c1 - c0) * t).round().astype(int)
+    return f"#{r:02X}{g:02X}{b:02X}"
+
 
 title = "bubble-basic · python · plotly · anyplot.ai"
 title_size = round(16 * 67 / len(title)) if len(title) > 67 else 16
@@ -55,8 +66,10 @@ fig.add_trace(
             "size": revenue_m,
             "sizemode": "area",
             "sizeref": sizeref,
-            "sizemin": 5,
+            "sizemin": 6,
             "color": revenue_m,
+            "cmin": cmin,
+            "cmax": cmax,
             "colorscale": imprint_seq,
             "colorbar": {
                 "title": {"text": "Revenue<br>($ millions)", "font": {"size": 12, "color": INK}},
@@ -66,7 +79,7 @@ fig.add_trace(
                 "y": 0.5,
                 "bgcolor": ELEVATED_BG,
                 "bordercolor": INK_SOFT,
-                "borderwidth": 1,
+                "borderwidth": 0.5,
             },
             "opacity": 0.75,
             "line": {"width": 1.5, "color": PAGE_BG},
@@ -80,7 +93,9 @@ fig.add_trace(
     )
 )
 
-# Size legend — three reference bubbles
+# Size legend — three reference bubbles, tinted along imprint_seq so the swatch
+# color matches what a real data bubble of that revenue would render (avoids a
+# flat-green swatch implying a value that the colorbar would actually show as blue)
 for size_label in [100, 500, 1500]:
     fig.add_trace(
         go.Scatter(
@@ -91,8 +106,8 @@ for size_label in [100, 500, 1500]:
                 "size": size_label,
                 "sizemode": "area",
                 "sizeref": sizeref,
-                "sizemin": 4,
-                "color": "#009E73",
+                "sizemin": 6,
+                "color": imprint_seq_color(size_label),
                 "opacity": 0.75,
                 "line": {"width": 1.5, "color": PAGE_BG},
             },
@@ -122,17 +137,34 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     legend={
-        "title": {"text": "Revenue", "font": {"size": 10, "color": INK}},
+        "title": {"text": "Revenue (size)", "font": {"size": 10, "color": INK}},
         "font": {"size": 10, "color": INK_SOFT},
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
-        "borderwidth": 1,
+        "borderwidth": 0.5,
         "x": 0.02,
         "y": 0.98,
         "xanchor": "left",
         "yanchor": "top",
     },
     margin={"l": 80, "r": 160, "t": 80, "b": 60},
+    annotations=[
+        {
+            "x": rd_pct[10],
+            "y": pmf[10],
+            "text": "Efficient innovator<br>(low R&D, high PMF)",
+            "font": {"size": 10, "color": INK},
+            "showarrow": True,
+            "arrowhead": 2,
+            "arrowcolor": INK_SOFT,
+            "ax": 40,
+            "ay": -40,
+            "bgcolor": ELEVATED_BG,
+            "bordercolor": INK_SOFT,
+            "borderwidth": 0.5,
+            "borderpad": 4,
+        }
+    ],
 )
 
 # Save
