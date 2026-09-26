@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: matplotlib 3.11.2 | Python 3.13.15
-Quality: 93/100 | Updated: 2026-09-26
+Quality: 91/100 | Updated: 2026-09-26
 """
 
 import os
@@ -25,7 +25,7 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 
 # Data — tech company metrics: revenue vs growth with market cap as bubble size
 np.random.seed(42)
-n_base = 35
+n_base = 60
 
 revenue_base = np.random.uniform(5, 120, n_base)
 growth_base = 0.4 * (100 - revenue_base) / 100 + np.random.randn(n_base) * 0.08 + 0.05
@@ -41,15 +41,12 @@ revenue = np.concatenate([revenue_base, outlier_revenue])
 growth_rate = np.concatenate([growth_base, outlier_growth])
 market_cap = np.concatenate([cap_base, outlier_cap])
 
-sectors = np.array(
-    ["Cloud/SaaS"] * 12
-    + ["E-Commerce"] * 8
-    + ["Semiconductors"] * 8
-    + ["Social Media"] * 7
-    + ["Cloud/SaaS", "Cloud/SaaS", "Semiconductors", "E-Commerce", "Semiconductors", "E-Commerce"]
-)
 sector_names = ["Cloud/SaaS", "E-Commerce", "Semiconductors", "Social Media"]
 sector_colors = IMPRINT_PALETTE[:4]
+sector_probs = [0.30, 0.25, 0.25, 0.20]
+sectors_base = np.random.choice(sector_names, size=n_base, p=sector_probs)
+outlier_sectors = np.array(["Cloud/SaaS", "Cloud/SaaS", "Semiconductors", "E-Commerce", "Semiconductors", "E-Commerce"])
+sectors = np.concatenate([sectors_base, outlier_sectors])
 
 # Scale bubble sizes by area for accurate visual perception (tuned for 3200×1800 canvas)
 size_scaled = (market_cap / market_cap.max()) * 580 + 30

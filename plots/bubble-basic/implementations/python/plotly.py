@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: plotly 7.1.0 | Python 3.13.15
-Quality: 90/100 | Updated: 2026-09-26
+Quality: 88/100 | Updated: 2026-09-26
 """
 
 import os
@@ -37,17 +37,14 @@ rd_pct[6], pmf[6], revenue_m[6] = 5, 18, 120
 rd_pct[10], pmf[10], revenue_m[10] = 22, 92, 920  # efficient innovator
 
 # Bubble sizing via sizeref (Plotly's idiomatic area-based scaling)
+# sizemin=9 (up from a previous 6) keeps the lowest-revenue bubbles clearly
+# visible against the dense mid-range cluster.
 sizeref = 2.0 * float(revenue_m.max()) / (46.0**2)
 cmin, cmax = float(revenue_m.min()), float(revenue_m.max())
 
-
-def imprint_seq_color(value: float) -> str:
-    """Interpolate a revenue value into the imprint_seq (green→blue) colorscale."""
-    t = max(0.0, min(1.0, (value - cmin) / (cmax - cmin)))
-    c0 = np.array([0x00, 0x9E, 0x73])
-    c1 = np.array([0x44, 0x67, 0xA3])
-    r, g, b = (c0 + (c1 - c0) * t).round().astype(int)
-    return f"#{r:02X}{g:02X}{b:02X}"
+# Legend swatch colors tinted along imprint_seq (green->blue) so each swatch
+# matches what a real data bubble of that revenue would render.
+imprint_seq_rgb = (np.array([0x00, 0x9E, 0x73]), np.array([0x44, 0x67, 0xA3]))
 
 
 title = "bubble-basic · python · plotly · anyplot.ai"
@@ -66,22 +63,13 @@ fig.add_trace(
             "size": revenue_m,
             "sizemode": "area",
             "sizeref": sizeref,
-            "sizemin": 6,
+            "sizemin": 9,
             "color": revenue_m,
             "cmin": cmin,
             "cmax": cmax,
             "colorscale": imprint_seq,
-            "colorbar": {
-                "title": {"text": "Revenue<br>($ millions)", "font": {"size": 12, "color": INK}},
-                "tickfont": {"size": 10, "color": INK_SOFT},
-                "thickness": 16,
-                "len": 0.65,
-                "y": 0.5,
-                "bgcolor": ELEVATED_BG,
-                "bordercolor": INK_SOFT,
-                "borderwidth": 0.5,
-            },
-            "opacity": 0.75,
+            "showscale": False,
+            "opacity": 0.65,
             "line": {"width": 1.5, "color": PAGE_BG},
         },
         hovertemplate=(
@@ -93,10 +81,12 @@ fig.add_trace(
     )
 )
 
-# Size legend — three reference bubbles, tinted along imprint_seq so the swatch
-# color matches what a real data bubble of that revenue would render (avoids a
-# flat-green swatch implying a value that the colorbar would actually show as blue)
-for size_label in [100, 500, 1500]:
+# Size legend — three reference bubbles (anchored near the data's min/mid/max
+# revenue), tinted along imprint_seq so the swatch color matches what a real
+# data bubble of that revenue would render
+for size_label in [100, 600, 2000]:
+    t = max(0.0, min(1.0, (size_label - cmin) / (cmax - cmin)))
+    r, g, b = (imprint_seq_rgb[0] + (imprint_seq_rgb[1] - imprint_seq_rgb[0]) * t).round().astype(int)
     fig.add_trace(
         go.Scatter(
             x=[None],
@@ -106,9 +96,9 @@ for size_label in [100, 500, 1500]:
                 "size": size_label,
                 "sizemode": "area",
                 "sizeref": sizeref,
-                "sizemin": 6,
-                "color": imprint_seq_color(size_label),
-                "opacity": 0.75,
+                "sizemin": 9,
+                "color": f"#{r:02X}{g:02X}{b:02X}",
+                "opacity": 0.65,
                 "line": {"width": 1.5, "color": PAGE_BG},
             },
             name=f"${size_label}M",
@@ -123,19 +113,23 @@ fig.update_layout(
         "title": {"text": "R&D Spend (% of Revenue)", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
+        "gridwidth": 1,
         "linecolor": INK_SOFT,
         "zeroline": False,
+        "ticks": "",
     },
     yaxis={
         "title": {"text": "Product-Market-Fit Score", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
+        "gridwidth": 1,
         "linecolor": INK_SOFT,
         "zeroline": False,
+        "ticks": "",
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    font={"color": INK},
+    font={"color": INK, "family": "Arial, Helvetica, sans-serif"},
     legend={
         "title": {"text": "Revenue (size)", "font": {"size": 10, "color": INK}},
         "font": {"size": 10, "color": INK_SOFT},
@@ -147,7 +141,7 @@ fig.update_layout(
         "xanchor": "left",
         "yanchor": "top",
     },
-    margin={"l": 80, "r": 160, "t": 80, "b": 60},
+    margin={"l": 80, "r": 60, "t": 80, "b": 60},
     annotations=[
         {
             "x": rd_pct[10],
