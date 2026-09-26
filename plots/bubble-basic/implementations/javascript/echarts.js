@@ -101,11 +101,11 @@ const legendGraphics = [
   ...legendSamples.map((sample) => ({
     type: "text",
     left: legendCx + maxDiameter / 2 + 14,
-    top: sample.cy - 8,
+    top: sample.cy - 9,
     style: {
       text: `${Math.round(sample.value)}`,
       fill: t.inkSoft,
-      fontSize: 16,
+      fontSize: 18,
     },
   })),
 ];
@@ -159,8 +159,8 @@ chart.setOption({
     seriesIndex: 0,
     orient: "vertical",
     left: 24,
-    top: 120,
-    itemHeight: 140,
+    top: 130,
+    itemHeight: 105,
     itemWidth: 16,
     calculable: false,
     hoverLink: false,
