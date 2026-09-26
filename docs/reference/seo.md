@@ -911,7 +911,8 @@ canonical tag omits the query — so the hub and its language-filtered variants
 all consolidate on the same canonical URL. Legacy links to
 `/{spec_id}/{language}` redirect to `/{spec_id}?language={language}` (SPA
 client-side redirect via `app/src/routes/index.tsx`; bots get a 301 from
-`/seo-proxy/{spec_id}/{language}` to `/seo-proxy/{spec_id}`).
+`/seo-proxy/{spec_id}/{language}` to the public `/{spec_id}` — never to a
+`/seo-proxy/` path, which nginx would prefix again into a redirect loop).
 
 The interactive view follows the same pattern: `?view=interactive` is a
 deep-link parameter only; the canonical tag always points at the base URL

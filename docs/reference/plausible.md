@@ -45,27 +45,39 @@ Plausible but are no longer produced.
 
 ### Filter-based pageviews
 
-Filters create dynamic URLs with the following format:
+Filters are appended to the page's own path as `/{category}/{value}` pairs
+(`buildPlausibleUrl()` in `app/src/hooks/useAnalytics.ts`):
 ```
-https://anyplot.ai/{category}/{value}/{category}/{value}/...
-```
-
-On spec routes, the spec/language/library prefix is preserved before the
-filter segments:
-```
-https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
+https://anyplot.ai/{pathname}/{category}/{value}/{category}/{value}/...
 ```
 
-**Ordered categories**: `lib`, `spec`, `plot`, `data`, `dom`, `feat`, `dep`, `tech`, `pat`, `prep`, `style`
+The gallery lives at `/plots`, so its filter views are recorded under
+`/plots/...`; on spec routes the spec/language/library path comes first.
+Until PR #9625 (2026-07-10) the reserved prefix was stripped, so older data
+records the same gallery filters without `/plots` (`/lib/matplotlib`).
 
-**Examples (root homepage)**:
-- `/?lib=matplotlib` → `https://anyplot.ai/lib/matplotlib`
-- `/?lib=matplotlib&plot=scatter` → `https://anyplot.ai/lib/matplotlib/plot/scatter`
-- `/?lib=matplotlib,seaborn` → `https://anyplot.ai/lib/matplotlib,seaborn` (OR logic)
-- `/?lib=matplotlib&lib=seaborn` → `https://anyplot.ai/lib/matplotlib/lib/seaborn` (AND logic)
+**Ordered categories**: `lang`, `lib`, `spec`, `plot`, `data`, `dom`, `feat`, `dep`, `tech`, `pat`, `prep`, `style`, `language`
+
+**Examples (gallery)**:
+- `/plots?lib=matplotlib` → `https://anyplot.ai/plots/lib/matplotlib`
+- `/plots?lib=matplotlib&plot=scatter` → `https://anyplot.ai/plots/lib/matplotlib/plot/scatter`
+- `/plots?lib=matplotlib,seaborn` → `https://anyplot.ai/plots/lib/matplotlib,seaborn` (OR logic)
+- `/plots?lib=matplotlib&lib=seaborn` → `https://anyplot.ai/plots/lib/matplotlib/lib/seaborn` (AND logic)
+- `/plots?spec=manhattan-gwas` → `https://anyplot.ai/plots/spec/manhattan-gwas`
 
 **Examples (spec routes)**:
-- `/scatter-basic/python?lib=matplotlib` → `https://anyplot.ai/scatter-basic/python/lib/matplotlib`
+- `/scatter-basic?language=python` → `https://anyplot.ai/scatter-basic/language/python`
+
+One spec is therefore recorded under three families of paths: gallery views
+filtered to it (`/plots/spec/{spec_id}`, plus any other filter segments), the
+hub (`/{spec_id}`, and `/{spec_id}/language/{language}` when the carousel is
+scoped) and its implementation pages (`/{spec_id}/{language}/{library}`).
+Filter Pages by "contains `{spec_id}`" to see them together. "contains" also
+matches longer ids that include this one (`line-basic` inside
+`sparkline-basic`); for such ids use the Stats API `matches` operator with the
+id anchored on a path segment, for example `[/,]line-basic([/,]|$)` — a comma
+counts as a boundary because OR-filtered gallery views record
+`/plots/spec/a,b`.
 
 **Benefits**:
 - Plausible shows popular filter combinations
@@ -163,11 +175,11 @@ but crawlers never run JavaScript and `app/nginx.conf` short-circuits bot user
 agents with `return 202` on `/api/event`, so nothing they do appears here — this
 event covers humans only.
 
-### Landing page navigation (`nav_click`)
+### Navigation clicks (`nav_click`)
 
-A single event captures every clickable surface on the chrome and the new
-editorial landing page so we can answer "where do users go from `/` and via
-which UI element". One event, one event-property pair: `source` (which UI
+A single event captures every clickable surface on the chrome, the editorial
+landing page and the gallery so we can answer "where do users go, from which
+page, and via which UI element". One event, one event-property pair: `source` (which UI
 element was clicked) + `target` (where it leads). Some sources additionally
 carry `spec`, `library`, or `value` for richer breakdowns.
 
@@ -185,6 +197,7 @@ carry `spec`, `library`, or `value` for richer breakdowns.
 | `section_header` | SectionHeader.tsx | `specs.all()` / `libraries.all()` / `palette.explore()` headers |
 | `specs_more_link` | LandingPage.tsx | `+ N more in the catalogue →` |
 | `suggest_spec_link` | LandingPage.tsx | `spec.suggest()` GitHub-issue link |
+| `gallery_spec_hub` | PlotsPage.tsx | `{spec_id}.compare() →` above the grid when `/plots` is filtered to exactly one spec (carries `spec`) → `/{spec_id}` |
 
 **Random methods**:
 - `click`: Shuffle icon clicked
@@ -510,7 +523,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `report_issue` | Custom Event | Track issue report clicks |
 | `tag_click` | Custom Event | Track tag filter clicks |
 | `plot_rotate` | Custom Event | Track plot image rotation on specs page |
-| `nav_click` | Custom Event | Track which UI element on landing/chrome leads users off the root |
+| `nav_click` | Custom Event | Track which UI element on the chrome, the landing page or the gallery leads users where |
 | `theme_toggle` | Custom Event | Track dark/light theme switches |
 | `view_mode_change` | Custom Event | Track preview ↔ interactive toggles in spec detail |
 | `library_click` | Custom Event | Track library-card clicks on the libraries page |
@@ -606,7 +619,7 @@ User lands on anyplot.ai
 | `report_issue` | `spec`, `library`? | SpecPage.tsx |
 | `external_link` | `destination`, `spec`?, `library`? | Footer.tsx, LegalPage.tsx, AboutPage.tsx, LibrariesPage.tsx, SectionHeader.tsx |
 | `internal_link` | `destination`, `spec`?, `library`? | Footer.tsx, AboutPage.tsx |
-| `nav_click` | `source`, `target`, `spec`?, `library`?, `value`? | NavBar, MastheadRule, HeroSection, SectionHeader, PlotOfTheDayTerminal, LandingPage |
+| `nav_click` | `source`, `target`, `spec`?, `library`?, `value`? | NavBar, MastheadRule, HeroSection, SectionHeader, PlotOfTheDayTerminal, LandingPage, PlotsPage |
 | `theme_toggle` | `to` | MastheadRule.tsx |
 | `view_mode_change` | `mode`, `library` | SpecDetailView.tsx |
 | `library_click` | `source`, `library` | LibrariesPage.tsx |

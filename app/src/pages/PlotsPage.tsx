@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Helmet } from 'react-helmet-async';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
 
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -13,6 +13,7 @@ import { useAppData, useHomeState } from 'src/hooks';
 import { specPath } from 'src/routes/paths';
 import { FilterBar } from 'src/sections/plots-gallery/FilterBar';
 import { ImagesGrid } from 'src/sections/plots-gallery/ImagesGrid';
+import { colors, fontSize, typography } from 'src/theme';
 import type { PlotImage } from 'src/types';
 
 export function PlotsPage() {
@@ -164,6 +165,16 @@ export function PlotsPage() {
 
   const specFilter = activeFilters.find(f => f.category === 'spec');
   const selectedSpec = specFilter?.values[0] || '';
+  // The gallery filtered to one spec shows the same implementations as that
+  // spec's own page, but never linked to it; getting there meant opening an
+  // implementation page first. Offered only for exactly one known spec —
+  // `selectedSpec` takes the first value even when several are OR-combined.
+  const singleSpec =
+    activeFilters.filter(f => f.category === 'spec').length === 1 &&
+    specFilter?.values.length === 1 &&
+    specsData.some(s => s.id === selectedSpec)
+      ? selectedSpec
+      : '';
 
   return (
     <Box onClick={handleContainerClick}>
@@ -199,6 +210,60 @@ export function PlotsPage() {
         onRemoveGroup={handleRemoveGroup}
         onTrackEvent={trackEvent}
       />
+
+      {singleSpec && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+          <Box
+            component={RouterLink}
+            to={specPath(singleSpec)}
+            onClick={() => {
+              // Like a card click: Back from the spec page must restore the
+              // offset the user left at, not one saved by an earlier click.
+              saveScrollPosition();
+              trackEvent('nav_click', {
+                source: 'gallery_spec_hub',
+                target: specPath(singleSpec),
+                spec: singleSpec,
+              });
+            }}
+            // The visible words come first, in order (WCAG 2.5.3 Label in
+            // Name), but without the `.()` punctuation, which screen readers
+            // announce literally (style guide §7.4.1, Accessibility).
+            aria-label={`${singleSpec} compare — all implementations of ${specTitles[singleSpec] || singleSpec}`}
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'baseline',
+              gap: 0.75,
+              fontFamily: typography.mono,
+              fontSize: fontSize.sm,
+              color: 'var(--ink)',
+              textDecoration: 'none',
+              transition: 'color 0.2s',
+              // Explicit-subject form (style guide §7.4.1): subject in
+              // --ink-muted, `.verb()` in --ink, both green on hover.
+              '& .subj': { color: 'var(--ink-muted)', transition: 'color 0.2s' },
+              '& .hub-arrow': { transition: 'transform 0.2s' },
+              '&:hover, &:hover .subj': { color: colors.primary },
+              '&:hover .hub-arrow': { transform: 'translateX(3px)' },
+              '&:focus-visible': {
+                outline: `2px solid ${colors.primary}`,
+                outlineOffset: 2,
+                borderRadius: '2px',
+              },
+            }}
+          >
+            <Box component="span">
+              <Box component="span" className="subj">
+                {singleSpec}
+              </Box>
+              .compare()
+            </Box>
+            <Box component="span" className="hub-arrow" aria-hidden="true">
+              →
+            </Box>
+          </Box>
+        </Box>
+      )}
 
       <ImagesGrid
         images={displayedImages}

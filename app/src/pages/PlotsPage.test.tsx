@@ -2,17 +2,26 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fireEvent, render, screen } from 'src/test-utils';
 
-const { mockHandleRandom } = vi.hoisted(() => ({ mockHandleRandom: vi.fn() }));
+const { mockHandleRandom, mockTrackEvent, mockSaveScrollPosition, state } = vi.hoisted(() => ({
+  mockHandleRandom: vi.fn(),
+  mockTrackEvent: vi.fn(),
+  mockSaveScrollPosition: vi.fn(),
+  state: {
+    activeFilters: [] as { category: string; values: string[] }[],
+    specsData: [] as { id: string; title: string }[],
+    specTitles: {} as Record<string, string>,
+  },
+}));
 
 vi.mock('src/hooks', () => ({
-  useAnalytics: () => ({ trackPageview: vi.fn(), trackEvent: vi.fn() }),
+  useAnalytics: () => ({ trackPageview: vi.fn(), trackEvent: mockTrackEvent }),
   useInfiniteScroll: () => ({ loadMoreRef: { current: null } }),
   useFilterState: () => ({
-    activeFilters: [],
+    activeFilters: state.activeFilters,
     filterCounts: null,
     globalCounts: null,
     orCounts: [],
-    specTitles: {},
+    specTitles: state.specTitles,
     allImages: [],
     displayedImages: [],
     hasMore: false,
@@ -28,10 +37,10 @@ vi.mock('src/hooks', () => ({
     randomAnimation: null,
   }),
   isFiltersEmpty: (f: unknown[]) => !f || f.length === 0,
-  useAppData: () => ({ specsData: [], librariesData: [], stats: null }),
+  useAppData: () => ({ specsData: state.specsData, librariesData: [], stats: null }),
   useHomeState: () => ({
     homeStateRef: { current: { scrollY: 0 } },
-    saveScrollPosition: vi.fn(),
+    saveScrollPosition: mockSaveScrollPosition,
     setHomeState: vi.fn(),
     homeState: { scrollY: 0 },
   }),
@@ -61,6 +70,60 @@ import { PlotsPage } from 'src/pages/PlotsPage';
 describe('PlotsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    state.activeFilters = [];
+    state.specsData = [];
+    state.specTitles = {};
+  });
+
+  describe('link to the spec page', () => {
+    const MANHATTAN = { id: 'manhattan-gwas', title: 'Manhattan Plot for GWAS' };
+
+    it('links the spec page when the gallery is filtered to exactly one spec', () => {
+      state.activeFilters = [{ category: 'spec', values: ['manhattan-gwas'] }];
+      state.specsData = [MANHATTAN];
+      state.specTitles = { 'manhattan-gwas': MANHATTAN.title };
+      render(<PlotsPage />);
+      // The accessible name starts with the visible words (WCAG 2.5.3 Label in
+      // Name) but not with `.()`, which screen readers announce literally.
+      const link = screen.getByRole('link', {
+        name: 'manhattan-gwas compare — all implementations of Manhattan Plot for GWAS',
+      });
+      expect(link).toHaveAttribute('href', '/manhattan-gwas');
+      expect(link).toHaveTextContent('manhattan-gwas.compare()');
+    });
+
+    it('saves the scroll position and tracks the click as nav_click', () => {
+      state.activeFilters = [{ category: 'spec', values: ['manhattan-gwas'] }];
+      state.specsData = [MANHATTAN];
+      render(<PlotsPage />);
+      fireEvent.click(screen.getByRole('link', { name: /all implementations of/i }));
+      // Back from the spec page must restore where the user left, like a card click.
+      expect(mockSaveScrollPosition).toHaveBeenCalledTimes(1);
+      expect(mockTrackEvent).toHaveBeenCalledWith('nav_click', {
+        source: 'gallery_spec_hub',
+        target: '/manhattan-gwas',
+        spec: 'manhattan-gwas',
+      });
+    });
+
+    it.each([
+      ['no filter', []],
+      ['a non-spec filter', [{ category: 'lib', values: ['matplotlib'] }]],
+      ['OR-combined specs', [{ category: 'spec', values: ['manhattan-gwas', 'scatter-basic'] }]],
+      [
+        'AND-combined specs',
+        [
+          { category: 'spec', values: ['manhattan-gwas'] },
+          { category: 'spec', values: ['scatter-basic'] },
+        ],
+      ],
+      ['an unknown spec id', [{ category: 'spec', values: ['no-such-spec'] }]],
+    ])('offers no link with %s', (_, filters) => {
+      state.activeFilters = filters;
+      state.specsData = [MANHATTAN, { id: 'scatter-basic', title: 'Basic Scatter Plot' }];
+      render(<PlotsPage />);
+      expect(screen.queryByRole('link', { name: /all implementations of/i })).toBeNull();
+    });
   });
 
   it('renders FilterBar and ImagesGrid', () => {
