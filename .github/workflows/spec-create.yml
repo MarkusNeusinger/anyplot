@@ -547,7 +547,8 @@ jobs:
     if: >
       github.event.label.name == 'approved' &&
       contains(github.event.issue.labels.*.name, 'spec-request') &&
-      github.event.sender.login == github.repository_owner
+      github.event.sender.login == github.repository_owner &&
+      github.triggering_actor == github.repository_owner
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -773,12 +774,14 @@ jobs:
           DEADLINE=$((SECONDS + 900))
           NO_AUTO=0
           LAST_STATUS="unknown"
+          REVIEW_DECISION=""
           while :; do
             if VIEW=$(gh pr view "$PR_NUMBER" --repo "$REPOSITORY" \
-                --json state,headRefOid,mergeStateStatus,autoMergeRequest,mergeCommit 2>/dev/null); then
+                --json state,headRefOid,mergeStateStatus,reviewDecision,autoMergeRequest,mergeCommit 2>/dev/null); then
               STATE=$(jq -r '.state' <<<"$VIEW")
               HEAD=$(jq -r '.headRefOid' <<<"$VIEW")
-              LAST_STATUS=$(jq -r '.mergeStateStatus' <<<"$VIEW")
+              LAST_STATUS=$(jq -r '"\(.mergeStateStatus), review decision: \(.reviewDecision // "none")"' <<<"$VIEW")
+              REVIEW_DECISION=$(jq -r '.reviewDecision // ""' <<<"$VIEW")
               if [ "$STATE" = "MERGED" ]; then
                 if [ "$ALREADY_MERGED" != "true" ] && [ "$HEAD" != "$HEAD_SHA" ]; then
                   fail "PR #${PR_NUMBER} merged at head ${HEAD}, not at the verified ${HEAD_SHA}. Check what landed in main before labelling the spec ready."
@@ -807,7 +810,14 @@ jobs:
             fi
             if [ "$SECONDS" -ge "$DEADLINE" ]; then
               disable_auto
-              fail "PR #${PR_NUMBER} did not merge within 15 minutes (merge state: ${LAST_STATUS}), so auto-merge was turned off. Once its required checks are green, re-run this job or remove and re-add \`approved\`."
+              HINT="Once its required checks are green, re-run this job or remove and re-add \`approved\`."
+              if [ "$REVIEW_DECISION" = "REVIEW_REQUIRED" ]; then
+                # The main ruleset's "extra approval for unattributed changes" can hold an
+                # App-opened PR for one human review even at 0 required approvals; re-running
+                # this job would only time out again.
+                HINT="The main ruleset wants an approving review on the Claude app's PR (its 'extra approval for unattributed changes' setting): approve PR #${PR_NUMBER}, then remove and re-add \`approved\`."
+              fi
+              fail "PR #${PR_NUMBER} did not merge within 15 minutes (merge state: ${LAST_STATUS}), so auto-merge was turned off. ${HINT}"
             fi
             sleep 20
           done
@@ -901,4 +911,4 @@ jobs:
             REASON=$(cat "$RUNNER_TEMP/merge-failure.txt")
           fi
           gh issue comment "$ISSUE_NUMBER" --repo "$REPOSITORY" \
-            --body "**Error:** The specification was not merged. ${REASON} ([workflow logs](https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}))"
+            --body "**Error:** The merge job did not finish. ${REASON} ([workflow logs](https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}))"
