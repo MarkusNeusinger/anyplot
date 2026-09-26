@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: plotly 7.1.0 | Python 3.13.15
 Quality: 88/100 | Updated: 2026-09-26
