@@ -6,7 +6,7 @@
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic LCG) ------------------------------------
-// Market analysis: growth rate vs. revenue, bubble size = market share.
+// Market analysis: growth rate vs. revenue, bubble size = revenue share of segment.
 let seed = 42;
 function rand() {
   seed = (seed * 1103515245 + 12345) & 0x7fffffff;
@@ -24,19 +24,14 @@ function radiusForShare(share) {
   return R_MIN + (R_MAX - R_MIN) * Math.sqrt(frac);
 }
 
-function hexToRgba(hex, alpha) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
 const companies = [];
 for (let i = 0; i < 90; i += 1) {
   const growthRate = -5 + rand() * 35;
   const revenue = 10 + rand() * 490;
-  const marketShare = Z_MIN + rand() * (Z_MAX - Z_MIN);
-  companies.push({ growthRate, revenue, marketShare });
+  // Each company is drawn from its own local segment, so this does not need
+  // to sum to 100 across companies (unlike a same-market "market share").
+  const segmentShare = Z_MIN + rand() * (Z_MAX - Z_MIN);
+  companies.push({ growthRate, revenue, segmentShare });
 }
 
 // Focal point: the standout company that ranks highest on BOTH growth and
@@ -46,7 +41,7 @@ let focalIndex = 0;
 let focalScore = -Infinity;
 companies.forEach((c, i) => {
   const growthNorm = (c.growthRate + 5) / 35;
-  const shareNorm = (c.marketShare - Z_MIN) / (Z_MAX - Z_MIN);
+  const shareNorm = (c.segmentShare - Z_MIN) / (Z_MAX - Z_MIN);
   const score = growthNorm + shareNorm;
   if (score > focalScore) {
     focalScore = score;
@@ -54,19 +49,20 @@ companies.forEach((c, i) => {
   }
 });
 
-const markerFill = hexToRgba(t.palette[0], 0.6);
+const [fr, fg, fb] = [1, 3, 5].map((i) => parseInt(t.palette[0].slice(i, i + 2), 16));
+const markerFill = `rgba(${fr}, ${fg}, ${fb}, 0.5)`;
 const seriesData = companies.map((c, i) => {
   const isFocal = i === focalIndex;
   return {
     x: c.growthRate,
     y: c.revenue,
     marker: {
-      radius: radiusForShare(c.marketShare),
+      radius: radiusForShare(c.segmentShare),
       fillColor: markerFill,
       lineColor: isFocal ? t.amber : t.pageBg,
-      lineWidth: isFocal ? 3 : 1.6,
+      lineWidth: isFocal ? 3 : 2,
     },
-    custom: { marketShare: Math.round(c.marketShare) },
+    custom: { segmentShare: Math.round(c.segmentShare) },
   };
 });
 
@@ -78,10 +74,10 @@ function drawSizeLegend(chart) {
   let cursorY = chart.plotTop + 30;
 
   chart.renderer
-    .text("Market Share (%)", legendX, cursorY)
+    .text("Revenue Share<br/>of Segment (%)", legendX, cursorY, true)
     .css({ color: t.ink, fontSize: "14px", fontWeight: "600" })
     .add();
-  cursorY += 30;
+  cursorY += 50;
 
   [Z_MIN, (Z_MIN + Z_MAX) / 2, Z_MAX].forEach((share) => {
     const r = radiusForShare(share);
@@ -112,7 +108,7 @@ function highlightFocalPoint(chart) {
 
   chart.renderer
     .label(
-      `Standout: ${focal.growthRate.toFixed(0)}% growth, ${Math.round(focal.marketShare)}% share`,
+      `Standout: ${focal.growthRate.toFixed(0)}% growth, ${Math.round(focal.segmentShare)}% segment share`,
       labelX,
       labelY,
       "callout",
@@ -148,7 +144,8 @@ Highcharts.chart(
       title: { text: "Year-over-Year Growth Rate (%)", style: { color: t.inkSoft, fontSize: "16px" } },
       lineColor: t.inkSoft,
       tickColor: t.inkSoft,
-      gridLineWidth: 0,
+      gridLineColor: t.grid,
+      gridLineWidth: 1,
       labels: { style: { color: t.inkSoft, fontSize: "14px" }, format: "{value}%" },
     },
     yAxis: {
@@ -168,7 +165,7 @@ Highcharts.chart(
         return (
           `Growth: <b>${this.x.toFixed(1)}%</b><br/>` +
           `Revenue: <b>$${this.y.toFixed(0)}M</b><br/>` +
-          `Market share: <b>${this.custom.marketShare}%</b>`
+          `Revenue share (segment): <b>${this.custom.segmentShare}%</b>`
         );
       },
     },
