@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 88/100 | Created: 2026-09-26
@@ -39,17 +39,18 @@ np.random.shuffle(transit_coverage)
 congestion_index = np.clip(85 - transit_coverage * 0.65 + np.random.normal(0, 6, n_cities), 15, 95)
 vehicle_registrations = np.clip(200 + congestion_index * 4 + np.random.normal(0, 60, n_cities), 150, 700)
 
-# Area-scaled bubble sizing via 4 tiers (pygal has no per-point size API) —
-# fewer, wider-spaced tiers than a previous 5-tier pass so adjacent bubbles
-# stay visually distinguishable even where they overlap heavily.
+# Area-scaled bubble sizing via 7 tiers (pygal has no per-point size API).
+# Quantile-based bin edges (rather than equal-width) keep tiers evenly
+# populated, so no single tier absorbs most of the dense mid-chart cluster.
 vr_min, vr_max = vehicle_registrations.min(), vehicle_registrations.max()
-bubble_norm = (vehicle_registrations - vr_min) / (vr_max - vr_min)
 
-n_tiers = 4
-tier_bins = np.clip(np.digitize(bubble_norm, np.linspace(0, 1, n_tiers + 1)[1:-1]), 0, n_tiers - 1)
+n_tiers = 7
+bin_edges_vr = np.quantile(vehicle_registrations, np.linspace(0, 1, n_tiers + 1))
+tier_bins = np.clip(np.digitize(vehicle_registrations, bin_edges_vr[1:-1]), 0, n_tiers - 1)
 
-# sqrt scaling for perceptual area accuracy, widened base/scale for a bigger visual step per tier
-tier_sizes = [int(20 + 90 * ((t + 0.5) / n_tiers) ** 0.5) for t in range(n_tiers)]
+# sqrt of each tier's actual midpoint value (not tier index) for accurate area scaling
+tier_mid_norm = [((bin_edges_vr[t] + bin_edges_vr[t + 1]) / 2 - vr_min) / (vr_max - vr_min) for t in range(n_tiers)]
+tier_sizes = [int(20 + 100 * norm**0.5) for norm in tier_mid_norm]
 
 # anyplot imprint_seq: #009E73 (brand green) → #4467A3 (blue), equidistant stops
 tier_colors = tuple(
@@ -65,8 +66,7 @@ tier_colors = tuple(
 ANYPLOT_AMBER = "#DDCC77"
 style_colors = tier_colors + (ANYPLOT_AMBER,)
 
-# Tier labels serve as the size legend (vehicle-registration ranges)
-bin_edges_vr = np.linspace(vr_min, vr_max, n_tiers + 1)
+# Tier labels serve as the size legend (vehicle-registration quantile ranges)
 tier_labels = [f"{bin_edges_vr[t]:.0f}–{bin_edges_vr[t + 1]:.0f} vehicles/1,000" for t in range(n_tiers)]
 
 # Focal city: highest congestion despite the data spread — visual anchor for data storytelling
@@ -79,25 +79,18 @@ for i in range(n_cities):
     if i == focal_idx:
         continue
     t = int(tier_bins[i])
-    tier_data[t].append(
-        {
-            "value": (round(float(transit_coverage[i]), 1), round(float(congestion_index[i]), 1)),
-            "label": (
-                f"Transit coverage: {transit_coverage[i]:.0f}%  |  "
-                f"Congestion index: {congestion_index[i]:.0f}  |  "
-                f"Vehicles: {vehicle_registrations[i]:.0f}/1,000"
-            ),
-        }
-    )
+    tier_data[t].append({"value": (round(float(transit_coverage[i]), 1), round(float(congestion_index[i]), 1))})
 
+# `label` metadata (only set here, on the single focal point) drives pygal's
+# `print_labels` static text overlay — the on-canvas annotation naming the
+# hotspot's exact metrics. Every other point omits `label` so the overlay
+# stays limited to this one bubble instead of cluttering all 50.
 focal_point_data = [
     {
         "value": (round(float(transit_coverage[focal_idx]), 1), round(float(congestion_index[focal_idx]), 1)),
         "label": (
-            f"★ Congestion Hotspot  |  "
-            f"Transit coverage: {transit_coverage[focal_idx]:.0f}%  |  "
-            f"Congestion index: {congestion_index[focal_idx]:.0f}  |  "
-            f"Vehicles: {vehicle_registrations[focal_idx]:.0f}/1,000"
+            f"★ Congestion Hotspot: {transit_coverage[focal_idx]:.0f}% coverage, "
+            f"{congestion_index[focal_idx]:.0f} congestion index"
         ),
     }
 ]
@@ -117,7 +110,7 @@ custom_style = Style(
     # `opacity` alone left bubbles fully solid in the previous pass despite the
     # spec's alpha-transparency requirement. `opacity_hover` still applies via
     # `.reactive.active` since `.dot` has no active-state fill-opacity rule.
-    dot_opacity=0.62,
+    dot_opacity=0.58,
     opacity=0.70,
     opacity_hover=0.95,
     title_font_size=66,
@@ -139,10 +132,10 @@ chart = pygal.XY(
     style=custom_style,
     title="bubble-basic · python · pygal · anyplot.ai",
     x_title="Public Transit Coverage (%)",
-    y_title="Traffic Congestion Index",
+    y_title="Traffic Congestion Index (0–100 scale)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=3,
+    legend_at_bottom_columns=4,
     legend_box_size=36,
     stroke=False,
     dots_size=20,
@@ -151,12 +144,13 @@ chart = pygal.XY(
     x_value_formatter=lambda x: f"{x:.0f}%",
     value_formatter=lambda x: f"{x:.0f}",
     margin_top=80,
-    margin_bottom=160,
+    margin_bottom=200,
     margin_left=100,
     margin_right=80,
     tooltip_border_radius=8,
     tooltip_fancy_mode=True,
     print_values=False,
+    print_labels=True,
     truncate_legend=30,
     spacing=30,
 )
