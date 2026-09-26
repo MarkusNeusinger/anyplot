@@ -38,13 +38,13 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 anyplot 3.3 lets requests and releases reach production only through the front door. Both
 origins now refuse what the Cloudflare edge did not stamp — the API's direct `*.run.app` URL
-behind a shared-secret gate, the site's own nginx behind the same gate, shipped switched off
-so that arming it is a measurement rather than a leap — and `script-src` trades
-`'unsafe-inline'` for a per-request nonce. Both services deploy through a candidate revision
-that is smoke-tested before it takes traffic, and both images are built and container-tested
-before merge. The API runs as one warm instance, so a page load no longer pays for a scale-out
-cold start, and IndexNow plus titles that name their languages and libraries carry the
-catalogue beyond Google.
+and the site's own nginx, each behind a shared-secret gate that shipped switched off so that
+arming it was a measurement rather than a leap — and `script-src` trades `'unsafe-inline'`
+for a per-request nonce. Both services deploy through a candidate revision that is
+smoke-tested before it takes traffic, and both images are built and container-tested before
+merge. The API runs as one warm instance, so a page load no longer pays for a scale-out cold
+start; IndexNow carries changed pages to the search engines beyond Google, and search results
+now name a plot's languages and libraries.
 Behind that: a deploy trigger that sat red for two days while every PR check stayed green, the
 gap backfill that brought 314 of 324 specs to all fifteen libraries, and 👍/👎 directly on the
 plot.
@@ -65,7 +65,7 @@ plot.
   on the static preview and the interactive surface — so rating an
   implementation is one tap instead of a trip through the floating feedback
   menu. The tap inks the thumb, flashes `>>> .liked` / `>>> .disliked` in the
-  centre like `.copied` does, and posts a reaction-only entry to `/feedback`
+  center like `.copied` does, and posts a reaction-only entry to `/feedback`
   with `library_id` and `language` (a new Alembic revision adds both columns
   and a `(spec_id, library_id)` index), so votes can be counted per image later
   via `FeedbackRepository.reaction_counts` — nothing is displayed yet. One vote
@@ -114,11 +114,11 @@ plot.
   route into the service can be measured *before* the switch is thrown; `off-seen` is the
   state every path that must keep working has to reach first. Exempt, as exact paths with no
   prefixes: `/health` (the deploy smoke reaches the candidate on its `run.app` tag URL, which
-  never passes the edge) and, until #11214 gave its caller the header,
-  `/debug/cache/invalidate` (`sync-postgres.yml` posts to the
-  direct URL by design, because Cloudflare's bot challenge answers an unauthenticated curl
-  POST with a 403 HTML page; that endpoint carries its own constant-time token), plus
-  `OPTIONS`, which a browser cannot attach a custom header to. `/seo-proxy/…` is deliberately
+  never passes the edge) and, until #11214 gave its caller the header, `/debug/cache/invalidate`
+  (`sync-postgres.yml` posts to the direct URL by design, because Cloudflare's bot challenge
+  answers an unauthenticated curl POST with a 403 HTML page; that endpoint carries its own
+  constant-time token), plus `OPTIONS`, which a browser cannot attach a custom header to.
+  `/seo-proxy/…` is deliberately
   **not** exempt although the sibling repo exempts it: the site's nginx fetches those pages
   over `api.anyplot.ai` and so carries the header, while an exemption would leave the API's
   most expensive reads open on the direct URL — a cache miss or an unknown id queries the
@@ -172,14 +172,14 @@ plot.
   at all and the href names the route, so one match proves both that the bot hop ran and
   that the right page came back. Two watchdogs stop a silent no-op: the run fails if the
   sweep found no routes or the spec file no title, and it fails if `seo.py` grows a fourth
-  parameterised route beyond the three this file probes by hand. The middle of those three,
+  parameterized route beyond the three this file probes by hand. The middle of those three,
   the consolidated `/{spec}/{language}`, gained a probe of its own — it must answer 301, and
   a target still carrying `/seo-proxy` is the redirect loop that once cost 48 Googlebot
   "Redirect error" URLs. A `concurrency` group keeps a manual dispatch from racing the
   nightly run over the same issue, and the two issue-mutating steps run only on the default
   branch, so a dispatch from a feature branch can never raise or close a production
   incident. Timeout recomputed to 62 min by the file's own formula (36 checks x 90 s + five
-  non-retried probes). (#11209)
+  non-retried probes; 64 min since #11221 added the `/_health` probe). (#11209)
 - **The API image is built and its container smoke-tested before merge, not after** — the
   first build attempt of a changed Dockerfile used to happen in Cloud Build, once the PR was
   already on `main`; that is how the deploy-api trigger sat red from 2026-08-30 until #10821
@@ -191,7 +191,8 @@ plot.
   `/openapi.json` and the MCP server all report), the OG disk fallback
   `api/static/og-image.png` survived the runtime stage's COPY, and the process runs as uid
   1000. Two hadolint steps gate both Dockerfiles at threshold `warning` with three named
-  exceptions in `api/Dockerfile`, so a warning of any other code blocks. Change detection
+  exceptions in `api/Dockerfile` (two since #11211, set inline on the instructions they
+  excuse), so a warning of any other code blocks. Change detection
   excludes `plots/**`: the plot pipeline's PRs touch nothing the image serves. Adopted from the
   sibling repo kurrentschrift, which added the same job after its `pyproject.toml` fell out
   of the runtime stage. (#11205)
@@ -202,8 +203,9 @@ plot.
   `.github/workflows/indexnow-submit.yml` maps every push to `main` that touches `plots/`
   onto the affected `/{spec}` and `/{spec}/{language}/{library}` URLs and POSTs them to
   `api.indexnow.org` (10,000 per request; a deleted implementation is submitted too).
-  `workflow_dispatch` with `scope=sitemap` submits the whole live sitemap for the initial
-  load. Google does not take part and keeps reading the sitemap. The protocol is free.
+  `workflow_dispatch` with `scope=sitemap` submits every page the checkout holds — each spec
+  hub and implementation, the rule the sitemap follows — for the initial load. Google does
+  not take part and keeps reading the sitemap. The protocol is free.
   (#11202)
 
 ### Changed
@@ -273,7 +275,7 @@ plot.
 - **Coverage cells read as three states, not a gradient.** The mark grew from
   10 px to 16 px inside a 24 px hit area (WCAG 2.2 SC 2.5.8), and full coverage
   now renders as solid brand green while anything short of it carries an ink
-  outline (dashed when a spec has no implementation at all), with a labelled
+  outline (dashed when a spec has no implementation at all), with a labeled
   legend replacing the less/more ramp.
   The interesting signal is which specs are *not* complete, and those are the
   minority — the old opacity ramp made them the hardest cells to pick out. The
@@ -303,7 +305,7 @@ plot.
   queries added a stable ~2.5 s to every cold start (2.0–3.6 s of an ~11 s start,
   measured over 197 starts). The prewarm is now a background task that runs each
   key through `get_or_set_cache`, so it shares the per-key lock with a request that
-  arrives first instead of duplicating its query, and it is cancelled on shutdown
+  arrives first instead of duplicating its query, and it is canceled on shutdown
   before the DB engine closes. (#11828)
 - **OG image compositing runs in a worker thread, at most two at once.** The
   collage and branded-image endpoints called PIL inline in the event loop, which
@@ -426,12 +428,13 @@ plot.
   `changelog.d/<slug>.md` in the changelog's own format (`### Category` over bold-titled bullets)
   and touches `CHANGELOG.md` not at all, so two PRs never meet at the same line. `tools/changelog`
   is the standard-library tool behind it — `check` (also the CI job "Changelog (fragment)", which
-  refuses a missing fragment AND a bullet written into `[Unreleased]`), `preview`, and `release`,
+  refuses a missing fragment AND a bullet added to `[Unreleased]` — since #11219 a re-worded one
+  passes), `preview`, and `release`,
   which folds every fragment under the new version heading newest-first, bumps `pyproject.toml`,
   `uv.lock` and `app/package.json`, repoints the compare links at the bottom of the file — a step
   `release.md` called easy to forget, so it is no longer a step — and deletes the fragments. The
   exemptions are the ones this repository already had, now enforced rather than remembered:
-  catalogue-only PRs under `plots/`, the automated plot pipeline and Dependabot (both by author, so
+  catalog-only PRs under `plots/`, the automated plot pipeline and Dependabot (both by author, so
   the gate never sits red on a bot batch), and the `skip-changelog` label. What the tool
   deliberately does NOT touch is the release's two aggregate lines — the italic *Catalog* line and
   the single **Dependencies:** bullet — because those summarize a window rather than a PR and are
@@ -503,18 +506,18 @@ plot.
   waited in the runner queue at once, ahead of the pipeline's own jobs. The new
   `.github/workflows/codeql.yml` keeps the same languages and weekly schedule but ignores
   `plots/**` both as a trigger and inside the analysis, so pipeline PRs no longer start
-  a scan. Default setup has to be switched off in the repository settings for the
-  workflow's uploads to be accepted. (#11200)
-- **The API image is built in two stages and drops two thirds of its weight** — the
+  a scan. Default setup is switched off in the repository settings, which the workflow's
+  uploads require. (#11200)
+- **The API image is built in two stages and loses more than half its weight** — the
   single-stage `api/Dockerfile` produced a 1.6 GB image (502 MB compressed in Artifact
   Registry) of which 277 MB compressed was ballast in two layers: `build-essential`,
   which never compiled anything because all 108 packages this image installs ship
   wheels, and a `chown -R appuser:appuser /app` that ran after the venv was in place
   and so rewrote the whole environment into a second layer. The build now installs into
   a builder stage and copies only the finished venv across with `COPY --chown`, which
-  sets ownership as the layer is written. Measured: 1.62 GB to 693 MB. Less Artifact
-  Registry growth per deploy and a shorter deploy rollout; `min-instances 1` already
-  covers the user-facing cold start. (#10821)
+  sets ownership as the layer is written. Measured: 1.62 GB to 693 MB (#11211 later spent
+  part of that on bytecode for faster cold starts and dropped the unread `plots/` copy).
+  Less Artifact Registry growth per deploy and a shorter deploy rollout. (#10821)
 - **The API deploy smoke-tests a candidate revision before it takes traffic** — the
   pipeline deployed straight onto live traffic, so a broken image served users until
   someone noticed. It now deploys with `--no-traffic --tag=candidate` and a
@@ -690,8 +693,9 @@ plot.
   first: a title the base lacks is an ADDED bullet and is still refused, a
   title it has is a CHANGED one and passes. (#11219)
 - **The API host stamps its own security headers, `/_health` stops dropping the site's,
-  and the CSP is guarded by a test that pins what a nonce later replaced** — api.anyplot.ai is a separate origin with no nginx in front of it,
-  so it inherited none of `app/security-headers.conf`: only `/proxy/html` set
+  and the CSP is guarded by a test that pins what a nonce later replaced** — api.anyplot.ai
+  is a separate origin with no nginx in front of it, so it inherited none of
+  `app/security-headers.conf`: only `/proxy/html` set
   `nosniff` and a `Referrer-Policy`, on that one response. An outermost middleware now
   `setdefault`s both on every response that leaves through the stack — CORS preflights, the
   origin gate's 403, an `HTTPException`'s 4xx — and the unhandled-500 handler stamps the
@@ -735,7 +739,8 @@ plot.
   carried an identical snippet; 4,254 plot pages had about 334 distinct descriptions,
   which Bing Webmaster Tools flagged as "too many pages with identical meta descriptions".
   The snippet now opens with the page's identity, `{title} in {library} ({language}):
-  {description}`, trimmed to 155 characters as before, so a searcher who typed the
+  {description}` (#11844 inserts ", also in N other libraries" before the colon), trimmed
+  to 155 characters as before, so a searcher who typed the
   library name sees it in the result. The hub keeps the plain description; body copy
   and JSON-LD are unchanged. (#11203)
 - **Infrastructure failures no longer spend a pair's generation budget** — the
@@ -769,11 +774,11 @@ plot.
   the highest attempt number, bounded by the same `watchdog:repair-rescued-<N>` marker.
   (#11198)
 - **Watchdog generation retries go straight to `impl-generate` and are marked only once
-  the run exists** — the issue scan dispatched `bulk-generate.yml`, which serialises on
+  the run exists** — the issue scan dispatched `bulk-generate.yml`, which serializes on
   one global concurrency group; GitHub keeps a single pending run per group and cancels
   the older pending run whenever a newer one queues. Nine rescues fired 5 s apart on
   2026-09-02 produced two runs and seven silent `cancelled`s, yet every pair had already
-  been labelled `watchdog:retried-<lib>` and so dropped out of all future scans. The
+  been labeled `watchdog:retried-<lib>` and so dropped out of all future scans. The
   rescue now dispatches `impl-generate.yml` (concurrency group per pair, `issue_number`
   passed through), waits up to 60 s for the run to appear, and sets the marker only
   then. Every rescue marker moves behind its dispatch the same way, and `dispatch()`
@@ -791,8 +796,8 @@ plot.
   the locked Pillow 12.3.0 manylinux wheel bundles libraqm. It does not: the wheel
   `dlopen()`s libraqm at runtime, so in a bare `python:3.13-slim` the check is `False` and
   both HarfBuzz and FriBiDi report no version at all. The assertion therefore failed every
-  build of this image and the `deploy-api` trigger stayed red, so nothing merged after
-  2026-08-28 shipped until the Debian `libraqm0` package (32 KB plus its HarfBuzz/FriBiDi
+  build of this image and the `deploy-api` trigger stayed red, so the API kept serving the
+  v3.2.0 image of 2026-08-28 until the Debian `libraqm0` package (32 KB plus its HarfBuzz/FriBiDi
   dependencies) turned the check `True`, verified in the built image. The assertion also
   moved to the runtime stage, where it checks the image that actually serves: in the
   builder stage it would pass on a venv whose runtime never got the library, which is
@@ -814,7 +819,9 @@ plot.
   `proxy_pass` clears it, so the Plausible hops cannot hand a third party the
   key both services take. Nothing is armed by merging: the rollout, the
   hostnames the Transform Rule has to cover and the rollback are in
-  `infra/cloudflare/README.md`. (#11221)
+  `infra/cloudflare/README.md`. Both gates have since been armed: the direct
+  `*.run.app` URLs of `anyplot-api` and `anyplot-app` answer 403, and `/health`
+  and `/_health` report `ok` through the edge (checked 2026-09-27). (#11221)
 - **`X-Origin-Gate` on `/_health` makes arming a measurement rather than a
   leap.** The same five verdicts the API reports — `off`, `off-seen`, `ok`,
   `missing`, `mismatch` — for the request they were asked with, never the value.
@@ -875,7 +882,7 @@ plot.
 plotnine 1) — and 1 regeneration, daily-regen having been paused for the backfill; 314 of 324
 specs now at full 15-library coverage (174 at v3.2.0), the other 10 short by 12 recorded gaps
 (Chart.js 4, plotnine 4, Highcharts 2, MUI X Charts 2); 1 new spec (line-tanabe-sugano, not yet
-implemented); 4,848 implementations over 325 specs; 27,367 stale GCS objects (old-layout renders,
+implemented); 4,848 implementations across 324 of 325 specs; 27,367 stale GCS objects (old-layout renders,
 python/highcharts orphans, staging leftovers) moved to an archive prefix on 2026-09-16.*
 
 ## [3.2.0] — 2026-08-29 — Findable by assistants
