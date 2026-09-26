@@ -301,8 +301,8 @@ hand-maintained in the router.
 
 ### Titles, headings, and snippets
 
-The `<title>` and the `<h1>` carry the same text, without and with the
-` | anyplot.ai` suffix, because Google builds its title link from both:
+The `<title>` repeats the `<h1>` text and adds the ` | anyplot.ai` suffix,
+because Google builds its title link from both:
 
 | Page | `<title>` (example) | Meta/OG description |
 |---|---|---|
@@ -372,11 +372,20 @@ thumbnail. Both page types now carry a `WebPage` node (`CollectionPage` on the
 hub) whose `primaryImageOfPage` is the exact URL of the body's `<img src>`: the
 page's own render, or on the hub the render of the best-scoring implementation.
 On an implementation page the `SoftwareSourceCode` node is also the page's
-`mainEntity`, with the render as its `image`. `og:image` stays the card, because
-link previews and the `og_image_view` analytics event depend on it. A page without a
-render gets no `primaryImageOfPage`; the card is never offered as the search
-thumbnail. Google picks a thumbnail per query and never guarantees one, so
-check the result a few weeks after a recrawl rather than right after a deploy.
+`mainEntity`, with the render as its `image`.
+
+`og:image` stays the card, because link previews and the `og_image_view`
+analytics event depend on it. So on a page with a render, `og:image` and
+`primaryImageOfPage` name different images on purpose: the new signal adds a
+clean candidate, it doesn't withdraw the card, and Google weighs the signals
+itself. A page without a render gets no `primaryImageOfPage`, so that signal
+never names the card; the card is still a candidate there, as `og:image`, as the
+body image and, on an implementation page, as the `image` of the
+`SoftwareSourceCode` main entity. If results still show no thumbnail a few weeks
+after the recrawl, the next lever is pointing `og:image` at the render too,
+which costs the branded link preview. Google picks a thumbnail per query and
+never guarantees one, so check the result weeks after a recrawl rather than
+right after a deploy.
 
 Below the image the page lists every asset **in words**, because a `<picture>`
 tells a browser which file to take but tells a reader nothing about which is

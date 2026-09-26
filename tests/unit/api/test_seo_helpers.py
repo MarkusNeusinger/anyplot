@@ -378,7 +378,7 @@ class TestBuildSpecHubHtml:
         assert '<img src="https://api.anyplot.ai/og/scatter-basic.png"' in page
         _, item_list, page_node = _extract_jsonld(page)["@graph"]
         assert "image" not in item_list["itemListElement"][0]
-        # the card is never offered as the search thumbnail
+        # the card is never named as primaryImageOfPage (it stays the og:image)
         assert "primaryImageOfPage" not in page_node
 
     def test_title_and_h1_name_the_languages(self) -> None:
@@ -516,7 +516,8 @@ class TestBuildImplHtml:
         page = _build_impl_html(spec, impl, "code()", "https://api.anyplot.ai/og/card.png")
         _, source, page_node = _extract_jsonld(page)["@graph"]
         assert source["image"] == "https://api.anyplot.ai/og/card.png"
-        # the card is never offered as the search thumbnail
+        # no primaryImageOfPage without a render; the card stays the main
+        # entity's image, as it is the page's only image
         assert "primaryImageOfPage" not in page_node
 
     def test_primary_image_is_the_body_render(self) -> None:
