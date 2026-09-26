@@ -49,7 +49,10 @@ products <- lapply(seq_len(nrow(category_params)), function(i) {
     )
 }) |>
     dplyr::bind_rows() |>
-    dplyr::mutate(category = factor(category, levels = category_params$category))
+    dplyr::mutate(category = factor(category, levels = category_params$category)) |>
+    # Draw largest bubbles first (bottom layer) so smaller bubbles stay
+    # visible on top instead of being buried in the dense low-price cluster.
+    dplyr::arrange(dplyr::desc(sales_volume))
 
 category_colors <- stats::setNames(IMPRINT_PALETTE, levels(products$category))
 
@@ -76,8 +79,8 @@ p <- ggplot(products, aes(
     geom_point(
         shape  = 21,
         color  = PAGE_BG,
-        alpha  = 0.65,
-        stroke = 0.4
+        alpha  = 0.55,
+        stroke = 0.6
     ) +
     geom_segment(
         data        = top_sellers,
@@ -104,6 +107,7 @@ p <- ggplot(products, aes(
     ) +
     scale_size_area(
         max_size = 18,
+        limits   = c(0, 450000),
         breaks   = c(5000, 50000, 150000, 400000),
         labels   = c("5K", "50K", "150K", "400K"),
         name     = "Annual Sales"
@@ -126,8 +130,7 @@ p <- ggplot(products, aes(
         axis.title        = element_text(color = INK,        size = 10),
         axis.text         = element_text(color = INK_SOFT,   size = 8),
         plot.title        = element_text(color = INK,        size = 12),
-        legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT,
-                                         linewidth = 0.3),
+        legend.background = element_rect(fill = ELEVATED_BG, color = NA),
         legend.text       = element_text(color = INK_SOFT,   size = 8),
         legend.title      = element_text(color = INK,        size = 10),
         legend.key        = element_rect(fill = NA,          color = NA),
