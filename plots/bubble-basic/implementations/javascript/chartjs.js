@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 93/100 | Created: 2026-08-24
+// Quality: 93/100 | Updated: 2026-09-26
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic LCG) ------------------------------------
@@ -64,6 +64,8 @@ products.forEach((p, i) => {
 });
 
 // --- Size legend plugin (static key explaining the bubble-area encoding) ---
+// Drawn as an elevated card (ELEVATED_BG + thin rule) rather than bare text
+// floating over the plot area, matching the style guide's callout-box role.
 const legendValues = [sizeMin, (sizeMin + sizeMax) / 2, sizeMax];
 const sizeLegend = {
   id: "sizeLegend",
@@ -71,11 +73,22 @@ const sizeLegend = {
     const { ctx, chartArea } = chart;
     const cx = chartArea.left + R_MAX + 24;
     const spacing = 2 * R_MAX + 20;
+    const panelX = chartArea.left - 16;
+    const panelY = chartArea.top - 4;
+    const panelW = 2 * (R_MAX + 12) + 90;
+    const panelH = 54 + 2 * R_MAX + (legendValues.length - 1) * spacing;
     ctx.save();
-    ctx.font = "13px sans-serif";
+    ctx.fillStyle = t.elevatedBg;
+    ctx.beginPath();
+    ctx.roundRect(panelX, panelY, panelW, panelH, 10);
+    ctx.fill();
+    ctx.strokeStyle = t.grid;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.font = "15px sans-serif";
     ctx.fillStyle = t.inkSoft;
     ctx.textAlign = "left";
-    ctx.fillText("Monthly sales (units)", chartArea.left, chartArea.top + 14);
+    ctx.fillText("Monthly sales (units)", chartArea.left, chartArea.top + 16);
     legendValues.forEach((val, i) => {
       const r = bubbleRadius(val);
       const cy = chartArea.top + 36 + R_MAX + i * spacing;
@@ -135,10 +148,14 @@ new Chart(canvas, {
         data: bubbleData,
         // Scriptable options single out the best-value bubble (full opacity,
         // brand-green ring) while the rest stay at the spec-range overlap alpha.
+        // Ordinary bubbles get a soft ink stroke (not a page-bg-matched one) so
+        // overlapping bubbles in dense clusters stay separable from each other,
+        // not only from the page.
         backgroundColor: (ctx) =>
           hexToRgba(t.palette[0], ctx.dataIndex === bestValueIndex ? 0.9 : 0.55),
-        borderColor: (ctx) => (ctx.dataIndex === bestValueIndex ? t.palette[0] : t.pageBg),
-        borderWidth: (ctx) => (ctx.dataIndex === bestValueIndex ? 2.5 : 1),
+        borderColor: (ctx) =>
+          ctx.dataIndex === bestValueIndex ? t.palette[0] : hexToRgba(t.ink, 0.3),
+        borderWidth: (ctx) => (ctx.dataIndex === bestValueIndex ? 2.5 : 1.25),
       },
     ],
   },
@@ -165,7 +182,7 @@ new Chart(canvas, {
     },
     scales: {
       x: {
-        ticks: { color: t.inkSoft, font: { size: 14 } },
+        ticks: { color: t.inkSoft, font: { size: 14 }, callback: (val) => `$${val}` },
         grid: { color: t.grid },
         title: { display: true, text: "Price ($)", color: t.ink, font: { size: 16 } },
       },

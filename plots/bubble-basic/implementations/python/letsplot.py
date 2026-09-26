@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
-Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-28
+Library: letsplot 4.11.0 | Python 3.13.15
+Quality: 91/100 | Updated: 2026-09-26
 """
 
 import os
@@ -17,9 +17,11 @@ from lets_plot import (
     element_text,
     geom_point,
     geom_smooth,
+    geom_text_repel,
     ggplot,
     ggsave,
     ggsize,
+    ggtb,
     guide_legend,
     guides,
     labs,
@@ -65,6 +67,15 @@ for sector, (rev_lo, rev_hi), (g_base, g_slope), s_mean, n in zip(
 
 df = pd.DataFrame(rows)
 
+# Focal-point outliers: largest player by market share, sharpest growth decline
+top_share_idx = df["market_share"].idxmax()
+top_decline_idx = df["growth_rate"].idxmin()
+outliers = df.loc[[top_share_idx, top_decline_idx]].copy()
+outliers["label"] = [
+    f"{df.loc[top_share_idx, 'sector']} — largest share",
+    f"{df.loc[top_decline_idx, 'sector']} — steepest decline",
+]
+
 # Plot
 plot = (
     ggplot(df, aes(x="revenue", y="growth_rate", size="market_share", color="sector"))
@@ -85,6 +96,15 @@ plot = (
         color=INK_SOFT,
         size=1.5,
         alpha=0.12,
+        inherit_aes=False,
+        show_legend=False,
+    )
+    + geom_text_repel(
+        aes(x="revenue", y="growth_rate", label="label"),
+        data=outliers,
+        size=3.5,
+        color=INK,
+        seed=42,
         inherit_aes=False,
         show_legend=False,
     )
@@ -115,6 +135,7 @@ plot = (
     + ggsize(800, 450)
 )
 
-# Save
+# Save: static PNG without the interactive toolbar, HTML with letsplot's
+# distinctive pan/zoom toolbar (ggtb) layered on top for the interactive export
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
-ggsave(plot, f"plot-{THEME}.html", path=".")
+ggsave(plot + ggtb(), f"plot-{THEME}.html", path=".")

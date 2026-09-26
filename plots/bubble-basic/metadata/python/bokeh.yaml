@@ -2,12 +2,12 @@ library: bokeh
 language: python
 specification_id: bubble-basic
 created: 2025-12-14 11:09:30+00:00
-updated: '2026-05-28T17:59:28Z'
+updated: '2026-09-26T22:42:29Z'
 generated_by: claude-sonnet
-workflow_run: 26590748799
+workflow_run: 36276305151
 issue: 755
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.15
+library_version: 3.10.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/bokeh/plot-light.html
@@ -15,34 +15,39 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 quality_score: 92
 review:
   strengths:
-  - 'Complete theme adaptation with #FAF8F1 / #1A1A17 backgrounds and all chrome tokens
-    properly threaded through every element'
-  - Area-proportional bubble scaling using correct sqrt formula — spec requirement
-    met precisely
-  - Custom size legend using BoxAnnotation + colormap-matched scatter glyphs — sophisticated
-    and visually coherent with the main chart
-  - Realistic neutral city-metrics scenario demonstrating all three bubble chart dimensions
-    with meaningful real-world correlations
-  - Trend line adds immediate storytelling value and guides viewer to the density-income
-    relationship
+  - 'Legend-swatch color bug from attempt 1 is fully fixed: reference bubbles now
+    show their true imprint_seq gradient colors in both themes, matching the main
+    data bubbles'
+  - Title enlarged to 58pt, now occupying a proportionate ~55-60% of canvas width
+    instead of the previously-too-small ~40%
+  - Trend line (dashed regression fit) explicitly guides the viewer to the positive
+    density-income correlation
+  - Third variable (green space) is doubly encoded via both bubble size and the imprint_seq
+    color ramp, reinforcing the pattern and improving CVD-safe readability
+  - 'Realistic, neutral, well-scaled data: population density, income and green-space
+    values are all plausible and appropriately correlated'
+  - 'Clean idiomatic bokeh usage: ColumnDataSource, transform(), LinearColorMapper,
+    HoverTool with formatted tooltips, toolbar_location=None with correct min_border_*
+    reservations'
+  - 'Theme-adaptive chrome fully correct in both renders: backgrounds, text, grid
+    and legend box all use the right tokens with no dark-on-dark or light-on-light
+    failures'
   weaknesses:
-  - 'Legend text hierarchy inverted: legend entry labels (26pt) are smaller than tick
-    labels (34pt) — increase legend entries to 34pt and header to 38pt'
-  - Both X and Y grid lines at alpha=0.12; scatter plots are cleaner with Y-axis-only
-    grid — add p.xgrid.grid_line_color = None to disable horizontal grid clutter
-  - No subtitle or annotation calling out the key insight; a Label near the trend
-    line or a descriptive title prefix would strengthen storytelling (DE-03)
+  - A small amount of unused whitespace remains in the upper-right quadrant beyond
+    the legend box; this is largely a byproduct of the genuine data correlation (few
+    points combine high density with very high income) rather than a layout defect,
+    so no further action is required unless it becomes visually distracting.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "bubble-basic · python · bokeh · anyplot.ai" in dark #1A1A17 at ~55% width; X-axis label "Population Density (people/km²)" and Y-axis label "Median Income (thousands USD)" in dark ink; tick labels in INK_SOFT #4A4A44; all clearly readable
-      Data: 40 city bubbles with imprint_seq colormap (green #009E73 → blue #4467A3); sizes 22-80px (area-proportional); alpha=0.65; dashed trend line in INK_SOFT; custom "Green Space" legend box (elevated #FFFDF6 background) in upper-left with 3 reference bubbles
+      Background: Warm off-white, consistent with #FAF8F1
+      Chrome: Bold dark title "bubble-basic · python · bokeh · anyplot.ai" spans ~55-60% of canvas width, fully visible with no clipping. Italic axis labels and tick labels render in dark/soft-dark ink, all clearly readable. Subtle y-axis-only grid.
+      Data: Bubbles range from teal-green (low green-space, high density) to muted blue (high green-space, low density) via the imprint_seq colormap, sized by sqrt(green_space) with ~0.65 alpha. First-series/base color matches the brand green #009E73 end of the ramp. Dashed grey trend line shows the positive density-income correlation. "Green Space" legend box (top-left) shows three reference bubbles (8/34/60 m²/capita) now rendering their TRUE gradient colors (small green, medium teal, large blue) — the attempt-1 washed-out-swatch bug is fixed.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title and axis labels in light #F0EFE8; tick labels in #B8B7B0; legend box uses elevated dark #242420 with subtle INK_SOFT border; all text clearly readable against dark surface; no dark-on-dark failures
-      Data: Bubble colors identical to light render — same imprint_seq gradient from #009E73 to #4467A3; bubble edge line_color=PAGE_BG (#1A1A17) blends cleanly into background; dashed trend line visible
+      Background: Warm near-black, consistent with #1A1A17
+      Chrome: Title and axis labels render in light/off-white ink, tick labels in soft light gray — all legible, no dark-on-dark failures. Grid lines faint and light, still visible.
+      Data: Bubble colors identical to the light render (same imprint_seq ramp, same positions/sizes) — only chrome flipped, as required. Legend swatches also show correct, undistorted gradient colors here, matching the fix verified in the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -54,35 +59,34 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
-          ticks, 30pt/26pt legend); readable at 400px mobile width
+        comment: Sizes explicitly set (58/42/34pt), readable in both themes; title
+          now ~55-60% of canvas width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps; legend box in intentionally empty upper-left zone
+        comment: No text/data collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 40 cities with bubble sizes 22-80px; all visible; alpha=0.65 appropriate;
-          imprint_seq color adds redundant encoding
+        comment: Legend reference bubbles now render true imprint_seq colors after
+          BoxAnnotation level='underlay' fix
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green→blue) is CVD-safe perceptually uniform; no red-green
-          sole signal
+        comment: Redundant size+color encoding improves CVD-safety
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800; intentional extra y-axis headroom used by legend; data
-          fills ~65% canvas; explicit min_border margins
+        comment: Good proportions, nothing cut off; widened legend and reduced padding
+          tighten prior whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -94,8 +98,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq correctly used for single-polarity continuous data;
-          backgrounds #FAF8F1/#1A1A17; all chrome theme-adaptive'
+        comment: Correct imprint_seq colormap, identical across themes, theme-correct
+          chrome
     design_excellence:
       score: 13
       max: 20
@@ -105,23 +109,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: custom imprint_seq, size legend with matched colormap
-          markers, intentional story. Not publication-ready: inverted legend text
-          hierarchy, lacks final visual punch'
+        comment: Thoughtful color ramp, refined typography, no toolbar clutter — solid
+          but not exceptional
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Outline frame removed, grid at 0.12 alpha, generous margins; misses
-          Y-only grid and explicit top/right spine removal
+        comment: Subtle grid, no outline, correctly rendered legend overlay; minor
+          residual whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Trend line + meaningful color encoding; no annotation or subtitle
-          to call out the key insight explicitly
+        comment: Trend line plus size/color double-encoding guide the viewer to the
+          relationship
     spec_compliance:
       score: 15
       max: 15
@@ -131,50 +134,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bubble chart with all three dimensions
+        comment: Correct bubble chart, area-proportional sizing
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-proportional scaling, alpha=0.65, size legend, min/max visible
+        comment: Size legend, alpha transparency, area-based scaling all present and
+          working
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=density, Y=income, size=green space; full data range shown
+        comment: X/Y correctly assigned, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels descriptive with units (m²/capita)
+        comment: Title matches mandated format exactly; legend labels/units match
+          data
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Full size spectrum; color gradient; positive correlation; all three
-          dimensions distinct
+        comment: Good spread across green-space, density and income ranges with realistic
+          noise
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: City metrics (density, income, green space) — real-world, neutral,
-          comprehensible
+        comment: Neutral, comprehensible urban-planning scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Density 500-12000 people/km², income 28-65k USD, green space 5-60
-          m²/capita — all factually grounded
+        comment: Realistic value ranges and correlations for city-level data
     code_quality:
       score: 10
       max: 10
@@ -184,7 +187,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → figure → chrome → legend → save'
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -196,22 +199,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic; strict=True in zip; captureBeyondViewport is
-          well-motivated
+        comment: No fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current Bokeh 3.9 API
+        comment: plot-{THEME}.png/.html via current bokeh API
     library_mastery:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: LM-01
@@ -219,33 +221,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ColumnDataSource, transform(), HoverTool, BoxAnnotation, Label, Range1d
-          — all canonical; Selenium CDP export follows recommended path
+        comment: figure(), ColumnDataSource, transform(), LinearColorMapper, HoverTool
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: LinearColorMapper+transform(), BoxAnnotation legend, HoverTool with
-          formatted fields; deducted 1 for individual ColumnDataSources per legend
-          row being slightly verbose
+        comment: HoverTool tooltips + hand-built BoxAnnotation+Label legend, z-order
+          bug now fixed
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
-  - pillow
   techniques:
   - hover-tooltips
-  - html-export
   - custom-legend
-  - annotations
+  - html-export
   patterns:
   - data-generation
   - columndatasource
   dataprep:
-  - normalization
   - regression
   styling:
   - alpha-blending
   - custom-colormap
-  - edge-highlighting
+  - grid-styling
