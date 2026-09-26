@@ -37,10 +37,14 @@ function randomNormal(rand, mean, stdDev) {
 // The community package has no bubble/z-size scatter mode (ZAxisConfig
 // only maps z to colour), so bubbles are drawn as a custom SVG layer
 // positioned via the chart's own scale hooks.
+// "Growth leaders" gets a wider (xSpread, ySpread) than the other two
+// archetypes — the previous review flagged that its 15 bubbles packed so
+// tightly around x=20-22, y=17-21 that individual boundaries were hard to
+// distinguish even with the pageBg stroke separation.
 const ARCHETYPES = [
-  { name: "Growth leaders", growth: 24, margin: 19, share: 62, count: 15, color: t.palette[0] },
-  { name: "Mid-market", growth: 12, margin: 10, share: 34, count: 20, color: t.palette[1] },
-  { name: "Niche players", growth: 4, margin: 3, share: 14, count: 15, color: t.palette[2] },
+  { name: "Growth leaders", growth: 24, margin: 19, share: 62, count: 15, xSpread: 9, ySpread: 7.5, color: t.palette[0] },
+  { name: "Mid-market", growth: 12, margin: 10, share: 34, count: 20, xSpread: 7, ySpread: 6, color: t.palette[1] },
+  { name: "Niche players", growth: 4, margin: 3, share: 14, count: 15, xSpread: 7, ySpread: 6, color: t.palette[2] },
 ];
 
 const rand = lcg(42);
@@ -48,8 +52,8 @@ const rand = lcg(42);
 const companies = ARCHETYPES.flatMap((a, groupIndex) =>
   Array.from({ length: a.count }, (_, i) => ({
     id: `${groupIndex}-${i}`,
-    x: Math.round(randomNormal(rand, a.growth, 7) * 10) / 10,
-    y: Math.round(randomNormal(rand, a.margin, 6) * 10) / 10,
+    x: Math.round(randomNormal(rand, a.growth, a.xSpread) * 10) / 10,
+    y: Math.round(randomNormal(rand, a.margin, a.ySpread) * 10) / 10,
     size: Math.min(100, Math.max(10, Math.round(randomNormal(rand, a.share, 18)))),
     color: a.color,
   })),
@@ -101,7 +105,7 @@ function Bubbles() {
 function ColorLegend({ left, top }) {
   return (
     <g>
-      <text x={left} y={top - 20} fontSize={13} fontWeight={600} fill={t.inkSoft}>
+      <text x={left} y={top - 20} fontSize={14} fontWeight={600} fill={t.inkSoft}>
         Company archetype
       </text>
       {ARCHETYPES.map((a, i) => {
@@ -109,7 +113,7 @@ function ColorLegend({ left, top }) {
         return (
           <g key={a.name}>
             <circle cx={left + 6} cy={cy} r={6} fill={a.color} fillOpacity={0.48} stroke={a.color} strokeWidth={1.5} />
-            <text x={left + 20} y={cy} dominantBaseline="middle" fontSize={13} fill={t.inkSoft}>
+            <text x={left + 20} y={cy} dominantBaseline="middle" fontSize={14} fill={t.inkSoft}>
               {a.name}
             </text>
           </g>
@@ -130,7 +134,7 @@ function SizeLegend({ left, top }) {
 
   return (
     <g>
-      <text x={left} y={top - 20} fontSize={13} fontWeight={600} fill={t.inkSoft}>
+      <text x={left} y={top - 20} fontSize={14} fontWeight={600} fill={t.inkSoft}>
         Market share index
       </text>
       {legendValues.map((value) => {
@@ -152,7 +156,7 @@ function SizeLegend({ left, top }) {
               x={left + MAX_RADIUS * 2 + 14}
               y={cy}
               dominantBaseline="middle"
-              fontSize={13}
+              fontSize={14}
               fill={t.inkSoft}
             >
               {value}
@@ -211,7 +215,7 @@ export default function Chart() {
           },
         ]}
       >
-        <ChartsGrid horizontal vertical />
+        <ChartsGrid horizontal />
         <Bubbles />
         <ChartsXAxis axisId="growth" />
         <ChartsYAxis axisId="margin" />
