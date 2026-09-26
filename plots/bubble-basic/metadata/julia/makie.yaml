@@ -2,137 +2,127 @@ library: makie
 language: julia
 specification_id: bubble-basic
 created: '2026-05-28T17:46:42Z'
-updated: '2026-05-28T18:08:59Z'
+updated: '2026-09-26T22:58:21Z'
 generated_by: claude-sonnet
-workflow_run: 26591521583
+workflow_run: 36277077462
 issue: 755
 language_version: 1.11.9
-library_version: 0.22.10
+library_version: 0.21.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/julia/makie/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - Correct bubble chart with size encoding via sqrt-normalization for perceptual
-    accuracy
-  - 'Full anyplot theme compliance: warm off-white/near-black backgrounds, INK token
-    hierarchy, BRAND green #009E73 used throughout'
-  - Size legend with MarkerElement reference bubbles (10/40/70/100 units) clearly
-    communicates the third data dimension
-  - 'Well-structured data narrative: price-rating correlation and mid-range sales
-    sweet-spot are both visible'
-  - All font sizes explicitly set, both themes fully readable with no dark-on-dark
-    failures
-  - Alpha (0.6) + stroke (0.9) combination gives bubbles good definition without competing
-    with each other
-  - Clean KISS code structure with proper Random.seed!(42) and correct output filename
+  - Correct area-based (not radius-based) bubble scaling via sqrt of the normalized
+    size variable, exactly as the spec requires
+  - Size range (10-100) and point count (65) land squarely within the spec's recommended
+    ranges
+  - Custom composite size+color legend built from MarkerElements - a sophisticated,
+    distinctive Makie technique
+  - Explicit data storytelling via the 'peak sales zone' shaded band and annotation,
+    on top of dual size/color encoding of sales
+  - Fully theme-adaptive chrome (title, axis, ticks, grid, legend box) verified correct
+    in both light and dark renders; data colors identical across themes
+  - Uses the current, non-deprecated Figure(size=...) API and correct canvas math
+    (1600x900 @ px_per_unit=2 -> 3200x1800)
   weaknesses:
-  - 'DE-01 moderate: single-color monochromatic design is clean but not exceptional
-    — no color contrast, size-as-focal-point is the only hierarchy device'
-  - 'DE-03 limited: mid-range sweet-spot narrative is embedded in the data but not
-    visually emphasized — no annotation, highlight, or reference line points the viewer
-    to the insight'
-  - 'LM-02 basic: MarkerElement custom legend is correct Makie usage but the implementation
-    does not showcase any distinctively Makie capability beyond what other static
-    libraries offer'
+  - Alpha is set to 0.75, slightly above the spec's recommended ~0.5-0.7 range for
+    overlapping-bubble transparency - consider nudging down for marginally better
+    separation in the densest cluster (~$250, rating ~2.3-2.7)
+  - Color and size both encode the same 'sales' variable (redundant dual-encoding);
+    the spec allows color to optionally distinguish a separate category, which was
+    not explored here
+  - The 'peak sales zone' annotation text (12pt) is small relative to the rest of
+    the type hierarchy for a callout meant to carry the plot's central narrative point
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "bubble-basic · julia · makie · anyplot.ai" dark ink, clearly readable; "Price (USD)" x-axis and "Customer Rating" y-axis labels dark ink, well-proportioned; tick labels in dark secondary ink (#4A4A44 equivalent INK_SOFT), readable; L-shaped spines (no top/right) in INK_SOFT; subtle grid at 15% opacity
-      Data: 65 bubbles in brand green #009E73 at alpha 0.6 with darker green strokes at alpha 0.9; size range from small (~10px) to large (~65px) clearly visible; upward price-rating trend apparent; Legend panel (Annual Sales) on right with four reference bubbles 10/40/70/100 units, warm elevated background, correctly themed
-      Legibility verdict: PASS — all text readable, no overflow, no clipping
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "bubble-basic · julia · makie · anyplot.ai" centered at top; "Price (USD)" and "Customer Rating" axis labels in dark ink; dark-gray tick labels; subtle ~15%-opacity grid on both axes; "peak sales zone" annotation in soft dark gray over a faint shaded band ($150-280). All clearly readable against the light background.
+      Data: Bubbles area-scaled by sqrt(sales), colored on a green(#009E73)->blue(#4467A3) continuous imprint_seq gradient encoding annual sales, alpha 0.75 with a thin dark stroke. Composite size+color legend ("Annual Sales": 10/40/70/100 units) to the right.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: Title in light cream (#F0EFE8 INK), fully readable; axis labels in same light INK, readable; tick labels in secondary light gray (#B8B7B0 INK_SOFT), clearly visible — no dark-on-dark failures detected; grid lines correctly flip to light-on-dark at 15% opacity; Legend background elevated dark (#242420), frame in light INK_SOFT, labels in INK_SOFT — all readable
-      Data: Bubble color is identical to light render (#009E73 brand green at alpha 0.6 + stroke 0.9) — data colors unchanged as required
-      Legibility verdict: PASS — all text readable against near-black background, no dark-on-dark failures
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and axis labels flip to off-white/light text; tick labels and "peak sales zone" annotation flip to soft light-gray; legend box uses a slightly lighter dark elevated fill with a soft border. No dark-on-dark failures observed — all text clearly legible.
+      Data: Bubble colors (green->blue gradient), alpha, and stroke are identical to the light render — only chrome flipped, confirming correct theme-adaptive implementation.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (titlesize=20, xlabelsize=14, ylabelsize=14,
-          xticklabelsize=12, yticklabelsize=12, legend labelsize=13); proportional
-          and readable in both themes
+        comment: All sizes explicitly set, readable in both themes; annotation text
+          a bit small relative to hierarchy
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps; bubble overlap handled by alpha=0.6; legend placed
-          in separate column
+        comment: No text collisions with other text, data, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 65 bubbles with sizes 10–65px; alpha + stroke give clear definition;
-          size range clearly communicates the third dimension
+        comment: Correct sqrt area-scaling for bubble sizes, well adapted to 65-point
+          density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single hue (brand green) — no hue discrimination needed; good contrast
-          on both surfaces; stroke adds definition for low-contrast situations
+        comment: CVD-safe green-blue ramp, alpha+stroke aid separation
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800 landscape; plot in col 1, legend in col 2; balanced margins;
-          no overflow or clipping
+        comment: Plot fills most of canvas, legend adjacent, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Price (USD) with units; Customer Rating descriptive; legend titled
-          Annual Sales
+        comment: Price (USD) has units; Customer Rating descriptive with visible scale
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series uses #009E73 brand green; PAGE_BG correctly #FAF8F1
-          light / #1A1A17 dark; all chrome tokens theme-adaptive; data colors identical
-          across themes'
+        comment: imprint_seq correctly used for single-polarity continuous data; both
+          renders theme-correct
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Clearly above defaults: anyplot tokens applied throughout, alpha+stroke
-          on bubbles, L-spine removal, subtle grid. Clean monochromatic design but
-          not quite publication-ready; no color contrast or secondary emphasis technique'
+        comment: Deliberate gradient, refined legend, clearly above defaults; palette
+          is a simple 2-stop gradient
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Good refinement: top/right spines removed, 15% opacity grid, legend
-          styled with elevated background token, balanced whitespace'
+        comment: Spines removed, subtle grid, generous whitespace, styled legend box,
+          marker stroke
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Intentional data narrative (price-rating correlation + mid-range
-          sweet spot) embedded in data design; bubble sizes create visual hierarchy;
-          but story is not visually emphasized — no annotation, highlight, or reference
-          line guides the viewer to the insight
+        comment: Peak sales zone annotation + dual size/color encoding gives explicit
+          narrative
     spec_compliance:
       score: 15
       max: 15
@@ -142,29 +132,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bubble chart: scatter with variable markersize encoding
-          third dimension'
+        comment: Correct bubble chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: sqrt normalization for area scaling; alpha 0.6; size legend with
-          reference bubbles; all spec features implemented
+        comment: x/y/size, area scaling, transparency, size legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Price(USD), Y=CustomerRating, Size=AnnualSales — all three dimensions
-          correctly mapped
+        comment: Price on X, Rating on Y, full range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''bubble-basic · julia · makie · anyplot.ai'' matches required
-          format; legend ''Annual Sales'' with correct reference values'
+        comment: Title format exact match; legend labels correct
     data_quality:
       score: 15
       max: 15
@@ -174,23 +160,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full size range (10–100 sales), price-rating correlation, bubble
-          overlap handled by alpha; all bubble chart features demonstrated
+        comment: Full size range, visible overlap, clear multi-variable relationship
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Product portfolio analysis (price vs quality rating with sales volume)
-          — real neutral business scenario
+        comment: Product portfolio scenario matches spec's suggested application,
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price $20–$500 realistic; rating 1.5–4.5 plausible for a 5-point
-          scale; sales 10–100 units reasonable for a product portfolio; correlations
-          make logical sense
+        comment: Plausible price/rating/sales values and relationships
     code_quality:
       score: 10
       max: 10
@@ -200,8 +183,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear: imports → tokens → data → plot → legend → save; no
-          functions or classes'
+        comment: Linear script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -213,49 +195,46 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all used
+        comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Idiomatic Julia broadcasting, clean variable naming, no over-engineering
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) — correct themed
-          filename and modern CairoMakie API
+        comment: Current Figure(size=...) API, correct px_per_unit
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Composite MarkerElement-based legend is expert-level Makie usage
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct use of Figure/Axis/scatter!/Legend; grid layout fig[1,1]/fig[1,2];
-          RGBAf color construction; colorant"" for palette; idiomatic keyword-argument
-          Axis styling
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: MarkerElement[] array comprehension for sized legend entries is a
-          Makie-specific pattern, but otherwise the implementation doesn't showcase
-          distinctively Makie capabilities beyond what other static libraries provide
+        comment: Manual dual-encoding legend + vspan/text annotation are Makie-distinctive
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
   patterns:
   - data-generation
   dataprep:
   - normalization
   styling:
+  - custom-colormap
   - alpha-blending
   - edge-highlighting

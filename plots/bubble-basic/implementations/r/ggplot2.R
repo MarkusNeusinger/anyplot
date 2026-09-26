@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' bubble-basic: Basic Bubble Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 90/100 | Created: 2026-05-28
+#' Quality: 92/100 | Updated: 2026-09-26
 
 library(ggplot2)
 library(dplyr)
@@ -31,6 +31,14 @@ continent_colors <- c(
 gm_2007 <- gapminder::gapminder |>
     dplyr::filter(year == 2007)
 
+# Top 3 population outliers — labeled to guide the viewer to the most
+# important data points (China, India, United States). "United States" is
+# shortened to "USA" because its bubble sits near the right panel edge and
+# the full name would clip against the log-scale x-axis boundary.
+top_countries <- gm_2007 |>
+    dplyr::slice_max(pop, n = 3) |>
+    dplyr::mutate(label = ifelse(country == "United States", "USA", as.character(country)))
+
 # Plot
 p <- ggplot(gm_2007, aes(
     x    = gdpPercap,
@@ -43,6 +51,15 @@ p <- ggplot(gm_2007, aes(
         color  = PAGE_BG,
         alpha  = 0.65,
         stroke = 0.4
+    ) +
+    geom_text(
+        data        = top_countries,
+        mapping     = aes(x = gdpPercap, y = lifeExp, label = label),
+        inherit.aes = FALSE,
+        color       = INK,
+        size        = 3.2,
+        fontface    = "bold",
+        vjust       = -1.7
     ) +
     scale_x_log10(
         labels = label_dollar(accuracy = 1),
@@ -64,15 +81,14 @@ p <- ggplot(gm_2007, aes(
         y     = "Life Expectancy (years)"
     ) +
     guides(
-        fill = guide_legend(override.aes = list(size = 4, alpha = 0.9)),
-        size = guide_legend(title = "Population")
+        fill = guide_legend(override.aes = list(size = 4, alpha = 0.9))
     ) +
     theme_minimal(base_size = 8) +
     theme(
         plot.background   = element_rect(fill = PAGE_BG,     color = PAGE_BG),
         panel.background  = element_rect(fill = PAGE_BG,     color = NA),
         panel.grid.major  = element_line(color = GRID,       linewidth = 0.4),
-        panel.grid.minor  = element_line(color = GRID,       linewidth = 0.2),
+        panel.grid.minor  = element_blank(),
         axis.title        = element_text(color = INK,        size = 10),
         axis.text         = element_text(color = INK_SOFT,   size = 8),
         plot.title        = element_text(color = INK,        size = 12),
