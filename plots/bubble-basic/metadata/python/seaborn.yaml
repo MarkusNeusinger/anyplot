@@ -2,125 +2,135 @@ library: seaborn
 language: python
 specification_id: bubble-basic
 created: '2025-12-23T01:30:31Z'
-updated: '2026-05-28T17:41:54Z'
+updated: '2026-09-26T22:32:11Z'
 generated_by: claude-sonnet
-workflow_run: 26590531637
+workflow_run: 36276082708
 issue: 755
-language_version: 3.13.13
+language_version: 3.13.15
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Full theme-adaptive chrome: all text, grid, legend, background tokens correctly
-    branch on ANYPLOT_THEME for both light and dark'
-  - Dual seaborn encoding (hue + size) with proper sizes area-scaling matches spec's
-    'scale by area' requirement
-  - Size legend handles explicitly recolored for dark mode visibility — a subtle but
-    important detail
-  - Realistic, story-rich dataset (healthcare spending x child mortality x income
-    tier) with plausible distributions
+  - 'First categorical series is exactly #009E73 and all four income-tier colors follow
+    the Imprint canonical order, with backgrounds correctly themed (#FAF8F1 light
+    / #1A1A17 dark) and all chrome (title, ticks, grid, legend frame) properly theme-adaptive
+    in both renders'
+  - Combined hue+size legend (sns.move_legend + manual handle recoloring so size swatches
+    stay INK_SOFT in both themes) is a genuinely idiomatic seaborn feature that would
+    take significantly more manual work in most other libraries
+  - Bubble sizes are area-scaled via matplotlib's s= parameter (not radius) exactly
+    as the spec requires, with edgecolor matched to the page background so overlapping
+    bubbles read as distinct discs instead of a muddy blob
+  - 'Data tells a clear, real-world-plausible story: four income tiers cluster distinctly
+    along the spending axis with population size as a legible third dimension, and
+    values (spending $50-$8500/yr, mortality 0.5-97 per 1,000) track real-world development
+    statistics closely'
+  - Clean KISS script structure with explicit np.random.seed(42), only used imports,
+    and correct plot-{THEME}.png output without bbox_inches='tight'
   weaknesses:
-  - 'DE-03: No annotations or visual focal point to guide the viewer through the story
-    (e.g., a callout on the extreme outlier bubble or a trend annotation would elevate
-    storytelling)'
-  - 'DE-01/DE-02: Tick marks are still visible; removing them (ax.tick_params(length=0))
-    would add a cleaner look'
-  - 'VQ-02: Bubble overlap in the Low Income cluster is handled by alpha but remains
-    visually dense; reducing marker max size slightly or nudging sizes=(40,900) could
-    reduce crowding'
+  - The smallest bubbles (Population ~1-2M, s~40) are legible at full 3200x1800 resolution
+    but will shrink to only a few pixels at the ~400px mobile preview width — consider
+    raising the sizes= floor slightly (e.g. 55-900) for the low end.
+  - Alpha is set to 0.72, just above the spec's recommended 0.5-0.7 range for handling
+    bubble overlap — a touch more transparency (e.g. 0.65) would let the densest low-income
+    cluster overlaps read even more clearly.
+  - Design Excellence is solid (custom palette, styled legend, subtle grid) but stops
+    short of a genuine focal-point callout — e.g. no annotation or trend cue calling
+    out the spending-vs-mortality relationship — so Data Storytelling scores 'good'
+    rather than 'excellent'.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "bubble-basic · python · seaborn · anyplot.ai" in dark #1A1A17 at fontsize 12, ~60% plot width — readable. Axis labels "Healthcare Spending ($ / year)" and "Child Mortality (per 1,000 births)" in dark ink at fontsize 10 — readable. Tick labels in #4A4A44 (INK_SOFT) at fontsize 8 — readable.
-      Data: Low Income = #009E73 (brand green), Lower-Middle = #C475FD (lavender), Upper-Middle = #4467A3 (blue), High Income = #BD8233 (ochre). Bubble sizes encode Population (M) with area scaling. Legend in upper right shows both tier colors and size key; size circles appear dark grey on cream background.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "bubble-basic · python · seaborn · anyplot.ai" in dark ink, centered, clearly readable. X-axis label "Healthcare Spending ($ / year)" and Y-axis label "Child Mortality (per 1,000 births)" in dark ink, both descriptive with units. Tick labels in a softer dark gray, fully legible. A subtle off-white/light grid (both axes) is visible but not competing with data. Top and right spines removed; left/bottom spines present in a soft ink tone. A legend box in the upper-right, titled "Income Tier / Population (M)", uses an elevated cream fill with a soft border, lists four income-tier color swatches plus four gray size swatches (15/30/45/60) — all text and swatches are clearly legible and do not overlap the data (the bubble cluster sits well below/left of the legend box).
+      Data: Four color-coded clusters of bubbles — green (#009E73, Low Income) at low spending/high mortality, lavender/purple (Lower-Middle Income) just to the right, blue (Upper-Middle Income) further right at low-mid mortality, and ochre/tan (High Income) spread across the highest spending values at near-zero mortality. Bubble sizes vary with population, from small dots (~1-2M) to large discs (~60M+); overlapping bubbles use a background-colored edge stroke so overlaps read as distinct discs rather than a solid blob. Overall shape is a clear downward-sloping/inverse relationship between spending and mortality.
+      Legibility verdict: PASS — all title, axis, tick, and legend text is clearly readable against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: Title and axis labels switch to #F0EFE8 (INK in dark mode) — clearly readable against dark background. Tick labels in #B8B7B0 (INK_SOFT dark) — readable. Legend background is #242420 (ELEVATED_BG dark). Size circle handles recolored to INK_SOFT (#B8B7B0, light grey) for visibility on dark legend box. No dark-on-dark failures detected.
-      Data: Colors identical to light render — green, lavender, blue, ochre unchanged. Only chrome flipped.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels rendered in light/off-white ink, clearly legible against the dark background. Tick labels in a lighter soft gray, also legible. Grid lines are a faint light-on-dark tone, subtle as in the light render. Spines follow the same L-shaped (left+bottom only) treatment. The legend box now uses a dark elevated fill (~#242420) with light text for both the income-tier labels and the "Income Tier / Population (M)" title — no dark-on-dark failures observed anywhere (title, axis labels, ticks, and legend text all flip correctly to light ink).
+      Data: The four bubble clusters render in identical hex colors to the light version (green #009E73, lavender, blue, ochre) — confirmed data colors are unchanged, only the chrome (background, text, grid, legend fill) flipped to the dark theme.
+      Legibility verdict: PASS — no dark-on-dark text; all chrome elements are correctly theme-adaptive and legible.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes; no proportional
-          issues
+        comment: All font sizes explicitly set (title dynamically scaled, xlabel/ylabel=10pt,
+          ticks/legend=8pt); readable in both themes, well-proportioned, no clipping
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: No text collisions; bubble overlap in Low Income cluster handled
-          well by alpha=0.72
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 48 data points at medium density; sizes=(50,1200) well calibrated;
-          all categories visible
+        comment: No text overlaps other text, data, or the legend; legend sits clear
+          of the bubble cluster
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bubble sizes (40-900) are visible and well-adapted to data density
+          at full resolution, but the smallest bubbles (~1-2M population) risk becoming
+          near-invisible at ~400px mobile scale
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four anyplot palette hues with good perceptual separation under CVD
+        comment: 4 distinct hue families (green/purple/blue/ochre), CVD-safe per style
+          guide, alpha blending aids overlap distinction
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); title ~60% width; no overflow or
-          clipping
+        comment: Plot area fills the canvas well with balanced margins; legend is
+          nested inside the plot area near the data, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels include units; title matches spec format
+        comment: Both axis labels are descriptive with units ($/year, per 1,000 births)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; canonical anyplot order; correct backgrounds
-          both themes'
+        comment: 'First series is #009E73, remaining tiers use Imprint canonical order
+          2-4; backgrounds and all chrome correctly theme-adaptive in both renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: true
-        comment: 'Above default: custom palette mapping, intentional edge color, dual-dimension
-          legend, theme-adaptive chrome'
+        comment: Custom per-tier palette mapping, styled legend frame with elevated
+          background, background-matched bubble edges — clearly above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Spines removed; subtle grid; elevated legend; bubble edge highlighting.
-          Tick marks still present.
+        comment: Top/right spines removed, subtle 15% alpha grid, generous whitespace,
+          polished legend frame with alpha blending
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Natural story in data (spending vs mortality); dual encoding intentional;
-          no explicit annotations or focal point
+        comment: Color-coded income-tier clusters make the spending/mortality relationship
+          immediately visible, but no explicit annotation or trend callout reinforces
+          the insight
     spec_compliance:
       score: 15
       max: 15
@@ -129,28 +139,25 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Correct bubble chart with variable marker area
+        comment: Correct bubble chart via sns.scatterplot with size mapping
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: X/Y position, size variable, transparency, size legend, area-based
-          scaling
+        comment: Area-scaled bubbles, alpha transparency for overlap, size legend
+          present, optional color-by-category used
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: X=Healthcare Spending, Y=Child Mortality, Size=Population, Color=Income
-          Tier
+        comment: x=Healthcare Spending, y=Child Mortality, size=Population, all axes
+          show full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title matches spec format; legend shows tier labels and size key
+        comment: Title matches 'bubble-basic · python · seaborn · anyplot.ai' exactly;
+          legend labels match Income Tier categories and Population values
     data_quality:
       score: 15
       max: 15
@@ -159,22 +166,21 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        passed: true
-        comment: All three dimensions utilized; size range spans small to large visually
+        comment: Shows full spread across all four income tiers, wide population-size
+          range, and mortality outliers within the low-income cluster
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Healthcare spending vs child mortality by income tier; plausible
-          values; no controversial content
+        comment: 'Real, neutral, comprehensible scenario: country healthcare spending
+          vs. child mortality by income tier'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Spending 50-8500 $/yr, mortality 0.5-100 per 1000, population 1-200M
-          all realistic
+        comment: Spending and mortality ranges per tier closely track real-world development
+          statistics (e.g. high-income ~$3.2k-8.5k spend, ~1-10 mortality; low-income
+          ~$50-300 spend, up to ~97 mortality)
     code_quality:
       score: 10
       max: 10
@@ -183,32 +189,27 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: Flat script; no functions or classes
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: np.random.seed(42) set before data generation
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: All imports used, none extraneous
+        comment: os, matplotlib.pyplot, numpy, pandas, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: Legend handle loop is justified complexity; no fake interactivity
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Saves as plot-{THEME}.png without bbox_inches='tight'
+        comment: Saves plot-{THEME}.png with dpi=400, no bbox_inches='tight'
     library_mastery:
       score: 7
       max: 10
@@ -217,16 +218,15 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: sns.scatterplot with size+hue+sizes; sns.move_legend; sns.set_theme
-          with rc dict; legend='brief'
+        comment: Axes-level sns.scatterplot with hue+size+palette dict, sns.set_theme
+          rc dict, sns.move_legend — solid idiomatic usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Dual seaborn encoding (hue+size simultaneously), sns.move_legend,
-          legend='brief' are seaborn-specific patterns
+        comment: Combined categorical+numeric (hue+size) auto-legend via legend='brief'
+          is a distinctive seaborn capability, further customized for theme-correct
+          swatches
   verdict: APPROVED
 impl_tags:
   dependencies: []
