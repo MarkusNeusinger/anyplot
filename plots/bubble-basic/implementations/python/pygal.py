@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 84/100 | Created: 2026-09-26
@@ -23,6 +23,8 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+_r, _g, _b = int(INK_MUTED[1:3], 16), int(INK_MUTED[3:5], 16), int(INK_MUTED[5:7], 16)
+GRID = f"rgba({_r}, {_g}, {_b}, 0.35)"  # lighter, theme-adaptive gridlines (pygal defaults to a hardcoded black)
 
 # Data — Transit coverage vs congestion, bubble = vehicle registrations per 1,000 residents
 np.random.seed(42)
@@ -37,19 +39,19 @@ np.random.shuffle(transit_coverage)
 congestion_index = np.clip(85 - transit_coverage * 0.65 + np.random.normal(0, 6, n_cities), 15, 95)
 vehicle_registrations = np.clip(200 + congestion_index * 4 + np.random.normal(0, 60, n_cities), 150, 700)
 
-# Area-scaled bubble sizing via 5 tiers (pygal has no per-point size API) —
-# fewer, wider-spaced tiers than a previous 8-tier pass to keep adjacent
-# bubbles visually distinguishable and the bottom legend compact.
+# Area-scaled bubble sizing via 4 tiers (pygal has no per-point size API) —
+# fewer, wider-spaced tiers than a previous 5-tier pass so adjacent bubbles
+# stay visually distinguishable even where they overlap heavily.
 vr_min, vr_max = vehicle_registrations.min(), vehicle_registrations.max()
 bubble_norm = (vehicle_registrations - vr_min) / (vr_max - vr_min)
 
-n_tiers = 5
+n_tiers = 4
 tier_bins = np.clip(np.digitize(bubble_norm, np.linspace(0, 1, n_tiers + 1)[1:-1]), 0, n_tiers - 1)
 
-# sqrt scaling for perceptual area accuracy
-tier_sizes = [int(14 + 60 * ((t + 0.5) / n_tiers) ** 0.5) for t in range(n_tiers)]
+# sqrt scaling for perceptual area accuracy, widened base/scale for a bigger visual step per tier
+tier_sizes = [int(20 + 90 * ((t + 0.5) / n_tiers) ** 0.5) for t in range(n_tiers)]
 
-# anyplot imprint_seq: #009E73 (brand green) → #4467A3 (blue), 5 equidistant stops
+# anyplot imprint_seq: #009E73 (brand green) → #4467A3 (blue), equidistant stops
 tier_colors = tuple(
     "#{:02X}{:02X}{:02X}".format(
         round(0x00 + (0x44 - 0x00) * i / (n_tiers - 1)),
@@ -108,6 +110,8 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=style_colors,
+    guide_stroke_color=GRID,
+    major_guide_stroke_color=GRID,
     opacity=0.70,
     opacity_hover=0.95,
     title_font_size=66,
