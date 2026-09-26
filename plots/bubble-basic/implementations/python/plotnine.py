@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 88/100 | Updated: 2026-09-26
@@ -52,9 +52,10 @@ for region, p in region_params.items():
     gdp = np.clip(gdp, 3, 85)
     le = p["le_base"] + 0.15 * gdp + np.random.normal(0, 2.5, p["n"])
     le = np.clip(le, 52, 88)
-    # Clip to the spec's recommended 10-100 size-value band, keeping the smallest bubbles clearly visible
+    # Clip to a raised size-value floor (18-100, within the spec's 10-100 band) so
+    # even the smallest bubble renders with a clearly visible radius at max_size=18
     pop = np.random.lognormal(mean=p["pop_mean"], sigma=0.55, size=p["n"])
-    pop = np.clip(pop, 10, 100)
+    pop = np.clip(pop, 18, 100)
     for i in range(p["n"]):
         rows.append({"gdp_per_capita": gdp[i], "life_expectancy": le[i], "population": pop[i], "region": region})
 
@@ -68,7 +69,10 @@ plot = (
         aes(x="gdp_per_capita", y="life_expectancy"), method="lm", se=False, color=INK_SOFT, size=0.7, inherit_aes=False
     )
     + geom_point(alpha=0.65, stroke=0.4)
-    + scale_size_area(max_size=18, breaks=[15, 40, 80], name="Population (M)")
+    # limits=(0, 100) anchors the area scaling to a true zero baseline; without it
+    # plotnine anchors the sqrt-area formula to the data's own min, which maps the
+    # smallest (floor-clipped) bubbles to a near-zero rendered size
+    + scale_size_area(max_size=18, breaks=[20, 50, 90], limits=(0, 100), name="Population (M)")
     + scale_color_manual(values=IMPRINT_PALETTE[:4], name="Region")
     + scale_x_continuous(labels=lambda lst: [f"${v:.0f}k" for v in lst], breaks=[10, 20, 30, 40, 50, 60, 70, 80])
     + scale_y_continuous(labels=lambda lst: [f"{v:.0f}" for v in lst])
@@ -76,6 +80,7 @@ plot = (
         x="GDP per Capita (USD thousands)",
         y="Life Expectancy (years)",
         title="bubble-basic · python · plotnine · anyplot.ai",
+        subtitle="Higher GDP per capita tracks with longer life expectancy across all four regions",
     )
     + theme_minimal()
     + theme(
@@ -85,6 +90,7 @@ plot = (
         axis_title=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
         plot_title=element_text(size=12, color=INK),
+        plot_subtitle=element_text(size=8, color=INK_SOFT),
         legend_title=element_text(size=8, color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
         legend_key=element_rect(fill=PAGE_BG, color="none"),
