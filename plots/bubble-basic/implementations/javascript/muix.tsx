@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-08-24
+// Quality: 87/100 | Updated: 2026-09-26
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
@@ -32,13 +32,15 @@ function randomNormal(rand, mean, stdDev) {
 // challengers, and small niche players — so the cloud has real structure
 // instead of a formless blob. Each archetype gets its own hue so the
 // pattern reads immediately instead of hiding in a single-color cloud.
+// Abstract group labels (no semantic color cue), so Imprint positions are
+// used in canonical order 1->3, not cherry-picked.
 // The community package has no bubble/z-size scatter mode (ZAxisConfig
 // only maps z to colour), so bubbles are drawn as a custom SVG layer
 // positioned via the chart's own scale hooks.
 const ARCHETYPES = [
   { name: "Growth leaders", growth: 24, margin: 19, share: 62, count: 15, color: t.palette[0] },
-  { name: "Mid-market", growth: 12, margin: 10, share: 34, count: 20, color: t.palette[2] },
-  { name: "Niche players", growth: 4, margin: 3, share: 14, count: 15, color: t.palette[3] },
+  { name: "Mid-market", growth: 12, margin: 10, share: 34, count: 20, color: t.palette[1] },
+  { name: "Niche players", growth: 4, margin: 3, share: 14, count: 15, color: t.palette[2] },
 ];
 
 const rand = lcg(42);
@@ -62,11 +64,11 @@ const sizeMin = Math.min(...sizeValues);
 const sizeMax = Math.max(...sizeValues);
 
 // Scale bubbles by AREA, not radius — otherwise size differences read as
-// far more extreme than the underlying data actually is. Capped a bit
-// tighter than the raw 10-100 domain would suggest so the densest cluster
+// far more extreme than the underlying data actually is. Capped tighter
+// than the raw 10-100 domain would suggest so the densest cluster
 // (growth ~20-30%, margin ~15-25%) stays legible instead of fusing together.
 const MIN_RADIUS = 7;
-const MAX_RADIUS = 44;
+const MAX_RADIUS = 38;
 function radiusForSize(value) {
   const ratio = (value - sizeMin) / (sizeMax - sizeMin);
   return MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * Math.sqrt(Math.max(0, ratio));
@@ -87,7 +89,7 @@ function Bubbles() {
           fill={d.color}
           fillOpacity={0.6}
           stroke={t.pageBg}
-          strokeWidth={1.5}
+          strokeWidth={2}
         />
       ))}
     </g>
