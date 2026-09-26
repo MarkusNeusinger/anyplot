@@ -16,4 +16,4 @@
   no `push` workflows, and only then labels the issue `spec-ready`. The shared
   `spec-merge-main` concurrency group, which cancelled queued batch approvals,
   is gone, and `auto-update-pr-branches.yml` leaves spec PRs alone so its
-  `GITHUB_TOKEN` merge commit cannot stall their checks.
+  `GITHUB_TOKEN` merge commit cannot stall their checks. (#11868)
