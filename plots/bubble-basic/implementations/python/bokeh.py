@@ -1,11 +1,9 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 92/100 | Created: 2026-05-28
+Library: bokeh 3.10.0 | Python 3.13.15
+Quality: 92/100 | Created: 2026-09-26
 """
 
-import base64
-import io
 import os
 import time
 from pathlib import Path
@@ -15,7 +13,6 @@ from bokeh.io import output_file, save
 from bokeh.models import BoxAnnotation, ColumnDataSource, HoverTool, Label, LinearColorMapper, Range1d
 from bokeh.plotting import figure
 from bokeh.transform import transform
-from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -68,7 +65,7 @@ y_pad = (median_income.max() - median_income.min()) * 0.07
 x_start = population_density.min() - x_pad * 1.5
 x_end = population_density.max() + x_pad * 1.5
 y_start = median_income.min() - y_pad
-y_end = median_income.max() + y_pad * 7
+y_end = median_income.max() + y_pad * 5.5
 
 x_range = x_end - x_start
 y_range = y_end - y_start
@@ -84,7 +81,7 @@ p = figure(
     toolbar_location=None,
     min_border_bottom=160,
     min_border_left=180,
-    min_border_top=110,
+    min_border_top=130,
     min_border_right=50,
 )
 p.x_range = Range1d(start=x_start, end=x_end)
@@ -124,7 +121,7 @@ p.border_fill_color = PAGE_BG
 p.outline_line_color = None
 p.outline_line_alpha = 0
 
-p.title.text_font_size = "50pt"
+p.title.text_font_size = "58pt"
 p.title.text_color = INK
 
 p.xaxis.axis_label_text_font_size = "42pt"
@@ -144,13 +141,12 @@ p.yaxis.major_tick_line_color = INK_SOFT
 p.xaxis.minor_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
 
-p.xgrid.grid_line_color = INK
+p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = INK
-p.xgrid.grid_line_alpha = 0.12
 p.ygrid.grid_line_alpha = 0.12
 
 # Size legend — anchored above the main data cluster (top region is empty due to correlation)
-legend_cx = x_start + x_range * 0.22
+legend_cx = x_start + x_range * 0.26
 legend_top = y_end - y_range * 0.04
 y_step = y_range * 0.07
 
@@ -160,14 +156,15 @@ ref_sizes = [np.sqrt(size_min**2 + (size_max**2 - size_min**2) * n) for n in ref
 ref_labels = [f"{v:.0f} m²/capita" for v in ref_green]
 
 legend_box = BoxAnnotation(
-    left=legend_cx - x_range * 0.13,
-    right=legend_cx + x_range * 0.13,
+    left=legend_cx - x_range * 0.17,
+    right=legend_cx + x_range * 0.17,
     top=legend_top + y_range * 0.01,
     bottom=legend_top - y_step * 3.8,
     fill_color=ELEVATED_BG,
     fill_alpha=0.9,
     line_color=INK_SOFT,
     line_alpha=0.4,
+    level="underlay",
 )
 p.add_layout(legend_box)
 
@@ -176,7 +173,7 @@ p.add_layout(
         x=legend_cx,
         y=legend_top - y_range * 0.01,
         text="Green Space",
-        text_font_size="30pt",
+        text_font_size="38pt",
         text_font_style="bold",
         text_color=INK,
         text_align="center",
@@ -201,7 +198,7 @@ for i, (sz, lbl, gv) in enumerate(zip(ref_sizes, ref_labels, ref_green, strict=T
             x=legend_cx + x_range * 0.01,
             y=ly,
             text=lbl,
-            text_font_size="26pt",
+            text_font_size="34pt",
             text_baseline="middle",
             text_color=INK_SOFT,
         )
@@ -211,8 +208,9 @@ for i, (sz, lbl, gv) in enumerate(zip(ref_sizes, ref_labels, ref_green, strict=T
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Save PNG via headless Chrome — use captureBeyondViewport so browser chrome
-# overhead (~139px) doesn't truncate the canvas height
+# Save PNG via headless Chrome — pin the viewport exactly via CDP, since
+# --window-size sets the OUTER window and still reserves a phantom title-bar
+# height even headless, which would shrink the screenshot below H.
 W, H = 3200, 1800
 opts = Options()
 for arg in (
@@ -227,7 +225,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
-screenshot = driver.execute_cdp_cmd("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": True})
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
-Image.open(io.BytesIO(base64.b64decode(screenshot["data"]))).save(f"plot-{THEME}.png")
