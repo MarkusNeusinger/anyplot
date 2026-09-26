@@ -8,4 +8,4 @@
   watchdog's cron-liveness rescue moves from >10 h to >26 h of silence: at 10 h
   it would have re-dispatched a second run every day, while 26 h first fires at
   the 06:00 UTC scan after a dropped night tick, which replaces the missed run
-  rather than adding one.
+  rather than adding one. (#11848)
