@@ -243,13 +243,20 @@ landing deep can walk the site without executing the SPA.
     <link rel="apple-touch-icon" href="https://anyplot.ai/apple-touch-icon.png" />
     <title>{title}</title>
     <meta name="description" content="{description}" />
+    <meta name="robots" content="{robots_content}" />
     <meta property="og:title" content="{title}" />
     <meta property="og:description" content="{description}" />
     <meta property="og:image" content="{image}" />
-    <meta property="og:url" content="{url}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="{title}" />
+    <meta property="og:url" content="{og_url}" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="anyplot.ai" />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@MarkusNeusinger" />
+    <meta name="twitter:creator" content="@MarkusNeusinger" />
     <meta name="twitter:title" content="{title}" />
     <meta name="twitter:description" content="{description}" />
     <meta name="twitter:image" content="{image}" />
@@ -285,20 +292,60 @@ Per-page body content:
 | Page | Body | JSON-LD |
 |------|------|---------|
 | Static pages (`/`, `/plots`, …) | `<h1>` + description + nav | — |
-| Spec hub `/{spec_id}` | description, preview `<img>`, one link per implementation page | `BreadcrumbList` + `ItemList` |
-| Implementation `/{spec_id}/{language}/{library}` | description, preview `<img>`, full source in `<pre><code>` (noqa-stripped, HTML-escaped), hub link, sibling-implementation links | `BreadcrumbList` + `SoftwareSourceCode` |
+| Spec hub `/{spec_id}` | lead paragraph naming every library by language, description, preview `<img>`, one link per implementation page | `BreadcrumbList` + `ItemList` + `CollectionPage` (`primaryImageOfPage`, `mainEntity` → the `ItemList`) |
+| Implementation `/{spec_id}/{language}/{library}` | lead paragraph naming the sibling libraries and linking the hub, description, preview `<img>`, full source in `<pre><code>` (noqa-stripped, HTML-escaped), hub link, sibling-implementation links | `BreadcrumbList` + `SoftwareSourceCode` (`mainEntityOfPage`) + `WebPage` (`primaryImageOfPage`, `mainEntity` → the code) |
 
 Display names (Matplotlib, Makie.jl, Apache ECharts, …) are derived from
 `core/constants.py` (`LANGUAGES_METADATA` / `LIBRARIES_METADATA`) — never
 hand-maintained in the router.
 
-The meta/OG description is trimmed to 155 characters (`_meta_description()`).
-On an implementation page it starts with the page's own identity,
-`{title} in {library} ({language}): {spec description}`, so the up to 15
-library pages of a spec and its hub no longer share one snippet — Bing
-Webmaster Tools flagged that duplication in 2026-09 — and a searcher who
-typed the library name sees it in the result. The hub keeps the plain spec
-description; body copy and JSON-LD carry the full text on both.
+### Titles, headings, and snippets
+
+The `<title>` and the `<h1>` carry the same text, without and with the
+` | anyplot.ai` suffix, because Google builds its title link from both:
+
+| Page | `<title>` (example) | Meta/OG description |
+|---|---|---|
+| Spec hub | `Manhattan Plot for GWAS in Python, R, Julia and JavaScript \| anyplot.ai` | the plain spec description |
+| Implementation | `Manhattan Plot for GWAS in plotnine (Python) \| anyplot.ai` | `{title} in {library} ({language}), also in {n} other libraries: {spec description}` |
+
+A searcher on 2026-09-26 reported that "manhattan plot python" returned
+`Manhattan Plot for GWAS - plotnine`, with nothing to say that seven other
+Python libraries had the same plot. Neither title then named a language: the
+hub's was the bare spec title, so an implementation page, whose body said
+"Python", outranked the hub that lists all of them. The formats above fix both
+sides:
+
+- The hub title names the languages the spec is implemented in, so a query
+  that includes one matches the page that offers every library.
+- The implementation title and description name the page's own library and
+  language, and the description says how many other libraries have the plot.
+  A count rather than the names keeps the spec's own description in the
+  155-character snippet, so the up to 15 implementation pages of a spec still
+  differ from one another. Bing Webmaster Tools flagged identical descriptions
+  across them in 2026-09.
+- A lead paragraph right under each `<h1>` names the libraries in plain text,
+  grouped by language: all of them on the hub, the siblings on an
+  implementation page with the page's own language first. Google often builds
+  the snippet from body text, so this is where "also in Matplotlib, Seaborn, …"
+  has to be. On an implementation page the paragraph links the hub with the
+  hub's own title as anchor text, so every implementation page tells Google
+  which page covers all the languages.
+
+The hub's meta description stays the plain spec description: Google asks for
+broad descriptions on aggregation pages and rarely shows keyword lists, and the
+title and lead paragraph already carry the languages and libraries. The meta
+description is trimmed to 155 characters (`_meta_description()`); body copy and
+JSON-LD carry the full text.
+
+Languages follow the registry order (Python, R, Julia, JavaScript) and libraries
+their id order within a language, in titles, lead paragraphs, link lists and the
+`ItemList` alike, so a page reads the same after every regeneration.
+
+Implementation pages don't declare the hub as their canonical. Each one carries
+its own source code, so it's a distinct page rather than a duplicate, and
+consolidating 15 of them onto the hub would drop the code a library-specific
+query is looking for.
 
 ## What a crawler sees of the plot
 
@@ -309,12 +356,27 @@ deliberately:
 |---|---|---|
 | `api.anyplot.ai/og/{spec}/{language}/{library}.png` | 1200×630 branded social card; the plot is a thumbnail inside chrome | `og:image`, `twitter:image` |
 | `…/plot-light.png`, `…/plot-dark.png` in GCS | the actual render, full resolution | the page body, as a `<picture>` |
+| `…/plot-light_1200.png` in GCS | the light render at 1200 px, the body's `<img src>` | `primaryImageOfPage` in the JSON-LD |
 
 The card is right for a shared link and wrong for an assistant asked to show the
 plot — in it the plot is roughly a third of the frame and the cell labels are
 barely legible. So the body carries the real render instead. Attribution does not
 suffer: every render's own title reads `{spec} · {language} · {library} ·
 anyplot.ai`, so the source travels with the image wherever it is embedded.
+
+The same reasoning applies to the thumbnail next to a Google result. Google
+documents three ways to name a page's preferred image: `primaryImageOfPage`,
+an image on the page's `mainEntity`, and `og:image`. Until 2026-09-26 only
+`og:image` was set, and it named the text-heavy card, so no result showed a
+thumbnail. Both page types now carry a `WebPage` node (`CollectionPage` on the
+hub) whose `primaryImageOfPage` is the exact URL of the body's `<img src>`: the
+page's own render, or on the hub the render of the best-scoring implementation.
+On an implementation page the `SoftwareSourceCode` node is also the page's
+`mainEntity`, with the render as its `image`. `og:image` stays the card, because
+link previews and the `og_image_view` analytics event depend on it. A page without a
+render gets no `primaryImageOfPage`; the card is never offered as the search
+thumbnail. Google picks a thumbnail per query and never guarantees one, so
+check the result a few weeks after a recrawl rather than right after a deploy.
 
 Below the image the page lists every asset **in words**, because a `<picture>`
 tells a browser which file to take but tells a reader nothing about which is
@@ -660,8 +722,14 @@ both themes, the interactive version and a rewritten meta description, while no
 — and Google, which had last fetched some of those pages three weeks earlier,
 had no reason to come back and see any of it.
 
+The last bump, to 2026-09-26, came with the titles, lead paragraphs and
+`primaryImageOfPage` described in
+[Titles, headings, and snippets](#titles-headings-and-snippets). It also covers
+the library-first meta descriptions of 2026-09-02, which shipped without a bump:
+three weeks later Google was still showing the older snippet.
+
 Bump `TEMPLATE_LAST_CHANGED` **only** when the rendered page genuinely changes
-for every URL. It asserts to search engines that ~3,900 pages changed at once;
+for every URL. It asserts to search engines that ~5,200 pages changed at once;
 making that claim casually is how a site teaches Google to ignore its `lastmod`
 altogether.
 
