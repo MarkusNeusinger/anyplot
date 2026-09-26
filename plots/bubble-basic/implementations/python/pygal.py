@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: pygal 3.1.3 | Python 3.13.15
-Quality: 87/100 | Created: 2026-09-26
+Quality: 87/100 | Updated: 2026-09-26
 """
 
 import os
@@ -112,6 +112,12 @@ custom_style = Style(
     colors=style_colors,
     guide_stroke_color=GRID,
     major_guide_stroke_color=GRID,
+    # `dot_opacity` (not `opacity`) governs the static fill/stroke alpha of XY
+    # scatter dots — pygal's `.dot` CSS rule cascades after `.reactive`, so
+    # `opacity` alone left bubbles fully solid in the previous pass despite the
+    # spec's alpha-transparency requirement. `opacity_hover` still applies via
+    # `.reactive.active` since `.dot` has no active-state fill-opacity rule.
+    dot_opacity=0.62,
     opacity=0.70,
     opacity_hover=0.95,
     title_font_size=66,
