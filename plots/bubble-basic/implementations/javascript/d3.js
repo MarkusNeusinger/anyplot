@@ -88,7 +88,7 @@ g.selectAll("circle.bubble").data(data).join("circle")
   .attr("cy", (d) => y(d.growth))
   .attr("r", (d) => r(d.team))
   .attr("fill", t.palette[0])
-  .attr("fill-opacity", 0.48)
+  .attr("fill-opacity", 0.58)
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1);
 
@@ -114,15 +114,28 @@ g.append("line")
   .attr("stroke-opacity", 0.6);
 
 const trendLabelX = x(fundingMin) + (x(fundingMax) - x(fundingMin)) * 0.62;
-const trendLabelY = y(slope * (fundingMin + (fundingMax - fundingMin) * 0.62) + intercept) - 16;
-g.append("text")
+const trendLabelY = y(slope * (fundingMin + (fundingMax - fundingMin) * 0.62) + intercept) - 22;
+const trendLabel = g.append("text")
   .attr("x", trendLabelX)
   .attr("y", trendLabelY)
   .attr("text-anchor", "middle")
-  .attr("fill", t.inkSoft)
-  .style("font-size", "14px")
-  .style("font-style", "italic")
+  .attr("fill", t.ink)
+  .style("font-size", "16px")
+  .style("font-weight", "500")
   .text("Growth slows as funding scales up");
+
+// A subtle background card anchors the trend annotation against the busy
+// bubble field behind it, so the story reads at a glance.
+const trendPad = 10;
+const trendBBox = trendLabel.node().getBBox();
+g.insert("rect", () => trendLabel.node())
+  .attr("x", trendBBox.x - trendPad)
+  .attr("y", trendBBox.y - trendPad * 0.6)
+  .attr("width", trendBBox.width + trendPad * 2)
+  .attr("height", trendBBox.height + trendPad * 1.2)
+  .attr("fill", t.elevatedBg)
+  .attr("stroke", t.grid)
+  .attr("rx", 6);
 
 // --- Size legend ------------------------------------------------------------
 const teamMedian = d3.median(data, (d) => d.team);
