@@ -87,7 +87,7 @@ function Bubbles() {
           cy={yScale(d.y)}
           r={radiusForSize(d.size)}
           fill={d.color}
-          fillOpacity={0.6}
+          fillOpacity={0.48}
           stroke={t.pageBg}
           strokeWidth={2}
         />
@@ -108,7 +108,7 @@ function ColorLegend({ left, top }) {
         const cy = top + i * 24;
         return (
           <g key={a.name}>
-            <circle cx={left + 6} cy={cy} r={6} fill={a.color} fillOpacity={0.6} stroke={a.color} strokeWidth={1.5} />
+            <circle cx={left + 6} cy={cy} r={6} fill={a.color} fillOpacity={0.48} stroke={a.color} strokeWidth={1.5} />
             <text x={left + 20} y={cy} dominantBaseline="middle" fontSize={13} fill={t.inkSoft}>
               {a.name}
             </text>
@@ -211,7 +211,7 @@ export default function Chart() {
           },
         ]}
       >
-        <ChartsGrid horizontal />
+        <ChartsGrid horizontal vertical />
         <Bubbles />
         <ChartsXAxis axisId="growth" />
         <ChartsYAxis axisId="margin" />
