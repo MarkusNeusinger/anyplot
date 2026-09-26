@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 93/100 | Updated: 2026-09-26
+// Quality: pending | Updated: 2026-09-26
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic LCG) ------------------------------------
@@ -85,7 +85,7 @@ const sizeLegend = {
     ctx.strokeStyle = t.grid;
     ctx.lineWidth = 1;
     ctx.stroke();
-    ctx.font = "15px sans-serif";
+    ctx.font = "16px sans-serif";
     ctx.fillStyle = t.inkSoft;
     ctx.textAlign = "left";
     ctx.fillText("Monthly sales (units)", chartArea.left, chartArea.top + 16);
@@ -99,7 +99,7 @@ const sizeLegend = {
       ctx.lineWidth = 1;
       ctx.strokeStyle = t.inkSoft;
       ctx.stroke();
-      ctx.font = "bold 15px sans-serif";
+      ctx.font = "bold 16px sans-serif";
       ctx.fillStyle = t.inkSoft;
       ctx.fillText(`${Math.round(val)}`, cx + R_MAX + 12, cy + 5);
     });
@@ -152,7 +152,7 @@ new Chart(canvas, {
         // overlapping bubbles in dense clusters stay separable from each other,
         // not only from the page.
         backgroundColor: (ctx) =>
-          hexToRgba(t.palette[0], ctx.dataIndex === bestValueIndex ? 0.9 : 0.55),
+          hexToRgba(t.palette[0], ctx.dataIndex === bestValueIndex ? 0.9 : 0.45),
         borderColor: (ctx) =>
           ctx.dataIndex === bestValueIndex ? t.palette[0] : hexToRgba(t.ink, 0.3),
         borderWidth: (ctx) => (ctx.dataIndex === bestValueIndex ? 2.5 : 1.25),
