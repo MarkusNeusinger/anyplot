@@ -1,7 +1,15 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: seaborn 0.13.2 | Python 3.13.15
 Quality: 91/100 | Updated: 2026-09-26
+
+Regen from quality 91. Addressed:
+- smallest bubbles (Population ~1-2M) risked shrinking to a few pixels at
+  mobile preview width -> raised sizes= floor 40 -> 60
+- alpha 0.72 sat just above the spec's recommended 0.5-0.7 overlap range ->
+  lowered to 0.65
+- added a subtle lowess trend line (sns.regplot) to make the inverse
+  spending/mortality relationship an explicit visual cue for storytelling
 """
 
 import os
@@ -72,6 +80,20 @@ fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 hue_order = [t[0] for t in tier_params]
+
+# Subtle lowess trend line — makes the inverse spending/mortality
+# relationship an explicit visual cue without adding a text callout
+sns.regplot(
+    data=df,
+    x="Healthcare Spending ($/year)",
+    y="Child Mortality (per 1,000 births)",
+    scatter=False,
+    lowess=True,
+    ax=ax,
+    color=INK_SOFT,
+    line_kws={"linewidth": 1.6, "linestyle": "--", "alpha": 0.55},
+)
+
 sns.scatterplot(
     data=df,
     x="Healthcare Spending ($/year)",
@@ -79,8 +101,8 @@ sns.scatterplot(
     size="Population (M)",
     hue="Income Tier",
     hue_order=hue_order,
-    sizes=(40, 900),
-    alpha=0.72,
+    sizes=(60, 900),
+    alpha=0.65,
     palette=tier_colors,
     edgecolor=PAGE_BG,
     linewidth=0.7,
