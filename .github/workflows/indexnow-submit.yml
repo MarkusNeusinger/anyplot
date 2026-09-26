@@ -10,7 +10,13 @@ run-name: "IndexNow: ${{ github.event_name == 'workflow_dispatch' && inputs.scop
 #   plots/<spec>/metadata/<lang>/<lib>.yaml        → https://anyplot.ai/<spec>/<lang>/<lib>
 #   plots/<spec>/implementations/<lang>/<lib>.<ext> → same page
 # A deleted implementation is submitted too — IndexNow is "this URL changed",
-# which covers removals.
+# which covers removals. Only a metadata .yaml makes a page, and an
+# implementation file counts only beside one: a stray .gitkeep once became
+# https://anyplot.ai/<spec>/python/, which answers 301.
+#
+# A push that bumps TEMPLATE_LAST_CHANGED in api/routers/seo.py changed every
+# bot-facing page at once, so it submits the full list; any other change to
+# that file submits nothing.
 #
 # The key is public by design: it only proves the submitter controls the host,
 # and the engines verify it by fetching https://anyplot.ai/<key>.txt. The same
@@ -27,6 +33,9 @@ on:
       # A change to this workflow exercises itself with the full list; a
       # fix that never runs until the next plot merge is a fix nobody saw.
       - '.github/workflows/indexnow-submit.yml'
+      # Only a TEMPLATE_LAST_CHANGED bump submits anything (the full list);
+      # the Collect URLs step checks the diff for it.
+      - 'api/routers/seo.py'
   workflow_dispatch:
     inputs:
       scope:
@@ -71,18 +80,19 @@ jobs:
         run: |
           set -euo pipefail
           # The full list comes from the checkout, not from the live sitemap:
-          # every spec directory is a hub page and every metadata file an
+          # every spec directory is a hub page and every metadata .yaml an
           # implementation page (the same rule the sitemap follows), plus the
-          # static pages. No fetch means no Cloudflare edge or bot management
-          # between a GitHub runner and the list, and the shallow checkout
-          # still carries the complete tree.
+          # static pages. Any other file there (a .gitkeep) is no page. No
+          # fetch means no Cloudflare edge or bot management between a GitHub
+          # runner and the list, and the shallow checkout still carries the
+          # complete tree.
           full_list() {
             for p in / /plots /specs /libraries /map /palette /about /mcp /legal /stats; do
               echo "https://${HOST}${p}"
             done
             git ls-tree -d --name-only HEAD plots/ | awk -F/ '{ print "https://'"$HOST"'/" $2 }'
             git ls-tree -r --name-only HEAD plots/ | awk -F/ '
-              $3 == "metadata" && NF == 5 { lib = $5; sub(/\.[^.]+$/, "", lib); print "https://'"$HOST"'/" $2 "/" $4 "/" lib }'
+              $3 == "metadata" && NF == 5 && $5 ~ /\.yaml$/ { lib = $5; sub(/\.yaml$/, "", lib); print "https://'"$HOST"'/" $2 "/" $4 "/" lib }'
           }
           commits=$(jq 'length' <<<"$PUSH_COMMITS")
           if [ "$SCOPE" = "sitemap" ]; then
@@ -97,6 +107,16 @@ jobs:
             # diff; submitting everything is cheap and always correct.
             echo "::notice::push carries ${commits} commits; submitting the full list instead of a diff"
             full_list | sort -u > urls.txt
+          elif git diff --name-only -G '^TEMPLATE_LAST_CHANGED' HEAD~1 HEAD -- api/routers/seo.py | grep -q .; then
+            # The bot-page template changed for every URL (the constant's
+            # comment says when it is bumped). Google recrawls from the
+            # sitemap's lastmod; the IndexNow engines only hear of it here.
+            # Any other change to seo.py falls through to the plots/ diff
+            # below, which is empty for it. -G does the matching inside git:
+            # piping the whole diff into `grep -q` can end in SIGPIPE, which
+            # pipefail turns into a silent "no bump".
+            echo "::notice::TEMPLATE_LAST_CHANGED changed; submitting the full list"
+            full_list | sort -u > urls.txt
           else
             # A changed specification touches every page of that spec: the
             # implementation pages render the spec's title and description
@@ -104,7 +124,7 @@ jobs:
             # page and the hub that lists it.
             impl_pages() {
               git ls-tree -r --name-only HEAD "plots/$1/metadata/" | awk -F/ '
-                NF == 5 { lib = $5; sub(/\.[^.]+$/, "", lib); print "https://'"$HOST"'/" $2 "/" $4 "/" lib }'
+                NF == 5 && $5 ~ /\.yaml$/ { lib = $5; sub(/\.yaml$/, "", lib); print "https://'"$HOST"'/" $2 "/" $4 "/" lib }'
             }
             git diff --name-only HEAD~1 HEAD -- plots/ | while IFS=/ read -r top spec third fourth fifth rest; do
               [ "$top" = plots ] && [ -n "$spec" ] && [ -n "$third" ] || continue
@@ -114,8 +134,22 @@ jobs:
                   impl_pages "$spec" ;;
                 metadata|implementations)
                   [ -n "$fifth" ] && [ -z "$rest" ] || continue
+                  lib=${fifth%.*}
+                  # A page is a metadata .yaml, as in full_list. An
+                  # implementation file counts only beside one — at HEAD, or
+                  # at HEAD~1 when this push deleted the page — which needs no
+                  # list of source extensions to keep in sync with
+                  # core/constants.py.
+                  meta="plots/${spec}/metadata/${fourth}/${lib}.yaml"
+                  if [ "$third" = metadata ]; then
+                    case "$fifth" in ?*.yaml) ;; *) continue ;; esac
+                  else
+                    git cat-file -e "HEAD:${meta}" 2>/dev/null \
+                      || git cat-file -e "HEAD~1:${meta}" 2>/dev/null \
+                      || continue
+                  fi
                   echo "https://${HOST}/${spec}"
-                  echo "https://${HOST}/${spec}/${fourth}/${fifth%.*}" ;;
+                  echo "https://${HOST}/${spec}/${fourth}/${lib}" ;;
               esac
             done | sort -u > urls.txt
           fi

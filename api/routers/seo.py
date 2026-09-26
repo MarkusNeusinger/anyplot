@@ -46,6 +46,13 @@ _SPEC_ID_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 # Bump this ONLY when the rendered page genuinely changes for every URL. It is
 # a claim to search engines that ~5,200 pages changed at once; making it
 # casually is how a site teaches Google to stop trusting its lastmod.
+#
+# Google hears of a bump through the sitemap's lastmod. The IndexNow engines
+# (Bing, Yandex, Seznam, Naver, Yep) hear of it because
+# .github/workflows/indexnow-submit.yml submits the full URL list for any push
+# to main whose diff adds or removes this assignment line; other changes to
+# this file submit nothing. Keep the assignment at the start of its line, as
+# the workflow matches it there.
 TEMPLATE_LAST_CHANGED = datetime(2026, 9, 26)
 
 
