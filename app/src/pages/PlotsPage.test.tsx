@@ -74,7 +74,7 @@ describe('PlotsPage', () => {
     expect(screen.getByTestId('helmet')).toBeInTheDocument();
   });
 
-  it('renders the scroll-to-top button (hidden until scrolled)', () => {
+  it('renders the shared scroll-to-top button', () => {
     render(<PlotsPage />);
     expect(screen.getByLabelText(/scroll to top/i)).toBeInTheDocument();
   });

@@ -130,7 +130,7 @@ describe('SpecsListPage', () => {
     expect(fetchUrl).toContain('/plots/filter');
   });
 
-  it('renders the scroll-to-top button (hidden until scrolled)', async () => {
+  it('renders the shared scroll-to-top button', async () => {
     mockFetchSuccess();
     render(<SpecsListPage />);
 
