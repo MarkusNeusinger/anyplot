@@ -28,8 +28,9 @@ const companies = [];
 for (let i = 0; i < 90; i += 1) {
   const growthRate = -5 + rand() * 35;
   const revenue = 10 + rand() * 490;
-  // Each company is drawn from its own local segment, so this does not need
-  // to sum to 100 across companies (unlike a same-market "market share").
+  // Each company's share is relative to its own market segment, not a
+  // shared market — so these values do NOT sum to 100 across companies,
+  // unlike a conventional "market share" metric. Labelled as such below.
   const segmentShare = Z_MIN + rand() * (Z_MAX - Z_MIN);
   companies.push({ growthRate, revenue, segmentShare });
 }
@@ -50,7 +51,7 @@ companies.forEach((c, i) => {
 });
 
 const [fr, fg, fb] = [1, 3, 5].map((i) => parseInt(t.palette[0].slice(i, i + 2), 16));
-const markerFill = `rgba(${fr}, ${fg}, ${fb}, 0.5)`;
+const markerFill = `rgba(${fr}, ${fg}, ${fb}, 0.45)`;
 const seriesData = companies.map((c, i) => {
   const isFocal = i === focalIndex;
   return {
@@ -59,8 +60,10 @@ const seriesData = companies.map((c, i) => {
     marker: {
       radius: radiusForShare(c.segmentShare),
       fillColor: markerFill,
+      // Page-bg stroke carves a visible edge between overlapping same-color
+      // bubbles in the densest cluster, so individual points stay legible.
       lineColor: isFocal ? t.amber : t.pageBg,
-      lineWidth: isFocal ? 3 : 2,
+      lineWidth: isFocal ? 3 : 2.5,
     },
     custom: { segmentShare: Math.round(c.segmentShare) },
   };
@@ -74,10 +77,10 @@ function drawSizeLegend(chart) {
   let cursorY = chart.plotTop + 30;
 
   chart.renderer
-    .text("Revenue Share<br/>of Segment (%)", legendX, cursorY, true)
-    .css({ color: t.ink, fontSize: "14px", fontWeight: "600" })
+    .text("Share of Own<br/>Market Segment (%)", legendX, cursorY, true)
+    .css({ color: t.ink, fontSize: "15px", fontWeight: "600" })
     .add();
-  cursorY += 50;
+  cursorY += 54;
 
   [Z_MIN, (Z_MIN + Z_MAX) / 2, Z_MAX].forEach((share) => {
     const r = radiusForShare(share);
@@ -88,7 +91,7 @@ function drawSizeLegend(chart) {
       .add();
     chart.renderer
       .text(`${Math.round(share)}%`, legendX + 2 * R_MAX + 16, cy + 5)
-      .css({ color: t.inkSoft, fontSize: "13px" })
+      .css({ color: t.inkSoft, fontSize: "14px" })
       .add();
     cursorY += 2 * R_MAX + 16;
   });
@@ -165,7 +168,7 @@ Highcharts.chart(
         return (
           `Growth: <b>${this.x.toFixed(1)}%</b><br/>` +
           `Revenue: <b>$${this.y.toFixed(0)}M</b><br/>` +
-          `Revenue share (segment): <b>${this.custom.segmentShare}%</b>`
+          `Share of own segment: <b>${this.custom.segmentShare}%</b>`
         );
       },
     },
