@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: altair 6.3.0 | Python 3.13.15
-Quality: 88/100 | Created: 2026-09-26
+Quality: 93/100 | Created: 2026-09-26
 """
 
 import os
@@ -23,7 +23,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 stage_colors = IMPRINT_PALETTE[:4]
 
-# Data — tech startup metrics: funding vs revenue, sized by employees, colored by stage
+# Data — tech startup metrics: funding vs revenue, sized by market share, colored by stage
 np.random.seed(42)
 n = 49
 
@@ -36,24 +36,25 @@ funding_m = np.clip(funding_m, 1, 80)
 revenue_m = funding_m * np.random.uniform(0.7, 1.5, size=n) + np.random.normal(5, 3, size=n)
 revenue_m = np.clip(revenue_m, 2, 100)
 
-stage_emp = {"Seed": (25, 10), "Series A": (80, 35), "Series B": (250, 90), "Growth": (550, 150)}
-employees = np.array([int(np.clip(np.random.normal(*stage_emp[s]), 15, 900)) for s in stages])
+# Market share (%) stays within the spec's recommended 10-100 size-column range
+stage_share = {"Seed": (14, 4), "Series A": (28, 7), "Series B": (48, 10), "Growth": (68, 12)}
+market_share = np.array([np.clip(np.random.normal(*stage_share[s]), 10, 95) for s in stages])
 
 df = pd.DataFrame(
     {
         "Funding ($M)": np.round(funding_m, 1),
         "Revenue ($M)": np.round(revenue_m, 1),
-        "Employees": employees,
+        "Market Share (%)": np.round(market_share, 1),
         "Stage": pd.Categorical(stages, categories=["Seed", "Series A", "Series B", "Growth"], ordered=True),
     }
 )
 
-# Add outlier: high-funded low-revenue startup to demonstrate full chart dynamics
+# Add outlier: high-funded low-revenue startup with weak market share to demonstrate full chart dynamics
 outlier = pd.DataFrame(
     {
         "Funding ($M)": [68.5],
         "Revenue ($M)": [7.2],
-        "Employees": [380],
+        "Market Share (%)": [22.0],
         "Stage": pd.Categorical(["Series B"], categories=["Seed", "Series A", "Series B", "Growth"], ordered=True),
     }
 )
@@ -67,6 +68,11 @@ for i in top3_idx:
 
 title = "bubble-basic · python · altair · anyplot.ai"
 
+# Legend-bound point selection — clicking a Stage in the legend spotlights that
+# cohort by dimming the rest, an interactive capability distinctive to Altair's
+# Vega-Lite selection grammar (preserved in the saved interactive HTML).
+stage_selection = alt.selection_point(fields=["Stage"], bind="legend")
+
 # Plot — bubble layer
 bubbles = (
     alt.Chart(df)
@@ -77,13 +83,13 @@ bubbles = (
             "Revenue ($M):Q", scale=alt.Scale(domain=[0, 110], nice=False), axis=alt.Axis(domain=False, tickSize=6)
         ),
         size=alt.Size(
-            "Employees:Q",
-            scale=alt.Scale(range=[50, 2000], domain=[15, 900]),
+            "Market Share (%):Q",
+            scale=alt.Scale(range=[50, 2000], domain=[10, 95]),
             legend=alt.Legend(
-                title="Employees",
+                title="Market Share (%)",
                 titleFontSize=10,
                 labelFontSize=10,
-                values=[50, 200, 500, 900],
+                values=[10, 30, 60, 90],
                 symbolFillColor=IMPRINT_PALETTE[0],
                 symbolStrokeColor=PAGE_BG,
                 symbolOpacity=0.65,
@@ -103,9 +109,10 @@ bubbles = (
                 symbolOpacity=0.65,
             ),
         ),
-        opacity=alt.condition(alt.datum.label != "", alt.value(0.9), alt.value(0.6)),
-        tooltip=["Stage:N", "Funding ($M):Q", "Revenue ($M):Q", "Employees:Q"],
+        opacity=alt.condition(stage_selection, alt.value(0.7), alt.value(0.12)),
+        tooltip=["Stage:N", "Funding ($M):Q", "Revenue ($M):Q", "Market Share (%):Q"],
     )
+    .add_params(stage_selection)
 )
 
 # Annotation layers — sort by revenue descending and alternate dy to prevent collision
@@ -132,7 +139,7 @@ chart = (
             fontWeight="bold",
             color=INK,
             anchor="middle",
-            subtitle="Tech Startup Metrics — Funding vs Revenue by Stage & Team Size",
+            subtitle="Tech Startup Metrics — Funding vs Revenue by Stage & Market Share",
             subtitleFontSize=12,
             subtitleColor=INK_SOFT,
             subtitlePadding=4,
@@ -150,7 +157,7 @@ chart = (
         titleFontSize=12,
     )
     .configure_legend(
-        fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, orient="right", padding=10
+        fillColor=ELEVATED_BG, strokeWidth=0, labelColor=INK_SOFT, titleColor=INK, orient="right", padding=10
     )
 )
 

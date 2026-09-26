@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: bokeh 3.10.0 | Python 3.13.15
-Quality: 92/100 | Created: 2026-09-26
+Quality: 90/100 | Created: 2026-09-26
 """
 
 import os
@@ -33,12 +33,13 @@ ANYPLOT_SEQ256 = ["#{:02X}{:02X}{:02X}".format(*(_c0 + (_c1 - _c0) * t).round().
 # Data — City metrics: population density vs median income, bubble = green space per capita
 # Green space inversely correlated with density (denser cities have less green space)
 np.random.seed(42)
-n_cities = 40
+n_cities = 55
 
 population_density = np.random.uniform(500, 12000, n_cities)  # people per km²
 median_income = 30 + population_density / 400 + np.random.normal(0, 4, n_cities)  # thousands USD
-green_space = 60 - (population_density / 12000) * 50 + np.random.normal(0, 4, n_cities)
-green_space = np.clip(green_space, 5, 60)  # m² per capita
+density_norm = (population_density - population_density.min()) / (population_density.max() - population_density.min())
+green_space = 100 - density_norm * 90 + np.random.normal(0, 5, n_cities)
+green_space = np.clip(green_space, 10, 100)  # m² per capita
 
 # Area-proportional bubble sizes: size² ∝ data value, so size ∝ sqrt(data)
 size_min, size_max = 22, 80
@@ -141,7 +142,8 @@ p.yaxis.major_tick_line_color = INK_SOFT
 p.xaxis.minor_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
 
-p.xgrid.grid_line_color = None
+p.xgrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.12
 p.ygrid.grid_line_color = INK
 p.ygrid.grid_line_alpha = 0.12
 
