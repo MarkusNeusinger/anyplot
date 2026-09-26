@@ -8,3 +8,4 @@
   of in that slot. One `ScrollToTopFab` replaces the copy each page carried,
   and every floating button reads its position from one shared corner geometry
   (`theme/floating-actions.ts`), so they cannot drift into each other again.
+  (#11843)
