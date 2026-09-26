@@ -72,7 +72,12 @@ One spec is therefore recorded under three families of paths: gallery views
 filtered to it (`/plots/spec/{spec_id}`, plus any other filter segments), the
 hub (`/{spec_id}`, and `/{spec_id}/language/{language}` when the carousel is
 scoped) and its implementation pages (`/{spec_id}/{language}/{library}`).
-Filter Pages by "contains `{spec_id}`" to see them together.
+Filter Pages by "contains `{spec_id}`" to see them together. "contains" also
+matches longer ids that include this one (`line-basic` inside
+`sparkline-basic`); for such ids use the Stats API `matches` operator with the
+id anchored on a path segment, for example `[/,]line-basic([/,]|$)` — a comma
+counts as a boundary because OR-filtered gallery views record
+`/plots/spec/a,b`.
 
 **Benefits**:
 - Plausible shows popular filter combinations

@@ -166,8 +166,8 @@ export function PlotsPage() {
   const specFilter = activeFilters.find(f => f.category === 'spec');
   const selectedSpec = specFilter?.values[0] || '';
   // The gallery filtered to one spec shows the same implementations as that
-  // spec's own page, but never linked to it: the page was reachable only via
-  // an implementation's `.compare()`. Offered only for exactly one known spec —
+  // spec's own page, but never linked to it; getting there meant opening an
+  // implementation page first. Offered only for exactly one known spec —
   // `selectedSpec` takes the first value even when several are OR-combined.
   const singleSpec =
     activeFilters.filter(f => f.category === 'spec').length === 1 &&
@@ -216,27 +216,34 @@ export function PlotsPage() {
           <Box
             component={RouterLink}
             to={specPath(singleSpec)}
-            onClick={() =>
+            onClick={() => {
+              // Like a card click: Back from the spec page must restore the
+              // offset the user left at, not one saved by an earlier click.
+              saveScrollPosition();
               trackEvent('nav_click', {
                 source: 'gallery_spec_hub',
                 target: specPath(singleSpec),
                 spec: singleSpec,
-              })
-            }
-            // Starts with the visible text (WCAG 2.5.3 Label in Name), so a
-            // speech-input user can say what they see; the rest names the target.
-            aria-label={`${singleSpec}.compare() — all implementations of ${specTitles[singleSpec] || singleSpec}`}
+              });
+            }}
+            // The visible words come first, in order (WCAG 2.5.3 Label in
+            // Name), but without the `.()` punctuation, which screen readers
+            // announce literally (style guide §7.4.1, Accessibility).
+            aria-label={`${singleSpec} compare — all implementations of ${specTitles[singleSpec] || singleSpec}`}
             sx={{
               display: 'inline-flex',
               alignItems: 'baseline',
               gap: 0.75,
               fontFamily: typography.mono,
               fontSize: fontSize.sm,
-              color: 'var(--ink-soft)',
+              color: 'var(--ink)',
               textDecoration: 'none',
               transition: 'color 0.2s',
+              // Explicit-subject form (style guide §7.4.1): subject in
+              // --ink-muted, `.verb()` in --ink, both green on hover.
+              '& .subj': { color: 'var(--ink-muted)', transition: 'color 0.2s' },
               '& .hub-arrow': { transition: 'transform 0.2s' },
-              '&:hover': { color: colors.primary },
+              '&:hover, &:hover .subj': { color: colors.primary },
               '&:hover .hub-arrow': { transform: 'translateX(3px)' },
               '&:focus-visible': {
                 outline: `2px solid ${colors.primary}`,
@@ -245,9 +252,12 @@ export function PlotsPage() {
               },
             }}
           >
-            {/* One tone on purpose: the house two-tone subject (opacity 0.7)
-                drops to ~3.7:1 on the light background, below WCAG AA. */}
-            <Box component="span">{`${singleSpec}.compare()`}</Box>
+            <Box component="span">
+              <Box component="span" className="subj">
+                {singleSpec}
+              </Box>
+              .compare()
+            </Box>
             <Box component="span" className="hub-arrow" aria-hidden="true">
               →
             </Box>

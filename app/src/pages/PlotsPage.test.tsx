@@ -2,9 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fireEvent, render, screen } from 'src/test-utils';
 
-const { mockHandleRandom, mockTrackEvent, state } = vi.hoisted(() => ({
+const { mockHandleRandom, mockTrackEvent, mockSaveScrollPosition, state } = vi.hoisted(() => ({
   mockHandleRandom: vi.fn(),
   mockTrackEvent: vi.fn(),
+  mockSaveScrollPosition: vi.fn(),
   state: {
     activeFilters: [] as { category: string; values: string[] }[],
     specsData: [] as { id: string; title: string }[],
@@ -39,7 +40,7 @@ vi.mock('src/hooks', () => ({
   useAppData: () => ({ specsData: state.specsData, librariesData: [], stats: null }),
   useHomeState: () => ({
     homeStateRef: { current: { scrollY: 0 } },
-    saveScrollPosition: vi.fn(),
+    saveScrollPosition: mockSaveScrollPosition,
     setHomeState: vi.fn(),
     homeState: { scrollY: 0 },
   }),
@@ -82,19 +83,22 @@ describe('PlotsPage', () => {
       state.specsData = [MANHATTAN];
       state.specTitles = { 'manhattan-gwas': MANHATTAN.title };
       render(<PlotsPage />);
-      // The accessible name starts with the visible text (WCAG 2.5.3 Label in Name).
+      // The accessible name starts with the visible words (WCAG 2.5.3 Label in
+      // Name) but not with `.()`, which screen readers announce literally.
       const link = screen.getByRole('link', {
-        name: 'manhattan-gwas.compare() — all implementations of Manhattan Plot for GWAS',
+        name: 'manhattan-gwas compare — all implementations of Manhattan Plot for GWAS',
       });
       expect(link).toHaveAttribute('href', '/manhattan-gwas');
       expect(link).toHaveTextContent('manhattan-gwas.compare()');
     });
 
-    it('tracks the click as nav_click from the gallery', () => {
+    it('saves the scroll position and tracks the click as nav_click', () => {
       state.activeFilters = [{ category: 'spec', values: ['manhattan-gwas'] }];
       state.specsData = [MANHATTAN];
       render(<PlotsPage />);
       fireEvent.click(screen.getByRole('link', { name: /all implementations of/i }));
+      // Back from the spec page must restore where the user left, like a card click.
+      expect(mockSaveScrollPosition).toHaveBeenCalledTimes(1);
       expect(mockTrackEvent).toHaveBeenCalledWith('nav_click', {
         source: 'gallery_spec_hub',
         target: '/manhattan-gwas',
