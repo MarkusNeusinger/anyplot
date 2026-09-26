@@ -4,10 +4,12 @@ Tests for api/routers/og_images.py — OG image endpoints.
 Covers:
 - Static OG image loading (including FileNotFoundError, line 32)
 - Home and plots OG image endpoints
-- _get_http_client() creation (lines 69-73)
-- _fetch_image() with 800px variant logic (lines 78-90)
-- Branded impl image: success, cache hit, no DB, not found, HTTP error (line 137-138)
-- Spec collage image: success, no DB, not found, no previews, HTTP error (lines 193-194)
+- _get_http_client() creation
+- _fetch_image() preferring the 800px derivative of prod-shaped preview URLs
+  (plot-light.png / plot-dark.png, legacy plot.png), with a logged fallback
+- Branded impl image: success, cache hit, no DB, not found, HTTP error,
+  and the source URL it requests
+- Spec collage image: success, no DB, not found, no previews, HTTP error
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -25,6 +27,27 @@ from core.database import get_db
 DB_CONFIG_PATCH = "api.dependencies.is_db_configured"
 
 FAKE_PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100  # Minimal PNG-like bytes
+
+# Preview URLs shaped like production: since 2026-04-23 `preview_url` is
+# `preview_url_light`, so every one ends in `/plot-light.png`. A legacy
+# `/plot.png` fixture is what let the dead 800px branch stay green.
+GCS_IMPL = "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib"
+LIGHT_URL = f"{GCS_IMPL}/plot-light.png"
+DARK_URL = f"{GCS_IMPL}/plot-dark.png"
+LEGACY_URL = f"{GCS_IMPL}/plot.png"
+
+
+def _http_client(statuses: dict[str, int]) -> AsyncMock:
+    """A stand-in for the shared httpx client: `get(url)` answers with the status
+    mapped to that URL (404 for any URL not listed) and FAKE_PNG as the body."""
+
+    def get(url: str) -> httpx.Response:
+        status = statuses.get(url, 404)
+        return httpx.Response(status, content=FAKE_PNG if status == 200 else b"", request=httpx.Request("GET", url))
+
+    client = AsyncMock()
+    client.get = AsyncMock(side_effect=get)
+    return client
 
 
 @pytest.fixture(autouse=True)
@@ -56,9 +79,7 @@ def db_client():
     fastapi_app.dependency_overrides.clear()
 
 
-def _make_impl(
-    library_id="matplotlib", preview_url="https://example.com/plot.png", quality_score=92.5, language="python"
-):
+def _make_impl(library_id="matplotlib", preview_url=LIGHT_URL, quality_score=92.5, language="python"):
     """Helper to create a mock implementation."""
     impl = MagicMock()
     impl.library_id = library_id
@@ -158,58 +179,90 @@ class TestStaticOgImage:
 class TestFetchImage:
     """Tests for _fetch_image and _get_http_client internal functions."""
 
-    async def test_fetch_image_tries_800px_variant(self) -> None:
-        """_fetch_image should try the 800px variant first for /plot.png URLs."""
-        mock_response = MagicMock()
-        mock_response.content = FAKE_PNG
-        mock_response.raise_for_status = MagicMock()
-
-        mock_client = AsyncMock()
-        mock_client.get = AsyncMock(return_value=mock_response)
-
-        with patch("api.routers.og_images._get_http_client", return_value=mock_client):
-            from api.routers.og_images import _fetch_image
-
-            result = await _fetch_image("https://storage.example.com/scatter/plot.png")
-
-        assert result == FAKE_PNG
-        # Should have called with the 800px variant
-        mock_client.get.assert_called_once_with("https://storage.example.com/scatter/plot_800.png")
-
-    async def test_fetch_image_800px_fallback(self) -> None:
-        """_fetch_image should fall back to the original URL if 800px variant fails."""
-        ok_response = MagicMock()
-        ok_response.content = FAKE_PNG
-        ok_response.raise_for_status = MagicMock()
-
-        mock_client = AsyncMock()
-        # First call (800px) raises, second call (original) succeeds
-        mock_client.get = AsyncMock(side_effect=[Exception("not found"), ok_response])
+    @pytest.mark.parametrize(
+        ("url", "expected"),
+        [
+            (LIGHT_URL, f"{GCS_IMPL}/plot-light_800.png"),
+            (DARK_URL, f"{GCS_IMPL}/plot-dark_800.png"),
+            (LEGACY_URL, f"{GCS_IMPL}/plot_800.png"),
+        ],
+        ids=["light", "dark", "legacy"],
+    )
+    async def test_fetch_image_requests_800px_variant_first(self, url, expected, caplog) -> None:
+        """A full-size render is never downloaded when its 800px derivative exists."""
+        mock_client = _http_client({expected: 200})
 
         with patch("api.routers.og_images._get_http_client", return_value=mock_client):
-            from api.routers.og_images import _fetch_image
-
-            result = await _fetch_image("https://storage.example.com/scatter/plot.png")
+            result = await og_images_module._fetch_image(url)
 
         assert result == FAKE_PNG
-        assert mock_client.get.call_count == 2
+        mock_client.get.assert_awaited_once_with(expected)
+        assert "falling back" not in caplog.text
 
-    async def test_fetch_image_non_plot_png_url(self) -> None:
-        """_fetch_image should not try 800px variant for non-/plot.png URLs."""
-        mock_response = MagicMock()
-        mock_response.content = FAKE_PNG
-        mock_response.raise_for_status = MagicMock()
+    async def test_fetch_image_falls_back_to_original_with_warning(self, caplog) -> None:
+        """A missing 800px derivative falls back to the original, and says so."""
+        small_url = f"{GCS_IMPL}/plot-light_800.png"
+        mock_client = _http_client({small_url: 404, LIGHT_URL: 200})
 
+        with (
+            patch("api.routers.og_images._get_http_client", return_value=mock_client),
+            caplog.at_level("WARNING", logger="api.routers.og_images"),
+        ):
+            result = await og_images_module._fetch_image(LIGHT_URL)
+
+        assert result == FAKE_PNG
+        assert [c.args[0] for c in mock_client.get.await_args_list] == [small_url, LIGHT_URL]
+        warnings = [r for r in caplog.records if r.levelname == "WARNING"]
+        assert len(warnings) == 1
+        assert small_url in warnings[0].getMessage()
+        assert LIGHT_URL in warnings[0].getMessage()
+
+    async def test_fetch_image_falls_back_on_transport_error(self) -> None:
+        """A transport error on the derivative falls back to the original too."""
+        ok = httpx.Response(200, content=FAKE_PNG, request=httpx.Request("GET", LIGHT_URL))
         mock_client = AsyncMock()
-        mock_client.get = AsyncMock(return_value=mock_response)
+        mock_client.get = AsyncMock(side_effect=[httpx.ConnectError("reset"), ok])
 
         with patch("api.routers.og_images._get_http_client", return_value=mock_client):
-            from api.routers.og_images import _fetch_image
-
-            result = await _fetch_image("https://storage.example.com/scatter/image.jpg")
+            result = await og_images_module._fetch_image(LIGHT_URL)
 
         assert result == FAKE_PNG
-        mock_client.get.assert_called_once_with("https://storage.example.com/scatter/image.jpg")
+        assert mock_client.get.await_count == 2
+
+    async def test_fetch_image_raises_when_original_also_fails(self) -> None:
+        """If the fallback fails as well, the HTTP error reaches the endpoint (502)."""
+        mock_client = _http_client({})
+
+        with (
+            patch("api.routers.og_images._get_http_client", return_value=mock_client),
+            pytest.raises(httpx.HTTPStatusError),
+        ):
+            await og_images_module._fetch_image(LIGHT_URL)
+
+        assert mock_client.get.await_count == 2
+
+    @pytest.mark.parametrize("width", [400, 800, 1200])
+    async def test_fetch_image_does_not_resuffix_a_variant(self, width) -> None:
+        """A URL that already names a size variant is fetched as given."""
+        variant = f"{GCS_IMPL}/plot-light_{width}.png"
+        mock_client = _http_client({variant: 200})
+
+        with patch("api.routers.og_images._get_http_client", return_value=mock_client):
+            result = await og_images_module._fetch_image(variant)
+
+        assert result == FAKE_PNG
+        mock_client.get.assert_awaited_once_with(variant)
+
+    async def test_fetch_image_non_png_url(self) -> None:
+        """A non-PNG URL has no derivative and is fetched as given."""
+        url = "https://storage.example.com/scatter/image.jpg"
+        mock_client = _http_client({url: 200})
+
+        with patch("api.routers.og_images._get_http_client", return_value=mock_client):
+            result = await og_images_module._fetch_image(url)
+
+        assert result == FAKE_PNG
+        mock_client.get.assert_awaited_once_with(url)
 
     def test_get_http_client_creates_new(self) -> None:
         """_get_http_client should create a new client when none exists."""
@@ -264,6 +317,30 @@ class TestBrandedImplImage:
 
         assert response.status_code == 200
         assert response.headers["content-type"] == "image/png"
+
+    def test_branded_impl_image_renders_from_800px_variant(self, db_client) -> None:
+        """A cache miss for a prod-shaped preview downloads only the 800px derivative."""
+        client, _ = db_client
+
+        spec = _make_spec(spec_id="scatter-basic", impls=[_make_impl(library_id="matplotlib")])
+        mock_repo = MagicMock()
+        mock_repo.get_by_id = AsyncMock(return_value=spec)
+        small_url = f"{GCS_IMPL}/plot-light_800.png"
+        http = _http_client({small_url: 200, LIGHT_URL: 200})
+
+        with (
+            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.get_cache", return_value=None),
+            patch("api.routers.og_images.set_cache"),
+            patch("api.routers.og_images.SpecRepository", return_value=mock_repo),
+            patch("api.routers.og_images._get_http_client", return_value=http),
+            patch("api.routers.og_images.create_branded_og_image", return_value=FAKE_PNG) as render,
+        ):
+            response = client.get("/og/scatter-basic/python/matplotlib.png")
+
+        assert response.status_code == 200
+        http.get.assert_awaited_once_with(small_url)
+        assert render.call_args.args[0] == FAKE_PNG
 
     def test_branded_impl_image_cache_hit(self, db_client) -> None:
         """Should return cached image without hitting DB."""
@@ -401,6 +478,38 @@ class TestSpecCollageImage:
 
         assert response.status_code == 200
         assert response.headers["content-type"] == "image/png"
+
+    def test_spec_collage_renders_from_800px_variants(self, db_client) -> None:
+        """Every collage source on a cache miss is the 800px derivative, never the original."""
+        client, _ = db_client
+
+        libraries = ["matplotlib", "seaborn", "plotly", "bokeh", "altair", "plotnine", "pygal"]
+        base = "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python"
+        impls = [
+            _make_impl(library_id=lib, preview_url=f"{base}/{lib}/plot-light.png", quality_score=90.0 - i)
+            for i, lib in enumerate(libraries)
+        ]
+        spec = _make_spec(spec_id="scatter-basic", impls=impls)
+        mock_repo = MagicMock()
+        mock_repo.get_by_id = AsyncMock(return_value=spec)
+        # Top six by quality; the seventh (pygal) is not fetched at all.
+        expected = {f"{base}/{lib}/plot-light_800.png" for lib in libraries[:6]}
+        http = _http_client(dict.fromkeys(expected, 200))
+
+        with (
+            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.get_cache", return_value=None),
+            patch("api.routers.og_images.set_cache"),
+            patch("api.routers.og_images.SpecRepository", return_value=mock_repo),
+            patch("api.routers.og_images._get_http_client", return_value=http),
+            patch("api.routers.og_images.create_og_collage", return_value=FAKE_PNG) as render,
+        ):
+            response = client.get("/og/scatter-basic.png")
+
+        assert response.status_code == 200
+        assert {c.args[0] for c in http.get.await_args_list} == expected
+        assert http.get.await_count == 6
+        assert render.call_args.args[0] == [FAKE_PNG] * 6
 
     def test_spec_collage_cache_hit(self, db_client) -> None:
         """Should return cached collage without hitting DB."""
