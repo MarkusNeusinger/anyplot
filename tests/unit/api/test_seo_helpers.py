@@ -355,7 +355,7 @@ class TestBuildSpecHubHtml:
         assert "&lt;axes&gt; &amp; friends" in page
 
         jsonld = _extract_jsonld(page)
-        breadcrumb, item_list = jsonld["@graph"]
+        breadcrumb, item_list, page_node = jsonld["@graph"]
         assert breadcrumb["@type"] == "BreadcrumbList"
         assert breadcrumb["itemListElement"][1]["item"] == "https://anyplot.ai/scatter-basic"
         assert item_list["@type"] == "ItemList"
@@ -365,13 +365,76 @@ class TestBuildSpecHubHtml:
         ]
         # per-item render URLs: one hub fetch enumerates every plot image
         assert [i["image"] for i in item_list["itemListElement"]] == ["https://gcs/preview.png"] * 2
+        # the page node ties the graph together and names the preferred image
+        assert page_node["@type"] == "CollectionPage"
+        assert page_node["@id"] == page_node["url"] == "https://anyplot.ai/scatter-basic"
+        assert page_node["name"] == "Basic Scatter Plot in Python and R"
+        assert page_node["mainEntity"] == {"@id": item_list["@id"]}
+        assert page_node["breadcrumb"] == {"@id": breadcrumb["@id"]}
 
     def test_hub_without_previews_falls_back_to_card(self) -> None:
         spec = _mock_spec([_mock_impl("matplotlib", "python", preview=None)])
         page = _build_spec_hub_html(spec, "https://api.anyplot.ai/og/scatter-basic.png")
         assert '<img src="https://api.anyplot.ai/og/scatter-basic.png"' in page
-        item_list = _extract_jsonld(page)["@graph"][1]
+        _, item_list, page_node = _extract_jsonld(page)["@graph"]
         assert "image" not in item_list["itemListElement"][0]
+        # the card is never named as primaryImageOfPage (it stays the og:image)
+        assert "primaryImageOfPage" not in page_node
+
+    def test_title_and_h1_name_the_languages(self) -> None:
+        """The bare spec title never said Python, so a single implementation
+        page outranked the hub for "manhattan plot python" (2026-09-26)."""
+        spec = _mock_spec([_mock_impl("matplotlib", "python"), _mock_impl("ggplot2", "r")])
+        page = _build_spec_hub_html(spec, "https://api.anyplot.ai/og/scatter-basic.png")
+        # still starts with the spec title — bot-serving-check.yml pins that prefix
+        assert "<title>Basic Scatter Plot in Python and R | anyplot.ai</title>" in page
+        assert "<h1>Basic Scatter Plot in Python and R</h1>" in page
+
+    def test_languages_follow_registry_order(self) -> None:
+        """Python first, whatever order the rows arrive in — not alphabetical."""
+        spec = _mock_spec(
+            [
+                _mock_impl("makie", "julia"),
+                _mock_impl("d3", "javascript"),
+                _mock_impl("ggplot2", "r"),
+                _mock_impl("matplotlib", "python"),
+            ]
+        )
+        page = _build_spec_hub_html(spec, "https://api.anyplot.ai/og/scatter-basic.png")
+        assert "<h1>Basic Scatter Plot in Python, R, Julia and JavaScript</h1>" in page
+        item_list = _extract_jsonld(page)["@graph"][1]
+        assert [i["url"].rsplit("/", 2)[1] for i in item_list["itemListElement"]] == [
+            "python",
+            "r",
+            "julia",
+            "javascript",
+        ]
+
+    def test_lead_lists_libraries_by_language(self) -> None:
+        spec = _mock_spec(
+            [_mock_impl("seaborn", "python"), _mock_impl("ggplot2", "r"), _mock_impl("matplotlib", "python")]
+        )
+        page = _build_spec_hub_html(spec, "https://api.anyplot.ai/og/scatter-basic.png")
+        lead = "<p>Source code in 3 libraries — Python: Matplotlib, Seaborn; R: ggplot2.</p>"
+        assert f"</h1>{lead}<p>{html.escape(spec.description)}</p>" in page
+
+    def test_meta_description_stays_the_plain_spec_description(self) -> None:
+        """An aggregation page gets a broad description, not a keyword list."""
+        spec = _mock_spec([_mock_impl("matplotlib", "python")])
+        page = _build_spec_hub_html(spec, "https://api.anyplot.ai/og/scatter-basic.png")
+        assert f'<meta name="description" content="{html.escape(spec.description)}" />' in page
+
+    def test_primary_image_is_the_body_render(self) -> None:
+        spec = _mock_spec([_mock_impl("matplotlib", "python")])
+        page = _build_spec_hub_html(spec, "https://api.anyplot.ai/og/scatter-basic.png")
+        page_node = _extract_jsonld(page)["@graph"][2]
+        assert page_node["primaryImageOfPage"] == "https://gcs/preview_1200.png"
+        assert f'<img src="{page_node["primaryImageOfPage"]}"' in page
+
+    def test_hub_without_impls_keeps_the_bare_title(self) -> None:
+        page = _build_spec_hub_html(_mock_spec([]), "https://api.anyplot.ai/og/scatter-basic.png")
+        assert "<title>Basic Scatter Plot | anyplot.ai</title>" in page
+        assert "Source code in" not in page
 
 
 class TestBuildImplHtml:
@@ -396,11 +459,20 @@ class TestBuildImplHtml:
 
     def test_jsonld_software_source_code(self) -> None:
         jsonld = _extract_jsonld(self._page())
-        breadcrumb, source = jsonld["@graph"]
+        breadcrumb, source, page_node = jsonld["@graph"]
         assert [i["name"] for i in breadcrumb["itemListElement"]] == ["anyplot.ai", "Basic Scatter Plot", "Matplotlib"]
         assert source["@type"] == "SoftwareSourceCode"
         assert source["programmingLanguage"] == "Python"
         assert source["url"] == "https://anyplot.ai/scatter-basic/python/matplotlib"
+        # the code is what the page is about — Google's second documented way
+        # of naming a page's preferred image, beside primaryImageOfPage
+        assert source["@id"] == "https://anyplot.ai/scatter-basic/python/matplotlib#code"
+        assert source["mainEntityOfPage"] == "https://anyplot.ai/scatter-basic/python/matplotlib"
+        assert page_node["@type"] == "WebPage"
+        assert page_node["@id"] == page_node["url"] == "https://anyplot.ai/scatter-basic/python/matplotlib"
+        assert page_node["name"] == "Basic Scatter Plot in Matplotlib (Python)"
+        assert page_node["mainEntity"] == {"@id": source["@id"]}
+        assert page_node["breadcrumb"] == {"@id": breadcrumb["@id"]}
         # fields an assistant checks before reusing the code — these lived only
         # in the SPA's JSON-LD, which no crawler executes
         assert source["license"] == "https://opensource.org/licenses/MIT"
@@ -442,8 +514,40 @@ class TestBuildImplHtml:
         impl = _mock_impl("matplotlib", "python", preview=None)
         spec = _mock_spec([impl])
         page = _build_impl_html(spec, impl, "code()", "https://api.anyplot.ai/og/card.png")
-        source = _extract_jsonld(page)["@graph"][1]
+        _, source, page_node = _extract_jsonld(page)["@graph"]
         assert source["image"] == "https://api.anyplot.ai/og/card.png"
+        # no primaryImageOfPage without a render; the card stays the main
+        # entity's image, as it is the page's only image
+        assert "primaryImageOfPage" not in page_node
+
+    def test_primary_image_is_the_body_render(self) -> None:
+        page = self._page()
+        page_node = _extract_jsonld(page)["@graph"][2]
+        assert page_node["primaryImageOfPage"] == "https://gcs/preview_1200.png"
+        assert f'<img src="{page_node["primaryImageOfPage"]}"' in page
+
+    def test_title_and_h1_name_library_and_language(self) -> None:
+        """The SERP read "Manhattan Plot for GWAS - plotnine", no language (2026-09-26)."""
+        page = self._page()
+        assert "<title>Basic Scatter Plot in Matplotlib (Python) | anyplot.ai</title>" in page
+        assert "<h1>Basic Scatter Plot in Matplotlib (Python)</h1>" in page
+
+    def test_lead_names_siblings_own_language_first(self) -> None:
+        d3 = _mock_impl("d3", "javascript")
+        spec = _mock_spec([_mock_impl("matplotlib", "python"), _mock_impl("chartjs", "javascript"), d3])
+        page = _build_impl_html(spec, d3, "code()", "https://api.anyplot.ai/og/card.png")
+        assert (
+            "</h1><p>The same plot in 2 other libraries — JavaScript: Chart.js; Python: Matplotlib. "
+            "Compare all 3 side by side: "
+            '<a href="https://anyplot.ai/scatter-basic">Basic Scatter Plot in Python and JavaScript</a>.</p>'
+            f"<p>{html.escape(spec.description)}</p>"
+        ) in page
+
+    def test_no_siblings_no_lead_and_no_also_clause(self) -> None:
+        impl = _mock_impl("matplotlib", "python")
+        page = _build_impl_html(_mock_spec([impl]), impl, "code()", "https://api.anyplot.ai/og/card.png")
+        assert "The same plot in" not in page
+        assert '<meta name="description" content="Basic Scatter Plot in Matplotlib (Python): ' in page
 
     def test_meta_description_names_the_library(self) -> None:
         """Every implementation page of a spec used to carry the spec description
@@ -457,11 +561,17 @@ class TestBuildImplHtml:
         makie_match = re.search(r'<meta name="description" content="([^"]*)"', makie_page)
         assert mpl_match and makie_match
         mpl_meta, makie_meta = mpl_match.group(1), makie_match.group(1)
-        assert mpl_meta.startswith("Basic Scatter Plot in Matplotlib (Python): ")
-        assert makie_meta.startswith("Basic Scatter Plot in Makie.jl (Julia): ")
+        # ...and says the plot is not only in this library
+        assert mpl_meta.startswith("Basic Scatter Plot in Matplotlib (Python), also in 1 other library: ")
+        assert makie_meta.startswith("Basic Scatter Plot in Makie.jl (Julia), also in 1 other library: ")
         assert mpl_meta != makie_meta
         # the visible body copy stays the plain spec description
         assert f"<p>{html.escape(spec.description)}</p>" in mpl_page
+
+    def test_meta_description_counts_other_libraries_in_the_plural(self) -> None:
+        meta = re.search(r'<meta name="description" content="([^"]*)"', self._page())
+        assert meta
+        assert meta.group(1).startswith("Basic Scatter Plot in Matplotlib (Python), also in 2 other libraries: ")
 
     def test_no_code_no_pre_block(self) -> None:
         page = self._page(code=None)
@@ -724,6 +834,9 @@ class TestRenderAssetList:
 
         out = _build_impl_html(spec, impl, None, "https://api.anyplot.ai/og/x.png")
         assert 'alt="Bar &quot;Chart&quot; &amp; &lt;b&gt; rendered with Altair"' in out
+        # the title and H1 are built from raw text and escaped exactly once too
+        assert "<title>Bar &quot;Chart&quot; &amp; &lt;b&gt; in Altair (Python) | anyplot.ai</title>" in out
+        assert "<h1>Bar &quot;Chart&quot; &amp; &lt;b&gt; in Altair (Python)</h1>" in out
         # and not double-escaped into visible noise
         assert "&amp;quot;" not in out
 

@@ -919,6 +919,9 @@ class TestSeoProxyRouter:
             assert "https://anyplot.ai/scatter-basic" in response.text
             # Legacy /python/{spec} prefix must NOT appear
             assert "https://anyplot.ai/python/scatter-basic" not in response.text
+            # The title names the languages; the render is the preferred image
+            assert "<title>Basic Scatter Plot in Python | anyplot.ai</title>" in response.text
+            assert '"primaryImageOfPage"' in response.text
 
     def test_normal_pages_are_not_noindex(self, db_client, mock_spec) -> None:
         """The guard must apply only to degraded mode, never to real pages."""
@@ -1021,6 +1024,9 @@ class TestSeoProxyRouter:
             assert '<pre><code class="language-json">' in response.text
             assert f"&quot;code_json&quot;: &quot;{code_url}&quot;" in response.text
             assert "&quot;spec_json&quot;: &quot;https://api.anyplot.ai/specs/scatter-basic&quot;" in response.text
+            # The title names library and language; the render is the preferred image
+            assert "<title>Basic Scatter Plot in Matplotlib (Python) | anyplot.ai</title>" in response.text
+            assert '"primaryImageOfPage"' in response.text
 
     def test_seo_spec_implementation_not_found(self, db_client) -> None:
         """SEO spec implementation should return 404 when spec not found."""

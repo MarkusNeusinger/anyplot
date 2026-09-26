@@ -38,10 +38,15 @@ _SPEC_ID_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 # Google — which had last fetched some of these pages three weeks earlier — had
 # no reason to come back and see any of it.
 #
+# 2026-09-26: every hub and implementation page gained a title, H1 and lead
+# paragraph naming its languages and sibling libraries, plus a page node with
+# primaryImageOfPage. The library-first meta descriptions of 2026-09-02 had
+# shipped without a bump, and Google was still showing the older snippet.
+#
 # Bump this ONLY when the rendered page genuinely changes for every URL. It is
-# a claim to search engines that ~3,900 pages changed at once; making it
+# a claim to search engines that ~5,200 pages changed at once; making it
 # casually is how a site teaches Google to stop trusting its lastmod.
-TEMPLATE_LAST_CHANGED = datetime(2026, 8, 18)
+TEMPLATE_LAST_CHANGED = datetime(2026, 9, 26)
 
 
 def _lastmod(dt: datetime | None) -> str:
@@ -351,9 +356,66 @@ def _impl_display_names(impl) -> tuple[str, str]:
     return _LIBRARY_NAMES.get(impl.library_id, impl.library_id), _LANGUAGE_NAMES.get(language_id, language_id)
 
 
+# Registry order (Python, R, Julia, JavaScript), not alphabetical: the language
+# a searcher is most likely to have typed comes first in every title and list.
+_LANGUAGE_ORDER = {lang["id"]: position for position, lang in enumerate(LANGUAGES_METADATA)}
+
+
 def _sorted_impls(spec) -> list:
-    """Impls with a loaded library relation, in stable (language, library) order."""
-    return sorted((i for i in spec.impls if i.library), key=lambda i: (i.library.language, i.library_id))
+    """Impls with a loaded library relation, in registry language order, then by library id."""
+    return sorted(
+        (i for i in spec.impls if i.library),
+        key=lambda i: (_LANGUAGE_ORDER.get(i.library.language, len(_LANGUAGE_ORDER)), i.library.language, i.library_id),
+    )
+
+
+def _join_en(items: list[str]) -> str:
+    """Join as English prose: "A", "A and B", "A, B and C"."""
+    return "".join(items) if len(items) < 2 else f"{', '.join(items[:-1])} and {items[-1]}"
+
+
+def _libraries_phrase(count: int, other: bool = False) -> str:
+    """Count phrase: "1 library", "14 libraries"; with ``other``, "14 other libraries"."""
+    noun = "library" if count == 1 else "libraries"
+    return f"{count} other {noun}" if other else f"{count} {noun}"
+
+
+def _library_groups(impls: list, first_language: str | None = None) -> str:
+    """Library display names grouped by language: "Python: Altair, Bokeh; R: ggplot2".
+
+    ``impls`` must arrive in ``_sorted_impls`` order. ``first_language`` moves
+    that group to the front, so an implementation page leads with its own
+    language's alternatives. Returns raw text; callers escape it.
+    """
+    groups: dict[str, list[str]] = {}
+    for impl in impls:
+        lib_name, lang_name = _impl_display_names(impl)
+        groups.setdefault(impl.library.language, []).append(lib_name)
+    order = sorted(groups, key=lambda language: language != first_language)
+    return "; ".join(f"{_LANGUAGE_NAMES.get(language, language)}: {', '.join(groups[language])}" for language in order)
+
+
+def _hub_heading(spec) -> str:
+    """Title and H1 of a hub: the spec title plus the languages it is implemented in.
+
+    "Manhattan Plot for GWAS in Python, R, Julia and JavaScript". The bare
+    title never said Python, so for "manhattan plot python" Google ranked a
+    single implementation page above the hub that lists all of them (user
+    report 2026-09-26). Raw text; callers escape it.
+    """
+    languages = list(dict.fromkeys(i.library.language for i in _sorted_impls(spec)))
+    if not languages:
+        return str(spec.title)
+    return f"{spec.title} in {_join_en([_LANGUAGE_NAMES.get(language, language) for language in languages])}"
+
+
+def _impl_heading(spec, lib_name: str, lang_name: str) -> str:
+    """Title and H1 of an implementation page: "Manhattan Plot for GWAS in plotnine (Python)".
+
+    The same phrase the hub's link list, the sibling links and the meta
+    description already use, so title, anchors and snippet agree. Raw text.
+    """
+    return f"{spec.title} in {lib_name} ({lang_name})"
 
 
 def _spec_index_entries(specs: list) -> list[tuple[str, str]]:
@@ -431,18 +493,25 @@ def _build_spec_hub_html(spec, image: str) -> str:
 
     Body carries the preview image and one link per implementation page;
     JSON-LD carries BreadcrumbList + ItemList so the hub↔impl structure is
-    machine-readable.
+    machine-readable, and a CollectionPage node that names the page's
+    preferred image.
     """
     spec_id_esc = html.escape(spec.id)
     title_esc = html.escape(spec.title)
+    heading = _hub_heading(spec)
+    heading_esc = html.escape(heading)
     desc_esc = html.escape(spec.description or DEFAULT_DESCRIPTION)
+    # The meta description stays the plain spec description: Google asks for
+    # broad descriptions on aggregation pages and rarely shows keyword lists,
+    # and the title and lead paragraph already name the languages and libraries.
     meta_desc_esc = html.escape(_meta_description(spec.description or DEFAULT_DESCRIPTION))
     image_esc = html.escape(image, quote=True)
     hub_url = f"https://anyplot.ai/{spec.id}"
+    sorted_impls = _sorted_impls(spec)
 
     impl_links = []
     impl_list_items = []
-    for position, impl in enumerate(_sorted_impls(spec), start=1):
+    for position, impl in enumerate(sorted_impls, start=1):
         lib_name, lang_name = _impl_display_names(impl)
         impl_url = f"{hub_url}/{impl.library.language}/{impl.library_id}"
         impl_links.append(
@@ -473,24 +542,51 @@ def _build_spec_hub_html(spec, image: str) -> str:
     else:
         plot_img = f'<img src="{image_esc}" alt="{title_esc}" width="1200" height="630" />'
 
-    body = f"<h1>{title_esc}</h1><p>{desc_esc}</p>{plot_img}" + (
+    # Plain-text library names right under the H1, where a snippet is drawn
+    # from; the link list further down keeps the one link per implementation.
+    lead = (
+        f"<p>Source code in {_libraries_phrase(len(sorted_impls))} — {html.escape(_library_groups(sorted_impls))}.</p>"
+        if sorted_impls
+        else ""
+    )
+    body = f"<h1>{heading_esc}</h1>{lead}<p>{desc_esc}</p>{plot_img}" + (
         f"<h2>Implementations</h2><ul>{''.join(impl_links)}</ul>" if impl_links else ""
     )
+    page_node = {
+        "@type": "CollectionPage",
+        "@id": hub_url,
+        "url": hub_url,
+        "name": heading,
+        "mainEntity": {"@id": f"{hub_url}#implementations"},
+        "breadcrumb": {"@id": f"{hub_url}#breadcrumb"},
+    }
+    # The search-thumbnail preference Google documents. og:image is the branded
+    # card, whose plot is a small inset among text; this is the clean render
+    # the body shows, at the exact URL of its <img src>.
+    if best_impl:
+        page_node["primaryImageOfPage"] = _thumb_1200(best_impl.preview_url_light)
     jsonld = {
         "@context": "https://schema.org",
         "@graph": [
             {
                 "@type": "BreadcrumbList",
+                "@id": f"{hub_url}#breadcrumb",
                 "itemListElement": [
                     {"@type": "ListItem", "position": 1, "name": "anyplot.ai", "item": "https://anyplot.ai/"},
                     {"@type": "ListItem", "position": 2, "name": spec.title, "item": hub_url},
                 ],
             },
-            {"@type": "ItemList", "name": spec.title, "itemListElement": impl_list_items},
+            {
+                "@type": "ItemList",
+                "@id": f"{hub_url}#implementations",
+                "name": spec.title,
+                "itemListElement": impl_list_items,
+            },
+            page_node,
         ],
     }
     return _render_bot_html(
-        title=f"{title_esc} | anyplot.ai",
+        title=f"{heading_esc} | anyplot.ai",
         description=meta_desc_esc,
         image=image_esc,
         url=f"https://anyplot.ai/{spec_id_esc}",
@@ -576,9 +672,15 @@ def _build_source_code_node(spec, impl, lib_name: str, lang_name: str, page_url:
     chrome, and structured-data consumers were being handed the chrome while
     the body served the real plot (AI-access audit 2026-08-19). The card
     remains the og:image — link previews are the surface it was made for.
+
+    `mainEntityOfPage` marks this node as what the page is about, which is
+    one of the two ways Google documents for naming a page's preferred image;
+    the page's WebPage node carries the other, `primaryImageOfPage`.
     """
     node = {
         "@type": "SoftwareSourceCode",
+        "@id": f"{page_url}#code",
+        "mainEntityOfPage": page_url,
         "name": f"{spec.title} — {lib_name}",
         "description": spec.description or DEFAULT_DESCRIPTION,
         "programmingLanguage": lang_name,
@@ -693,30 +795,50 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
 
     Body carries the preview image, the implementation source in a <pre>
     block, and hub + sibling links; JSON-LD carries BreadcrumbList +
-    SoftwareSourceCode.
+    SoftwareSourceCode + a WebPage node that names the preferred image.
     """
     language_id = impl.library.language
     lib_name, lang_name = _impl_display_names(impl)
     title_esc = html.escape(spec.title)
     lib_name_esc = html.escape(lib_name)
+    heading = _impl_heading(spec, lib_name, lang_name)
+    heading_esc = html.escape(heading)
     desc_esc = html.escape(spec.description or DEFAULT_DESCRIPTION)
+    image_esc = html.escape(image, quote=True)
+    hub_url = f"https://anyplot.ai/{spec.id}"
+    page_url = f"{hub_url}/{language_id}/{impl.library_id}"
+    sorted_impls = _sorted_impls(spec)
+    siblings = [s for s in sorted_impls if not (s.library_id == impl.library_id and s.library.language == language_id)]
+
     # The meta/OG description names the library first. Reusing the spec
     # description verbatim gave every implementation page of a spec (up to 15)
     # and its hub the same snippet — Bing Webmaster Tools flagged the catalogue
     # for "too many pages with identical meta descriptions" (2026-09-02), and a
     # searcher who typed "matplotlib funnel chart" saw nothing about matplotlib
     # in the result. The visible body and the JSON-LD keep the plain text.
-    meta_desc_esc = html.escape(
-        _meta_description(f"{spec.title} in {lib_name} ({lang_name}): {spec.description or DEFAULT_DESCRIPTION}")
-    )
-    image_esc = html.escape(image, quote=True)
-    hub_url = f"https://anyplot.ai/{spec.id}"
-    page_url = f"{hub_url}/{language_id}/{impl.library_id}"
+    #
+    # It also says the plot exists in other libraries: a searcher who found the
+    # plotnine page for "manhattan plot python" could not tell from the result
+    # that seven other Python libraries had it too (user report 2026-09-26).
+    # A count, not the names, so the spec's own description still fits.
+    also = f", also in {_libraries_phrase(len(siblings), other=True)}" if siblings else ""
+    meta_desc_esc = html.escape(_meta_description(f"{heading}{also}: {spec.description or DEFAULT_DESCRIPTION}"))
+
+    # Named in plain text under the H1, the page's own language first; the
+    # "Other implementations" list at the bottom keeps one link per sibling.
+    # The hub link's anchor text is the hub's own title, so every
+    # implementation page tells Google which page covers all the languages.
+    lead = ""
+    if siblings:
+        lead = (
+            f"<p>The same plot in {_libraries_phrase(len(siblings), other=True)} — "
+            f"{html.escape(_library_groups(siblings, first_language=language_id))}. "
+            f"Compare all {len(sorted_impls)} side by side: "
+            f'<a href="{html.escape(hub_url, quote=True)}">{html.escape(_hub_heading(spec))}</a>.</p>'
+        )
 
     sibling_links = []
-    for sibling in _sorted_impls(spec):
-        if sibling.library_id == impl.library_id and sibling.library.language == language_id:
-            continue
+    for sibling in siblings:
         sib_lib_name, sib_lang_name = _impl_display_names(sibling)
         sibling_url = f"{hub_url}/{sibling.library.language}/{sibling.library_id}"
         sibling_links.append(
@@ -741,7 +863,8 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
         plot_img = f'<img src="{image_esc}" alt="{title_esc} rendered with {lib_name_esc}" width="1200" height="630" />'
 
     body = (
-        f"<h1>{title_esc} — {lib_name_esc}</h1>"
+        f"<h1>{heading_esc}</h1>"
+        f"{lead}"
         f"<p>{desc_esc}</p>"
         f"{plot_img}"
         + (
@@ -753,11 +876,25 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
         + f'<p>Part of <a href="{html.escape(hub_url, quote=True)}">{title_esc}</a> on anyplot.ai.</p>'
         + (f"<h2>Other implementations</h2><ul>{''.join(sibling_links)}</ul>" if sibling_links else "")
     )
+    page_node = {
+        "@type": "WebPage",
+        "@id": page_url,
+        "url": page_url,
+        "name": heading,
+        "mainEntity": {"@id": f"{page_url}#code"},
+        "breadcrumb": {"@id": f"{page_url}#breadcrumb"},
+    }
+    # The search-thumbnail preference, at the exact URL of the body's <img src>
+    # — see the hub builder. Without a render the card is the only image, and
+    # it stays reachable through the og tags and the SoftwareSourceCode node.
+    if impl.preview_url_light:
+        page_node["primaryImageOfPage"] = _thumb_1200(impl.preview_url_light)
     jsonld = {
         "@context": "https://schema.org",
         "@graph": [
             {
                 "@type": "BreadcrumbList",
+                "@id": f"{page_url}#breadcrumb",
                 "itemListElement": [
                     {"@type": "ListItem", "position": 1, "name": "anyplot.ai", "item": "https://anyplot.ai/"},
                     {"@type": "ListItem", "position": 2, "name": spec.title, "item": hub_url},
@@ -765,10 +902,11 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
                 ],
             },
             _build_source_code_node(spec, impl, lib_name, lang_name, page_url, hub_url, image),
+            page_node,
         ],
     }
     return _render_bot_html(
-        title=f"{title_esc} - {lib_name_esc} | anyplot.ai",
+        title=f"{heading_esc} | anyplot.ai",
         description=meta_desc_esc,
         image=image_esc,
         url=html.escape(page_url, quote=True),
