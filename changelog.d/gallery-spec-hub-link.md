@@ -8,6 +8,7 @@
   click is tracked as `nav_click` with `source: gallery_spec_hub`. It is set in
   one tone rather than the two-tone `subject.verb()` style, whose dimmed
   subject measures about 3.7:1 on the light background, below WCAG AA.
+  (#11845)
 
 ### Fixed
 
@@ -15,4 +16,4 @@
   Filter pageviews have been recorded under `/plots/...` since 2026-07-10, but
   the doc still showed the old root paths and missed the `lang` and `language`
   categories. `docs/reference/seo.md` also still said the `/{spec_id}/{language}`
-  crawler redirect pointed at a `/seo-proxy/` path.
+  crawler redirect pointed at a `/seo-proxy/` path. (#11845)
