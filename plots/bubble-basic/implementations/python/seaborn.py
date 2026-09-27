@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: seaborn 0.13.2 | Python 3.13.15
-Quality: 88/100 | Updated: 2026-09-26
+Quality: 91/100 | Updated: 2026-09-27
 """
 
 import os
@@ -26,7 +26,7 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 np.random.seed(42)
 
 tier_params = [
-    ("Low Income", 50, 300, 85, 22, 15),
+    ("Low Income", 50, 300, 85, 27, 15),
     ("Lower-Middle Income", 300, 950, 38, 11, 15),
     ("Upper-Middle Income", 950, 3200, 14, 5, 15),
     ("High Income", 3200, 8500, 5, 2, 15),
@@ -97,7 +97,7 @@ sns.scatterplot(
     alpha=0.65,
     palette=tier_colors,
     edgecolor=PAGE_BG,
-    linewidth=0.7,
+    linewidth=0.9,
     legend="brief",
     ax=ax,
 )
@@ -131,9 +131,12 @@ for handle, text_obj in zip(legend.legend_handles, legend.texts, strict=False):
     text_obj.set_color(INK)
     # Size handles (non-tier labels): the combined hue+size legend renders these
     # as Line2D markers, not patches, so recolor via the marker face/edge setters.
+    # alpha is set explicitly to 1.0 (not inherited from the scatter's alpha=0.65)
+    # so the swatch stays legible against the dark elevated panel.
     if text_obj.get_text() not in tier_names:
         handle.set_markerfacecolor(INK_SOFT)
         handle.set_markeredgecolor(INK_SOFT)
+        handle.set_alpha(1.0)
 legend.set_frame_on(True)
 legend.get_frame().set_alpha(0.92)
 legend.get_frame().set_edgecolor(INK_SOFT)
