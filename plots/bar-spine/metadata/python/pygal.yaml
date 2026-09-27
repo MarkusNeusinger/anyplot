@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: bar-spine
 created: '2026-05-08T15:29:07Z'
-updated: '2026-09-27T03:22:56Z'
+updated: '2026-09-27T03:30:48Z'
 generated_by: claude-sonnet
 workflow_run: 36290673625
 issue: 5249
@@ -12,154 +12,161 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Correct data mapping: bar widths are proportional to the marginal class frequencies,
-    and segment heights are the conditional survival proportions, both computed directly
-    from the raw counts'
-  - Real, factually accurate Titanic survival data by passenger class that closely
-    matches well-known historical statistics (1st ~62%, 2nd ~43%, 3rd ~26% survival)
-  - Creative, distinctive use of pygal's Histogram (value, x_min, x_max) rectangle
-    feature to build adjacent variable-width bars, implementing a spine plot that
-    pygal has no native chart type for
-  - 'Correct Imprint palette (green #009E73 primary, #C475FD secondary) with theme-correct
-    chrome in both light and dark renders, all text clearly legible in both themes'
-  - Explicit font sizing across all text elements (title, axis, legend, value labels)
-    with good, balanced canvas utilization
+  - 'Genuinely correct spine-plot construction: bar widths are proportional to marginal
+    class frequency and segment heights sum to 100%, with bars perfectly adjacent
+    (no gaps) via cumulative x_ranges'
+  - Clever, idiomatic pygal technique — uses Histogram's (value, x_min, x_max) tuple
+    format with two overlapping full-height series to fake a variable-width stacked
+    bar, which pygal has no native chart type for
+  - 'Historically accurate data: survived/not-survived counts per class match the
+    real Titanic passenger statistics (1st: 200/123, 2nd: 119/158, 3rd: 181/528)'
+  - Theme-adaptive chrome correctly threaded through the Style object (background,
+    ink tokens, grid) — title, axis labels, and tick labels are all clearly legible
+    in both light and dark renders
+  - Title fontsize scaling formula keeps the long mandated title comfortably sized
+    instead of overflowing
+  - Percentage value labels directly on the bars give an immediate, labeled narrative
+    of declining survival rate across classes
   weaknesses:
-  - 'Title is missing the mandated language token: it reads ''... · bar-spine · pygal
-    · anyplot.ai'' but the required format is ''{spec-id} · {language} · {library}
-    · anyplot.ai'' — insert ''python'' between ''bar-spine'' and ''pygal'''
-  - Y-axis label 'Survival Rate' does not state the unit explicitly — rename to 'Survival
-    Rate (%)' to score full marks on axis labeling
-  - Only the 'Survived' segment gets a percentage callout, placed above the bar rather
-    than within the segment as the spec suggests, and the 'Not Survived' segment has
-    no label at all — consider adding matching labels inside the larger segments (e.g.
-    the wide 3rd-class purple area easily fits '74% not survived')
-  - Overall aesthetic still reads close to a well-configured library default (flat
-    fills, default monospace typeface, no depth/hierarchy beyond color) — a bit more
-    typographic or layout distinction would lift Design Excellence
+  - 'Dark render: the ''Survived'' series'' print_values labels (''62% survived'',
+    ''43% survived'', ''26% survived''), which are anchored above the full-height
+    bar top (i.e. in the page-background band above the 100% guide, not on the green
+    fill), render in the same fixed dark ink used in the light render instead of a
+    theme-adaptive light token — low contrast against the near-black #1A1A17 page
+    background. The ''not survived'' labels are fine because they sit inside the bright
+    purple/green fill. Set an explicit value_colors (or equivalent per-series label
+    color) in the Style tied to INK/INK_SOFT so labels placed on the page background
+    flip with theme.'
+  - No visual emphasis singles out one class or one segment as the focal insight —
+    all three bars carry equal visual weight; a highlight (e.g. bolder label or accent
+    on 3rd class, which has both the largest width and the worst survival rate) would
+    sharpen the storytelling.
+  - X-axis has no explicit x_title (relies solely on the '(24.7%)'-style category
+    labels) — an axis title like 'Passenger Class (share of total passengers)' would
+    remove any ambiguity about what the parenthetical percentage represents.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Dark ink title "Titanic Survival by Passenger Class · bar-spine · pygal · anyplot.ai" at top, dark "Survival Rate" y-axis label, dark 0%-100% tick labels (25% steps), dark x-axis category labels "1st Class (24.7%)" / "2nd Class (21.2%)" / "3rd Class (54.2%)", dark legend text at bottom. All chrome text is clearly readable against the light background.
-      Data: Three adjacent variable-width bars (spine plot), stacked green (#009E73, "Survived") on top of lavender-purple (#C475FD, "Not Survived"). Bar widths shrink/grow with each class's marginal share (24.7% / 21.2% / 54.2%); segment split shows declining survival by class (62% → 43% → 26%, called out via labels above each bar). First series is the Imprint green as required.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Serif title "Titanic Survival by Passenger Class · bar-spine · python · pygal · anyplot.ai" in dark ink, clearly readable. Y-axis title "Survival Rate (%)" and 0/25/50/75/100% tick labels in dark ink, legible. X-axis category labels "1st Class (24.7%)", "2nd Class (21.2%)", "3rd Class (54.2%)" centered under each variable-width bar, legible. Subtle dashed horizontal gridlines, not competing with data. Legend at bottom with two square swatches ("Survived" green, "Not Survived" lavender), clearly legible.
+      Data: Three adjacent bars (no gaps) with widths proportional to class size (24.7% / 21.2% / 54.2%). Each bar is stacked: brand green (#009E73) "Survived" segment on top, lavender (#C475FD) "Not Survived" segment below, heights summing to 100%. Percentage labels ("62% survived", "38% not survived", etc.) sit on or above each segment, all readable against both the cream background and the bright fill colors.
+      Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same layout with all title/axis/tick/legend text now light-colored (off-white/light gray), clearly legible against the dark background. No dark-on-dark elements found — tick labels, axis title, and legend text are all appropriately light-toned.
-      Data: Green (#009E73) and lavender-purple (#C475FD) segments are pixel-identical to the light render — only chrome (background, text, grid) flips as required.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Title, y-axis title, all tick labels, x-axis category labels, and legend text render in light ink (theme-adaptive), clearly readable against the dark background. Gridlines remain subtle.
+      Data: Same brand green (#009E73) and lavender (#C475FD) segments, identical hues to the light render — only chrome flipped, as required. Bar widths and stacked proportions are pixel-identical to the light render.
+      Legibility verdict: PARTIAL FAIL for one specific element — the "Survived" series' top-anchored value labels ("62% survived", "43% survived", "26% survived") sit in the page-background band above the bars (not on the green fill) and are rendered in the same fixed dark ink as the light render, giving them low contrast against the near-black background. This is a narrower issue than the title/axis/tick chrome (which all pass); it affects only these 3 data labels. The "not survived" labels, which sit on the bright colored fill itself, remain fully legible in both themes.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title, label, major_label, legend,
-          value); readable and well-proportioned in both themes.
+        comment: Explicit sizing throughout (title/label/major_label/legend/value
+          font sizes); title, axis labels and ticks fully legible in both themes;
+          the 3 top-anchored 'Survived' value labels have low contrast on the near-black
+          dark background
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements.
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Solid stacked segments are highly visible and appropriately sized
-          for the plot.
+        comment: Stacked segments fill their proportional area clearly, fully visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. purple gives strong, CVD-safe contrast; not red-green.
+        comment: Green/lavender pair is CVD-safe and high-contrast; not a red-green
+          pairing
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the large majority of the 3200x1800 canvas with balanced
-          margins; legend sits directly under the plot.
+        comment: Bars + labels + legend use a large majority of the canvas, balanced
+          margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
-        max: 2
-        passed: false
-        comment: Y-axis label 'Survival Rate' is descriptive but doesn't state the
-          unit ('%') explicitly.
-      - id: VQ-07
-        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD (canonical Imprint order);
-          backgrounds and chrome are theme-correct in both renders.'
+        comment: Y-axis 'Survival Rate (%)' has units; x-axis labels include marginal
+          share percentages
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series correctly #009E73, second correctly #C475FD, both theme
+          backgrounds correct, but the dark-render value-label contrast issue counts
+          as one off chrome element'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured default: correct palette and sizing, but flat fills
-          and default monospace typography without extra polish.'
+        comment: Custom serif title face distinguishes headline from data labels,
+          deliberate use of the overlapping-histogram trick, tuned title-fontsize
+          scaling formula — clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Only horizontal guides shown (show_x_guides=False), generous whitespace,
-          but no other refinement beyond that.
+        comment: Subtle y-only gridlines, minimal spines, bottom-anchored 2-column
+          legend, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Per-bar 'X% survived' callouts create a visual hierarchy that highlights
-          the declining-survival trend across classes.
+        comment: Direct percentage labels create a readable declining-survival narrative
+          across classes, but no single focal emphasis singles out the most striking
+          data point
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: 'Correct spine plot: variable bar widths by marginal frequency, normalized
-          stacked segments to 100%, adjacent with no gaps.'
+        comment: 'Correct spine plot: variable bar widths from marginal frequency,
+          stacked-to-100% conditional segments, adjacent bars'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: All mandatory features present; optional 'labels within segments'
-          partially implemented (only Survived labeled, above the bar).
+        comment: Variable widths, conditional stacking, no gaps, distinct colors +
+          legend, centered x-labels, and in-segment percentage labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: X/Y correctly assigned; all data visible.
+        comment: X = class (width-encoded), Y = stacked survival proportion; both
+          axes show all data
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title is missing the mandated language token ('python'); legend labels
-          are correct.
+        comment: Title matches '{Descriptive Title} · bar-spine · python · pygal ·
+          anyplot.ai'; legend labels 'Survived'/'Not Survived' match the data
     data_quality:
       score: 15
       max: 15
@@ -168,23 +175,18 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        passed: true
-        comment: Shows varying bar widths AND varying conditional splits across all
-          three classes.
+        comment: All 3 classes show distinct widths and distinct conditional proportions,
+          exercising the full spine-plot feature set
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Real, neutral historical Titanic dataset, commonly used in dataviz
-          education.
+        comment: Well-known, neutral historical Titanic survival dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Counts and resulting proportions closely match well-documented real
-          Titanic survival statistics.
+        comment: Counts match the real historical passenger-class survival statistics
     code_quality:
       score: 10
       max: 10
@@ -193,62 +195,53 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: Imports -> data -> style -> chart -> save, no classes.
+        comment: Linear imports → data → style → chart → save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Hardcoded deterministic counts, no randomness.
+        comment: Fully deterministic hardcoded counts, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: os, sys, pygal, Style all used; sys needed for the documented filename-collision
-          workaround.
+        comment: Only pygal, pygal.style, os, sys — all used (sys for the path fix)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: Clean and appropriately complex for the overlapping-histogram spine-plot
-          technique; well-commented.
+        comment: Well-commented rationale for the overlapping-histogram trick, no
+          fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current pygal API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current render_to_png/render
+          API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: true
-        comment: Leverages Histogram's (value, x_min, x_max) rectangle API idiomatically
-          to build variable-width bars.
+        comment: Uses pygal's Histogram (value, x_min, x_max) tuple API exactly as
+          intended for variable-width bars, plus custom x_labels/y_labels and formatters
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Uses pygal's variable-width rectangle feature creatively to fake
-          a spine/mosaic chart type the library doesn't natively support.
-  verdict: REJECTED
+        comment: The overlapping-Histogram spine-plot construction is a pygal-specific
+          technique that would need a different approach entirely in most other libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
   - annotations
-  - html-export
   patterns:
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
-  - grid-styling
+  - publication-ready
