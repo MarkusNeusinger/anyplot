@@ -3,11 +3,12 @@
 impl-generate.yml resolves one model per (spec, library) pair: an explicit
 `model` input always wins; without one ("auto", or the label trigger) the pair's
 first implementation runs on opus and a regeneration on sonnet. The resolved
-value is threaded into the review and every repair of the PR.
+value is threaded into the review and every repair of the PR and recorded in
+the PR body (`**Model:** opus`), which rescues without a model read back.
 
-The routing script runs for real here, against a throwaway git repository whose
-`origin/main` holds a few implementations. The rest are content guards for
-wiring that has no local execution loop.
+The step scripts run for real here, against a throwaway git repository whose
+`origin/main` holds a few implementations, with a fake `gh` on PATH. The rest
+are content guards for wiring that has no local execution loop.
 """
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ REPO_ROOT = Path(__file__).parent.parent.parent.parent
 WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 EXPRESSION = re.compile(r"\$\{\{\s*(.+?)\s*\}\}")
 MODELS = {"auto", "haiku", "sonnet", "opus"}
+NO_MAIN_WARNING = "::warning::origin/main unavailable — routing assumes a first run (opus)"
 
 # Implementations present on the fake origin/main.
 ON_MAIN = (
@@ -38,6 +40,13 @@ ON_MAIN = (
 )
 # Present in the working tree only: must not count as "already on main".
 WORKING_TREE_ONLY = "plots/spec-a/implementations/python/seaborn.py"
+
+LANG_EXT = {
+    "matplotlib": ("python", ".py"),
+    "plotly": ("python", ".py"),
+    "ggplot2": ("r", ".R"),
+    "muix": ("javascript", ".tsx"),
+}
 
 
 def _workflow(filename: str) -> dict[Any, Any]:
@@ -78,13 +87,44 @@ def _clean_env(**extra: str) -> dict[str, str]:
 
 
 def _outputs(path: Path) -> dict[str, str]:
+    if not path.exists():
+        return {}
     return dict(line.split("=", 1) for line in path.read_text(encoding="utf-8").splitlines() if "=" in line)
 
 
-@pytest.fixture
-def repo(tmp_path: Path) -> Path:
-    """A git repo whose `origin/main` holds ON_MAIN (and nothing else)."""
-    root = tmp_path / "repo"
+def _fake_gh(tmp_path: Path, body: str) -> str:
+    """Install a `gh` stub running `body` (POSIX sh); return the PATH to use."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir(exist_ok=True)
+    gh = bin_dir / "gh"
+    gh.write_text("#!/bin/sh\n" + body, encoding="utf-8")
+    gh.chmod(0o755)
+    return f"{bin_dir}{os.pathsep}{os.environ['PATH']}"
+
+
+def _exec(script: str, cwd: Path, tmp_path: Path, **env: str) -> subprocess.CompletedProcess[str]:
+    """Run a step script the way Actions does; outputs land in tmp_path."""
+    assert "${{" not in script, "render the expressions first"
+    for name in ("github_output", "step_summary"):
+        (tmp_path / name).unlink(missing_ok=True)
+    return subprocess.run(
+        ["bash", "-eo", "pipefail", "-c", script],
+        cwd=cwd,
+        env=_clean_env(
+            GITHUB_OUTPUT=str(tmp_path / "github_output"), GITHUB_STEP_SUMMARY=str(tmp_path / "step_summary"), **env
+        ),
+        capture_output=True,
+        text=True,
+    )
+
+
+def _run_script(script: str, cwd: Path, tmp_path: Path, **env: str) -> dict[str, str]:
+    result = _exec(script, cwd, tmp_path, **env)
+    assert result.returncode == 0, result.stdout + result.stderr
+    return _outputs(tmp_path / "github_output")
+
+
+def _git_repo(root: Path, *, with_origin_main: bool) -> Path:
     root.mkdir()
     env = _clean_env()
 
@@ -109,15 +149,30 @@ def repo(tmp_path: Path) -> Path:
         "-m",
         "main",
     )
-    git("update-ref", "refs/remotes/origin/main", "HEAD")
+    if with_origin_main:
+        git("update-ref", "refs/remotes/origin/main", "HEAD")
     (root / WORKING_TREE_ONLY).write_text("# local only\n", encoding="utf-8")
     return root
 
 
-def _run_extract_inputs(
-    repo: Path, tmp_path: Path, *, library: str, model: str = "auto", label_trigger: bool = False, spec: str = "spec-a"
-) -> dict[str, str]:
-    """Run impl-generate's "Extract inputs" step and return its outputs."""
+@pytest.fixture
+def repo(tmp_path: Path) -> Path:
+    """A git repo whose `origin/main` holds ON_MAIN (and nothing else)."""
+    return _git_repo(tmp_path / "repo", with_origin_main=True)
+
+
+@pytest.fixture
+def repo_without_main(tmp_path: Path) -> Path:
+    """The same repo with no `origin/main` and no `origin` remote to fetch it from."""
+    return _git_repo(tmp_path / "repo", with_origin_main=False)
+
+
+# ---------------------------------------------------------------------------
+# impl-generate
+# ---------------------------------------------------------------------------
+
+
+def _extract_inputs_script(*, library: str, model: str, label_trigger: bool, spec: str) -> tuple[str, dict[str, str]]:
     dispatch = not label_trigger
     context = {
         "github.event_name": "workflow_dispatch" if dispatch else "issues",
@@ -127,30 +182,58 @@ def _run_extract_inputs(
         "inputs.model": model if dispatch else "",
         "github.event.issue.number": "" if dispatch else "42",
     }
-    script = _render(_step("impl-generate.yml", "Extract inputs")["run"], context)
-    return _run_script(
-        script,
-        repo,
+    env = {
+        "LABEL_NAME": "" if dispatch else f"generate:{library}",
+        "ISSUE_TITLE": "" if dispatch else f"[{spec}] Some plot",
+    }
+    return _render(_step("impl-generate.yml", "Extract inputs")["run"], context), env
+
+
+def _run_extract_inputs(
+    repo: Path, tmp_path: Path, *, library: str, model: str = "auto", label_trigger: bool = False, spec: str = "spec-a"
+) -> dict[str, str]:
+    """Run impl-generate's "Extract inputs" step and return its outputs."""
+    script, env = _extract_inputs_script(library=library, model=model, label_trigger=label_trigger, spec=spec)
+    return _run_script(script, repo, tmp_path, **env)
+
+
+def _create_pr_body(tmp_path: Path, *, model: str) -> str:
+    """Run impl-generate's "Create Pull Request" step and return the body it sends."""
+    body_file = tmp_path / "pr_body.md"
+    path = _fake_gh(
         tmp_path,
-        LABEL_NAME="" if dispatch else f"generate:{library}",
-        ISSUE_TITLE="" if dispatch else f"[{spec}] Some plot",
+        'if [ "$1 $2" = "pr list" ]; then exit 0; fi\n'
+        'if [ "$1 $2" = "pr create" ]; then\n'
+        "  while [ $# -gt 0 ]; do\n"
+        '    if [ "$1" = "--body" ]; then printf "%s" "$2" > "$GH_BODY_FILE"; fi\n'
+        "    shift\n"
+        "  done\n"
+        '  echo "https://github.com/owner/repo/pull/123"\n'
+        "  exit 0\n"
+        "fi\n"
+        "exit 1\n",
     )
-
-
-def _run_script(script: str, repo: Path, tmp_path: Path, **env: str) -> dict[str, str]:
-    """Run a step script in `repo` the way Actions does and return its outputs."""
-    assert "${{" not in script, "render the expressions first"
-    out = tmp_path / "github_output"
-    out.unlink(missing_ok=True)
-    result = subprocess.run(
-        ["bash", "-eo", "pipefail", "-c", script],
-        cwd=repo,
-        env=_clean_env(GITHUB_OUTPUT=str(out), **env),
-        capture_output=True,
-        text=True,
+    script = _render(
+        _step("impl-generate.yml", "Create Pull Request")["run"],
+        {"github.repository": "owner/repo", "github.run_id": "1"},
     )
-    assert result.returncode == 0, result.stdout + result.stderr
-    return _outputs(out)
+    outputs = _run_script(
+        script,
+        tmp_path,
+        tmp_path,
+        PATH=path,
+        GH_BODY_FILE=str(body_file),
+        GH_TOKEN="unused",
+        MODEL=model,
+        SPEC_ID="spec-a",
+        LANGUAGE="python",
+        LIBRARY="plotly",
+        EXT=".py",
+        ISSUE="42",
+        BRANCH="implementation/spec-a/plotly",
+    )
+    assert outputs["pr_number"] == "123"
+    return body_file.read_text(encoding="utf-8")
 
 
 class TestImplGenerateRouting:
@@ -183,7 +266,9 @@ class TestImplGenerateRouting:
         ],
     )
     def test_explicit_model_wins(self, repo, tmp_path, library, model):
-        assert _run_extract_inputs(repo, tmp_path, library=library, model=model)["model"] == model
+        outputs = _run_extract_inputs(repo, tmp_path, library=library, model=model)
+        assert outputs["model"] == model
+        assert outputs["model_reason"] == "explicit input"
 
     def test_empty_model_routes_like_auto(self, repo, tmp_path):
         assert _run_extract_inputs(repo, tmp_path, library="plotly", model="")["model"] == "opus"
@@ -195,6 +280,26 @@ class TestImplGenerateRouting:
         assert outputs["specification_id"] == "spec-a"
         assert outputs["library"] == library
         assert outputs["model"] == expected
+
+    @pytest.mark.parametrize(
+        ("library", "model", "reason"),
+        [("plotly", "opus", "first implementation"), ("matplotlib", "sonnet", "regeneration")],
+    )
+    def test_reason_reaches_outputs_and_run_summary(self, repo, tmp_path, library, model, reason):
+        outputs = _run_extract_inputs(repo, tmp_path, library=library)
+        assert (outputs["model"], outputs["model_reason"]) == (model, reason)
+        summary = (tmp_path / "step_summary").read_text(encoding="utf-8")
+        assert f"**Model:** {model} ({reason})" in summary
+
+    def test_routing_fails_without_origin_main(self, repo_without_main, tmp_path):
+        script, env = _extract_inputs_script(library="plotly", model="auto", label_trigger=False, spec="spec-a")
+        result = _exec(script, repo_without_main, tmp_path, **env)
+        assert result.returncode != 0
+        assert "::error::origin/main unavailable — cannot route the model" in result.stdout
+        assert "model" not in _outputs(tmp_path / "github_output")
+
+    def test_explicit_model_needs_no_origin_main(self, repo_without_main, tmp_path):
+        assert _run_extract_inputs(repo_without_main, tmp_path, library="plotly", model="sonnet")["model"] == "sonnet"
 
 
 class TestImplGenerateWiring:
@@ -216,33 +321,51 @@ class TestImplGenerateWiring:
         assert args.startswith("--model ${{ steps.inputs.outputs.model }} ")
 
     @pytest.mark.parametrize(
-        "name", ["Create library metadata file", "Trigger review workflow", "Handle generation failure"]
+        "name",
+        [
+            "Create library metadata file",
+            "Create Pull Request",
+            "Post preview to issue",
+            "Trigger review workflow",
+            "Handle generation failure",
+        ],
     )
-    def test_metadata_review_and_retry_get_the_resolved_model(self, name):
+    def test_consumers_get_the_resolved_model(self, name):
         assert _step("impl-generate.yml", name)["env"]["MODEL"] == "${{ steps.inputs.outputs.model }}"
 
     def test_retry_forwards_the_resolved_model_explicitly(self):
         script = _step("impl-generate.yml", "Handle generation failure")["run"]
         assert '-f model="${MODEL}"' in script
 
+    def test_preview_comment_shows_model_and_reason(self):
+        step = _step("impl-generate.yml", "Post preview to issue")
+        assert step["env"]["MODEL_REASON"] == "${{ steps.inputs.outputs.model_reason }}"
+        assert "**Model:** ${MODEL} (${MODEL_REASON})" in step["run"]
 
-def _run_review_extract(
-    repo: Path, tmp_path: Path, *, library: str, model_input: str = "", payload: str = ""
-) -> dict[str, str]:
+    @pytest.mark.parametrize("model", ["opus", "haiku"])
+    def test_pr_body_records_the_model_on_its_own_line(self, tmp_path, model):
+        body = _create_pr_body(tmp_path, model=model)
+        assert f"**Model:** {model}" in body.splitlines()
+
+
+# ---------------------------------------------------------------------------
+# impl-review
+# ---------------------------------------------------------------------------
+
+
+def _run_review(
+    repo: Path, tmp_path: Path, *, library: str, model_input: str = "", payload: str = "", body: str = ""
+) -> subprocess.CompletedProcess[str]:
     """Run impl-review's "Extract PR info" step against a fake `gh`."""
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir(exist_ok=True)
-    pr = {"headRefName": f"implementation/spec-a/{library}", "headRefOid": "0" * 40, "body": "**Parent Issue:** #42"}
-    gh = bin_dir / "gh"
-    gh.write_text(f"#!/bin/sh\ncat <<'EOF'\n{json.dumps(pr)}\nEOF\n", encoding="utf-8")
-    gh.chmod(0o755)
+    pr = {"headRefName": f"implementation/spec-a/{library}", "headRefOid": "0" * 40, "body": body}
+    path = _fake_gh(tmp_path, f"cat <<'EOF'\n{json.dumps(pr)}\nEOF\n")
     # The step parks gh's output under /tmp; keep the test inside tmp_path.
     script = _step("impl-review.yml", "Extract PR info")["run"].replace("/tmp/", f"{tmp_path}/")
-    return _run_script(
+    return _exec(
         script,
         repo,
         tmp_path,
-        PATH=f"{bin_dir}{os.pathsep}{os.environ['PATH']}",
+        PATH=path,
         GH_TOKEN="unused",
         PR_NUMBER="7",
         MODEL_INPUT=model_input,
@@ -250,44 +373,84 @@ def _run_review_extract(
     )
 
 
-class TestImplReviewRescueRouting:
+def _review_model(repo: Path, tmp_path: Path, **kwargs: str) -> str:
+    result = _run_review(repo, tmp_path, **kwargs)
+    assert result.returncode == 0, result.stdout + result.stderr
+    return _outputs(tmp_path / "github_output")["model"]
+
+
+class TestImplReviewModel:
     """impl-generate always sends its resolved model; rescues send none."""
 
     @pytest.mark.parametrize(("model_input", "payload"), [("", "opus"), ("", "haiku"), ("sonnet", ""), ("opus", "")])
     def test_threaded_or_explicit_model_wins(self, repo, tmp_path, model_input, payload):
         # plotly is a first run, so routing alone would say opus.
-        outputs = _run_review_extract(repo, tmp_path, library="plotly", model_input=model_input, payload=payload)
-        assert outputs["model"] == (model_input or payload)
+        assert _review_model(repo, tmp_path, library="plotly", model_input=model_input, payload=payload) == (
+            model_input or payload
+        )
 
     @pytest.mark.parametrize(("model_input", "payload"), [("auto", ""), ("", ""), ("", "auto")])
     @pytest.mark.parametrize(
         ("library", "expected"), [("matplotlib", "sonnet"), ("muix", "sonnet"), ("plotly", "opus"), ("seaborn", "opus")]
     )
     def test_rescue_without_a_model_routes(self, repo, tmp_path, model_input, payload, library, expected):
-        outputs = _run_review_extract(repo, tmp_path, library=library, model_input=model_input, payload=payload)
+        result = _run_review(repo, tmp_path, library=library, model_input=model_input, payload=payload)
+        assert result.returncode == 0, result.stdout + result.stderr
+        outputs = _outputs(tmp_path / "github_output")
         assert outputs["library"] == library
         assert outputs["model"] == expected
 
     def test_library_match_is_exact(self, repo, tmp_path):
         # "d3" is on main; a library whose name only starts the same is not.
-        assert _run_review_extract(repo, tmp_path, library="d3")["model"] == "sonnet"
-        assert _run_review_extract(repo, tmp_path, library="d")["model"] == "opus"
+        assert _review_model(repo, tmp_path, library="d3") == "sonnet"
+        assert _review_model(repo, tmp_path, library="d") == "opus"
+
+    @pytest.mark.parametrize(("library", "pinned"), [("plotly", "haiku"), ("matplotlib", "opus")])
+    def test_body_marker_beats_routing(self, repo, tmp_path, library, pinned):
+        body = f"## Implementation\n\n**File:** `x`\n\n**Model:** {pinned}\r\n\n**Parent Issue:** #42"
+        assert _review_model(repo, tmp_path, library=library, model_input="auto", body=body) == pinned
+
+    @pytest.mark.parametrize(("model_input", "payload"), [("sonnet", ""), ("", "sonnet")])
+    def test_body_marker_loses_to_input_and_payload(self, repo, tmp_path, model_input, payload):
+        body = "**Model:** haiku"
+        assert _review_model(repo, tmp_path, library="plotly", model_input=model_input, payload=payload, body=body) == (
+            "sonnet"
+        )
+
+    def test_body_marker_must_be_a_whole_line_with_a_known_model(self, repo, tmp_path):
+        body = "Note: **Model:** haiku was used\n**Model:** gpt\n**Model:** haiku (pinned)"
+        assert _review_model(repo, tmp_path, library="matplotlib", body=body) == "sonnet"  # routing
+
+    def test_pr_body_round_trips_into_a_rescue_review(self, repo, tmp_path):
+        body = _create_pr_body(tmp_path, model="haiku")
+        # plotly is a first run: routing would say opus, the recorded pin says haiku.
+        assert _review_model(repo, tmp_path, library="plotly", body=body) == "haiku"
+
+    def test_missing_origin_main_warns_and_assumes_a_first_run(self, repo_without_main, tmp_path):
+        result = _run_review(repo_without_main, tmp_path, library="matplotlib")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert NO_MAIN_WARNING in result.stdout
+        assert _outputs(tmp_path / "github_output")["model"] == "opus"
 
 
-LANG_EXT = {
-    "matplotlib": ("python", ".py"),
-    "plotly": ("python", ".py"),
-    "ggplot2": ("r", ".R"),
-    "muix": ("javascript", ".tsx"),
-}
+# ---------------------------------------------------------------------------
+# impl-repair
+# ---------------------------------------------------------------------------
 
 
-def _run_repair_resolve(repo: Path, tmp_path: Path, *, library: str, model_input: str) -> dict[str, str]:
+def _run_repair(
+    repo: Path, tmp_path: Path, *, library: str, model_input: str, body: str = ""
+) -> subprocess.CompletedProcess[str]:
+    """Run impl-repair's "Resolve model" step; the fake `gh pr view` prints `body`."""
     language, ext = LANG_EXT[library]
-    return _run_script(
+    path = _fake_gh(tmp_path, f"cat <<'EOF'\n{body}\nEOF\n")
+    return _exec(
         _step("impl-repair.yml", "Resolve model")["run"],
         repo,
         tmp_path,
+        PATH=path,
+        GH_TOKEN="unused",
+        PR_NUMBER="7",
         MODEL_INPUT=model_input,
         SPEC_ID="spec-a",
         LIBRARY=library,
@@ -296,18 +459,40 @@ def _run_repair_resolve(repo: Path, tmp_path: Path, *, library: str, model_input
     )
 
 
-class TestImplRepairRouting:
+def _repair_model(repo: Path, tmp_path: Path, **kwargs: str) -> str:
+    result = _run_repair(repo, tmp_path, **kwargs)
+    assert result.returncode == 0, result.stdout + result.stderr
+    return _outputs(tmp_path / "github_output")["model"]
+
+
+class TestImplRepairModel:
     @pytest.mark.parametrize(
         ("library", "expected"),
         [("matplotlib", "sonnet"), ("ggplot2", "sonnet"), ("muix", "sonnet"), ("plotly", "opus")],
     )
     @pytest.mark.parametrize("model_input", ["auto", ""])
     def test_rescue_without_a_model_routes(self, repo, tmp_path, library, expected, model_input):
-        assert _run_repair_resolve(repo, tmp_path, library=library, model_input=model_input)["model"] == expected
+        assert _repair_model(repo, tmp_path, library=library, model_input=model_input) == expected
 
     @pytest.mark.parametrize("model_input", ["haiku", "sonnet", "opus"])
     def test_threaded_model_wins(self, repo, tmp_path, model_input):
-        assert _run_repair_resolve(repo, tmp_path, library="plotly", model_input=model_input)["model"] == model_input
+        assert _repair_model(repo, tmp_path, library="plotly", model_input=model_input) == model_input
+
+    @pytest.mark.parametrize(("library", "pinned"), [("plotly", "haiku"), ("matplotlib", "opus")])
+    def test_body_marker_beats_routing(self, repo, tmp_path, library, pinned):
+        body = f"**File:** `x`\n\n**Model:** {pinned}\n\n**Parent Issue:** #42"
+        assert _repair_model(repo, tmp_path, library=library, model_input="auto", body=body) == pinned
+
+    def test_body_marker_loses_to_input(self, repo, tmp_path):
+        assert _repair_model(repo, tmp_path, library="plotly", model_input="sonnet", body="**Model:** haiku") == (
+            "sonnet"
+        )
+
+    def test_missing_origin_main_warns_and_assumes_a_first_run(self, repo_without_main, tmp_path):
+        result = _run_repair(repo_without_main, tmp_path, library="matplotlib", model_input="auto")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert NO_MAIN_WARNING in result.stdout
+        assert _outputs(tmp_path / "github_output")["model"] == "opus"
 
     def test_resolution_runs_before_claude_and_after_language(self):
         names = [s.get("name") for s in _steps("impl-repair.yml")]
@@ -331,6 +516,11 @@ class TestImplRepairRouting:
         for step in _steps("impl-repair.yml"):
             if step.get("name") not in {"Resolve model", "Handle repair failure"}:
                 assert "inputs.model" not in json.dumps(step), step.get("name")
+
+
+# ---------------------------------------------------------------------------
+# Inputs, pacing, fixed models
+# ---------------------------------------------------------------------------
 
 
 class TestModelInputs:
@@ -370,15 +560,34 @@ class TestModelInputs:
         assert 'MODEL="${MODEL:-auto}"' in script
 
 
-class TestDailyRegenPreflight:
+class TestBulkGeneratePacing:
+    PACE = "${{ inputs.pace_seconds || ((inputs.model == 'sonnet' || inputs.model == 'haiku') && '120' || '180') }}"
+
+    def test_pace_input_has_no_fixed_default(self):
+        assert _dispatch_inputs("bulk-generate.yml")["pace_seconds"]["default"] == ""
+
+    @pytest.mark.parametrize("step", ["Preview generation plan", "Dispatch impl-generate for each matrix item (paced)"])
+    def test_default_pace_is_180_for_opus_and_auto_120_otherwise(self, step):
+        env = _step("bulk-generate.yml", step)["env"]
+        assert env["PACE_SECONDS"] == self.PACE
+
+
+class TestFixedModels:
     @pytest.mark.parametrize(
         "name", ["Spec polish (autonomous, opens PR with auto-merge)", "Cross-library similarity audit"]
     )
-    def test_preflight_steps_run_on_sonnet(self, name):
+    def test_daily_regen_preflight_runs_on_sonnet(self, name):
         args = _step("daily-regen.yml", name)["with"]["claude_args"]
         assert args.startswith("--model sonnet ")
 
-    def test_no_step_runs_on_haiku(self):
+    def test_daily_regen_never_runs_on_haiku(self):
         for step in _steps("daily-regen.yml"):
             assert "haiku" not in step.get("with", {}).get("claude_args", ""), step.get("name")
         assert "--model haiku" not in (WORKFLOWS_DIR / "daily-regen.yml").read_text(encoding="utf-8")
+
+    @pytest.mark.parametrize("filename", ["spec-create.yml", "report-validate.yml", "util-claude.yml"])
+    def test_opus_workflows_stay_pinned(self, filename):
+        claude_args = [s["with"]["claude_args"] for s in _steps(filename) if "claude_args" in (s.get("with") or {})]
+        assert claude_args, f"no Claude step found in {filename}"
+        for args in claude_args:
+            assert args.startswith("--model opus "), args

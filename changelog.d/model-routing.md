@@ -9,9 +9,16 @@
   routing); `haiku`, `sonnet` or `opus` still pins one model for every pair.
   Label-triggered runs, the watchdog's generation retries and the babysit
   backfill scripts (`MODEL` now defaults to `auto`) follow the same routing,
-  and so do review and repair rescues that arrive without a model
-  (`impl-review-retry.yml`, the watchdog, a manual rerun), which used to fall
-  back to Sonnet.
+  so a full-catalogue backfill now runs on Opus. The resolved model and its
+  reason appear in the run summary and the issue preview comment, and the PR
+  body records it (`**Model:** opus`). Review and repair rescues that arrive
+  without a model (`impl-review-retry.yml`, the watchdog, a manual rerun)
+  read that line back instead of falling back to Sonnet, so an explicit pin
+  survives them. Without a readable `origin/main`, generation fails rather
+  than guessing a first run.
+- **`bulk-generate.yml` paces dispatches 180 s apart for Opus runs.** The
+  default pause is 180 s for model `auto` or `opus` and stays 120 s for a
+  pinned `sonnet` or `haiku`; `pace_seconds` still overrides it.
 - **The daily-regen spec polish and similarity audit run on Sonnet instead of
   Haiku.** Both pre-flight steps in `daily-regen.yml` stay pinned regardless of
   the run's `model` input.

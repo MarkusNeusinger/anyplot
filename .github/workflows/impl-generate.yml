@@ -159,15 +159,25 @@ jobs:
           # the watchdog; empty on the label trigger) a pair's first
           # implementation runs on opus and a regeneration on sonnet. "First"
           # means no implementation file on origin/main yet. The resolved value
-          # is threaded into review + repair, so one PR runs on one model.
+          # is threaded into review + repair and recorded in the PR body, so
+          # one PR runs on one model.
           if [ -n "$MODEL" ] && [ "$MODEL" != "auto" ]; then
-            MODEL_SOURCE="explicit"
-          elif git cat-file -e "origin/main:plots/$SPEC_ID/implementations/$LANGUAGE/$LIBRARY$EXT" 2>/dev/null; then
-            MODEL="sonnet"
-            MODEL_SOURCE="auto: regeneration"
+            MODEL_REASON="explicit input"
           else
-            MODEL="opus"
-            MODEL_SOURCE="auto: first implementation"
+            # Without origin/main every pair would look like a first run and
+            # silently land on opus, so stop instead of guessing.
+            if ! git rev-parse -q --verify origin/main >/dev/null \
+               && ! git fetch -q origin +refs/heads/main:refs/remotes/origin/main; then
+              echo "::error::origin/main unavailable — cannot route the model"
+              exit 1
+            fi
+            if git cat-file -e "origin/main:plots/$SPEC_ID/implementations/$LANGUAGE/$LIBRARY$EXT" 2>/dev/null; then
+              MODEL="sonnet"
+              MODEL_REASON="regeneration"
+            else
+              MODEL="opus"
+              MODEL_REASON="first implementation"
+            fi
           fi
 
           echo "specification_id=$SPEC_ID" >> $GITHUB_OUTPUT
@@ -176,8 +186,10 @@ jobs:
           echo "ext=$EXT" >> $GITHUB_OUTPUT
           echo "issue_number=$ISSUE" >> $GITHUB_OUTPUT
           echo "model=$MODEL" >> $GITHUB_OUTPUT
+          echo "model_reason=$MODEL_REASON" >> $GITHUB_OUTPUT
+          echo "**Model:** ${MODEL} (${MODEL_REASON})" >> "$GITHUB_STEP_SUMMARY"
 
-          echo "::notice::Generating $LANGUAGE/$LIBRARY for $SPEC_ID (issue: ${ISSUE:-none}, model: ${MODEL} (${MODEL_SOURCE}), ext: ${EXT})"
+          echo "::notice::Generating $LANGUAGE/$LIBRARY for $SPEC_ID (issue: ${ISSUE:-none}, model: ${MODEL} (${MODEL_REASON}), ext: ${EXT})"
 
       - name: Read issue number from specification.yaml (fallback)
         id: spec_issue
@@ -826,6 +838,9 @@ jobs:
         id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Recorded in the body: rescues that re-dispatch review or repair
+          # without a model read it back, so an explicit pin survives them.
+          MODEL: ${{ steps.inputs.outputs.model }}
           SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
           LANGUAGE: ${{ steps.inputs.outputs.language }}
           LIBRARY: ${{ steps.inputs.outputs.library }}
@@ -873,7 +888,9 @@ jobs:
 
           Implements the **${LANGUAGE}/${LIBRARY}** version of \`${SPEC_ID}\`.
 
-          **File:** \`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}\`"
+          **File:** \`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}\`
+
+          **Model:** ${MODEL}"
 
           if [ -n "$ISSUE" ]; then
             BODY="${BODY}
@@ -985,6 +1002,8 @@ jobs:
           LIBRARY: ${{ steps.inputs.outputs.library }}
           ISSUE: ${{ steps.issue.outputs.number }}
           PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+          MODEL: ${{ steps.inputs.outputs.model }}
+          MODEL_REASON: ${{ steps.inputs.outputs.model_reason }}
         run: |
           # Use staging URLs (available immediately after upload) — show both themes side by side.
           BASE="https://storage.googleapis.com/anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
@@ -1013,7 +1032,8 @@ jobs:
           |-------|------|
           | ![${LIBRARY} light](${PNG_LIGHT}) | ![${LIBRARY} dark](${PNG_DARK}) |
 
-          **PR:** #${PR_NUMBER}"
+          **PR:** #${PR_NUMBER}
+          **Model:** ${MODEL} (${MODEL_REASON})"
 
           if [ -n "$HTML_LIGHT" ]; then
             BODY="${BODY}

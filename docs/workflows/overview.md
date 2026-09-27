@@ -263,14 +263,28 @@ The routing applies whenever nobody chooses a model: a `generate:{library}`
 label, a `bulk-generate.yml` or `daily-regen.yml` run with the default
 `model=auto`, and the watchdog's generation retries. A failed generation
 forwards its resolved model to its own retry, so a first run stays on Opus.
-Review and repair runs that arrive without a model apply the same routing:
-`impl-review-retry.yml`, the watchdog's review and repair rescues, and a manual
-`gh workflow run impl-review.yml -f pr_number=N`.
+The run summary, the issue preview comment, and the PR body show the resolved
+model; the preview comment and the summary also show why, for example
+`opus (first implementation)`.
+
+Review and repair runs that arrive without a model, such as
+`impl-review-retry.yml`, the watchdog's review and repair rescues, or a manual
+`gh workflow run impl-review.yml -f pr_number=N`, read the `**Model:**` line
+from the PR body, so an explicit pin survives a rescue. Only a PR without that
+line is routed again.
+
+If `origin/main` can't be read, `impl-generate.yml` fails instead of guessing.
+Review and repair log a warning and assume a first run (Opus).
+
 To pin one model for a whole run, pass it explicitly:
 
 ```bash
 gh workflow run bulk-generate.yml -f specification_id=scatter-basic -f library=all -f model=sonnet
 ```
+
+`bulk-generate.yml` waits 180 seconds between dispatches for `model=auto` or
+`opus`, and 120 seconds for `sonnet` or `haiku`; `pace_seconds` overrides
+either default.
 
 The other pipeline LLM steps use fixed models: `spec-create.yml` runs on Opus,
 and the spec polish and cross-library similarity audit in `daily-regen.yml` run

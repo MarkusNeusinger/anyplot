@@ -76,10 +76,12 @@ with evidence — never let the user ask "still running?".
 
 ## 3 · Reading the signals correctly
 
-- **Timing**: ~55–75 min per fresh spec end-to-end (15 dispatches
-  paced ~120 s apart ≈ 30 min, then the generate→review→repair→merge
-  tail). `impl:done` labels lag and cluster near the end — **0/15 at
-  21 min is normal, NOT a stall**.
+- **Timing**: ~55–75 min per fresh spec end-to-end, measured on
+  Sonnet with 15 dispatches paced ~120 s apart ≈ 30 min, then the
+  generate→review→repair→merge tail. A fresh spec now runs on Opus
+  with 180 s pacing (≈ 45 min of dispatches), so expect a longer run
+  until new numbers are measured. `impl:done` labels lag and cluster
+  near the end — **0/15 at 21 min is normal, NOT a stall**.
 - **Repairs are routine** (`Repair: <lib> … (attempt 1)`) — most libs
   need one; the 4-attempt cascade (90/80/70/60/50) is the design.
 - **Regenerations never repair.** A pair that already has an
@@ -175,6 +177,14 @@ runner wait ≤4 min; only CodeQL piled up) — the binding limit is the
 Claude usage window, which is why the user pulled it back the same
 evening. Reducing means: stop launching and let in-flight PRs drain;
 never cancel runs that already spent Claude time.
+
+**A gap backfill is all-Opus.** Every missing library is a first
+implementation, so under `auto` each generate, review, and repair runs
+on Opus and burns the usage window much faster than the Sonnet runs
+the numbers above came from. Run it with `slots=1` or a longer
+`STAGGER` unless the owner explicitly accepts the faster burn; pinning
+`MODEL=sonnet` is the owner's call, since it gives up Opus on first
+runs.
 
 **For an unattended queue use the scheduler**,
 `.claude/skills/babysit-pipeline/run_queue.sh <queue-dir> [slots]`,

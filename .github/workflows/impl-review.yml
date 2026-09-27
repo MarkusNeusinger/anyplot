@@ -84,23 +84,43 @@ jobs:
           # Extract issue number from PR body
           ISSUE_NUMBER=$(echo "$BODY" | grep -oP '\*\*Parent Issue:\*\* #\K\d+' | head -1 || echo "")
 
-          # Resolve model: explicit input > repository_dispatch payload >
-          # routing. impl-generate and impl-repair always send the model they
-          # resolved. "auto" (the dispatch default) or no model at all comes
-          # from rescues (impl-review-retry, the watchdog, a manual rerun) and
-          # routes like impl-generate: opus while the pair has no
-          # implementation on origin/main yet (its first run), sonnet for a
-          # regeneration. LANGUAGE/EXT are only derived in the next step, so
-          # the lookup matches the library's file in any language directory.
+          # Resolve model: explicit input > repository_dispatch payload > the
+          # PR body's "**Model:**" line > routing. impl-generate and
+          # impl-repair always send the model they resolved, and impl-generate
+          # records it in the body. "auto" (the dispatch default) or no model
+          # at all comes from rescues (impl-review-retry, the watchdog, a
+          # manual rerun): they take the body's model, so an explicit pin
+          # survives, and only a PR without that line routes like
+          # impl-generate — opus while the pair has no implementation on
+          # origin/main yet (its first run), sonnet for a regeneration.
+          MODEL_BODY=$(echo "$BODY" | tr -d '\r' | grep -oP '^\*\*Model:\*\* \K(haiku|sonnet|opus)$' | head -1 || true)
           MODEL="${MODEL_INPUT:-auto}"
+          MODEL_FROM="input"
           if [ "$MODEL" = "auto" ]; then
             MODEL="${MODEL_PAYLOAD:-auto}"
+            MODEL_FROM="payload"
           fi
           if [ "$MODEL" = "auto" ]; then
-            ON_MAIN=$(git ls-tree -r --name-only origin/main -- "plots/${SPEC_ID}/implementations/" 2>/dev/null || true)
-            if grep -qE "^plots/${SPEC_ID}/implementations/[a-z]+/${LIBRARY}\.[A-Za-z]+$" <<< "$ON_MAIN"; then
-              MODEL="sonnet"
+            MODEL="${MODEL_BODY:-auto}"
+            MODEL_FROM="PR body"
+          fi
+          if [ "$MODEL" = "auto" ]; then
+            MODEL_FROM="routing"
+            if git rev-parse -q --verify origin/main >/dev/null \
+               || git fetch -q origin +refs/heads/main:refs/remotes/origin/main; then
+              # LANGUAGE/EXT are only derived in the next step, so match the
+              # library's file in any language directory. SPEC_ID and LIBRARY
+              # come from the implementation/{spec-id}/{library} branch name,
+              # whose contract ([a-z0-9-] ids, alphanumeric library names)
+              # keeps them free of regex metacharacters.
+              ON_MAIN=$(git ls-tree -r --name-only origin/main -- "plots/${SPEC_ID}/implementations/" 2>/dev/null || true)
+              if grep -qE "^plots/${SPEC_ID}/implementations/[a-z]+/${LIBRARY}\.[A-Za-z]+$" <<< "$ON_MAIN"; then
+                MODEL="sonnet"
+              else
+                MODEL="opus"
+              fi
             else
+              echo "::warning::origin/main unavailable — routing assumes a first run (opus)"
               MODEL="opus"
             fi
           fi
@@ -113,7 +133,7 @@ jobs:
           echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
           echo "model=$MODEL" >> $GITHUB_OUTPUT
 
-          echo "::notice::Reviewing PR #$PR_NUMBER for $LIBRARY implementation of $SPEC_ID (branch: $HEAD_REF, model: $MODEL)"
+          echo "::notice::Reviewing PR #$PR_NUMBER for $LIBRARY implementation of $SPEC_ID (branch: $HEAD_REF, model: $MODEL from $MODEL_FROM)"
 
       - name: Derive language + extension from library
         id: lang

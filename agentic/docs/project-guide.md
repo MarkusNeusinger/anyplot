@@ -641,7 +641,7 @@ Located in `.github/workflows/`:
 | **impl-review-retry.yml** | PR labeled `ai-review-failed` | Re-dispatches impl-review exactly once after a failed/timed-out review |
 | **impl-repair.yml** | Called by impl-review (on rejection) | Fixes rejected implementation (max 4 attempts) |
 | **impl-merge.yml** | `ai-approved` label OR workflow_dispatch | Merges approved PR, creates metadata/{language}/{library}.yaml |
-| **bulk-generate.yml** | workflow_dispatch only | Sequential paced dispatch of impl-generate per (spec, library) pair (default 120 s between dispatches) |
+| **bulk-generate.yml** | workflow_dispatch only | Sequential paced dispatch of impl-generate per (spec, library) pair (default 180 s between dispatches for model `auto`/`opus`, 120 s for `sonnet`/`haiku`) |
 
 ### Report Workflows (`report-*.yml`)
 
@@ -775,11 +775,11 @@ The new architecture separates specification and implementation processes:
 - `implementation/{specification-id}/{library}` - Library implementation PRs
 
 **Concurrency:**
-- `bulk-generate.yml` dispatches impl-generate runs sequentially with a configurable pause between dispatches (default 120 s) to stay under the Claude concurrency budget
+- `bulk-generate.yml` dispatches impl-generate runs sequentially with a configurable pause between dispatches (default 180 s for model `auto`/`opus`, 120 s for `sonnet`/`haiku`) to stay under the Claude concurrency budget
 - Spec merge operations are serialized (one at a time) to prevent race conditions
 
 **Models:**
-- `impl-generate.yml` routes each (spec, library) pair: Opus for its first implementation (no implementation file on `origin/main` yet), Sonnet for a regeneration. The resolved model is threaded into that PR's review and repairs; `impl-review.yml` and `impl-repair.yml` apply the same routing when a rescue (impl-review-retry, the watchdog, a manual rerun) dispatches them without a model.
+- `impl-generate.yml` routes each (spec, library) pair: Opus for its first implementation (no implementation file on `origin/main` yet), Sonnet for a regeneration. The resolved model is threaded into that PR's review and repairs and recorded in the PR body (`**Model:** opus`). When a rescue (impl-review-retry, the watchdog, a manual rerun) dispatches `impl-review.yml` or `impl-repair.yml` without a model, they read that line back, so an explicit pin survives; only a PR without it is routed. If `origin/main` is unavailable, impl-generate fails instead of guessing, while review and repair warn and assume a first run (Opus).
 - The `model` input (default `auto`) on `impl-generate.yml`, `bulk-generate.yml`, `daily-regen.yml`, `impl-review.yml` and `impl-repair.yml` overrides the routing when set to `haiku`, `sonnet` or `opus`; label-triggered runs always route.
 - Fixed models: `spec-create.yml` runs on Opus; the spec polish and cross-library similarity audit in `daily-regen.yml` run on Sonnet. See `docs/workflows/overview.md#pipeline-models`.
 

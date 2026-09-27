@@ -102,6 +102,8 @@ jobs:
       - name: Resolve model
         id: model
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ inputs.pr_number }}
           MODEL_INPUT: ${{ inputs.model }}
           SPEC_ID: ${{ inputs.specification_id }}
           LIBRARY: ${{ inputs.library }}
@@ -110,19 +112,35 @@ jobs:
         run: |
           # impl-review always forwards the model it resolved. "auto" (the
           # dispatch default) comes from rescues that carry none (the
-          # watchdog's repair re-dispatches, a manual restart) and routes like
-          # impl-generate: opus while the pair has no implementation on
+          # watchdog's repair re-dispatches, a manual restart). They take the
+          # model impl-generate recorded in the PR body ("**Model:**"), so an
+          # explicit pin survives; only a PR without that line routes like
+          # impl-generate — opus while the pair has no implementation on
           # origin/main yet (its first run), sonnet for a regeneration.
           MODEL="${MODEL_INPUT:-auto}"
+          MODEL_FROM="input"
           if [ "$MODEL" = "auto" ]; then
-            if git cat-file -e "origin/main:plots/$SPEC_ID/implementations/$LANGUAGE/$LIBRARY$EXT" 2>/dev/null; then
-              MODEL="sonnet"
+            BODY=$(gh pr view "$PR_NUMBER" --json body -q .body 2>/dev/null || true)
+            MODEL_BODY=$(echo "$BODY" | tr -d '\r' | grep -oP '^\*\*Model:\*\* \K(haiku|sonnet|opus)$' | head -1 || true)
+            MODEL="${MODEL_BODY:-auto}"
+            MODEL_FROM="PR body"
+          fi
+          if [ "$MODEL" = "auto" ]; then
+            MODEL_FROM="routing"
+            if git rev-parse -q --verify origin/main >/dev/null \
+               || git fetch -q origin +refs/heads/main:refs/remotes/origin/main; then
+              if git cat-file -e "origin/main:plots/$SPEC_ID/implementations/$LANGUAGE/$LIBRARY$EXT" 2>/dev/null; then
+                MODEL="sonnet"
+              else
+                MODEL="opus"
+              fi
             else
+              echo "::warning::origin/main unavailable — routing assumes a first run (opus)"
               MODEL="opus"
             fi
           fi
           echo "model=$MODEL" >> "$GITHUB_OUTPUT"
-          echo "::notice::Repair model: $MODEL (input: ${MODEL_INPUT:-none})"
+          echo "::notice::Repair model: $MODEL (from $MODEL_FROM)"
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
