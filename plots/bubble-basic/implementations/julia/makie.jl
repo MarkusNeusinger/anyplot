@@ -1,7 +1,7 @@
 # anyplot.ai
 # bubble-basic: Basic Bubble Chart
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 90/100 | Updated: 2026-09-27
+# Quality: 89/100 | Updated: 2026-09-27
 
 using CairoMakie
 using Colors
@@ -18,33 +18,43 @@ const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const INK_MUTED   = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
 const IMPRINT_PALETTE = [colorant"#009E73", colorant"#C475FD", colorant"#4467A3"]
 
-# Data — product portfolio with a visible narrative:
-#   higher price correlates with better ratings (premium positioning),
-#   but mid-range products (~$150-280) capture the highest sales volume
-n          = 65
-price_norm = rand(n)                          # uniform [0, 1]
-price      = 20.0 .+ 480.0 .* price_norm     # $20-$500
+# Data — film portfolio with a visible narrative:
+#   production budget mildly correlates with critic rating, but box-office
+#   revenue peaks disproportionately for mid-to-high budget films (~$80-150M
+#   "franchise sweet spot") before diminishing returns set in on ultra-high
+#   budget tentpoles.
+n           = 90
+budget_norm = rand(n) .^ 1.4                       # skewed toward low end — more indie
+                                                    # films than tentpoles, as in real slates
+budget      = 5.0 .+ 245.0 .* budget_norm          # $5M-$250M production budget
 
-# Rating rises with price (r ≈ 0.65): premium commands better quality perception
-quality = clamp.(1.5 .+ 2.5 .* price_norm .+ 0.45 .* randn(n), 1.5, 4.5)
+# Rating rises mildly with budget (r ≈ 0.5): bigger productions afford more polish.
+# Slightly wider jitter than a plain 0.9 stddev spreads out the high-budget
+# cluster so blockbuster-tier bubbles don't stack as tightly.
+rating = clamp.(5.0 .+ 2.5 .* budget_norm .+ 1.15 .* randn(n), 1.5, 9.8)
 
-# Sales peak at mid-range ~$200 and fall off at both extremes (sweet-spot effect)
-sweet_spot = (price .- 200.0) ./ 160.0
-sales = clamp.(15.0 .+ 80.0 .* exp.(-0.5 .* sweet_spot .^ 2) .+ 8.0 .* randn(n), 10.0, 100.0)
+# Box office scales with budget but gets an ROI boost near the $80-150M zone
+sweet_spot = (budget .- 115.0) ./ 70.0
+box_office = clamp.(
+    0.8 .* budget .* (1.0 .+ 1.8 .* exp.(-0.5 .* sweet_spot .^ 2)) .+ 25.0 .* randn(n),
+    10.0, 900.0,
+)
 
-# Scale marker sizes proportional to area (visual area ∝ data value)
-s_min, s_max = extrema(sales)
-s_norm       = (sales .- s_min) ./ (s_max - s_min)
-marker_sizes = 10.0 .+ 55.0 .* sqrt.(s_norm)
+# Scale marker sizes proportional to area (visual area ∝ data value). Floor
+# raised and range narrowed vs. earlier drafts so the smallest reference
+# bubble stays legible and dense clusters overlap less.
+s_min, s_max = extrema(box_office)
+s_norm       = (box_office .- s_min) ./ (s_max - s_min)
+marker_sizes = 15.0 .+ 42.0 .* sqrt.(s_norm)
 
-# Product tier — a distinct categorical variable (not derived from sales) so
-# color and size each carry their own signal instead of duplicating one.
-tier_idx    = ifelse.(price .< 150.0, 1, ifelse.(price .< 280.0, 2, 3))
-tier_names  = ["Budget (<\$150)", "Mid-range (\$150–280)", "Premium (>\$280)"]
+# Production scale — a distinct categorical variable (not derived from box
+# office) so color and size each carry their own signal instead of duplicating one.
+tier_idx    = ifelse.(budget .< 50.0, 1, ifelse.(budget .< 150.0, 2, 3))
+tier_names  = ["Indie (<\$50M)", "Studio (\$50–150M)", "Blockbuster (>\$150M)"]
 point_color = IMPRINT_PALETTE[tier_idx]
 
 # Plot
-title_str = "bubble-basic · julia · makie · anyplot.ai"
+title_str = "Film Portfolio Analysis · bubble-basic · julia · makie · anyplot.ai"
 
 fig = Figure(
     size            = (1600, 900),
@@ -55,10 +65,10 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title             = title_str,
-    titlesize         = 20,
+    titlesize         = 36,
     titlecolor        = INK,
-    xlabel            = "Price (USD)",
-    ylabel            = "Customer Rating",
+    xlabel            = "Production Budget (USD Millions)",
+    ylabel            = "Critic Rating (out of 10)",
     xlabelsize        = 14,
     ylabelsize        = 14,
     xlabelcolor       = INK,
@@ -78,24 +88,26 @@ ax = Axis(
     ygridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
-# Highlight the mid-range sweet spot where sales peak — makes the DE-03
-# narrative explicit instead of leaving it implicit in the data alone.
-vspan!(ax, 150.0, 280.0; color = RGBAf(INK.r, INK.g, INK.b, 0.06))
-text!(ax, 215.0, 4.55;
-    text     = "peak sales zone",
+# Highlight the franchise sweet spot where box-office ROI peaks — makes the
+# DE-03 narrative explicit instead of leaving it implicit in the data alone.
+vspan!(ax, 80.0, 150.0; color = RGBAf(INK.r, INK.g, INK.b, 0.06))
+text!(ax, 115.0, 9.6;
+    text     = "franchise sweet spot",
     align    = (:center, :bottom),
     fontsize = 14,
     color    = INK_SOFT,
 )
 
-# Bubble area (sqrt-scaled) encodes annual sales; fill color encodes product
-# tier — two independent variables, each with its own legend group below.
-scatter!(ax, price, quality;
+# Bubble area (sqrt-scaled) encodes box-office revenue; fill color encodes
+# production scale — two independent variables, each with its own legend
+# group below. Lower alpha than earlier drafts to ease overlap in the dense
+# low-budget cluster.
+scatter!(ax, budget, rating;
     color       = point_color,
     markersize  = marker_sizes,
-    alpha       = 0.65,
+    alpha       = 0.5,
     strokewidth = 1.0,
-    strokecolor = RGBAf(INK.r, INK.g, INK.b, 0.35),
+    strokecolor = RGBAf(INK.r, INK.g, INK.b, 0.4),
 )
 
 # Tier legend — fixed-size swatches, one per product tier
@@ -110,10 +122,12 @@ tier_elems = [
     for i in eachindex(IMPRINT_PALETTE)
 ]
 
-# Size legend — neutral-colored reference bubbles show the area scale only
-ref_vals = [10, 40, 70, 100]
+# Size legend — neutral-colored reference bubbles show the area scale only.
+# Values chosen within the actual box_office range so no two clamp to the
+# same normalized size (this domain's revenue tops out well under $400M).
+ref_vals = [30, 110, 200, 300]
 ref_norm = clamp.((Float64.(ref_vals) .- s_min) ./ (s_max - s_min), 0.0, 1.0)
-ref_ms   = 10.0 .+ 55.0 .* sqrt.(ref_norm)
+ref_ms   = 15.0 .+ 45.0 .* sqrt.(ref_norm)
 
 size_elems = [
     MarkerElement(
@@ -128,8 +142,8 @@ size_elems = [
 
 Legend(fig[1, 2],
     [tier_elems, size_elems],
-    [tier_names, string.(ref_vals) .* " units"],
-    ["Product Tier", "Annual Sales"];
+    [tier_names, "\$" .* string.(ref_vals) .* "M"],
+    ["Production Scale", "Box Office Revenue"];
     backgroundcolor = ELEVATED_BG,
     framecolor      = INK_SOFT,
     labelcolor      = INK_SOFT,
@@ -137,6 +151,10 @@ Legend(fig[1, 2],
     patchsize       = (60, 40),
     labelsize       = 13,
 )
+
+# Tighten the gap between the plot panel and the legend column — a small,
+# layout-aware polish that Makie's GridLayout makes trivial.
+colgap!(fig.layout, 1, 18)
 
 # Save
 save("plot-$(THEME).png", fig; px_per_unit = 2)
