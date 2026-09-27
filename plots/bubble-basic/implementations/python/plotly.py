@@ -1,17 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: plotly 7.1.0 | Python 3.13.15
-Quality: 90/100 | Updated: 2026-09-27
-
-Regen from quality 90. Addressed:
-- Dense low-R&D cluster occlusion: opacity 0.6 -> 0.5, max on-screen
-  diameter 40 -> 37 for a touch more separation between overlapping bubbles.
-- Title only filled ~35% of plot width: added a descriptive prefix so the
-  title lands in the 50-70% guideline while reinforcing the R&D/PMF theme.
-- Storytelling capped at two isolated callouts: added a subtle "R&D
-  powerhouses" zone highlight (shape + floating label, no arrow) around the
-  high-R&D/high-PMF cluster near x=29-41, giving a third layer of visual
-  hierarchy beyond the point-specific annotations.
+Quality: 94/100 | Updated: 2026-09-27
 """
 
 import os
