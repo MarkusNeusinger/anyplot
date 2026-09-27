@@ -1,7 +1,8 @@
 // anyplot.ai
 // bar-spine: Spine Plot for Two-Variable Proportions
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-02
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
+// Quality: 88/100 | Updated: 2026-09-27
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -54,9 +55,13 @@ function findSegment(x) {
 // Retained/Churned bands apart (mitigates red-green CVD ambiguity) and
 // satisfy the spec's "consider adding percentage labels when space permits"
 // note. Only the segment's center point (inserted below, between its flat
-// startX/endX run) carries a label, and only when the band's own height
-// leaves enough room to render one legibly.
-const MIN_LABEL_SHARE = 8;
+// startX/endX run) carries a label. A minimum-width exception keeps the
+// label on even the thinnest band (Enterprise churned, 4%) by dropping to a
+// smaller font instead of hiding it outright — the smallest legible size
+// still fits the ~4%-tall band, so hue is never the sole Retained/Churned
+// cue anywhere in the chart.
+const MIN_LABEL_SHARE = 3;
+const THIN_BAND_SHARE = 8;
 const labelCenterXs = new Set(segments.map((s) => s.center));
 function segmentLabelFormatter() {
   if (!labelCenterXs.has(this.x) || this.y < MIN_LABEL_SHARE) return null;
@@ -68,6 +73,10 @@ const labelStyle = {
   fontWeight: "600",
   textOutline: "1px rgba(26, 26, 23, 0.55)",
 };
+const thinLabelStyle = { ...labelStyle, fontSize: "10px" };
+function labelStyleFor(share) {
+  return share < THIN_BAND_SHARE ? thinLabelStyle : labelStyle;
+}
 
 // Retained (good) keeps the brand-green first slot; churned (bad) takes the
 // semantic-red anchor rather than the next ordinal palette position.
@@ -77,7 +86,11 @@ const series = [
     color: t.palette[0],
     data: segments.flatMap((s) => [
       { x: s.startX, y: s.retainedPct },
-      { x: s.center, y: s.retainedPct },
+      {
+        x: s.center,
+        y: s.retainedPct,
+        dataLabels: { style: labelStyleFor(s.retainedPct) },
+      },
       { x: s.endX, y: s.retainedPct },
     ]),
   },
@@ -86,7 +99,11 @@ const series = [
     color: t.palette[4],
     data: segments.flatMap((s) => [
       { x: s.startX, y: s.churnedPct },
-      { x: s.center, y: s.churnedPct },
+      {
+        x: s.center,
+        y: s.churnedPct,
+        dataLabels: { style: labelStyleFor(s.churnedPct) },
+      },
       { x: s.endX, y: s.churnedPct },
     ]),
   },
@@ -96,7 +113,7 @@ const series = [
 const titleText =
   "SaaS Subscription Churn by Tier · bar-spine · javascript · highcharts · anyplot.ai";
 const titleRatio = titleText.length > 67 ? 67 / titleText.length : 1;
-const titleFontSize = Math.max(14, Math.round(22 * titleRatio));
+const titleFontSize = Math.max(18, Math.round(30 * titleRatio));
 
 Highcharts.chart("container", {
   chart: {
