@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
 Library: altair 6.3.0 | Python 3.13.15
 Quality: 84/100 | Updated: 2026-09-27
@@ -26,6 +26,14 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Per-segment percentage-label text color, chosen for >=4.5:1 contrast against
+# each fixed Imprint fill (data colors don't change with theme).
+LABEL_TEXT_COLOR = {
+    "Very Comfortable": "#FFFFFF",
+    "Comfortable": "#1A1A17",
+    "Neutral": "#FFFFFF",
+    "Uncomfortable": "#1A1A17",
+}
 
 # Data — technology comfort survey by age group
 age_groups = ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"]
@@ -79,6 +87,7 @@ for age in age_groups:
                 "count": cnt,
                 "total": total,
                 "pct_label": f"{prop:.0%}" if prop >= 0.10 else "",
+                "label_color": LABEL_TEXT_COLOR[cat],
             }
         )
         y_acc = y1
@@ -94,7 +103,7 @@ label_expr = " : ".join(
 # Spine bars
 bars = (
     alt.Chart(spine_df)
-    .mark_rect(stroke=PAGE_BG, strokeWidth=1.2)
+    .mark_rect(stroke=PAGE_BG, strokeWidth=0.5)
     .encode(
         x=alt.X(
             "x_start:Q",
@@ -160,11 +169,12 @@ bars = (
 # Percentage labels inside segments wide enough to fit text
 pct_labels = (
     alt.Chart(spine_df[spine_df["pct_label"] != ""])
-    .mark_text(align="center", baseline="middle", fontSize=10, fontWeight="bold", color="white")
+    .mark_text(align="center", baseline="middle", fontSize=10, fontWeight="bold")
     .encode(
         x=alt.X("x_mid:Q", scale=alt.Scale(domain=[0, 1])),
         y=alt.Y("y_mid:Q", scale=alt.Scale(domain=[0, 1])),
         text="pct_label:N",
+        color=alt.Color("label_color:N", scale=None, legend=None),
     )
 )
 
@@ -176,7 +186,7 @@ chart = (
         height=320,
         background=PAGE_BG,
         title=alt.TitleParams(
-            "Technology Comfort by Age Group · bar-spine · altair · anyplot.ai",
+            "Technology Comfort by Age Group · bar-spine · python · altair · anyplot.ai",
             subtitle="Comfort with technology collapses sharply past age 55",
             fontSize=16,
             subtitleFontSize=11,
