@@ -71,6 +71,11 @@ WARNING = "warning"
 # or read only by luck. The exact heading is the one spelling that passes.
 NEAR_MISS_HEADING_RE = re.compile(r"^\s*#+\s*what\s+a\s+good\s+version\s+looks\s+like", re.IGNORECASE)
 OTHER_SECTION_RE = re.compile(r"^##\s+(?P<name>\S.*?)\s*$")
+# A kind prefix after the first one, spelled as leniently as the gate reads the
+# first (any case, optional comma and bold markers). The gate reads only the
+# opening prefix, so a second one would change nothing it does. Mentioning the
+# phrase without its colon is fine.
+SECOND_PREFIX_RE = re.compile(r"\b(?:a good version shows|expected,?\s*not a defect)\s*[*_]{0,2}\s*:", re.IGNORECASE)
 
 GENERIC_PHRASES = (
     "no overlap",
@@ -341,7 +346,7 @@ def check_contract(text: str, require_section: bool = False) -> list[Finding]:
         rest = item[len(PREFIXES[kind]) :].strip()
         if not rest:
             findings.append(Finding("K6", "the bullet has no text after its kind prefix", number))
-        elif SHOWS_PREFIX in rest or EXPECTED_PREFIX in rest:
+        elif SECOND_PREFIX_RE.search(rest):
             findings.append(Finding("K6", "the bullet carries a second kind prefix; split it, one kind per bullet", number))
 
     return findings

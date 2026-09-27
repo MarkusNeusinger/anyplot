@@ -85,6 +85,10 @@ class TestContract:
         body = f"- {GOOD[0]}\n  still the first bullet\n- {GOOD[1]}\n- {GOOD[2]}\n"
         assert check_contract(_spec(body=body)) == []
 
+    def test_prefix_phrase_without_colon_is_not_a_second_prefix(self):
+        body = f"- {GOOD[0]}\n- {E}overlap, which is expected, not a defect, in dense regions.\n- {GOOD[2]}\n"
+        assert check_contract(_spec(body=body)) == []
+
     @pytest.mark.parametrize(
         ("body", "rule"),
         [
@@ -112,6 +116,12 @@ class TestContract:
             pytest.param(f"- {GOOD[0]}\n- **Expected, not a defect:** overlap.\n", "K6", id="bold-prefix"),
             pytest.param(f"- {GOOD[0]}\n- {E.strip()}\n", "K6", id="prefix-without-text"),
             pytest.param(f"- {GOOD[0]}\n- {S}translucency. {E}overlap.\n", "K6", id="two-prefixes"),
+            pytest.param(
+                f"- {GOOD[0]}\n- {S}translucency; expected, not a defect: overlap.\n", "K6", id="second-prefix-lower-case"
+            ),
+            pytest.param(
+                f"- {GOOD[0]}\n- {E}overlap. **A good version shows**: outlines.\n", "K6", id="second-prefix-bold"
+            ),
         ],
     )
     def test_violation(self, body: str, rule: str):
