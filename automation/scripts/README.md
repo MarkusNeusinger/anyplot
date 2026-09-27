@@ -40,6 +40,24 @@ Regen gate (stdlib, plus PyYAML for `context`): `context` writes the previous
 review with stable weakness ids `W1..Wn` (used by `impl-generate.yml` and
 `impl-review.yml`), `decide` turns the review's `review_regen.json` into
 `merge` or `keep`. `impl-review.yml` runs a copy taken from its own ref.
+`parse_characteristics` reads the spec's characteristic bullets as `C1..Cn`
+(wrapped lines joined), `characteristic_kind` reads each bullet's kind, and an
+improvement that cites an `Expected, not a defect:` bullet is not counted.
+
+### `spec_characteristics_lint.py`
+Lint for the closing `## What a good version looks like` section of
+`plots/*/specification.md`. Standard library only; it imports the parser from
+`regen_gate.py`, so the lint and the gate read the same bullets. CI
+(`ci-tests.yml`, "Run Tests") and spec-create run it with the runner's `python3`.
+
+```bash
+# Parser contract, blocking: exit 1 on any ::error
+python3 -m automation.scripts.spec_characteristics_lint contract --all
+# House style, warnings only: exit 0
+python3 -m automation.scripts.spec_characteristics_lint style plots/scatter-basic/specification.md
+# House style with the hard rules as errors (the backfill): exit 1 on any ::error
+python3 -m automation.scripts.spec_characteristics_lint style --strict plots/scatter-basic/specification.md
+```
 
 ### `close_issue_if_complete.py`
 Closes a spec issue once every supported library is `impl:<lib>:done` or
