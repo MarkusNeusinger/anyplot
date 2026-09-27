@@ -76,7 +76,7 @@ When regenerating an existing implementation, you MUST read these BEFORE writing
 
 - Preserve the bits listed under "Strengths" unchanged.
 - **Address the weaknesses that are real per the spec's `## What a good version looks like` section** (and each ❌ item in the checklist that is real in the same sense). A weakness that asks for something the section calls expected — e.g. "bubbles overlap in the dense cluster" on a bubble chart that already uses translucency and outlines — is not real: decline it and name it with a one-line reason in the commit body. Without the section, judge against Description, Data and Notes.
-- **Answer overlap weaknesses through data generation, marker size or alpha — never by moving marks off their data values.** No force/collision simulations, nudge or declutter passes, or offsets on data marks; moving labels is fine. The review deducts displaced marks (SC-03).
+- **Answer overlap weaknesses through data generation, marker size or alpha — never by moving marks off their data values.** No force/collision simulations, nudge or declutter passes, or offsets on data marks; moving labels is fine. The review deducts displaced marks (SC-03). Exempt, as in SC-03: jitter in categorical strip/swarm plots, layout-positioned types (networks, treemaps, word clouds, packed circles), and any jitter, dodge or offset the spec's Data or Notes ask for.
 - **Keep the data scenario and the variant.** Same domain, same story, same encodings unless a weakness names the scenario itself as the problem or a change request (below) asks for a different one. On a `-basic` spec, add no new encodings or elements (derived color channels, trend lines, highlight bands, annotation layers) — the review scores them as the wrong variant.
 - **Don't add code for changes that don't show.** Every edit should be visible in the render or fix a named code-quality item; a longer file with an unchanged picture is not an improvement.
 - **Canvas size: the Step 0 contract is non-negotiable on regen.** The previous file's `figsize` / `dpi` / `width` / `height` / `scale_factor` values are **historical**, never current — overwrite them to the canonical pair from `prompts/library/{LIBRARY}.md` as your *first* edit, before touching anything else. The post-render gate checks this and re-triggers repair on drift; do not let that fire.
@@ -305,7 +305,7 @@ Before finishing, confirm:
 3. ✅ First categorical series renders in `#009E73` in both themes
 4. ✅ Changes were committed and pushed
 5. ✅ If regenerating: `/tmp/anyplot-prev-review.md` and the previous source file were read, and each weakness / failed criterion was either addressed or declined as not real per the spec's characteristic section (declined ones named with a reason in the commit body)
-6. ✅ Every data mark sits at its data value — overlap was handled through data generation, marker size or alpha, not by moving marks
+6. ✅ Every data mark sits at its data value — overlap was handled through data generation, marker size or alpha, not by moving marks (SC-03 exemptions only: categorical strip/swarm jitter, layout-positioned types, jitter/dodge/offset the spec asks for)
 7. ✅ If regenerating: same data scenario and variant as before (unless a weakness or change request asked otherwise), no new encodings on a `-basic` spec, and no added code whose effect does not show in the render
 
 If any of these failed, DO NOT report success.

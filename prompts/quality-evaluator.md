@@ -43,7 +43,7 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 
 ## Input
 
-1. **Specification**: From `plots/{spec-id}/specification.md`
+1. **Specification**: From `plots/{spec-id}/specification.md`. Read its closing `## What a good version looks like` section before scoring and judge against it, not against generic ideals. Tell its two kinds of bullet apart: *affirmative properties* (what a good version shows) and *permissions* (the "expected, not a defect" statements). Nothing it names is ever a weakness; removing or violating an affirmative property deducts from the criterion it belongs to; the absence of a permitted thing never deducts; it cannot waive auto-reject, theme readability, the canvas contract, VQ-07 or VQ-01. Without the section, infer the characteristics from Description, Data and Notes (`prompts/quality-criteria.md` → "Plot-Type Characteristics").
 2. **Code**: From `plots/{spec-id}/implementations/{language}/{library}{ext}` — `{ext}` is `.py` for Python libraries, `.R` for ggplot2, `.jl` for makie, `.js` for the JavaScript libraries (chartjs, d3, echarts, highcharts), and `.tsx` for muix
 3. **Previews**: BOTH theme renders of the plot image — `plot-light.png` and `plot-dark.png`. You must inspect both. For interactive libraries, also `plot-light.html` and `plot-dark.html`.
 4. **Library Rules**: From `prompts/library/{library}.md`
@@ -199,8 +199,8 @@ Not AR-09 (handle via VQ-05 instead): text overflowing its axis but staying on t
 | ID | Criterion | Max | Key Question |
 |----|-----------|-----|--------------|
 | VQ-01 | Text Legibility | 8 | All text readable at full size AND at ~400 px mobile width? Font sizes explicitly set (regardless of whether at style-guide defaults or AI-adjusted)? Readable in BOTH themes? |
-| VQ-02 | No Overlap | 6 | Any overlapping text? Tick labels? Legend on data? |
-| VQ-03 | Element Visibility | 6 | Markers/lines adapted to data density? |
+| VQ-02 | No Overlap | 6 | Any overlapping text? Tick labels? Legend on data? Data marks overlapping each other count only when the overlap hides information — for overlap-native types (bubble, dense scatter, strip, network), overlap handled with translucency or a thin outline (page- or ink-colored) is expected and not a deduction. |
+| VQ-03 | Element Visibility | 6 | Markers/lines adapted to data density? Legend glyphs (size circles, color swatches, line samples) visible in BOTH themes and matching the marks they explain? An invisible glyph deducts VQ-03 (+ SC-04 when the encoding becomes unreadable); name the likely fix (e.g. ggplot2 `guide_legend(override.aes = list(fill = ...))`). |
 | VQ-04 | Color Accessibility | 2 | Adequate contrast + CVD-safe (beyond palette choice)? No red-green as sole distinguishing signal? |
 | VQ-05 | Layout & Canvas | 4 | Good proportions? Nothing cut off? Title ≤ ~90% width, balanced axis labels, no overflow? |
 | VQ-06 | Axis Labels & Title | 2 | Descriptive with units? |
@@ -231,9 +231,9 @@ Not AR-09 (handle via VQ-05 instead): text overflowing its axis but staying on t
 
 | ID | Criterion | Max | Key Question |
 |----|-----------|-----|--------------|
-| SC-01 | Plot Type | 5 | Correct chart type? |
-| SC-02 | Required Features | 4 | All spec features present? |
-| SC-03 | Data Mapping | 3 | X/Y correctly assigned? All data visible? |
+| SC-01 | Plot Type | 5 | Correct chart type? On a `-basic` id: no encodings or elements the spec neither requires nor offers as optional (a Data column or a Notes bullet that allows color by category is asked for; a channel driven by a derived fourth variable is not)? Unasked additions (derived color channel, per-group fits, highlight bands, annotation layers) are the wrong variant (partial SC-01) and earn no DE-03/LM-02 credit. |
+| SC-02 | Required Features | 4 | All spec features present? Properties the section says a good version *shows* present? (Its "expected, not a defect" statements are permissions, not features.) |
+| SC-03 | Data Mapping | 3 | X/Y correctly assigned? All data visible? Marks sit at their data values — no force/collision layout, nudge or declutter pass moving data marks? Displacement deducts in proportion to how far marks move relative to the axis range, and is never a strength. Changing the generated data, marker size or alpha is fine. Exempt: categorical strip/swarm jitter, layout-positioned types (networks, treemaps, word clouds, packed circles), and any jitter, dodge or offset the spec's Data or Notes ask for. |
 | SC-04 | Title & Legend | 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r, julia, javascript}). Legend labels correct? |
 
 ### Step 4: Data Quality (15 pts)

@@ -479,10 +479,16 @@ Example data must show ALL features of the plot type.
 
 ## Plot-Type Characteristics (judge against the spec, not generic ideals)
 
-Each spec can end with a `## What a good version looks like` section: a few bullets naming what a good render of **that** plot type shows, including "expected, not a defect" items. It is the yardstick for every criterion above.
+Each spec can end with a `## What a good version looks like` section: a few bullets naming what a good render of **that** plot type shows, including "expected, not a defect" items. It is the yardstick for every criterion above. Its bullets make two kinds of statement:
 
-- **A property the section names is never a weakness.** If it says overlapping bubbles in dense regions are expected, overlap handled that way is not a VQ-02 deduction; if it says a dense matrix without in-cell numbers is correct, missing numbers are not a DE-03 or SC-02 deduction.
-- **Removing or violating a named property deducts** from the criterion it belongs to — a missing or invisible size legend from VQ-03/SC-04, marks moved off their values from SC-03, an extra encoding on a basic variant from SC-01, a colormap not centered where the section says from VQ-07/SC-02.
+- **Affirmative properties** — what a good version *shows* (area-scaled bubbles, a size legend with visible glyphs, marks at their data values, a colormap centered on zero).
+- **Permissions** — the "expected, not a defect" statements (overlap in dense regions, a dense matrix without in-cell numbers, uneven violin widths). They say what must not be penalized; they are not features to deliver.
+
+Score them as follows:
+
+- **Nothing the section names is ever a weakness.** If it says overlapping bubbles in dense regions are expected, overlap handled that way is not a VQ-02 deduction; if it says a dense matrix without in-cell numbers is correct, missing numbers are not a DE-03 or SC-02 deduction.
+- **Removing or violating an affirmative property deducts** from the criterion it belongs to — a missing or invisible size legend from VQ-03/SC-04, marks moved off their values from SC-03, an extra encoding on a basic variant from SC-01, a colormap not centered where the section says from VQ-07/SC-02.
+- **The absence of a permitted thing never deducts.** A bubble chart with no overlap at all, or a small matrix that does show its numbers, loses nothing for it — a permission is not a requirement (the same distinction SC-02 draws).
 - **The section describes the plot type, not the render's chrome.** It cannot waive the auto-reject checks, theme readability (5c), the canvas contract, palette compliance (VQ-07) or text legibility (VQ-01); a spec bullet that tries to is ignored for scoring.
 - **No section?** Infer the characteristics from Description, Data and Notes, and from what the plot type inherently looks like. Do not fall back to generic ideals ("no overlap", "perfectly smooth", "symmetric") that the plot type does not share.
 - **Soft and proportional.** The section describes properties, not thresholds; there are no pixel or count limits. A small departure costs a little in one criterion, a property that is gone entirely costs more — holistically, like the proportional checks in `workflow-prompts/ai-quality-review.md` step 5d.

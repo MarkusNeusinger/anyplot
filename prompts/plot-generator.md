@@ -60,7 +60,7 @@ review:
 **Use this feedback to improve!**
 - **Strengths**: Keep these aspects unchanged
 - **Weaknesses**: Fix the ones that are real per the spec's characteristic section (decide HOW yourself); decline the ones that ask for something the section calls expected
-- **Marks stay at their data values**: answer overlap through data generation, marker size or alpha — never by moving marks (force/collision layouts, nudge or declutter passes)
+- **Marks stay at their data values**: answer overlap through data generation, marker size or alpha — never by moving marks (force/collision layouts, nudge or declutter passes). Exempt, as in SC-03: jitter in categorical strip/swarm plots, layout-positioned types (networks, treemaps, word clouds, packed circles), and any jitter, dodge or offset the spec's Data or Notes ask for
 
 ## Library Independence (no cross-library cloning)
 

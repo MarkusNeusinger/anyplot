@@ -545,14 +545,31 @@ class TestPlotTypeCharacteristics:
         assert "Legend glyphs" in content
         assert "hides information" in content
         assert "Variant creep on `-basic` specs" in content
+        assert "Affirmative properties" in content
+        assert "absence of a permitted thing never deducts" in content
+        assert "not the render's chrome" in content
 
-    def test_review_prompt_mirrors_the_rules(self) -> None:
-        content = (WORKFLOW_PROMPTS_DIR / "ai-quality-review.md").read_text()
+    @pytest.mark.parametrize(
+        "prompt_path",
+        [WORKFLOW_PROMPTS_DIR / "ai-quality-review.md", PROMPTS_DIR / "quality-evaluator.md"],
+        ids=lambda p: p.name,
+    )
+    def test_scoring_prompts_mirror_the_rules(self, prompt_path: Path) -> None:
+        """Both scoring prompts — the workflow reviewer and the one
+        scripts/evaluate-plot.py concatenates with the rubric — carry the
+        same characteristic-section rules, so neither scores by the old ones."""
+        content = prompt_path.read_text()
         assert "What a good version looks like" in content
-        assert "Legend glyphs visible" in content
-        assert "Marks at their data values" in content
+        assert "affirmative properties" in content
+        assert "absence of a permitted thing never deducts" in content
         assert "hides information" in content
+        assert "visible in BOTH themes" in content
+        assert "Marks sit at their data values" in content
+        assert "layout-positioned types" in content
+        assert "any jitter, dodge or offset the spec's Data or Notes ask for" in content
+        assert "neither requires nor offers as optional" in content
         assert "wrong variant" in content
+        assert "are permissions, not features" in content
 
     def test_generation_prompts_forbid_moving_marks(self) -> None:
         for path in (
@@ -563,11 +580,23 @@ class TestPlotTypeCharacteristics:
             content = path.read_text()
             assert "What a good version looks like" in content or "characteristic section" in content, path.name
             assert re.search(r"never (?:by )?mov(?:e|ing) marks", content, re.IGNORECASE), path.name
+            # The SC-03 exemptions travel with the rule, or generation would
+            # "fix" legitimate strip-plot jitter or network layouts.
+            assert "layout-positioned types" in content, path.name
+            assert "any jitter, dodge or offset the spec's Data or Notes ask for" in content, path.name
 
-    def test_regen_rules_no_longer_demand_every_weakness(self) -> None:
-        content = (WORKFLOW_PROMPTS_DIR / "impl-generate-claude.md").read_text()
+    @pytest.mark.parametrize(
+        "prompt_path",
+        [WORKFLOW_PROMPTS_DIR / "impl-generate-claude.md", WORKFLOW_PROMPTS_DIR / "impl-repair-claude.md"],
+        ids=lambda p: p.name,
+    )
+    def test_regen_and_repair_decline_unreal_weaknesses(self, prompt_path: Path) -> None:
+        content = prompt_path.read_text()
         assert 'Address every bullet under "Weaknesses"' not in content
+        assert "(fix these problems - decide HOW yourself)" not in content
         assert "Keep the data scenario and the variant" in content
+        assert "Don't add code for changes that don't show" in content
+        assert "Declined:" in content
 
     def test_spec_polish_never_touches_the_section(self) -> None:
         content = (WORKFLOW_PROMPTS_DIR / "spec-polish-claude.md").read_text()
