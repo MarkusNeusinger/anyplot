@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: bubble-basic
 created: '2026-05-28T17:41:39Z'
-updated: '2026-09-27T02:00:40Z'
+updated: '2026-09-27T02:09:41Z'
 generated_by: claude-sonnet
 workflow_run: 36286817268
 issue: 755
@@ -12,99 +12,103 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 93
 review:
   strengths:
-  - 'Correct Imprint palette with brand green (#009E73) as the first categorical series,
-    and theme-correct #FAF8F1/#1A1A17 backgrounds with properly flipped chrome in
-    both renders'
-  - 'Thoughtful data storytelling: the five zone types form clearly separated bands
-    along the log-density axis instead of one overlapping blob, and the top-3 green-space
-    neighborhoods are called out with leader-line annotations'
-  - Proper area-true bubble sizing via scale_size_area (not radius), log-scale x-axis
-    with annotation_logticks, and a floored size domain that keeps the smallest bubbles
-    visible without breaking area-proportionality
-  - Clean, well-commented, reproducible code (set.seed(42), fully vectorized rlnorm/rnorm
-    data generation with no explicit per-zone loop)
+  - 'Correct Imprint palette: brand green (#009E73) is the first categorical series,
+    remaining four zone colors follow canonical order, and chrome (background, text,
+    grid, legend) is theme-correct in both light and dark renders'
+  - Bubble size uses scale_size_area() (true area-scaling, not radius) with a floored
+    lower limit so the smallest real values still get visible presence, matching the
+    spec's area-accuracy requirement
+  - Direct-labeled top-3 green-space bubbles with alternating leader-line direction
+    create a genuine focal point without collisions, and z-ordering (largest bubbles
+    drawn first) keeps small bubbles visible on top
+  - Realistic, neutral synthetic dataset (density vs. income vs. green space across
+    five city zone types) with meaningful, factually plausible variation across categories
+  - All font sizes explicitly set, KISS script structure (imports → data → plot →
+    save), reproducible via set.seed(42), clean imports (dplyr/scales/ragg all actually
+    used)
   weaknesses:
-  - scale_y_continuous(limits = c(15, 150)) is narrower than the income data's clamp
-    ceiling (pmin(180, ...)); a rare high-income draw would silently vanish from the
-    plot (ggplot2 drops out-of-range rows instead of clipping them) rather than being
-    clamped visually — raise the axis limit to 180 or lower the data clamp to 150
-    so the two stay in sync
-  - With ~110 overlapping bubbles across 5 categories, the mid-density band (Inner
-    Ring/Outer Ring around 3,000-8,000 density) reads a bit busy — a slightly lower
-    alpha or a touch more stroke contrast would help disentangle the densest cluster
-  - The size-legend breaks list (3, 10, 25, 60, 120) declares a 120 break that falls
-    outside the actual data range and is silently dropped by ggplot2, leaving only
-    4 legend circles — trim the breaks list to match the true data range so it doesn't
-    look like a legend was cut off
+  - Dense overlapping clusters (especially the Outer Ring blue bubbles around density
+    3,000-10,000) partially bury individual data points under stacked alpha — a slightly
+    lower alpha or gentle jitter in the densest region would keep more individual
+    bubbles distinguishable
+  - panel.grid.major.x is fully removed while the style guide's default for scatter/bubble
+    charts is grid on both axes; the log-scale annotation_logticks partially substitutes
+    for it, but a faint x grid would align closer to the default guidance
+  - Some generated green-space values (e.g., Industrial District, Urban Core) fall
+    below the spec's recommended 10-100 size-column range — the low end is realistic
+    for those zones but drifts from the suggested guidance
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Dark title "bubble-basic · r · ggplot2 · anyplot.ai" and gray subtitle "Bubble size encodes green space per capita" both clearly legible. Axis titles "Population Density (people/km², log scale)" and "Median Household Income ($K)" are dark and readable; tick labels (1,000 / 3,000 / 10,000 / 30,000 and 20-140) are soft gray but fully legible. Horizontal gridlines are subtle. Legend panels "Zone Type" (5 color swatches with labels) and "Green Space (m²/capita)" (4 size-reference circles) are both fully within the canvas, not clipped.
-      Data: Bubbles colored by zone — Urban Core is brand green (#009E73, first series, correct), Inner Ring lavender, Outer Ring blue, Industrial District ochre, Suburban Fringe red. Alpha ~0.58 blending is visible where bubbles overlap. Three "SUBF-0xx" bubbles are called out with bold black leader-line labels.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Chrome: Title "bubble-basic · r · ggplot2 · anyplot.ai" and subtitle "Bubble size encodes green space per capita" in dark ink, clearly legible. Axis titles ("Population Density (people/km², log scale)", "Median Household Income ($K)") dark and readable. Tick labels in a softer grey, fully legible. A subtle horizontal-only grid is visible without competing with the data. The "Zone Type" and "Green Space (m²/capita)" legends sit in a lightly elevated box to the right of the plot, fully readable. Three neighborhoods (SUBF-017, SUBF-012, SUBF-019) are direct-labeled in bold dark text with thin leader lines, with no overlap between labels.
+      Data: Five zone-type colors from the Imprint palette — Urban Core = brand green (#009E73), Inner Ring = lavender, Outer Ring = blue, Industrial District = ochre, Suburban Fringe = matte red. Bubble sizes are area-scaled to green-space-per-capita, ranging from small dots to large translucent circles, with semi-transparent fills (alpha ~0.58) and off-white strokes so overlapping bubbles stay distinguishable.
+      Legibility verdict: PASS — no light-on-light or hard-to-read text anywhere in this render.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and subtitle flip to light ink/soft-gray text, both legible on the dark surface. Axis titles and tick labels flip to light tones and remain fully readable. Gridlines are faint but visible. Both legend panels render with a slightly elevated dark background and light text, fully legible and fully within the canvas.
-      Data: Bubble colors are identical to the light render (same green/lavender/blue/ochre/red hues at the same positions and sizes) — only the chrome (background, text, grid, legend panel fill) flips. The "SUBF-0xx" annotation labels flip to bold white text, clearly readable against the dark background.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title/axis/tick/legend text is clearly visible.
+      Chrome: Title, subtitle, axis titles, and tick labels have all flipped to light tones (light ink for primary text, lighter grey for tick/legend text) and remain clearly legible against the dark surface. The legend box uses a slightly elevated dark fill, still readable. The same three neighborhoods are labeled in bold white text with white leader lines, fully legible and not overlapping.
+      Data: The five zone-type bubble colors are pixel-identical to the light render (same brand green, lavender, blue, ochre, matte red) — only the chrome (background, text, grid, legend fill) changed. Brand green (Urban Core) remains clearly visible against the dark background.
+      Legibility verdict: PASS — no dark-on-dark failures; every title/label/tick element is clearly visible against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes for all text elements; fully readable in both
-          themes with no light-on-light or dark-on-dark issues
+        comment: All font sizes explicitly set (title 12pt, axis titles 10pt, tick/legend
+          8pt, annotation text ~3.2mm); readable and well-proportioned in both themes,
+          no overflow
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Labels and leader lines avoid collisions; dense mid-band bubble overlap
-          is intentional alpha-blended encoding, not a text/element collision
+        comment: No text-on-text or text-on-legend collisions; the three leader-line
+          labels avoid each other via alternating placement
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bubbles are distinguishable via alpha + stroke; mid-density cluster
-          is a bit busy with ~110 overlapping points
+        comment: Area-true sizing with a floored lower limit keeps small bubbles visible,
+          but the densest Outer Ring cluster still buries some individual points under
+          stacked alpha
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 5 distinguishable hues, not reliant on red-green as sole signal
+        comment: Imprint palette + alpha 0.58 gives adequate contrast between overlapping
+          series; no red-green-only signaling
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); no clipping, good proportions, legend
-          panels fully contained
+        comment: Plot fills a healthy majority of the canvas, legend sits adjacent
+          to the plot, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (people/km², $K, m²/capita)
+        comment: Both axis titles are descriptive and include units (people/km², $K)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical series is #009E73; canonical Imprint order; correct
-          theme-adaptive backgrounds in both renders'
+        comment: 'First series is #009E73, remaining four zones follow canonical Imprint
+          order, chrome and background are theme-correct in both renders'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -112,24 +116,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, deliberate annotation hierarchy, professional polish
-          beyond defaults
+        comment: Custom Imprint theme, subtitle, and refined typography clearly above
+          library defaults, though dense overlap regions look slightly busy
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: theme_minimal base with x-gridlines removed, subtle y-gridlines only,
-          generous margins
+        comment: theme_minimal chrome, subtle y-only grid, white bubble strokes for
+          separation, generous margins; only the fully-removed x grid keeps this from
+          a perfect score
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Zone types cluster clearly along the density axis and top-3 green-space
-          neighborhoods are called out, though the mid-density band is visually busy
+        comment: Direct labeling of the top-3 green-space neighborhoods with leader
+          lines creates a clear focal point on top of the color-coded zone pattern
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,51 +142,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bubble chart
+        comment: 'Correct bubble chart: x/y position plus size-encoded third dimension,
+          plus optional color for zone type'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: x/y/size all present, alpha transparency for overlap, size legend
-          included
+        comment: Area-scaled sizing, alpha 0.5-0.7 for overlap, size legend present,
+          category color encoding all implemented per spec notes
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Axes correct, but y-axis limit (150) is narrower than the data clamp
-          ceiling (180), a latent mismatch that could silently drop points
+        comment: x=density, y=income, size=green_space correctly mapped; axis limits
+          show the full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'bubble-basic · r · ggplot2 · anyplot.ai';
-          legend labels match zone categories
+        comment: Title matches the mandated 'bubble-basic · r · ggplot2 · anyplot.ai'
+          format exactly; legend labels match the zone-type categories
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows x, y, size, and an optional category dimension
+        comment: Shows the full size range (legend markers 3/10/25/60) and five distinct
+          zone distributions with different spreads
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral city-infrastructure scenario
+        comment: Neutral, comprehensible urban-planning scenario (density/income/green-space
+          by zone type)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Density, income, and green-space ranges are all sensible for the
-          domain
+        comment: Density, income, and green-space ranges are all plausible for real
+          city zones
     code_quality:
       score: 10
       max: 10
@@ -191,60 +199,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat pipeline
+        comment: Imports -> theme tokens -> data generation -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42)
+        comment: set.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (ggplot2, dplyr, scales, ragg) actually used
+        comment: dplyr, scales, and ragg are all actually used (mutate/arrange, label_comma,
+          agg_png)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI/interactivity
+        comment: Clean, idiomatic ggplot2 pipeline, no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png
+        comment: Saves plot-{THEME}.png via ragg::agg_png, uses linewidth (not deprecated
+          size=)
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: scale_size_area(), annotation_logticks(), guides(override.aes=...)
+          are all idiomatic high-level ggplot2 patterns
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic scale_size_area, scale_x_log10, annotation_logticks, aes-driven
-          fill mapping
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: true
-        comment: annotation_logticks and guide_legend override.aes go beyond generic
-          usage but are not deeply distinctive
+        comment: annotation_logticks() plus layered geom_segment+geom_text direct
+          labeling are distinctive ggplot2-grammar techniques, not generic across
+          libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - manual-ticks
-  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
-  - publication-ready
+  - grid-styling
