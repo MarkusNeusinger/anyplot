@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 91/100 | Updated: 2026-09-27
+// Quality: 89/100 | Updated: 2026-09-27
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
@@ -12,11 +12,23 @@ const t = window.ANYPLOT_TOKENS;
 const TITLE = "bubble-basic · javascript · muix · anyplot.ai";
 const TITLE_HEIGHT = 56;
 const MARGIN = { top: 24, right: 210, bottom: 70, left: 90 };
+
 // Semi-transparent fill composites differently over the two page backgrounds:
-// the same alpha reads visibly darker/more saturated over #1A1A17 than over
-// #FAF8F1, even though the underlying Imprint hex values never change. A
-// small theme-aware opacity bump keeps the perceived hue closer across themes.
-const BUBBLE_OPACITY = window.ANYPLOT_THEME === "dark" ? 0.6 : 0.48;
+// the same alpha reads more saturated over #1A1A17 than over #FAF8F1, even
+// though the underlying Imprint hex values never change. The effect is
+// strongest for the palette's paler hues (lavender) — they already read
+// brighter/more saturated against the near-black surface with no extra alpha
+// at all, so a single flat dark-theme bump over-saturates lavender while
+// barely helping the darker blue, which needs the most help staying visible.
+// Scale the bump per hue instead, inversely to that hue's own luma.
+const LIGHT_OPACITY = 0.52; // within spec's 0.5-0.7 overlap range
+const DARK_OPACITY_MAX_BUMP = 0.16;
+function relativeLuma(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
 
 // --- Data (in-memory, deterministic LCG — no seeded RNG in the browser) -----
 function lcg(seed) {
@@ -43,15 +55,32 @@ function randomNormal(rand, mean, stdDev) {
 // The community package has no bubble/z-size scatter mode (ZAxisConfig
 // only maps z to colour), so bubbles are drawn as a custom SVG layer
 // positioned via the chart's own scale hooks.
-// "Growth leaders" gets a wider (xSpread, ySpread) than the other two
-// archetypes — the previous review flagged that its 15 bubbles packed so
-// tightly around x=20-22, y=17-21 that individual boundaries were hard to
-// distinguish even with the pageBg stroke separation.
+// Spreads are wide enough that the normal distributions rarely produce
+// fully-fused bubbles on their own; fillOpacity plus the pageBg stroke
+// (see spec: "use transparency to handle overlapping bubbles") cover the
+// rest, so no separate collision-avoidance pass is needed.
 const ARCHETYPES = [
   { name: "Growth leaders", growth: 24, margin: 19, share: 62, count: 15, xSpread: 9, ySpread: 7.5, color: t.palette[0] },
   { name: "Mid-market", growth: 12, margin: 10, share: 34, count: 20, xSpread: 7, ySpread: 6, color: t.palette[1] },
   { name: "Niche players", growth: 4, margin: 3, share: 14, count: 15, xSpread: 7, ySpread: 6, color: t.palette[2] },
 ];
+
+// Per-archetype opacity (see the luma-scaled dark-theme bump above): the
+// palest hue in play gets almost none of the bump, the darkest gets the most.
+const archetypeLumas = ARCHETYPES.map((a) => relativeLuma(a.color));
+const minArchetypeLuma = Math.min(...archetypeLumas);
+const maxArchetypeLuma = Math.max(...archetypeLumas);
+ARCHETYPES.forEach((a, i) => {
+  if (window.ANYPLOT_THEME !== "dark") {
+    a.opacity = LIGHT_OPACITY;
+    return;
+  }
+  const paleness =
+    maxArchetypeLuma === minArchetypeLuma
+      ? 0
+      : (archetypeLumas[i] - minArchetypeLuma) / (maxArchetypeLuma - minArchetypeLuma);
+  a.opacity = LIGHT_OPACITY + DARK_OPACITY_MAX_BUMP * (1 - paleness);
+});
 
 const rand = lcg(42);
 
@@ -62,6 +91,7 @@ const companies = ARCHETYPES.flatMap((a, groupIndex) =>
     y: Math.round(randomNormal(rand, a.margin, a.ySpread) * 10) / 10,
     size: Math.min(100, Math.max(10, Math.round(randomNormal(rand, a.share, 18)))),
     color: a.color,
+    opacity: a.opacity,
   })),
 );
 
@@ -93,55 +123,6 @@ const COLOR_LEGEND_HEIGHT = 20 + (ARCHETYPES.length - 1) * 24 + 12;
 const SIZE_LEGEND_HEIGHT =
   20 + SIZE_LEGEND_VALUES.reduce((height, value) => height + radiusForSize(value) * 2 + 16, 0);
 
-// Declutter pass: per-archetype spread tuning (see above) can't fully
-// prevent a chance pocket where several bubbles from different archetypes
-// land on top of each other. x and y need different px-per-unit factors
-// since the axes don't share a domain width, so distances are computed in
-// approximate pixel space — mirroring ChartContainer's linear min/max
-// mapping, since the real xScale/yScale hooks aren't available until the
-// chart mounts — and converted back to data units. The scale used here is
-// only an approximation (built from the pre-repulsion spread); the real
-// axis domain is recomputed below from the settled positions, so a bubble
-// can never end up padded outside its own axis range. Bubbles closer than
-// 92% of their summed radii are pushed apart — tight enough to still read
-// as an organic cloud, strong enough that no two bubbles fuse into an
-// undifferentiated blob.
-const rawXValues = companies.map((d) => d.x);
-const rawYValues = companies.map((d) => d.y);
-const rawXDomain = [Math.min(...rawXValues) - 4, Math.max(...rawXValues) + 4];
-const rawYDomain = [Math.min(...rawYValues) - 4, Math.max(...rawYValues) + 4];
-const { width: CANVAS_WIDTH, height: CANVAS_HEIGHT } = window.ANYPLOT_SIZE;
-const PLOT_WIDTH = CANVAS_WIDTH - MARGIN.left - MARGIN.right;
-const PLOT_HEIGHT = CANVAS_HEIGHT - TITLE_HEIGHT - MARGIN.top - MARGIN.bottom;
-const PX_PER_X = PLOT_WIDTH / (rawXDomain[1] - rawXDomain[0]);
-const PX_PER_Y = PLOT_HEIGHT / (rawYDomain[1] - rawYDomain[0]);
-
-for (let iter = 0; iter < 40; iter++) {
-  for (let i = 0; i < companies.length; i++) {
-    for (let j = i + 1; j < companies.length; j++) {
-      const a = companies[i];
-      const b = companies[j];
-      const dxPx = (b.x - a.x) * PX_PER_X;
-      const dyPx = (b.y - a.y) * PX_PER_Y;
-      const dist = Math.hypot(dxPx, dyPx) || 0.001;
-      const minDist = (radiusForSize(a.size) + radiusForSize(b.size)) * 0.92;
-      if (dist < minDist) {
-        const push = (minDist - dist) / 2;
-        const ux = dxPx / dist;
-        const uy = dyPx / dist;
-        a.x -= (ux * push) / PX_PER_X;
-        a.y -= (uy * push) / PX_PER_Y;
-        b.x += (ux * push) / PX_PER_X;
-        b.y += (uy * push) / PX_PER_Y;
-      }
-    }
-  }
-}
-companies.forEach((d) => {
-  d.x = Math.round(d.x * 10) / 10;
-  d.y = Math.round(d.y * 10) / 10;
-});
-
 const xValues = companies.map((d) => d.x);
 const yValues = companies.map((d) => d.y);
 const xDomain = [Math.min(...xValues) - 4, Math.max(...xValues) + 4];
@@ -160,7 +141,7 @@ function Bubbles() {
           cy={yScale(d.y)}
           r={radiusForSize(d.size)}
           fill={d.color}
-          fillOpacity={BUBBLE_OPACITY}
+          fillOpacity={d.opacity}
           stroke={t.pageBg}
           strokeWidth={2}
         />
@@ -181,7 +162,7 @@ function ColorLegend({ left, top }) {
         const cy = top + i * 24;
         return (
           <g key={a.name}>
-            <circle cx={left + 6} cy={cy} r={6} fill={a.color} fillOpacity={BUBBLE_OPACITY} stroke={a.color} strokeWidth={1.5} />
+            <circle cx={left + 6} cy={cy} r={6} fill={a.color} fillOpacity={a.opacity} stroke={a.color} strokeWidth={1.5} />
             <text x={left + 20} y={cy} dominantBaseline="middle" fontSize={14} fill={t.inkSoft}>
               {a.name}
             </text>
@@ -252,7 +233,7 @@ export default function Chart() {
           height: TITLE_HEIGHT,
           lineHeight: `${TITLE_HEIGHT}px`,
           paddingLeft: 24,
-          fontSize: 22,
+          fontSize: 26,
           fontWeight: 500,
           color: t.ink,
         }}
@@ -286,7 +267,7 @@ export default function Chart() {
           },
         ]}
       >
-        <ChartsGrid horizontal />
+        <ChartsGrid horizontal vertical />
         <Bubbles />
         <ChartsXAxis axisId="growth" />
         <ChartsYAxis axisId="margin" />
