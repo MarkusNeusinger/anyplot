@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: altair 6.3.0 | Python 3.13.15
 Quality: 94/100 | Created: 2026-09-27
@@ -71,10 +71,15 @@ outlier_climber = pd.DataFrame(
 )
 df = pd.concat([df, outlier_laggard, outlier_climber], ignore_index=True)
 
-# Flag top-3 companies by revenue for storytelling annotations
-top3_idx = df["Revenue ($M)"].nlargest(3).index.tolist()
+# Flag three storytelling companies: the organic top performer by revenue, plus
+# the two hand-placed counter-example outliers. Spans three different stages
+# instead of a strict top-3-by-revenue set, which collapsed onto one dominant
+# stage and gave the callouts near-duplicate text.
+top1_idx = df["Revenue ($M)"].iloc[:n].idxmax()
+laggard_idx = n
+climber_idx = n + 1
 df["label"] = ""
-for i in top3_idx:
+for i in (top1_idx, laggard_idx, climber_idx):
     df.loc[i, "label"] = f"{df.loc[i, 'Stage']} · ${df.loc[i, 'Revenue ($M)']}M"
 
 title = "bubble-basic · python · altair · anyplot.ai"
@@ -97,8 +102,11 @@ trend = (
 # Plot — bubble layer
 bubbles = (
     alt.Chart(df)
-    .mark_circle(stroke=PAGE_BG, strokeWidth=1.5)
+    .mark_circle(stroke=PAGE_BG, strokeWidth=2)
     .encode(
+        order=alt.Order(
+            "Segment Share (%):Q", sort="descending"
+        ),  # largest bubbles drawn first (behind), smallest on top so overlapping clusters stay legible
         x=alt.X(
             "Funding ($M):Q", scale=alt.Scale(domain=[0, 85], nice=False), axis=alt.Axis(domain=False, ticks=False)
         ),
@@ -113,7 +121,7 @@ bubbles = (
                 titleFontSize=11,
                 labelFontSize=12,
                 values=[10, 25, 40, 55],
-                symbolFillColor=IMPRINT_PALETTE[0],
+                symbolFillColor=INK_SOFT,  # neutral fill (not a categorical hue) - the size legend applies to every Stage, not just Seed
                 symbolStrokeColor=PAGE_BG,
                 symbolOpacity=0.65,
                 direction="vertical",
@@ -138,8 +146,8 @@ bubbles = (
     .add_params(stage_selection)
 )
 
-# Top-3 highlight rings — a stroke-only outline sized to match each bubble gives the
-# "top performer" story an instant, at-a-glance visual anchor beyond the text labels.
+# Highlight rings — a stroke-only outline sized to match each bubble gives the
+# three storytelling companies an instant, at-a-glance visual anchor beyond the text labels.
 top3_highlight = (
     alt.Chart(df[df["label"] != ""])
     .mark_circle(filled=False, stroke=INK, strokeWidth=2.5, opacity=0.9)
