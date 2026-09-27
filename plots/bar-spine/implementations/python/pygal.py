@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 86/100 | Updated: 2026-09-27
@@ -47,7 +47,7 @@ survive_props = [s / t for s, t in zip(survived_counts, class_totals, strict=Tru
 not_survive_props = [1.0 - sp for sp in survive_props]
 
 # Title fontsize scales with title length off the 67-char mandated baseline
-TITLE = "Titanic Survival by Passenger Class · bar-spine · pygal · anyplot.ai"
+TITLE = "Titanic Survival by Passenger Class · bar-spine · python · pygal · anyplot.ai"
 title_font_size = round(66 * min(1.0, 67 / len(TITLE)))
 
 custom_style = Style(
@@ -60,6 +60,9 @@ custom_style = Style(
     opacity=1,
     stroke_opacity=1,
     stroke_width=1.5,
+    # Serif title distinguishes the headline from the monospace data labels
+    # below, rather than leaving every text element in the library-default face.
+    title_font_family='Georgia, "Times New Roman", serif',
     title_font_size=title_font_size,
     label_font_size=56,
     major_label_font_size=44,
@@ -72,7 +75,7 @@ chart = pygal.Histogram(
     width=3200,
     height=1800,
     title=TITLE,
-    y_title="Survival Rate",
+    y_title="Survival Rate (%)",
     show_legend=True,
     show_x_guides=False,
     show_y_guides=True,
@@ -97,12 +100,17 @@ not_survived_data = [
     for cls, nsp, (x_min, x_max) in zip(class_names, not_survive_props, x_ranges, strict=True)
 ]
 
-# print_values_position="top" anchors labels just above each bar's own rect.
-# "Survived" spans the full [0, 1] range, so its label lands above the plot —
-# a per-bar headline. "Not Survived" is suppressed (empty formatter) since its
-# rect boundary sits mid-bar and would otherwise print into the green segment.
+# print_values_position="top" anchors each series' label just above its own
+# rect's top edge. "Survived" spans the full [0, 1] range, so its label lands
+# above the plot as a per-bar headline. "Not Survived" only rises to
+# not_survive_prop, so its label sits right at the green/purple boundary —
+# inside the visible green sliver, next to the segment it describes.
 chart.add("Survived", survived_data, formatter=lambda _v, index=None, **_kw: f"{survive_props[index]:.0%} survived")
-chart.add("Not Survived", not_survived_data, formatter=lambda _v, **_kw: "")
+chart.add(
+    "Not Survived",
+    not_survived_data,
+    formatter=lambda _v, index=None, **_kw: f"{not_survive_props[index]:.0%} not survived",
+)
 
 # Y-axis in percentage format
 chart.y_labels = [
