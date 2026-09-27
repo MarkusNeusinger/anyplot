@@ -40,16 +40,18 @@ function alphaForShare(share) {
 const PLOT_W_PX = 1300;
 const PLOT_H_PX = 700;
 
-// A candidate is rejected if it would land within 2+ neighbors' combined
-// radius: pairs may still touch (alpha blending is meant to handle that), but
-// 3-way-or-more fusions read as one indistinguishable blob.
+// A candidate is rejected if it would land within 1+ neighbor's combined
+// radius: a single near-total overlap already hides the smaller bubble behind
+// the larger one, so any close neighbor triggers a resample, not just a
+// 2+-way clump. The distance threshold itself (1.0x combined radius) allows
+// partial edge-touching overlap through — only near-total fusion is retried.
 function closeNeighborCount(candidate, placed) {
   let count = 0;
   for (const p of placed) {
     const dxPx = ((candidate.growthRate - p.growthRate) / (X_MAX - X_MIN)) * PLOT_W_PX;
     const dyPx = ((candidate.revenue - p.revenue) / (Y_MAX - Y_MIN)) * PLOT_H_PX;
     const dist = Math.hypot(dxPx, dyPx);
-    if (dist < (candidate.r + p.r) * 0.9) count += 1;
+    if (dist < (candidate.r + p.r) * 1.0) count += 1;
   }
   return count;
 }
@@ -65,7 +67,7 @@ for (let i = 0; i < 70; i += 1) {
     // unlike a conventional "market share" metric. Labelled as such below.
     const segmentShare = Z_MIN + rand() * (Z_MAX - Z_MIN);
     candidate = { growthRate, revenue, segmentShare, r: radiusForShare(segmentShare) };
-    if (attempt === 9 || closeNeighborCount(candidate, companies) < 2) break;
+    if (attempt === 9 || closeNeighborCount(candidate, companies) < 1) break;
   }
   companies.push(candidate);
 }
