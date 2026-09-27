@@ -9,7 +9,8 @@ Replaces regen.md step 2j (~70 lines of bash). Orchestrates:
 4. Add `quality:{score}` and `ai-approved`/`quality-poor` labels via
    the GitHub REST API (gh CLI label add is flaky on this repo because
    GraphQL warns about deprecated classic projects and aborts the mutation;
-   REST is reliable)
+   REST is reliable). Ratchet: `ai-approved` is withheld when the new score
+   is more than one point below the score stored on origin/main.
 5. Cleanup: remove the worktree and prune
 
 Returns `(pr_url, pr_number)`.
@@ -20,6 +21,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -61,8 +63,41 @@ def _quality_label(score: int) -> str:
     return f"quality:{int(score)}"
 
 
-def _approval_label(score: int) -> str:
+def _approval_label(score: int, stored_score: int | None = None) -> str | None:
+    """`ai-approved` / `quality-poor`, or None when the regen ratchet refuses.
+
+    Ratchet: a regeneration that scores more than one point below the score
+    stored on origin/main must not auto-merge (`ai-approved` is what
+    `impl-merge.yml` listens for). The CI pipeline enforces a stricter regen
+    gate (before/after comparison against a re-scored predecessor); this local
+    path is an owner override and only guards against plain regressions.
+    """
+    if stored_score is not None and score < stored_score - 1:
+        return None
     return "ai-approved" if score >= 50 else "quality-poor"
+
+
+def _parse_stored_score(metadata_text: str) -> int | None:
+    """`quality_score` from a metadata YAML document, or None when absent/invalid."""
+    try:
+        data = yaml.safe_load(metadata_text) or {}
+    except yaml.YAMLError:
+        return None
+    score = data.get("quality_score") if isinstance(data, dict) else None
+    return score if isinstance(score, int) and not isinstance(score, bool) else None
+
+
+def _stored_score(spec_id: str, library: str) -> int | None:
+    """The live implementation's stored score on origin/main (None = no live impl / no score)."""
+    proc = subprocess.run(
+        ["git", "show", f"origin/main:plots/{spec_id}/metadata/python/{library}.yaml"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if proc.returncode != 0:
+        return None
+    return _parse_stored_score(proc.stdout)
 
 
 def _build_pr_body(spec_id: str, library: str, quality: QualityEval, parent_issue: int | None) -> str:
@@ -168,8 +203,17 @@ def create_regen_pr(
         pr_url = out.splitlines()[-1]  # last line is the PR URL
         pr_number = int(pr_url.rsplit("/", 1)[-1])
 
-        # Label via REST (gh pr edit --add-label is flaky on this repo)
-        _add_labels(pr_number, [_quality_label(quality.score), _approval_label(quality.score)])
+        # Label via REST (gh pr edit --add-label is flaky on this repo).
+        # origin/main was fetched above, so the stored score is current.
+        stored = _stored_score(spec_id, library)
+        approval = _approval_label(quality.score, stored)
+        if approval is None:
+            print(
+                f"regen ratchet: score {quality.score} < stored {stored} - 1 on origin/main — "
+                "ai-approved withheld; the PR stays open without auto-merge (add ai-approved by hand to override)",
+                file=sys.stderr,
+            )
+        _add_labels(pr_number, [_quality_label(quality.score), *([approval] if approval else [])])
     finally:
         # Always clean up the worktree AND the local branch — leaving the
         # branch behind would block the next regen attempt for this library.

@@ -1,0 +1,472 @@
+#!/usr/bin/env python3
+"""Regen gate: decide whether a regenerated implementation replaces the live one.
+
+A regeneration (an implementation PR for a (spec, library) pair that already
+has an implementation on ``main``) gets exactly one review and no repair loop.
+The review scores the new render blind, then re-scores the predecessor's
+production renders against the same criteria and writes a pairwise judgement
+to ``review_regen.json`` (contract in
+``prompts/workflow-prompts/ai-quality-review.md`` step 5f). This script turns
+that judgement into a verdict:
+
+- ``merge`` -- the new implementation replaces the live one
+  (``impl-review.yml`` adds ``regen:improved`` and then ``ai-approved``).
+- ``keep`` -- the PR is closed and the live implementation stays
+  (``regen:kept``; never ``ai-rejected``, so no repair and no deletion).
+
+Merge requires ALL of:
+
+1. the canvas gate passed and the new score is a real, non-zero score;
+2. the predecessor's production renders were available to the reviewer;
+3. ``review_regen.json`` exists and is structurally valid, every ``W`` ref is
+   one of the previous review's weakness ids and every ``C`` ref is one of the
+   spec's characteristic properties;
+4. ``new_score >= prev_rescored - 1`` (``prev_rescored`` is the predecessor
+   re-scored in the same session; the stored score is display-only);
+5. at least one improvement with a non-empty ``where_visible``;
+6. no regressions -- on a ``*-basic`` spec a changed data scenario or added
+   encodings count as regressions unless a change request asked for them.
+
+Anything missing or malformed fails closed to ``keep``.
+
+The script is stdlib-only except for the ``context`` subcommand, which needs
+PyYAML to read the previous metadata. ``impl-review.yml`` runs it from a copy
+taken at the workflow's own ref, so the parser always matches the workflow.
+
+Subcommands::
+
+    regen_gate.py context --metadata META.yaml --spec-id S --language L --library B \
+        [--spec-file plots/S/specification.md] \
+        [--out-md /tmp/anyplot-prev-review.md] [--out-weaknesses /tmp/anyplot-prev-weaknesses.json]
+
+    regen_gate.py decide --spec-id S --library B --score N --prev-stored N|n/a \
+        --regen-json review_regen.json --weaknesses-json /tmp/anyplot-prev-weaknesses.json \
+        --spec-file plots/S/specification.md --prev-renders available|missing \
+        [--canvas-failed] [--change-request-present] [--context-failed] [--summary-out FILE]
+
+Both write ``key=value`` outputs to ``$GITHUB_OUTPUT`` when it is set.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import sys
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+
+MERGE = "merge"
+KEEP = "keep"
+
+REF_RE = re.compile(r"^(?:(?P<kind>[WPC])(?P<num>[1-9]\d*)|new)$")
+CHARACTERISTICS_HEADING_RE = re.compile(r"^##\s+what a good version looks like\b", re.IGNORECASE)
+NEXT_SECTION_RE = re.compile(r"^#{1,2}\s")
+# Column 0 only: indented bullets are sub-points of the one above.
+TOP_LEVEL_BULLET_RE = re.compile(r"^(?:[-*+]|\d+[.)])\s+(?P<text>\S.*)$")
+
+
+# ---------------------------------------------------------------------------
+# Previous review extraction (shared by impl-generate and impl-review)
+# ---------------------------------------------------------------------------
+
+
+def weakness_ids(weaknesses: list[Any]) -> list[dict[str, str]]:
+    """Assign stable ids W1..Wn to the previous review's weaknesses, in order."""
+    texts = [str(w).strip() for w in weaknesses if str(w).strip()]
+    return [{"id": f"W{i}", "text": text} for i, text in enumerate(texts, start=1)]
+
+
+def parse_characteristics(spec_text: str) -> list[str]:
+    """Top-level bullets of the spec's "What a good version looks like" section.
+
+    Returns an empty list when the section does not exist (PR 2 adds it to the
+    spec template; older specs have none). Ids are C1..Cn in document order.
+    """
+    items: list[str] = []
+    in_section = False
+    for line in spec_text.splitlines():
+        if CHARACTERISTICS_HEADING_RE.match(line):
+            in_section = True
+            continue
+        if not in_section:
+            continue
+        if NEXT_SECTION_RE.match(line):
+            break
+        m = TOP_LEVEL_BULLET_RE.match(line)
+        if m:
+            items.append(m.group("text").strip())
+    return items
+
+
+def render_previous_review(
+    data: dict[str, Any], spec_id: str, language: str, library: str, characteristics: list[str] | None = None
+) -> tuple[str, list[dict[str, str]]]:
+    """Build ``/tmp/anyplot-prev-review.md`` and the id'd weakness list."""
+    review = data.get("review") or {}
+    quality = data.get("quality_score")
+
+    lines = [f"# Previous Review for {spec_id} / {language} / {library}", ""]
+    lines.append(f"**Previous quality score (stored):** {quality if quality is not None else 'n/a'}")
+    lines.append("")
+
+    desc = review.get("image_description")
+    if desc:
+        lines += ["## Previous image description", str(desc).strip(), ""]
+
+    strengths = review.get("strengths") or []
+    if strengths:
+        lines.append("## Strengths (KEEP these)")
+        lines += [f"- {s}" for s in strengths]
+        lines.append("")
+
+    weaknesses = weakness_ids(review.get("weaknesses") or [])
+    if weaknesses:
+        lines.append("## Weaknesses (FIX these) — stable ids W1..Wn")
+        lines += [f"- **{w['id']}:** {w['text']}" for w in weaknesses]
+        lines.append("")
+
+    checklist = review.get("criteria_checklist") or {}
+    if checklist:
+        lines.append("## Criteria checklist (focus on items that failed)")
+        for cat, payload in checklist.items():
+            payload = payload or {}
+            score = payload.get("score", "?")
+            max_score = payload.get("max", "?")
+            lines.append(f"### {cat}  ({score}/{max_score})")
+            for item in payload.get("items") or []:
+                item = item or {}
+                mark = "✅" if item.get("passed") else "❌"
+                lines.append(f"- {mark} {item.get('id', '?')} {item.get('name', '')}: {item.get('comment', '')}")
+            lines.append("")
+
+    if characteristics:
+        lines.append("## Characteristic properties from the spec — stable ids C1..Cn")
+        lines += [f"- **C{i}:** {text}" for i, text in enumerate(characteristics, start=1)]
+        lines.append("")
+
+    return "\n".join(lines), weaknesses
+
+
+# ---------------------------------------------------------------------------
+# Decision
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class GateInput:
+    spec_id: str
+    score: int | None
+    regen: Any
+    regen_error: str | None = None
+    known_weakness_ids: frozenset[str] = frozenset()
+    characteristic_count: int = 0
+    prev_renders: bool = True
+    canvas_failed: bool = False
+    change_request_present: bool = False
+    context_ok: bool = True
+
+
+@dataclass
+class GateResult:
+    verdict: str
+    reason: str
+    prev_rescored: int | None = None
+    improvements: list[dict[str, str]] = field(default_factory=list)
+    regressions: list[dict[str, str]] = field(default_factory=list)
+
+
+def _is_int(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def validate_regen(payload: Any, known_weakness_ids: frozenset[str], characteristic_count: int) -> list[str]:
+    """Structural and id validation of ``review_regen.json``. Returns error strings."""
+    if not isinstance(payload, dict):
+        return ["top level is not a JSON object"]
+    errors: list[str] = []
+
+    prev = payload.get("prev_rescored")
+    if not _is_int(prev) or not 0 <= prev <= 100:
+        errors.append(f"prev_rescored must be an integer 0-100 (got {prev!r})")
+
+    improvements = payload.get("improvements")
+    if not isinstance(improvements, list):
+        errors.append("improvements must be a list")
+    else:
+        for i, item in enumerate(improvements, start=1):
+            if not isinstance(item, dict):
+                errors.append(f"improvements[{i}] is not an object")
+                continue
+            ref = item.get("ref")
+            m = REF_RE.match(ref) if isinstance(ref, str) else None
+            if m is None:
+                errors.append(f"improvements[{i}].ref {ref!r} is not W<n>, P<n>, C<n> or 'new'")
+            elif m.group("kind") == "W" and ref not in known_weakness_ids:
+                errors.append(f"improvements[{i}].ref {ref} is not a weakness id of the previous review")
+            elif m.group("kind") == "C" and int(m.group("num")) > characteristic_count:
+                errors.append(
+                    f"improvements[{i}].ref {ref} does not exist (the spec lists {characteristic_count} characteristic properties)"
+                )
+            if not isinstance(item.get("what"), str) or not item["what"].strip():
+                errors.append(f"improvements[{i}].what must be a non-empty string")
+            if "where_visible" in item and not isinstance(item["where_visible"], str):
+                errors.append(f"improvements[{i}].where_visible must be a string")
+
+    regressions = payload.get("regressions")
+    if not isinstance(regressions, list):
+        errors.append("regressions must be a list")
+    else:
+        for i, item in enumerate(regressions, start=1):
+            if not isinstance(item, dict) or not isinstance(item.get("what"), str) or not item["what"].strip():
+                errors.append(f"regressions[{i}] must be an object with a non-empty 'what'")
+
+    if not isinstance(payload.get("scenario_changed"), bool):
+        errors.append("scenario_changed must be true or false")
+
+    encodings = payload.get("encodings_added")
+    if not isinstance(encodings, list) or not all(isinstance(e, str) for e in encodings):
+        errors.append("encodings_added must be a list of strings")
+
+    applied = payload.get("change_request_applied")
+    if applied is not None and not isinstance(applied, bool):
+        errors.append("change_request_applied must be true, false or null")
+
+    return errors
+
+
+def decide(inp: GateInput) -> GateResult:
+    """Apply the regen gate. Every uncertain input resolves to ``keep``."""
+    if inp.canvas_failed:
+        return GateResult(KEEP, "canvas dimension gate failed")
+    if inp.score is None:
+        return GateResult(KEEP, "no valid review score")
+    if inp.score == 0:
+        return GateResult(KEEP, "new render scored 0 (auto-reject)")
+    if not inp.prev_renders:
+        return GateResult(KEEP, "previous production renders unavailable, no before/after comparison possible")
+    if not inp.context_ok:
+        return GateResult(KEEP, "regen context extraction failed (previous review not available to the reviewer)")
+    if inp.regen is None:
+        return GateResult(KEEP, f"review_regen.json {inp.regen_error or 'missing'}")
+
+    errors = validate_regen(inp.regen, inp.known_weakness_ids, inp.characteristic_count)
+    if errors:
+        return GateResult(KEEP, "invalid review_regen.json: " + "; ".join(errors))
+
+    payload: dict[str, Any] = inp.regen
+    prev_rescored: int = payload["prev_rescored"]
+    improvements = [
+        {
+            "ref": item["ref"],
+            "what": item["what"].strip(),
+            "where_visible": str(item.get("where_visible") or "").strip(),
+        }
+        for item in payload["improvements"]
+    ]
+    regressions = [
+        {"what": item["what"].strip(), "where_visible": str(item.get("where_visible") or "").strip()}
+        for item in payload["regressions"]
+    ]
+
+    # A change request is the only thing that may legitimately swap the
+    # scenario or add encodings on a -basic spec — and only one that exists.
+    change_request_applied = inp.change_request_present and payload.get("change_request_applied") is True
+    if inp.spec_id.endswith("-basic") and not change_request_applied:
+        if payload["scenario_changed"]:
+            regressions.append(
+                {"what": "data scenario replaced on a -basic spec", "where_visible": "data and labels of both renders"}
+            )
+        encodings = [e.strip() for e in payload["encodings_added"] if e.strip()]
+        if encodings:
+            regressions.append(
+                {"what": f"encodings added on a -basic spec: {', '.join(encodings)}", "where_visible": "both renders"}
+            )
+
+    result = GateResult(KEEP, "", prev_rescored=prev_rescored, improvements=improvements, regressions=regressions)
+
+    if regressions:
+        result.reason = f"{len(regressions)} regression(s): " + "; ".join(r["what"] for r in regressions)
+        return result
+
+    visible = [i for i in improvements if i["where_visible"]]
+    if not visible:
+        result.reason = "no visible improvement (every improvement needs a non-empty where_visible)"
+        return result
+
+    if inp.score < prev_rescored - 1:
+        result.reason = f"new score {inp.score} < re-scored predecessor {prev_rescored} - 1"
+        return result
+
+    result.verdict = MERGE
+    result.reason = (
+        f"{len(visible)} visible improvement(s), no regressions, new score {inp.score} >= "
+        f"re-scored predecessor {prev_rescored} - 1"
+    )
+    return result
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+
+def _write_outputs(values: dict[str, str]) -> None:
+    for key, value in values.items():
+        print(f"{key}={value}")
+    path = os.environ.get("GITHUB_OUTPUT")
+    if path:
+        with open(path, "a", encoding="utf-8") as f:
+            for key, value in values.items():
+                f.write(f"{key}={value}\n")
+
+
+def _one_line(text: str) -> str:
+    return " ".join(str(text).split())
+
+
+def load_regen_json(path: Path) -> tuple[Any, str | None]:
+    if not path.is_file():
+        return None, "missing"
+    try:
+        return json.loads(path.read_text(encoding="utf-8")), None
+    except (OSError, ValueError) as exc:
+        return None, f"unreadable ({_one_line(str(exc))[:200]})"
+
+
+def load_known_weakness_ids(path: Path | None) -> frozenset[str]:
+    if path is None or not path.is_file():
+        return frozenset()
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return frozenset()
+    if not isinstance(data, list):
+        return frozenset()
+    return frozenset(str(item["id"]) for item in data if isinstance(item, dict) and "id" in item)
+
+
+def parse_score(raw: str | None) -> int | None:
+    if raw is None or not re.fullmatch(r"\d{1,3}", raw.strip()):
+        return None
+    value = int(raw.strip())
+    return value if value <= 100 else None
+
+
+def render_summary(result: GateResult, prev_stored: str, score: int | None) -> str:
+    """Markdown block for the PR/issue comment (improvements, regressions, reason)."""
+    rescored = str(result.prev_rescored) if result.prev_rescored is not None else "n/a"
+    lines = [
+        "| Previous (stored) | Previous (re-scored) | New |",
+        "|---|---|---|",
+        f"| {prev_stored} | {rescored} | {score if score is not None else 'n/a'} |",
+        "",
+        "**Improvements**",
+    ]
+    if result.improvements:
+        for item in result.improvements:
+            where = item["where_visible"] or "_not visible_"
+            lines.append(f"- `{item['ref']}` {_one_line(item['what'])} — {_one_line(where)}")
+    else:
+        lines.append("- none")
+    lines += ["", "**Regressions**"]
+    if result.regressions:
+        for item in result.regressions:
+            where = f" — {_one_line(item['where_visible'])}" if item["where_visible"] else ""
+            lines.append(f"- {_one_line(item['what'])}{where}")
+    else:
+        lines.append("- none")
+    lines += ["", f"**Reason:** {_one_line(result.reason)}"]
+    return "\n".join(lines) + "\n"
+
+
+def cmd_context(args: argparse.Namespace) -> int:
+    import yaml  # PyYAML — only this subcommand needs it
+
+    data = yaml.safe_load(Path(args.metadata).read_text(encoding="utf-8")) or {}
+    characteristics: list[str] = []
+    if args.spec_file and Path(args.spec_file).is_file():
+        characteristics = parse_characteristics(Path(args.spec_file).read_text(encoding="utf-8"))
+    md, weaknesses = render_previous_review(data, args.spec_id, args.language, args.library, characteristics)
+    Path(args.out_md).write_text(md, encoding="utf-8")
+    Path(args.out_weaknesses).write_text(json.dumps(weaknesses, indent=2, ensure_ascii=False), encoding="utf-8")
+    quality = data.get("quality_score")
+    stored = str(quality) if _is_int(quality) else "n/a"
+    _write_outputs(
+        {"prev_stored": stored, "weakness_count": str(len(weaknesses)), "characteristic_count": str(len(characteristics))}
+    )
+    return 0
+
+
+def cmd_decide(args: argparse.Namespace) -> int:
+    regen, regen_error = load_regen_json(Path(args.regen_json))
+    characteristic_count = 0
+    if args.spec_file and Path(args.spec_file).is_file():
+        characteristic_count = len(parse_characteristics(Path(args.spec_file).read_text(encoding="utf-8")))
+    score = parse_score(args.score)
+    inp = GateInput(
+        spec_id=args.spec_id,
+        score=score,
+        regen=regen,
+        regen_error=regen_error,
+        known_weakness_ids=load_known_weakness_ids(Path(args.weaknesses_json) if args.weaknesses_json else None),
+        characteristic_count=characteristic_count,
+        prev_renders=args.prev_renders == "available",
+        canvas_failed=args.canvas_failed,
+        change_request_present=args.change_request_present,
+        context_ok=not args.context_failed,
+    )
+    result = decide(inp)
+    rescored = str(result.prev_rescored) if result.prev_rescored is not None else "n/a"
+    reason = _one_line(result.reason)
+    print(
+        f"::notice::regen_gate spec={args.spec_id} lib={args.library} prev_stored={args.prev_stored} "
+        f"prev_rescored={rescored} new={score if score is not None else 'n/a'} verdict={result.verdict} reason={reason}"
+    )
+    if args.summary_out:
+        Path(args.summary_out).write_text(render_summary(result, args.prev_stored, score), encoding="utf-8")
+    _write_outputs({"verdict": result.verdict, "reason": reason, "prev_rescored": rescored})
+    return 0
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    ctx = sub.add_parser("context", help="Extract the previous review with stable weakness ids")
+    ctx.add_argument("--metadata", required=True)
+    ctx.add_argument("--spec-id", required=True)
+    ctx.add_argument("--language", required=True)
+    ctx.add_argument("--library", required=True)
+    ctx.add_argument("--spec-file", default="")
+    ctx.add_argument("--out-md", default="/tmp/anyplot-prev-review.md")
+    ctx.add_argument("--out-weaknesses", default="/tmp/anyplot-prev-weaknesses.json")
+    ctx.set_defaults(func=cmd_context)
+
+    dec = sub.add_parser("decide", help="Apply the regen gate to review_regen.json")
+    dec.add_argument("--spec-id", required=True)
+    dec.add_argument("--library", required=True)
+    dec.add_argument("--score", default="")
+    dec.add_argument("--prev-stored", default="n/a")
+    dec.add_argument("--regen-json", default="review_regen.json")
+    dec.add_argument("--weaknesses-json", default="/tmp/anyplot-prev-weaknesses.json")
+    dec.add_argument("--spec-file", default="")
+    dec.add_argument("--prev-renders", choices=["available", "missing"], default="missing")
+    dec.add_argument("--canvas-failed", action="store_true")
+    dec.add_argument("--change-request-present", action="store_true")
+    dec.add_argument("--context-failed", action="store_true")
+    dec.add_argument("--summary-out", default="")
+    dec.set_defaults(func=cmd_decide)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    return int(args.func(args))
+
+
+if __name__ == "__main__":
+    sys.exit(main())

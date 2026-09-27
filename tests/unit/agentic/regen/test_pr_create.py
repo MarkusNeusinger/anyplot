@@ -8,13 +8,19 @@ side-effecting to run in unit tests, so we patch `subprocess.run` /
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
 
 from agentic.workflows.modules.regen import QualityEval
-from agentic.workflows.modules.regen.pr_create import _build_pr_body, _read_spec_issue, create_regen_pr
+from agentic.workflows.modules.regen.pr_create import (
+    _approval_label,
+    _build_pr_body,
+    _parse_stored_score,
+    _read_spec_issue,
+    create_regen_pr,
+)
 
 
 def _quality(score: int = 87) -> QualityEval:
@@ -50,6 +56,58 @@ def test_build_pr_body_includes_parent_issue_marker():
     assert "**Parent Issue:** #42" in body
     assert "Quality: 87/100" in body
     assert "VQ: 30/30" in body  # category breakdown
+
+
+@pytest.mark.parametrize(
+    ("score", "stored", "expected"),
+    [
+        (87, None, "ai-approved"),  # no live implementation → plain threshold
+        (40, None, "quality-poor"),
+        (86, 87, "ai-approved"),  # stored - 1 still passes
+        (85, 87, None),  # stored - 2 → ratchet refuses ai-approved
+        (95, 87, "ai-approved"),
+        (46, 47, "quality-poor"),  # within the ratchet, below 50
+    ],
+)
+def test_approval_label_ratchet(score, stored, expected):
+    assert _approval_label(score, stored) == expected
+
+
+def test_parse_stored_score():
+    assert _parse_stored_score("quality_score: 91\n") == 91
+    assert _parse_stored_score("quality_score: null\n") is None
+    assert _parse_stored_score("quality_score: true\n") is None
+    assert _parse_stored_score("library: altair\n") is None
+    assert _parse_stored_score(": : :\n  - [") is None
+
+
+def test_create_regen_pr_withholds_ai_approved_below_stored(tmp_path, monkeypatch):
+    """Ratchet: a local regen scoring > 1 below the stored score gets only its quality label."""
+    monkeypatch.chdir(tmp_path)
+    _setup_repo(tmp_path)
+    worktree = tmp_path / ".worktrees" / "scatter-basic-altair"
+    (worktree / "plots" / "scatter-basic" / "implementations" / "python").mkdir(parents=True)
+    (worktree / "plots" / "scatter-basic" / "metadata" / "python").mkdir(parents=True)
+
+    with (
+        patch("agentic.workflows.modules.regen.pr_create.subprocess") as sp,
+        patch("agentic.workflows.modules.regen.pr_create.time.sleep"),
+    ):
+        sp.run.return_value = MagicMock(returncode=0, stdout="quality_score: 92\n")
+        sp.check_output.side_effect = [
+            "https://github.com/owner/repo/pull/7\n",
+            '{"owner":{"login":"owner"},"name":"repo"}',
+        ]
+        create_regen_pr(
+            "scatter-basic",
+            "altair",
+            _quality(87),
+            plots_root=tmp_path / "plots",
+            worktrees_root=tmp_path / ".worktrees",
+        )
+
+    label_posts = [c.args[0] for c in sp.run.call_args_list if c.args[0][:2] == ["gh", "api"]]
+    assert [cmd[-1] for cmd in label_posts] == ["labels[]=quality:87"]
 
 
 def test_build_pr_body_omits_parent_when_no_issue():
@@ -90,7 +148,9 @@ def test_create_regen_pr_orchestration(tmp_path, monkeypatch):
         patch("agentic.workflows.modules.regen.pr_create.subprocess") as sp,
         patch("agentic.workflows.modules.regen.pr_create.time.sleep"),
     ):
-        sp.run.return_value = None
+        # returncode=1: `git show origin/main:<metadata>` finds no live impl,
+        # so the ratchet has no stored score to compare against.
+        sp.run.return_value = MagicMock(returncode=1, stdout="")
         sp.check_output.side_effect = [
             # 1) `gh pr create ...` → PR URL on the last line
             f"Creating PR...\n{pr_url}\n",

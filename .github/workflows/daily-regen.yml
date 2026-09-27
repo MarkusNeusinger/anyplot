@@ -71,6 +71,9 @@ concurrency:
 jobs:
   pick:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read   # closed `regen` PRs = last regen attempt per spec
     outputs:
       specs: ${{ steps.pick.outputs.specs }}
       specs_json: ${{ steps.pick.outputs.specs_json }}
@@ -89,6 +92,8 @@ jobs:
       - name: Pick oldest spec(s) (or use override)
         id: pick
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
           COUNT: ${{ inputs.count || '1' }}
           MIN_AGE_HOURS: ${{ inputs.min_age_hours || '20' }}
           SPEC_OVERRIDE: ${{ inputs.specification_id }}
@@ -96,6 +101,7 @@ jobs:
           python3 <<'PY'
           import json
           import os
+          import subprocess
           import sys
           from datetime import datetime, timedelta, timezone
           from pathlib import Path
@@ -124,6 +130,34 @@ jobs:
                   f.write(f"count=1\n")
               sys.exit(0)
 
+          def parse_ts(raw: str) -> datetime | None:
+              try:
+                  dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+              except ValueError:
+                  return None
+              return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+          # Last regen ATTEMPT per spec. A regeneration the regen gate kept
+          # closes its PR and never touches `updated` in the metadata, so
+          # without this the same spec would be picked again every night.
+          # One call at pick time; a failure degrades to "updated only".
+          last_attempt: dict[str, datetime] = {}
+          try:
+              raw = subprocess.run(
+                  ["gh", "pr", "list", "--repo", os.environ["GH_REPO"], "--state", "closed",
+                   "--label", "regen", "--limit", "200", "--json", "headRefName,closedAt"],
+                  check=True, capture_output=True, text=True,
+              ).stdout
+              for pr in json.loads(raw):
+                  parts = str(pr.get("headRefName") or "").split("/")
+                  closed = parse_ts(str(pr.get("closedAt") or ""))
+                  if len(parts) == 3 and parts[0] == "implementation" and closed:
+                      if parts[1] not in last_attempt or closed > last_attempt[parts[1]]:
+                          last_attempt[parts[1]] = closed
+              print(f"::notice::Closed regen PRs seen for {len(last_attempt)} spec(s)")
+          except (subprocess.CalledProcessError, ValueError, OSError) as exc:
+              print(f"::warning::Could not list closed regen PRs ({' '.join(str(exc).split())[:200]}) — picking by metadata 'updated' only")
+
           candidates: list[tuple[datetime, str]] = []
 
           for spec_dir in sorted(specs_dir.iterdir()):
@@ -151,12 +185,15 @@ jobs:
                   candidates.append((datetime.min.replace(tzinfo=timezone.utc), spec_dir.name))
                   continue
 
-              try:
-                  dt = datetime.fromisoformat(latest_updated.replace("Z", "+00:00"))
-                  if dt.tzinfo is None:
-                      dt = dt.replace(tzinfo=timezone.utc)
-              except Exception:
+              dt = parse_ts(latest_updated)
+              if dt is None:
                   continue
+
+              # Age = time since the newer of the last merged update and the
+              # last regen attempt (kept regens included).
+              attempt = last_attempt.get(spec_dir.name)
+              if attempt and attempt > dt:
+                  dt = attempt
 
               if NOW - dt < MIN_AGE:
                   continue  # too fresh to re-roll
@@ -168,7 +205,7 @@ jobs:
 
           print(f"::notice::Eligible specs: {len(candidates)}  picked: {picks}")
           for dt, name in candidates[:COUNT]:
-              print(f"  - {name:40s}  latest_updated={dt.isoformat()}")
+              print(f"  - {name:40s}  last_touched={dt.isoformat()}")
 
           github_output = os.environ["GITHUB_OUTPUT"]
           with open(github_output, "a", encoding="utf-8") as f:

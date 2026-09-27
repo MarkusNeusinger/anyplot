@@ -56,6 +56,11 @@ on:
         required: false
         type: string
         default: '{}'
+      regen_gate:
+        description: "Regen gate for pairs that already have an implementation on main (false = forced regen via the fresh-generation path, labelled regen:forced)"
+        required: false
+        type: boolean
+        default: true
 
 env:
   ALL_LIBRARIES: "matplotlib seaborn plotly bokeh altair plotnine pygal highcharts letsplot ggplot2 makie chartjs d3 echarts muix"
@@ -190,6 +195,7 @@ jobs:
           PACE_SECONDS: ${{ inputs.pace_seconds || '120' }}
           MODEL: ${{ inputs.model || 'sonnet' }}
           CHANGE_REQUESTS: ${{ inputs.change_requests || '{}' }}
+          REGEN_GATE: ${{ inputs.regen_gate == false && 'false' || 'true' }}
         run: |
           set -u
 
@@ -242,13 +248,15 @@ jobs:
                   -f library="${LIBRARY}" \
                   -f issue_number="${ISSUE}" \
                   -f model="${MODEL}" \
-                  -f change_request="${HINT}" && dispatched=1 && break
+                  -f change_request="${HINT}" \
+                  -f regen_gate="${REGEN_GATE}" && dispatched=1 && break
               else
                 gh workflow run impl-generate.yml --repo "${{ github.repository }}" \
                   -f specification_id="${SPEC_ID}" \
                   -f library="${LIBRARY}" \
                   -f model="${MODEL}" \
-                  -f change_request="${HINT}" && dispatched=1 && break
+                  -f change_request="${HINT}" \
+                  -f regen_gate="${REGEN_GATE}" && dispatched=1 && break
               fi
               echo "::warning::Dispatch attempt $attempt failed for ${SPEC_ID}/${LIBRARY}, retrying in 10s"
               sleep 10
