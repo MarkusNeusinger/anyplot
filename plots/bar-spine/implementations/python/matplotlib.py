@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
-Library: matplotlib 3.11.2 | Python 3.13.12
-Quality: 93/100 | Updated: 2026-09-27
+Library: matplotlib 3.11.2 | Python 3.13.15
+Quality: 91/100 | Updated: 2026-09-27
 """
 
 import importlib
