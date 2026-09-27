@@ -2,9 +2,9 @@ library: pygal
 language: python
 specification_id: bubble-basic
 created: 2025-12-14 11:08:57+00:00
-updated: '2026-09-27T01:54:31Z'
+updated: '2026-09-27T02:57:27Z'
 generated_by: claude-sonnet
-workflow_run: 36286515171
+workflow_run: 36289269061
 issue: 755
 language_version: 3.13.15
 library_version: 3.1.3
@@ -12,104 +12,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/pygal/plot-dark.html
-quality_score: 90
+quality_score: 88
 review:
   strengths:
-  - Bubble size correctly scaled by area (sqrt of tier midpoint) via quantile-based
-    tiers, keeping tiers evenly populated instead of one tier absorbing the dense
-    low-coverage cluster.
-  - Thin PAGE_BG halo-ring stroke around every bubble keeps individual bubbles distinguishable
-    in the dense overlap zone instead of melting into a single blob under alpha blending.
-  - Focal 'Congestion Hotspot' bubble rendered in ANYPLOT_AMBER with a print_labels
-    annotation creates a clear visual anchor and data story for the extreme point.
-  - 'First categorical/tier color is exactly #009E73, and the 7-tier legend is a correct
-    imprint_seq interpolation to #4467A3 for the continuous vehicle-registration variable
-    — identical data colors across both theme renders.'
-  - All font sizes explicitly set (title, axis labels, ticks, legend, tooltip, value-label);
-    both light and dark renders are fully legible with no dark-on-dark or light-on-light
-    failures.
+  - 'Correct area-based bubble sizing: tier radii are derived from sqrt(value) rather
+    than value directly, so visual area scales proportionally with the underlying
+    vehicle-registration metric'
+  - Page-background halo stroke around every dot keeps individual overlapping bubbles
+    traceable despite heavy overplotting — a well-justified workaround for pygal's
+    lack of a per-point alpha/stroke API
+  - 'Imprint sequential colormap (#009E73 -> #4467A3) correctly used for the continuous
+    size dimension, with the amber accent reserved only for the single focal-point
+    highlight instead of polluting the categorical palette'
+  - 'Strong data storytelling: the congestion-hotspot city is called out with a print_labels
+    annotation that sits cleanly clear of the title and other bubbles in both renders'
+  - Quantile-based (not equal-width) tier binning keeps all 7 legend entries populated
+    instead of one tier absorbing the dense mid-chart cluster
+  - Theme tokens (background, ink, grid) are correctly threaded through the Style
+    object; both renders pass the light/dark legibility checklist with no dark-on-dark
+    or light-on-light failures
+  - Clean, reproducible, single-pass script (seeded RNG, no unused imports, no functions/classes)
+    appropriate for the KISS structure criterion
   weaknesses:
-  - The dense low-coverage cluster (~10-45% transit coverage) has many heavily overlapping
-    bubbles; the halo rings help but individual points are still hard to trace precisely
-    in that region.
-  - The size legend is an indirect 7-tier color-coded proxy (vehicle-registration
-    ranges) rather than a traditional small/medium/large reference-circle legend —
-    functional, given pygal's lack of a per-point size API, but slower to read than
-    a real size key.
-  - Styling relies on inline CSS that matches pygal's internal `#chart-{uuid} .dot`
-    / `.text-overlay text.label` selectors by specificity — well documented and currently
-    correct, but fragile if pygal's internal graph.css selectors change in a future
-    version.
+  - Despite the halo-ring mitigation, the 40-60% transit-coverage band still stacks
+    6-8 overlapping bubbles on top of each other, making individual points hard to
+    trace in that cluster — consider a stronger stroke/opacity contrast or slight
+    y-jitter to further separate that region
+  - dot_opacity=0.48 sits marginally below the specification's recommended alpha range
+    of ~0.5-0.7 for overlap handling; harmless visually but worth nudging into range
+  - The vehicle-registrations size column spans ~150-700, above the specification's
+    illustrative 10-100 range for the bubble-size column — not a functional problem
+    since it is correctly area-scaled and realistic, but a literal spec deviation
+    worth noting
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "bubble-basic · python · pygal · anyplot.ai" in dark ink, centered-right of a warm off-white canvas, fully visible, not clipped. X-axis title "Public Transit Coverage (%)" and Y-axis title "Traffic Congestion Index (0-100 scale)" in dark ink, both descriptive with units. Tick labels ("10%"-"90%", "20"-"90") in dark ink, fully readable. Grid lines are light dotted, subtle but visible. Legend at bottom in 4 columns, 7 tier-range labels ("209-341 vehicles/1,000" ... "521-624 vehicles/1,000") plus "★ Congestion Hotspot", all in dark ink with colored swatches matching the bubble tiers.
-      Data: 50 bubbles positioned by (transit coverage, congestion index), sized by area and colored by a 7-step sequential scale from #009E73 (brand green, low vehicle registrations) to #4467A3 (blue, high vehicle registrations). Bubbles carry a thin off-white halo stroke so overlapping bubbles in the dense low-coverage cluster (~10-45%) stay individually traceable. One focal bubble is rendered in amber (#DDCC77) with a "★ Congestion Hotspot: 15% coverage, 95 congestion index" annotation as a visual anchor.
-      Legibility verdict: PASS — all text (title, axis titles, ticks, legend, annotation) is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1-consistent), not pure white and not dark.
+      Chrome: Title "bubble-basic · python · pygal · anyplot.ai" in dark ink, fully visible, comfortably above the tallest bubble. X-axis title "Public Transit Coverage (%) — bubble size ↔ vehicle registrations" and y-axis title "Traffic Congestion Index (0-100 scale)" both dark, readable, similarly sized. Tick labels ("10%"..."90%", "20"..."90") dark and legible against the light background. Subtle dashed gridlines visible without dominating. 4-column legend at the bottom lists all 7 vehicle-registration tiers plus the "Congestion Hotspot" entry, all text dark and crisp.
+      Data: 50 bubbles in a sequential green-to-blue-gray gradient (first/lowest tier = brand green #009E73, highest tier = blue #4467A3), each with a light halo stroke separating overlapping bubbles. The single amber/tan focal bubble (highest congestion) stands out clearly with a "★ Congestion Hotspot: 12% coverage, 95 congestion index" annotation placed to its right, not overlapping the title or other bubbles. Data show a clear inverse relationship between coverage and congestion, with bubble size (vehicle registrations) increasing toward the upper-left congested/low-coverage cities.
+      Legibility verdict: PASS — all chrome text and annotation text is clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title and axis titles now in light/off-white ink, fully visible and not clipped. Tick labels and legend text are light-colored and clearly legible against the dark background. Grid lines are a lighter, subtle dotted tone, still visible without dominating. The annotation text ("★ Congestion Hotspot: ...") is rendered in light ink, confirmed readable against both the dark canvas and the overlapping amber/olive bubble region — no dark-on-dark failure.
-      Data: Identical bubble positions, sizes, and colors as the light render — the same #009E73→#4467A3 sequential scale and the same #DDCC77 amber focal bubble. Halo strokes now match the dark PAGE_BG, preserving the same separation effect between overlapping bubbles.
-      Legibility verdict: PASS — all text remains readable in the dark theme; no dark-on-dark or unreadable elements found.
+      Background: Warm near-black (#1A1A17-consistent), not pure black and not light.
+      Chrome: Same title, axis titles, and tick labels now rendered in light ink, fully legible against the dark background. Gridlines remain subtle. Legend text at the bottom is light-colored and crisp against the dark background — no dark-on-dark failures observed anywhere (title, axis labels, ticks, legend, and the hotspot annotation are all light-on-dark).
+      Data: Identical bubble colors and positions to the light render (green-to-blue sequential gradient, same amber focal bubble) — only the halo-stroke color flips to the dark background tone, confirming chrome-only theme adaptation of the data encoding.
+      Legibility verdict: PASS — all chrome and annotation text is clearly readable against the dark background; no dark-on-dark or contrast issues found.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title/label/major_label/legend/value/value_label/tooltip);
-          fully readable in both themes, no overflow, title fits without clipping.
+        comment: All titles, axis labels, ticks, and legend text readable in both
+          themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions; the hotspot annotation
-          sits at the edge of the amber bubble but remains fully readable in both
-          themes.
+        comment: Text does not overlap; dense bubble cluster around 40-60% coverage
+          is hard to fully disentangle despite halo mitigation
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Halo-ring stroke keeps bubbles distinguishable, but the dense low-coverage
-          cluster still has many heavily overlapping bubbles that are hard to trace
-          individually.
+        comment: Halo strokes and opacity tuning keep most bubbles traceable; densest
+          cluster still partially occludes individual points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-to-blue scale plus a distinct amber focal color;
-          no red-green-only signal, good contrast.
+        comment: Sequential green-to-blue gradient, no red-green-only signal, adequate
+          contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot fills a good share of the 3200x1800 canvas,
-          nothing cut off at the canvas edges (title, ticks, legend all fully inside
-          bounds).
+        comment: 3200x1800 canvas gate passed, no clipping, balanced proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis titles are descriptive and carry units ("%", "0-100 scale").
+        comment: Descriptive axis titles with units and encoding explanation
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First tier is exactly #009E73; the 7-tier scale is a correct imprint_seq
-          interpolation to #4467A3; backgrounds are #FAF8F1/#1A1A17; chrome is theme-correct
-          in both renders; amber focal color is a legitimate semantic-anchor use,
-          not part of the categorical pool.'
+        comment: 'First tier = #009E73, correct imprint_seq interpolation, correct
+          theme backgrounds in both renders'
     design_excellence:
       score: 14
       max: 20
@@ -118,20 +116,23 @@ review:
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        comment: Thoughtful sequential palette doubling as the size legend, amber
-          focal highlight, and halo-ring technique are clearly above library defaults.
+        passed: true
+        comment: Custom sequential palette, halo-ring workaround, deliberate amber
+          accent for the focal point
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Subtle dotted grid and generous margins, but the default y/x axis
-          lines remain and the dense cluster reduces overall polish.
+        passed: true
+        comment: Subtle grid, generous whitespace, clean bottom legend; dense cluster
+          slightly undercuts refinement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: The amber focal bubble and annotation create a clear visual hierarchy
-          pointing at the extreme congestion point.
+        passed: true
+        comment: Congestion-hotspot annotation creates a clear focal point, though
+          overall clutter in the dense region dilutes the narrative
     spec_compliance:
       score: 15
       max: 15
@@ -140,25 +141,28 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct bubble/XY chart with x, y, and size all encoded.
+        passed: true
+        comment: Correct XY bubble chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Area-scaled sizing, alpha transparency for overlap, and a (color-tier)
-          size legend are all present.
+        passed: true
+        comment: Area-scaled bubbles, alpha transparency, size legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
+        passed: true
         comment: x=transit coverage, y=congestion index, size=vehicle registrations,
-          all axes show the full data range.
+          full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches the mandated format exactly; legend labels correctly
-          describe each tier's vehicle-registration range.
+        passed: true
+        comment: Title matches mandated format; legend labels match tier ranges and
+          hotspot
     data_quality:
       score: 15
       max: 15
@@ -167,52 +171,57 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        comment: Full range of all three variables represented, including a clear
-          extreme/focal point.
+        passed: true
+        comment: All three dimensions (x, y, size) shown, plus bonus color encoding
+          and annotation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Neutral urban-planning scenario (transit coverage vs. congestion
-          vs. vehicle registrations), plausible and comprehensible.
+        passed: true
+        comment: Plausible, neutral urban-transit/congestion dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Percentages, congestion index, and vehicle-registration values are
-          all realistic and their relationships are directionally consistent with
-          real-world transit economics.
+        passed: true
+        comment: Sensible domain values; size column range differs from the spec's
+          illustrative 10-100 suggestion but remains realistic and correctly area-scaled
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 3
         max: 3
-        comment: Flat imports -> data -> style -> plot -> save structure, no functions/classes.
+        passed: true
+        comment: No functions/classes, linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: np.random.seed(42) set.
+        passed: true
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Only os, sys (path fix), numpy, pygal, pygal.style.Style — all used.
+        passed: true
+        comment: Only os, sys, numpy, pygal used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        comment: Correct and well-commented, but the inline CSS-specificity overrides
-          matching pygal's internal selectors add noticeable complexity for what is
-          a 'basic' variant.
+        passed: true
+        comment: Justified complexity for pygal's per-point size/alpha limitations;
+          no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        passed: true
+        comment: Saves plot-{THEME}.png and .html via current pygal API
     library_mastery:
       score: 8
       max: 10
@@ -221,26 +230,29 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Correctly works around pygal's lack of a per-point size API using
-          per-tier series with dots_size — the pattern the library's own docs recommend.
+        passed: true
+        comment: Style object, XY chart, css injection for a documented pygal CSS-specificity
+          gap
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        comment: Uses print_labels annotation overlay, per-chart CSS scoping via chart.uuid,
-          and interactive HTML/tooltip output — features distinctive to pygal.
+        passed: true
+        comment: print_labels annotation, per-series dots_size tiers, tooltip config,
+          bottom multi-column legend
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - hover-tooltips
+  - custom-legend
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - binning
+  - normalization
   styling:
   - alpha-blending
   - custom-colormap
