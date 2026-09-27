@@ -30,5 +30,5 @@ A diverging bar chart displays bars extending in opposite directions from a cent
 - A good version shows: every bar starting at the zero baseline, positive values extending right (or up) and negative values left (or down), so bar length stays proportional to the magnitude, on a value axis that is never truncated.
 - A good version shows: a clearly marked zero baseline, a line or an equivalent indicator across the full span of the bars, visible in both themes.
 - A good version shows: one color for every positive bar and a contrasting one for every negative bar, so direction reads from color as well as from side.
-- A good version shows: bars in order of value, so the chart runs from the largest positive to the largest negative value, with horizontal bars when category labels are long.
+- A good version shows: bars in order of value, so the chart runs from the largest positive value to the most negative one, with horizontal bars when category labels are long.
 - Expected, not a defect: most bars on one side of zero, one side reaching much further than the other, and very short bars near zero; they show which way the data leans, not an imbalance to fix.
