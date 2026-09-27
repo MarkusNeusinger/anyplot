@@ -42,7 +42,7 @@ const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.t
 const x = d3.scaleLinear().domain([0, d3.max(data, (d) => d.funding)]).nice().range([0, iw]);
 const y = d3.scaleLinear().domain(d3.extent(data, (d) => d.growth)).nice().range([ih, 0]);
 const teamExtent = d3.extent(data, (d) => d.team);
-const r = d3.scaleSqrt().domain(teamExtent).range([8, 28]);
+const r = d3.scaleSqrt().domain(teamExtent).range([7, 21]);
 // Stroke weight steps up across team-size terciles — a secondary encoding
 // that reinforces the size channel with an outline cue, mirrored in the
 // legend below so the reference set and the real bubbles agree.
@@ -88,18 +88,19 @@ g.append("text")
 // --- Force-directed decluttering (d3-specific) -------------------------------
 // A collision force gently nudges overlapping bubbles apart from their true
 // (funding, growth) position so the densest funding cluster (100-150) stays
-// individually legible instead of stacking 3-4 deep. The x/y forces pull each
-// node back toward its real data coordinate; the anchor strength is loosened
-// further (0.85 -> 0.6) and the collision padding widened again (4 -> 6px,
-// with more relaxation ticks) so the densest cluster gets enough room to
-// fully separate instead of still nudging against its neighbors.
+// individually legible instead of stacking 3-4 deep. Shrinking the radius
+// range (was 8-28, now 7-21) cuts the raw overlap footprint, which lets the
+// x/y anchor strength rise (0.6 -> 0.85) so rendered positions track their
+// true data coordinate much more closely while the collision force (padding
+// unchanged at +6px, same 320 relaxation ticks) still has enough headroom to
+// fully separate the smaller bubbles in the densest region.
 data.forEach((d) => {
   d.x = x(d.funding);
   d.y = y(d.growth);
 });
 const declutter = d3.forceSimulation(data)
-  .force("x", d3.forceX((d) => x(d.funding)).strength(0.6))
-  .force("y", d3.forceY((d) => y(d.growth)).strength(0.6))
+  .force("x", d3.forceX((d) => x(d.funding)).strength(0.85))
+  .force("y", d3.forceY((d) => y(d.growth)).strength(0.85))
   .force("collide", d3.forceCollide((d) => r(d.team) + 6))
   .stop();
 for (let i = 0; i < 320; i++) declutter.tick();
@@ -201,21 +202,20 @@ legend.append("text")
   .style("font-size", "14px")
   .text("Team Size (employees)");
 
-// Legend circles echo the real bubble treatment (brand-green tint, not a
-// generic gray outline) and reuse the same team-size stroke-width scale as
-// the real bubbles, so the reference set's outline emphasis matches the data.
+// Legend circles echo the real bubble treatment (brand-green tint at the
+// same 0.58 fill-opacity as the real marks, not a generic gray outline) and
+// reuse the same team-size stroke-width scale as the real bubbles, so the
+// reference set matches the data both in fill and outline emphasis.
 const baselineY = 110;
 const legendX = [60, 140, 210];
 legendValues.forEach((v, i) => {
-  const emphasis = 0.4 + i * 0.3;
   legend.append("circle")
     .attr("cx", legendX[i])
     .attr("cy", baselineY - legendR[i])
     .attr("r", legendR[i])
     .attr("fill", t.palette[0])
-    .attr("fill-opacity", 0.12 + i * 0.06)
+    .attr("fill-opacity", 0.58)
     .attr("stroke", t.palette[0])
-    .attr("stroke-opacity", emphasis)
     .attr("stroke-width", strokeWidth(v));
   legend.append("text")
     .attr("x", legendX[i])
