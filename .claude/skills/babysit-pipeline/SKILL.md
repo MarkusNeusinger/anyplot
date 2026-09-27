@@ -33,7 +33,11 @@ gh workflow run bulk-generate.yml -f specification_id=<spec> -f library=all
 gh workflow run impl-generate.yml -f specification_id=<spec> -f library=<lib> -f model=<model>
 ```
 
-`model` threads through generate→review→repair→merge. impl-generate
+`model` threads through generate→review→repair→merge. Leave it out
+(or pass `auto`) and impl-generate routes per pair: Opus when the pair
+has no implementation on `origin/main` yet, Sonnet for a regeneration.
+An explicit `haiku`/`sonnet`/`opus` pins the model for every pair —
+for a gap backfill that means giving up Opus on first runs. impl-generate
 auto-closes any existing open PR for the same spec/lib.
 
 ## 2 · Monitor — use the bundled scripts, don't hand-roll
@@ -148,8 +152,9 @@ the file top-down: the cheap specs finish early and the progress
 number moves.
 
 **One spec per driver invocation** —
-`.claude/skills/babysit-pipeline/run_spec.sh <spec> <model> <lib>...`
-dispatches that spec's missing libraries staggered ~150 s
+`.claude/skills/babysit-pipeline/run_spec.sh <spec> auto <lib>...`
+(`auto` = the §1 routing; every missing library is a first run, so
+Opus) dispatches that spec's missing libraries staggered ~150 s
 apart, then polls until each metadata file lands, and exits with
 `RESULT=COMPLETE|PARTIAL|TIMEOUT`. Run it via Bash
 `run_in_background: true`; it skips libraries already on main, so

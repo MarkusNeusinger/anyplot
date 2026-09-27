@@ -12,7 +12,8 @@
 #                per line) and receives the ledger: done.log, deferred.log,
 #                queue.log, results/, and an optional rescue_specs.txt
 #   [slots]      drivers in flight at once (default 2; 4 only with the user's OK)
-# Env: MODEL (default sonnet), DEADLINE (epoch seconds; no launches after it),
+# Env: MODEL (default auto: impl-generate picks opus for a first implementation,
+#      sonnet for a regeneration), DEADLINE (epoch seconds; no launches after it),
 #      STAGGER (s between launches, 90), THROTTLE_WAIT (s, 900), ANYPLOT_REPO.
 # Run it detached so it survives the session, with both streams captured
 # (the second positional argument is the slot count, not a redirect):
@@ -47,7 +48,7 @@ if [ -z "$REPO" ] || [ ! -d "$REPO/plots" ]; then
   echo "error: could not resolve the anyplot repo root (tried \$ANYPLOT_REPO, then git from $R)." >&2
   exit 2
 fi
-MODEL="${MODEL:-sonnet}"
+MODEL="${MODEL:-auto}"
 DEADLINE="${DEADLINE:-}"        # epoch seconds; no new launches at or after this
 STAGGER="${STAGGER:-90}"        # seconds between two launches
 THROTTLE_WAIT="${THROTTLE_WAIT:-900}"

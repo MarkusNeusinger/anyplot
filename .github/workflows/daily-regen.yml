@@ -1,5 +1,5 @@
 name: "Scheduled: Regen oldest specs"
-run-name: "Scheduled regen (${{ github.event.inputs.specification_id || github.event.inputs.count || '1' }} / ${{ github.event.inputs.model || 'sonnet' }})"
+run-name: "Scheduled regen (${{ github.event.inputs.specification_id || github.event.inputs.count || '1' }} / ${{ github.event.inputs.model || 'auto' }})"
 
 # Picks the N oldest specs (by most-recent implementation `updated` timestamp)
 # and re-dispatches `bulk-generate.yml` for each. Default N=1 per cron tick.
@@ -22,10 +22,12 @@ run-name: "Scheduled regen (${{ github.event.inputs.specification_id || github.e
 # not an extra one.
 #
 # bulk-generate is serialised via its own concurrency group. Default model is
-# Sonnet for higher implementation quality; can be overridden per manual run.
+# "auto": impl-generate runs a regeneration (a pair already on main, i.e.
+# almost every pair here) on Sonnet and a library the spec never had on Opus.
+# A manual run can pin one model for every pair instead.
 #
 # Triggers:
-#   - schedule: once daily at 02:17 UTC → Sonnet
+#   - schedule: once daily at 02:17 UTC → auto (Sonnet for regenerations)
 #   - workflow_dispatch: manual, with inputs for spec id, model, count, dry-run
 #     (also used by the watchdog's cron-liveness rescue, with all defaults)
 
@@ -39,11 +41,12 @@ on:
         required: false
         default: ''
       model:
-        description: "Claude model to use across all generate / review / repair steps"
+        description: "Claude model for all generate / review / repair steps; auto = opus for a pair's first implementation, sonnet for a regeneration"
         required: false
         type: choice
-        default: 'sonnet'
+        default: 'auto'
         options:
+          - auto
           - haiku
           - sonnet
           - opus
@@ -239,10 +242,11 @@ jobs:
   # dispatch in the same job so we don't have to aggregate matrix outputs back
   # into a separate dispatch job (which is awkward in GitHub Actions).
   #
-  # The two pre-flight LLM steps are HARDCODED to Haiku regardless of
-  # `inputs.model` — they're narrow, cheap audits. The user-selected model is
-  # passed through to bulk-generate (and from there to impl-generate / review /
-  # repair) unchanged.
+  # The two pre-flight LLM steps are HARDCODED to Sonnet regardless of
+  # `inputs.model` — narrow audits (on Haiku until 2026-09). The user-selected
+  # model ("auto" unless a manual run pins one) is passed through to
+  # bulk-generate (and from there to impl-generate / review / repair)
+  # unchanged.
   # ============================================================================
   preflight-dispatch:
     needs: pick
@@ -297,7 +301,7 @@ jobs:
         uses: anthropics/claude-code-action@4036a180cf690f49529f5d8c79c998855287f590  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: '--model haiku --settings ${{ github.workspace }}/.claude/settings.json'
+          claude_args: '--model sonnet --settings ${{ github.workspace }}/.claude/settings.json'
           allowed_bots: '*'
           prompt: |
             Read `prompts/workflow-prompts/spec-polish-claude.md` and follow those instructions.
@@ -313,7 +317,7 @@ jobs:
         uses: anthropics/claude-code-action@4036a180cf690f49529f5d8c79c998855287f590  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: '--model haiku --settings ${{ github.workspace }}/.claude/settings.json'
+          claude_args: '--model sonnet --settings ${{ github.workspace }}/.claude/settings.json'
           allowed_bots: '*'
           prompt: |
             Read `prompts/workflow-prompts/impl-similarity-claude.md` and follow those instructions.
@@ -347,7 +351,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_ID: ${{ matrix.spec_id }}
-          MODEL: ${{ inputs.model || 'sonnet' }}
+          MODEL: ${{ inputs.model || 'auto' }}
           CHANGE_REQUESTS: ${{ steps.collect.outputs.change_requests }}
         run: |
           echo "::notice::Dispatching bulk-generate for ${SPEC_ID} (all libs, model=${MODEL})"

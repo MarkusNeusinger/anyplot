@@ -248,6 +248,33 @@ gh workflow run bulk-generate.yml -f specification_id=all -f library=matplotlib
 
 ---
 
+## Pipeline models
+
+`impl-generate.yml` picks the Claude model for each (spec, library) pair and
+threads it into the review and every repair of that pair's PR:
+
+| Situation | Model |
+|-----------|-------|
+| First implementation: the pair has no implementation file on `origin/main` yet | Opus |
+| Regeneration: the pair already has an implementation on `origin/main` | Sonnet |
+| Explicit `model` input (`haiku`, `sonnet`, or `opus`) | That model, for every pair |
+
+The routing applies whenever nobody chooses a model: a `generate:{library}`
+label, a `bulk-generate.yml` or `daily-regen.yml` run with the default
+`model=auto`, and the watchdog's generation retries. A failed generation
+forwards its resolved model to its own retry, so a first run stays on Opus.
+To pin one model for a whole run, pass it explicitly:
+
+```bash
+gh workflow run bulk-generate.yml -f specification_id=scatter-basic -f library=all -f model=sonnet
+```
+
+The other pipeline LLM steps use fixed models: `spec-create.yml` runs on Opus,
+and the spec polish and cross-library similarity audit in `daily-regen.yml` run
+on Sonnet.
+
+---
+
 ## CLI model tiers
 
 The agentic workflows use abstract model tiers (`small`, `medium`, `large`) instead of CLI-specific model names. This allows the same command to work across different AI tools.

@@ -40,11 +40,12 @@ on:
         required: false
         type: string
       model:
-        description: "Claude model to use (also threaded into review + repair)"
+        description: "Claude model (also threaded into review + repair); auto = opus for the pair's first implementation, sonnet for a regeneration"
         required: false
         type: choice
-        default: 'sonnet'
+        default: 'auto'
         options:
+          - auto
           - haiku
           - sonnet
           - opus
@@ -86,6 +87,14 @@ jobs:
       # ========================================================================
       # Setup: Extract inputs and validate
       # ========================================================================
+      # Checkout comes first: "Extract inputs" resolves the model from
+      # origin/main (first implementation vs. regeneration), and every model
+      # consumer below reads that one resolved value.
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+
       - name: Extract inputs
         id: inputs
         env:
@@ -117,11 +126,6 @@ jobs:
             exit 1
           fi
 
-          # Default model when caller didn't supply one (label trigger path).
-          if [ -z "$MODEL" ]; then
-            MODEL="sonnet"
-          fi
-
           # Derive LANGUAGE + EXT from LIBRARY. Mirrors core/constants.py LIBRARIES_METADATA;
           # new non-Python entries get listed here too.
           case "$LIBRARY" in
@@ -149,6 +153,23 @@ jobs:
               ;;
           esac
 
+          # Model routing. An explicit model always wins: any dispatch input
+          # other than "auto", including the model a failed run forwards to its
+          # own retry. Without one ("auto" from bulk-generate, daily-regen or
+          # the watchdog; empty on the label trigger) a pair's first
+          # implementation runs on opus and a regeneration on sonnet. "First"
+          # means no implementation file on origin/main yet. The resolved value
+          # is threaded into review + repair, so one PR runs on one model.
+          if [ -n "$MODEL" ] && [ "$MODEL" != "auto" ]; then
+            MODEL_SOURCE="explicit"
+          elif git cat-file -e "origin/main:plots/$SPEC_ID/implementations/$LANGUAGE/$LIBRARY$EXT" 2>/dev/null; then
+            MODEL="sonnet"
+            MODEL_SOURCE="auto: regeneration"
+          else
+            MODEL="opus"
+            MODEL_SOURCE="auto: first implementation"
+          fi
+
           echo "specification_id=$SPEC_ID" >> $GITHUB_OUTPUT
           echo "library=$LIBRARY" >> $GITHUB_OUTPUT
           echo "language=$LANGUAGE" >> $GITHUB_OUTPUT
@@ -156,12 +177,7 @@ jobs:
           echo "issue_number=$ISSUE" >> $GITHUB_OUTPUT
           echo "model=$MODEL" >> $GITHUB_OUTPUT
 
-          echo "::notice::Generating $LANGUAGE/$LIBRARY for $SPEC_ID (issue: ${ISSUE:-none}, model: ${MODEL}, ext: ${EXT})"
-
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-        with:
-          fetch-depth: 0
+          echo "::notice::Generating $LANGUAGE/$LIBRARY for $SPEC_ID (issue: ${ISSUE:-none}, model: ${MODEL} (${MODEL_SOURCE}), ext: ${EXT})"
 
       - name: Read issue number from specification.yaml (fallback)
         id: spec_issue

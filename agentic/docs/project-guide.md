@@ -778,6 +778,11 @@ The new architecture separates specification and implementation processes:
 - `bulk-generate.yml` dispatches impl-generate runs sequentially with a configurable pause between dispatches (default 120 s) to stay under the Claude concurrency budget
 - Spec merge operations are serialized (one at a time) to prevent race conditions
 
+**Models:**
+- `impl-generate.yml` routes each (spec, library) pair: Opus for its first implementation (no implementation file on `origin/main` yet), Sonnet for a regeneration. The resolved model is threaded into that PR's review and repairs.
+- The `model` input (default `auto`) on `impl-generate.yml`, `bulk-generate.yml` and `daily-regen.yml` overrides the routing when set to `haiku`, `sonnet` or `opus`; label-triggered runs always route.
+- Fixed models: `spec-create.yml` runs on Opus; the spec polish and cross-library similarity audit in `daily-regen.yml` run on Sonnet. See `docs/workflows/overview.md#pipeline-models`.
+
 ## GitHub Issue Labels
 
 The project uses a structured labeling system. Labels are managed with the
