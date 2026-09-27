@@ -775,7 +775,8 @@ class TestCollect:
         assert record["regen_counts"] == {"total": 1, "visible": 1, "permission": 0}
         assert record["order"] == "forward"
 
-    def test_permission_citation_is_counted_apart(self, bundles, workspace, tmp_path):
+    @pytest.mark.parametrize("ref", ["C2", "c2"])  # c2: the gate coerces the ref before judging
+    def test_permission_citation_is_counted_apart(self, bundles, workspace, tmp_path, ref):
         """regen_counts follows the gate record: a cited permission is never a visible improvement."""
         tmp = rt.TmpPaths(tmp_path / "tmp")
         cell = _cell("r-bubble-basic-matplotlib-v1-v0", "regen", "forward")
@@ -789,7 +790,7 @@ class TestCollect:
         regen = {
             "prev_rescored": 87,
             "improvements": [
-                {"ref": "C2", "what": "overlap", "where_visible": "centre cluster"},
+                {"ref": ref, "what": "overlap", "where_visible": "centre cluster"},
                 {"ref": "W1", "what": "legend larger", "where_visible": ""},
             ],
             "regressions": [],
@@ -820,14 +821,16 @@ class TestCollect:
                 {"ref": "C2", "where_visible": "a"},
                 {"ref": "C1", "where_visible": "b"},
                 {"ref": "new", "where_visible": " "},
+                {"ref": "c2", "where_visible": "a"},  # the gate coerces c2 -> C2: a permission, never visible
                 "not an item",
             ]
         }
-        assert rt.improvement_counts(regen, labelled) == {"total": 3, "visible": 1, "permission": 1}
+        assert rt.improvement_counts(regen, labelled) == {"total": 4, "visible": 1, "permission": 2}
+        assert regen["improvements"][3]["ref"] == "c2"  # the record's raw regen stays untouched
         # A section without kind prefixes (the pinned v1 specs) has no permissions.
         assert rt.improvement_counts(regen, "## What a good version looks like\n- x\n- y\n") == {
-            "total": 3,
-            "visible": 2,
+            "total": 4,
+            "visible": 3,
             "permission": 0,
         }
         assert rt.improvement_counts(None, labelled) is None

@@ -70,6 +70,7 @@ from typing import Any
 from automation.scripts import review_provenance
 from automation.scripts import review_retest_metrics as metrics
 from automation.scripts.regen_gate import (
+    normalize_regen,
     parse_characteristics,
     parse_record_markers,
     permission_refs,
@@ -962,11 +963,16 @@ def improvement_counts(regen: Any, spec_text: str) -> dict[str, int] | None:
     with the harness's own ``regen_gate``, so it works under any rules_ref; a
     spec without kind prefixes has no permissions, and the counts then equal
     the plain ones. ``None`` when ``review_regen.json`` lists no improvements.
+    Refs are judged after the gate's own ``normalize_regen`` (``c2`` counts as
+    ``C2``). One divergence is deliberate: a payload the gate rejects as
+    ``regen_json_invalid`` (its record zeroes the counts) is still counted
+    here, item by item — mirroring ``validate_regen`` is not worth it.
     """
     if not isinstance(regen, dict) or not isinstance(regen.get("improvements"), list):
         return None
+    normalized, _ = normalize_regen(regen)  # the gate judges the coerced payload (c2 -> C2)
     permissions = permission_refs(parse_characteristics(spec_text))
-    items = [i for i in regen["improvements"] if isinstance(i, dict)]
+    items = [i for i in normalized["improvements"] if isinstance(i, dict)]
     counted = [i for i in items if str(i.get("ref") or "") not in permissions]
     return {
         "total": len(items),
