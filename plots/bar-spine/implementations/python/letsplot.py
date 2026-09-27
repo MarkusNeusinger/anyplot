@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
 Library: letsplot 4.11.0 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-09-27
@@ -132,7 +132,7 @@ plot = (
     + scale_fill_manual(values={"Retained": IMPRINT[0], "Churned": IMPRINT[1]}, name="Status")
     + scale_x_continuous(expand=[0, 0], breaks=list(x_mids), labels=tiers)
     + scale_y_continuous(expand=[0, 0], breaks=[0.0, 0.25, 0.5, 0.75, 1.0], labels=["0%", "25%", "50%", "75%", "100%"])
-    + labs(x="Subscription Tier", y="Customer Proportion", title="bar-spine · letsplot · anyplot.ai")
+    + labs(x="Subscription Tier", y="Customer Proportion", title="bar-spine · python · letsplot · anyplot.ai")
     + anyplot_theme
     + ggsize(800, 450)
 )
