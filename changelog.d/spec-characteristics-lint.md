@@ -10,7 +10,7 @@
   `-basic` variant bullet, possible contradictions with Notes). Before, a
   spec-only PR skipped pytest, so a section the gate would misread could merge
   unchecked. spec-create runs both checks before it commits, and `--strict`
-  makes the style rules blocking for the planned backfill.
+  makes the style rules blocking for the planned backfill. (#11948)
 
 ### Changed
 
@@ -26,7 +26,7 @@
   DQ-01 aspect and never shaped into the data. The review also scores a
   related but different form (a donut for a pie) as a partial SC-01 on any
   spec, deducts spline overshoot under SC-03, and names missed Notes or
-  `A good version shows:` bullets under SC-02.
+  `A good version shows:` bullets under SC-02. (#11948)
 
 ### Fixed
 
@@ -35,4 +35,4 @@
   now joined to the bullet above it. The regeneration comparison in the review
   prompt also exempts what SC-03 exempts (categorical jitter, layout-positioned
   types, offsets the spec asks for) from its "marks moved" regression, and no
-  longer counts an element the spec requires as an added encoding.
+  longer counts an element the spec requires as an added encoding. (#11948)
