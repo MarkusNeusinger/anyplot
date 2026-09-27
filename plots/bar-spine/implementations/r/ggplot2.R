@@ -20,6 +20,9 @@ IMPRINT_PALETTE <- c(
   "#AE3030"  # 5 - matte red   (semantic: churned / bad)
 )
 SEGMENT_TEXT <- "#FFFDF6" # warm near-white, legible on both fills
+# Imprint "neutral" anchor happens to equal INK; used below for a reference
+# trend line so it reads as structural (like gridlines), not a 3rd data series.
+NEUTRAL <- INK
 
 # --- Data -----------------------------------------------------------------
 # SaaS customer base split by subscription tier (bar width = tier size) and
@@ -56,14 +59,31 @@ spine_df <- df_counts %>%
   ) %>%
   ungroup()
 
+# Retained/churned boundary per tier == the retention rate itself; connecting
+# it across tiers turns the width+color pattern into an explicit trend line.
+retention_trend <- spine_df %>%
+  filter(status == "Retained") %>%
+  arrange(xmid)
+
 # --- Plot -------------------------------------------------------------------
 plot_title <- "Customer Retention by Subscription Tier · bar-spine · r · ggplot2 · anyplot.ai"
+plot_subtitle <- "Retention climbs steadily from Basic to Enterprise"
 title_fontsize <- max(8, round(12 * 67 / nchar(plot_title)))
 
 p <- ggplot(spine_df) +
   geom_rect(
     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = status),
     color = NA
+  ) +
+  geom_line(
+    data = retention_trend,
+    aes(x = xmid, y = ymax, group = 1),
+    color = NEUTRAL, linewidth = 0.5, linetype = "22", alpha = 0.85
+  ) +
+  geom_point(
+    data = retention_trend,
+    aes(x = xmid, y = ymax),
+    shape = 21, size = 2.2, stroke = 0.8, color = NEUTRAL, fill = PAGE_BG
   ) +
   geom_text(
     data = filter(spine_df, prop > 0.06),
@@ -84,6 +104,7 @@ p <- ggplot(spine_df) +
   ) +
   labs(
     title = plot_title,
+    subtitle = plot_subtitle,
     x = "Subscription Tier (bar width ∝ customer base)",
     y = "Share of Customers"
   ) +
@@ -98,6 +119,7 @@ p <- ggplot(spine_df) +
     axis.text          = element_text(color = INK_SOFT, size = 8),
     axis.ticks         = element_blank(),
     plot.title         = element_text(color = INK, size = title_fontsize, face = "bold"),
+    plot.subtitle      = element_text(color = INK_SOFT, size = 9, face = "italic", margin = margin(t = 2, b = 6)),
     legend.text        = element_text(color = INK_SOFT, size = 8),
     legend.title       = element_text(color = INK, size = 10)
   )
