@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' bar-spine: Spine Plot for Two-Variable Proportions
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 91/100 | Created: 2026-09-02
+#' Quality: 88/100 | Updated: 2026-09-27
 
 library(ggplot2)
 library(dplyr)
