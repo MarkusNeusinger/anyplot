@@ -46,9 +46,20 @@ bubbles[41] = [61, 3, 85, 3 / 61]; // large but stagnant market leader
 const indexValues = bubbles.map((b) => b[2]);
 const indexMin = Math.min(...indexValues);
 const indexMax = Math.max(...indexValues);
-const efficiencyValues = bubbles.map((b) => b[3]);
-const efficiencyMin = Math.min(...efficiencyValues);
-const efficiencyMax = Math.max(...efficiencyValues);
+
+// The raw efficiency values pile up in a narrow band for the 55-95 R&D-spend
+// cluster (heavy spend converges toward the same growth-per-dollar ratio), so
+// a linear color scale over the raw value left most of that cluster the same
+// dark blue. Mapping color to each bubble's PERCENTILE RANK instead spreads
+// the full color range evenly across all 65 bubbles regardless of how the
+// underlying efficiency values are distributed — order is preserved (still
+// low-to-high growth-per-R&D-dollar), only the color spacing changes.
+const rankOrder = bubbles.map((_, i) => i).sort((a, b) => bubbles[a][3] - bubbles[b][3]);
+const ranks = new Array(bubbles.length);
+rankOrder.forEach((bubbleIdx, order) => {
+  ranks[bubbleIdx] = order / (bubbles.length - 1);
+});
+bubbles.forEach((b, i) => b.push(ranks[i]));
 
 // Scale bubble diameter by sqrt(value) so on-screen AREA (not radius) is
 // proportional to the market index.
@@ -83,7 +94,7 @@ const restBubbles = bubbles
 const chart = echarts.init(document.getElementById("container"));
 
 // --- Size legend (three reference bubbles drawn as graphic elements) -------
-const legendCx = size.width - 130;
+const legendCx = size.width - 105;
 const legendSamples = [
   { value: indexMin, cy: size.height * 0.26 },
   { value: (indexMin + indexMax) / 2, cy: size.height * 0.48 },
@@ -132,7 +143,7 @@ chart.setOption({
     left: "center",
     textStyle: { color: t.ink, fontSize: 22 },
   },
-  grid: { left: 170, right: 260, top: 110, bottom: 100 },
+  grid: { left: 170, right: 210, top: 110, bottom: 100 },
   xAxis: {
     type: "value",
     name: "R&D Investment ($M)",
@@ -156,20 +167,21 @@ chart.setOption({
     splitLine: { lineStyle: { color: t.grid } },
   },
   // Idiomatic ECharts feature: a continuous visualMap drives the bubble-cloud
-  // color from the derived efficiency dimension (index 3), giving every
-  // bubble a distinct hue by growth-per-R&D-dollar instead of one flat wash —
-  // this is what separates individual bubbles in the densest cluster once
-  // opacity blending alone stops being enough. It targets only the main
-  // cloud (seriesIndex 0); the standout series keeps its solid brand-green
-  // spotlight untouched.
+  // color from the derived efficiency-rank dimension (index 4), giving every
+  // bubble a distinct hue by relative growth-per-R&D-dollar instead of one
+  // flat wash — ranking (rather than the raw ratio) is what separates
+  // individual bubbles in the densest cluster, where raw efficiency values
+  // converge too tightly for a linear scale to distinguish. It targets only
+  // the main cloud (seriesIndex 0); the standout series keeps its solid
+  // brand-green spotlight untouched.
   // Positioned in the top portion of the left margin (well above the
   // vertically-centered y-axis name) so its side labels never collide with
   // the rotated axis title.
   visualMap: {
     type: "continuous",
-    dimension: 3,
-    min: efficiencyMin,
-    max: efficiencyMax,
+    dimension: 4,
+    min: 0,
+    max: 1,
     seriesIndex: 0,
     orient: "vertical",
     left: 24,
