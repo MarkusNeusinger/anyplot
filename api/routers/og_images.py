@@ -17,7 +17,7 @@ from api.analytics import track_og_image
 from api.cache import cache_key, get_cache, set_cache
 from api.dependencies import optional_db
 from core.database import SpecRepository
-from core.images import create_branded_og_image, create_home_og_image, create_og_collage
+from core.images import RESPONSIVE_SIZES, create_branded_og_image, create_home_og_image, create_og_collage
 
 
 logger = logging.getLogger(__name__)
@@ -137,18 +137,55 @@ def _get_http_client() -> httpx.AsyncClient:
     return _http_client
 
 
+# The width derivatives `create_responsive_variants` writes beside every render
+# (`plot-light.png` → `plot-light_400.png`, `_800`, `_1200`). A URL that already
+# ends in one of these is a variant and is fetched as given.
+_SIZE_VARIANT_SUFFIXES = tuple(f"_{width}.png" for width in RESPONSIVE_SIZES)
+
+
+def _og_source_url(url: str) -> str | None:
+    """The 800px derivative of a full-size PNG render URL, or None if there is none to prefer.
+
+    Any `*.png` that is not already a size variant maps to its `_800` sibling:
+    `plot-light.png` → `plot-light_800.png`, `plot-dark.png` →
+    `plot-dark_800.png`, legacy `plot.png` → `plot_800.png`. Matching the
+    extension rather than one filename keeps the shortcut alive across a
+    rename; the old `/plot.png` match went dead when previews moved to
+    `plot-light.png`.
+    """
+    if not url.endswith(".png") or url.endswith(_SIZE_VARIANT_SUFFIXES):
+        return None
+    return f"{url[:-4]}_800.png"
+
+
 async def _fetch_image(url: str) -> bytes:
-    """Fetch an image from a URL, trying the 800px variant first for efficiency."""
+    """Fetch a plot render for an OG card, preferring its 800px derivative.
+
+    The OG layouts need no more: the branded card's plot box is 1068x338 px and
+    a collage slot's 277x156 px, while originals are typically ~4800 px wide
+    (up to ~5900). Decoding originals costs tens to hundreds of MiB per render,
+    and glibc keeps those freed blocks in the render threads' arenas, so every
+    such cache miss ratchets the resident size up for good. If the derivative
+    cannot be fetched, the original is used and a warning is logged, so a
+    renamed derivative shows up in the logs instead of silently switching the
+    shortcut off.
+    """
     client = _get_http_client()
-    # Prefer smaller responsive variant for OG collage (each slot is ~400px wide)
-    if url and url.endswith("/plot.png"):
-        small_url = url.replace("/plot.png", "/plot_800.png")
+    small_url = _og_source_url(url)
+    if small_url is not None:
         try:
             response = await client.get(small_url)
             response.raise_for_status()
             return response.content
-        except Exception:
-            pass  # Fall back to original
+        except Exception as exc:
+            reason = str(exc).splitlines()[0] if str(exc) else ""
+            logger.warning(
+                "OG source %s unavailable (%s: %s); falling back to full-size %s",
+                small_url,
+                type(exc).__name__,
+                reason,
+                url,
+            )
     response = await client.get(url)
     response.raise_for_status()
     return response.content

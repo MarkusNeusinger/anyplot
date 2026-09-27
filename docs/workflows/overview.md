@@ -17,16 +17,35 @@ Issue + [spec-request] label
 spec-create.yml
   |-- Creates branch: specification/{spec-id}
   |-- Generates: specification.md + specification.yaml
-  |-- Creates PR --> main
+  |-- Claude opens the PR --> main as claude[bot] (CI runs without a manual approval)
   |-- Posts analysis comment
        |
-       v (maintainer adds [approved] label to Issue)
+       v (repository owner adds [approved] label to Issue)
        |
 spec-create.yml (merge job)
-  |-- Merges PR to main
+  |-- Verifies the PR: opened by the Claude app, from specification/{spec-id}
+  |   into main, references the issue, changes only the spec files
+  |-- Enables auto-merge: GitHub squash-merges once the required checks pass
+  |-- Waits up to 15 minutes for the merge to land
+  |-- Dispatches sync-postgres.yml
   |-- Adds [spec-ready] label
-  |-- Triggers sync-postgres.yml
 ```
+
+The spec PR is opened by the Claude GitHub App rather than by the workflow's
+`GITHUB_TOKEN`. Since GitHub's
+[2026-06-11 change](https://github.blog/changelog/2026-06-11-bot-created-pull-requests-can-run-workflows-if-approved/),
+workflow runs on a pull request that `GITHUB_TOKEN` opens or updates wait at
+`action_required` until someone approves them, so a `GITHUB_TOKEN` spec PR never
+got the required checks and could not merge on its own.
+
+The merge job acts only on an `approved` label that the repository owner adds.
+It refuses, with a comment on the issue, any PR that fails a check — for
+example, one that changes a file outside `plots/{spec-id}/specification.md`,
+`specification.yaml`, and the `.gitkeep` placeholders under `implementations/`
+and `metadata/`. Don't approve pending workflow runs for such a PR, and don't
+merge it by hand. If the merge doesn't land within 15 minutes, the job turns
+auto-merge off again and says so on the issue; once the checks are green,
+re-run the job or remove and re-add `approved`.
 
 ### 2. Report pipeline
 

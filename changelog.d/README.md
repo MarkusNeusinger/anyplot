@@ -47,8 +47,9 @@ Rules, all enforced by `uv run python -m tools.changelog check`:
 The CI job "Changelog (fragment)" requires a fragment in every PR — except
 catalogue-only PRs (everything under `plots/`), PRs labelled `skip-changelog`,
 and the two bot authors: the automated plot pipeline (`github-actions[bot]`:
-spec-create, impl-generate/review/repair/merge, spec auto-polish, daily-regen)
-and Dependabot. Those are exactly the classes `CLAUDE.md` already exempts and
+impl-generate/review/repair/merge, daily-regen) and Dependabot. Spec-create and
+spec auto-polish open their PRs as `claude[bot]` and pass as catalogue-only.
+Those are exactly the classes `CLAUDE.md` already exempts and
 the release summarizes in aggregate. The job also refuses bullets ADDED to
 `[Unreleased]` directly.
 

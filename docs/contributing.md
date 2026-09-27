@@ -29,7 +29,7 @@ By participating, you agree to our [Code of Conduct](../CODE_OF_CONDUCT.md).
    - Assigns a unique spec-id
    - Creates a PR with `specification.md` and `specification.yaml`
 4. **Review the generated spec** (PR comments)
-5. **Maintainer adds `approved` label** to the Issue (not the PR)
+5. **The repository owner adds the `approved` label** to the Issue (not the PR); the merge job ignores the label from anyone else
 6. **Spec merges to main** with `spec-ready` label
 
 ---

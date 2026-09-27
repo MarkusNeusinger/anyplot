@@ -3,19 +3,38 @@ run-name: "Create Spec: issue #${{ github.event.issue.number }}"
 
 # Creates new specification with approval gate
 # Flow:
-# 1. User adds `spec-request` label → creates branch + PR
-# 2. Maintainer adds `approved` label → merges PR to main
+# 1. User adds `spec-request` label → Claude writes the spec, pushes
+#    specification/{id} and opens the PR as claude[bot] (Claude GitHub App)
+# 2. Owner adds `approved` label → the merge job verifies the PR, squash-merges
+#    it through auto-merge once the required checks pass, dispatches
+#    sync-postgres.yml and labels the issue `spec-ready`
+#
+# Why Claude opens the PR instead of this workflow's GITHUB_TOKEN: since
+# GitHub's 2026-06-11 change ("Bot-created pull requests can run workflows if
+# approved"), pull_request runs on a PR that GITHUB_TOKEN opens or updates sit
+# at `action_required` until a human approves them. The main ruleset requires
+# Run Linting, Run Tests, Run Frontend Tests and Changelog (fragment), so a
+# GITHUB_TOKEN spec PR could not merge until the owner approved its runs by
+# hand (#11847: "the base branch policy prohibits the merge"). A PR opened with
+# the Claude App token that claude-code-action mints for the Claude step runs
+# CI like any other PR — the pattern daily-regen's spec polish already uses.
 #
 # Triggers:
 # - spec-request label added → create specification + PR
-# - approved label added (on spec-request issue) → merge PR
+# - approved label added by the repository owner (on a spec-request issue) → merge PR
 
 on:
   issues:
     types: [labeled]
 
 concurrency:
-  group: spec-create-${{ github.event.issue.number }}
+  # One lane per issue for the two labels that drive this workflow, so an
+  # `approved` added while `spec-request` is still creating the spec queues
+  # behind it instead of racing it. Every other label gets a lane of its own
+  # (the run id): GitHub keeps only ONE pending run per concurrency group and
+  # cancels the older pending run when another one queues, so an unrelated
+  # label event in the same lane could cancel a queued approval.
+  group: spec-create-${{ github.event.issue.number }}-${{ contains(fromJSON('["spec-request", "approved"]'), github.event.label.name) && 'pipeline' || github.run_id }}
   cancel-in-progress: false
 
 jobs:
@@ -29,7 +48,7 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
-      id-token: write
+      id-token: write  # claude-code-action exchanges it for the Claude App token
 
     outputs:
       specification_id: ${{ steps.process.outputs.specification_id }}
@@ -45,10 +64,10 @@ jobs:
           # Skip if already has specification-id in title
           if [[ "$ISSUE_TITLE" =~ ^\[[a-z0-9-]+\] ]]; then
             echo "::notice::Skipping: Issue already has specification ID in title"
-            echo "should_run=false" >> $GITHUB_OUTPUT
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          echo "should_run=true" >> $GITHUB_OUTPUT
+          echo "should_run=true" >> "$GITHUB_OUTPUT"
 
       - name: Checkout repository
         if: steps.check.outputs.should_run == 'true'
@@ -64,6 +83,10 @@ jobs:
           gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/reactions \
             -f content=eyes
 
+      # Both Claude steps below carry the same instructions (the retry adds a
+      # note on resuming). `gh` inside a Claude step runs with the Claude App
+      # token, so the PR it opens (step 9) is authored by claude[bot]; the token
+      # is revoked when the step ends, so every later step uses GITHUB_TOKEN.
       - name: Process with Claude
         if: steps.check.outputs.should_run == 'true'
         id: process
@@ -142,6 +165,8 @@ jobs:
                  - `tags`: Follow spec-tags-generator guide (4 dimensions: plot_type, data_type, domain, features)
                - Create empty folder: `plots/{specification-id}/implementations/python/`
                - Create empty folder: `plots/{specification-id}/metadata/python/`
+               - Touch nothing outside `plots/{specification-id}/`: the merge job refuses a PR
+                 that changes any other file.
 
             8. **Commit and push:**
                ```bash
@@ -154,12 +179,36 @@ jobs:
                git push -u origin "specification/{specification-id}"
                ```
 
-            9. **Update issue title:**
+            9. **Open the pull request:**
+               `gh` in this step is authenticated as the Claude GitHub App, so the PR is opened
+               by `claude[bot]`. That is deliberate: CI runs on it without a manual approval,
+               and the merge job only merges a spec PR the Claude app opened. Run this with
+               `{specification-id}` filled in, unchanged otherwise — same title and body, and
+               no labels, reviewers or auto-merge:
+               ```bash
+               SPEC_ID="{specification-id}"
+               EXISTING=$(gh pr list --repo "${{ github.repository }}" --head "specification/${SPEC_ID}" --base main --state open --json url -q '.[0].url // empty')
+               if [ -n "$EXISTING" ]; then
+                 echo "PR already open: $EXISTING"
+               else
+                 SPEC_CONTENT=$(cat "plots/${SPEC_ID}/specification.md")
+                 BODY_FILE=$(mktemp)
+                 printf '## New Specification: `%s`\n\nRelated to #%s\n\n---\n\n### specification.md\n\n%s\n\n---\n\n**Next:** Add `approved` label to the issue to merge this PR.\n\n---\n:robot: *[spec-create workflow](%s)*\n' \
+                   "$SPEC_ID" "$ISSUE_NUMBER" "$SPEC_CONTENT" \
+                   "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" > "$BODY_FILE"
+                 gh pr create --repo "${{ github.repository }}" --base main --head "specification/${SPEC_ID}" \
+                   --title "spec: add ${SPEC_ID} specification" --body-file "$BODY_FILE"
+               fi
+               ```
+               If `gh pr create` fails, print its error and continue with step 10; the workflow
+               reports the missing PR on the issue.
+
+            10. **Update issue title:**
                ```bash
                gh issue edit $ISSUE_NUMBER --title "[{specification-id}] {original title}"
                ```
 
-            10. **Output for workflow:**
+            11. **Output for workflow:**
                After completing, print these lines exactly:
                ```
                SPECIFICATION_ID={specification-id}
@@ -169,10 +218,11 @@ jobs:
             ---
 
             ## Important Rules
-            - Do NOT create a PR (the workflow does that)
-            - Do NOT add labels
+            - Open exactly ONE pull request, with the command in step 9 (it reuses an open one)
+            - Do NOT add labels (to the issue or the PR)
+            - Do NOT enable auto-merge or merge anything (the merge job does that after approval)
             - Do NOT close the issue
-            - STOP after pushing the branch
+            - STOP after step 11
 
       - name: Retry Claude (on failure)
         if: steps.check.outputs.should_run == 'true' && steps.process.outcome == 'failure'
@@ -191,6 +241,13 @@ jobs:
             ## Task: Create New Specification
 
             You are creating a new plot specification.
+
+            **This is a retry:** a first attempt failed partway, in this same checkout. Before
+            step 1, look at what it left: `git status`, `git branch -a`, and the current issue
+            title (`gh issue view $ISSUE_NUMBER --json title -q .title`). A
+            `plots/{specification-id}/` directory on a `specification/{specification-id}` branch
+            is that attempt's work, not a duplicate: finish the steps it did not reach instead of
+            starting over, and never open a second pull request.
 
             ### Issue Details
             - **Title:** ${{ github.event.issue.title }}
@@ -251,6 +308,8 @@ jobs:
                  - `tags`: Follow spec-tags-generator guide (4 dimensions: plot_type, data_type, domain, features)
                - Create empty folder: `plots/{specification-id}/implementations/python/`
                - Create empty folder: `plots/{specification-id}/metadata/python/`
+               - Touch nothing outside `plots/{specification-id}/`: the merge job refuses a PR
+                 that changes any other file.
 
             8. **Commit and push:**
                ```bash
@@ -263,12 +322,36 @@ jobs:
                git push -u origin "specification/{specification-id}"
                ```
 
-            9. **Update issue title:**
+            9. **Open the pull request:**
+               `gh` in this step is authenticated as the Claude GitHub App, so the PR is opened
+               by `claude[bot]`. That is deliberate: CI runs on it without a manual approval,
+               and the merge job only merges a spec PR the Claude app opened. Run this with
+               `{specification-id}` filled in, unchanged otherwise — same title and body, and
+               no labels, reviewers or auto-merge:
+               ```bash
+               SPEC_ID="{specification-id}"
+               EXISTING=$(gh pr list --repo "${{ github.repository }}" --head "specification/${SPEC_ID}" --base main --state open --json url -q '.[0].url // empty')
+               if [ -n "$EXISTING" ]; then
+                 echo "PR already open: $EXISTING"
+               else
+                 SPEC_CONTENT=$(cat "plots/${SPEC_ID}/specification.md")
+                 BODY_FILE=$(mktemp)
+                 printf '## New Specification: `%s`\n\nRelated to #%s\n\n---\n\n### specification.md\n\n%s\n\n---\n\n**Next:** Add `approved` label to the issue to merge this PR.\n\n---\n:robot: *[spec-create workflow](%s)*\n' \
+                   "$SPEC_ID" "$ISSUE_NUMBER" "$SPEC_CONTENT" \
+                   "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" > "$BODY_FILE"
+                 gh pr create --repo "${{ github.repository }}" --base main --head "specification/${SPEC_ID}" \
+                   --title "spec: add ${SPEC_ID} specification" --body-file "$BODY_FILE"
+               fi
+               ```
+               If `gh pr create` fails, print its error and continue with step 10; the workflow
+               reports the missing PR on the issue.
+
+            10. **Update issue title:**
                ```bash
                gh issue edit $ISSUE_NUMBER --title "[{specification-id}] {original title}"
                ```
 
-            10. **Output for workflow:**
+            11. **Output for workflow:**
                After completing, print these lines exactly:
                ```
                SPECIFICATION_ID={specification-id}
@@ -278,10 +361,11 @@ jobs:
             ---
 
             ## Important Rules
-            - Do NOT create a PR (the workflow does that)
-            - Do NOT add labels
+            - Open exactly ONE pull request, with the command in step 9 (it reuses an open one)
+            - Do NOT add labels (to the issue or the PR)
+            - Do NOT enable auto-merge or merge anything (the merge job does that after approval)
             - Do NOT close the issue
-            - STOP after pushing the branch
+            - STOP after step 11
 
       - name: Extract outputs
         if: steps.check.outputs.should_run == 'true'
@@ -292,8 +376,12 @@ jobs:
           SPEC_ID=$(echo "$TITLE" | sed -n 's/^\[\([a-z0-9-]*\)\].*/\1/p')
 
           if [[ -z "$SPEC_ID" ]]; then
-            echo "::error::Could not extract specification ID from title: $TITLE"
-            exit 1
+            # A duplicate stops Claude before it renames the issue, so there is no
+            # id to extract. Hand over to the validate step, which closes the issue
+            # as a duplicate or fails with an issue comment.
+            echo "::warning::No specification ID in the issue title: $TITLE"
+            echo "specification_id=" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
           # Reserved spec slugs collide with top-level frontend routes.
@@ -307,14 +395,15 @@ jobs:
             fi
           done
 
-          echo "specification_id=$SPEC_ID" >> $GITHUB_OUTPUT
-          echo "branch=specification/$SPEC_ID" >> $GITHUB_OUTPUT
+          echo "specification_id=$SPEC_ID" >> "$GITHUB_OUTPUT"
+          echo "branch=specification/$SPEC_ID" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
 
       - name: Validate specification was created (not duplicate)
         if: steps.check.outputs.should_run == 'true'
+        id: validate
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_ID: ${{ steps.extract.outputs.specification_id }}
@@ -322,8 +411,9 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
         run: |
-          # Check if specification directory was actually created
-          if [ ! -d "plots/${SPEC_ID}" ]; then
+          # Check if specification directory was actually created (an empty id
+          # means Claude never renamed the issue, which a duplicate also does)
+          if [ -z "$SPEC_ID" ] || [ ! -d "plots/${SPEC_ID}" ]; then
             echo "::warning::Specification directory not created - likely a duplicate"
 
             # Get Claude's comment to find duplicate info
@@ -339,7 +429,7 @@ jobs:
               gh issue edit "$ISSUE_NUM" --add-label "duplicate" 2>/dev/null || true
               gh issue close "$ISSUE_NUM" --comment "**Duplicate detected:** Claude's analysis indicates this specification already exists. See previous comment for details."
 
-              exit 0  # Not an error, just a duplicate
+              exit 0  # Not an error, just a duplicate; the steps below are skipped
             fi
 
             # If not a duplicate, something else failed
@@ -349,9 +439,10 @@ jobs:
           fi
 
           echo "::notice::Specification directory created successfully"
+          echo "created=true" >> "$GITHUB_OUTPUT"
 
-      - name: Create Pull Request
-        if: steps.check.outputs.should_run == 'true'
+      - name: Find the pull request Claude opened
+        if: steps.check.outputs.should_run == 'true' && steps.validate.outputs.created == 'true'
         id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -359,47 +450,42 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
+          # How gh reports the author of a PR the Claude GitHub App (claude[bot])
+          # opened; the merge job refuses a spec PR with any other author.
+          CLAUDE_APP_LOGIN: app/claude
         run: |
-          # Read the specification content for PR body
-          SPEC_CONTENT=$(cat "plots/${SPEC_ID}/specification.md")
+          # Claude opened the PR in its own step (prompt step 9). Retried: a
+          # missed read must not look like a missing PR.
+          PR_JSON=""
+          for attempt in 1 2 3; do
+            PR_JSON=$(gh pr list --repo "$REPOSITORY" --head "specification/${SPEC_ID}" --base main \
+              --state open --json number,url,author --jq '.[0] // empty' 2>/dev/null || true)
+            if [ -n "$PR_JSON" ]; then
+              break
+            fi
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt * 5)); fi
+          done
 
-          # Unquoted heredoc so $VARS expand (a quoted <<'EOF' shipped literal
-          # "$SPEC_CONTENT" into PR bodies). Literal backticks are escaped so
-          # the shell doesn't treat them as command substitution; variable
-          # *values* (e.g. backticks inside specification.md) are inserted
-          # verbatim without re-evaluation.
-          BODY_FILE=$(mktemp)
-          cat > "$BODY_FILE" <<EOF
-          ## New Specification: \`${SPEC_ID}\`
+          RETRY_HINT="To retry, close any PR from \`specification/${SPEC_ID}\`, delete that branch, remove the \`[${SPEC_ID}]\` prefix from this issue's title, then remove and re-add the \`spec-request\` label."
+          if [ -z "$PR_JSON" ]; then
+            echo "::error::No open pull request from specification/${SPEC_ID}: Claude pushed the branch but did not open the PR"
+            gh issue comment "$ISSUE_NUMBER" --repo "$REPOSITORY" --body "**Error:** Claude pushed \`specification/${SPEC_ID}\` but opened no pull request for it, so there is nothing to approve yet. Don't open one by hand: the merge job only merges a spec PR the Claude app opened. ${RETRY_HINT} See the [workflow logs](https://github.com/${REPOSITORY}/actions/runs/${RUN_ID})."
+            exit 1
+          fi
 
-          Related to #${ISSUE_NUMBER}
+          PR_NUMBER=$(jq -r '.number' <<<"$PR_JSON")
+          PR_AUTHOR=$(jq -r '.author.login // ""' <<<"$PR_JSON")
+          if [ "$PR_AUTHOR" != "$CLAUDE_APP_LOGIN" ]; then
+            echo "::error::PR #${PR_NUMBER} was opened by '${PR_AUTHOR}', not the Claude app ('${CLAUDE_APP_LOGIN}'); the merge job would refuse it"
+            gh issue comment "$ISSUE_NUMBER" --repo "$REPOSITORY" --body "**Error:** The open PR from \`specification/${SPEC_ID}\` (#${PR_NUMBER}) was opened by \`${PR_AUTHOR}\`, not by the Claude app, so the merge job would refuse it. ${RETRY_HINT} See the [workflow logs](https://github.com/${REPOSITORY}/actions/runs/${RUN_ID})."
+            exit 1
+          fi
 
-          ---
-
-          ### specification.md
-
-          ${SPEC_CONTENT}
-
-          ---
-
-          **Next:** Add \`approved\` label to the issue to merge this PR.
-
-          ---
-          :robot: *[spec-create workflow](https://github.com/${REPOSITORY}/actions/runs/${RUN_ID})*
-          EOF
-
-          PR_URL=$(gh pr create \
-            --base main \
-            --head "specification/${SPEC_ID}" \
-            --title "spec: add ${SPEC_ID} specification" \
-            --body-file "$BODY_FILE")
-
-          PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
-          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "pr_url=$(jq -r '.url' <<<"$PR_JSON")" >> "$GITHUB_OUTPUT"
 
       - name: Comment on issue
-        if: steps.check.outputs.should_run == 'true'
+        if: steps.check.outputs.should_run == 'true' && steps.validate.outputs.created == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_ID: ${{ steps.extract.outputs.specification_id }}
@@ -410,8 +496,11 @@ jobs:
         run: |
           SPEC_CONTENT=$(cat "plots/${SPEC_ID}/specification.md")
 
-          # Unquoted heredoc + --body-file: see "Create Pull Request" step for
-          # why (variable expansion with escaped literal backticks).
+          # Unquoted heredoc so $VARS expand (a quoted <<'EOF' shipped literal
+          # "$SPEC_CONTENT" into comments). Literal backticks are escaped so
+          # the shell doesn't treat them as command substitution; variable
+          # *values* (e.g. backticks inside specification.md) are inserted
+          # verbatim without re-evaluation.
           BODY_FILE=$(mktemp)
           cat > "$BODY_FILE" <<EOF
           ## :white_check_mark: Specification Ready: \`${SPEC_ID}\`
@@ -435,36 +524,50 @@ jobs:
           gh issue comment "$ISSUE_NUMBER" --body-file "$BODY_FILE"
 
       - name: Add rocket reaction on success
-        if: steps.check.outputs.should_run == 'true' && success()
+        if: steps.check.outputs.should_run == 'true' && steps.validate.outputs.created == 'true' && success()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           REPOSITORY: ${{ github.repository }}
         run: |
-          gh api repos/$REPOSITORY/issues/$ISSUE_NUMBER/reactions \
+          gh api "repos/${REPOSITORY}/issues/${ISSUE_NUMBER}/reactions" \
             -f content=rocket
 
   # ============================================================================
   # Job 2: Merge specification (triggered by approved label)
   # ============================================================================
+  # Only the repository owner's `approved` counts, and only a PR the Claude app
+  # opened is merged — after fail-closed checks of who opened it, where it
+  # points, and which files it changes. The merge stays on GITHUB_TOKEN and
+  # never bypasses the ruleset: auto-merge waits for the required checks, which
+  # run on a claude[bot] PR without a manual approval.
+  #
+  # No job-level concurrency group on purpose: GitHub keeps ONE pending run per
+  # group and cancels the older pending run when another one queues, so the
+  # shared `spec-merge-main` group this job used to have cancelled 7 of 10 batch
+  # approvals on 2026-06-10. Spec PRs change disjoint directories and the main
+  # ruleset is not strict, so there is nothing to serialize across issues; the
+  # workflow-level group still serializes the runs of one issue.
   merge:
     if: >
       github.event.label.name == 'approved' &&
-      contains(github.event.issue.labels.*.name, 'spec-request')
+      contains(github.event.issue.labels.*.name, 'spec-request') &&
+      github.event.sender.login == github.repository_owner &&
+      github.triggering_actor == github.repository_owner
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
-      contents: write
-      pull-requests: write
-      issues: write
-
-    # Prevent race conditions when multiple specs are approved simultaneously
-    concurrency:
-      group: spec-merge-main
-      cancel-in-progress: false  # Queue merges instead of canceling
+      contents: write       # squash-merge, delete the head branch
+      pull-requests: write  # enable / disable auto-merge
+      issues: write         # labels and comments on the issue
+      actions: write        # gh workflow run sync-postgres.yml
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # The file guard diffs the PR head against its merge base with main.
+          fetch-depth: 0
 
       - name: Extract specification ID
         id: extract
@@ -478,30 +581,276 @@ jobs:
             exit 1
           fi
 
-          echo "specification_id=$SPEC_ID" >> $GITHUB_OUTPUT
+          echo "specification_id=$SPEC_ID" >> "$GITHUB_OUTPUT"
 
-      - name: Find and merge PR
-        id: merge
+      - name: Verify the pull request (fail closed)
+        id: verify
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_ID: ${{ steps.extract.outputs.specification_id }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          # How gh reports the author of a PR the Claude GitHub App (claude[bot])
+          # opened — e.g. the spec-polish PR #10454.
+          CLAUDE_APP_LOGIN: app/claude
         run: |
-          # Find PR for this specification
-          PR_NUMBER=$(gh pr list --head "specification/${SPEC_ID}" --json number -q '.[0].number')
+          set -euo pipefail
+          HEAD_BRANCH="specification/${SPEC_ID}"
+          # "#<issue>" as a whole reference: not "#<issue>0", not "&#<issue>;".
+          ISSUE_REF_RE="(^|[^0-9A-Za-z_&])#${ISSUE_NUMBER}([^0-9]|$)"
 
-          if [[ -z "$PR_NUMBER" ]]; then
-            echo "::error::No PR found for branch specification/${SPEC_ID}"
+          # Refusal: explain on the issue, then fail the job. $1 names what was
+          # checked, the remaining arguments are the reasons.
+          refuse() {
+            local subject="$1"
+            shift
+            local body_file
+            body_file=$(mktemp)
+            {
+              printf '## :no_entry: Specification not merged\n\n'
+              printf "\`approved\` was added, but %s did not pass the merge checks:\n\n" "$subject"
+              printf -- '- %s\n' "$@"
+              printf "\nThe merge job only merges an open PR from \`%s\` into \`main\` that the Claude app opened for this issue and that changes nothing but \`plots/%s/specification.md\`, \`specification.yaml\` and \`.gitkeep\` placeholders under \`implementations/\` and \`metadata/\`. **Do not approve workflow runs for a PR that touches anything else, and do not merge it by hand.**\n\n" "$HEAD_BRANCH" "$SPEC_ID"
+              printf -- '---\n:robot: *[spec-create workflow](https://github.com/%s/actions/runs/%s)*\n' "$REPOSITORY" "$RUN_ID"
+            } > "$body_file"
+            printf '::error::Refused: %s\n' "$@"
+            gh issue comment "$ISSUE_NUMBER" --repo "$REPOSITORY" --body-file "$body_file"
+            echo "refused=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          }
+
+          # Retried: an API blip must fail the job, never skip a check.
+          PRS=""
+          for attempt in 1 2 3; do
+            if PRS=$(gh pr list --repo "$REPOSITORY" --head "$HEAD_BRANCH" --state all --limit 50 \
+                --json number,state,headRefName,headRefOid,baseRefName,isCrossRepository,author,body); then
+              break
+            fi
+            PRS=""
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt * 5)); fi
+          done
+          if [ -z "$PRS" ]; then
+            echo "::error::Could not list the pull requests from ${HEAD_BRANCH}"
             exit 1
           fi
 
-          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          OPEN=$(jq -c '[.[] | select(.state == "OPEN")]' <<<"$PRS")
+          case "$(jq 'length' <<<"$OPEN")" in
+            1) ;;
+            0)
+              # A re-run after the merge already landed: nothing is left to
+              # verify or merge, and the post-merge steps are idempotent.
+              MERGED=$(jq -c --arg re "$ISSUE_REF_RE" \
+                '[.[] | select(.state == "MERGED" and .baseRefName == "main" and ((.body // "") | test($re)))] | max_by(.number) // empty' \
+                <<<"$PRS")
+              if [ -n "$MERGED" ]; then
+                PR_NUMBER=$(jq -r '.number' <<<"$MERGED")
+                echo "::notice::PR #${PR_NUMBER} from ${HEAD_BRANCH} is already merged; continuing with the post-merge steps"
+                {
+                  echo "already_merged=true"
+                  echo "pr_number=${PR_NUMBER}"
+                  echo "head_sha=$(jq -r '.headRefOid' <<<"$MERGED")"
+                } >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              refuse "no pull request" "there is no open pull request from \`${HEAD_BRANCH}\`"
+              ;;
+            *)
+              refuse "no single pull request" "more than one open pull request comes from \`${HEAD_BRANCH}\`"
+              ;;
+          esac
 
-          # Merge the PR
-          gh pr merge "$PR_NUMBER" --squash --delete-branch
+          PR=$(jq -c '.[0]' <<<"$OPEN")
+          PR_NUMBER=$(jq -r '.number' <<<"$PR")
+          HEAD_SHA=$(jq -r '.headRefOid' <<<"$PR")
+          AUTHOR=$(jq -r '.author.login // ""' <<<"$PR")
+          REASONS=()
+          if [ "$(jq -r '.headRefName' <<<"$PR")" != "$HEAD_BRANCH" ]; then
+            REASONS+=("its head branch is not \`${HEAD_BRANCH}\`")
+          fi
+          if [ "$AUTHOR" != "$CLAUDE_APP_LOGIN" ]; then
+            REASONS+=("it was opened by \`${AUTHOR}\`, not by the Claude app (\`${CLAUDE_APP_LOGIN}\`)")
+          fi
+          if [ "$(jq -r '.isCrossRepository' <<<"$PR")" != "false" ]; then
+            REASONS+=("its head branch lives in another repository")
+          fi
+          if [ "$(jq -r '.baseRefName' <<<"$PR")" != "main" ]; then
+            REASONS+=("it does not target \`main\`")
+          fi
+          if ! jq -e --arg re "$ISSUE_REF_RE" '(.body // "") | test($re)' <<<"$PR" > /dev/null; then
+            REASONS+=("its description does not reference issue #${ISSUE_NUMBER}")
+          fi
 
-          echo "::notice::Merged PR #$PR_NUMBER for specification ${SPEC_ID}"
+          if [[ ! "$HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            REASONS+=("its head commit could not be read")
+          else
+            # The diff is read locally from the exact head SHA, not from the
+            # API's file list: what gets squashed is merge-base..HEAD_SHA.
+            git fetch --no-tags --quiet origin "+refs/heads/main:refs/remotes/origin/main" "$HEAD_SHA"
+            set +e
+            VIOLATIONS=$(python3 automation/scripts/spec_pr_guard.py \
+              --spec-id "$SPEC_ID" --head "$HEAD_SHA" --base origin/main)
+            GUARD_RC=$?
+            set -e
+            case "$GUARD_RC" in
+              0) ;;
+              1)
+                COUNT=0
+                while IFS= read -r line; do
+                  COUNT=$((COUNT + 1))
+                  if [ "$COUNT" -le 20 ]; then REASONS+=("it changes ${line}"); fi
+                done <<<"$VIOLATIONS"
+                if [ "$COUNT" -gt 20 ]; then REASONS+=("… and $((COUNT - 20)) more file(s)"); fi
+                ;;
+              *)
+                echo "::error::The file guard could not read the diff of ${HEAD_SHA} (exit ${GUARD_RC})"
+                exit 1
+                ;;
+            esac
+          fi
+
+          if [ "${#REASONS[@]}" -gt 0 ]; then
+            refuse "PR #${PR_NUMBER}" "${REASONS[@]}"
+          fi
+
+          echo "::notice::PR #${PR_NUMBER} verified at ${HEAD_SHA}: opened by the Claude app, changes only the spec files of plots/${SPEC_ID}/"
+          {
+            echo "already_merged=false"
+            echo "pr_number=${PR_NUMBER}"
+            echo "head_sha=${HEAD_SHA}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Merge once the required checks pass
+        if: steps.verify.outputs.already_merged == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.verify.outputs.pr_number }}
+          HEAD_SHA: ${{ steps.verify.outputs.head_sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          # No --admin: the required checks ran on the Claude app's PR without
+          # an approval, and the merge waits for them instead of bypassing them.
+          # `--auto` hands the squash to GitHub for when they pass; gh merges
+          # straight away when they already have. `--match-head-commit` pins
+          # either to the SHA verified above, so a head that moved is refused.
+          MERR=""
+          for attempt in 1 2 3; do
+            STATE=$(gh pr view "$PR_NUMBER" --repo "$REPOSITORY" --json state -q .state 2>/dev/null || echo "")
+            if [ "$STATE" = "MERGED" ]; then
+              echo "::notice::PR #${PR_NUMBER} is already merged"
+              exit 0
+            fi
+            if gh pr merge "$PR_NUMBER" --repo "$REPOSITORY" --squash --delete-branch --auto \
+                --match-head-commit "$HEAD_SHA" 2> /tmp/merge.err; then
+              echo "::notice::PR #${PR_NUMBER}: merged, or auto-merge enabled at ${HEAD_SHA}"
+              exit 0
+            fi
+            MERR=$(head -c 500 /tmp/merge.err | tr '\n' ' ')
+            echo "::warning::gh pr merge failed (attempt ${attempt}/3): ${MERR}"
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt * 10)); fi
+          done
+          echo "Could not merge PR #${PR_NUMBER} or enable auto-merge for it: ${MERR}" > "$RUNNER_TEMP/merge-failure.txt"
+          echo "::error::Could not merge PR #${PR_NUMBER} or enable auto-merge for it: ${MERR}"
+          exit 1
+
+      - name: Wait for the merge to land
+        id: wait
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.verify.outputs.pr_number }}
+          HEAD_SHA: ${{ steps.verify.outputs.head_sha }}
+          ALREADY_MERGED: ${{ steps.verify.outputs.already_merged }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          # With auto-merge on, the merge lands when the required checks finish,
+          # after the step above has returned. Bounded at 15 minutes: past that
+          # auto-merge is turned off again, so the PR cannot land later without
+          # the sync, the label and the comment below.
+          fail() {
+            echo "$1" > "$RUNNER_TEMP/merge-failure.txt"
+            echo "::error::$1"
+            exit 1
+          }
+          disable_auto() {
+            gh pr merge "$PR_NUMBER" --repo "$REPOSITORY" --disable-auto > /dev/null 2>&1 || true
+          }
+
+          DEADLINE=$((SECONDS + 900))
+          NO_AUTO=0
+          LAST_STATUS="unknown"
+          REVIEW_DECISION=""
+          while :; do
+            if VIEW=$(gh pr view "$PR_NUMBER" --repo "$REPOSITORY" \
+                --json state,headRefOid,mergeStateStatus,reviewDecision,autoMergeRequest,mergeCommit 2>/dev/null); then
+              STATE=$(jq -r '.state' <<<"$VIEW")
+              HEAD=$(jq -r '.headRefOid' <<<"$VIEW")
+              LAST_STATUS=$(jq -r '"\(.mergeStateStatus), review decision: \(.reviewDecision // "none")"' <<<"$VIEW")
+              REVIEW_DECISION=$(jq -r '.reviewDecision // ""' <<<"$VIEW")
+              if [ "$STATE" = "MERGED" ]; then
+                if [ "$ALREADY_MERGED" != "true" ] && [ "$HEAD" != "$HEAD_SHA" ]; then
+                  fail "PR #${PR_NUMBER} merged at head ${HEAD}, not at the verified ${HEAD_SHA}. Check what landed in main before labelling the spec ready."
+                fi
+                echo "::notice::PR #${PR_NUMBER} is merged ($(jq -r '.mergeCommit.oid // "unknown commit"' <<<"$VIEW"))"
+                echo "merged=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              if [ "$STATE" = "CLOSED" ]; then
+                fail "PR #${PR_NUMBER} was closed without being merged."
+              fi
+              if [ "$HEAD" != "$HEAD_SHA" ]; then
+                disable_auto
+                fail "The head of PR #${PR_NUMBER} moved from the verified ${HEAD_SHA} to ${HEAD}, so auto-merge was turned off. Remove and re-add \`approved\` to verify the new head."
+              fi
+              if [ "$(jq -r '.autoMergeRequest == null' <<<"$VIEW")" = "true" ]; then
+                NO_AUTO=$((NO_AUTO + 1))
+                if [ "$NO_AUTO" -ge 3 ]; then
+                  fail "PR #${PR_NUMBER} is open with auto-merge off (merge state: ${LAST_STATUS}). Once its required checks are green, re-run this job or remove and re-add \`approved\`."
+                fi
+              else
+                NO_AUTO=0
+              fi
+            else
+              echo "::warning::Could not read PR #${PR_NUMBER}; trying again"
+            fi
+            if [ "$SECONDS" -ge "$DEADLINE" ]; then
+              disable_auto
+              HINT="Once its required checks are green, re-run this job or remove and re-add \`approved\`."
+              if [ "$REVIEW_DECISION" = "REVIEW_REQUIRED" ]; then
+                # The main ruleset's "extra approval for unattributed changes" can hold an
+                # App-opened PR for one human review even at 0 required approvals; re-running
+                # this job would only time out again.
+                HINT="The main ruleset wants an approving review on the Claude app's PR (its 'extra approval for unattributed changes' setting): approve PR #${PR_NUMBER}, then remove and re-add \`approved\`."
+              fi
+              fail "PR #${PR_NUMBER} did not merge within 15 minutes (merge state: ${LAST_STATUS}), so auto-merge was turned off. ${HINT}"
+            fi
+            sleep 20
+          done
+
+      - name: Trigger database sync
+        id: sync
+        if: steps.wait.outputs.merged == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          # A merge made with GITHUB_TOKEN (directly, or through auto-merge that
+          # GITHUB_TOKEN enabled) triggers no workflows, so sync-postgres.yml's
+          # own `push: main` trigger never fires for it. Dispatch it the way
+          # impl-merge.yml does; the run checks out main as it is now, which
+          # already contains this merge.
+          for attempt in 1 2 3; do
+            if gh workflow run sync-postgres.yml --repo "$REPOSITORY" --ref main; then
+              echo "::notice::Dispatched sync-postgres.yml"
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt * 10)); fi
+          done
+          echo "::error::Could not dispatch sync-postgres.yml"
+          exit 1
 
       - name: Update issue labels
+        if: ${{ !cancelled() && steps.wait.outputs.merged == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
@@ -511,16 +860,24 @@ jobs:
           gh issue edit "$ISSUE_NUMBER" --add-label "spec-ready"
 
       - name: Comment on issue
+        if: ${{ !cancelled() && steps.wait.outputs.merged == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_ID: ${{ steps.extract.outputs.specification_id }}
-          PR_NUMBER: ${{ steps.merge.outputs.pr_number }}
+          PR_NUMBER: ${{ steps.verify.outputs.pr_number }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
+          SYNC_OUTCOME: ${{ steps.sync.outcome }}
         run: |
-          # Unquoted heredoc + --body-file: see "Create Pull Request" step for
-          # why (variable expansion with escaped literal backticks).
+          if [ "$SYNC_OUTCOME" = "success" ]; then
+            SYNC_LINE="The specification is now in \`main\`, and \`sync-postgres.yml\` has been dispatched to load it into PostgreSQL."
+          else
+            SYNC_LINE=":warning: The specification is now in \`main\`, but \`sync-postgres.yml\` could not be dispatched, so PostgreSQL does not have it yet. Run \`gh workflow run sync-postgres.yml\`."
+          fi
+
+          # Unquoted heredoc + --body-file: see the create job's "Comment on
+          # issue" step for why (variable expansion with escaped literal backticks).
           BODY_FILE=$(mktemp)
           cat > "$BODY_FILE" <<EOF
           ## :rocket: Specification Merged!
@@ -528,7 +885,7 @@ jobs:
           **Specification:** \`${SPEC_ID}\`
           **PR:** #${PR_NUMBER} (merged)
 
-          The specification is now in \`main\` and synced to PostgreSQL.
+          ${SYNC_LINE}
 
           ---
 
@@ -543,3 +900,20 @@ jobs:
           EOF
 
           gh issue comment "$ISSUE_NUMBER" --body-file "$BODY_FILE"
+
+      - name: Report failure on the issue
+        # A refusal already explained itself; a merge that landed is reported
+        # by the steps above even when the sync dispatch failed.
+        if: failure() && steps.verify.outputs.refused != 'true' && steps.wait.outputs.merged != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          REASON="See the workflow logs."
+          if [ -s "$RUNNER_TEMP/merge-failure.txt" ]; then
+            REASON=$(cat "$RUNNER_TEMP/merge-failure.txt")
+          fi
+          gh issue comment "$ISSUE_NUMBER" --repo "$REPOSITORY" \
+            --body "**Error:** The merge job did not finish. ${REASON} ([workflow logs](https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}))"
