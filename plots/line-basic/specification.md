@@ -23,3 +23,11 @@ A basic line plot connects data points with straight lines to show how a continu
 - Clear axis labels for both X and Y axes
 - Grid lines for improved readability
 - Markers on data points are optional but can enhance visibility
+
+## What a good version looks like
+
+- One continuous line connects the values in x order; with a single series no legend is needed, because the axis label names the quantity.
+- Real series wiggle: short-term noise, dips and plateaus are expected, not a defect, and a perfectly smooth curve suggests fabricated data unless the scenario is a model output.
+- Markers are optional; when drawn they stay small enough that the line still reads as a line, and the line is never smoothed past the points it connects.
+- Missing values, if the data has any, show as a gap in the line rather than a straight bridge across it.
+- The y axis spans the data instead of being forced to zero when zero would flatten the signal, and the basic variant stays one line — no second series, trend line, shaded band or event annotations.

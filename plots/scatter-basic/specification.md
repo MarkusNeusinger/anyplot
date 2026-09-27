@@ -23,3 +23,10 @@ A fundamental 2D scatter plot that displays the relationship between two numeric
 - Include axis labels and a descriptive title
 - Grid lines help with value estimation
 - Consider point size that balances visibility with overlap clarity
+
+## What a good version looks like
+
+- One point per observation at its exact (x, y) value, all in one colour; the cloud's direction, spread and the odd outlier read at a glance.
+- Points overlapping where the cloud is dense are expected, not a defect: moderate transparency lets piled-up areas read darker, and points are never jittered or nudged off their values to separate them.
+- Real paired data scatters: visible noise around the trend and a few outliers are expected, while a cloud lying exactly on a line suggests fabricated data.
+- The basic variant is x and y only — no colour or size channel, no regression or trend line, no marginal distributions and no point labels.
