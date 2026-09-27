@@ -90,22 +90,25 @@ ax = Axis(
 
 # Highlight the franchise sweet spot where box-office ROI peaks — makes the
 # DE-03 narrative explicit instead of leaving it implicit in the data alone.
-vspan!(ax, 80.0, 150.0; color = RGBAf(INK.r, INK.g, INK.b, 0.06))
+# Heavier band opacity + bold ink-colored text (vs. a previous low-contrast
+# gray) so the insight reads at a glance instead of blending into the grid.
+vspan!(ax, 80.0, 150.0; color = RGBAf(INK.r, INK.g, INK.b, 0.10))
 text!(ax, 115.0, 9.6;
     text     = "franchise sweet spot",
     align    = (:center, :bottom),
-    fontsize = 14,
-    color    = INK_SOFT,
+    fontsize = 17,
+    font     = :bold,
+    color    = INK,
 )
 
 # Bubble area (sqrt-scaled) encodes box-office revenue; fill color encodes
 # production scale — two independent variables, each with its own legend
-# group below. Lower alpha than earlier drafts to ease overlap in the dense
-# low-budget cluster.
+# group below. Alpha lowered further (0.5 -> 0.4) so individual bubbles in
+# the dense low-budget indie cluster stay distinguishable from each other.
 scatter!(ax, budget, rating;
     color       = point_color,
     markersize  = marker_sizes,
-    alpha       = 0.5,
+    alpha       = 0.4,
     strokewidth = 1.0,
     strokecolor = RGBAf(INK.r, INK.g, INK.b, 0.4),
 )
