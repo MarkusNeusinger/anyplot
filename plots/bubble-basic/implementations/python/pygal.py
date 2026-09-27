@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 88/100 | Created: 2026-09-27
@@ -31,11 +31,11 @@ np.random.seed(42)
 n_cities = 50
 
 # Uniform spread across the coverage range to avoid clustering. The low-coverage
-# band is widened (8-40 vs. the previous 10-35) to thin out the densest overlap
-# region in the top-left of the chart, where transit coverage is low and
+# band is widened further (5-45 vs. the previous 8-40) to thin out the densest
+# overlap region in the top-left of the chart, where transit coverage is low and
 # congestion is high.
 transit_coverage = np.concatenate(
-    [np.random.uniform(8, 40, 15), np.random.uniform(40, 68, 20), np.random.uniform(68, 95, 15)]
+    [np.random.uniform(5, 45, 15), np.random.uniform(45, 70, 20), np.random.uniform(70, 95, 15)]
 )
 np.random.shuffle(transit_coverage)
 
@@ -118,7 +118,9 @@ custom_style = Style(
     # `opacity` alone left bubbles fully solid in the previous pass despite the
     # spec's alpha-transparency requirement. `opacity_hover` still applies via
     # `.reactive.active` since `.dot` has no active-state fill-opacity rule.
-    dot_opacity=0.58,
+    # Lowered further (0.58 -> 0.48) so individual bubbles stay traceable in the
+    # densest low-coverage cluster, where several tiers still overlap.
+    dot_opacity=0.48,
     opacity=0.70,
     opacity_hover=0.95,
     title_font_size=66,
@@ -179,9 +181,9 @@ chart = pygal.XY(
 chart.css = (
     "file://style.css",
     "file://graph.css",
-    # stroke-width bumped 3px -> 5px: a thicker halo ring stays a visible
+    # stroke-width bumped 3px -> 6px: a thicker halo ring stays a visible
     # boundary even in the densest overlap zone (low transit coverage).
-    f"inline:#chart-{chart.uuid} .dot {{ stroke: {PAGE_BG}; stroke-width: 5px; stroke-opacity: 1; }}",
+    f"inline:#chart-{chart.uuid} .dot {{ stroke: {PAGE_BG}; stroke-width: 6px; stroke-opacity: 1; }}",
     f"inline:#chart-{chart.uuid} .text-overlay text.label {{ fill: {INK}; }}",
 )
 
