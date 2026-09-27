@@ -78,6 +78,21 @@ python3 -m automation.scripts.spec_characteristics_lint style plots/scatter-basi
 python3 -m automation.scripts.spec_characteristics_lint style --strict plots/scatter-basic/specification.md
 ```
 
+### `review_retest.py`
+Review retest harness (stdlib, plus PyYAML for the manifest and Pillow/numpy
+for `freeze`'s pixel statistics), driven by `.github/workflows/review-retest.yml`:
+`plan` and `bundle` (prep job), `materialize` and `collect` (one review cell,
+run from a copy outside the workspace), `report` (aggregate job), plus the
+local `gate-report` (production gate records from PR comments) and `freeze`
+(builds and, with `--execute`, uploads a frozen set). How to run it:
+`docs/workflows/review-retest.md`.
+
+### `review_retest_metrics.py`
+The retest's metrics as pure functions (no IO): per-criterion spread and
+flips, totals, verdict straddle, weakness-topic agreement (taxonomy
+`topics-v1`), named-defect and false-alarm rates, gate calibration and order
+bias, arm comparison with a seeded bootstrap, and the gate monitor.
+
 ### `close_issue_if_complete.py`
 Closes a spec issue once every supported library is `impl:<lib>:done` or
 `:failed`. Shared by `impl-merge.yml` and the kept-regen branch of

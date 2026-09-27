@@ -237,6 +237,8 @@ Every decision leaves three traces:
 - **The notice line in the run log.** `::notice::regen_gate spec=… lib=… prev_stored=… prev_rescored=… new=… verdict=… code=… model=… criteria=… reason=…`. Run logs expire.
 - **The pair artifact.** `regen-pair-<pr>-<attempt>` on the `impl-review.yml` run, kept 60 days: both renders, both sources (the predecessor's with its score hidden), the previous review, this review's files, and the gate record. The predecessor's production renders are overwritten on the next merge, so this is the only copy of what the gate compared.
 
+`uv run python -m automation.scripts.review_retest gate-report` aggregates the records across pull requests: merge rate, reason codes, how far re-scored predecessors land from their stored scores, and soft alarms. See [Review retest](review-retest.md#monitor-the-regen-gate).
+
 To replace an implementation without the gate, dispatch with `regen_gate=false` (`impl-generate.yml` or `bulk-generate.yml`): the PR is labelled `regen:forced` and takes the fresh-generation path, including the repair loop — whose exhaustion path removes the old implementation from main.
 
 The local `/regen` command (`agentic/commands/regen.md`) is an owner override without the review gate; it only withholds `ai-approved` when the new score is more than one point below the stored score.
@@ -265,6 +267,7 @@ Located in `.github/workflows/`:
 | `impl-repair.yml` | Fixes rejected implementations |
 | `impl-merge.yml` | Merges approved PRs |
 | `bulk-generate.yml` | Batch implementation generation |
+| `review-retest.yml` | Dispatch-only measurement: re-runs the AI quality review on the frozen retest set (several fresh sessions per item, regen pairs in both orders) for one rules version, and reports score spread, verdict flips, weakness agreement, and gate order bias against a baseline arm. Read-only tokens; writes nothing outside its own artifacts. See [Review retest](review-retest.md) |
 | `daily-regen.yml` | Cron-driven regeneration of the oldest implementations (once a day at 02:17 UTC, off the top of the hour to dodge GitHub's scheduler overload). A spec's age counts from the newer of its last merged update and the last activity on its spec issue (every regen touches the issue), so a kept regeneration is not re-picked the next night. Any activity on the issue — a comment, a label, a report — postpones that spec's regen the same way |
 | `watchdog-stuck-jobs.yml` | 6-hourly safety net: re-dispatches stuck reviews, repairs (including a repair that crashed after a rejection), merges and generations (straight to `impl-generate.yml`, marked only once the run exists), re-closes open `regen:kept` PRs, never rescues a regeneration into repair or re-dispatches its failed review (it flags it for manual attention instead; "regeneration" = the `regen` label or the implementation file on main, unless `regen:forced`), and rescues daily-regen when its cron is silently starved by GitHub (>26 h without a run) |
 | `report-validate.yml` | Validates user-submitted issue reports |

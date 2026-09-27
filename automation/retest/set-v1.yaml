@@ -1,0 +1,417 @@
+# Review retest set v1 — the hand-curated half of the frozen set.
+#
+# What each item pins:
+#   - implementation and metadata: `plots/<spec>/…` at the role's `commit`
+#     (git history is permanent);
+#   - spec text: `plots/<spec>/specification.md` at `spec_commit` (per item, or
+#     the default below) unless an arm runs with spec_source=rules_ref;
+#   - renders: public objects `gs://anyplot-images/<gcs_prefix>/<id>/<role>-<theme>.png`
+#     with the sha256, size and pair pixel statistics that `review_retest.py
+#     freeze` writes to set-v1.lock.json. `render` names the freeze source:
+#     `production` (the live object, refused if the implementation changed on
+#     main after `commit`) or a local regen-experiment snapshot whose
+#     manifest.yaml main_sha must equal `commit`.
+#
+# Labels (defects, permitted, expected) are ground truth: pre-screened, then
+# confirmed by the owner (decision D4). Until then `labels: draft` and the
+# lists stay empty; the report says so and skips those metrics. A changed
+# item or render means a new set (v2); v1 is never rewritten.
+#
+# Label shapes, for when they are filled in:
+#   defects:   [{id: D1, criteria: [VQ-03, SC-04], match: '<regex>', note: '…'}]
+#   permitted: [{id: A1, criteria: [VQ-02], match: '<regex>', note: '…'}]
+#   expected:  {forward: keep|merge, reversed: keep|merge}   # regen pairs only
+
+version: 1
+set: v1
+gcs_prefix: retest/sets/v1
+baseline_rules_sha: &base 0674ab6b55acc71f5015a6aae07145424cbac7cb
+spec_commit: *base
+labels: draft
+
+# bubble-basic regen experiment rounds (2026-09-26/27): main_sha of each
+# snapshot and its local directory, relative to the repository root of the
+# checkout that runs freeze. Only freeze reads the directories.
+snapshots:
+  v0: {commit: &v0 f68ff4e5033e058f828cdcfa11e7b5d3c9b2c03b, render: &r-v0 {snapshot: agentic/runs/regen-exp-bubble-basic/v0}}
+  v1: {commit: &v1 356e3356ace0105d04b2652af6a7afd0575d3271, render: &r-v1 {snapshot: agentic/runs/regen-exp-bubble-basic/v1}}
+  v2: {commit: &v2 bb3369527b50f66e634fafb0e94adbbe9ef970f3, render: &r-v2 {snapshot: agentic/runs/regen-exp-bubble-basic/v2}}
+  v3: {commit: &v3 bdc8d83f79692239a27dda8774a949588c5912b1, render: &r-v3 {snapshot: agentic/runs/regen-exp-bubble-basic/v3}}
+  v4: {commit: &v4 7a3e19f4b4e9551e7e2b0de2bd002b1874a46d08, render: &r-v4 {snapshot: agentic/runs/regen-exp-bubble-basic/v4}}
+  v5: {commit: &v5 b10d535f7047005184c1d688319cb21754defb09, render: &r-v5 {snapshot: agentic/runs/regen-exp-bubble-basic/v5}}
+
+items:
+  # ---- core: fresh, one candidate hard case per library ------------------
+  - id: f-bubble-basic-ggplot2
+    kind: fresh
+    tier: core
+    spec_id: bubble-basic
+    library: ggplot2
+    new: {commit: *v5, render: *r-v5}
+    note: "candidate: size-legend circles near-invisible (VQ-03, SC-04); probe: translucent overlap (VQ-02)"
+    defects: []
+    permitted: []
+
+  - id: f-area-elevation-profile-seaborn
+    kind: fresh
+    tier: core
+    spec_id: area-elevation-profile
+    library: seaborn
+    new: {commit: *base, render: production}
+    note: "candidate: y-axis title clipped at the left edge (AR-09)"
+    defects: []
+    permitted: []
+
+  - id: f-bar-horizontal-makie
+    kind: fresh
+    tier: core
+    spec_id: bar-horizontal
+    library: makie
+    new: {commit: *base, render: production}
+    note: "candidate: content fills about 27 % of the width, subtitle above the title (VQ-05)"
+    defects: []
+    permitted: []
+
+  - id: f-choropleth-basic-altair
+    kind: fresh
+    tier: core
+    spec_id: choropleth-basic
+    library: altair
+    new: {commit: *base, render: production}
+    note: "candidate: white page in the dark render, title white on white (VQ-07, VQ-01)"
+    defects: []
+    permitted: []
+
+  - id: f-violin-split-plotnine
+    kind: fresh
+    tier: core
+    spec_id: violin-split
+    library: plotnine
+    new: {commit: *base, render: production}
+    note: "candidate: halves do not meet (SC-01/SC-02); white grid in the dark render only (DE-02)"
+    defects: []
+    permitted: []
+
+  - id: f-pie-basic-highcharts
+    kind: fresh
+    tier: core
+    spec_id: pie-basic
+    library: highcharts
+    new: {commit: *base, render: production}
+    note: "candidate: donut drawn for a pie (SC-01)"
+    defects: []
+    permitted: []
+
+  - id: f-bar-pareto-letsplot
+    kind: fresh
+    tier: core
+    spec_id: bar-pareto
+    library: letsplot
+    new: {commit: *base, render: production}
+    note: "candidate: fake secondary axis drawn with geom_text (SC-03)"
+    defects: []
+    permitted: []
+
+  - id: f-waterfall-basic-muix
+    kind: fresh
+    tier: core
+    spec_id: waterfall-basic
+    library: muix
+    new: {commit: *base, render: production}
+    note: "candidate: connectors cross value labels (VQ-02); labels show running totals (SC-03)"
+    defects: []
+    permitted: []
+
+  - id: f-line-win-probability-chartjs
+    kind: fresh
+    tier: core
+    spec_id: line-win-probability
+    library: chartjs
+    new: {commit: *base, render: production}
+    note: "candidate: labels struck by the curve (VQ-02); real teams with invented numbers (DQ-02)"
+    defects: []
+    permitted: []
+
+  - id: f-bubble-basic-d3
+    kind: fresh
+    tier: core
+    spec_id: bubble-basic
+    library: d3
+    new: {commit: *v5, render: *r-v5}
+    note: "candidate: force collision moves marks off their values (SC-03)"
+    defects: []
+    permitted: []
+
+  - id: f-network-basic-bokeh
+    kind: fresh
+    tier: core
+    spec_id: network-basic
+    library: bokeh
+    new: {commit: *base, render: production}
+    note: "candidate: labels far from their nodes (VQ-02); probe: layout-positioned nodes are not SC-03"
+    defects: []
+    permitted: []
+
+  - id: f-bar-diverging-likert-matplotlib
+    kind: fresh
+    tier: core
+    spec_id: bar-diverging-likert
+    library: matplotlib
+    new: {commit: *base, render: production}
+    note: "candidate: axis title collides with the legend row (VQ-02)"
+    defects: []
+    permitted: []
+
+  - id: f-candlestick-volume-plotly
+    kind: fresh
+    tier: core
+    spec_id: candlestick-volume
+    library: plotly
+    new: {commit: *base, render: production}
+    note: "candidate: bright white vertical lines in the dark pane (DE-02, VQ-07)"
+    defects: []
+    permitted: []
+
+  - id: f-line-stock-comparison-pygal
+    kind: fresh
+    tier: core
+    spec_id: line-stock-comparison
+    library: pygal
+    new: {commit: *base, render: production}
+    note: "candidate: false real-world returns (DQ-02/03); tiny legend squares (VQ-03)"
+    defects: []
+    permitted: []
+
+  - id: f-gantt-basic-echarts
+    kind: fresh
+    tier: core
+    spec_id: gantt-basic
+    library: echarts
+    new: {commit: *base, render: production}
+    note: "candidate: last bar ends on the frame (SC-03, VQ-05)"
+    defects: []
+    permitted: []
+
+  # ---- core: regen pairs (bubble-basic experiment), run in both orders ----
+  - id: r-bubble-basic-chartjs-v5-v4
+    kind: regen
+    tier: core
+    spec_id: bubble-basic
+    library: chartjs
+    class: near-identical
+    new: {commit: *v5, render: *r-v5}
+    prev: {commit: *v4, render: *r-v4}
+    note: "alpha 0.48 -> 0.55 only; about 13 % of pixels differ, max channel delta 37 (Fable measurement)"
+    expected: null
+
+  - id: r-bubble-basic-matplotlib-v5-v5
+    kind: regen
+    tier: core
+    spec_id: bubble-basic
+    library: matplotlib
+    class: identity
+    new: {commit: *v5, render: *r-v5}
+    prev: {commit: *v5, render: *r-v5}
+    note: "identity control (Python)"
+    expected: null
+
+  - id: r-bubble-basic-chartjs-v5-v5
+    kind: regen
+    tier: core
+    spec_id: bubble-basic
+    library: chartjs
+    class: identity
+    new: {commit: *v5, render: *r-v5}
+    prev: {commit: *v5, render: *r-v5}
+    note: "identity control (JavaScript), decision D14"
+    expected: null
+
+  - id: r-bubble-basic-letsplot-v3-v3
+    kind: regen
+    tier: core
+    spec_id: bubble-basic
+    library: letsplot
+    class: identity
+    new: {commit: *v3, render: *r-v3}
+    prev: {commit: *v3, render: *r-v3}
+    note: "identity control (Python), decision D14"
+    expected: null
+
+  - id: r-bubble-basic-bokeh-v1-v0
+    kind: regen
+    tier: core
+    spec_id: bubble-basic
+    library: bokeh
+    class: different
+    new: {commit: *v1, render: *r-v1}
+    prev: {commit: *v0, render: *r-v0}
+    note: "size legend becomes legible (plan: merge forward, keep reversed)"
+    expected: null
+
+  - id: r-bubble-basic-d3-v1-v0
+    kind: regen
+    tier: core
+    spec_id: bubble-basic
+    library: d3
+    class: different
+    new: {commit: *v1, render: *r-v1}
+    prev: {commit: *v0, render: *r-v0}
+    note: "force collision introduced (plan: keep forward, merge reversed)"
+    expected: null
+
+  - id: r-bubble-basic-pygal-v1-v0
+    kind: regen
+    tier: core
+    spec_id: bubble-basic
+    library: pygal
+    class: different
+    new: {commit: *v1, render: *r-v1}
+    prev: {commit: *v0, render: *r-v0}
+    note: "data scenario swapped on a -basic spec, symmetric (plan: keep both orders)"
+    expected: null
+
+  # ---- full: a second fresh item per library ------------------------------
+  - id: f-bubble-basic-matplotlib
+    kind: fresh
+    tier: full
+    spec_id: bubble-basic
+    library: matplotlib
+    new: {commit: *v5, render: *r-v5}
+    note: "candidate clean overlap probe"
+    defects: []
+    permitted: []
+
+  - id: f-heatmap-correlation-seaborn
+    kind: fresh
+    tier: full
+    spec_id: heatmap-correlation
+    library: seaborn
+    new: {commit: *base, render: production}
+    note: "candidate: colorbar title clipped; seeded spec"
+    defects: []
+    permitted: []
+
+  - id: f-sankey-basic-plotly
+    kind: fresh
+    tier: full
+    spec_id: sankey-basic
+    library: plotly
+    new: {commit: *base, render: production}
+    defects: []
+    permitted: []
+
+  - id: f-histogram-basic-altair
+    kind: fresh
+    tier: full
+    spec_id: histogram-basic
+    library: altair
+    new: {commit: *base, render: production}
+    defects: []
+    permitted: []
+
+  - id: f-bubble-basic-plotnine-v1
+    kind: fresh
+    tier: full
+    spec_id: bubble-basic
+    library: plotnine
+    new: {commit: *v1, render: *r-v1}
+    note: "candidate: unrequested trend line on a -basic spec (SC-01)"
+    defects: []
+    permitted: []
+
+  - id: f-box-grouped-makie
+    kind: fresh
+    tier: full
+    spec_id: box-grouped
+    library: makie
+    new: {commit: *base, render: production}
+    defects: []
+    permitted: []
+
+  - id: f-bar-stacked-labeled-d3
+    kind: fresh
+    tier: full
+    spec_id: bar-stacked-labeled
+    library: d3
+    new: {commit: *base, render: production}
+    defects: []
+    permitted: []
+
+  - id: f-line-multi-muix
+    kind: fresh
+    tier: full
+    spec_id: line-multi
+    library: muix
+    new: {commit: *base, render: production}
+    defects: []
+    permitted: []
+
+  - id: f-scatter-text-letsplot
+    kind: fresh
+    tier: full
+    spec_id: scatter-text
+    library: letsplot
+    new: {commit: *base, render: production}
+    defects: []
+    permitted: []
+
+  - id: f-survival-kaplan-meier-ggplot2
+    kind: fresh
+    tier: full
+    spec_id: survival-kaplan-meier
+    library: ggplot2
+    new: {commit: *base, render: production}
+    defects: []
+    permitted: []
+
+  - id: f-heatmap-calendar-chartjs
+    kind: fresh
+    tier: full
+    spec_id: heatmap-calendar
+    library: chartjs
+    new: {commit: *base, render: production}
+    defects: []
+    permitted: []
+
+  - id: f-area-stacked-pygal
+    kind: fresh
+    tier: full
+    spec_id: area-stacked
+    library: pygal
+    new: {commit: *base, render: production}
+    defects: []
+    permitted: []
+
+  # ---- full: further regen pairs ------------------------------------------
+  - id: r-bubble-basic-letsplot-v3-v2
+    kind: regen
+    tier: full
+    spec_id: bubble-basic
+    library: letsplot
+    class: near-identical
+    new: {commit: *v3, render: *r-v3}
+    prev: {commit: *v2, render: *r-v2}
+    note: "alpha 0.55 -> 0.5 only; about 10 % of pixels differ, max channel delta 28 (Fable measurement)"
+    expected: null
+
+  - id: r-bubble-basic-highcharts-v4-v3
+    kind: regen
+    tier: full
+    spec_id: bubble-basic
+    library: highcharts
+    class: different
+    new: {commit: *v4, render: *r-v4}
+    prev: {commit: *v3, render: *r-v3}
+    note: "declutter pass rewrites the data (plan: keep forward, merge reversed)"
+    expected: null
+
+  - id: r-bubble-basic-plotnine-v1-v0
+    kind: regen
+    tier: full
+    spec_id: bubble-basic
+    library: plotnine
+    class: different
+    new: {commit: *v1, render: *r-v1}
+    prev: {commit: *v0, render: *r-v0}
+    note: "trend line added on a -basic spec (plan: keep forward; reversed is an owner call)"
+    expected: null

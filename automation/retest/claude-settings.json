@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Write",
+      "Edit",
+      "Bash",
+      "Read(/tmp/*)",
+      "mcp__plugin_context7_context7__*",
+      "mcp__plugin_playwright_playwright__*"
+    ],
+    "ask": [],
+    "deny": [
+      "Bash(gh *)",
+      "Bash(git push *)",
+      "Bash(git commit *)",
+      "WebFetch"
+    ]
+  },
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
