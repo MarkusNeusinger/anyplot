@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 count-basic: Basic Count Plot
-Library: matplotlib 3.11.1 | Python 3.13.14
-Quality: pending | Updated: 2026-08-11
+Library: matplotlib 3.11.2 | Python 3.13.15
+Quality: 95/100 | Updated: 2026-09-27
 """
 
 import os
