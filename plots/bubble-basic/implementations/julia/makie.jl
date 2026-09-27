@@ -1,7 +1,7 @@
 # anyplot.ai
 # bubble-basic: Basic Bubble Chart
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 89/100 | Updated: 2026-09-27
+# Quality: 91/100 | Updated: 2026-09-27
 
 using CairoMakie
 using Colors
@@ -90,22 +90,26 @@ ax = Axis(
 
 # Highlight the franchise sweet spot where box-office ROI peaks — makes the
 # DE-03 narrative explicit instead of leaving it implicit in the data alone.
-vspan!(ax, 80.0, 150.0; color = RGBAf(INK.r, INK.g, INK.b, 0.06))
+# Heavier band opacity + bold ink-colored text (vs. a previous low-contrast
+# gray) so the insight reads at a glance instead of blending into the grid.
+vspan!(ax, 80.0, 150.0; color = RGBAf(INK.r, INK.g, INK.b, 0.10))
 text!(ax, 115.0, 9.6;
     text     = "franchise sweet spot",
     align    = (:center, :bottom),
-    fontsize = 14,
-    color    = INK_SOFT,
+    fontsize = 17,
+    font     = :bold,
+    color    = INK,
 )
 
 # Bubble area (sqrt-scaled) encodes box-office revenue; fill color encodes
 # production scale — two independent variables, each with its own legend
-# group below. Lower alpha than earlier drafts to ease overlap in the dense
-# low-budget cluster.
+# group below. Alpha lowered further (0.4 -> 0.3) so individual bubbles in
+# the densest low-budget indie and mid-budget studio clusters stay
+# distinguishable instead of merging into blobs.
 scatter!(ax, budget, rating;
     color       = point_color,
     markersize  = marker_sizes,
-    alpha       = 0.5,
+    alpha       = 0.3,
     strokewidth = 1.0,
     strokecolor = RGBAf(INK.r, INK.g, INK.b, 0.4),
 )
@@ -148,8 +152,8 @@ Legend(fig[1, 2],
     framecolor      = INK_SOFT,
     labelcolor      = INK_SOFT,
     titlecolor      = INK,
-    patchsize       = (60, 40),
-    labelsize       = 13,
+    patchsize       = (64, 44),
+    labelsize       = 16,
 )
 
 # Tighten the gap between the plot panel and the legend column — a small,

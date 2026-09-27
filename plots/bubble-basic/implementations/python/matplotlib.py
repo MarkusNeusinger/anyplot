@@ -1,13 +1,14 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: matplotlib 3.11.2 | Python 3.13.15
-Quality: 90/100 | Updated: 2026-09-27
+Quality: 93/100 | Updated: 2026-09-27
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import FuncFormatter, NullLocator
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
@@ -85,8 +86,6 @@ category_names = [spec["name"] for spec in category_specs]
 category_colors = IMPRINT_PALETTE[:4]
 
 # Scale bubble sizes by area for accurate visual perception (tuned for 3200×1800 canvas).
-# Range narrowed from a prior 30-550 span so the dense low-price Kitchenware cluster
-# doesn't merge into an indistinct mass of large overlapping circles.
 size_scaled = (sales_volume / sales_volume.max()) * 380 + 25
 
 # Plot
@@ -127,7 +126,7 @@ legend_ax.set_yticks([])
 for spine in legend_ax.spines.values():
     spine.set_color(INK_SOFT)
     spine.set_linewidth(0.8)
-legend_ax.set_title("Sales Volume", fontsize=9, color=INK_SOFT, loc="left", pad=4)
+legend_ax.set_title("Sales Volume", fontsize=10, fontweight="bold", color=INK, loc="left", pad=4)
 for cap, y in zip(legend_caps, (0.18, 0.5, 0.84), strict=True):
     legend_ax.scatter(
         0.28,
@@ -142,21 +141,20 @@ for cap, y in zip(legend_caps, (0.18, 0.5, 0.84), strict=True):
     )
     legend_ax.text(0.55, y, f"{cap}K units", fontsize=9, color=INK_SOFT, va="center", transform=legend_ax.transAxes)
 
-# Category color legend — upper right, fontsize bumped from the 8pt baseline for
-# better mobile-thumbnail legibility (previous review flagged 8pt as tight)
+# Category color legend — upper right, bold title leads the eye ahead of the body text
 category_legend = ax.legend(
     fontsize=9,
     loc="upper right",
-    framealpha=0.95,
+    framealpha=1.0,
     facecolor=ELEVATED_BG,
     edgecolor=INK_SOFT,
     title="Product Category",
-    title_fontsize=9,
+    title_fontsize=10,
     markerscale=0.7,
     handletextpad=0.5,
     borderpad=0.7,
 )
-plt.setp(category_legend.get_title(), color=INK_SOFT)
+plt.setp(category_legend.get_title(), color=INK, fontweight="bold")
 plt.setp(category_legend.get_texts(), color=INK_SOFT)
 
 # Focal-point annotation — call out the standout premium Electronics bubble
@@ -169,10 +167,10 @@ standout_y = quality_rating[electronics_mask][standout_local_idx]
 ax.annotate(
     "Premium standout",
     xy=(standout_x, standout_y),
-    xytext=(standout_x + 70, standout_y + 1.55),
+    xytext=(standout_x * 0.57, standout_y - 1.6),
     fontsize=9,
     color=INK_SOFT,
-    ha="left",
+    ha="right",
     arrowprops={"arrowstyle": "-", "color": INK_SOFT, "linewidth": 0.8},
     bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "linewidth": 0.6, "boxstyle": "round,pad=0.3"},
     zorder=4,
@@ -183,7 +181,7 @@ ax.annotate(
 # is tuned for.
 title = "Retail Product Portfolio · bubble-basic · python · matplotlib · anyplot.ai"
 title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
-ax.set_xlabel("Retail Price ($)", fontsize=10, color=INK, labelpad=8)
+ax.set_xlabel("Retail Price ($, log scale)", fontsize=10, color=INK, labelpad=8)
 ax.set_ylabel("Customer Quality Rating (1–10)", fontsize=10, color=INK, labelpad=8)
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=12)
 ax.tick_params(axis="both", labelsize=8, labelcolor=INK_SOFT, length=0)
@@ -194,7 +192,15 @@ for spine in ax.spines.values():
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK, zorder=0)
 ax.xaxis.grid(False)
 
-ax.set_xlim(-40, 1300)
+# Log x-axis: retail price is heavily right-skewed (Kitchenware ~$55 mean vs
+# Furniture ~$680 mean), so a linear axis crushes the low-price cluster into an
+# unreadable clump. Log spacing gives that region room to breathe while keeping
+# the high-price tail proportionate.
+ax.set_xscale("log")
+ax.set_xlim(7, 1400)
+ax.set_xticks([10, 30, 100, 300, 1000])
+ax.xaxis.set_minor_locator(NullLocator())
+ax.xaxis.set_major_formatter(FuncFormatter(lambda v, _: f"${v:,.0f}"))
 ax.set_ylim(1, 10.8)
 
 fig.subplots_adjust(left=0.09, right=0.97, top=0.92, bottom=0.12)

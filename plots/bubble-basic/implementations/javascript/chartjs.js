@@ -27,8 +27,10 @@ for (let i = 0; i < N; i++) {
 const sizeValues = products.map((p) => p.salesVolume);
 const sizeMin = Math.min(...sizeValues);
 const sizeMax = Math.max(...sizeValues);
-const R_MIN = 7;
-const R_MAX = 38;
+// Wider spread than the previous 7-38 range plus a lower base alpha below
+// give bubbles in the dense $80-140 cluster more visual separation.
+const R_MIN = 6;
+const R_MAX = 42;
 
 function bubbleRadius(size) {
   // area-proportional (not radius-proportional) to avoid overstating large values
@@ -111,7 +113,7 @@ const sizeLegend = {
       ctx.lineWidth = 1;
       ctx.strokeStyle = t.inkSoft;
       ctx.stroke();
-      ctx.font = "15px sans-serif";
+      ctx.font = "16px sans-serif";
       ctx.fillStyle = t.inkSoft;
       ctx.fillText(`${Math.round(val)}`, cx + R_MAX + 12, cy + 5);
     });
@@ -189,7 +191,7 @@ new Chart(canvas, {
         backgroundColor: (ctx) =>
           hexToRgba(
             t.palette[0],
-            ctx.dataIndex === bestValueIndex ? 0.9 : 0.58,
+            ctx.dataIndex === bestValueIndex ? 0.9 : 0.48,
           ),
         borderColor: (ctx) =>
           ctx.dataIndex === bestValueIndex

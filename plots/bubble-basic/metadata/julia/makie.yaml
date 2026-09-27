@@ -2,9 +2,9 @@ library: makie
 language: julia
 specification_id: bubble-basic
 created: '2026-05-28T17:46:42Z'
-updated: '2026-09-27T01:24:15Z'
+updated: '2026-09-27T02:09:25Z'
 generated_by: claude-sonnet
-workflow_run: 36283018622
+workflow_run: 36286917129
 issue: 755
 language_version: 1.11.9
 library_version: 0.21.9
@@ -12,60 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - 'Excellent theme-adaptive execution: the Imprint palette data colors (green/lavender/blue
-    tiers) are pixel-identical between light and dark renders, and every chrome element
-    (background, title, axis labels, ticks, grid, legend box) flips correctly with
-    no dark-on-dark or light-on-light failures.'
-  - Well-designed dual-legend layout that clearly separates the two encoded variables
-    — 'Production Scale' (color) and 'Box Office Revenue' (size) — with bold group
-    headers, generous spacing, and a colgap!-tuned gap between the plot and legend
-    column.
-  - 'Thoughtful data narrative: production budget, critic rating, and box-office revenue
-    are generated with a genuine ''franchise sweet spot'' ROI relationship, and the
-    vspan! + text! annotation calls that pattern out explicitly.'
-  - Bubble sizing follows the spec's area-proportional requirement (sqrt-scaled),
-    with a size-reference legend whose values ($30M-$300M) closely bracket the actual
-    data range.
-  - 'Clean, idiomatic, reproducible Makie code: flat script structure, explicit font
-    sizes throughout, Random.seed!(42), and no unused imports.'
+  - Correct sqrt-based area scaling for bubble size tied to box-office revenue, matching
+    the spec's 'scale by area, not radius' requirement
+  - Dual, well-organized legend (Production Scale color legend + Box Office Revenue
+    size legend) with real reference bubbles at sensible values
+  - '''Franchise sweet spot'' shaded band plus bold annotation gives the chart a clear
+    narrative focal point (DE-03) instead of a flat scatter of bubbles'
+  - Theme-adaptive chrome correctly implemented — data colors are byte-identical across
+    light/dark renders, only chrome (background, ink, grid) flips, no dark-on-dark
+    or light-on-light failures
+  - Uses current Makie API (Figure(size=...) rather than the deprecated resolution=
+    keyword), spines removed on top/right, subtle theme-aware gridlines
   weaknesses:
-  - 'Pipeline consistency: the reviewed plot-light.png/plot-dark.png render the title
-    as ''bubble-basic · julia · makie · anyplot.ai'', but the committed HEAD source
-    (makie.jl:57) sets title_str = ''Film Portfolio Analysis · bubble-basic · julia
-    · makie · anyplot.ai'' with titlesize=36 — the prefix does not appear in either
-    render, even though the same commit''s removal of the inset avg-revenue Axis IS
-    correctly reflected (both renders show no inset). The reviewed PNGs therefore
-    mix an old title with the new no-inset layout, a state that doesn''t match any
-    single commit. Recommend re-rendering both themes from the exact HEAD script before
-    the next AI review. Extrapolating from the current ~45%-width, 41-character render,
-    the real 67-character prefixed title at titlesize=36 should land around 70-85%
-    width (in line with the style guide''s expectation for the full mandated title),
-    so overflow is unlikely — but this must be visually confirmed rather than assumed.'
-  - 'DE-03 storytelling is understated: the ''franchise sweet spot'' annotation uses
-    small, low-contrast gray text over a very subtle shaded band, so the insight is
-    easy to miss at a glance — a bolder callout (heavier weight, or a short leader
-    line to the peak cluster) would make the story land immediately.'
-  - Minor bubble crowding in the low-budget indie cluster (budget < $50M) makes some
-    of the smaller bubbles hard to distinguish individually even at alpha=0.5 — slightly
-    more transparency or horizontal jitter in that region would help.
+  - Bubble alpha is set to 0.3, below the spec's recommended 0.5-0.7 range for handling
+    overlap — raising it toward ~0.5 would make individual bubbles read more solidly
+    without losing overlap legibility
+  - Title fontsize (36 at fig size 1600x900/px_per_unit=2) pushes the title close
+    to ~90% of the axis panel width — trimming titlesize toward ~28-30 would restore
+    more breathing room next to the legend column
+  - The 'Production Scale' color tier is a discretized version of the already-plotted
+    X-axis (production budget) rather than a fully independent third dimension — it
+    aids reading dense clusters but isn't orthogonal new information
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "bubble-basic · julia · makie · anyplot.ai" centered at top; dark axis labels "Production Budget (USD Millions)" (x) and "Critic Rating (out of 10)" (y, rotated); soft gray tick labels on both axes; thin left/bottom spines only (top/right removed); subtle low-opacity gridlines; a light-gray shaded vertical band ("franchise sweet spot") with a small gray annotation label inside it. Legend panel on the right has an off-white elevated background with a thin border, bold section headers ("Production Scale", "Box Office Revenue"), and gray labels.
-      Data: ~90 semi-transparent bubbles. First tier (Indie) is brand green #009E73, second tier (Studio) is lavender #C475FD, third tier (Blockbuster) is blue #4467A3 — matching Imprint palette positions 1-3 in canonical order. Bubble area scales with box-office revenue (sqrt-scaled), from small (~15px) to large (~100px) circles, each with a thin dark stroke for edge definition.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues found.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "Film Portfolio Analysis · bubble-basic · julia · makie · anyplot.ai" fully visible and not clipped at the top edge. Dark-ink axis titles ("Production Budget (USD Millions)", "Critic Rating (out of 10)") and softer-gray tick labels are all clearly readable. Grid lines are subtle but visible. The "franchise sweet spot" band renders as a light gray-tinted rectangle with bold dark annotation text sitting clearly above the bubbles in that region, fully legible.
+      Data: Three tiers of semi-transparent bubbles — green (#009E73, Indie <$50M), lavender (#C475FD, Studio $50-150M), and blue (#4467A3, Blockbuster >$150M) — sized by sqrt(box office revenue). The legend panel on the right shows solid (non-alpha) color swatches for the three tiers plus neutral gray reference circles for the size scale ($30M/$110M/$200M/$300M), all legible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same layout as the light render, but title, axis labels, and legend text render in light off-white/gray tones; tick labels and axis spines use a lighter soft-gray; gridlines are a faint light-on-dark overlay; the "franchise sweet spot" shaded band and its label use a lighter gray tone appropriate for the dark surface. Legend panel background is the dark elevated tone (#242420-equivalent) with a light border and light text.
-      Data: Same three bubble colors (green/lavender/blue) and same sizes as the light render — confirmed pixel-identical data-color positions across themes, only chrome inverted.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures found (title, axis labels, tick labels, and legend text all use light tones with strong contrast against the near-black surface).
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title renders in near-white bold text, fully visible and uncropped. Axis titles and tick labels flip to light ink and remain clearly readable against the dark background — no dark-on-dark failures observed anywhere (axis titles, ticks, legend text, annotation all use light ink). The sweet-spot band appears as a light-gray-tinted rectangle (white-ink tint at low alpha) with a bold light annotation, clearly visible against the near-black surface.
+      Data: Same three underlying data colors as the light render (green/lavender/blue at the same alpha) — confirmed the base hues are identical; alpha-compositing against the darker background naturally deepens their apparent tone, which is expected and not a theme violation. Legend swatches and text are fully legible in the dark legend panel.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -73,57 +58,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (titlesize=36, label/tick sizes 12-14);
-          readable in both themes with no overflow. Title width in the reviewed render
-          (~45%) is on the narrow side of the guideline but not a violation; the full
-          prefixed title from HEAD would extrapolate to ~70-85% width, within the
-          expected band for the mandated title length — see weaknesses re. stale render.
+        comment: All text readable in both themes; title fontsize slightly generous
+          relative to length
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text, data, or the legend; legend is cleanly
-          separated via colgap!.
+        comment: No text collisions with other text or data; legend well separated
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Sqrt area-scaled markers with alpha=0.5 are mostly well-adapted to
-          the 90-point density; some crowding remains in the dense low-budget indie
-          cluster.
+        comment: Alpha=0.3 keeps dense low-budget clusters distinguishable but slightly
+          washes out individual bubbles
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; stroke outlines add definition against
-          overlapping bubbles.
+        comment: Imprint palette is CVD-safe; size also encodes revenue, not color-only
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Plot and legend together use a large, balanced share of the 3200x1800
-          canvas; nothing is cut off; canvas dimension gate passed.
+        comment: Nothing cut off, but title reaches close to ~90% of axis panel width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels are descriptive and carry units (USD Millions, out
-          of 10).
+        comment: Descriptive axis labels with units, correct mandated title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; tiers 2-3 use canonical Imprint positions
-          2-3; backgrounds and chrome are theme-correct in both renders; data colors
-          identical across themes.'
+        comment: 'First series is #009E73, backgrounds match FAF8F1/1A1A17, both renders
+          theme-correct'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -131,26 +107,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful two-group legend, alpha-blended palette, and contextual
-          annotation — clearly above a configured default, short of publication-level
-          polish.
+        comment: Custom palette, dual-legend design, intentional data storytelling
+          via annotation
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, generous whitespace, deliberate colgap!
-          tuning between plot and legend; legend typography hierarchy is a nice detail.
+        comment: Spines removed, subtle grid, tightened legend gap, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Visual hierarchy exists via color tier + size, and the 'franchise
-          sweet spot' band names the insight — but the annotation is subtle enough
-          that a viewer could miss it at a glance.
+        comment: '''Franchise sweet spot'' band + annotation gives a clear focal point
+          and narrative'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -158,53 +131,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bubble chart: x/y position plus size-encoded third dimension.'
+        comment: Correct bubble chart
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Area-proportional sizing, alpha transparency for overlap, size-reference
-          legend, and visible min/max bubbles are all present.
+        comment: Area-based sizing and size legend present; alpha=0.3 is below the
+          spec's recommended 0.5-0.7
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=budget, y=rating correctly mapped; axes show the full data range.
+        comment: x=budget, y=rating, size=box office, all axes show full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Rendered title matches the mandated '{spec-id} · {language} · {library}
-          · anyplot.ai' format exactly; legend labels match the tier/size semantics.
+        comment: Title matches mandated format; legend labels match data tiers
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers the full indie-to-blockbuster budget range with a genuine
-          budget/rating/revenue relationship and a sweet-spot bump; lacks an extreme
-          outlier (e.g. a bomb blockbuster or breakout indie hit) that would showcase
-          more variance.
+        comment: Covers x/y/size plus a bonus categorical tier dimension
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible film-industry scenario.
+        comment: Plausible, neutral film-industry domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget, rating, and revenue ranges and their ROI relationship are
-          all realistic for the film domain.
+        comment: Budget, rating, and box-office ranges are all sensible for the domain
     code_quality:
       score: 10
       max: 10
@@ -214,52 +182,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat imports -> data -> plot -> save script, no functions/classes.
+        comment: No functions or classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42).
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random all used; unused Statistics import was
-          correctly dropped with the inset removal.
+        comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No over-engineering or fake functionality; comments explain non-obvious
-          data-generation intent.
+        comment: No fake UI/interactivity, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png via save(..., px_per_unit=2), current CairoMakie
-          API.
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current Figure(size=...)
+          API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Current Makie API (size= not resolution=), GridLayout colgap!, proper
+          Axis/Legend composition
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct, idiomatic use of Figure/Axis/scatter!/vspan!/text!/Legend/colgap!.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses Makie's GridLayout-based Legend placement (fig[1,2]) and colgap!
-          layout tuning, which are more directly built into Makie's layout system
-          than in most other libraries.
+        comment: vspan!, text! annotation, custom MarkerElement legend construction
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -268,7 +233,9 @@ impl_tags:
   - custom-legend
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
