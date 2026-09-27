@@ -40,7 +40,7 @@ Generator-side changes (`prompts/workflow-prompts/impl-generate-claude.md`, `pro
 
 The pull request that adds the workflow can't dispatch it: a `workflow_dispatch`-only workflow must be on the default branch first. Run these in order once it has merged, each after the previous one has finished:
 
-1. Smoke-test one cell:
+1. Smoke-test one cell. It is the first run to meet the idle check (step 1 of [Run a baseline and a candidate arm](#run-a-baseline-and-a-candidate-arm)): the prep job refuses while a pipeline run is queued, or in progress and less than six hours old, and `daily-regen` fires at 02:17 UTC and dispatches regenerations, so dispatch it once the pipeline is idle:
 
    ```bash
    gh workflow run review-retest.yml -f subset=f-bubble-basic-ggplot2 -f runs=1 -f label=smoke
