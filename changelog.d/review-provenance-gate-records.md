@@ -9,7 +9,7 @@
   overlay, so exactly what the reviewer read), and `review.rendered_at` (the
   staging render's creation time). A new standard-library helper,
   `automation/scripts/review_provenance.py`, computes both. The keys aren't
-  synced to the database, and every new step is non-gating.
+  synced to the database, and every new step is non-gating. (#11950)
 - **Regen gate records.** Every regen gate decision now carries a reason code
   (`merge`, `below_tolerance`, `no_visible_improvement`, `regression`,
   `regen_json_invalid`, …) and leaves a one-line JSON record in the PR comment
@@ -21,7 +21,7 @@
   previous review, the review files, the record) is kept as a 60-day
   `regen-pair-<pr>-<attempt>` artifact — the predecessor's production renders
   are overwritten on the next merge, so it is the only copy. Run logs expire;
-  PR comments don't, so the gate can now be monitored after the fact.
+  PR comments don't, so the gate can now be monitored after the fact. (#11950)
 
 ### Changed
 
@@ -30,6 +30,7 @@
   replace path now posts the same summary (stored, re-scored and new score,
   improvements, regressions, reason) and the gate record before it dispatches
   the merge. A failed comment only logs a warning and never holds up the merge.
+  (#11950)
 
 ### Fixed
 
@@ -39,4 +40,4 @@
   meant to score the new version blind (seen on #11926). `impl-generate.yml`
   now resets it to `Quality: pending` before the PR opens, the state a fresh
   file starts in (`regen_gate.py sanitize-source --pending`); impl-review
-  writes the new score afterwards.
+  writes the new score afterwards. (#11950)
