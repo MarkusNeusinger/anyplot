@@ -12,3 +12,4 @@
   `-basic` spec count as the wrong variant (SC-01). Regenerations now address
   only the weaknesses that are real per that section, answer overlap with data,
   marker size or alpha instead of moving marks, and keep their data scenario.
+  (#11946)
