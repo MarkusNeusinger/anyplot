@@ -180,6 +180,73 @@ class TestLabelGate:
         assert labels["r-bubble-basic-matplotlib-b-a"]["expected"] == {"forward": "merge", "reversed": "keep"}
 
 
+# Scoped defect patterns of set v1 (PR #11964 review): each matches a phrasing
+# of its own defect and not a weakness about something else, so an unrelated
+# weakness is never credited as the named defect.
+SCOPED_LABELS: dict[tuple[str, str], tuple[list[str], list[str]]] = {
+    ("f-area-elevation-profile-seaborn", "D1"): (
+        [
+            "Y-axis label 'Elevation (m)' is partially cut off at the left edge",
+            "The y-axis title touches the left canvas edge",
+        ],
+        ["the legend is clipped at the right edge", "The title is cut off at the top"],
+    ),
+    ("f-bar-horizontal-makie", "D2"): (
+        [
+            "Title hierarchy is inverted: the subtitle appears above the title",
+            "Title and subtitle are in the wrong order",
+        ],
+        ["Visual hierarchy between the bars is weak", "The legend is placed above the title"],
+    ),
+    ("f-bode-basic-altair", "D1"): (
+        ["In the dark render, axis titles and tick labels are dark on dark and nearly illegible"],
+        ["Tick labels are small and hard to read at this size", "Low contrast between the magnitude and phase curves"],
+    ),
+    ("f-waterfall-basic-muix", "D2"): (
+        ["Value labels show the running total instead of each step's change"],
+        ["The final cumulative total bar has no label", "Colors do not change between positive and negative steps"],
+    ),
+    ("f-bubble-basic-d3", "D1"): (
+        ["d3.forceCollide moves the bubbles off their data values"],
+        ["Two labels collide near the top-right bubble", "The legend is forced into the top-left corner"],
+    ),
+    ("f-scatter-hr-diagram-letsplot", "D2"): (
+        ["The yellow 'Sun' label has low contrast on the light background"],
+        ["Low-contrast gridlines in the light render", "The yellow G-type stars blend into the light background"],
+    ),
+}
+
+
+def _shipped_defect(item_id: str, defect_id: str) -> dict[str, Any]:
+    manifest = yaml.safe_load(MANIFEST.read_text(encoding="utf-8"))
+    item = next(i for i in manifest["items"] if i["id"] == item_id)
+    return next(d for d in item["defects"] if d["id"] == defect_id)
+
+
+def _caught(label: dict[str, Any], weakness: str) -> bool:
+    """Every listed criterion below max, so only the pattern decides."""
+    checklist = {cid: {"score": 1, "max": 2, "comment": ""} for cid in label["criteria"]}
+    return rt.metrics.defect_hit(label, {"checklist": checklist, "weaknesses": [weakness]})
+
+
+class TestScopedLabelPatterns:
+    @pytest.mark.parametrize(
+        ("key", "phrasing"),
+        [(key, p) for key, (hits, _) in SCOPED_LABELS.items() for p in hits],
+        ids=lambda v: v[0] if isinstance(v, tuple) else None,
+    )
+    def test_matches_its_own_defect(self, key, phrasing):
+        assert _caught(_shipped_defect(*key), phrasing)
+
+    @pytest.mark.parametrize(
+        ("key", "phrasing"),
+        [(key, p) for key, (_, misses) in SCOPED_LABELS.items() for p in misses],
+        ids=lambda v: v[0] if isinstance(v, tuple) else None,
+    )
+    def test_ignores_an_unrelated_weakness(self, key, phrasing):
+        assert not _caught(_shipped_defect(*key), phrasing)
+
+
 # ---------------------------------------------------------------------------
 # plan
 # ---------------------------------------------------------------------------

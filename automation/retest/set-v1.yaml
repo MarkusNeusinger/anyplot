@@ -71,7 +71,7 @@ items:
     new: {commit: *base, render: production}
     note: "candidate: y-axis title clipped at the left edge (AR-09)"
     defects:
-      - {id: D1, criteria: [VQ-05], match: 'clip|cut[- ]?off|truncat|cropped', note: 'y-axis title clipped at the left canvas edge (AR-09 edge clipping)'}
+      - {id: D1, criteria: [VQ-05], match: '(\b(y[- ]?axis|vertical[- ]axis|y)[- ](title|label)|\bylabel|elevation (\(m\) )?(axis )?(title|label)).{0,60}(clip|cut|crop|truncat|chopped|off[- ]canvas|touch\w* the (left |canvas |figure |image )*edge|(runs|extends|spills) (past|beyond|off|outside))|(clip|cut|crop|truncat|chopped)\w*.{0,60}(\b(y[- ]?axis|vertical[- ]axis|y)[- ](title|label)|\bylabel)|\bleft (canvas |figure |image |plot )?(edge|side|margin|border|boundary).{0,60}(clip|cut|crop|truncat|chopped)|(clip|cut|crop|truncat|chopped)\w*.{0,60}\bleft (canvas |figure |image |plot )?(edge|side|margin|border|boundary)', note: 'y-axis title clipped at the left canvas edge (AR-09 edge clipping)'}
     permitted: []
 
   - id: f-bar-horizontal-makie
@@ -83,7 +83,7 @@ items:
     note: "candidate: content fills about 27 % of the width, subtitle above the title (VQ-05)"
     defects:
       - {id: D1, criteria: [VQ-05], match: 'white ?space|empty space|unused space|wasted space|(plot|chart|content|panel|bars?|data) (area |region )?(is |are |looks? )?(narrow|squeez|compress|cramped|confined|small)|small (portion|fraction|part) of the (canvas|width|figure)|(only|about|~) ?\d+ ?% of the (canvas|width|figure)', note: 'plot content fills about 27 % of the canvas width'}
-      - {id: D2, criteria: [VQ-05, DE-01], match: 'subtitle.{0,40}(above|over|before|on top)|(above|over) the (main )?title|title (order|hierarchy)|hierarch', note: 'subtitle placed above the title'}
+      - {id: D2, criteria: [VQ-05, DE-01], match: 'subtitle.{0,40}(above|\bover\b|before|on top of|precedes|ahead of)|\b(title|heading)s?\b.{0,40}(below|beneath|under|after) (the )?subtitle|\b(title|heading)s?\b.{0,40}subtitle.{0,40}(order|hierarch|swapped|reversed|inverted|backwards|flipped)|(inverted|reversed|swapped|backwards|flipped|wrong) (title|heading)[- ]?(hierarchy|order)|\b(title|heading) (hierarchy|order) (is )?(inverted|reversed|swapped|backwards|flipped|wrong)', note: 'subtitle placed above the title'}
     permitted: []
 
   - id: f-bode-basic-altair
@@ -94,7 +94,7 @@ items:
     new: {commit: *base, render: production}
     note: "candidate: axis titles and tick labels dark on dark in the dark render (VQ-01, VQ-07); bright white grid there (DE-02)"
     defects:
-      - {id: D1, criteria: [VQ-01, VQ-07], match: 'dark[- ]on[- ]dark|contrast|illegible|hard to read|unreadable|dark (render|theme|mode|background).{0,60}(label|tick|title|text)|(label|tick|title|text).{0,60}dark (render|theme|mode|background)', note: 'axis titles and tick labels dark on dark in the dark render'}
+      - {id: D1, criteria: [VQ-01, VQ-07], match: '(?s)^(?=.*\bdark\b).*(\b(axis|axes|tick|label|(sub)?title|text)\w*.{0,60}(dark[- ]on[- ]dark|contrast|illegib|hard to (read|see)|unreadable|invisible|barely (visible|legible|readable)|faint|disappear|vanish|blend)|(dark[- ]on[- ]dark|contrast|illegib|hard to (read|see)|unreadable|invisible|barely (visible|legible|readable)|faint|disappear|vanish|blend)\w*.{0,60}\b(axis|axes|tick|label|(sub)?title|text))', note: 'axis titles and tick labels dark on dark in the dark render'}
       - {id: D2, criteria: [DE-02, VQ-07], match: '(white|bright|light|harsh|heavy|strong) grid|grid ?lines?.{0,40}(white|bright|harsh|glar|stand out|too strong|too prominent|heavy)', note: 'bright white grid in the dark render'}
     permitted: []
 
@@ -140,7 +140,7 @@ items:
     note: "candidate: connectors cross value labels (VQ-02); labels show running totals (SC-03)"
     defects:
       - {id: D1, criteria: [VQ-02], match: 'connector.{0,60}(cross|through|over|overlap|strik|collid|behind|intersect)|(cross|through|overlap|strik|collid|intersect)\w*.{0,60}connector', note: 'connector lines cross the value labels'}
-      - {id: D2, criteria: [SC-03, DQ-03], match: 'running total|cumulative|(instead of|rather than|not) (the )?(change|delta|increment|step)', note: 'value labels show running totals instead of the step values'}
+      - {id: D2, criteria: [SC-03, DQ-03], match: '\b(value |data |bar |step )?labels?\b.{0,60}(running|cumulative)|(running|cumulative) (total|sum|balance|value|amount|figure)s?.{0,40}(instead of|rather than|not (the )?(per[- ]step |step |individual |incremental )?(change|delta|increment|step))|\b(value |data |bar )?labels?\b.{0,60}(not|n.t) (show|display|report|give) (the )?(per[- ]step |step |individual |incremental )?(change|delta|increment|step value)', note: 'value labels show running totals instead of the step values'}
     permitted: []
 
   - id: f-line-win-probability-chartjs
@@ -163,7 +163,7 @@ items:
     new: {commit: *v5, render: *r-v5}
     note: "candidate: force collision moves marks off their values (SC-03)"
     defects:
-      - {id: D1, criteria: [SC-03], match: 'force|collision|collide|displac|nudg|jitter|off (their|its) (true |data )?(value|position|coordinate)|(moved|pushed|shifted) (apart|away|off)|not at (their|its)', note: 'force collision moves bubbles off their (x, y) values'}
+      - {id: D1, criteria: [SC-03], match: 'force[- ]?(layout|simulation|collide|collision|directed|based)|forcecollide|d3[.-]force|collision[- ](detection|simulation|resolution|avoidance|force|layout)|\b(bubble|circle|marker|mark|point|dot|disc)s?\b.{0,60}(displac|nudg|jitter|moved|pushed|shifted|repositioned|spread apart|off (their|its) (true |data |actual |exact )?(value|position|coordinate|location)|not at (their|its)|no longer (sit |lie )?(at|on|encode|match|reflect))|(displac|nudg|jitter)\w* (of |the |apart )*(bubble|circle|marker|mark|point|dot|disc)s?|position\w*.{0,40}(do(es)? not|do(es)?n.t|no longer|fail to) (encode|reflect|match|represent|show) (the )?(true |actual |underlying )?(data|value|x|coordinate)', note: 'force collision moves bubbles off their (x, y) values'}
     permitted: []
 
   - id: f-network-basic-bokeh
@@ -390,7 +390,7 @@ items:
     note: "candidate: 'Main Sequence' label in empty space away from the band, 'White Dwarfs' partly under a marker (VQ-02); yellow 'Sun' label on the light page (VQ-01)"
     defects:
       - {id: D1, criteria: [VQ-02], match: '(main sequence|white dwarfs?|giants?|region|group|annotation)s? labels?.{0,60}(away|far|off|empty|misplac|under|behind|overlap|cover|obscur|detached)|labels?.{0,60}(misplac|away from|off (their|the)|far from|under|behind|overlap)', note: 'Main Sequence label in empty space away from the band; White Dwarfs label partly under a marker'}
-      - {id: D2, criteria: [VQ-01, VQ-04], match: 'sun.{0,60}(yellow|contrast|hard to read|illegible|faint|legib)|yellow.{0,60}(label|text|annotation)|(label|text|annotation).{0,60}yellow|low[- ]contrast', note: 'yellow Sun label on the light page'}
+      - {id: D2, criteria: [VQ-01, VQ-04], match: '\bsun\b.{0,60}(yellow|contrast|hard to (read|see)|illegib|legib|readab|washed[- ]out)|(yellow|contrast|hard to (read|see)|illegib|legib|readab|washed[- ]out)\w*.{0,60}\bsun\b|yellow (label|text|annotation)s?.{0,60}(light|white|pale|cream) (page|background|canvas|render)|yellow (text|label|annotation) on (a |the )?(light|white|pale|cream)', note: 'yellow Sun label on the light page'}
     permitted: []
 
   - id: f-survival-kaplan-meier-ggplot2
