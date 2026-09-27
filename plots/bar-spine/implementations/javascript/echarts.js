@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-spine: Spine Plot for Two-Variable Proportions
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 95/100 | Created: 2026-09-02
+// Quality: 90/100 | Updated: 2026-09-27
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -24,6 +24,9 @@ const statusColor = { Churned: t.palette[4], "At Risk": t.amber, Retained: t.pal
 const LABEL_LIGHT = "#FAF8F1";
 const LABEL_DARK = "#1A1A17";
 const statusTextColor = { Churned: LABEL_LIGHT, "At Risk": LABEL_DARK, Retained: LABEL_LIGHT };
+// Retained's light-on-green label sits near the WCAG AA floor (~3:1); a heavier
+// weight adds enough stroke thickness to remove any residual ambiguity.
+const statusLabelWeight = { Churned: 500, "At Risk": 500, Retained: 700 };
 
 const totals = tiers.map((tier) => statusOrder.reduce((sum, status) => sum + tier.counts[status], 0));
 const grandTotal = totals.reduce((sum, total) => sum + total, 0);
@@ -61,7 +64,9 @@ function segmentRenderItem(params, api) {
   );
   if (!rectShape) return;
   const children = [
-    { type: "rect", shape: rectShape, style: { fill: statusColor[seg.status], stroke: t.pageBg, lineWidth: 2 } },
+    // Thin (not thick) seam: definition between segments without competing
+    // with the spec's gap-free, continuous-proportion-axis emphasis.
+    { type: "rect", shape: rectShape, style: { fill: statusColor[seg.status], stroke: t.pageBg, lineWidth: 1 } },
   ];
   if (rectShape.width > 70 && rectShape.height > 40) {
     children.push({
@@ -72,7 +77,7 @@ function segmentRenderItem(params, api) {
         text: `${Math.round(seg.pct)}%`,
         fill: statusTextColor[seg.status],
         fontSize: 14,
-        fontWeight: 500,
+        fontWeight: statusLabelWeight[seg.status],
         align: "center",
         verticalAlign: "middle",
       },

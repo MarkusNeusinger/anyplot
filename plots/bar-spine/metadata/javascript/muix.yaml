@@ -2,9 +2,9 @@ library: muix
 language: javascript
 specification_id: bar-spine
 created: '2026-09-02T12:57:16Z'
-updated: '2026-09-02T13:14:02Z'
+updated: '2026-09-27T03:40:25Z'
 generated_by: claude-sonnet
-workflow_run: 33631923585
+workflow_run: 36291460220
 issue: 5249
 language_version: 22.23.2
 library_version: 7.29.1
@@ -12,101 +12,109 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/muix/plot-dark.html
-quality_score: 91
+quality_score: 95
 review:
   strengths:
-  - 'Clever workaround for MUI X''s lack of native variable-width bars: renders one
-    synchronized BarChart per tier, sized proportionally to its marginal count, with
-    the y-axis (ticks/line) shown only on the leftmost panel so the row reads as one
-    continuous spine plot.'
-  - 'Correct, well-justified Imprint palette use: Retained = palette[0] brand green,
-    Churned = palette[4] matte red — exactly the sanctioned semantic exception (bad/loss
-    -> red anchor) rather than an arbitrary ordinal pick.'
-  - Segment percentage labels flip fill color per series (dark text on green, light
-    text on red) and hide themselves below a 22px height threshold, avoiding unreadable
-    squeezed text.
-  - Title fontsize scales down via a length-based formula for the long mandated title,
-    keeping it inside the canvas with no overflow.
-  - Bars are perfectly adjacent with zero gaps, matching the spec's requirement to
-    emphasize a continuous proportion axis.
-  - Deterministic in-memory data, clean single-purpose helpers, no fake UI, current
-    MUI X API usage (skipAnimation, barLabel, slotProps).
-  - 'Compelling story: churn rate visibly and monotonically drops as subscription
-    tier (and bar width) increases, immediately legible in both themes.'
+  - Solves MUI X's lack of variable-width-bar support by stitching four independently-sized
+    BarChart instances into one continuous spine, with widths computed to exact pixel
+    proportion of each tier's marginal share
+  - 'Smart semantic color mapping: Retained=brand green (#009E73), Downgraded=amber
+    (#DDCC77, the ''caution'' anchor), Churned=matte red (#AE3030, the ''bad/loss''
+    anchor) - matches the traffic-light convention a reader would expect for this
+    outcome data'
+  - Reference gridlines at 25/50/75% are drawn as an overlay confined to the widest
+    (Free) bar, working around MUI X's own grid painting behind opaque bar fills -
+    a thoughtful, well-documented technical workaround
+  - Conditional percentage labels inside each segment hide automatically below a 22px
+    height threshold, avoiding cramped/overlapping text in the narrow Enterprise segments
+  - Thin ink stroke added only to the amber Downgraded series to fix its sub-3:1 WCAG
+    contrast on the cream background, exactly per the style guide's optional outline
+    pattern
+  - Italic caption at the bottom explicitly explains the dual encoding (bar width
+    = tier size, segment height = conditional rate), removing any ambiguity about
+    how to read the chart
+  - Data tells a clear, realistic business story - churn falls from 32% (Free) to
+    6% (Enterprise) as retention climbs from 50.7% to 91.1%, monotonic across all
+    four tiers
+  - Both renders are pixel-identical in data colors with correctly theme-adapted chrome
+    (background, ink, muted caption text) in light and dark
   weaknesses:
-  - Only 2 fill categories (Churned/Retained) — the spec allows 2-5; a 3rd category
-    (e.g. a 'Downgraded' status) would better showcase the conditional-distribution
-    feature that distinguishes a spine plot from a simple two-color stacked bar.
-  - Category identity leans on green-vs-red hue; stacking order (Churned always on
-    top) and the text/legend labels provide redundant cues, but a thin stroke or hatch
-    on one segment would make the distinction more robust for colorblind viewers.
-  - No gridlines at any percentage interval — for the very wide Free bar, a subtle
-    25/50/75% horizontal rule would help readers gauge the segment boundary without
-    tracing back to the y-axis.
+  - Title (with descriptive prefix) renders at only ~40% of plot width due to the
+    length-based font-scaling formula - well short of the 50-70% comfortable range,
+    though not a hard violation since it doesn't overflow or look squeezed
+  - No explicit X-axis title (e.g. 'Subscription Tier') - relies on the tier tick
+    labels alone being self-explanatory, which is acceptable but slightly less complete
+    than a fully labeled axis pair
+  - Left/right canvas padding (32px on a 3200px-wide canvas) is extremely tight; still
+    balanced and nothing is clipped, but a touch more breathing room would look less
+    edge-to-edge
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), not pure white — matches the light-theme spec.
-      Chrome: Bold dark title "Customer Churn by Subscription Tier · bar-spine · javascript · muix · anyplot.ai" top-left; legend row below with green "Retained" and red "Churned" swatches plus "n = 10,800 customers" note at top-right; rotated "Share of customers" y-axis label on the far left with 0%-100% ticks shown once on the shared left axis; four x-axis category labels (Free, Basic, Pro, Enterprise) centered under variable-width bars; italic caption at the bottom explaining the width/height encoding. All text renders in dark ink and is clearly legible against the light background.
-      Data: Four adjacent bars with widths proportional to tier size (Free widest, Enterprise narrowest), each a single 100%-stacked column split into a green "Retained" segment (bottom) and a red "Churned" segment (top). Percentage labels (68%/32%, 79%/21%, 88%/12%, 94%/6%) sit inside each segment, colored for contrast against their own fill. First series is the correct brand green #009E73; churned uses the matte-red semantic anchor.
-      Legibility verdict: PASS
+      Background: warm off-white, consistent with Imprint #FAF8F1 - not pure white.
+      Chrome: Bold dark-ink title top-left ("Customer Churn by Subscription Tier · bar-spine · javascript · muix · anyplot.ai"); a three-item custom legend (Retained/Downgraded/Churned swatches, the Downgraded swatch outlined) plus an "n = 10,800 customers" annotation top-right; a rotated "Share of customers" y-axis label; y-axis tick labels 0%-100% in steps of 10; x-axis tier labels (Free, Basic, Pro, Enterprise) centered under each variable-width bar; an italic muted-gray caption at the bottom explaining the width/height encoding. All chrome text renders in dark ink/soft-ink tones, clearly legible against the cream background.
+      Data: Four adjacent, variable-width 100%-stacked bars (widest=Free, narrowest=Enterprise) with three vertically stacked segments per bar - green Retained (#009E73, bottom), amber/khaki Downgraded (with a thin dark stroke for contrast, middle), and matte-red Churned (top). Percentage labels are drawn inside each segment when tall enough (e.g. "50.7%", "17.3%", "32%" for Free), using white text on the red/green segments and dark text on the amber segment for contrast. Thin horizontal reference lines at the 25/50/75% marks are visible confined to the left edge of the widest (Free) bar only.
+      Legibility verdict: PASS - all title, legend, axis, tick, and in-segment percentage text is clearly readable against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), not pure black — matches the dark-theme spec.
-      Chrome: Same title, legend, axis labels, tick labels, and caption, all re-rendered in light ink/off-white tones (title and axis label in light cream, tick/legend/caption text in a softer light-gray) — fully readable against the dark background, no dark-on-dark text anywhere.
-      Data: Identical green/red segment colors and identical percentage values/positions as the light render — confirms data colors are constant and only chrome (text/background) flips between themes.
-      Legibility verdict: PASS
+      Background: warm near-black, consistent with Imprint #1A1A17 - not pure black.
+      Chrome: Same title, legend, axis labels, tick labels, and caption as the light render, all correctly re-colored to light ink / soft-ink tones (off-white/light-gray) against the dark background. The reference gridlines within the Free bar are still faintly visible.
+      Data: Identical segment layout, bar widths, and percentages as the light render - green Retained, amber Downgraded (with stroke), and red Churned segments are pixel-identical in hue to the light render; only the chrome (background, text, reference-line tint) has flipped for the dark theme.
+      Legibility verdict: PASS - all chrome text is light-colored and clearly readable against the near-black background; no dark-on-dark failures found. In-segment percentage labels (white on red/green, dark ink on amber) remain readable since those label colors are tied to the segment's own fixed data color, not the page theme.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; title fontsize scales with title
-          length via the length-based formula
+        comment: All font sizes explicitly set (titleFontSize scaled by length, tickLabelStyle,
+          legend, caption); readable at full size in both themes, no overflow or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: No text/label collisions; small segments correctly hide their percentage
+          label below the 22px height threshold instead of overlapping
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Segments are large, high-contrast fills; percentage labels self-hide
-          below a 22px height threshold
+        comment: Segments and their labels are clearly visible and sized appropriately
+          for a 4-category spine plot
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Retained/Churned rely partly on green-vs-red hue; mitigated by consistent
-          stacking order and text/legend labels but no stroke/hatch redundancy
+        passed: true
+        comment: Ink stroke added on the amber Downgraded series for WCAG contrast;
+          direct in-segment labels give redundant encoding beyond hue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: No overflow or cut-off elements; generous margins; canvas gate passed
+        comment: Chart, legend, caption, and title use the canvas well with balanced
+          (if tight) symmetric margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive y-axis label with % units; title follows the required
-          format
+        comment: Y-axis 'Share of customers' with % tick labels; x-axis tier names
+          are self-explanatory
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series is brand green palette[0]; churned correctly uses the
-          matte-red semantic anchor (palette[4]); backgrounds correct in both themes
+        comment: 'First series is #009E73; Downgraded/Churned correctly use the amber
+          and matte-red semantic anchors given the clear good/caution/bad labels;
+          both renders theme-correct'
     design_excellence:
       score: 16
       max: 20
@@ -116,22 +124,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Multi-panel synchronized-axis technique is a sophisticated solve
-          for MUI X's lack of variable-width bars
+        comment: Custom semantic palette, custom-built legend, editorial caption and
+          n= annotation - clearly above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Only one y-axis line kept, no x-axis line, no grid clutter, generous
-          whitespace
+        comment: Spines removed, subtle reference gridlines only where useful, contrast-tuned
+          stroke on one series; margins are a bit tight
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: 'Clear focal point: churn visibly drops as tier size shrinks; caption
-          reinforces the encoding'
+        comment: Monotonic churn-decreases-with-tier story is immediately visible
+          via width + color + labels
     spec_compliance:
       score: 15
       max: 15
@@ -141,51 +149,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct spine plot: width = marginal frequency, height = conditional
-          proportion'
+        comment: 'Correct spine plot: variable bar widths for marginal frequency,
+          stacked normalized segments for conditional distribution'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Proportional widths, 100%-stacked segments, zero-gap adjacency, centered
-          x labels, percentage labels all present
+        comment: Width proportional to marginal count, segments sum to 100%, bars
+          adjacent with no gaps, distinct colors + legend, centered x labels, percentage
+          labels where space permits
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapping correct, axes show all data
+        comment: x_category -> bar width, fill_category -> stacked segment, count
+          -> conditional %; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format compliant; legend labels match series
+        comment: Title matches '{Descriptive Title} · bar-spine · javascript · muix
+          · anyplot.ai'; legend labels match the three outcome series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers the core spine-plot mechanics but only 2 fill categories (spec
-          allows up to 5) understates the conditional-distribution aspect
+        comment: All four tiers show distinct, varying three-way splits, not uniform
+          placeholder values
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral SaaS churn-by-tier scenario
+        comment: Neutral, comprehensible SaaS subscription-churn scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic customer counts; churn decreasing with tier is a sensible
-          domain pattern
+        comment: Proportions and the churn-falls-with-tier relationship are realistic
+          and internally consistent (percentages sum to 100% per tier)
     code_quality:
       score: 10
       max: 10
@@ -195,60 +206,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary classes; small helpers justified by per-segment label
-          styling
+        comment: Imports -> data -> layout math -> render; the single default-exported
+          component is the mandatory harness contract, not over-engineering
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded in-memory data
+        comment: Fully hard-coded, deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only BarChart imported and used
+        comment: Only imports BarChart from @mui/x-charts
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; complexity matches the technique's requirements
+        comment: The multi-chart stitching is non-trivial but well commented and justified
+          by the library's lack of variable-width-bar support; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation set, current MUI X API
+        comment: Correctly relies on the harness for output; uses current BarChart
+          API (skipAnimation, barLabel, slotProps)
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic stack/series/xAxis/yAxis config
+        comment: Correct, idiomatic BarChart configuration (band scale, stack, margins)
+          for each column
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: barLabel with per-ownerState fill color and height-gated visibility
-          is a distinctive, non-trivial use of the API
+        comment: Context-aware barLabel callback (hides labels by bar height), per-series
+          sx targeting, and slotProps styling are genuinely MUI X-specific
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - annotations
-  - subplots
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - normalization
   styling:
-  - minimal-chrome
+  - edge-highlighting
+  - grid-styling
+  - publication-ready

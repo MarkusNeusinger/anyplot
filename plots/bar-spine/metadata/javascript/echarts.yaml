@@ -2,9 +2,9 @@ library: echarts
 language: javascript
 specification_id: bar-spine
 created: '2026-09-02T12:51:56Z'
-updated: '2026-09-02T13:09:35Z'
+updated: '2026-09-27T03:34:48Z'
 generated_by: claude-sonnet
-workflow_run: 33631439961
+workflow_run: 36291359956
 issue: 5249
 language_version: 22.23.2
 library_version: 6.1.0
@@ -12,123 +12,130 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/echarts/plot-dark.html
-quality_score: 95
+quality_score: 90
 review:
   strengths:
-  - 'Review-1''s dark-render percentage-label contrast bug is fully fixed: label colors
-    are now derived from each status''s own fixed data-fill luminance (LABEL_LIGHT/LABEL_DARK)
-    instead of theme-flipping tokens, so Churned, At Risk, and Retained labels are
-    all legible in both themes.'
-  - 'Genuinely idiomatic ECharts library mastery: implements the variable-width, 100%-stacked
-    spine plot with a custom series (renderItem + api.coord() + echarts.graphic.clipRectByRect)
-    since ECharts has no native series for this chart type.'
-  - 'Correct spine-plot semantics: bar widths proportional to each tier''s marginal
-    customer total, segment heights are conditional proportions summing to 100%, and
-    bars sit flush against each other with no layout gaps.'
-  - Thoughtful, spec-appropriate semantic color mapping (Churned=matte red, At Risk=amber,
-    Retained=brand green) — a legitimate application of the style guide's semantic-exception
-    rule for status/quality categories.
-  - Y-axis title now reads 'Share within tier (%)' with explicit units, resolving
-    the earlier VQ-06 nit.
-  - 'Clear data storytelling: churn rate visibly and monotonically decreases from
-    Free through Enterprise, so the business insight reads at a glance without needing
-    annotations.'
+  - Correct spine/marimekko-style implementation via ECharts custom series (renderItem
+    + api.coord) — bar widths are accurately proportional to each tier's marginal
+    total, and segments are normalized to 100% height per tier.
+  - Semantically meaningful color mapping (red = Churned/bad, amber = At Risk/warning,
+    green = Retained/good) using the Imprint semantic-exception guidance, with redundant
+    encoding (fixed stack order + inline % labels) so the mapping doesn't rely on
+    hue alone.
+  - Theme-adaptive chrome is correctly threaded through the custom renderItem callbacks
+    (an area that's easy to get wrong for custom series) — both light and dark renders
+    are fully legible with correct backgrounds and text colors.
+  - The fixed (non-theme-adaptive) segment-label text colors are a deliberate, well-reasoned
+    choice since the segment fills themselves are constant across themes; the code
+    comments explain the WCAG contrast reasoning for the bold-weight fix on the green
+    segment.
+  - Clean, deterministic in-memory data; no fake interactivity; correct mount-node
+    contract and output-file behavior for a JS/interactive library.
   weaknesses:
-  - 'Light-theme ''Retained'' (green) segment label sits at roughly 3:1 contrast (light
-    label on #009E73) — borderline for WCAG AA normal text; a slightly heavier font
-    weight would remove any residual ambiguity if this segment''s styling is revisited.'
-  - The 2px inter-segment/inter-tier stroke (colored t.pageBg) creates a subtle visible
-    seam between adjacent tiers; an intentional, spec-guide-sanctioned bar-edge choice,
-    but in mild tension with the spec's emphasis on a fully continuous, gap-free proportion
-    axis. Not a deduction — a polish note.
+  - DE-03 storytelling could go further — the subtitle explains the encoding but there's
+    no direct callout of the clear churn-reduction trend across tiers, so the viewer
+    has to connect the color/position dots themselves rather than being guided straight
+    to the 'higher tiers churn less' insight.
+  - Title and subtitle occupy noticeably less than the 50-70% width guideline (not
+    a hard deduction since only overflow is penalized, but a touch more generous title
+    sizing would strengthen the visual hierarchy at the top of the canvas).
+  - The manually-built legend and tier-label series (legendItems/tierMeta) are a reasonable
+    workaround for a single custom series lacking native legend sync, but they duplicate
+    state that must be kept in sync with statusOrder/tiers by hand if either list
+    ever changes.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1.
-      Chrome: title "bar-spine · javascript · echarts · anyplot.ai", subtitle explaining the width/height encoding, 3-swatch legend (Churned/At Risk/Retained), vertical "Share within tier (%)" y-axis title with % tick labels, centered tier-name labels (Free, Basic, Premium, Enterprise) — all rendered in dark ink and clearly readable.
-      Data: four adjacent variable-width 100%-stacked bars (Free widest, Enterprise narrowest), each divided into Churned (#AE3030 matte red), At Risk (#DDCC77 amber), Retained (#009E73 brand green) segments with in-segment percentage labels. First/anchor semantic color usage confirmed correct.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "bar-spine · javascript · echarts · anyplot.ai" and subtitle centered top in dark ink; manually drawn legend (Churned/At Risk/Retained swatches) beneath the subtitle; y-axis title "Share within tier (%)" and 0-100% tick labels in soft dark gray; x-axis tier labels (Free, Basic, Premium, Enterprise) centered under each variable-width bar. All chrome text is clearly readable against the light background.
+      Data: Four adjacent bars with widths proportional to each tier's customer total (Free widest, Enterprise narrowest), each stacked into three segments — matte red (Churned), amber (At Risk), brand green (Retained) — normalized to 100% height. Percentage labels are shown inside segments large enough to hold them; the narrow Enterprise/Churned segment correctly omits its label rather than overflowing. First-series-adjacent brand green (#009E73) is used for the "good" outcome per the semantic-exception rule for status data.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17.
-      Chrome: title, subtitle, legend, axis title, tick labels, and tier labels all render in light ink and are clearly readable; no dark-on-dark failures.
-      Data: bar widths, segment heights, and all three status colors are pixel-identical to the light render, confirming palette consistency across themes. The in-segment percentage labels that were illegible in Review 1 (near-white text on amber, near-black text on red) are now fixed: Churned and Retained labels render in light #FAF8F1 text and At Risk labels render in dark #1A1A17 text, matching the light render exactly — because label color is now derived from each status's fixed data-fill luminance instead of theme-flipping tokens.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title/subtitle/legend/axis layout, now rendered in light ink/soft-gray tones. All text (title, subtitle, legend labels, axis title, tick labels, tier labels) is clearly legible against the dark background — no dark-on-dark instances found.
+      Data: Same red/amber/green segment fills and same bar-width proportions as the light render — confirmed identical to light render; only the chrome (background, text, grid) flipped to the dark-theme tokens.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; Review-1's dark-mode label-contrast
-          failure is fully resolved in both renders
+        comment: All font sizes explicitly set (22/14/16px); no overflow or clipping
+          in either theme; title/subtitle sit comfortably under the width guideline
+          rather than overflowing it.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements
+        comment: No overlap between title, subtitle, legend, axis text, or data segments
+          in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Segments sized for their data; labels adaptively suppressed when
-          segments are too small to hold them
+        comment: Segments are well-sized for the data density; the narrow Enterprise/Churned
+          slice correctly suppresses its label instead of overflowing.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: All three segment-label pairings pass in both themes; green-on-white
-          label is borderline ~3:1 but was already flagged acceptable in Review 1
+        comment: Red/amber/green triad backed by fixed stack position and inline %
+          text as redundant encoding, not hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, good canvas utilization
+        comment: Plot area uses ~92-94% of the canvas with balanced margins; nothing
+          is cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis name now includes explicit (%) units
+        comment: Y-axis labeled 'Share within tier (%)' with units; x-axis uses descriptive
+          tier names.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Data colors identical across themes; well-justified semantic-exception
-          mapping, now theme-correct end-to-end
+        comment: Imprint semantic-exception colors for status data (red=bad/Churned,
+          amber=warning/At Risk, green=good/Retained); backgrounds and all chrome
+          are theme-correct in both renders; data colors identical between themes.
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful semantic palette now fully executed without the prior
-          contrast oversight
+        comment: Thoughtful semantic color choice and contrast-tuned label weights
+          go beyond a configured default, short of top-tier publication polish.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines/axis lines removed, subtle grid, generous whitespace, careful
-          per-status label-color choices
+        comment: Spines/ticks hidden, subtle grid, generous whitespace, thin segment
+          seams — solid refinement without being flawless in every detail.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Churn-decreases-with-tier trend is immediately visible, now fully
-          legible in both themes
+        comment: Color semantics plus the left-to-right churn decline create visual
+          hierarchy, but there's no explicit callout guiding the viewer to the insight.
     spec_compliance:
       score: 15
       max: 15
@@ -138,26 +145,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct variable-width, normalized spine plot
+        comment: 'Genuine spine plot: bar width = marginal frequency, segment height
+          = conditional proportion, normalized to 100%.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Width proportional to marginal frequency, segments sum to 100%, legend,
-          centered tier labels, adaptive percentage labels
+        comment: Variable bar width, gap-free adjacent bars, centered x-axis labels,
+          conditional % labels shown when space permits — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X encodes tier size, Y encodes conditional share
+        comment: X = tier share of total, Y = status share within tier; all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Title exactly matches 'bar-spine · javascript · echarts · anyplot.ai';
+          legend labels match the data (Churned/At Risk/Retained).
     data_quality:
       score: 15
       max: 15
@@ -167,21 +176,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows varying bar widths and varying, meaningfully-trending conditional
-          proportions
+        comment: 4 tiers x 3 statuses with clearly varying proportions across every
+          tier — no flat/uniform segments.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral SaaS churn-by-tier business scenario
+        comment: SaaS subscription-tier churn is a real, neutral, easily understood
+          business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible customer counts and churn-rate pattern (higher churn on
-          free tier, lower on paid tiers)
+        comment: Churn decreasing and retention increasing with tier price is realistic
+          and internally consistent.
     code_quality:
       score: 10
       max: 10
@@ -191,51 +201,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure; renderItem callbacks are required by the ECharts
-          custom-series API, not over-engineering
+        comment: Linear data -> derive -> option script; the renderItem functions
+          are required by ECharts' custom-series API, not gratuitous abstraction.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic in-memory data
+        comment: Fully deterministic hardcoded data, no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No extraneous imports
+        comment: No imports beyond the provided echarts/tokens globals.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Label-color fix is a proper structural fix, documented with a clear
-          why-comment
+        comment: Appropriate complexity for a variable-width stacked chart; no fake
+          UI or simulated interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, current API
+        comment: Correct mount-node contract, animation disabled, no explicit size/devicePixelRatio
+          passed to echarts.init.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of custom series + renderItem for a chart type with no
-          native ECharts equivalent
+        comment: Uses the documented custom-series + renderItem + api.coord pattern,
+          the recommended ECharts technique for variable-width/Marimekko-style charts.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: api.coord() and echarts.graphic.clipRectByRect are genuinely ECharts-specific
-          low-level rendering APIs
+        comment: The geometry-level custom renderItem API is genuinely ECharts-distinctive
+          among anyplot's JS libraries.
   verdict: APPROVED
 impl_tags:
   dependencies: []
