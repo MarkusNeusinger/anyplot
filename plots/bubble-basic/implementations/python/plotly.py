@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: plotly 7.1.0 | Python 3.13.15
-Quality: 90/100 | Updated: 2026-09-27
+Quality: 94/100 | Updated: 2026-09-27
 """
 
 import os
@@ -37,10 +37,10 @@ rd_pct[6], pmf[6], revenue_m[6] = 5, 18, 120
 rd_pct[10], pmf[10], revenue_m[10] = 22, 92, 920  # efficient innovator
 
 # Bubble sizing via sizeref (Plotly's idiomatic area-based scaling).
-# Max on-screen diameter trimmed from a previous 46 to 40 so the denser
-# n=62 field overlaps less in the mid R&D-spend cluster; sizemin=9 keeps
-# the lowest-revenue bubbles clearly visible.
-sizeref = 2.0 * float(revenue_m.max()) / (40.0**2)
+# Max on-screen diameter trimmed to 37 (from 40) so the denser n=62 field
+# overlaps less in the dense low-R&D cluster; sizemin=9 keeps the
+# lowest-revenue bubbles clearly visible.
+sizeref = 2.0 * float(revenue_m.max()) / (37.0**2)
 cmin, cmax = float(revenue_m.min()), float(revenue_m.max())
 
 # Legend swatch colors tinted along imprint_seq (green->blue) so each swatch
@@ -48,8 +48,8 @@ cmin, cmax = float(revenue_m.min()), float(revenue_m.max())
 imprint_seq_rgb = (np.array([0x00, 0x9E, 0x73]), np.array([0x44, 0x67, 0xA3]))
 
 
-title = "bubble-basic · python · plotly · anyplot.ai"
-title_size = round(16 * 67 / len(title)) if len(title) > 67 else 16
+title = "R&D Investment vs. Product-Market Fit · bubble-basic · python · plotly · anyplot.ai"
+title_size = max(11, round(16 * 67 / len(title))) if len(title) > 67 else 16
 
 # Plot
 fig = go.Figure()
@@ -70,7 +70,7 @@ fig.add_trace(
             "cmax": cmax,
             "colorscale": imprint_seq,
             "showscale": False,
-            "opacity": 0.6,
+            "opacity": 0.5,
             "line": {"width": 1.5, "color": PAGE_BG},
         },
         hovertemplate=(
@@ -99,7 +99,7 @@ for size_label in [100, 600, 2000]:
                 "sizeref": sizeref,
                 "sizemin": 9,
                 "color": f"#{r:02X}{g:02X}{b:02X}",
-                "opacity": 0.6,
+                "opacity": 0.5,
                 "line": {"width": 1.5, "color": PAGE_BG},
             },
             name=f"${size_label}M",
@@ -143,7 +143,32 @@ fig.update_layout(
         "yanchor": "top",
     },
     margin={"l": 80, "r": 60, "t": 80, "b": 60},
+    # Subtle zone highlight around the R&D-powerhouse cluster (indices 0-2:
+    # high R&D spend, high PMF, high revenue) — a third layer of visual
+    # hierarchy beyond the two point-specific callouts below.
+    shapes=[
+        {
+            "type": "rect",
+            "x0": 29,
+            "x1": 41,
+            "y0": 83,
+            "y1": 99,
+            "line": {"color": INK_SOFT, "width": 1, "dash": "dot"},
+            "fillcolor": GRID,
+            "layer": "below",
+        }
+    ],
     annotations=[
+        {
+            "x": 35,
+            "y": 99,
+            "yshift": 6,
+            "text": "R&D powerhouses",
+            "font": {"size": 9, "color": INK_SOFT},
+            "showarrow": False,
+            "xanchor": "center",
+            "yanchor": "bottom",
+        },
         {
             "x": rd_pct[10],
             "y": pmf[10],
