@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
-Library: matplotlib | Python 3.13
-Quality: pending | Updated: 2026-09-27
+Library: matplotlib 3.11.2 | Python 3.13.15
+Quality: 89/100 | Updated: 2026-09-27
 """
 
 import os
