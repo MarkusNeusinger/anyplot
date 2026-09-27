@@ -1,6 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
-Library: letsplot 4.11.0 | Python 3.13.15
+Library: letsplot 4.11.0 | Python 3.13.12
 Quality: 93/100 | Updated: 2026-09-27
 """
 
@@ -83,7 +83,7 @@ plot = (
         tooltips="none",
     )
     + geom_point(
-        alpha=0.55,
+        alpha=0.5,
         tooltips=layer_tooltips()
         .format("payroll", "${.0f}M")
         .format("win_pct", "{.1f}%")
@@ -98,7 +98,7 @@ plot = (
     + scale_x_continuous(expand=[0.02, 5])
     + guides(
         color=guide_legend(nrow=1, override_aes={"size": 7}),
-        size=guide_legend(nrow=1, override_aes={"color": IMPRINT_PALETTE[0], "alpha": 0.55}),
+        size=guide_legend(nrow=1, override_aes={"color": IMPRINT_PALETTE[0], "alpha": 0.5}),
     )
     + labs(x="Team Payroll (Million USD)", y="Win Rate (%)", title="bubble-basic · python · letsplot · anyplot.ai")
     + theme_minimal()
