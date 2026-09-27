@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: bubble-basic
 created: '2026-08-24T18:08:21Z'
-updated: '2026-09-27T01:56:38Z'
+updated: '2026-09-27T02:11:32Z'
 generated_by: claude-sonnet
 workflow_run: 36286615932
 issue: 755
@@ -12,130 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - Area-correct bubble sizing (sqrt scaling of the min-max-normalized share) with
-    radius+alpha both tuned by share, so small bubbles don't wash out against the
-    background
-  - Manual size legend built with SVGRenderer to compensate for the core-only bundle
-    lacking highcharts-more's bubbleLegend — exactly the workaround the library rules
-    call for, and it fulfills the spec's 'include a size legend' requirement
-  - Focal-point callout (renderer.label with the native 'callout' shape) highlights
-    the standout company on both growth and share, giving the viewer a guided insight
-    instead of a bare position+size encoding
-  - 'Careful data-realism note: labels the size metric ''Share of Own Market Segment''
-    rather than a plain ''market share'', avoiding the common trap of bubble values
-    that should sum to 100% but don''t'
-  - pageBg-colored stroke on every non-focal marker cleanly separates overlapping
-    same-color bubbles in the densest cluster
-  - Deterministic LCG data generation, all font sizes explicitly set, correct Imprint
-    green + theme-correct backgrounds in both renders
+  - Custom SVG-drawn size legend (10%/55%/100% circles) satisfies the spec's 'include
+    a size legend' requirement, working around the core bundle lacking bubbleLegend.
+  - Bubble radius is scaled by area (sqrt of the normalized value), correctly following
+    the spec's explicit 'scale by area not radius' guidance.
+  - Alpha blending plus a page-background stroke deliberately handle overlapping bubbles,
+    matching the spec's transparency note.
+  - Focal-point and secondary callouts add genuine data storytelling beyond a bare
+    position+size encoding, guiding the viewer to two standout companies.
+  - Theme-adaptive chrome is correct in both renders; bubble fill color is identical
+    (Imprint brand green) between light and dark, only chrome flips.
+  - Correctly implements a bubble series using core scatter + per-point marker.radius,
+    honoring the highcharts-more restriction rather than importing a forbidden module.
   weaknesses:
-  - The ~19-24% growth / $300-450M revenue region has a dense bubble cluster where
-    several similarly sized, similarly colored bubbles nearly fully overlap and read
-    as a single merged blob despite the pageBg stroke — consider a touch more separation
-    (jitter, or slightly higher stroke contrast) in that region so individual companies
-    stay distinguishable.
-  - Outside the single focal-point callout, the remaining 89 points read as an undifferentiated
-    random scatter with no secondary visual hierarchy — a second, lighter-weight cue
-    (e.g. a subtle note on another notable point, or grouping/banding by share tier)
-    would strengthen the data storytelling beyond the one highlight.
-  - Design polish is solid but stops short of 'clearly above defaults' territory —
-    grid and axis chrome are close to Highcharts defaults; a bit more deliberate whitespace/typography
-    tuning (e.g. lighter grid, more distinct hierarchy between title and axis titles)
-    would push this further.
+  - 'Code is more elaborate than a ''basic'' bubble chart calls for: declutter-pass
+    nudging, focal-point scoring, and secondary-candidate neighbor counting add several
+    helper functions beyond the KISS structure expected for this spec variant.'
+  - The dense cluster around 18-24% growth / $300-420M revenue still has several same-color
+    bubbles nearly merging despite the declutter pass; a few individual points are
+    hard to distinguish there.
+  - The size-legend column leaves noticeable empty whitespace below the 100% circle
+    in the right margin — could tighten the margin or add a fourth reference size
+    to use the space better.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "bubble-basic · javascript · highcharts · anyplot.ai" in bold dark ink, centered top. X-axis title "Year-over-Year Growth Rate (%)" and Y-axis title "Annual Revenue ($M)" in medium-gray ink, both descriptive with units. Tick labels (-4% to 28%, $0 to $550) in a lighter gray, subtle light-gray gridlines on both axes. Top-right size legend "Share of Own Market Segment (%)" with three reference circles (10%, 55%, 100%) and percentage labels. A bordered callout box near the bottom-right reads "Standout: 28% growth, 95% segment share" with a leader line pointing at the highlighted bubble.
-      Data: ~90 bubbles, all rendered in the Imprint brand green (#009E73) at varying opacity (small bubbles slightly more opaque to avoid washing out), with a pageBg-colored (light) stroke separating overlapping bubbles and a thicker brand-green stroke ring on the one focal bubble.
-      Legibility verdict: PASS — all title/axis/tick/legend text is clearly readable against the light background, no light-on-light issues.
+      Chrome: Title "bubble-basic · javascript · highcharts · anyplot.ai" is bold dark text, fully visible and not clipped. X-axis title "Year-over-Year Growth Rate (%)" and Y-axis title "Annual Revenue ($M)" are dark-gray, clearly readable. Tick labels ($0-$550, -4% to 28%) are all legible with subtle gridlines. The custom size legend ("Share of Own Market Segment (%)" with 10%/55%/100% reference circles) sits in the right margin, fully visible with dark title text and gray value labels.
+      Data: All ~90 bubbles are Imprint brand green (#009E73-based) at varying opacity/radius (area-scaled by segment share). Two callout annotations — a bordered "Standout: 28% growth, 95% segment share" box and an italic "Also notable: 30% growth, 64% share" note with a dotted leader line — highlight two focal companies. No text overlaps data or other text.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and axis titles now rendered in light/off-white ink, tick labels in light gray, gridlines subtle light-gray-on-dark. Size legend and callout box mirror the light render with dark elevated-surface fill and light text.
-      Data: Same ~90 bubbles in the identical Imprint green (#009E73) at the same opacities — confirmed unchanged from the light render; only chrome (background, text, grid, box fills) flipped to the dark tokens. Non-focal bubble strokes now use the dark pageBg color, still visibly separating overlaps against the green fill.
-      Legibility verdict: PASS — all text is clearly light-colored against the dark background; no dark-on-dark failures observed anywhere (title, axes, ticks, legend, callout).
+      Chrome: Title, axis titles, and tick labels all render in light gray/white and are clearly legible against the dark background — no dark-on-dark failures observed. Gridlines are subtle but visible. The size legend title and circle labels are light-colored and fully readable.
+      Data: Bubble fill color is identical brand green to the light render (only chrome flipped, as required); the callout boxes use a dark elevated-surface fill with light text, both readable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks/legend
-          14px), readable in both themes, title doesn't overflow
+        comment: All font sizes explicitly set (title 23px, axis titles 16px, ticks/legend
+          14-15px); readable and well-proportioned in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions; callout box placed clear
-          of other chrome
+        comment: No text-on-text or text-on-data collisions; bubble overlap is intentional
+          per spec and handled with alpha + page-bg stroke.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Radius + alpha tuned by share for 90 points, but the densest cluster
-          (~19-24% growth) still has bubbles that nearly fully merge
+        comment: Area-scaled radius and alpha work well overall, but the densest cluster
+          (18-24% growth) still has a few nearly-merged bubbles.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single hue with alpha variation, no red-green reliance, adequate
-          contrast
+        comment: Single-hue alpha + stroke encoding, no red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills most of the canvas, balanced margins, legend reserved
-          in-margin next to the plot rather than floating
+        comment: Plot fills most of the canvas with balanced margins; nothing cut
+          off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis titles descriptive with units (%, $M)
+        comment: Descriptive axis titles with units (%, $M).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series is #009E73 in both renders, identical across
-          themes; backgrounds are theme-correct #FAF8F1 / #1A1A17'
+        comment: 'First series is #009E73 in both themes; backgrounds are theme-correct
+          #FAF8F1 / #1A1A17.'
     design_excellence:
-      score: 13
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful area-scaling, alpha-tuning by share, stroke separation
-          and a custom legend go beyond a configured default, but stop short of full
-          publication polish
+        comment: Custom size legend, opacity gradient, and callouts show clear design
+          intent beyond defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle gridlines, generous margin reserved for the legend; grid/axis
-          chrome still fairly close to Highcharts defaults
+        comment: Subtle grid, no chart border, page-bg strokes carve overlap edges;
+          generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: The focal-point callout creates a real guided insight, but the rest
-          of the chart reads as an undifferentiated scatter with no secondary hierarchy
+        comment: Focal + secondary callouts guide the viewer directly to two standout
+          companies.
     spec_compliance:
       score: 15
       max: 15
@@ -145,29 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Bubble chart correctly implemented via core scatter + per-point marker.radius,
-          the documented workaround for the core-only bundle
+        comment: Correct bubble chart via area-scaled scatter markers.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: x/y/size all present, area-based scaling, alpha transparency for
-          overlap, and an explicit size legend as the spec requests
+        comment: Size legend, area scaling, alpha transparency, min/max bubble bounds
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Growth rate on X, revenue on Y, segment share on bubble size — all
-          data visible across full axis ranges
+        comment: Growth on X, revenue on Y, share on size — all axes show full data
+          range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; custom size legend correctly
-          labels what bubble size encodes
+        comment: Title matches required format exactly; custom size legend serves
+          as the legend.
     data_quality:
       score: 15
       max: 15
@@ -177,80 +166,76 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full range of x, y, and size values represented, including small/large
-          bubbles and overlaps
+        comment: 90 points span the full growth/revenue/share ranges with real variation.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible business scenario (growth vs. revenue vs.
-          segment share)
+        comment: Neutral business scenario (company growth vs. revenue vs. segment
+          share).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ranges are realistic; the 'share of own segment' framing avoids the
-          common market-share-must-sum-to-100% factual trap
+        comment: Plausible ranges; 'own segment share' metric is clearly labeled to
+          avoid implying a global 100% total.
     code_quality:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 1
         max: 3
-        passed: true
-        comment: Several small helper functions (radius/alpha/fill scaling, legend,
-          callout) — reasonable given the Highcharts callback contract, but not a
-          flat imports→data→plot script
+        passed: false
+        comment: Several helper functions (declutter pass, focal scoring, neighbor
+          counting) go well beyond a basic-variant KISS structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed = 42)
+        comment: Deterministic fixed-seed LCG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only the provided globals are used
+        comment: No imports beyond the provided globals.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Legitimate SVGRenderer usage for legend/callout, no fake interactive
-          elements
+        passed: false
+        comment: No fake functionality, but the extra analysis logic is more complex
+          than the spec's 'basic' variant requires.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Highcharts.chart('container', ...) with animation disabled, credits
-          off, no deprecated APIs
+        comment: Correct mount-node contract, animation disabled.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Correctly works around the core-only bundle's missing bubble series
-          type via scatter + per-point marker.radius, exactly as the library rules
-          prescribe
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses renderer.label's native 'callout' shape and a hand-built SVGRenderer
-          size legend — distinctive Highcharts-specific techniques
-  verdict: REJECTED
+        comment: Correct core-bundle workaround (scatter + marker.radius) given highcharts-more
+          is unavailable.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses SVGRenderer callout labels, but the manual size-legend/annotation
+          pattern could be replicated in other libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -262,4 +247,4 @@ impl_tags:
   - normalization
   styling:
   - alpha-blending
-  - edge-highlighting
+  - publication-ready
