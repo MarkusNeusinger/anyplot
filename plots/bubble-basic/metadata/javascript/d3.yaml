@@ -2,9 +2,9 @@ library: d3
 language: javascript
 specification_id: bubble-basic
 created: '2026-08-24T17:55:07Z'
-updated: '2026-09-27T03:02:35Z'
+updated: '2026-09-27T20:42:50Z'
 generated_by: claude-sonnet
-workflow_run: 36289855858
+workflow_run: 36348379921
 issue: 755
 language_version: 22.23.2
 library_version: 7.9.0
@@ -12,46 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/d3/plot-dark.html
-quality_score: 94
+quality_score: 83
 review:
   strengths:
-  - 'All three spec dimensions present and correctly mapped: funding (x), growth rate
-    (y), team size (size), with d3.scaleSqrt() correctly scaling bubble area (not
-    radius) by value.'
-  - Force-directed decluttering (d3-force collision) actively pulls overlapping bubbles
-    apart while keeping rendered positions close to their true data coordinates, directly
-    addressing the spec's overlap note beyond just relying on alpha.
-  - Size legend clearly reproduces the real bubble treatment (same fill-opacity, same
-    stroke-width-by-tercile scale) for three reference values (10/50/100), so the
-    reference set is trustworthy.
-  - Trend line + annotation card ('Growth slows as funding scales up') gives the chart
-    a clear narrative focal point without cluttering the data field, with sensible
-    z-ordering (line under bubbles, label/card on top).
-  - 'Imprint palette correctly applied — first series is #009E73, identical between
-    light/dark renders, and chrome (background/grid/ink) is fully theme-adaptive with
-    no dark-on-dark or light-on-light failures.'
-  - Deterministic LCG-seeded data generation matches the d3.js guidance for browser-side
-    reproducibility (no seeded Math.random equivalent).
+  - Bubbles now sit exactly at their (funding, growth) data coordinates — the predecessor's
+    d3-force collision simulation, which nudged marks away from their true positions,
+    has been removed, satisfying the spec's C3 requirement
+  - The disallowed trend line and annotation callout card are gone — the basic variant
+    now encodes only x, y, and size, as the spec's C5 bullet requires
+  - Max bubble radius reduced from 21px to 18px, directly addressing the prior review's
+    flagged overlap issue in the densest funding cluster
+  - Legend value label font size increased from 14px to 16px, improving visual balance
+    against axis tick labels per the prior review's suggestion
+  - Size legend reuses the identical fill-opacity, page-colored outline, and stroke-width-by-tercile
+    treatment as the real bubbles, so the reference set is trustworthy in both themes
+  - Deterministic seeded LCG data generation, area-correct d3.scaleSqrt() radius scale,
+    and clean theme-adaptive chrome (grid, axis, legend) throughout
   weaknesses:
-  - In the densest funding cluster (~100-160 $M), several bubbles still stack with
-    heavy overlap despite the collision force — a touch more collision padding (or
-    slightly reduced max radius, e.g. 21px to 18px) would improve individual legibility
-    there.
-  - Legend value labels ('10', '50', '100') are set at 14px, noticeably smaller relative
-    to the legend title and canvas scale than the axis tick labels — bump to ~15-16px
-    for better visual balance.
+  - Densest funding cluster (~100-160 $M) still has substantial bubble overlap; this
+    is largely expected per the spec's overlap permission, but the most crowded pocket
+    could still use a touch more separation via a slightly lower fill-opacity (e.g.
+    0.5) or marker size rather than any positional adjustment
+  - Design Excellence is generic (single flat color, no additional visual hierarchy)
+    — within the basic variant's constraints (no extra color/derived channels allowed),
+    consider a more refined legend card treatment or subtler grid opacity to lift
+    DE-01/DE-02
+  - Library Mastery is generic (LM-02) — no D3-distinctive technique remains after
+    removing the force simulation; a spec-safe distinctive touch (e.g. voronoi-based
+    legend label placement, custom tick formatting) could raise this without violating
+    the basic-variant constraints
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "bubble-basic · javascript · d3 · anyplot.ai" in dark bold text at top-center, clearly legible. Axis titles "Funding Raised ($M)" and "Revenue Growth Rate (%)" in dark ink, tick labels in a softer dark gray, both fully readable. Subtle horizontal/vertical gridlines visible but unobtrusive. Size legend box (top-right, "Team Size (employees)") has a light elevated-gray card with dark readable text.
-      Data: ~120 green (#009E73) semi-transparent bubbles scaling by funding (x) and growth rate (y), with radius scaled by sqrt(team size). A dashed green trend line runs top-left to bottom-right, with a callout card ("Growth slows as funding scales up") anchored near it. First (and only) categorical series correctly uses #009E73.
+      Chrome: Title "bubble-basic · javascript · d3 · anyplot.ai" in dark bold text at top-center, clearly legible. Axis titles "Funding Raised ($M)" and "Revenue Growth Rate (%)" in dark ink, tick labels in a softer dark gray, all fully readable. Subtle horizontal/vertical gridlines visible but unobtrusive. Size legend box (top-right, "Team Size (employees)") has a light elevated-gray card with dark readable text and three reference bubbles (10/50/100).
+      Data: ~120 green (#009E73) semi-transparent bubbles at their true (funding, growth) coordinates, with radius scaled by sqrt(team size) so area (not radius) encodes the value. No trend line, regression annotation, or callout card is present — only x, y, and size are encoded, matching the basic-variant spec. First (and only) categorical series correctly uses #009E73.
       Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
       Chrome: Title, axis titles, and tick labels all rendered in light/off-white tones, clearly legible against the dark background. Gridlines are subtle but visible (slightly lighter than background). Legend card uses a dark elevated-gray fill with light text and border, readable.
-      Data: Same green (#009E73) bubbles at the same positions, sizes, and opacity as the light render — data colors are identical between themes, only chrome (background, text, grid, legend card) flipped. Trend line and annotation card remain legible with light text on the dark elevated card.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title/axis/tick text and the annotation card text are clearly visible.
+      Data: Same green (#009E73) bubbles at the same positions, sizes, and opacity as the light render — data colors are identical between themes, only chrome (background, text, grid, legend card) flipped. No trend line or annotation present, consistent with the light render.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all title/axis/tick text is clearly visible.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -62,21 +63,23 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (14-22px), fully readable in both themes
+        comment: Explicit font sizes (14-22px), well-proportioned title (~43-char
+          mandated title, no overflow), readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Decluttering force reduces overlap well; densest cluster (100-160)
-          still has some bubble stacking
+        comment: Densest funding cluster (100-160) still shows notable bubble overlap,
+          but translucency + page-colored outline keep individual bubbles distinguishable
+          per the spec's overlap permission
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Alpha 0.58 + collision force handle density per spec note; a few
-          bubbles in the densest region are still hard to individually distinguish
+        comment: Alpha 0.58 + area-scaled radius (7-18px) handle density well; legend
+          glyphs visible and matching in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -89,8 +92,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing clipped, legend and annotation card well
-          placed
+        comment: Good proportions, nothing cut off, legend placed near the plot without
+          overlapping data
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -103,30 +106,34 @@ review:
         max: 2
         passed: true
         comment: 'First series #009E73, identical light/dark data color, correct theme
-          backgrounds'
+          backgrounds and chrome'
     design_excellence:
-      score: 17
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: Secondary stroke-width tercile encoding, legend echoing real bubble
-          treatment, intentional layering
+        comment: Secondary stroke-width tercile encoding and consistent legend treatment
+          lift it slightly above a plain default, but overall still a single-color,
+          low-ornamentation design
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
         comment: Softened domain lines, subtle gridlines, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Trend line + annotation card create a clear, guided focal point
+        passed: false
+        comment: 'Default: no added visual hierarchy beyond the base size encoding.
+          This is expected for a compliant basic-variant plot — the spec''s C5 bullet
+          forbids a trend line or annotation layer, which is exactly what would have
+          added storytelling'
     spec_compliance:
       score: 15
       max: 15
@@ -136,7 +143,8 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bubble chart
+        comment: Correct bubble chart; no longer includes a disallowed trend line/annotation
+          layer, so it now matches the basic variant exactly
       - id: SC-02
         name: Required Features
         score: 4
@@ -148,7 +156,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: x=funding, y=growth, size=team, correctly mapped
+        comment: x=funding, y=growth, size=team correctly mapped; bubbles sit exactly
+          at their data values with no force/collision displacement
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -164,7 +173,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All three quantitative dimensions represented and legible
+        comment: All three quantitative dimensions represented and legible; smallest
+          bubbles stay visible, largest do not overwhelm
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -187,8 +197,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script; the one lcg() helper is the recommended reproducibility
-          pattern per prompts/library/d3.md
+        comment: Flat script, only the recommended lcg() helper
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -200,50 +209,48 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only the d3 global used, no extraneous imports
+        comment: Only the d3 global used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity, appropriate complexity with clear comments
+        comment: Clean, appropriate complexity, no fake UI, simpler than the predecessor
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
         comment: Follows mount-node contract, sizes svg from ANYPLOT_SIZE, no animation
-          left running
     library_mastery:
-      score: 10
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
         comment: Modern d3 v7 join pattern, scaleSqrt/scaleQuantize/scaleLinear used
           idiomatically
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: d3-force collision simulation for decluttering is a genuinely D3-specific
-          technique other libraries can't easily replicate
-  verdict: APPROVED
+        passed: false
+        comment: Generic usage after removing d3-force — no remaining feature unique
+          to D3 versus another charting library
+  verdict: REJECTED
+  model: claude-sonnet-5
+  criteria_version: qc-4374db4964.aqr-815475d157.sg-7006008fc6.lib-10a34e8881
+  rendered_at: '2026-09-27T20:37:06Z'
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - annotations
-  - force-simulation
   patterns:
   - data-generation
-  dataprep:
-  - regression
+  dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
