@@ -1,8 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Updated: 2026-09-27
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 91/100 | Updated: 2026-09-27
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
