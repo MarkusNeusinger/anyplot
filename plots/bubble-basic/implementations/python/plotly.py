@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: plotly 7.1.0 | Python 3.13.15
-Quality: 94/100 | Updated: 2026-09-27
+Quality: 92/100 | Updated: 2026-09-27
 """
 
 import os
@@ -37,10 +37,10 @@ rd_pct[6], pmf[6], revenue_m[6] = 5, 18, 120
 rd_pct[10], pmf[10], revenue_m[10] = 22, 92, 920  # efficient innovator
 
 # Bubble sizing via sizeref (Plotly's idiomatic area-based scaling).
-# Max on-screen diameter trimmed to 37 (from 40) so the denser n=62 field
-# overlaps less in the dense low-R&D cluster; sizemin=9 keeps the
-# lowest-revenue bubbles clearly visible.
-sizeref = 2.0 * float(revenue_m.max()) / (37.0**2)
+# Max on-screen diameter capped at 34 and sizemin lowered to 5 so the dense
+# low-R&D/low-PMF cluster overlaps less while the lowest-revenue bubbles
+# stay clearly visible.
+sizeref = 2.0 * float(revenue_m.max()) / (34.0**2)
 cmin, cmax = float(revenue_m.min()), float(revenue_m.max())
 
 # Legend swatch colors tinted along imprint_seq (green->blue) so each swatch
@@ -64,14 +64,14 @@ fig.add_trace(
             "size": revenue_m,
             "sizemode": "area",
             "sizeref": sizeref,
-            "sizemin": 9,
+            "sizemin": 5,
             "color": revenue_m,
             "cmin": cmin,
             "cmax": cmax,
             "colorscale": imprint_seq,
             "showscale": False,
             "opacity": 0.5,
-            "line": {"width": 1.5, "color": PAGE_BG},
+            "line": {"width": 2, "color": PAGE_BG},
         },
         hovertemplate=(
             "<b>R&D Spend:</b> %{x:.1f}%<br>"
@@ -97,10 +97,10 @@ for size_label in [100, 600, 2000]:
                 "size": size_label,
                 "sizemode": "area",
                 "sizeref": sizeref,
-                "sizemin": 9,
+                "sizemin": 5,
                 "color": f"#{r:02X}{g:02X}{b:02X}",
                 "opacity": 0.5,
-                "line": {"width": 1.5, "color": PAGE_BG},
+                "line": {"width": 2, "color": PAGE_BG},
             },
             name=f"${size_label}M",
             showlegend=True,
@@ -130,9 +130,9 @@ fig.update_layout(
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    font={"color": INK, "family": "Arial, Helvetica, sans-serif"},
+    font={"color": INK, "family": "Lato, 'DejaVu Sans', sans-serif"},
     legend={
-        "title": {"text": "Revenue (size)", "font": {"size": 10, "color": INK}},
+        "title": {"text": "Revenue", "font": {"size": 10, "color": INK}},
         "font": {"size": 10, "color": INK_SOFT},
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
@@ -142,7 +142,7 @@ fig.update_layout(
         "xanchor": "left",
         "yanchor": "top",
     },
-    margin={"l": 80, "r": 60, "t": 80, "b": 60},
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
     # Subtle zone highlight around the R&D-powerhouse cluster (indices 0-2:
     # high R&D spend, high PMF, high revenue) — a third layer of visual
     # hierarchy beyond the two point-specific callouts below.
