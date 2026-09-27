@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: altair 6.3.0 | Python 3.13.15
-Quality: 91/100 | Created: 2026-09-27
+Quality: 94/100 | Created: 2026-09-27
 """
 
 import os
@@ -23,7 +23,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 stage_colors = IMPRINT_PALETTE[:4]
 
-# Data — tech startup metrics: funding vs revenue, sized by market share, colored by stage
+# Data — tech startup metrics: funding vs revenue, sized by segment share, colored by stage
 np.random.seed(42)
 n = 49
 
@@ -36,16 +36,17 @@ funding_m = np.clip(funding_m, 1, 80)
 revenue_m = funding_m * np.random.uniform(0.6, 1.6, size=n) + np.random.normal(5, 3.5, size=n)
 revenue_m = np.clip(revenue_m, 2, 118)
 
-# Market share (%) narrowed to a realistic 10-58 band — a single company holding
-# ~95% would imply a near-monopoly, implausible across four competing stage cohorts
-stage_share = {"Seed": (14, 4), "Series A": (24, 5), "Series B": (36, 6), "Growth": (48, 7)}
-market_share = np.array([np.clip(np.random.normal(*stage_share[s]), 10, 58) for s in stages])
+# Segment share (%) of each company's own addressable segment, not a single global
+# market — so per-stage totals need not sum to 100%. Drawn independently of Stage
+# (a single wide distribution) so bubble size carries genuinely new information
+# rather than tracking the color-encoded cohort.
+market_share = np.clip(np.random.normal(30, 13, size=n), 8, 62)
 
 df = pd.DataFrame(
     {
         "Funding ($M)": np.round(funding_m, 1),
         "Revenue ($M)": np.round(revenue_m, 1),
-        "Market Share (%)": np.round(market_share, 1),
+        "Segment Share (%)": np.round(market_share, 1),
         "Stage": pd.Categorical(stages, categories=["Seed", "Series A", "Series B", "Growth"], ordered=True),
     }
 )
@@ -56,7 +57,7 @@ outlier_laggard = pd.DataFrame(
     {
         "Funding ($M)": [68.5],
         "Revenue ($M)": [7.2],
-        "Market Share (%)": [22.0],
+        "Segment Share (%)": [22.0],
         "Stage": pd.Categorical(["Series B"], categories=["Seed", "Series A", "Series B", "Growth"], ordered=True),
     }
 )
@@ -64,7 +65,7 @@ outlier_climber = pd.DataFrame(
     {
         "Funding ($M)": [11.0],
         "Revenue ($M)": [54.0],
-        "Market Share (%)": [31.0],
+        "Segment Share (%)": [31.0],
         "Stage": pd.Categorical(["Series A"], categories=["Seed", "Series A", "Series B", "Growth"], ordered=True),
     }
 )
@@ -83,22 +84,34 @@ title = "bubble-basic · python · altair · anyplot.ai"
 # Vega-Lite selection grammar (preserved in the saved interactive HTML).
 stage_selection = alt.selection_point(fields=["Stage"], bind="legend")
 
+# Regression trend — Vega-Lite's transform_regression fits the funding->revenue
+# trend server-side (no scipy/sklearn call in this script), a distinctive
+# declarative capability that sits underneath the bubbles as context.
+trend = (
+    alt.Chart(df)
+    .transform_regression("Funding ($M)", "Revenue ($M)")
+    .mark_line(strokeDash=[5, 4], strokeWidth=1.5, opacity=0.55)
+    .encode(x="Funding ($M):Q", y="Revenue ($M):Q", color=alt.value(INK_SOFT))
+)
+
 # Plot — bubble layer
 bubbles = (
     alt.Chart(df)
     .mark_circle(stroke=PAGE_BG, strokeWidth=1.5)
     .encode(
-        x=alt.X("Funding ($M):Q", scale=alt.Scale(domain=[0, 85], nice=False), axis=alt.Axis(domain=False, tickSize=6)),
+        x=alt.X(
+            "Funding ($M):Q", scale=alt.Scale(domain=[0, 85], nice=False), axis=alt.Axis(domain=False, ticks=False)
+        ),
         y=alt.Y(
-            "Revenue ($M):Q", scale=alt.Scale(domain=[0, 125], nice=False), axis=alt.Axis(domain=False, tickSize=6)
+            "Revenue ($M):Q", scale=alt.Scale(domain=[0, 125], nice=False), axis=alt.Axis(domain=False, ticks=False)
         ),
         size=alt.Size(
-            "Market Share (%):Q",
-            scale=alt.Scale(range=[50, 1500], domain=[10, 58]),
+            "Segment Share (%):Q",
+            scale=alt.Scale(range=[50, 1500], domain=[8, 62]),
             legend=alt.Legend(
-                title="Market Share (%)",
-                titleFontSize=10,
-                labelFontSize=10,
+                title="Segment Share (%)",
+                titleFontSize=11,
+                labelFontSize=12,
                 values=[10, 25, 40, 55],
                 symbolFillColor=IMPRINT_PALETTE[0],
                 symbolStrokeColor=PAGE_BG,
@@ -111,16 +124,16 @@ bubbles = (
             scale=alt.Scale(domain=["Seed", "Series A", "Series B", "Growth"], range=stage_colors),
             legend=alt.Legend(
                 title="Stage",
-                titleFontSize=10,
-                labelFontSize=10,
+                titleFontSize=11,
+                labelFontSize=12,
                 symbolType="circle",
                 symbolSize=200,
                 symbolStrokeWidth=0,
                 symbolOpacity=0.65,
             ),
         ),
-        opacity=alt.condition(stage_selection, alt.value(0.58), alt.value(0.1)),
-        tooltip=["Stage:N", "Funding ($M):Q", "Revenue ($M):Q", "Market Share (%):Q"],
+        opacity=alt.condition(stage_selection, alt.value(0.5), alt.value(0.1)),
+        tooltip=["Stage:N", "Funding ($M):Q", "Revenue ($M):Q", "Segment Share (%):Q"],
     )
     .add_params(stage_selection)
 )
@@ -133,7 +146,7 @@ top3_highlight = (
     .encode(
         x="Funding ($M):Q",
         y="Revenue ($M):Q",
-        size=alt.Size("Market Share (%):Q", scale=alt.Scale(range=[50, 1500], domain=[10, 58]), legend=None),
+        size=alt.Size("Segment Share (%):Q", scale=alt.Scale(range=[50, 1500], domain=[8, 62]), legend=None),
     )
 )
 
@@ -150,7 +163,7 @@ _annotation_layers = [
 annotations = alt.layer(*_annotation_layers)
 
 chart = (
-    (bubbles + top3_highlight + annotations)
+    (trend + bubbles + top3_highlight + annotations)
     .properties(
         width=620,
         height=320,
@@ -162,7 +175,7 @@ chart = (
             fontWeight="bold",
             color=INK,
             anchor="middle",
-            subtitle="Tech Startup Metrics — Funding vs Revenue by Stage & Market Share",
+            subtitle="Tech Startup Metrics — Funding vs Revenue by Stage & Segment Share",
             subtitleFontSize=12,
             subtitleColor=INK_SOFT,
             subtitlePadding=4,
@@ -175,7 +188,7 @@ chart = (
         gridOpacity=0.15,
         labelColor=INK_SOFT,
         titleColor=INK,
-        labelFontSize=10,
+        labelFontSize=12,
         titleFontSize=12,
     )
     .configure_legend(

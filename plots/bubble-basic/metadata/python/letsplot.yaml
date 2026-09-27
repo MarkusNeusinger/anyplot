@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: bubble-basic
 created: '2025-12-23T01:31:09Z'
-updated: '2026-09-27T00:39:38Z'
+updated: '2026-09-27T01:58:59Z'
 generated_by: claude-sonnet
-workflow_run: 36282815759
+workflow_run: 36286713789
 issue: 755
 language_version: 3.13.15
 library_version: 4.11.0
@@ -12,45 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/letsplot/plot-dark.html
-quality_score: 91
+quality_score: 92
 review:
   strengths:
-  - scale_size_area used for bubble sizing, scaling by area rather than radius exactly
-    as the spec requires
-  - geom_smooth adds a dashed linear trend line that gives the chart a clear analytical
-    narrative (payroll correlates with win rate) rather than a flat scatter of bubbles
-  - layer_tooltips() is configured with formatted per-field tooltips (payroll as $M,
-    win_pct as %, attendance as K) for the HTML export, without cluttering the static
-    PNG
-  - Theme-adaptive chrome tokens (PAGE_BG, INK, INK_SOFT, RULE, ELEVATED_BG) are threaded
-    consistently through plot background, panel, axis, and legend styling in both
-    renders
-  - Size legend breaks (15, 25, 35, 45) are chosen to span the actual attendance data
-    range, making the size-to-value mapping easy to read
-  - ggtb() overlay is added only to the HTML export, keeping the static PNG free of
-    interactive-toolbar clutter
+  - 'Theme-adaptive chrome is threaded correctly through every non-data element (background,
+    title, axis text, ticks, grid, legend box) and is identical in structure across
+    both renders, with the two Imprint categorical hues (#009E73 Eastern, #C475FD
+    Western) unchanged between light and dark.'
+  - 'Strong data storytelling: a dashed OLS trend line (geom_smooth, method=''lm'')
+    plus dotted average reference lines on both axes turn a plain payroll-vs-win-rate
+    scatter into a quadrant-style read (over/under-performing teams relative to payroll).'
+  - scale_size_area (area-based, not radius-based) is used for the bubble-size encoding,
+    matching the spec's explicit 'scale bubble sizes by area' requirement, with alpha=0.42
+    to handle overlap as the spec recommends.
+  - Rich, well-formatted layer_tooltips (currency, percent, and K-suffixed fields)
+    add genuine value to the interactive HTML export without faking anything in the
+    static PNG.
+  - Clean, reproducible, single-pass script (np.random.seed(42), no functions/classes)
+    with only used imports and a realistic sports-analytics scenario (payroll vs.
+    win rate vs. attendance) covering the full range of bubble sizes and both conference
+    categories.
   weaknesses:
-  - The payroll cluster around $135-145M has 4-5 heavily overlapping bubbles of similar
-    size and color that are hard to parse individually even with alpha=0.5 - consider
-    a touch more transparency or a small size/position nudge in dense regions
-  - Design relies on the mandated Imprint palette plus theme_minimal with no additional
-    distinctive visual device beyond the trend line - solid execution but not much
-    extra design risk-taking beyond the baseline recipe
+  - The lower-left cluster (payroll ~90-96M, win rate ~15%) has heavy Eastern/Western
+    bubble overlap that makes individual points hard to distinguish — a touch more
+    transparency or a slightly smaller max bubble size in that region would help.
+  - Legend boxes keep a visible border (legend_background element_rect(color=INK_SOFT,
+    size=0.5)); the style guide's decoration-removal checklist prefers dropping legend
+    frames entirely for a cleaner look.
+  - The mandated title renders comfortably compact (~45-50% of plot width) rather
+    than the 70-85% typical for this title length — not a defect, but there is unused
+    header whitespace if a slightly larger plot_title size is ever wanted.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-range), matches spec — not pure white, not dark.
-      Chrome: Title "bubble-basic · python · letsplot · anyplot.ai" in dark ink at top-left; axis titles "Team Payroll (Million USD)" and "Win Rate (%)" in dark ink; tick labels in soft dark gray; subtle light-gray gridlines; dashed dark-gray trend line. Two legend boxes at the bottom (Avg. Attendance size legend, Conference color legend) with off-white/elevated fill and thin borders.
-      Data: Two overlapping bubble series — green (#009E73, Eastern) and purple/magenta (Western) — semi-transparent (alpha 0.5) circles sized by area for average attendance, positioned by payroll (x) and win rate (y). First categorical series correctly uses the brand green.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "bubble-basic · python · letsplot · anyplot.ai" in dark ink, clearly visible top-left. Axis titles "Team Payroll (Million USD)" and "Win Rate (%)" in dark ink. Tick labels in a softer dark gray. Subtle light gridlines (major only). A dashed dark-gray OLS trend line and dotted average-reference lines cross the plot. Two legends at the bottom in lightly-bordered elevated-cream boxes: a bubble-size legend ("Avg. Attendance (K)": 15/25/35/45) and a color legend ("Conference": Eastern/Western).
+      Data: ~70 bubbles in two hues — green (#009E73, Eastern) and lavender (#C475FD, Western) — at alpha ~0.4, positioned by payroll (x) and win rate (y), sized by average attendance. First series is confirmed brand green.
       Legibility verdict: PASS — all title, axis, tick, and legend text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-range), matches spec — not pure black, not light.
-      Chrome: Same title now in white/light ink; axis titles in light ink; tick labels in light gray; subtle darker gridlines; dashed light-gray trend line, clearly visible against the dark panel. Legend boxes now use a slightly elevated dark fill with light borders and light text.
-      Data: Same two bubble series in identical green (#009E73) and purple hues as the light render — only the chrome (background, text, grid, legend frames) flipped, not the data colors, as required.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title, axis, and legend text remains clearly legible against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title and axis titles now rendered in light/off-white ink; tick labels in a lighter gray; gridlines are faint light-on-dark. The trend line and reference lines switch to a light dashed/dotted gray. Legend boxes now sit on a dark elevated panel with light text, borders in a soft light-gray tone.
+      Data: The same two hues — green (#009E73) and lavender (#C475FD) — are pixel-identical to the light render; only the chrome flipped as expected.
+      Legibility verdict: PASS — no dark-on-dark failures; every title, axis, tick, and legend text element is legible light-on-dark, and the brand green remains vivid against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -58,75 +64,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit; readable in both themes at full size
+        comment: All font sizes explicitly set (axis_title=13, axis_text=10, plot_title=18,
+          legend=10); readable and well-proportioned in both themes; title comfortably
+          fits with no overflow.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text overlap; a few bubble clusters overlap heavily (expected
-          for bubble charts, but reduces individual-point readability in the densest
-          area)
+        comment: No text overlaps other text, data, or legend boxes in either render.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Area-based sizing and alpha=0.5 handle most overlap well; the ~$140M
-          cluster remains hard to parse
+        comment: Bubble sizing via scale_size_area with alpha=0.42 works well overall;
+          one dense low-payroll cluster is hard to disambiguate bubble-by-bubble.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple pair has good contrast and is CVD-safe; not used as
-          sole categorical signal (position also differs)
+        comment: Green/lavender pairing is CVD-safe and distinguishable beyond hue
+          alone via position and size.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas confirmed (no canvas-gate flag); balanced axis labels,
-          no overflow/clipping
+        comment: Plot area uses the large majority of the 3200x1800 canvas with balanced
+          margins; legends sit directly beneath the plot, not isolated.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (Million USD, %)
+        comment: Both axis labels are descriptive with units (Million USD, %).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds match #FAF8F1/#1A1A17; data
-          colors identical across themes'
+        comment: 'First series is #009E73 (Eastern), second is #C475FD (Western) per
+          Imprint canonical order; backgrounds are #FAF8F1/#1A1A17; chrome is theme-correct
+          in both renders.'
     design_excellence:
       score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: trend line, tuned alpha, configured size legend breaks;
-          relies on mandated palette + theme_minimal rather than a bespoke visual
-          device'
+        comment: Trend line, average reference lines, blended alpha, and panel background
+          matching page background go clearly beyond a configured default.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines/borders removed, grid subtle (alpha 0.15), generous margins,
-          styled legend backgrounds
+        comment: Subtle grid, no panel border, generous margins; only the visible
+          legend-box border keeps this from a perfect score.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Trend line creates a clear payroll-to-win-rate narrative; conference
-          coloring adds a second layer of insight
+        comment: Trend line plus average reference lines create a quadrant-style visual
+          hierarchy that guides the reader toward the payroll/win-rate relationship.
     spec_compliance:
       score: 15
       max: 15
@@ -136,27 +142,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bubble chart
+        comment: Correct bubble chart via geom_point with size aesthetic.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-scaled bubbles, alpha transparency, size legend, optional color
-          dimension all present
+        comment: x/y/size all present, area-based sizing, alpha for overlap, size
+          legend included.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=payroll, y=win_pct correctly mapped; axes show full data range
+        comment: payroll=x, win_pct=y, attendance=size — correctly assigned, full
+          data range visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels (Conference, Avg. Attendance)
-          match data
+        comment: Title matches the exact mandated format; legend labels (Conference,
+          Avg. Attendance) match the data.
     data_quality:
       score: 15
       max: 15
@@ -166,21 +173,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All three numeric dimensions shown plus an optional categorical color
-          and trend line
+        comment: Full range of bubble sizes, both conferences, and a visible outlier
+          team are all represented.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sports payroll/win-rate/attendance framing is plausible and neutral
+        comment: Neutral, comprehensible sports-analytics scenario (payroll vs. win
+          rate vs. attendance).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Payroll, win rate, and attendance ranges are all sensible for the
-          domain
+        comment: Payroll ($90-190M), win rate (15-78%), and attendance (12-45K) ranges
+          are all realistic for a professional sports league.
     code_quality:
       score: 10
       max: 10
@@ -190,32 +198,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: Flat imports -> data -> plot -> save structure, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every imported name is used
+        comment: Every imported name is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI/interactivity
+        comment: Appropriate complexity, no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current ggsave/scale_size_area
-          API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current ggsave API.
     library_mastery:
       score: 9
       max: 10
@@ -225,22 +232,22 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: scale_size_area, geom_smooth, guides()/override_aes used idiomatically
+        comment: 'Expert use of ggplot grammar: layer composition, guides/override_aes,
+          theme system.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: layer_tooltips() with formatted fields and ggtb() toolbar for the
-          HTML export showcase lets-plot-specific interactivity
+        comment: layer_tooltips() with per-field formatting and ggtb() interactive
+          toolbar are distinctive lets-plot features.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
-  - layer-composition
-  - custom-legend
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
@@ -248,3 +255,5 @@ impl_tags:
   - regression
   styling:
   - alpha-blending
+  - minimal-chrome
+  - grid-styling
