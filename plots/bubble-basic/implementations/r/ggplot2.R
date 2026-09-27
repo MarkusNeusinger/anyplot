@@ -90,7 +90,7 @@ p <- ggplot(products, aes(
     geom_point(
         shape  = 21,
         color  = PAGE_BG,
-        alpha  = 0.55,
+        alpha  = 0.42,
         stroke = 1.0
     ) +
     geom_segment(
@@ -120,8 +120,8 @@ p <- ggplot(products, aes(
     scale_size_area(
         max_size = 13,
         limits   = size_limits,
-        breaks   = c(10, 30, 60, 100),
-        labels   = c("10", "30", "60", "100"),
+        breaks   = c(10, 40, 70, 100),
+        labels   = c("10", "40", "70", "100"),
         name     = "Monthly Sales Volume (K units)"
     ) +
     scale_fill_manual(values = category_colors, name = "Product Category") +
@@ -149,7 +149,11 @@ p <- ggplot(products, aes(
         legend.text        = element_text(color = INK_SOFT,   size = 8),
         legend.title       = element_text(color = INK,        size = 10),
         legend.key         = element_rect(fill = NA,          color = NA),
-        legend.margin      = margin(6, 8, 6, 8),
+        legend.key.size    = unit(0.35, "cm"),
+        legend.key.spacing.y = unit(1, "pt"),
+        legend.spacing.y   = unit(2, "pt"),
+        legend.margin      = margin(4, 6, 4, 6),
+        legend.box.spacing = unit(6, "pt"),
         plot.margin        = margin(12, 12, 10, 10)
     )
 
