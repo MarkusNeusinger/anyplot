@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-09-27
@@ -82,17 +82,19 @@ plot = (
     )
     # geom_point's default shape already splits fill (region color) from edge
     # (color); fixing color to the page bg gives each bubble a subtle halo that
-    # separates it from overlapping neighbors. alpha lowered from the initial
-    # 0.65 to ease bubble-on-bubble crowding in the dense lower-middle cluster.
-    + geom_point(color=PAGE_BG, alpha=0.55, stroke=0.5)
+    # separates it from overlapping neighbors. alpha lowered further (0.55 -> 0.45)
+    # to keep the densest cluster (Middle East & Africa, ~$15-20k GDP) from merging
+    # into a single blob.
+    + geom_point(color=PAGE_BG, alpha=0.45, stroke=0.5)
     # limits=(0, 100) anchors the area scaling to a true zero baseline; without it
     # plotnine anchors the sqrt-area formula to the data's own min, which maps the
-    # smallest (floor-clipped) bubbles to a near-zero rendered size.
+    # smallest (floor-clipped) bubbles to a near-zero rendered size. max_size trimmed
+    # from 18 to 15 so the largest bubbles overlap less severely in dense clusters.
     # override_aes gives the size-legend's key glyphs a visible INK_SOFT fill/edge —
     # without it they'd inherit geom_point's fixed color=PAGE_BG stroke, which blends
     # into the PAGE_BG legend_key background and renders as empty boxes.
     + scale_size_area(
-        max_size=18,
+        max_size=15,
         breaks=[20, 50, 90],
         limits=(0, 100),
         name="Population (M)",
