@@ -10,7 +10,7 @@ Create a script for the specified plot type and library. The code should be simp
 
 ## Input
 
-1. **Spec**: Markdown specification from `plots/{spec-id}/specification.md`
+1. **Spec**: Markdown specification from `plots/{spec-id}/specification.md`. Read its closing `## What a good version looks like` section on every generation, new or regen: it names what a good render of this plot type shows (including "expected, not a defect" items) and is what the review scores against. Without it, derive the same from Description, Data and Notes.
 2. **Library**: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, letsplot, ggplot2, makie, chartjs, d3, echarts, highcharts, or muix
 3. **Library Rules**: Specific rules from `prompts/library/{library}.md`
 4. **Previous Metadata** (if regenerating): `plots/{spec-id}/metadata/{language}/{library}.yaml`
@@ -59,7 +59,8 @@ review:
 
 **Use this feedback to improve!**
 - **Strengths**: Keep these aspects unchanged
-- **Weaknesses**: Fix these problems (decide HOW yourself)
+- **Weaknesses**: Fix the ones that are real per the spec's characteristic section (decide HOW yourself); decline the ones that ask for something the section calls expected
+- **Marks stay at their data values**: answer overlap through data generation, marker size or alpha — never by moving marks (force/collision layouts, nudge or declutter passes). Exempt, as in SC-03: jitter in categorical strip/swarm plots, layout-positioned types (networks, treemaps, word clouds, packed circles), and any jitter, dodge or offset the spec's Data or Notes ask for
 
 ## Library Independence (no cross-library cloning)
 
@@ -495,7 +496,7 @@ anyplot renders at **3200 × 1800 px** (16:9) or **2400 × 2400 px** (1:1) — l
 - Tell a story through good data choice and clear visual hierarchy
 - **Annotation restraint (DEFAULT):** Do NOT add text annotations, callout boxes, arrows, or labeled data points unless the specification explicitly asks for them (e.g., spec-id contains "annotated"). Good storytelling comes from visual design — color contrast, size variation, strategic data choice — not text overlays.
 - **When annotations ARE appropriate:** Only when spec-id contains "annotated" or the spec explicitly describes annotations as a required feature. Even then, use sparingly.
-- **Respect the spec variant:** If the spec-id contains `basic`, storytelling comes from well-chosen data and clean design — NOT from adding annotations, trendlines, or extra visual elements. A basic scatter plot should remain a basic scatter plot.
+- **Respect the spec variant:** If the spec-id contains `basic`, storytelling comes from well-chosen data and clean design — NOT from adding annotations, trendlines, or extra visual elements. A basic scatter plot should remain a basic scatter plot. Extra encodings on a `-basic` spec (a color channel from a derived variable, per-group fits, highlight bands, annotation layers) are scored as the wrong variant (SC-01) and earn no storytelling credit.
 
 ## Output Files
 

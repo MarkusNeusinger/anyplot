@@ -16,6 +16,7 @@ Evaluate if the **${LIBRARY}** implementation matches the specification for `${S
 `plots/${SPEC_ID}/specification.md`
 - Understand what the plot should show
 - Note all required features
+- Read the closing `## What a good version looks like` section carefully: it names the observable properties of a good render of this plot type, including "expected, not a defect" items. **Judge against it, not against generic ideals.** Tell its two kinds of bullet apart: *affirmative properties* (what a good version shows) and *permissions* (the "expected, not a defect" statements). Nothing it names is ever a weakness; removing or violating an affirmative property deducts from the criterion it belongs to; the absence of a permitted thing never deducts (`prompts/quality-criteria.md` → "Plot-Type Characteristics"). If the spec has no such section, infer the characteristics from Description, Data and Notes before you score.
 
 ### 2. Read the Implementation
 `plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}` — the workflow supplies `${LANGUAGE}` and `${EXT}` for this run. Reference: `.py` for the Python libraries (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, letsplot), `.R` for ggplot2 (R), `.jl` for makie (Julia), `.js` for the JavaScript libraries (chartjs, d3, echarts, highcharts), and `.tsx` for muix (JavaScript, React)
@@ -87,15 +88,17 @@ If it does **not** exist: the gate passed; no canvas-specific action — score V
 
 ### 5d. MANDATORY: Proportional Sizing Check (both renders)
 
-Visually estimate from each PNG — no pixel measurement needed. These are soft proportional checks **without hard thresholds**. Violations cost points in the existing VQ-01 (Text Legibility), VQ-02 (No Overlap), and VQ-05 (Layout & Canvas) categories rather than triggering a separate pass/fail item. A single visual problem can reduce points in multiple categories simultaneously (holistic, not strict).
+Visually estimate from each PNG — no pixel measurement needed. These are soft proportional checks **without hard thresholds**. Violations cost points in the existing VQ-01 (Text Legibility), VQ-02 (No Overlap), VQ-03 (Element Visibility), VQ-05 (Layout & Canvas) and SC-03 (Data Mapping) categories rather than triggering a separate pass/fail item. A single visual problem can reduce points in multiple categories simultaneously (holistic, not strict).
 
 - **Title proportion:** Title comfortably occupies ~50–70% of the plot width. **Note:** the mandated `{spec-id} · {lang} · {lib} · anyplot.ai` title is ~67 chars; at the style-guide default fontsize it naturally fills ~70–85% on landscape. That is **expected and not a deduction** — the AI made the right tradeoff. Only deduct if either: (a) the title overflows beyond ~90% of plot width / clips edges, or (b) the fontsize is too generous for the title length (squeezed look, no breathing room) → VQ-01 + VQ-05.
 - **Axis label proportionality:** Short labels with few words ("Date", "Year") must not dominate the axis with oversized fontsizes. Long descriptive labels ("Fläche von Häusern in Quadratmetern", "Average temperature in °C") are completely fine as long as they don't overflow — the "No overflow" check below covers that. Disproportionately oversized short labels → deduct VQ-05.
 - **Axis label balance:** X-axis and Y-axis labels are visually similar in size. One much larger than the other without semantic reason → deduct VQ-05.
 - **Tick label balance:** X-axis and Y-axis tick labels are visually similar in size. Exception: rotated long categorical labels may legitimately look wider.
-- **No overlap:** No text overlaps with other text, with data elements, or with legend/annotation boxes → deduct VQ-02 (severe overlap = 0).
+- **No overlap:** No text overlaps with other text, with data elements, or with legend/annotation boxes → deduct VQ-02 (severe overlap = 0). **Data marks overlapping each other** is different: it is a weakness only when it hides information (an opaque blob where marks can no longer be told apart). For overlap-native types — bubble, dense scatter, strip, network — overlap handled with translucency or a thin outline (page- or ink-colored) is expected and not a deduction, especially when the spec's characteristic section says so.
 - **No overflow:** No text extends beyond axis bounds, plot bounds, or the canvas frame → deduct VQ-05.
 - **Marker / line density appropriateness:** Sparse data (< 50 points) should have prominent markers; dense data (> 500 points) should have smaller markers + `alpha < 1` to combat overplotting → deduct VQ-03 when poorly chosen.
+- **Legend glyphs visible:** Look at every legend in **both** renders. Size circles, color swatches and line samples must be visible against the page and match the marks they explain (fill, outline, alpha, shape). A glyph drawn in the background color or without the marks' fill → deduct VQ-03 (+ SC-04 when the encoding becomes unreadable), and name the likely fix in the weakness (e.g. ggplot2 `guide_legend(override.aes = list(fill = ...))`).
+- **Marks at their data values:** Check the code for force/collision simulations, nudge or declutter passes, or offsets applied to data marks after the data was generated. Displacement deducts SC-03 in proportion to how far marks move relative to the axis range — never list it as a strength. Changing the generated data, the marker size or the alpha is the endorsed answer to overlap. Exempt: categorical strip/swarm jitter, layout-positioned types (networks, treemaps, word clouds), and any jitter, dodge or offset the spec's Data or Notes ask for (then it is a required feature, not displacement).
 
 **Required:** Note specific violations in `weaknesses` with enough context for the repair loop to fix them. Examples:
 - "X-axis label 'Date' is oversized at fontsize=18pt, dominates the axis disproportional to its info content — reduce to ~10pt."
@@ -160,8 +163,8 @@ Read `prompts/quality-criteria.md` and evaluate:
 | ID | Criterion | Max | Check |
 |----|-----------|-----|-------|
 | VQ-01 | Text Legibility | 8 | Font sizes explicitly set? Readable at full size in BOTH themes? Mobile-readable when scaled to ~400 px? Apply Proportional Sizing Check (5d). |
-| VQ-02 | No Overlap | 6 | All text readable? No collisions with other text or with data? See 5d. |
-| VQ-03 | Element Visibility | 6 | Markers/lines adapted to density? See 5d data-density appropriateness. |
+| VQ-02 | No Overlap | 6 | All text readable? No collisions with other text or with data? Data-mark overlap only counts when it hides information — expected overlap handled with alpha/outline is not a deduction. See 5d. |
+| VQ-03 | Element Visibility | 6 | Markers/lines adapted to density? Legend glyphs (size circles, swatches, line samples) visible in BOTH themes and matching the marks? See 5d. |
 | VQ-04 | Color Accessibility | 2 | Adequate contrast + CVD-safe (beyond palette)? No red-green as sole signal? |
 | VQ-05 | Layout & Canvas | 4 | Good proportions? Nothing cut off? Title 50–70% width, balanced axis labels, no overflow — see 5d. |
 | VQ-06 | Axis Labels & Title | 2 | Descriptive with units? |
@@ -179,9 +182,9 @@ Read `prompts/quality-criteria.md` and evaluate:
 #### Spec Compliance (15 pts)
 | ID | Criterion | Max | Check |
 |----|-----------|-----|-------|
-| SC-01 | Plot Type | 5 | Correct chart type? |
-| SC-02 | Required Features | 4 | All features from spec? |
-| SC-03 | Data Mapping | 3 | X/Y correct? Axes show all data? |
+| SC-01 | Plot Type | 5 | Correct chart type? On a `-basic` id: no encodings or elements the spec neither requires nor offers as optional (a Data column or a Notes bullet that allows color by category is asked for; a channel driven by a derived fourth variable is not)? Unasked additions (derived color channel, per-group fits, highlight bands, annotation layers) are the wrong variant (partial SC-01) and earn no DE-03/LM-02 credit. |
+| SC-02 | Required Features | 4 | All features from spec? Properties the section says a good version *shows* present? (Its "expected, not a defect" statements are permissions, not features.) |
+| SC-03 | Data Mapping | 3 | X/Y correct? Axes show all data? Marks sit at their data values — no force/collision layout, nudge or declutter pass moving data marks (exempt: categorical jitter, layout-positioned types, and any jitter, dodge or offset the spec's Data or Notes ask for)? |
 | SC-04 | Title & Legend | 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r, julia, javascript}). Legend labels match? |
 
 #### Data Quality (15 pts)
@@ -456,6 +459,7 @@ The 5 dimensions:
 - This is a **${LIBRARY}-only** review — focus only on this library
 - Post feedback to **PR #${PR_NUMBER}**
 - Be specific about what failed and how to fix it
+- Every weakness is acted on by the next generation, so never list something the spec's "What a good version looks like" section calls expected, and phrase an overlap weakness so that its fix is data generation, marker size or alpha — never moving marks off their values
 - Mark criteria as N/A when not applicable (e.g., legend for single-series)
 - **Score strictly**: median implementation should score 72-78, not 90+
 - **Design Excellence defaults are low**: DE-01=4, DE-02=2, DE-03=2 — raise only with evidence

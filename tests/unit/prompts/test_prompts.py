@@ -495,3 +495,134 @@ class TestFifteenLibraryCoverage:
         ):
             assert f'"{key}"' in content, f"checklist example missing key: {key}"
         assert "library_features" not in content, "stale 5-category checklist key resurfaced"
+
+
+CHARACTERISTICS_HEADING = "## What a good version looks like"
+PLOTS_DIR = PROMPTS_DIR.parent / "plots"
+WORKFLOW_PROMPTS_DIR = PROMPTS_DIR / "workflow-prompts"
+
+# Hand-seeded (owner-approved, one-off) characteristic sections for the most
+# regenerated / central plot types. Every other spec gets the section from
+# spec-create or keeps relying on the review inferring it from Description/Notes.
+SEEDED_CHARACTERISTIC_SPECS = [
+    "bubble-basic",
+    "scatter-basic",
+    "line-basic",
+    "bar-basic",
+    "heatmap-basic",
+    "heatmap-correlation",
+    "violin-basic",
+    "network-force-directed",
+]
+
+
+def _specs_with_characteristics() -> list[str]:
+    return sorted(
+        path.parent.name
+        for path in PLOTS_DIR.glob("*/specification.md")
+        if CHARACTERISTICS_HEADING in path.read_text(encoding="utf-8")
+    )
+
+
+class TestPlotTypeCharacteristics:
+    """The per-spec "What a good version looks like" section and the review
+    rules built on it (regen-stability experiment on bubble-basic, 2026-09-27:
+    marks displaced by collision layouts, invisible size-legend glyphs and extra
+    encodings on -basic specs were scored as strengths or not at all)."""
+
+    def test_template_ends_with_characteristics_section(self) -> None:
+        """Trailing, so sync_to_postgres' `(?=\\n##|\\Z)` split can't leak it into Notes."""
+        content = (PROMPTS_DIR / "templates" / "specification.md").read_text()
+        headings = re.findall(r"^## .+$", content, re.MULTILINE)
+        assert headings[-2:] == ["## Notes", CHARACTERISTICS_HEADING]
+
+    def test_quality_criteria_covers_new_rules(self) -> None:
+        content = (PROMPTS_DIR / "quality-criteria.md").read_text()
+        assert "## Plot-Type Characteristics" in content
+        assert content.index("## Plot-Type Characteristics") < content.index("## Score Caps")
+        assert "What a good version looks like" in content
+        assert "Data-value integrity" in content
+        assert "Legend glyphs" in content
+        assert "hides information" in content
+        assert "Variant creep on `-basic` specs" in content
+        assert "Affirmative properties" in content
+        assert "absence of a permitted thing never deducts" in content
+        assert "not the render's chrome" in content
+
+    @pytest.mark.parametrize(
+        "prompt_path",
+        [WORKFLOW_PROMPTS_DIR / "ai-quality-review.md", PROMPTS_DIR / "quality-evaluator.md"],
+        ids=lambda p: p.name,
+    )
+    def test_scoring_prompts_mirror_the_rules(self, prompt_path: Path) -> None:
+        """Both scoring prompts — the workflow reviewer and the one
+        scripts/evaluate-plot.py concatenates with the rubric — carry the
+        same characteristic-section rules, so neither scores by the old ones."""
+        content = prompt_path.read_text()
+        assert "What a good version looks like" in content
+        assert "affirmative properties" in content
+        assert "absence of a permitted thing never deducts" in content
+        assert "hides information" in content
+        assert "visible in BOTH themes" in content
+        assert "Marks sit at their data values" in content
+        assert "layout-positioned types" in content
+        assert "any jitter, dodge or offset the spec's Data or Notes ask for" in content
+        assert "neither requires nor offers as optional" in content
+        assert "wrong variant" in content
+        assert "are permissions, not features" in content
+
+    def test_generation_prompts_forbid_moving_marks(self) -> None:
+        for path in (
+            WORKFLOW_PROMPTS_DIR / "impl-generate-claude.md",
+            WORKFLOW_PROMPTS_DIR / "impl-repair-claude.md",
+            PROMPTS_DIR / "plot-generator.md",
+        ):
+            content = path.read_text()
+            assert "What a good version looks like" in content or "characteristic section" in content, path.name
+            assert re.search(r"never (?:by )?mov(?:e|ing) marks", content, re.IGNORECASE), path.name
+            # The SC-03 exemptions travel with the rule, or generation would
+            # "fix" legitimate strip-plot jitter or network layouts.
+            assert "layout-positioned types" in content, path.name
+            assert "any jitter, dodge or offset the spec's Data or Notes ask for" in content, path.name
+
+    @pytest.mark.parametrize(
+        "prompt_path",
+        [WORKFLOW_PROMPTS_DIR / "impl-generate-claude.md", WORKFLOW_PROMPTS_DIR / "impl-repair-claude.md"],
+        ids=lambda p: p.name,
+    )
+    def test_regen_and_repair_decline_unreal_weaknesses(self, prompt_path: Path) -> None:
+        content = prompt_path.read_text()
+        assert 'Address every bullet under "Weaknesses"' not in content
+        assert "(fix these problems - decide HOW yourself)" not in content
+        assert "Keep the data scenario and the variant" in content
+        assert "Don't add code for changes that don't show" in content
+        assert "Declined:" in content
+
+    def test_spec_polish_never_touches_the_section(self) -> None:
+        content = (WORKFLOW_PROMPTS_DIR / "spec-polish-claude.md").read_text()
+        assert "Do NOT author, rewrite" in content
+        assert "What a good version looks like" in content
+        assert "is out of scope for this audit" in content
+
+    @pytest.mark.parametrize("spec_id", SEEDED_CHARACTERISTIC_SPECS)
+    def test_seeded_spec_has_section(self, spec_id: str) -> None:
+        content = (PLOTS_DIR / spec_id / "specification.md").read_text(encoding="utf-8")
+        assert CHARACTERISTICS_HEADING in content, f"{spec_id} lost its seeded characteristic section"
+
+    @pytest.mark.parametrize("spec_id", _specs_with_characteristics())
+    def test_section_follows_parser_format(self, spec_id: str) -> None:
+        """Heading once, last `## ` section, column-0 `- ` bullets (indented
+        continuation lines allowed) and nothing else — the shape the regen gate
+        parses as C1..Cn. The count bound is looser than the prompts' 3-5 on
+        purpose: this guards the parser contract, not house style, so a
+        spec-create PR is never blocked by a bullet too many or too few."""
+        content = (PLOTS_DIR / spec_id / "specification.md").read_text(encoding="utf-8")
+        lines = content.splitlines()
+        assert lines.count(CHARACTERISTICS_HEADING) == 1, f"{spec_id}: heading must appear exactly once"
+        start = lines.index(CHARACTERISTICS_HEADING)
+        body = lines[start + 1 :]
+        assert not [line for line in body if line.startswith("#")], f"{spec_id}: section must be last, no sub-headings"
+        stray = [line for line in body if line.strip() and not (line.startswith("- ") or line.startswith("  "))]
+        assert not stray, f"{spec_id}: only column-0 '- ' bullets (plus indented continuations) allowed, found {stray}"
+        bullets = [line for line in body if line.startswith("- ")]
+        assert 2 <= len(bullets) <= 6, f"{spec_id}: expected 2-6 bullets, found {len(bullets)}"

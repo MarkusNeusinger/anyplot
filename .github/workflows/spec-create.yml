@@ -156,6 +156,16 @@ jobs:
                - Read tagging guide: `prompts/spec-tags-generator.md`
                - Create directory: `plots/{specification-id}/`
                - Create: `plots/{specification-id}/specification.md` (follow template structure)
+               - End `specification.md` with the template's `## What a good version looks like`
+                 section (after `## Notes`): 3-5 column-0 `- ` bullets, no sub-headings,
+                 one line per bullet (no wrapped continuation lines), naming
+                 what a viewer sees in a good render of THIS plot type. Include at least one
+                 "expected, not a defect" item (something that can look like a flaw but is
+                 inherent to the type, and how a good version handles it) and, for a `-basic`
+                 id, which encodings the variant has and nothing beyond them. No numeric
+                 thresholds, no generic ideals ("no overlap", "clean design"), and nothing that
+                 contradicts Description, Data or Notes. The AI review judges every
+                 implementation against this section.
                - Create: `plots/{specification-id}/specification.yaml` with:
                  - `specification_id`: the generated id
                  - `title`: a proper title
@@ -299,6 +309,17 @@ jobs:
                - Read tagging guide: `prompts/spec-tags-generator.md`
                - Create directory: `plots/{specification-id}/`
                - Create: `plots/{specification-id}/specification.md` (follow template structure)
+               - End `specification.md` with the template's `## What a good version looks like`
+                 section (after `## Notes`): 3-5 column-0 `- ` bullets, no sub-headings,
+                 one line per bullet (no wrapped continuation lines), naming
+                 what a viewer sees in a good render of THIS plot type. Include at least one
+                 "expected, not a defect" item (something that can look like a flaw but is
+                 inherent to the type, and how a good version handles it) and, for a `-basic`
+                 id, which encodings the variant has and nothing beyond them. No numeric
+                 thresholds, no generic ideals ("no overlap", "clean design"), and nothing that
+                 contradicts Description, Data or Notes. The AI review judges every
+                 implementation against this section. If the first attempt left a
+                 `specification.md` without this section, add it.
                - Create: `plots/{specification-id}/specification.yaml` with:
                  - `specification_id`: the generated id
                  - `title`: a proper title

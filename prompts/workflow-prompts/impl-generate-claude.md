@@ -63,7 +63,7 @@ Read these files to understand the requirements:
 1. `prompts/plot-generator.md` - Base generation rules
 2. `prompts/default-style-guide.md` - **CRITICAL**: Imprint palette, continuous-data rules, theme-adaptive chrome tokens. Every new implementation must comply. Always refer to the palette as **Imprint** in code comments and metadata — never "anyplot palette".
 3. `prompts/library/{LIBRARY}.md` - Library-specific rules + theme-adaptive chrome mapping for this library
-4. `plots/{SPEC_ID}/specification.md` - What to visualize
+4. `plots/{SPEC_ID}/specification.md` - What to visualize. Its closing `## What a good version looks like` section (when present) names what a good render of this plot type shows, including "expected, not a defect" items — the review scores against it, so build toward it. Without the section, derive the same from Description, Data and Notes.
 
 ### If regenerating (`IS_REGENERATION=true`) — MANDATORY
 
@@ -75,7 +75,10 @@ When regenerating an existing implementation, you MUST read these BEFORE writing
 **Default regen mindset: incremental improvement, not rewrite.**
 
 - Preserve the bits listed under "Strengths" unchanged.
-- Address every bullet under "Weaknesses" and each ❌ item in the criteria checklist.
+- **Address the weaknesses that are real per the spec's `## What a good version looks like` section** (and each ❌ item in the checklist that is real in the same sense). A weakness that asks for something the section calls expected — e.g. "bubbles overlap in the dense cluster" on a bubble chart that already uses translucency and outlines — is not real: decline it and name it with a one-line reason in the commit body. Without the section, judge against Description, Data and Notes.
+- **Answer overlap weaknesses through data generation, marker size or alpha — never by moving marks off their data values.** No force/collision simulations, nudge or declutter passes, or offsets on data marks; moving labels is fine. The review deducts displaced marks (SC-03). Exempt, as in SC-03: jitter in categorical strip/swarm plots, layout-positioned types (networks, treemaps, word clouds, packed circles), and any jitter, dodge or offset the spec's Data or Notes ask for.
+- **Keep the data scenario and the variant.** Same domain, same story, same encodings unless a weakness names the scenario itself as the problem or a change request (below) asks for a different one. On a `-basic` spec, add no new encodings or elements (derived color channels, trend lines, highlight bands, annotation layers) — the review scores them as the wrong variant.
+- **Don't add code for changes that don't show.** Every edit should be visible in the render or fix a named code-quality item; a longer file with an unchanged picture is not an improvement.
 - **Canvas size: the Step 0 contract is non-negotiable on regen.** The previous file's `figsize` / `dpi` / `width` / `height` / `scale_factor` values are **historical**, never current — overwrite them to the canonical pair from `prompts/library/{LIBRARY}.md` as your *first* edit, before touching anything else. The post-render gate checks this and re-triggers repair on drift; do not let that fire.
 - **Base style wins on everything else.** If anything in `prompts/default-style-guide.md` or `prompts/library/{LIBRARY}.md` differs from the previous implementation, update the previous code to match. This includes **font sizes** (title, axis labels, tick labels, legend), **marker and line sizes**, **palette** (Imprint palette positions), **theme tokens** (background, INK, INK_SOFT, ELEVATED_BG, GRID), and **chrome** (spines, gridlines, legend frame). The previous review may not have flagged the old values because they were valid at the time — that does NOT make them current. Always re-read the library prompt's "Sizing" section and the style guide's "Visual Sizing Defaults" table on every regen and align. Also normalise any stale "anyplot palette" wording in the previous code's comments to "Imprint palette".
 - Do NOT discard working structure / data generation / layout choices that the previous review did not flag.
@@ -114,7 +117,8 @@ When a change_request is present:
   prefers incremental improvement) does **NOT** apply when a change_request is
   present — you must implement the requested change.
 - **Preserve `review.strengths`** while applying the new direction. Override
-  "Respect the spec variant" (below) only insofar as the change_request
+  "Respect the spec variant" (`prompts/plot-generator.md` → "Data storytelling")
+  and the "Keep the data scenario and the variant" regen rule above only insofar as the change_request
   explicitly permits — the spec-variant rule still binds the rest of the
   implementation.
 - The hint is short by design (~1 sentence). It will name the sibling and the
@@ -278,7 +282,7 @@ git commit -m "feat({LIBRARY}): implement {SPEC_ID}"
 git push -u origin implementation/{SPEC_ID}/{LIBRARY}
 ```
 
-If `IS_REGENERATION=true`, use an expanded commit body that names what you addressed. Example:
+If `IS_REGENERATION=true`, use an expanded commit body that names what you addressed and which weaknesses you declined, with the reason. Example:
 
 ```
 feat(matplotlib): implement scatter-basic
@@ -286,6 +290,9 @@ feat(matplotlib): implement scatter-basic
 Regen from quality 78. Addressed:
 - text legibility on dark background
 - grid contrast (VQ-03 failed → fixed)
+Declined:
+- "points overlap in the dense center" — expected per the spec's
+  characteristic section; alpha already keeps every point visible
 ```
 
 Pass the multi-line message via `-F -` or a heredoc so git preserves the body.
@@ -297,6 +304,8 @@ Before finishing, confirm:
 2. ✅ `plot-light.png` AND `plot-dark.png` were generated successfully (plus `plot-light.html` / `plot-dark.html` for interactive libs — ggplot2 and makie are PNG-only)
 3. ✅ First categorical series renders in `#009E73` in both themes
 4. ✅ Changes were committed and pushed
-5. ✅ If regenerating: `/tmp/anyplot-prev-review.md` and the previous source file were read, and each weakness / failed criterion was either addressed or consciously kept (explained in the commit body)
+5. ✅ If regenerating: `/tmp/anyplot-prev-review.md` and the previous source file were read, and each weakness / failed criterion was either addressed or declined as not real per the spec's characteristic section (declined ones named with a reason in the commit body)
+6. ✅ Every data mark sits at its data value — overlap was handled through data generation, marker size or alpha, not by moving marks (SC-03 exemptions only: categorical strip/swarm jitter, layout-positioned types, jitter/dodge/offset the spec asks for)
+7. ✅ If regenerating: same data scenario and variant as before (unless a weakness or change request asked otherwise), no new encodings on a `-basic` spec, and no added code whose effect does not show in the render
 
 If any of these failed, DO NOT report success.

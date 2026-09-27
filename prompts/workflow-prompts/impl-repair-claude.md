@@ -11,16 +11,25 @@ Read both sources to understand what needs to be fixed:
 1. `/tmp/ai_feedback.md` - Full review from PR comments
 2. `plots/{SPEC_ID}/metadata/{LANGUAGE}/{LIBRARY}.yaml` - Look at:
    - `review.strengths` (keep these aspects!)
-   - `review.weaknesses` (fix these problems - decide HOW yourself)
+   - `review.weaknesses` (fix the ones that are real per the spec's `## What a good version looks like` section - decide HOW yourself; see "Which weaknesses to fix" below)
    - `review.image_description` (understand what was generated visually)
    - `review.criteria_checklist` (see exactly which criteria failed)
-     - Look for items with `passed: false` - these need fixing
+     - Look for items with `passed: false` - these need fixing, unless the failure contradicts the characteristic section (then decline it, see below)
      - Focus on categories with low scores (e.g., visual_quality.score < visual_quality.max)
      - VQ-XX items for visual issues
      - SC-XX items for spec compliance
      - CQ-XX items for code quality
 
 **Important:** If the review triggered AR-08 (FAKE_FUNCTIONALITY), this is NOT repairable via repair. The implementation must either be regenerated as a genuine static visualization or marked NOT_FEASIBLE. Do NOT fix by "improving" the fake elements.
+
+### Which weaknesses to fix
+
+Read the closing `## What a good version looks like` section of `plots/{SPEC_ID}/specification.md` (without one, use Description, Data and Notes) and decide per weakness:
+
+- **Fix the weaknesses that are real per the section.** A weakness that asks for something the section calls expected — e.g. "bubbles overlap in the dense cluster" on a bubble chart that already uses translucency and outlines — is not real: decline it and name it with a one-line reason in the commit body. The section never waives chrome rules (theme readability, canvas, palette, text legibility, auto-reject checks); those weaknesses are always real.
+- **Keep the data scenario and the variant.** Same domain, same story, same encodings unless a weakness names the scenario itself as the problem. On a `-basic` spec, add no new encodings or elements (derived color channels, trend lines, highlight bands, annotation layers).
+- **Don't add code for changes that don't show.** Every edit should be visible in the render or fix a named code-quality item.
+- **Never move marks off their data values** to fix overlap — see the overlap line under "Visual-sizing fixes" below for the endorsed fixes and the SC-03 exemptions.
 
 ## Step 2: Read reference files
 
@@ -35,6 +44,8 @@ Read both sources to understand what needs to be fixed:
 - Text overlaps → adjust margins, rotate ticks, reduce label fontsize, or move legend
 - Sparse data with tiny markers → increase `s=` / `size=` / `marker.size=` / `marker.radius`
 - Dense data with oversized markers / overplotting → reduce marker size + add `alpha=0.5-0.7`
+- Data marks overlapping each other → change the data generation, marker size or alpha. **Never move marks off their data values** (no force/collision simulation, nudge or declutter pass, or offsets on data marks) — the review deducts displaced marks under SC-03. Moving labels is fine. Exempt, as in SC-03: jitter in categorical strip/swarm plots, layout-positioned types (networks, treemaps, word clouds, packed circles), and any jitter, dodge or offset the spec's Data or Notes ask for. If the spec's `## What a good version looks like` section calls the overlap expected and the marks are already distinguishable, decline the weakness (see "Which weaknesses to fix").
+- Invisible legend glyphs (size circles, swatches, line samples) → give the legend the marks' fill, outline and alpha explicitly (e.g. ggplot2 `guides(size = guide_legend(override.aes = list(...)))`)
 
 Adjust the canvas-controlling knobs of the relevant library family:
 - DPI-based (matplotlib / seaborn / plotnine): `figsize`, `dpi`, `fontsize=`
@@ -66,10 +77,12 @@ having multiple libraries in the catalog. See `prompts/plot-generator.md` →
 
 ## Step 4: Fix the issues
 
-Based on the AI feedback, fix:
+Based on the AI feedback, fix the weaknesses you kept in "Which weaknesses to fix" (Step 1):
 - Visual quality issues
 - Code quality issues
 - Spec compliance issues
+
+Keep the data scenario and variant, add no code without a visible effect, and never move marks off their data values beyond the SC-03 exemptions.
 
 ## Step 5: Test the fix (BOTH themes)
 
@@ -141,6 +154,8 @@ git commit -m "fix({LIBRARY}): address review feedback for {SPEC_ID}
 Attempt {ATTEMPT}/4 - fixes based on AI review"
 git push origin {BRANCH}
 ```
+
+If you declined any weakness in Step 1, add a `Declined:` list to the commit body, one line per weakness with its reason (e.g. `- "bubbles overlap in the dense cluster" — expected per the spec's characteristic section; alpha already keeps every bubble visible`).
 
 ## Report result
 

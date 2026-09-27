@@ -47,6 +47,29 @@ merge it by hand. If the merge doesn't land within 15 minutes, the job turns
 auto-merge off again and says so on the issue; once the checks are green,
 re-run the job or remove and re-add `approved`.
 
+#### The "What a good version looks like" section
+
+Every `specification.md` that spec-create writes ends with a
+`## What a good version looks like` section: 3-5 one-line bullets that name what
+a viewer sees in a good render of that plot type. At least one bullet is an
+"expected, not a defect" item — something that can look like a flaw but is
+inherent to the type, such as overlapping bubbles in a dense bubble chart.
+
+- The AI review (`impl-review.yml`) scores every implementation against this
+  section: it never lists something the section calls expected as a weakness,
+  and it deducts when a property the section says a good version shows is
+  missing. When a spec has no section, the review infers the same from
+  Description, Data, and Notes.
+- Generation and repair build toward the section and decline review weaknesses
+  that contradict it.
+- The daily spec polish (`daily-regen.yml`) never adds, edits, or removes the
+  section.
+- The Postgres sync doesn't store the section, so the website doesn't show it.
+
+When you review a spec PR before adding `approved`, check this section too: it
+must describe the plot type rather than generic ideals such as "no overlap",
+contain no numeric thresholds, and not contradict Description, Data, or Notes.
+
 ### 2. Report pipeline
 
 See [Report Issues](report-issue.md) for details.

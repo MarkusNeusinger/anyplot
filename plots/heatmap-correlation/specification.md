@@ -24,3 +24,11 @@ A heatmap specifically designed to display correlation coefficients between vari
 - Display as symmetric matrix with variable names on both axes
 - Consider masking upper or lower triangle to reduce redundancy
 - Set colorbar range to fixed -1 to 1 for consistent interpretation
+
+## What a good version looks like
+
+- Square cells on a symmetric matrix with the same variable names in the same order on both axes; long names are rotated, never truncated.
+- The diagonal is uniformly r = 1 and reads as the matrix's visual axis, not an artifact; masking the redundant upper or lower triangle is a legitimate choice, not missing data.
+- A diverging colormap centered on zero, with the color bar fixed to the full correlation range and its midpoint visible, so sign and strength read from color alone.
+- Cells carry their correlation values as the Notes ask, and the numbers switch color with cell darkness so they stay legible at both ends of the colormap in both themes.
+- A mix of strong, weak and near-zero correlations, positive and negative, is expected; a matrix where every off-diagonal value looks alike suggests fabricated data.
