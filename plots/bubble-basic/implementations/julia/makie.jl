@@ -103,12 +103,13 @@ text!(ax, 115.0, 9.6;
 
 # Bubble area (sqrt-scaled) encodes box-office revenue; fill color encodes
 # production scale — two independent variables, each with its own legend
-# group below. Alpha lowered further (0.5 -> 0.4) so individual bubbles in
-# the dense low-budget indie cluster stay distinguishable from each other.
+# group below. Alpha lowered further (0.4 -> 0.3) so individual bubbles in
+# the densest low-budget indie and mid-budget studio clusters stay
+# distinguishable instead of merging into blobs.
 scatter!(ax, budget, rating;
     color       = point_color,
     markersize  = marker_sizes,
-    alpha       = 0.4,
+    alpha       = 0.3,
     strokewidth = 1.0,
     strokecolor = RGBAf(INK.r, INK.g, INK.b, 0.4),
 )
@@ -151,8 +152,8 @@ Legend(fig[1, 2],
     framecolor      = INK_SOFT,
     labelcolor      = INK_SOFT,
     titlecolor      = INK,
-    patchsize       = (60, 40),
-    labelsize       = 13,
+    patchsize       = (64, 44),
+    labelsize       = 16,
 )
 
 # Tighten the gap between the plot panel and the legend column — a small,
