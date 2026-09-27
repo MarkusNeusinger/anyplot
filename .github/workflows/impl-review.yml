@@ -130,8 +130,126 @@ jobs:
 
       - name: Checkout PR code
         run: |
+          # Keep the regen helpers from THIS workflow's ref before switching to
+          # the PR head: the gate's parser must match the workflow that calls
+          # it, and a PR branched off an older main does not carry them.
+          mkdir -p "$RUNNER_TEMP/regen-tools"
+          cp automation/scripts/regen_gate.py automation/scripts/close_issue_if_complete.py "$RUNNER_TEMP/regen-tools/"
           git fetch origin ${{ steps.pr.outputs.head_sha }}
           git checkout ${{ steps.pr.outputs.head_sha }}
+
+      # Pre-merge test hook (impl-generate.yml dispatches the review on its own
+      # ref when run from a feature branch): review with that branch's
+      # prompts/. Unstaged right away so the metadata commit below can never
+      # pick the overlay up. No-op on main and on repository_dispatch.
+      - name: Overlay prompts/ from trigger ref (branch-level prompt iteration)
+        if: github.ref_name != 'main' && github.event_name == 'workflow_dispatch'
+        env:
+          WORKFLOW_SHA: ${{ github.sha }}
+        run: |
+          git checkout "$WORKFLOW_SHA" -- prompts/
+          git reset -q -- prompts/
+          echo "::notice::Overlaid prompts/ from ${WORKFLOW_SHA} (unstaged)"
+
+      # Regen = the pair already has an implementation on main. Decided here
+      # from origin/main, never from the PR's `regen` label (a lost label must
+      # not route a regeneration into the repair loop, whose exhaustion path
+      # deletes the live implementation). Only `regen:forced` (dispatch input
+      # regen_gate=false) opts out; if the labels cannot be read the PR is
+      # gated — the fail-safe direction.
+      - name: Detect regeneration
+        id: regen
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+          SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+          LIBRARY: ${{ steps.pr.outputs.library }}
+          LANGUAGE: ${{ steps.lang.outputs.language }}
+          EXT: ${{ steps.lang.outputs.ext }}
+        run: |
+          # A stale file must never stand in for this run's judgement.
+          rm -f review_regen.json
+
+          git fetch origin main
+          if ! git cat-file -e "origin/main:plots/$SPEC_ID/implementations/$LANGUAGE/$LIBRARY$EXT" 2>/dev/null; then
+            echo "is_regen=false" >> $GITHUB_OUTPUT
+            echo "::notice::No implementation on main — fresh generation path"
+            exit 0
+          fi
+
+          LABELS=""
+          READ_OK=0
+          for attempt in 1 2 3; do
+            if LABELS=$(gh pr view "$PR_NUMBER" --json labels -q '.labels[].name' 2> /tmp/regen-labels.err); then
+              READ_OK=1
+              break
+            fi
+            echo "::warning::gh pr view (labels) failed (attempt ${attempt}/3): $(head -c 300 /tmp/regen-labels.err | tr '\n' ' ')"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+          done
+
+          if [ "$READ_OK" = "1" ] && echo "$LABELS" | grep -qx "regen:forced"; then
+            echo "is_regen=false" >> $GITHUB_OUTPUT
+            echo "::notice::Forced regeneration (regen:forced) — fresh generation path with repair loop"
+            exit 0
+          fi
+          [ "$READ_OK" = "1" ] || echo "::warning::labels unreadable — gating the regeneration (fail-safe)"
+          echo "is_regen=true" >> $GITHUB_OUTPUT
+          echo "::notice::Regeneration: implementation is live on main — one review, regen gate decides keep vs replace"
+
+      - name: Regen context
+        id: regen_ctx
+        if: steps.regen.outputs.is_regen == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+          SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+          LIBRARY: ${{ steps.pr.outputs.library }}
+          LANGUAGE: ${{ steps.lang.outputs.language }}
+          EXT: ${{ steps.lang.outputs.ext }}
+        run: |
+          pip install --quiet pyyaml
+          IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}"
+          META_FILE="plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml"
+
+          # Previous review from main's metadata (the PR branch's copy was
+          # reset to quality_score: null by impl-generate). Missing metadata
+          # yields no weakness ids and prev_stored=n/a.
+          if ! git show "origin/main:${META_FILE}" > /tmp/anyplot-prev-metadata.yaml 2>/dev/null; then
+            echo "::warning::${META_FILE} not on main — previous review unavailable"
+            echo "{}" > /tmp/anyplot-prev-metadata.yaml
+          fi
+          python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" context \
+            --metadata /tmp/anyplot-prev-metadata.yaml \
+            --spec-id "$SPEC_ID" --language "$LANGUAGE" --library "$LIBRARY" \
+            --spec-file "plots/${SPEC_ID}/specification.md" \
+            --omit-scores \
+            --out-md /tmp/anyplot-prev-review.md \
+            --out-weaknesses /tmp/anyplot-prev-weaknesses.json
+
+          # Previous source for the before/after code read, plus both line
+          # counts ("grew a lot with no visible change" is a CQ-04 note).
+          # The generated header carries the stored score (`Quality: N/100`);
+          # the reviewer's copy has it hidden so the re-score cannot anchor.
+          # Sanitizing is part of this step: if it fails, the step fails and
+          # the gate keeps (--context-failed) rather than leak the score.
+          git show "origin/main:${IMPL_FILE}" > /tmp/anyplot-prev-impl-raw
+          python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" sanitize-source \
+            --source /tmp/anyplot-prev-impl-raw --out "/tmp/anyplot-prev-impl${EXT}"
+          rm -f /tmp/anyplot-prev-impl-raw
+          echo "prev_lines=$(wc -l < "/tmp/anyplot-prev-impl${EXT}" | tr -d ' ')" >> $GITHUB_OUTPUT
+          echo "new_lines=$(wc -l < "$IMPL_FILE" | tr -d ' ')" >> $GITHUB_OUTPUT
+
+          # Change request, as impl-generate.yml recorded it in the PR body.
+          rm -f /tmp/anyplot-change-request.txt
+          CR=$(gh pr view "$PR_NUMBER" --json body -q '.body' | grep -oP '^\*\*Change request:\*\* \K.*' | head -1 || true)
+          if [ -n "$CR" ]; then
+            printf '%s\n' "$CR" > /tmp/anyplot-change-request.txt
+            echo "change_request_present=true" >> $GITHUB_OUTPUT
+          else
+            echo "change_request_present=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Check attempt count
         id: attempts
@@ -196,6 +314,50 @@ jobs:
           done
           ls -la plot_images/
 
+      # Regen only: the predecessor's production renders, which the review
+      # re-scores against the same criteria (prompt step 8b) AFTER scoring the
+      # new render blind. Kept out of the working directory so a directory
+      # listing during the blind pass does not surface them, and as
+      # top-level /tmp files because `.claude/settings.json` allows the Read
+      # tool on `/tmp/*` only (a $RUNNER_TEMP path would be a denied read in
+      # the non-interactive action). Anything short of both files →
+      # prev_renders=missing, and the gate keeps the live implementation.
+      - name: Download previous production renders (regen)
+        id: prev_renders
+        if: steps.regen.outputs.is_regen == 'true'
+        env:
+          SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+          LIBRARY: ${{ steps.pr.outputs.library }}
+          LANGUAGE: ${{ steps.lang.outputs.language }}
+          GCS_OK: ${{ steps.gcs.outcome == 'success' }}
+        run: |
+          LIGHT=/tmp/anyplot-prev-plot-light.png
+          DARK=/tmp/anyplot-prev-plot-dark.png
+          rm -f "$LIGHT" "$DARK"
+          if [ "$GCS_OK" != "true" ]; then
+            echo "::warning::GCP auth failed — previous renders unavailable"
+            echo "prev_renders=missing" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          SRC="gs://anyplot-images/plots/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
+          for attempt in 1 2 3; do
+            if gsutil cp "${SRC}/plot-light.png" "$LIGHT" 2> /tmp/gsutil-prev.err \
+               && gsutil cp "${SRC}/plot-dark.png" "$DARK" 2>> /tmp/gsutil-prev.err \
+               && [ -s "$LIGHT" ] && [ -s "$DARK" ]; then
+              break
+            fi
+            echo "::warning::previous render download incomplete (attempt ${attempt}/3): $(head -c 300 /tmp/gsutil-prev.err | tr '\n' ' ')"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+          done
+          if [ -s "$LIGHT" ] && [ -s "$DARK" ]; then
+            echo "prev_renders=available" >> $GITHUB_OUTPUT
+            echo "light=$LIGHT" >> $GITHUB_OUTPUT
+            echo "dark=$DARK" >> $GITHUB_OUTPUT
+          else
+            echo "prev_renders=missing" >> $GITHUB_OUTPUT
+          fi
+          ls -la "$LIGHT" "$DARK" 2>/dev/null || true
+
       - name: Verify both theme renders exist
         run: |
           missing=""
@@ -215,10 +377,12 @@ jobs:
       # a synthetic weakness (named actual+target+signed delta + likely cause).
       # ai-quality-review.md reads that file and treats canvas_gate=fail as a
       # MUST-flag weakness that forces VQ-05 to 0, which drags the quality_score
-      # below the repair threshold — re-routing the PR into impl-repair through
-      # the existing 5-review/4-repair cascade. Never raw `exit 1` here:
-      # impl-repair.yml is dispatched by ai-rejected label only, so a hard step
-      # failure would leave a dead PR with no retry path.
+      # below the repair threshold — re-routing a fresh generation into
+      # impl-repair through the 5-review/4-repair cascade. On a regeneration
+      # there is no repair: the regen gate reads the same file and keeps the
+      # live implementation. Never raw `exit 1` here: impl-repair.yml is
+      # dispatched by the verdict step only, so a hard step failure would leave
+      # a dead PR with no retry path.
       - name: Canvas dimension gate
         env:
           LIBRARY: ${{ steps.pr.outputs.library }}
@@ -353,6 +517,12 @@ jobs:
             - ATTEMPT: ${{ steps.attempts.outputs.display }}
             - LANGUAGE: ${{ steps.lang.outputs.language }}
             - EXT: ${{ steps.lang.outputs.ext }}
+            - IS_REGENERATION: ${{ steps.regen.outputs.is_regen || 'false' }}
+            - PREV_RENDERS: ${{ steps.prev_renders.outputs.prev_renders || 'missing' }}
+            - PREV_RENDER_LIGHT: ${{ steps.prev_renders.outputs.light || 'n/a' }}
+            - PREV_RENDER_DARK: ${{ steps.prev_renders.outputs.dark || 'n/a' }}
+            - PREV_LINES: ${{ steps.regen_ctx.outputs.prev_lines || 'n/a' }}
+            - NEW_LINES: ${{ steps.regen_ctx.outputs.new_lines || 'n/a' }}
 
       - name: Extract quality score
         id: score
@@ -506,6 +676,46 @@ jobs:
             gh pr edit "$PR_NUM" --add-label "$LABEL"
           }
 
+      # One review, no repair: automation/scripts/regen_gate.py turns the
+      # review's before/after judgement (review_regen.json, prompt step 8b)
+      # into merge | keep. Runs before any verdict label so impl-merge can
+      # never fire on a regeneration the gate did not approve. The helper is
+      # the copy taken from this workflow's ref; if it cannot run at all, the
+      # verdict is keep (fail closed).
+      - name: Regen gate
+        id: gate
+        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && steps.regen.outputs.is_regen == 'true'
+        env:
+          SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+          LIBRARY: ${{ steps.pr.outputs.library }}
+          SCORE: ${{ steps.score.outputs.score }}
+          PREV_STORED: ${{ steps.regen_ctx.outputs.prev_stored || 'n/a' }}
+          PREV_RENDERS: ${{ steps.prev_renders.outputs.prev_renders || 'missing' }}
+          CONTEXT_OUTCOME: ${{ steps.regen_ctx.outcome }}
+          CHANGE_REQUEST_PRESENT: ${{ steps.regen_ctx.outputs.change_request_present || 'false' }}
+        run: |
+          FLAGS=()
+          [ -f /tmp/anyplot-canvas-gate.txt ] && FLAGS+=(--canvas-failed)
+          [ "$CHANGE_REQUEST_PRESENT" = "true" ] && FLAGS+=(--change-request-present)
+          [ "$CONTEXT_OUTCOME" = "success" ] || FLAGS+=(--context-failed)
+          if ! python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" decide \
+               --spec-id "$SPEC_ID" --library "$LIBRARY" \
+               --score "$SCORE" --prev-stored "$PREV_STORED" \
+               --regen-json review_regen.json \
+               --weaknesses-json /tmp/anyplot-prev-weaknesses.json \
+               --spec-file "plots/${SPEC_ID}/specification.md" \
+               --prev-renders "$PREV_RENDERS" \
+               --summary-out /tmp/anyplot-regen-summary.md \
+               "${FLAGS[@]}"; then
+            echo "::notice::regen_gate spec=${SPEC_ID} lib=${LIBRARY} prev_stored=${PREV_STORED} prev_rescored=n/a new=${SCORE} verdict=keep reason=gate script crashed"
+            {
+              echo "verdict=keep"
+              echo "reason=gate script crashed"
+              echo "prev_rescored=n/a"
+            } >> "$GITHUB_OUTPUT"
+            printf '**Reason:** gate script crashed (see the impl-review run log)\n' > /tmp/anyplot-regen-summary.md
+          fi
+
       - name: Add preliminary verdict label (early)
         if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true'
         env:
@@ -513,9 +723,42 @@ jobs:
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
           SCORE: ${{ steps.score.outputs.score }}
           ATTEMPT_COUNT: ${{ steps.attempts.outputs.count }}
+          IS_REGEN: ${{ steps.regen.outputs.is_regen }}
+          GATE_VERDICT: ${{ steps.gate.outputs.verdict }}
         run: |
           # Add verdict label early to ensure it's set even if later steps fail
           # This is idempotent - re-running won't cause issues
+
+          # Regeneration: the gate's verdict, never the cascading threshold.
+          # merge → `regen:improved` FIRST, then `ai-approved` (impl-merge
+          # listens for the latter, so the marker must already be there).
+          # keep → `regen:kept` only. Never `ai-rejected`: that would start
+          # the repair loop, whose exhaustion path deletes the live
+          # implementation from main.
+          if [ "$IS_REGEN" = "true" ]; then
+            add_label() {
+              local label="$1" attempt
+              for attempt in 1 2 3; do
+                if gh pr edit "$PR_NUM" --add-label "$label" 2> /tmp/label.err; then
+                  return 0
+                fi
+                echo "::warning::adding ${label} failed (attempt ${attempt}/3): $(head -c 300 /tmp/label.err | tr '\n' ' ')"
+                [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+              done
+              return 1
+            }
+            gh label create "regen:improved" --color "0e8a16" --description "Regeneration replaced the live implementation (regen gate)" 2>/dev/null || true
+            gh label create "regen:kept" --color "bfdadc" --description "Regeneration closed, live implementation kept (regen gate)" 2>/dev/null || true
+            if [ "$GATE_VERDICT" = "merge" ]; then
+              add_label "regen:improved" || { echo "::error::regen:improved could not be added — not adding ai-approved"; exit 1; }
+              add_label "ai-approved" || { echo "::error::ai-approved could not be added"; exit 1; }
+              echo "::notice::Regen gate: merge (regen:improved + ai-approved)"
+            else
+              add_label "regen:kept" || echo "::warning::regen:kept could not be added — the verdict step still closes the PR"
+              echo "::notice::Regen gate: keep (regen:kept)"
+            fi
+            exit 0
+          fi
 
           # Dynamic threshold based on repair attempt count:
           # Attempt 0 (Review 1): >= 90
@@ -550,8 +793,10 @@ jobs:
         if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true'
         run: pip install pyyaml
 
+      # Skipped on a kept regeneration: the PR is closed unmerged, so there is
+      # nothing to record on its branch.
       - name: Update metadata and implementation header
-        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true'
+        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && (steps.regen.outputs.is_regen != 'true' || steps.gate.outputs.verdict == 'merge')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
@@ -908,6 +1153,10 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
           MODEL: ${{ steps.pr.outputs.model }}
+          IS_REGEN: ${{ steps.regen.outputs.is_regen }}
+          GATE_VERDICT: ${{ steps.gate.outputs.verdict }}
+          GATE_REASON: ${{ steps.gate.outputs.reason }}
+          PREV_STORED: ${{ steps.regen_ctx.outputs.prev_stored || 'n/a' }}
         run: |
           # Cascading thresholds:
           # Attempt 0 (Review 1): >= 90
@@ -943,6 +1192,87 @@ jobs:
             echo "::error::${what} failed after 3 attempts for PR #${PR_NUM}"
             return 1
           }
+
+          # ── Regeneration: the regen gate decided, the cascade does not apply ──
+          if [ "$IS_REGEN" = "true" ]; then
+            if [ "$GATE_VERDICT" = "merge" ]; then
+              echo "::notice::Regen gate approved the replacement (${GATE_REASON}), triggering merge"
+              # Idempotent re-assert: impl-merge refuses a PR without
+              # ai-approved, so a label lost after regen:improved would
+              # otherwise strand the PR silently.
+              gh_retry "ai-approved label" gh pr edit "$PR_NUM" --add-label "ai-approved" || exit 1
+              gh_retry "impl-merge dispatch" gh workflow run impl-merge.yml -f pr_number="$PR_NUM"
+              exit 0
+            fi
+
+            # keep: close the PR, leave main and GCS production untouched.
+            # Nothing reaches main, so sync-postgres is not triggered either.
+            echo "::notice::Regen gate kept the live implementation (${GATE_REASON:-no verdict})"
+            RUN_URL="https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}"
+            SUMMARY_FILE=/tmp/anyplot-regen-summary.md
+            if [ ! -s "$SUMMARY_FILE" ]; then
+              printf '**Reason:** %s\n' "${GATE_REASON:-regen gate produced no verdict}" > "$SUMMARY_FILE"
+            fi
+            FAILED=0
+
+            {
+              echo "<!-- regen-kept:${SPEC_ID}:${LIBRARY} -->"
+              echo "## :leftwards_arrow_with_hook: Regeneration kept the live implementation"
+              echo ""
+              echo "The regen gate compared this render (score ${SCORE}) with the implementation on main and kept the latter. This PR is closed without merging; main and the production images are unchanged."
+              echo ""
+              cat "$SUMMARY_FILE"
+              echo ""
+              echo "The staging render of this PR must **not** be promoted by hand. To replace the implementation anyway, re-run with \`regen_gate=false\`:"
+              echo ""
+              echo "\`\`\`"
+              echo "gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f regen_gate=false"
+              echo "\`\`\`"
+              echo ""
+              echo "---"
+              echo ":robot: *[impl-review](${RUN_URL})*"
+            } > /tmp/anyplot-regen-kept.md
+
+            gh_retry "kept-regen PR comment" gh pr comment "$PR_NUM" --body-file /tmp/anyplot-regen-kept.md || FAILED=1
+            # A lost close is re-tried by watchdog Case 0 (open + regen:kept).
+            gh_retry "kept-regen PR close" gh pr close "$PR_NUM" --delete-branch || FAILED=1
+
+            if [ -n "$ISSUE_NUMBER" ]; then
+              # The pair is done again (its live implementation): re-assert
+              # done FIRST, then drop the labels that say it is in flight.
+              gh label create "impl:${LIBRARY}:done" --color "0e8a16" --description "${LIBRARY} implementation merged" 2>/dev/null || true
+              gh_retry "impl:${LIBRARY}:done" gh issue edit "$ISSUE_NUMBER" --add-label "impl:${LIBRARY}:done" || FAILED=1
+              PRESENT=""
+              if PRESENT=$(gh issue view "$ISSUE_NUMBER" --json labels -q '.labels[].name' 2>/dev/null); then
+                for stale in "generate:${LIBRARY}" "impl:${LIBRARY}:pending" \
+                             "impl:${LIBRARY}:failed" "watchdog:retried-${LIBRARY}"; do
+                  if echo "$PRESENT" | grep -qx "$stale"; then
+                    gh_retry "remove ${stale}" gh issue edit "$ISSUE_NUMBER" --remove-label "$stale" || FAILED=1
+                  fi
+                done
+              else
+                # Could not see what is there: remove pending blind. A failure
+                # here only turns the run red; the pair is already done again.
+                gh_retry "remove impl:${LIBRARY}:pending" gh issue edit "$ISSUE_NUMBER" --remove-label "impl:${LIBRARY}:pending" || FAILED=1
+              fi
+              gh_retry "issue comment" gh issue comment "$ISSUE_NUMBER" --body-file /tmp/anyplot-regen-kept.md || FAILED=1
+
+              LIBRARIES=$(python3 -c "from core.constants import SUPPORTED_LIBRARIES; print(' '.join(sorted(SUPPORTED_LIBRARIES)))" 2>/dev/null || echo "")
+              if [ -n "$LIBRARIES" ]; then
+                python3 "$RUNNER_TEMP/regen-tools/close_issue_if_complete.py" \
+                  --issue "$ISSUE_NUMBER" --spec-id "$SPEC_ID" --libraries "$LIBRARIES" \
+                  --run-url "$RUN_URL" --source impl-review || true
+              else
+                echo "::warning::Could not read SUPPORTED_LIBRARIES — issue #${ISSUE_NUMBER} left open"
+              fi
+            fi
+
+            if [ "$FAILED" -ne 0 ]; then
+              echo "::error::Kept regeneration of PR #${PR_NUM}: some bookkeeping calls failed (see warnings above)"
+              exit 1
+            fi
+            exit 0
+          fi
 
           # Check if verdict label was already added by earlier step.
           # Track read success explicitly rather than inferring it from an

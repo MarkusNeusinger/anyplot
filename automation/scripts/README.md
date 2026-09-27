@@ -35,6 +35,17 @@ from automation.scripts.label_manager import (
 ### `workflow_cli.py`
 CLI interface for use in GitHub Actions shell steps.
 
+### `regen_gate.py`
+Regen gate (stdlib, plus PyYAML for `context`): `context` writes the previous
+review with stable weakness ids `W1..Wn` (used by `impl-generate.yml` and
+`impl-review.yml`), `decide` turns the review's `review_regen.json` into
+`merge` or `keep`. `impl-review.yml` runs a copy taken from its own ref.
+
+### `close_issue_if_complete.py`
+Closes a spec issue once every supported library is `impl:<lib>:done` or
+`:failed`. Shared by `impl-merge.yml` and the kept-regen branch of
+`impl-review.yml`.
+
 ### `spec_pr_guard.py`
 Fail-closed file allowlist for the spec PR that the merge job in `spec-create.yml`
 merges: the diff of the PR head against its merge base with `main` may only add or

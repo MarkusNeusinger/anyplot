@@ -71,6 +71,9 @@ concurrency:
 jobs:
   pick:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read   # spec issue updatedAt = last regen attempt per spec
     outputs:
       specs: ${{ steps.pick.outputs.specs }}
       specs_json: ${{ steps.pick.outputs.specs_json }}
@@ -89,6 +92,8 @@ jobs:
       - name: Pick oldest spec(s) (or use override)
         id: pick
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
           COUNT: ${{ inputs.count || '1' }}
           MIN_AGE_HOURS: ${{ inputs.min_age_hours || '20' }}
           SPEC_OVERRIDE: ${{ inputs.specification_id }}
@@ -96,6 +101,7 @@ jobs:
           python3 <<'PY'
           import json
           import os
+          import subprocess
           import sys
           from datetime import datetime, timedelta, timezone
           from pathlib import Path
@@ -124,6 +130,51 @@ jobs:
                   f.write(f"count=1\n")
               sys.exit(0)
 
+          def parse_ts(raw: str) -> datetime | None:
+              try:
+                  dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+              except ValueError:
+                  return None
+              return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+          # Last regen ATTEMPT per spec = the spec issue's updatedAt. A
+          # regeneration the regen gate kept closes its PR and never touches
+          # `updated` in the metadata, so without this the same spec would be
+          # picked again every night. Every regen touches its issue (pending
+          # labels, preview and verdict comments), so the issue's updatedAt is
+          # a durable attempt record that — unlike a closed-PR listing — never
+          # falls out of a window. Semantics: ANY activity on a spec's issue
+          # (a comment, a label, a report) postpones that spec's regen by
+          # MIN_AGE_HOURS and moves it back in the oldest-first order.
+          # One call at pick time, most recently updated first (so the
+          # limit only drops issues that are old anyway); a failure degrades
+          # to "metadata updated only". Mapping issue → spec comes from each
+          # plots/<spec>/specification.yaml `issue:` field.
+          issue_updated: dict[int, datetime] = {}
+          try:
+              raw = subprocess.run(
+                  ["gh", "issue", "list", "--repo", os.environ["GH_REPO"], "--state", "all",
+                   "--search", "sort:updated-desc", "--limit", "1000", "--json", "number,updatedAt"],
+                  check=True, capture_output=True, text=True,
+              ).stdout
+              for issue in json.loads(raw):
+                  ts = parse_ts(str(issue.get("updatedAt") or ""))
+                  if ts and isinstance(issue.get("number"), int):
+                      issue_updated[issue["number"]] = ts
+              print(f"::notice::Issue activity read for {len(issue_updated)} issue(s)")
+          except (subprocess.CalledProcessError, ValueError, OSError) as exc:
+              print(f"::warning::Could not list issues ({' '.join(str(exc).split())[:200]}) — picking by metadata 'updated' only")
+
+          last_attempt: dict[str, datetime] = {}
+          if issue_updated:
+              for spec_yaml in specs_dir.glob("*/specification.yaml"):
+                  try:
+                      issue_no = (yaml.safe_load(spec_yaml.read_text(encoding="utf-8")) or {}).get("issue")
+                  except Exception:
+                      continue
+                  if isinstance(issue_no, int) and issue_no in issue_updated:
+                      last_attempt[spec_yaml.parent.name] = issue_updated[issue_no]
+
           candidates: list[tuple[datetime, str]] = []
 
           for spec_dir in sorted(specs_dir.iterdir()):
@@ -146,16 +197,19 @@ jobs:
                   if latest_updated is None or s > latest_updated:
                       latest_updated = s
 
-              if not latest_updated:
-                  # No metadata yet → treat as ancient, candidate for regen
-                  candidates.append((datetime.min.replace(tzinfo=timezone.utc), spec_dir.name))
-                  continue
+              dt = parse_ts(latest_updated) if latest_updated else None
+              if latest_updated and dt is None:
+                  continue  # unparseable timestamp — skip, as before
 
-              try:
-                  dt = datetime.fromisoformat(latest_updated.replace("Z", "+00:00"))
-                  if dt.tzinfo is None:
-                      dt = dt.replace(tzinfo=timezone.utc)
-              except Exception:
+              # Age = time since the newer of the last merged update and the
+              # last activity on the spec issue (kept regens included). No
+              # usable metadata → the issue activity alone is the age; only
+              # when neither exists is the spec treated as ancient.
+              attempt = last_attempt.get(spec_dir.name)
+              if attempt and (dt is None or attempt > dt):
+                  dt = attempt
+              if dt is None:
+                  candidates.append((datetime.min.replace(tzinfo=timezone.utc), spec_dir.name))
                   continue
 
               if NOW - dt < MIN_AGE:
@@ -168,7 +222,7 @@ jobs:
 
           print(f"::notice::Eligible specs: {len(candidates)}  picked: {picks}")
           for dt, name in candidates[:COUNT]:
-              print(f"  - {name:40s}  latest_updated={dt.isoformat()}")
+              print(f"  - {name:40s}  last_touched={dt.isoformat()}")
 
           github_output = os.environ["GITHUB_OUTPUT"]
           with open(github_output, "a", encoding="utf-8") as f:

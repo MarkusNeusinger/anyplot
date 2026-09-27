@@ -7,6 +7,12 @@
 > Functionally a local-model alternative to the GitHub `daily-regen.yml` workflow: produces the same per-library
 > PRs with `quality:{N}` + `ai-approved`/`quality-poor` labels, so `impl-merge.yml` still handles squash-merge,
 > GCS staging→production, and `impl:{lib}:done` issue labels. No Cloud AI review/repair is dispatched.
+>
+> **Owner override.** This command bypasses the CI regen gate (the before/after comparison against a re-scored
+> predecessor in `impl-review.yml`, see `docs/workflows/overview.md#regen-gate-regenerations`). Only run it when the
+> owner wants a local replacement. One guard stays: `create-pr` withholds `ai-approved` when the new score is more
+> than one point below the score stored on `origin/main` (the ratchet) — the PR then stays open without auto-merge,
+> and adding `ai-approved` by hand is the owner's explicit override.
 
 ## Context
 
@@ -404,8 +410,10 @@ PR_NUMBER=$(echo "$PR_OUTPUT" | sed -n '2p')
 Internally: fetches `origin/main`, creates `implementation/{SPEC_ID}/{LIBRARY}` worktree from it, copies the
 regenerated files in, commits, pushes, opens the PR with the `**Parent Issue:** #N` marker (read from the
 spec's `specification.yaml`) so `impl-merge.yml` can comment on the spec issue and add `impl:{LIBRARY}:done`.
-Adds `quality:{SCORE}` plus `ai-approved` (≥ 50) or `quality-poor` (< 50) via REST. Always cleans up the
-worktree afterward, even on failure.
+Adds `quality:{SCORE}` plus `ai-approved` (≥ 50) or `quality-poor` (< 50) via REST — except when the score is more
+than one point below the stored score on `origin/main`: then only `quality:{SCORE}` is added and the command prints
+a `regen ratchet` warning (log the PR as "ratchet: no auto-merge"). Always cleans up the worktree afterward, even on
+failure.
 
 ### 2j. Tick off and log
 
@@ -504,7 +512,8 @@ The user can:
 
 - **No agent teams.** Runs entirely in the lead session.
 - **One library per invocation.** Restart-safe.
-- **No Cloud AI review.** Each PR carries `quality:{N}` plus `ai-approved` (≥50) or `quality-poor` (<50).
+- **No Cloud AI review.** Each PR carries `quality:{N}` plus `ai-approved` (≥50) or `quality-poor` (<50);
+  `ai-approved` is withheld when the score is more than one point below the stored score on `origin/main`.
   `impl-merge.yml` still triggers on `ai-approved` (squash-merge, GCS staging→production, `impl:{lib}:done` label,
   `sync-postgres.yml`).
 - **`.gitignore`** must contain `.regen-plan.md`, `.regen-history/`, and `.regen-preview/`.

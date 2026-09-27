@@ -637,7 +637,7 @@ Located in `.github/workflows/`:
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | **impl-generate.yml** | `generate:{library}` label OR workflow_dispatch | Generates single library implementation |
-| **impl-review.yml** | Called by impl-generate | AI quality review, adds `quality:XX` and `ai-approved`/`ai-rejected` |
+| **impl-review.yml** | Called by impl-generate | AI quality review, adds `quality:XX` and `ai-approved`/`ai-rejected`; on a regeneration (implementation already on `origin/main`) the regen gate decides instead: `regen:improved` + `ai-approved` or `regen:kept` (PR closed, never `ai-rejected`) — see `docs/workflows/overview.md#regen-gate-regenerations` |
 | **impl-review-retry.yml** | PR labeled `ai-review-failed` | Re-dispatches impl-review exactly once after a failed/timed-out review |
 | **impl-repair.yml** | Called by impl-review (on rejection) | Fixes rejected implementation (max 4 attempts) |
 | **impl-merge.yml** | `ai-approved` label OR workflow_dispatch | Merges approved PR, creates metadata/{language}/{library}.yaml |
@@ -827,6 +827,7 @@ uv run python -m automation.scripts.label_manager list
 - **Review 4 (Repair 3)**: >= 60 -> ai-approved, merged immediately
 - **Review 5 (Repair 4)**: >= 50 -> ai-approved, merged immediately
 - **Failure**: < 50 after 4 repairs -> close PR and regenerate
+- **Regenerations** skip the cascade: one review, and the regen gate (`automation/scripts/regen_gate.py`) replaces the live implementation only when the new score >= the predecessor re-scored in the same review - 1, at least one improvement is visible, and nothing regressed. `regen_gate=false` on `impl-generate.yml` / `bulk-generate.yml` forces the old path (`regen:forced`).
 
 ### Quality Score Labels
 
@@ -905,6 +906,9 @@ These are set automatically by `impl-review.yml` after AI evaluation and used by
        -> ai-approved -> impl-merge -> impl:{library}:done
        -> ai-rejected -> impl-repair (x4) -> ai-attempt-1/2/3/4
                                           -> PR closed (after 4 failed repairs; manual regen via generate:{library})
+       -> regeneration (impl on main) -> regen gate, one review, no repair
+                                          -> regen:improved + ai-approved -> impl-merge
+                                          -> regen:kept -> PR closed, live implementation stays
 ```
 
 **Test Issues:** When creating issues for testing workflows, add the `test` label to exclude them from production searches.

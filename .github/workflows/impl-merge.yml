@@ -243,6 +243,9 @@ jobs:
           PR_BODY=$(gh pr view "$PR_NUM" --json body -q '.body' 2>/dev/null || echo "")
           ISSUE=$(echo "$PR_BODY" | grep -oP '\*\*Parent Issue:\*\* #\K\d+' | head -1 || echo "")
           echo "number=$ISSUE" >> $GITHUB_OUTPUT
+          # Regen PRs carry "**Regeneration:** previous quality N" (impl-generate.yml).
+          PREV_QUALITY=$(echo "$PR_BODY" | grep -oP '\*\*Regeneration:\*\* previous quality \K(\d+|n/a)' | head -1 || echo "")
+          echo "prev_quality=$PREV_QUALITY" >> $GITHUB_OUTPUT
 
       - name: Extract quality score from PR labels
         if: steps.check.outputs.should_run == 'true'
@@ -449,6 +452,7 @@ jobs:
           SPEC_ID: ${{ steps.extract.outputs.specification_id }}
           PR_NUM: ${{ steps.check.outputs.pr_number }}
           QUALITY_SCORE: ${{ steps.quality.outputs.score }}
+          PREV_QUALITY: ${{ steps.issue.outputs.prev_quality }}
         run: |
           BODY="## :white_check_mark: ${LIBRARY} Complete
 
@@ -459,6 +463,11 @@ jobs:
           if [ -n "$QUALITY_SCORE" ]; then
             BODY="${BODY}
           **Quality Score:** ${QUALITY_SCORE}/100"
+          fi
+
+          if [ -n "$PREV_QUALITY" ]; then
+            BODY="${BODY}
+          **Regen:** previous ${PREV_QUALITY} → ${QUALITY_SCORE:-n/a} (stored scores)"
           fi
 
           BODY="${BODY}
@@ -486,61 +495,14 @@ jobs:
             exit 1
           fi
 
-          # Get current labels on the issue
-          LABELS=$(gh issue view "$ISSUE" --json labels -q '.labels[].name' 2>/dev/null || echo "")
-
-          # Count done and failed implementations
-          DONE_COUNT=0
-          FAILED_COUNT=0
-          DONE_LIBS=""
-          FAILED_LIBS=""
-
-          for lib in $LIBRARIES; do
-            if echo "$LABELS" | grep -q "^impl:${lib}:done$"; then
-              DONE_COUNT=$((DONE_COUNT + 1))
-              DONE_LIBS="$DONE_LIBS $lib"
-            elif echo "$LABELS" | grep -q "^impl:${lib}:failed$"; then
-              FAILED_COUNT=$((FAILED_COUNT + 1))
-              FAILED_LIBS="$FAILED_LIBS $lib"
-            fi
-          done
-
-          TOTAL_LIBS=$(echo "$LIBRARIES" | wc -w | tr -d ' ')
-          TOTAL=$((DONE_COUNT + FAILED_COUNT))
-          echo "::notice::Libraries: $DONE_COUNT done, $FAILED_COUNT failed, $TOTAL/$TOTAL_LIBS total"
-
-          # Close issue if all supported libraries are done OR done+failed=TOTAL_LIBS
-          if [ "$TOTAL" -eq "$TOTAL_LIBS" ]; then
-            # Build status table
-            TABLE="| Library | Status |\n|---------|--------|"
-            for lib in $LIBRARIES; do
-              if echo "$DONE_LIBS" | grep -w -q "$lib"; then
-                TABLE="$TABLE\n| $lib | :white_check_mark: |"
-              elif echo "$FAILED_LIBS" | grep -w -q "$lib"; then
-                TABLE="$TABLE\n| $lib | :x: (not supported) |"
-              fi
-            done
-
-            if [ "$FAILED_COUNT" -eq 0 ]; then
-              TITLE=":tada: All Implementations Complete!"
-              SUMMARY="All ${TOTAL_LIBS} library implementations for \`${SPEC_ID}\` have been successfully merged."
-            else
-              TITLE=":white_check_mark: Implementations Complete"
-              SUMMARY="${DONE_COUNT}/${TOTAL_LIBS} implementations merged, ${FAILED_COUNT} libraries could not implement this plot type."
-            fi
-
-            gh issue comment "$ISSUE" --body "## ${TITLE}
-
-          ${SUMMARY}
-
-          $(echo -e "$TABLE")
-
-          ---
-          :robot: *[impl-merge](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
-
-            gh issue close "$ISSUE"
-            echo "::notice::Closed issue #$ISSUE - all implementations complete ($DONE_COUNT done, $FAILED_COUNT failed)"
-          fi
+          # Shared with impl-review.yml's kept-regen branch: close the issue
+          # once every supported library is done or failed.
+          python3 automation/scripts/close_issue_if_complete.py \
+            --issue "$ISSUE" \
+            --spec-id "$SPEC_ID" \
+            --libraries "$LIBRARIES" \
+            --run-url "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --source impl-merge
 
       - name: Trigger database sync
         if: steps.check.outputs.should_run == 'true'

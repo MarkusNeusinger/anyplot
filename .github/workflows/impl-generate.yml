@@ -53,6 +53,11 @@ on:
         required: false
         type: string
         default: ''
+      regen_gate:
+        description: "Regen gate: when the pair already has an implementation on main, one review decides keep vs replace (no repair). false = forced regen through the old fresh-generation path (repair loop, cascading thresholds), labelled regen:forced"
+        required: false
+        type: boolean
+        default: true
 
 # Global concurrency: max 3 concurrent implementation workflows
 concurrency:
@@ -293,6 +298,10 @@ jobs:
           LANGUAGE: ${{ steps.inputs.outputs.language }}
           LIBRARY: ${{ steps.inputs.outputs.library }}
           EXT: ${{ steps.inputs.outputs.ext }}
+          # Label-triggered runs have no inputs: only an explicit dispatch with
+          # regen_gate=false opts out (null == false is true in expressions,
+          # hence the event_name guard).
+          REGEN_GATE: ${{ (github.event_name == 'workflow_dispatch' && inputs.regen_gate == false) && 'false' || 'true' }}
         run: |
           METADATA_FILE="plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml"
           IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}"
@@ -304,6 +313,23 @@ jobs:
             echo "is_regeneration=false" >> $GITHUB_OUTPUT
           fi
 
+          # Regen gate marker. impl-review.yml decides "regen" on its own from
+          # origin/main (implementation file present) — these labels are for
+          # humans and the watchdog, except `regen:forced`, which opts the PR
+          # out of the gate. Keyed on the implementation file alone, the same
+          # test impl-review uses.
+          if [ -f "$IMPL_FILE" ]; then
+            if [ "$REGEN_GATE" = "false" ]; then
+              echo "regen_label=regen:forced" >> $GITHUB_OUTPUT
+              echo "::notice::Forced regeneration (regen_gate=false) — fresh-generation review path"
+            else
+              echo "regen_label=regen" >> $GITHUB_OUTPUT
+              echo "::notice::Gated regeneration — one review decides keep vs replace"
+            fi
+          else
+            echo "regen_label=" >> $GITHUB_OUTPUT
+          fi
+
       - name: Extract previous review feedback (regeneration)
         id: prev_review
         if: steps.existing.outputs.is_regeneration == 'true'
@@ -312,56 +338,15 @@ jobs:
           LANGUAGE: ${{ steps.inputs.outputs.language }}
           LIBRARY: ${{ steps.inputs.outputs.library }}
         run: |
-          .venv/bin/python3 - <<'PY'
-          import os, pathlib, yaml
-
-          spec = os.environ["SPEC_ID"]
-          lang = os.environ["LANGUAGE"]
-          lib = os.environ["LIBRARY"]
-          meta_path = pathlib.Path(f"plots/{spec}/metadata/{lang}/{lib}.yaml")
-          data = yaml.safe_load(meta_path.read_text(encoding="utf-8")) or {}
-          review = data.get("review") or {}
-          quality = data.get("quality_score")
-
-          lines = [f"# Previous Review for {spec} / {lang} / {lib}", ""]
-          lines.append(f"**Previous quality score:** {quality if quality is not None else 'n/a'}")
-          lines.append("")
-
-          desc = review.get("image_description")
-          if desc:
-              lines += ["## Previous image description", str(desc).strip(), ""]
-
-          strengths = review.get("strengths") or []
-          if strengths:
-              lines.append("## Strengths (KEEP these)")
-              lines += [f"- {s}" for s in strengths]
-              lines.append("")
-
-          weaknesses = review.get("weaknesses") or []
-          if weaknesses:
-              lines.append("## Weaknesses (FIX these)")
-              lines += [f"- {w}" for w in weaknesses]
-              lines.append("")
-
-          checklist = review.get("criteria_checklist") or {}
-          if checklist:
-              lines.append("## Criteria checklist (focus on items that failed)")
-              for cat, payload in checklist.items():
-                  payload = payload or {}
-                  score = payload.get("score", "?")
-                  max_score = payload.get("max", "?")
-                  lines.append(f"### {cat}  ({score}/{max_score})")
-                  for item in payload.get("items") or []:
-                      item = item or {}
-                      mark = "✅" if item.get("passed") else "❌"
-                      lines.append(
-                          f"- {mark} {item.get('id', '?')} {item.get('name', '')}: {item.get('comment', '')}"
-                      )
-                  lines.append("")
-
-          pathlib.Path("/tmp/anyplot-prev-review.md").write_text("\n".join(lines), encoding="utf-8")
-          print(f"::notice::Extracted previous review (score={quality}) to /tmp/anyplot-prev-review.md")
-          PY
+          # Shared extractor (also used by impl-review.yml): writes
+          # /tmp/anyplot-prev-review.md with stable weakness ids W1..Wn, the
+          # same ids the regen review refers to in review_regen.json.
+          .venv/bin/python3 automation/scripts/regen_gate.py context \
+            --metadata "plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml" \
+            --spec-id "$SPEC_ID" --language "$LANGUAGE" --library "$LIBRARY" \
+            --out-md /tmp/anyplot-prev-review.md \
+            --out-weaknesses /tmp/anyplot-prev-weaknesses.json
+          echo "::notice::Extracted previous review to /tmp/anyplot-prev-review.md"
 
       - name: Ensure implementation directories exist
         env:
@@ -831,7 +816,31 @@ jobs:
           EXT: ${{ steps.inputs.outputs.ext }}
           ISSUE: ${{ steps.issue.outputs.number }}
           BRANCH: ${{ steps.branch.outputs.branch }}
+          REGEN_LABEL: ${{ steps.existing.outputs.regen_label }}
+          PREV_STORED: ${{ steps.prev_review.outputs.prev_stored || 'n/a' }}
+          # Via env, never interpolated into the script: the hint is free text.
+          CHANGE_REQUEST: ${{ inputs.change_request }}
         run: |
+          # Label one name per call, retried: the regen label is added after
+          # creation (not via --label, which fails the whole create when the
+          # label is missing). A lost `regen` label only costs the watchdog
+          # its hint; a lost `regen:forced` makes impl-review gate the PR
+          # (fail-safe: the live implementation stays).
+          add_regen_label() {
+            local pr="$1" attempt
+            [ -n "$REGEN_LABEL" ] || return 0
+            gh label create "$REGEN_LABEL" --color "c5def5" \
+              --description "Regeneration of an implementation that is live on main" 2>/dev/null || true
+            for attempt in 1 2 3; do
+              if gh pr edit "$pr" --add-label "$REGEN_LABEL" 2> /tmp/label.err; then
+                return 0
+              fi
+              echo "::warning::adding ${REGEN_LABEL} to PR #${pr} failed (attempt ${attempt}/3): $(head -c 300 /tmp/label.err | tr '\n' ' ')"
+              [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+            done
+            echo "::error::could not label PR #${pr} ${REGEN_LABEL}"
+          }
+
           # Check if PR already exists
           EXISTING_PR=$(gh pr list --head "$BRANCH" --base main --json number -q '.[0].number' 2>/dev/null || echo "")
 
@@ -839,6 +848,7 @@ jobs:
             echo "pr_number=$EXISTING_PR" >> $GITHUB_OUTPUT
             echo "pr_exists=true" >> $GITHUB_OUTPUT
             echo "::notice::Using existing PR #$EXISTING_PR"
+            add_regen_label "$EXISTING_PR"
             exit 0
           fi
 
@@ -855,6 +865,25 @@ jobs:
           **Parent Issue:** #${ISSUE}"
           fi
 
+          # Regen context. impl-merge reads the "previous quality" line for
+          # its issue comment, impl-review reads the change request for the
+          # regen gate. One line each: newlines in the hint are flattened.
+          if [ -n "$REGEN_LABEL" ]; then
+            BODY="${BODY}
+
+          **Regeneration:** previous quality ${PREV_STORED}"
+            if [ "$REGEN_LABEL" = "regen:forced" ]; then
+              BODY="${BODY} (forced: regen_gate=false, fresh-generation review path)"
+            else
+              BODY="${BODY} (gated: one review decides keep vs replace)"
+            fi
+            if [ -n "$CHANGE_REQUEST" ]; then
+              CR_LINE=$(printf '%s' "$CHANGE_REQUEST" | tr '\r\n' '  ')
+              BODY="${BODY}
+          **Change request:** ${CR_LINE}"
+            fi
+          fi
+
           BODY="${BODY}
 
           ---
@@ -869,6 +898,7 @@ jobs:
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "pr_exists=true" >> $GITHUB_OUTPUT
           echo "::notice::Created PR #$PR_NUMBER"
+          add_regen_label "$PR_NUMBER"
 
       # ========================================================================
       # Upload to GCS Staging
@@ -988,7 +1018,20 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
           MODEL: ${{ steps.inputs.outputs.model }}
+          TRIGGER_REF: ${{ github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
+          # Pre-merge test hook: a dispatch from a feature branch reviews with
+          # that branch's impl-review.yml (repository_dispatch always runs the
+          # default branch's copy), so workflow + prompt changes can be smoke-
+          # tested before they reach main.
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$TRIGGER_REF" != "main" ]; then
+            gh workflow run impl-review.yml --ref "$TRIGGER_REF" \
+              -f pr_number="$PR_NUMBER" \
+              -f model="$MODEL"
+            echo "::notice::Triggered impl-review.yml on ref ${TRIGGER_REF} for PR #$PR_NUMBER (model=$MODEL)"
+            exit 0
+          fi
           # Use repository_dispatch as workaround for workflow_dispatch caching issue
           gh api repos/${{ github.repository }}/dispatches \
             -f event_type=review-pr \
@@ -1042,8 +1085,52 @@ jobs:
           # parked WITHOUT `impl:<lib>:failed` (it is not a capability verdict)
           # and left for the next dispatch.
           INFRA_WINDOW_CAP: '5'
+          # Non-empty when the "Check for existing implementation" step ran and
+          # found the pair on main (`regen` or `regen:forced`). A failure in an
+          # earlier setup step leaves it empty, so the handler re-detects from
+          # origin/main itself below.
+          REGEN_LABEL: ${{ steps.existing.outputs.regen_label }}
+          LANGUAGE: ${{ steps.inputs.outputs.language }}
+          EXT: ${{ steps.inputs.outputs.ext }}
+          REGEN_GATE: ${{ (github.event_name == 'workflow_dispatch' && inputs.regen_gate == false) && 'false' || 'true' }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           echo "::notice::Handling generation failure for $LIBRARY/$SPEC_ID"
+
+          # Is the pair's implementation live on main? Then this failure must
+          # never mark it `impl:<lib>:failed` (the implementation still
+          # serves; the label would also send watchdog Section B after a pair
+          # that is fine), on EVERY failure path — including setup steps that
+          # fail before "Check for existing implementation" ran. Detected from
+          # origin/main like impl-review does. When the repository itself is
+          # unavailable (checkout failed) the answer is unknown, and unknown
+          # never writes the terminal :failed label.
+          IS_LIVE=false
+          if [ -n "$REGEN_LABEL" ]; then
+            IS_LIVE=true
+          elif git rev-parse --git-dir >/dev/null 2>&1; then
+            git fetch -q origin main 2>/dev/null || true
+            if git cat-file -e "origin/main:plots/$SPEC_ID/implementations/$LANGUAGE/$LIBRARY$EXT" 2>/dev/null; then
+              IS_LIVE=true
+            fi
+          else
+            IS_LIVE=true
+            echo "::warning::No repository checkout — cannot tell whether ${LIBRARY}/${SPEC_ID} is live on main; not marking it failed"
+          fi
+          echo "::notice::Implementation live on main: ${IS_LIVE}"
+
+          # Regen only: the pair is back to "done" (its live implementation),
+          # so the issue may be complete again.
+          close_issue_if_complete() {
+            local libs
+            libs=$(python3 -c "from core.constants import SUPPORTED_LIBRARIES; print(' '.join(sorted(SUPPORTED_LIBRARIES)))" 2>/dev/null || echo "")
+            if [ -z "$libs" ] || [ ! -f automation/scripts/close_issue_if_complete.py ]; then
+              echo "::warning::close_issue_if_complete unavailable — issue #${ISSUE} left open"
+              return 0
+            fi
+            python3 automation/scripts/close_issue_if_complete.py --issue "$ISSUE" --spec-id "$SPEC_ID" \
+              --libraries "$libs" --run-url "$RUN_URL" --source impl-generate || true
+          }
 
           # Classify the failure. The retry cap exists to stop re-running a pair
           # the model cannot solve; a provider incident, a cloud token refresh
@@ -1137,7 +1224,8 @@ jobs:
               -f library="${LIBRARY}" \
               -f issue_number="${ISSUE}" \
               -f model="${MODEL}" \
-              -f change_request="${CHANGE_REQUEST}"
+              -f change_request="${CHANGE_REQUEST}" \
+              -f regen_gate="${REGEN_GATE}"
             if [ -n "${CHANGE_REQUEST}" ]; then
               echo "::notice::Triggered automatic retry for ${LIBRARY}/${SPEC_ID} ($1, model=${MODEL}, change_request=present)"
             else
@@ -1158,6 +1246,9 @@ jobs:
               for stale in "generate:${LIBRARY}" "impl:${LIBRARY}:pending"; do
                 gh issue edit "$ISSUE" --remove-label "$stale" 2>/dev/null || true
               done
+              if [ "$IS_LIVE" = "true" ]; then
+                gh issue edit "$ISSUE" --add-label "impl:${LIBRARY}:done" 2>/dev/null || true
+              fi
               gh issue comment "$ISSUE" --body "${MARKER}
           ${INFRA_TAG}
           ## :pause_button: ${LIBRARY} Paused (infrastructure failures)
@@ -1173,6 +1264,9 @@ jobs:
 
           ---
           :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+              if [ "$IS_LIVE" = "true" ]; then
+                close_issue_if_complete
+              fi
             else
               gh issue comment "$ISSUE" --body "${MARKER}
           ${INFRA_TAG}
@@ -1209,6 +1303,26 @@ jobs:
               # handled right now, so at the cap it would under-report by one.
               CAP_REASON="${ATTEMPT} failed attempt(s) in the last ${CAMPAIGN_WINDOW_H}h (cap: 3 per campaign)"
             fi
+
+            if [ "$IS_LIVE" = "true" ]; then
+              # Regeneration: the implementation on main is untouched and still
+              # live — no `impl:<lib>:failed`, the pair stays done.
+              echo "::warning::Regeneration of $LIBRARY gave up ($CAP_REASON) — the live implementation stays, not marked failed"
+              gh issue edit "$ISSUE" --add-label "impl:${LIBRARY}:done" 2>/dev/null || true
+              for stale in "generate:${LIBRARY}" "impl:${LIBRARY}:pending"; do
+                gh issue edit "$ISSUE" --remove-label "$stale" 2>/dev/null || true
+              done
+              gh issue comment "$ISSUE" --body "${MARKER}
+          ## :leftwards_arrow_with_hook: ${LIBRARY} Regeneration Abandoned (retry cap reached)
+
+          The regeneration of **${LIBRARY}** for \`${SPEC_ID}\` produced no implementation after ${CAP_REASON}. The implementation on main is unchanged and stays live; the pair is **not** marked failed.
+
+          ---
+          :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+              close_issue_if_complete
+              exit 0
+            fi
+
             echo "::warning::Marking $LIBRARY as failed: $CAP_REASON"
 
             # Create failed label if needed
