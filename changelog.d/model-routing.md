@@ -8,7 +8,10 @@
   `bulk-generate.yml` and `daily-regen.yml` now defaults to `auto` (the
   routing); `haiku`, `sonnet` or `opus` still pins one model for every pair.
   Label-triggered runs, the watchdog's generation retries and the babysit
-  backfill scripts (`MODEL` now defaults to `auto`) follow the same routing.
+  backfill scripts (`MODEL` now defaults to `auto`) follow the same routing,
+  and so do review and repair rescues that arrive without a model
+  (`impl-review-retry.yml`, the watchdog, a manual rerun), which used to fall
+  back to Sonnet.
 - **The daily-regen spec polish and similarity audit run on Sonnet instead of
   Haiku.** Both pre-flight steps in `daily-regen.yml` stay pinned regardless of
   the run's `model` input.

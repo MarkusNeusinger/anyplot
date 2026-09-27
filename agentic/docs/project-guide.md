@@ -779,8 +779,8 @@ The new architecture separates specification and implementation processes:
 - Spec merge operations are serialized (one at a time) to prevent race conditions
 
 **Models:**
-- `impl-generate.yml` routes each (spec, library) pair: Opus for its first implementation (no implementation file on `origin/main` yet), Sonnet for a regeneration. The resolved model is threaded into that PR's review and repairs.
-- The `model` input (default `auto`) on `impl-generate.yml`, `bulk-generate.yml` and `daily-regen.yml` overrides the routing when set to `haiku`, `sonnet` or `opus`; label-triggered runs always route.
+- `impl-generate.yml` routes each (spec, library) pair: Opus for its first implementation (no implementation file on `origin/main` yet), Sonnet for a regeneration. The resolved model is threaded into that PR's review and repairs; `impl-review.yml` and `impl-repair.yml` apply the same routing when a rescue (impl-review-retry, the watchdog, a manual rerun) dispatches them without a model.
+- The `model` input (default `auto`) on `impl-generate.yml`, `bulk-generate.yml`, `daily-regen.yml`, `impl-review.yml` and `impl-repair.yml` overrides the routing when set to `haiku`, `sonnet` or `opus`; label-triggered runs always route.
 - Fixed models: `spec-create.yml` runs on Opus; the spec polish and cross-library similarity audit in `daily-regen.yml` run on Sonnet. See `docs/workflows/overview.md#pipeline-models`.
 
 ## GitHub Issue Labels

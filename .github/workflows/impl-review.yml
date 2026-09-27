@@ -13,11 +13,12 @@ on:
         required: true
         type: string
       model:
-        description: "Claude model to use (also threaded into repair)"
+        description: "Claude model (also threaded into repair); auto = opus while the pair has no implementation on main, else sonnet"
         required: false
         type: choice
-        default: 'sonnet'
+        default: 'auto'
         options:
+          - auto
           - haiku
           - sonnet
           - opus
@@ -83,8 +84,26 @@ jobs:
           # Extract issue number from PR body
           ISSUE_NUMBER=$(echo "$BODY" | grep -oP '\*\*Parent Issue:\*\* #\K\d+' | head -1 || echo "")
 
-          # Resolve model: explicit input > repository_dispatch payload > default sonnet
-          MODEL="${MODEL_INPUT:-${MODEL_PAYLOAD:-sonnet}}"
+          # Resolve model: explicit input > repository_dispatch payload >
+          # routing. impl-generate and impl-repair always send the model they
+          # resolved. "auto" (the dispatch default) or no model at all comes
+          # from rescues (impl-review-retry, the watchdog, a manual rerun) and
+          # routes like impl-generate: opus while the pair has no
+          # implementation on origin/main yet (its first run), sonnet for a
+          # regeneration. LANGUAGE/EXT are only derived in the next step, so
+          # the lookup matches the library's file in any language directory.
+          MODEL="${MODEL_INPUT:-auto}"
+          if [ "$MODEL" = "auto" ]; then
+            MODEL="${MODEL_PAYLOAD:-auto}"
+          fi
+          if [ "$MODEL" = "auto" ]; then
+            ON_MAIN=$(git ls-tree -r --name-only origin/main -- "plots/${SPEC_ID}/implementations/" 2>/dev/null || true)
+            if grep -qE "^plots/${SPEC_ID}/implementations/[a-z]+/${LIBRARY}\.[A-Za-z]+$" <<< "$ON_MAIN"; then
+              MODEL="sonnet"
+            else
+              MODEL="opus"
+            fi
+          fi
 
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "specification_id=$SPEC_ID" >> $GITHUB_OUTPUT

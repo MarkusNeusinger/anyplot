@@ -263,6 +263,9 @@ The routing applies whenever nobody chooses a model: a `generate:{library}`
 label, a `bulk-generate.yml` or `daily-regen.yml` run with the default
 `model=auto`, and the watchdog's generation retries. A failed generation
 forwards its resolved model to its own retry, so a first run stays on Opus.
+Review and repair runs that arrive without a model apply the same routing:
+`impl-review-retry.yml`, the watchdog's review and repair rescues, and a manual
+`gh workflow run impl-review.yml -f pr_number=N`.
 To pin one model for a whole run, pass it explicitly:
 
 ```bash
