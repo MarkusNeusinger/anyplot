@@ -257,6 +257,7 @@ threads it into the review and every repair of that pair's PR:
 |-----------|-------|
 | First implementation: the pair has no implementation file on `origin/main` yet | Opus |
 | Regeneration: the pair already has an implementation on `origin/main` | Sonnet |
+| Forced regeneration: a regeneration dispatched with `regen_gate=false` (see [Regen gate](#regen-gate-regenerations)) | Opus |
 | Explicit `model` input (`haiku`, `sonnet`, or `opus`) | That model, for every pair |
 
 The routing applies whenever nobody chooses a model: a `generate:{library}`

@@ -100,6 +100,9 @@ jobs:
         env:
           LABEL_NAME: ${{ github.event.label.name }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
+          # Same expression as "Check for existing implementation": only an
+          # explicit dispatch with regen_gate=false forces a regeneration.
+          REGEN_GATE: ${{ (github.event_name == 'workflow_dispatch' && inputs.regen_gate == false) && 'false' || 'true' }}
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             # From workflow_dispatch
@@ -157,7 +160,8 @@ jobs:
           # other than "auto", including the model a failed run forwards to its
           # own retry. Without one ("auto" from bulk-generate, daily-regen or
           # the watchdog; empty on the label trigger) a pair's first
-          # implementation runs on opus and a regeneration on sonnet. "First"
+          # implementation runs on opus and a regeneration on sonnet, except a
+          # forced one (regen_gate=false), which runs on opus. "First"
           # means no implementation file on origin/main yet. The resolved value
           # is threaded into review + repair and recorded in the PR body, so
           # one PR runs on one model.
@@ -172,8 +176,16 @@ jobs:
               exit 1
             fi
             if git cat-file -e "origin/main:plots/$SPEC_ID/implementations/$LANGUAGE/$LIBRARY$EXT" 2>/dev/null; then
-              MODEL="sonnet"
-              MODEL_REASON="regeneration"
+              if [ "$REGEN_GATE" = "false" ]; then
+                # A forced regeneration skips the regen gate and goes through
+                # the fresh-generation path (repair loop, cascading
+                # thresholds), so it runs on opus like a first implementation.
+                MODEL="opus"
+                MODEL_REASON="forced regeneration"
+              else
+                MODEL="sonnet"
+                MODEL_REASON="regeneration"
+              fi
             else
               MODEL="opus"
               MODEL_REASON="first implementation"

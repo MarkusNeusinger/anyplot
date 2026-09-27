@@ -172,7 +172,9 @@ def repo_without_main(tmp_path: Path) -> Path:
 # ---------------------------------------------------------------------------
 
 
-def _extract_inputs_script(*, library: str, model: str, label_trigger: bool, spec: str) -> tuple[str, dict[str, str]]:
+def _extract_inputs_script(
+    *, library: str, model: str, label_trigger: bool, spec: str, regen_gate: str = "true"
+) -> tuple[str, dict[str, str]]:
     dispatch = not label_trigger
     context = {
         "github.event_name": "workflow_dispatch" if dispatch else "issues",
@@ -185,15 +187,25 @@ def _extract_inputs_script(*, library: str, model: str, label_trigger: bool, spe
     env = {
         "LABEL_NAME": "" if dispatch else f"generate:{library}",
         "ISSUE_TITLE": "" if dispatch else f"[{spec}] Some plot",
+        "REGEN_GATE": regen_gate,
     }
     return _render(_step("impl-generate.yml", "Extract inputs")["run"], context), env
 
 
 def _run_extract_inputs(
-    repo: Path, tmp_path: Path, *, library: str, model: str = "auto", label_trigger: bool = False, spec: str = "spec-a"
+    repo: Path,
+    tmp_path: Path,
+    *,
+    library: str,
+    model: str = "auto",
+    label_trigger: bool = False,
+    spec: str = "spec-a",
+    regen_gate: str = "true",
 ) -> dict[str, str]:
     """Run impl-generate's "Extract inputs" step and return its outputs."""
-    script, env = _extract_inputs_script(library=library, model=model, label_trigger=label_trigger, spec=spec)
+    script, env = _extract_inputs_script(
+        library=library, model=model, label_trigger=label_trigger, spec=spec, regen_gate=regen_gate
+    )
     return _run_script(script, repo, tmp_path, **env)
 
 
@@ -290,6 +302,24 @@ class TestImplGenerateRouting:
         assert (outputs["model"], outputs["model_reason"]) == (model, reason)
         summary = (tmp_path / "step_summary").read_text(encoding="utf-8")
         assert f"**Model:** {model} ({reason})" in summary
+
+    @pytest.mark.parametrize(
+        ("library", "model", "expected", "reason"),
+        [
+            ("matplotlib", "auto", "opus", "forced regeneration"),  # on main, gate opted out
+            ("plotly", "auto", "opus", "first implementation"),  # nothing to force on a first run
+            ("matplotlib", "sonnet", "sonnet", "explicit input"),  # an explicit model still wins
+        ],
+    )
+    def test_forced_regeneration_routes_to_opus(self, repo, tmp_path, library, model, expected, reason):
+        outputs = _run_extract_inputs(repo, tmp_path, library=library, model=model, regen_gate="false")
+        assert (outputs["model"], outputs["model_reason"]) == (expected, reason)
+
+    def test_regen_gate_expression_matches_the_existing_check(self):
+        """Routing and the regen labels must agree on what a forced regeneration is."""
+        routing = _step("impl-generate.yml", "Extract inputs")["env"]["REGEN_GATE"]
+        existing = _step("impl-generate.yml", "Check for existing implementation (regeneration)")["env"]["REGEN_GATE"]
+        assert routing == existing
 
     def test_routing_fails_without_origin_main(self, repo_without_main, tmp_path):
         script, env = _extract_inputs_script(library="plotly", model="auto", label_trigger=False, spec="spec-a")
