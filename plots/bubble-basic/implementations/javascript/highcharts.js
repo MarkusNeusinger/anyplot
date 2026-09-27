@@ -51,7 +51,7 @@ companies.forEach((c, i) => {
 });
 
 const [fr, fg, fb] = [1, 3, 5].map((i) => parseInt(t.palette[0].slice(i, i + 2), 16));
-const markerFill = `rgba(${fr}, ${fg}, ${fb}, 0.45)`;
+const markerFill = `rgba(${fr}, ${fg}, ${fb}, 0.6)`;
 const seriesData = companies.map((c, i) => {
   const isFocal = i === focalIndex;
   return {
@@ -61,9 +61,11 @@ const seriesData = companies.map((c, i) => {
       radius: radiusForShare(c.segmentShare),
       fillColor: markerFill,
       // Page-bg stroke carves a visible edge between overlapping same-color
-      // bubbles in the densest cluster, so individual points stay legible.
-      lineColor: isFocal ? t.amber : t.pageBg,
-      lineWidth: isFocal ? 3 : 2.5,
+      // bubbles in the densest cluster. The focal point reuses the brand
+      // green at full opacity (not amber, which is reserved for warning/
+      // caution) so the highlight reads as "notable", not "alert".
+      lineColor: isFocal ? t.palette[0] : t.pageBg,
+      lineWidth: isFocal ? 3.5 : 2.5,
     },
     custom: { segmentShare: Math.round(c.segmentShare) },
   };
@@ -99,9 +101,10 @@ function drawSizeLegend(chart) {
 
 function highlightFocalPoint(chart) {
   // Guide the viewer to one standout company (top-ranked on both growth and
-  // share) with an amber-ringed marker and a native Highcharts SVGRenderer
-  // "callout" label pointing at it — a focal point beyond the bare
-  // position+size encoding.
+  // share) with a brand-green-ringed marker and a native Highcharts
+  // SVGRenderer "callout" label pointing at it — a focal point beyond the
+  // bare position+size encoding. Brand green (not amber, reserved for
+  // warning/caution) keeps the highlight read as "notable" rather than "alert".
   const focal = companies[focalIndex];
   const point = chart.series[0].points[focalIndex];
   const anchorX = chart.plotLeft + point.plotX;
@@ -119,7 +122,7 @@ function highlightFocalPoint(chart) {
       anchorY,
     )
     .css({ color: t.ink, fontSize: "13px", fontWeight: "600" })
-    .attr({ fill: t.elevatedBg, stroke: t.amber, "stroke-width": 1.5, padding: 8, r: 5, zIndex: 6 })
+    .attr({ fill: t.elevatedBg, stroke: t.palette[0], "stroke-width": 1.5, padding: 8, r: 5, zIndex: 6 })
     .add();
 }
 
