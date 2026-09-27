@@ -42,7 +42,9 @@ const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.t
 const x = d3.scaleLinear().domain([0, d3.max(data, (d) => d.funding)]).nice().range([0, iw]);
 const y = d3.scaleLinear().domain(d3.extent(data, (d) => d.growth)).nice().range([ih, 0]);
 const teamExtent = d3.extent(data, (d) => d.team);
-const r = d3.scaleSqrt().domain(teamExtent).range([7, 21]);
+// Radius scaled by sqrt(team) so the bubble AREA (not radius) is proportional
+// to team size, per the spec's perceptual-accuracy requirement.
+const r = d3.scaleSqrt().domain(teamExtent).range([7, 18]);
 // Stroke weight steps up across team-size terciles — a secondary encoding
 // that reinforces the size channel with an outline cue, mirrored in the
 // legend below so the reference set and the real bubbles agree.
@@ -88,101 +90,19 @@ g.append("text")
   .style("font-size", "16px")
   .text("Revenue Growth Rate (%)");
 
-// --- Force-directed decluttering (d3-specific) -------------------------------
-// A collision force gently nudges overlapping bubbles apart from their true
-// (funding, growth) position so the densest funding cluster (100-150) stays
-// individually legible instead of stacking 3-4 deep. Raising the x/y anchor
-// strength (0.85 -> 0.92) and trimming the collision padding (+9 -> +6px)
-// keeps rendered positions tracking their true data coordinate even more
-// tightly, while the collision force still has enough headroom over 380
-// relaxation ticks to fully separate the smaller bubbles in the densest
-// region. Rendered centers are therefore a close approximation of
-// (funding, growth), not the literal data point.
-data.forEach((d) => {
-  d.x = x(d.funding);
-  d.y = y(d.growth);
-});
-const declutter = d3.forceSimulation(data)
-  .force("x", d3.forceX((d) => x(d.funding)).strength(0.92))
-  .force("y", d3.forceY((d) => y(d.growth)).strength(0.92))
-  .force("collide", d3.forceCollide((d) => r(d.team) + 6))
-  .stop();
-for (let i = 0; i < 380; i++) declutter.tick();
-
-// --- Trend line -------------------------------------------------------------
-// Least-squares fit of growth vs. funding, drawn as a dashed guide so the
-// negative correlation is called out explicitly rather than left implicit.
-// Drawn BEFORE the bubbles (not after) so the translucent bubble fills sit
-// on top of the dashes instead of the dashes cutting across a bubble —
-// a cleaner z-order than layering the line on the very top.
-const sumX = d3.sum(data, (d) => d.funding);
-const sumY = d3.sum(data, (d) => d.growth);
-const sumXY = d3.sum(data, (d) => d.funding * d.growth);
-const sumXX = d3.sum(data, (d) => d.funding * d.funding);
-const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-const intercept = (sumY - slope * sumX) / n;
-const [fundingMin, fundingMax] = d3.extent(data, (d) => d.funding);
-
-g.append("line")
-  .attr("x1", x(fundingMin))
-  .attr("y1", y(slope * fundingMin + intercept))
-  .attr("x2", x(fundingMax))
-  .attr("y2", y(slope * fundingMax + intercept))
-  .attr("stroke", t.palette[0])
-  .attr("stroke-width", 2.5)
-  .attr("stroke-dasharray", "8,6")
-  .attr("stroke-opacity", 0.75);
-
 // --- Bubbles --------------------------------------------------------------
+// Every bubble sits at its true (funding, growth) coordinate — overlap in the
+// densest funding cluster is handled through fill-opacity and a thin
+// page-colored outline, not by displacing marks from their data values.
 g.selectAll("circle.bubble").data(data).join("circle")
   .attr("class", "bubble")
-  .attr("cx", (d) => d.x)
-  .attr("cy", (d) => d.y)
+  .attr("cx", (d) => x(d.funding))
+  .attr("cy", (d) => y(d.growth))
   .attr("r", (d) => r(d.team))
   .attr("fill", t.palette[0])
   .attr("fill-opacity", 0.58)
   .attr("stroke", t.pageBg)
   .attr("stroke-width", (d) => strokeWidth(d.team));
-
-// --- Trend annotation card ---------------------------------------------------
-// Drawn last (on top of both the line and the bubbles) so the callout text
-// stays legible against the busy field behind it.
-const trendLabelX = x(fundingMin) + (x(fundingMax) - x(fundingMin)) * 0.74;
-const trendLabelY = y(slope * (fundingMin + (fundingMax - fundingMin) * 0.74) + intercept) - 75;
-const trendLabel = g.append("text")
-  .attr("x", trendLabelX)
-  .attr("y", trendLabelY)
-  .attr("text-anchor", "middle")
-  .attr("fill", t.ink)
-  .style("font-size", "16px")
-  .style("font-weight", "500")
-  .text("Growth slows as funding scales up");
-
-// A background card anchors the trend annotation against the busy bubble
-// field behind it, with a brand-green accent bar tying the callout to the
-// trend line it explains, so the story reads at a glance.
-const trendPad = 8;
-const trendBBox = trendLabel.node().getBBox();
-const cardX = trendBBox.x - trendPad;
-const cardY = trendBBox.y - trendPad * 0.6;
-const cardW = trendBBox.width + trendPad * 2;
-const cardH = trendBBox.height + trendPad * 1.2;
-g.insert("rect", () => trendLabel.node())
-  .attr("x", cardX)
-  .attr("y", cardY)
-  .attr("width", cardW)
-  .attr("height", cardH)
-  .attr("fill", t.elevatedBg)
-  .attr("stroke", t.grid)
-  .attr("stroke-width", 1.5)
-  .attr("rx", 8);
-g.insert("rect", () => trendLabel.node())
-  .attr("x", cardX)
-  .attr("y", cardY)
-  .attr("width", 4)
-  .attr("height", cardH)
-  .attr("fill", t.palette[0])
-  .attr("rx", 2);
 
 // --- Size legend ------------------------------------------------------------
 const teamMedian = d3.median(data, (d) => d.team);
@@ -232,7 +152,7 @@ legendValues.forEach((v, i) => {
     .attr("y", baselineY + 22)
     .attr("text-anchor", "middle")
     .attr("fill", t.inkSoft)
-    .style("font-size", "14px")
+    .style("font-size", "16px")
     .text(v);
 });
 
