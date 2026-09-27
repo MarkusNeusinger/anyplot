@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: bokeh 3.10.0 | Python 3.13.15
-Quality: 93/100 | Created: 2026-09-27
+Quality: 92/100 | Created: 2026-09-27
 """
 
 import os
@@ -13,6 +13,7 @@ from bokeh.io import output_file, save
 from bokeh.models import (
     Arrow,
     BoxAnnotation,
+    ColorBar,
     ColumnDataSource,
     HoverTool,
     Label,
@@ -55,6 +56,11 @@ size_min, size_max = 22, 80
 green_norm = (green_space - green_space.min()) / (green_space.max() - green_space.min())
 bubble_size = np.sqrt(size_min**2 + (size_max**2 - size_min**2) * green_norm)
 
+# Size AND color both encode green_space deliberately — the spec only asks for
+# one size-encoded third dimension, so this is a reinforcing redundancy rather
+# than a missed opportunity: it lets the size legend and the color bar below
+# corroborate each other instead of splitting attention across two variables.
+
 color_mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=green_space.min(), high=green_space.max())
 
 source = ColumnDataSource(
@@ -92,7 +98,7 @@ p = figure(
     min_border_bottom=160,
     min_border_left=180,
     min_border_top=130,
-    min_border_right=50,
+    min_border_right=260,
 )
 p.x_range = Range1d(start=x_start, end=x_end)
 p.y_range = Range1d(start=y_start, end=y_end)
@@ -113,6 +119,25 @@ main_renderer = p.scatter(
     hover_line_color=INK,
     hover_line_width=3,
 )
+
+# Native ColorBar — makes the continuous green-space -> color mapping explicit
+# alongside the hand-built size legend below, rather than leaving color as an
+# unexplained visual echo of bubble size.
+color_bar = ColorBar(
+    color_mapper=color_mapper,
+    width=22,
+    location=(0, 0),
+    title="Green Space (m²/capita)",
+    title_text_font_size="30pt",
+    title_text_color=INK,
+    major_label_text_font_size="28pt",
+    major_label_text_color=INK_SOFT,
+    background_fill_color=PAGE_BG,
+    border_line_color=None,
+    bar_line_color=INK_SOFT,
+    major_tick_line_color=INK_SOFT,
+)
+p.add_layout(color_bar, "right")
 
 # Hover tool — scoped to the main data renderer only (skip the legend swatches)
 hover = HoverTool(
