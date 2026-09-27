@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 93/100 | Created: 2026-05-08
+Library: matplotlib 3.11.2 | Python 3.13.15
+Quality: 91/100 | Updated: 2026-09-27
 """
 
 import importlib
@@ -46,60 +46,42 @@ prop_died = died_counts / class_totals
 # Left-edge positions for adjacent bars
 x_left = np.concatenate([[0], np.cumsum(bar_widths)[:-1]])
 
-# Colors: Okabe-Ito positions 1 and 2
+# Colors: Imprint palette positions 1 and 2
 COLOR_SURVIVED = "#009E73"
 COLOR_DIED = "#C475FD"
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-for i, (x, w) in enumerate(zip(x_left, bar_widths, strict=True)):
-    # Survived segment (bottom)
-    ax.bar(x, prop_survived[i], width=w, bottom=0, color=COLOR_SURVIVED, align="edge", linewidth=0)
-    # Did-not-survive segment (top)
-    ax.bar(x, prop_died[i], width=w, bottom=prop_survived[i], color=COLOR_DIED, align="edge", linewidth=0)
+survived_bars = ax.bar(
+    x_left, prop_survived, width=bar_widths, bottom=0, align="edge", color=COLOR_SURVIVED, linewidth=0
+)
+died_bars = ax.bar(
+    x_left, prop_died, width=bar_widths, bottom=prop_survived, align="edge", color=COLOR_DIED, linewidth=0
+)
 
-    # Thin page-color separator between bars
-    if i > 0:
-        ax.axvline(x, color=PAGE_BG, linewidth=2.5, zorder=5)
+# Thin page-color separators between adjacent bars
+for x in x_left[1:]:
+    ax.axvline(x, color=PAGE_BG, linewidth=2.5, zorder=5)
 
-    # Percentage labels inside each segment (only when segment is tall enough)
-    cx = x + w / 2
-    if prop_survived[i] > 0.08:
-        ax.text(
-            cx,
-            prop_survived[i] / 2,
-            f"{prop_survived[i]:.0%}",
-            ha="center",
-            va="center",
-            fontsize=15,
-            color="white",
-            fontweight="bold",
-            zorder=6,
-        )
-    if prop_died[i] > 0.08:
-        ax.text(
-            cx,
-            prop_survived[i] + prop_died[i] / 2,
-            f"{prop_died[i]:.0%}",
-            ha="center",
-            va="center",
-            fontsize=15,
-            color="white",
-            fontweight="bold",
-            zorder=6,
-        )
+# Percentage labels centered within each segment (blank when too small to hold text)
+survived_labels = [f"{p:.0%}" if p > 0.08 else "" for p in prop_survived]
+died_labels = [f"{p:.0%}" if p > 0.08 else "" for p in prop_died]
+ax.bar_label(
+    survived_bars, labels=survived_labels, label_type="center", fontsize=8, fontweight="bold", color="white", zorder=6
+)
+ax.bar_label(died_bars, labels=died_labels, label_type="center", fontsize=8, fontweight="bold", color="white", zorder=6)
 
 # X-axis: centered tick labels under variable-width bars
 center_positions = x_left + bar_widths / 2
 ax.set_xticks(center_positions)
-ax.set_xticklabels(classes, fontsize=16, color=INK_SOFT)
+ax.set_xticklabels(classes, fontsize=8, color=INK_SOFT)
 ax.tick_params(axis="x", length=0, labelcolor=INK_SOFT)
 
 # Y-axis: percentage scale
 ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0])
-ax.set_yticklabels(["0%", "25%", "50%", "75%", "100%"], fontsize=16, color=INK_SOFT)
+ax.set_yticklabels(["0%", "25%", "50%", "75%", "100%"], fontsize=8, color=INK_SOFT)
 ax.tick_params(axis="y", length=0, labelcolor=INK_SOFT)
 
 ax.set_xlim(0, 1)
@@ -111,34 +93,34 @@ ax.annotate(
     f"1st class: {prop_survived[0]:.0%} survival\nvs. {prop_survived[-1]:.0%} for crew",
     xy=(cx_1st, prop_survived[0]),
     xytext=(0.28, 0.88),
-    fontsize=14,
+    fontsize=7,
     color=INK_SOFT,
     ha="center",
     va="bottom",
-    arrowprops={"arrowstyle": "-|>", "color": INK_SOFT, "lw": 1.5},
+    arrowprops={"arrowstyle": "-|>", "color": INK_SOFT, "lw": 1.2},
     bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9, "boxstyle": "round,pad=0.35"},
     zorder=7,
 )
 
 # Style
-ax.set_xlabel("Passenger Class", fontsize=20, color=INK)
-ax.set_ylabel("Proportion of Passengers", fontsize=20, color=INK)
-ax.set_title("bar-spine · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.set_xlabel("Passenger Class", fontsize=10, color=INK)
+ax.set_ylabel("Proportion of Passengers", fontsize=10, color=INK)
+ax.set_title("bar-spine · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
 
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+ax.yaxis.grid(True, alpha=0.18, linewidth=0.8, color=INK)
 
 # Legend
 survived_patch = mpatches.Patch(color=COLOR_SURVIVED, label="Survived")
 died_patch = mpatches.Patch(color=COLOR_DIED, label="Did Not Survive")
-leg = ax.legend(handles=[survived_patch, died_patch], fontsize=16, loc="upper right", framealpha=1.0)
+leg = ax.legend(handles=[survived_patch, died_patch], fontsize=8, loc="upper right", framealpha=1.0)
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
 plt.setp(leg.get_texts(), color=INK_SOFT)
 
 plt.tight_layout()
-plt.savefig(os.path.join(_OUT, f"plot-{THEME}.png"), dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(os.path.join(_OUT, f"plot-{THEME}.png"), dpi=400, facecolor=PAGE_BG)
