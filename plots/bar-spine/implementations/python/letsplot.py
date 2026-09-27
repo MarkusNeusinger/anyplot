@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 90/100 | Created: 2026-05-08
+Library: letsplot 4.11.0 | Python 3.13.15
+Quality: 89/100 | Updated: 2026-09-27
 """
 
 import os
