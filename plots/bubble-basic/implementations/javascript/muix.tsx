@@ -10,7 +10,11 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 const TITLE = "bubble-basic · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 56;
+// Explicit callout naming the diagonal the three archetypes trace - without
+// it, the growth/margin correlation across clusters is only an unlabeled
+// color pattern the viewer has to infer for themselves.
+const SUBTITLE = "Growth leaders combine the strongest revenue growth and profit margin";
+const TITLE_HEIGHT = 84;
 const MARGIN = { top: 24, right: 210, bottom: 70, left: 90 };
 
 // Semi-transparent fill composites differently over the two page backgrounds:
@@ -71,6 +75,12 @@ const archetypeLumas = ARCHETYPES.map((a) => relativeLuma(a.color));
 const minArchetypeLuma = Math.min(...archetypeLumas);
 const maxArchetypeLuma = Math.max(...archetypeLumas);
 ARCHETYPES.forEach((a, i) => {
+  // Growth leaders is the densest cluster (largest mean market share, so the
+  // biggest bubbles land closest together) - the previous review flagged
+  // heavy bubble-on-bubble fusion there. A thicker pageBg stroke keeps
+  // individual boundaries readable without dropping opacity below the
+  // spec's 0.5-0.7 floor.
+  a.strokeWidth = i === 0 ? 3 : 2;
   if (window.ANYPLOT_THEME !== "dark") {
     a.opacity = LIGHT_OPACITY;
     return;
@@ -92,6 +102,7 @@ const companies = ARCHETYPES.flatMap((a, groupIndex) =>
     size: Math.min(100, Math.max(10, Math.round(randomNormal(rand, a.share, 18)))),
     color: a.color,
     opacity: a.opacity,
+    strokeWidth: a.strokeWidth,
   })),
 );
 
@@ -143,7 +154,7 @@ function Bubbles() {
           fill={d.color}
           fillOpacity={d.opacity}
           stroke={t.pageBg}
-          strokeWidth={2}
+          strokeWidth={d.strokeWidth}
         />
       ))}
     </g>
@@ -228,17 +239,11 @@ export default function Chart() {
 
   return (
     <div style={{ width, height }}>
-      <div
-        style={{
-          height: TITLE_HEIGHT,
-          lineHeight: `${TITLE_HEIGHT}px`,
-          paddingLeft: 24,
-          fontSize: 26,
-          fontWeight: 500,
-          color: t.ink,
-        }}
-      >
-        {TITLE}
+      <div style={{ height: TITLE_HEIGHT, paddingLeft: 24, paddingTop: 14, color: t.ink }}>
+        <div style={{ fontSize: 26, fontWeight: 500, lineHeight: "32px" }}>{TITLE}</div>
+        <div style={{ fontSize: 15, fontWeight: 400, lineHeight: "20px", marginTop: 4, color: t.inkSoft }}>
+          {SUBTITLE}
+        </div>
       </div>
       <ChartContainer
         width={width}
