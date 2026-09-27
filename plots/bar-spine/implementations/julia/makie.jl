@@ -1,7 +1,7 @@
 # anyplot.ai
 # bar-spine: Spine Plot for Two-Variable Proportions
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 91/100 | Created: 2026-09-02
+# Quality: 93/100 | Updated: 2026-09-27
 
 using CairoMakie
 using Colors
