@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 91/100 | Updated: 2026-09-27
+// Quality: 90/100 | Updated: 2026-09-27
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -15,13 +15,20 @@ function rand() {
 
 const Z_MIN = 10;
 const Z_MAX = 100;
-const R_MIN = 6;
+const R_MIN = 9;
 const R_MAX = 32;
 
 // Scale by area, not radius, so bubble size reads proportionally.
 function radiusForShare(share) {
   const frac = Math.max(0, Math.min(1, (share - Z_MIN) / (Z_MAX - Z_MIN)));
   return R_MIN + (R_MAX - R_MIN) * Math.sqrt(frac);
+}
+
+// Small bubbles have the least area to carry color, so nudge their opacity up
+// a bit to keep them from washing out against the plot background.
+function alphaForShare(share) {
+  const frac = Math.max(0, Math.min(1, (share - Z_MIN) / (Z_MAX - Z_MIN)));
+  return 0.6 + 0.15 * (1 - frac);
 }
 
 const companies = [];
@@ -35,23 +42,71 @@ for (let i = 0; i < 90; i += 1) {
   companies.push({ growthRate, revenue, segmentShare });
 }
 
+const X_RANGE = 35;
+const Y_RANGE = 490;
+const X_MIN = -5;
+const Y_MIN = 10;
+
+// Declutter pass: the densest region (~19-24% growth, $300-450M revenue)
+// otherwise lands several similarly sized bubbles almost exactly on top of
+// each other, which reads as one merged blob even with a page-bg stroke.
+// Nudge any pair closer than MIN_SEP (in axis-normalized space, so growth%
+// and revenue$ contribute comparably) apart along their connecting vector.
+const MIN_SEP = 0.035;
+for (let i = 1; i < companies.length; i += 1) {
+  for (let j = 0; j < i; j += 1) {
+    const dx = (companies[i].growthRate - companies[j].growthRate) / X_RANGE;
+    const dy = (companies[i].revenue - companies[j].revenue) / Y_RANGE;
+    const dist = Math.hypot(dx, dy);
+    if (dist > 0 && dist < MIN_SEP) {
+      const push = ((MIN_SEP - dist) / dist) * 0.5;
+      companies[i].growthRate = Math.min(X_MIN + X_RANGE, Math.max(X_MIN, companies[i].growthRate + dx * push * X_RANGE));
+      companies[i].revenue = Math.min(Y_MIN + Y_RANGE, Math.max(Y_MIN, companies[i].revenue + dy * push * Y_RANGE));
+    }
+  }
+}
+
 // Focal point: the standout company that ranks highest on BOTH growth and
 // share (normalized 0-1 and summed) — gives the viewer a guided insight
 // instead of a bare position+size encoding.
-let focalIndex = 0;
-let focalScore = -Infinity;
-companies.forEach((c, i) => {
-  const growthNorm = (c.growthRate + 5) / 35;
+const scored = companies.map((c) => {
+  const growthNorm = (c.growthRate - X_MIN) / X_RANGE;
   const shareNorm = (c.segmentShare - Z_MIN) / (Z_MAX - Z_MIN);
-  const score = growthNorm + shareNorm;
-  if (score > focalScore) {
-    focalScore = score;
-    focalIndex = i;
-  }
+  return growthNorm + shareNorm;
+});
+let focalIndex = 0;
+scored.forEach((score, i) => {
+  if (score > scored[focalIndex]) focalIndex = i;
 });
 
+// Secondary cue: a high-scoring point that also has few neighbors nearby, so
+// its label lands in genuinely open space instead of overlapping the dense
+// cluster around it — a second, lighter-weight highlight so the chart isn't
+// a single point of interest floating over an undifferentiated scatter.
+function neighborCount(i) {
+  let count = 0;
+  companies.forEach((c, j) => {
+    if (j === i) return;
+    const dx = (c.growthRate - companies[i].growthRate) / X_RANGE;
+    const dy = (c.revenue - companies[i].revenue) / Y_RANGE;
+    if (Math.hypot(dx, dy) < 0.1) count += 1;
+  });
+  return count;
+}
+
+const secondaryCandidates = companies
+  .map((c, i) => {
+    const dx = (c.growthRate - companies[focalIndex].growthRate) / X_RANGE;
+    const dy = (c.revenue - companies[focalIndex].revenue) / Y_RANGE;
+    return { i, distFromFocal: Math.hypot(dx, dy), neighbors: neighborCount(i) };
+  })
+  .filter((cand) => cand.i !== focalIndex && cand.distFromFocal >= 0.25)
+  .sort((a, b) => a.neighbors - b.neighbors || scored[b.i] - scored[a.i]);
+
+const secondaryIndex = secondaryCandidates.length > 0 ? secondaryCandidates[0].i : -1;
+
 const [fr, fg, fb] = [1, 3, 5].map((i) => parseInt(t.palette[0].slice(i, i + 2), 16));
-const markerFill = `rgba(${fr}, ${fg}, ${fb}, 0.6)`;
+const fillForShare = (share) => `rgba(${fr}, ${fg}, ${fb}, ${alphaForShare(share)})`;
 const seriesData = companies.map((c, i) => {
   const isFocal = i === focalIndex;
   return {
@@ -59,13 +114,13 @@ const seriesData = companies.map((c, i) => {
     y: c.revenue,
     marker: {
       radius: radiusForShare(c.segmentShare),
-      fillColor: markerFill,
+      fillColor: fillForShare(c.segmentShare),
       // Page-bg stroke carves a visible edge between overlapping same-color
       // bubbles in the densest cluster. The focal point reuses the brand
       // green at full opacity (not amber, which is reserved for warning/
       // caution) so the highlight reads as "notable", not "alert".
       lineColor: isFocal ? t.palette[0] : t.pageBg,
-      lineWidth: isFocal ? 3.5 : 2.5,
+      lineWidth: isFocal ? 3.5 : 3,
     },
     custom: { segmentShare: Math.round(c.segmentShare) },
   };
@@ -89,7 +144,7 @@ function drawSizeLegend(chart) {
     const cy = cursorY + R_MAX;
     chart.renderer
       .circle(legendX + R_MAX, cy, r)
-      .attr({ fill: markerFill, stroke: t.palette[0], "stroke-width": 1.2 })
+      .attr({ fill: fillForShare(share), stroke: t.palette[0], "stroke-width": 1.2 })
       .add();
     chart.renderer
       .text(`${Math.round(share)}%`, legendX + 2 * R_MAX + 16, cy + 5)
@@ -126,6 +181,33 @@ function highlightFocalPoint(chart) {
     .add();
 }
 
+function highlightSecondaryPoint(chart) {
+  // A second, deliberately lighter-weight cue: a plain italic note on a thin
+  // dotted leader, no fill box or border. This gives the chart a secondary
+  // point of interest — beyond the single bordered focal callout — without
+  // competing with it for visual weight.
+  if (secondaryIndex < 0) return;
+  const secondary = companies[secondaryIndex];
+  const point = chart.series[0].points[secondaryIndex];
+  const anchorX = chart.plotLeft + point.plotX;
+  const anchorY = chart.plotTop + point.plotY;
+  const labelX = Math.min(Math.max(anchorX + 90, chart.plotLeft + 10), chart.plotLeft + chart.plotWidth - 195);
+  const labelY = Math.min(Math.max(anchorY - 60, chart.plotTop + 10), chart.plotTop + chart.plotHeight - 16);
+
+  chart.renderer
+    .path(["M", anchorX, anchorY, "L", labelX - 6, labelY + 6])
+    .attr({ stroke: t.inkSoft, "stroke-width": 1, dashstyle: "Dot", zIndex: 5 })
+    .add();
+  chart.renderer
+    .text(
+      `Also notable: ${secondary.growthRate.toFixed(0)}% growth, ${Math.round(secondary.segmentShare)}% share`,
+      labelX,
+      labelY,
+    )
+    .css({ color: t.inkSoft, fontSize: "12px", fontStyle: "italic" })
+    .add();
+}
+
 // --- Chart -------------------------------------------------------------------
 // Core bundle has no highcharts-more, so bubbles are core "scatter" points
 // with a per-point marker.radius (area-scaled) instead of the "bubble" series
@@ -144,20 +226,31 @@ Highcharts.chart(
     colors: t.palette,
     title: {
       text: "bubble-basic · javascript · highcharts · anyplot.ai",
-      style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+      style: { color: t.ink, fontSize: "23px", fontWeight: "700" },
+      margin: 26,
     },
     xAxis: {
-      title: { text: "Year-over-Year Growth Rate (%)", style: { color: t.inkSoft, fontSize: "16px" } },
+      title: {
+        text: "Year-over-Year Growth Rate (%)",
+        style: { color: t.inkSoft, fontSize: "16px", fontWeight: "500" },
+      },
       lineColor: t.inkSoft,
       tickColor: t.inkSoft,
+      tickWidth: 0,
+      tickLength: 0,
       gridLineColor: t.grid,
       gridLineWidth: 1,
       labels: { style: { color: t.inkSoft, fontSize: "14px" }, format: "{value}%" },
     },
     yAxis: {
-      title: { text: "Annual Revenue ($M)", style: { color: t.inkSoft, fontSize: "16px" } },
+      title: {
+        text: "Annual Revenue ($M)",
+        style: { color: t.inkSoft, fontSize: "16px", fontWeight: "500" },
+      },
       lineColor: t.inkSoft,
       tickColor: t.inkSoft,
+      tickWidth: 0,
+      tickLength: 0,
       gridLineColor: t.grid,
       gridLineWidth: 1,
       labels: { style: { color: t.inkSoft, fontSize: "14px" }, format: "${value}" },
@@ -184,5 +277,6 @@ Highcharts.chart(
   function drawExtras(chart) {
     drawSizeLegend(chart);
     highlightFocalPoint(chart);
+    highlightSecondaryPoint(chart);
   },
 );
