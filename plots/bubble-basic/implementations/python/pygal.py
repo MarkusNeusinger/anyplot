@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 86/100 | Created: 2026-09-27
@@ -170,10 +170,22 @@ chart = pygal.XY(
 # repeat pygal's own `#chart-{uuid} .dot` id-scoped selector (only known
 # once the chart object exists) to match its specificity, then rely on
 # being appended last in the stylesheet to win the tie on source order.
+#
+# The `print_labels` annotation text renders into a `.text-overlay .label`
+# node, but graph.css also emits a per-series `#chart-{uuid} .text-overlay
+# .color-N text { fill: black }` rule (one per series color) that hardcodes
+# black regardless of the Style object's foreground tokens. That per-series
+# rule has 3 classes + 1 element, which beats a plain `.label` override's
+# 2 classes + 0 elements on specificity alone — appending later in the
+# stylesheet isn't enough to win. Matching `text.label` (element + class)
+# brings the override to the same specificity as the color-N rule, so the
+# existing "last in the stylesheet wins the tie" source-order rule (as used
+# for the `.dot` halo override above) applies and it follows the theme.
 chart.css = (
     "file://style.css",
     "file://graph.css",
     f"inline:#chart-{chart.uuid} .dot {{ stroke: {PAGE_BG}; stroke-width: 3px; stroke-opacity: 1; }}",
+    f"inline:#chart-{chart.uuid} .text-overlay text.label {{ fill: {INK}; }}",
 )
 
 for t in range(n_tiers):
