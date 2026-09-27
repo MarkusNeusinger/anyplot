@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 93/100 | Updated: 2026-09-27
+// Quality: 94/100 | Updated: 2026-09-27
 
 const t = window.ANYPLOT_TOKENS;
 const size = window.ANYPLOT_SIZE;
@@ -25,8 +25,13 @@ const bubbles = [];
 for (let i = 0; i < companyCount; i++) {
   const rdSpend = 5 + rand() * 95; // R&D investment, $M
   const noise = (rand() - 0.5) * 30; // wide noise band so the trend isn't a tight line
-  const growthRate = Math.max(1, 3 + rdSpend * 0.18 + noise); // revenue growth, %
-  const marketIndex = 8 + rand() * 92; // relative market-strength index
+  const rawGrowth = 3 + rdSpend * 0.18 + noise;
+  // Soft floor: companies whose trend + noise would go non-positive settle at
+  // a small randomized value instead of a hard clamp, so the low-R&D cluster
+  // spreads naturally near the origin rather than piling up as concentric
+  // bubbles at a single y.
+  const growthRate = rawGrowth > 1 ? rawGrowth : 0.3 + rand() * 1.7; // revenue growth, %
+  const marketIndex = 10 + rand() * 90; // relative market-strength index
   const efficiency = growthRate / rdSpend; // growth % earned per R&D dollar
   bubbles.push([rdSpend, growthRate, marketIndex, efficiency]);
 }
@@ -93,7 +98,7 @@ const legendGraphics = [
     style: {
       text: "Relative Market Index",
       fill: t.inkSoft,
-      fontSize: 14,
+      fontSize: 16,
       fontWeight: "bold",
     },
   },
@@ -112,7 +117,7 @@ const legendGraphics = [
     style: {
       text: `${Math.round(sample.value)}`,
       fill: t.inkSoft,
-      fontSize: 14,
+      fontSize: 16,
     },
   })),
 ];
