@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 81/100 | Created: 2026-05-08
+Library: pygal 3.1.3 | Python 3.13.15
+Quality: 91/100 | Updated: 2026-09-27
 """
 
 import os
@@ -22,6 +22,7 @@ sys.path.insert(0, _cwd)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
@@ -45,37 +46,51 @@ for w in widths:
 survive_props = [s / t for s, t in zip(survived_counts, class_totals, strict=True)]
 not_survive_props = [1.0 - sp for sp in survive_props]
 
+# Title fontsize scales with title length off the 67-char mandated baseline
+TITLE = "Titanic Survival by Passenger Class · bar-spine · python · pygal · anyplot.ai"
+title_font_size = round(66 * min(1.0, 67 / len(TITLE)))
+
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
-    foreground=INK,
+    foreground=INK_SOFT,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=18,
-    value_font_size=16,
+    opacity=1,
+    stroke_opacity=1,
+    stroke_width=1.5,
+    # Serif title distinguishes the headline from the monospace data labels
+    # below, rather than leaving every text element in the library-default face.
+    title_font_family='Georgia, "Times New Roman", serif',
+    title_font_size=title_font_size,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
 )
 
 chart = pygal.Histogram(
     style=custom_style,
-    width=4800,
-    height=2700,
-    title="Titanic Survival by Passenger Class · bar-spine · pygal · anyplot.ai",
-    y_title="Survival Rate",
+    width=3200,
+    height=1800,
+    title=TITLE,
+    y_title="Survival Rate (%)",
     show_legend=True,
     show_x_guides=False,
     show_y_guides=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=2,
+    print_values=True,
+    print_values_position="top",
+    truncate_label=-1,
 )
 
 # Spine plot using overlapping Histogram bars:
-# Series 1 "Survived" (green #009E73): full-height background bar (value=1.0)
-# Series 2 "Not Survived" (orange #C475FD): overlay bar from y=0 to not_survive_prop
-# → orange covers the bottom portion; green is visible at top (survive_prop)
+# Series 1 "Survived" (Imprint green #009E73): full-height background bar (value=1.0)
+# Series 2 "Not Survived" (Imprint lavender #C475FD): overlay bar from y=0 to not_survive_prop
+# → lavender covers the bottom portion; green is visible at top (survive_prop)
+# opacity=1 keeps the overlay fully solid so the covered green never bleeds through.
 survived_data = [
     {"value": (1.0, x_min, x_max), "label": f"{cls} — {sp:.1%} survived"}
     for cls, sp, (x_min, x_max) in zip(class_names, survive_props, x_ranges, strict=True)
@@ -85,8 +100,17 @@ not_survived_data = [
     for cls, nsp, (x_min, x_max) in zip(class_names, not_survive_props, x_ranges, strict=True)
 ]
 
-chart.add("Survived", survived_data)
-chart.add("Not Survived", not_survived_data)
+# print_values_position="top" anchors each series' label just above its own
+# rect's top edge. "Survived" spans the full [0, 1] range, so its label lands
+# above the plot as a per-bar headline. "Not Survived" only rises to
+# not_survive_prop, so its label sits right at the green/purple boundary —
+# inside the visible green sliver, next to the segment it describes.
+chart.add("Survived", survived_data, formatter=lambda _v, index=None, **_kw: f"{survive_props[index]:.0%} survived")
+chart.add(
+    "Not Survived",
+    not_survived_data,
+    formatter=lambda _v, index=None, **_kw: f"{not_survive_props[index]:.0%} not survived",
+)
 
 # Y-axis in percentage format
 chart.y_labels = [
