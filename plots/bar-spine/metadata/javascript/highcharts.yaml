@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: bar-spine
 created: '2026-09-02T12:53:43Z'
-updated: '2026-09-27T03:24:53Z'
+updated: '2026-09-27T03:35:56Z'
 generated_by: claude-sonnet
 workflow_run: 36290769692
 issue: 5249
@@ -12,90 +12,93 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - Clever engineering workaround to build a genuine spine plot with only the core
-    Highcharts bundle (no variwide module) via a stacked step-area chart, achieving
-    exactly proportional bar widths and a normalized 100% height per tier
+  - 'Repair commit directly addressed both weaknesses from attempt 1: the thinnest
+    4% band label grew from 10px to 12px and is now clearly legible even zoomed in,
+    and the legend gained an elevated box (background, border, radius, padding) that
+    reads well in both themes'
+  - Subtle vertical gradient fill on each segment (brighten(0.12) at top fading to
+    the base Imprint color) adds a touch of professional depth without altering the
+    perceived hue between light and dark renders
+  - Clever engineering workaround builds a genuine spine plot with only the core Highcharts
+    bundle (no variwide module) via a stacked step-area chart, achieving exactly proportional
+    bar widths and a normalized 100% height per tier
   - 'Correct, brand-consistent theme-adaptive colors: first series is #009E73 (brand
-    green), churned uses a deliberate semantic-red anchor, and data colors stay identical
-    between renders while chrome flips correctly'
+    green), churned uses the deliberate semantic-red anchor, and data colors stay
+    identical between renders while chrome flips correctly'
   - Percentage data labels act as a non-color cue mitigating red-green CVD ambiguity,
-    with a smart minimum-font fallback so even the thinnest segment (Enterprise churned,
-    4%) stays labeled
-  - Realistic, neutral SaaS churn-by-tier dataset with a clear decreasing-churn-by-tier
-    narrative
+    and the decreasing-churn-by-tier trend reads clearly across the four tiers
   - Title format, axis labels, and legend match the spec and style guide exactly;
     canvas dimensions passed the gate
   weaknesses:
-  - Design excellence is solid but fairly conservative — leans on stock Highcharts
-    area/stacking styling without extra polish (subtle depth, refined legend/box treatment)
-    that would push it into top-tier territory
-  - The percentage label on the thinnest segment (Enterprise churned, 4%) renders
-    at only 10px CSS and is hard to read once the image is scaled down to preview/thumbnail
-    sizes — consider a slightly larger minimum font or a leader-line callout for very
-    thin bands
-  - The helper functions (findSegment, segmentLabelFormatter, labelStyleFor) add more
-    structure than the simplest possible script — justified by the genuine complexity
-    of faking variable-width bars on the core bundle, but worth keeping in mind if
-    a simpler path becomes available
+  - Design excellence, while improved, still leans on a fairly spare stacked-area
+    composition — the gradient fill and legend box are nice touches but the chart
+    doesn't yet reach FiveThirtyEight-level intentional hierarchy
+  - Data storytelling is carried entirely by color + labels; there is no additional
+    emphasis technique (e.g. callout annotation on the biggest churn-rate drop between
+    Free and Enterprise) to guide the viewer further
+  - The step-area/gradient technique, while a creative workaround for the missing
+    variwide module, is a general charting trick rather than something distinctive
+    to Highcharts specifically
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches spec.
-      Chrome: Title "SaaS Subscription Churn by Tier · bar-spine · javascript · highcharts · anyplot.ai" in bold dark ink, clearly readable. X-axis title "Subscription tier — width ∝ customer count" and y-axis title "Share of tier (%)" in soft dark gray, both legible. Tick labels (0%-100% on y, Free/Basic/Pro/Enterprise on x) are dark and crisp against the light background. Legend at bottom ("Retained" green swatch, "Churned" red swatch) is clearly legible.
-      Data: Four variable-width stacked columns (Free widest, Enterprise narrowest) built from a stacked step-area chart. First series (Retained) is brand green #009E73, second series (Churned) is a semantic red. White percentage labels with dark text-outline sit inside each segment (70/30, 80/20, 90/10, 96/4) and are all readable, including the thinnest 4% churned band at Enterprise. No overlap, no clipping at any edge (verified by cropping left and right thirds of the canvas).
+      Background: Warm off-white, matching #FAF8F1 — not pure white.
+      Chrome: Title "SaaS Subscription Churn by Tier · bar-spine · javascript · highcharts · anyplot.ai" in bold dark ink, ~60% of plot width, fully visible. Axis titles ("Subscription tier — width ∝ customer count", "Share of tier (%)") and tick labels in medium-grey ink, all clearly readable. Legend ("Retained" / "Churned") sits in a bottom-centered elevated box with a subtle border and rounded corners, readable against the light background.
+      Data: Four adjacent bars (Free, Basic, Pro, Enterprise) with no gaps, each normalized to 100% height. Retained segment (top) is brand green #009E73 with a subtle top-to-bottom gradient; Churned segment (bottom) is semantic matte-red #AE3030 with the same gradient treatment. Percentage labels (e.g. "70%", "30%", down to "4%" on the thinnest Enterprise-churned band) are white with a dark text-outline and clearly legible at every band width, including the thinnest one, after the repair bumped its font from 10px to 12px.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches spec.
-      Chrome: Title, axis titles, and tick labels all render in light gray/off-white text, clearly visible against the dark background — no dark-on-dark issues found. Legend text is light gray and legible.
-      Data: Same four stacked columns with identical Retained (#009E73) and Churned (red) colors as the light render — only chrome (background, text, dividers) flipped, confirming theme-adaptive colors are correctly separated from data colors. Percentage labels (including the thin 4% Enterprise churned band) remain legible with dark text-outline against both the red segment and page background. No clipping detected at either edge.
+      Background: Warm near-black, matching #1A1A17 — not pure black.
+      Chrome: Same title, now in light ink (#F0EFE8-equivalent), fully legible against the dark background. Axis titles and tick labels render in a lighter soft-grey tone, clearly visible with no dark-on-dark issues. The legend box now uses the dark elevated background with a lighter border, and both "Retained"/"Churned" labels are clearly readable.
+      Data: Identical green (#009E73) and red (#AE3030) data colors to the light render, with the same gradient treatment — confirms only chrome flipped, not the categorical data colors. The thin 4% label remains legible, using the same white text + dark outline styling that also holds up against the darker background.
       Legibility verdict: PASS
+
+    Edge-clipping check: inspected the title top edge, the left y-axis tick labels, and the Enterprise bar's right edge (x-axis label + thinnest data label) at full resolution in both renders — no chopped pixels found on any title, tick label, axis title, legend, or data label. Canvas dimension gate file was absent, confirming the gate passed.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at full size; smallest percentage
-          label (4%) strains a bit at thumbnail scale
+        comment: All font sizes explicit; thin-band label bumped from 10px to 12px
+          this attempt and is now clearly legible in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or data elements
+        comment: No collisions between text, data, or legend
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Segments and labels visible even on the thinnest 4% band, minor legibility
-          strain at small sizes
+        comment: Even the thinnest 4% band keeps a legible label after the font-size
+          fix
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/green pairing backed by percentage data labels as a non-color
-          cue
+        comment: Red/green backed by percentage data labels as a non-color cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, good proportions, no overflow or clipping
+        comment: Canvas gate passed, good proportions, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units
+        comment: Descriptive axis titles with units/proportionality notation
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -104,29 +107,30 @@ review:
         comment: 'First series #009E73, correct theme backgrounds, identical data
           colors across renders'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean, purposeful, but relies mostly on stock area/stacking styling
+        comment: Subtle gradient fill and boxed legend push this clearly above stock
+          defaults, though not yet publication-ready
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Spines minimal, subtle segment dividers, but grid essentially invisible
-          under full-height bars
+        comment: New elevated legend box with border/radius/padding and the segment
+          gradient directly address the prior review's refinement gap
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Green/red good/bad coding plus decreasing-churn trend tells a clear
-          story, but no extra emphasis beyond labels
+        comment: Green/red good-bad coding plus the decreasing-churn-by-tier trend
+          reads clearly, but no added emphasis (e.g. callout) beyond the labels
     spec_compliance:
       score: 15
       max: 15
@@ -136,7 +140,8 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct spine-plot semantics achieved via stacked step-area workaround
+        comment: Correct spine-plot semantics via a stacked step-area workaround (variwide
+          module unavailable in core bundle)
       - id: SC-02
         name: Required Features
         score: 4
@@ -149,7 +154,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: X = tier (width-encoded), Y = share percentage, correct
+        comment: X = tier (width-encoded), Y = share percentage
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -177,8 +182,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Sensible customer counts and churn rates within spec's category-count
-          range
+        comment: Sensible customer counts and churn rates, 4 categories within spec's
+          3-8 range
     code_quality:
       score: 9
       max: 10
@@ -201,13 +206,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only ANYPLOT_TOKENS/Highcharts globals used
+        comment: Only ANYPLOT_TOKENS/Highcharts globals used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity for the workaround
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
@@ -224,26 +229,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of area/stacking, dataLabels formatter, shared tooltip
-          formatter
+        comment: Idiomatic area/stacking, dataLabels formatter, shared tooltip formatter
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Creative step-area workaround for the missing variwide module, well
-          documented in comments
+        comment: Creative, well-documented step-area + gradient-fill workaround, though
+          the technique itself isn't Highcharts-exclusive
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
-  - annotations
-  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
-  - cumulative-sum
+  - normalization
   styling:
+  - gradient-fill
   - publication-ready
