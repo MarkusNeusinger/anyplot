@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: altair 6.3.0 | Python 3.13.15
 Quality: 88/100 | Created: 2026-09-27
@@ -33,8 +33,8 @@ stage_funding = {"Seed": (6, 3.5), "Series A": (15, 5.5), "Series B": (40, 9), "
 funding_m = np.array([np.random.normal(*stage_funding[s]) for s in stages])
 funding_m = np.clip(funding_m, 1, 80)
 
-revenue_m = funding_m * np.random.uniform(0.7, 1.5, size=n) + np.random.normal(5, 3, size=n)
-revenue_m = np.clip(revenue_m, 2, 100)
+revenue_m = funding_m * np.random.uniform(0.6, 1.6, size=n) + np.random.normal(5, 3.5, size=n)
+revenue_m = np.clip(revenue_m, 2, 118)
 
 # Market share (%) narrowed to a realistic 10-58 band — a single company holding
 # ~95% would imply a near-monopoly, implausible across four competing stage cohorts
@@ -50,8 +50,9 @@ df = pd.DataFrame(
     }
 )
 
-# Add outlier: high-funded low-revenue startup with weak market share to demonstrate full chart dynamics
-outlier = pd.DataFrame(
+# Add two counter-examples to break the near-linear funding->revenue trend:
+# a high-funded, low-revenue laggard, and a capital-efficient, low-funded high-revenue climber.
+outlier_laggard = pd.DataFrame(
     {
         "Funding ($M)": [68.5],
         "Revenue ($M)": [7.2],
@@ -59,7 +60,15 @@ outlier = pd.DataFrame(
         "Stage": pd.Categorical(["Series B"], categories=["Seed", "Series A", "Series B", "Growth"], ordered=True),
     }
 )
-df = pd.concat([df, outlier], ignore_index=True)
+outlier_climber = pd.DataFrame(
+    {
+        "Funding ($M)": [11.0],
+        "Revenue ($M)": [54.0],
+        "Market Share (%)": [31.0],
+        "Stage": pd.Categorical(["Series A"], categories=["Seed", "Series A", "Series B", "Growth"], ordered=True),
+    }
+)
+df = pd.concat([df, outlier_laggard, outlier_climber], ignore_index=True)
 
 # Flag top-3 companies by revenue for storytelling annotations
 top3_idx = df["Revenue ($M)"].nlargest(3).index.tolist()
@@ -81,7 +90,7 @@ bubbles = (
     .encode(
         x=alt.X("Funding ($M):Q", scale=alt.Scale(domain=[0, 85], nice=False), axis=alt.Axis(domain=False, tickSize=6)),
         y=alt.Y(
-            "Revenue ($M):Q", scale=alt.Scale(domain=[0, 110], nice=False), axis=alt.Axis(domain=False, tickSize=6)
+            "Revenue ($M):Q", scale=alt.Scale(domain=[0, 125], nice=False), axis=alt.Axis(domain=False, tickSize=6)
         ),
         size=alt.Size(
             "Market Share (%):Q",
@@ -110,25 +119,38 @@ bubbles = (
                 symbolOpacity=0.65,
             ),
         ),
-        opacity=alt.condition(stage_selection, alt.value(0.7), alt.value(0.12)),
+        opacity=alt.condition(stage_selection, alt.value(0.58), alt.value(0.1)),
         tooltip=["Stage:N", "Funding ($M):Q", "Revenue ($M):Q", "Market Share (%):Q"],
     )
     .add_params(stage_selection)
 )
 
-# Annotation layers — sort by revenue descending and alternate dy to prevent collision
+# Top-3 highlight rings — a stroke-only outline sized to match each bubble gives the
+# "top performer" story an instant, at-a-glance visual anchor beyond the text labels.
+top3_highlight = (
+    alt.Chart(df[df["label"] != ""])
+    .mark_circle(filled=False, stroke=INK, strokeWidth=2.5, opacity=0.9)
+    .encode(
+        x="Funding ($M):Q",
+        y="Revenue ($M):Q",
+        size=alt.Size("Market Share (%):Q", scale=alt.Scale(range=[50, 1500], domain=[10, 58]), legend=None),
+    )
+)
+
+# Annotation layers — sort by revenue descending and alternate dy/dx to prevent collision
 _labeled = df[df["label"] != ""].sort_values("Revenue ($M)", ascending=False).reset_index(drop=True)
-_dy_offsets = [-15, 12, -15]
+_dy_offsets = [-24, 18, -26]
+_dx_offsets = [-14, -18, -14]
 _annotation_layers = [
     alt.Chart(_labeled.iloc[[k]])
-    .mark_text(align="right", dx=-10, dy=_dy_offsets[k], fontSize=12, fontWeight="bold")
+    .mark_text(align="right", dx=_dx_offsets[k], dy=_dy_offsets[k], fontSize=12, fontWeight="bold")
     .encode(x="Funding ($M):Q", y="Revenue ($M):Q", text="label:N", color=alt.value(INK))
     for k in range(len(_labeled))
 ]
 annotations = alt.layer(*_annotation_layers)
 
 chart = (
-    (bubbles + annotations)
+    (bubbles + top3_highlight + annotations)
     .properties(
         width=620,
         height=320,
