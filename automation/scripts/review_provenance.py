@@ -16,12 +16,15 @@ every review:
 - the resolved model -- the ``model`` of the first ``system``/``init`` message
   in the claude-code-action execution file (for example ``claude-sonnet-5``).
   Only that message counts: helper sessions in the same file name other
-  models (a ``claude-haiku-…`` sub-agent, for example).
+  models (a ``claude-haiku-…`` sub-agent, for example). When the file is
+  absent or names no plausible model, the model is unresolved (``model_id=``
+  empty) -- never the alias the session was started with, which moves
+  between releases and would pass for a resolved id.
 
 CLI (both write ``key=value`` lines to ``$GITHUB_OUTPUT`` when it is set)::
 
     review_provenance.py criteria-version --root . [--library matplotlib]
-    review_provenance.py model --execution-file FILE --fallback claude-sonnet
+    review_provenance.py model --execution-file FILE
 """
 
 from __future__ import annotations
@@ -47,7 +50,7 @@ SHORT = 10
 MISSING = "missing"
 
 # What a model id may look like before it is written to outputs, metadata and
-# records. Anything else falls back to the alias.
+# records. Anything else leaves the model unresolved.
 MODEL_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/\[\]-]{0,99}$")
 QUOTA_RE = re.compile(
     r"usage limit|rate[ _-]?limit|quota|too many requests|\b429\b|overloaded|credit balance", re.IGNORECASE
@@ -180,9 +183,9 @@ def model_from_messages(messages: list[dict[str, Any]]) -> str | None:
     return None
 
 
-def resolved_model(execution_file: str | Path | None, fallback: str) -> str:
-    """The model that ran the session, or ``fallback`` when the file cannot tell."""
-    return model_from_messages(_messages_or_empty(execution_file)) or fallback
+def resolved_model(execution_file: str | Path | None) -> str | None:
+    """The model that ran the session, or ``None`` when the file cannot tell."""
+    return model_from_messages(_messages_or_empty(execution_file))
 
 
 def _number(value: Any) -> float | None:
@@ -191,9 +194,11 @@ def _number(value: Any) -> float | None:
     return float(value)
 
 
-def execution_summary(execution_file: str | Path | None, fallback_model: str) -> dict[str, Any]:
+def execution_summary(execution_file: str | Path | None, fallback_model: str | None = None) -> dict[str, Any]:
     """Model, cost, turns, duration and error class of a session — never its transcript.
 
+    ``model`` is ``fallback_model`` (default ``None``) when the file names no
+    model; a caller that records it as provenance leaves the fallback out.
     ``error_class`` is ``""`` for a successful session, ``quota`` when the
     result names a usage or rate limit, ``other`` for any other error result,
     and ``no_result`` when the file holds no result message (a crash, a
@@ -260,7 +265,9 @@ def cmd_criteria_version(args: argparse.Namespace) -> int:
 
 
 def cmd_model(args: argparse.Namespace) -> int:
-    _write_outputs({"model_id": resolved_model(args.execution_file, args.fallback)})
+    # Empty when unresolved: impl-review then leaves review.model out of the
+    # metadata and writes n/a into the gate record.
+    _write_outputs({"model_id": resolved_model(args.execution_file) or ""})
     return 0
 
 
@@ -273,9 +280,10 @@ def build_parser() -> argparse.ArgumentParser:
     cv.add_argument("--library", default="")
     cv.set_defaults(func=cmd_criteria_version)
 
-    model = sub.add_parser("model", help="Resolved model id from a claude-code-action execution file")
+    model = sub.add_parser(
+        "model", help="Resolved model id from a claude-code-action execution file (empty when unresolved)"
+    )
     model.add_argument("--execution-file", default="")
-    model.add_argument("--fallback", required=True)
     model.set_defaults(func=cmd_model)
     return parser
 

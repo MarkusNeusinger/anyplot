@@ -345,6 +345,10 @@ the rules version the reviewer read (`review.criteria_version`, the git blob
 IDs of `prompts/quality-criteria.md`, `ai-quality-review.md`,
 `default-style-guide.md`, and the library prompt), and when the reviewed render
 was made (`review.rendered_at`). These keys aren't synced to the database.
+A value the run can't determine is left out, and any value an earlier review
+wrote for that key is removed with it. For example, an execution file that
+names no model leaves `review.model` out, never filled with the alias, and the
+gate record and notice line show `model=n/a`.
 
 ---
 

@@ -132,38 +132,40 @@ RESULT = {
 
 
 class TestResolvedModel:
+    """An unresolved model is ``None`` — never the alias passed for an id."""
+
     def test_reads_the_first_init_message(self, tmp_path):
         assistant = {"type": "assistant", "message": {"model": "claude-haiku-4-5-20251001"}}
         path = _execution_file(tmp_path, [INIT, assistant, HELPER, RESULT])
-        assert resolved_model(path, "claude-sonnet") == "claude-sonnet-5"
+        assert resolved_model(path) == "claude-sonnet-5"
 
     def test_never_takes_a_helper_model(self, tmp_path):
         path = _execution_file(tmp_path, [{"type": "assistant", "model": "claude-haiku-4-5"}, RESULT])
-        assert resolved_model(path, "claude-sonnet") == "claude-sonnet"
+        assert resolved_model(path) is None
 
     def test_jsonl(self, tmp_path):
         path = _execution_file(tmp_path, [INIT, RESULT], jsonl=True)
-        assert resolved_model(path, "claude-sonnet") == "claude-sonnet-5"
+        assert resolved_model(path) == "claude-sonnet-5"
 
     def test_messages_wrapper(self, tmp_path):
         path = tmp_path / "out.json"
         path.write_text(json.dumps({"messages": [INIT]}), encoding="utf-8")
-        assert resolved_model(path, "x") == "claude-sonnet-5"
+        assert resolved_model(path) == "claude-sonnet-5"
 
     @pytest.mark.parametrize("content", ["", "{not json", "[1, 2]", '"text"'])
-    def test_malformed_file_falls_back(self, tmp_path, content):
+    def test_malformed_file_is_unresolved(self, tmp_path, content):
         path = tmp_path / "out.json"
         path.write_text(content, encoding="utf-8")
-        assert resolved_model(path, "claude-opus") == "claude-opus"
+        assert resolved_model(path) is None
 
-    def test_missing_file_falls_back(self, tmp_path):
-        assert resolved_model(tmp_path / "absent.json", "claude-opus") == "claude-opus"
-        assert resolved_model("", "claude-opus") == "claude-opus"
-        assert resolved_model(None, "claude-opus") == "claude-opus"
+    def test_missing_file_is_unresolved(self, tmp_path):
+        assert resolved_model(tmp_path / "absent.json") is None
+        assert resolved_model("") is None
+        assert resolved_model(None) is None
 
-    def test_implausible_model_falls_back(self, tmp_path):
+    def test_implausible_model_is_unresolved(self, tmp_path):
         path = _execution_file(tmp_path, [{**INIT, "model": "claude sonnet\nevil=1"}])
-        assert resolved_model(path, "claude-sonnet") == "claude-sonnet"
+        assert resolved_model(path) is None
 
 
 class TestExecutionSummary:
@@ -194,6 +196,7 @@ class TestExecutionSummary:
         assert summary["error_class"] == "no_result"
         assert summary["model"] == "claude-sonnet-5"
         assert execution_summary(None, "claude-opus")["model"] == "claude-opus"
+        assert execution_summary(None)["model"] is None
 
     def test_summary_carries_no_transcript(self, tmp_path):
         result = {**RESULT, "result": "SECRET TRANSCRIPT TEXT"}
@@ -215,11 +218,17 @@ class TestCli:
         out = tmp_path / "gh_output"
         monkeypatch.setenv("GITHUB_OUTPUT", str(out))
         path = _execution_file(tmp_path, [INIT, RESULT])
-        assert main(["model", "--execution-file", str(path), "--fallback", "claude-sonnet"]) == 0
+        assert main(["model", "--execution-file", str(path)]) == 0
         assert out.read_text(encoding="utf-8") == "model_id=claude-sonnet-5\n"
 
-    def test_model_with_empty_execution_file_argument(self, tmp_path, monkeypatch):
+    def test_model_with_empty_execution_file_argument_is_empty(self, tmp_path, monkeypatch):
+        # impl-review reads an empty model_id as unresolved: review.model is
+        # left out of the metadata and the gate record says n/a.
         out = tmp_path / "gh_output"
         monkeypatch.setenv("GITHUB_OUTPUT", str(out))
-        assert main(["model", "--execution-file", "", "--fallback", "claude-opus"]) == 0
-        assert out.read_text(encoding="utf-8") == "model_id=claude-opus\n"
+        assert main(["model", "--execution-file", ""]) == 0
+        assert out.read_text(encoding="utf-8") == "model_id=\n"
+
+    def test_model_has_no_alias_fallback(self):
+        with pytest.raises(SystemExit):
+            main(["model", "--execution-file", "", "--fallback", "claude-opus"])

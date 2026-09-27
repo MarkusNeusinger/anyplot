@@ -591,17 +591,17 @@ jobs:
       # Provenance: the model that actually ran the review. The alias
       # (`sonnet`, `opus`) moves between releases; the execution file's
       # system/init message names the resolved id (claude-sonnet-5, …).
-      # Falls back to claude-<alias>; never gating.
+      # When the file is absent or names no model, model_id stays empty:
+      # the metadata then leaves review.model out and the gate record says
+      # n/a — the alias is never recorded as if it were an id. Never gating.
       - name: Resolve review model
         id: review_model
         if: steps.review.conclusion == 'success'
         continue-on-error: true
         env:
           EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
-          MODEL_ALIAS: ${{ steps.pr.outputs.model }}
         run: |
-          python3 "$RUNNER_TEMP/regen-tools/review_provenance.py" model \
-            --execution-file "${EXECUTION_FILE:-}" --fallback "claude-${MODEL_ALIAS}"
+          python3 "$RUNNER_TEMP/regen-tools/review_provenance.py" model --execution-file "${EXECUTION_FILE:-}"
 
       - name: Extract quality score
         id: score
@@ -775,7 +775,7 @@ jobs:
           PREV_RENDERS: ${{ steps.prev_renders.outputs.prev_renders || 'missing' }}
           CONTEXT_OUTCOME: ${{ steps.regen_ctx.outcome }}
           CHANGE_REQUEST_PRESENT: ${{ steps.regen_ctx.outputs.change_request_present || 'false' }}
-          MODEL_ID: ${{ steps.review_model.outputs.model_id || format('claude-{0}', steps.pr.outputs.model) }}
+          MODEL_ID: ${{ steps.review_model.outputs.model_id || 'n/a' }}
           CRITERIA_VERSION: ${{ steps.rules.outputs.criteria_version || 'n/a' }}
           PROMPTS_TREE: ${{ steps.rules.outputs.prompts_tree || 'n/a' }}
           PREV_MODEL: ${{ steps.regen_ctx.outputs.prev_model || 'n/a' }}
@@ -834,7 +834,7 @@ jobs:
           LIBRARY: ${{ steps.pr.outputs.library }}
           LANGUAGE: ${{ steps.lang.outputs.language }}
           EXT: ${{ steps.lang.outputs.ext }}
-          MODEL_ID: ${{ steps.review_model.outputs.model_id || format('claude-{0}', steps.pr.outputs.model) }}
+          MODEL_ID: ${{ steps.review_model.outputs.model_id || 'n/a' }}
           CRITERIA_VERSION: ${{ steps.rules.outputs.criteria_version || 'n/a' }}
         run: |
           DIR="$RUNNER_TEMP/regen-pair"
@@ -959,7 +959,7 @@ jobs:
           SCORE: ${{ steps.score.outputs.score }}
           BRANCH: ${{ steps.pr.outputs.branch }}
           # Review provenance (not synced to the database: sync_to_postgres
-          # picks review keys by name). Empty values are skipped.
+          # picks review keys by name). An empty value removes the key.
           REVIEW_MODEL: ${{ steps.review_model.outputs.model_id }}
           CRITERIA_VERSION: ${{ steps.rules.outputs.criteria_version }}
           RENDERED_AT: ${{ steps.staging.outputs.rendered_at }}
@@ -1061,16 +1061,22 @@ jobs:
               data['review']['verdict'] = verdict
 
           # Review provenance: resolved model id, rules version, render time.
-          # Each is optional — a missing value never stops this script.
+          # Each is optional — a missing value never stops this script. A
+          # value this review could not determine removes the key: a repair
+          # review starts from the metadata the previous review wrote, whose
+          # model, rules or render time would otherwise pass for this one's.
           review_model = os.environ.get('REVIEW_MODEL', '').strip()
-          if review_model:
-              data['review']['model'] = review_model
           criteria_version = os.environ.get('CRITERIA_VERSION', '').strip()
-          if criteria_version:
-              data['review']['criteria_version'] = criteria_version
           rendered_at = os.environ.get('RENDERED_AT', '').strip()
-          if rendered_at:
-              data['review']['rendered_at'] = rendered_at
+          for key, value in (
+              ('model', review_model),
+              ('criteria_version', criteria_version),
+              ('rendered_at', rendered_at),
+          ):
+              if value:
+                  data['review'][key] = value
+              else:
+                  data['review'].pop(key, None)
 
           # Add impl_tags (issue #2434)
           if impl_tags:

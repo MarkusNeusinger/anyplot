@@ -144,7 +144,22 @@ class TestImplReviewProvenance:
         step = _step("impl-review.yml", "Resolve review model")
         assert step["continue-on-error"] is True
         assert step["env"]["EXECUTION_FILE"] == "${{ steps.review.outputs.execution_file }}"
-        assert '--fallback "claude-${MODEL_ALIAS}"' in step["run"]
+        assert 'review_provenance.py" model --execution-file "${EXECUTION_FILE:-}"' in step["run"]
+
+    def test_an_unresolved_model_is_never_recorded_as_the_alias(self):
+        # The alias moves between releases; an unresolved model is n/a in the
+        # notice, record and pair, and absent from the metadata.
+        step = _step("impl-review.yml", "Resolve review model")
+        assert "--fallback" not in step["run"]
+        assert "MODEL_ALIAS" not in step["env"]
+        for name in ("Regen gate", "Stage regen pair"):
+            assert (
+                _step("impl-review.yml", name)["env"]["MODEL_ID"]
+                == "${{ steps.review_model.outputs.model_id || 'n/a' }}"
+            )
+        metadata = _step("impl-review.yml", "Update metadata and implementation header")
+        assert metadata["env"]["REVIEW_MODEL"] == "${{ steps.review_model.outputs.model_id }}"
+        assert "format('claude-" not in (WORKFLOWS_DIR / "impl-review.yml").read_text(encoding="utf-8")
 
     def test_render_time_never_fails_the_download(self):
         step = _step("impl-review.yml", "Download plot images from staging")
@@ -201,7 +216,9 @@ class TestImplReviewProvenance:
             assert f"os.environ.get('{name}', '')" in script, name
         assert "os.environ[" not in script
 
-    def _run_writer(self, tmp_path: Path, env_extra: dict[str, str]) -> dict[str, Any]:
+    def _run_writer(
+        self, tmp_path: Path, env_extra: dict[str, str], review: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         (tmp_path / "update_metadata.py").write_text(_metadata_writer_script(), encoding="utf-8")
         meta = tmp_path / "meta.yaml"
         meta.write_text(
@@ -210,7 +227,7 @@ class TestImplReviewProvenance:
                     "library": "matplotlib",
                     "created": "2026-05-28T00:00:00Z",
                     "quality_score": None,
-                    "review": {"strengths": [], "weaknesses": []},
+                    "review": review if review is not None else {"strengths": [], "weaknesses": []},
                 }
             ),
             encoding="utf-8",
@@ -248,6 +265,25 @@ class TestImplReviewProvenance:
         data = self._run_writer(tmp_path, {"REVIEW_MODEL": "", "CRITERIA_VERSION": " "})
         assert data["quality_score"] == 91
         assert data["review"]["weaknesses"] == ["legend small"]
+        for key in ("model", "criteria_version", "rendered_at"):
+            assert key not in data["review"], key
+
+    def test_metadata_writer_drops_the_previous_reviews_provenance(self, tmp_path):
+        # A repair review starts from the metadata the first review wrote; a
+        # value this review could not determine must not be credited to it.
+        previous = {
+            "strengths": ["old"],
+            "weaknesses": ["old"],
+            "model": "claude-opus-5-5",
+            "criteria_version": "qc-0000000000.aqr-0000000000.sg-0000000000.lib-0000000000",
+            "rendered_at": "2026-10-01T00:00:00Z",
+        }
+        data = self._run_writer(tmp_path, {"REVIEW_MODEL": "claude-sonnet-5", "CRITERIA_VERSION": ""}, previous)
+        assert data["review"]["model"] == "claude-sonnet-5"
+        assert "criteria_version" not in data["review"]
+        assert "rendered_at" not in data["review"]
+
+        data = self._run_writer(tmp_path, {}, previous)
         for key in ("model", "criteria_version", "rendered_at"):
             assert key not in data["review"], key
 

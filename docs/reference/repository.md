@@ -325,7 +325,7 @@ review:
 - Created by `impl-generate.yml`, updated by `impl-review.yml`
 - Review feedback persisted for AI to improve on regeneration
 - Extended review data includes `image_description`, `criteria_checklist`, and `verdict` for targeted fixes
-- `review.model`, `review.criteria_version` (git blob IDs of `prompts/quality-criteria.md`, `ai-quality-review.md`, `default-style-guide.md`, and the library prompt), and `review.rendered_at` record which model and rules produced the review; they aren't synced to the database
+- `review.model`, `review.criteria_version` (git blob IDs of `prompts/quality-criteria.md`, `ai-quality-review.md`, `default-style-guide.md`, and the library prompt), and `review.rendered_at` record which model and rules produced the review; they aren't synced to the database. A value the review run can't determine is left out (removed if an earlier review wrote it), never filled with the model alias
 
 ### GCS storage
 

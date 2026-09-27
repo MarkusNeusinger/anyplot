@@ -8,8 +8,10 @@
   `default-style-guide.md` and the library prompt, hashed after the prompt
   overlay, so exactly what the reviewer read), and `review.rendered_at` (the
   staging render's creation time). A new standard-library helper,
-  `automation/scripts/review_provenance.py`, computes both. The keys aren't
-  synced to the database, and every new step is non-gating. (#11950)
+  `automation/scripts/review_provenance.py`, computes both. A value the run
+  can't determine is left out, never filled with the alias, and a repair
+  review drops what the previous review wrote for it. The keys aren't synced
+  to the database, and every new step is non-gating. (#11950)
 - **Regen gate records.** Every regen gate decision now carries a reason code
   (`merge`, `below_tolerance`, `no_visible_improvement`, `regression`,
   `regen_json_invalid`, …) and leaves a one-line JSON record in the PR comment

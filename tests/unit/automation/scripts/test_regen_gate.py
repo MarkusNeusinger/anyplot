@@ -371,7 +371,34 @@ class TestSanitizeSource:
         assert not any(re.search(r"Quality:\s*\d+\s*/\s*100", line) for line in head)
         assert any("Quality: hidden" in line for line in head)
         assert out.count("\n") == (header + body).count("\n")  # line count unchanged
-        assert out.endswith(body[-60:])  # lines past the header are untouched
+        # Every line after the header is untouched, including the data lines
+        # that sit inside the first HEADER_LINES lines.
+        assert out.splitlines(keepends=True)[header.count("\n") :] == body.splitlines(keepends=True)
+
+    @pytest.mark.parametrize(
+        "line",
+        [
+            "print('Quality: 50/100 is data, not a header')",
+            "# Quality: 50/100 is what the old version scored",
+            "    Quality: 50/100 | Created: 2026-05-28",
+            "x = 'Quality: 50/100 | Created: 2026-05-28'",
+            "// Quality: 50/100 of the points",
+        ],
+    )
+    def test_only_whole_header_lines_are_rewritten(self, line):
+        from automation.scripts.regen_gate import sanitize_source
+
+        text = f"import x\n{line}\n"
+        assert sanitize_source(text) == text
+        assert reset_header_score(text) == text
+
+    def test_crlf_line_endings_are_kept(self):
+        from automation.scripts.regen_gate import sanitize_source
+
+        text = "// anyplot.ai\r\n// Quality: 91/100 | Created: 2026-05-28\r\nconst a = 1;\r\n"
+        assert (
+            sanitize_source(text) == "// anyplot.ai\r\n// Quality: hidden/100 | Created: 2026-05-28\r\nconst a = 1;\r\n"
+        )
 
     def test_cli(self, tmp_path):
         src = tmp_path / "raw.py"
@@ -766,6 +793,35 @@ class TestGateRecord:
         text = '<!-- regen-gate-record:v1 {not json} -->\n<!-- regen-gate-record:v1 {"x":1} -->'
         assert parse_record_markers(text) == []
 
+    def test_validate_rejects_a_foreign_version_verdict_and_code(self):
+        bogus = {"v": 999, "spec": "x", "lib": "y", "verdict": "bogus", "code": "bogus"}
+        errors = validate_record(bogus)
+        assert any("record.v must be 1" in e for e in errors)
+        assert any("record.verdict must be" in e for e in errors)
+        assert any("record.code is not one of REASON_CODES" in e for e in errors)
+
+    @pytest.mark.parametrize(
+        ("key", "value"),
+        [("v", True), ("v", "1"), ("v", 2), ("verdict", "MERGE"), ("verdict", None), ("code", ""), ("code", 1)],
+    )
+    def test_validate_rejects_each_bad_enum_value(self, key, value):
+        record = self._record()
+        record[key] = value
+        assert validate_record(record) != []
+
+    def test_every_reason_code_and_verdict_validates(self):
+        for code in REASON_CODES:
+            for verdict in (MERGE, KEEP):
+                record = {**self._record(), "code": code, "verdict": verdict}
+                assert validate_record(record) == [], (code, verdict)
+
+    def test_parse_skips_markers_with_a_foreign_version_verdict_or_code(self):
+        good = self._record()
+        bad = [{**good, "v": 999}, {**good, "verdict": "bogus"}, {**good, "code": "bogus"}]
+        markers = [f"<!-- regen-gate-record:v1 {json.dumps(r, separators=(',', ':'))} -->" for r in bad]
+        text = "\n".join([*markers, render_record_marker(good)])
+        assert parse_record_markers(text) == [good]
+
     def test_record_token(self):
         assert record_token(None) == "n/a"
         assert record_token("  ") == "n/a"
@@ -947,7 +1003,8 @@ class TestResetHeaderScore:
         assert not any(re.search(r"Quality:\s*\d+\s*/\s*100", line) for line in head)
         assert any(re.search(r"Quality: pending \| (Created|Updated): ", line) for line in head)
         assert out.count("\n") == (header + body).count("\n")
-        assert out.endswith(body[-60:])
+        # The data line inside the first HEADER_LINES lines keeps its number.
+        assert out.splitlines(keepends=True)[header.count("\n") :] == body.splitlines(keepends=True)
 
     def test_pending_header_is_unchanged(self):
         text = "// anyplot.ai\n// x: y\n// Library: d3 7 | JavaScript 22\n// Quality: pending | Created: 2026-06-02\n"

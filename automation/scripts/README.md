@@ -42,13 +42,16 @@ review with stable weakness ids `W1..Wn` (used by `impl-generate.yml` and
 `merge` or `keep` with a reason code and, with `--record-out`, a gate record
 (scores, counts, codes, provenance — no model-written text); `marker` turns
 that record into the `<!-- regen-gate-record:v1 … -->` line both PR comments
-carry. `sanitize-source` hides the predecessor's header score from the
-reviewer; with `--pending` it resets the new file's header to
-`Quality: pending` (`impl-generate.yml`). `impl-review.yml` runs a copy taken
-from its own ref. `parse_characteristics` reads the spec's characteristic
-bullets as `C1..Cn` (wrapped lines joined), `characteristic_kind` reads each
-bullet's kind, and an improvement that cites an `Expected, not a defect:`
-bullet is not counted.
+carry, and `parse_record_markers` reads back only records that pass
+`validate_record` (version 1, a known verdict, a code from `REASON_CODES`).
+`sanitize-source` hides the predecessor's header score from the reviewer; with
+`--pending` it resets the new file's header to `Quality: pending`
+(`impl-generate.yml`). Both rewrite only a whole generated header line in the
+first 15 lines, never a line that merely mentions a score. `impl-review.yml`
+runs a copy taken from its own ref. `parse_characteristics` reads the spec's
+characteristic bullets as `C1..Cn` (wrapped lines joined),
+`characteristic_kind` reads each bullet's kind, and an improvement that cites
+an `Expected, not a defect:` bullet is not counted.
 
 ### `review_provenance.py`
 Review provenance (stdlib): `criteria-version` prints the rules version — git
@@ -56,8 +59,9 @@ blob ids of `prompts/quality-criteria.md`, `ai-quality-review.md`,
 `default-style-guide.md` and the library prompt, as
 `qc-….aqr-….sg-….lib-…` — plus the `prompts/` tree id; `model` reads the
 resolved model id from the claude-code-action execution file (first
-`system`/`init` message only). `impl-review.yml` writes both into the
-metadata's `review` block and the gate record.
+`system`/`init` message only) and prints an empty id when the file doesn't name
+one, never the alias. `impl-review.yml` writes both into the metadata's
+`review` block (an empty value removes the key) and the gate record (`n/a`).
 
 ### `spec_characteristics_lint.py`
 Lint for the closing `## What a good version looks like` section of

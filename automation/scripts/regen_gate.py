@@ -242,8 +242,32 @@ def render_previous_review(
     return "\n".join(lines), weaknesses
 
 
-QUALITY_HEADER_RE = re.compile(r"(Quality:\s*)\d{1,3}(\s*/\s*100)")
+# One whole header line as impl-review writes it: the language's comment lead
+# (none inside a Python docstring, ``#'`` for R, ``#`` for Julia, ``//`` for
+# JavaScript), ``Quality: N/100``, then nothing or the ``| Created: …`` /
+# ``| Updated: …`` date. Matched against the full line, so a line that only
+# mentions a score — ``print('Quality: 50/100 …')``, a sentence in a comment —
+# is never rewritten.
+QUALITY_HEADER_RE = re.compile(
+    r"(?P<head>(?:(?:#'|#|//)[ \t]?)?Quality:[ \t]*)\d{1,3}(?P<scale>[ \t]*/[ \t]*100)"
+    r"(?P<tail>[ \t]*(?:\|[ \t]*(?:Created|Updated):.*)?)"
+)
 HEADER_LINES = 15
+
+
+def _rewrite_header_score(text: str, template: str) -> str:
+    """Apply ``template`` (``QUALITY_HEADER_RE`` groups) to each header line.
+
+    Only the first ``HEADER_LINES`` lines are read; line endings and the line
+    count stay as they were.
+    """
+    lines = text.splitlines(keepends=True)
+    for i, line in enumerate(lines[:HEADER_LINES]):
+        body = line.rstrip("\r\n")
+        match = QUALITY_HEADER_RE.fullmatch(body)
+        if match:
+            lines[i] = match.expand(template) + line[len(body) :]
+    return "".join(lines)
 
 
 def sanitize_source(text: str) -> str:
@@ -252,12 +276,11 @@ def sanitize_source(text: str) -> str:
     impl-review writes ``Quality: N/100`` into every implementation's header
     (docstring for Python, ``#'`` for R, ``#`` for Julia, ``//`` for
     JavaScript). The copy handed to the reviewer must not reveal N before the
-    predecessor is re-scored, so the value becomes ``hidden`` — only in the
-    leading header lines, and the line count stays the same.
+    predecessor is re-scored, so the value becomes ``hidden`` — only on a
+    whole header line (``QUALITY_HEADER_RE``) in the leading ``HEADER_LINES``
+    lines, and the line count stays the same.
     """
-    lines = text.splitlines(keepends=True)
-    head = [QUALITY_HEADER_RE.sub(r"\1hidden\2", line) for line in lines[:HEADER_LINES]]
-    return "".join(head + lines[HEADER_LINES:])
+    return _rewrite_header_score(text, r"\g<head>hidden\g<scale>\g<tail>")
 
 
 def reset_header_score(text: str) -> str:
@@ -267,12 +290,10 @@ def reset_header_score(text: str) -> str:
     predecessor's stored score, and the review would score the new version
     with that number in plain sight. ``impl-generate.yml`` resets it before
     the PR opens, the way a fresh file starts (``prompts/plot-generator.md``:
-    ``Quality: pending``). Same scope as ``sanitize_source``: the leading
-    header lines only, line count unchanged.
+    ``Quality: pending``). Same scope as ``sanitize_source``: whole header
+    lines in the leading lines only, line count unchanged.
     """
-    lines = text.splitlines(keepends=True)
-    head = [QUALITY_HEADER_RE.sub(r"\1pending", line) for line in lines[:HEADER_LINES]]
-    return "".join(head + lines[HEADER_LINES:])
+    return _rewrite_header_score(text, r"\g<head>pending\g<tail>")
 
 
 # ---------------------------------------------------------------------------
@@ -725,13 +746,24 @@ def build_record(
 
 
 def validate_record(record: Any) -> list[str]:
-    """Schema check for a gate record: known keys, and no free text anywhere."""
+    """Schema check for a gate record. Returns error strings.
+
+    Known keys only, no free text anywhere, and a ``v`` / ``verdict`` /
+    ``code`` this module can have written: ``RECORD_VERSION``, ``MERGE`` or
+    ``KEEP``, and one of ``REASON_CODES``.
+    """
     if not isinstance(record, dict):
         return ["record is not a JSON object"]
     errors = [f"unknown key {key!r}" for key in record if key not in RECORD_KEYS]
     for missing in ("v", "spec", "lib", "verdict", "code"):
         if missing not in record:
             errors.append(f"missing key {missing!r}")
+    if "v" in record and not (_is_int(record["v"]) and record["v"] == RECORD_VERSION):
+        errors.append(f"record.v must be {RECORD_VERSION}")
+    if "verdict" in record and record["verdict"] not in (MERGE, KEEP):
+        errors.append(f"record.verdict must be {MERGE!r} or {KEEP!r}")
+    if "code" in record and not (isinstance(record["code"], str) and record["code"] in REASON_CODES):
+        errors.append("record.code is not one of REASON_CODES")
 
     def walk(value: Any, where: str) -> None:
         if isinstance(value, dict):
@@ -762,7 +794,11 @@ def render_record_marker(record: dict[str, Any]) -> str:
 
 
 def parse_record_markers(text: str) -> list[dict[str, Any]]:
-    """Every valid gate record embedded in a comment body, in order."""
+    """Every valid gate record embedded in a comment body, in order.
+
+    A marker whose JSON does not parse or fails ``validate_record`` (a foreign
+    version, an unknown verdict or code, free text) is skipped.
+    """
     records: list[dict[str, Any]] = []
     for match in RECORD_MARKER_RE.finditer(text or ""):
         try:
