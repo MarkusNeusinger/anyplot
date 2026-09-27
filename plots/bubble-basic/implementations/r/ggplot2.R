@@ -1,13 +1,12 @@
 #' anyplot.ai
 #' bubble-basic: Basic Bubble Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 92/100 | Updated: 2026-09-26
+#' Quality: 92/100 | Updated: 2026-09-27
 
 library(ggplot2)
 library(dplyr)
 library(scales)
 library(ragg)
-library(gapminder)
 
 set.seed(42)
 
@@ -19,66 +18,105 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 GRID        <- if (THEME == "light") "#D3D1CA" else "#3A3A37"
 
-continent_colors <- c(
-    Africa   = "#009E73",
-    Americas = "#C475FD",
-    Asia     = "#4467A3",
-    Europe   = "#BD8233",
-    Oceania  = "#AE3030"
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030")
+
+# Data — synthetic retail catalog: price vs. customer rating, bubble = annual
+# sales volume, colored by product category. Category price medians follow a
+# real-world cheap-to-expensive ladder (beauty < apparel < home & kitchen <
+# sports < electronics), which keeps the five categories visually separated
+# along the log price axis instead of fully overlapping in one price band.
+n_per_category <- 22
+
+category_params <- tibble::tibble(
+    category  = c("Electronics", "Apparel", "Home & Kitchen", "Beauty", "Sports"),
+    code      = c("ELEC", "APRL", "HOME", "BEAU", "SPRT"),
+    price_mu  = c(5.80, 3.47, 4.00, 2.77, 4.44),
+    price_sd  = c(0.55, 0.45, 0.45, 0.45, 0.45),
+    rating_mu = c(4.1, 3.9, 4.0, 4.2, 3.95),
+    rating_sd = c(0.35, 0.40, 0.35, 0.30, 0.40),
+    sales_mu  = c(8.5, 10.5, 9.6, 11.0, 9.8),
+    sales_sd  = c(0.70, 0.60, 0.65, 0.60, 0.65)
 )
 
-# Data — gapminder 2007: GDP per capita vs life expectancy, bubble = population
-gm_2007 <- gapminder::gapminder |>
-    dplyr::filter(year == 2007)
+products <- lapply(seq_len(nrow(category_params)), function(i) {
+    p <- category_params[i, ]
+    tibble::tibble(
+        category     = p$category,
+        price        = pmin(2500, pmax(3, rlnorm(n_per_category, meanlog = p$price_mu, sdlog = p$price_sd))),
+        rating       = pmin(5, pmax(1, rnorm(n_per_category, mean = p$rating_mu, sd = p$rating_sd))),
+        sales_volume = pmin(450000, pmax(300, rlnorm(n_per_category, meanlog = p$sales_mu, sdlog = p$sales_sd))),
+        product_id   = sprintf("%s-%03d", p$code, seq_len(n_per_category))
+    )
+}) |>
+    dplyr::bind_rows() |>
+    dplyr::mutate(category = factor(category, levels = category_params$category)) |>
+    # Draw largest bubbles first (bottom layer) so smaller bubbles stay
+    # visible on top instead of being buried in the dense low-price cluster.
+    dplyr::arrange(dplyr::desc(sales_volume))
 
-# Top 3 population outliers — labeled to guide the viewer to the most
-# important data points (China, India, United States). "United States" is
-# shortened to "USA" because its bubble sits near the right panel edge and
-# the full name would clip against the log-scale x-axis boundary.
-top_countries <- gm_2007 |>
-    dplyr::slice_max(pop, n = 3) |>
-    dplyr::mutate(label = ifelse(country == "United States", "USA", as.character(country)))
+category_colors <- stats::setNames(IMPRINT_PALETTE, levels(products$category))
+
+# Top 3 best-sellers by annual sales volume — labeled with a short leader
+# line. Direction alternates by price order (not sales-volume order) so two
+# best-sellers that happen to sit close together on price don't get pushed
+# to the same side and collide.
+top_sellers <- products |>
+    dplyr::slice_max(sales_volume, n = 3) |>
+    dplyr::arrange(price) |>
+    dplyr::mutate(
+        direction   = rep(c(1, -1), length.out = dplyr::n()),
+        label_y     = rating + direction * 0.6,
+        label_vjust = ifelse(direction > 0, -0.4, 1.4)
+    )
 
 # Plot
-p <- ggplot(gm_2007, aes(
-    x    = gdpPercap,
-    y    = lifeExp,
-    size = pop,
-    fill = continent
+p <- ggplot(products, aes(
+    x    = price,
+    y    = rating,
+    size = sales_volume,
+    fill = category
 )) +
     geom_point(
         shape  = 21,
         color  = PAGE_BG,
-        alpha  = 0.65,
-        stroke = 0.4
+        alpha  = 0.55,
+        stroke = 0.6
+    ) +
+    geom_segment(
+        data        = top_sellers,
+        mapping     = aes(x = price, y = rating, xend = price, yend = label_y),
+        inherit.aes = FALSE,
+        color       = INK_SOFT,
+        linewidth   = 0.3
     ) +
     geom_text(
-        data        = top_countries,
-        mapping     = aes(x = gdpPercap, y = lifeExp, label = label),
+        data        = top_sellers,
+        mapping     = aes(x = price, y = label_y, label = product_id, vjust = label_vjust),
         inherit.aes = FALSE,
         color       = INK,
         size        = 3.2,
-        fontface    = "bold",
-        vjust       = -1.7
+        fontface    = "bold"
     ) +
     scale_x_log10(
         labels = label_dollar(accuracy = 1),
-        breaks = c(500, 1000, 5000, 10000, 50000)
+        breaks = c(10, 30, 100, 300, 1000)
+    ) +
+    scale_y_continuous(
+        limits = c(0.8, 5.7),
+        breaks = 1:5
     ) +
     scale_size_area(
-        max_size = 22,
-        breaks   = c(5e7, 2e8, 5e8, 1e9),
-        labels   = c("50M", "200M", "500M", "1B"),
-        name     = "Population"
+        max_size = 18,
+        limits   = c(0, 450000),
+        breaks   = c(5000, 50000, 150000, 400000),
+        labels   = c("5K", "50K", "150K", "400K"),
+        name     = "Annual Sales"
     ) +
-    scale_fill_manual(
-        values = continent_colors,
-        name   = "Continent"
-    ) +
+    scale_fill_manual(values = category_colors, name = "Category") +
     labs(
         title = "bubble-basic · r · ggplot2 · anyplot.ai",
-        x     = "GDP per Capita (log scale)",
-        y     = "Life Expectancy (years)"
+        x     = "Price ($, log scale)",
+        y     = "Customer Rating (out of 5)"
     ) +
     guides(
         fill = guide_legend(override.aes = list(size = 4, alpha = 0.9))
@@ -92,8 +130,7 @@ p <- ggplot(gm_2007, aes(
         axis.title        = element_text(color = INK,        size = 10),
         axis.text         = element_text(color = INK_SOFT,   size = 8),
         plot.title        = element_text(color = INK,        size = 12),
-        legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT,
-                                         linewidth = 0.3),
+        legend.background = element_rect(fill = ELEVATED_BG, color = NA),
         legend.text       = element_text(color = INK_SOFT,   size = 8),
         legend.title      = element_text(color = INK,        size = 10),
         legend.key        = element_rect(fill = NA,          color = NA),
