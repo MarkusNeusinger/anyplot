@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: bubble-basic
 created: '2026-08-24T17:53:28Z'
-updated: '2026-09-27T00:49:36Z'
+updated: '2026-09-27T01:01:05Z'
 generated_by: claude-sonnet
 workflow_run: 36283118668
 issue: 755
@@ -12,46 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Correct area-based bubble sizing (sqrt(area) formula) matching the spec's requirement
-    to scale bubbles by area rather than radius
-  - Custom size legend explains the third dimension with concrete min/mid/max example
-    bubbles, drawn as an elevated callout card matching the style guide
-  - 'Genuine data storytelling: a ''Best value'' annotation with a soft radial glow
-    highlights the highest quality-per-dollar product, not just a raw x/y/size encoding'
-  - Draws largest bubbles first so smaller bubbles render on top, improving individuation
-    in dense overlapping clusters
-  - Theme-adaptive chrome is threaded through consistently (ink, inkSoft, grid, elevatedBg);
-    both renders are fully readable and share identical data colors
-  - Per-bubble tooltip callback exposes price/quality/sales detail in the interactive
-    HTML view
+  - Bubble sizing is genuinely area-proportional (radius derived from sqrt of interpolated
+    area) rather than the common radius-proportional mistake, exactly per the spec
+    note
+  - Custom canvas-drawn size legend clearly explains the bubble-area encoding with
+    three reference sizes (min/mid/max), addressing the spec's explicit request for
+    a size legend
+  - Best-value product (highest quality/price ratio) is highlighted with full opacity,
+    a brand-green ring, a soft radial glow, and a callout annotation -- a genuine
+    data-storytelling focal point beyond raw x/y/size encoding
+  - Largest-bubbles-drawn-first z-ordering plus alpha 0.58 (0.9 for the highlighted
+    point) directly follows the spec's overlap-handling guidance and keeps the dense
+    $80-140 cluster individuated
+  - Theme tokens are threaded through every chrome element (title, axis ticks/titles,
+    grid, legend card, annotation) and both PNGs render correctly on the warm off-white
+    / warm near-black surfaces with no dark-on-dark or light-on-light failures
+  - Deterministic LCG-seeded data generation with a plausible price/quality/sales-volume
+    business scenario and realistic positive price-quality correlation with noise
   weaknesses:
-  - Dense clusters (roughly $100-140 price range) have many overlapping bubbles where
-    individual boundaries are hard to trace despite the ink-colored stroke — a slightly
-    higher-contrast stroke or gentle positional jitter would ease this
-  - The Y-axis auto-scales to the data range (~2-8) while the axis title states 'Quality
-    Rating (1-10)' — the displayed scale doesn't match the stated range; set scales.y.min=1/max=10,
-    or simplify the label to drop the numeric range
-  - Relies on three custom Canvas plugins (glow, size legend, annotation) plus several
-    helper functions — more code surface than a minimal KISS baseline, though it buys
-    real storytelling value here
+  - In the densest cluster (roughly $80-140 price range), many similarly-sized bubbles
+    still overlap heavily enough that individual points are hard to isolate visually
+    -- a slightly lower max alpha or a touch more radius spread in that band would
+    help
+  - The implementation relies on several small canvas plugins (sizeLegend, bestValueGlow,
+    standoutAnnotation) for customization -- justified by Chart.js's plugin idiom
+    for a static PNG screenshot, but it moves away from a flat KISS script structure
+  - Size legend text (15px value labels) is noticeably smaller than the axis tick
+    labels (14px) sitting right next to bubbles of comparable visual weight -- could
+    bump to 16px for better internal balance within the card
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "bubble-basic · javascript · chartjs · anyplot.ai" in bold dark ink, clearly visible and comfortably sized. Axis titles "Price ($)" and "Quality Rating (1–10)" in dark ink. Tick labels ($0-$250, 2-8) in softer gray-ink, all legible. Subtle light-gray gridlines on both axes, visible but not competing with data. Custom size-legend card top-left ("Monthly sales (units)" with 13/56/99 example bubbles) sits on an elevated cream card with a thin rule, fully readable.
-      Data: All bubbles render in brand green (#009E73) at varying opacity — 0.58 for regular bubbles, 0.9 plus a brighter ring for the highlighted "Best value" bubble. Bubble area scales with monthly sales (10-100 units), giving visibly distinct small/medium/large bubbles. The "Best value" annotation (dark leader line + bold label) points clearly to the highlighted bubble in the low-price/mid-quality region.
-      Legibility verdict: PASS — no light-on-light text, no clipped or obscured labels.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "bubble-basic · javascript · chartjs · anyplot.ai" in bold dark ink, centered top, clearly legible. X-axis title "Price ($)" and Y-axis title "Quality Rating (1-10)" in dark ink, tick labels in a slightly softer dark gray. Subtle light-gray gridlines on both axes. A callout-style size legend card ("Monthly sales (units)" with three reference bubbles labeled 13/56/99) sits top-left inside the plot area with a soft border, not floating isolated. A "Best value" annotation with a thin connector line points at one of the lowest-price bubbles.
+      Data: ~70 bubbles in brand green (#009E73) with alpha transparency, sized by area, densest in the $60-150 price band trending toward higher quality ratings; the highlighted best-value bubble is rendered at full opacity with a darker green ring and a soft radial glow underneath it.
+      Legibility verdict: PASS -- all text (title, axis titles, tick labels, legend card text, annotation) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title, axis titles, and tick labels all render in light ink/soft-ink tones, clearly visible against the dark surface. Gridlines are the same subtle style, now light-on-dark and still non-dominant. The size-legend card switches to the dark elevated background (#242420-equivalent) with light text and a light-toned example bubble outline — fully readable, no dark-on-dark failure anywhere.
-      Data: Bubble colors and positions are pixel-identical to the light render — same green hue, same opacity levels, same "Best value" highlight and glow. Only the chrome (background, text, grid, legend card) flipped, as required.
-      Legibility verdict: PASS — no dark-on-dark text, brand green reads clearly against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title, axis titles, and tick labels now rendered in light ink/off-white, clearly visible against the dark surface. Gridlines are a subtle light tone at low opacity. The size-legend card now uses a dark elevated panel fill with light text and light-colored reference bubble outlines. The "Best value" annotation line and text are rendered in light ink, fully legible.
+      Data: The bubble fill color is the identical brand green (#009E73) as the light render -- confirmed unchanged data hue; only the chrome (background, text, grid, legend panel, annotation stroke) flipped to the dark-theme tokens. The best-value bubble's glow and ring remain visible and distinct against the dark background.
+      Legibility verdict: PASS -- no dark-on-dark failures observed; every title/label/tick/legend/annotation element is clearly legible on the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -59,76 +65,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis titles, tick labels, and legend text are all explicitly
-          sized and clearly readable in both themes.
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks
+          14px, legend 15-16px); readable in both themes; title comfortably fits without
+          overflow
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions; dense mid-price bubble
-          clusters make some individual boundaries hard to trace despite the stroke.
+        comment: No text-on-text or text-on-data collisions; size legend card and
+          'Best value' annotation are clear of other chrome
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bubble radius range (7-38px) is visible across the size spectrum;
-          largest-first draw order keeps small bubbles from being buried, though the
-          busiest cluster is still visually dense.
+        comment: Radius range (7-38px) and largest-first z-order keep bubbles distinguishable,
+          though the densest $80-140 cluster is still visually busy
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue brand green with opacity/ring encoding for the highlight
-          — no red/green-only signal, adequate contrast.
+        comment: Single-hue green with alpha + ink strokes for separation, no red-green
+          reliance, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimension gate passed; generous margins, no overflow or clipping,
-          legend card doesn't collide with data.
+        comment: Plot area fills the canvas well with balanced margins; legend card
+          sits inside the plot area, not isolated
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units (Price ($), Quality
-          Rating (1-10)).
+        comment: '''Price ($)'' and ''Quality Rating (1-10)'' are descriptive with
+          units/scale'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series uses #009E73; backgrounds match theme spec exactly;
-          data colors identical across renders.'
+        comment: 'First series is #009E73, identical across both renders; theme-correct
+          backgrounds and chrome in both PNGs'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: true
-        comment: Custom legend card and radial glow highlight show above-default polish,
-          but overall composition is still a fairly standard bubble scatter.
+        comment: Custom canvas plugins (glow, size legend card, annotation) show intentional
+          design work clearly above a configured default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Subtle grid, generous whitespace, elevated-card legend styling matches
-          the style guide's callout-box role.
+        comment: Subtle grid, generous whitespace, rounded elevated-bg legend card
+          with thin rule border
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: The 'Best value' annotation gives the chart a genuine focal point
-          beyond the raw x/y/size encoding.
+        comment: Best-value bubble is clearly emphasized via opacity, ring, glow,
+          and callout -- a real focal point, though the 'insight' requires reading
+          the label
     spec_compliance:
       score: 15
       max: 15
@@ -137,29 +141,24 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: 'Correct bubble chart (Chart.js type: ''bubble'').'
+        comment: Native Chart.js 'bubble' chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: Area-scaled sizing, alpha 0.58-0.9 for overlap handling, and an explicit
-          size legend are all present.
+        comment: Area-proportional sizing, alpha for overlap, size legend, min/max
+          visibility all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: X=price, Y=quality, size=sales volume correctly mapped; minor note
-          that the Y-axis auto-scales to ~2-8 while the label says (1-10) — see weaknesses.
+        comment: x=price, y=quality, r=sales volume; axes show the full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title exactly matches 'bubble-basic · javascript · chartjs · anyplot.ai';
-          custom legend correctly explains the size encoding.
+        comment: Title format exactly matches spec-id · language · library · anyplot.ai;
+          categorical legend correctly omitted for single series, size legend present
     data_quality:
       score: 15
       max: 15
@@ -168,77 +167,67 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        passed: true
-        comment: All three dimensions (price, quality, sales volume) are represented
-          and legible.
+        comment: Full price/quality/sales-volume range with a visible correlation
+          trend plus noise and outliers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Product price/quality/sales-volume scenario is plausible and neutral.
+        comment: Neutral, comprehensible product price/quality/sales scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Price $15-220, quality 2-9.8, sales 10-100 are all sensible domain
-          values.
+        comment: Price $15-220, quality 1-10, sales 10-100 units/month are all plausible
+          and internally consistent
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 2
         max: 3
-        passed: false
-        comment: Uses several helper functions (makeLcg, bubbleRadius, hexToRgba)
-          plus three custom Canvas plugins — more structure than a minimal KISS baseline.
+        comment: Several helper functions and Chart.js plugins are used -- justified
+          by the plugin idiom, but not a flat top-down script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Fixed-seed LCG (seed 42) makes data fully deterministic.
+        comment: Deterministic fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: No imports; only the global Chart is used.
+        comment: No stray imports; only the provided globals are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: No fake UI/interactivity; the custom plugins implement real visual
-          features.
+        comment: No fake UI or simulated interactivity; complexity is proportional
+          to the visual features delivered
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: 'Mounts a canvas into #container, animation:false set, current Chart.js
-          v4 bubble API.'
+        comment: 'Mounts into #container via new Chart(), animation:false set, no
+          deprecated API'
     library_mastery:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 5
         max: 5
-        passed: true
-        comment: Uses the native bubble type with scriptable per-point styling options
-          — idiomatic Chart.js.
+        comment: Native bubble type, scriptable per-point styling, correct mount-node
+          contract and theme token usage
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Demonstrates Chart.js's plugin architecture (afterDraw, beforeDatasetsDraw)
-          for a glow effect, custom legend, and annotation — beyond generic usage.
+        comment: Chart.js plugin API (afterDraw/beforeDatasetsDraw) drives the custom
+          legend, glow, and annotation -- not trivially replicated in another library
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -247,8 +236,7 @@ impl_tags:
   - custom-legend
   patterns:
   - data-generation
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - alpha-blending
   - gradient-fill
