@@ -24,12 +24,19 @@ const companyCount = 65;
 const bubbles = [];
 for (let i = 0; i < companyCount; i++) {
   const rdSpend = 5 + rand() * 95; // R&D investment, $M
-  const noise = (rand() - 0.5) * 14;
+  const noise = (rand() - 0.5) * 30; // wide noise band so the trend isn't a tight line
   const growthRate = Math.max(1, 3 + rdSpend * 0.18 + noise); // revenue growth, %
   const marketIndex = 8 + rand() * 92; // relative market-strength index
   const efficiency = growthRate / rdSpend; // growth % earned per R&D dollar
   bubbles.push([rdSpend, growthRate, marketIndex, efficiency]);
 }
+
+// A handful of deliberate outliers break the x/y trend, showing what the
+// bubble encoding reveals that a plain 2D scatter would blur: heavy R&D spend
+// doesn't guarantee growth, and a small agile spender can still break out.
+bubbles[3] = [88, 5, 71, 5 / 88]; // legacy incumbent: heavy spend, weak growth
+bubbles[17] = [9, 46, 24, 46 / 9]; // agile startup: tiny spend, breakout growth
+bubbles[41] = [61, 3, 85, 3 / 61]; // large but stagnant market leader
 
 const indexValues = bubbles.map((b) => b[2]);
 const indexMin = Math.min(...indexValues);
@@ -105,7 +112,7 @@ const legendGraphics = [
     style: {
       text: `${Math.round(sample.value)}`,
       fill: t.inkSoft,
-      fontSize: 18,
+      fontSize: 14,
     },
   })),
 ];
@@ -129,6 +136,7 @@ chart.setOption({
     nameTextStyle: { color: t.ink, fontSize: 16 },
     axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
+    axisTick: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
   },
   yAxis: {
@@ -139,6 +147,7 @@ chart.setOption({
     nameTextStyle: { color: t.ink, fontSize: 16 },
     axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
+    axisTick: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
   },
   // Idiomatic ECharts feature: a continuous visualMap drives the bubble-cloud
