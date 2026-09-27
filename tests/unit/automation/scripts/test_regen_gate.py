@@ -723,7 +723,7 @@ class TestGateRecord:
             render_record_marker(record)
 
     def test_parse_skips_malformed_markers(self):
-        text = "<!-- regen-gate-record:v1 {not json} -->\n<!-- regen-gate-record:v1 {\"x\":1} -->"
+        text = '<!-- regen-gate-record:v1 {not json} -->\n<!-- regen-gate-record:v1 {"x":1} -->'
         assert parse_record_markers(text) == []
 
     def test_record_token(self):
@@ -801,6 +801,20 @@ class TestDecideProvenanceCli:
         assert record["criteria_version"] == "qc-a.aqr-b.sg-c.lib-d"
         assert validate_record(record) == []
         assert record_file.read_text(encoding="utf-8").count("\n") == 1  # one line
+
+    def test_record_failure_never_changes_the_decision(self, tmp_path, monkeypatch, capsys):
+        # impl-review.yml turns a non-zero exit into keep/script_crashed, so a
+        # record that cannot be written must not fail the decide step.
+        gh_output = tmp_path / "gh_output"
+        monkeypatch.setenv("GITHUB_OUTPUT", str(gh_output))
+        unwritable = tmp_path / "no-such-dir" / "record.json"
+        assert main(self._decide(tmp_path, ["--record-out", str(unwritable)])) == 0
+        out = capsys.readouterr().out
+        assert "::warning::regen gate record not written:" in out
+        assert not unwritable.exists()
+        outputs = gh_output.read_text(encoding="utf-8").splitlines()
+        assert "verdict=keep" in outputs
+        assert "code=no_visible_improvement" in outputs
 
     def test_marker_subcommand(self, tmp_path, monkeypatch, capsys):
         monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
@@ -903,4 +917,7 @@ class TestResetHeaderScore:
         src = tmp_path / "impl.js"
         src.write_text("// anyplot.ai\n// Quality: 91/100 | Updated: 2026-09-01\nconst a = 1;\n", encoding="utf-8")
         assert main(["sanitize-source", "--pending", "--source", str(src), "--out", str(src)]) == 0
-        assert src.read_text(encoding="utf-8") == "// anyplot.ai\n// Quality: pending | Updated: 2026-09-01\nconst a = 1;\n"
+        assert (
+            src.read_text(encoding="utf-8")
+            == "// anyplot.ai\n// Quality: pending | Updated: 2026-09-01\nconst a = 1;\n"
+        )

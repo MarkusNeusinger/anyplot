@@ -843,20 +843,26 @@ def cmd_decide(args: argparse.Namespace) -> int:
     if args.summary_out:
         Path(args.summary_out).write_text(render_summary(result, args.prev_stored, score), encoding="utf-8")
     if args.record_out:
-        record = build_record(
-            result,
-            spec_id=args.spec_id,
-            library=args.library,
-            score=score,
-            prev_stored=parse_score(args.prev_stored),
-            pr=_optional_int(args.pr),
-            model=args.model or None,
-            criteria_version=args.criteria_version or None,
-            prompts_tree=args.prompts_tree or None,
-            prev_model=args.prev_model or None,
-            prev_criteria_version=args.prev_criteria_version or None,
-        )
-        Path(args.record_out).write_text(json.dumps(record, separators=(",", ":")) + "\n", encoding="utf-8")
+        # The record is monitoring only: a failure to build or write it must
+        # never reach the workflow's crash fallback, which would turn a
+        # legitimate merge into keep/script_crashed.
+        try:
+            record = build_record(
+                result,
+                spec_id=args.spec_id,
+                library=args.library,
+                score=score,
+                prev_stored=parse_score(args.prev_stored),
+                pr=_optional_int(args.pr),
+                model=args.model or None,
+                criteria_version=args.criteria_version or None,
+                prompts_tree=args.prompts_tree or None,
+                prev_model=args.prev_model or None,
+                prev_criteria_version=args.prev_criteria_version or None,
+            )
+            Path(args.record_out).write_text(json.dumps(record, separators=(",", ":")) + "\n", encoding="utf-8")
+        except Exception as exc:
+            print(f"::warning::regen gate record not written: {_one_line(str(exc))[:200]}")
     _write_outputs({"verdict": result.verdict, "reason": reason, "prev_rescored": rescored, "code": result.code})
     return 0
 
