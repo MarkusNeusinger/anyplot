@@ -20,62 +20,69 @@ GRID        <- if (THEME == "light") "#D3D1CA" else "#3A3A37"
 
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030")
 
-# Data — synthetic retail catalog: price vs. customer rating, bubble = annual
-# sales volume, colored by product category. Category price medians follow a
-# real-world cheap-to-expensive ladder (beauty < apparel < home & kitchen <
-# sports < electronics), which keeps the five categories visually separated
-# along the log price axis instead of fully overlapping in one price band.
+# Data — synthetic city-infrastructure scenario: population density vs. median
+# household income, bubble = green space per capita, colored by neighborhood
+# zone type. Density falls off from the urban core outward while green space
+# per capita rises, which keeps the five zone types visually separated along
+# the log density axis instead of overlapping in one band.
 n_per_category <- 22
 
-category_params <- tibble::tibble(
-    category  = c("Electronics", "Apparel", "Home & Kitchen", "Beauty", "Sports"),
-    code      = c("ELEC", "APRL", "HOME", "BEAU", "SPRT"),
-    price_mu  = c(5.80, 3.47, 4.00, 2.77, 4.44),
-    price_sd  = c(0.55, 0.45, 0.45, 0.45, 0.45),
-    rating_mu = c(4.1, 3.9, 4.0, 4.2, 3.95),
-    rating_sd = c(0.35, 0.40, 0.35, 0.30, 0.40),
-    sales_mu  = c(8.5, 10.5, 9.6, 11.0, 9.8),
-    sales_sd  = c(0.70, 0.60, 0.65, 0.60, 0.65)
+zone_params <- tibble::tibble(
+    category   = c("Urban Core", "Inner Ring", "Outer Ring", "Industrial District", "Suburban Fringe"),
+    code       = c("URBN", "INNR", "OUTR", "INDU", "SUBF"),
+    density_mu = log(c(18000, 9000, 4200, 3200, 1200)),
+    density_sd = c(0.35, 0.35, 0.40, 0.40, 0.45),
+    income_mu  = c(58, 64, 82, 46, 98),
+    income_sd  = c(9, 10, 13, 8, 14),
+    green_mu   = log(c(4, 8, 18, 5, 35)),
+    green_sd   = c(0.40, 0.40, 0.45, 0.35, 0.40)
 )
 
-# Flat, vectorized generation: repeat each category's params n_per_category
-# times, then draw all rows in one rlnorm()/rnorm() call each (both accept
-# vectorized mean/sd arguments) instead of looping per category.
-row_params <- category_params[rep(seq_len(nrow(category_params)), each = n_per_category), ]
+# Flat, vectorized generation: repeat each zone's params n_per_category times,
+# then draw all rows in one rlnorm()/rnorm() call each (both accept vectorized
+# mean/sd arguments) instead of looping per zone.
+row_params <- zone_params[rep(seq_len(nrow(zone_params)), each = n_per_category), ]
 n_total <- nrow(row_params)
 
-products <- tibble::tibble(
-    category     = row_params$category,
-    price        = pmin(2500, pmax(3, rlnorm(n_total, meanlog = row_params$price_mu, sdlog = row_params$price_sd))),
-    rating       = pmin(5, pmax(1, rnorm(n_total, mean = row_params$rating_mu, sd = row_params$rating_sd))),
-    sales_volume = pmin(450000, pmax(300, rlnorm(n_total, meanlog = row_params$sales_mu, sdlog = row_params$sales_sd))),
-    product_id   = sprintf("%s-%03d", row_params$code, rep(seq_len(n_per_category), times = nrow(category_params)))
+neighborhoods <- tibble::tibble(
+    category        = row_params$category,
+    density         = pmin(35000, pmax(150, rlnorm(n_total, meanlog = row_params$density_mu, sdlog = row_params$density_sd))),
+    income          = pmin(180, pmax(15, rnorm(n_total, mean = row_params$income_mu, sd = row_params$income_sd))),
+    green_space     = pmin(150, pmax(1, rlnorm(n_total, meanlog = row_params$green_mu, sdlog = row_params$green_sd))),
+    neighborhood_id = sprintf("%s-%03d", row_params$code, rep(seq_len(n_per_category), times = nrow(zone_params)))
 ) |>
-    dplyr::mutate(category = factor(category, levels = category_params$category)) |>
+    dplyr::mutate(category = factor(category, levels = zone_params$category)) |>
     # Draw largest bubbles first (bottom layer) so smaller bubbles stay
-    # visible on top instead of being buried in the dense low-price cluster.
-    dplyr::arrange(dplyr::desc(sales_volume))
+    # visible on top instead of being buried in the dense low-density cluster.
+    dplyr::arrange(dplyr::desc(green_space))
 
-category_colors <- stats::setNames(IMPRINT_PALETTE, levels(products$category))
+category_colors <- stats::setNames(IMPRINT_PALETTE, levels(neighborhoods$category))
 
-# Top 3 best-sellers by annual sales volume — labeled with a short leader
-# line. Direction alternates by price order (not sales-volume order) so two
-# best-sellers that happen to sit close together on price don't get pushed
-# to the same side and collide.
-top_sellers <- products |>
-    dplyr::slice_max(sales_volume, n = 3) |>
-    dplyr::arrange(price) |>
+# Bubble-size domain floor: anchoring scale_size_area() at an absolute zero
+# buries the smallest real values at a couple of visible pixels. Flooring the
+# lower limit just below the observed minimum keeps sizing strictly area-true
+# across the data range while giving the smallest bubbles real presence.
+green_range <- range(neighborhoods$green_space)
+size_limits <- c(green_range[1] * 0.75, green_range[2])
+
+# Top 3 neighborhoods by green space per capita — labeled with a short leader
+# line. Direction alternates by density order (not green-space order) so two
+# standouts that happen to sit close together on density don't get pushed to
+# the same side and collide.
+top_green <- neighborhoods |>
+    dplyr::slice_max(green_space, n = 3) |>
+    dplyr::arrange(density) |>
     dplyr::mutate(
         direction   = rep(c(1, -1), length.out = dplyr::n()),
-        label_y     = rating + direction * 0.6,
+        label_y     = income + direction * 16,
         label_vjust = ifelse(direction > 0, -0.4, 1.4)
     )
 
 # Plot
-p <- ggplot(products, aes(
-    x    = price,
-    y    = rating,
-    size = sales_volume,
+p <- ggplot(neighborhoods, aes(
+    x    = density,
+    y    = income,
+    size = green_space,
     fill = category
 )) +
     geom_point(
@@ -85,42 +92,42 @@ p <- ggplot(products, aes(
         stroke = 1.0
     ) +
     geom_segment(
-        data        = top_sellers,
-        mapping     = aes(x = price, y = rating, xend = price, yend = label_y),
+        data        = top_green,
+        mapping     = aes(x = density, y = income, xend = density, yend = label_y),
         inherit.aes = FALSE,
         color       = INK_SOFT,
         linewidth   = 0.3
     ) +
     geom_text(
-        data        = top_sellers,
-        mapping     = aes(x = price, y = label_y, label = product_id, vjust = label_vjust),
+        data        = top_green,
+        mapping     = aes(x = density, y = label_y, label = neighborhood_id, vjust = label_vjust),
         inherit.aes = FALSE,
         color       = INK,
         size        = 3.2,
         fontface    = "bold"
     ) +
     scale_x_log10(
-        labels = label_dollar(accuracy = 1),
-        breaks = c(10, 30, 100, 300, 1000)
+        labels = label_comma(),
+        breaks = c(300, 1000, 3000, 10000, 30000)
     ) +
     annotation_logticks(sides = "b", color = INK_SOFT, linewidth = 0.25) +
     scale_y_continuous(
-        limits = c(0.8, 5.7),
-        breaks = 1:5
+        limits = c(15, 150),
+        breaks = c(20, 50, 80, 110, 140)
     ) +
     scale_size_area(
         max_size = 18,
-        limits   = c(0, 450000),
-        breaks   = c(5000, 50000, 150000, 400000),
-        labels   = c("5K", "50K", "150K", "400K"),
-        name     = "Annual Sales"
+        limits   = size_limits,
+        breaks   = c(3, 10, 25, 60, 120),
+        labels   = c("3", "10", "25", "60", "120"),
+        name     = "Green Space (m²/capita)"
     ) +
-    scale_fill_manual(values = category_colors, name = "Category") +
+    scale_fill_manual(values = category_colors, name = "Zone Type") +
     labs(
         title    = "bubble-basic · r · ggplot2 · anyplot.ai",
-        subtitle = "Bubble size encodes annual sales volume",
-        x        = "Price ($, log scale)",
-        y        = "Customer Rating (out of 5)"
+        subtitle = "Bubble size encodes green space per capita",
+        x        = "Population Density (people/km², log scale)",
+        y        = "Median Household Income ($K)"
     ) +
     guides(
         fill = guide_legend(override.aes = list(size = 4, alpha = 0.9))
