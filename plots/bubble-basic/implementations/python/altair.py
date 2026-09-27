@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: altair 6.3.0 | Python 3.13.15
 Quality: 91/100 | Created: 2026-09-27
@@ -83,6 +83,16 @@ title = "bubble-basic · python · altair · anyplot.ai"
 # Vega-Lite selection grammar (preserved in the saved interactive HTML).
 stage_selection = alt.selection_point(fields=["Stage"], bind="legend")
 
+# Regression trend — Vega-Lite's transform_regression fits the funding->revenue
+# trend server-side (no scipy/sklearn call in this script), a distinctive
+# declarative capability that sits underneath the bubbles as context.
+trend = (
+    alt.Chart(df)
+    .transform_regression("Funding ($M)", "Revenue ($M)")
+    .mark_line(strokeDash=[5, 4], strokeWidth=1.5, opacity=0.55)
+    .encode(x="Funding ($M):Q", y="Revenue ($M):Q", color=alt.value(INK_SOFT))
+)
+
 # Plot — bubble layer
 bubbles = (
     alt.Chart(df)
@@ -119,7 +129,7 @@ bubbles = (
                 symbolOpacity=0.65,
             ),
         ),
-        opacity=alt.condition(stage_selection, alt.value(0.58), alt.value(0.1)),
+        opacity=alt.condition(stage_selection, alt.value(0.5), alt.value(0.1)),
         tooltip=["Stage:N", "Funding ($M):Q", "Revenue ($M):Q", "Market Share (%):Q"],
     )
     .add_params(stage_selection)
@@ -150,7 +160,7 @@ _annotation_layers = [
 annotations = alt.layer(*_annotation_layers)
 
 chart = (
-    (bubbles + top3_highlight + annotations)
+    (trend + bubbles + top3_highlight + annotations)
     .properties(
         width=620,
         height=320,
