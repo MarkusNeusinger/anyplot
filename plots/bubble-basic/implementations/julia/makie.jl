@@ -1,7 +1,7 @@
 # anyplot.ai
 # bubble-basic: Basic Bubble Chart
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 91/100 | Updated: 2026-09-27
+# Quality: pending | Updated: 2026-09-27
 
 using CairoMakie
 using Colors
@@ -65,7 +65,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title             = title_str,
-    titlesize         = 36,
+    titlesize         = 29,
     titlecolor        = INK,
     xlabel            = "Production Budget (USD Millions)",
     ylabel            = "Critic Rating (out of 10)",
@@ -103,13 +103,13 @@ text!(ax, 115.0, 9.6;
 
 # Bubble area (sqrt-scaled) encodes box-office revenue; fill color encodes
 # production scale — two independent variables, each with its own legend
-# group below. Alpha lowered further (0.4 -> 0.3) so individual bubbles in
-# the densest low-budget indie and mid-budget studio clusters stay
-# distinguishable instead of merging into blobs.
+# group below. Alpha raised to 0.5 (spec calls for 0.5-0.7 to handle
+# overlap) so individual bubbles read more solidly while dense low-budget
+# indie and mid-budget studio clusters stay distinguishable.
 scatter!(ax, budget, rating;
     color       = point_color,
     markersize  = marker_sizes,
-    alpha       = 0.3,
+    alpha       = 0.5,
     strokewidth = 1.0,
     strokecolor = RGBAf(INK.r, INK.g, INK.b, 0.4),
 )
