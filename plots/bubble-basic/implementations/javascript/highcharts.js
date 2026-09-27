@@ -1,7 +1,8 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
-// Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 91/100 | Updated: 2026-09-27
+// Library: Highcharts 12.6.0 | Node 22
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
+// Quality: pending | Updated: 2026-09-27
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -15,13 +16,20 @@ function rand() {
 
 const Z_MIN = 10;
 const Z_MAX = 100;
-const R_MIN = 6;
+const R_MIN = 9;
 const R_MAX = 32;
 
 // Scale by area, not radius, so bubble size reads proportionally.
 function radiusForShare(share) {
   const frac = Math.max(0, Math.min(1, (share - Z_MIN) / (Z_MAX - Z_MIN)));
   return R_MIN + (R_MAX - R_MIN) * Math.sqrt(frac);
+}
+
+// Small bubbles have the least area to carry color, so nudge their opacity up
+// a bit to keep them from washing out against the plot background.
+function alphaForShare(share) {
+  const frac = Math.max(0, Math.min(1, (share - Z_MIN) / (Z_MAX - Z_MIN)));
+  return 0.6 + 0.15 * (1 - frac);
 }
 
 const companies = [];
@@ -51,7 +59,7 @@ companies.forEach((c, i) => {
 });
 
 const [fr, fg, fb] = [1, 3, 5].map((i) => parseInt(t.palette[0].slice(i, i + 2), 16));
-const markerFill = `rgba(${fr}, ${fg}, ${fb}, 0.6)`;
+const fillForShare = (share) => `rgba(${fr}, ${fg}, ${fb}, ${alphaForShare(share)})`;
 const seriesData = companies.map((c, i) => {
   const isFocal = i === focalIndex;
   return {
@@ -59,7 +67,7 @@ const seriesData = companies.map((c, i) => {
     y: c.revenue,
     marker: {
       radius: radiusForShare(c.segmentShare),
-      fillColor: markerFill,
+      fillColor: fillForShare(c.segmentShare),
       // Page-bg stroke carves a visible edge between overlapping same-color
       // bubbles in the densest cluster. The focal point reuses the brand
       // green at full opacity (not amber, which is reserved for warning/
@@ -89,7 +97,7 @@ function drawSizeLegend(chart) {
     const cy = cursorY + R_MAX;
     chart.renderer
       .circle(legendX + R_MAX, cy, r)
-      .attr({ fill: markerFill, stroke: t.palette[0], "stroke-width": 1.2 })
+      .attr({ fill: fillForShare(share), stroke: t.palette[0], "stroke-width": 1.2 })
       .add();
     chart.renderer
       .text(`${Math.round(share)}%`, legendX + 2 * R_MAX + 16, cy + 5)
