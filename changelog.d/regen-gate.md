@@ -19,4 +19,4 @@
   open `regen:kept` PRs and never rescues a regeneration into repair; a failed
   regeneration no longer marks the pair `impl:<lib>:failed`; and the local
   `/regen` withholds `ai-approved` when the new score falls more than one point
-  below the stored one.
+  below the stored one. (#11945)
