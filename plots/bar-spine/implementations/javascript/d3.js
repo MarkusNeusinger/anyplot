@@ -43,20 +43,42 @@ const margin = { top: 155, right: 60, bottom: 115, left: 90 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
-// Bar width proportional to marginal count n; segments stacked to 100 %.
+// Bar width proportional to marginal count n; segments stacked to 100 % via
+// d3.stack's expand offset (exact fractions — no manual cumulative-sum bookkeeping).
 const grandTotal = d3.sum(data, (d) => d.n);
+const series = d3
+  .stack()
+  .keys(fillKeys)
+  .offset(d3.stackOffsetExpand)(data.map((d) => ({ ...d.counts })));
+
+// Largest-remainder rounding: floor every share, then hand the leftover whole
+// points to the segments with the biggest fractional part, so labels always
+// sum to exactly 100 instead of drifting to 99/101 under independent rounding.
+const roundToHundred = (pcts) => {
+  const floors = pcts.map((p) => Math.floor(p));
+  const leftover = 100 - d3.sum(floors);
+  const order = pcts
+    .map((p, i) => ({ i, frac: p - floors[i] }))
+    .sort((a, b) => b.frac - a.frac);
+  const rounded = floors.slice();
+  for (let k = 0; k < leftover; k++) rounded[order[k].i] += 1;
+  return rounded;
+};
+
 let cursor = 0;
-const bars = data.map((d) => {
+const bars = data.map((d, i) => {
   const barWidth = (d.n / grandTotal) * iw;
   const x0 = cursor;
   cursor += barWidth;
-  let stack = 0;
-  const segments = fillKeys.map((key) => {
-    const pct = (d.counts[key] / d.n) * 100;
-    const seg = { key, pct, y0: stack, y1: stack + pct };
-    stack += pct;
-    return seg;
-  });
+  const pcts = fillKeys.map((key) => (d.counts[key] / d.n) * 100);
+  const labels = roundToHundred(pcts);
+  const segments = fillKeys.map((key, k) => ({
+    key,
+    pct: pcts[k],
+    label: labels[k],
+    y0: series[k][i][0] * 100,
+    y1: series[k][i][1] * 100,
+  }));
   return { ...d, x0, barWidth, segments };
 });
 
@@ -128,7 +150,7 @@ barGroups.each(function (bar) {
       .attr("fill", textColorFor(fillColor[seg.key]))
       .style("font-size", `${fontSize}px`)
       .style("font-weight", "600")
-      .text(`${Math.round(seg.pct)}%`);
+      .text(`${seg.label}%`);
   });
 });
 
