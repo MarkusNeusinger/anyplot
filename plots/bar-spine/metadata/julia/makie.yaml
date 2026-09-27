@@ -2,9 +2,9 @@ library: makie
 language: julia
 specification_id: bar-spine
 created: '2026-09-02T12:39:36Z'
-updated: '2026-09-02T12:43:46Z'
+updated: '2026-09-27T03:34:40Z'
 generated_by: claude-sonnet
-workflow_run: 33630723559
+workflow_run: 36291062086
 issue: 5249
 language_version: 1.11.9
 library_version: 0.21.9
@@ -12,91 +12,103 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 93
 review:
   strengths:
-  - Bar widths are numerically correct proportional to marginal tier counts — verified
-    against the pixel boundaries in both renders.
-  - Well-justified use of the documented semantic-exception palette (green/red for
-    retained/churned) with a code comment explaining the rationale.
-  - 'Clean theme-adaptive chrome: identical data colors, correctly flipped background/ink/grid
-    tokens between light and dark.'
-  - In-segment percentage labels remain legible even for the smallest segment (11%).
+  - 'Correct spine-plot geometry: bar widths are proportional to per-tier customer
+    totals (edges/lefts/rights derived via cumsum of tier_totals), segment heights
+    sum to exactly 100%, and bars are drawn adjacent with no gaps'
+  - 'Thoughtful semantic-exception color use: Retained/Churned is a documented good/bad
+    pair, so brand green (#009E73) and matte red (#AE3030) replace the ordinal 1st/2nd
+    palette slots per the style guide''s semantic-exception rule -- explicitly reasoned
+    about in code comments'
+  - Churned segments carry a diagonal Makie.Pattern hatch on top of the red fill,
+    so the good/bad distinction survives red-green color-vision deficiency instead
+    of relying on hue alone
+  - Percentage labels rendered inside every segment (including the thin 11% Enterprise-churned
+    slice) remain legible and correctly centered in both themes
+  - 'Theme-adaptive chrome is fully correct: PAGE_BG/INK/INK_SOFT tokens flip cleanly,
+    top/right spines hidden, legend frame removed, all text readable on both #FAF8F1
+    and #1A1A17 backgrounds'
+  - 'All required spec features present: bar-width-as-marginal-frequency, stacked
+    conditional proportions, normalized 100% height, adjacent bars, distinct colors
+    with legend, x-axis labels centered under variable-width bars, percentage labels
+    within segments'
   weaknesses:
-  - 'VQ-04: red/green is the dominant channel for the retained/churned distinction;
-    consider adding a subtle secondary cue (e.g. hatch pattern or icon) for full CVD
-    robustness, though position (bottom/top) already helps.'
-  - Title omits the optional descriptive prefix, resulting in a visually light title
-    band relative to the 50–70% width guideline — not required, but a descriptive
-    prefix would strengthen DE-03/DE-01.
-  - 'LM-02: primitive composition is correct but doesn''t showcase more distinctive
-    Makie-specific capabilities.'
+  - Design excellence is strong but stops short of a fully 'publication-ready' treatment
+    -- e.g. no explicit callout/annotation drawing the eye to the headline insight
+    (retention rising monotonically with tier), relying only on left-to-right ordering
+    and color to carry the story
+  - Percentage labels use plain white text on both green and red fills; a slightly
+    darker/mixed tone for the smallest (11%) segment would improve contrast marginally
+    further, though legibility is already acceptable
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Title "bar-spine · julia · makie · anyplot.ai" in bold dark ink, axis labels ("Subscription Tier (bar width ∝ customer count)", "Share of Customers") and tick labels in dark/soft-dark ink — all clearly readable. Borderless legend at right ("Retained", "Churned").
-      Data: Four variable-width stacked bars (Basic, Standard, Premium, Enterprise). Green (#009E73) "Retained" segment at bottom, matte-red (#AE3030) "Churned" segment on top of each bar, both carrying white percentage labels. First categorical series correctly uses brand green under the documented semantic-exception rule (retained/churned is a good/bad pair).
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "SaaS Subscription Churn · bar-spine · julia · makie · anyplot.ai" in dark ink, comfortably sized and fully visible with no clipping. X-axis label "Subscription Tier (bar width ∝ customer count)" and y-axis label "Share of Customers" in dark ink, similarly sized. Tick labels (Basic/Standard/Premium/Enterprise and 0%-100%) in a softer dark gray, all clearly legible. Top/right spines removed, left/bottom spines present in soft gray.
+      Data: Four adjacent bars of varying width (Basic narrowest through mid-width Standard, wider Premium, widest-looking Enterprise proportionally by customer count). Each bar is split into a green "Retained" segment (bottom, #009E73) and a red diagonally-hatched "Churned" segment (top, #AE3030 with darker hatch lines). White percentage labels are centered in each segment (e.g. 52%/48% for Basic, 89%/11% for Enterprise). Legend at right lists "Retained" (solid green swatch) and "Churned" (hatched red swatch).
+      Legibility verdict: PASS -- all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Title and axis/tick labels flip to light ink (near-white/soft-grey) against the dark surface — all clearly readable, no dark-on-dark failures observed.
-      Data: Green and red segment colors are pixel-identical to the light render — confirmed only chrome (background, text, grid, tick colors) changed, data colors held constant.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title and axis labels now rendered in light ink (near-white), tick labels in a lighter soft gray -- clearly legible against the dark surface. Spines and grid follow the same soft-gray treatment adapted for the dark theme.
+      Data: Identical green (#009E73) and hatched red (#AE3030) segments as the light render, in the same tier order and proportions -- confirms only chrome (background, text, spine colors) changed between themes, not the data colors. Percentage labels remain white and legible on both fills.
+      Legibility verdict: PASS -- all text is clearly readable against the dark background; no dark-on-dark failures observed (title, axis labels, and tick labels are all light-colored and distinct from the near-black background).
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; title narrower than the 50-70%
-          guideline since the optional descriptive prefix is omitted, not a legibility
-          issue
+        comment: All font sizes explicitly set (titlesize=20, xlabelsize/ylabelsize=14,
+          tick sizes=12); title fits without clipping; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, segments, or legend
+        comment: No overlap between title, axis labels, tick labels, in-segment percentage
+          labels, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Smallest segment (11%) label still fully legible
+        comment: Bars and segments are large and clearly visible; percentage labels
+          legible even in the thin 11% segment
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Green/red is the dominant channel for retained/churned; documented
-          semantic exception applies and position is a consistent secondary cue, but
-          color remains primary — soft CVD concern
+        passed: true
+        comment: Diagonal hatch pattern on churned segments preserves the good/bad
+          distinction beyond hue for CVD safety
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800), clean proportions, nothing clipped
+        comment: Plot area uses most of the canvas with balanced margins; legend sits
+          close to the plot, not isolated
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units, x-axis explains width encoding
+        comment: Descriptive axis labels; y-axis ticks show % units directly
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct Imprint hex values for the documented semantic exception;
-          both renders theme-correct with identical data colors
+        comment: Correct Imprint semantic-exception use (green=good/retained, red=bad/churned);
+          backgrounds and chrome theme-correct in both renders
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -104,21 +116,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Hand-built spine/mosaic chart from poly!/text! primitives since Makie
-          has no built-in recipe; justified semantic color choice
+        comment: Thoughtful, reasoned color choice and hatch-texture accessibility
+          feature; above a configured default but not fully publication-ready polish
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, borderless legend, generous whitespace
+        comment: Spines removed, legend frame removed, clean stroke separators between
+          segments; some refinement visible
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Tier ordering plus shrinking red segments creates a clear churn-decreases-with-tier
-          narrative
+        comment: Tier ordering plus percentage labels create a visible retention trend,
+          though no explicit annotation calls it out
     spec_compliance:
       score: 15
       max: 15
@@ -128,27 +141,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct spine plot; bar widths verified proportional to marginal
-          tier counts
+        comment: 'Correct spine plot: variable bar widths by marginal frequency, stacked
+          conditional proportions'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Variable widths, stacked conditional segments, adjacent bars, legend,
-          centered labels, percentage labels
+        comment: 'All spec features present: proportional widths, adjacent bars, normalized
+          100% height, legend, centered x labels, percentage labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = tier, Y = share, all tiers and fill categories present
+        comment: X = tier (width-encoded), Y = share of customers 0-100%, correctly
+          mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches exact required format; legend labels match data semantics
+        comment: Title format correct with descriptive prefix; legend labels (Retained/Churned)
+          match the data
     data_quality:
       score: 15
       max: 15
@@ -158,19 +173,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All spine-plot-defining aspects present
+        comment: Wide range of churn rates shown (11% to 48%) across four tiers, demonstrating
+          the concept fully
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SaaS subscription churn by tier is plausible and neutral
+        comment: Neutral, realistic SaaS subscription churn scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Counts and totals are sensible customer-segment magnitudes
+        comment: Customer counts and retention improving with tier are plausible and
+          internally consistent
     code_quality:
       score: 10
       max: 10
@@ -180,61 +197,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, single loop
+        comment: Imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data, no randomness to seed
+        comment: Data is fully deterministic (hardcoded counts), no unseeded randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie and Colors both used
+        comment: CairoMakie and Colors both actively used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Clean, no over-engineering, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct save pattern, uses current size= API instead of deprecated
-          resolution=
+        comment: Saves plot-$(THEME).png via save(...) with px_per_unit=2
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic low-level poly!/text!/Legend composition -- the correct
+          Makie approach since no native spine-plot geom exists
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct low-level primitive composition for a chart type with no
-          built-in Makie recipe
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Solid Rect2f/RGBAf usage but doesn't reach for more distinctive Makie-only
-          capabilities
+        comment: Makie.Pattern hatch texture is a CairoMakie-native feature not trivially
+          replicated in most other libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - manual-ticks
   patterns:
-  - iteration-over-groups
+  - data-generation
   dataprep:
   - cumulative-sum
-  - normalization
   styling:
   - edge-highlighting
-  - grid-styling
+  - hatch-pattern
