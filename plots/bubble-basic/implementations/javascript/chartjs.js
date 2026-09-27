@@ -45,23 +45,30 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-const bubbleData = products.map((p) => ({
+// Best-value product (highest quality per dollar) drives the storytelling
+// highlight below — a genuine insight beyond the raw x/y/size encoding.
+let bestValueProduct = products[0];
+let bestValueScore = -Infinity;
+products.forEach((p) => {
+  const score = p.quality / p.price;
+  if (score > bestValueScore) {
+    bestValueScore = score;
+    bestValueProduct = p;
+  }
+});
+
+// Draw largest bubbles first so smaller ones render on top of them instead of
+// being buried underneath — meaningfully improves individuation in the dense
+// $80-140 cluster where same-size bubbles previously stacked in insert order.
+const orderedProducts = [...products].sort(
+  (a, b) => b.salesVolume - a.salesVolume,
+);
+const bubbleData = orderedProducts.map((p) => ({
   x: p.price,
   y: p.quality,
   r: bubbleRadius(p.salesVolume),
 }));
-
-// Best-value product (highest quality per dollar) drives the storytelling
-// highlight below — a genuine insight beyond the raw x/y/size encoding.
-let bestValueIndex = 0;
-let bestValueScore = -Infinity;
-products.forEach((p, i) => {
-  const score = p.quality / p.price;
-  if (score > bestValueScore) {
-    bestValueScore = score;
-    bestValueIndex = i;
-  }
-});
+const bestValueIndex = orderedProducts.indexOf(bestValueProduct);
 
 // --- Size legend plugin (static key explaining the bubble-area encoding) ---
 // Drawn as an elevated card (ELEVATED_BG + thin rule) rather than bare text
@@ -71,9 +78,12 @@ const sizeLegend = {
   id: "sizeLegend",
   afterDraw(chart) {
     const { ctx, chartArea } = chart;
-    const cx = chartArea.left + R_MAX + 24;
+    // Offset clear of the y-axis tick-label gutter so the card never
+    // overlaps the "10"/"9" labels now that the axis is pinned to 1-10.
+    const left = chartArea.left + 56;
+    const cx = left + R_MAX + 24;
     const spacing = 2 * R_MAX + 20;
-    const panelX = chartArea.left - 16;
+    const panelX = left - 16;
     const panelY = chartArea.top - 4;
     const panelW = 2 * (R_MAX + 12) + 90;
     const panelH = 54 + 2 * R_MAX + (legendValues.length - 1) * spacing;
@@ -85,10 +95,12 @@ const sizeLegend = {
     ctx.strokeStyle = t.grid;
     ctx.lineWidth = 1;
     ctx.stroke();
-    ctx.font = "16px sans-serif";
-    ctx.fillStyle = t.inkSoft;
+    // Bold, higher-contrast header outranks the regular-weight value labels —
+    // a clearer typographic hierarchy than a flat single-weight legend.
+    ctx.font = "bold 16px sans-serif";
+    ctx.fillStyle = t.ink;
     ctx.textAlign = "left";
-    ctx.fillText("Monthly sales (units)", chartArea.left, chartArea.top + 16);
+    ctx.fillText("Monthly sales (units)", left, chartArea.top + 16);
     legendValues.forEach((val, i) => {
       const r = bubbleRadius(val);
       const cy = chartArea.top + 36 + R_MAX + i * spacing;
@@ -99,7 +111,7 @@ const sizeLegend = {
       ctx.lineWidth = 1;
       ctx.strokeStyle = t.inkSoft;
       ctx.stroke();
-      ctx.font = "bold 16px sans-serif";
+      ctx.font = "15px sans-serif";
       ctx.fillStyle = t.inkSoft;
       ctx.fillText(`${Math.round(val)}`, cx + R_MAX + 12, cy + 5);
     });
@@ -114,7 +126,7 @@ const bestValueGlow = {
   id: "bestValueGlow",
   beforeDatasetsDraw(chart) {
     const { ctx, scales } = chart;
-    const p = products[bestValueIndex];
+    const p = bestValueProduct;
     const px = scales.x.getPixelForValue(p.price);
     const py = scales.y.getPixelForValue(p.quality);
     const r = bubbleRadius(p.salesVolume);
@@ -135,7 +147,7 @@ const standoutAnnotation = {
   id: "standoutAnnotation",
   afterDraw(chart) {
     const { ctx, chartArea, scales } = chart;
-    const p = products[bestValueIndex];
+    const p = bestValueProduct;
     const px = scales.x.getPixelForValue(p.price);
     const py = scales.y.getPixelForValue(p.quality);
     // Point below-right when near the top-left legend, otherwise above-right.
@@ -175,9 +187,14 @@ new Chart(canvas, {
         // one) so overlapping bubbles in the dense clusters stay separable from
         // each other, not only from the page.
         backgroundColor: (ctx) =>
-          hexToRgba(t.palette[0], ctx.dataIndex === bestValueIndex ? 0.9 : 0.58),
+          hexToRgba(
+            t.palette[0],
+            ctx.dataIndex === bestValueIndex ? 0.9 : 0.58,
+          ),
         borderColor: (ctx) =>
-          ctx.dataIndex === bestValueIndex ? t.palette[0] : hexToRgba(t.ink, 0.45),
+          ctx.dataIndex === bestValueIndex
+            ? t.palette[0]
+            : hexToRgba(t.ink, 0.65),
         borderWidth: (ctx) => (ctx.dataIndex === bestValueIndex ? 2.5 : 1.5),
       },
     ],
@@ -197,7 +214,7 @@ new Chart(canvas, {
       tooltip: {
         callbacks: {
           label: (ctx) => {
-            const p = products[ctx.dataIndex];
+            const p = orderedProducts[ctx.dataIndex];
             return `Price $${p.price.toFixed(0)} · Quality ${p.quality.toFixed(1)} · Sales ${Math.round(p.salesVolume)} units`;
           },
         },
@@ -205,14 +222,30 @@ new Chart(canvas, {
     },
     scales: {
       x: {
-        ticks: { color: t.inkSoft, font: { size: 14 }, callback: (val) => `$${val}` },
+        ticks: {
+          color: t.inkSoft,
+          font: { size: 14 },
+          callback: (val) => `$${val}`,
+        },
         grid: { color: t.grid },
-        title: { display: true, text: "Price ($)", color: t.ink, font: { size: 16 } },
+        title: {
+          display: true,
+          text: "Price ($)",
+          color: t.ink,
+          font: { size: 16 },
+        },
       },
       y: {
+        min: 1,
+        max: 10,
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
-        title: { display: true, text: "Quality Rating (1–10)", color: t.ink, font: { size: 16 } },
+        title: {
+          display: true,
+          text: "Quality Rating (1–10)",
+          color: t.ink,
+          font: { size: 16 },
+        },
       },
     },
   },

@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' bubble-basic: Basic Bubble Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 92/100 | Updated: 2026-09-27
+#' Quality: 93/100 | Updated: 2026-09-27
 
 library(ggplot2)
 library(dplyr)
@@ -38,17 +38,19 @@ category_params <- tibble::tibble(
     sales_sd  = c(0.70, 0.60, 0.65, 0.60, 0.65)
 )
 
-products <- lapply(seq_len(nrow(category_params)), function(i) {
-    p <- category_params[i, ]
-    tibble::tibble(
-        category     = p$category,
-        price        = pmin(2500, pmax(3, rlnorm(n_per_category, meanlog = p$price_mu, sdlog = p$price_sd))),
-        rating       = pmin(5, pmax(1, rnorm(n_per_category, mean = p$rating_mu, sd = p$rating_sd))),
-        sales_volume = pmin(450000, pmax(300, rlnorm(n_per_category, meanlog = p$sales_mu, sdlog = p$sales_sd))),
-        product_id   = sprintf("%s-%03d", p$code, seq_len(n_per_category))
-    )
-}) |>
-    dplyr::bind_rows() |>
+# Flat, vectorized generation: repeat each category's params n_per_category
+# times, then draw all rows in one rlnorm()/rnorm() call each (both accept
+# vectorized mean/sd arguments) instead of looping per category.
+row_params <- category_params[rep(seq_len(nrow(category_params)), each = n_per_category), ]
+n_total <- nrow(row_params)
+
+products <- tibble::tibble(
+    category     = row_params$category,
+    price        = pmin(2500, pmax(3, rlnorm(n_total, meanlog = row_params$price_mu, sdlog = row_params$price_sd))),
+    rating       = pmin(5, pmax(1, rnorm(n_total, mean = row_params$rating_mu, sd = row_params$rating_sd))),
+    sales_volume = pmin(450000, pmax(300, rlnorm(n_total, meanlog = row_params$sales_mu, sdlog = row_params$sales_sd))),
+    product_id   = sprintf("%s-%03d", row_params$code, rep(seq_len(n_per_category), times = nrow(category_params)))
+) |>
     dplyr::mutate(category = factor(category, levels = category_params$category)) |>
     # Draw largest bubbles first (bottom layer) so smaller bubbles stay
     # visible on top instead of being buried in the dense low-price cluster.
@@ -79,8 +81,8 @@ p <- ggplot(products, aes(
     geom_point(
         shape  = 21,
         color  = PAGE_BG,
-        alpha  = 0.55,
-        stroke = 0.6
+        alpha  = 0.58,
+        stroke = 1.0
     ) +
     geom_segment(
         data        = top_sellers,
@@ -101,6 +103,7 @@ p <- ggplot(products, aes(
         labels = label_dollar(accuracy = 1),
         breaks = c(10, 30, 100, 300, 1000)
     ) +
+    annotation_logticks(sides = "b", color = INK_SOFT, linewidth = 0.25) +
     scale_y_continuous(
         limits = c(0.8, 5.7),
         breaks = 1:5
@@ -114,9 +117,10 @@ p <- ggplot(products, aes(
     ) +
     scale_fill_manual(values = category_colors, name = "Category") +
     labs(
-        title = "bubble-basic · r · ggplot2 · anyplot.ai",
-        x     = "Price ($, log scale)",
-        y     = "Customer Rating (out of 5)"
+        title    = "bubble-basic · r · ggplot2 · anyplot.ai",
+        subtitle = "Bubble size encodes annual sales volume",
+        x        = "Price ($, log scale)",
+        y        = "Customer Rating (out of 5)"
     ) +
     guides(
         fill = guide_legend(override.aes = list(size = 4, alpha = 0.9))
@@ -125,11 +129,13 @@ p <- ggplot(products, aes(
     theme(
         plot.background   = element_rect(fill = PAGE_BG,     color = PAGE_BG),
         panel.background  = element_rect(fill = PAGE_BG,     color = NA),
-        panel.grid.major  = element_line(color = GRID,       linewidth = 0.4),
+        panel.grid.major.x = element_blank(),
+        panel.grid.major.y = element_line(color = GRID,      linewidth = 0.25),
         panel.grid.minor  = element_blank(),
         axis.title        = element_text(color = INK,        size = 10),
         axis.text         = element_text(color = INK_SOFT,   size = 8),
         plot.title        = element_text(color = INK,        size = 12),
+        plot.subtitle     = element_text(color = INK_SOFT,   size = 9, margin = margin(b = 8)),
         legend.background = element_rect(fill = ELEVATED_BG, color = NA),
         legend.text       = element_text(color = INK_SOFT,   size = 8),
         legend.title      = element_text(color = INK,        size = 10),
