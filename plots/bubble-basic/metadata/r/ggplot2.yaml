@@ -2,9 +2,9 @@ library: ggplot2
 language: r
 specification_id: bubble-basic
 created: '2026-05-28T17:41:39Z'
-updated: '2026-09-26T22:47:45Z'
+updated: '2026-09-27T00:02:44Z'
 generated_by: claude-sonnet
-workflow_run: 36276969574
+workflow_run: 36280205654
 issue: 755
 language_version: 4.4.1
 library_version: 3.5.1
@@ -15,43 +15,42 @@ preview_html_dark: null
 quality_score: 92
 review:
   strengths:
-  - 'Correct Imprint palette in canonical order — Africa is #009E73 (brand green,
-    first series), then Americas/Asia/Europe/Oceania follow palette positions 2-5
-    exactly — identical across both themes with theme-correct chrome'
-  - scale_size_area() correctly implements the spec's core requirement (bubble size
-    scaled by area, not radius), paired with a clearly labeled Population size legend
-    (50M/200M/500M/1B breaks)
-  - 'Real, neutral, factually accurate dataset (gapminder 2007: GDP per capita vs.
-    life expectancy vs. population) with China/India/USA population-outlier labels
-    adding a clear storytelling focal point'
-  - Explicit font sizing throughout (axis.title=10, axis.text=8, plot.title=12, legend
-    text/title=8/10) matching style-guide defaults, with a clean minimal theme — no
-    spines, subtle major-only grid on both axes
-  - 'Clean, idiomatic ggplot2 code: KISS structure, single set.seed(42), only used
-    imports, ragg::agg_png device, sensible log-scale x-axis for GDP''s wide range'
+  - Annual Sales size legend now renders all four defined breaks (5K/50K/150K/400K)
+    in both themes, giving the largest bubbles a reference size — fixes the attempt-1
+    defect
+  - Legend background no longer carries a visible outline frame (legend.background/legend.key
+    use color = NA), matching the style guide's decoration-removal checklist
+  - Correct 3-dimension bubble encoding (x = price on a log/$ axis, y = rating, size
+    = sales via area-accurate scale_size_area) plus a well-motivated category color
+    channel
+  - Page-background-colored point stroke (color = PAGE_BG) keeps individual bubble
+    edges distinguishable even where the dense low-price cluster overlaps
+  - Top-3 best-seller callouts with alternating directional leader lines create a
+    genuine focal point and data story
+  - Theme-adaptive chrome verified pixel-correct in both renders; Imprint palette
+    in canonical order with identical data hues across themes
+  - All font sizes explicitly set; clean KISS structure with a fixed seed
   weaknesses:
-  - The 'USA' outlier label sits in a visually dense cluster at the top-right (overlapping
-    Asia/Europe/Americas bubbles packed tightly together) — nudge the label further
-    out or add a short leader line so it doesn't risk touching neighboring bubbles
-  - 5 categorical series (continents) is at the style guide's 'borderline' distinguishability
-    threshold (n=5-6) which recommends redundant encoding (e.g. marker shape) alongside
-    color — not required, but would strengthen accessibility further
-  - The gapminder-bubble treatment (colored continents, log-x GDP vs. life expectancy,
-    population-size bubbles) is a well-known reference pattern rather than a distinctive
-    one-of-a-kind design — a subtle enhancement (e.g. a soft trend guide or continent
-    grouping) could push Design Excellence further
+  - The dense low-price cluster (~$10-$60, Beauty/Apparel/Home & Kitchen) still shows
+    heavy bubble overlap; alpha was only nudged from 0.65 to 0.55 rather than adding
+    jitter or thinning, so colors still blend into a muddier patch there than in the
+    sparser high-price region.
+  - DE-01/DE-02 are solid but not yet at the top of the scale — the composition still
+    reads as a well-executed default rather than a fully custom, art-directed layout.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "bubble-basic · r · ggplot2 · anyplot.ai" in dark ink, top-left, clearly readable. Axis titles "GDP per Capita (log scale)" and "Life Expectancy (years)" in dark ink, tick labels ($500...$50,000 log-scale on x, 40-80 on y) in softer gray-ink, all legible. Subtle gray major gridlines on both axes, no minor grid, no panel border/spines. "Population" and "Continent" legend boxes on the right with thin ink-soft borders on an elevated cream fill — readable.
-      Data: Bubbles colored by continent — Africa green (#009E73, first series as required), Americas lavender, Asia blue, Europe ochre, Oceania red — matching Imprint canonical order 1-5. Bubble size (area-scaled) represents population; alpha ~0.65 handles overlap in the dense mid-GDP cluster. China, India, and USA bubbles are bold-labeled in dark text as population outliers.
-      Legibility verdict: PASS — all text reads clearly against the light background; no light-on-light issues.
+      Chrome: Title "bubble-basic · r · ggplot2 · anyplot.ai" top-left in dark ink (~35% of the plot panel width, well within proportion for a short title). X-axis "Price ($, log scale)" with $10-$1,000 log-spaced ticks; Y-axis "Customer Rating (out of 5)" 1-5. Grid lines are subtle light gray, visible but not competing with data. "Category" and "Annual Sales" legend blocks sit at upper/lower right without a visible outline frame (fixed from attempt 1).
+      Data: Bubbles colored by category — Electronics=green (#009E73, first series), Apparel=lavender, Home & Kitchen=blue, Beauty=ochre, Sports=red — all Imprint categorical hues in canonical order. Bubble size encodes annual sales via scale_size_area; the "Annual Sales" legend now shows all four defined keys (5K/50K/150K/400K), fixing the attempt-1 defect where 400K silently disappeared. Three top-sellers (BEAU-013, APRL-008, BEAU-004) are labeled with bold text and leader lines.
+      Legibility verdict: PASS — title, axis labels, tick labels, and legend text are all clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and axis titles render in light ink (#F0EFE8), tick labels and legend text in softer light-gray ink (#B8B7B0), all clearly legible against the dark surface. Gridlines are a dim, subtle gray, still visible but non-competing. Legend boxes use the elevated dark fill (#242420) with a thin ink-soft border — readable, no dark-on-dark failures.
-      Data: Continent colors are pixel-identical to the light render (green/lavender/blue/ochre/red) — only chrome flipped. Country labels (China, India, USA) remain in light ink, clearly readable against their bubbles.
-      Legibility verdict: PASS — no dark-on-dark text; all labels, ticks, and legend entries remain fully legible.
+      Chrome: Same layout as the light render; title/axis/tick text renders in light ink (#F0EFE8 primary / #B8B7B0 secondary). Grid lines are subtle and visible against the dark surface. Legend blocks again have no visible outline frame.
+      Data: Category colors are identical to the light render (same 5 Imprint hues at the same positions) — only chrome flipped, confirming theme-adaptive tokens were threaded through correctly. The size legend shows the same complete 5K/50K/150K/400K set as the light render.
+      Legibility verdict: PASS — no dark-on-dark failures; all text is clearly readable against the dark background, and the brand green (Electronics) remains visible.
+
+    Both paragraphs describe both renders per the mandatory format.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -59,54 +58,52 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (axis.title=10, axis.text=8, plot.title=12,
-          legend=8/10), matching style-guide defaults; readable in both themes, title
-          well within width bounds
+        comment: All font sizes explicitly set; readable in both themes; title proportion
+          appropriate for its length
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: No text-on-text overlap, but the 'USA' label sits in a tightly packed
-          top-right cluster with some collision risk against neighboring bubbles
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: scale_size_area gives correct area-proportional sizing; alpha=0.65
-          manages overlap well across the density range
+        comment: No text/data collisions; bubble-on-bubble overlap is spec-mandated
+          alpha blending, not a text-overlap defect
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Page-bg-colored point stroke keeps bubble edges distinguishable even
+          in the dense low-price cluster; alpha nudged from 0.65 to 0.55 per attempt-1
+          feedback, though the densest region still blends somewhat
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 5 continent colors are CVD-safe Imprint hues, but at the 'borderline'
-          n=5-6 threshold with no redundant shape/linestyle encoding
+        comment: Good contrast, CVD-safe categorical hues
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills ~70%+ of the canvas, balanced margins, legends adjacent
-          to the plot
+        comment: Plot fills most of the canvas, balanced margins, legend adjacent
+          to plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''GDP per Capita (log scale)'' and ''Life Expectancy (years)'' —
-          descriptive with units/transform noted'
+        comment: Both axes descriptive with units ($ and /5)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Africa); remaining continents follow canonical
-          Imprint order 2-5; theme-correct chrome in both renders'
+        comment: 'Canonical Imprint order, first series #009E73, theme-correct chrome
+          pixel-verified in both renders'
     design_excellence:
       score: 16
       max: 20
@@ -116,23 +113,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful palette application, outlier labeling, and typography
-          clearly above library defaults, though the gapminder-bubble treatment is
-          a familiar reference pattern
+        comment: Log/$ price axis, tiered sales legend now complete, price-ladder
+          category ordering; strong design clearly above defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: No spines, subtle major-only grid, generous margins, polished legend
-          boxes
+        comment: Tuned theme_minimal, generous margins, legend box outline removed
+          per style guide
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: China/India/USA labels create a clear focal point; continent coloring
-          reveals regional wealth/life-expectancy clustering
+        comment: Top-seller callouts with leader lines create a genuine focal point
     spec_compliance:
       score: 15
       max: 15
@@ -142,50 +137,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bubble chart via geom_point + size aesthetic
+        comment: Correct bubble chart (x, y, size)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-based sizing, alpha 0.65 transparency, size legend, balanced
-          min/max bubble sizes — all present
+        comment: Size legend now shows all four defined breaks (5K/50K/150K/400K)
+          — fixes attempt-1 defect
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=gdpPercap, y=lifeExp, size=pop correctly mapped; log-scale x shows
-          full data range
+        comment: X/Y correctly assigned, full data range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend labels (Population,
-          Continent) are correct and descriptive
+        comment: Title format correct; legend labels match category/size data
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Full range of x/y/size variation plus categorical continent grouping
+        comment: Shows most feature-space aspects (price/rating/sales variation across
+          5 categories)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, well-known, neutral gapminder 2007 dataset
+        comment: Real, neutral retail scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Real-world GDP/life-expectancy/population values, factually accurate
+        comment: Price/rating/sales ranges and category ladder are factually plausible
     code_quality:
       score: 10
       max: 10
@@ -207,21 +201,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, scales, ragg, gapminder all actually used
+        comment: Only used packages
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex, no fake functionality
+        comment: Clean, idiomatic, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave with ragg::agg_png to plot-{theme}.png, current API
+        comment: Saves plot-{theme}.png via ragg::agg_png, current API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -229,27 +223,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: scale_size_area, scale_x_log10, guide_legend(override.aes), theme_minimal
-          layering — expert idiomatic usage
+        comment: Idiomatic ggplot2 grammar-of-graphics usage
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: scale_size_area's built-in area-correct scaling and grammar-of-graphics
-          layering are ggplot2-distinctive, though the overall chart type is replicable
-          in other libraries
+        comment: scale_size_area for area-accurate bubble sizing, guide_legend override.aes
+          for legend key styling
   verdict: APPROVED
 impl_tags:
-  dependencies:
-  - gapminder
-  - scales
+  dependencies: []
   techniques:
   - annotations
   - manual-ticks
+  - custom-legend
+  - layer-composition
   patterns:
-  - dataset-loading
+  - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - publication-ready
