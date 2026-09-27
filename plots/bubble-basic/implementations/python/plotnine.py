@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 93/100 | Updated: 2026-09-27
@@ -19,6 +19,7 @@ from plotnine import (
     ggplot,
     guide_legend,
     labs,
+    scale_color_manual,
     scale_fill_manual,
     scale_size_area,
     scale_x_continuous,
@@ -66,8 +67,18 @@ df["region"] = pd.Categorical(df["region"], categories=regions, ordered=True)
 # Plot
 plot = (
     ggplot(df, aes(x="gdp_per_capita", y="life_expectancy", size="population", fill="region"))
+    # Per-region fit (color/fill mapped to region) instead of one pooled trend line —
+    # shows each region's own GDP/life-expectancy slope and confidence band rather than
+    # flattening the four groups into a single line. show_legend=False keeps the legend
+    # limited to the bubble fill key (same scale, so colors already match).
     + geom_smooth(
-        aes(x="gdp_per_capita", y="life_expectancy"), method="lm", se=False, color=INK_SOFT, size=0.7, inherit_aes=False
+        aes(x="gdp_per_capita", y="life_expectancy", color="region", fill="region"),
+        method="lm",
+        se=True,
+        alpha=0.12,
+        size=0.8,
+        inherit_aes=False,
+        show_legend=False,
     )
     # geom_point's default shape already splits fill (region color) from edge
     # (color); fixing color to the page bg gives each bubble a subtle halo that
@@ -87,13 +98,14 @@ plot = (
         guide=guide_legend(override_aes={"fill": INK_SOFT, "color": INK_SOFT, "alpha": 1}),
     )
     + scale_fill_manual(values=IMPRINT_PALETTE[:4], name="Region")
+    + scale_color_manual(values=IMPRINT_PALETTE[:4], guide=None)
     + scale_x_continuous(labels=lambda lst: [f"${v:.0f}k" for v in lst], breaks=[10, 20, 30, 40, 50, 60, 70, 80])
     + scale_y_continuous(labels=lambda lst: [f"{v:.0f}" for v in lst])
     + labs(
         x="GDP per Capita (USD thousands)",
         y="Life Expectancy (years)",
         title="bubble-basic · python · plotnine · anyplot.ai",
-        subtitle="Higher GDP per capita tracks with longer life expectancy across all four regions",
+        subtitle="Each region's own GDP-to-life-expectancy trend, with population size layered on top",
     )
     + theme_minimal()
     + theme(
