@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' bubble-basic: Basic Bubble Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 92/100 | Updated: 2026-09-27
+#' Quality: 92/100 (regen) | Updated: 2026-09-27
 
 library(ggplot2)
 library(dplyr)
@@ -79,8 +79,8 @@ p <- ggplot(products, aes(
     geom_point(
         shape  = 21,
         color  = PAGE_BG,
-        alpha  = 0.55,
-        stroke = 0.6
+        alpha  = 0.48,
+        stroke = 0.9
     ) +
     geom_segment(
         data        = top_sellers,
@@ -114,9 +114,10 @@ p <- ggplot(products, aes(
     ) +
     scale_fill_manual(values = category_colors, name = "Category") +
     labs(
-        title = "bubble-basic · r · ggplot2 · anyplot.ai",
-        x     = "Price ($, log scale)",
-        y     = "Customer Rating (out of 5)"
+        title    = "bubble-basic · r · ggplot2 · anyplot.ai",
+        subtitle = "Bubble size encodes annual sales volume",
+        x        = "Price ($, log scale)",
+        y        = "Customer Rating (out of 5)"
     ) +
     guides(
         fill = guide_legend(override.aes = list(size = 4, alpha = 0.9))
@@ -130,6 +131,7 @@ p <- ggplot(products, aes(
         axis.title        = element_text(color = INK,        size = 10),
         axis.text         = element_text(color = INK_SOFT,   size = 8),
         plot.title        = element_text(color = INK,        size = 12),
+        plot.subtitle     = element_text(color = INK_SOFT,   size = 9, margin = margin(b = 8)),
         legend.background = element_rect(fill = ELEVATED_BG, color = NA),
         legend.text       = element_text(color = INK_SOFT,   size = 8),
         legend.title      = element_text(color = INK,        size = 10),
