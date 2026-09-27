@@ -44,6 +44,11 @@ class TestStatistics:
         assert m.pooled_sd([[1, 3], [5, 5], [7]]) == pytest.approx(1.0)
         assert m.pooled_sd([[1], [2]]) is None
 
+    def test_pooled_sd_weights_units_by_degrees_of_freedom(self):
+        # var([80, 90, 80, 90, 80]) = 30 on 4 df, var([88, 90]) = 2 on 1 df:
+        # (4 * 30 + 1 * 2) / (4 + 1) = 24.4, not the unweighted (30 + 2) / 2 = 16.
+        assert m.pooled_sd([[80, 90, 80, 90, 80], [88, 90], [70]]) == pytest.approx(math.sqrt(24.4))
+
     def test_flip_rate(self):
         assert m.flip_rate([[90, 90], [88, 90], [70]]) == 0.5
         assert m.flip_rate([[1]]) is None
@@ -106,6 +111,14 @@ class TestFreshMetrics:
         assert vq01["flip"] == 0.5
         assert group["weaknesses"]["below_max_without_limiting_word"] == pytest.approx(1 / 3)
         assert group["noisiest_criteria"][0]["id"] == "VQ-01"
+
+    def test_totals_pool_unequal_run_counts_by_degrees_of_freedom(self):
+        # Unit a kept five runs, unit b lost one of its three to a usage limit.
+        records = [_rec("a", r, s) for r, s in enumerate((80, 90, 80, 90, 80), 1)]
+        records += [_rec("b", 1, 88), _rec("b", 2, 90)]
+        typed = m.group_metrics(records, {})["total"]["typed"]
+        assert typed["sd"] == pytest.approx(math.sqrt((4 * 30 + 1 * 2) / 5))
+        assert typed["n_units"] == 2
 
     def test_auto_reject_units_are_reported_apart(self):
         records = [_rec("a", 1, 0), _rec("a", 2, 90), _rec("b", 1, 88), _rec("b", 2, 90)]
@@ -258,6 +271,16 @@ class TestCompare:
         assert fresh["delta_mean_ci"] is not None
         assert "model changed" in result["flags"]
         assert not any(f.startswith("noise up") for f in result["flags"])
+
+    def test_delta_sd_pools_unequal_run_counts_by_degrees_of_freedom(self):
+        base = [_rec("a", r, s) for r, s in enumerate((80, 90, 80, 90, 80), 1)]
+        base += [_rec("b", 1, 88), _rec("b", 2, 90)]
+        cand = [_rec("a", r, 85) for r in range(1, 6)] + [_rec("b", 1, 88), _rec("b", 2, 90)]
+        fresh = m.compare_arms(base, cand, {})["kinds"]["fresh"]
+        # Candidate (4 * 0 + 1 * 2) / 5, baseline (4 * 30 + 1 * 2) / 5; the
+        # unweighted mean of the variances would give sqrt(1) - sqrt(16) = -3.
+        assert fresh["delta_sd"] == pytest.approx(math.sqrt(2 / 5) - math.sqrt(122 / 5))
+        assert fresh["delta_sd_ci"] is not None
 
     def test_noise_up_flag(self):
         base = [_rec(i, r, 90) for i in "abcd" for r in (1, 2)]

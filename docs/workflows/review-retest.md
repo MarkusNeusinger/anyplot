@@ -116,7 +116,7 @@ The prep job also refuses more than 240 sessions, and regen cells on rules older
 
 Every metric is grouped by kind (fresh or regen) and resolved model. A cell whose session named no model forms its own `unresolved (<alias>)` group, and any unresolved group raises the "model changed" flag in a comparison. A *unit* is an item for fresh cells and an item-order for regen cells.
 
-- **Criteria.** Per criterion: mean, the share of runs at the maximum (a ceiling effect, not reliability), the pooled within-unit standard deviation, and the flip rate (units whose runs differ).
+- **Criteria.** Per criterion: mean, the share of runs at the maximum (a ceiling effect, not reliability), the pooled within-unit standard deviation, and the flip rate (units whose runs differ). Every pooled standard deviation in the report weights each unit by its degrees of freedom (runs − 1), so a unit that lost runs to a usage limit counts for less.
 - **Totals.** The typed score (`quality_score.txt`) and the checklist sum, each with its pooled standard deviation, and the share of runs where they differ. Units with an auto-reject run are listed apart, because 0 against 90 would swamp any spread.
 - **Verdicts.** Fresh units whose runs straddle the approval line of 90, and the pairwise disagreement rate.
 - **Weaknesses.** Count per review; the mean pairwise topic Jaccard within a unit (taxonomy `topics-v1`); a Jaccard on criterion IDs when weaknesses start with one; the share of "add X" weaknesses; the share of below-maximum comments with no limiting word.

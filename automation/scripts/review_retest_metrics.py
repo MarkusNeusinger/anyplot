@@ -94,9 +94,18 @@ def mean(values: Iterable[float]) -> float | None:
 
 
 def pooled_sd(groups: Iterable[Sequence[float]]) -> float | None:
-    """``sqrt(mean_i var_ddof1)`` over the groups that hold at least two values."""
-    variances = [statistics.variance(g) for g in groups if len(g) >= 2]
-    return math.sqrt(sum(variances) / len(variances)) if variances else None
+    """``sqrt(sum_g (n_g - 1) var_g / sum_g (n_g - 1))`` over the groups of two or more values.
+
+    Pooled by degrees of freedom: a unit with five runs weighs twice as much
+    as one with three, so a unit that lost runs to a usage limit doesn't
+    count as much as a complete one. With equal run counts this is the mean
+    of the variances.
+    """
+    eligible = [g for g in groups if len(g) >= 2]
+    dof = sum(len(g) - 1 for g in eligible)
+    if not dof:
+        return None
+    return math.sqrt(sum((len(g) - 1) * statistics.variance(g) for g in eligible) / dof)
 
 
 def flip_rate(groups: Iterable[Sequence[float]], threshold: float = 1) -> float | None:

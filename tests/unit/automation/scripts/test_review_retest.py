@@ -1019,7 +1019,8 @@ class TestReport:
         assert "| Metric | Baseline | Candidate | Δ (95% CI) |" in snippet
         assert f"rules {A[:7]} → {B[:7]}" in snippet
         row = next(line for line in snippet.splitlines() if line.startswith("| Total mean"))
-        # Baseline pooled SD: sqrt((var[86, 92] + var[80, 84]) / 2) = sqrt((18 + 8) / 2) = 3.6.
+        # Baseline pooled SD, one degree of freedom per unit:
+        # sqrt((1 * var[86, 92] + 1 * var[80, 84]) / (1 + 1)) = sqrt((18 + 8) / 2) = 3.6.
         assert row.startswith("| Total mean / pooled within-item SD (typed) | 85.5 / 3.6 | 86.0 / 0.0 | 0.5 (")
         assert " / -3.6 (" in row
 
