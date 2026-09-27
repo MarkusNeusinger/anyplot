@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
 Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 84/100 | Updated: 2026-09-27
@@ -87,11 +87,12 @@ anyplot_theme = theme(
     panel_background=element_rect(fill=PAGE_BG),
     panel_grid_major=element_blank(),
     panel_grid_minor=element_blank(),
-    panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
+    panel_border=element_blank(),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
     axis_title=element_text(color=INK, size=10),
     axis_text=element_text(color=INK_SOFT, size=8),
     axis_ticks=element_line(color=INK_SOFT),
-    plot_title=element_text(color=INK, size=11, weight="bold"),
+    plot_title=element_text(color=INK, size=10, weight="bold"),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(color=INK_SOFT, size=8),
     legend_title=element_text(color=INK, size=8),
