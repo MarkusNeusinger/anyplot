@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: bubble-basic
 created: 2025-12-14 11:07:38+00:00
-updated: '2026-09-27T02:48:37Z'
+updated: '2026-09-27T02:55:36Z'
 generated_by: claude-sonnet
 workflow_run: 36289070738
 issue: 755
@@ -12,9 +12,13 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 96
 review:
   strengths:
+  - 'The previous review''s blocking issue — the ''Series A · $54.0M'' callout colliding
+    with the rotated ''Revenue ($M)'' axis title — is fixed: the label is now left-aligned
+    with a positive dx that pushes it rightward into the plot instead of into the
+    axis-title gutter, confirmed clean in both renders.'
   - 'Sophisticated Altair-native storytelling: a Vega-Lite regression trend line (transform_regression)
     sits under the bubbles, three narratively meaningful companies (top performer,
     capital-inefficient laggard, capital-efficient climber) get stroke-only highlight
@@ -33,51 +37,46 @@ review:
     PIL for the mandatory canvas pad-to-target step), no functions/classes, correct
     plot-{theme}.png/.html output.'
   weaknesses:
-  - 'The ''Series A · $54.0M'' callout annotation collides with the rotated ''Revenue
-    ($M)'' y-axis title in BOTH light and dark renders — the ''S'' in ''Series'' overlaps
-    the axis-title letters so both are partially illegible right at the intersection
-    (bottom-left corner of the plot area, near y=54). Fix: give this specific annotation
-    more dx/dy clearance from the axis title zone (e.g. push dx further negative and
-    dy further so the label sits fully inside the plot rather than at the extreme
-    left edge), or nudge the x-domain/left padding so left-edge annotations don''t
-    collide with the axis title.'
-  - Design Excellence execution has a rough edge (the same annotation-collision bug)
-    that keeps DE-02 (Visual Refinement) from full marks despite otherwise strong
-    polish — fixing the label placement above should also resolve this.
+  - The Seed/Series A cluster in the bottom-left (low funding, low revenue) still
+    has substantial bubble overlap that makes individual segment-share sizes hard
+    to distinguish at a glance — a minor readability tax on an otherwise legible chart,
+    not severe enough to fail VQ-02/VQ-03 given the existing alpha and draw-order
+    handling.
+  - Aesthetic sophistication (DE-01) is strong but stops short of a fully 'FiveThirtyEight'
+    publication feel — reserve remaining headroom for even tighter typographic hierarchy
+    between title/subtitle/legend if revisited.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Bold dark title "bubble-basic · python · altair · anyplot.ai" centered at top, gray subtitle below it, dark "Funding ($M)" / "Revenue ($M)" axis titles, gray tick labels, subtle light-gray gridlines on both axes. All clearly readable EXCEPT one localized collision: the "Series A · $54.0M" callout label overlaps the rotated "Revenue ($M)" axis title at the bottom-left of the plot, where the first letters of each string visually interleave.
-      Data: Bubbles colored by Stage — Seed=#009E73 (green, first series, correct), Series A=lavender/purple, Series B=blue, Growth=ochre — matching the canonical Imprint order. Size legend "Segment Share (%)" uses neutral gray swatches (correct, since it's a size encoding, not a hue). Two dashed-line trend and three highlighted/annotated outlier bubbles (Growth·$103.0M, Series A·$54.0M, Series B·$7.2M) are visible.
-      Legibility verdict: FAIL (localized) — the "Series A · $54.0M" / "Revenue ($M)" text collision described above; everything else passes.
+      Chrome: Bold dark title "bubble-basic · python · altair · anyplot.ai" centered at top, gray subtitle "Tech Startup Metrics — Funding vs Revenue by Stage & Segment Share" below it, dark "Funding ($M)" / "Revenue ($M)" axis titles, gray tick labels, subtle light-gray gridlines on both axes. The previously reported collision between the "Series A · $54.0M" callout and the rotated "Revenue ($M)" axis title is GONE in this render — the label now sits left-aligned above/right of its bubble, fully clear of the axis-title gutter. All text is readable.
+      Data: Bubbles colored by Stage — Seed=#009E73 (green, first series, correct), Series A=lavender/purple, Series B=blue, Growth=ochre — matching the canonical Imprint order. Size legend "Segment Share (%)" uses neutral gray swatches at 10/25/40/55 (correct, since it's a size encoding, not a hue). A dashed regression trend line and three highlighted/annotated outlier bubbles (Growth · $103.0M, Series A · $54.0M, Series B · $7.2M) are clearly visible with no overlap among them or with axis chrome.
+      Legibility verdict: PASS — no dark-on-light or light-on-light failures, no remaining label/axis-title collision.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title and axis titles in light/off-white, tick labels and subtitle in light gray, gridlines in light gray at low opacity — all readable against the dark surface, no dark-on-dark failures. Legend box uses the elevated dark fill (#242420), text readable.
-      Data: Same four Stage colors as the light render (Seed green identical hex, Series A/B/Growth identical hex) — only chrome flipped, confirming palette-vs-theme separation is implemented correctly. Highlight rings on the three outliers are now light-colored (INK for dark theme) instead of dark, correctly following the theme-adaptive ink token.
-      Legibility verdict: FAIL (localized) — the identical "Series A · $54.0M" vs "Revenue ($M)" collision reproduces in this render too (same layout, different theme), confirming this is a layout bug rather than a theme-specific coloring issue.
+      Chrome: Title and axis titles in light/off-white, tick labels and subtitle in light gray, gridlines in light gray at low opacity — all readable against the dark surface, no dark-on-dark failures. Legend box uses the elevated dark fill (#242420), text readable. The "Series A · $54.0M" label sits clear of the y-axis title here too, confirming the fix is theme-independent.
+      Data: Same four Stage colors as the light render (Seed green identical hex, Series A/B/Growth identical hex) — only chrome flipped, confirming palette-vs-theme separation is implemented correctly. Highlight rings on the three outliers are light-colored (INK for dark theme) instead of dark, correctly following the theme-adaptive ink token.
+      Legibility verdict: PASS — all text readable, no dark-on-dark, no clipping, no collisions.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 16, subtitle 12, axis 12, legend
-          11/12, annotations 12), well-proportioned and readable in both themes; the
-          Series A/Revenue-axis-title collision (see VQ-02) locally reduces legibility
-          at one spot.
+          11/12, annotations 12); the prior 'Series A' / axis-title collision that
+          hurt legibility is fixed; well-proportioned and readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: '''Series A · $54.0M'' callout overlaps the ''Revenue ($M)'' y-axis
-          title in both renders — main content elsewhere is readable, so this is minimal/localized
-          rather than widespread overlap.'
+        passed: true
+        comment: The 'Series A · $54.0M' callout no longer overlaps the 'Revenue ($M)'
+          y-axis title in either render; no other collisions observed.
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -111,25 +110,25 @@ review:
         comment: 'First series #009E73, canonical order for remaining stages, correct
           theme-adaptive backgrounds/chrome in both renders.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
         comment: Custom palette, trend line, highlight rings and callouts show intentional
-          hierarchy, clearly above library defaults; docked slightly since the label-collision
-          undercuts the polish.
+          hierarchy, clearly above library defaults; the label-collision rough edge
+          from the prior review is now resolved.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
         comment: Axis domain/ticks removed, subtle grid, generous whitespace, clean
-          legend — good refinement, but the annotation/axis-title collision is a rough
-          edge.
+          legend; the annotation/axis-title collision that previously docked this
+          is fixed.
       - id: DE-03
         name: Data Storytelling
         score: 5
@@ -246,7 +245,7 @@ review:
         passed: true
         comment: transform_regression and legend-bound alt.selection_point are declarative
           Vega-Lite capabilities not easily replicated in other libraries.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
