@@ -78,6 +78,9 @@ from automation.scripts.regen_gate import (
 )
 
 
+# Bump when a harness change alters what a session sees or what a record
+# measures: resume (split_resume) and compare_arms treat another version as
+# another arm, and neither compares the dispatch commit.
 HARNESS_VERSION = "1"
 MAX_SESSIONS = 240
 # First commit whose regen_gate.py has `context --omit-scores` (the blind
@@ -585,6 +588,55 @@ def load_records(path: Path | None) -> list[dict[str, Any]]:
     return records
 
 
+def _provenance_text(value: Any) -> str:
+    if value in (None, ""):
+        return "missing"
+    text = str(value)
+    return text[:10] if re.fullmatch(r"[0-9a-f]{40}", text) else text
+
+
+def split_resume(
+    records: Sequence[dict[str, Any]], cells: Sequence[dict[str, Any]], arm: dict[str, str]
+) -> tuple[dict[str, dict[str, Any]], list[dict[str, str]], int]:
+    """Which successful resumed records may stand in for a planned cell.
+
+    A record fills its cell only when it was measured the way this arm
+    measures: the same ``arm`` values (set, harness version, action pin,
+    rules commit, spec source) and the cell's own model alias. The cell id
+    already fixes the item, the order and the run, so ``orders`` and ``runs``
+    change which cells exist, never what one means. The dispatch commit
+    (``harness_sha``) is not compared: ``main`` moves with every merge, and
+    ``HARNESS_VERSION`` plus the action pin are the harness's measurement
+    identity, the same pair ``compare_arms`` flags as "harness changed". A
+    missing or ``n/a`` value never matches.
+
+    Returns the accepted records by cell id, the rejected ones with their
+    reason, and how many successful records name a cell outside this plan.
+    """
+    by_id = {c["id"]: c for c in cells}
+    accepted: dict[str, dict[str, Any]] = {}
+    rejected: list[dict[str, str]] = []
+    unused = 0
+    for record in records:
+        if not record.get("ok"):
+            continue
+        cell = by_id.get(str(record.get("cell")))
+        if cell is None:
+            unused += 1
+            continue
+        expected = {**arm, "model_alias": cell["model"]}
+        diffs = [
+            f"{field} {_provenance_text(record.get(field))} != {_provenance_text(value)}"
+            for field, value in expected.items()
+            if value in (None, "", "n/a") or record.get(field) != value
+        ]
+        if diffs:
+            rejected.append({"cell": cell["id"], "reason": "; ".join(diffs)})
+        else:
+            accepted[cell["id"]] = record
+    return accepted, rejected, unused
+
+
 def plan(
     manifest: dict[str, Any],
     *,
@@ -596,6 +648,8 @@ def plan(
     repo: Path,
     lister: RunLister | None,
     resume_records: Sequence[dict[str, Any]] = (),
+    action_sha: str = "n/a",
+    spec_source: str = "pinned",
     now: datetime | None = None,
     ancestor: Callable[[Path, str, str], bool] | None = None,
 ) -> dict[str, Any]:
@@ -605,9 +659,16 @@ def plan(
         raise HarnessError("runs must be between 1 and 10")
     items = resolve_subset(manifest, subset)
     cells = build_cells(manifest, items, models, runs, orders)
-    done = {r["cell"] for r in resume_records if r.get("ok")}
-    resumed = [c for c in cells if c["id"] in done]
-    cells = [c for c in cells if c["id"] not in done]
+    arm = {
+        "set": manifest["set"],
+        "harness_version": HARNESS_VERSION,
+        "action_sha": action_sha,
+        "rules_sha": rules_sha,
+        "spec_source": spec_source,
+    }
+    resumed, rejected, unused = split_resume(resume_records, cells, arm)
+    resumed_ids = [c["id"] for c in cells if c["id"] in resumed]
+    cells = [c for c in cells if c["id"] not in resumed]
     if len(cells) > MAX_SESSIONS:
         raise HarnessError(f"{len(cells)} sessions exceed the cap of {MAX_SESSIONS}; narrow the subset or the runs")
     if any(c["kind"] == "regen" for c in cells) and not ancestor(repo, GATE_MIN_COMMIT, rules_sha):
@@ -626,7 +687,10 @@ def plan(
     return {
         "cells": cells,
         "items": needed,
-        "resumed": len(resumed),
+        "resumed": len(resumed_ids),
+        "resumed_cells": resumed_ids,
+        "resume_rejected": rejected,
+        "resume_unused": unused,
         "sessions": len(cells),
         "by_model": {
             f"{kind}/{model}": sum(1 for c in cells if (c["kind"], c["model"]) == (kind, model))
@@ -1095,6 +1159,7 @@ def collect(
         "harness_sha": prov.get("harness_sha", "n/a"),
         "rules_sha": prov.get("rules_sha", "n/a"),
         "action_sha": prov.get("action_sha", "n/a"),
+        "spec_source": prov.get("spec_source", "n/a"),
         "ok": error_class == "",
         "error_class": error_class,
         "review_outcome": review_outcome,
@@ -1787,24 +1852,50 @@ def cmd_plan(args: argparse.Namespace) -> int:
         repo=Path(args.repo),
         lister=None if args.skip_idle_check else gh_run_lister,
         resume_records=resume,
+        action_sha=args.action_sha,
+        spec_source=args.spec_source,
     )
     summary = (
         f"{result['sessions']} sessions ({', '.join(f'{k} {v}' for k, v in result['by_model'].items()) or 'none'}), "
         f"{result['resumed']} resumed, about ${result['estimate_usd']:.0f} API-equivalent"
     )
     print(f"::notice::review retest plan: {summary}")
+    resume_lines = resume_log(result["resume_rejected"], result["resume_unused"])
+    for line in resume_lines:
+        print(f"::warning::{line}")
     write_outputs(
         {
             "matrix": json.dumps(result["cells"], separators=(",", ":")),
             "items": ",".join(result["items"]),
             "sessions": str(result["sessions"]),
+            "resumed": ",".join(result["resumed_cells"]),
         }
     )
     step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if step_summary:
         with open(step_summary, "a", encoding="utf-8") as f:
             f.write(f"### Review retest plan\n\n{summary}. Items: {', '.join(result['items']) or 'none'}.\n\n")
+            if resume_lines:
+                f.write("".join(f"- {line}\n" for line in resume_lines) + "\n")
     return 0
+
+
+def resume_log(rejected: Sequence[dict[str, str]], unused: int) -> list[str]:
+    """One line per distinct rejection reason, with its count and first cells."""
+    by_reason: dict[str, list[str]] = {}
+    for entry in rejected:
+        by_reason.setdefault(entry["reason"], []).append(entry["cell"])
+    lines = [
+        f"resume: {len(cells)} record(s) rejected and run again ({reason}): "
+        + ", ".join(cells[:3])
+        + (f" and {len(cells) - 3} more" if len(cells) > 3 else "")
+        for reason, cells in by_reason.items()
+    ]
+    if unused:
+        lines.append(
+            f"resume: {unused} successful record(s) name cells outside this plan (subset, runs, orders) and are not used"
+        )
+    return lines
 
 
 def cmd_bundle(args: argparse.Namespace) -> int:
@@ -1856,6 +1947,7 @@ def cmd_collect(args: argparse.Namespace) -> int:
             "harness_sha": args.harness_sha,
             "rules_sha": args.rules_sha,
             "action_sha": args.action_sha,
+            "spec_source": args.spec_source,
         },
     )
     print(
@@ -1870,9 +1962,15 @@ def cmd_report(args: argparse.Namespace) -> int:
     manifest = load_manifest(Path(args.manifest))
     lock_path = Path(args.lock)
     lock_sha = sha256_bytes(lock_path.read_bytes()) if lock_path.is_file() else "unfrozen"
-    records = merge_records(
-        load_records(Path(args.resume_records)) if args.resume_records else [], load_cell_records(Path(args.cells))
-    )
+    resumed = load_records(Path(args.resume_records)) if args.resume_records else []
+    if resumed:
+        # Only the cells plan reused (its compatibility check) are merged: a
+        # record plan rejected ran again, and must not survive a failed rerun.
+        if args.resumed_cells is None:
+            raise HarnessError("--resume-records needs --resumed-cells, the cells plan reused (its resumed output)")
+        reused = {c for c in args.resumed_cells.split(",") if c}
+        resumed = [r for r in resumed if r.get("ok") and r.get("cell") in reused]
+    records = merge_records(resumed, load_cell_records(Path(args.cells)))
     base = load_records(Path(args.compare_records)) if args.compare_records else []
     payload = report(
         records,
@@ -1969,6 +2067,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--rules-sha", required=True)
     p.add_argument("--repo", default=".")
     p.add_argument("--resume-records", default="")
+    p.add_argument("--action-sha", default="n/a", help="the claude-code-action pin (resumed records must match)")
+    p.add_argument("--spec-source", default="pinned", choices=["pinned", "rules_ref"])
     p.add_argument("--skip-idle-check", action="store_true", help="local dry runs only")
     p.set_defaults(func=cmd_plan)
 
@@ -2006,6 +2106,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--harness-sha", default="n/a")
     p.add_argument("--rules-sha", default="n/a")
     p.add_argument("--action-sha", default="n/a")
+    p.add_argument("--spec-source", default="n/a")
     p.set_defaults(func=cmd_collect)
 
     p = sub.add_parser("report", help="Aggregate cell records into the report")
@@ -2020,6 +2121,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--run-url", default="")
     p.add_argument("--compare-records", default="")
     p.add_argument("--resume-records", default="")
+    p.add_argument(
+        "--resumed-cells",
+        default=None,
+        help="comma-separated cell ids plan reused (its resumed output); required with --resume-records",
+    )
     p.set_defaults(func=cmd_report)
 
     p = sub.add_parser("gate-report", help="Aggregate production regen-gate records (needs gh)")

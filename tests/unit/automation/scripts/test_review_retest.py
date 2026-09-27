@@ -27,6 +27,7 @@ MANIFEST = REPO_ROOT / "automation" / "retest" / "set-v1.yaml"
 NOW = datetime(2026, 10, 1, 12, 0, tzinfo=timezone.utc)
 A = "a" * 40
 B = "b" * 40
+ACTION = "c" * 40
 
 pytestmark = pytest.mark.skipif(shutil.which("git") is None, reason="needs git")
 
@@ -259,6 +260,7 @@ def _plan(manifest=None, **kwargs):
         "runs": 3,
         "orders": "both",
         "rules_sha": B,
+        "action_sha": ACTION,
         "repo": REPO_ROOT,
         "lister": lambda wf, status: [],
         "now": NOW,
@@ -266,6 +268,23 @@ def _plan(manifest=None, **kwargs):
     }
     params.update(kwargs)
     return rt.plan(manifest or _manifest(), **params)
+
+
+def _resumed(cell: str, model_alias: str = "opus", **overrides: Any) -> dict[str, Any]:
+    """A successful record of an earlier run of the arm ``_plan`` plans."""
+    record = {
+        "cell": cell,
+        "ok": True,
+        "set": "v1",
+        "harness_version": rt.HARNESS_VERSION,
+        "action_sha": ACTION,
+        "rules_sha": B,
+        "spec_source": "pinned",
+        "model_alias": model_alias,
+        "harness_sha": A,  # the dispatch commit: never compared
+    }
+    record.update(overrides)
+    return record
 
 
 class TestPlan:
@@ -337,13 +356,79 @@ class TestPlan:
 
     def test_resume_skips_successful_cells(self):
         done = [
-            {"cell": "f-bubble-basic-matplotlib__r1", "ok": True},
-            {"cell": "f-bubble-basic-matplotlib__r2", "ok": False},
+            _resumed("f-bubble-basic-matplotlib__r1"),
+            _resumed("f-bubble-basic-matplotlib__r2", ok=False),
+            _resumed("r-bubble-basic-matplotlib-b-a__rev__r1", model_alias="sonnet", harness_sha=B),
         ]
         result = _plan(resume_records=done)
-        assert result["resumed"] == 1
-        assert result["sessions"] == 8
+        assert result["resumed"] == 2
+        assert result["resumed_cells"] == ["f-bubble-basic-matplotlib__r1", "r-bubble-basic-matplotlib-b-a__rev__r1"]
+        assert result["resume_rejected"] == [] and result["resume_unused"] == 0
+        assert result["sessions"] == 7
         assert "f-bubble-basic-matplotlib__r1" not in {c["id"] for c in result["cells"]}
+
+    def test_resume_rejects_a_record_from_other_rules(self):
+        done = [_resumed("f-bubble-basic-matplotlib__r1", rules_sha=A), _resumed("f-bubble-basic-matplotlib__r2")]
+        result = _plan(resume_records=done)
+        assert result["resumed_cells"] == ["f-bubble-basic-matplotlib__r2"]
+        assert "f-bubble-basic-matplotlib__r1" in {c["id"] for c in result["cells"]}
+        assert result["resume_rejected"] == [
+            {"cell": "f-bubble-basic-matplotlib__r1", "reason": f"rules_sha {A[:10]} != {B[:10]}"}
+        ]
+
+    def test_resume_rejects_a_record_from_another_model(self):
+        # models=sonnet: the fresh cell ran on Opus under production routing, the
+        # regen cell on Sonnet either way — only the regen record measures the same.
+        done = [
+            _resumed("f-bubble-basic-matplotlib__r1", model_alias="opus"),
+            _resumed("r-bubble-basic-matplotlib-b-a__fwd__r1", model_alias="sonnet"),
+        ]
+        result = _plan(models="sonnet", resume_records=done)
+        assert result["resumed_cells"] == ["r-bubble-basic-matplotlib-b-a__fwd__r1"]
+        assert result["resume_rejected"] == [
+            {"cell": "f-bubble-basic-matplotlib__r1", "reason": "model_alias opus != sonnet"}
+        ]
+
+    @pytest.mark.parametrize(
+        ("field", "value"),
+        [
+            ("set", "v0"),
+            ("harness_version", "0"),
+            ("action_sha", A),
+            ("spec_source", "rules_ref"),
+            ("rules_sha", None),  # no provenance can't be shown to match
+            ("action_sha", "n/a"),
+        ],
+    )
+    def test_resume_rejects_any_other_measurement(self, field, value):
+        cell = "f-bubble-basic-matplotlib__r1"
+        record = _resumed(cell, **{field: value})
+        if value is None:
+            del record[field]
+        result = _plan(resume_records=[record])
+        assert result["resumed"] == 0 and result["sessions"] == 9
+        assert result["resume_rejected"][0]["reason"].startswith(f"{field} ")
+
+    def test_resume_without_a_known_action_pin_reuses_nothing(self):
+        result = _plan(action_sha="n/a", resume_records=[_resumed("f-bubble-basic-matplotlib__r1", action_sha="n/a")])
+        assert result["resumed"] == 0
+        assert result["resume_rejected"][0]["reason"] == "action_sha n/a != n/a"
+
+    def test_resume_records_outside_the_plan_are_unused(self):
+        done = [_resumed("f-scatter-basic-ggplot2__r1"), _resumed("f-bubble-basic-matplotlib__r4")]
+        result = _plan(resume_records=done)
+        assert result["resumed"] == 0 and result["resume_rejected"] == []
+        assert result["resume_unused"] == 2
+
+    def test_resume_log_groups_reasons(self):
+        rejected = [{"cell": f"c{i}", "reason": "rules_sha aaaaaaaaaa != bbbbbbbbbb"} for i in range(5)]
+        rejected.append({"cell": "d1", "reason": "model_alias opus != sonnet"})
+        lines = rt.resume_log(rejected, unused=2)
+        assert lines == [
+            "resume: 5 record(s) rejected and run again (rules_sha aaaaaaaaaa != bbbbbbbbbb): c0, c1, c2 and 2 more",
+            "resume: 1 record(s) rejected and run again (model_alias opus != sonnet): d1",
+            "resume: 2 successful record(s) name cells outside this plan (subset, runs, orders) and are not used",
+        ]
 
     def test_idle_check_that_cannot_list_runs_refuses(self, monkeypatch):
         def failing_run(args, **kwargs):
@@ -732,9 +817,11 @@ class TestCollect:
                 "harness_sha": A,
                 "action_sha": "x",
                 "prompts_tree": "t",
+                "spec_source": "pinned",
             },
         )
         assert record["ok"] is True and record["error_class"] == ""
+        assert record["spec_source"] == "pinned"  # plan's resume check compares it
         assert record["model"] == "claude-sonnet-5"
         assert record["model_alias"] == "sonnet"
         assert record["cost_usd"] == 0.61 and record["turns"] == 20
@@ -1672,6 +1759,56 @@ class TestCli:
         assert all(set(c) >= {"id", "item", "kind", "spec_id", "library", "order", "run", "model"} for c in cells)
         assert len({c["id"] for c in cells}) == len(cells)
         assert all(re.fullmatch(r"[a-z0-9_-]+", c["id"]) for c in cells)  # safe artifact names
+
+    def test_plan_reports_reused_and_rejected_resume_records(self, tmp_path, monkeypatch, capsys):
+        manifest = yaml.safe_load(MANIFEST.read_text(encoding="utf-8"))
+        rules = manifest["baseline_rules_sha"]
+        lock_file = tmp_path / "lock.json"
+        lock_file.write_text(json.dumps({"version": 1, "set": "v1", "objects": {}}), encoding="utf-8")
+        resume = tmp_path / "records.jsonl"
+        kept = _resumed("f-bubble-basic-ggplot2__r1", rules_sha=rules)
+        other_rules = _resumed("f-bubble-basic-ggplot2__r2", rules_sha=B)
+        resume.write_text("".join(json.dumps(r) + "\n" for r in (kept, other_rules)), encoding="utf-8")
+        out = tmp_path / "gh_output"
+        monkeypatch.setenv("GITHUB_OUTPUT", str(out))
+        monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+        monkeypatch.setattr(rt, "is_ancestor", lambda repo, a, b: True)
+        args = ["plan", "--manifest", str(MANIFEST), "--lock", str(lock_file), "--rules-sha", rules]
+        args += ["--action-sha", ACTION, "--resume-records", str(resume), "--repo", str(REPO_ROOT)]
+        assert rt.main([*args, "--subset", "f-bubble-basic-ggplot2", "--skip-idle-check"]) == 0
+        values = dict(line.split("=", 1) for line in out.read_text(encoding="utf-8").splitlines())
+        assert values["resumed"] == "f-bubble-basic-ggplot2__r1"
+        assert [c["id"] for c in json.loads(values["matrix"])] == [
+            "f-bubble-basic-ggplot2__r2",
+            "f-bubble-basic-ggplot2__r3",
+        ]
+        stdout = capsys.readouterr().out
+        assert (
+            f"::warning::resume: 1 record(s) rejected and run again (rules_sha {B[:10]} != {rules[:10]}): "
+            "f-bubble-basic-ggplot2__r2"
+        ) in stdout
+
+    def test_report_merges_only_the_cells_plan_reused(self, tmp_path):
+        manifest_file = tmp_path / "manifest.yaml"
+        manifest_file.write_text(yaml.safe_dump(_manifest()), encoding="utf-8")
+        item = "f-bubble-basic-matplotlib"
+        resume = tmp_path / "records.jsonl"
+        resumed = [_record(f"{item}__r1", item, 1, 90), _record(f"{item}__r2", item, 2, 70, rules_sha=A)]
+        resume.write_text("".join(json.dumps(r) + "\n" for r in resumed), encoding="utf-8")
+        cells = tmp_path / "cells"
+        (cells / f"cell-{item}__r2").mkdir(parents=True)
+        rerun = {**_record(f"{item}__r2", item, 2, 0), "ok": False, "error_class": "quota", "score_typed": None}
+        (cells / f"cell-{item}__r2" / "record.json").write_text(json.dumps(rerun), encoding="utf-8")
+        base = ["report", "--manifest", str(manifest_file), "--lock", str(tmp_path / "absent.json")]
+        base += ["--cells", str(cells), "--resume-records", str(resume)]
+
+        # Without plan's list the report refuses rather than guess.
+        assert rt.main([*base, "--out", str(tmp_path / "refused")]) == 1
+
+        assert rt.main([*base, "--out", str(tmp_path / "report"), "--resumed-cells", f"{item}__r1"]) == 0
+        merged = rt.load_records(tmp_path / "report" / "records.jsonl")
+        # r2's old record (other rules) was rejected by plan; its failed rerun stands.
+        assert [(r["cell"], r["ok"]) for r in merged] == [(f"{item}__r1", True), (f"{item}__r2", False)]
 
     def test_cell_lifecycle_through_the_cli(self, bundles, workspace, tmp_path, monkeypatch):
         """materialize → (a review) → collect → report, called the way the workflow calls them."""

@@ -87,7 +87,9 @@ The pull request that adds the workflow can't dispatch it: a `workflow_dispatch`
 
 5. Open the candidate run's summary and paste the fenced snippet into the pull request body.
 
-To finish an arm that stopped early (a usage limit, a cancelled run), dispatch it again with `resume_from=<run-id>`: cells that already produced a review are reused, and only the rest run.
+To finish an arm that stopped early (a usage limit, a cancelled run), dispatch it again with the same inputs and `resume_from=<run-id>`: cells that already produced a review are reused, and only the rest run.
+
+A cell is reused only when its record was measured the way the new run measures: the same set, harness version (`HARNESS_VERSION`), action pin, rules commit, `spec_source`, and the model that cell runs on. The prep job drops any other record with a warning that names the mismatch, and that cell runs again; the report merges exactly the cells the prep job reused. The dispatch commit itself isn't compared, so you can resume from a newer `main`. Give `rules_ref` as a commit SHA: a branch name, or the default, resolves to a new commit once the branch moves, and then no cell matches.
 
 Reuse a baseline only when the set, the harness version, the action pin, and the resolved models all match and it's less than 14 days old. A model alias (`sonnet`, `opus`) moves between releases, and the report flags "model changed" when two arms resolved different models.
 
@@ -105,7 +107,7 @@ Reuse a baseline only when the set, the harness version, the action pin, and the
 | `orders` | `both` | Regen pairs: `both` orders or `forward` only |
 | `spec_source` | `pinned` | `pinned` spec text, or the spec text at `rules_ref` (for spec backfills) |
 | `compare_to` | none | Run ID of the baseline arm |
-| `resume_from` | none | Run ID of an incomplete arm to finish |
+| `resume_from` | none | Run ID of an incomplete arm to finish; only its cells that match this arm are reused |
 | `max_parallel` | `6` | Concurrent sessions |
 
 The prep job also refuses more than 240 sessions, and regen cells on rules older than `02e1a7974` (the first regen gate with a blind re-score).

@@ -80,6 +80,12 @@ on:
 
 permissions: {}
 
+env:
+  # Keep in sync with the claude-code-action pin in the review job (a test
+  # checks it). Cells record it, and plan reuses a resumed cell only when it
+  # matches.
+  ACTION_SHA: 4036a180cf690f49529f5d8c79c998855287f590
+
 concurrency:
   group: review-retest
   cancel-in-progress: false
@@ -94,6 +100,7 @@ jobs:
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
       sessions: ${{ steps.plan.outputs.sessions }}
+      resumed: ${{ steps.plan.outputs.resumed }}
       rules_sha: ${{ steps.rules.outputs.sha }}
     steps:
       - name: Checkout repository
@@ -133,7 +140,9 @@ jobs:
 
       # Refuses (fails the run) when the set is not frozen, over 240 sessions,
       # while the production pipeline is busy, or for regen cells on rules
-      # that predate the gate's --omit-scores.
+      # that predate the gate's --omit-scores. A resumed cell is reused only
+      # when its record matches this arm (set, harness version, action pin,
+      # rules commit, spec source, model); the others run again, with a warning.
       - name: Plan
         id: plan
         env:
@@ -143,6 +152,7 @@ jobs:
           MODELS: ${{ inputs.models }}
           RUNS: ${{ inputs.runs }}
           ORDERS: ${{ inputs.orders }}
+          SPEC_SOURCE: ${{ inputs.spec_source }}
           RULES_SHA: ${{ steps.rules.outputs.sha }}
           RESUME_FROM: ${{ inputs.resume_from }}
         run: |
@@ -152,7 +162,8 @@ jobs:
           fi
           python3 -m automation.scripts.review_retest plan \
             --subset "$SUBSET" --models "$MODELS" --runs "$RUNS" --orders "$ORDERS" \
-            --rules-sha "$RULES_SHA" --repo . "${RESUME[@]}"
+            --rules-sha "$RULES_SHA" --action-sha "$ACTION_SHA" --spec-source "$SPEC_SOURCE" \
+            --repo . "${RESUME[@]}"
 
       - name: Bundle pinned sources and frozen renders
         if: steps.plan.outputs.sessions != '0'
@@ -189,8 +200,6 @@ jobs:
     env:
       CELL_JSON: ${{ toJSON(matrix.cell) }}
       RULES_SHA: ${{ needs.prep.outputs.rules_sha }}
-      # Keep in sync with the claude-code-action pin below (a test checks it).
-      ACTION_SHA: 4036a180cf690f49529f5d8c79c998855287f590
     steps:
       - name: Checkout harness
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -306,6 +315,7 @@ jobs:
           STARTED_AT: ${{ steps.cell.outputs.started_at }}
           CRITERIA_VERSION: ${{ steps.rules.outputs.criteria_version }}
           PROMPTS_TREE: ${{ steps.rules.outputs.prompts_tree }}
+          SPEC_SOURCE: ${{ inputs.spec_source }}
         run: |
           cd "$HARNESS"
           python3 -m automation.scripts.review_retest collect \
@@ -315,7 +325,8 @@ jobs:
             --gate-script "$GITHUB_WORKSPACE/automation/scripts/regen_gate.py" \
             --prev-stored "${PREV_STORED:-n/a}" --started-at "${STARTED_AT:-0}" --timeout-minutes 25 \
             --criteria-version "${CRITERIA_VERSION:-n/a}" --prompts-tree "${PROMPTS_TREE:-n/a}" \
-            --harness-sha "$GITHUB_SHA" --rules-sha "$RULES_SHA" --action-sha "$ACTION_SHA"
+            --harness-sha "$GITHUB_SHA" --rules-sha "$RULES_SHA" --action-sha "$ACTION_SHA" \
+            --spec-source "$SPEC_SOURCE"
 
       - name: Upload the cell
         if: always()
@@ -380,14 +391,16 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           COMPARE_TO: ${{ inputs.compare_to }}
           RESUME_FROM: ${{ inputs.resume_from }}
+          RESUMED: ${{ needs.prep.outputs.resumed }}
         run: |
           mkdir -p "$RUNNER_TEMP/cells"
           EXTRA=()
           if [ -n "$COMPARE_TO" ] && [ -f "$RUNNER_TEMP/compare/records.jsonl" ]; then
             EXTRA+=(--compare-records "$RUNNER_TEMP/compare/records.jsonl")
           fi
+          # Only the cells plan reused; a record it rejected ran again.
           if [ -n "$RESUME_FROM" ] && [ -f "$RUNNER_TEMP/resume/records.jsonl" ]; then
-            EXTRA+=(--resume-records "$RUNNER_TEMP/resume/records.jsonl")
+            EXTRA+=(--resume-records "$RUNNER_TEMP/resume/records.jsonl" --resumed-cells "$RESUMED")
           fi
           python3 -m automation.scripts.review_retest report \
             --cells "$RUNNER_TEMP/cells" --out "$RUNNER_TEMP/report" \

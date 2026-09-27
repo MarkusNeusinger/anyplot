@@ -87,7 +87,10 @@ local `validate` (the manifest; `--check-git` the pinned sources,
 `--check-renders` every render's canvas from its PNG header, no download),
 `gate-report` (production gate records from PR comments) and `freeze`
 (builds and, with `--execute`, uploads a frozen set). A cell records the
-resolved model id or `null`, with the alias apart as `model_alias`. An
+resolved model id or `null`, with the alias apart as `model_alias`. On a
+resume, `plan` reuses a cell only when its record matches the arm (set,
+harness version, action pin, rules commit, spec source, the cell's model),
+and `report` merges exactly the cells `plan` reused. An
 overlaid `regen_gate.py` from the rules under test only receives the
 `context`, `sanitize-source` and `decide` flags it has had since `02e1a7974`;
 the header reset, the characteristic kinds and marker parsing come from the

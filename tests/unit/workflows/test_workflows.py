@@ -498,7 +498,21 @@ class TestReviewRetestWorkflow:
         retest = _action_step(self.WORKFLOW, "review")["uses"]
         review = _action_step(load_workflow("impl-review.yml"), "review")["uses"]
         assert retest == review
-        assert self.WORKFLOW["jobs"]["review"]["env"]["ACTION_SHA"] == retest.split("@", 1)[1]
+        # Workflow-level: the review job records it, plan checks resumed records against it.
+        assert self.WORKFLOW["env"]["ACTION_SHA"] == retest.split("@", 1)[1]
+
+    def test_resume_reuses_only_what_plan_accepted(self) -> None:
+        steps = {s.get("name"): s for job in self.WORKFLOW["jobs"].values() for s in job.get("steps", [])}
+        plan = steps["Plan"]["run"]
+        assert '--action-sha "$ACTION_SHA"' in plan and '--spec-source "$SPEC_SOURCE"' in plan
+        assert steps["Plan"]["env"]["SPEC_SOURCE"] == "${{ inputs.spec_source }}"
+        collect = steps["Collect the cell"]
+        assert '--spec-source "$SPEC_SOURCE"' in collect["run"]
+        assert collect["env"]["SPEC_SOURCE"] == "${{ inputs.spec_source }}"
+        assert self.WORKFLOW["jobs"]["prep"]["outputs"]["resumed"] == "${{ steps.plan.outputs.resumed }}"
+        report = steps["Report"]
+        assert report["env"]["RESUMED"] == "${{ needs.prep.outputs.resumed }}"
+        assert '--resumed-cells "$RESUMED"' in report["run"]
 
     def test_matrix_and_limits(self) -> None:
         review = self.WORKFLOW["jobs"]["review"]
