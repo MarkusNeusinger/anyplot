@@ -11,6 +11,7 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 const TITLE = "bubble-basic · javascript · muix · anyplot.ai";
 const TITLE_HEIGHT = 56;
+const MARGIN = { top: 24, right: 210, bottom: 70, left: 90 };
 
 // --- Data (in-memory, deterministic LCG — no seeded RNG in the browser) -----
 function lcg(seed) {
@@ -59,11 +60,7 @@ const companies = ARCHETYPES.flatMap((a, groupIndex) =>
   })),
 );
 
-const xValues = companies.map((d) => d.x);
-const yValues = companies.map((d) => d.y);
 const sizeValues = companies.map((d) => d.size);
-const xDomain = [Math.min(...xValues) - 4, Math.max(...xValues) + 4];
-const yDomain = [Math.min(...yValues) - 4, Math.max(...yValues) + 4];
 const sizeMin = Math.min(...sizeValues);
 const sizeMax = Math.max(...sizeValues);
 
@@ -77,6 +74,57 @@ function radiusForSize(value) {
   const ratio = (value - sizeMin) / (sizeMax - sizeMin);
   return MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * Math.sqrt(Math.max(0, ratio));
 }
+
+// Declutter pass: per-archetype spread tuning (see above) can't fully
+// prevent a chance pocket where several bubbles from different archetypes
+// land on top of each other (review flagged x=18-22/y=15-19 fusing into a
+// blob). x and y need different px-per-unit factors since the axes don't
+// share a domain width, so distances are computed in approximate pixel
+// space — mirroring ChartContainer's linear min/max mapping, since the
+// real xScale/yScale hooks aren't available until the chart mounts — and
+// converted back to data units. Only pockets packed tighter than 75% of
+// the summed radii are pushed apart; lighter overlap is left for the alpha
+// blending + pageBg stroke to handle, as designed.
+const rawXValues = companies.map((d) => d.x);
+const rawYValues = companies.map((d) => d.y);
+const rawXDomain = [Math.min(...rawXValues) - 4, Math.max(...rawXValues) + 4];
+const rawYDomain = [Math.min(...rawYValues) - 4, Math.max(...rawYValues) + 4];
+const { width: CANVAS_WIDTH, height: CANVAS_HEIGHT } = window.ANYPLOT_SIZE;
+const PLOT_WIDTH = CANVAS_WIDTH - MARGIN.left - MARGIN.right;
+const PLOT_HEIGHT = CANVAS_HEIGHT - TITLE_HEIGHT - MARGIN.top - MARGIN.bottom;
+const PX_PER_X = PLOT_WIDTH / (rawXDomain[1] - rawXDomain[0]);
+const PX_PER_Y = PLOT_HEIGHT / (rawYDomain[1] - rawYDomain[0]);
+
+for (let iter = 0; iter < 30; iter++) {
+  for (let i = 0; i < companies.length; i++) {
+    for (let j = i + 1; j < companies.length; j++) {
+      const a = companies[i];
+      const b = companies[j];
+      const dxPx = (b.x - a.x) * PX_PER_X;
+      const dyPx = (b.y - a.y) * PX_PER_Y;
+      const dist = Math.hypot(dxPx, dyPx) || 0.001;
+      const minDist = (radiusForSize(a.size) + radiusForSize(b.size)) * 0.75;
+      if (dist < minDist) {
+        const push = (minDist - dist) / 2;
+        const ux = dxPx / dist;
+        const uy = dyPx / dist;
+        a.x -= (ux * push) / PX_PER_X;
+        a.y -= (uy * push) / PX_PER_Y;
+        b.x += (ux * push) / PX_PER_X;
+        b.y += (uy * push) / PX_PER_Y;
+      }
+    }
+  }
+}
+companies.forEach((d) => {
+  d.x = Math.round(d.x * 10) / 10;
+  d.y = Math.round(d.y * 10) / 10;
+});
+
+const xValues = companies.map((d) => d.x);
+const yValues = companies.map((d) => d.y);
+const xDomain = [Math.min(...xValues) - 4, Math.max(...xValues) + 4];
+const yDomain = [Math.min(...yValues) - 4, Math.max(...yValues) + 4];
 
 // --- Bubbles (reads the chart's live x/y scales via context hooks) ---------
 function Bubbles() {
@@ -172,7 +220,7 @@ function SizeLegend({ left, top }) {
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const chartHeight = height - TITLE_HEIGHT;
-  const margin = { top: 24, right: 210, bottom: 70, left: 90 };
+  const margin = MARGIN;
 
   return (
     <div style={{ width, height }}>
