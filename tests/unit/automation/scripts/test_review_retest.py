@@ -200,16 +200,42 @@ SCOPED_LABELS: dict[tuple[str, str], tuple[list[str], list[str]]] = {
         ["Visual hierarchy between the bars is weak", "The legend is placed above the title"],
     ),
     ("f-bode-basic-altair", "D1"): (
-        ["In the dark render, axis titles and tick labels are dark on dark and nearly illegible"],
-        ["Tick labels are small and hard to read at this size", "Low contrast between the magnitude and phase curves"],
+        [
+            "In the dark render, axis titles and tick labels are dark on dark and nearly illegible",
+            "Dark render: labels and titles are dark gray on near-black and nearly unreadable",
+            "Axis labels use dark gray text on the dark background",
+        ],
+        [
+            "Tick labels are small and hard to read at this size",
+            "Low contrast between the magnitude and phase curves",
+            "In the dark render the legend text is illegible",
+            "The chart title has low contrast in the dark render",
+            "Data labels are hard to read in dark mode",
+        ],
     ),
     ("f-waterfall-basic-muix", "D2"): (
-        ["Value labels show the running total instead of each step's change"],
-        ["The final cumulative total bar has no label", "Colors do not change between positive and negative steps"],
+        [
+            "Value labels show the running total instead of each step's change",
+            "Value labels are cumulative rather than incremental",
+            "The data labels read as cumulative totals",
+        ],
+        [
+            "The final cumulative total bar has no label",
+            "Colors do not change between positive and negative steps",
+            "Value labels on the cumulative total bar are missing",
+            "Labels are cut off on the cumulative bar",
+        ],
     ),
     ("f-bubble-basic-d3", "D1"): (
-        ["d3.forceCollide moves the bubbles off their data values"],
-        ["Two labels collide near the top-right bubble", "The legend is forced into the top-left corner"],
+        [
+            "d3.forceCollide moves the bubbles off their data values",
+            "The circles are nudged away from their values to avoid overlap",
+        ],
+        [
+            "Two labels collide near the top-right bubble",
+            "The legend is forced into the top-left corner",
+            "Bubble labels are shifted away from their bubbles",
+        ],
     ),
     ("f-scatter-hr-diagram-letsplot", "D2"): (
         ["The yellow 'Sun' label has low contrast on the light background"],

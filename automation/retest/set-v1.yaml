@@ -94,7 +94,7 @@ items:
     new: {commit: *base, render: production}
     note: "candidate: axis titles and tick labels dark on dark in the dark render (VQ-01, VQ-07); bright white grid there (DE-02)"
     defects:
-      - {id: D1, criteria: [VQ-01, VQ-07], match: '(?s)^(?=.*\bdark\b).*(\b(axis|axes|tick|label|(sub)?title|text)\w*.{0,60}(dark[- ]on[- ]dark|contrast|illegib|hard to (read|see)|unreadable|invisible|barely (visible|legible|readable)|faint|disappear|vanish|blend)|(dark[- ]on[- ]dark|contrast|illegib|hard to (read|see)|unreadable|invisible|barely (visible|legible|readable)|faint|disappear|vanish|blend)\w*.{0,60}\b(axis|axes|tick|label|(sub)?title|text))', note: 'axis titles and tick labels dark on dark in the dark render'}
+      - {id: D1, criteria: [VQ-01, VQ-07], match: '(?s)^(?=.*\bdark\b).*(\b(axis|axes|tick|x[- ]?label|y[- ]?label|xlabel|ylabel|labels? and (axis )?titles?|titles? and (tick )?labels?)\w*.{0,60}(dark[- ]on[- ]dark|dark (grey|gray)\w*( text| ink)? on|contrast|illegib|hard to (read|see)|unreadable|invisible|barely (visible|legible|readable)|faint|disappear|vanish|blend)|(dark[- ]on[- ]dark|dark (grey|gray)\w*( text| ink)? on|contrast|illegib|hard to (read|see)|unreadable|invisible|barely (visible|legible|readable)|faint|disappear|vanish|blend)\w*.{0,60}\b(axis|axes|tick|x[- ]?label|y[- ]?label|xlabel|ylabel|labels? and (axis )?titles?|titles? and (tick )?labels?))', note: 'axis titles and tick labels dark on dark in the dark render'}
       - {id: D2, criteria: [DE-02, VQ-07], match: '(white|bright|light|harsh|heavy|strong) grid|grid ?lines?.{0,40}(white|bright|harsh|glar|stand out|too strong|too prominent|heavy)', note: 'bright white grid in the dark render'}
     permitted: []
 
@@ -140,7 +140,7 @@ items:
     note: "candidate: connectors cross value labels (VQ-02); labels show running totals (SC-03)"
     defects:
       - {id: D1, criteria: [VQ-02], match: 'connector.{0,60}(cross|through|over|overlap|strik|collid|behind|intersect)|(cross|through|overlap|strik|collid|intersect)\w*.{0,60}connector', note: 'connector lines cross the value labels'}
-      - {id: D2, criteria: [SC-03, DQ-03], match: '\b(value |data |bar |step )?labels?\b.{0,60}(running|cumulative)|(running|cumulative) (total|sum|balance|value|amount|figure)s?.{0,40}(instead of|rather than|not (the )?(per[- ]step |step |individual |incremental )?(change|delta|increment|step))|\b(value |data |bar )?labels?\b.{0,60}(not|n.t) (show|display|report|give) (the )?(per[- ]step |step |individual |incremental )?(change|delta|increment|step value)', note: 'value labels show running totals instead of the step values'}
+      - {id: D2, criteria: [SC-03, DQ-03], match: '\b(value |data |bar |step )?labels?\b.{0,40}\b(show|display|report|give|print|read|reflect|are|is|contain|use|carry|encode|indicat|represent|denot|depict)\w* (the |a |an |as |only |just |each |their |its |cumulative |running )*(running|cumulative)|(running|cumulative) (total|sum|balance|value|amount|figure)s?.{0,40}(instead of|rather than|not (the )?(per[- ]step |step |individual |incremental )?(change|delta|increment|step))|\b(value |data |bar )?labels?\b.{0,60}(not|n.t) (show|display|report|give) (the )?(per[- ]step |step |individual |incremental )?(change|delta|increment|step value)', note: 'value labels show running totals instead of the step values'}
     permitted: []
 
   - id: f-line-win-probability-chartjs
@@ -163,7 +163,7 @@ items:
     new: {commit: *v5, render: *r-v5}
     note: "candidate: force collision moves marks off their values (SC-03)"
     defects:
-      - {id: D1, criteria: [SC-03], match: 'force[- ]?(layout|simulation|collide|collision|directed|based)|forcecollide|d3[.-]force|collision[- ](detection|simulation|resolution|avoidance|force|layout)|\b(bubble|circle|marker|mark|point|dot|disc)s?\b.{0,60}(displac|nudg|jitter|moved|pushed|shifted|repositioned|spread apart|off (their|its) (true |data |actual |exact )?(value|position|coordinate|location)|not at (their|its)|no longer (sit |lie )?(at|on|encode|match|reflect))|(displac|nudg|jitter)\w* (of |the |apart )*(bubble|circle|marker|mark|point|dot|disc)s?|position\w*.{0,40}(do(es)? not|do(es)?n.t|no longer|fail to) (encode|reflect|match|represent|show) (the )?(true |actual |underlying )?(data|value|x|coordinate)', note: 'force collision moves bubbles off their (x, y) values'}
+      - {id: D1, criteria: [SC-03], match: 'force[- ]?(layout|simulation|collide|collision|directed|based)|forcecollide|d3[.-]force|collision[- ](detection|simulation|resolution|avoidance|force|layout)|\b(bubble|circle|marker|mark|point|dot|disc)s?\b(?! labels?\b| annotations?\b| text\b).{0,60}(displac|nudg|jitter|moved|pushed|shifted|repositioned|spread apart|off (their|its) (true |data |actual |exact )?(value|position|coordinate|location)|not at (their|its)|no longer (sit |lie )?(at|on|encode|match|reflect))|(displac|nudg|jitter)\w* (of |the |apart )*(bubble|circle|marker|mark|point|dot|disc)s?|position\w*.{0,40}(do(es)? not|do(es)?n.t|no longer|fail to) (encode|reflect|match|represent|show) (the )?(true |actual |underlying )?(data|value|x|coordinate)', note: 'force collision moves bubbles off their (x, y) values'}
     permitted: []
 
   - id: f-network-basic-bokeh
