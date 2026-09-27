@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 count-basic: Basic Count Plot
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 94/100 | Updated: 2026-08-11
@@ -59,7 +59,7 @@ ax.text(
     transform=ax.get_yaxis_transform(),
     ha="right",
     va="bottom",
-    fontsize=9,
+    fontsize=10,
     color=INK_MUTED,
 )
 
@@ -83,10 +83,13 @@ value_labels[0].set_path_effects([path_effects.withStroke(linewidth=4, foregroun
 for lbl in value_labels:
     lbl.set_bbox({"facecolor": PAGE_BG, "edgecolor": "none", "pad": 3})
 
-# Style — minimalist: no y-axis labels, values are direct-labeled on the bars instead
-ax.set_xlabel("Survey Response", fontsize=11, color=INK)
-ax.set_title("count-basic · python · matplotlib · anyplot.ai", fontsize=13, fontweight="medium", color=INK)
-ax.tick_params(axis="x", labelsize=10, colors=INK_SOFT)
+# Style — minimalist: no numeric y-axis ticks, values are direct-labeled on the bars
+# instead; an explicit axis title still tells a reader skimming the axis that these
+# are response counts before they reach the bar labels.
+ax.set_xlabel("Survey Response", fontsize=10, color=INK)
+ax.set_ylabel("Number of Responses", fontsize=10, color=INK)
+ax.set_title("count-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="x", labelsize=8, colors=INK_SOFT)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.spines["left"].set_visible(False)
