@@ -39,7 +39,7 @@ on:
   workflow_dispatch:
     inputs:
       scope:
-        description: "'changed' submits the URLs touched by the latest commit on main; 'sitemap' submits every URL in the live sitemap (initial load, or after a long outage)"
+        description: "'changed' submits the URLs touched by the latest commit on main; 'sitemap' submits every page the checkout holds: the static pages, each spec hub and each implementation page (initial load, or after a long outage)"
         required: false
         default: changed
         type: choice

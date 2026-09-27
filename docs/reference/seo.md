@@ -636,7 +636,7 @@ sitemap. Three pieces, kept in sync when the key is rotated:
 |-------|-------|---------|
 | Key file | `app/public/<key>.txt` (served by nginx to every client, bots included — an explicit `location =` like `robots.txt`) | Proves the submitter controls `anyplot.ai`; the engines fetch it on every submission. The key is public by design. |
 | Submission workflow | `.github/workflows/indexnow-submit.yml` | On every push to `main` that touches `plots/`, maps the diff to page URLs (`/{spec}` and `/{spec}/{language}/{library}`; a changed specification covers the hub and all of its implementation pages) and POSTs them to `https://api.indexnow.org/indexnow`, 10,000 per request. Only a metadata `.yaml` makes an implementation page, and an implementation file counts only beside one, so a placeholder such as `.gitkeep` never becomes a URL. A deleted implementation is submitted too — the protocol means "this URL changed". A push that changes the workflow file itself, one carrying more than one commit, or one that bumps `TEMPLATE_LAST_CHANGED` (see below) submits the full list instead of a diff. |
-| Manual full load | `gh workflow run indexnow-submit.yml -f scope=sitemap` | Submits every URL of the live sitemap; used once at rollout and after a long outage of the workflow. |
+| Manual full load | `gh workflow run indexnow-submit.yml -f scope=sitemap` | Submits every page the checkout holds — the static pages, each spec hub and each implementation page — built from the repository, not fetched from the live sitemap; used once at rollout and after a long outage of the workflow. |
 
 The engines answer `200` or `202` for an accepted batch; `4xx` means a key or
 payload problem and fails the run so it is visible. One `4xx` is transient by
