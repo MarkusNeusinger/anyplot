@@ -31,4 +31,4 @@ A funnel chart visualizes sequential stages of a process where values progressiv
 - A good version shows: one distinct color per stage, as the Notes ask, and each stage's name beside or on its segment.
 - A good version shows: every segment labeled with its value or its percentage, readable against its own fill in both themes.
 - A good version shows: the basic variant's single funnel: one segment per stage and no second funnel, comparison series or drop-off callouts between the stages.
-- Expected, not a defect: widths that shrink at every step, drops of very different size between stages, and centered trapezoids or slanted connectors between segments; the narrowing is how a funnel is built.
+- Expected, not a defect: widths that shrink at every step, drops of very different size between stages, and slanted sides or connectors between segments that make each step look like a gradual taper; the narrowing is how a funnel is built.
