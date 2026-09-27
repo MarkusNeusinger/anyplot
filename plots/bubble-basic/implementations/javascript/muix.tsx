@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Updated: 2026-09-26
+// Quality: 86/100 | Updated: 2026-09-27
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
@@ -11,6 +11,7 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 const TITLE = "bubble-basic · javascript · muix · anyplot.ai";
 const TITLE_HEIGHT = 56;
+const MARGIN = { top: 24, right: 210, bottom: 70, left: 90 };
 
 // --- Data (in-memory, deterministic LCG — no seeded RNG in the browser) -----
 function lcg(seed) {
@@ -37,10 +38,14 @@ function randomNormal(rand, mean, stdDev) {
 // The community package has no bubble/z-size scatter mode (ZAxisConfig
 // only maps z to colour), so bubbles are drawn as a custom SVG layer
 // positioned via the chart's own scale hooks.
+// "Growth leaders" gets a wider (xSpread, ySpread) than the other two
+// archetypes — the previous review flagged that its 15 bubbles packed so
+// tightly around x=20-22, y=17-21 that individual boundaries were hard to
+// distinguish even with the pageBg stroke separation.
 const ARCHETYPES = [
-  { name: "Growth leaders", growth: 24, margin: 19, share: 62, count: 15, color: t.palette[0] },
-  { name: "Mid-market", growth: 12, margin: 10, share: 34, count: 20, color: t.palette[1] },
-  { name: "Niche players", growth: 4, margin: 3, share: 14, count: 15, color: t.palette[2] },
+  { name: "Growth leaders", growth: 24, margin: 19, share: 62, count: 15, xSpread: 9, ySpread: 7.5, color: t.palette[0] },
+  { name: "Mid-market", growth: 12, margin: 10, share: 34, count: 20, xSpread: 7, ySpread: 6, color: t.palette[1] },
+  { name: "Niche players", growth: 4, margin: 3, share: 14, count: 15, xSpread: 7, ySpread: 6, color: t.palette[2] },
 ];
 
 const rand = lcg(42);
@@ -48,18 +53,14 @@ const rand = lcg(42);
 const companies = ARCHETYPES.flatMap((a, groupIndex) =>
   Array.from({ length: a.count }, (_, i) => ({
     id: `${groupIndex}-${i}`,
-    x: Math.round(randomNormal(rand, a.growth, 7) * 10) / 10,
-    y: Math.round(randomNormal(rand, a.margin, 6) * 10) / 10,
+    x: Math.round(randomNormal(rand, a.growth, a.xSpread) * 10) / 10,
+    y: Math.round(randomNormal(rand, a.margin, a.ySpread) * 10) / 10,
     size: Math.min(100, Math.max(10, Math.round(randomNormal(rand, a.share, 18)))),
     color: a.color,
   })),
 );
 
-const xValues = companies.map((d) => d.x);
-const yValues = companies.map((d) => d.y);
 const sizeValues = companies.map((d) => d.size);
-const xDomain = [Math.min(...xValues) - 4, Math.max(...xValues) + 4];
-const yDomain = [Math.min(...yValues) - 4, Math.max(...yValues) + 4];
 const sizeMin = Math.min(...sizeValues);
 const sizeMax = Math.max(...sizeValues);
 
@@ -73,6 +74,57 @@ function radiusForSize(value) {
   const ratio = (value - sizeMin) / (sizeMax - sizeMin);
   return MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * Math.sqrt(Math.max(0, ratio));
 }
+
+// Declutter pass: per-archetype spread tuning (see above) can't fully
+// prevent a chance pocket where several bubbles from different archetypes
+// land on top of each other (review flagged x=18-22/y=15-19 fusing into a
+// blob). x and y need different px-per-unit factors since the axes don't
+// share a domain width, so distances are computed in approximate pixel
+// space — mirroring ChartContainer's linear min/max mapping, since the
+// real xScale/yScale hooks aren't available until the chart mounts — and
+// converted back to data units. Only pockets packed tighter than 75% of
+// the summed radii are pushed apart; lighter overlap is left for the alpha
+// blending + pageBg stroke to handle, as designed.
+const rawXValues = companies.map((d) => d.x);
+const rawYValues = companies.map((d) => d.y);
+const rawXDomain = [Math.min(...rawXValues) - 4, Math.max(...rawXValues) + 4];
+const rawYDomain = [Math.min(...rawYValues) - 4, Math.max(...rawYValues) + 4];
+const { width: CANVAS_WIDTH, height: CANVAS_HEIGHT } = window.ANYPLOT_SIZE;
+const PLOT_WIDTH = CANVAS_WIDTH - MARGIN.left - MARGIN.right;
+const PLOT_HEIGHT = CANVAS_HEIGHT - TITLE_HEIGHT - MARGIN.top - MARGIN.bottom;
+const PX_PER_X = PLOT_WIDTH / (rawXDomain[1] - rawXDomain[0]);
+const PX_PER_Y = PLOT_HEIGHT / (rawYDomain[1] - rawYDomain[0]);
+
+for (let iter = 0; iter < 30; iter++) {
+  for (let i = 0; i < companies.length; i++) {
+    for (let j = i + 1; j < companies.length; j++) {
+      const a = companies[i];
+      const b = companies[j];
+      const dxPx = (b.x - a.x) * PX_PER_X;
+      const dyPx = (b.y - a.y) * PX_PER_Y;
+      const dist = Math.hypot(dxPx, dyPx) || 0.001;
+      const minDist = (radiusForSize(a.size) + radiusForSize(b.size)) * 0.75;
+      if (dist < minDist) {
+        const push = (minDist - dist) / 2;
+        const ux = dxPx / dist;
+        const uy = dyPx / dist;
+        a.x -= (ux * push) / PX_PER_X;
+        a.y -= (uy * push) / PX_PER_Y;
+        b.x += (ux * push) / PX_PER_X;
+        b.y += (uy * push) / PX_PER_Y;
+      }
+    }
+  }
+}
+companies.forEach((d) => {
+  d.x = Math.round(d.x * 10) / 10;
+  d.y = Math.round(d.y * 10) / 10;
+});
+
+const xValues = companies.map((d) => d.x);
+const yValues = companies.map((d) => d.y);
+const xDomain = [Math.min(...xValues) - 4, Math.max(...xValues) + 4];
+const yDomain = [Math.min(...yValues) - 4, Math.max(...yValues) + 4];
 
 // --- Bubbles (reads the chart's live x/y scales via context hooks) ---------
 function Bubbles() {
@@ -101,7 +153,7 @@ function Bubbles() {
 function ColorLegend({ left, top }) {
   return (
     <g>
-      <text x={left} y={top - 20} fontSize={13} fontWeight={600} fill={t.inkSoft}>
+      <text x={left} y={top - 20} fontSize={14} fontWeight={600} fill={t.inkSoft}>
         Company archetype
       </text>
       {ARCHETYPES.map((a, i) => {
@@ -109,7 +161,7 @@ function ColorLegend({ left, top }) {
         return (
           <g key={a.name}>
             <circle cx={left + 6} cy={cy} r={6} fill={a.color} fillOpacity={0.48} stroke={a.color} strokeWidth={1.5} />
-            <text x={left + 20} y={cy} dominantBaseline="middle" fontSize={13} fill={t.inkSoft}>
+            <text x={left + 20} y={cy} dominantBaseline="middle" fontSize={14} fill={t.inkSoft}>
               {a.name}
             </text>
           </g>
@@ -130,7 +182,7 @@ function SizeLegend({ left, top }) {
 
   return (
     <g>
-      <text x={left} y={top - 20} fontSize={13} fontWeight={600} fill={t.inkSoft}>
+      <text x={left} y={top - 20} fontSize={14} fontWeight={600} fill={t.inkSoft}>
         Market share index
       </text>
       {legendValues.map((value) => {
@@ -152,7 +204,7 @@ function SizeLegend({ left, top }) {
               x={left + MAX_RADIUS * 2 + 14}
               y={cy}
               dominantBaseline="middle"
-              fontSize={13}
+              fontSize={14}
               fill={t.inkSoft}
             >
               {value}
@@ -168,7 +220,7 @@ function SizeLegend({ left, top }) {
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const chartHeight = height - TITLE_HEIGHT;
-  const margin = { top: 24, right: 210, bottom: 70, left: 90 };
+  const margin = MARGIN;
 
   return (
     <div style={{ width, height }}>
@@ -211,7 +263,7 @@ export default function Chart() {
           },
         ]}
       >
-        <ChartsGrid horizontal vertical />
+        <ChartsGrid horizontal />
         <Bubbles />
         <ChartsXAxis axisId="growth" />
         <ChartsYAxis axisId="margin" />
