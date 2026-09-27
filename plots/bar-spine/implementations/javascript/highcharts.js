@@ -72,17 +72,30 @@ const labelStyle = {
   fontWeight: "600",
   textOutline: "1px rgba(26, 26, 23, 0.55)",
 };
-const thinLabelStyle = { ...labelStyle, fontSize: "10px" };
+const thinLabelStyle = { ...labelStyle, fontSize: "12px" };
 function labelStyleFor(share) {
   return share < THIN_BAND_SHARE ? thinLabelStyle : labelStyle;
 }
 
 // Retained (good) keeps the brand-green first slot; churned (bad) takes the
-// semantic-red anchor rather than the next ordinal palette position.
+// semantic-red anchor rather than the next ordinal palette position. Each
+// segment's fill is a subtle vertical gradient (a touch lighter at the top)
+// rather than a flat tint, giving the stack a little depth without changing
+// the perceived hue at a glance.
+function depthFill(color) {
+  return {
+    linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+    stops: [
+      [0, Highcharts.color(color).brighten(0.12).get()],
+      [1, color],
+    ],
+  };
+}
 const series = [
   {
     name: "Retained",
     color: t.palette[0],
+    fillColor: depthFill(t.palette[0]),
     data: segments.flatMap((s) => [
       { x: s.startX, y: s.retainedPct },
       {
@@ -96,6 +109,7 @@ const series = [
   {
     name: "Churned",
     color: t.palette[4],
+    fillColor: depthFill(t.palette[4]),
     data: segments.flatMap((s) => [
       { x: s.startX, y: s.churnedPct },
       {
@@ -166,6 +180,11 @@ Highcharts.chart("container", {
     symbolRadius: 2,
     itemDistance: 24,
     margin: 20,
+    backgroundColor: t.elevatedBg,
+    borderColor: t.grid,
+    borderWidth: 1,
+    borderRadius: 6,
+    padding: 12,
   },
   tooltip: {
     shared: true,
