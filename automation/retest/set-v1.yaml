@@ -61,7 +61,7 @@ items:
     defects:
       - {id: D1, criteria: [VQ-03, SC-04], match: '(size|bubble|area)[- ]?legend|legend (circles?|glyphs?|keys?|symbols?|markers?|bubbles?)', note: 'size-legend circles near-invisible against the page'}
     permitted:
-      - {id: A1, criteria: [VQ-02], match: 'overlap|occlu|obscur', note: 'translucent overlap in dense regions is expected (spec characteristic)'}
+      - {id: A1, criteria: [VQ-02], match: '(bubble|circle|marker|point|glyph|disc)s?.{0,40}(overlap|occlu|obscur|on top of)|(overlap|occlu|obscur)\w*.{0,40}(bubble|circle|marker|point|glyph|disc)s?', note: 'translucent overlap in dense regions is expected (spec characteristic)'}
 
   - id: f-area-elevation-profile-seaborn
     kind: fresh
@@ -82,7 +82,7 @@ items:
     new: {commit: *base, render: production}
     note: "candidate: content fills about 27 % of the width, subtitle above the title (VQ-05)"
     defects:
-      - {id: D1, criteria: [VQ-05], match: 'white ?space|empty space|unused space|wasted space|narrow|squeez|compress|cramped|small (portion|fraction|part)|(only|about|~) ?\d+ ?%', note: 'plot content fills about 27 % of the canvas width'}
+      - {id: D1, criteria: [VQ-05], match: 'white ?space|empty space|unused space|wasted space|(plot|chart|content|panel|bars?|data) (area |region )?(is |are |looks? )?(narrow|squeez|compress|cramped|confined|small)|small (portion|fraction|part) of the (canvas|width|figure)|(only|about|~) ?\d+ ?% of the (canvas|width|figure)', note: 'plot content fills about 27 % of the canvas width'}
       - {id: D2, criteria: [VQ-05, DE-01], match: 'subtitle.{0,40}(above|over|before|on top)|(above|over) the (main )?title|title (order|hierarchy)|hierarch', note: 'subtitle placed above the title'}
     permitted: []
 
@@ -128,7 +128,7 @@ items:
     new: {commit: *base, render: production}
     note: "candidate: fake secondary axis drawn with geom_text (SC-03)"
     defects:
-      - {id: D1, criteria: [SC-03, LM-01], match: 'second(ary)? (y[- ]?)?axis|right(-hand)? (y[- ]?)?axis|dual[- ]axis|twin axis|(fake|simulated|manual|hand[- ]?drawn|drawn|text[- ]based|pseudo)[- ](secondary )?axis|geom_text', note: 'secondary axis faked with geom_text'}
+      - {id: D1, criteria: [SC-03, LM-01], match: 'second(ary)? (y[- ]?)?axis|right(-hand)? (y[- ]?)?axis|dual[- ]axis|twin axis|(fake|simulated|manual|hand[- ]?drawn|drawn|text[- ]based|pseudo)[- ](secondary )?axis|geom_text.{0,40}(axis|tick|scale|percent)|(axis|tick|scale).{0,40}geom_text', note: 'secondary axis faked with geom_text'}
     permitted: []
 
   - id: f-waterfall-basic-muix
@@ -197,7 +197,7 @@ items:
     new: {commit: *base, render: production}
     note: "candidate: bright white vertical zero-lag line in both dark panes, near-invisible in the light render (DE-02, VQ-07)"
     defects:
-      - {id: D1, criteria: [DE-02, VQ-07], match: '(zero|lag[- ]?0|lag zero|vertical|reference).{0,40}(line|bar|stem|rule)|(white|bright|harsh|glaring) (vertical )?(line|bar|stem|rule)', note: 'bright white zero-lag line in both dark panes, near-invisible in the light render'}
+      - {id: D1, criteria: [DE-02, VQ-07], match: '(zero|lag[- ]?0|lag[- ]zero|reference)[- ]?(lag )?(line|bar|stem|rule|marker)|(white|bright|harsh|glaring|faint|invisible|washed).{0,30}(vertical |reference )?(line|rule) at (lag )?(0|zero)', note: 'bright white zero-lag line in both dark panes, near-invisible in the light render'}
     permitted: []
 
   - id: f-line-stock-comparison-pygal
@@ -208,7 +208,7 @@ items:
     new: {commit: *base, render: production}
     note: "candidate: false real-world returns (DQ-02/03); tiny legend squares (VQ-03)"
     defects:
-      - {id: D1, criteria: [DQ-02, DQ-03], match: 'real(-world)? (stock|ticker|compan|return|price|firm)|actual (stock|ticker|compan|return|price)|(fabricated|invented|fictional|made[- ]up|fake|synthetic|false|inaccurate|random|misleading) (return|price|stock|data|number|performance)|aapl|googl|msft|apple|alphabet|microsoft', note: 'real tickers (AAPL, GOOGL, MSFT) with invented returns'}
+      - {id: D1, criteria: [DQ-02, DQ-03], match: 'real(-world)? (stock|ticker|compan|return|price|firm)|actual (stock|ticker|compan|return|price)|(fabricated|invented|fictional|made[- ]up|fake|synthetic|false|inaccurate|random|misleading) (return|price|stock|data|number|performance)|\b(aapl|googl|msft)\b|\bapple\b|\balphabet\b|\bmicrosoft\b', note: 'real tickers (AAPL, GOOGL, MSFT) with invented returns'}
       - {id: D2, criteria: [VQ-03], match: 'legend.{0,60}(tiny|small|minuscule|hard to see|barely|faint|square|swatch|box|marker|symbol)|(tiny|small|minuscule) (legend|swatch|square|marker)', note: 'tiny legend squares'}
     permitted: []
 
@@ -311,7 +311,7 @@ items:
     note: "candidate clean overlap probe"
     defects: []
     permitted:
-      - {id: A1, criteria: [VQ-02], match: 'overlap|occlu|obscur', note: 'translucent overlap in dense regions is expected (spec characteristic)'}
+      - {id: A1, criteria: [VQ-02], match: '(bubble|circle|marker|point|glyph|disc)s?.{0,40}(overlap|occlu|obscur|on top of)|(overlap|occlu|obscur)\w*.{0,40}(bubble|circle|marker|point|glyph|disc)s?', note: 'translucent overlap in dense regions is expected (spec characteristic)'}
 
   - id: f-heatmap-basic-seaborn
     kind: fresh
@@ -351,7 +351,7 @@ items:
     new: {commit: *v1, render: *r-v1}
     note: "candidate: unrequested trend line on a -basic spec (SC-01)"
     defects:
-      - {id: D1, criteria: [SC-01], match: 'trend ?line|regression|fit(ted)? line|best[- ]fit|smooth|loess|linear fit|reference line', note: 'unrequested trend line on a -basic spec'}
+      - {id: D1, criteria: [SC-01], match: 'trend ?line|regression|fit(ted)? line|best[- ]fit|smooth(ed|ing)? (line|curve|fit)|geom_smooth|loess|linear fit|reference line', note: 'unrequested trend line on a -basic spec'}
     permitted: []
 
   - id: f-box-grouped-makie
