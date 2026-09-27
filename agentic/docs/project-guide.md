@@ -139,7 +139,7 @@ Everything for one plot type lives in a single directory:
 
 ```
 plots/{specification-id}/
-├── specification.md       # Description, Applications, Data, Notes
+├── specification.md       # Description, Applications, Data, Notes, What a good version looks like
 ├── specification.yaml     # Spec-level metadata (tags, created, issue, suggested, updates)
 ├── metadata/              # Per-library metadata, grouped by language
 │   ├── python/{matplotlib,seaborn,…}.yaml
@@ -186,7 +186,7 @@ Example: `plots/scatter-basic/` contains everything for the basic scatter plot.
 ### Directory Structure
 
 - **`plots/{specification-id}/`**: Plot-centric directories (spec, metadata, implementations together)
-  - `specification.md`: Library-agnostic specification (Description, Applications, Data, Notes)
+  - `specification.md`: Library-agnostic specification (Description, Applications, Data, Notes, and a closing "What a good version looks like" section — 3-5 observable properties of a good render of that plot type, including "expected, not a defect" items, that the AI review scores against; written by spec-create, never by spec polish, and not synced to the database)
   - `specification.yaml`: Spec-level metadata (tags, created, issue, suggested, updates)
   - `metadata/{language}/{library}.yaml`: Per-library metadata (preview_url, quality_score, review feedback)
   - `implementations/{language}/{library}{ext}`: Library-specific implementations

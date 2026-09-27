@@ -43,6 +43,22 @@ Example (from `.github/workflows/impl-review.yml`):
 | `spec-polish-claude.md` | `daily-regen.yml` | Daily light-touch spec quality polish |
 | `impl-similarity-claude.md` | `daily-regen.yml` | Daily impl-similarity dedup analysis |
 
+## Plot-type characteristics
+
+Each `plots/{spec-id}/specification.md` can end with a `## What a good version
+looks like` section: 3-5 column-0 `- ` bullets naming the observable properties
+of a good render of that plot type, including "expected, not a defect" items.
+The prompts share it as follows:
+
+- `spec-create.yml` writes it for every new spec (from
+  `prompts/templates/specification.md`).
+- `spec-polish-claude.md` never adds, edits or removes it.
+- `impl-generate-claude.md`, `impl-repair-claude.md` and `plot-generator.md`
+  build toward it, and a regeneration declines weaknesses that contradict it.
+- `ai-quality-review.md` and `prompts/quality-criteria.md` ("Plot-Type
+  Characteristics") score against it. When a spec has no section, the review
+  infers the characteristics from Description, Data and Notes.
+
 ## Variable Reference
 
 Variables are documented per prompt file (most accept the same `LIBRARY`,

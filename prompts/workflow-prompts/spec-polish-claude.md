@@ -26,7 +26,7 @@ Read these files:
 For each, decide if the spec needs work:
 
 1. **Wording** — descriptions concise and unambiguous? applications realistic? data fields include types/sizes? notes actionable?
-2. **Missing sections** — every section from `specification.md` template present?
+2. **Missing sections** — every section from `specification.md` template present? **Exception:** `## What a good version looks like` is out of scope for this audit. A spec without it is NOT missing a section as far as you are concerned — do not add it (see the hard rule below).
 3. **Tag completeness** — all 4 dimensions (`plot_type`, `data_type`, `domain`, `features`) have ≥1 value?
 4. **Tag quality** — naming conventions enforced (lowercase, hyphens, no underscores)? Vocabulary policy:
    - **`plot_type` is canonical**: the table in `spec-tags-generator.md` is the allowed set. Tags outside the table must either be moved to the correct dimension (e.g. `regression` → `features`, `timeseries` → `data_type`) or dropped if they're not really plot types.
@@ -42,6 +42,7 @@ For each, decide if the spec needs work:
 
 - Do NOT change `id`, `issue`, `created` fields in `specification.yaml`.
 - Do NOT change semantic content. Data shape, plot type, and core requirements must stay identical. You are polishing wording, structure, and tags only — not redesigning the spec.
+- Do NOT author, rewrite, reorder, reword, or delete the `## What a good version looks like` section — not even a typo. It is the review's yardstick for this plot type and is written by spec-create or by hand, never by polish. Leave it byte-identical when it exists, and never add it when it does not (the review infers the characteristics from Description and Notes instead). Keep it as the last section of the file. Also do not edit Description, Data or Notes in a way that would contradict it.
 - After any edit, set `updated:` in `specification.yaml` to the current UTC ISO 8601 timestamp (e.g. `2026-05-05T18:30:00Z`). Use `date -u +"%Y-%m-%dT%H:%M:%SZ"` to generate it.
 
 ## Step 4: Commit and open a PR
@@ -85,6 +86,7 @@ Then open the PR. Use a HEREDOC for the body so multi-line markdown survives:
     ## Hard guarantees from the prompt
     - `id`, `issue`, `created` unchanged
     - No semantic changes (data shape, plot type, requirements identical)
+    - "What a good version looks like" section untouched (not added, not edited)
     - `updated` bumped to current UTC
 
     Auto-merge enabled — will merge once required checks pass. The

@@ -35,6 +35,8 @@ Read both sources to understand what needs to be fixed:
 - Text overlaps → adjust margins, rotate ticks, reduce label fontsize, or move legend
 - Sparse data with tiny markers → increase `s=` / `size=` / `marker.size=` / `marker.radius`
 - Dense data with oversized markers / overplotting → reduce marker size + add `alpha=0.5-0.7`
+- Data marks overlapping each other → change the data generation, marker size or alpha. **Never move marks off their data values** (no force/collision simulation, nudge or declutter pass, or offsets on data marks) — the review deducts displaced marks under SC-03. Moving labels is fine. If the spec's `## What a good version looks like` section calls the overlap expected, keep the fix minimal.
+- Invisible legend glyphs (size circles, swatches, line samples) → give the legend the marks' fill, outline and alpha explicitly (e.g. ggplot2 `guides(size = guide_legend(override.aes = list(...)))`)
 
 Adjust the canvas-controlling knobs of the relevant library family:
 - DPI-based (matplotlib / seaborn / plotnine): `figsize`, `dpi`, `fontsize=`

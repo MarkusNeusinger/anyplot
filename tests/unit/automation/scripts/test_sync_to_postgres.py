@@ -239,6 +239,45 @@ Minimal description.
         assert result["applications"] == ["One app"]
         assert result["data"] == ["One data point"]
 
+    def test_trailing_characteristics_section_does_not_leak_into_notes(self, tmp_path):
+        """The review-only "What a good version looks like" section follows Notes
+        and must not end up in the synced notes (or any other synced field)."""
+        spec_content = """# bubble-basic: Basic Bubble Chart
+
+## Description
+A bubble chart adding size as a third dimension.
+
+## Applications
+- Market analysis
+
+## Data
+- `x` (numeric) - Horizontal position
+
+## Notes
+- Scale bubble sizes by area
+- Include a size legend
+
+## What a good version looks like
+
+- Overlapping bubbles in dense regions are expected, not a defect
+- A size legend with visible, mark-styled glyphs in both themes
+- The basic variant encodes x, y and size only
+"""
+        spec_dir = tmp_path / "bubble-basic"
+        spec_dir.mkdir()
+        spec_file = spec_dir / "specification.md"
+        spec_file.write_text(spec_content)
+
+        result = parse_spec_markdown(spec_file)
+
+        assert result["notes"] == ["Scale bubble sizes by area", "Include a size legend"]
+        assert result["description"] == "A bubble chart adding size as a third dimension."
+        assert result["applications"] == ["Market analysis"]
+        assert result["data"] == ["`x` (numeric) - Horizontal position"]
+        flattened = " ".join([result["description"], *result["applications"], *result["data"], *result["notes"]])
+        assert "What a good version" not in flattened
+        assert "expected, not a defect" not in flattened
+
 
 class TestParseMetadataYaml:
     """Tests for parse_metadata_yaml function."""

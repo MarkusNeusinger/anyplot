@@ -209,6 +209,8 @@ No overlapping text elements.
 - Tick labels overlap each other
 - Legend overlaps data
 
+**Overlap of data marks** (bubbles, points, violins, network nodes) is a weakness only when it **hides information** — a cluster so opaque that the count, the extent or an individual mark can no longer be read. For overlap-native types (bubble charts, dense scatters, strip plots, networks) overlap in dense regions is expected: when translucency, a page-coloured outline or a smaller marker keeps every mark distinguishable, it is **not a deduction**. Never suggest moving marks off their data values to reduce overlap — the fixes are data generation, marker size and alpha (see SC-03).
+
 ### VQ-03: Element Visibility (6 Points)
 
 Data elements must be visible and adapted to data density.
@@ -227,6 +229,8 @@ Data elements must be visible and adapted to data density.
 | 30-100 | 100-200 | 0.7-0.9 |
 | 100-300 | 50-100 | 0.5-0.7 |
 | 300+ | 20-50 | 0.3-0.5 |
+
+**Legend glyphs count as elements.** Size-legend circles, colour swatches and line samples must be visible in **both** themes and must match the marks they explain (same fill, outline, alpha and shape). A glyph drawn in the page colour, at near-zero alpha, or without the marks' fill is an invisible element: deduct VQ-03 in proportion, and also SC-04 when the encoding it explains becomes unreadable. Look at the legend in each render — do not assume it inherited the marks' styling. The weakness should name the likely fix (e.g. ggplot2 `guides(size = guide_legend(override.aes = list(fill = ..., alpha = ...)))`, or setting the legend marker colour explicitly from the palette).
 
 ### VQ-04: Color Accessibility (2 Points)
 
@@ -342,6 +346,8 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 | 3 | Correct base type but missing variant (e.g., grouped bar instead of stacked) |
 | 0 | Wrong chart type entirely |
 
+**Variant creep on `-basic` specs.** When the spec id ends in `-basic`, encodings or elements the spec does not ask for — a colour channel driven by a derived fourth variable, per-group fits or trend lines, highlight bands, several annotation layers — make it the wrong variant: score SC-01 partially (typically 3) and give that addition **no** DE-03 or LM-02 credit. A basic chart earns storytelling through its data and design, not through extra channels (see `prompts/plot-generator.md` → "Respect the spec variant").
+
 ### SC-02: Required Features (4 Points)
 
 | Points | Criterion |
@@ -357,6 +363,8 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 | 3 | X/Y correctly assigned, axes show all data |
 | 1 | Minor mapping issues |
 | 0 | X/Y swapped or data not visible |
+
+**Data-value integrity: marks sit at their data values.** Changing the generated data (a different seed, a spread-out scenario, rejection sampling) is allowed — the spec does not pin the data. Displacing marks **after** the data exists is not: force or collision layouts applied to data marks, nudge or declutter passes that rewrite plotted x/y values, or offsets that move a mark away from the value its tooltip or axis reports. Deduct SC-03 in proportion to how far marks move relative to the axis range (a few marks shifted by a hair is a small deduction; a cloud rearranged by a simulation loses most of SC-03), and never list such displacement as a strength. **Exempt:** jitter in categorical strip and swarm plots (the categorical axis carries no value), and layout-positioned types where position is not data — networks, treemaps, word clouds, packed circles. Moving **labels** to avoid collisions is fine; moving the **marks** is not.
 
 ### SC-04: Title & Legend (3 Points)
 
@@ -466,6 +474,17 @@ Example data must show ALL features of the plot type.
 **Calibration:** LM-02 = 1 is the default. To score 3+, the implementation must use a feature distinctive to this specific library.
 
 **Note:** Basic library usage is checked by AR-05. Library Mastery evaluates *quality* of usage.
+
+---
+
+## Plot-Type Characteristics (judge against the spec, not generic ideals)
+
+Each spec can end with a `## What a good version looks like` section: a few bullets naming what a good render of **that** plot type shows, including "expected, not a defect" items. It is the yardstick for every criterion above.
+
+- **A property the section names is never a weakness.** If it says overlapping bubbles in dense regions are expected, overlap handled that way is not a VQ-02 deduction; if it says a dense matrix without in-cell numbers is correct, missing numbers are not a DE-03 or SC-02 deduction.
+- **Removing or violating a named property deducts** from the criterion it belongs to — a missing or invisible size legend from VQ-03/SC-04, marks moved off their values from SC-03, an extra encoding on a basic variant from SC-01, a colormap not centred where the section says from VQ-07/SC-02.
+- **No section?** Infer the characteristics from Description, Data and Notes, and from what the plot type inherently looks like. Do not fall back to generic ideals ("no overlap", "perfectly smooth", "symmetric") that the plot type does not share.
+- **Soft and proportional.** The section describes properties, not thresholds; there are no pixel or count limits. A small departure costs a little in one criterion, a property that is gone entirely costs more — holistically, like the proportional checks in `workflow-prompts/ai-quality-review.md` step 5d.
 
 ---
 

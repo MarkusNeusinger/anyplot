@@ -6,7 +6,7 @@ anyplot follows a **plot-centric repository pattern** where everything for one p
 
 ```
 plots/{specification-id}/
-├── specification.md     # Description, Applications, Data, Notes
+├── specification.md     # Description, Applications, Data, Notes, What a good version looks like
 ├── specification.yaml   # Spec-level metadata (tags, created, issue, suggested)
 ├── metadata/            # Per-library metadata (one file per library)
 │   ├── matplotlib.yaml
