@@ -70,6 +70,20 @@ NEXT_SECTION_RE = re.compile(r"^#{1,2}\s")
 # Column 0 only: indented bullets are sub-points of the one above.
 TOP_LEVEL_BULLET_RE = re.compile(r"^(?:[-*+]|\d+[.)])\s+(?P<text>\S.*)$")
 
+# The two kinds of characteristic bullet, each written as the bullet's opening
+# words. spec_characteristics_lint.py requires these exact prefixes; the gate
+# reads them leniently (any case, optional bold markers) and anchored at the
+# start of the bullet, and a bullet without a recognisable prefix counts as
+# affirmative, so an older or unlabeled section parses as it always did.
+SHOWS_PREFIX = "A good version shows:"
+EXPECTED_PREFIX = "Expected, not a defect:"
+KIND_SHOWS = "shows"
+KIND_EXPECTED = "expected"
+_KIND_RES = (
+    (KIND_SHOWS, re.compile(r"^\s*[*_]{0,2}\s*a good version shows\s*[*_]{0,2}\s*:", re.IGNORECASE)),
+    (KIND_EXPECTED, re.compile(r"^\s*[*_]{0,2}\s*expected,?\s*not a defect\s*[*_]{0,2}\s*:", re.IGNORECASE)),
+)
+
 
 # ---------------------------------------------------------------------------
 # Previous review extraction (shared by impl-generate and impl-review)
@@ -102,6 +116,19 @@ def parse_characteristics(spec_text: str) -> list[str]:
         if m:
             items.append(m.group("text").strip())
     return items
+
+
+def characteristic_kind(text: str) -> str | None:
+    """Kind of one characteristic bullet: ``"shows"``, ``"expected"`` or None.
+
+    Only the bullet's opening words count: a bullet that mentions "expected,
+    not a defect" mid-sentence is not a permission. None means no recognisable
+    prefix, and the gate then reads the bullet as affirmative.
+    """
+    for kind, pattern in _KIND_RES:
+        if pattern.match(text):
+            return kind
+    return None
 
 
 def render_previous_review(

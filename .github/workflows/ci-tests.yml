@@ -59,6 +59,13 @@ jobs:
         echo "Changed files:"
         echo "$CHANGED_FILES"
 
+        # Changed specification.md files that still exist, for the style part
+        # of "Check spec characteristic sections" (next step).
+        : > "$RUNNER_TEMP/changed_specs.txt"
+        while IFS= read -r spec; do
+          if [[ -f "$spec" ]]; then echo "$spec" >> "$RUNNER_TEMP/changed_specs.txt"; fi
+        done < <(echo "$CHANGED_FILES" | grep -E '^plots/[^/]+/specification\.md$' || true)
+
         # Check for Python changes outside plots/ (api, core, tests, automation)
         # Plot implementations don't have unit tests
         TESTABLE_CHANGES=$(echo "$CHANGED_FILES" | grep '\.py$' | grep -v '^plots/' || true)
@@ -80,6 +87,24 @@ jobs:
           echo "No testable changes (only plots/ or non-Python), skipping tests"
           echo "should_test=false" >> $GITHUB_OUTPUT
         fi
+
+    # Runs on every event, whatever should_test says: spec-only PRs (spec-create,
+    # spec polish, the characteristics backfill) skip pytest, and this job is a
+    # required check. The contract (the shape the regen gate parses) is checked
+    # over every spec and blocks; house style is checked on the changed specs
+    # and only warns. Standard library only — the runner's python3, no uv.
+    - name: Check spec characteristic sections
+      run: |
+        echo "python3: $(python3 --version)"
+        status=0
+        python3 -m automation.scripts.spec_characteristics_lint contract --all || status=$?
+        if [[ -s "$RUNNER_TEMP/changed_specs.txt" ]]; then
+          mapfile -t CHANGED_SPECS < "$RUNNER_TEMP/changed_specs.txt"
+          python3 -m automation.scripts.spec_characteristics_lint style "${CHANGED_SPECS[@]}" || status=$?
+        else
+          echo "No changed specification.md files; style check skipped"
+        fi
+        exit "$status"
 
     - name: Set up Python
       if: steps.check.outputs.should_test == 'true'
@@ -159,7 +184,7 @@ jobs:
 
     - name: Skip notice
       if: steps.check.outputs.should_test == 'false'
-      run: echo "::notice::Tests skipped - no testable Python changes (only plots/ or non-Python files)"
+      run: echo "::notice::Tests skipped - no testable Python changes (only plots/ or non-Python files); the spec characteristic-section check still ran"
 
   test-frontend:
     name: Run Frontend Tests
