@@ -110,6 +110,185 @@ class TestImplReviewRegenBranch:
         assert "verdict=keep" in script  # crash fallback
 
 
+def _step_names(filename: str) -> list[str | None]:
+    return [s.get("name") for s in _steps(filename)]
+
+
+def _metadata_writer_script() -> str:
+    """The update_metadata.py heredoc of impl-review's metadata step, as run."""
+    run = _step("impl-review.yml", "Update metadata and implementation header")["run"]
+    return run.split("cat > /tmp/update_metadata.py << 'EOF'\n", 1)[1].split("\nEOF\n", 1)[0]
+
+
+class TestImplReviewProvenance:
+    """Provenance and gate records (P6 A1). Every new step is non-gating."""
+
+    def test_provenance_helper_is_copied_from_the_workflow_ref(self):
+        script = _step("impl-review.yml", "Checkout PR code")["run"]
+        copy = script[: script.index("git fetch origin")]
+        assert "automation/scripts/review_provenance.py" in copy
+        assert "automation/scripts/regen_gate.py" in copy
+
+    def test_rules_version_is_recorded_after_the_overlay_and_before_the_review(self):
+        names = _step_names("impl-review.yml")
+        rules = names.index("Record rules version")
+        assert names.index("Overlay prompts/ from trigger ref (branch-level prompt iteration)") < rules
+        assert rules < names.index("Run AI Quality Review")
+        step = _step("impl-review.yml", "Record rules version")
+        assert step["continue-on-error"] is True
+        assert 'review_provenance.py" criteria-version --root . --library' in step["run"]
+
+    def test_model_is_resolved_right_after_the_review(self):
+        names = _step_names("impl-review.yml")
+        assert names.index("Resolve review model") == names.index("Run AI Quality Review") + 1
+        step = _step("impl-review.yml", "Resolve review model")
+        assert step["continue-on-error"] is True
+        assert step["env"]["EXECUTION_FILE"] == "${{ steps.review.outputs.execution_file }}"
+        assert '--fallback "claude-${MODEL_ALIAS}"' in step["run"]
+
+    def test_render_time_never_fails_the_download(self):
+        step = _step("impl-review.yml", "Download plot images from staging")
+        assert step["id"] == "staging"
+        script = step["run"]
+        assert "gsutil stat" in script
+        assert '|| CREATED=""' in script
+        assert 'echo "rendered_at=${RENDERED_AT}" >> "$GITHUB_OUTPUT"' in script
+
+    def test_gate_passes_provenance_and_writes_a_record(self):
+        script = _step("impl-review.yml", "Regen gate")["run"]
+        for flag in (
+            "--record-out",
+            "--pr",
+            "--model",
+            "--criteria-version",
+            "--prompts-tree",
+            "--prev-model",
+            "--prev-criteria-version",
+        ):
+            assert flag in script, flag
+        fallback = script[script.index("; then\n") :]
+        assert 'code: "script_crashed"' in fallback
+        assert 'echo "code=script_crashed"' in fallback
+
+    def test_regen_context_feeds_prev_provenance(self):
+        env = _step("impl-review.yml", "Regen gate")["env"]
+        assert "steps.regen_ctx.outputs.prev_model" in env["PREV_MODEL"]
+        assert "steps.regen_ctx.outputs.prev_criteria_version" in env["PREV_CRITERIA_VERSION"]
+
+    def test_regen_pair_artifact_is_staged_and_never_gating(self):
+        names = _step_names("impl-review.yml")
+        assert names.index("Regen gate") < names.index("Stage regen pair") < names.index("Upload regen pair")
+        assert names.index("Upload regen pair") < names.index("Add preliminary verdict label (early)")
+        stage = _step("impl-review.yml", "Stage regen pair")
+        upload = _step("impl-review.yml", "Upload regen pair")
+        assert stage["continue-on-error"] is True
+        assert upload["continue-on-error"] is True
+        assert "steps.regen.outputs.is_regen == 'true'" in stage["if"]
+        assert 'DIR="$RUNNER_TEMP/regen-pair"' in stage["run"]
+        assert upload["uses"].startswith("actions/upload-artifact@")
+        assert upload["with"]["path"] == "${{ steps.pair.outputs.dir }}"
+        assert upload["with"]["retention-days"] == 60
+        assert upload["with"]["name"].startswith("regen-pair-${{ steps.pr.outputs.pr_number }}-")
+
+    def test_metadata_writer_reads_provenance_through_os_environ_get(self):
+        step = _step("impl-review.yml", "Update metadata and implementation header")
+        for name in ("REVIEW_MODEL", "CRITERIA_VERSION", "RENDERED_AT"):
+            assert name in step["env"], name
+        script = _metadata_writer_script()
+        for name in ("REVIEW_MODEL", "CRITERIA_VERSION", "RENDERED_AT"):
+            assert f"os.environ.get('{name}', '')" in script, name
+        assert "os.environ[" not in script
+
+    def _run_writer(self, tmp_path: Path, env_extra: dict[str, str]) -> dict[str, Any]:
+        (tmp_path / "update_metadata.py").write_text(_metadata_writer_script(), encoding="utf-8")
+        meta = tmp_path / "meta.yaml"
+        meta.write_text(
+            yaml.safe_dump(
+                {
+                    "library": "matplotlib",
+                    "created": "2026-05-28T00:00:00Z",
+                    "quality_score": None,
+                    "review": {"strengths": [], "weaknesses": []},
+                }
+            ),
+            encoding="utf-8",
+        )
+        (tmp_path / "review_strengths.json").write_text('["clean"]', encoding="utf-8")
+        (tmp_path / "review_weaknesses.json").write_text('["legend small"]', encoding="utf-8")
+        (tmp_path / "review_verdict.txt").write_text("APPROVED\n", encoding="utf-8")
+        env = {k: v for k, v in os.environ.items() if k not in {"REVIEW_MODEL", "CRITERIA_VERSION", "RENDERED_AT"}}
+        env.update(env_extra)
+        subprocess.run(
+            [sys.executable, "update_metadata.py", str(meta), "91", "2026-10-02T02:31:10Z"],
+            cwd=tmp_path,
+            env=env,
+            check=True,
+            capture_output=True,
+        )
+        return yaml.safe_load(meta.read_text(encoding="utf-8"))
+
+    def test_metadata_writer_runs_with_provenance(self, tmp_path):
+        data = self._run_writer(
+            tmp_path,
+            {
+                "REVIEW_MODEL": "claude-opus-5-5",
+                "CRITERIA_VERSION": "qc-e1373b1495.aqr-15492a059e.sg-7006008fc6.lib-e97ebfa5c3",
+                "RENDERED_AT": "2026-10-02T01:58:44Z",
+            },
+        )
+        assert data["quality_score"] == 91
+        assert data["review"]["verdict"] == "APPROVED"
+        assert data["review"]["model"] == "claude-opus-5-5"
+        assert data["review"]["criteria_version"].startswith("qc-e1373b1495.")
+        assert data["review"]["rendered_at"] == "2026-10-02T01:58:44Z"
+
+    def test_metadata_writer_runs_without_provenance(self, tmp_path):
+        data = self._run_writer(tmp_path, {"REVIEW_MODEL": "", "CRITERIA_VERSION": " "})
+        assert data["quality_score"] == 91
+        assert data["review"]["weaknesses"] == ["legend small"]
+        for key in ("model", "criteria_version", "rendered_at"):
+            assert key not in data["review"], key
+
+    def test_both_regen_comments_carry_the_gate_record(self):
+        block = _regen_block(_step("impl-review.yml", "Add verdict label and take action")["run"])
+        assert 'regen_gate.py" marker' in block
+        merge_start = block.index('if [ "$GATE_VERDICT" = "merge" ]; then')
+        merge = block[merge_start : block.index("exit 0", merge_start)]
+        keep = block[block.index("exit 0", merge_start) :]
+        assert '"$GATE_RECORD_MARKER"' in merge
+        assert "/tmp/anyplot-regen-merged.md" in merge
+        assert '"$GATE_RECORD_MARKER"' in keep[: keep.index("} > /tmp/anyplot-regen-kept.md")]
+
+    def test_merge_path_comment_never_blocks_the_merge(self):
+        block = _code_only(_regen_block(_step("impl-review.yml", "Add verdict label and take action")["run"]))
+        comment = block.index('gh pr comment "$PR_NUM" --body-file /tmp/anyplot-regen-merged.md')
+        dispatch = block.index("gh workflow run impl-merge.yml")
+        assert comment < dispatch
+        line_start = block.rindex("\n", 0, comment)
+        assert block[line_start:comment].strip().startswith("GH_RETRY_LEVEL=warning gh_retry")
+        after = block[comment : block.index("\n", block.index("\n", comment) + 1)]
+        assert '|| echo "::warning::' in after
+        assert "exit 1" not in after
+
+
+class TestImplGenerateHeaderReset:
+    """M3: the new file's header says `Quality: pending` before the review sees it."""
+
+    SCRIPT = _step("impl-generate.yml", "Create library metadata file")["run"]
+
+    def test_header_is_reset_before_the_metadata_commit(self):
+        reset = self.SCRIPT.index("sanitize-source --pending")
+        assert self.SCRIPT.index('git ls-files --error-unmatch "$IMPL_FILE"') < reset
+        assert reset < self.SCRIPT.index('git commit -m "chore(${LIBRARY}): add metadata for ${SPEC_ID}"')
+        assert '--source "$IMPL_FILE" --out "$IMPL_FILE"' in self.SCRIPT
+        assert 'git add "$IMPL_FILE"' in self.SCRIPT
+
+    def test_helper_comes_from_the_workflow_ref_and_never_fails_the_step(self):
+        assert 'git show "${GITHUB_SHA}:automation/scripts/regen_gate.py"' in self.SCRIPT
+        block = self.SCRIPT[self.SCRIPT.index("sanitize-source --pending") :]
+        assert block.index("else\n") < block.index("::warning::could not reset the Quality header")
+
+
 class TestWatchdog:
     SCRIPT = _step("watchdog-stuck-jobs.yml", "Scan and dispatch")["run"]
 

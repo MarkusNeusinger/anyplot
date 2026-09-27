@@ -46,3 +46,8 @@ review:
   # Summary feedback
   strengths: []        # What's good about this implementation
   weaknesses: []       # What needs improvement (AI decides HOW to fix)
+
+  # Provenance of the review (filled by impl-review, not synced to the database)
+  model: null             # Resolved model ID of the review session (e.g., claude-opus-5-5)
+  criteria_version: null  # qc-<10 hex>.aqr-<10 hex>.sg-<10 hex>.lib-<10 hex>: git blob ids of the rubric files and the library prompt
+  rendered_at: null       # RFC 3339 creation time of the reviewed render (staging object)

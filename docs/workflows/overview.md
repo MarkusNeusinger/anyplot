@@ -220,16 +220,22 @@ The cascade applies to fresh generations only. A regeneration takes the regen ga
 A regeneration is an implementation PR for a (spec, library) pair that already has an implementation on main — for example every PR that `daily-regen.yml` produces. It gets one review and no repair loop, and the live implementation is replaced only when the new one is visibly better:
 
 1. `impl-review.yml` detects the regeneration from `origin/main` (the implementation file exists there), downloads the predecessor's production renders to `/tmp/anyplot-prev-plot-{light,dark}.png` (outside the working directory), and writes the previous review with stable weakness ids `W1`..`Wn` — without its stored scores — to `/tmp/anyplot-prev-review.md`.
-2. The review scores the new render blind (the prompt never shows it the stored score), then re-scores the predecessor's renders against the same criteria and writes its before/after judgement to `review_regen.json` (step 8b of `prompts/workflow-prompts/ai-quality-review.md`).
+2. The review scores the new render blind (the prompt never shows it the stored score, and `impl-generate.yml` resets the new file's `Quality: N/100` header, which a regeneration inherits from its predecessor, to `Quality: pending` before the PR opens), then re-scores the predecessor's renders against the same criteria and writes its before/after judgement to `review_regen.json` (step 8b of `prompts/workflow-prompts/ai-quality-review.md`).
 3. `automation/scripts/regen_gate.py` decides. Replace requires all of:
    - new score >= re-scored predecessor - 1 (the stored score is display-only);
    - at least one improvement with a named, visible location that doesn't cite an `Expected, not a defect:` bullet of the spec (a permission is never an improvement; the gate lists such an item as not counted);
    - no regressions. On a `*-basic` spec, a replaced data scenario or added encodings count as regressions unless a change request asked for them.
-4. Replace: `regen:improved`, then `ai-approved`, then the normal merge. Keep: `regen:kept`, the PR is closed with a comment (stored, re-scored, and new score, improvements, regressions, reason), the issue gets `impl:{library}:done` back, and nothing reaches main, GCS production, or the database.
+4. Replace: `regen:improved`, then `ai-approved`, a PR comment with the same summary (stored, re-scored, and new score, improvements, regressions, reason), then the normal merge. Keep: `regen:kept`, the PR is closed with that comment, the issue gets `impl:{library}:done` back, and nothing reaches main, GCS production, or the database.
 
 A crashed regen review is auto-retried once by `impl-review.yml`; after that the PR carries `ai-review-failed` and the watchdog only flags it — it never dispatches a further review for a regeneration.
 
-Anything missing or malformed — no `review_regen.json`, an unknown weakness id, missing previous renders, a failed canvas gate, a score of 0 — keeps the live implementation. The gate step logs one `::notice::regen_gate spec=… lib=… prev_stored=… prev_rescored=… new=… verdict=… reason=…` line per decision.
+Anything missing or malformed — no `review_regen.json`, an unknown weakness id, missing previous renders, a failed canvas gate, a score of 0 — keeps the live implementation.
+
+Every decision leaves three traces:
+
+- **The gate record in the PR comment.** Both the keep and the replace comment end with an invisible `<!-- regen-gate-record:v1 {...} -->` marker: one line of JSON with the scores, improvement and regression counts, the reason code (`merge`, `below_tolerance`, `no_visible_improvement`, `regression`, `regen_json_invalid`, `canvas_failed`, and so on), and the provenance of both reviews (resolved model and rules version of this review and of the stored one). It holds no model-written text. PR comments are permanent, so read this first.
+- **The notice line in the run log.** `::notice::regen_gate spec=… lib=… prev_stored=… prev_rescored=… new=… verdict=… code=… model=… criteria=… reason=…`. Run logs expire.
+- **The pair artifact.** `regen-pair-<pr>-<attempt>` on the `impl-review.yml` run, kept 60 days: both renders, both sources (the predecessor's with its score hidden), the previous review, this review's files, and the gate record. The predecessor's production renders are overwritten on the next merge, so this is the only copy of what the gate compared.
 
 To replace an implementation without the gate, dispatch with `regen_gate=false` (`impl-generate.yml` or `bulk-generate.yml`): the PR is labelled `regen:forced` and takes the fresh-generation path, including the repair loop — whose exhaustion path removes the old implementation from main.
 
@@ -331,6 +337,14 @@ either default.
 The other pipeline LLM steps use fixed models: `spec-create.yml` runs on Opus,
 and the spec polish and cross-library similarity audit in `daily-regen.yml` run
 on Sonnet.
+
+An alias such as `sonnet` points at a newer model after each release, so
+`impl-review.yml` stores what actually ran. The metadata's `review` block
+records the resolved model ID (`review.model`, for example `claude-sonnet-5`),
+the rules version the reviewer read (`review.criteria_version`, the git blob
+IDs of `prompts/quality-criteria.md`, `ai-quality-review.md`,
+`default-style-guide.md`, and the library prompt), and when the reviewed render
+was made (`review.rendered_at`). These keys aren't synced to the database.
 
 ---
 

@@ -39,10 +39,25 @@ CLI interface for use in GitHub Actions shell steps.
 Regen gate (stdlib, plus PyYAML for `context`): `context` writes the previous
 review with stable weakness ids `W1..Wn` (used by `impl-generate.yml` and
 `impl-review.yml`), `decide` turns the review's `review_regen.json` into
-`merge` or `keep`. `impl-review.yml` runs a copy taken from its own ref.
-`parse_characteristics` reads the spec's characteristic bullets as `C1..Cn`
-(wrapped lines joined), `characteristic_kind` reads each bullet's kind, and an
-improvement that cites an `Expected, not a defect:` bullet is not counted.
+`merge` or `keep` with a reason code and, with `--record-out`, a gate record
+(scores, counts, codes, provenance — no model-written text); `marker` turns
+that record into the `<!-- regen-gate-record:v1 … -->` line both PR comments
+carry. `sanitize-source` hides the predecessor's header score from the
+reviewer; with `--pending` it resets the new file's header to
+`Quality: pending` (`impl-generate.yml`). `impl-review.yml` runs a copy taken
+from its own ref. `parse_characteristics` reads the spec's characteristic
+bullets as `C1..Cn` (wrapped lines joined), `characteristic_kind` reads each
+bullet's kind, and an improvement that cites an `Expected, not a defect:`
+bullet is not counted.
+
+### `review_provenance.py`
+Review provenance (stdlib): `criteria-version` prints the rules version — git
+blob ids of `prompts/quality-criteria.md`, `ai-quality-review.md`,
+`default-style-guide.md` and the library prompt, as
+`qc-….aqr-….sg-….lib-…` — plus the `prompts/` tree id; `model` reads the
+resolved model id from the claude-code-action execution file (first
+`system`/`init` message only). `impl-review.yml` writes both into the
+metadata's `review` block and the gate record.
 
 ### `spec_characteristics_lint.py`
 Lint for the closing `## What a good version looks like` section of

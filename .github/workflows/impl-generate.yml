@@ -765,6 +765,22 @@ jobs:
             exit 1
           fi
 
+          # M3: a regeneration edits the live file, so its header still says
+          # `Quality: N/100` — the predecessor's stored score, in plain sight
+          # of the review that scores this version blind. Reset it to
+          # `Quality: pending`, the state a fresh file starts in; impl-review
+          # writes the new score after the review. The helper comes from this
+          # workflow's own ref (the branch was cut from main, which may not
+          # carry --pending yet). Never fatal: a failure only leaves the
+          # header as the generator wrote it.
+          if git show "${GITHUB_SHA}:automation/scripts/regen_gate.py" > "$RUNNER_TEMP/regen_gate_header.py" 2>/dev/null \
+             && python3 "$RUNNER_TEMP/regen_gate_header.py" sanitize-source --pending \
+                  --source "$IMPL_FILE" --out "$IMPL_FILE"; then
+            git add "$IMPL_FILE"
+          else
+            echo "::warning::could not reset the Quality header of ${IMPL_FILE} to pending"
+          fi
+
           # Add metadata file
           git add "$METADATA_FILE"
 

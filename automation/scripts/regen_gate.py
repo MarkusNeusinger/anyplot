@@ -31,6 +31,13 @@ Merge requires ALL of:
 
 Anything missing or malformed fails closed to ``keep``.
 
+Every decision also carries a machine-readable reason ``code`` (see
+``REASON_CODES``) and, with ``--record-out``, a gate record: a one-line JSON
+object with scores, counts, codes and provenance, and no model-written text.
+``impl-review.yml`` embeds it in the PR comment on both paths as
+``<!-- regen-gate-record:v1 {...} -->`` (``marker``), where it outlives the
+run log; ``review_retest.py gate-report`` aggregates those markers.
+
 The script is stdlib-only except for the ``context`` subcommand, which needs
 PyYAML to read the previous metadata. ``impl-review.yml`` runs it from a copy
 taken at the workflow's own ref, so the parser always matches the workflow.
@@ -44,11 +51,16 @@ Subcommands::
     regen_gate.py decide --spec-id S --library B --score N --prev-stored N|n/a \
         --regen-json review_regen.json --weaknesses-json /tmp/anyplot-prev-weaknesses.json \
         --spec-file plots/S/specification.md --prev-renders available|missing \
-        [--canvas-failed] [--change-request-present] [--context-failed] [--summary-out FILE]
+        [--canvas-failed] [--change-request-present] [--context-failed] [--summary-out FILE] \
+        [--pr N] [--model ID] [--criteria-version V] [--prompts-tree SHA] \
+        [--prev-model ID] [--prev-criteria-version V] [--record-out FILE]
 
-    regen_gate.py sanitize-source --source PREV_IMPL --out /tmp/anyplot-prev-impl.EXT
+    regen_gate.py sanitize-source --source PREV_IMPL --out /tmp/anyplot-prev-impl.EXT [--pending]
 
-Both write ``key=value`` outputs to ``$GITHUB_OUTPUT`` when it is set.
+    regen_gate.py marker --record FILE
+
+``context`` and ``decide`` write ``key=value`` outputs to ``$GITHUB_OUTPUT``
+when it is set.
 """
 
 from __future__ import annotations
@@ -59,12 +71,31 @@ import os
 import re
 import sys
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 
 MERGE = "merge"
 KEEP = "keep"
+
+# Machine-readable reason codes, one per decision branch. ``script_crashed``
+# is written by the workflow's fallback when this script cannot run at all.
+REASON_CODES = (
+    "canvas_failed",
+    "no_score",
+    "score_zero",
+    "prev_renders_missing",
+    "context_failed",
+    "regen_json_missing",
+    "regen_json_unreadable",
+    "regen_json_invalid",
+    "regression",
+    "no_visible_improvement",
+    "below_tolerance",
+    "merge",
+    "script_crashed",
+)
 
 REF_RE = re.compile(r"^(?:(?P<kind>[WPC])(?P<num>[1-9]\d*)|new)$")
 CHARACTERISTICS_HEADING_RE = re.compile(r"^##\s+what a good version looks like\b", re.IGNORECASE)
@@ -229,6 +260,21 @@ def sanitize_source(text: str) -> str:
     return "".join(head + lines[HEADER_LINES:])
 
 
+def reset_header_score(text: str) -> str:
+    """Turn ``Quality: N/100`` back into ``Quality: pending`` (M3).
+
+    A regeneration edits the live file, so its header still carries the
+    predecessor's stored score, and the review would score the new version
+    with that number in plain sight. ``impl-generate.yml`` resets it before
+    the PR opens, the way a fresh file starts (``prompts/plot-generator.md``:
+    ``Quality: pending``). Same scope as ``sanitize_source``: the leading
+    header lines only, line count unchanged.
+    """
+    lines = text.splitlines(keepends=True)
+    head = [QUALITY_HEADER_RE.sub(r"\1pending", line) for line in lines[:HEADER_LINES]]
+    return "".join(head + lines[HEADER_LINES:])
+
+
 # ---------------------------------------------------------------------------
 # Decision
 # ---------------------------------------------------------------------------
@@ -254,11 +300,16 @@ class GateInput:
 class GateResult:
     verdict: str
     reason: str
+    code: str = ""
     prev_rescored: int | None = None
     improvements: list[dict[str, str]] = field(default_factory=list)
     regressions: list[dict[str, str]] = field(default_factory=list)
     # Improvements whose ref is in here were listed but not counted.
     permission_refs: frozenset[str] = frozenset()
+    # Filled once review_regen.json validated; None before that.
+    scenario_changed: bool | None = None
+    encodings_added: int | None = None
+    coerced: bool = False
 
 
 def _is_int(value: Any) -> bool:
@@ -372,29 +423,40 @@ def validate_regen(payload: Any, known_weakness_ids: frozenset[str], characteris
 def decide(inp: GateInput) -> GateResult:
     """Apply the regen gate. Every uncertain input resolves to ``keep``."""
     if inp.canvas_failed:
-        return GateResult(KEEP, "canvas dimension gate failed")
+        return GateResult(KEEP, "canvas dimension gate failed", "canvas_failed")
     if inp.score is None:
-        return GateResult(KEEP, "no valid review score")
+        return GateResult(KEEP, "no valid review score", "no_score")
     if inp.score == 0:
-        return GateResult(KEEP, "new render scored 0 (auto-reject)")
+        return GateResult(KEEP, "new render scored 0 (auto-reject)", "score_zero")
     if not inp.prev_renders:
-        return GateResult(KEEP, "previous production renders unavailable, no before/after comparison possible")
+        return GateResult(
+            KEEP,
+            "previous production renders unavailable, no before/after comparison possible",
+            "prev_renders_missing",
+        )
     if not inp.context_ok:
-        return GateResult(KEEP, "regen context extraction failed (previous review not available to the reviewer)")
+        return GateResult(
+            KEEP,
+            "regen context extraction failed (previous review not available to the reviewer)",
+            "context_failed",
+        )
     if inp.regen is None:
-        return GateResult(KEEP, f"review_regen.json {inp.regen_error or 'missing'}")
+        error = inp.regen_error or "missing"
+        code = "regen_json_missing" if error == "missing" else "regen_json_unreadable"
+        return GateResult(KEEP, f"review_regen.json {error}", code)
 
     regen, coerced = normalize_regen(inp.regen)
     result = _judge(inp, regen)
     if coerced:
         result.reason += f" (coerced: {'; '.join(coerced)})"
+        result.coerced = True
     return result
 
 
 def _judge(inp: GateInput, regen: Any) -> GateResult:
     errors = validate_regen(regen, inp.known_weakness_ids, inp.characteristic_count)
     if errors:
-        return GateResult(KEEP, "invalid review_regen.json: " + "; ".join(errors))
+        return GateResult(KEEP, "invalid review_regen.json: " + "; ".join(errors), "regen_json_invalid")
 
     payload: dict[str, Any] = regen
     prev_rescored: int = payload["prev_rescored"]
@@ -432,9 +494,12 @@ def _judge(inp: GateInput, regen: Any) -> GateResult:
         improvements=improvements,
         regressions=regressions,
         permission_refs=inp.permission_refs,
+        scenario_changed=bool(payload["scenario_changed"]),
+        encodings_added=len([e for e in payload["encodings_added"] if e.strip()]),
     )
 
     if regressions:
+        result.code = "regression"
         result.reason = f"{len(regressions)} regression(s): " + "; ".join(r["what"] for r in regressions)
         return result
 
@@ -450,14 +515,17 @@ def _judge(inp: GateInput, regen: Any) -> GateResult:
     visible = [i for i in counted if i["where_visible"]]
     if not visible:
         detail = " (every improvement needs a non-empty where_visible)" if counted or not cited else ""
+        result.code = "no_visible_improvement"
         result.reason = f"no visible improvement{detail}{note}"
         return result
 
     if inp.score < prev_rescored - 1:
+        result.code = "below_tolerance"
         result.reason = f"new score {inp.score} < re-scored predecessor {prev_rescored} - 1{note}"
         return result
 
     result.verdict = MERGE
+    result.code = "merge"
     result.reason = (
         f"{len(visible)} visible improvement(s), no regressions, new score {inp.score} >= "
         f"re-scored predecessor {prev_rescored} - 1{note}"
@@ -549,6 +617,158 @@ def render_summary(result: GateResult, prev_stored: str, score: int | None) -> s
     return "\n".join(lines) + "\n"
 
 
+# ---------------------------------------------------------------------------
+# Gate record (machine-readable, no model-written text)
+# ---------------------------------------------------------------------------
+
+RECORD_VERSION = 1
+RECORD_MARKER = "regen-gate-record:v1"
+RECORD_MARKER_RE = re.compile(r"<!-- regen-gate-record:v1 (\{[^\n]*?\}) -->")
+# Every string in a record is an identifier from the workflow (spec, library,
+# model id, rules version, timestamp) or a fixed code — never review prose.
+RECORD_TOKEN_RE = re.compile(r"^[A-Za-z0-9._:/\[\]-]*$")
+RECORD_KEYS = frozenset(
+    {
+        "v",
+        "pr",
+        "spec",
+        "lib",
+        "model",
+        "criteria_version",
+        "prompts_tree",
+        "prev_model",
+        "prev_criteria_version",
+        "prev_stored",
+        "prev_rescored",
+        "new",
+        "verdict",
+        "code",
+        "improvements",
+        "regressions",
+        "scenario_changed",
+        "encodings_added",
+        "coerced",
+        "at",
+    }
+)
+
+
+def record_token(value: Any, limit: int = 100) -> str:
+    """A workflow-supplied identifier reduced to a safe token (``n/a`` when empty).
+
+    Runs of ``-`` collapse to one, so a record can always sit inside an HTML
+    comment (``--`` would end it early).
+    """
+    if value is None:
+        return "n/a"
+    text = re.sub(r"[^A-Za-z0-9._:/\[\]-]", "", str(value).strip())[:limit]
+    text = re.sub(r"-{2,}", "-", text)
+    return text or "n/a"
+
+
+def _ref_kind(ref: str) -> str:
+    return "new" if ref == "new" else ref[:1]
+
+
+def build_record(
+    result: GateResult,
+    *,
+    spec_id: str,
+    library: str,
+    score: int | None,
+    prev_stored: int | None,
+    pr: int | None = None,
+    model: str | None = None,
+    criteria_version: str | None = None,
+    prompts_tree: str | None = None,
+    prev_model: str | None = None,
+    prev_criteria_version: str | None = None,
+    at: str | None = None,
+) -> dict[str, Any]:
+    """The gate record: scores, counts, codes and provenance — nothing a model wrote."""
+    kinds = {"W": 0, "P": 0, "C": 0, "new": 0}
+    for item in result.improvements:
+        kind = _ref_kind(item["ref"])
+        if kind in kinds:
+            kinds[kind] += 1
+    return {
+        "v": RECORD_VERSION,
+        "pr": pr,
+        "spec": record_token(spec_id),
+        "lib": record_token(library),
+        "model": record_token(model),
+        "criteria_version": record_token(criteria_version, limit=200),
+        "prompts_tree": record_token(prompts_tree),
+        "prev_model": record_token(prev_model),
+        "prev_criteria_version": record_token(prev_criteria_version, limit=200),
+        "prev_stored": prev_stored,
+        "prev_rescored": result.prev_rescored,
+        "new": score,
+        "verdict": result.verdict,
+        "code": result.code,
+        "improvements": {
+            "total": len(result.improvements),
+            "visible": len([i for i in result.improvements if i["where_visible"]]),
+            **kinds,
+        },
+        "regressions": len(result.regressions),
+        "scenario_changed": result.scenario_changed,
+        "encodings_added": result.encodings_added,
+        "coerced": result.coerced,
+        "at": at or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
+
+
+def validate_record(record: Any) -> list[str]:
+    """Schema check for a gate record: known keys, and no free text anywhere."""
+    if not isinstance(record, dict):
+        return ["record is not a JSON object"]
+    errors = [f"unknown key {key!r}" for key in record if key not in RECORD_KEYS]
+    for missing in ("v", "spec", "lib", "verdict", "code"):
+        if missing not in record:
+            errors.append(f"missing key {missing!r}")
+
+    def walk(value: Any, where: str) -> None:
+        if isinstance(value, dict):
+            for key, inner in value.items():
+                walk(inner, f"{where}.{key}")
+        elif isinstance(value, str) and not RECORD_TOKEN_RE.fullmatch(value):
+            errors.append(f"{where} is not a plain token")
+        elif value is not None and not isinstance(value, str | int | float | bool | dict):
+            errors.append(f"{where} has an unsupported type")
+
+    walk(record, "record")
+    return errors
+
+
+def render_record_marker(record: dict[str, Any]) -> str:
+    """``<!-- regen-gate-record:v1 {json} -->`` for a PR comment.
+
+    Raises ``ValueError`` when the record is not a clean record or its JSON
+    would close the HTML comment early.
+    """
+    errors = validate_record(record)
+    if errors:
+        raise ValueError("invalid gate record: " + "; ".join(errors))
+    payload = json.dumps(record, separators=(",", ":"), ensure_ascii=True)
+    if "--" in payload:
+        raise ValueError("gate record contains '--' and would break the HTML comment")
+    return f"<!-- {RECORD_MARKER} {payload} -->"
+
+
+def parse_record_markers(text: str) -> list[dict[str, Any]]:
+    """Every valid gate record embedded in a comment body, in order."""
+    records: list[dict[str, Any]] = []
+    for match in RECORD_MARKER_RE.finditer(text or ""):
+        try:
+            record = json.loads(match.group(1))
+        except ValueError:
+            continue
+        if not validate_record(record):
+            records.append(record)
+    return records
+
+
 def cmd_context(args: argparse.Namespace) -> int:
     import yaml  # PyYAML — only this subcommand needs it
 
@@ -563,10 +783,27 @@ def cmd_context(args: argparse.Namespace) -> int:
     Path(args.out_weaknesses).write_text(json.dumps(weaknesses, indent=2, ensure_ascii=False), encoding="utf-8")
     quality = data.get("quality_score")
     stored = str(quality) if _is_int(quality) else "n/a"
+    # Provenance of the stored review, so a gate decision can later be told
+    # apart as comparable (same model, same rules) or not. Older metadata has
+    # neither key.
+    raw_review = data.get("review")
+    review: dict[str, Any] = raw_review if isinstance(raw_review, dict) else {}
     _write_outputs(
-        {"prev_stored": stored, "weakness_count": str(len(weaknesses)), "characteristic_count": str(len(characteristics))}
+        {
+            "prev_stored": stored,
+            "weakness_count": str(len(weaknesses)),
+            "characteristic_count": str(len(characteristics)),
+            "prev_model": record_token(review.get("model")),
+            "prev_criteria_version": record_token(review.get("criteria_version"), limit=200),
+        }
     )
     return 0
+
+
+def _optional_int(raw: str | None) -> int | None:
+    if raw is None or not re.fullmatch(r"\s*\d+\s*", raw):
+        return None
+    return int(raw)
 
 
 def cmd_decide(args: argparse.Namespace) -> int:
@@ -591,19 +828,53 @@ def cmd_decide(args: argparse.Namespace) -> int:
     result = decide(inp)
     rescored = str(result.prev_rescored) if result.prev_rescored is not None else "n/a"
     reason = _one_line(result.reason)
+    # The stable prefix (spec … verdict) is what readers match on; the new
+    # fields sit before `reason=`, which stays last and runs to the line end.
+    provenance = ""
+    if args.model:
+        provenance += f" model={record_token(args.model)}"
+    if args.criteria_version:
+        provenance += f" criteria={record_token(args.criteria_version, limit=200)}"
     print(
         f"::notice::regen_gate spec={args.spec_id} lib={args.library} prev_stored={args.prev_stored} "
-        f"prev_rescored={rescored} new={score if score is not None else 'n/a'} verdict={result.verdict} reason={reason}"
+        f"prev_rescored={rescored} new={score if score is not None else 'n/a'} verdict={result.verdict} "
+        f"code={result.code}{provenance} reason={reason}"
     )
     if args.summary_out:
         Path(args.summary_out).write_text(render_summary(result, args.prev_stored, score), encoding="utf-8")
-    _write_outputs({"verdict": result.verdict, "reason": reason, "prev_rescored": rescored})
+    if args.record_out:
+        record = build_record(
+            result,
+            spec_id=args.spec_id,
+            library=args.library,
+            score=score,
+            prev_stored=parse_score(args.prev_stored),
+            pr=_optional_int(args.pr),
+            model=args.model or None,
+            criteria_version=args.criteria_version or None,
+            prompts_tree=args.prompts_tree or None,
+            prev_model=args.prev_model or None,
+            prev_criteria_version=args.prev_criteria_version or None,
+        )
+        Path(args.record_out).write_text(json.dumps(record, separators=(",", ":")) + "\n", encoding="utf-8")
+    _write_outputs({"verdict": result.verdict, "reason": reason, "prev_rescored": rescored, "code": result.code})
     return 0
 
 
 def cmd_sanitize_source(args: argparse.Namespace) -> int:
     text = Path(args.source).read_text(encoding="utf-8")
-    Path(args.out).write_text(sanitize_source(text), encoding="utf-8")
+    rewrite = reset_header_score if args.pending else sanitize_source
+    Path(args.out).write_text(rewrite(text), encoding="utf-8")
+    return 0
+
+
+def cmd_marker(args: argparse.Namespace) -> int:
+    try:
+        record = json.loads(Path(args.record).read_text(encoding="utf-8"))
+        print(render_record_marker(record))
+    except (OSError, ValueError) as exc:
+        print(f"no gate record marker: {_one_line(str(exc))[:200]}", file=sys.stderr)
+        return 1
     return 0
 
 
@@ -624,8 +895,15 @@ def build_parser() -> argparse.ArgumentParser:
 
     san = sub.add_parser("sanitize-source", help="Hide the stored score in a source file's generated header")
     san.add_argument("--source", required=True)
-    san.add_argument("--out", required=True)
+    san.add_argument("--out", required=True, help="may equal --source (rewrite in place)")
+    san.add_argument(
+        "--pending", action="store_true", help="write 'Quality: pending' instead of 'hidden' (impl-generate, M3)"
+    )
     san.set_defaults(func=cmd_sanitize_source)
+
+    mark = sub.add_parser("marker", help="Print the PR-comment marker for a gate record written by --record-out")
+    mark.add_argument("--record", required=True)
+    mark.set_defaults(func=cmd_marker)
 
     dec = sub.add_parser("decide", help="Apply the regen gate to review_regen.json")
     dec.add_argument("--spec-id", required=True)
@@ -640,6 +918,15 @@ def build_parser() -> argparse.ArgumentParser:
     dec.add_argument("--change-request-present", action="store_true")
     dec.add_argument("--context-failed", action="store_true")
     dec.add_argument("--summary-out", default="")
+    # Provenance for the notice line and the gate record; all optional, so
+    # older callers (the retest harness at any rules_ref) keep working.
+    dec.add_argument("--pr", default="")
+    dec.add_argument("--model", default="", help="resolved model id of the review session")
+    dec.add_argument("--criteria-version", default="", help="review_provenance.py criteria-version")
+    dec.add_argument("--prompts-tree", default="", help="git tree id of the prompts/ the reviewer read")
+    dec.add_argument("--prev-model", default="", help="context's prev_model")
+    dec.add_argument("--prev-criteria-version", default="", help="context's prev_criteria_version")
+    dec.add_argument("--record-out", default="", help="write the gate record (one-line JSON) here")
     dec.set_defaults(func=cmd_decide)
     return parser
 
