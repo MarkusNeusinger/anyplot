@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-error: Bar Chart with Error Bars
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 91/100 | Created: 2026-09-02
+// Quality: 87/100 | Updated: 2026-09-27
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
@@ -53,30 +53,38 @@ g.selectAll(".bar")
   .attr("fill", t.palette[0])
   .attr("rx", 4);
 
-// --- Error bars (stem + caps) ------------------------------------------------
+// --- Error bars (stem + caps, drawn as one d3-shape "I-beam" path per bar) --
 const capWidth = Math.min(x.bandwidth() * 0.4, 36);
-const errorGroups = g.selectAll(".error").data(data).join("g").attr("class", "error");
+// A d3.line() generator with .defined() gaps draws three disjoint segments
+// (top cap, stem, bottom cap) as a single path per datum.
+const errorLine = d3
+  .line()
+  .defined((p) => p !== null)
+  .x((p) => p.x)
+  .y((p) => p.y);
 
-errorGroups
-  .append("line")
-  .attr("x1", (d) => x(d.treatment) + x.bandwidth() / 2)
-  .attr("x2", (d) => x(d.treatment) + x.bandwidth() / 2)
-  .attr("y1", (d) => y(d.mean + d.sd))
-  .attr("y2", (d) => y(d.mean - d.sd))
+g.selectAll(".error")
+  .data(data)
+  .join("path")
+  .attr("class", "error")
+  .attr("fill", "none")
   .attr("stroke", t.ink)
-  .attr("stroke-width", 2.5);
-
-errorGroups
-  .selectAll(".cap")
-  .data((d) => [d.mean + d.sd, d.mean - d.sd].map((v) => ({ treatment: d.treatment, v })))
-  .join("line")
-  .attr("class", "cap")
-  .attr("x1", (d) => x(d.treatment) + x.bandwidth() / 2 - capWidth / 2)
-  .attr("x2", (d) => x(d.treatment) + x.bandwidth() / 2 + capWidth / 2)
-  .attr("y1", (d) => y(d.v))
-  .attr("y2", (d) => y(d.v))
-  .attr("stroke", t.ink)
-  .attr("stroke-width", 2.5);
+  .attr("stroke-width", 2.5)
+  .attr("d", (d) => {
+    const cx = x(d.treatment) + x.bandwidth() / 2;
+    const top = y(d.mean + d.sd);
+    const bottom = y(d.mean - d.sd);
+    return errorLine([
+      { x: cx - capWidth / 2, y: top },
+      { x: cx + capWidth / 2, y: top },
+      null,
+      { x: cx, y: top },
+      { x: cx, y: bottom },
+      null,
+      { x: cx - capWidth / 2, y: bottom },
+      { x: cx + capWidth / 2, y: bottom },
+    ]);
+  });
 
 // --- Peak callout (data storytelling) -----------------------------------
 const peak = data.reduce((a, b) => (b.mean > a.mean ? b : a));
@@ -146,6 +154,6 @@ svg
   .attr("y", 56)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "30px")
+  .style("font-size", "36px")
   .style("font-weight", "600")
   .text("bar-error · javascript · d3 · anyplot.ai");

@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' bar-error: Bar Chart with Error Bars
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 89/100 | Created: 2026-09-02
+#' Quality: 89/100 | Updated: 2026-09-27
 
 library(ggplot2)
 library(dplyr)
@@ -36,9 +36,14 @@ yield_summary <- replicate_yields %>%
   summarise(mean_yield = mean(yield), sd_yield = sd(yield)) %>%
   arrange(desc(mean_yield)) %>%
   mutate(
-    treatment = factor(treatment, levels = treatment),
+    # Reversed levels so coord_flip() draws the top-ranked treatment
+    # at the top of the horizontal axis, not the bottom.
+    treatment = factor(treatment, levels = rev(treatment)),
     is_top = mean_yield == max(mean_yield)
   )
+
+top_row <- yield_summary %>% filter(is_top)
+top_x <- as.numeric(top_row$treatment)
 
 # --- Plot -------------------------------------------------------------------
 plot_title <- "Crop Yield by Fertilizer Treatment · bar-error · r · ggplot2 · anyplot.ai"
@@ -52,10 +57,20 @@ p <- ggplot(yield_summary, aes(x = treatment, y = mean_yield)) +
   ) +
   geom_text(
     aes(y = mean_yield + sd_yield, label = sprintf("%.1f", mean_yield), fontface = ifelse(is_top, "bold", "plain")),
-    vjust = -0.9, size = 3, color = INK
+    hjust = -0.4, size = 3, color = INK
   ) +
+  annotate(
+    "text",
+    x = top_x, y = top_row$mean_yield + top_row$sd_yield + 0.9,
+    label = "★ Best yield", hjust = 0, vjust = 0.5,
+    size = 3, fontface = "bold", color = BRAND
+  ) +
+  coord_flip(clip = "off") +
   scale_alpha_manual(values = c(`TRUE` = 1, `FALSE` = 0.6), guide = "none") +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.14))) +
+  scale_y_continuous(
+    labels = scales::label_number(suffix = " t/ha"),
+    expand = expansion(mult = c(0, 0.32))
+  ) +
   labs(
     title = plot_title,
     subtitle = "Ranked by mean yield (highest first) · error bars show ±1 SD across 8 replicate plots per treatment",
@@ -66,9 +81,9 @@ p <- ggplot(yield_summary, aes(x = treatment, y = mean_yield)) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major.x = element_blank(),
+    panel.grid.major.y = element_blank(),
     panel.grid.minor  = element_blank(),
-    panel.grid.major.y = element_line(color = INK, linewidth = 0.3),
+    panel.grid.major.x = element_line(color = INK, linewidth = 0.3),
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     axis.ticks        = element_blank(),

@@ -2,46 +2,53 @@ library: matplotlib
 language: python
 specification_id: bar-error
 created: '2025-12-27T19:21:04Z'
-updated: '2026-05-10T14:44:50Z'
-generated_by: claude-haiku
-workflow_run: 25631357603
+updated: '2026-09-27T21:00:30Z'
+generated_by: claude-sonnet
+workflow_run: 36349375161
 issue: 2376
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.15
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 93
 review:
   strengths:
-  - Flawless visual quality with perfect theme adaptation
-  - All bars and error bars render identically in light/dark with proper chrome flipping
-  - Perfect text legibility in both themes with no readability failures
-  - 'Full spec compliance: all required features (error bars, caps, labels) correctly
-    implemented'
-  - Professional annotation explaining error bar representation
-  - Clean, idiomatic matplotlib code with proper theme-token pattern
+  - The winning variant is highlighted with a bolder ink-toned edge instead of an
+    extraneous hue, keeping VQ-07 palette compliance while still creating a clear
+    focal point
+  - The annotation directly ties the highlighted bar to a computed +50% lift over
+    Control and doubles as the required CI explanation, giving the chart a clear point
+    of view
+  - A dashed Control-baseline reference line lets every variant be read as a lift
+    over Control at a glance
+  - Exact canonical canvas (3200×1800, no bbox_inches='tight'), correct title format
+    including the language segment, and per-bar value labels for quick reading
+  - Clean, idiomatic KISS-structured code using Axes methods throughout with consistent
+    theme tokens in both renders
   weaknesses:
-  - Generic design with standard library defaults—no custom palette or design innovations
-  - No visual hierarchy or focal point—all bars have equal visual weight
-  - Limited use of matplotlib distinctive features
-  - Annotation is explanatory but not visually emphatic or used to create visual storytelling
+  - The annotation's connector line runs straight through the "18.5%" value label
+    on the Variant C bar (both themes) — nudge the value-label y-offset or the annotation
+    xytext so the line clears the label
+  - 'Library Mastery is generic: aside from the annotate()+arrowprops/bbox combo,
+    the implementation sticks to standard ax.bar/ax.errorbar — no matplotlib-distinctive
+    feature (e.g. bar_label(), custom Patch/Path work) is used'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with appropriate contrast for legibility
-      Chrome: Title "bar-error · matplotlib · anyplot.ai" in dark text (#1A1A17), X-axis "Test Group" and Y-axis "Conversion Rate (%)" labels clearly visible in dark gray (INK_SOFT), tick labels legible
-      Data: Five bars in Okabe-Ito green (#009E73) with symmetric error bars featuring visible horizontal caps; error magnitudes range 1.0-2.8%; annotation box in bottom-right explains "Error bars: 95% CI"
-      Legibility verdict: PASS — all text readable, proper contrast, no light-on-light failures
+      Background: Warm off-white, matches #FAF8F1 exactly (sampled corner pixel 250,248,241).
+      Chrome: Title "bar-error · python · matplotlib · anyplot.ai" in dark ink, centered, comfortably sized; "Test Group" / "Conversion Rate (%)" axis titles and tick labels in dark/soft-ink gray, all clearly legible; subtle y-axis gridlines; dashed gray Control-baseline reference line.
+      Data: Five bars in Imprint brand green (#009E73), symmetric error bars in soft ink gray with visible caps; Variant C bar has a bolder dark-ink outline (not a separate hue) marking it as the focal point; a rounded annotation box reads "Variant C: +50% vs Control baseline (error bars: 95% CI)" with a connector line to the bar; per-bar value labels (e.g. "18.5%") above each error cap.
+      Legibility verdict: PASS - all text readable, no light-on-light failures. Minor issue: the annotation connector line passes directly through the "18.5%" value label (crowding, not full occlusion).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with strong contrast
-      Chrome: Title in light text (#F0EFE8), axis labels and tick labels in light gray (INK_SOFT), all clearly readable; no dark-on-dark failures; annotation box uses elevated dark background (#242420)
-      Data: Bars render in identical Okabe-Ito green (#009E73) as light render (only chrome flipped by theme); error bars light gray with visible caps; values and magnitudes match light render exactly
-      Legibility verdict: PASS — all text readable, proper contrast, no dark-on-dark failures, brand green remains vibrant
+      Background: Warm near-black, matches #1A1A17 exactly (sampled corner pixel 26,26,23).
+      Chrome: Same title/axis chrome now in light ink (#F0EFE8) and soft light-gray ticks, fully legible against the dark surface; annotation box uses the elevated dark background with a light-gray border; Variant C's highlight outline now reads as a light-ink ring, still readable without a separate hue.
+      Data: Bars are identical Imprint brand green (#009E73) to the light render - confirmed data colors did not shift, only chrome flipped. Error bars and value labels are legible light gray.
+      Legibility verdict: PASS - no dark-on-dark failures; same minor connector-line/label crowding as the light render.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -49,69 +56,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt;
-          perfect legibility in both themes'
+        comment: All font sizes explicit (title 12pt, labels 10pt, ticks 8pt, value
+          labels/annotation 9pt); fully legible in both themes, title well within
+          width
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All text fully readable with clear separation
+        comment: The annotation connector line runs through the '18.5%' value label
+          on Variant C in both renders — crowding, text still readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, error caps (capsize=8), and lines (elinewidth=2.5) optimally
-          sized and distinct
+        comment: Bars, error caps (capsize=7) and lines (elinewidth=2.2) are well-sized
+          and clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green with strong contrast; CVD-safe
+        comment: Only brand green plus achromatic ink tones used — no hue-only signal,
+          CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 16:9 layout, 60-70% canvas utilization, balanced margins
+        comment: Exact canonical 3200×1800 canvas, balanced margins, nothing cut off,
+          chart fills a healthy share of the frame
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units (%), title matches spec format
+        comment: '"Conversion Rate (%)" carries units, "Test Group" is descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct backgrounds (#FAF8F1 light, #1A1A17 dark); brand green #009E73
-          in both; perfect theme adaptation'
+        comment: 'First series #009E73 in both renders; backgrounds exactly #FAF8F1/#1A1A17;
+          winner highlight uses INK token, not an off-palette hue'
     design_excellence:
-      score: 10
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured defaults but no custom palette or design innovations
+        passed: true
+        comment: 'Thoughtful, restrained design: baseline reference line, ink-toned
+          focal highlight, integrated annotation — clearly above default bar+errorbar
+          styling'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid (alpha=0.15), nice annotation box placement
+        comment: Spines removed, subtle grid, tasteful rounded annotation box; held
+          back from perfect by the connector/label crowding
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: Data displayed but no visual hierarchy or emphasis; all bars equal
-          weight
+        passed: true
+        comment: Clear focal point (highlighted winner) tied to an explicit +50%-vs-Control
+          narrative via the annotation and baseline reference — viewer sees the insight
+          immediately
     spec_compliance:
       score: 15
       max: 15
@@ -121,25 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bar chart with error bars
+        comment: Correct bar chart with error bars, single series
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Error bars, caps, 95% CI label, categorical grouping all present
+        comment: Visible caps, annotation naming '95% CI', consistent bar width/spacing,
+          natural order (Control first)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis categories, Y-axis values, all data visible
+        comment: Zero baseline, value axis untruncated and spans every error bar,
+          marks at their data values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, annotation explains error representation
+        comment: Title exactly 'bar-error · python · matplotlib · anyplot.ai'; annotation
+          correctly explains the error-bar meaning
     data_quality:
       score: 15
       max: 15
@@ -149,19 +167,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Symmetric errors with varying magnitudes (1.0-2.8%)
+        comment: Error magnitudes vary (1.0-2.8), several ranges overlap neighbors
+          — shows the uncertainty range the chart exists for
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: A/B testing context; conversion rates 11.7-18.5% are realistic
+        comment: A/B test conversion-rate scenario, neutral and realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct proportions; error magnitudes realistic
+        comment: Conversion rates and CI widths are plausible; the +50% lift figure
+          matches the underlying values
     code_quality:
       score: 10
       max: 10
@@ -171,33 +191,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, tokens, data, plot, save'
+        comment: Linear imports → tokens → data → plot → save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set; data itself is deterministic literals
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib, numpy'
+        comment: os, matplotlib.pyplot, numpy all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code, no over-engineering
+        comment: Appropriate complexity, no over-engineering, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, current matplotlib API
+        comment: Saves plot-{THEME}.png at dpi=400 with no bbox_inches='tight'; current
+          API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -205,21 +226,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Proper Axes methods, theme-token pattern, follows best practices
+        comment: Axes-method API throughout (ax.bar/ax.errorbar/ax.annotate/ax.axhline),
+          correct theme-token pattern
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Uses ax.errorbar and annotations (standard matplotlib) but generic
-          patterns
+        passed: true
+        comment: Uses annotate() with arrowprops/bbox and a per-artist edge override
+          on a single Patch — more than generic usage, but not a hard-to-replicate
+          feature
   verdict: APPROVED
+  model: claude-sonnet-5
+  criteria_version: qc-4374db4964.aqr-815475d157.sg-7006008fc6.lib-e97ebfa5c3
+  rendered_at: '2026-09-27T20:53:12Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - manual-ticks
   patterns:
-  - data-generation
+  - explicit-figure
   dataprep: []
   styling:
+  - edge-highlighting
   - grid-styling
+  - alpha-blending
