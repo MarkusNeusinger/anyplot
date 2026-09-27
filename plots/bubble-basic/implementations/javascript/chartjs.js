@@ -27,8 +27,8 @@ for (let i = 0; i < N; i++) {
 const sizeValues = products.map((p) => p.salesVolume);
 const sizeMin = Math.min(...sizeValues);
 const sizeMax = Math.max(...sizeValues);
-// Wider spread than the previous 7-38 range plus a lower base alpha below
-// give bubbles in the dense $80-140 cluster more visual separation.
+// Wider radius spread than a smaller range would give, keeping bubbles in the
+// dense $80-140 cluster individuated by size alone.
 const R_MIN = 6;
 const R_MAX = 42;
 
@@ -191,7 +191,7 @@ new Chart(canvas, {
         backgroundColor: (ctx) =>
           hexToRgba(
             t.palette[0],
-            ctx.dataIndex === bestValueIndex ? 0.9 : 0.48,
+            ctx.dataIndex === bestValueIndex ? 0.9 : 0.55,
           ),
         borderColor: (ctx) =>
           ctx.dataIndex === bestValueIndex
