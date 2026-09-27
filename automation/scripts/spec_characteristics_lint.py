@@ -146,8 +146,7 @@ VISUAL_VALUE_RE = re.compile(
     re.IGNORECASE,
 )
 LIBRARY_RE = re.compile(
-    r"(?<![\w.])(?:" + "|".join(re.escape(n).replace(r"\ ", r"\s+") for n in LIBRARY_NAMES) + r")(?!\w)",
-    re.IGNORECASE,
+    r"(?<![\w.])(?:" + "|".join(re.escape(n).replace(r"\ ", r"\s+") for n in LIBRARY_NAMES) + r")(?!\w)", re.IGNORECASE
 )
 # name( or obj.method( — call syntax; "value(s)" is prose, not a call.
 CALL_RE = re.compile(r"\b[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*\((?!s\))")
@@ -173,8 +172,7 @@ STOPWORDS = frozenset(
 # One kind per bullet: words that suggest the other kind slipped in.
 REQUIREMENT_WORDS_RE = re.compile(r"\b(?:never|must|should|keeps?|stays?|so that|instead)\b", re.IGNORECASE)
 PERMISSION_WORDS_RE = re.compile(
-    r"not a defect|\b(?:is|are) expected\b|\bis fine\b|\bis correct\b|\blegitimate\b|not an imbalance",
-    re.IGNORECASE,
+    r"not a defect|\b(?:is|are) expected\b|\bis fine\b|\bis correct\b|\blegitimate\b|not an imbalance", re.IGNORECASE
 )
 
 
@@ -313,7 +311,9 @@ def check_contract(text: str, require_section: bool = False) -> list[Finding]:
     low, high = CONTRACT_BULLETS
     if not low <= len(section.bullets) <= high:
         findings.append(
-            Finding("K4", f"the section needs {low}-{high} bullets (found {len(section.bullets)})", section.heading_line)
+            Finding(
+                "K4", f"the section needs {low}-{high} bullets (found {len(section.bullets)})", section.heading_line
+            )
         )
 
     parsed = len(parse_characteristics(text))
@@ -347,7 +347,9 @@ def check_contract(text: str, require_section: bool = False) -> list[Finding]:
         if not rest:
             findings.append(Finding("K6", "the bullet has no text after its kind prefix", number))
         elif SECOND_PREFIX_RE.search(rest):
-            findings.append(Finding("K6", "the bullet carries a second kind prefix; split it, one kind per bullet", number))
+            findings.append(
+                Finding("K6", "the bullet carries a second kind prefix; split it, one kind per bullet", number)
+            )
 
     return findings
 
@@ -457,7 +459,9 @@ def check_style(text: str, spec_id: str, strict: bool = False) -> list[Finding]:
     for bullet in section.bullets:
         if bullet.continuation_lines:
             findings.append(
-                Finding("S2", "write each bullet on one line (no continuation lines)", bullet.continuation_lines[0], hard)
+                Finding(
+                    "S2", "write each bullet on one line (no continuation lines)", bullet.continuation_lines[0], hard
+                )
             )
 
     if not text.endswith("\n") or text.endswith("\n\n"):
@@ -480,16 +484,24 @@ def check_style(text: str, spec_id: str, strict: bool = False) -> list[Finding]:
         for pattern, what in ((UNIT_RE, "a unit"), (COMPARATOR_RE, "a comparator")):
             m = pattern.search(body)
             if m:
-                findings.append(Finding("S6", f"numeric threshold '{m.group(0)}' ({what}): no thresholds", number, hard))
+                findings.append(
+                    Finding("S6", f"numeric threshold '{m.group(0)}' ({what}): no thresholds", number, hard)
+                )
         m = VISUAL_VALUE_RE.search(body)
         if m:
-            findings.append(Finding("S7", f"styling value '{m.group(0)}': describe the effect, not the value", number, hard))
+            findings.append(
+                Finding("S7", f"styling value '{m.group(0)}': describe the effect, not the value", number, hard)
+            )
         m = LIBRARY_RE.search(body) or CALL_RE.search(body)
         if m:
-            findings.append(Finding("S8", f"library or API name '{m.group(0)}': the section is library-agnostic", number, hard))
+            findings.append(
+                Finding("S8", f"library or API name '{m.group(0)}': the section is library-agnostic", number, hard)
+            )
         m = HEX_RE.search(body)
         if m:
-            findings.append(Finding("S9", f"hex color '{m.group(0)}': the palette lives in the style guide", number, hard))
+            findings.append(
+                Finding("S9", f"hex color '{m.group(0)}': the palette lives in the style guide", number, hard)
+            )
         if len(item) > HARD_MAX_CHARS:
             findings.append(Finding("S10", f"bullet has {len(item)} characters (max {HARD_MAX_CHARS})", number, hard))
         elif len(item) > SOFT_MAX_CHARS:
@@ -563,8 +575,10 @@ def annotation(path: str, finding: Finding) -> str:
 
 
 def _read(path: str) -> str | Finding:
+    # Decode the raw bytes: read_text() translates CRLF to LF, which would hide
+    # exactly the line endings K8 exists to catch.
     try:
-        return Path(path).read_text(encoding="utf-8")
+        return Path(path).read_bytes().decode("utf-8")
     except (OSError, UnicodeDecodeError) as exc:
         return Finding("K0", f"cannot read the file: {exc}")
 
@@ -592,7 +606,9 @@ def cmd_contract(args: argparse.Namespace) -> int:
         for finding in findings:
             print(annotation(path, finding))
         errors += len(findings)
-    print(f"spec_characteristics_lint contract: {len(paths)} file(s), {with_section} with the section, {errors} error(s)")
+    print(
+        f"spec_characteristics_lint contract: {len(paths)} file(s), {with_section} with the section, {errors} error(s)"
+    )
     return 1 if errors else 0
 
 

@@ -117,7 +117,9 @@ class TestContract:
             pytest.param(f"- {GOOD[0]}\n- {E.strip()}\n", "K6", id="prefix-without-text"),
             pytest.param(f"- {GOOD[0]}\n- {S}translucency. {E}overlap.\n", "K6", id="two-prefixes"),
             pytest.param(
-                f"- {GOOD[0]}\n- {S}translucency; expected, not a defect: overlap.\n", "K6", id="second-prefix-lower-case"
+                f"- {GOOD[0]}\n- {S}translucency; expected, not a defect: overlap.\n",
+                "K6",
+                id="second-prefix-lower-case",
             ),
             pytest.param(
                 f"- {GOOD[0]}\n- {E}overlap. **A good version shows**: outlines.\n", "K6", id="second-prefix-bold"
@@ -129,7 +131,11 @@ class TestContract:
 
     @pytest.mark.parametrize(
         "heading",
-        ["## What a Good Version Looks Like", "##  What a good version looks like", "### What a good version looks like"],
+        [
+            "## What a Good Version Looks Like",
+            "##  What a good version looks like",
+            "### What a good version looks like",
+        ],
     )
     def test_near_miss_heading(self, heading: str):
         text = _spec().replace("## What a good version looks like", heading)
@@ -301,7 +307,9 @@ class TestCli:
 
     def test_annotation_format(self):
         assert annotation("p.md", Finding("K3", "bad line", 4)) == "::error file=p.md,line=4,title=K3::bad line"
-        assert annotation("p.md", Finding("W4", "100% sure", None, WARNING)) == "::warning file=p.md,title=W4::100%25 sure"
+        assert (
+            annotation("p.md", Finding("W4", "100% sure", None, WARNING)) == "::warning file=p.md,title=W4::100%25 sure"
+        )
 
     def test_contract_exit_codes(self, tmp_path, capsys):
         good = self._write(tmp_path, "good-basic", _spec())
@@ -311,6 +319,12 @@ class TestCli:
         out = capsys.readouterr().out
         assert "::error file=" in out and "title=K4" in out
         assert "2 file(s), 2 with the section, 1 error(s)" in out
+
+    def test_contract_cli_rejects_crlf_bytes(self, tmp_path, capsys):
+        path = self._write(tmp_path, "crlf-basic", "")
+        path.write_bytes(_spec().replace("\n", "\r\n").encode("utf-8"))
+        assert main(["contract", str(path)]) == 1
+        assert "title=K8" in capsys.readouterr().out
 
     def test_contract_without_files_is_a_usage_error(self, capsys):
         assert main(["contract"]) == 2
