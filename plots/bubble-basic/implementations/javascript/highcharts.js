@@ -13,6 +13,10 @@ function rand() {
   return seed / 0x7fffffff;
 }
 
+const X_MIN = -5;
+const X_MAX = 30;
+const Y_MIN = 10;
+const Y_MAX = 500;
 const Z_MIN = 10;
 const Z_MAX = 100;
 const R_MIN = 9;
@@ -31,32 +35,82 @@ function alphaForShare(share) {
   return 0.6 + 0.15 * (1 - frac);
 }
 
+// Rough plot-area pixel box (mount minus title/axis/legend margins), used only
+// to space out bubbles below — it doesn't need to match the real layout exactly.
+const PLOT_W_PX = 1300;
+const PLOT_H_PX = 700;
+
+// A candidate is rejected if it would land within 2+ neighbors' combined
+// radius: pairs may still touch (alpha blending is meant to handle that), but
+// 3-way-or-more fusions read as one indistinguishable blob.
+function closeNeighborCount(candidate, placed) {
+  let count = 0;
+  for (const p of placed) {
+    const dxPx = ((candidate.growthRate - p.growthRate) / (X_MAX - X_MIN)) * PLOT_W_PX;
+    const dyPx = ((candidate.revenue - p.revenue) / (Y_MAX - Y_MIN)) * PLOT_H_PX;
+    const dist = Math.hypot(dxPx, dyPx);
+    if (dist < (candidate.r + p.r) * 0.9) count += 1;
+  }
+  return count;
+}
+
 const companies = [];
 for (let i = 0; i < 70; i += 1) {
-  const growthRate = -5 + rand() * 35;
-  const revenue = 10 + rand() * 490;
-  // Each company's share is relative to its own market segment, not a
-  // shared market — so these values do NOT sum to 100 across companies,
-  // unlike a conventional "market share" metric. Labelled as such below.
-  const segmentShare = Z_MIN + rand() * (Z_MAX - Z_MIN);
-  companies.push({ growthRate, revenue, segmentShare });
+  let candidate;
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const growthRate = X_MIN + rand() * (X_MAX - X_MIN);
+    const revenue = Y_MIN + rand() * (Y_MAX - Y_MIN);
+    // Each company's share is relative to its own market segment, not a
+    // shared market — so these values do NOT sum to 100 across companies,
+    // unlike a conventional "market share" metric. Labelled as such below.
+    const segmentShare = Z_MIN + rand() * (Z_MAX - Z_MIN);
+    candidate = { growthRate, revenue, segmentShare, r: radiusForShare(segmentShare) };
+    if (attempt === 9 || closeNeighborCount(candidate, companies) < 2) break;
+  }
+  companies.push(candidate);
 }
+
+// Highlight one bubble as a focal point instead of leaving the chart a flat
+// scatter of equals — the largest segment share, kept away from the plot
+// edges so its label never risks clipping against the axes.
+const focal = companies
+  .filter((c) => {
+    const nx = (c.growthRate - X_MIN) / (X_MAX - X_MIN);
+    const ny = (c.revenue - Y_MIN) / (Y_MAX - Y_MIN);
+    return nx > 0.12 && nx < 0.88 && ny > 0.12 && ny < 0.88;
+  })
+  .reduce((best, c) => (c.segmentShare > best.segmentShare ? c : best));
+focal.isFocal = true;
 
 const [fr, fg, fb] = [1, 3, 5].map((i) => parseInt(t.palette[0].slice(i, i + 2), 16));
 const fillForShare = (share) => `rgba(${fr}, ${fg}, ${fb}, ${alphaForShare(share)})`;
-const seriesData = companies.map((c) => ({
-  x: c.growthRate,
-  y: c.revenue,
-  marker: {
-    radius: radiusForShare(c.segmentShare),
-    fillColor: fillForShare(c.segmentShare),
-    // Page-bg stroke carves a visible edge between overlapping same-color
-    // bubbles instead of them reading as one merged blob.
-    lineColor: t.pageBg,
-    lineWidth: 3,
-  },
-  custom: { segmentShare: Math.round(c.segmentShare) },
-}));
+const seriesData = companies.map((c) => {
+  const point = {
+    x: c.growthRate,
+    y: c.revenue,
+    marker: {
+      radius: c.r,
+      fillColor: fillForShare(c.segmentShare),
+      // Page-bg stroke carves a visible edge between overlapping same-color
+      // bubbles instead of them reading as one merged blob.
+      lineColor: t.pageBg,
+      lineWidth: 3,
+    },
+    custom: { segmentShare: Math.round(c.segmentShare) },
+  };
+  if (c.isFocal) {
+    const ny = (c.revenue - Y_MIN) / (Y_MAX - Y_MIN);
+    point.marker.lineColor = t.ink;
+    point.marker.lineWidth = 2.5;
+    point.dataLabels = {
+      enabled: true,
+      format: `Segment leader<br/>${Math.round(c.segmentShare)}% share`,
+      y: ny > 0.5 ? c.r + 20 : -(c.r + 20),
+      style: { color: t.ink, fontSize: "13px", fontWeight: "600", textOutline: "none" },
+    };
+  }
+  return point;
+});
 
 // --- Chart post-render helpers ------------------------------------------------
 function drawSizeLegend(chart) {
