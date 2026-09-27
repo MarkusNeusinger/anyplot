@@ -169,6 +169,7 @@ jobs:
           path: ${{ runner.temp }}/bundles
           retention-days: 3
           if-no-files-found: error
+          overwrite: true  # artifacts are per run, not per attempt: a re-run replaces them
 
   review:
     name: ${{ matrix.cell.id }}
@@ -209,14 +210,19 @@ jobs:
       # The same overlay impl-review applies on a branch dispatch, except that
       # prompts/ is replaced whole, so no file from the harness commit lingers.
       # Shallow on purpose: the reviewer cannot look anything up in history.
+      # regen_gate.py exists from 02e1a7974 on; plan refuses regen cells on
+      # older rules and a fresh cell never calls it, so such rules get none.
       - name: Overlay the rules under test
         env:
           SPEC_SOURCE: ${{ inputs.spec_source }}
           SPEC_ID: ${{ matrix.cell.spec_id }}
         run: |
           git fetch -q --depth=1 origin "$RULES_SHA"
-          rm -rf prompts
-          git checkout FETCH_HEAD -- prompts/ automation/scripts/regen_gate.py
+          rm -rf prompts automation/scripts/regen_gate.py
+          git checkout FETCH_HEAD -- prompts/
+          if git cat-file -e FETCH_HEAD:automation/scripts/regen_gate.py 2>/dev/null; then
+            git checkout FETCH_HEAD -- automation/scripts/regen_gate.py
+          fi
           if [ "$SPEC_SOURCE" = "rules_ref" ]; then
             git checkout FETCH_HEAD -- "plots/${SPEC_ID}/specification.md"
             git checkout FETCH_HEAD -- "plots/${SPEC_ID}/specification.yaml" 2>/dev/null || true
@@ -319,6 +325,7 @@ jobs:
           path: ${{ runner.temp }}/cell
           retention-days: 90
           if-no-files-found: warn
+          overwrite: true  # "Re-run failed jobs" keeps the earlier attempt's cell artifact
 
   aggregate:
     needs: [prep, review]
@@ -395,3 +402,4 @@ jobs:
           path: ${{ runner.temp }}/report
           retention-days: 90
           if-no-files-found: error
+          overwrite: true

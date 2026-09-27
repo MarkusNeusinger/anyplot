@@ -1,6 +1,6 @@
 # Review retest
 
-> **Status (2026-09-27):** The harness (`automation/scripts/review_retest.py`), the workflow (`.github/workflows/review-retest.yml`), and the set v1 manifest (`automation/retest/set-v1.yaml`) exist. The frozen renders aren't uploaded yet, so set v1 has no lock and every run refuses until the freeze below is done. The ground-truth labels are drafts, so the named-defect, false-alarm, and gate-accuracy metrics stay empty until the owner confirms them.
+> **Status (2026-09-27):** The harness (`automation/scripts/review_retest.py`), the workflow (`.github/workflows/review-retest.yml`), and the set v1 manifest (`automation/retest/set-v1.yaml`) exist. The frozen renders aren't uploaded yet, so set v1 has no lock and every run refuses until the freeze below is done; the rule that sends review-rubric pull requests here joins `CLAUDE.md` and the `open-pr` skill together with the lock. The ground-truth labels are drafts, so the named-defect, false-alarm, and gate-accuracy metrics stay empty until the owner confirms them.
 
 The AI quality review decides what reaches the catalogue, and a change to its rubric or its model used to be observable only on real pipeline runs. The review retest re-runs the review on a frozen set of implementations and regeneration pairs, several sessions per item, and reports how the scores, verdicts, and weaknesses spread and move. You run it as an *arm* (one rules version) and compare it against a *baseline* arm, so a rubric pull request can show its effect before it merges.
 
@@ -25,7 +25,7 @@ Generator-side changes (`prompts/workflow-prompts/impl-generate-claude.md`, `pro
 ## How it works
 
 - **The set.** `automation/retest/set-v1.yaml` lists the items. A *fresh* item is one implementation, reviewed the way a first implementation is. A *regen* item is a pair (new version and predecessor), reviewed the way a regeneration is: the new render blind, then the predecessor re-scored, then the regen gate. Sources are pinned by commit; renders are public objects under `gs://anyplot-images/retest/sets/v1/`, and `automation/retest/set-v1.lock.json` holds their sha256, size, and the pairs' pixel statistics. The prep job downloads them anonymously over HTTPS and checks every hash.
-- **An arm.** `rules_ref` names the commit whose `prompts/` and `automation/scripts/regen_gate.py` the reviewer uses. The harness itself always comes from the commit you dispatch, so you can measure any past or unmerged rules version from `main`.
+- **An arm.** `rules_ref` names the commit whose `prompts/` and `automation/scripts/regen_gate.py` the reviewer uses. The harness itself always comes from the commit you dispatch, so you can measure any past or unmerged rules version from `main`; rules that predate the regen gate (`02e1a7974`) have no `regen_gate.py`, so only fresh items run on them.
 - **A cell.** One item, one order (regen pairs run forward and reversed), one run. Every cell is a fresh Claude session in its own job. With `models=production`, fresh items run on Opus and regen pairs on Sonnet, as `impl-review.yml` routes them.
 - **What a session sees.** Exactly what `impl-review.yml` shows the reviewer, with these deliberate differences:
   - The file under review says `Quality: pending` in every arm (the state `impl-generate.yml` leaves since the header reset).
@@ -108,7 +108,7 @@ The manifest is hand-curated; the lock and the public renders are written once b
 
 ### Build and upload a set
 
-The upload is a one-time, owner-authorized write of about 80 new objects (about 45 MB) with no clobber and no deletes. Run it from the owner's checkout, where the regen-experiment snapshots live under `agentic/runs/regen-exp-bubble-basic/`.
+The upload is a one-time, owner-authorized write of 94 objects (27 fresh items × 2 renders, 10 pairs × 4 renders; the core tier alone is 58), about 20 MB, with no clobber and no deletes. Run it from the owner's checkout, where the regen-experiment snapshots live under `agentic/runs/regen-exp-bubble-basic/`.
 
 1. Fetch `main`, so `freeze` can check that no implementation changed after its pinned commit:
 
@@ -116,27 +116,33 @@ The upload is a one-time, owner-authorized write of about 80 new objects (about 
    git fetch origin main
    ```
 
-2. Build the set in a new local directory (a dry run: it downloads the production renders, copies the snapshot renders, checks canvases and hashes, measures the pairs, and prints the exact upload commands):
+2. Check every source without downloading a render. This reads only the 24-byte PNG header of each render (an HTTP range request for production objects) and reports every canvas, pin, and snapshot problem `freeze` would refuse, in one pass:
+
+   ```bash
+   uv run python -m automation.scripts.review_retest validate --check-git --check-renders
+   ```
+
+3. Build the set in a new local directory (a dry run: it downloads the production renders, copies the snapshot renders, checks canvases and hashes, measures the pairs, and prints the exact upload commands):
 
    ```bash
    uv run python -m automation.scripts.review_retest freeze --staging /tmp/retest-set-v1
    ```
 
-3. Review the printed pixel statistics (identity pairs must be 0 %) and the `gcloud storage cp --no-clobber` commands.
-4. Upload, verify every public object against the lock, and write the lock:
+4. Review the printed pixel statistics (identity pairs must be 0 %) and the `gcloud storage cp --no-clobber` commands.
+5. Upload, verify every public object against the lock, and write the lock:
 
    ```bash
    uv run python -m automation.scripts.review_retest freeze --staging /tmp/retest-set-v1 --execute --write-lock
    ```
 
-5. Commit `automation/retest/set-v1.lock.json`.
-6. Smoke-test one cell from the branch that carries the lock, and check that the run left no comment, label, or dispatch behind:
+6. Commit `automation/retest/set-v1.lock.json`.
+7. Smoke-test one cell from the branch that carries the lock, and check that the run left no comment, label, or dispatch behind:
 
    ```bash
    gh workflow run review-retest.yml --ref <branch> -f subset=f-bubble-basic-ggplot2 -f runs=1 -f label=smoke
    ```
 
-`freeze` refuses while the pipeline is busy, when a production render's implementation changed on `main` after the pinned commit, when a snapshot was taken at another commit, when an identity pair's renders differ, and when an object already exists with different content.
+`freeze` refuses while the pipeline is busy, when a render isn't on a canonical canvas (3200 × 1800 or 2400 × 2400), when a production render's implementation changed on `main` after the pinned commit, when a snapshot was taken at another commit, when an identity pair's renders differ, and when an object already exists with different content. It collects every refusal and lists them together at the end of the run.
 
 ### Confirm the labels
 

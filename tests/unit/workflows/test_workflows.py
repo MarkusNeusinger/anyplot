@@ -515,7 +515,12 @@ class TestReviewRetestWorkflow:
         assert checkout["with"]["persist-credentials"] is False
         overlay = steps["Overlay the rules under test"]["run"]
         assert 'git fetch -q --depth=1 origin "$RULES_SHA"' in overlay
-        assert "git checkout FETCH_HEAD -- prompts/ automation/scripts/regen_gate.py" in overlay
+        # Nothing from the harness commit survives: prompts/ and the gate come
+        # from the rules under test, and rules older than the gate have none.
+        assert "rm -rf prompts automation/scripts/regen_gate.py" in overlay
+        assert "git checkout FETCH_HEAD -- prompts/" in overlay
+        assert "git cat-file -e FETCH_HEAD:automation/scripts/regen_gate.py" in overlay
+        assert "git checkout FETCH_HEAD -- automation/scripts/regen_gate.py" in overlay
         names = [s.get("name") for s in self.WORKFLOW["jobs"]["review"]["steps"]]
         assert names.index("Copy the harness out of the workspace") < names.index("Overlay the rules under test")
         assert (
@@ -523,6 +528,19 @@ class TestReviewRetestWorkflow:
             < names.index("Record rules version")
             < names.index("Run AI Quality Review")
         )
+
+    def test_uploads_survive_a_rerun(self) -> None:
+        # Artifacts belong to the run, not the attempt: without overwrite a
+        # "Re-run failed jobs" attempt fails its upload with a conflict.
+        uploads = [
+            step
+            for job in self.WORKFLOW["jobs"].values()
+            for step in job.get("steps", [])
+            if str(step.get("uses", "")).startswith("actions/upload-artifact@")
+        ]
+        assert len(uploads) == 3
+        for step in uploads:
+            assert step["with"].get("overwrite") is True, step["name"]
 
     def test_frozen_set_is_read_anonymously(self) -> None:
         # The prep job has no GCP credentials: renders come over public HTTPS.

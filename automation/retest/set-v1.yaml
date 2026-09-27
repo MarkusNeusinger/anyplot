@@ -72,23 +72,23 @@ items:
     defects: []
     permitted: []
 
-  - id: f-choropleth-basic-altair
+  - id: f-bode-basic-altair
     kind: fresh
     tier: core
-    spec_id: choropleth-basic
+    spec_id: bode-basic
     library: altair
     new: {commit: *base, render: production}
-    note: "candidate: white page in the dark render, title white on white (VQ-07, VQ-01)"
+    note: "candidate: axis titles and tick labels dark on dark in the dark render (VQ-01, VQ-07); bright white grid there (DE-02)"
     defects: []
     permitted: []
 
-  - id: f-violin-split-plotnine
+  - id: f-bar-diverging-plotnine
     kind: fresh
     tier: core
-    spec_id: violin-split
+    spec_id: bar-diverging
     library: plotnine
     new: {commit: *base, render: production}
-    note: "candidate: halves do not meet (SC-01/SC-02); white grid in the dark render only (DE-02)"
+    note: "candidate: bright white major grid lines in the dark render only (DE-02, VQ-07)"
     defects: []
     permitted: []
 
@@ -162,13 +162,13 @@ items:
     defects: []
     permitted: []
 
-  - id: f-candlestick-volume-plotly
+  - id: f-acf-pacf-plotly
     kind: fresh
     tier: core
-    spec_id: candlestick-volume
+    spec_id: acf-pacf
     library: plotly
     new: {commit: *base, render: production}
-    note: "candidate: bright white vertical lines in the dark pane (DE-02, VQ-07)"
+    note: "candidate: bright white vertical zero-lag line in both dark panes, near-invisible in the light render (DE-02, VQ-07)"
     defects: []
     permitted: []
 
@@ -281,13 +281,13 @@ items:
     defects: []
     permitted: []
 
-  - id: f-heatmap-correlation-seaborn
+  - id: f-heatmap-basic-seaborn
     kind: fresh
     tier: full
-    spec_id: heatmap-correlation
+    spec_id: heatmap-basic
     library: seaborn
     new: {commit: *base, render: production}
-    note: "candidate: colorbar title clipped; seeded spec"
+    note: "candidate: colorbar squeezed into the top-left corner, its title clipped at the canvas edge; x-axis title cut at the bottom (AR-09, VQ-05); seeded spec"
     defects: []
     permitted: []
 
@@ -346,12 +346,13 @@ items:
     defects: []
     permitted: []
 
-  - id: f-scatter-text-letsplot
+  - id: f-scatter-hr-diagram-letsplot
     kind: fresh
     tier: full
-    spec_id: scatter-text
+    spec_id: scatter-hr-diagram
     library: letsplot
     new: {commit: *base, render: production}
+    note: "candidate: 'Main Sequence' label in empty space away from the band, 'White Dwarfs' partly under a marker (VQ-02); yellow 'Sun' label on the light page (VQ-01)"
     defects: []
     permitted: []
 

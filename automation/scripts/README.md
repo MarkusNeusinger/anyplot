@@ -83,7 +83,9 @@ Review retest harness (stdlib, plus PyYAML for the manifest and Pillow/numpy
 for `freeze`'s pixel statistics), driven by `.github/workflows/review-retest.yml`:
 `plan` and `bundle` (prep job), `materialize` and `collect` (one review cell,
 run from a copy outside the workspace), `report` (aggregate job), plus the
-local `gate-report` (production gate records from PR comments) and `freeze`
+local `validate` (the manifest; `--check-git` the pinned sources,
+`--check-renders` every render's canvas from its PNG header, no download),
+`gate-report` (production gate records from PR comments) and `freeze`
 (builds and, with `--execute`, uploads a frozen set). How to run it:
 `docs/workflows/review-retest.md`.
 

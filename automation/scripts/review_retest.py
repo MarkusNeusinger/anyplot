@@ -23,7 +23,8 @@ the harness:
 
 Subcommands::
 
-    validate   check the manifest (and, with --check-git, every pinned file)
+    validate   check the manifest (with --check-git, every pinned file; with
+               --check-renders, every render's canvas from its PNG header)
     plan       resolve a subset into the matrix of cells (prep job)
     bundle     pinned sources via git + renders over HTTPS, sha256-checked (prep job)
     materialize  lay out one cell exactly as impl-review does (review job)
@@ -237,13 +238,18 @@ def is_ancestor(repo: Path, ancestor: str, commit: str) -> bool:
     )
 
 
-def http_get(url: str, *, attempts: int = 3, timeout: int = 60) -> bytes | None:
-    """GET a public object; ``None`` on 404. Retries transient failures."""
+def http_get(url: str, *, attempts: int = 3, timeout: int = 60, first_bytes: int | None = None) -> bytes | None:
+    """GET a public object; ``None`` on 404. Retries transient failures.
+
+    With ``first_bytes``, asks for only that many leading bytes (an HTTP Range
+    request) and never reads more, even from a server that ignores the range.
+    """
     last: Exception | None = None
+    request = urllib.request.Request(url, headers={"Range": f"bytes=0-{first_bytes - 1}"} if first_bytes else {})
     for attempt in range(1, attempts + 1):
         try:
-            with urllib.request.urlopen(url, timeout=timeout) as response:
-                data: bytes = response.read()
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                data: bytes = response.read(first_bytes) if first_bytes else response.read()
                 return data
         except urllib.error.HTTPError as exc:
             if exc.code == 404:
@@ -1461,30 +1467,102 @@ def pixel_stats(a: Path, b: Path) -> dict[str, Any]:
     return {"changed_px_pct": round(float(changed.mean()) * 100, 2), "max_channel_delta": int(diff.max())}
 
 
-def _render_source(
-    item: dict[str, Any], role: str, theme: str, snapshots_root: Path, repo: Path, fetch: Callable[[str], bytes | None]
-) -> tuple[str, Callable[[], bytes | None]]:
-    """(description, loader) for one frozen render; refuses unpinnable sources."""
-    spec_id, library = item["spec_id"], item["library"]
-    commit = item[role]["commit"]
-    render = item[role]["render"]
-    if render == "production":
-        later = git(repo, "log", "--format=%H", f"{commit}..origin/main", "--", impl_path(spec_id, library)).split()
-        if later:
-            raise HarnessError(
-                f"{item['id']} {role}: {len(later)} commit(s) on origin/main touched the implementation after "
-                f"{commit[:10]} — the production render no longer matches the pinned source; re-pin the item"
-            )
-        url = f"{PUBLIC_BASE}/plots/{spec_id}/{language_of(library)}/{library}/plot-{theme}.png"
-        return url, lambda: fetch(url)
-    snapshot = snapshots_root / str(render["snapshot"])
+def production_url(spec_id: str, library: str, theme: str) -> str:
+    return f"{PUBLIC_BASE}/plots/{spec_id}/{language_of(library)}/{library}/plot-{theme}.png"
+
+
+def _check_production_pin(item: dict[str, Any], role: str, repo: Path) -> None:
+    """Refuse a production render whose implementation changed on main after the pin."""
+    spec_id, library, commit = item["spec_id"], item["library"], item[role]["commit"]
+    later = git(repo, "log", "--format=%H", f"{commit}..origin/main", "--", impl_path(spec_id, library)).split()
+    if later:
+        raise HarnessError(
+            f"{item['id']} {role}: {len(later)} commit(s) on origin/main touched the implementation after "
+            f"{commit[:10]} — the production render no longer matches the pinned source; re-pin the item"
+        )
+
+
+def _snapshot_render(item: dict[str, Any], role: str, theme: str, snapshots_root: Path) -> Path:
+    """Path of a snapshot render; refuses a snapshot taken at another commit."""
+    library, commit = str(item["library"]), str(item[role]["commit"])
+    snapshot = snapshots_root / str(item[role]["render"]["snapshot"])
     snap_manifest = load_yaml(snapshot / "manifest.yaml") or {}
     if str(snap_manifest.get("main_sha")) != commit:
         raise HarnessError(
             f"{item['id']} {role}: snapshot {snapshot} was taken at {snap_manifest.get('main_sha')}, not {commit}"
         )
-    path = snapshot / "renders" / language_of(library) / library / f"plot-{theme}.png"
+    return snapshot / "renders" / language_of(library) / library / f"plot-{theme}.png"
+
+
+def _render_source(
+    item: dict[str, Any], role: str, theme: str, snapshots_root: Path, repo: Path, fetch: Callable[[str], bytes | None]
+) -> tuple[str, Callable[[], bytes | None]]:
+    """(description, loader) for one frozen render; refuses unpinnable sources."""
+    if item[role]["render"] == "production":
+        _check_production_pin(item, role, repo)
+        url = production_url(item["spec_id"], item["library"], theme)
+        return url, lambda: fetch(url)
+    path = _snapshot_render(item, role, theme, snapshots_root)
     return str(path), lambda: path.read_bytes() if path.is_file() else None
+
+
+def _refusal(problems: Sequence[str], what: str) -> HarnessError:
+    unique = list(dict.fromkeys(problems))  # a pin refusal repeats per theme
+    return HarnessError(f"{what} ({len(unique)} problem(s)):\n  " + "\n  ".join(unique))
+
+
+PNG_HEADER_BYTES = 24  # signature + IHDR length/type + width + height
+
+
+def check_renders(
+    manifest: dict[str, Any], *, repo: Path, snapshots_root: Path, head: Callable[[str], bytes | None] | None = None
+) -> dict[str, Any]:
+    """Everything freeze would refuse about the sources, without downloading a render.
+
+    Reads only the 24-byte PNG header of every render the set needs (production
+    objects over an HTTP Range request, snapshot renders from disk) and checks
+    the canvas, plus the production pins and the snapshot commits. A snapshot
+    directory that is not present locally is skipped, not refused.
+    """
+
+    def default_head(url: str) -> bytes | None:
+        return http_get(url, first_bytes=PNG_HEADER_BYTES, timeout=30)
+
+    head = head or default_head
+    problems: list[str] = []
+    skipped: list[str] = []
+    checked = 0
+    for item in manifest["items"]:
+        for role in roles_of(item):
+            render = item[role]["render"]
+            if render != "production" and not (snapshots_root / str(render["snapshot"])).is_dir():
+                skipped.append(f"{item['id']} {role}: snapshot {render['snapshot']} is not present")
+                continue
+            for theme in THEMES:
+                at = f"{item['id']} {role} {theme}"
+                try:
+                    if render == "production":
+                        _check_production_pin(item, role, repo)
+                        where = production_url(item["spec_id"], item["library"], theme)
+                        data = head(where)
+                    else:
+                        path = _snapshot_render(item, role, theme, snapshots_root)
+                        where = str(path)
+                        data = None
+                        if path.is_file():
+                            with path.open("rb") as f:
+                                data = f.read(PNG_HEADER_BYTES)
+                    if data is None:
+                        problems.append(f"{at}: source {where} not found")
+                        continue
+                    size = png_size(data)
+                except HarnessError as exc:
+                    problems.append(str(exc) if str(exc).startswith(item["id"]) else f"{at}: {exc}")
+                    continue
+                checked += 1
+                if not canonical_canvas(size):
+                    problems.append(f"{at}: {size[0]}x{size[1]} is not a canonical canvas ({where})")
+    return {"problems": list(dict.fromkeys(problems)), "checked": checked, "skipped": skipped}
 
 
 def freeze(
@@ -1499,7 +1577,11 @@ def freeze(
     now: datetime | None = None,
 ) -> dict[str, Any]:
     """Build the frozen set in ``staging``: every render copied to its object
-    path, checked, hashed; pair pixel statistics; the lock; the upload commands."""
+    path, checked, hashed; pair pixel statistics; the lock; the upload commands.
+
+    Every refusal is collected and raised once at the end, so one dry run
+    lists all of them (``validate --check-renders`` finds the source problems
+    without downloading anything)."""
     if lister is not None:
         busy = busy_pipeline_runs(lister, now or datetime.now(timezone.utc))
         if busy:
@@ -1508,29 +1590,39 @@ def freeze(
     sources: dict[str, str] = {}
     pairs: dict[str, dict[str, Any]] = {}
     uploads: list[str] = []
+    problems: list[str] = []
     for item in manifest["items"]:
+        staged = 0
         for role in roles_of(item):
             for theme in THEMES:
+                at = f"{item['id']} {role} {theme}"
                 obj = object_path(manifest, item["id"], role, theme)
-                where, load = _render_source(item, role, theme, snapshots_root, repo, fetch)
-                data = load()
-                if data is None:
-                    raise HarnessError(f"{item['id']} {role} {theme}: source {where} not found")
-                size = png_size(data)
-                if not canonical_canvas(size):
-                    raise HarnessError(f"{item['id']} {role} {theme}: {size[0]}x{size[1]} is not a canonical canvas")
-                target = staging / obj
-                target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_bytes(data)
-                digest = sha256_bytes(data)
-                objects[obj] = {"sha256": digest, "width": size[0], "height": size[1], "bytes": len(data)}
-                sources[obj] = where
-                existing = fetch(f"{PUBLIC_BASE}/{obj}")
+                try:
+                    where, load = _render_source(item, role, theme, snapshots_root, repo, fetch)
+                    data = load()
+                    if data is None:
+                        problems.append(f"{at}: source {where} not found")
+                        continue
+                    size = png_size(data)
+                    if not canonical_canvas(size):
+                        problems.append(f"{at}: {size[0]}x{size[1]} is not a canonical canvas ({where})")
+                        continue
+                    target = staging / obj
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(data)
+                    digest = sha256_bytes(data)
+                    objects[obj] = {"sha256": digest, "width": size[0], "height": size[1], "bytes": len(data)}
+                    sources[obj] = where
+                    staged += 1
+                    existing = fetch(f"{PUBLIC_BASE}/{obj}")
+                except HarnessError as exc:
+                    problems.append(str(exc) if str(exc).startswith(item["id"]) else f"{at}: {exc}")
+                    continue
                 if existing is None:
                     uploads.append(obj)
                 elif sha256_bytes(existing) != digest:
-                    raise HarnessError(f"{obj} already exists with different content — a frozen set is never rewritten")
-        if item["kind"] == "regen":
+                    problems.append(f"{obj} already exists with different content — a frozen set is never rewritten")
+        if item["kind"] == "regen" and staged == len(roles_of(item)) * len(THEMES):
             pairs[item["id"]] = {
                 theme: stats(
                     staging / object_path(manifest, item["id"], "new", theme),
@@ -1539,7 +1631,9 @@ def freeze(
                 for theme in THEMES
             }
             if item.get("class") == "identity" and any(p.get("changed_px_pct") for p in pairs[item["id"]].values()):
-                raise HarnessError(f"{item['id']} is labelled identity but its renders differ")
+                problems.append(f"{item['id']} is labelled identity but its renders differ")
+    if problems:
+        raise _refusal(problems, "freeze refused")
     lock = {
         "version": 1,
         "set": manifest["set"],
@@ -1605,6 +1699,14 @@ def cmd_validate(args: argparse.Namespace) -> int:
         if missing:
             raise HarnessError("pinned sources missing:\n  " + "\n  ".join(missing))
         print("git ok: every pinned source exists")
+    if args.check_renders:
+        repo = Path(args.repo)
+        result = check_renders(manifest, repo=repo, snapshots_root=Path(args.snapshots_root or repo))
+        for line in result["skipped"]:
+            print(f"  skipped {line}")
+        if result["problems"]:
+            raise _refusal(result["problems"], "freeze would refuse these renders")
+        print(f"renders ok: {result['checked']} PNG headers on canonical canvases, {len(result['skipped'])} skipped")
     return 0
 
 
@@ -1784,7 +1886,13 @@ def build_parser() -> argparse.ArgumentParser:
     _manifest_arg(p)
     _lock_arg(p)
     p.add_argument("--check-git", action="store_true")
+    p.add_argument(
+        "--check-renders",
+        action="store_true",
+        help="read every render's PNG header (HTTP Range, no download) and check canvases and pins as freeze does",
+    )
     p.add_argument("--repo", default=".")
+    p.add_argument("--snapshots-root", default="", help="where the manifest's snapshot dirs live (default: --repo)")
     p.set_defaults(func=cmd_validate)
 
     p = sub.add_parser("plan", help="Resolve a subset into the matrix of cells")

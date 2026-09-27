@@ -1059,6 +1059,20 @@ class TestFreeze:
                 now=NOW,
             )
 
+    def test_every_refusal_is_listed_at_once(self, repo, tmp_path):
+        setup = self._setup(repo, tmp_path, identity=True)
+        setup["production"] = {url: fake_png(4800, 2700, salt=url.encode()) for url in setup["production"]}
+        setup["manifest"]["items"][1]["new"]["commit"] = repo["v0"]
+        setup["manifest"]["items"][1]["prev"]["commit"] = repo["v0"]
+        with pytest.raises(rt.HarnessError) as refused:
+            self._freeze(setup, repo, tmp_path)
+        text = str(refused.value)
+        assert text.startswith("freeze refused (4 problem(s)):")
+        assert "f-bubble-basic-matplotlib new light: 4800x2700 is not a canonical canvas" in text
+        assert "f-bubble-basic-matplotlib new dark: 4800x2700 is not a canonical canvas" in text
+        # A pin refusal is reported once per role, not once per theme.
+        assert text.count("was taken at") == 2
+
     def test_verify_uploaded(self):
         lock = {"objects": {"a.png": {"sha256": sha(b"x")}, "b.png": {"sha256": sha(b"y")}}}
         bucket = {f"{rt.PUBLIC_BASE}/a.png": b"x", f"{rt.PUBLIC_BASE}/b.png": b"z"}
@@ -1074,6 +1088,117 @@ class TestFreeze:
         img.save(b)
         assert rt.pixel_stats(a, b) == {"changed_px_pct": 6.25, "max_channel_delta": 37}
         assert rt.pixel_stats(a, a) == {"changed_px_pct": 0.0, "max_channel_delta": 0}
+
+
+class TestCheckRenders:
+    """validate --check-renders: freeze's source refusals from PNG headers alone."""
+
+    def _manifest(self, repo: dict[str, Any], snaps: Path) -> dict[str, Any]:
+        _snapshot(snaps, "v1", repo["v1"], {("matplotlib", t): fake_png(2400, 2400) for t in rt.THEMES})
+        # Named v0 but taken at v1: freeze would refuse it.
+        _snapshot(snaps, "v0", repo["v1"], {("matplotlib", t): fake_png() for t in rt.THEMES})
+        _git(repo["root"], "update-ref", "refs/remotes/origin/main", repo["v1"])
+        base = {"tier": "core", "spec_id": "bubble-basic", "library": "matplotlib"}
+        return _manifest(
+            baseline_rules_sha=repo["v1"],
+            spec_commit=repo["v1"],
+            items=[
+                {**base, "id": "f-a", "kind": "fresh", "new": {"commit": repo["v1"], "render": "production"}},
+                {**base, "id": "f-b", "kind": "fresh", "new": {"commit": repo["v0"], "render": "production"}},
+                {
+                    **base,
+                    "id": "r-c",
+                    "kind": "regen",
+                    "class": "different",
+                    "new": {"commit": repo["v1"], "render": {"snapshot": "v1"}},
+                    "prev": {"commit": repo["v0"], "render": {"snapshot": "v0"}},
+                },
+                {
+                    **base,
+                    "id": "r-d",
+                    "kind": "regen",
+                    "class": "identity",
+                    "new": {"commit": repo["v1"], "render": {"snapshot": "absent"}},
+                    "prev": {"commit": repo["v1"], "render": {"snapshot": "absent"}},
+                },
+            ],
+        )
+
+    def test_lists_every_problem_from_headers(self, repo, tmp_path):
+        snaps = tmp_path / "snaps"
+        manifest = self._manifest(repo, snaps)
+        heads: list[str] = []
+
+        def head(url: str) -> bytes:
+            heads.append(url)
+            return (fake_png(4800, 2700) if url.endswith("plot-dark.png") else fake_png())[: rt.PNG_HEADER_BYTES]
+
+        result = rt.check_renders(manifest, repo=repo["root"], snapshots_root=snaps, head=head)
+        assert result["problems"] == [
+            f"f-a new dark: 4800x2700 is not a canonical canvas ({rt.PUBLIC_BASE}/plots/bubble-basic/python/matplotlib/plot-dark.png)",
+            f"f-b new: 1 commit(s) on origin/main touched the implementation after {repo['v0'][:10]} — the production "
+            "render no longer matches the pinned source; re-pin the item",
+            f"r-c prev: snapshot {snaps / 'v0'} was taken at {repo['v1']}, not {repo['v0']}",
+        ]
+        assert result["checked"] == 4  # f-a light and dark, r-c new light and dark
+        assert result["skipped"] == [
+            "r-d new: snapshot absent is not present",
+            "r-d prev: snapshot absent is not present",
+        ]
+        assert len(heads) == 2  # only f-a: a failed pin is never fetched
+
+    def test_missing_production_object(self, repo, tmp_path):
+        snaps = tmp_path / "snaps"
+        manifest = self._manifest(repo, snaps)
+        manifest["items"] = manifest["items"][:1]
+        result = rt.check_renders(manifest, repo=repo["root"], snapshots_root=snaps, head=lambda url: None)
+        assert [p.split(":")[0] for p in result["problems"]] == ["f-a new light", "f-a new dark"]
+        assert all("not found" in p for p in result["problems"])
+
+    def test_cli(self, monkeypatch, capsys, tmp_path):
+        calls: list[Path] = []
+
+        def fake(manifest, *, repo, snapshots_root, head=None):
+            calls.append(snapshots_root)
+            return {"problems": [], "checked": 94, "skipped": []}
+
+        monkeypatch.setattr(rt, "check_renders", fake)
+        lock = str(tmp_path / "absent.json")
+        assert rt.main(["validate", "--manifest", str(MANIFEST), "--lock", lock, "--check-renders"]) == 0
+        assert "renders ok: 94 PNG headers on canonical canvases, 0 skipped" in capsys.readouterr().out
+        assert calls == [Path(".")]
+
+        def failing(manifest, *, repo, snapshots_root, head=None):
+            return {"problems": ["x new light: 4800x2700 is not a canonical canvas"], "checked": 1, "skipped": []}
+
+        monkeypatch.setattr(rt, "check_renders", failing)
+        assert rt.main(["validate", "--manifest", str(MANIFEST), "--lock", lock, "--check-renders"]) == 1
+        assert "freeze would refuse these renders (1 problem(s))" in capsys.readouterr().err
+
+    def test_http_get_range_reads_only_the_header(self, monkeypatch):
+        seen: dict[str, Any] = {}
+
+        class Response:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *exc):
+                return False
+
+            def read(self, n: int = -1) -> bytes:
+                seen["read"] = n
+                return b"x" * (n if n > 0 else 100)
+
+        def urlopen(request, timeout):
+            seen["range"] = request.get_header("Range")
+            return Response()
+
+        monkeypatch.setattr(rt.urllib.request, "urlopen", urlopen)
+        assert rt.http_get("https://example.invalid/a.png", first_bytes=24) == b"x" * 24
+        assert seen == {"range": "bytes=0-23", "read": 24}
+        seen.clear()
+        assert rt.http_get("https://example.invalid/a.png") == b"x" * 100
+        assert seen == {"range": None, "read": -1}
 
 
 class TestCli:

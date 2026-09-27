@@ -66,7 +66,7 @@ Project skills in `.claude/skills/` encode the verification loops — route by w
 | new binaries, fonts, embedded assets | `/audit-licenses` — tracked-binary/payload/history provenance sweep |
 | any ship request | `/open-pr` — gates → PR → CI watch → review-thread resolution (the executable form of "PR Follow-Through" above) |
 
-Known gaps with NO verification loop yet (reason through carefully and say so in the PR): `.github/workflows/` and generator-side `prompts/` changes (only observable on real pipeline runs), Cloud Build deploys, GCS promotion, and the Postgres sync. Review-rubric changes are the exception — `prompts/quality-criteria.md`, `prompts/workflow-prompts/ai-quality-review.md`, `prompts/default-style-guide.md`, the review rules in `prompts/library/*.md`, and the review model routing: dispatch a candidate arm of `review-retest.yml` against the baseline and paste its snippet in the PR (`docs/workflows/review-retest.md`). Run `/optimize-skills` periodically to mine session transcripts for new friction and fold it back into these loops.
+Known gaps with NO verification loop yet (reason through carefully and say so in the PR): `.github/workflows/` and `prompts/` changes (only observable on real pipeline runs), Cloud Build deploys, GCS promotion, and the Postgres sync. Run `/optimize-skills` periodically to mine session transcripts for new friction and fold it back into these loops.
 
 ## MCP Tools (Context7)
 
