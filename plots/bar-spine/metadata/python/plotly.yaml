@@ -2,65 +2,57 @@ library: plotly
 language: python
 specification_id: bar-spine
 created: '2026-05-08T15:15:59Z'
-updated: '2026-05-08T15:43:36Z'
+updated: '2026-09-27T03:14:18Z'
 generated_by: claude-sonnet
-workflow_run: 25563122676
+workflow_run: 36290275546
 issue: 5249
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.15
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - 'Perfect spec compliance: spine plot correctly implemented with variable-width
-    bars proportional to marginal counts, normalized to 100%, adjacent with no gaps,
-    and centered x-axis tick labels including n= counts'
-  - 'Excellent data quality: realistic subscription business scenario with meaningful
-    cross-channel proportion variation (Active: 42%-77%) that showcases all spine
-    plot features'
-  - All font sizes explicitly set and readable in both light and dark themes with
-    zero dark-on-dark failures
-  - 'Perfect code quality: flat KISS structure, hardcoded deterministic data, clean
-    idiomatic Plotly usage via go.Bar with width= parameter'
-  - 'Theme-adaptive chrome correctly implemented: PAGE_BG, INK, INK_SOFT, GRID tokens
-    applied to backgrounds, text, grid, and legend box in both themes'
+  - 'Correct spine-plot construction: bar widths are exactly proportional to marginal
+    channel counts (widths = counts / total), segments stack to 100%, and bars are
+    perfectly adjacent (bargap=0) per the spec''s core requirement'
+  - Thoughtful semantic color mapping (Active=brand green, On Trial=amber, Cancelled=matte
+    red) that follows the Imprint style guide's status/quality semantic-exception
+    rule, with a code comment explaining the reasoning
+  - Storytelling annotations calling out the highest-cancellation and best-retention
+    channels give the chart a clear focal point and immediate insight (DE-03)
+  - Sample sizes (n=NNN) baked into the x-axis tick labels add real context without
+    cluttering the legend or adding a separate data table
+  - In-segment percentage labels are conditionally suppressed below 9% to avoid clutter
+    in thin segments -- a smart, spec-aligned 'when space permits' heuristic
+  - 'Both renders are clean: identical data colors between themes, correctly flipped
+    chrome, fully legible text, and canvas dimensions land exactly on the 3200x1800
+    landscape target'
   weaknesses:
-  - 'Okabe-Ito palette positions assigned out of canonical sequential order: code
-    uses 1->5->2 (Active=#009E73, On Trial=#E69F00, Cancelled=#D55E00) instead of
-    canonical 1->2->3; fix to Active=#009E73 (pos 1), On Trial=#D55E00 (pos 2), Cancelled=#0072B2
-    (pos 3)'
-  - 'Code-image discrepancy: plot_images/ files appear to be from attempt 1 — current
-    code lacks the two annotation callout boxes visible in renders, uses different
-    Cancelled color, different legend position (x=0.02 left vs rendered right), and
-    different y-axis range; re-run to regenerate images from current code'
-  - 'Storytelling regression: current code removed fig.add_annotation() callout boxes
-    (''32% churned – highest cancellation'' on Social Media and ''77% active – best
-    retention'' on Referral) that were in a prior version; these add high storytelling
-    value and should be restored'
-  - Y-axis range extends to 120% in rendered images while bars reach only 100%; set
-    range=[0, 1.05] for tight layout without annotations or [0, 1.15] to provide headroom
-    for callout boxes above bars
+  - 'Title omits the required language token: renders as ''Subscription Outcomes by
+    Channel · bar-spine · plotly · anyplot.ai'' but the mandated format is ''{Descriptive
+    Title} · {spec-id} · {language} · {library} · anyplot.ai'' -- ''python'' is missing
+    between ''bar-spine'' and ''plotly'' in the title.text string inside update_layout()'
+  - Legend and both annotation boxes draw visible borders (bordercolor/borderwidth=1),
+    which is a minor departure from the style guide's 'remove box frames around legends'
+    guidance -- consider a borderless legend or a much lighter divider
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "Subscription Outcomes by Channel · bar-spine · plotly · anyplot.ai" in dark INK (#1A1A17), clearly readable. Axis labels "Acquisition Channel" and "Proportion of Customers" in dark INK at 22px. Tick labels (bold channel name + n= count) in INK_SOFT at 18px. Legend "Status" title and item labels in INK/INK_SOFT. All text readable.
-      Data: Five variable-width adjacent bars. Colors: green #009E73 (Active, bottom), orange #E69F00 (On Trial, middle), steel blue (Cancelled, top — code declares #D55E00 but render shows blue, indicating image is from prior code version). Percentage labels inside segments; suppressed for small segments. Two annotation callout boxes present (not in current code).
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "Subscription Outcomes by Channel · bar-spine · plotly · anyplot.ai" in dark ink, centered, fully visible with no clipping. X-axis tick labels are bold channel names ("Direct", "Organic Search", etc.) with a lighter "n=NNN" line underneath, centered under each variable-width bar. Y-axis shows 0%-100% in dark ink with "Proportion of Customers" title. Legend box (titled "Status") sits to the right of the plot with a light border, listing Active/On Trial/Cancelled with matching color swatches. Two callout annotation boxes ("32% churned", "77% active") sit above the bars with light fills and dark text, connected to their target segments by thin arrows.
+      Data: Five variable-width stacked bars (Direct, Organic Search, Social Media, Email, Referral), widths proportional to channel size. Segments colored brand green (#009E73, Active), amber (#DDCC77, On Trial), and matte red (#AE3030, Cancelled) bottom-to-top. In-segment percentage labels are white on green/red and dark ink on amber, all readable. Bars are adjacent with no gaps.
+      Legibility verdict: PASS -- all text (title, axis titles, tick labels, legend, annotations, in-bar percentage labels) is clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface
-      Chrome: Title and axis labels render in light cream (#F0EFE8 range), clearly readable against dark background. Tick labels in soft gray (#B8B7B0 range). Grid lines subtle and visible. Legend box uses ELEVATED_BG (#242420) with INK_SOFT border.
-      Data: All three data colors (green, orange, steel blue) are identical to light render — only chrome flips. Annotation callout boxes also adapt to dark theme.
-      Dark-on-dark check: No failures — no dark text on dark background observed.
-      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark failures
-
-    Note: Images appear to be from attempt 1 (prior code version). Current attempt 2 code lacks annotations, uses #D55E00 for Cancelled (vs steel blue in render), places legend at x=0.02 (left vs rendered right), and sets yaxis range=[0, 1.01] (vs 120% in render). Scoring was based on rendered images as instructed.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title, now rendered in light ink (#F0EFE8), fully visible. Axis titles and tick labels flipped to light ink / soft light gray. Legend box background flipped to the dark elevated tone (#242420) with a light border; legend text is light-colored. Annotation boxes also flipped to the dark elevated fill with light text and light arrows.
+      Data: Data colors are identical to the light render -- brand green, amber, and matte red segments unchanged, confirming only chrome (not data colors) adapts to theme. In-segment percentage labels remain white on green/red and now light-ink on amber (correctly re-derived per theme, since TEXT_COLOR for "On Trial" uses the theme-adaptive INK token).
+      Legibility verdict: PASS -- no dark-on-dark failures observed; every title, axis label, tick label, legend entry, and annotation is clearly readable against the near-black background. Brand green remains vivid and distinguishable on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -68,79 +60,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
-          labels 18px, legend 16px; readable in both themes'
+        comment: All font sizes explicitly set (title 16, axis titles 12, ticks/legend
+          10-11); readable and well-proportioned in both themes, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Percentage labels, x-axis tick labels (bold name + n= count), and
-          legend are clean with no overlaps
+        comment: No collisions between title, annotations, legend, ticks, or in-bar
+          labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Variable-width bars and in-segment labels clearly visible; label
-          suppression below 9% share is correct
+        comment: Five bar segments clearly visible and distinguishable at this data
+          density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito subset is CVD-safe; green/orange/blue distinguishable without
-          relying on hue alone
+        comment: Good contrast; in-segment text color adapts per background (white
+          on green/red, ink on amber)
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions overall; minor wasted canvas at top where y-axis
-          extends to 120% while data bars reach only 100%
+        comment: Balanced margins, headroom above bars used productively for storytelling
+          annotations rather than wasted
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with percentage ticks; x-axis includes bold
-          channel name and n= counts
+        comment: Descriptive axis titles; y-axis expressed as percentage format acting
+          as the unit
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73; but Okabe-Ito sequential order violated:
-          code uses positions 1->5->2, render shows 1->5->3; canonical for 3 series
-          is 1->2->3'
+        passed: true
+        comment: Correct Imprint semantic-exception mapping (green/amber/matte-red
+          for Active/On Trial/Cancelled); theme-correct backgrounds and chrome in
+          both renders
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above-default with themed backgrounds, n= counts in ticks, annotation
-          callouts from prior code version; strong but annotations inflate score
+        comment: Thoughtful semantic palette, intentional hierarchy via callouts and
+          sample-size context -- clearly above defaults but not fully publication-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No bar edges (marker_line_width=0), y-axis-only grid with token-correct
-          GRID color, generous margins; left/bottom spine lines remain
+        comment: Subtle/invisible grid, minimal spines, generous whitespace, but legend
+          and annotation boxes carry visible borders that add slight chrome
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Annotation callouts in images guide viewer to highest-cancellation
-          and best-retention channels; current code lacks these annotations (potential
-          regression)
+        comment: Two targeted annotations immediately surface the highest-churn and
+          best-retention channels
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -148,29 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct spine plot: variable-width stacked bars, widths proportional
-          to marginal count, normalized to 100%, adjacent with no gaps'
+        comment: 'Correct spine plot: width-by-marginal, height-normalized-to-100%,
+          conditional stacking'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: proportional widths, conditional proportions
-          summing to 100%, no gaps, distinct colors, centered labels, percentage labels'
+        comment: Proportional widths, no gaps, distinct colors + legend, centered
+          tick labels, conditional percentage labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x_category -> channel width, fill_category -> stacked color, count
-          -> proportions correctly computed
+        comment: X = channel (width-encoded), Y = proportion 0-100%, correctly assigned
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title contains 'bar-spine · plotly · anyplot.ai'; legend labels match
-          data categories
+        passed: false
+        comment: Title omits the required 'python' language token between spec-id
+          and library name; legend labels are otherwise correct
     data_quality:
       score: 15
       max: 15
@@ -180,23 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full range: variable bar widths (240-830), meaningful proportion
-          variation (Active: 42%-77%), all three outcomes represented'
+        comment: Shows the full range from best retention (77% active) to worst (32%
+          cancelled)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic subscription business with five acquisition channels and
-          three customer lifecycle stages; neutral and non-controversial
+        comment: Neutral, realistic SaaS subscription/acquisition-channel scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Channel sizes and proportions are mutually consistent and domain-plausible;
-          Referral best retention and Social Media highest cancellation are realistic
-          patterns
+        comment: Cancellation and channel-size figures are plausible for a subscription
+          business
     code_quality:
       score: 10
       max: 10
@@ -206,63 +194,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat layout: tokens -> data -> computation -> traces -> layout ->
-          save; no functions or classes'
+        comment: Linear imports -> data -> compute -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data fully hardcoded; no randomness; deterministic output
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os (stdlib) and plotly.graph_objects; both used
+        comment: Only os and plotly.graph_objects, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic loop over outcomes, inline label suppression, per-bar
-          hovertemplate via list comprehension; no over-engineering
+        comment: Appropriate complexity for a manual variable-width spine construction;
+          no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current Plotly
-          API
+        comment: Saves plot-{THEME}.png with correct width/height/scale plus plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct use of go.Bar with width= for variable-width bars, barmode=stack,
-          bargap=0, tickmode=array for custom tick labels; appropriate API level for
-          this chart type
+        comment: Variable-width go.Bar traces with barmode=stack is the standard plotly
+          technique for mosaic/spine-style charts
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Variable-width bars via width= parameter (non-trivial in other libraries),
-          per-bar hovertemplate list, HTML export; solid plotly-specific usage
+        comment: Per-point hovertemplate arrays and arrow-annotations are reasonably
+          plotly-idiomatic, though replicable with some effort in other interactive
+          libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
+  - annotations
   - manual-ticks
-  - html-export
   patterns:
   - iteration-over-groups
   dataprep:
   - normalization
-  styling:
-  - grid-styling
+  styling: []
