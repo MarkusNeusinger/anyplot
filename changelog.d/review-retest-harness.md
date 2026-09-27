@@ -25,14 +25,15 @@
   `model_alias`, never in its place. The baseline arm (`rules_ref=0674ab6b5`)
   runs on today's harness: an overlaid `regen_gate.py` only receives the flags
   it already had. How to run and read it: `docs/workflows/review-retest.md`.
+  (#11964)
 - **Regen gate report.** `review_retest.py gate-report` aggregates the
   production regen gate records from the PR-comment markers: merge rate,
   reason codes, how far re-scored predecessors land from their stored scores
   (comparable decisions apart), the counted visible improvements, how often a
   review cites an "Expected, not a defect" bullet as an improvement, and soft
-  alarms.
+  alarms. (#11964)
 - **A verification loop for review-rubric changes.** `CLAUDE.md` and the
   `open-pr` skill send pull requests that change the review rubric
   (`quality-criteria.md`, `ai-quality-review.md`, `default-style-guide.md`,
   the review rules in `prompts/library/*.md`, the review model routing) to a
-  candidate arm of the retest, whose snippet goes into the PR body.
+  candidate arm of the retest, whose snippet goes into the PR body. (#11964)
