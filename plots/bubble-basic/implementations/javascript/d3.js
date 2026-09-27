@@ -46,7 +46,7 @@ const r = d3.scaleSqrt().domain(teamExtent).range([7, 21]);
 // Stroke weight steps up across team-size terciles — a secondary encoding
 // that reinforces the size channel with an outline cue, mirrored in the
 // legend below so the reference set and the real bubbles agree.
-const strokeWidth = d3.scaleQuantize().domain(teamExtent).range([1, 1.6, 2.4]);
+const strokeWidth = d3.scaleQuantize().domain(teamExtent).range([1, 2, 3.5]);
 
 // --- Gridlines --------------------------------------------------------------
 const gridX = g.append("g")
@@ -101,9 +101,9 @@ data.forEach((d) => {
 const declutter = d3.forceSimulation(data)
   .force("x", d3.forceX((d) => x(d.funding)).strength(0.85))
   .force("y", d3.forceY((d) => y(d.growth)).strength(0.85))
-  .force("collide", d3.forceCollide((d) => r(d.team) + 6))
+  .force("collide", d3.forceCollide((d) => r(d.team) + 9))
   .stop();
-for (let i = 0; i < 320; i++) declutter.tick();
+for (let i = 0; i < 380; i++) declutter.tick();
 
 // --- Bubbles --------------------------------------------------------------
 g.selectAll("circle.bubble").data(data).join("circle")
@@ -137,8 +137,8 @@ g.append("line")
   .attr("stroke-dasharray", "8,6")
   .attr("stroke-opacity", 0.75);
 
-const trendLabelX = x(fundingMin) + (x(fundingMax) - x(fundingMin)) * 0.62;
-const trendLabelY = y(slope * (fundingMin + (fundingMax - fundingMin) * 0.62) + intercept) - 22;
+const trendLabelX = x(fundingMin) + (x(fundingMax) - x(fundingMin)) * 0.74;
+const trendLabelY = y(slope * (fundingMin + (fundingMax - fundingMin) * 0.74) + intercept) - 75;
 const trendLabel = g.append("text")
   .attr("x", trendLabelX)
   .attr("y", trendLabelY)
@@ -151,7 +151,7 @@ const trendLabel = g.append("text")
 // A background card anchors the trend annotation against the busy bubble
 // field behind it, with a brand-green accent bar tying the callout to the
 // trend line it explains, so the story reads at a glance.
-const trendPad = 10;
+const trendPad = 8;
 const trendBBox = trendLabel.node().getBBox();
 const cardX = trendBBox.x - trendPad;
 const cardY = trendBBox.y - trendPad * 0.6;
