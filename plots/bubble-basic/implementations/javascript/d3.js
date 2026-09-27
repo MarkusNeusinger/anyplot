@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 89/100 | Updated: 2026-09-27
+// Quality: 94/100 | Updated: 2026-09-27
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
@@ -46,7 +46,7 @@ const r = d3.scaleSqrt().domain(teamExtent).range([7, 21]);
 // Stroke weight steps up across team-size terciles — a secondary encoding
 // that reinforces the size channel with an outline cue, mirrored in the
 // legend below so the reference set and the real bubbles agree.
-const strokeWidth = d3.scaleQuantize().domain(teamExtent).range([1, 1.6, 2.4]);
+const strokeWidth = d3.scaleQuantize().domain(teamExtent).range([1, 2, 3.5]);
 
 // --- Gridlines --------------------------------------------------------------
 const gridX = g.append("g")
@@ -88,22 +88,22 @@ g.append("text")
 // --- Force-directed decluttering (d3-specific) -------------------------------
 // A collision force gently nudges overlapping bubbles apart from their true
 // (funding, growth) position so the densest funding cluster (100-150) stays
-// individually legible instead of stacking 3-4 deep. Shrinking the radius
-// range (was 8-28, now 7-21) cuts the raw overlap footprint, which lets the
-// x/y anchor strength rise (0.6 -> 0.85) so rendered positions track their
-// true data coordinate much more closely while the collision force (padding
-// unchanged at +6px, same 320 relaxation ticks) still has enough headroom to
-// fully separate the smaller bubbles in the densest region.
+// individually legible instead of stacking 3-4 deep. Raising the x/y anchor
+// strength (0.85 -> 0.92) and trimming the collision padding (+9 -> +6px)
+// keeps rendered positions tracking their true data coordinate even more
+// tightly, while the collision force still has enough headroom over 380
+// relaxation ticks to fully separate the smaller bubbles in the densest
+// region.
 data.forEach((d) => {
   d.x = x(d.funding);
   d.y = y(d.growth);
 });
 const declutter = d3.forceSimulation(data)
-  .force("x", d3.forceX((d) => x(d.funding)).strength(0.85))
-  .force("y", d3.forceY((d) => y(d.growth)).strength(0.85))
+  .force("x", d3.forceX((d) => x(d.funding)).strength(0.92))
+  .force("y", d3.forceY((d) => y(d.growth)).strength(0.92))
   .force("collide", d3.forceCollide((d) => r(d.team) + 6))
   .stop();
-for (let i = 0; i < 320; i++) declutter.tick();
+for (let i = 0; i < 380; i++) declutter.tick();
 
 // --- Bubbles --------------------------------------------------------------
 g.selectAll("circle.bubble").data(data).join("circle")
@@ -137,8 +137,8 @@ g.append("line")
   .attr("stroke-dasharray", "8,6")
   .attr("stroke-opacity", 0.75);
 
-const trendLabelX = x(fundingMin) + (x(fundingMax) - x(fundingMin)) * 0.62;
-const trendLabelY = y(slope * (fundingMin + (fundingMax - fundingMin) * 0.62) + intercept) - 22;
+const trendLabelX = x(fundingMin) + (x(fundingMax) - x(fundingMin)) * 0.74;
+const trendLabelY = y(slope * (fundingMin + (fundingMax - fundingMin) * 0.74) + intercept) - 75;
 const trendLabel = g.append("text")
   .attr("x", trendLabelX)
   .attr("y", trendLabelY)
@@ -151,7 +151,7 @@ const trendLabel = g.append("text")
 // A background card anchors the trend annotation against the busy bubble
 // field behind it, with a brand-green accent bar tying the callout to the
 // trend line it explains, so the story reads at a glance.
-const trendPad = 10;
+const trendPad = 8;
 const trendBBox = trendLabel.node().getBBox();
 const cardX = trendBBox.x - trendPad;
 const cardY = trendBBox.y - trendPad * 0.6;
@@ -203,9 +203,9 @@ legend.append("text")
   .text("Team Size (employees)");
 
 // Legend circles echo the real bubble treatment (brand-green tint at the
-// same 0.58 fill-opacity as the real marks, not a generic gray outline) and
-// reuse the same team-size stroke-width scale as the real bubbles, so the
-// reference set matches the data both in fill and outline emphasis.
+// same 0.58 fill-opacity as the real marks, with the same background-colored
+// cutout stroke) and reuse the same team-size stroke-width scale as the real
+// bubbles, so the reference set matches the data in fill and outline alike.
 const baselineY = 110;
 const legendX = [60, 140, 210];
 legendValues.forEach((v, i) => {
@@ -215,7 +215,7 @@ legendValues.forEach((v, i) => {
     .attr("r", legendR[i])
     .attr("fill", t.palette[0])
     .attr("fill-opacity", 0.58)
-    .attr("stroke", t.palette[0])
+    .attr("stroke", t.pageBg)
     .attr("stroke-width", strokeWidth(v));
   legend.append("text")
     .attr("x", legendX[i])
