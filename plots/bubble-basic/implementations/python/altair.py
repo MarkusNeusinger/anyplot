@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: altair 6.3.0 | Python 3.13.15
 Quality: 93/100 | Created: 2026-09-26
@@ -29,16 +29,17 @@ n = 49
 
 stages = np.random.choice(["Seed", "Series A", "Series B", "Growth"], size=n, p=[0.25, 0.30, 0.25, 0.20])
 
-stage_funding = {"Seed": (6, 4), "Series A": (18, 7), "Series B": (38, 10), "Growth": (60, 12)}
+stage_funding = {"Seed": (6, 3.5), "Series A": (15, 5.5), "Series B": (40, 9), "Growth": (60, 12)}
 funding_m = np.array([np.random.normal(*stage_funding[s]) for s in stages])
 funding_m = np.clip(funding_m, 1, 80)
 
 revenue_m = funding_m * np.random.uniform(0.7, 1.5, size=n) + np.random.normal(5, 3, size=n)
 revenue_m = np.clip(revenue_m, 2, 100)
 
-# Market share (%) stays within the spec's recommended 10-100 size-column range
-stage_share = {"Seed": (14, 4), "Series A": (28, 7), "Series B": (48, 10), "Growth": (68, 12)}
-market_share = np.array([np.clip(np.random.normal(*stage_share[s]), 10, 95) for s in stages])
+# Market share (%) narrowed to a realistic 10-58 band — a single company holding
+# ~95% would imply a near-monopoly, implausible across four competing stage cohorts
+stage_share = {"Seed": (14, 4), "Series A": (24, 5), "Series B": (36, 6), "Growth": (48, 7)}
+market_share = np.array([np.clip(np.random.normal(*stage_share[s]), 10, 58) for s in stages])
 
 df = pd.DataFrame(
     {
@@ -84,12 +85,12 @@ bubbles = (
         ),
         size=alt.Size(
             "Market Share (%):Q",
-            scale=alt.Scale(range=[50, 2000], domain=[10, 95]),
+            scale=alt.Scale(range=[50, 1500], domain=[10, 58]),
             legend=alt.Legend(
                 title="Market Share (%)",
                 titleFontSize=10,
                 labelFontSize=10,
-                values=[10, 30, 60, 90],
+                values=[10, 25, 40, 55],
                 symbolFillColor=IMPRINT_PALETTE[0],
                 symbolStrokeColor=PAGE_BG,
                 symbolOpacity=0.65,
@@ -150,7 +151,6 @@ chart = (
         tickColor=INK_SOFT,
         gridColor=INK,
         gridOpacity=0.15,
-        gridDash=[3, 3],
         labelColor=INK_SOFT,
         titleColor=INK,
         labelFontSize=10,
