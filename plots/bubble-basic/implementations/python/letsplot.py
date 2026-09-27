@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: letsplot 4.11.0 | Python 3.13.15
-Quality: 91/100 | Updated: 2026-09-26
+Quality: 93/100 | Updated: 2026-09-27
 """
 
 import os
@@ -17,7 +17,6 @@ from lets_plot import (
     element_text,
     geom_point,
     geom_smooth,
-    geom_text_repel,
     ggplot,
     ggsave,
     ggsize,
@@ -44,86 +43,75 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-ANYPLOT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+# Imprint palette — 8 hues, theme-independent, hybrid-v3 sort
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - market analysis: companies by revenue, growth rate, and market share
+# Data - sports analytics: team payroll vs. win rate, bubble size = average attendance
 np.random.seed(42)
 
-sectors = ["Technology", "Healthcare", "Finance", "Energy", "Consumer Goods"]
-rev_ranges = [(15, 120), (20, 140), (50, 200), (60, 195), (10, 130)]
-growth_params = [(28, -0.10), (18, -0.04), (10, -0.02), (7, -0.01), (15, -0.05)]
-share_means = [10, 14, 20, 22, 12]
-counts = [10, 10, 9, 8, 8]
+conferences = ["Eastern", "Western"]
+win_pct_offset = {"Eastern": 0.0, "Western": 5.0}
+n_per_conference = 35
 
 rows = []
-for sector, (rev_lo, rev_hi), (g_base, g_slope), s_mean, n in zip(
-    sectors, rev_ranges, growth_params, share_means, counts, strict=True
-):
-    rev = np.random.uniform(rev_lo, rev_hi, n)
-    growth = g_base + g_slope * rev + np.random.randn(n) * 2.5
-    share = np.clip(np.random.randn(n) * 5 + s_mean, 2, 30)
-    for r, g, s in zip(rev, growth, share, strict=True):
-        rows.append({"revenue": r, "growth_rate": g, "market_share": s, "sector": sector})
+for conference in conferences:
+    payroll_millions = np.random.uniform(90, 190, n_per_conference)
+    win_pct = np.clip(
+        18 + win_pct_offset[conference] + 0.28 * (payroll_millions - 90) + np.random.normal(0, 8, n_per_conference),
+        15,
+        78,
+    )
+    attendance_thousands = np.clip(np.random.normal(28, 7, n_per_conference), 12, 45)
+    for payroll, win, attendance in zip(payroll_millions, win_pct, attendance_thousands, strict=True):
+        rows.append({"payroll": payroll, "win_pct": win, "attendance": attendance, "conference": conference})
 
 df = pd.DataFrame(rows)
 
-# Focal-point outliers: largest player by market share, sharpest growth decline
-top_share_idx = df["market_share"].idxmax()
-top_decline_idx = df["growth_rate"].idxmin()
-outliers = df.loc[[top_share_idx, top_decline_idx]].copy()
-outliers["label"] = [
-    f"{df.loc[top_share_idx, 'sector']} — largest share",
-    f"{df.loc[top_decline_idx, 'sector']} — steepest decline",
-]
-
 # Plot
 plot = (
-    ggplot(df, aes(x="revenue", y="growth_rate", size="market_share", color="sector"))
-    + geom_point(
-        alpha=0.7,
-        tooltips=layer_tooltips()
-        .format("revenue", "${.1f}M")
-        .format("growth_rate", "{.1f}%")
-        .format("market_share", "{.1f}%")
-        .line("@sector")
-        .line("Revenue|@revenue")
-        .line("Growth|@growth_rate")
-        .line("Market Share|@market_share"),
-    )
+    ggplot(df, aes(x="payroll", y="win_pct", size="attendance", color="conference"))
     + geom_smooth(
-        aes(x="revenue", y="growth_rate"),
-        method="loess",
+        aes(x="payroll", y="win_pct"),
+        method="lm",
+        se=False,
         color=INK_SOFT,
-        size=1.5,
-        alpha=0.12,
+        linetype="dashed",
+        size=0.8,
+        alpha=0.6,
         inherit_aes=False,
         show_legend=False,
+        tooltips="none",
     )
-    + geom_text_repel(
-        aes(x="revenue", y="growth_rate", label="label"),
-        data=outliers,
-        size=3.5,
-        color=INK,
-        seed=42,
-        inherit_aes=False,
-        show_legend=False,
+    + geom_point(
+        alpha=0.55,
+        tooltips=layer_tooltips()
+        .format("payroll", "${.0f}M")
+        .format("win_pct", "{.1f}%")
+        .format("attendance", "{.1f}K")
+        .line("@conference")
+        .line("Payroll|@payroll")
+        .line("Win Rate|@win_pct")
+        .line("Avg. Attendance|@attendance"),
     )
-    + scale_size_area(max_size=22, name="Market Share (%)", breaks=[5, 10, 15, 20, 25])
-    + scale_color_manual(values=ANYPLOT_PALETTE, name="Sector")
-    + scale_x_continuous(expand=[0.02, 10])
+    + scale_size_area(max_size=19, name="Avg. Attendance (K)", breaks=[15, 25, 35, 45])
+    + scale_color_manual(values=IMPRINT_PALETTE[:2], name="Conference")
+    + scale_x_continuous(expand=[0.02, 5])
     + guides(
         color=guide_legend(nrow=1, override_aes={"size": 7}),
-        size=guide_legend(nrow=1, override_aes={"color": ANYPLOT_PALETTE[0], "alpha": 0.7}),
+        size=guide_legend(nrow=1, override_aes={"color": IMPRINT_PALETTE[0], "alpha": 0.55}),
     )
-    + labs(x="Revenue (Million USD)", y="Growth Rate (%)", title="bubble-basic · python · letsplot · anyplot.ai")
+    + labs(x="Team Payroll (Million USD)", y="Win Rate (%)", title="bubble-basic · python · letsplot · anyplot.ai")
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
-        axis_title=element_text(size=12, color=INK),
+        # color must match fill explicitly: an unset color on panel_background
+        # renders a visible default border once a legend is present, even
+        # with panel_border=element_blank() (lets-plot 4.11.0 quirk).
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_border=element_blank(),
+        axis_title=element_text(size=13, color=INK),
         axis_text=element_text(size=10, color=INK_SOFT),
-        axis_line=element_line(color=INK_SOFT),
-        plot_title=element_text(size=16, color=INK),
+        plot_title=element_text(size=18, color=INK),
         plot_margin=[30, 20, 20, 20],
         legend_title=element_text(size=10, color=INK),
         legend_text=element_text(size=10, color=INK_SOFT),
@@ -131,6 +119,8 @@ plot = (
         panel_grid_major=element_line(size=0.3, color=RULE),
         panel_grid_minor=element_blank(),
         legend_position="bottom",
+        legend_box="horizontal",
+        legend_spacing=20,
     )
     + ggsize(800, 450)
 )
