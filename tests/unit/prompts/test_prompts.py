@@ -626,6 +626,10 @@ class TestPlotTypeCharacteristics:
             # "fix" legitimate strip-plot jitter or network layouts.
             assert "layout-positioned types" in content, path.name
             assert "any jitter, dodge or offset the spec's Data or Notes ask for" in content, path.name
+            # Permissions are never targets (the bubble-overlap leak: data
+            # clustered to "show" the overlap a spec only permits).
+            assert "`Expected, not a defect:` bullets are permissions, not targets" in content, path.name
+            assert re.search(r"never shape the data to produce them", content, re.IGNORECASE), path.name
 
     @pytest.mark.parametrize(
         "prompt_path",

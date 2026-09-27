@@ -63,7 +63,7 @@ Read these files to understand the requirements:
 1. `prompts/plot-generator.md` - Base generation rules
 2. `prompts/default-style-guide.md` - **CRITICAL**: Imprint palette, continuous-data rules, theme-adaptive chrome tokens. Every new implementation must comply. Always refer to the palette as **Imprint** in code comments and metadata — never "anyplot palette".
 3. `prompts/library/{LIBRARY}.md` - Library-specific rules + theme-adaptive chrome mapping for this library
-4. `plots/{SPEC_ID}/specification.md` - What to visualize. Its closing `## What a good version looks like` section (when present) names what a good render of this plot type shows, including "expected, not a defect" items — the review scores against it, so build toward it. Without the section, derive the same from Description, Data and Notes.
+4. `plots/{SPEC_ID}/specification.md` - What to visualize. Its closing `## What a good version looks like` section (when present) names what a good render of this plot type shows, and the review scores against it. Build toward its `A good version shows:` bullets (the review deducts when one is missing). Its `Expected, not a defect:` bullets are permissions, not targets: never shape the data to produce them (no clustering points to show overlap). Without the section, derive the same from Description, Data and Notes.
 
 ### If regenerating (`IS_REGENERATION=true`) — MANDATORY
 
