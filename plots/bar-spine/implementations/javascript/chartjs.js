@@ -58,9 +58,20 @@ const drawSpine = {
 
       ctx.fillStyle = t.palette[0]; // Retained — brand green, always first series
       ctx.fillRect(xLeft, ySplit, xRight - xLeft, yZero - ySplit);
+      ctx.strokeStyle = t.ink;
+      ctx.lineWidth = 1.25;
+      ctx.strokeRect(xLeft, ySplit, xRight - xLeft, yZero - ySplit);
 
       ctx.fillStyle = t.palette[4]; // Churned — matte red, semantic loss anchor
       ctx.fillRect(xLeft, yHundred, xRight - xLeft, ySplit - yHundred);
+      ctx.strokeStyle = t.ink;
+      ctx.lineWidth = 1.25;
+      ctx.strokeRect(xLeft, yHundred, xRight - xLeft, ySplit - yHundred);
+      // Redundant ink-color outline on both segments (default-style-guide.md
+      // "Optional outline pattern"): a shape boundary independent of hue, so
+      // the Retained/Churned split doesn't rely on green/red alone for
+      // deuteranopia/protanopia readers, and it firms up matte-red's marginal
+      // dark-theme contrast.
 
       // Bar edges: thin page-bg stroke for definition (default-style-guide.md
       // "Data Element Styling"), between the two stacked segments...
