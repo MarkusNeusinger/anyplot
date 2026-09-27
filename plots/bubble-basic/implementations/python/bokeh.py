@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: bokeh 3.10.0 | Python 3.13.15
 Quality: 92/100 | Created: 2026-09-27
@@ -51,37 +51,42 @@ density_norm = (population_density - population_density.min()) / (population_den
 green_space = 100 - density_norm * 90 + np.random.normal(0, 5, n_cities)
 green_space = np.clip(green_space, 10, 100)  # m² per capita
 
+# Transit accessibility index — a genuinely independent fourth attribute (not
+# derived from density/income/green_space) so color adds new information
+# instead of echoing the size encoding. Also breaks up color runs inside the
+# densest cluster, since neighboring points no longer share near-identical hue.
+transit_score = np.clip(np.random.normal(5.5, 2.3, n_cities), 0, 10)
+
 # Area-proportional bubble sizes: size² ∝ data value, so size ∝ sqrt(data)
-size_min, size_max = 22, 80
+size_min, size_max = 16, 80
 green_norm = (green_space - green_space.min()) / (green_space.max() - green_space.min())
 bubble_size = np.sqrt(size_min**2 + (size_max**2 - size_min**2) * green_norm)
 
-# Size AND color both encode green_space deliberately — the spec only asks for
-# one size-encoded third dimension, so this is a reinforcing redundancy rather
-# than a missed opportunity: it lets the size legend and the color bar below
-# corroborate each other instead of splitting attention across two variables.
-
-color_mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=green_space.min(), high=green_space.max())
+color_mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=transit_score.min(), high=transit_score.max())
 
 source = ColumnDataSource(
     data={
         "density": population_density,
         "income": median_income,
         "size": bubble_size,
-        "green_space": green_space,
+        "transit_score": transit_score,
         "density_display": np.round(population_density).astype(int),
         "income_display": np.round(median_income, 1),
         "green_display": np.round(green_space, 1),
+        "transit_display": np.round(transit_score, 1),
     }
 )
 
-# Symmetric axis ranges — equal padding both sides; extra top space for legend
+# Modest, symmetric axis padding — the size legend below lives inside the
+# naturally sparse bottom-right corner (high density + low income is rare
+# given the positive density-income correlation), so no extra headroom needs
+# to be reserved just to make room for it.
 x_pad = (population_density.max() - population_density.min()) * 0.07
 y_pad = (median_income.max() - median_income.min()) * 0.07
-x_start = population_density.min() - x_pad * 1.5
-x_end = population_density.max() + x_pad * 1.5
+x_start = population_density.min() - x_pad * 1.3
+x_end = population_density.max() + x_pad * 1.3
 y_start = median_income.min() - y_pad
-y_end = median_income.max() + y_pad * 5.5
+y_end = median_income.max() + y_pad * 2.2
 
 x_range = x_end - x_start
 y_range = y_end - y_start
@@ -108,7 +113,7 @@ main_renderer = p.scatter(
     y="income",
     size="size",
     source=source,
-    fill_color=transform("green_space", color_mapper),
+    fill_color=transform("transit_score", color_mapper),
     fill_alpha=0.65,
     line_color=PAGE_BG,
     line_width=2,
@@ -120,14 +125,13 @@ main_renderer = p.scatter(
     hover_line_width=3,
 )
 
-# Native ColorBar — makes the continuous green-space -> color mapping explicit
-# alongside the hand-built size legend below, rather than leaving color as an
-# unexplained visual echo of bubble size.
+# Native ColorBar — the transit-score -> color mapping, independent of the
+# size legend below (which explains the green-space -> bubble-size mapping).
 color_bar = ColorBar(
     color_mapper=color_mapper,
     width=22,
     location=(0, 0),
-    title="Green Space (m²/capita)",
+    title="Transit Score (0-10)",
     title_text_font_size="30pt",
     title_text_color=INK,
     major_label_text_font_size="28pt",
@@ -146,6 +150,7 @@ hover = HoverTool(
         ("Density", "@density_display{,} people/km²"),
         ("Income", "$@income_display{0.0}k"),
         ("Green Space", "@green_display m²/capita"),
+        ("Transit Score", "@transit_display / 10"),
     ],
     mode="mouse",
 )
@@ -194,9 +199,11 @@ p.xgrid.grid_line_alpha = 0.12
 p.ygrid.grid_line_color = INK
 p.ygrid.grid_line_alpha = 0.12
 
-# Size legend — anchored above the main data cluster (top region is empty due to correlation)
-legend_cx = x_start + x_range * 0.26
-legend_top = y_end - y_range * 0.04
+# Size legend — anchored in the bottom-right corner, which the positive
+# density-income correlation leaves naturally sparse (high density rarely
+# pairs with low income), reclaiming space instead of padding the canvas.
+legend_cx = x_end - x_range * 0.20
+legend_top = y_start + y_range * 0.34
 y_step = y_range * 0.07
 
 ref_green = [green_space.min(), (green_space.min() + green_space.max()) / 2, green_space.max()]
@@ -229,18 +236,11 @@ p.add_layout(
     )
 )
 
-for i, (sz, lbl, gv) in enumerate(zip(ref_sizes, ref_labels, ref_green, strict=True)):
+for i, (sz, lbl) in enumerate(zip(ref_sizes, ref_labels, strict=True)):
     ly = legend_top - y_step * (i + 0.85)
-    ref_src = ColumnDataSource(data={"x": [legend_cx - x_range * 0.04], "y": [ly], "size": [sz], "green_space": [gv]})
+    ref_src = ColumnDataSource(data={"x": [legend_cx - x_range * 0.04], "y": [ly], "size": [sz]})
     p.scatter(
-        x="x",
-        y="y",
-        size="size",
-        source=ref_src,
-        fill_color=transform("green_space", color_mapper),
-        fill_alpha=0.65,
-        line_color=PAGE_BG,
-        line_width=2,
+        x="x", y="y", size="size", source=ref_src, fill_color=INK_SOFT, fill_alpha=0.5, line_color=PAGE_BG, line_width=2
     )
     p.add_layout(
         Label(
@@ -258,7 +258,7 @@ p.add_layout(
     Arrow(
         end=NormalHead(size=14, fill_color=INK_SOFT, line_color=INK_SOFT),
         x_start=outlier_x + x_range * 0.09,
-        y_start=outlier_y + y_range * 0.055,
+        y_start=outlier_y + y_range * 0.06,
         x_end=outlier_x + x_range * 0.012,
         y_end=outlier_y + y_range * 0.012,
         line_color=INK_SOFT,
@@ -268,7 +268,7 @@ p.add_layout(
 p.add_layout(
     Label(
         x=outlier_x + x_range * 0.095,
-        y=outlier_y + y_range * 0.06,
+        y=outlier_y + y_range * 0.065,
         text="Outlier: income well above trend",
         text_font_size="28pt",
         text_font_style="italic",
