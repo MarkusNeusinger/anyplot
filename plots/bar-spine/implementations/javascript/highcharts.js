@@ -1,8 +1,7 @@
 // anyplot.ai
 // bar-spine: Spine Plot for Two-Variable Proportions
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: 88/100 | Updated: 2026-09-27
+// Quality: 85/100 | Updated: 2026-09-27
 
 const t = window.ANYPLOT_TOKENS;
 
