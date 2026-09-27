@@ -16,12 +16,17 @@ import yaml
 
 from automation.scripts.regen_gate import (
     KEEP,
+    KIND_EXPECTED,
+    KIND_SHOWS,
     MERGE,
     GateInput,
+    characteristic_kind,
     decide,
     main,
     parse_characteristics,
+    permission_refs,
     render_previous_review,
+    render_summary,
     validate_regen,
     weakness_ids,
 )
@@ -132,6 +137,64 @@ class TestImprovements:
     def test_malformed_ref_keeps(self, ref):
         imp = [{"ref": ref, "what": "x", "where_visible": "y"}]
         assert decide(_inp(regen=_regen(improvements=imp))).verdict == KEEP
+
+
+class TestPermissionRefs:
+    """An "Expected, not a defect" bullet is a permission, never an improvement
+    (the bubble-overlap leak: "overlap now visible" cited as satisfying C2)."""
+
+    def test_permission_only_improvement_keeps(self):
+        imp = [{"ref": "C2", "what": "Bubbles now overlap in the dense cluster", "where_visible": "centre, both"}]
+        result = decide(_inp(regen=_regen(improvements=imp), characteristic_count=5, permission_refs=frozenset({"C2"})))
+        assert result.verdict == KEEP
+        assert result.reason.startswith("no visible improvement (C2 = 'Expected, not a defect' bullet")
+        assert "not counted as an improvement" in result.reason
+        assert "where_visible" not in result.reason  # the item had one; that is not why it failed
+
+    def test_permission_next_to_a_real_improvement_merges_with_a_note(self):
+        imp = [
+            {"ref": "C2", "what": "Overlap visible", "where_visible": "centre"},
+            {"ref": "C4", "what": "Size legend circles filled", "where_visible": "legend, both renders"},
+        ]
+        result = decide(_inp(regen=_regen(improvements=imp), characteristic_count=5, permission_refs=frozenset({"C2"})))
+        assert result.verdict == MERGE
+        assert result.reason.startswith("1 visible improvement(s)")
+        assert "(C2 = 'Expected, not a defect' bullet, not counted as an improvement)" in result.reason
+
+    def test_several_permissions_are_listed_in_order(self):
+        imp = [
+            {"ref": "C5", "what": "a", "where_visible": "x"},
+            {"ref": "C2", "what": "b", "where_visible": "y"},
+        ]
+        result = decide(
+            _inp(regen=_regen(improvements=imp), characteristic_count=5, permission_refs=frozenset({"C2", "C5"}))
+        )
+        assert result.verdict == KEEP
+        assert "(C2, C5 = 'Expected, not a defect' bullets, not counted as an improvement)" in result.reason
+
+    def test_permission_ref_does_not_invalidate_the_file(self):
+        imp = [{"ref": "C2", "what": "Overlap", "where_visible": "centre"}]
+        result = decide(_inp(regen=_regen(improvements=imp), characteristic_count=3, permission_refs=frozenset({"C2"})))
+        assert not result.reason.startswith("invalid")
+
+    def test_unprefixed_section_counts_every_c_ref(self):
+        """Backward compatible: a section without kind prefixes has no permissions."""
+        spec = "## What a good version looks like\n- Overlap is expected, not a defect\n- Legend readable\n"
+        items = parse_characteristics(spec)
+        assert permission_refs(items) == frozenset()
+        imp = [{"ref": "C1", "what": "Overlap handled", "where_visible": "centre"}]
+        inp = _inp(regen=_regen(improvements=imp), characteristic_count=len(items), permission_refs=permission_refs(items))
+        assert decide(inp).verdict == MERGE
+
+    def test_summary_marks_the_permission(self):
+        imp = [
+            {"ref": "C2", "what": "Overlap visible", "where_visible": "centre"},
+            {"ref": "W2", "what": "Legend fixed", "where_visible": "legend"},
+        ]
+        result = decide(_inp(regen=_regen(improvements=imp), characteristic_count=3, permission_refs=frozenset({"C2"})))
+        text = render_summary(result, "90", 85)
+        assert "- `C2` Overlap visible — centre _(permission, not counted)_" in text
+        assert "- `W2` Legend fixed — legend\n" in text
 
 
 class TestRegressions:
@@ -271,8 +334,6 @@ class TestCoercion:
 
 class TestSummary:
     def test_mentions_are_neutralised(self):
-        from automation.scripts.regen_gate import render_summary
-
         imp = [{"ref": "new", "what": "Pinged @octocat", "where_visible": "legend @team"}]
         result = decide(_inp(regen=_regen(improvements=imp)))
         text = render_summary(result, "90", 85)
@@ -339,6 +400,7 @@ class TestExtraction:
         assert "**W1:** legend invisible" in md
         assert "**W2:** labels overlap" in md
         assert "**C1:** overlap handled with alpha" in md
+        assert '(only "A good version shows" bullets can be improvement refs)' in md
         assert "**Previous quality score (stored):** 90" in md
         assert [w["id"] for w in weaknesses] == ["W1", "W2"]
 
@@ -349,10 +411,65 @@ class TestExtraction:
             "- Overlap is expected\n  - nested detail\n1. Sizes scale by area\n* Legend readable\n\n"
             "## Later\n- not this either\n"
         )
-        assert parse_characteristics(spec) == ["Overlap is expected", "Sizes scale by area", "Legend readable"]
+        assert parse_characteristics(spec) == ["Overlap is expected; nested detail", "Sizes scale by area", "Legend readable"]
 
     def test_parse_characteristics_absent(self):
         assert parse_characteristics("# spec\n\n## Notes\n- a\n") == []
+
+    def test_wrapped_line_continues_the_bullet(self):
+        spec = "## What a good version looks like\n- A good version shows: bubble area grows\n  with the size value.\n- B\n"
+        assert parse_characteristics(spec) == ["A good version shows: bubble area grows with the size value.", "B"]
+
+    def test_blank_line_does_not_end_a_bullet(self):
+        spec = "## What a good version looks like\n- A\n\n    continued after a blank line\n\n- B\n"
+        assert parse_characteristics(spec) == ["A continued after a blank line", "B"]
+
+    def test_whitespace_inside_a_bullet_is_collapsed(self):
+        spec = "## What a good version looks like\n- A good  version shows:   area\n\ttab-indented tail\n"
+        assert parse_characteristics(spec) == ["A good version shows: area tab-indented tail"]
+
+    @pytest.mark.parametrize("stop", ["## Later", "# Top"])
+    def test_parsing_stops_at_the_next_heading(self, stop):
+        spec = f"## What a good version looks like\n- A\n{stop}\n- not this\n  nor this\n"
+        assert parse_characteristics(spec) == ["A"]
+
+    def test_sub_heading_does_not_end_the_section(self):
+        """Lenient on purpose (the lint rejects it as K2): a ### line is skipped."""
+        spec = "## What a good version looks like\n- A\n### Sub\n- B\n"
+        assert parse_characteristics(spec) == ["A", "B"]
+
+    def test_indented_line_before_any_bullet_is_ignored(self):
+        assert parse_characteristics("## What a good version looks like\n  stray\n- A\n") == ["A"]
+
+
+class TestCharacteristicKind:
+    @pytest.mark.parametrize(
+        ("text", "kind"),
+        [
+            ("A good version shows: area-scaled bubbles.", KIND_SHOWS),
+            ("Expected, not a defect: overlapping bubbles.", KIND_EXPECTED),
+            ("a good version shows: lower case still reads", KIND_SHOWS),
+            ("EXPECTED, NOT A DEFECT: upper case", KIND_EXPECTED),
+            ("Expected not a defect: comma missing", KIND_EXPECTED),
+            ("**Expected, not a defect:** bold prefix", KIND_EXPECTED),
+            ("**A good version shows**: bold prefix, colon outside", KIND_SHOWS),
+            ("  A good version shows : spaced", KIND_SHOWS),
+            ("Bubble area grows with the size value.", None),
+            ("Overlapping bubbles are expected, not a defect: translucency handles them.", None),
+            ("A good version shows area-scaled bubbles (no colon).", None),
+        ],
+    )
+    def test_kind(self, text, kind):
+        assert characteristic_kind(text) == kind
+
+    def test_permission_refs(self):
+        items = [
+            "A good version shows: area",
+            "Expected, not a defect: overlap",
+            "Legend readable",
+            "Expected, not a defect: uneven sizes",
+        ]
+        assert permission_refs(items) == frozenset({"C2", "C4"})
 
 
 class TestCli:
@@ -424,6 +541,31 @@ class TestCli:
         assert "::notice::regen_gate spec=bubble-basic lib=altair prev_stored=88 prev_rescored=80 new=81 verdict=merge" in stdout
         assert "verdict=merge" in out.read_text()
         assert "| 88 | 80 | 81 |" in summary.read_text()
+
+    def test_decide_reads_permissions_from_the_spec_file(self, tmp_path, monkeypatch, capsys):
+        """cmd_decide derives the permission refs from --spec-file itself."""
+        out = tmp_path / "gh_output"
+        monkeypatch.setenv("GITHUB_OUTPUT", str(out))
+        spec = tmp_path / "specification.md"
+        spec.write_text(
+            "# bubble-basic\n\n## Notes\n- n\n\n## What a good version looks like\n\n"
+            "- A good version shows: bubble area grows with the size value.\n"
+            "- Expected, not a defect: overlapping bubbles in dense regions.\n"
+            "- A good version shows: a size legend drawn like the data marks.\n",
+            encoding="utf-8",
+        )
+        regen = tmp_path / "review_regen.json"
+        imp = [{"ref": "C2", "what": "Bubbles overlap in the dense cluster now", "where_visible": "centre, both renders"}]
+        regen.write_text(json.dumps(_regen(prev_rescored=80, improvements=imp)), encoding="utf-8")
+        summary = tmp_path / "summary.md"
+        args = ["decide", "--spec-id", "bubble-basic", "--library", "d3", "--score", "84", "--regen-json", str(regen)]
+        args += ["--spec-file", str(spec), "--prev-renders", "available", "--summary-out", str(summary)]
+        assert main(args) == 0
+        stdout = capsys.readouterr().out
+        assert "verdict=keep" in stdout
+        assert "C2 = 'Expected, not a defect' bullet, not counted as an improvement" in stdout
+        assert "verdict=keep" in out.read_text()
+        assert "_(permission, not counted)_" in summary.read_text()
 
     def test_decide_invalid_json_keeps(self, tmp_path, monkeypatch, capsys):
         monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
