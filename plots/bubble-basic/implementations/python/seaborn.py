@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: seaborn 0.13.2 | Python 3.13.15
-Quality: 87/100 | Updated: 2026-09-27
+Quality: 91/100 | Updated: 2026-09-27
 """
 
 import os
