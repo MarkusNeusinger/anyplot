@@ -28,8 +28,9 @@ A force-directed graph uses physics simulation to position nodes, where connecte
 
 ## What a good version looks like
 
-- Node positions come from the force layout, not from data: there are no axes or grid, connected nodes sit close and unconnected ones apart, and a fixed seed makes the layout reproducible.
-- Some edge crossings, dense hub clusters and a few peripheral nodes are expected, not defects; a perfectly planar or symmetric picture suggests fabricated data rather than a real network.
-- When node size or color is used, it encodes one graph property (such as degree or community) and a legend or caption says which.
-- Labels appear on hubs or key nodes, or on every node only when the network is small, and they stay readable instead of piling up inside clusters.
-- Edges are thinner and lighter than the nodes, so the structure shows without an edge hairball hiding them; edge width varies only when it encodes weight.
+- A good version shows: node positions from the force layout, not from data: no axes or grid, connected nodes close together and unconnected ones apart, and a fixed seed so the layout is reproducible.
+- Expected, not a defect: some edge crossings, dense hub clusters and a few peripheral nodes.
+- A good version shows: the irregular structure of a real network; a perfectly planar or symmetric picture suggests fabricated data.
+- A good version shows: node size or color, when used, encoding one graph property (such as degree or community), with a legend or caption that says which.
+- A good version shows: labels on hubs or key nodes, or on every node only when the network is small, readable instead of piling up inside clusters.
+- A good version shows: edges thinner and lighter than the nodes, so the structure shows without an edge hairball hiding them; edge width varies only when it encodes weight.

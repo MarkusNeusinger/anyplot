@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from automation.scripts.spec_characteristics_lint import check_contract
 from core.constants import INTERACTIVE_LIBRARIES, LANGUAGE_FILE_EXTENSIONS, LIBRARIES_METADATA, SUPPORTED_LANGUAGES
 
 
@@ -502,8 +503,10 @@ PLOTS_DIR = PROMPTS_DIR.parent / "plots"
 WORKFLOW_PROMPTS_DIR = PROMPTS_DIR / "workflow-prompts"
 
 # Hand-seeded (owner-approved, one-off) characteristic sections for the most
-# regenerated / central plot types. Every other spec gets the section from
-# spec-create or keeps relying on the review inferring it from Description/Notes.
+# regenerated / central plot types, split to one kind per bullet ("A good
+# version shows:" / "Expected, not a defect:") in the P0 lint PR. Every other
+# spec gets the section from spec-create or the one-time backfill, or keeps
+# relying on the review inferring it from Description/Notes.
 SEEDED_CHARACTERISTIC_SPECS = [
     "bubble-basic",
     "scatter-basic",
@@ -535,6 +538,15 @@ class TestPlotTypeCharacteristics:
         content = (PROMPTS_DIR / "templates" / "specification.md").read_text()
         headings = re.findall(r"^## .+$", content, re.MULTILINE)
         assert headings[-2:] == ["## Notes", CHARACTERISTICS_HEADING]
+
+    def test_template_placeholders_carry_the_kinds(self) -> None:
+        content = (PROMPTS_DIR / "templates" / "specification.md").read_text()
+        section = content[content.index(CHARACTERISTICS_HEADING) :]
+        assert "\n- A good version shows: {" in section
+        assert "\n- Expected, not a defect: {" in section
+        assert "3-6 in total, one kind per bullet" in section
+        assert "the basic variant's" in section
+        assert "Derived layers (trend or fit lines" in section
 
     def test_quality_criteria_covers_new_rules(self) -> None:
         content = (PROMPTS_DIR / "quality-criteria.md").read_text()
@@ -611,18 +623,11 @@ class TestPlotTypeCharacteristics:
 
     @pytest.mark.parametrize("spec_id", _specs_with_characteristics())
     def test_section_follows_parser_format(self, spec_id: str) -> None:
-        """Heading once, last `## ` section, column-0 `- ` bullets (indented
-        continuation lines allowed) and nothing else — the shape the regen gate
-        parses as C1..Cn. The count bound is looser than the prompts' 3-5 on
-        purpose: this guards the parser contract, not house style, so a
-        spec-create PR is never blocked by a bullet too many or too few."""
+        """The parser contract the regen gate reads as C1..Cn, checked by the
+        same lint CI runs (automation/scripts/spec_characteristics_lint.py
+        `contract`): heading once, last section, column-0 `- ` bullets with a
+        kind prefix, 2-8 of them. House style (3-6, one line each) is the
+        lint's `style` check, which only warns."""
         content = (PLOTS_DIR / spec_id / "specification.md").read_text(encoding="utf-8")
-        lines = content.splitlines()
-        assert lines.count(CHARACTERISTICS_HEADING) == 1, f"{spec_id}: heading must appear exactly once"
-        start = lines.index(CHARACTERISTICS_HEADING)
-        body = lines[start + 1 :]
-        assert not [line for line in body if line.startswith("#")], f"{spec_id}: section must be last, no sub-headings"
-        stray = [line for line in body if line.strip() and not (line.startswith("- ") or line.startswith("  "))]
-        assert not stray, f"{spec_id}: only column-0 '- ' bullets (plus indented continuations) allowed, found {stray}"
-        bullets = [line for line in body if line.startswith("- ")]
-        assert 2 <= len(bullets) <= 6, f"{spec_id}: expected 2-6 bullets, found {len(bullets)}"
+        findings = check_contract(content)
+        assert not findings, f"{spec_id}: " + "; ".join(f"{f.rule} line {f.line}: {f.message}" for f in findings)

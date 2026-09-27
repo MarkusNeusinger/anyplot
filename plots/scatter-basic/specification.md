@@ -26,7 +26,8 @@ A fundamental 2D scatter plot that displays the relationship between two numeric
 
 ## What a good version looks like
 
-- One point per observation at its exact (x, y) value, all in one color; the cloud's direction, spread and the odd outlier read at a glance.
-- Points overlapping where the cloud is dense are expected, not a defect: moderate transparency lets piled-up areas read darker, and points are never jittered or nudged off their values to separate them.
-- Real paired data scatters: visible noise around the trend and a few outliers are expected, while a cloud lying exactly on a line suggests fabricated data.
-- The basic variant is x and y only — no color or size channel, no regression or trend line, no marginal distributions and no point labels.
+- A good version shows: one point per observation at its exact (x, y) value, all in one color, so the cloud's direction, spread and the odd outlier read at a glance.
+- Expected, not a defect: points overlapping where the cloud is dense, visible noise around the trend and a few outliers.
+- A good version shows: moderate transparency, so piled-up areas read darker, with no point jittered or nudged off its values to separate them.
+- A good version shows: a cloud that scatters like real paired data; one lying exactly on a line suggests fabricated data.
+- A good version shows: the basic variant's x and y only: no color or size channel, no regression or trend line, no marginal distributions and no point labels.

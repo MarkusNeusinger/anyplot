@@ -23,7 +23,8 @@
 
 ## What a good version looks like
 
-- {An observable property of a good render of THIS plot type — something a viewer sees in the image, not a code instruction}
-- {An "expected, not a defect" item: something that can look like a flaw but is inherent to the plot type, and how a good version handles it (e.g. "overlap in dense regions is expected; translucency handles it, marks never move off their values")}
-- {What the variant includes and leaves out — for a `-basic` spec, exactly the encodings the Data section lists and nothing added}
-- {Optional: one or two more observable properties; 3-5 bullets in total, no numeric thresholds, no generic ideals such as "no overlap" or "clean design"}
+- A good version shows: {an observable property of a good render of THIS plot type — something a viewer sees in the image, not a code instruction}
+- Expected, not a defect: {something that can look like a flaw but is inherent to the plot type, with no instruction attached — e.g. "overlapping bubbles in dense regions"}
+- A good version shows: {how a good version handles the expected item, phrased conditionally so it never turns the permission into a target — e.g. "where bubbles overlap, translucency and a thin outline keep each one distinguishable, and every bubble stays at its (x, y) values"}
+- A good version shows: {the variant's scope — for a `-basic` spec, "the basic variant's …" with exactly the encodings the Data section lists. Derived layers (trend or fit lines, mean or reference lines, bands, extra series, derived color scales, marginals, facets, callouts) are outside a basic variant; an id that names a field's standard diagram lists the layers its spec requires}
+- {Optional: more bullets of either kind; 3-6 in total, one kind per bullet, one line each, no numeric thresholds, no generic ideals such as "no overlap" or "clean design"}

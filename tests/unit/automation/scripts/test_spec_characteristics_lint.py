@@ -23,6 +23,18 @@ from automation.scripts.spec_characteristics_lint import (
 )
 
 
+PLOTS_DIR = Path(__file__).resolve().parents[4] / "plots"
+SEEDED_SPECS = [
+    "bubble-basic",
+    "scatter-basic",
+    "line-basic",
+    "bar-basic",
+    "heatmap-basic",
+    "heatmap-correlation",
+    "violin-basic",
+    "network-force-directed",
+]
+
 S = "A good version shows: "
 E = "Expected, not a defect: "
 
@@ -244,6 +256,30 @@ class TestStyle:
         notes = ("Markers are optional",)
         text = _spec([*GOOD, S + "a line that includes markers at every value."], notes=notes)
         assert "W5" in _rules(check_style(text, "demo-basic"))
+
+
+class TestRepository:
+    """The seeds set the bar the backfill is calibrated against."""
+
+    @pytest.mark.parametrize("spec_id", SEEDED_SPECS)
+    def test_seed_passes_contract_and_strict_style(self, spec_id: str):
+        text = (PLOTS_DIR / spec_id / "specification.md").read_text(encoding="utf-8")
+        assert check_contract(text) == []
+        assert check_style(text, spec_id, strict=True) == []
+
+    @pytest.mark.parametrize("spec_id", SEEDED_SPECS)
+    def test_seed_has_both_kinds(self, spec_id: str):
+        text = (PLOTS_DIR / spec_id / "specification.md").read_text(encoding="utf-8")
+        kinds = {lint.exact_kind(item) for item in lint.parse_characteristics(text)}
+        assert kinds == {"shows", "expected"}
+
+    def test_every_spec_passes_the_contract(self):
+        """What CI's `contract --all` enforces on every PR and every push to main."""
+        failures = {
+            path.parent.name: _rules(check_contract(path.read_text(encoding="utf-8")))
+            for path in sorted(PLOTS_DIR.glob("*/specification.md"))
+        }
+        assert {k: v for k, v in failures.items() if v} == {}
 
 
 class TestCli:

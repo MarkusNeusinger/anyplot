@@ -27,8 +27,9 @@ A heatmap displaying values in a matrix format using color intensity. Each cell'
 
 ## What a good version looks like
 
-- Every cell is a filled rectangle colored by its value; cells tile the grid without gaps (a thin page-colored separator is fine) and each row and column label sits at its cells.
-- The colormap fits the data — sequential for single-signed values, diverging and centered on zero (with the midpoint visible on the color bar) when values cross zero — and a labeled color bar is always present.
-- In-cell numbers appear only when the cells are large enough to read them; a large matrix without numbers is correct, not a missing feature, and shown numbers switch color with cell darkness so they stay legible in both themes.
-- Rows and columns follow a logical order so blocks and gradients emerge; uneven patches, hot spots and near-empty rows are expected in real data, not noise to smooth away.
-- Long row or column labels are rotated or given room, never truncated or overlapping.
+- A good version shows: every cell as a filled rectangle colored by its value, tiling the grid without gaps other than an optional thin page-colored separator, with each row and column label at its cells.
+- A good version shows: a colormap that fits the data (sequential for single-signed values, diverging and centered on zero with the midpoint visible on the color bar when values cross zero) and a labeled color bar.
+- A good version shows: in-cell numbers only when the cells are large enough to read them, switching color with cell darkness so they stay legible in both themes.
+- Expected, not a defect: a large matrix without in-cell numbers, and uneven patches, hot spots and near-empty rows in real data, which are not noise to smooth away.
+- A good version shows: rows and columns in a logical order so blocks and gradients emerge, with long row or column labels rotated or given room, never truncated or overlapping.
+- A good version shows: the basic variant's value grid only: no dendrograms or cluster trees, no marginal bars, and no annotation layer beyond the in-cell numbers the Notes allow.

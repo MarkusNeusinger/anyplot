@@ -448,5 +448,30 @@ class TestSpecCreateCharacteristicsSection:
     def test_both_prompts_request_the_section(self) -> None:
         for step_id, prompt in self._spec_create_prompts().items():
             assert "## What a good version looks like" in prompt, step_id
+            assert "3-6 column-0 `- ` bullets" in prompt, step_id
             assert "one line per bullet (no wrapped continuation lines)" in prompt, step_id
-            assert "expected, not a defect" in prompt, step_id
+            assert "`A good version shows: `" in prompt, step_id
+            assert "`Expected, not a defect: `" in prompt, step_id
+            assert "one kind per bullet" in prompt, step_id
+            assert "at least one of each" in prompt, step_id
+            assert "the basic variant's" in prompt, step_id
+
+    def test_both_prompts_self_check_with_the_lint(self) -> None:
+        for step_id, prompt in self._spec_create_prompts().items():
+            assert "python3 -m automation.scripts.spec_characteristics_lint contract plots/" in prompt, step_id
+            assert "python3 -m automation.scripts.spec_characteristics_lint style plots/" in prompt, step_id
+
+    def test_both_prompts_share_the_section_rules(self) -> None:
+        """First attempt and retry carry the same section instructions (the
+        retry only adds its repair sentence)."""
+        retry = (
+            " If the first attempt left a `specification.md` without this section, add it;"
+            " if it left bullets without a kind prefix, fix them."
+        )
+        blocks = []
+        for prompt in self._spec_create_prompts().values():
+            start = prompt.index("- End `specification.md` with the template's")
+            end = prompt.index("- Create: `plots/{specification-id}/specification.yaml`")
+            blocks.append(" ".join(prompt[start:end].split()))
+        assert sum(retry in block for block in blocks) == 1
+        assert len({block.replace(retry, "") for block in blocks}) == 1
