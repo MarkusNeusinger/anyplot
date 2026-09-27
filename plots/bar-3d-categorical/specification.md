@@ -26,3 +26,12 @@ A three-dimensional bar chart where bars rise from a 2D categorical grid, with h
 - Grid lines on the base plane help relate bars to their categorical positions
 - Consider adding value labels on top of bars when the grid is small (under 25 bars)
 - A color bar or legend should indicate the mapping when color encodes a variable
+
+## What a good version looks like
+
+- A good version shows: one bar per pair of categories standing on its cell of the base-plane grid, its height above the base plane proportional to its value, read against a vertical value axis that starts at zero and has readable ticks.
+- A good version shows: an elevated oblique view, as the Notes suggest, that shows the base-plane grid, both categorical axes with their labels and the value axis, with slight gaps between bars so their faces and depth read.
+- A good version shows: where taller front bars hide rear ones, a view angle and bar spacing that leave part of every bar in sight, so no bar disappears entirely.
+- A good version shows: color, if used, encoding either the value or a third categorical variable, with a color bar or legend that says which.
+- A good version shows: value labels, if drawn on a small grid, on top of their own bar, readable in both themes and not colliding with each other.
+- Expected, not a defect: rear bars partly hidden behind taller front ones, and perspective foreshortening that makes bars further back look smaller; both are inherent to the 3D view.

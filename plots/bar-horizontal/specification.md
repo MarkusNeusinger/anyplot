@@ -24,3 +24,12 @@ A horizontal bar chart displaying categorical data with rectangular bars extendi
 - Use a single color for all bars, or highlight specific bars to draw attention
 - Ensure adequate spacing between bars for visual clarity
 - Value labels can be placed at the end of bars or inside them
+
+## What a good version looks like
+
+- A good version shows: one horizontal bar per category extending from a zero baseline, so bar length stays proportional to the value, on a value axis that is never truncated.
+- A good version shows: bars of one thickness with even gaps, and categories in a meaningful order: by value for a ranking, or their natural order (response scales, age groups) when they have one.
+- A good version shows: each category label written horizontally beside its bar and shown in full, with long labels given room rather than truncated or rotated.
+- A good version shows: one color for all bars, or an accent color on the bars the scenario highlights as the Notes allow, and no error bars, stacking, grouping or trend line.
+- A good version shows: value labels, if drawn, at the bar ends or inside the bars, readable in both themes and not colliding with each other.
+- Expected, not a defect: unequal lengths, including one dominant or one near-empty bar and a long tail of short bars; they are the point of the chart, not an imbalance to fix.

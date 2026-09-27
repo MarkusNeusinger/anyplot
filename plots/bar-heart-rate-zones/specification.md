@@ -28,3 +28,11 @@ A vertical bar chart showing the time spent in each heart rate training zone (Z1
 - Optionally annotate each bar or axis tick with the zone's HR boundary range (bpm or % of max HR)
 - Y-axis represents time (minutes or seconds); a horizontal layout is an acceptable alternative
 - Fully static-renderable; a clear legend or zone-name labels help readers unfamiliar with Z1–Z5 shorthand
+
+## What a good version looks like
+
+- A good version shows: one bar per zone in fixed Z1 to Z5 order, never sorted by duration, each extending from a zero baseline, so bar length stays proportional to the time spent, on a time axis that is never truncated.
+- A good version shows: the conventional zone colors the Notes name, grey for Z1, blue for Z2, green for Z3, orange for Z4 and red for Z5, every bar distinguishable from the page in both themes.
+- A good version shows: every bar labeled with its duration in a readable time format, and each zone identified by its name or a legend for viewers who do not know the Z1–Z5 shorthand.
+- A good version shows: heart rate boundary ranges, if drawn, on their bar or axis tick, in bpm or percent of maximum heart rate, readable in both themes and not colliding with the duration labels.
+- Expected, not a defect: most of the time piled into one or two zones, a near-empty zone, and fewer than five bars when the workout did not reach the higher zones; a session's intensity is rarely spread evenly.

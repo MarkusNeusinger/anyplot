@@ -28,3 +28,11 @@ A horizontal bar chart where bars are sorted by influence magnitude, extending l
 - Label each bar with the parameter name on the y-axis
 - Optionally display the low/high input values or resulting output values at bar ends
 - The x-axis represents the output metric (e.g., NPV, cost, duration)
+
+## What a good version looks like
+
+- A good version shows: one horizontal bar per parameter spanning from its low-scenario to its high-scenario result, split by a vertical base-case reference line, with the widest range at the top and narrower ones below, so the stack tapers into a tornado.
+- A good version shows: one color for the low-scenario segment and a distinct one for the high-scenario segment, applied by scenario on every bar, whichever side of the base case a segment falls on, and identified in a legend.
+- A good version shows: the base-case line visible in both themes across all bars, each parameter name beside its bar on the category axis, and the output metric with its units on the value axis.
+- A good version shows: low and high values at the bar ends, if drawn, clear of the bars, the base-case line and the parameter names, readable in both themes.
+- Expected, not a defect: bars that reach unequally to the two sides of the base case, a value axis that does not start at zero, and a parameter whose low-scenario result lies above the base case, which puts its low-scenario color on the right.
