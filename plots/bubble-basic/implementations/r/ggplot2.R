@@ -112,14 +112,14 @@ p <- ggplot(neighborhoods, aes(
     ) +
     annotation_logticks(sides = "b", color = INK_SOFT, linewidth = 0.25) +
     scale_y_continuous(
-        limits = c(15, 150),
-        breaks = c(20, 50, 80, 110, 140)
+        limits = c(15, 180),
+        breaks = c(20, 50, 80, 110, 140, 170)
     ) +
     scale_size_area(
         max_size = 18,
         limits   = size_limits,
-        breaks   = c(3, 10, 25, 60, 120),
-        labels   = c("3", "10", "25", "60", "120"),
+        breaks   = c(3, 10, 25, 60),
+        labels   = c("3", "10", "25", "60"),
         name     = "Green Space (m²/capita)"
     ) +
     scale_fill_manual(values = category_colors, name = "Zone Type") +
