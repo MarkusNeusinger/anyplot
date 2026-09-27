@@ -43,7 +43,7 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 
 ## Input
 
-1. **Specification**: From `plots/{spec-id}/specification.md`. Read its closing `## What a good version looks like` section before scoring and judge against it, not against generic ideals. Tell its two kinds of bullet apart: *affirmative properties* (what a good version shows) and *permissions* (the "expected, not a defect" statements). Nothing it names is ever a weakness; removing or violating an affirmative property deducts from the criterion it belongs to; the absence of a permitted thing never deducts; it cannot waive auto-reject, theme readability, the canvas contract, VQ-07 or VQ-01. Without the section, infer the characteristics from Description, Data and Notes (`prompts/quality-criteria.md` → "Plot-Type Characteristics").
+1. **Specification**: From `plots/{spec-id}/specification.md`. Read its closing `## What a good version looks like` section before scoring and judge against it, not against generic ideals. Each bullet starts with its kind: `A good version shows:` bullets are *affirmative properties* (what a good version shows), `Expected, not a defect:` bullets are *permissions*. Nothing a permission names is ever a weakness; removing or violating an affirmative property deducts from the criterion it belongs to; the absence of a permitted thing never deducts; it cannot waive auto-reject, theme readability, the canvas contract, VQ-07 or VQ-01. Read an unlabeled section by meaning. Without the section, infer the characteristics from Description, Data and Notes and sort them into the same two kinds (`prompts/quality-criteria.md` → "Plot-Type Characteristics").
 2. **Code**: From `plots/{spec-id}/implementations/{language}/{library}{ext}` — `{ext}` is `.py` for Python libraries, `.R` for ggplot2, `.jl` for makie, `.js` for the JavaScript libraries (chartjs, d3, echarts, highcharts), and `.tsx` for muix
 3. **Previews**: BOTH theme renders of the plot image — `plot-light.png` and `plot-dark.png`. You must inspect both. For interactive libraries, also `plot-light.html` and `plot-dark.html`.
 4. **Library Rules**: From `prompts/library/{library}.md`
@@ -231,16 +231,16 @@ Not AR-09 (handle via VQ-05 instead): text overflowing its axis but staying on t
 
 | ID | Criterion | Max | Key Question |
 |----|-----------|-----|--------------|
-| SC-01 | Plot Type | 5 | Correct chart type? On a `-basic` id: no encodings or elements the spec neither requires nor offers as optional (a Data column or a Notes bullet that allows color by category is asked for; a channel driven by a derived fourth variable is not)? Unasked additions (derived color channel, per-group fits, highlight bands, annotation layers) are the wrong variant (partial SC-01) and earn no DE-03/LM-02 credit. |
-| SC-02 | Required Features | 4 | All spec features present? Properties the section says a good version *shows* present? (Its "expected, not a defect" statements are permissions, not features.) |
-| SC-03 | Data Mapping | 3 | X/Y correctly assigned? All data visible? Marks sit at their data values — no force/collision layout, nudge or declutter pass moving data marks? Displacement deducts in proportion to how far marks move relative to the axis range, and is never a strength. Changing the generated data, marker size or alpha is fine. Exempt: categorical strip/swarm jitter, layout-positioned types (networks, treemaps, word clouds, packed circles), and any jitter, dodge or offset the spec's Data or Notes ask for. |
+| SC-01 | Plot Type | 5 | Correct chart type? On a `-basic` id: no encodings or elements the spec neither requires nor offers as optional (a Data column or a Notes bullet that allows color by category is asked for; a channel driven by a derived fourth variable is not)? Unasked additions (derived color channel, per-group fits, highlight bands, annotation layers) are the wrong variant (partial SC-01) and earn no DE-03/LM-02 credit. A related but different form (a donut for a pie) is partial SC-01 on any spec. |
+| SC-02 | Required Features | 4 | All spec features present? Check each Notes bullet and each `A good version shows:` bullet against the render, and name any missed one in the note. (Its `Expected, not a defect:` bullets are permissions, not features.) |
+| SC-03 | Data Mapping | 3 | X/Y correctly assigned? All data visible? Marks sit at their data values — no force/collision layout, nudge or declutter pass moving data marks? Displacement deducts in proportion to how far marks move relative to the axis range, and is never a strength. Changing the generated data, marker size or alpha is fine. A smoothed curve that swings past the values it connects (spline overshoot) shows values the data does not have — deduct in proportion. Exempt: categorical strip/swarm jitter, layout-positioned types (networks, treemaps, word clouds, packed circles), and any jitter, dodge or offset the spec's Data or Notes ask for. |
 | SC-04 | Title & Legend | 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r, julia, javascript}). Legend labels correct? |
 
 ### Step 4: Data Quality (15 pts)
 
 | ID | Criterion | Max | Key Question |
 |----|-----------|-----|--------------|
-| DQ-01 | Feature Coverage | 6 | Shows ALL aspects of plot type? |
+| DQ-01 | Feature Coverage | 6 | Shows ALL aspects of plot type? (A permission is not an aspect to exhibit: data with little or no overlap loses nothing, and a point count inside the spec's Data range is not a lever.) |
 | DQ-02 | Realistic Context | 5 | Real-world plausible **AND neutral** scenario? |
 | DQ-03 | Factual Correctness | 4 | Do values and proportions align with real-world facts? |
 

@@ -50,21 +50,39 @@ re-run the job or remove and re-add `approved`.
 #### The "What a good version looks like" section
 
 Every `specification.md` that spec-create writes ends with a
-`## What a good version looks like` section: 3-5 one-line bullets that name what
-a viewer sees in a good render of that plot type. At least one bullet is an
-"expected, not a defect" item — something that can look like a flaw but is
-inherent to the type, such as overlapping bubbles in a dense bubble chart.
+`## What a good version looks like` section: 3-6 one-line bullets that name what
+a viewer sees in a good render of that plot type. Each bullet starts with its
+kind, and each bullet has one kind:
+
+- `A good version shows:` is an affirmative property. The review deducts points
+  when a render misses or violates it, and it's the only kind a regeneration
+  can cite as an improvement.
+- `Expected, not a defect:` is a permission: something that can look like a
+  flaw but is inherent to the type, such as overlapping bubbles in a dense
+  bubble chart. The review never penalizes it, and generation never targets it.
+  How a good version handles it goes in its own `A good version shows:` bullet.
+
+Every section has at least one bullet of each kind. How the pipeline uses it:
 
 - The AI review (`impl-review.yml`) scores every implementation against this
-  section: it never lists something the section calls expected as a weakness,
-  and it deducts when a property the section says a good version shows is
+  section: it never lists something an `Expected, not a defect:` bullet names
+  as a weakness, and it deducts when an `A good version shows:` property is
   missing. When a spec has no section, the review infers the same from
   Description, Data, and Notes.
-- Generation and repair build toward the section and decline review weaknesses
-  that contradict it.
+- Generation and repair build toward the `A good version shows:` bullets and
+  decline review weaknesses that contradict the section.
 - The daily spec polish (`daily-regen.yml`) never adds, edits, or removes the
   section.
 - The Postgres sync doesn't store the section, so the website doesn't show it.
+- CI checks the section on every PR and every push to `main`. The "Run Tests"
+  job runs `automation/scripts/spec_characteristics_lint.py`: `contract` over
+  every spec, which blocks, and `style` over the changed specs, which only
+  warns. A spec PR whose section fails the contract can't merge: fix the
+  section on the branch, then remove and re-add `approved`.
+
+The regen gate numbers the bullets `C1`..`Cn` in document order and never
+compares these ids across PRs. Append new bullets at the end, and edit a
+section only when no regeneration PR for that spec is open.
 
 When you review a spec PR before adding `approved`, check this section too: it
 must describe the plot type rather than generic ideals such as "no overlap",
@@ -205,7 +223,7 @@ A regeneration is an implementation PR for a (spec, library) pair that already h
 2. The review scores the new render blind (the prompt never shows it the stored score), then re-scores the predecessor's renders against the same criteria and writes its before/after judgement to `review_regen.json` (step 8b of `prompts/workflow-prompts/ai-quality-review.md`).
 3. `automation/scripts/regen_gate.py` decides. Replace requires all of:
    - new score >= re-scored predecessor - 1 (the stored score is display-only);
-   - at least one improvement with a named, visible location;
+   - at least one improvement with a named, visible location that doesn't cite an `Expected, not a defect:` bullet of the spec (a permission is never an improvement; the gate lists such an item as not counted);
    - no regressions. On a `*-basic` spec, a replaced data scenario or added encodings count as regressions unless a change request asked for them.
 4. Replace: `regen:improved`, then `ai-approved`, then the normal merge. Keep: `regen:kept`, the PR is closed with a comment (stored, re-scored, and new score, improvements, regressions, reason), the issue gets `impl:{library}:done` back, and nothing reaches main, GCS production, or the database.
 
@@ -249,7 +267,7 @@ Located in `.github/workflows/`:
 | `indexnow-submit.yml` | Pushes changed page URLs to IndexNow (Bing, Yandex, Seznam, Naver, Yep) on every push to main that touches `plots/`; a push that changes the workflow file itself or bumps `TEMPLATE_LAST_CHANGED` in `api/routers/seo.py` submits the full list, as does `workflow_dispatch` with `scope=sitemap` |
 | `codeql.yml` | CodeQL scanning (actions, JavaScript/TypeScript, Python) on pushes to main, PRs and a weekly cron; `plots/**` is excluded from triggers and analysis, so pipeline PRs never start a scan |
 | `ci-lint.yml` | Ruff lint check on PRs |
-| `ci-tests.yml` | Unit + integration tests on PRs |
+| `ci-tests.yml` | Unit + integration tests on PRs. Its "Run Tests" job also lints the "What a good version looks like" section on every run, even when no Python changed: the contract over every spec (blocking) and the style of the changed specs (warnings) |
 | `ci-image.yml` | Builds `api/Dockerfile` and smoke-tests the container before merge — `/health`, the reported version against `pyproject.toml`, the runtime stage's COPY payload, non-root uid — plus hadolint on both Dockerfiles. Skips when only `plots/**` or frontend sources changed |
 | `notify-deployment.yml` | Records GitHub deployment events for `app` / `api` |
 | `bot-serving-check.yml` | Daily synthetic monitor: curls the Cloud Run origin with crawler UAs and fails on non-200 or a page that is not the prerendered one. Routes are derived from the `@router.get("/seo-proxy/…")` decorators in `api/routers/seo.py` and the expected spec title from `plots/<spec>/specification.yaml`, so no literal here can go stale. A failure opens (or comments on) the fixed-title issue **Bot serving check is red**; the next green run closes it — the bot→seo-proxy path is invisible to human traffic and needs its own alarm |

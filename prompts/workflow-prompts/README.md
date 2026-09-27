@@ -46,15 +46,21 @@ Example (from `.github/workflows/impl-review.yml`):
 ## Plot-type characteristics
 
 Each `plots/{spec-id}/specification.md` can end with a `## What a good version
-looks like` section: 3-5 column-0 `- ` bullets naming the observable properties
-of a good render of that plot type, including "expected, not a defect" items.
-The prompts share it as follows:
+looks like` section: 3-6 column-0 `- ` bullets naming the observable properties
+of a good render of that plot type. Each bullet starts with its kind:
+`A good version shows:` for an affirmative property, or
+`Expected, not a defect:` for a permission (never penalized, never a target,
+never an improvement ref). The prompts share it as follows:
 
 - `spec-create.yml` writes it for every new spec (from
-  `prompts/templates/specification.md`).
+  `prompts/templates/specification.md`) and checks it with
+  `automation/scripts/spec_characteristics_lint.py` before it commits; CI runs
+  the same lint (`contract` over every spec, blocking; `style` over the changed
+  specs, warnings).
 - `spec-polish-claude.md` never adds, edits or removes it.
 - `impl-generate-claude.md`, `impl-repair-claude.md` and `plot-generator.md`
-  build toward it, and a regeneration declines weaknesses that contradict it.
+  build toward its `A good version shows:` bullets, never shape the data to
+  produce a permission, and decline weaknesses that contradict the section.
 - `ai-quality-review.md` and `prompts/quality-criteria.md` ("Plot-Type
   Characteristics") score against it. When a spec has no section, the review
   infers the characteristics from Description, Data and Notes.

@@ -1,7 +1,7 @@
 ### Changed
 
 - **The AI review judges each plot against its own plot type.** Specs gain a
-  closing `## What a good version looks like` section with 3-5 observable
+  closing `## What a good version looks like` section with 3-6 observable
   properties of a good render, including "expected, not a defect" items;
   spec-create writes it for new specs, spec polish never touches it, and eight
   central specs (bubble, scatter, line, bar, violin, two heatmaps, force-directed

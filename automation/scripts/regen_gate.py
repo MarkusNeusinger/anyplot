@@ -20,10 +20,12 @@ Merge requires ALL of:
 2. the predecessor's production renders were available to the reviewer;
 3. ``review_regen.json`` exists and is structurally valid, every ``W`` ref is
    one of the previous review's weakness ids and every ``C`` ref is one of the
-   spec's characteristic properties;
+   spec's characteristic bullets;
 4. ``new_score >= prev_rescored - 1`` (``prev_rescored`` is the predecessor
    re-scored in the same session; the stored score is display-only);
-5. at least one improvement with a non-empty ``where_visible``;
+5. at least one improvement with a non-empty ``where_visible`` whose ref is
+   not an "Expected, not a defect" bullet (a permission is never an
+   improvement; such an improvement is not counted, and the file stays valid);
 6. no regressions -- on a ``*-basic`` spec a changed data scenario or added
    encodings count as regressions unless a change request asked for them.
 
@@ -67,8 +69,24 @@ KEEP = "keep"
 REF_RE = re.compile(r"^(?:(?P<kind>[WPC])(?P<num>[1-9]\d*)|new)$")
 CHARACTERISTICS_HEADING_RE = re.compile(r"^##\s+what a good version looks like\b", re.IGNORECASE)
 NEXT_SECTION_RE = re.compile(r"^#{1,2}\s")
-# Column 0 only: indented bullets are sub-points of the one above.
+# Column 0 only. An indented line continues the bullet above it — a wrapped
+# line, or a sub-point whose marker is dropped (NESTED_MARKER_RE).
 TOP_LEVEL_BULLET_RE = re.compile(r"^(?:[-*+]|\d+[.)])\s+(?P<text>\S.*)$")
+NESTED_MARKER_RE = re.compile(r"^(?:[-*+]|\d+[.)])\s+")
+
+# The two kinds of characteristic bullet, each written as the bullet's opening
+# words. spec_characteristics_lint.py requires these exact prefixes; the gate
+# reads them leniently (any case, optional bold markers) and anchored at the
+# start of the bullet, and a bullet without a recognisable prefix counts as
+# affirmative, so an older or unlabeled section parses as it always did.
+SHOWS_PREFIX = "A good version shows:"
+EXPECTED_PREFIX = "Expected, not a defect:"
+KIND_SHOWS = "shows"
+KIND_EXPECTED = "expected"
+_KIND_RES = (
+    (KIND_SHOWS, re.compile(r"^\s*[*_]{0,2}\s*a good version shows\s*[*_]{0,2}\s*:", re.IGNORECASE)),
+    (KIND_EXPECTED, re.compile(r"^\s*[*_]{0,2}\s*expected,?\s*not a defect\s*[*_]{0,2}\s*:", re.IGNORECASE)),
+)
 
 
 # ---------------------------------------------------------------------------
@@ -85,8 +103,11 @@ def weakness_ids(weaknesses: list[Any]) -> list[dict[str, str]]:
 def parse_characteristics(spec_text: str) -> list[str]:
     """Top-level bullets of the spec's "What a good version looks like" section.
 
-    Returns an empty list when the section does not exist (PR 2 adds it to the
-    spec template; older specs have none). Ids are C1..Cn in document order.
+    Ids are C1..Cn in document order. An indented, non-empty line continues the
+    bullet above it, across blank lines: a wrapped line is joined with a space,
+    a nested sub-point with "; " (its marker dropped). The next ``#``/``##``
+    heading ends the section. Whitespace inside a bullet is collapsed, as the
+    lint compares it. Returns an empty list when the spec has no section.
     """
     items: list[str] = []
     in_section = False
@@ -100,8 +121,30 @@ def parse_characteristics(spec_text: str) -> list[str]:
             break
         m = TOP_LEVEL_BULLET_RE.match(line)
         if m:
-            items.append(m.group("text").strip())
-    return items
+            items.append(m.group("text"))
+        elif items and line[:1].isspace() and line.strip():
+            text = line.strip()
+            nested = NESTED_MARKER_RE.match(text)
+            items[-1] += f"; {text[nested.end() :]}" if nested else f" {text}"
+    return [" ".join(item.split()) for item in items]
+
+
+def characteristic_kind(text: str) -> str | None:
+    """Kind of one characteristic bullet: ``"shows"``, ``"expected"`` or None.
+
+    Only the bullet's opening words count: a bullet that mentions "expected,
+    not a defect" mid-sentence is not a permission. None means no recognisable
+    prefix, and the gate then reads the bullet as affirmative.
+    """
+    for kind, pattern in _KIND_RES:
+        if pattern.match(text):
+            return kind
+    return None
+
+
+def permission_refs(items: list[str]) -> frozenset[str]:
+    """C ids of the "Expected, not a defect" bullets — never an improvement ref."""
+    return frozenset(f"C{i}" for i, text in enumerate(items, start=1) if characteristic_kind(text) == KIND_EXPECTED)
 
 
 def render_previous_review(
@@ -158,7 +201,10 @@ def render_previous_review(
             lines.append("")
 
     if characteristics:
-        lines.append("## Characteristic properties from the spec — stable ids C1..Cn")
+        lines.append(
+            '## Characteristic bullets from the spec — stable ids C1..Cn (only "A good version shows" bullets '
+            "can be improvement refs)"
+        )
         lines += [f"- **C{i}:** {text}" for i, text in enumerate(characteristics, start=1)]
         lines.append("")
 
@@ -196,6 +242,8 @@ class GateInput:
     regen_error: str | None = None
     known_weakness_ids: frozenset[str] = frozenset()
     characteristic_count: int = 0
+    # C ids of the spec's "Expected, not a defect" bullets (permission_refs()).
+    permission_refs: frozenset[str] = frozenset()
     prev_renders: bool = True
     canvas_failed: bool = False
     change_request_present: bool = False
@@ -209,6 +257,8 @@ class GateResult:
     prev_rescored: int | None = None
     improvements: list[dict[str, str]] = field(default_factory=list)
     regressions: list[dict[str, str]] = field(default_factory=list)
+    # Improvements whose ref is in here were listed but not counted.
+    permission_refs: frozenset[str] = frozenset()
 
 
 def _is_int(value: Any) -> bool:
@@ -290,7 +340,7 @@ def validate_regen(payload: Any, known_weakness_ids: frozenset[str], characteris
                 errors.append(f"improvements[{i}].ref {ref} is not a weakness id of the previous review")
             elif m.group("kind") == "C" and int(m.group("num")) > characteristic_count:
                 errors.append(
-                    f"improvements[{i}].ref {ref} does not exist (the spec lists {characteristic_count} characteristic properties)"
+                    f"improvements[{i}].ref {ref} does not exist (the spec lists {characteristic_count} characteristic bullets)"
                 )
             if not isinstance(item.get("what"), str) or not item["what"].strip():
                 errors.append(f"improvements[{i}].what must be a non-empty string")
@@ -375,25 +425,42 @@ def _judge(inp: GateInput, regen: Any) -> GateResult:
                 {"what": f"encodings added on a -basic spec: {', '.join(encodings)}", "where_visible": "both renders"}
             )
 
-    result = GateResult(KEEP, "", prev_rescored=prev_rescored, improvements=improvements, regressions=regressions)
+    result = GateResult(
+        KEEP,
+        "",
+        prev_rescored=prev_rescored,
+        improvements=improvements,
+        regressions=regressions,
+        permission_refs=inp.permission_refs,
+    )
 
     if regressions:
         result.reason = f"{len(regressions)} regression(s): " + "; ".join(r["what"] for r in regressions)
         return result
 
-    visible = [i for i in improvements if i["where_visible"]]
+    # A permission ("Expected, not a defect") is never an improvement: the
+    # item is not counted, but the rest of the file still is.
+    counted = [i for i in improvements if i["ref"] not in inp.permission_refs]
+    cited = sorted({i["ref"] for i in improvements if i["ref"] in inp.permission_refs}, key=lambda ref: int(ref[1:]))
+    note = ""
+    if cited:
+        bullets = "bullet" if len(cited) == 1 else "bullets"
+        note = f" ({', '.join(cited)} = 'Expected, not a defect' {bullets}, not counted as an improvement)"
+
+    visible = [i for i in counted if i["where_visible"]]
     if not visible:
-        result.reason = "no visible improvement (every improvement needs a non-empty where_visible)"
+        detail = " (every improvement needs a non-empty where_visible)" if counted or not cited else ""
+        result.reason = f"no visible improvement{detail}{note}"
         return result
 
     if inp.score < prev_rescored - 1:
-        result.reason = f"new score {inp.score} < re-scored predecessor {prev_rescored} - 1"
+        result.reason = f"new score {inp.score} < re-scored predecessor {prev_rescored} - 1{note}"
         return result
 
     result.verdict = MERGE
     result.reason = (
         f"{len(visible)} visible improvement(s), no regressions, new score {inp.score} >= "
-        f"re-scored predecessor {prev_rescored} - 1"
+        f"re-scored predecessor {prev_rescored} - 1{note}"
     )
     return result
 
@@ -467,7 +534,8 @@ def render_summary(result: GateResult, prev_stored: str, score: int | None) -> s
     if result.improvements:
         for item in result.improvements:
             where = _safe(item["where_visible"]) if item["where_visible"] else "_not visible_"
-            lines.append(f"- `{item['ref']}` {_safe(item['what'])} — {where}")
+            flag = " _(permission, not counted)_" if item["ref"] in result.permission_refs else ""
+            lines.append(f"- `{item['ref']}` {_safe(item['what'])} — {where}{flag}")
     else:
         lines.append("- none")
     lines += ["", "**Regressions**"]
@@ -503,9 +571,9 @@ def cmd_context(args: argparse.Namespace) -> int:
 
 def cmd_decide(args: argparse.Namespace) -> int:
     regen, regen_error = load_regen_json(Path(args.regen_json))
-    characteristic_count = 0
+    characteristics: list[str] = []
     if args.spec_file and Path(args.spec_file).is_file():
-        characteristic_count = len(parse_characteristics(Path(args.spec_file).read_text(encoding="utf-8")))
+        characteristics = parse_characteristics(Path(args.spec_file).read_text(encoding="utf-8"))
     score = parse_score(args.score)
     inp = GateInput(
         spec_id=args.spec_id,
@@ -513,7 +581,8 @@ def cmd_decide(args: argparse.Namespace) -> int:
         regen=regen,
         regen_error=regen_error,
         known_weakness_ids=load_known_weakness_ids(Path(args.weaknesses_json) if args.weaknesses_json else None),
-        characteristic_count=characteristic_count,
+        characteristic_count=len(characteristics),
+        permission_refs=permission_refs(characteristics),
         prev_renders=args.prev_renders == "available",
         canvas_failed=args.canvas_failed,
         change_request_present=args.change_request_present,

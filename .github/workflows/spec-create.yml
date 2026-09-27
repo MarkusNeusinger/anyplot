@@ -157,15 +157,29 @@ jobs:
                - Create directory: `plots/{specification-id}/`
                - Create: `plots/{specification-id}/specification.md` (follow template structure)
                - End `specification.md` with the template's `## What a good version looks like`
-                 section (after `## Notes`): 3-5 column-0 `- ` bullets, no sub-headings,
+                 section (after `## Notes`): 3-6 column-0 `- ` bullets, no sub-headings,
                  one line per bullet (no wrapped continuation lines), naming
-                 what a viewer sees in a good render of THIS plot type. Include at least one
-                 "expected, not a defect" item (something that can look like a flaw but is
-                 inherent to the type, and how a good version handles it) and, for a `-basic`
-                 id, which encodings the variant has and nothing beyond them. No numeric
-                 thresholds, no generic ideals ("no overlap", "clean design"), and nothing that
-                 contradicts Description, Data or Notes. The AI review judges every
-                 implementation against this section.
+                 what a viewer sees in a good render of THIS plot type. Start every bullet
+                 with its kind, one kind per bullet: `A good version shows: ` for a property
+                 a good render shows (the review deducts when it is missing), or
+                 `Expected, not a defect: ` for something that can look like a flaw but is
+                 inherent to the type (never penalized, never a target, no instruction in
+                 it). Write at least one of each. Say how a good version handles an expected
+                 item in its own `A good version shows: ` bullet, phrased conditionally
+                 ("where bubbles overlap, …"). For a `-basic` id, add an `A good version shows: `
+                 bullet about "the basic variant's …" encodings and nothing beyond them:
+                 derived layers (trend or fit lines, mean or reference lines, bands, extra
+                 series, derived color scales, marginals, facets, callouts) are outside a basic
+                 variant, and an id that names a field's standard diagram lists the layers its
+                 spec requires. No numeric thresholds, no generic ideals ("no overlap", "clean
+                 design"), and nothing that contradicts Description, Data or Notes. The AI
+                 review judges every implementation against this section.
+               - Check the section before you commit, and fix every `::error` these print and
+                 every `::warning` that is not a false alarm:
+                 `python3 -m automation.scripts.spec_characteristics_lint contract plots/{specification-id}/specification.md`
+                 and
+                 `python3 -m automation.scripts.spec_characteristics_lint style plots/{specification-id}/specification.md`.
+                 CI runs the same contract check and blocks the merge on an error.
                - Create: `plots/{specification-id}/specification.yaml` with:
                  - `specification_id`: the generated id
                  - `title`: a proper title
@@ -310,16 +324,31 @@ jobs:
                - Create directory: `plots/{specification-id}/`
                - Create: `plots/{specification-id}/specification.md` (follow template structure)
                - End `specification.md` with the template's `## What a good version looks like`
-                 section (after `## Notes`): 3-5 column-0 `- ` bullets, no sub-headings,
+                 section (after `## Notes`): 3-6 column-0 `- ` bullets, no sub-headings,
                  one line per bullet (no wrapped continuation lines), naming
-                 what a viewer sees in a good render of THIS plot type. Include at least one
-                 "expected, not a defect" item (something that can look like a flaw but is
-                 inherent to the type, and how a good version handles it) and, for a `-basic`
-                 id, which encodings the variant has and nothing beyond them. No numeric
-                 thresholds, no generic ideals ("no overlap", "clean design"), and nothing that
-                 contradicts Description, Data or Notes. The AI review judges every
-                 implementation against this section. If the first attempt left a
-                 `specification.md` without this section, add it.
+                 what a viewer sees in a good render of THIS plot type. Start every bullet
+                 with its kind, one kind per bullet: `A good version shows: ` for a property
+                 a good render shows (the review deducts when it is missing), or
+                 `Expected, not a defect: ` for something that can look like a flaw but is
+                 inherent to the type (never penalized, never a target, no instruction in
+                 it). Write at least one of each. Say how a good version handles an expected
+                 item in its own `A good version shows: ` bullet, phrased conditionally
+                 ("where bubbles overlap, …"). For a `-basic` id, add an `A good version shows: `
+                 bullet about "the basic variant's …" encodings and nothing beyond them:
+                 derived layers (trend or fit lines, mean or reference lines, bands, extra
+                 series, derived color scales, marginals, facets, callouts) are outside a basic
+                 variant, and an id that names a field's standard diagram lists the layers its
+                 spec requires. No numeric thresholds, no generic ideals ("no overlap", "clean
+                 design"), and nothing that contradicts Description, Data or Notes. The AI
+                 review judges every implementation against this section. If the first attempt
+                 left a `specification.md` without this section, add it; if it left bullets
+                 without a kind prefix, fix them.
+               - Check the section before you commit, and fix every `::error` these print and
+                 every `::warning` that is not a false alarm:
+                 `python3 -m automation.scripts.spec_characteristics_lint contract plots/{specification-id}/specification.md`
+                 and
+                 `python3 -m automation.scripts.spec_characteristics_lint style plots/{specification-id}/specification.md`.
+                 CI runs the same contract check and blocks the merge on an error.
                - Create: `plots/{specification-id}/specification.yaml` with:
                  - `specification_id`: the generated id
                  - `title`: a proper title

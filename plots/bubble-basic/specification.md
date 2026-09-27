@@ -30,7 +30,8 @@ A bubble chart extending scatter plots by adding a third dimension through bubbl
 
 ## What a good version looks like
 
-- Bubble area, not radius, grows with the size value, so a value twice as large has twice the area; the smallest bubbles stay visible and the largest do not swallow the plot.
-- Overlapping bubbles in dense regions are expected, not a defect: translucency and a thin outline (page- or ink-colored) keep each bubble distinguishable, and bubbles are never moved off their (x, y) values to reduce overlap.
-- A size legend shows a few reference bubbles drawn like the data marks (same fill, outline and translucency), visible against the page in both themes and labeled in the size variable's units.
-- The basic variant encodes x, y and size: one color for all bubbles, or an optional categorical color as the Notes allow — no color scale, color bar, trend line or annotation layer driven by a further variable.
+- A good version shows: bubble area, not radius, growing with the size value, so a value twice as large has twice the area; the smallest bubbles stay visible and the largest do not swallow the plot.
+- Expected, not a defect: overlapping bubbles in dense regions.
+- A good version shows: where bubbles overlap, translucency and a thin outline (page- or ink-colored) keep each one distinguishable, and every bubble stays at its (x, y) values rather than being moved to reduce overlap.
+- A good version shows: a size legend with a few reference bubbles drawn like the data marks (same fill, outline and translucency), visible against the page in both themes and labeled in the size variable's units.
+- A good version shows: the basic variant's x, y and size only, with one color for all bubbles or an optional categorical color as the Notes allow, and no color scale, color bar, trend line or annotation layer driven by a further variable.

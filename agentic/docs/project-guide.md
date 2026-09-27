@@ -186,7 +186,7 @@ Example: `plots/scatter-basic/` contains everything for the basic scatter plot.
 ### Directory Structure
 
 - **`plots/{specification-id}/`**: Plot-centric directories (spec, metadata, implementations together)
-  - `specification.md`: Library-agnostic specification (Description, Applications, Data, Notes, and a closing "What a good version looks like" section — 3-5 observable properties of a good render of that plot type, including "expected, not a defect" items, that the AI review scores against; written by spec-create, never by spec polish, and not synced to the database)
+  - `specification.md`: Library-agnostic specification (Description, Applications, Data, Notes, and a closing "What a good version looks like" section — 3-6 one-line bullets, each starting with its kind (`A good version shows:` for an observable property of a good render of that plot type, `Expected, not a defect:` for a permission), that the AI review scores against and CI lints (`automation/scripts/spec_characteristics_lint.py`); written by spec-create, never by spec polish, and not synced to the database)
   - `specification.yaml`: Spec-level metadata (tags, created, issue, suggested, updates)
   - `metadata/{language}/{library}.yaml`: Per-library metadata (preview_url, quality_score, review feedback)
   - `implementations/{language}/{library}{ext}`: Library-specific implementations
@@ -746,7 +746,7 @@ Issue ready for maintainer review
 | Workflow | Purpose |
 |----------|---------|
 | **ci-lint.yml** | Ruff linting on PR |
-| **ci-tests.yml** | Unit tests on PR |
+| **ci-tests.yml** | Unit tests on PR, plus the characteristic-section lint on every run (contract over every spec, blocking; style of changed specs, warnings) |
 | **ci-image.yml** | Builds `api/Dockerfile` and smoke-tests the container on PR (health, reported version vs `pyproject.toml`, the runtime stage's COPY payload, non-root uid) plus hadolint on both Dockerfiles; skips when only `plots/**` or frontend sources changed |
 | **sync-postgres.yml** | Syncs plots/ to database on push to main |
 | **sync-labels.yml** | Auto-syncs labels after manual PR merges (spec-ready, impl:*:done) |

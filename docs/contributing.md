@@ -29,7 +29,7 @@ By participating, you agree to our [Code of Conduct](../CODE_OF_CONDUCT.md).
    - Assigns a unique spec-id
    - Creates a PR with `specification.md` and `specification.yaml`
 4. **Review the generated spec** (PR comments)
-   - The spec ends with a `## What a good version looks like` section: 3-5 one-line bullets that name what a good render of this plot type shows, including at least one "expected, not a defect" item.
+   - The spec ends with a `## What a good version looks like` section: 3-6 one-line bullets that name what a good render of this plot type shows. Each bullet starts with its kind — `A good version shows:` for a property a good render shows, or `Expected, not a defect:` for something that can look like a flaw but is inherent to the type — and the section has at least one of each.
    - The AI review scores every implementation against this section, so check it before you approve: it should describe this plot type rather than generic ideals such as "no overlap", contain no numeric thresholds, and not contradict Description, Data, or Notes. See [the section's role in the pipeline](./workflows/overview.md#the-what-a-good-version-looks-like-section).
 5. **The repository owner adds the `approved` label** to the Issue (not the PR); the merge job ignores the label from anyone else
 6. **Spec merges to main** with `spec-ready` label

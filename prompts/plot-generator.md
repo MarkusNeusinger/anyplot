@@ -10,7 +10,7 @@ Create a script for the specified plot type and library. The code should be simp
 
 ## Input
 
-1. **Spec**: Markdown specification from `plots/{spec-id}/specification.md`. Read its closing `## What a good version looks like` section on every generation, new or regen: it names what a good render of this plot type shows (including "expected, not a defect" items) and is what the review scores against. Without it, derive the same from Description, Data and Notes.
+1. **Spec**: Markdown specification from `plots/{spec-id}/specification.md`. Read its closing `## What a good version looks like` section on every generation, new or regen: it names what a good render of this plot type shows and is what the review scores against. Build toward its `A good version shows:` bullets; its `Expected, not a defect:` bullets are permissions, not targets — never shape the data to produce them (no clustering points to show overlap). Without it, derive the same from Description, Data and Notes.
 2. **Library**: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, letsplot, ggplot2, makie, chartjs, d3, echarts, highcharts, or muix
 3. **Library Rules**: Specific rules from `prompts/library/{library}.md`
 4. **Previous Metadata** (if regenerating): `plots/{spec-id}/metadata/{language}/{library}.yaml`
@@ -59,7 +59,7 @@ review:
 
 **Use this feedback to improve!**
 - **Strengths**: Keep these aspects unchanged
-- **Weaknesses**: Fix the ones that are real per the spec's characteristic section (decide HOW yourself); decline the ones that ask for something the section calls expected
+- **Weaknesses**: Fix the ones that are real per the spec's characteristic section (decide HOW yourself); decline the ones that ask for something an `Expected, not a defect:` bullet permits
 - **Marks stay at their data values**: answer overlap through data generation, marker size or alpha — never by moving marks (force/collision layouts, nudge or declutter passes). Exempt, as in SC-03: jitter in categorical strip/swarm plots, layout-positioned types (networks, treemaps, word clouds, packed circles), and any jitter, dodge or offset the spec's Data or Notes ask for
 
 ## Library Independence (no cross-library cloning)
