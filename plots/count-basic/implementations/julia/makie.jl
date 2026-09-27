@@ -1,7 +1,7 @@
 # anyplot.ai
 # count-basic: Basic Count Plot
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 89/100 | Created: 2026-08-11
+# Quality: 85/100 | Updated: 2026-09-27
 
 using CairoMakie
 using Colors
@@ -66,13 +66,9 @@ ax = Axis(
 )
 hidespines!(ax, :t, :r)
 
-# Leading category gets full brand-green emphasis; the rest are tinted back
-# so the eye lands on the top device type first.
-bar_colors = [i == 1 ? BRAND : RGBAf(BRAND.r, BRAND.g, BRAND.b, 0.55) for i in 1:length(sorted_devices)]
-
 barplot!(
     ax, 1:length(sorted_devices), sorted_counts;
-    color = bar_colors, width = 0.62,
+    color = BRAND, width = 0.62,
     strokewidth = 1.5, strokecolor = PAGE_BG,
 )
 
