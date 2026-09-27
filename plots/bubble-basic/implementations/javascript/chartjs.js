@@ -78,9 +78,12 @@ const sizeLegend = {
   id: "sizeLegend",
   afterDraw(chart) {
     const { ctx, chartArea } = chart;
-    const cx = chartArea.left + R_MAX + 24;
+    // Offset clear of the y-axis tick-label gutter so the card never
+    // overlaps the "10"/"9" labels now that the axis is pinned to 1-10.
+    const left = chartArea.left + 56;
+    const cx = left + R_MAX + 24;
     const spacing = 2 * R_MAX + 20;
-    const panelX = chartArea.left - 16;
+    const panelX = left - 16;
     const panelY = chartArea.top - 4;
     const panelW = 2 * (R_MAX + 12) + 90;
     const panelH = 54 + 2 * R_MAX + (legendValues.length - 1) * spacing;
@@ -97,7 +100,7 @@ const sizeLegend = {
     ctx.font = "bold 16px sans-serif";
     ctx.fillStyle = t.ink;
     ctx.textAlign = "left";
-    ctx.fillText("Monthly sales (units)", chartArea.left, chartArea.top + 16);
+    ctx.fillText("Monthly sales (units)", left, chartArea.top + 16);
     legendValues.forEach((val, i) => {
       const r = bubbleRadius(val);
       const cy = chartArea.top + 36 + R_MAX + i * spacing;
@@ -191,7 +194,7 @@ new Chart(canvas, {
         borderColor: (ctx) =>
           ctx.dataIndex === bestValueIndex
             ? t.palette[0]
-            : hexToRgba(t.ink, 0.45),
+            : hexToRgba(t.ink, 0.65),
         borderWidth: (ctx) => (ctx.dataIndex === bestValueIndex ? 2.5 : 1.5),
       },
     ],
@@ -233,6 +236,8 @@ new Chart(canvas, {
         },
       },
       y: {
+        min: 1,
+        max: 10,
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
         title: {
