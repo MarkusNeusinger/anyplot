@@ -2,9 +2,9 @@ library: makie
 language: julia
 specification_id: bar-error
 created: '2026-09-02T11:55:37Z'
-updated: '2026-09-02T12:08:53Z'
+updated: '2026-09-27T21:10:30Z'
 generated_by: claude-sonnet
-workflow_run: 33626760189
+workflow_run: 36349859666
 issue: 2376
 language_version: 1.11.9
 library_version: 0.21.9
@@ -12,43 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 96
 review:
   strengths:
-  - 'Random.seed!(42) now actually drives the data: mean_yield/std_yield are derived
-    from a real seeded simulation of 30 runs per catalyst instead of hardcoded literals,
-    fixing the prior review''s code-cleanliness flag'
-  - New raincloud-style jittered scatter overlay shows the individual per-run distribution
-    behind each bar, and the '★ Top performer' callout on the best catalyst gives
-    the chart an explicit focal point beyond sort order alone
-  - Error bars have clearly visible caps (whiskerwidth=18) with the subtitle explicitly
-    stating the metric (±1 SD, n=30 runs)
+  - Asymmetric error bars (16th–84th percentile) derived from a physically-motivated
+    ceiling-compressed distribution replace the predecessor's symmetric ±1 SD, matching
+    the spec's 'unequal arms where errors are asymmetric' property and resolving the
+    prior review's W2
+  - Distinctive Makie `bracket!` curly-brace annotation spans the top two bars' error-bar
+    caps, labeled with the actual computed yield gap ('+3.7 pts vs runner-up') — a
+    library-specific primitive with no direct matplotlib/plotly equivalent, resolving
+    the prior review's W1 on Library Mastery
+  - Bold ink-colored outline on the top-performing bar reinforces the bracket callout
+    with a second, complementary visual cue, resolving W3's suggestion to distinguish
+    the focal bar
   - Correct Imprint brand green (#009E73) identical across themes, fully theme-adaptive
-    chrome (title, subtitle, ticks, spines, grid, error bars, jitter dots) in both
-    light and dark renders
-  - Clean L-shaped spines, Y-axis-only subtle gridlines, correct omission of a legend
-    for the single-series chart, realistic neutral catalyst-yield scenario
+    chrome, clean L-shaped spines, subtle Y-axis-only grid, and an explicit subtitle
+    naming the error-bar metric
   weaknesses:
-  - The jitter+scatter+errorbar+text composition is a generic layering technique reproducible
-    in any plotting library; nothing here is distinctive specifically to Makie (e.g.
-    a custom Theme, DataInspector-style interaction hint, or a Makie recipe) so Library
-    Mastery stays capped
-  - Only symmetric error bars are demonstrated; the spec's optional asymmetric-error
-    variant is not shown
-  - Design storytelling is still fairly minimal beyond the top-performer callout and
-    descending sort — no additional visual hierarchy (e.g. distinguishing the callout
-    catalyst's bar color) reinforces the focal point
+  - The bracket's curly brace and its text sit close to the top of the Pd/C jitter
+    cloud in both renders — a denser cluster of gray run-dots brushes near the brace
+    line; increasing the bracket offset slightly would give it cleaner clearance from
+    the raincloud overlay
+  - Five distinct visual elements are layered (bar, error bar, jittered run-dots,
+    comparison bracket, accent-stroke highlight) but only the error-bar meaning is
+    named in the subtitle — the raincloud dots and the bold-outlined bar are left
+    unexplained, asking readers to infer their meaning from context
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 (not pure white).
-      Chrome: Bold dark title "bar-error · julia · makie · anyplot.ai" and a soft-gray subtitle "Error bars: ±1 SD (n = 30 runs per catalyst)" at the top. Y-axis "Reaction Yield (%)", X-axis "Catalyst" with six category ticks (Pd/C, Pt/C, Ru/C, Ni, Cu, Fe). Subtle horizontal gridlines at 50 and 100. L-shaped spines (top/right removed). All title, subtitle, axis labels, and tick labels are clearly readable dark-on-light — no light-on-light issues.
-      Data: Six brand-green (#009E73) bars descending from ~87% to ~54% reaction yield. Each bar has a jittered gray scatter cloud of 30 individual run values behind it (raincloud-style), plus a black error-bar line with visible caps (±1 SD). A "★ Top performer" annotation sits above the Pd/C bar's error-bar cap, clearly readable and non-overlapping.
+      Chrome: Bold dark title "bar-error · julia · makie · anyplot.ai" and a soft-gray subtitle "Error bars: 16th–84th percentile range (n = 30 runs per catalyst)" at the top. Y-axis "Reaction Yield (%)", X-axis "Catalyst" with six category ticks (Pd/C, Pt/C, Ru/C, Ni, Cu, Fe). Subtle horizontal gridlines at 50 and 100. L-shaped spines (top/right removed). All title, subtitle, axis labels, and tick labels are clearly readable dark-on-light — no light-on-light issues.
+      Data: Six brand-green (#009E73) bars descending from ~87% to ~54% reaction yield. The Pd/C bar (top performer) carries a bold black outline stroke distinguishing it from the other five bars' near-invisible page-colored strokes. Each bar has a jittered gray scatter cloud of 30 individual run values behind it (raincloud-style). Black error-bar lines with visible caps show asymmetric (16th–84th percentile) ranges — visibly unequal upper/lower arms, most pronounced on the Fe bar. A curly-brace bracket connects the Pd/C and Pt/C error-bar caps, labeled "+3.7 pts vs runner-up," clearly readable and non-overlapping with the title/subtitle.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 (not pure black).
       Chrome: Title, subtitle, axis labels, and tick labels flip to light/off-white and soft light-gray tones respectively, fully legible against the dark surface — no dark-on-dark failures. Gridlines and spines flip to the light-toned theme-adaptive tokens.
-      Data: Bars are the identical brand green (#009E73) as the light render — data colors unchanged. The jittered scatter dots flip to a light-gray tone (theme-adaptive ink token) and remain clearly visible against the dark bars/background. Error-bar lines and caps flip to a light/white tone, mirroring the light render's black error bars. The "★ Top performer" callout flips to light text, fully readable.
+      Data: Bars are the identical brand green (#009E73) as the light render — data colors unchanged. The Pd/C bar's outline flips to a bold white/off-white stroke, still clearly distinguishing it. Jittered scatter dots flip to a light-gray tone and remain visible against the dark bars/background. Asymmetric error-bar lines and caps flip to a light/white tone, mirroring the light render's black error bars, with the same visibly unequal upper/lower arms. The bracket callout flips to light text/lines, fully readable and identical in content to the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -57,22 +57,23 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit, no overflow, readable in both themes
+        comment: All font sizes explicitly set; readable in both themes, no overflow
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlap; top-performer callout clears the error-bar cap
+        comment: Bracket brace/text sits close to the Pd/C jitter cloud in both renders;
+          no actual text collision
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, jitter cloud, and error-bar caps well sized for 6 sparse categories
+        comment: Bars, error-bar caps and jitter cloud well adapted to 6 sparse categories
           with 30 runs each
       - id: VQ-04
         name: Color Accessibility
@@ -85,7 +86,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, nothing clipped
+        comment: Balanced margins, nothing clipped, 3200x1800 canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -97,9 +98,10 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Brand green identical across themes; theme-correct chrome
+        comment: Brand green identical across themes; theme-correct chrome in both
+          renders
     design_excellence:
-      score: 16
+      score: 17
       max: 20
       items:
       - id: DE-01
@@ -107,22 +109,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Raincloud-style distribution overlay + focal callout is clearly above
-          a configured default
+        comment: 'Strong design: asymmetric error model, bracket callout, accent-stroke
+          highlight go clearly beyond a configured default'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
         comment: L-shaped spines, Y-only subtle grid, bar edge strokes, subtle jitter
-          alpha
+          alpha; some clutter from unexplained layered elements
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Top-performer callout plus visible per-run spread gives a clear focal
-          point and distribution context
+        comment: Bracket callout states the actual point gap and the highlighted bar
+          reinforces the winner — viewer immediately sees the insight
     spec_compliance:
       score: 15
       max: 15
@@ -138,30 +140,33 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Visible error-bar caps + subtitle explaining ±1 SD, n=30
+        comment: Visible error-bar caps, subtitle naming the metric, consistent bar
+          widths, meaningful (descending) order
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, axes show all data
+        comment: X/Y correctly assigned, axes show all data, bars sit at the real
+          mean_yield values; x-jitter on the categorical axis is exempt
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact title format, legend correctly omitted
+        comment: Exact title format; error-bar meaning named via subtitle annotation
+          as the spec allows
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Symmetric error bars with meaningful per-catalyst variation and run-level
-          spread shown; asymmetric case not shown
+        comment: Meaningful per-catalyst variation and run-level spread shown; asymmetric
+          errors are a permitted enhancement, not required
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -173,8 +178,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Realistic yields and catalyst ordering (Pd/Pt more active than base
-          metals)
+        comment: Realistic yields, catalyst ordering, and physically-motivated ceiling-compressed
+          asymmetry
     code_quality:
       score: 10
       max: 10
@@ -190,13 +195,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) now actually drives the randn-based simulation
+        comment: Random.seed!(42) drives the simulation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (CairoMakie, Colors, Random, Statistics)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -210,33 +215,37 @@ review:
         passed: true
         comment: Saves plot-$(THEME).png with px_per_unit=2, current API
     library_mastery:
-      score: 6
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct high-level Figure/Axis/barplot!/errorbars!/text! usage
+        comment: Correct high-level Figure/Axis/barplot!/errorbars!/scatter!/bracket!
+          usage
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 5
         max: 5
-        passed: false
-        comment: Layered scatter+bar+errorbar+text composition is generic across libraries;
-          no Makie-specific feature (custom Theme, recipe, DataInspector) leveraged
+        passed: true
+        comment: Uses bracket!, a Makie-specific recipe with no direct matplotlib/plotly
+          equivalent
   verdict: APPROVED
+  model: claude-sonnet-5
+  criteria_version: qc-4374db4964.aqr-815475d157.sg-7006008fc6.lib-d4a232663e
+  rendered_at: '2026-09-27T21:03:47Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - groupby-aggregation
+  dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - publication-ready
