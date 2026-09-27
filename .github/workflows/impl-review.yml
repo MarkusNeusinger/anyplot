@@ -173,7 +173,8 @@ jobs:
           # the PR head: the gate's parser must match the workflow that calls
           # it, and a PR branched off an older main does not carry them.
           mkdir -p "$RUNNER_TEMP/regen-tools"
-          cp automation/scripts/regen_gate.py automation/scripts/close_issue_if_complete.py "$RUNNER_TEMP/regen-tools/"
+          cp automation/scripts/regen_gate.py automation/scripts/close_issue_if_complete.py \
+             automation/scripts/review_provenance.py "$RUNNER_TEMP/regen-tools/"
           git fetch origin ${{ steps.pr.outputs.head_sha }}
           git checkout ${{ steps.pr.outputs.head_sha }}
 
@@ -328,6 +329,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db  # v3
 
       - name: Download plot images from staging
+        id: staging
         if: steps.gcs.outcome == 'success'
         env:
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
@@ -352,6 +354,17 @@ jobs:
             [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
           done
           ls -la plot_images/
+
+          # Provenance: when the render under review was made (the staging
+          # object's creation time, RFC 3339). Best effort and never fatal —
+          # an empty value only leaves review.rendered_at out of the metadata.
+          CREATED=$(gsutil stat "gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}/plot-light.png" 2>/dev/null \
+            | sed -n 's/^[[:space:]]*Creation time:[[:space:]]*//p' | head -1) || CREATED=""
+          RENDERED_AT=""
+          if [ -n "$CREATED" ]; then
+            RENDERED_AT=$(date -u -d "$CREATED" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null) || RENDERED_AT=""
+          fi
+          echo "rendered_at=${RENDERED_AT}" >> "$GITHUB_OUTPUT"
 
       # Regen only: the predecessor's production renders, which the review
       # re-scores against the same criteria (prompt step 8b) AFTER scoring the
@@ -532,6 +545,18 @@ jobs:
         id: t0
         run: echo "at=$(date -u -d '1 second ago' +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
 
+      # Provenance: which rules this review reads — git blob ids of the rubric
+      # files and the library prompt, plus the prompts/ tree id — computed
+      # after the overlay above, so it hashes exactly what the reviewer opens.
+      # Never gating: without it, review.criteria_version is left out.
+      - name: Record rules version
+        id: rules
+        continue-on-error: true
+        env:
+          LIBRARY: ${{ steps.pr.outputs.library }}
+        run: |
+          python3 "$RUNNER_TEMP/regen-tools/review_provenance.py" criteria-version --root . --library "$LIBRARY"
+
       - name: Run AI Quality Review
         id: review
         continue-on-error: true
@@ -562,6 +587,21 @@ jobs:
             - PREV_RENDER_DARK: ${{ steps.prev_renders.outputs.dark || 'n/a' }}
             - PREV_LINES: ${{ steps.regen_ctx.outputs.prev_lines || 'n/a' }}
             - NEW_LINES: ${{ steps.regen_ctx.outputs.new_lines || 'n/a' }}
+
+      # Provenance: the model that actually ran the review. The alias
+      # (`sonnet`, `opus`) moves between releases; the execution file's
+      # system/init message names the resolved id (claude-sonnet-5, …).
+      # When the file is absent or names no model, model_id stays empty:
+      # the metadata then leaves review.model out and the gate record says
+      # n/a — the alias is never recorded as if it were an id. Never gating.
+      - name: Resolve review model
+        id: review_model
+        if: steps.review.conclusion == 'success'
+        continue-on-error: true
+        env:
+          EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
+        run: |
+          python3 "$RUNNER_TEMP/regen-tools/review_provenance.py" model --execution-file "${EXECUTION_FILE:-}"
 
       - name: Extract quality score
         id: score
@@ -720,11 +760,14 @@ jobs:
       # into merge | keep. Runs before any verdict label so impl-merge can
       # never fire on a regeneration the gate did not approve. The helper is
       # the copy taken from this workflow's ref; if it cannot run at all, the
-      # verdict is keep (fail closed).
+      # verdict is keep (fail closed). The gate record (scores, counts, reason
+      # code, model and rules provenance — no model-written text) goes into the
+      # PR comment on both paths below, where it outlives this run's log.
       - name: Regen gate
         id: gate
         if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && steps.regen.outputs.is_regen == 'true'
         env:
+          PR_NUM: ${{ steps.pr.outputs.pr_number }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
           SCORE: ${{ steps.score.outputs.score }}
@@ -732,7 +775,14 @@ jobs:
           PREV_RENDERS: ${{ steps.prev_renders.outputs.prev_renders || 'missing' }}
           CONTEXT_OUTCOME: ${{ steps.regen_ctx.outcome }}
           CHANGE_REQUEST_PRESENT: ${{ steps.regen_ctx.outputs.change_request_present || 'false' }}
+          MODEL_ID: ${{ steps.review_model.outputs.model_id || 'n/a' }}
+          CRITERIA_VERSION: ${{ steps.rules.outputs.criteria_version || 'n/a' }}
+          PROMPTS_TREE: ${{ steps.rules.outputs.prompts_tree || 'n/a' }}
+          PREV_MODEL: ${{ steps.regen_ctx.outputs.prev_model || 'n/a' }}
+          PREV_CRITERIA_VERSION: ${{ steps.regen_ctx.outputs.prev_criteria_version || 'n/a' }}
         run: |
+          RECORD=/tmp/anyplot-regen-record.json
+          rm -f "$RECORD"
           FLAGS=()
           [ -f /tmp/anyplot-canvas-gate.txt ] && FLAGS+=(--canvas-failed)
           [ "$CHANGE_REQUEST_PRESENT" = "true" ] && FLAGS+=(--change-request-present)
@@ -745,15 +795,79 @@ jobs:
                --spec-file "plots/${SPEC_ID}/specification.md" \
                --prev-renders "$PREV_RENDERS" \
                --summary-out /tmp/anyplot-regen-summary.md \
+               --pr "$PR_NUM" --model "$MODEL_ID" \
+               --criteria-version "$CRITERIA_VERSION" --prompts-tree "$PROMPTS_TREE" \
+               --prev-model "$PREV_MODEL" --prev-criteria-version "$PREV_CRITERIA_VERSION" \
+               --record-out "$RECORD" \
                "${FLAGS[@]}"; then
-            echo "::notice::regen_gate spec=${SPEC_ID} lib=${LIBRARY} prev_stored=${PREV_STORED} prev_rescored=n/a new=${SCORE} verdict=keep reason=gate script crashed"
+            echo "::notice::regen_gate spec=${SPEC_ID} lib=${LIBRARY} prev_stored=${PREV_STORED} prev_rescored=n/a new=${SCORE} verdict=keep code=script_crashed model=${MODEL_ID} criteria=${CRITERIA_VERSION} reason=gate script crashed"
             {
               echo "verdict=keep"
               echo "reason=gate script crashed"
               echo "prev_rescored=n/a"
+              echo "code=script_crashed"
             } >> "$GITHUB_OUTPUT"
             printf '**Reason:** gate script crashed (see the impl-review run log)\n' > /tmp/anyplot-regen-summary.md
+            # Minimal record so the decision still leaves a trace in the comment.
+            jq -cn --arg pr "$PR_NUM" --arg spec "$SPEC_ID" --arg lib "$LIBRARY" --arg model "$MODEL_ID" \
+               --arg cv "$CRITERIA_VERSION" --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+               '{v: 1, pr: ($pr | tonumber? // null), spec: $spec, lib: $lib, model: $model,
+                 criteria_version: $cv, verdict: "keep", code: "script_crashed", at: $at}' \
+               > "$RECORD" 2>/dev/null || rm -f "$RECORD"
           fi
+
+      # Regen only: keep the pair the gate just judged as a 60-day artifact —
+      # both renders, both sources, the previous review, this review's files
+      # and the gate record. The predecessor's production renders are
+      # overwritten by the next merge, so this is the only copy. Staged into
+      # one directory first (mixed /tmp + workspace paths would be rooted at
+      # `/`). Never gating.
+      - name: Stage regen pair
+        id: pair
+        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && steps.regen.outputs.is_regen == 'true'
+        continue-on-error: true
+        timeout-minutes: 5
+        env:
+          PR_NUM: ${{ steps.pr.outputs.pr_number }}
+          HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
+          SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+          LIBRARY: ${{ steps.pr.outputs.library }}
+          LANGUAGE: ${{ steps.lang.outputs.language }}
+          EXT: ${{ steps.lang.outputs.ext }}
+          MODEL_ID: ${{ steps.review_model.outputs.model_id || 'n/a' }}
+          CRITERIA_VERSION: ${{ steps.rules.outputs.criteria_version || 'n/a' }}
+        run: |
+          DIR="$RUNNER_TEMP/regen-pair"
+          rm -rf "$DIR"
+          mkdir -p "$DIR/new" "$DIR/prev"
+          cp plot_images/plot-light.png plot_images/plot-dark.png "$DIR/new/" 2>/dev/null || true
+          cp "plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}" "$DIR/new/" 2>/dev/null || true
+          cp /tmp/anyplot-prev-plot-light.png "$DIR/prev/plot-light.png" 2>/dev/null || true
+          cp /tmp/anyplot-prev-plot-dark.png "$DIR/prev/plot-dark.png" 2>/dev/null || true
+          cp "/tmp/anyplot-prev-impl${EXT}" "$DIR/prev/${LIBRARY}${EXT}" 2>/dev/null || true
+          cp /tmp/anyplot-prev-review.md /tmp/anyplot-prev-weaknesses.json "$DIR/prev/" 2>/dev/null || true
+          cp review_*.json review_*.txt quality_score.txt "$DIR/" 2>/dev/null || true
+          cp /tmp/anyplot-regen-record.json "$DIR/gate-record.json" 2>/dev/null || true
+          cp /tmp/anyplot-regen-summary.md "$DIR/gate-summary.md" 2>/dev/null || true
+          MAIN_SHA=$(git rev-parse -q --verify origin/main 2>/dev/null || echo "")
+          jq -n --arg pr "$PR_NUM" --arg head "$HEAD_SHA" --arg main "$MAIN_SHA" --arg spec "$SPEC_ID" \
+             --arg lib "$LIBRARY" --arg lang "$LANGUAGE" --arg ext "$EXT" --arg model "$MODEL_ID" \
+             --arg cv "$CRITERIA_VERSION" \
+             '{v: 1, pr: ($pr | tonumber? // null), head_sha: $head, main_sha: $main, spec_id: $spec,
+               library: $lib, language: $lang, ext: $ext, model: $model, criteria_version: $cv}' \
+             > "$DIR/pair.json" || true
+          echo "dir=$DIR" >> "$GITHUB_OUTPUT"
+
+      - name: Upload regen pair
+        if: steps.pair.outputs.dir != ''
+        continue-on-error: true
+        timeout-minutes: 5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        with:
+          name: regen-pair-${{ steps.pr.outputs.pr_number }}-${{ github.run_attempt }}
+          path: ${{ steps.pair.outputs.dir }}
+          retention-days: 60
+          if-no-files-found: warn
 
       - name: Add preliminary verdict label (early)
         if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true'
@@ -844,6 +958,11 @@ jobs:
           EXT: ${{ steps.lang.outputs.ext }}
           SCORE: ${{ steps.score.outputs.score }}
           BRANCH: ${{ steps.pr.outputs.branch }}
+          # Review provenance (not synced to the database: sync_to_postgres
+          # picks review keys by name). An empty value removes the key.
+          REVIEW_MODEL: ${{ steps.review_model.outputs.model_id }}
+          CRITERIA_VERSION: ${{ steps.rules.outputs.criteria_version }}
+          RENDERED_AT: ${{ steps.staging.outputs.rendered_at }}
         run: |
           METADATA_FILE="plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml"
           IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}"
@@ -861,6 +980,7 @@ jobs:
             cat > /tmp/update_metadata.py << 'EOF'
           import yaml
           import json
+          import os
           import sys
           from pathlib import Path
 
@@ -939,6 +1059,24 @@ jobs:
               data['review']['criteria_checklist'] = criteria_checklist
           if verdict:
               data['review']['verdict'] = verdict
+
+          # Review provenance: resolved model id, rules version, render time.
+          # Each is optional — a missing value never stops this script. A
+          # value this review could not determine removes the key: a repair
+          # review starts from the metadata the previous review wrote, whose
+          # model, rules or render time would otherwise pass for this one's.
+          review_model = os.environ.get('REVIEW_MODEL', '').strip()
+          criteria_version = os.environ.get('CRITERIA_VERSION', '').strip()
+          rendered_at = os.environ.get('RENDERED_AT', '').strip()
+          for key, value in (
+              ('model', review_model),
+              ('criteria_version', criteria_version),
+              ('rendered_at', rendered_at),
+          ):
+              if value:
+                  data['review'][key] = value
+              else:
+                  data['review'].pop(key, None)
 
           # Add impl_tags (issue #2434)
           if impl_tags:
@@ -1215,6 +1353,8 @@ jobs:
           # GraphQL). Every API call below is retried 3x with linear backoff.
           # `::warning::` is line-oriented, so multi-line gh stderr would leak
           # everything after the first newline into the raw log — flatten it.
+          # GH_RETRY_LEVEL=warning marks a call whose failure must not read as
+          # an error (the merge-path gate comment below).
           gh_retry() {
             local what="$1"; shift
             local attempt err
@@ -1228,18 +1368,46 @@ jobs:
                 sleep $((attempt * 5))
               fi
             done
-            echo "::error::${what} failed after 3 attempts for PR #${PR_NUM}"
+            echo "::${GH_RETRY_LEVEL:-error}::${what} failed after 3 attempts for PR #${PR_NUM}"
             return 1
           }
 
           # ── Regeneration: the regen gate decided, the cascade does not apply ──
           if [ "$IS_REGEN" = "true" ]; then
+            RUN_URL="https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}"
+            SUMMARY_FILE=/tmp/anyplot-regen-summary.md
+            if [ ! -s "$SUMMARY_FILE" ]; then
+              printf '**Reason:** %s\n' "${GATE_REASON:-regen gate produced no verdict}" > "$SUMMARY_FILE"
+            fi
+            # Machine-readable gate record (`<!-- regen-gate-record:v1 {...} -->`)
+            # for both comments; empty when the gate wrote none.
+            GATE_RECORD_MARKER=$(python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" marker \
+              --record /tmp/anyplot-regen-record.json 2>/dev/null) || GATE_RECORD_MARKER=""
+
             if [ "$GATE_VERDICT" = "merge" ]; then
               echo "::notice::Regen gate approved the replacement (${GATE_REASON}), triggering merge"
               # Idempotent re-assert: impl-merge refuses a PR without
               # ai-approved, so a label lost after regen:improved would
               # otherwise strand the PR silently.
               gh_retry "ai-approved label" gh pr edit "$PR_NUM" --add-label "ai-approved" || exit 1
+              # Record the decision on the PR (the run log expires). Warning
+              # only: this comment must never hold up the merge.
+              {
+                echo "## :arrows_counterclockwise: Regeneration replaces the live implementation"
+                echo ""
+                echo "The regen gate compared this render (score ${SCORE}) with the implementation on main and approved the replacement; the merge follows."
+                echo ""
+                cat "$SUMMARY_FILE"
+                echo ""
+                echo "---"
+                echo ":robot: *[impl-review](${RUN_URL})*"
+                if [ -n "$GATE_RECORD_MARKER" ]; then
+                  echo ""
+                  echo "$GATE_RECORD_MARKER"
+                fi
+              } > /tmp/anyplot-regen-merged.md
+              GH_RETRY_LEVEL=warning gh_retry "regen gate PR comment" gh pr comment "$PR_NUM" --body-file /tmp/anyplot-regen-merged.md \
+                || echo "::warning::regen gate comment not posted — the merge goes ahead"
               gh_retry "impl-merge dispatch" gh workflow run impl-merge.yml -f pr_number="$PR_NUM"
               exit 0
             fi
@@ -1247,11 +1415,6 @@ jobs:
             # keep: close the PR, leave main and GCS production untouched.
             # Nothing reaches main, so sync-postgres is not triggered either.
             echo "::notice::Regen gate kept the live implementation (${GATE_REASON:-no verdict})"
-            RUN_URL="https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}"
-            SUMMARY_FILE=/tmp/anyplot-regen-summary.md
-            if [ ! -s "$SUMMARY_FILE" ]; then
-              printf '**Reason:** %s\n' "${GATE_REASON:-regen gate produced no verdict}" > "$SUMMARY_FILE"
-            fi
             FAILED=0
 
             {
@@ -1270,6 +1433,10 @@ jobs:
               echo ""
               echo "---"
               echo ":robot: *[impl-review](${RUN_URL})*"
+              if [ -n "$GATE_RECORD_MARKER" ]; then
+                echo ""
+                echo "$GATE_RECORD_MARKER"
+              fi
             } > /tmp/anyplot-regen-kept.md
 
             gh_retry "kept-regen PR comment" gh pr comment "$PR_NUM" --body-file /tmp/anyplot-regen-kept.md || FAILED=1

@@ -313,6 +313,11 @@ review:
     - "Good use of alpha for overlapping points"
   weaknesses:
     - "Grid could be more subtle"
+
+  # Provenance of the review (filled by impl-review, not synced to the database)
+  model: claude-opus-5-5          # resolved model ID, not the alias
+  criteria_version: qc-1f3a9c0b2d.aqr-8e41d7a6c5.sg-0b9d2e7f41.lib-5c6a1e8d93
+  rendered_at: "2026-09-27T12:04:31Z"  # creation time of the reviewed render
 ```
 
 **Key Points**:
@@ -320,6 +325,7 @@ review:
 - Created by `impl-generate.yml`, updated by `impl-review.yml`
 - Review feedback persisted for AI to improve on regeneration
 - Extended review data includes `image_description`, `criteria_checklist`, and `verdict` for targeted fixes
+- `review.model`, `review.criteria_version` (git blob IDs of `prompts/quality-criteria.md`, `ai-quality-review.md`, `default-style-guide.md`, and the library prompt), and `review.rendered_at` record which model and rules produced the review; they aren't synced to the database. A value the review run can't determine is left out (removed if an earlier review wrote it), never filled with the model alias
 
 ### GCS storage
 

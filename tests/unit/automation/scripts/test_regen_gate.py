@@ -19,14 +19,21 @@ from automation.scripts.regen_gate import (
     KIND_EXPECTED,
     KIND_SHOWS,
     MERGE,
+    REASON_CODES,
     GateInput,
+    build_record,
     characteristic_kind,
     decide,
     main,
     parse_characteristics,
+    parse_record_markers,
     permission_refs,
+    record_token,
     render_previous_review,
+    render_record_marker,
     render_summary,
+    reset_header_score,
+    validate_record,
     validate_regen,
     weakness_ids,
 )
@@ -38,7 +45,9 @@ KNOWN = frozenset({"W1", "W2", "W3"})
 def _regen(**overrides) -> dict:
     payload = {
         "prev_rescored": 85,
-        "improvements": [{"ref": "W2", "what": "Size legend circles filled", "where_visible": "size legend, both renders"}],
+        "improvements": [
+            {"ref": "W2", "what": "Size legend circles filled", "where_visible": "size legend, both renders"}
+        ],
         "regressions": [],
         "scenario_changed": False,
         "encodings_added": [],
@@ -162,10 +171,7 @@ class TestPermissionRefs:
         assert "(C2 = 'Expected, not a defect' bullet, not counted as an improvement)" in result.reason
 
     def test_several_permissions_are_listed_in_order(self):
-        imp = [
-            {"ref": "C5", "what": "a", "where_visible": "x"},
-            {"ref": "C2", "what": "b", "where_visible": "y"},
-        ]
+        imp = [{"ref": "C5", "what": "a", "where_visible": "x"}, {"ref": "C2", "what": "b", "where_visible": "y"}]
         result = decide(
             _inp(regen=_regen(improvements=imp), characteristic_count=5, permission_refs=frozenset({"C2", "C5"}))
         )
@@ -183,7 +189,9 @@ class TestPermissionRefs:
         items = parse_characteristics(spec)
         assert permission_refs(items) == frozenset()
         imp = [{"ref": "C1", "what": "Overlap handled", "where_visible": "centre"}]
-        inp = _inp(regen=_regen(improvements=imp), characteristic_count=len(items), permission_refs=permission_refs(items))
+        inp = _inp(
+            regen=_regen(improvements=imp), characteristic_count=len(items), permission_refs=permission_refs(items)
+        )
         assert decide(inp).verdict == MERGE
 
     def test_summary_marks_the_permission(self):
@@ -363,7 +371,34 @@ class TestSanitizeSource:
         assert not any(re.search(r"Quality:\s*\d+\s*/\s*100", line) for line in head)
         assert any("Quality: hidden" in line for line in head)
         assert out.count("\n") == (header + body).count("\n")  # line count unchanged
-        assert out.endswith(body[-60:])  # lines past the header are untouched
+        # Every line after the header is untouched, including the data lines
+        # that sit inside the first HEADER_LINES lines.
+        assert out.splitlines(keepends=True)[header.count("\n") :] == body.splitlines(keepends=True)
+
+    @pytest.mark.parametrize(
+        "line",
+        [
+            "print('Quality: 50/100 is data, not a header')",
+            "# Quality: 50/100 is what the old version scored",
+            "    Quality: 50/100 | Created: 2026-05-28",
+            "x = 'Quality: 50/100 | Created: 2026-05-28'",
+            "// Quality: 50/100 of the points",
+        ],
+    )
+    def test_only_whole_header_lines_are_rewritten(self, line):
+        from automation.scripts.regen_gate import sanitize_source
+
+        text = f"import x\n{line}\n"
+        assert sanitize_source(text) == text
+        assert reset_header_score(text) == text
+
+    def test_crlf_line_endings_are_kept(self):
+        from automation.scripts.regen_gate import sanitize_source
+
+        text = "// anyplot.ai\r\n// Quality: 91/100 | Created: 2026-05-28\r\nconst a = 1;\r\n"
+        assert (
+            sanitize_source(text) == "// anyplot.ai\r\n// Quality: hidden/100 | Created: 2026-05-28\r\nconst a = 1;\r\n"
+        )
 
     def test_cli(self, tmp_path):
         src = tmp_path / "raw.py"
@@ -411,7 +446,11 @@ class TestExtraction:
             "- Overlap is expected\n  - nested detail\n1. Sizes scale by area\n* Legend readable\n\n"
             "## Later\n- not this either\n"
         )
-        assert parse_characteristics(spec) == ["Overlap is expected; nested detail", "Sizes scale by area", "Legend readable"]
+        assert parse_characteristics(spec) == [
+            "Overlap is expected; nested detail",
+            "Sizes scale by area",
+            "Legend readable",
+        ]
 
     def test_parse_characteristics_absent(self):
         assert parse_characteristics("# spec\n\n## Notes\n- a\n") == []
@@ -538,7 +577,10 @@ class TestCli:
             == 0
         )
         stdout = capsys.readouterr().out
-        assert "::notice::regen_gate spec=bubble-basic lib=altair prev_stored=88 prev_rescored=80 new=81 verdict=merge" in stdout
+        assert (
+            "::notice::regen_gate spec=bubble-basic lib=altair prev_stored=88 prev_rescored=80 new=81 verdict=merge"
+            in stdout
+        )
         assert "verdict=merge" in out.read_text()
         assert "| 88 | 80 | 81 |" in summary.read_text()
 
@@ -555,17 +597,25 @@ class TestCli:
             encoding="utf-8",
         )
         regen = tmp_path / "review_regen.json"
-        imp = [{"ref": "C2", "what": "Bubbles overlap in the dense cluster now", "where_visible": "centre, both renders"}]
+        imp = [
+            {"ref": "C2", "what": "Bubbles overlap in the dense cluster now", "where_visible": "centre, both renders"}
+        ]
         regen.write_text(json.dumps(_regen(prev_rescored=80, improvements=imp)), encoding="utf-8")
         summary = tmp_path / "summary.md"
+        record_file = tmp_path / "record.json"
         args = ["decide", "--spec-id", "bubble-basic", "--library", "d3", "--score", "84", "--regen-json", str(regen)]
         args += ["--spec-file", str(spec), "--prev-renders", "available", "--summary-out", str(summary)]
+        args += ["--record-out", str(record_file)]
         assert main(args) == 0
         stdout = capsys.readouterr().out
         assert "verdict=keep" in stdout
+        assert "code=no_visible_improvement" in stdout
         assert "C2 = 'Expected, not a defect' bullet, not counted as an improvement" in stdout
         assert "verdict=keep" in out.read_text()
         assert "_(permission, not counted)_" in summary.read_text()
+        record = json.loads(record_file.read_text(encoding="utf-8"))
+        assert record["improvements"]["visible"] == 0
+        assert record["improvements"]["permission"] == 1
 
     def test_decide_invalid_json_keeps(self, tmp_path, monkeypatch, capsys):
         monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
@@ -591,3 +641,380 @@ class TestCli:
             ]
         )
         assert "reason=review_regen.json missing" in capsys.readouterr().out
+
+
+class TestReasonCodes:
+    """Every decision branch carries its own machine-readable code."""
+
+    @pytest.mark.parametrize(
+        ("overrides", "code"),
+        [
+            ({"canvas_failed": True}, "canvas_failed"),
+            ({"score": None}, "no_score"),
+            ({"score": 0}, "score_zero"),
+            ({"prev_renders": False}, "prev_renders_missing"),
+            ({"context_ok": False}, "context_failed"),
+        ],
+    )
+    def test_precondition_codes(self, overrides, code):
+        result = decide(_inp(**overrides))
+        assert (result.verdict, result.code) == (KEEP, code)
+
+    def test_missing_and_unreadable_json(self):
+        missing = decide(GateInput(spec_id="x", score=90, regen=None, regen_error="missing"))
+        unreadable = decide(GateInput(spec_id="x", score=90, regen=None, regen_error="unreadable (bad)"))
+        assert missing.code == "regen_json_missing"
+        assert unreadable.code == "regen_json_unreadable"
+
+    def test_judge_codes(self):
+        assert decide(_inp(regen=_regen(prev_rescored="many"))).code == "regen_json_invalid"
+        assert decide(_inp(regen=_regen(regressions=[{"what": "lost legend"}]))).code == "regression"
+        assert decide(_inp(regen=_regen(improvements=[]))).code == "no_visible_improvement"
+        assert decide(_inp(score=80)).code == "below_tolerance"
+        assert decide(_inp()).code == "merge"
+
+    def test_permission_only_improvement_is_no_visible_improvement(self):
+        imp = [{"ref": "C2", "what": "Overlap visible", "where_visible": "centre"}]
+        result = decide(_inp(regen=_regen(improvements=imp), characteristic_count=3, permission_refs=frozenset({"C2"})))
+        assert (result.verdict, result.code) == (KEEP, "no_visible_improvement")
+
+    def test_every_code_is_declared(self):
+        seen = {
+            decide(_inp(canvas_failed=True)).code,
+            decide(_inp(score=None)).code,
+            decide(_inp(score=0)).code,
+            decide(_inp(prev_renders=False)).code,
+            decide(_inp(context_ok=False)).code,
+            decide(_inp(score=80)).code,
+            decide(_inp()).code,
+        }
+        assert seen <= set(REASON_CODES)
+        assert "script_crashed" in REASON_CODES  # the workflow's fallback
+
+    def test_judgement_facts_are_kept(self):
+        result = decide(_inp(spec_id="scatter-x", regen=_regen(scenario_changed=True, encodings_added=["size", " "])))
+        assert result.scenario_changed is True
+        assert result.encodings_added == 1
+        assert result.coerced is False
+        assert decide(_inp(regen=_regen(prev_rescored="85"))).coerced is True
+
+
+class TestGateRecord:
+    def _record(self, **overrides) -> dict:
+        imp = [
+            {"ref": "W2", "what": "Legend fixed @someone", "where_visible": "legend"},
+            {"ref": "new", "what": "Refactor", "where_visible": ""},
+        ]
+        result = decide(_inp(regen=_regen(improvements=imp)))
+        fields = {
+            "spec_id": "scatter-annotated",
+            "library": "chartjs",
+            "score": 85,
+            "prev_stored": 92,
+            "pr": 11926,
+            "model": "claude-sonnet-5",
+            "criteria_version": "qc-e1373b1495.aqr-15492a059e.sg-7006008fc6.lib-e97ebfa5c3",
+            "prompts_tree": "8c118c04cfaf7255e7530ce81075fa199dd84896",
+            "at": "2026-10-02T02:31:10Z",
+        }
+        fields.update(overrides)
+        return build_record(result, **fields)
+
+    def test_shape(self):
+        record = self._record()
+        assert record["v"] == 1
+        assert record["verdict"] == "merge"
+        assert record["code"] == "merge"
+        assert (record["prev_stored"], record["prev_rescored"], record["new"]) == (92, 85, 85)
+        assert record["improvements"] == {"total": 2, "visible": 1, "W": 1, "P": 0, "C": 0, "new": 1, "permission": 0}
+        assert record["regressions"] == 0
+        assert record["prev_model"] == "n/a"
+        assert validate_record(record) == []
+
+    def test_permission_is_listed_but_not_counted_as_visible(self):
+        """``visible`` is the number the gate decided on, so it agrees with the code."""
+        imp = [
+            {"ref": "C2", "what": "Overlap visible", "where_visible": "centre"},
+            {"ref": "C4", "what": "Size legend circles filled", "where_visible": "legend"},
+        ]
+        permissions = frozenset({"C2"})
+        merged = decide(_inp(regen=_regen(improvements=imp), characteristic_count=5, permission_refs=permissions))
+        record = build_record(merged, spec_id="bubble-basic", library="d3", score=85, prev_stored=90)
+        assert (record["verdict"], record["code"]) == ("merge", "merge")
+        assert record["improvements"] == {"total": 2, "visible": 1, "W": 0, "P": 0, "C": 2, "new": 0, "permission": 1}
+
+        kept = decide(_inp(regen=_regen(improvements=imp[:1]), characteristic_count=5, permission_refs=permissions))
+        record = build_record(kept, spec_id="bubble-basic", library="d3", score=85, prev_stored=90)
+        assert (record["verdict"], record["code"]) == ("keep", "no_visible_improvement")
+        assert record["improvements"]["visible"] == 0
+        assert record["improvements"]["permission"] == 1
+        assert validate_record(record) == []
+
+    def test_contains_no_model_written_text(self):
+        text = json.dumps(self._record())
+        assert "Legend fixed" not in text
+        assert "someone" not in text
+        assert "legend" not in text
+
+    def test_every_string_is_a_plain_token(self):
+        record = self._record(model="claude sonnet; rm -rf /", criteria_version="<b>qc</b>")
+        assert validate_record(record) == []
+        assert record["model"] == "claudesonnetrm-rf/"
+
+    def test_validate_rejects_free_text_and_unknown_keys(self):
+        record = self._record()
+        record["reason"] = "1 regression(s): legend lost"
+        record["model"] = "has spaces"
+        errors = validate_record(record)
+        assert any("unknown key 'reason'" in e for e in errors)
+        assert any("record.model is not a plain token" in e for e in errors)
+
+    def test_marker_roundtrip(self):
+        record = self._record()
+        marker = render_record_marker(record)
+        assert marker.startswith("<!-- regen-gate-record:v1 {") and marker.endswith("} -->")
+        assert parse_record_markers(f"## Kept\n\ntext\n\n{marker}\n") == [record]
+
+    def test_marker_never_contains_a_double_dash(self):
+        record = self._record(model="claude--sonnet", criteria_version="qc--x")
+        assert "--" not in json.dumps(record)
+        render_record_marker(record)  # does not raise
+
+    def test_marker_refuses_a_record_that_would_break_the_comment(self):
+        record = self._record()
+        record["model"] = "a--b"
+        with pytest.raises(ValueError, match="'--'"):
+            render_record_marker(record)
+        record["model"] = "a b"
+        with pytest.raises(ValueError, match="invalid gate record"):
+            render_record_marker(record)
+
+    def test_parse_skips_malformed_markers(self):
+        text = '<!-- regen-gate-record:v1 {not json} -->\n<!-- regen-gate-record:v1 {"x":1} -->'
+        assert parse_record_markers(text) == []
+
+    def test_validate_rejects_a_foreign_version_verdict_and_code(self):
+        bogus = {"v": 999, "spec": "x", "lib": "y", "verdict": "bogus", "code": "bogus"}
+        errors = validate_record(bogus)
+        assert any("record.v must be 1" in e for e in errors)
+        assert any("record.verdict must be" in e for e in errors)
+        assert any("record.code is not one of REASON_CODES" in e for e in errors)
+
+    @pytest.mark.parametrize(
+        ("key", "value"),
+        [("v", True), ("v", "1"), ("v", 2), ("verdict", "MERGE"), ("verdict", None), ("code", ""), ("code", 1)],
+    )
+    def test_validate_rejects_each_bad_enum_value(self, key, value):
+        record = self._record()
+        record[key] = value
+        assert validate_record(record) != []
+
+    def test_every_reason_code_and_verdict_validates(self):
+        for code in REASON_CODES:
+            for verdict in (MERGE, KEEP):
+                record = {**self._record(), "code": code, "verdict": verdict}
+                assert validate_record(record) == [], (code, verdict)
+
+    def test_parse_skips_markers_with_a_foreign_version_verdict_or_code(self):
+        good = self._record()
+        bad = [{**good, "v": 999}, {**good, "verdict": "bogus"}, {**good, "code": "bogus"}]
+        markers = [f"<!-- regen-gate-record:v1 {json.dumps(r, separators=(',', ':'))} -->" for r in bad]
+        text = "\n".join([*markers, render_record_marker(good)])
+        assert parse_record_markers(text) == [good]
+
+    def test_record_token(self):
+        assert record_token(None) == "n/a"
+        assert record_token("  ") == "n/a"
+        assert record_token("claude-opus-5-5") == "claude-opus-5-5"
+        assert record_token("claude-sonnet-5[1m]") == "claude-sonnet-5[1m]"
+
+
+class TestDecideProvenanceCli:
+    def _decide(self, tmp_path, extra: list[str]) -> list[str]:
+        regen = tmp_path / "review_regen.json"
+        regen.write_text(json.dumps(_regen(prev_rescored=80, improvements=[])), encoding="utf-8")
+        return [
+            "decide",
+            "--spec-id",
+            "bubble-basic",
+            "--library",
+            "altair",
+            "--score",
+            "81",
+            "--prev-stored",
+            "88",
+            "--regen-json",
+            str(regen),
+            "--prev-renders",
+            "available",
+            *extra,
+        ]
+
+    def test_notice_carries_code_model_and_criteria(self, tmp_path, monkeypatch, capsys):
+        monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
+        main(self._decide(tmp_path, ["--model", "claude-sonnet-5", "--criteria-version", "qc-a.aqr-b.sg-c"]))
+        out = capsys.readouterr().out
+        notice = next(line for line in out.splitlines() if line.startswith("::notice::regen_gate"))
+        assert notice.startswith(
+            "::notice::regen_gate spec=bubble-basic lib=altair prev_stored=88 prev_rescored=80 new=81 verdict=keep "
+        )
+        assert " code=no_visible_improvement model=claude-sonnet-5 criteria=qc-a.aqr-b.sg-c reason=" in notice
+        assert "code=no_visible_improvement" in out.splitlines()
+
+    def test_old_argument_set_still_works(self, tmp_path, monkeypatch, capsys):
+        monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
+        assert main(self._decide(tmp_path, [])) == 0
+        notice = next(line for line in capsys.readouterr().out.splitlines() if line.startswith("::notice::"))
+        assert "model=" not in notice
+        assert " code=no_visible_improvement reason=" in notice
+
+    def test_record_out(self, tmp_path, monkeypatch, capsys):
+        monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
+        record_file = tmp_path / "record.json"
+        args = [
+            "--pr",
+            "11926",
+            "--model",
+            "claude-sonnet-5",
+            "--criteria-version",
+            "qc-a.aqr-b.sg-c.lib-d",
+            "--prompts-tree",
+            "8c118c04",
+            "--prev-model",
+            "n/a",
+            "--prev-criteria-version",
+            "n/a",
+            "--record-out",
+            str(record_file),
+        ]
+        main(self._decide(tmp_path, args))
+        record = json.loads(record_file.read_text(encoding="utf-8"))
+        assert record["pr"] == 11926
+        assert record["prev_stored"] == 88
+        assert record["prev_rescored"] == 80
+        assert record["new"] == 81
+        assert record["code"] == "no_visible_improvement"
+        assert record["criteria_version"] == "qc-a.aqr-b.sg-c.lib-d"
+        assert validate_record(record) == []
+        assert record_file.read_text(encoding="utf-8").count("\n") == 1  # one line
+
+    def test_record_failure_never_changes_the_decision(self, tmp_path, monkeypatch, capsys):
+        # impl-review.yml turns a non-zero exit into keep/script_crashed, so a
+        # record that cannot be written must not fail the decide step.
+        gh_output = tmp_path / "gh_output"
+        monkeypatch.setenv("GITHUB_OUTPUT", str(gh_output))
+        unwritable = tmp_path / "no-such-dir" / "record.json"
+        assert main(self._decide(tmp_path, ["--record-out", str(unwritable)])) == 0
+        out = capsys.readouterr().out
+        assert "::warning::regen gate record not written:" in out
+        assert not unwritable.exists()
+        outputs = gh_output.read_text(encoding="utf-8").splitlines()
+        assert "verdict=keep" in outputs
+        assert "code=no_visible_improvement" in outputs
+
+    def test_marker_subcommand(self, tmp_path, monkeypatch, capsys):
+        monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
+        record_file = tmp_path / "record.json"
+        main(self._decide(tmp_path, ["--record-out", str(record_file)]))
+        capsys.readouterr()
+        assert main(["marker", "--record", str(record_file)]) == 0
+        marker = capsys.readouterr().out.strip()
+        assert parse_record_markers(marker)[0]["code"] == "no_visible_improvement"
+
+    def test_marker_subcommand_fails_on_missing_or_bad_record(self, tmp_path, capsys):
+        assert main(["marker", "--record", str(tmp_path / "absent.json")]) == 1
+        bad = tmp_path / "bad.json"
+        bad.write_text('{"v": 1, "spec": "x", "lib": "y", "verdict": "keep", "code": "a b"}', encoding="utf-8")
+        assert main(["marker", "--record", str(bad)]) == 1
+        assert capsys.readouterr().out == ""
+
+    def test_workflow_crash_fallback_record_is_accepted(self, tmp_path, capsys):
+        # The shape impl-review.yml writes with jq when this script cannot run.
+        fallback = {
+            "v": 1,
+            "pr": 11926,
+            "spec": "bubble-basic",
+            "lib": "chartjs",
+            "model": "claude-sonnet-5",
+            "criteria_version": "n/a",
+            "verdict": "keep",
+            "code": "script_crashed",
+            "at": "2026-10-02T02:31:10Z",
+        }
+        assert validate_record(fallback) == []
+        record_file = tmp_path / "record.json"
+        record_file.write_text(json.dumps(fallback), encoding="utf-8")
+        assert main(["marker", "--record", str(record_file)]) == 0
+
+
+class TestContextProvenance:
+    def _context(self, tmp_path, review: dict) -> str:
+        out = tmp_path / "gh_output"
+        meta = tmp_path / "meta.yaml"
+        meta.write_text(yaml.safe_dump({"quality_score": 90, "review": review}), encoding="utf-8")
+        main(
+            [
+                "context",
+                "--metadata",
+                str(meta),
+                "--spec-id",
+                "s",
+                "--language",
+                "python",
+                "--library",
+                "altair",
+                "--out-md",
+                str(tmp_path / "prev.md"),
+                "--out-weaknesses",
+                str(tmp_path / "weak.json"),
+            ]
+        )
+        return out.read_text()
+
+    def test_prev_provenance_from_stored_review(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("GITHUB_OUTPUT", str(tmp_path / "gh_output"))
+        text = self._context(tmp_path, {"model": "claude-opus-5-5", "criteria_version": "qc-a.aqr-b.sg-c.lib-d"})
+        assert "prev_model=claude-opus-5-5" in text
+        assert "prev_criteria_version=qc-a.aqr-b.sg-c.lib-d" in text
+
+    def test_prev_provenance_absent_is_na(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("GITHUB_OUTPUT", str(tmp_path / "gh_output"))
+        text = self._context(tmp_path, {"weaknesses": ["a"]})
+        assert "prev_model=n/a" in text
+        assert "prev_criteria_version=n/a" in text
+
+
+class TestResetHeaderScore:
+    """M3: impl-generate resets the new file's header to `Quality: pending`."""
+
+    @pytest.mark.parametrize(
+        "header",
+        [
+            '""" anyplot.ai\nscatter-basic: Basic Scatter\nLibrary: altair 5.5 | Python 3.13\nQuality: 92/100 | Updated: 2026-09-01\n"""\n',
+            "#' anyplot.ai\n#' scatter-basic: Basic\n#' Library: ggplot2 3.5 | R 4.4\n#' Quality: 88/100 | Created: 2026-05-28\n",
+            "# anyplot.ai\n# scatter-basic: Basic\n# Library: makie 0.21 | Julia 1.11\n# Quality: 7/100 | Created: 2026-05-28\n",
+            "// anyplot.ai\n// scatter-basic: Basic\n// Library: d3 7.9 | JavaScript 22\n// Quality: 100 / 100 | Updated: 2026-08-24\n",
+        ],
+    )
+    def test_header_reset(self, header):
+        body = "import x\nprint('Quality: 50/100 is data, not a header')\n" * 10
+        out = reset_header_score(header + body)
+        head = out.splitlines()[: header.count("\n")]
+        assert not any(re.search(r"Quality:\s*\d+\s*/\s*100", line) for line in head)
+        assert any(re.search(r"Quality: pending \| (Created|Updated): ", line) for line in head)
+        assert out.count("\n") == (header + body).count("\n")
+        # The data line inside the first HEADER_LINES lines keeps its number.
+        assert out.splitlines(keepends=True)[header.count("\n") :] == body.splitlines(keepends=True)
+
+    def test_pending_header_is_unchanged(self):
+        text = "// anyplot.ai\n// x: y\n// Library: d3 7 | JavaScript 22\n// Quality: pending | Created: 2026-06-02\n"
+        assert reset_header_score(text) == text
+
+    def test_cli_rewrites_in_place(self, tmp_path):
+        src = tmp_path / "impl.js"
+        src.write_text("// anyplot.ai\n// Quality: 91/100 | Updated: 2026-09-01\nconst a = 1;\n", encoding="utf-8")
+        assert main(["sanitize-source", "--pending", "--source", str(src), "--out", str(src)]) == 0
+        assert (
+            src.read_text(encoding="utf-8")
+            == "// anyplot.ai\n// Quality: pending | Updated: 2026-09-01\nconst a = 1;\n"
+        )
