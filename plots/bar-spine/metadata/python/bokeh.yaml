@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: bar-spine
 created: '2026-05-08T15:15:56Z'
-updated: '2026-09-27T03:16:28Z'
+updated: '2026-09-27T03:23:17Z'
 generated_by: claude-sonnet
 workflow_run: 36290375214
 issue: 5249
@@ -12,9 +12,13 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
+  - 'All three attempt-1 weaknesses are fixed: title now includes the mandated ''python''
+    language token, the legend has clear headroom above the 100% line (y_range extended
+    to 1.18, no more grazing the Engineering bar), and the dead np.random.seed(42)
+    call was removed'
   - 'Correct spine-plot semantics: bar widths proportional to department marginal
     totals, segments stacked to 100%, bars adjacent with no gaps'
   - Well-reasoned semantic-exception color mapping (green=on-time, amber=warning,
@@ -26,34 +30,32 @@ review:
   - Percentage labels inside segments are large and readable, with an 8% threshold
     that avoids clutter in the thin Cancelled bands
   weaknesses:
-  - 'Title omits the mandated {language} token: currently ''Project Completion Status
-    by Department · bar-spine · bokeh · anyplot.ai'' instead of ''... · bar-spine
-    · python · bokeh · anyplot.ai'' — insert ''python'' between the spec-id and the
-    library name'
-  - Legend (top_left) sits directly above the Engineering bar and its bottom edge
-    grazes the 100% gridline, slightly intruding into the top of that bar's Cancelled
-    segment — increase headroom or reposition the legend so its bounding box stays
-    fully above y=1.0
-  - Green (On Time) and red (Cancelled) segments share the same stacked bar; position
-    and in-segment labels mitigate it but this pairing is worth a second look for
-    red-green color-blind users if the pattern recurs
-  - np.random.seed(42) is set but never used — all data is hardcoded constants, so
-    the seed call is dead code
+  - 'Design Excellence still reads as a well-configured default: flat solid quad fills
+    with no edge stroke or subtle gradient — a thin white/ink segment border or a
+    slightly more refined grid treatment would push DE-01/DE-02 further above the
+    baseline'
+  - 'Library Mastery is generic beyond the HoverTool: consider a more bokeh-distinctive
+    feature (e.g. CustomJS-driven interaction, hover-triggered glyph highlighting)
+    to raise LM-02 beyond ''nice touch but standard usage'''
+  - Green (On Time) and red (Cancelled) segments still share the same stacked bar;
+    position, amber separation, and in-segment % labels mitigate it, but keep an eye
+    on this pairing for red-green color-blind readers if similar semantic-status charts
+    recur
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1.
-      Chrome: Title "Project Completion Status by Department · bar-spine · bokeh · anyplot.ai" in dark ink, top-left legend (On Time / Delayed / Cancelled) with dark text on a light elevated panel, x-axis "Department (bar width ∝ project count)" and y-axis "Proportion of Projects" labels in dark ink, percentage y-axis ticks (0%-100%) and department names (Engineering, Marketing, Sales, Operations) in soft dark gray. A dashed connector plus "★ Best: 85% on-time" callout sits in the headroom above the Operations bar.
-      Data: Four adjacent stacked bars with widths proportional to each department's project count (Engineering widest region on the left down to Marketing narrowest). Segments are green (On Time, #009E73), amber (Delayed), and red (Cancelled) bottom-to-top, with bold percentage labels (e.g. 65%, 27%, 71%, 21%, 73%, 20%, 85%, 12%) inside segments ≥8% of the bar height.
-      Legibility verdict: PASS — all text is clearly readable against the light background; the legend's bottom edge grazes the top of the Engineering bar but does not obscure any text.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "Project Completion Status by Department · bar-spine · python · bokeh · anyplot.ai" in dark ink (language token now present). Top-left legend (On Time / Delayed / Cancelled) sits on a light elevated panel with dark-gray text, now with clear headroom above the 100% gridline (no longer grazing the Engineering bar's Cancelled segment). X-axis "Department (bar width ∝ project count)" and y-axis "Proportion of Projects" labels in dark ink; percentage y-axis ticks (0%-100%) and department names (Engineering, Marketing, Sales, Operations) in soft dark gray.
+      Data: Four adjacent stacked bars with widths proportional to each department's project count (Engineering widest on the left, Marketing narrowest). Segments are green (On Time, #009E73), amber (Delayed, #DDCC77), and red (Cancelled, #AE3030) bottom-to-top, with bold percentage labels (65%, 27%, 71%, 21%, 73%, 20%, 85%, 12%) inside segments ≥8% of bar height. A dashed connector plus "★ Best: 85% on-time" callout sits in the headroom above the Operations bar.
+      Legibility verdict: PASS — all text is clearly readable against the light background; the legend no longer intrudes on the plot area.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
       Chrome: Same title, legend, and axis labels now rendered in light ink (white title/axis labels, light-gray tick labels and legend text) against the dark elevated legend panel. Grid lines are barely visible, subtle as intended.
-      Data: Identical green/amber/red segment colors and identical percentage labels/positions as the light render — only the chrome (background, text, grid, legend panel) flipped to the dark theme.
-      Legibility verdict: PASS — no dark-on-dark text; title, axis labels, tick labels, and legend text are all clearly visible against the dark surface, and the brand green remains vivid.
+      Data: Identical green/amber/red segment colors and identical percentage labels/positions as the light render — only the chrome (background, text, grid, legend panel) flipped to the dark theme. The dark-ink percentage labels drawn on the amber "Delayed" segments remain fully readable in both themes since amber itself is theme-independent.
+      Legibility verdict: PASS — no dark-on-dark text; title, axis labels, tick labels, and legend text are all clearly visible against the dark surface, and the brand green remains vivid and identical to the light render.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -61,20 +63,20 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit; fully readable in both themes
+        comment: All font sizes explicit; fully readable in both themes at full size
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Legend's bottom edge grazes the top of the Engineering bar's Cancelled
-          segment near the 100% line
+        comment: Legend headroom fixed (y_range extended to 1.18) — no more grazing
+          the Engineering bar's Cancelled segment
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Segments and labels sized appropriately for only 4 categories
+        comment: Segments and labels sized appropriately for 4 categories x 3 statuses
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -112,13 +114,14 @@ review:
         max: 8
         passed: false
         comment: Deliberate semantic palette and restrained styling above default,
-          but not exceptional
+          but flat fills with no edge treatment keep it short of exceptional
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Subtle y-grid, clean outline, x-grid removed; moderate refinement
+        comment: Subtle y-grid, clean outline, x-grid removed; moderate refinement,
+          no segment stroke or extra polish
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -126,7 +129,7 @@ review:
         passed: false
         comment: Star callout creates a clear focal point on the best-performing department
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -150,11 +153,11 @@ review:
         comment: X/Y correct, all data shown
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title is missing the mandated {language} token ('python') between
-          spec-id and library
+        passed: true
+        comment: Title now includes the mandated 'python' language token; legend labels
+          match data
     data_quality:
       score: 15
       max: 15
@@ -178,7 +181,7 @@ review:
         passed: true
         comment: Project counts (70-150) and proportions are sensible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -201,11 +204,10 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: np.random.seed(42) is dead code — no random calls anywhere in the
-          script
+        passed: true
+        comment: Dead np.random.seed(42) call removed — no unused code remains
       - id: CQ-05
         name: Output & API
         score: 1
