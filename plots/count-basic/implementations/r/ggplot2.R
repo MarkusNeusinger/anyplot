@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' count-basic: Basic Count Plot
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 91/100 | Created: 2026-08-11
+#' Quality: pending | Updated: 2026-09-27
 
 library(ggplot2)
 library(dplyr)
@@ -44,13 +44,6 @@ freq_order <- df %>%
   pull(response)
 df$response <- factor(df$response, levels = freq_order)
 
-counts <- df %>%
-  count(response, name = "n") %>%
-  mutate(
-    pct   = 100 * n / sum(n),
-    label = sprintf("%d (%.0f%%)", n, pct)
-  )
-
 # Highlight the leading category as a focal point; other bars get a solid,
 # lightened tint of the same brand hue (opaque, not alpha) so the mix stays
 # identical between light and dark renders -- alpha would blend with the
@@ -63,15 +56,27 @@ bar_colors[leader] <- IMPRINT_PALETTE[1]
 # --- Plot -----------------------------------------------------------------
 title_text <- "count-basic · r · ggplot2 · anyplot.ai"
 
-p <- ggplot(df, aes(x = response, fill = response)) +
-  geom_bar(width = 0.65) +
+# Count + percentage labels are computed by stat_count() itself via
+# after_stat(), not by a separate dplyr summary -- `group = 1` forces the
+# stat to pool every bar into one group so `sum(after_stat(count))` is the
+# grand total rather than each bar's own (always-1) share. This leans on
+# ggplot2's stat/aes machinery beyond geom_bar()'s plain tally.
+p <- ggplot(df, aes(x = response)) +
+  geom_bar(aes(fill = response), width = 0.65) +
   geom_text(
-    data = counts,
-    aes(x = response, y = n, label = label),
+    aes(
+      y     = after_stat(count),
+      group = 1,
+      label = sprintf(
+        "%d (%.0f%%)",
+        after_stat(count),
+        100 * after_stat(count) / sum(after_stat(count))
+      )
+    ),
+    stat  = "count",
     vjust = -0.6,
-    size = 3.2,
-    color = INK,
-    inherit.aes = FALSE
+    size  = 3.2,
+    color = INK
   ) +
   scale_fill_manual(values = bar_colors, guide = "none") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
