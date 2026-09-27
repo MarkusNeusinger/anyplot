@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: bubble-basic
 created: '2026-05-28T17:46:42Z'
-updated: '2026-09-27T00:49:09Z'
+updated: '2026-09-27T01:10:39Z'
 generated_by: claude-sonnet
 workflow_run: 36283018622
 issue: 755
@@ -12,7 +12,254 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 70
 review:
-  strengths: []
-  weaknesses: []
+  strengths:
+  - 'Canonical Imprint palette order preserved: Indie tier = #009E73 (brand green,
+    first series), Studio = lavender, Blockbuster = blue.'
+  - 'Theme-adaptive chrome verified pixel-exact against both required backgrounds
+    (#FAF8F1 light / #1A1A17 dark); data colors identical across renders.'
+  - Area-correct (sqrt-scaled) bubble sizing with a dedicated size legend using in-range
+    reference values, plus a separate tier-color legend cleanly grouped via Makie's
+    multi-list Legend().
+  - Clear data storytelling via the 'franchise sweet spot' vspan + annotation, giving
+    the chart a defined focal point instead of a raw undifferentiated scatter.
+  - Idiomatic, up-to-date Makie API usage (Figure(size = ...) rather than the deprecated
+    resolution= kwarg); canvas lands exactly on the 3200x1800 target.
+  weaknesses:
+  - 'CRITICAL: The ''Avg. Revenue by Tier'' inset Axis (built via Axis(fig[1,1]; width=Relative(0.26),
+    height=Relative(0.26), halign=0.02, valign=0.98, ...) plus barplot!) never appears
+    in either rendered PNG. Pixel-sampled the intended bbox region (top-left of the
+    main axis, roughly x:150-820, y:120-530 at 3200x1800) in both plot-light.png and
+    plot-dark.png: it is 100% flat PAGE_BG with zero ELEVATED_BG or bar-color pixels
+    present. This is dead code — real computational and layout effort (avg_revenue,
+    inset_ax, second barplot!) that produces no visible output. Either fix the nested-Axis
+    placement so it actually renders (verify against current CairoMakie''s inset-axis
+    idiom — the GridLayout cell may need the inset created via `Axis(fig[1,1], ...)`
+    layered correctly, or check for a silently-swallowed layout conflict) or remove
+    the inset entirely and keep the simpler, working two-legend chart.'
+  - Title occupies only ~25% of the plot width (measured 1048-1840px of 3200px at
+    titlesize=25) — well under the 50-70% comfort zone, and this was already flagged
+    in Attempt 1 (then estimated at 35-40%) without being resolved. The title lacks
+    the optional descriptive prefix; consider adding a short one (e.g. 'Film Portfolio
+    Analysis · bubble-basic · julia · makie · anyplot.ai') and/or increasing titlesize
+    further to give it more visual presence.
+  - The blockbuster-tier cluster (budget ~$260-280M, rating 8-8.5) still has 3 bubbles
+    heavily overlapping/stacked, making individual points hard to distinguish even
+    at alpha=0.5 — same issue flagged in Attempt 1, not meaningfully improved.
+  - Box-office revenue (bubble-size variable) ranges roughly $10M-$900M, well past
+    the spec's suggested 10-100 size-column guideline. Plausible as real-world revenue,
+    but worth double-checking against the intended scale.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, sampled RGB (250,248,241) = exactly #FAF8F1.
+      Chrome: Bold dark title "bubble-basic · julia · makie · anyplot.ai" centered near the top, occupying only ~25% of the canvas width. Axis labels "Production Budget (USD Millions)" and "Critic Rating (out of 10)" are dark and fully legible; tick labels and grid lines are soft gray, subtle but visible. A light gray "franchise sweet spot" vspan band with a legible annotation label sits mid-chart. The right-side grouped legend ("Production Scale" tier swatches + "Box Office Revenue" size references) uses a barely-tinted elevated panel with dark title text and gray body text, all readable. The top-left corner of the plot area (where the code's inset "Avg. Revenue by Tier" bar chart should sit) is empty flat background — confirmed by pixel sampling, no inset panel, background, or bars are present anywhere in that region.
+      Data: 90 bubbles colored green (Indie)/lavender (Studio)/blue (Blockbuster) by production tier, sized by box-office revenue (sqrt-scaled), alpha ≈0.5. First categorical series is #009E73 as required.
+      Legibility verdict: PASS (all rendered chrome is readable; the missing inset is a functional/rendering bug, not a legibility failure).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, sampled RGB (26,26,23) = exactly #1A1A17.
+      Chrome: Title and axis labels render in light off-white ink, clearly legible against the dark surface; tick labels and legend body text use a lighter muted gray — no dark-on-dark failures observed. The legend panel switches to the dark-elevated background with light border and light text, all readable. Same top-left corner check performed: the inset bar chart is absent here too — confirmed via pixel sampling, the region is flat #1A1A17 with no ELEVATED_BG or bar pixels.
+      Data: Same green/lavender/blue tier colors as the light render, confirmed identical — only chrome flipped as required.
+      Legibility verdict: PASS (readable in both themes; the inset-axis omission is a code/rendering defect, not a theme-adaptation failure).
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicit, readable in both themes; title proportion undersized
+          (see VQ-05)
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Blockbuster-tier cluster has several heavily overlapping same-color
+          bubbles, hard to distinguish individually
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers reasonably sized for n=90, alpha handles most overlap, but
+          dense cluster still muddy
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct tier colors, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Canvas exactly 3200x1800; title only ~25% of width (well under 50-70%
+          target); dead top-left inset space leaves layout unbalanced
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order, correct theme backgrounds
+          in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Dual grouped legend and tier coloring show effort, but the intended
+          inset-chart sophistication never renders — no credit for a feature that
+          isn't in the artifact
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, elevated legend panel, tightened colgap
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Explicit 'franchise sweet spot' vspan + annotation gives a clear
+          focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bubble chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Size legend present, alpha for overlap, optional color dimension
+          used well
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y/size correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match tiers and revenue
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: x, y, size, plus an extra categorical tier dimension; n=90 within
+          recommended range
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Film budget/rating/revenue relationships are plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Box-office revenue exceeds the spec's suggested 10-100 size-value
+          guideline, though plausible as real revenue
+    code_quality:
+      score: 5
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: No functions/classes, but carries a non-functional inset-axis block
+          adding unneeded complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (CairoMakie, Colors, Random, Statistics) are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 0
+        max: 2
+        passed: false
+        comment: The inset Axis + barplot! block is dead code — it never appears in
+          either rendered PNG, verified by pixel sampling. Shipping code that silently
+          produces no visible output is effectively fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png correctly
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Current Figure(size=...) API, idiomatic Axis/Legend kwargs
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Multi-list grouped Legend + colgap! are Makie-distinctive; the attempted
+          inset-axis composition (the library's signature nested-layout trick) doesn't
+          render, so it earns no credit
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - inset-axes
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
