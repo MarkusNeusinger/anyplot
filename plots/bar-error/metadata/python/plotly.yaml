@@ -2,103 +2,108 @@ library: plotly
 language: python
 specification_id: bar-error
 created: '2025-12-27T19:20:48Z'
-updated: '2026-05-10T14:50:52Z'
-generated_by: claude-haiku
-workflow_run: 25631446707
+updated: '2026-09-27T21:06:24Z'
+generated_by: claude-sonnet
+workflow_run: 36349620399
 issue: 2376
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.15
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/plotly/plot-dark.html
-quality_score: 81
+quality_score: 85
 review:
   strengths:
-  - Clean, readable code with proper theme tokens (INK, INK_SOFT, BRAND)
-  - Correct asymmetric error bars implementation with clear caps
-  - Proper title and legend formatting per anyplot.ai standards
-  - All text legible in both light and dark themes
-  - Data realistic and appropriate for scientific context
+  - 'Fixed the critical code/image color mismatch from the predecessor: all five bars
+    now consistently render in Imprint brand green (#009E73) matching the code, in
+    both themes'
+  - 'Title format corrected to include the missing language segment: ''bar-error ·
+    python · plotly · anyplot.ai'''
+  - L-shaped spines (top/right removed via explicit showline/mirror config) plus a
+    subtle Y-axis-only grid give a clean, refined frame
+  - Dashed control-baseline reference line with annotation adds genuine visual hierarchy,
+    letting the viewer see at a glance which treatments beat the control
+  - Asymmetric error bars with visible caps, styled consistently in one color that
+    stands out against the bars and the page in both themes
+  - Realistic, neutral lab-experiment data with meaningfully varied errors across
+    groups, and categories in the natural control-first order
   weaknesses:
-  - 'CRITICAL: Code specifies color=BRAND for all bars but images render different
-    colors per bar - code/image mismatch must be resolved'
-  - No spine removal or visual refinement - top/right spines remain
-  - Generic design approach - missing distinctive library features or aesthetic choices
-  - No visual hierarchy or storytelling emphasis
-  image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
-    \ (#FAF8F1) surface, correct\n  Chrome: Title \"bar-error · plotly · anyplot.ai\"\
-    \ and axis labels (\"Treatment Group\", \"Response Value (%)\") are clearly visible\
-    \ in dark text (#1A1A17). Tick labels and annotations all readable. LEGIBILITY:\
-    \ PASS\n  Data: Five bars with asymmetric error bars and caps. Colors show green,\
-    \ orange, blue, pink, yellow (Okabe-Ito positions 1-5) - NOTE: Code specifies\
-    \ all bars should be BRAND green, but renders as multi-colored. Annotation \"\
-    Error bars: ±1 SD (asymmetric)\" clearly visible at bottom-left.\n  \nDark render\
-    \ (plot-dark.png):\n  Background: Warm near-black (#1A1A17) surface, correct\n\
-    \  Chrome: Title and axis labels rendered in light text (#F0EFE8), clearly readable\
-    \ against dark background. Tick labels visible. All text adapts properly for dark\
-    \ theme. LEGIBILITY: PASS\n  Data: Bars maintain identical color sequence to light\
-    \ render (green, orange, blue, pink, yellow). Only chrome flips theme-adaptively.\
-    \ Error bars and caps clearly visible. No dark-on-dark failures.\n\nCODE/IMAGE\
-    \ MISMATCH IDENTIFIED: The implementation code sets color=BRAND (#009E73) for\
-    \ all bars, but both renders display bars in different colors. This discrepancy\
-    \ must be resolved before approval."
+  - 'The ''Error bars: ±1 SD (asymmetric)'' annotation at the bottom-left overlaps
+    the Control bar itself in both renders (text sits on top of the green fill near
+    the baseline) — move it outside the bar, e.g. raise its y-offset or give it a
+    small ELEVATED_BG background pill so it doesn''t sit on top of the data'
+  - The single-series 'Measurement' legend is redundant chart junk (only one trace)
+    per the decoration-removal guidance — consider removing it since the bottom annotation
+    already explains what is shown, freeing the top-right corner
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface matching #FAF8F1, correct — not pure white.
+      Chrome: Title "bar-error · python · plotly · anyplot.ai" in dark ink, centered, clearly readable. X-axis title "Treatment Group" and Y-axis title "Response Value (%)" in dark ink, tick labels in a softer dark gray — all readable. A dashed control-baseline line in soft dark gray crosses the chart at y=45.2 with a "Control baseline (45.2%)" annotation in the empty top-left whitespace. A second annotation "Error bars: ±1 SD (asymmetric)" sits bottom-left but visibly overlaps the bottom portion of the green Control bar.
+      Data: Five green (#009E73) bars — Control, Treatment A-D — each with an asymmetric black-gray error bar and visible caps. A "Measurement" legend box sits top-right with a green swatch matching the bars.
+      Legibility verdict: PASS (all chrome text readable; the annotation/bar overlap is a layout issue, not a legibility failure — the text stays legible against the green fill).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface matching #1A1A17, correct — not pure black.
+      Chrome: Title and both axis titles render in light ink (#F0EFE8), tick labels in a lighter gray (#B8B7B0) — both clearly readable against the dark background, no dark-on-dark failures. Dashed control-baseline line and its annotation are legible in light gray. The bottom-left error-bar annotation again overlaps the bottom of the Control bar, same as in the light render.
+      Data: The five bars are identical brand green (#009E73) to the light render — only the chrome (background, text, grid, legend box) flips theme. Error bars and caps remain visible in the same soft gray against both the green bars and the dark background.
+      Legibility verdict: PASS (all text readable in dark theme; same annotation/bar overlap layout issue as light render).
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes (28/22/18px) correct per style guide. All text readable
-          in both themes.
+        comment: All font sizes explicit (16/12/10px); readable in both themes; title
+          fits without overflow or clipping.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: Category labels, tick labels, and error bars all well-spaced. No
-          collisions.
+        passed: false
+        comment: 'The bottom-left ''Error bars: ±1 SD'' annotation overlaps the Control
+          bar in both renders; text stays readable but sits on top of data.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, error bars with caps, grid lines all clearly visible.
+        comment: Bars and error-bar caps clearly visible and appropriately sized for
+          5 categories; legend glyph matches bar fill in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Colors used are colorblind-safe Okabe-Ito palette positions. Adequate
-          contrast.
+        comment: Gray error bars contrast well against both green bars and page background
+          in both themes; no red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions (4800x2700). Nothing cut off. Appropriate margins
-          (100/80/120/100).
+        comment: Plot fills a large, balanced share of the canvas; margins reasonable;
+          nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title: ''bar-error · plotly · anyplot.ai''. X-axis: ''Treatment
-          Group''. Y-axis: ''Response Value (%)'' with units.'
+        comment: '''Treatment Group'' and ''Response Value (%)'' — descriptive with
+          units.'
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL: Code specifies color=BRAND (all green), but images show
-          multi-colored bars. Background colors correct (#FAF8F1/#1A1A17). Code/image
-          mismatch must be resolved.'
+        passed: true
+        comment: 'All bars identical Imprint brand green (#009E73) in both renders;
+          backgrounds correct #FAF8F1/#1A1A17; chrome theme-correct.'
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -106,22 +111,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic defaults. Bar edge styling (line=INK_SOFT) is standard, not
-          custom. No distinctive palette or design choices.
+        comment: Clean single-brand-green look with a reference line, but still close
+          to a well-configured default rather than a distinctive custom design.
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No spine removal (should remove top/right). Grid appropriate but
-          not refined. Missing visual polish.
+        passed: true
+        comment: L-shaped spines deliberately configured (mirror=False), subtle Y-axis-only
+          grid, generous margins; the redundant single-series legend and annotation
+          overlap hold this back from perfect.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Annotation explains error bars, but no visual hierarchy or emphasis
-          to guide reader.
+        passed: true
+        comment: Dashed control-baseline line + annotation create a clear focal comparison
+          — viewer immediately sees which treatments beat control.
     spec_compliance:
       score: 15
       max: 15
@@ -131,28 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bar chart with error bars implementation.
+        comment: Correct bar chart with error bars; asymmetric errors implemented
+          as specified.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Error bars with caps present. Asymmetric errors correctly implemented.
-          Legend annotation present.
+        comment: Visible caps, annotation naming ±1 SD, consistent bar widths/styling,
+          control-first ordering — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: treatment groups, Y: response values. All 5 categories displayed.
-          Range [0, 90] appropriate.'
+        comment: X=categories, Y=values, axis range [0,90] shows every error bar in
+          full; marks sit at their data values.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct. Legend shows ''Measurement'' trace. Annotation:
-          ''±1 SD (asymmetric)''.'
+        comment: Title exactly 'bar-error · python · plotly · anyplot.ai'; legend
+          label 'Measurement' matches the trace.
     data_quality:
       score: 15
       max: 15
@@ -162,22 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all bar chart features: central values, asymmetric errors,
-          category labels, uncertainty ranges.'
+        comment: Asymmetric errors of clearly varying magnitude across groups; values
+          above and below the control baseline.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lab experiment comparing treatment effectiveness. Values (45-72)
-          and errors (3-11) realistic. Neutral presentation.
+        comment: Neutral lab experiment comparing treatment effectiveness against
+          a control; plausible values.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis [0, 90] provides good margin above max value (71.5). Percentage
-          scale appropriate.
+        comment: Response percentages (45-72%) and SDs (3-11%) are realistic for the
+          domain.
     code_quality:
       score: 10
       max: 10
@@ -187,34 +194,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes. Linear code, straightforward logic.
+        comment: Linear imports -> data -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) set; data is deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly imported and used. No unused imports.
+        comment: Only os, numpy, plotly.graph_objects imported and used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean theme token usage. Clear variable names. No fake UI.
+        comment: Clean, appropriately simple, no fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Correct file naming
-          and API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API (write_image/write_html).
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -222,24 +228,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: go.Figure, add_trace(go.Bar) idiomatic. Error bars configured via
-          error_y dict. Interactive hover template used.
+        comment: go.Figure/go.Bar, error_y dict, add_hline, add_annotation, update_traces(hoverlabel=...)
+          — idiomatic high-level API usage.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Standard error_y configuration. No use of plotly-specific advanced
-          features like subplots, secondary axes, or callbacks.
-    score_caps_applied: []
+        passed: true
+        comment: Uses plotly-specific add_hline convenience method, asymmetric error_y,
+          and a theme-aware hovertemplate/hoverlabel for the interactive HTML.
   verdict: REJECTED
+  model: claude-sonnet-5
+  criteria_version: qc-4374db4964.aqr-815475d157.sg-7006008fc6.lib-212804a6a0
+  rendered_at: '2026-09-27T20:59:32Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - grid-styling
   - edge-highlighting
