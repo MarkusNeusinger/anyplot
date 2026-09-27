@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: pygal 3.1.3 | Python 3.13.15
-Quality: 90/100 | Created: 2026-09-27
+Quality: pending | Updated: 2026-09-27
 """
 
 import os
@@ -30,9 +30,12 @@ GRID = f"rgba({_r}, {_g}, {_b}, 0.35)"  # lighter, theme-adaptive gridlines (pyg
 np.random.seed(42)
 n_cities = 50
 
-# Uniform spread across the coverage range to avoid clustering
+# Uniform spread across the coverage range to avoid clustering. The low-coverage
+# band is widened (8-40 vs. the previous 10-35) to thin out the densest overlap
+# region in the top-left of the chart, where transit coverage is low and
+# congestion is high.
 transit_coverage = np.concatenate(
-    [np.random.uniform(10, 35, 15), np.random.uniform(35, 65, 20), np.random.uniform(65, 95, 15)]
+    [np.random.uniform(8, 40, 15), np.random.uniform(40, 68, 20), np.random.uniform(68, 95, 15)]
 )
 np.random.shuffle(transit_coverage)
 
@@ -68,7 +71,10 @@ tier_colors = tuple(
 ANYPLOT_AMBER = "#DDCC77"
 style_colors = tier_colors + (ANYPLOT_AMBER,)
 
-# Tier labels serve as the size legend (vehicle-registration quantile ranges)
+# Tier labels serve as the size legend (vehicle-registration quantile ranges).
+# The small->large ordering itself is explained once in the x-axis title
+# below, instead of repeating a descriptor word in every one of the 7 legend
+# entries — spelling it out per-entry overflowed the 4-column legend layout.
 tier_labels = [f"{bin_edges_vr[t]:.0f}–{bin_edges_vr[t + 1]:.0f} vehicles/1,000" for t in range(n_tiers)]
 
 # Focal city: highest congestion despite the data spread — visual anchor for data storytelling
@@ -140,7 +146,7 @@ chart = pygal.XY(
     height=1800,
     style=custom_style,
     title="bubble-basic · python · pygal · anyplot.ai",
-    x_title="Public Transit Coverage (%)",
+    x_title="Public Transit Coverage (%)  —  bubble size ↔ vehicle registrations",
     y_title="Traffic Congestion Index (0–100 scale)",
     show_legend=True,
     legend_at_bottom=True,
@@ -164,31 +170,18 @@ chart = pygal.XY(
     spacing=30,
 )
 
-# Thin page-background "halo" ring around every bubble so overlapping dots
-# keep a visible boundary in the dense low-coverage cluster, instead of
-# melting into one blob under alpha blending. graph.css's default `.dot`
-# rule ties stroke-opacity to dot_opacity and uses the fill color as the
-# stroke, so the ring is invisible without an override. The override must
-# repeat pygal's own `#chart-{uuid} .dot` id-scoped selector (only known
-# once the chart object exists) to match its specificity, then rely on
-# being appended last in the stylesheet to win the tie on source order.
-#
-# The `print_labels` annotation text renders into a `.text-overlay .label`
-# node, but graph.css also emits a per-series `#chart-{uuid} .text-overlay
-# .color-N text { fill: black }` rule (one per series color) that hardcodes
-# black regardless of the Style object's foreground tokens. That per-series
-# rule has 3 classes + 1 element, which beats a plain `.label` override's
-# 2 classes + 0 elements on specificity alone — appending later in the
-# stylesheet isn't enough to win. Matching `text.label` (element + class)
-# brings the override to the same specificity as the color-N rule, so the
-# existing "last in the stylesheet wins the tie" source-order rule (as used
-# for the `.dot` halo override above) applies and it follows the theme.
+# Thin page-background "halo" ring around every bubble keeps overlapping dots
+# individually traceable instead of melting into one blob. graph.css's default
+# `.dot` rule ties stroke to the fill color, and its per-series `.text-overlay
+# .color-N text` rule hardcodes black for the print_labels annotation — both
+# need an override at matching (or higher) CSS specificity, scoped to this
+# chart's own id-selector, appended last so source order wins any tie.
 chart.css = (
     "file://style.css",
     "file://graph.css",
-    # stroke-width bumped 3px -> 4px so the halo ring stays a visible boundary
-    # in the dense low-coverage cluster even where several bubbles overlap.
-    f"inline:#chart-{chart.uuid} .dot {{ stroke: {PAGE_BG}; stroke-width: 4px; stroke-opacity: 1; }}",
+    # stroke-width bumped 3px -> 5px: a thicker halo ring stays a visible
+    # boundary even in the densest overlap zone (low transit coverage).
+    f"inline:#chart-{chart.uuid} .dot {{ stroke: {PAGE_BG}; stroke-width: 5px; stroke-opacity: 1; }}",
     f"inline:#chart-{chart.uuid} .text-overlay text.label {{ fill: {INK}; }}",
 )
 
