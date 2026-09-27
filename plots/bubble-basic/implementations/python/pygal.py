@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: pygal 3.1.3 | Python 3.13.15
-Quality: 92/100 | Created: 2026-09-26
+Quality: 89/100 | Created: 2026-09-27
 """
 
 import os
@@ -52,7 +52,7 @@ tier_bins = np.clip(np.digitize(vehicle_registrations, bin_edges_vr[1:-1]), 0, n
 tier_mid_norm = [((bin_edges_vr[t] + bin_edges_vr[t + 1]) / 2 - vr_min) / (vr_max - vr_min) for t in range(n_tiers)]
 tier_sizes = [int(20 + 100 * norm**0.5) for norm in tier_mid_norm]
 
-# anyplot imprint_seq: #009E73 (brand green) → #4467A3 (blue), equidistant stops
+# Imprint sequential colormap (imprint_seq): #009E73 (brand green) → #4467A3 (blue), equidistant stops
 tier_colors = tuple(
     "#{:02X}{:02X}{:02X}".format(
         round(0x00 + (0x44 - 0x00) * i / (n_tiers - 1)),
@@ -118,11 +118,18 @@ custom_style = Style(
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
+    # `value_label_font_size` (not `value_font_size`) governs the `.text-overlay
+    # text.label` CSS rule that print_labels renders into — a separate style
+    # token pygal defaults to 10px regardless of the other font sizes above.
+    # Left unset, the hotspot annotation fell back to that 10px default no
+    # matter how large title/label/legend were configured.
+    value_label_font_size=40,
     tooltip_font_size=36,
     title_font_family="Helvetica Neue, Helvetica, Arial, sans-serif",
     label_font_family="Helvetica Neue, Helvetica, Arial, sans-serif",
     major_label_font_family="Helvetica Neue, Helvetica, Arial, sans-serif",
     legend_font_family="Helvetica Neue, Helvetica, Arial, sans-serif",
+    value_label_font_family="Helvetica Neue, Helvetica, Arial, sans-serif",
 )
 
 # Plot
@@ -153,6 +160,32 @@ chart = pygal.XY(
     print_labels=True,
     truncate_legend=30,
     spacing=30,
+)
+
+# Thin page-background "halo" ring around every bubble so overlapping dots
+# keep a visible boundary in the dense low-coverage cluster, instead of
+# melting into one blob under alpha blending. graph.css's default `.dot`
+# rule ties stroke-opacity to dot_opacity and uses the fill color as the
+# stroke, so the ring is invisible without an override. The override must
+# repeat pygal's own `#chart-{uuid} .dot` id-scoped selector (only known
+# once the chart object exists) to match its specificity, then rely on
+# being appended last in the stylesheet to win the tie on source order.
+#
+# The `print_labels` annotation text renders into a `.text-overlay .label`
+# node, but graph.css also emits a per-series `#chart-{uuid} .text-overlay
+# .color-N text { fill: black }` rule (one per series color) that hardcodes
+# black regardless of the Style object's foreground tokens. That per-series
+# rule has 3 classes + 1 element, which beats a plain `.label` override's
+# 2 classes + 0 elements on specificity alone — appending later in the
+# stylesheet isn't enough to win. Matching `text.label` (element + class)
+# brings the override to the same specificity as the color-N rule, so the
+# existing "last in the stylesheet wins the tie" source-order rule (as used
+# for the `.dot` halo override above) applies and it follows the theme.
+chart.css = (
+    "file://style.css",
+    "file://graph.css",
+    f"inline:#chart-{chart.uuid} .dot {{ stroke: {PAGE_BG}; stroke-width: 3px; stroke-opacity: 1; }}",
+    f"inline:#chart-{chart.uuid} .text-overlay text.label {{ fill: {INK}; }}",
 )
 
 for t in range(n_tiers):
