@@ -33,7 +33,11 @@ gh workflow run bulk-generate.yml -f specification_id=<spec> -f library=all
 gh workflow run impl-generate.yml -f specification_id=<spec> -f library=<lib> -f model=<model>
 ```
 
-`model` threads through generate→review→repair→merge. impl-generate
+`model` threads through generate→review→repair→merge. Leave it out
+(or pass `auto`) and impl-generate routes per pair: Opus when the pair
+has no implementation on `origin/main` yet, Sonnet for a regeneration.
+An explicit `haiku`/`sonnet`/`opus` pins the model for every pair —
+for a gap backfill that means giving up Opus on first runs. impl-generate
 auto-closes any existing open PR for the same spec/lib.
 
 ## 2 · Monitor — use the bundled scripts, don't hand-roll
@@ -72,10 +76,12 @@ with evidence — never let the user ask "still running?".
 
 ## 3 · Reading the signals correctly
 
-- **Timing**: ~55–75 min per fresh spec end-to-end (15 dispatches
-  paced ~120 s apart ≈ 30 min, then the generate→review→repair→merge
-  tail). `impl:done` labels lag and cluster near the end — **0/15 at
-  21 min is normal, NOT a stall**.
+- **Timing**: ~55–75 min per fresh spec end-to-end, measured on
+  Sonnet with 15 dispatches paced ~120 s apart ≈ 30 min, then the
+  generate→review→repair→merge tail. A fresh spec now runs on Opus
+  with 180 s pacing (≈ 45 min of dispatches), so expect a longer run
+  until new numbers are measured. `impl:done` labels lag and cluster
+  near the end — **0/15 at 21 min is normal, NOT a stall**.
 - **Repairs are routine** (`Repair: <lib> … (attempt 1)`) — most libs
   need one; the 4-attempt cascade (90/80/70/60/50) is the design.
 - **Regenerations never repair.** A pair that already has an
@@ -148,8 +154,9 @@ the file top-down: the cheap specs finish early and the progress
 number moves.
 
 **One spec per driver invocation** —
-`.claude/skills/babysit-pipeline/run_spec.sh <spec> <model> <lib>...`
-dispatches that spec's missing libraries staggered ~150 s
+`.claude/skills/babysit-pipeline/run_spec.sh <spec> auto <lib>...`
+(`auto` = the §1 routing; every missing library is a first run, so
+Opus) dispatches that spec's missing libraries staggered ~150 s
 apart, then polls until each metadata file lands, and exits with
 `RESULT=COMPLETE|PARTIAL|TIMEOUT`. Run it via Bash
 `run_in_background: true`; it skips libraries already on main, so
@@ -164,12 +171,23 @@ still run one spec at a time: their stall logic reads *any* active
 `impl-*` run as belonging to the spec they are watching (§3), so a
 second spec in flight makes them call a stalled spec healthy. Never
 mix the two modes on the same queue. The slot count is the user's
-call: **2 is the default**, 4 with their OK. A 5-slot trial on
+call: **1 is the default** under `MODEL=auto` or `opus` (see the
+all-Opus note below), 2 for a pinned `sonnet`/`haiku`, and more only
+with their OK. A 5-slot trial on
 2026-09-01 was clean on the GitHub side (API quota untouched, impl-*
 runner wait ≤4 min; only CodeQL piled up) — the binding limit is the
 Claude usage window, which is why the user pulled it back the same
 evening. Reducing means: stop launching and let in-flight PRs drain;
 never cancel runs that already spent Claude time.
+
+**A gap backfill is all-Opus.** Every missing library is a first
+implementation, so under `auto` each generate, review, and repair runs
+on Opus and burns the usage window much faster than the Sonnet runs
+the numbers above came from. `run_queue.sh` therefore defaults to one
+slot and a 180 s `STAGGER` when `MODEL` is `auto` or `opus` (2 slots
+and 90 s for a pinned `sonnet`/`haiku`). Raise either only when the
+owner explicitly accepts the faster burn; pinning `MODEL=sonnet` is
+the owner's call too, since it gives up Opus on first runs.
 
 **For an unattended queue use the scheduler**,
 `.claude/skills/babysit-pipeline/run_queue.sh <queue-dir> [slots]`,
@@ -177,8 +195,8 @@ started detached so it survives the session, with both streams
 captured:
 
 ```bash
-setsid nohup .claude/skills/babysit-pipeline/run_queue.sh agentic/runs/<run> 2 \
-  > agentic/runs/<run>/queue.out 2>&1 &      # the 2 is the slot count
+setsid nohup .claude/skills/babysit-pipeline/run_queue.sh agentic/runs/<run> 1 \
+  > agentic/runs/<run>/queue.out 2>&1 &      # the 1 is the slot count
 ```
 
 It keeps `[slots]` drivers in flight over

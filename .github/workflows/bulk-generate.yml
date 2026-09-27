@@ -39,15 +39,16 @@ on:
         type: boolean
         default: false
       pace_seconds:
-        description: "Seconds to wait between dispatches (0 = fire all at once, default 120 = 2 min)"
+        description: "Seconds to wait between dispatches (0 = fire all at once; empty = 180 for model auto/opus, 120 for sonnet/haiku)"
         required: false
-        default: '120'
+        default: ''
       model:
-        description: "Claude model to use across generate / review / repair (default sonnet)"
+        description: "Claude model for generate / review / repair; auto = opus for a pair's first implementation, sonnet for a regeneration"
         required: false
         type: choice
-        default: 'sonnet'
+        default: 'auto'
         options:
+          - auto
           - haiku
           - sonnet
           - opus
@@ -155,11 +156,12 @@ jobs:
           MATRIX: ${{ needs.build-matrix.outputs.matrix }}
           COUNT: ${{ needs.build-matrix.outputs.count }}
           DRY_RUN: ${{ inputs.dry_run }}
+          PACE_SECONDS: ${{ inputs.pace_seconds || ((inputs.model == 'sonnet' || inputs.model == 'haiku') && '120' || '180') }}
         run: |
           echo "## Bulk Generation Plan"
           echo ""
           echo "**Total items:** $COUNT"
-          echo "**Pacing:** ${{ inputs.pace_seconds || '120' }}s between dispatches (0 = fire all)"
+          echo "**Pacing:** ${PACE_SECONDS}s between dispatches (0 = fire all)"
           echo "**Dry run:** $DRY_RUN"
           echo ""
           echo "### Items to generate:"
@@ -170,8 +172,10 @@ jobs:
   #
   # One runner loops through every (spec, library) pair and dispatches
   # impl-generate.yml with a configurable pause between each call. Default
-  # pace is 120 s (2 min) to stay under the Claude Max concurrency budget on
-  # Sonnet and avoid spinning up 9 heavy generation runs at once.
+  # pace is 180 s (3 min) for model auto/opus — first implementations run on
+  # Opus, which is slower and heavier on the Claude usage window — and 120 s
+  # (2 min) for a pinned sonnet/haiku, to stay under the Claude Max
+  # concurrency budget and avoid spinning up 9 heavy generation runs at once.
   # ============================================================================
   generate:
     needs: [build-matrix, preview]
@@ -180,7 +184,7 @@ jobs:
     permissions:
       contents: read
       actions: write
-    # Enough headroom: 9 libs × (120 s pace + ~30 s dispatch) ≈ 23 min;
+    # Enough headroom: 15 libs × (180 s pace + ~30 s dispatch) ≈ 53 min;
     # bulk "all for all" could be very long — clamp at 6 h.
     timeout-minutes: 360
 
@@ -192,8 +196,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MATRIX: ${{ needs.build-matrix.outputs.matrix }}
-          PACE_SECONDS: ${{ inputs.pace_seconds || '120' }}
-          MODEL: ${{ inputs.model || 'sonnet' }}
+          PACE_SECONDS: ${{ inputs.pace_seconds || ((inputs.model == 'sonnet' || inputs.model == 'haiku') && '120' || '180') }}
+          MODEL: ${{ inputs.model || 'auto' }}
           CHANGE_REQUESTS: ${{ inputs.change_requests || '{}' }}
           REGEN_GATE: ${{ inputs.regen_gate == false && 'false' || 'true' }}
         run: |

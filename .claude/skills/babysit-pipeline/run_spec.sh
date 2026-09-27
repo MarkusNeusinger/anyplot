@@ -6,11 +6,13 @@
 # specs whose issues closed long ago. Exits per spec so the agent can report
 # and start the next queue entry.
 # Usage: run_spec.sh <spec-id> <model> <lib1> [lib2 ...]
+#   <model> auto lets impl-generate route (opus for a first implementation,
+#   sonnet for a regeneration); haiku/sonnet/opus pin one model.
 set -uo pipefail
 
 usage() {
   echo "usage: $(basename "$0") <spec-id> <model> <lib1> [lib2 ...]" >&2
-  echo "  e.g. $(basename "$0") line-basic sonnet highcharts muix" >&2
+  echo "  e.g. $(basename "$0") line-basic auto highcharts muix" >&2
   exit 2
 }
 # Explicit guard: with `set -u` a missing argument would otherwise surface as an

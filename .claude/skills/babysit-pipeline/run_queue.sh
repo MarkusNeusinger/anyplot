@@ -11,12 +11,15 @@
 #   <queue-dir>  holds full_queue.txt (`<n-missing> <spec> <lib...>`, one spec
 #                per line) and receives the ledger: done.log, deferred.log,
 #                queue.log, results/, and an optional rescue_specs.txt
-#   [slots]      drivers in flight at once (default 2; 4 only with the user's OK)
-# Env: MODEL (default sonnet), DEADLINE (epoch seconds; no launches after it),
-#      STAGGER (s between launches, 90), THROTTLE_WAIT (s, 900), ANYPLOT_REPO.
+#   [slots]      drivers in flight at once (default 1 for MODEL auto/opus, 2 for
+#                sonnet/haiku; more only with the user's OK)
+# Env: MODEL (default auto: impl-generate picks opus for a first implementation,
+#      sonnet for a regeneration), DEADLINE (epoch seconds; no launches after it),
+#      STAGGER (s between launches; default 180 for MODEL auto/opus, 90 for
+#      sonnet/haiku), THROTTLE_WAIT (s, 900), ANYPLOT_REPO.
 # Run it detached so it survives the session, with both streams captured
 # (the second positional argument is the slot count, not a redirect):
-#   setsid nohup run_queue.sh agentic/runs/<run> 2 > agentic/runs/<run>/queue.out 2>&1 &
+#   setsid nohup run_queue.sh agentic/runs/<run> 1 > agentic/runs/<run>/queue.out 2>&1 &
 # Stop it with `pkill -f run_queue.sh`; drivers keep running (after their
 # dispatches they only watch).
 #
@@ -34,7 +37,18 @@ usage() {
 [ "$#" -ge 1 ] || usage
 Q="$(cd "$1" && pwd)" || usage
 [ -f "$Q/full_queue.txt" ] || { echo "error: $Q/full_queue.txt not found" >&2; exit 2; }
-SLOTS="${2:-2}"
+MODEL="${MODEL:-auto}"
+# Under auto every missing library is a first implementation, so the whole
+# backfill runs on Opus (generate, review and repairs) and burns the Claude
+# usage window much faster than the Sonnet runs the old 2-slot / 90 s defaults
+# were tuned on. Default to one driver and a longer stagger then; the slots
+# argument and STAGGER still override, and a pinned sonnet/haiku keeps the old
+# defaults.
+case "$MODEL" in
+  auto|opus) DEFAULT_SLOTS=1; DEFAULT_STAGGER=180 ;;
+  *)         DEFAULT_SLOTS=2; DEFAULT_STAGGER=90 ;;
+esac
+SLOTS="${2:-$DEFAULT_SLOTS}"
 case "$SLOTS" in
   ''|*[!0-9]*|0) echo "error: slots must be a positive integer, got '$SLOTS'" >&2; usage ;;
 esac
@@ -47,9 +61,8 @@ if [ -z "$REPO" ] || [ ! -d "$REPO/plots" ]; then
   echo "error: could not resolve the anyplot repo root (tried \$ANYPLOT_REPO, then git from $R)." >&2
   exit 2
 fi
-MODEL="${MODEL:-sonnet}"
 DEADLINE="${DEADLINE:-}"        # epoch seconds; no new launches at or after this
-STAGGER="${STAGGER:-90}"        # seconds between two launches
+STAGGER="${STAGGER:-$DEFAULT_STAGGER}"  # seconds between two launches
 THROTTLE_WAIT="${THROTTLE_WAIT:-900}"
 OUT="$Q/results"; mkdir -p "$OUT"
 LOG="$Q/queue.log"

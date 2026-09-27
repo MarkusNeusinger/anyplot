@@ -271,6 +271,51 @@ gh workflow run bulk-generate.yml -f specification_id=all -f library=matplotlib
 
 ---
 
+## Pipeline models
+
+`impl-generate.yml` picks the Claude model for each (spec, library) pair and
+threads it into the review and every repair of that pair's PR:
+
+| Situation | Model |
+|-----------|-------|
+| First implementation: the pair has no implementation file on `origin/main` yet | Opus |
+| Regeneration: the pair already has an implementation on `origin/main` | Sonnet |
+| Forced regeneration: a regeneration dispatched with `regen_gate=false` (see [Regen gate](#regen-gate-regenerations)) | Opus |
+| Explicit `model` input (`haiku`, `sonnet`, or `opus`) | That model, for every pair |
+
+The routing applies whenever nobody chooses a model: a `generate:{library}`
+label, a `bulk-generate.yml` or `daily-regen.yml` run with the default
+`model=auto`, and the watchdog's generation retries. A failed generation
+forwards its resolved model to its own retry, so a first run stays on Opus.
+The run summary, the issue preview comment, and the PR body show the resolved
+model; the preview comment and the summary also show why, for example
+`opus (first implementation)`.
+
+Review and repair runs that arrive without a model, such as
+`impl-review-retry.yml`, the watchdog's review and repair rescues, or a manual
+`gh workflow run impl-review.yml -f pr_number=N`, read the `**Model:**` line
+from the PR body, so an explicit pin survives a rescue. Only a PR without that
+line is routed again.
+
+If `origin/main` can't be read, `impl-generate.yml` fails instead of guessing.
+Review and repair log a warning and assume a first run (Opus).
+
+To pin one model for a whole run, pass it explicitly:
+
+```bash
+gh workflow run bulk-generate.yml -f specification_id=scatter-basic -f library=all -f model=sonnet
+```
+
+`bulk-generate.yml` waits 180 seconds between dispatches for `model=auto` or
+`opus`, and 120 seconds for `sonnet` or `haiku`; `pace_seconds` overrides
+either default.
+
+The other pipeline LLM steps use fixed models: `spec-create.yml` runs on Opus,
+and the spec polish and cross-library similarity audit in `daily-regen.yml` run
+on Sonnet.
+
+---
+
 ## CLI model tiers
 
 The agentic workflows use abstract model tiers (`small`, `medium`, `large`) instead of CLI-specific model names. This allows the same command to work across different AI tools.

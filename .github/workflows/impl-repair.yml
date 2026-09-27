@@ -24,11 +24,12 @@ on:
         required: true
         type: string
       model:
-        description: "Claude model to use (also threaded back into review)"
+        description: "Claude model (also threaded back into review); auto = opus while the pair has no implementation on main, else sonnet"
         required: false
         type: choice
-        default: 'sonnet'
+        default: 'auto'
         options:
+          - auto
           - haiku
           - sonnet
           - opus
@@ -98,6 +99,69 @@ jobs:
           echo "ext=$EXT"           >> $GITHUB_OUTPUT
           echo "::notice::Repair: $LANGUAGE/$LIBRARY (ext: $EXT)"
 
+      - name: Resolve model
+        id: model
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          MODEL_INPUT: ${{ inputs.model }}
+          SPEC_ID: ${{ inputs.specification_id }}
+          LIBRARY: ${{ inputs.library }}
+          LANGUAGE: ${{ steps.lang.outputs.language }}
+          EXT: ${{ steps.lang.outputs.ext }}
+        run: |
+          # impl-review always forwards the model it resolved. "auto" (the
+          # dispatch default) comes from rescues that carry none (the
+          # watchdog's repair re-dispatches, a manual restart). They take the
+          # model impl-generate recorded in the PR body ("**Model:**"), so an
+          # explicit pin survives; only a PR without that line routes like
+          # impl-generate — opus while the pair has no implementation on
+          # origin/main yet (its first run), sonnet for a regeneration.
+          MODEL="${MODEL_INPUT:-auto}"
+          MODEL_FROM="input"
+          if [ "$MODEL" = "auto" ]; then
+            # Same retry shape as impl-review's "Extract PR info": three
+            # attempts with linear backoff (5 s, 10 s). A failed lookup must
+            # not pass for "no Model line" and silently reroute a pinned
+            # model, so fail closed once the attempts are spent.
+            BODY=""
+            LOOKUP_OK=""
+            for attempt in 1 2 3; do
+              if BODY=$(gh pr view "$PR_NUMBER" --json body -q .body 2> /tmp/pr-body.err); then
+                LOOKUP_OK=1
+                break
+              fi
+              PERR=$(head -c 500 /tmp/pr-body.err | tr '\n' ' ')
+              echo "::warning::gh pr view failed (attempt ${attempt}/3): ${PERR}"
+              if [ "$attempt" -lt 3 ]; then
+                sleep $((attempt * 5))
+              fi
+            done
+            if [ -z "$LOOKUP_OK" ]; then
+              echo "::error::gh pr view failed after 3 attempts for PR #${PR_NUMBER} — cannot read the PR's recorded model"
+              exit 1
+            fi
+            MODEL_BODY=$(echo "$BODY" | tr -d '\r' | grep -oP '^\*\*Model:\*\* \K(haiku|sonnet|opus)$' | head -1 || true)
+            MODEL="${MODEL_BODY:-auto}"
+            MODEL_FROM="PR body"
+          fi
+          if [ "$MODEL" = "auto" ]; then
+            MODEL_FROM="routing"
+            if git rev-parse -q --verify origin/main >/dev/null \
+               || git fetch -q origin +refs/heads/main:refs/remotes/origin/main; then
+              if git cat-file -e "origin/main:plots/$SPEC_ID/implementations/$LANGUAGE/$LIBRARY$EXT" 2>/dev/null; then
+                MODEL="sonnet"
+              else
+                MODEL="opus"
+              fi
+            else
+              echo "::warning::origin/main unavailable — routing assumes a first run (opus)"
+              MODEL="opus"
+            fi
+          fi
+          echo "model=$MODEL" >> "$GITHUB_OUTPUT"
+          echo "::notice::Repair model: $MODEL (from $MODEL_FROM)"
+
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
@@ -163,7 +227,7 @@ jobs:
         uses: anthropics/claude-code-action@4036a180cf690f49529f5d8c79c998855287f590  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: "--model ${{ inputs.model || 'sonnet' }} --settings ${{ github.workspace }}/.claude/settings.json"
+          claude_args: "--model ${{ steps.model.outputs.model }} --settings ${{ github.workspace }}/.claude/settings.json"
           allowed_bots: '*'
           prompt: |
             Read `prompts/workflow-prompts/impl-repair-claude.md` and follow those instructions.
@@ -183,7 +247,7 @@ jobs:
         uses: anthropics/claude-code-action@4036a180cf690f49529f5d8c79c998855287f590  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: "--model ${{ inputs.model || 'sonnet' }} --settings ${{ github.workspace }}/.claude/settings.json"
+          claude_args: "--model ${{ steps.model.outputs.model }} --settings ${{ github.workspace }}/.claude/settings.json"
           allowed_bots: '*'
           prompt: |
             Read `prompts/workflow-prompts/impl-repair-claude.md` and follow those instructions.
@@ -283,7 +347,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ inputs.pr_number }}
-          MODEL: ${{ inputs.model || 'sonnet' }}
+          MODEL: ${{ steps.model.outputs.model }}
         run: |
           # Use repository_dispatch as workaround for workflow_dispatch caching issue
           gh api repos/${{ github.repository }}/dispatches \
@@ -305,7 +369,9 @@ jobs:
           SPEC_ID: ${{ inputs.specification_id }}
           LIBRARY: ${{ inputs.library }}
           ATTEMPT: ${{ inputs.attempt }}
-          MODEL: ${{ inputs.model || 'sonnet' }}
+          # The resolved model when "Resolve model" ran; a crash before it
+          # forwards the raw input and lets the retry resolve again.
+          MODEL: ${{ steps.model.outputs.model || inputs.model || 'auto' }}
         run: |
           # Restore ai-rejected label that was removed at start of repair so the
           # PR state stays consistent (otherwise it looks "stuck approved").
