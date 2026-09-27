@@ -78,6 +78,15 @@ with evidence — never let the user ask "still running?".
   21 min is normal, NOT a stall**.
 - **Repairs are routine** (`Repair: <lib> … (attempt 1)`) — most libs
   need one; the 4-attempt cascade (90/80/70/60/50) is the design.
+- **Regenerations never repair.** A pair that already has an
+  implementation on main (every `daily-regen` pick) gets one review;
+  the regen gate then either merges (`regen:improved` + `ai-approved`)
+  or closes the PR (`regen:kept`) and re-adds `impl:<lib>:done`. A
+  kept regen is a normal outcome, not a failure — `impl:<lib>:done`
+  is the completion signal either way. Grep the review log for
+  `::notice::regen_gate` for the reason. Never promote a kept PR's
+  staging render by hand; to force a replacement, re-dispatch with
+  `-f regen_gate=false`.
 - **Review/merge runs are titled `Review: PR #N` / `Merge: PR #N`** —
   no spec name, so you cannot filter them by spec. Because specs run
   sequentially, ANY in_progress/queued `bulk-generate`/`impl-*` run
