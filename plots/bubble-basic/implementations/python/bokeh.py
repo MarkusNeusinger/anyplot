@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: bokeh 3.10.0 | Python 3.13.15
-Quality: 90/100 | Created: 2026-09-26
+Quality: 93/100 | Created: 2026-09-27
 """
 
 import os
@@ -10,7 +10,16 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import BoxAnnotation, ColumnDataSource, HoverTool, Label, LinearColorMapper, Range1d
+from bokeh.models import (
+    Arrow,
+    BoxAnnotation,
+    ColumnDataSource,
+    HoverTool,
+    Label,
+    LinearColorMapper,
+    NormalHead,
+    Range1d,
+)
 from bokeh.plotting import figure
 from bokeh.transform import transform
 from selenium import webdriver
@@ -88,7 +97,7 @@ p = figure(
 p.x_range = Range1d(start=x_start, end=x_end)
 p.y_range = Range1d(start=y_start, end=y_end)
 
-p.scatter(
+main_renderer = p.scatter(
     x="density",
     y="income",
     size="size",
@@ -97,10 +106,17 @@ p.scatter(
     fill_alpha=0.65,
     line_color=PAGE_BG,
     line_width=2,
+    # Bokeh-specific hover_* vectorized props auto-build a hover glyph: the
+    # bubble under the cursor snaps to full opacity with an ink outline, no
+    # custom JS required.
+    hover_fill_alpha=1.0,
+    hover_line_color=INK,
+    hover_line_width=3,
 )
 
-# Hover tool
+# Hover tool — scoped to the main data renderer only (skip the legend swatches)
 hover = HoverTool(
+    renderers=[main_renderer],
     tooltips=[
         ("Density", "@density_display{,} people/km²"),
         ("Income", "$@income_display{0.0}k"),
@@ -115,6 +131,12 @@ trend_coeffs = np.polyfit(population_density, median_income, 1)
 x_trend = np.linspace(x_start, x_end, 100)
 y_trend = np.polyval(trend_coeffs, x_trend)
 p.line(x=x_trend, y=y_trend, line_color=INK_SOFT, line_dash="dashed", line_width=5, line_alpha=0.5)
+
+# Outlier callout — the point furthest above the trend line
+residual = median_income - np.polyval(trend_coeffs, population_density)
+outlier_idx = int(np.argmax(residual))
+outlier_x = population_density[outlier_idx]
+outlier_y = median_income[outlier_idx]
 
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
@@ -135,8 +157,8 @@ p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
 
-p.xaxis.axis_line_color = INK_SOFT
-p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.axis_line_color = None
+p.yaxis.axis_line_color = None
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
 p.xaxis.minor_tick_line_color = None
@@ -205,6 +227,31 @@ for i, (sz, lbl, gv) in enumerate(zip(ref_sizes, ref_labels, ref_green, strict=T
             text_color=INK_SOFT,
         )
     )
+
+# Outlier callout — arrow + label pointing at the point furthest above trend
+p.add_layout(
+    Arrow(
+        end=NormalHead(size=14, fill_color=INK_SOFT, line_color=INK_SOFT),
+        x_start=outlier_x + x_range * 0.09,
+        y_start=outlier_y + y_range * 0.055,
+        x_end=outlier_x + x_range * 0.012,
+        y_end=outlier_y + y_range * 0.012,
+        line_color=INK_SOFT,
+        line_width=3,
+    )
+)
+p.add_layout(
+    Label(
+        x=outlier_x + x_range * 0.095,
+        y=outlier_y + y_range * 0.06,
+        text="Outlier: income well above trend",
+        text_font_size="28pt",
+        text_font_style="italic",
+        text_color=INK_SOFT,
+        text_align="left",
+        text_baseline="bottom",
+    )
+)
 
 # Save HTML
 output_file(f"plot-{THEME}.html")

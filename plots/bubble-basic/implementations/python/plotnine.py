@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: plotnine 0.15.8 | Python 3.13.15
-Quality: 93/100 | Updated: 2026-09-26
+Quality: 93/100 | Updated: 2026-09-27
 """
 
 import os
@@ -17,8 +17,9 @@ from plotnine import (
     geom_point,
     geom_smooth,
     ggplot,
+    guide_legend,
     labs,
-    scale_color_manual,
+    scale_fill_manual,
     scale_size_area,
     scale_x_continuous,
     scale_y_continuous,
@@ -64,16 +65,28 @@ df["region"] = pd.Categorical(df["region"], categories=regions, ordered=True)
 
 # Plot
 plot = (
-    ggplot(df, aes(x="gdp_per_capita", y="life_expectancy", size="population", color="region"))
+    ggplot(df, aes(x="gdp_per_capita", y="life_expectancy", size="population", fill="region"))
     + geom_smooth(
         aes(x="gdp_per_capita", y="life_expectancy"), method="lm", se=False, color=INK_SOFT, size=0.7, inherit_aes=False
     )
-    + geom_point(alpha=0.65, stroke=0.4)
+    # geom_point's default shape already splits fill (region color) from edge
+    # (color); fixing color to the page bg gives each bubble a subtle halo that
+    # separates it from overlapping neighbors
+    + geom_point(color=PAGE_BG, alpha=0.65, stroke=0.5)
     # limits=(0, 100) anchors the area scaling to a true zero baseline; without it
     # plotnine anchors the sqrt-area formula to the data's own min, which maps the
-    # smallest (floor-clipped) bubbles to a near-zero rendered size
-    + scale_size_area(max_size=18, breaks=[20, 50, 90], limits=(0, 100), name="Population (M)")
-    + scale_color_manual(values=IMPRINT_PALETTE[:4], name="Region")
+    # smallest (floor-clipped) bubbles to a near-zero rendered size.
+    # override_aes gives the size-legend's key glyphs a visible INK_SOFT fill/edge —
+    # without it they'd inherit geom_point's fixed color=PAGE_BG stroke, which blends
+    # into the PAGE_BG legend_key background and renders as empty boxes.
+    + scale_size_area(
+        max_size=18,
+        breaks=[20, 50, 90],
+        limits=(0, 100),
+        name="Population (M)",
+        guide=guide_legend(override_aes={"fill": INK_SOFT, "color": INK_SOFT, "alpha": 1}),
+    )
+    + scale_fill_manual(values=IMPRINT_PALETTE[:4], name="Region")
     + scale_x_continuous(labels=lambda lst: [f"${v:.0f}k" for v in lst], breaks=[10, 20, 30, 40, 50, 60, 70, 80])
     + scale_y_continuous(labels=lambda lst: [f"{v:.0f}" for v in lst])
     + labs(
@@ -96,7 +109,6 @@ plot = (
         legend_key=element_rect(fill=PAGE_BG, color="none"),
         legend_background=element_rect(fill=ELEVATED_BG, color="none"),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
-        panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color="none"),
