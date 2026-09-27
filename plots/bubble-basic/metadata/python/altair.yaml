@@ -2,9 +2,9 @@ library: altair
 language: python
 specification_id: bubble-basic
 created: 2025-12-14 11:07:38+00:00
-updated: '2026-09-27T00:40:15Z'
+updated: '2026-09-27T01:56:55Z'
 generated_by: claude-sonnet
-workflow_run: 36282396574
+workflow_run: 36286311001
 issue: 755
 language_version: 3.13.15
 library_version: 6.3.0
@@ -12,123 +12,137 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/altair/plot-dark.html
-quality_score: 91
+quality_score: 94
 review:
   strengths:
-  - 'Correct Imprint palette in canonical order: Seed=#009E73 (first series), Series
-    A=#C475FD, Series B=#4467A3, Growth=#BD8233 -- identical data hues across both
-    themes with only chrome flipping'
-  - 'Theme chrome fully correct in both renders: warm off-white light / warm near-black
-    dark, all text readable in both'
-  - New top-3-by-revenue highlight rings (stroke-only outline sized to the bubble)
-    give the story an instant visual anchor beyond the text labels -- directly addresses
-    prior DE-03 feedback
-  - Two deliberate counter-examples (a high-funded low-revenue laggard, a capital-efficient
-    low-funded high-revenue climber) break the near-linear funding-to-revenue trend
-    and demonstrate fuller feature coverage -- directly addresses prior DQ-01 feedback
-  - Legend-bound alt.selection_point(bind='legend') dims non-selected stages on click,
-    a distinctive Altair/Vega-Lite capability preserved in the saved interactive HTML
-  - Bubble size correctly encodes area for Market Share with an explicit, clearly
-    labeled size legend
-  - Canvas gate passed cleanly, no edge clipping, KISS structure with fixed seed (np.random.seed(42))
+  - 'Two genuinely distinctive Altair/Vega-Lite features used well: legend-bound point
+    selection (selection_point(bind="legend")) for interactive cohort spotlighting
+    preserved in the HTML output, and transform_regression for a declarative, no-extra-dependency
+    trend line.'
+  - Segment Share is now drawn independently of Stage (a single wide distribution
+    per the code comment), so bubble size carries genuinely new information instead
+    of tracking the color-encoded cohort - fixes the attempt-1 DQ-01 redundancy finding.
+  - Segment Share is reframed as each company's own addressable-segment share rather
+    than a single global market, so the 10-62% values no longer imply an impossible
+    >100% total across 51 companies - fixes the attempt-1 DQ-03 finding.
+  - Tick marks are now removed on both axes (ticks=False) alongside the domain lines,
+    matching the style guide's decoration-removal checklist - fixes the attempt-1
+    DE-02 finding.
+  - Axis and legend labelFontSize bumped to 11-12 (from 10), improving mobile-scale
+    legibility while staying proportionate to the generous surrounding whitespace
+    - fixes the attempt-1 VQ-01 finding.
+  - 'Clear data storytelling: top-3-by-revenue companies get outline rings plus collision-avoided
+    text callouts, and two deliberate counter-example points (a capital-inefficient
+    laggard, a capital-efficient climber) break the naive funding-to-revenue trend.'
+  - Correct area-based size encoding (mark_circle size channel, matching the spec's
+    "scale by area not radius" note), density-appropriate alpha, and canonical Imprint
+    palette order held pixel-identical across both theme renders.
+  - 'Clean KISS script: explicit font sizes throughout, theme tokens threaded through
+    axis/legend/view/title configs, reproducible via np.random.seed(42), and the mandatory
+    PAD-to-target canvas safety block correctly implemented.'
   weaknesses:
-  - The dense overlap cluster around Funding $68-72M (the ringed top-3 Growth bubble
-    stacked with a Series B bubble and another Growth bubble) still blends colors
-    at the intersection -- opacity was left at 0.58 from the prior attempt; try 0.5
-    for just that region or add a touch more positional separation
-  - 'LM-02: the legend-bound click-to-highlight selection is Altair-specific but remains
-    a fairly common recipe -- a more unusual Vega-Lite feature (e.g. a cross-filtering
-    second view, a regression trend layer) would push Library Mastery higher'
+  - The x=70 cluster still overlaps a Series B (blue) and two Growth (ochre) bubbles
+    at near-identical positions, blending into a muddy gray-brown patch that briefly
+    obscures the Stage color encoding at that spot - consider a small manual jitter
+    or slightly lower opacity there.
+  - The three top-3-revenue annotations all read "Growth · $...M" since the top 3
+    by revenue happen to share one stage, which limits the label's incremental storytelling
+    value versus a single occurrence.
+  - The Segment Share size-legend swatches are rendered in brand green (symbolFillColor)
+    regardless of a bubble's actual Stage color, which is a common Vega-Lite convention
+    for size legends but could be misread as implying the size legend only applies
+    to the Seed category.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 -- not pure white.
-      Chrome: Bold dark title "bubble-basic · python · altair · anyplot.ai" and a gray subtitle "Tech Startup Metrics — Funding vs Revenue by Stage & Market Share" are both clearly readable. Axis titles "Funding ($M)" and "Revenue ($M)" are dark and legible; tick labels and gridlines are soft gray/subtle but visible. Two legends on the right (Stage, Market Share (%)) sit in an off-white elevated panel, fully inside the canvas with no clipping.
-      Data: Four stage cohorts (Seed, Series A, Series B, Growth) render as translucent bubbles sized by Market Share. Seed = #009E73 (brand green, first series), Series A = lavender #C475FD, Series B = blue #4467A3, Growth = ochre #BD8233 -- canonical Imprint order. The top-3-by-revenue Growth bubbles carry a dark stroke-only highlight ring plus a bold text label ("Growth · $103.0M", "Growth · $100.6M", "Growth · $75.9M"). One dense overlap cluster near Funding $68-72M blends the ringed Growth bubble with an underlying Series B and a second Growth bubble into a slightly muddy intersection color.
-      Legibility verdict: PASS (all title/axis/tick/legend text is clearly readable against the light background; no light-on-light text).
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Bold dark title "bubble-basic · python · altair · anyplot.ai" centered at top with a gray subtitle "Tech Startup Metrics — Funding vs Revenue by Stage & Segment Share" beneath it. Axis titles "Funding ($M)" / "Revenue ($M)" carry units in dark ink; tick labels in soft gray; subtle gridlines at low opacity; no axis domain lines or tick marks (removed per style guide). Legend panels ("Stage" and "Segment Share (%)") sit to the right with a light elevated fill and no border. All chrome is clearly legible against the light background.
+      Data: First categorical series (Seed) is the brand green #009E73; Series A is lavender, Series B is blue, Growth is ochre - matches canonical Imprint order. Bubbles are alpha-blended (~0.5-0.65) and area-scaled by Segment Share, with a light stroke separating overlaps. A dashed gray regression line runs through the cluster, and the top-3-by-revenue bubbles carry a dark outline ring plus bold text callouts ("Growth · $103.0M", etc.).
+      Legibility verdict: PASS - no light-on-light issues; all text and data are clearly distinguishable from the background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 -- not pure black.
-      Chrome: Title, subtitle, axis titles, tick labels, and both legend panels flip to light/white text on a dark elevated panel -- no dark-on-dark failures observed anywhere.
-      Data: The four stage bubble hues (green/lavender/blue/ochre) are the same underlying Imprint hex values as the light render -- only the alpha-blended appearance against the black background differs (an expected consequence of the 0.58 opacity used to handle bubble overlap, not a palette change). The same overlap cluster near Funding $68-72M shows the same color-blending softness as in the light render.
-      Legibility verdict: PASS (all text is light-colored and clearly readable against the dark background; brand green #009E73 still reads well).
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title and axis titles flip to light cream, tick labels/subtitle/legend text flip to light gray, the highlight-ring stroke flips from dark ink to cream so it stays visible against the dark surface, and legend panels use the dark elevated background (#242420-consistent). Grid lines remain subtle.
+      Data: Same four Imprint hues (green/lavender/blue/ochre) as the light render, confirming the data-color channel is identical across themes and only chrome flipped.
+      Legibility verdict: PASS - no dark-on-dark failures; title, axis labels, tick labels, legend text, and annotation callouts are all clearly readable against the dark background.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 16, subtitle 12, axis title
-          12, ticks/legend 10); well-proportioned, no overflow, readable in both themes
+        comment: All font sizes explicit and readable in both themes; labelFontSize
+          bumped to 11-12 (from 10) since attempt 1, fixing the borderline mobile-scale
+          legibility
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions; annotation offsets avoid
-          the labels themselves
+        comment: No text/data collisions; annotation offsets avoid the ringed bubbles
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Mostly well adapted, but the Funding $68-72M cluster still blends
-          Series B/Growth bubble colors at the overlap (opacity unchanged at 0.58
-          from prior attempt)
+        comment: Area-based sizing + density-appropriate alpha reads well; the x=70
+          overlap cluster is still slightly busy where Series B and Growth bubbles
+          blend
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette, good contrast, no red-green as sole signal
+        comment: CVD-safe Imprint palette, alpha aids overlap discrimination, no red-green-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; balanced margins; legend adjacent to plot; good
-          canvas utilization
+        comment: Canvas gate passed at 3200x1800, balanced margins, legend adjacent,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Both axis titles descriptive with units: Funding ($M), Revenue ($M)'
+        comment: Both axes carry units ($M, %)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; canonical order for remaining 3 stages; theme-correct
-          chrome in both renders; data hues identical across themes'
+        comment: 'First series #009E73, canonical Imprint order, theme-correct backgrounds
+          and chrome in both renders'
     design_excellence:
-      score: 17
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, alpha blending, stroke highlight rings, subtitle
-          context -- clearly above a configured default
+        comment: Thoughtful hierarchy (title/subtitle, trend line, annotations), clearly
+          above defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Axis domain lines removed, subtle 0.15-opacity grid, generous whitespace
+        comment: Axis domain lines and tick marks now removed (fixing attempt-1 finding),
+          subtle grid, borderless legend
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Top-3 highlight rings + revenue-value labels + two counter-example
-          outliers create an instantly-visible focal point, an improvement over the
-          prior text-only callouts
+        comment: Top-3-revenue rings + callouts and regression context give an immediate,
+          clear insight
     spec_compliance:
       score: 15
       max: 15
@@ -138,30 +152,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bubble chart: x/y position plus size-encoded third dimension'
+        comment: Correct bubble chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Size legend present, alpha transparency (0.58/0.1) handles overlap
-          as spec recommends
+        comment: Area-based sizing, alpha transparency, size legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Funding on x, Revenue on y, Market Share on size -- all correctly
-          assigned and fully visible in-domain
+        comment: Funding on x, Revenue on y, full range visible within fixed domains
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels match Stage
-          and Market Share (%) data
+        comment: Title matches mandated format exactly; legend matches Stage categories
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -169,21 +180,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four stage cohorts across the full size range (10-58%), plus two
-          deliberate outliers (laggard, climber) breaking the near-linear trend
+        comment: Segment Share now drawn independently of Stage, so bubble size adds
+          genuinely new information (fixes attempt-1 redundancy finding)
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral tech-startup funding/revenue/market-share scenario
+        comment: Neutral, comprehensible startup-funding scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Funding/revenue/market-share ranges and stage-wise progressions are
-          realistic for the domain
+        comment: Reframed as per-company addressable-segment share, so values no longer
+          imply an impossible >100% total (fixes attempt-1 finding)
     code_quality:
       score: 10
       max: 10
@@ -193,7 +204,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -205,21 +216,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas, PIL all used
+        comment: os, altair, numpy, pandas, PIL (used for canvas padding) - all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity for a layered annotated bubble chart
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html via current Altair API
+        comment: Correct plot-{THEME}.png/.html, current vl-convert API, PAD-to-target
+          block present
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -227,27 +239,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Layered Chart composition, alt.Size/alt.Color/alt.condition, high-level
-          Vega-Lite grammar throughout
+        comment: High-level Chart/mark/encode API, layered composition, declarative
+          transforms
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Legend-bound alt.selection_point is Altair-specific but a fairly
-          common recipe, unchanged from the prior attempt
+        comment: Legend-bound selection_point and transform_regression are genuinely
+          Altair/Vega-Lite-specific
   verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - annotations
   - layer-composition
-  - html-export
+  - annotations
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - regression
   styling:
   - alpha-blending
   - edge-highlighting
