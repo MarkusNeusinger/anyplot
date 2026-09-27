@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 90/100 | Created: 2026-05-08
+Library: altair 6.3.0 | Python 3.13.15
+Quality: 88/100 | Updated: 2026-09-27
 """
 
 import os
@@ -15,6 +15,7 @@ del _script_dir
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -25,6 +26,14 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Per-segment percentage-label text color, chosen for >=4.5:1 contrast against
+# each fixed Imprint fill (data colors don't change with theme).
+LABEL_TEXT_COLOR = {
+    "Very Comfortable": "#FFFFFF",
+    "Comfortable": "#1A1A17",
+    "Neutral": "#FFFFFF",
+    "Uncomfortable": "#1A1A17",
+}
 
 # Data — technology comfort survey by age group
 age_groups = ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"]
@@ -78,6 +87,7 @@ for age in age_groups:
                 "count": cnt,
                 "total": total,
                 "pct_label": f"{prop:.0%}" if prop >= 0.10 else "",
+                "label_color": LABEL_TEXT_COLOR[cat],
             }
         )
         y_acc = y1
@@ -93,7 +103,7 @@ label_expr = " : ".join(
 # Spine bars
 bars = (
     alt.Chart(spine_df)
-    .mark_rect(stroke=PAGE_BG, strokeWidth=1.5)
+    .mark_rect(stroke=PAGE_BG, strokeWidth=0.5)
     .encode(
         x=alt.X(
             "x_start:Q",
@@ -103,14 +113,14 @@ bars = (
                 labelExpr=label_expr,
                 labelAngle=0,
                 title="Age Group",
-                titleFontSize=22,
-                labelFontSize=18,
+                titleFontSize=12,
+                labelFontSize=10,
                 domainColor=INK_SOFT,
                 tickColor=INK_SOFT,
                 labelColor=INK_SOFT,
                 titleColor=INK,
                 grid=False,
-                tickSize=6,
+                tickSize=4,
             ),
         ),
         x2="x_end:Q",
@@ -120,8 +130,8 @@ bars = (
             axis=alt.Axis(
                 format="%",
                 title="Proportion of Respondents",
-                titleFontSize=22,
-                labelFontSize=18,
+                titleFontSize=12,
+                labelFontSize=10,
                 domainColor=INK_SOFT,
                 tickColor=INK_SOFT,
                 labelColor=INK_SOFT,
@@ -137,14 +147,14 @@ bars = (
             scale=alt.Scale(domain=comfort_cats, range=IMPRINT),
             legend=alt.Legend(
                 title="Technology Comfort",
-                titleFontSize=18,
-                labelFontSize=16,
+                titleFontSize=10,
+                labelFontSize=10,
                 fillColor=ELEVATED_BG,
                 strokeColor=INK_SOFT,
                 titleColor=INK,
                 labelColor=INK_SOFT,
                 orient="right",
-                padding=10,
+                padding=6,
             ),
         ),
         tooltip=[
@@ -159,11 +169,12 @@ bars = (
 # Percentage labels inside segments wide enough to fit text
 pct_labels = (
     alt.Chart(spine_df[spine_df["pct_label"] != ""])
-    .mark_text(align="center", baseline="middle", fontSize=13, fontWeight="bold", color="white")
+    .mark_text(align="center", baseline="middle", fontSize=10, fontWeight="bold")
     .encode(
         x=alt.X("x_mid:Q", scale=alt.Scale(domain=[0, 1])),
         y=alt.Y("y_mid:Q", scale=alt.Scale(domain=[0, 1])),
         text="pct_label:N",
+        color=alt.Color("label_color:N", scale=None, legend=None),
     )
 )
 
@@ -171,21 +182,37 @@ pct_labels = (
 chart = (
     alt.layer(bars, pct_labels)
     .properties(
-        width=1600,
-        height=900,
+        width=595,
+        height=320,
         background=PAGE_BG,
         title=alt.TitleParams(
-            "Technology Comfort by Age Group · bar-spine · altair · anyplot.ai",
-            fontSize=28,
+            "Technology Comfort by Age Group · bar-spine · python · altair · anyplot.ai",
+            subtitle="Comfort with technology collapses sharply past age 55",
+            fontSize=16,
+            subtitleFontSize=11,
             color=INK,
+            subtitleColor=INK_SOFT,
             anchor="start",
-            offset=20,
+            offset=10,
         ),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
-    .configure_title(color=INK, fontSize=28)
+    .configure_view(fill=PAGE_BG, stroke=None, continuousWidth=595, continuousHeight=320)
+    .configure_title(color=INK, fontSize=16)
 )
 
-# Save
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save — hard target: 3200 x 1800 (landscape). See prompts/library/altair.md "Canvas".
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
