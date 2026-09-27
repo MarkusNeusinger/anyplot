@@ -6,6 +6,7 @@
 using CairoMakie
 using Colors
 using Random
+using Statistics
 
 Random.seed!(42)
 
@@ -23,8 +24,9 @@ const IMPRINT_PALETTE = [colorant"#009E73", colorant"#C475FD", colorant"#4467A3"
 #   revenue peaks disproportionately for mid-to-high budget films (~$80-150M
 #   "franchise sweet spot") before diminishing returns set in on ultra-high
 #   budget tentpoles.
-n           = 65
-budget_norm = rand(n)                              # uniform [0, 1]
+n           = 90
+budget_norm = rand(n) .^ 1.4                       # skewed toward low end — more indie
+                                                    # films than tentpoles, as in real slates
 budget      = 5.0 .+ 245.0 .* budget_norm          # $5M-$250M production budget
 
 # Rating rises mildly with budget (r ≈ 0.5): bigger productions afford more polish
@@ -42,7 +44,7 @@ box_office = clamp.(
 # bubble stays legible and dense clusters overlap less.
 s_min, s_max = extrema(box_office)
 s_norm       = (box_office .- s_min) ./ (s_max - s_min)
-marker_sizes = 15.0 .+ 45.0 .* sqrt.(s_norm)
+marker_sizes = 15.0 .+ 42.0 .* sqrt.(s_norm)
 
 # Production scale — a distinct categorical variable (not derived from box
 # office) so color and size each carry their own signal instead of duplicating one.
@@ -62,7 +64,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title             = title_str,
-    titlesize         = 20,
+    titlesize         = 25,
     titlecolor        = INK,
     xlabel            = "Production Budget (USD Millions)",
     ylabel            = "Critic Rating (out of 10)",
@@ -102,7 +104,7 @@ text!(ax, 115.0, 9.6;
 scatter!(ax, budget, rating;
     color       = point_color,
     markersize  = marker_sizes,
-    alpha       = 0.55,
+    alpha       = 0.5,
     strokewidth = 1.0,
     strokecolor = RGBAf(INK.r, INK.g, INK.b, 0.4),
 )
@@ -148,6 +150,38 @@ Legend(fig[1, 2],
     patchsize       = (60, 40),
     labelsize       = 13,
 )
+
+# Inset axis — Makie's GridLayout lets a second Axis be placed directly on
+# top of another cell via relative width/height/align, a composition trick
+# most other plotting libraries need a separate subplot grid for. Placed in
+# the sparse low-budget/high-rating corner so it doesn't cover data.
+avg_revenue = [mean(box_office[tier_idx .== i]) for i in eachindex(IMPRINT_PALETTE)]
+
+inset_ax = Axis(fig[1, 1];
+    width           = Relative(0.26),
+    height          = Relative(0.26),
+    halign          = 0.02,
+    valign          = 0.98,
+    backgroundcolor = ELEVATED_BG,
+    title           = "Avg. Revenue by Tier",
+    titlesize       = 11,
+    titlecolor      = INK_SOFT,
+    xticks          = (1:3, ["Indie", "Studio", "Block."]),
+    xticklabelsize  = 9,
+    xticklabelcolor = INK_MUTED,
+    ylabel          = "\$M",
+    ylabelsize      = 9,
+    ylabelcolor     = INK_MUTED,
+    yticklabelsize  = 9,
+    yticklabelcolor = INK_MUTED,
+    topspinevisible   = false,
+    rightspinevisible = false,
+    leftspinecolor    = INK_SOFT,
+    bottomspinecolor  = INK_SOFT,
+    xgridvisible      = false,
+    ygridvisible      = false,
+)
+barplot!(inset_ax, 1:3, avg_revenue; color = IMPRINT_PALETTE, strokewidth = 0)
 
 # Tighten the gap between the plot panel and the legend column — a small,
 # layout-aware polish that Makie's GridLayout makes trivial.
