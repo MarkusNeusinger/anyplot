@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
 Library: seaborn 0.13.2 | Python 3.13.15
 Quality: 86/100 | Updated: 2026-09-27
@@ -39,6 +39,13 @@ sns.set_theme(
         "legend.edgecolor": INK_SOFT,
     },
 )
+sns.set_context("notebook", font_scale=1.0)
+
+# Route the two fill colors through seaborn's palette machinery (matplotlib's
+# ax.bar draws the bars themselves — sns.barplot can't vary bar width per
+# category — but the color lookup for every segment is genuine seaborn usage).
+sns.set_palette(IMPRINT)
+palette = sns.color_palette()
 
 # Data — customers acquired per channel, six months later split into retained/churned
 channels = ["Referral", "Organic Search", "Email", "Direct", "Paid Social"]
@@ -48,7 +55,7 @@ channel_totals = retained_counts + churned_counts
 total_customers = channel_totals.sum()
 
 fill_order = ["Retained", "Churned"]
-colors = [IMPRINT[0], IMPRINT[4]]
+colors = [palette[0], palette[4]]
 
 widths = channel_totals / total_customers
 x_positions = np.cumsum(np.concatenate([[0], widths[:-1]]))
