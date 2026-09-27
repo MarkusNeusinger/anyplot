@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 83/100 | Updated: 2026-09-27
@@ -17,6 +17,7 @@ from plotnine import (
     geom_point,
     geom_smooth,
     ggplot,
+    guide_legend,
     labs,
     scale_fill_manual,
     scale_size_area,
@@ -74,8 +75,17 @@ plot = (
     + geom_point(color=PAGE_BG, alpha=0.65, stroke=0.5)
     # limits=(0, 100) anchors the area scaling to a true zero baseline; without it
     # plotnine anchors the sqrt-area formula to the data's own min, which maps the
-    # smallest (floor-clipped) bubbles to a near-zero rendered size
-    + scale_size_area(max_size=18, breaks=[20, 50, 90], limits=(0, 100), name="Population (M)")
+    # smallest (floor-clipped) bubbles to a near-zero rendered size.
+    # override_aes gives the size-legend's key glyphs a visible INK_SOFT fill/edge —
+    # without it they'd inherit geom_point's fixed color=PAGE_BG stroke, which blends
+    # into the PAGE_BG legend_key background and renders as empty boxes.
+    + scale_size_area(
+        max_size=18,
+        breaks=[20, 50, 90],
+        limits=(0, 100),
+        name="Population (M)",
+        guide=guide_legend(override_aes={"fill": INK_SOFT, "color": INK_SOFT, "alpha": 1}),
+    )
     + scale_fill_manual(values=IMPRINT_PALETTE[:4], name="Region")
     + scale_x_continuous(labels=lambda lst: [f"${v:.0f}k" for v in lst], breaks=[10, 20, 30, 40, 50, 60, 70, 80])
     + scale_y_continuous(labels=lambda lst: [f"{v:.0f}" for v in lst])
