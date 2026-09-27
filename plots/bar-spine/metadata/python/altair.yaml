@@ -2,123 +2,132 @@ library: altair
 language: python
 specification_id: bar-spine
 created: '2026-05-08T15:47:46Z'
-updated: '2026-05-08T15:54:39Z'
+updated: '2026-09-27T03:24:06Z'
 generated_by: claude-sonnet
-workflow_run: 25564513508
+workflow_run: 36290477339
 issue: 5249
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.15
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/altair/plot-dark.html
-quality_score: 90
+quality_score: 88
 review:
   strengths:
-  - 'Textbook spine plot implementation: proportional bar widths, normalized stacking,
-    no inter-bar gaps'
-  - Full theme adaptation with all chrome tokens correctly threaded to every element
-  - 'First series = #009E73 and Okabe-Ito order maintained throughout'
-  - Percentage labels inside segments add immediate readability with no overlap
-  - labelExpr (Vega-Lite expression language) for custom x-axis tick placement — sophisticated
-    Altair technique
-  - Deterministic, realistic dataset with a compelling real-world story
+  - Subtitle delivers genuine data storytelling ("Comfort with technology collapses
+    sharply past age 55") that is actually supported by the data ordering (51% ->
+    10% Very Comfortable from 18-24 to 65+).
+  - Percentage-label text color is chosen per-category for contrast against each fixed
+    Imprint fill (LABEL_TEXT_COLOR dict) rather than one hardcoded color -- legible
+    white-on-green/blue and dark-on-purple/amber in both themes.
+  - Bar widths are correctly proportional to marginal age-group totals and segments
+    correctly normalize to 100% height, with bars adjacent (only a thin PAGE_BG-colored
+    separator stroke) -- matches the spine-plot definition precisely.
+  - Custom Vega-Lite labelExpr axis technique centers each age-group tick label at
+    the true bar midpoint despite the irregular variable-width geometry.
+  - Light and dark renders use identical Imprint data colors for all four categories
+    and correctly swap only chrome tokens (background, ink, grid).
   weaknesses:
-  - Full four-sided view enclosure (configure_view stroke) creates a boxed look; removing
-    top/right border would make the plot lighter and more modern
-  - No focal emphasis to guide the viewer to the main insight (comfort collapses in
-    55+ groups); a subtle annotation or highlight would push storytelling to exceptional
+  - Aesthetic sophistication is solid but not exceptional -- beyond the contrast-aware
+    segment labels and subtitle, the chart relies on fairly standard bar/legend chrome
+    with no distinguishing visual flourish.
+  - Y-axis gridlines (gridOpacity=0.10) are barely visible at final scale in both
+    renders -- could be nudged up slightly (e.g. 0.15) for better guide value without
+    becoming heavy.
+  - There is noticeable dead space between the rightmost bar and the legend box at
+    this canvas width -- tightening legend padding/offset would use the space more
+    intentionally.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface
-      Chrome: Title "Technology Comfort by Age Group · bar-spine · altair · anyplot.ai" in dark ink (#1A1A17), clearly readable. Axis labels "Age Group" and "Proportion of Respondents" in dark ink, readable. Y-axis tick labels (0%-100% percentages) and x-axis age group labels in INK_SOFT (#4A4A44), readable. Legend "Technology Comfort" title and labels readable.
-      Data: Six variable-width bars. First series (Very Comfortable) = #009E73 teal. Second (Comfortable) = #D55E00 orange. Third (Neutral) = #0072B2 blue. Fourth (Uncomfortable) = #CC79A7 reddish-purple. White bold percentage labels inside segments ≥10%. All colors clearly distinguishable.
+      Background: Warm off-white (~#FAF8F1), correct light-theme token -- not pure white.
+      Chrome: Title "Technology Comfort by Age Group · bar-spine · python · altair · anyplot.ai" in bold dark ink, subtitle "Comfort with technology collapses sharply past age 55" in softer dark-grey ink, both fully visible with no clipping. Axis titles ("Age Group", "Proportion of Respondents") and tick labels (0%-100%, six age-group categories) render in dark/soft-dark ink, clearly legible against the light background. Legend box ("Technology Comfort") sits at the right with a near-white fill and soft border, all four category labels readable.
+      Data: Six variable-width, adjacent bars (18-24 narrowest through 35-44 widest back down to 65+ narrow), each stacked into four segments colored Very Comfortable=#009E73 (green, first series correct), Comfortable=purple, Neutral=blue, Uncomfortable=amber. Percentage labels inside segments >=10% use white text on green/blue and dark text on purple/amber, all readable.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title in off-white (#F0EFE8), clearly readable. Axis labels and tick labels in light gray (#B8B7B0), readable against dark background. Legend title and labels also in light gray, readable. Medium-gray rectangular border around plot area (configure_view stroke=INK_SOFT=#B8B7B0 in dark mode) — visible and functional. No dark-on-dark failures.
-      Data: Colors identical to light render — same #009E73, #D55E00, #0072B2, #CC79A7 segments with same proportions and white percentage labels.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues
+      Background: Warm near-black (~#1A1A17), correct dark-theme token -- not pure black.
+      Chrome: Same title and subtitle text, now rendered in light ink / soft light-grey, fully legible against the dark background. Axis titles and tick labels use light/soft-light ink, clearly visible, no dark-on-dark failures anywhere (ticks, axis titles, legend text all confirmed legible). Legend box uses a dark elevated fill with light text and soft border, readable.
+      Data: Identical four Imprint colors and identical proportions/segment layout to the light render -- confirmed pixel-for-pixel color parity (green #009E73, purple, blue, amber unchanged). Only chrome (background, text ink, grid, legend fill) flipped between themes, as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=28px, axis labels=22px, tick
-          labels=18px, legend=16px; readable in both themes'
+        comment: All font sizes explicit; fully readable in both themes; minor risk
+          of tick labels feeling small when scaled to ~400px.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; x-axis labels centered under variable-width
-          bars via labelExpr; percentage labels well-placed
+        comment: No collisions between labels, segments, or legend.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All spine segments clearly visible; white stroke separates bars cleanly
+        comment: Large filled segments with clear contrast-aware labels; no overplotting
+          concerns for this chart type.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; good luminance contrast between all
-          four segments
+        comment: Imprint palette used, no red-green-only signal, per-segment label
+          color chosen for contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Bars span full canvas width; proportional widths use space effectively;
-          balanced margins
+        comment: Canvas gate passed (no /tmp gate file); proportions balanced, nothing
+          cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels; y-axis formatted as percentages
+        comment: Descriptive axis titles (Age Group, Proportion of Respondents) with
+          percent formatting.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73; Okabe-Ito order maintained; correct backgrounds;
-          all chrome theme-adaptive'
+        comment: 'First series #009E73; canonical Imprint order; correct light/dark
+          backgrounds; theme-correct in both renders.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Clearly above defaults: correct palette, explicitly sized typography,
-          percentage labels, elevated legend fill. Not quite publication-ready; enclosed
-          border adds visual weight'
+        passed: false
+        comment: Contrast-aware labels and subtitle show real thought, but overall
+          chrome is fairly standard bar/legend styling.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle y-axis-only grid at 10% opacity is good; custom legend frame.
-          configure_view applies full four-sided enclosure rather than L-frame
+        passed: false
+        comment: Spines removed, grid very subtle (arguably too subtle), generous
+          whitespace overall but legend padding leaves dead space.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Declining green segments tell a clear story; variable widths show
-          sample distribution; percentage labels guide reading. Missing focal emphasis
-          on 55+ transition
+        comment: Subtitle explicitly states the trend and the color/segment hierarchy
+          supports it, but no additional emphasis (e.g. highlighting the 65+ bar).
     spec_compliance:
       score: 15
       max: 15
@@ -128,28 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct spine plot: proportional widths + normalized stacked segments'
+        comment: 'Correct spine plot: variable-width bars, normalized stacked segments.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Proportional widths, conditional proportions summing to 100%, no
-          gaps, percentage labels, legend
+        comment: Variable width, 100% normalization, adjacent bars, centered labels,
+          percentage labels, legend -- all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x_category drives bar widths; fill_category drives stacked segments;
-          all data visible
+        comment: X = age group with proportional width, Y = conditional proportion,
+          correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes spec-id (bar-spine), library (altair), and anyplot.ai;
-          legend labels match four comfort categories
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match fill categories.
     data_quality:
       score: 15
       max: 15
@@ -159,22 +168,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 variable-width bars, 4 fill categories, proportional widths showing
-          sample distribution, conditional proportions shifting across age groups
+        comment: Shows marginal width, conditional stacking, normalization, and percentage
+          labels.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Technology comfort survey by age group is a real, neutral, professionally
-          relevant scenario
+        comment: Technology comfort by age group is plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Comfort declining with age is well-documented; plausible sample sizes
-          (550-880 per group); proportions internally consistent
+        comment: Counts in the hundreds per cell, sensible survey-scale magnitudes.
     code_quality:
       score: 10
       max: 10
@@ -184,32 +191,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear Imports → Data → Plot → Save; no functions or classes
+        comment: No functions/classes; flat script structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data; no random seed needed
+        comment: Deterministic hardcoded data, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (theme env), sys (path fix), altair, pandas'
+        comment: os, sys, altair, pandas, PIL.Image -- all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual x/y boundary computation is necessarily complex for spine
-          plot; well-organized and Pythonic
+        comment: Appropriate complexity for the geometry required; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: Saves plot-{THEME}.png and .html; current altair API; canvas pad-to-target
+          applied.
     library_mastery:
       score: 7
       max: 10
@@ -219,29 +226,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Strong Altair idioms: mark_rect with x/x2/y/y2, alt.layer(), alt.TitleParams,
-          alt.Scale with explicit domain, configure_* chain'
+        comment: Idiomatic alt.Chart/mark_rect/layer composition with Axis/Legend/Title
+          param objects.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses Vega-Lite labelExpr (conditional expression language) for custom
-          bar-midpoint tick labels — distinctly Altair/Vega-Lite; mark_rect dual-endpoint
-          encodings also Altair-idiomatic
+        passed: false
+        comment: Uses Vega-Lite labelExpr for midpoint tick labeling -- a genuinely
+          altair-specific technique -- but otherwise fairly standard layering.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - hover-tooltips
-  - html-export
+  - annotations
   - manual-ticks
+  - html-export
   patterns:
+  - data-generation
   - groupby-aggregation
-  - iteration-over-groups
   dataprep:
-  - normalization
   - cumulative-sum
   styling:
   - edge-highlighting
