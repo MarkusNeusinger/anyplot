@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-error: Bar Chart with Error Bars
-Library: plotly | Python
+Library: plotly 7.1.0 | Python 3.13.15
+Quality: 85/100 | Updated: 2026-09-27
 """
 
 import os
