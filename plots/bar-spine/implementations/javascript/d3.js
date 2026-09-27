@@ -31,7 +31,7 @@ const data = [
   { category: "Placebo", n: 120, counts: { Improved: 24, "No Change": 60, Worsened: 36 } },
   { category: "Low Dose", n: 95, counts: { Improved: 43, "No Change": 38, Worsened: 14 } },
   { category: "Medium Dose", n: 150, counts: { Improved: 98, "No Change": 37, Worsened: 15 } },
-  { category: "High Dose", n: 80, counts: { Improved: 56, "No Change": 16, Worsened: 8 } },
+  { category: "High Dose", n: 80, counts: { Improved: 52, "No Change": 18, Worsened: 10 } },
 ];
 
 // Improved/No Change/Worsened read as good/neutral/bad — semantic exception (default-style-guide.md)
@@ -114,7 +114,11 @@ barGroups.each(function (bar) {
 
   bar.segments.forEach((seg) => {
     const segHeight = y(seg.y0) - y(seg.y1);
-    if (segHeight < 34 || bar.barWidth < 50) return;
+    if (bar.barWidth < 50) return;
+    // Graceful degradation for thin bands: shrink the label one step before
+    // suppressing it outright, rather than jumping straight from 15px to gone.
+    const fontSize = segHeight >= 34 ? 15 : segHeight >= 22 ? 12 : null;
+    if (fontSize === null) return;
     group
       .append("text")
       .attr("x", bar.barWidth / 2)
@@ -122,7 +126,7 @@ barGroups.each(function (bar) {
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "central")
       .attr("fill", textColorFor(fillColor[seg.key]))
-      .style("font-size", "15px")
+      .style("font-size", `${fontSize}px`)
       .style("font-weight", "600")
       .text(`${Math.round(seg.pct)}%`);
   });
