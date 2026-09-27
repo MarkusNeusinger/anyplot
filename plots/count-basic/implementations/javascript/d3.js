@@ -116,16 +116,19 @@ g.selectAll("rect")
   .attr("stroke-width", 1);
 
 // --- Mean reference line (secondary encoding beyond sort/opacity) --------------
-// A dashed amber rule at the across-category mean lets the eye split the long
-// tail into above-/below-average languages at a glance. Drawn before the count
-// labels so their page-bg halo (below) can mask the line where they land close
-// to it, instead of the line cutting through the digits.
+// A dashed neutral rule at the across-category mean lets the eye split the long
+// tail into above-/below-average languages at a glance. Neutral (not amber) per
+// the style guide's semantic anchors: neutral is for baseline/reference lines,
+// amber is reserved for warning/caution — here the leader callout below. Drawn
+// before the count labels so their page-bg halo (below) can mask the line where
+// they land close to it, instead of the line cutting through the digits.
 g.append("line")
   .attr("x1", 0)
   .attr("x2", iw)
   .attr("y1", y(meanCount))
   .attr("y2", y(meanCount))
-  .attr("stroke", t.amber)
+  .attr("stroke", t.ink)
+  .attr("stroke-opacity", 0.5)
   .attr("stroke-width", 2)
   .attr("stroke-dasharray", "6,5");
 
@@ -133,20 +136,22 @@ g.append("text")
   .attr("x", iw)
   .attr("y", y(meanCount) - 10)
   .attr("text-anchor", "end")
-  .attr("fill", t.amber)
+  .attr("fill", t.inkSoft)
   .style("font-size", "14px")
   .style("font-weight", "600")
   .text(`Mean = ${d3.format(",.0f")(meanCount)}`);
 
 // --- Count labels above bars ---------------------------------------------------
 // A page-bg halo (paint-order: stroke) keeps the mean line above from visually
-// clashing with labels that land close to it (e.g. Java at 87 vs. mean 91).
+// clashing with labels that land close to it (e.g. Java at 87 vs. mean 91); the
+// extra vertical offset (vs. a plain "just above the bar" placement) gives that
+// pairing more breathing room.
 g.selectAll(".count-label")
   .data(counts)
   .join("text")
   .attr("class", "count-label")
   .attr("x", (d) => x(d.language) + x.bandwidth() / 2)
-  .attr("y", (d) => y(d.count) - 14)
+  .attr("y", (d) => y(d.count) - 20)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .attr("stroke", t.pageBg)
@@ -162,7 +167,7 @@ g.selectAll(".count-label")
 // second data color, exercising d3.symbol alongside the rollup/scale/axis idiom.
 const leader = counts[0];
 const leaderX = x(leader.language) + x.bandwidth() / 2;
-const leaderY = y(leader.count) - 40;
+const leaderY = y(leader.count) - 48;
 g.append("path")
   .attr("d", d3.symbol().type(d3.symbolDiamond).size(140)())
   .attr("transform", `translate(${leaderX},${leaderY})`)
