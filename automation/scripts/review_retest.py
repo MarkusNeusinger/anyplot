@@ -38,7 +38,12 @@ the workspace, because the review job overlays ``prompts/`` and
 ``automation/scripts/regen_gate.py`` from the rules under test. Anything the
 harness takes from the rules under test (the gate's ``context``,
 ``sanitize-source`` and ``decide``) is called by path with the flags every
-revision since ``02e1a7974`` understands.
+revision since ``02e1a7974`` understands; a later addition (``decide
+--record-out``, the ``marker`` subcommand, ``sanitize-source --pending``) is
+never passed to an overlay, so the baseline rules (``0674ab6b5``) run
+unchanged. What the harness needs beyond that — the header reset, the
+characteristic kinds, record-marker parsing — comes from its own copy of
+``regen_gate.py``.
 """
 
 from __future__ import annotations
@@ -64,7 +69,12 @@ from typing import Any
 
 from automation.scripts import review_provenance
 from automation.scripts import review_retest_metrics as metrics
-from automation.scripts.regen_gate import parse_record_markers, reset_header_score
+from automation.scripts.regen_gate import (
+    parse_characteristics,
+    parse_record_markers,
+    permission_refs,
+    reset_header_score,
+)
 
 
 HARNESS_VERSION = "1"
@@ -403,12 +413,20 @@ def load_lock(path: Path, manifest: dict[str, Any]) -> dict[str, Any]:
 
 
 def item_labels(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    """Per-item labels the metrics apply at report time."""
+    """Per-item labels the metrics apply at report time.
+
+    Defects, permission probes and expected verdicts count only once the owner
+    has confirmed them (``labels: confirmed``). Draft proposals are validated
+    with the manifest but never reach a report, so no PR body quotes a miss
+    rate against unconfirmed ground truth. The pair ``class`` is measured
+    (pixel statistics in the lock), not a label, and always applies.
+    """
+    confirmed = manifest.get("labels") == "confirmed"
     return {
         item["id"]: {
-            "defects": item.get("defects") or [],
-            "permitted": item.get("permitted") or [],
-            "expected": item.get("expected") or {},
+            "defects": (item.get("defects") or []) if confirmed else [],
+            "permitted": (item.get("permitted") or []) if confirmed else [],
+            "expected": (item.get("expected") or {}) if confirmed else {},
             "class": item.get("class"),
         }
         for item in manifest["items"]
@@ -934,6 +952,29 @@ def _strings(value: Any) -> list[str]:
     return [str(v) for v in value if str(v).strip()] if isinstance(value, list) else []
 
 
+def improvement_counts(regen: Any, spec_text: str) -> dict[str, int] | None:
+    """The improvement counts a production gate record carries, for one cell.
+
+    ``total`` is every listed improvement, ``permission`` those whose ref is an
+    "Expected, not a defect" bullet of the spec the reviewer saw, and
+    ``visible`` only the counted ones (not a permission) with a non-empty
+    ``where_visible`` — the gate record's ``improvements`` semantics. Computed
+    with the harness's own ``regen_gate``, so it works under any rules_ref; a
+    spec without kind prefixes has no permissions, and the counts then equal
+    the plain ones. ``None`` when ``review_regen.json`` lists no improvements.
+    """
+    if not isinstance(regen, dict) or not isinstance(regen.get("improvements"), list):
+        return None
+    permissions = permission_refs(parse_characteristics(spec_text))
+    items = [i for i in regen["improvements"] if isinstance(i, dict)]
+    counted = [i for i in items if str(i.get("ref") or "") not in permissions]
+    return {
+        "total": len(items),
+        "visible": sum(1 for i in counted if str(i.get("where_visible") or "").strip()),
+        "permission": len(items) - len(counted),
+    }
+
+
 def collect(
     workspace: Path,
     cell: dict[str, Any],
@@ -959,8 +1000,11 @@ def collect(
         if path.is_file() and path.stat().st_size <= 2_000_000:
             shutil.copyfile(path, files / path.name)
 
+    # The alias the session was started with is kept apart as ``model_alias``;
+    # ``model`` is the id the execution file resolved, or None. An alias moves
+    # between releases and must never pass for a resolved id.
     alias = str(cell.get("model") or "")
-    summary = review_provenance.execution_summary(execution_file or None, f"claude-{alias}")
+    summary = review_provenance.execution_summary(execution_file or None)
     score = _score(workspace / "quality_score.txt")
     checklist_raw, _ = _read_json(workspace / "review_checklist.json")
     flat = flatten_checklist(checklist_raw)
@@ -968,11 +1012,17 @@ def collect(
     strengths_raw, _ = _read_json(workspace / "review_strengths.json")
     regen, regen_error = (None, None)
     gate = None
+    counts = None
     is_regen = cell.get("kind") == "regen"
     if is_regen:
         regen, regen_error = _read_json(workspace / "review_regen.json")
+        spec_file = workspace / "plots" / str(cell["spec_id"]) / "specification.md"
+        try:
+            spec_text = spec_file.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            spec_text = ""
+        counts = improvement_counts(regen, spec_text)
         if score is not None and materialize_ok:
-            spec_file = workspace / "plots" / str(cell["spec_id"]) / "specification.md"
             try:
                 out = _run_gate(
                     gate_script,
@@ -1054,6 +1104,7 @@ def collect(
         "strengths": _strings(strengths_raw),
         "regen": regen if isinstance(regen, dict) else None,
         "regen_error": regen_error if is_regen else None,
+        "regen_counts": counts,
         "gate": gate,
         "prev_stored": int(prev_stored) if (prev_stored or "").isdigit() else None,
         "comment_written": (workspace / "review_comment.md").is_file(),
@@ -1273,10 +1324,11 @@ def render_report(
                 f"| Gate verdict flip rate / accuracy vs expected | {_pct(g['verdict_flip'])} / {_pct(g['accuracy'])} (n={g['accuracy_n']}) |",
                 f"| Pooled SD: prev_rescored / new / new − prev_rescored | {_fmt(g['sd_prev_rescored'])} / {_fmt(g['sd_new'])} / {_fmt(g['sd_delta'])} |",
                 f"| Order bias (pts, negative favours merge) | {_fmt(g['order_bias'])} over {g['order_bias_items']} pairs |",
+                f"| Runs citing a permission as an improvement (not counted) | {_pct(g['permission_cited'])} (n={g['permission_cited_n']}) |",
             ]
             for cls, cal in g["calibration"].items():
                 lines.append(
-                    f"| {cls} pairs: new − prev_rescored < −1 / visible improvement claimed | "
+                    f"| {cls} pairs: new − prev_rescored < −1 / counted visible improvement claimed | "
                     f"{_pct(cal['below_tolerance'])} / {_pct(cal['visible_claims'])} (n={cal['n']}) |"
                 )
         lines += ["", "| Criterion | Mean | At max | Pooled SD | Flip |", "|---|---|---|---|---|"]
@@ -1415,11 +1467,16 @@ def render_gate_report(result: dict[str, Any]) -> str:
             f"SD {_fmt(summary['sd'])}{_ci(summary['ci'])}"
         )
 
+    imp = result["improvements"]
     lines = [
         "# Regen gate report",
         "",
         f"- Decisions: {result['n']}; merge rate {_pct(result['merge_rate'])}",
         f"- Reason codes: {', '.join(f'{k} {v}' for k, v in result['codes'].items()) or 'none'}",
+        f"- Counted visible improvements (never a permission): mean {_fmt(imp['visible_mean'])} per decision, "
+        f"at least one in {_pct(imp['with_visible'])} (n={imp['n']})",
+        f"- Permission cited as an improvement: {imp['permission_cited']}/{imp['permission_n']} decisions "
+        f"({_pct(imp['permission_cited_share'])}); kept with nothing else counted: {imp['permission_only_keeps']}",
         f"- prev_rescored − prev_stored, comparable: {drift(result['drift_comparable'])}",
         f"- prev_rescored − prev_stored, all: {drift(result['drift_all'])}",
         f"- new − prev_rescored: {drift(result['margin'])}; inside [−1, 0]: {_pct(result['margin_within_tolerance'])}",
@@ -1797,7 +1854,8 @@ def cmd_collect(args: argparse.Namespace) -> int:
     )
     print(
         f"::notice::cell {record['cell']}: ok={record['ok']} error={record['error_class'] or '-'} "
-        f"model={record['model']} score={record['score_typed']} cost={record['cost_usd']}"
+        f"model={record['model'] or 'n/a'} alias={record['model_alias'] or 'n/a'} "
+        f"score={record['score_typed']} cost={record['cost_usd']}"
     )
     return 0
 

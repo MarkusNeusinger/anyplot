@@ -2,8 +2,9 @@
 """Review provenance: which rules and which model produced a review.
 
 Standard library only. ``impl-review.yml`` runs it from the copy it takes at
-its own ref (``$RUNNER_TEMP/regen-tools/``). Two facts are recorded next to
-every review:
+its own ref (``$RUNNER_TEMP/regen-tools/``); the review retest harness
+(``review_retest.py``) imports it. Two facts are recorded next to every
+review:
 
 - ``criteria_version`` -- the git blob ids of the files the reviewer scores
   against, as ``qc-<10 hex>.aqr-<10 hex>.sg-<10 hex>[.lib-<10 hex>]``:

@@ -9,6 +9,7 @@ import re
 import shutil
 import struct
 import subprocess
+import sys
 import zlib
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -84,6 +85,12 @@ def _manifest(**overrides: Any) -> dict[str, Any]:
     return manifest
 
 
+def _confirmed_manifest() -> dict[str, Any]:
+    manifest = _manifest(labels="confirmed")
+    manifest["items"][1]["expected"] = {"forward": "merge", "reversed": "keep"}
+    return manifest
+
+
 # ---------------------------------------------------------------------------
 # Manifest
 # ---------------------------------------------------------------------------
@@ -145,6 +152,22 @@ class TestManifest:
         block = step["run"].split("data = {", 1)[1].split("\n}", 1)[0]
         keys = tuple(re.findall(r"^\s*'([a-z_]+)':", block, re.MULTILINE))
         assert keys == rt.IMPL_GENERATE_METADATA_KEYS
+
+
+class TestLabelGate:
+    """Draft labels are validated but never reach a report (decision D4)."""
+
+    def test_draft_labels_are_ignored(self):
+        labels = rt.item_labels(_manifest())
+        assert labels["f-bubble-basic-matplotlib"]["defects"] == []
+        assert labels["f-bubble-basic-matplotlib"]["permitted"] == []
+        # The pair class is measured, not a label: it always applies.
+        assert labels["r-bubble-basic-matplotlib-b-a"]["class"] == "different"
+
+    def test_confirmed_labels_apply(self):
+        labels = rt.item_labels(_confirmed_manifest())
+        assert [d["id"] for d in labels["f-bubble-basic-matplotlib"]["defects"]] == ["D1"]
+        assert labels["r-bubble-basic-matplotlib-b-a"]["expected"] == {"forward": "merge", "reversed": "keep"}
 
 
 # ---------------------------------------------------------------------------
@@ -656,6 +679,43 @@ class TestCollect:
             "review_weaknesses.json",
         ]
 
+    @pytest.mark.parametrize("init", [None, {"type": "system", "subtype": "init", "model": "not a model id!"}])
+    def test_unresolved_model_is_none_never_the_alias(self, workspace, tmp_path, capsys, init):
+        """#11950: an alias must never pass for a resolved model id."""
+        _write_review(workspace)
+        execution = ""
+        if init is not None:
+            path = tmp_path / "exec.json"
+            path.write_text(json.dumps([init, {"type": "result", **OK_RESULT}]), encoding="utf-8")
+            execution = str(path)
+        cell = _cell("f-bubble-basic-matplotlib", "fresh", model="opus")
+        out = tmp_path / "cell"
+        code = rt.main(
+            [
+                "collect",
+                "--workspace",
+                str(workspace),
+                "--cell",
+                json.dumps(cell),
+                "--out",
+                str(out),
+                "--execution-file",
+                execution,
+                "--review-outcome",
+                "success",
+                "--materialize-outcome",
+                "success",
+                "--gate-script",
+                str(GATE_SCRIPT),
+            ]
+        )
+        assert code == 0
+        record = json.loads((out / "record.json").read_text(encoding="utf-8"))
+        assert record["model"] is None
+        assert record["model_alias"] == "opus"
+        assert "claude-opus" not in json.dumps(record)
+        assert "model=n/a alias=opus" in capsys.readouterr().out
+
     def test_transcript_is_never_copied(self, workspace, tmp_path):
         _write_review(workspace)
         out = tmp_path / "cell"
@@ -702,7 +762,66 @@ class TestCollect:
         assert record["gate"]["code"] == "merge"
         assert record["prev_stored"] == 88
         assert record["regen"]["prev_rescored"] == 87
+        assert record["regen_counts"] == {"total": 1, "visible": 1, "permission": 0}
         assert record["order"] == "forward"
+
+    def test_permission_citation_is_counted_apart(self, bundles, workspace, tmp_path):
+        """regen_counts follows the gate record: a cited permission is never a visible improvement."""
+        tmp = rt.TmpPaths(tmp_path / "tmp")
+        cell = _cell("r-bubble-basic-matplotlib-v1-v0", "regen", "forward")
+        out = rt.materialize(bundles["out"] / cell["item"], workspace, cell, GATE_SCRIPT, tmp=tmp)
+        (workspace / "plots/bubble-basic/specification.md").write_text(
+            "# bubble-basic\n\n## What a good version looks like\n\n"
+            "- A good version shows: a size legend drawn like the marks.\n"
+            "- Expected, not a defect: overlapping bubbles in dense regions.\n",
+            encoding="utf-8",
+        )
+        regen = {
+            "prev_rescored": 87,
+            "improvements": [
+                {"ref": "C2", "what": "overlap", "where_visible": "centre cluster"},
+                {"ref": "W1", "what": "legend larger", "where_visible": ""},
+            ],
+            "regressions": [],
+            "scenario_changed": False,
+            "encodings_added": [],
+            "change_request_applied": None,
+        }
+        _write_review(workspace, score=88, regen=regen)
+        record = rt.collect(
+            workspace,
+            cell,
+            tmp_path / "cell",
+            execution_file=str(_execution(tmp_path, OK_RESULT)),
+            review_outcome="success",
+            materialize_ok=True,
+            gate_script=GATE_SCRIPT,
+            prev_stored=out["prev_stored"],
+            tmp=tmp,
+        )
+        assert record["regen_counts"] == {"total": 2, "visible": 0, "permission": 1}
+        assert record["gate"]["verdict"] == "keep"
+        assert record["gate"]["code"] == "no_visible_improvement"
+
+    def test_improvement_counts(self):
+        labelled = "## What a good version looks like\n- A good version shows: x\n- Expected, not a defect: y\n"
+        regen = {
+            "improvements": [
+                {"ref": "C2", "where_visible": "a"},
+                {"ref": "C1", "where_visible": "b"},
+                {"ref": "new", "where_visible": " "},
+                "not an item",
+            ]
+        }
+        assert rt.improvement_counts(regen, labelled) == {"total": 3, "visible": 1, "permission": 1}
+        # A section without kind prefixes (the pinned v1 specs) has no permissions.
+        assert rt.improvement_counts(regen, "## What a good version looks like\n- x\n- y\n") == {
+            "total": 3,
+            "visible": 2,
+            "permission": 0,
+        }
+        assert rt.improvement_counts(None, labelled) is None
+        assert rt.improvement_counts({"improvements": "none"}, labelled) is None
 
     @pytest.mark.parametrize(
         ("result", "outcome", "materialize_ok", "started_ago", "expected"),
@@ -795,7 +914,7 @@ class TestReport:
         ]
         payload = rt.report(
             records,
-            _manifest(),
+            _confirmed_manifest(),
             tmp_path / "report",
             label="baseline",
             subset_label="core",
@@ -817,6 +936,47 @@ class TestReport:
         lines = (tmp_path / "report" / "records.jsonl").read_text(encoding="utf-8").splitlines()
         assert len(lines) == 4
         assert payload["metrics"]["cells"]["ok"] == 3
+
+    def test_draft_labels_leave_the_label_metrics_empty(self, tmp_path):
+        records = [
+            _record("f-bubble-basic-matplotlib__r1", "f-bubble-basic-matplotlib", 1, 89),
+            _record("f-bubble-basic-matplotlib__r2", "f-bubble-basic-matplotlib", 2, 91),
+        ]
+        rt.report(
+            records,
+            _manifest(),
+            tmp_path / "report",
+            label="baseline",
+            subset_label="core",
+            rules_sha=B,
+            harness_sha=A,
+            run_url="u",
+            lock_sha="c" * 64,
+        )
+        snippet = (tmp_path / "report" / "snippet.md").read_text(encoding="utf-8")
+        assert "| Named-defect miss rate | – (no labels) |" in snippet
+        assert "(labels: draft)" in (tmp_path / "report" / "retest-report.md").read_text(encoding="utf-8")
+
+    def test_unresolved_model_is_its_own_group(self, tmp_path):
+        records = [
+            _record("f-bubble-basic-matplotlib__r1", "f-bubble-basic-matplotlib", 1, 89),
+            _record(
+                "f-bubble-basic-matplotlib__r2", "f-bubble-basic-matplotlib", 2, 91, model=None, model_alias="opus"
+            ),
+        ]
+        payload = rt.report(
+            records,
+            _manifest(),
+            tmp_path / "report",
+            label="x",
+            subset_label="core",
+            rules_sha=B,
+            harness_sha=A,
+            run_url="u",
+            lock_sha="c" * 64,
+        )
+        assert set(payload["metrics"]["groups"]) == {"fresh|claude-opus-5-5", "fresh|unresolved (opus)"}
+        assert "claude-opus ·" not in (tmp_path / "report" / "snippet.md").read_text(encoding="utf-8")
 
     def test_comparison_columns(self, tmp_path):
         base = [
@@ -904,6 +1064,183 @@ class TestGateReport:
         text = rt.render_gate_report(rt.metrics.gate_monitor(records, rt.comparable_record))
         assert "Decisions: 1; merge rate 0%" in text
         assert "regression 1" in text
+
+    def test_reads_permission_and_counted_visible_from_real_records(self):
+        """Records as regen_gate.py writes them since #11948: `visible` counts only
+        what the gate counted, `permission` the cited "Expected, not a defect" bullets."""
+        from automation.scripts.regen_gate import (
+            GateInput,
+            build_record,
+            decide,
+            parse_record_markers,
+            render_record_marker,
+        )
+
+        def record(improvements: list[dict[str, str]], permissions: frozenset[str]) -> dict[str, Any]:
+            regen = {
+                "prev_rescored": 90,
+                "improvements": improvements,
+                "regressions": [],
+                "scenario_changed": False,
+                "encodings_added": [],
+                "change_request_applied": None,
+            }
+            result = decide(
+                GateInput(
+                    spec_id="bubble-basic",
+                    score=91,
+                    regen=regen,
+                    known_weakness_ids=frozenset({"W1"}),
+                    characteristic_count=3,
+                    permission_refs=permissions,
+                )
+            )
+            built = build_record(result, spec_id="bubble-basic", library="altair", score=91, prev_stored=92)
+            return parse_record_markers(render_record_marker(built))[0]
+
+        permission_only = record([{"ref": "C2", "what": "overlap", "where_visible": "centre"}], frozenset({"C2"}))
+        assert permission_only["code"] == "no_visible_improvement"
+        assert permission_only["improvements"]["visible"] == 0
+        assert permission_only["improvements"]["permission"] == 1
+        merged = record(
+            [
+                {"ref": "W1", "what": "legend", "where_visible": "legend"},
+                {"ref": "C2", "what": "overlap", "where_visible": "centre"},
+            ],
+            frozenset({"C2"}),
+        )
+        assert merged["verdict"] == "merge" and merged["improvements"]["visible"] == 1
+
+        result = rt.metrics.gate_monitor([permission_only, merged], rt.comparable_record)
+        assert result["improvements"]["visible_mean"] == pytest.approx(0.5)
+        assert result["improvements"]["permission_cited"] == 2
+        assert result["improvements"]["permission_only_keeps"] == 1
+        text = rt.render_gate_report(result)
+        assert "Counted visible improvements (never a permission): mean 0.5 per decision, at least one in 50%" in text
+        assert "Permission cited as an improvement: 2/2 decisions (100%); kept with nothing else counted: 1" in text
+
+
+# Every flag the harness may pass to a rules-under-test gate: exactly what
+# regen_gate.py had at GATE_MIN_COMMIT (02e1a7974), so any rules_ref the plan
+# accepts can run. TestBaselineOverlay checks this set against that commit.
+BASE_GATE_FLAGS = {
+    "context": {
+        "--metadata",
+        "--spec-id",
+        "--language",
+        "--library",
+        "--spec-file",
+        "--omit-scores",
+        "--out-md",
+        "--out-weaknesses",
+    },
+    "sanitize-source": {"--source", "--out"},
+    "decide": {
+        "--spec-id",
+        "--library",
+        "--score",
+        "--prev-stored",
+        "--regen-json",
+        "--weaknesses-json",
+        "--spec-file",
+        "--prev-renders",
+    },
+}
+
+
+def _gate_at(commit: str, target: Path) -> Path:
+    """regen_gate.py as it was at ``commit``; skips when this clone lacks the commit."""
+    shown = subprocess.run(
+        ["git", "-C", str(REPO_ROOT), "show", f"{commit}:automation/scripts/regen_gate.py"], capture_output=True
+    )
+    if shown.returncode != 0:
+        pytest.skip(f"{commit[:10]} is not in this clone (shallow checkout)")
+    target.mkdir(parents=True, exist_ok=True)
+    path = target / "regen_gate.py"
+    path.write_bytes(shown.stdout)
+    return path
+
+
+def _merge_regen() -> dict[str, Any]:
+    return {
+        "prev_rescored": 87,
+        "improvements": [{"ref": "W1", "what": "legend larger", "where_visible": "legend"}],
+        "regressions": [],
+        "scenario_changed": False,
+        "encodings_added": [],
+        "change_request_applied": None,
+    }
+
+
+class TestBaselineOverlay:
+    """The documented baseline arm (rules_ref = baseline_rules_sha, 0674ab6b5) runs
+    on today's harness: materialize and collect hand an overlay gate only the flags
+    it already had, and take everything newer from the harness's own copy."""
+
+    def test_only_base_flags_reach_the_overlay(self, bundles, workspace, tmp_path, monkeypatch):
+        calls: list[list[str]] = []
+        real = rt._run_gate
+
+        def spy(gate_script: Path, args: list[str], python: str = sys.executable) -> dict[str, str]:
+            calls.append(list(args))
+            return real(gate_script, args, python)
+
+        monkeypatch.setattr(rt, "_run_gate", spy)
+        tmp = rt.TmpPaths(tmp_path / "tmp")
+        cell = _cell("r-bubble-basic-matplotlib-v1-v0", "regen", "forward")
+        out = rt.materialize(bundles["out"] / cell["item"], workspace, cell, GATE_SCRIPT, tmp=tmp)
+        _write_review(workspace, score=88, regen=_merge_regen())
+        rt.collect(
+            workspace,
+            cell,
+            tmp_path / "cell",
+            execution_file="",
+            review_outcome="success",
+            materialize_ok=True,
+            gate_script=GATE_SCRIPT,
+            prev_stored=out["prev_stored"],
+            tmp=tmp,
+        )
+        assert [c[0] for c in calls] == ["context", "sanitize-source", "decide"]
+        for call in calls:
+            flags = {arg for arg in call[1:] if arg.startswith("--")}
+            assert flags <= BASE_GATE_FLAGS[call[0]], call
+
+    def test_base_flags_exist_at_the_oldest_accepted_rules(self, tmp_path):
+        gate = _gate_at(rt.GATE_MIN_COMMIT, tmp_path / "min")
+        for sub, flags in BASE_GATE_FLAGS.items():
+            usage = subprocess.run(
+                [sys.executable, str(gate), sub, "--help"], capture_output=True, text=True, check=True
+            ).stdout
+            assert flags <= set(re.findall(r"--[a-z-]+", usage)), sub
+
+    def test_regen_cell_on_the_baseline_rules(self, bundles, workspace, tmp_path):
+        manifest = yaml.safe_load(MANIFEST.read_text(encoding="utf-8"))
+        gate = _gate_at(manifest["baseline_rules_sha"], tmp_path / "baseline")
+        tmp = rt.TmpPaths(tmp_path / "tmp")
+        cell = _cell("r-bubble-basic-matplotlib-v1-v0", "regen", "forward")
+        out = rt.materialize(bundles["out"] / cell["item"], workspace, cell, gate, tmp=tmp)
+        assert out["prev_stored"] == "88"
+        assert "Quality: hidden/100" in tmp.prev_impl(".py").read_text(encoding="utf-8")
+        assert "Previous quality score" not in tmp.prev_review.read_text(encoding="utf-8")
+        impl = (workspace / "plots/bubble-basic/implementations/python/matplotlib.py").read_text(encoding="utf-8")
+        assert "Quality: pending" in impl  # the harness's own header reset, not the overlay's
+        _write_review(workspace, score=88, regen=_merge_regen())
+        record = rt.collect(
+            workspace,
+            cell,
+            tmp_path / "cell",
+            execution_file="",
+            review_outcome="success",
+            materialize_ok=True,
+            gate_script=gate,
+            prev_stored=out["prev_stored"],
+            tmp=tmp,
+        )
+        assert record["gate"]["verdict"] == "merge" and record["gate"]["prev_rescored"] == 87
+        assert record["gate"]["code"] is None  # reason codes arrived with #11950
+        assert record["regen_counts"] == {"total": 1, "visible": 1, "permission": 0}
+        assert record["model"] is None and record["model_alias"] == "sonnet"
 
 
 # ---------------------------------------------------------------------------

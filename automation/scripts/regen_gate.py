@@ -36,7 +36,8 @@ Every decision also carries a machine-readable reason ``code`` (see
 object with scores, counts, codes and provenance, and no model-written text.
 ``impl-review.yml`` embeds it in the PR comment on both paths as
 ``<!-- regen-gate-record:v1 {...} -->`` (``marker``), where it outlives the
-run log, so later tooling can aggregate them with ``parse_record_markers``.
+run log; ``review_retest.py gate-report`` aggregates them with
+``parse_record_markers``.
 
 The script is stdlib-only except for the ``context`` subcommand, which needs
 PyYAML to read the previous metadata. ``impl-review.yml`` runs it from a copy

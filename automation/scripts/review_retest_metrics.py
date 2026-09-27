@@ -7,10 +7,13 @@ and an item-order (``forward`` / ``reversed``) for regen cells; runs of the
 same unit are the repeated sessions whose disagreement the harness measures.
 
 Record fields read here (written by ``review_retest.py collect``): ``cell``,
-``item``, ``kind``, ``order``, ``run``, ``model``, ``ok``, ``error_class``,
+``item``, ``kind``, ``order``, ``run``, ``model`` (the resolved id, or None
+when the session named none), ``model_alias``, ``ok``, ``error_class``,
 ``score_typed``, ``checklist`` (``{id: {"score", "max", "comment"}}``),
 ``checklist_sum``, ``weaknesses``, ``gate`` (``{"verdict", "prev_rescored",
-"code"}``) and ``regen`` (the parsed ``review_regen.json``).
+"code"}``), ``regen`` (the parsed ``review_regen.json``) and ``regen_counts``
+(``{"total", "visible", "permission"}``, the gate record's improvement
+counts).
 
 Labels (from the set manifest, applied at report time so a corrected label
 re-scores old records): ``defects`` and ``permitted`` per item
@@ -192,8 +195,22 @@ def unit_key(record: dict[str, Any]) -> str:
     return f"{record['item']}__{order}" if order else str(record["item"])
 
 
+def model_label(record: dict[str, Any]) -> str:
+    """The resolved model id a record is grouped under.
+
+    A session whose execution file named no model is ``unresolved (<alias>)``:
+    kept apart from the resolved groups and never shown under its alias as if
+    that were an id.
+    """
+    model = record.get("model")
+    if isinstance(model, str) and model.strip() and model != "n/a":
+        return model
+    alias = record.get("model_alias")
+    return f"unresolved ({alias})" if alias else "unresolved"
+
+
 def group_key(record: dict[str, Any]) -> tuple[str, str]:
-    return (str(record.get("kind") or "?"), str(record.get("model") or "?"))
+    return (str(record.get("kind") or "?"), model_label(record))
 
 
 def ok_records(records: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -393,10 +410,26 @@ def defect_metrics(units: dict[str, list[dict[str, Any]]], labels: dict[str, dic
 
 
 def _visible_improvements(record: dict[str, Any]) -> int:
+    """Visible improvements the gate counts: never one that cites a permission.
+
+    Reads ``regen_counts["visible"]`` (the gate record's semantics); a record
+    without it counts every improvement with a ``where_visible``.
+    """
+    counts = record.get("regen_counts")
+    if isinstance(counts, dict) and isinstance(counts.get("visible"), int):
+        return int(counts["visible"])
     regen = record.get("regen")
     if not isinstance(regen, dict) or not isinstance(regen.get("improvements"), list):
         return 0
     return sum(1 for i in regen["improvements"] if isinstance(i, dict) and str(i.get("where_visible") or "").strip())
+
+
+def _permission_citations(record: dict[str, Any]) -> int | None:
+    """Improvements citing an "Expected, not a defect" bullet; None when unknown."""
+    counts = record.get("regen_counts")
+    if isinstance(counts, dict) and isinstance(counts.get("permission"), int):
+        return int(counts["permission"])
+    return None
 
 
 def gate_metrics(units: dict[str, list[dict[str, Any]]], labels: dict[str, dict[str, Any]]) -> dict[str, Any]:
@@ -411,6 +444,7 @@ def gate_metrics(units: dict[str, list[dict[str, Any]]], labels: dict[str, dict[
         "identity": {"below_tolerance": [], "visible_claims": []},
         "near-identical": {"below_tolerance": [], "visible_claims": []},
     }
+    permission_cited: list[bool] = []
     per_item: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(dict)
     for runs in units.values():
         item = str(runs[0]["item"])
@@ -437,6 +471,9 @@ def gate_metrics(units: dict[str, list[dict[str, Any]]], labels: dict[str, dict[
                     calibration[pair_class]["below_tolerance"].append(score - prev < -1)
             if pair_class in calibration:
                 calibration[pair_class]["visible_claims"].append(_visible_improvements(record) > 0)
+            cited = _permission_citations(record)
+            if cited is not None:
+                permission_cited.append(cited > 0)
         rescored.append(rs)
         new.append(ns)
         delta.append(ds)
@@ -479,6 +516,10 @@ def gate_metrics(units: dict[str, list[dict[str, Any]]], labels: dict[str, dict[
         },
         "order_bias": mean(biases),
         "order_bias_items": len(biases),
+        # Runs whose review cited a permission as an improvement (not counted
+        # by the gate; a sign the reviewer misreads the characteristic kinds).
+        "permission_cited": share(permission_cited),
+        "permission_cited_n": len(permission_cited),
     }
 
 
@@ -487,7 +528,7 @@ def group_metrics(records: Sequence[dict[str, Any]], labels: dict[str, dict[str,
     kind = str(records[0].get("kind")) if records else "?"
     out: dict[str, Any] = {
         "kind": kind,
-        "model": str(records[0].get("model")) if records else "?",
+        "model": model_label(records[0]) if records else "?",
         "runs": len(records),
         "units": len(units),
         "criteria": criterion_metrics(units),
@@ -516,7 +557,7 @@ def arm_metrics(records: Sequence[dict[str, Any]], labels: dict[str, dict[str, A
     return {
         "cells": {"total": len(records), "ok": len(good), "errors": dict(sorted(errors.items()))},
         "cost_usd": sum(float(r["cost_usd"]) for r in records if isinstance(r.get("cost_usd"), int | float)),
-        "models": sorted({str(r.get("model")) for r in good}),
+        "models": sorted({model_label(r) for r in good}),
         "groups": {f"{kind}|{model}": group_metrics(rs, labels) for (kind, model), rs in sorted(groups.items())},
     }
 
@@ -582,7 +623,11 @@ def compare_arms(
     def facet(records: Sequence[dict[str, Any]], field: str) -> set[str]:
         return {str(r.get(field)) for r in ok_records(records)}
 
-    if facet(base, "model") != facet(cand, "model"):
+    # An unresolved model can never be shown to match another arm's, so any
+    # unresolved group flags as well.
+    base_models = {model_label(r) for r in ok_records(base)}
+    cand_models = {model_label(r) for r in ok_records(cand)}
+    if base_models != cand_models or any(label.startswith("unresolved") for label in base_models | cand_models):
         out["flags"].append("model changed")
     if facet(base, "harness_version") != facet(cand, "harness_version") or facet(base, "action_sha") != facet(
         cand, "action_sha"
@@ -645,6 +690,12 @@ def gate_monitor(
     prev_rescored``. ``comparable`` says whether a record's stored review ran
     under the same model and rules as today's review — only then does drift
     isolate contrast bias from rules, model and render age.
+
+    ``improvements`` reads the record's counts as the gate wrote them:
+    ``visible`` holds only the improvements the gate counted (never one that
+    cites an "Expected, not a defect" bullet), ``permission`` the cited
+    permissions. A record without ``permission`` (none is expected: the key
+    shipped with the first record) is left out of the permission shares.
     """
     n = len(records)
     merges = sum(1 for r in records if r.get("verdict") == "merge")
@@ -671,6 +722,30 @@ def gate_monitor(
         by_lib[str(record.get("lib") or "n/a")].append(record)
         by_week[_week(record.get("at"))].append(record)
 
+    def counts(record: dict[str, Any]) -> dict[str, Any] | None:
+        value = record.get("improvements")
+        return value if isinstance(value, dict) else None
+
+    def count(value: Any) -> int | None:
+        return value if isinstance(value, int) and not isinstance(value, bool) else None
+
+    counted = [(r, c) for r in records if (c := counts(r)) is not None]
+    with_permission = [(r, c) for r, c in counted if count(c.get("permission")) is not None]
+    visible = [float(v) for _, c in counted if (v := count(c.get("visible"))) is not None]
+    cited = [(r, c) for r, c in with_permission if c["permission"] > 0]
+    improvements: dict[str, Any] = {
+        "n": len(counted),
+        "visible_mean": mean(visible),
+        "with_visible": share(v > 0 for v in visible),
+        "permission_n": len(with_permission),
+        "permission_cited": len(cited),
+        "permission_cited_share": len(cited) / len(with_permission) if with_permission else None,
+        # Kept with a cited permission and nothing else visible that counts.
+        "permission_only_keeps": sum(
+            1 for r, c in cited if r.get("code") == "no_visible_improvement" and count(c.get("visible")) == 0
+        ),
+    }
+
     drift_comparable = _summary(drift_of(comparable_records), seed)
     report: dict[str, Any] = {
         "n": n,
@@ -682,6 +757,7 @@ def gate_monitor(
         "drift_by_library": {k: _summary(drift_of(v), seed) for k, v in sorted(by_lib.items())},
         "margin": _summary(margins, seed),
         "margin_within_tolerance": share(-1 <= m <= 0 for m in margins),
+        "improvements": improvements,
         "weekly": {
             week: {
                 "n": len(rs),
@@ -703,4 +779,10 @@ def gate_monitor(
         alarms.append(f"regen_json_invalid in {invalid}/{n} decisions — a contract or prompt problem")
     if n >= 30 and report["merge_rate"] is not None and not 0.05 <= report["merge_rate"] <= 0.50:
         alarms.append(f"merge rate {report['merge_rate']:.0%} over {n} decisions — look at the reason codes")
+    if improvements["permission_n"] >= 10 and (improvements["permission_cited_share"] or 0) > 0.10:
+        alarms.append(
+            f"reviews cite an 'Expected, not a defect' bullet as an improvement in "
+            f"{improvements['permission_cited']}/{improvements['permission_n']} decisions — the 8b prompt or "
+            "the specs' characteristic kinds need a look"
+        )
     return report

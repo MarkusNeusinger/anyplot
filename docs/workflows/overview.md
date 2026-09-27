@@ -237,7 +237,7 @@ Every decision leaves three traces:
 - **The notice line in the run log.** `::notice::regen_gate spec=… lib=… prev_stored=… prev_rescored=… new=… verdict=… code=… model=… criteria=… reason=…`. Run logs expire.
 - **The pair artifact.** `regen-pair-<pr>-<attempt>` on the `impl-review.yml` run, kept 60 days: both renders, both sources (the predecessor's with its score hidden), the previous review, this review's files, and the gate record. The predecessor's production renders are overwritten on the next merge, so this is the only copy of what the gate compared.
 
-`uv run python -m automation.scripts.review_retest gate-report` aggregates the records across pull requests: merge rate, reason codes, how far re-scored predecessors land from their stored scores, and soft alarms. See [Review retest](review-retest.md#monitor-the-regen-gate).
+`uv run python -m automation.scripts.review_retest gate-report` aggregates the records across pull requests: merge rate, reason codes, how far re-scored predecessors land from their stored scores, the counted visible improvements and cited permissions, and soft alarms. See [Review retest](review-retest.md#monitor-the-regen-gate).
 
 To replace an implementation without the gate, dispatch with `regen_gate=false` (`impl-generate.yml` or `bulk-generate.yml`): the PR is labelled `regen:forced` and takes the fresh-generation path, including the repair loop — whose exhaustion path removes the old implementation from main.
 

@@ -198,6 +198,19 @@ class TestGateMetrics:
         assert identity["below_tolerance"] == pytest.approx(1 / 3)
         assert identity["visible_claims"] == pytest.approx(1 / 3)
         assert gate["calibration"]["near-identical"]["n"] == 0
+        assert gate["permission_cited"] is None and gate["permission_cited_n"] == 0  # no regen_counts
+
+    def test_visible_claims_count_only_what_the_gate_counts(self):
+        """regen_counts (the gate record's semantics) wins over the raw where_visible count."""
+        labels = {"p": {"class": "identity"}}
+        cited = _regen_rec("p", "forward", 1, 90, 90, "keep", visible=1)
+        cited["regen_counts"] = {"total": 1, "visible": 0, "permission": 1}
+        real = _regen_rec("p", "forward", 2, 90, 90, "merge", visible=1)
+        real["regen_counts"] = {"total": 1, "visible": 1, "permission": 0}
+        gate = m.group_metrics([cited, real], labels)["gate"]
+        assert gate["calibration"]["identity"]["visible_claims"] == pytest.approx(1 / 2)
+        assert gate["permission_cited"] == pytest.approx(1 / 2)
+        assert gate["permission_cited_n"] == 2
 
 
 class TestArm:
@@ -212,6 +225,17 @@ class TestArm:
         assert arm["cells"] == {"total": 4, "ok": 3, "errors": {"quota": 1}}
         assert set(arm["groups"]) == {"fresh|claude-opus-5-5", "regen|claude-sonnet-5"}
         assert arm["cost_usd"] == pytest.approx(4.0)
+
+    def test_model_label_never_shows_an_alias_as_an_id(self):
+        assert m.model_label({"model": "claude-opus-5-5", "model_alias": "opus"}) == "claude-opus-5-5"
+        assert m.model_label({"model": None, "model_alias": "opus"}) == "unresolved (opus)"
+        assert m.model_label({"model": "n/a", "model_alias": "sonnet"}) == "unresolved (sonnet)"
+        assert m.model_label({"model": ""}) == "unresolved"
+        records = [_rec("a", 1, 90), _rec("a", 2, 88, model=None, model_alias="opus")]
+        arm = m.arm_metrics(records, {})
+        assert set(arm["groups"]) == {"fresh|claude-opus-5-5", "fresh|unresolved (opus)"}
+        assert arm["models"] == ["claude-opus-5-5", "unresolved (opus)"]
+        assert arm["groups"]["fresh|unresolved (opus)"]["model"] == "unresolved (opus)"
 
 
 class TestCompare:
@@ -239,6 +263,13 @@ class TestCompare:
         base = [_rec(i, r, 90) for i in "abcd" for r in (1, 2)]
         cand = [_rec(i, r, s) for i in "abcd" for r, s in ((1, 84), (2, 94))]
         assert "noise up (fresh)" in m.compare_arms(base, cand, {})["flags"]
+
+    def test_unresolved_models_flag_even_when_the_aliases_match(self):
+        base = [_rec(i, r, 90, model=None, model_alias="opus") for i in "ab" for r in (1, 2)]
+        cand = [_rec(i, r, 90, model=None, model_alias="opus") for i in "ab" for r in (1, 2)]
+        assert "model changed" in m.compare_arms(base, cand, {})["flags"]
+        resolved = [_rec(i, r, 90) for i in "ab" for r in (1, 2)]
+        assert "model changed" not in m.compare_arms(resolved, resolved, {})["flags"]
 
 
 class TestGateMonitor:
@@ -285,3 +316,38 @@ class TestGateMonitor:
         ]
         report = m.gate_monitor(records, lambda r: False)
         assert any("regen_json_invalid" in a for a in report["alarms"])
+
+    @staticmethod
+    def _improvements(visible: int, permission: int | None, total: int = 2) -> dict:
+        counts = {"total": total, "visible": visible, "W": 1, "P": 0, "C": total - 1, "new": 0}
+        if permission is not None:
+            counts["permission"] = permission
+        return counts
+
+    def test_improvements_use_the_gate_counted_semantics(self):
+        records = [
+            # Permission-only: the gate counted nothing visible and kept.
+            self._record(0, improvements=self._improvements(0, 1)),
+            self._record(1, verdict="merge", code="merge", improvements=self._improvements(2, 0)),
+            # Permission cited next to a counted improvement: merged, not a permission-only keep.
+            self._record(2, verdict="merge", code="merge", improvements=self._improvements(1, 1)),
+            # A record without the permission key stays out of the permission share.
+            self._record(3, improvements=self._improvements(0, None)),
+            # The crash fallback's minimal record carries no counts at all.
+            self._record(4, code="script_crashed", prev_rescored=None, new=None),
+        ]
+        imp = m.gate_monitor(records, lambda r: False)["improvements"]
+        assert imp["n"] == 4
+        assert imp["visible_mean"] == pytest.approx(3 / 4)
+        assert imp["with_visible"] == pytest.approx(2 / 4)
+        assert (imp["permission_n"], imp["permission_cited"]) == (3, 2)
+        assert imp["permission_cited_share"] == pytest.approx(2 / 3)
+        assert imp["permission_only_keeps"] == 1
+
+    def test_permission_citation_alarm(self):
+        cited = [self._record(i, improvements=self._improvements(0, 1)) for i in range(2)]
+        clean = [self._record(10 + i, improvements=self._improvements(0, 0)) for i in range(8)]
+        report = m.gate_monitor(cited + clean, lambda r: False)
+        assert any("'Expected, not a defect' bullet" in a and "2/10" in a for a in report["alarms"])
+        quiet = m.gate_monitor(cited[:1] + clean + clean[:1], lambda r: False)
+        assert not any("Expected, not a defect" in a for a in quiet["alarms"])
