@@ -169,6 +169,8 @@ class TestImplReviewProvenance:
         fallback = script[script.index("; then\n") :]
         assert 'code: "script_crashed"' in fallback
         assert 'echo "code=script_crashed"' in fallback
+        # Same notice shape as the script's own line (docs/workflows/overview.md).
+        assert "code=script_crashed model=${MODEL_ID} criteria=${CRITERIA_VERSION} reason=" in fallback
 
     def test_regen_context_feeds_prev_provenance(self):
         env = _step("impl-review.yml", "Regen gate")["env"]

@@ -800,7 +800,7 @@ jobs:
                --prev-model "$PREV_MODEL" --prev-criteria-version "$PREV_CRITERIA_VERSION" \
                --record-out "$RECORD" \
                "${FLAGS[@]}"; then
-            echo "::notice::regen_gate spec=${SPEC_ID} lib=${LIBRARY} prev_stored=${PREV_STORED} prev_rescored=n/a new=${SCORE} verdict=keep code=script_crashed model=${MODEL_ID} reason=gate script crashed"
+            echo "::notice::regen_gate spec=${SPEC_ID} lib=${LIBRARY} prev_stored=${PREV_STORED} prev_rescored=n/a new=${SCORE} verdict=keep code=script_crashed model=${MODEL_ID} criteria=${CRITERIA_VERSION} reason=gate script crashed"
             {
               echo "verdict=keep"
               echo "reason=gate script crashed"
