@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
 Library: bokeh 3.10.0 | Python 3.13.15
 Quality: 84/100 | Updated: 2026-09-27
@@ -45,7 +45,6 @@ STATUS_COLOR = {
 STATUS_LABEL_COLOR = {"On Time": "#FFFFFF", "Delayed": "#1A1A17", "Cancelled": "#FFFFFF"}
 
 # Data: project completion status by department
-np.random.seed(42)
 departments = ["Engineering", "Marketing", "Sales", "Operations"]
 statuses = ["On Time", "Delayed", "Cancelled"]
 
@@ -80,8 +79,8 @@ p = figure(
     width=3200,
     height=1800,
     x_range=Range1d(-0.01, 1.01),
-    y_range=Range1d(-0.01, 1.12),  # small headroom above 100% for the callout, not accidental padding
-    title="Project Completion Status by Department · bar-spine · bokeh · anyplot.ai",
+    y_range=Range1d(-0.01, 1.18),  # headroom above 100% for the callout and legend clearance
+    title="Project Completion Status by Department · bar-spine · python · bokeh · anyplot.ai",
     toolbar_location=None,  # bokeh's default toolbar shrinks the saved PNG below the target height
     min_border_bottom=160,  # room for 34pt x-tick labels + 42pt x-axis label
     min_border_left=180,  # room for 34pt y-tick labels + 42pt y-axis label
