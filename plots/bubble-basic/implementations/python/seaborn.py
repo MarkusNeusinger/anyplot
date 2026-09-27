@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: seaborn 0.13.2 | Python 3.13.15
-Quality: 91/100 | Updated: 2026-09-26
+Quality: 88/100 | Updated: 2026-09-26
 """
 
 import os
@@ -26,10 +26,10 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 np.random.seed(42)
 
 tier_params = [
-    ("Low Income", 50, 300, 85, 22, 12),
-    ("Lower-Middle Income", 300, 950, 38, 11, 12),
-    ("Upper-Middle Income", 950, 3200, 14, 5, 12),
-    ("High Income", 3200, 8500, 5, 2, 12),
+    ("Low Income", 50, 300, 85, 22, 15),
+    ("Lower-Middle Income", 300, 950, 38, 11, 15),
+    ("Upper-Middle Income", 950, 3200, 14, 5, 15),
+    ("High Income", 3200, 8500, 5, 2, 15),
 ]
 tier_colors = {t[0]: IMPRINT_PALETTE[i] for i, t in enumerate(tier_params)}
 
@@ -37,7 +37,7 @@ rows = []
 for tier, s_min, s_max, m_ctr, m_std, n in tier_params:
     spending = np.random.uniform(s_min, s_max, n)
     mortality = np.clip(np.random.normal(m_ctr, m_std, n), 0.5, 150)
-    population = np.clip(np.random.lognormal(1.8, 1.1, n), 1.0, 200.0)
+    population = np.clip(np.random.lognormal(3.1, 0.35, n), 10.0, 100.0)
     for s, m, pop in zip(spending, mortality, population, strict=False):
         rows.append(
             {
@@ -72,6 +72,20 @@ fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 hue_order = [t[0] for t in tier_params]
+
+# Subtle lowess trend line — makes the inverse spending/mortality
+# relationship an explicit visual cue without adding a text callout
+sns.regplot(
+    data=df,
+    x="Healthcare Spending ($/year)",
+    y="Child Mortality (per 1,000 births)",
+    scatter=False,
+    lowess=True,
+    ax=ax,
+    color=INK_SOFT,
+    line_kws={"linewidth": 1.6, "linestyle": "--", "alpha": 0.55},
+)
+
 sns.scatterplot(
     data=df,
     x="Healthcare Spending ($/year)",
@@ -79,8 +93,8 @@ sns.scatterplot(
     size="Population (M)",
     hue="Income Tier",
     hue_order=hue_order,
-    sizes=(40, 900),
-    alpha=0.72,
+    sizes=(60, 900),
+    alpha=0.65,
     palette=tier_colors,
     edgecolor=PAGE_BG,
     linewidth=0.7,
@@ -115,13 +129,11 @@ tier_names = {t[0] for t in tier_params}
 for handle, text_obj in zip(legend.legend_handles, legend.texts, strict=False):
     text_obj.set_fontsize(8)
     text_obj.set_color(INK)
-    # Size handles (non-tier labels): override colors so they're visible in dark mode
+    # Size handles (non-tier labels): the combined hue+size legend renders these
+    # as Line2D markers, not patches, so recolor via the marker face/edge setters.
     if text_obj.get_text() not in tier_names:
-        try:
-            handle.set_facecolor(INK_SOFT)
-            handle.set_edgecolor(INK_SOFT)
-        except AttributeError:
-            pass
+        handle.set_markerfacecolor(INK_SOFT)
+        handle.set_markeredgecolor(INK_SOFT)
 legend.set_frame_on(True)
 legend.get_frame().set_alpha(0.92)
 legend.get_frame().set_edgecolor(INK_SOFT)

@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 93/100 | Updated: 2026-09-26
+// Quality: 93/100 | Updated: 2026-09-27
 
 const t = window.ANYPLOT_TOKENS;
 const size = window.ANYPLOT_SIZE;
@@ -101,11 +101,11 @@ const legendGraphics = [
   ...legendSamples.map((sample) => ({
     type: "text",
     left: legendCx + maxDiameter / 2 + 14,
-    top: sample.cy - 8,
+    top: sample.cy - 9,
     style: {
       text: `${Math.round(sample.value)}`,
       fill: t.inkSoft,
-      fontSize: 16,
+      fontSize: 18,
     },
   })),
 ];
@@ -159,8 +159,8 @@ chart.setOption({
     seriesIndex: 0,
     orient: "vertical",
     left: 24,
-    top: 120,
-    itemHeight: 140,
+    top: 130,
+    itemHeight: 105,
     itemWidth: 16,
     calculable: false,
     hoverLink: false,
