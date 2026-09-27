@@ -2,9 +2,9 @@ library: plotly
 language: python
 specification_id: bubble-basic
 created: '2025-12-23T01:30:54Z'
-updated: '2026-09-26T23:41:14Z'
+updated: '2026-09-27T00:29:37Z'
 generated_by: claude-sonnet
-workflow_run: 36279462212
+workflow_run: 36282193588
 issue: 755
 language_version: 3.13.15
 library_version: 7.1.0
@@ -12,47 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - Size legend uses three reference bubbles whose swatch colors are computed along
-    the same imprint_seq gradient as the real data markers, so the legend accurately
-    previews what a bubble of that revenue actually looks like
-  - Annotation callout on the 'efficient innovator' point (low R&D spend, high PMF
-    score) adds a clear narrative focal point that guides the reader to the most interesting
-    outlier
-  - Theme-adaptive chrome is threaded correctly through title, axis titles, tick labels,
-    gridlines, legend, and annotation box in both renders — no dark-on-dark or light-on-light
-    failures
-  - Idiomatic plotly bubble sizing via sizemode='area' with a computed sizeref and
-    sizemin floor keeps the smallest bubbles visible while scaling area (not radius)
-    correctly
-  - Reproducible synthetic data (np.random.seed(42)) with plausible tech-company R&D/PMF/revenue
-    values and no unused imports
+  - 'Dual encoding: the continuous imprint_seq colorscale is tied to revenue and reinforces
+    bubble size, and the legend swatches are tinted to match the actual rendered bubble
+    colors at those revenue values — a thoughtful internal-consistency touch.'
+  - Clear data storytelling via two annotated archetypes ("Efficient innovator", "Underinvested
+    laggard") that give the viewer an immediate entry point into the R&D-vs-PMF relationship.
+  - 'Full compliance with the spec''s notes: area-based sizing (sizemode="area"),
+    alpha=0.6 transparency for overlap handling, and a proper size legend built via
+    dummy traces.'
+  - Clean, idiomatic plotly code — go.Figure with sizeref/sizemode, a custom hovertemplate,
+    and theme-adaptive tokens threaded through every layout element (title, axes,
+    grid, legend, annotations).
+  - 'Both renders are fully theme-correct: correct backgrounds, all text legible,
+    and the imprint_seq data colors are pixel-identical between light and dark — only
+    chrome flips.'
   weaknesses:
-  - Data point count (n=38) is below the specification's recommended 50-500 points
-    for a bubble chart — consider increasing n toward the low end of that range for
-    denser, more convincing coverage
-  - Bubbles in the mid R&D-spend cluster (~26-27% on the x-axis) overlap tightly enough
-    that individual points are hard to distinguish even with alpha=0.65 — a touch
-    more jitter or a slightly lower sizeref in that range would help
-  - Visual hierarchy relies on a single annotation as the only storytelling device;
-    the rest of the chart is fairly uniform in emphasis
+  - Some bubbles in the dense low-R&D cluster (x approx 5-10%) overlap heavily enough
+    that a couple of the smallest markers are nearly fully occluded — consider alpha
+    closer to 0.5 or slightly more sizemin separation to keep individual points readable
+    in that cluster.
+  - Title fills only ~35% of the plot width because the mandated string has no descriptive
+    prefix — adding the optional '{Descriptive Title} · ' prefix would both fill the
+    title proportion closer to the 50-70% guideline and reinforce the R&D/PMF narrative
+    the annotations already set up.
+  - Beyond the two callouts, the layout is a fairly standard bubble scatter with no
+    further engineered visual hierarchy (e.g. highlighting the top-performer cluster
+    near x=35-40%), which caps the data storytelling at two isolated points.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), not pure white — matches the light-theme surface.
-      Chrome: Title "bubble-basic · python · plotly · anyplot.ai" is centered, dark ink text, clearly legible. X-axis title "R&D Spend (% of Revenue)" and Y-axis title "Product-Market-Fit Score" are dark and readable. Tick labels are soft dark gray, legible against the cream background. Gridlines are faint and unobtrusive. A "Revenue (size)" legend box sits top-left with an off-white elevated fill and thin border, showing three color-tinted reference bubbles ($100M, $600M, $2000M). An annotation box "Efficient innovator (low R&D, high PMF)" with an arrow points to a standout bubble near (22, 92).
-      Data: Bubbles are colored along a green-to-blue continuous scale (imprint_seq) tied to revenue, with the smallest/lowest-revenue bubbles rendering near brand green #009E73 and the largest/highest-revenue bubbles near blue #4467A3, each with a thin light-colored stroke matching the page background for definition against overlapping neighbors.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues observed.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "bubble-basic · python · plotly · anyplot.ai" in dark ink, centered top. Axis titles "R&D Spend (% of Revenue)" and "Product-Market-Fit Score" in dark ink. Tick labels in soft grey-brown. Subtle light-grey gridlines on both axes. Only left/bottom spines drawn (top/right removed). Legend box "Revenue (size)" top-left with three swatches ($100M green, $600M teal, $2000M blue-grey) on an elevated off-white card with thin border. Two annotation callout boxes ("Efficient innovator", "Underinvested laggard") with arrows pointing to specific bubbles.
+      Data: 62 bubbles ranging from small bright green (low revenue) through teal to blue-grey (high revenue), area-scaled by revenue, opacity ~0.6, thin off-white bubble edges for separation on overlaps. First-series baseline color is #009E73 green as required, shifting toward #4467A3 blue for higher-revenue bubbles via the imprint_seq colorscale.
+      Legibility verdict: PASS — all title, axis, tick, legend, and annotation text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), not pure black — matches the dark-theme surface.
-      Chrome: Same title, axis titles, and tick labels now render in light ink/off-white tones, fully legible against the dark background. Gridlines remain faint but visible. The legend box switches to the dark elevated fill (#242420) with a light border, and the annotation box follows the same dark-elevated styling with light text.
-      Data: The bubble colors and gradient (green→blue) are identical to the light render — only the chrome (background, text, grid, legend/annotation frames) flipped, confirming the palette rule holds.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed. Brand green remains vivid and distinguishable from the near-black surface.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and axis titles now in light ink (#F0EFE8), tick labels in light grey-brown (#B8B7B0), gridlines subtle light-on-dark. Legend card and annotation callout boxes now use the dark elevated background (#242420) with light text and a visible light border. Spines and structure identical to the light render, just re-tokened for dark chrome.
+      Data: Bubble colors are pixel-identical to the light render (green-to-blue imprint_seq gradient, same positions/sizes) — only the chrome (background, text, grid, legend/annotation frames) flipped, as required.
+      Legibility verdict: PASS — no dark-on-dark failures; all text (title, axis labels, ticks, legend, annotations) reads clearly against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -60,47 +63,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized and legible in both themes
+        comment: Explicit font sizes throughout (title 16, axis 12, tick/legend/annotation
+          10); all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Alpha 0.65 keeps overlaps readable, but the 26-27% R&D cluster is
-          tightly packed
+        comment: No text-on-text or text-on-data collisions; legend and annotation
+          boxes sit in open space
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: sizemin=9 keeps smallest bubbles visible; dense cluster slightly
-          reduces individual visibility
+        comment: Alpha=0.6 + thin edges handle most overlap, but a few bubbles in
+          the dense low-R&D cluster are nearly fully occluded
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-blue continuum is CVD-safe, no red-green sole signal
+        comment: imprint_seq continuous scale is CVD-safe; no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, no clipping, generous margins
+        comment: Canvas gate passed (3200x1800); nothing clipped, margins generous
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units, correct mandated title
+        comment: Both axis labels descriptive with units (% of Revenue)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq colorscale, correct theme backgrounds in both renders
+        comment: imprint_seq used correctly for the continuous revenue dimension;
+          theme-correct backgrounds in both renders
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -108,22 +113,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Legend swatches color-matched to the gradient, dynamic title-fontsize
-          scaling
+        comment: Dual color+size encoding with color-matched legend swatches; polished
+          but standard scatter layout otherwise
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped spines, subtle grid, generous whitespace, theme-colored
+          bubble edges for definition
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: L-shaped axis lines, subtle grid, generous whitespace, marker edge
-          stroke matching page background
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Single annotation provides a focal point but overall emphasis is
-          otherwise uniform
+        comment: Two annotated archetypes create a clear entry point, but no further
+          hierarchy elsewhere in the chart
     spec_compliance:
       score: 15
       max: 15
@@ -133,48 +138,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bubble chart via go.Scatter with sized markers
+        comment: Correct bubble chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Third dimension via size, size legend, transparency for overlap,
-          bonus color encoding
+        comment: Area-based sizing, alpha 0.5-0.7 transparency, size legend all present
+          per spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y/size mapped correctly, all data visible in axis ranges
+        comment: x/y/size mapped correctly, all data visible within axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact, legend labels informative
+        comment: Title matches mandated format exactly; legend labels match revenue
+          tiers
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: n=38 is below the spec's recommended 50-500 point range
+        comment: All three quantitative dimensions (R&D%, PMF score, revenue) clearly
+          shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral tech-company R&D/PMF/revenue data
+        comment: Plausible, neutral tech-company financial scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible value ranges for all three dimensions
+        comment: R&D %, PMF score, and revenue ranges are all domain-sensible
     code_quality:
       score: 10
       max: 10
@@ -184,7 +191,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -196,36 +203,39 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, plotly, os — all used
+        comment: Only numpy, os, plotly.graph_objects — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity for the legend color-matching logic, well-commented
+          rationale
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: write_image/write_html with correct theme-suffixed filenames
+        comment: Saves plot-{THEME}.png and .html correctly via current write_image/write_html
+          API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Textbook sizeref/sizemode='area' bubble-chart pattern
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Hovertemplate + customdata, and a color-matched dummy-trace size
-          legend
+        comment: sizeref/sizemode='area', hovertemplate, layout config all idiomatic
+          plotly patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Dummy-trace size legend and color-matched swatches are a real plotly-specific
+          technique, though a known idiom rather than a rare one
   verdict: APPROVED
 impl_tags:
   dependencies: []
