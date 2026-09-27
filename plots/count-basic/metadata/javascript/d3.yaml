@@ -2,27 +2,26 @@ library: d3
 language: javascript
 specification_id: count-basic
 created: '2026-08-11T06:55:36Z'
-updated: '2026-08-11T07:34:00Z'
+updated: '2026-09-27T20:55:12Z'
 generated_by: claude-sonnet
-workflow_run: 31468578151
+workflow_run: 36349126868
 issue: 2033
-language_version: 22.23.1
+language_version: 22.23.2
 library_version: 7.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/d3/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/d3/plot-dark.html
-quality_score: 95
+quality_score: 85
 review:
   strengths:
   - Genuinely counts raw per-respondent observations via d3.rollup instead of pre-aggregating
     — matches the count-basic spec's defining distinction from a basic bar chart
   - Sorted descending by frequency with count labels above each bar, exactly per the
     spec's notes
-  - 'Adds real analytical value beyond the base requirement: a dashed mean-reference
-    line with label, and a diamond-symbol ''Most common'' callout on the leading category'
-  - Opacity fade (0.6-1.0) tied to count gives the leading bar a focal point without
-    introducing a second data color
+  - 'Fixed W1 from the previous review: the mean-reference line and its label now
+    use the theme-adaptive ink/neutral token instead of amber, so it no longer competes
+    semantically with the amber ''Most common'' leader callout'
   - 'Count-label halo (paint-order: stroke with pageBg) keeps digits legible where
     they sit close to the mean line'
   - 'Clean chrome: tick marks removed, axis domains removed, y-axis-only subtle gridlines,
@@ -32,29 +31,35 @@ review:
   - All font sizes explicitly set and legible in both themes; no clipping or overflow
     at the canvas edges
   weaknesses:
-  - The mean-reference line and the 'Most common' callout both use the amber semantic
-    anchor; the style guide reserves 'neutral' specifically for baseline/reference
-    lines and amber for warning/caution, so the two distinct annotations currently
-    read as the same signal type — consider using the theme-adaptive neutral/ink token
-    for the mean line and reserving amber for the leader callout
-  - The Java count label ('87') sits very close to the amber mean line ('Mean = 91')
-    — the halo keeps it readable but the two elements are tight; a touch more vertical
-    offset would give it more breathing room
-  - 'Library Mastery is strong but not maximal: the emphasis opacity scale and diamond
-    annotation are nice touches yet still fairly transferable techniques rather than
-    something uniquely D3 (e.g. force/voronoi/hierarchy)'
+  - 'Data-color identity is broken between themes for 5 of the 7 bars: the emphasis
+    scale applies fill-opacity (0.6-1.0) to the same palette[0] hex, but that opacity
+    composites against the theme''s page background, so e.g. the TypeScript bar renders
+    as roughly rgb(48,176,140) — pale mint — on the #FAF8F1 light background and roughly
+    rgb(5,133,97) — dark forest green — on the #1A1A17 dark background. These are
+    visibly different colors, not just a chrome flip. Fix: keep all bars at fill-opacity
+    1 with the single palette[0] hex (matching the spec''s ''one color for all bars''
+    requirement) and create emphasis through sort order, a thin ink-colored stroke,
+    or a callout instead of opacity blended over the page background.'
+  - 'Variant creep on this -basic spec: the dashed mean-reference line (with its ''Mean
+    = 91'' label) and the diamond ''Most common'' callout are annotation layers that
+    the spec''s Notes (count labels, optional percentage annotations only) and the
+    characteristic bullet (''one color for all bars ... no second grouping variable,
+    stacking, error bars or cumulative line'') do not ask for. Consider removing these
+    two extra layers, or limiting embellishment to what the Notes/characteristics
+    explicitly permit, so the basic variant earns its storytelling from data and sort
+    order rather than added encodings.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "count-basic · javascript · d3 · anyplot.ai" in bold dark ink at top center, subtitle "Developer survey · n = 640 respondents · sorted by frequency" below it in softer gray. X-axis label "Primary Programming Language" and Y-axis label "Number of Respondents" both in dark ink. Y-axis ticks (0-180 by 20s) and 7 category tick labels (Python, JavaScript, TypeScript, Java, Go, Rust, C++) in soft gray. Subtle horizontal gridlines only. All text clearly legible against the light background.
-      Data: 7 vertical bars in brand green (#009E73), opacity fading from full strength on Python (165) down to ~0.6 on C++ (32), giving the leading bar visual weight. Black count labels with a light halo sit above each bar (165, 154, 101, 87, 65, 36, 32). An amber dashed line marks the mean (91) with a "Mean = 91" label at the right. An amber diamond marker and "Most common" text sit above the Python bar. First series correctly renders in brand green #009E73.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "count-basic · javascript · d3 · anyplot.ai" in bold dark ink at top center, subtitle "Developer survey · n = 640 respondents · sorted by frequency" below it in softer gray. X-axis label "Primary Programming Language" and Y-axis label "Number of Respondents" both in dark ink. Y-axis ticks (0-180 by 20s) and 7 category tick labels (Python, JavaScript, TypeScript, Java, Go, Rust, C++) in soft gray. Subtle horizontal gridlines only, no visible spines. All text is clearly legible against the light background.
+      Data: 7 vertical bars in brand green (#009E73), fill-opacity fading from full strength on Python (165) down toward ~0.6 on C++ (32) to create a visual focal point. Black count labels with a light halo sit above each bar (165, 154, 101, 87, 65, 36, 32). A now gray/ink dashed mean line (91) with a "Mean = 91" label sits at the right (recolored from amber in the previous version). An amber diamond marker and "Most common" text sit above the Python bar.
       Legibility verdict: PASS — no overlapping or clipped text, all chrome and data elements readable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and subtitle now render in light ink (white/near-white for title, soft light gray for subtitle) — fully readable against the dark surface. Axis titles in light ink, tick labels in soft light gray. Gridlines remain subtle and visible.
-      Data: Bars are the identical brand green (#009E73) with the same opacity fade as the light render — data colors did not shift between themes. Count labels are light-colored with a dark halo (matching pageBg), remaining legible even close to the amber mean line. The amber mean line, "Mean = 91" label, diamond marker, and "Most common" annotation are unchanged in hue and equally legible on the dark surface.
-      Legibility verdict: PASS — no dark-on-dark text found; all title/axis/tick/annotation text uses the theme-adaptive light ink tokens correctly.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and subtitle render in light ink (white/near-white for title, soft light gray for subtitle) — fully readable against the dark surface. Axis titles in light ink, tick labels in soft light gray. Gridlines remain subtle and visible. No dark-on-dark text found anywhere.
+      Data: Bars use the same palette[0] hex and the same fill-opacity gradient as the light render, but composited against the near-black background the faded bars (TypeScript through C++) render as noticeably darker, more saturated greens than their pale-mint counterparts in the light render — the data color is NOT visually identical between the two themes for these 5 bars (confirmed by pixel sampling: TypeScript ≈ rgb(48,176,140) light vs. rgb(5,133,97) dark). Only Python (full opacity) is a true, unshifted #009E73 in both themes. The mean line, its label, the diamond marker, and the "Most common" text are all unchanged in hue and legible on the dark surface.
+      Legibility verdict: PASS for text — all title/axis/tick/annotation text uses theme-adaptive light ink tokens correctly; FAIL for strict data-color identity on the 5 opacity-faded bars (see weaknesses).
   criteria_checklist:
     visual_quality:
       score: 29
@@ -62,38 +67,39 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit and readable in both themes; count label
-          for Java (87) sits close to the mean line
+        comment: All font sizes explicitly set; readable in both themes and at desktop/mobile
+          widths; title fits without clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap; halo strokes keep count labels legible near the
-          mean line
+        comment: No overlapping text; halo strokes keep count labels legible near
+          the mean line
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Wide bars appropriately sized for 7 sparse categories
+        comment: Wide bars well-sized for 7 sparse categories; no legend needed for
+          single series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue green with opacity variation, amber accent, good contrast
-          on both surfaces
+        comment: Single-hue green with good contrast on both surfaces; amber accent
+          distinguishable
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area uses the large majority of the canvas with balanced margins;
-          nothing cut off
+        comment: Plot area fills most of the canvas with balanced margins; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -103,60 +109,69 @@ review:
           of Respondents'''
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series is #009E73, theme-correct backgrounds and chrome in
-          both renders'
+        passed: false
+        comment: 'First bar (max count) is a true #009E73 in both themes, but the
+          fill-opacity emphasis scale on the other 5 bars composites against the theme
+          background, producing visibly different RGB between light and dark (e.g.
+          TypeScript: rgb(48,176,140) light vs rgb(5,133,97) dark) — data colors are
+          not identical across themes'
     design_excellence:
-      score: 17
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful opacity-driven emphasis and typography, clearly above
-          a plain default bar chart
+        comment: Thoughtful typography, halo-protected labels, and now-corrected mean-line
+          color above a plain default bar chart, though the layout itself is a standard
+          sorted bar chart
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
         comment: Axis domains and tick marks removed, y-axis-only subtle grid, generous
-          whitespace, halo-protected labels
+          whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: Sort order + mean reference line + 'Most common' callout give an
-          immediate, clear insight
+        passed: false
+        comment: Sort order (a required feature) is present, but the mean-line and
+          leader-callout annotations that drive most of the perceived hierarchy are
+          unasked additions on this -basic spec and earn no storytelling credit per
+          the SC-01 variant-creep rule
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: 'Genuine count plot: counts raw per-respondent observations via d3.rollup,
-          not pre-aggregated data'
+        passed: false
+        comment: Genuine count plot via d3.rollup on raw observations, but the opacity-graded
+          bars (not 'one color for all bars') plus the mean-reference line and 'Most
+          common' diamond callout are encodings/annotation layers the -basic spec's
+          Notes and characteristic section do not ask for
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Sorted descending, count labels above bars, consistent bar width/spacing
-          per spec notes
+          — all Notes items present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = category (language), Y = count, all categories shown
+        comment: X = category, Y = count, all categories shown, bars sit exactly at
+          their counted values
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -173,8 +188,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 7 categories with a clear frequency spread from majority to long
-          tail
+        comment: Clear frequency spread from a dominant category down through a long
+          tail — matches the spec's 'unequal heights' permission
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -197,7 +212,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports/data/plot flow; the small LCG helper is the library-recommended
+        comment: Linear imports/data/plot flow; the small LCG helper is the idiomatic
           reproducibility pattern for D3
       - id: CQ-02
         name: Reproducibility
@@ -225,24 +240,28 @@ review:
         comment: 'Renders into #container per the mount-node contract, animations
           not used'
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
         comment: Idiomatic d3-array rollup, scaleBand/scaleLinear, axisBottom/axisLeft,
           d3-shape symbol generator
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: d3.rollup counting and d3.symbol diamond marker are D3-distinctive,
-          though not maximally exotic
-  verdict: APPROVED
+        comment: d3.rollup counting raw observations is genuinely D3-distinctive for
+          implementing a count plot; the diamond leader marker is a nice touch but
+          decorative rather than load-bearing
+  verdict: REJECTED
+  model: claude-sonnet-5
+  criteria_version: qc-4374db4964.aqr-815475d157.sg-7006008fc6.lib-10a34e8881
+  rendered_at: '2026-09-27T20:48:43Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -253,4 +272,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
