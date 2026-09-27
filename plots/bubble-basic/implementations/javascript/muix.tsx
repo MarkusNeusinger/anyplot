@@ -55,10 +55,10 @@ function randomNormal(rand, mean, stdDev) {
 // The community package has no bubble/z-size scatter mode (ZAxisConfig
 // only maps z to colour), so bubbles are drawn as a custom SVG layer
 // positioned via the chart's own scale hooks.
-// "Growth leaders" gets a wider (xSpread, ySpread) than the other two
-// archetypes — the previous review flagged that its 15 bubbles packed so
-// tightly around x=20-22, y=17-21 that individual boundaries were hard to
-// distinguish even with the pageBg stroke separation.
+// Spreads are wide enough that the normal distributions rarely produce
+// fully-fused bubbles on their own; fillOpacity plus the pageBg stroke
+// (see spec: "use transparency to handle overlapping bubbles") cover the
+// rest, so no separate collision-avoidance pass is needed.
 const ARCHETYPES = [
   { name: "Growth leaders", growth: 24, margin: 19, share: 62, count: 15, xSpread: 9, ySpread: 7.5, color: t.palette[0] },
   { name: "Mid-market", growth: 12, margin: 10, share: 34, count: 20, xSpread: 7, ySpread: 6, color: t.palette[1] },
@@ -122,55 +122,6 @@ const SIZE_LEGEND_VALUES = [
 const COLOR_LEGEND_HEIGHT = 20 + (ARCHETYPES.length - 1) * 24 + 12;
 const SIZE_LEGEND_HEIGHT =
   20 + SIZE_LEGEND_VALUES.reduce((height, value) => height + radiusForSize(value) * 2 + 16, 0);
-
-// Declutter pass: per-archetype spread tuning (see above) can't fully
-// prevent a chance pocket where several bubbles from different archetypes
-// land on top of each other. x and y need different px-per-unit factors
-// since the axes don't share a domain width, so distances are computed in
-// approximate pixel space — mirroring ChartContainer's linear min/max
-// mapping, since the real xScale/yScale hooks aren't available until the
-// chart mounts — and converted back to data units. The scale used here is
-// only an approximation (built from the pre-repulsion spread); the real
-// axis domain is recomputed below from the settled positions, so a bubble
-// can never end up padded outside its own axis range. Bubbles closer than
-// 92% of their summed radii are pushed apart — tight enough to still read
-// as an organic cloud, strong enough that no two bubbles fuse into an
-// undifferentiated blob.
-const rawXValues = companies.map((d) => d.x);
-const rawYValues = companies.map((d) => d.y);
-const rawXDomain = [Math.min(...rawXValues) - 4, Math.max(...rawXValues) + 4];
-const rawYDomain = [Math.min(...rawYValues) - 4, Math.max(...rawYValues) + 4];
-const { width: CANVAS_WIDTH, height: CANVAS_HEIGHT } = window.ANYPLOT_SIZE;
-const PLOT_WIDTH = CANVAS_WIDTH - MARGIN.left - MARGIN.right;
-const PLOT_HEIGHT = CANVAS_HEIGHT - TITLE_HEIGHT - MARGIN.top - MARGIN.bottom;
-const PX_PER_X = PLOT_WIDTH / (rawXDomain[1] - rawXDomain[0]);
-const PX_PER_Y = PLOT_HEIGHT / (rawYDomain[1] - rawYDomain[0]);
-
-for (let iter = 0; iter < 40; iter++) {
-  for (let i = 0; i < companies.length; i++) {
-    for (let j = i + 1; j < companies.length; j++) {
-      const a = companies[i];
-      const b = companies[j];
-      const dxPx = (b.x - a.x) * PX_PER_X;
-      const dyPx = (b.y - a.y) * PX_PER_Y;
-      const dist = Math.hypot(dxPx, dyPx) || 0.001;
-      const minDist = (radiusForSize(a.size) + radiusForSize(b.size)) * 0.92;
-      if (dist < minDist) {
-        const push = (minDist - dist) / 2;
-        const ux = dxPx / dist;
-        const uy = dyPx / dist;
-        a.x -= (ux * push) / PX_PER_X;
-        a.y -= (uy * push) / PX_PER_Y;
-        b.x += (ux * push) / PX_PER_X;
-        b.y += (uy * push) / PX_PER_Y;
-      }
-    }
-  }
-}
-companies.forEach((d) => {
-  d.x = Math.round(d.x * 10) / 10;
-  d.y = Math.round(d.y * 10) / 10;
-});
 
 const xValues = companies.map((d) => d.x);
 const yValues = companies.map((d) => d.y);
@@ -282,7 +233,7 @@ export default function Chart() {
           height: TITLE_HEIGHT,
           lineHeight: `${TITLE_HEIGHT}px`,
           paddingLeft: 24,
-          fontSize: 22,
+          fontSize: 26,
           fontWeight: 500,
           color: t.ink,
         }}
