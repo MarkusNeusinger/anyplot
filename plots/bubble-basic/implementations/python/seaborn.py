@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: seaborn 0.13.2 | Python 3.13.15
 Quality: 91/100 | Updated: 2026-09-27
@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.ticker import FuncFormatter
 
 
 # Theme tokens
@@ -111,6 +112,15 @@ title_fontsize = max(8, round(12 * ratio))
 ax.set_xlabel("Healthcare Spending ($ / year)", fontsize=10, color=INK)
 ax.set_ylabel("Child Mortality (per 1,000 births)", fontsize=10, color=INK)
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
+
+# Spending spans two orders of magnitude across tiers, so a linear x-axis
+# crushes the Low Income cluster into a sliver; log scale spaces every tier
+# evenly and separates its 15 points instead.
+ax.set_xscale("log")
+ax.set_xticks([100, 300, 1000, 3000, 8000])
+ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x:,.0f}"))
+ax.xaxis.set_minor_formatter(FuncFormatter(lambda x, _: ""))
+
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, length=0)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
