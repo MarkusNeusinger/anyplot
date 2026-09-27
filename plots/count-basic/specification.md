@@ -22,3 +22,11 @@ A count plot displays the frequency of observations in each category of a catego
 - Consider adding count labels on or above bars for precise reading
 - Optional percentage annotations can show relative proportions
 - Use consistent bar width and adequate spacing between categories
+
+## What a good version looks like
+
+- A good version shows: one vertical bar per category rising from a zero baseline to the number of observations in it, so bar height stays proportional to the count, on a count axis that is never truncated and has whole-number ticks.
+- A good version shows: bars of one width with even gaps, and categories in the order the context calls for: by descending frequency, or their original or alphabetical order.
+- A good version shows: count labels, if drawn, on or above their bars, and percentage annotations, if drawn, matching each bar's share of all observations, readable in both themes and not colliding with each other.
+- A good version shows: the basic variant's single categorical variable: one color for all bars, the count and percentage labels the Notes allow, and no second grouping variable, stacking, error bars or cumulative line.
+- Expected, not a defect: unequal heights, including one dominant category, a near-empty one and a long tail of rare categories; they are the point of the chart, not an imbalance to fix.

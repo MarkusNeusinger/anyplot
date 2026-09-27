@@ -25,3 +25,11 @@ A bar chart with error bars displays categorical data as rectangular bars with v
 - Consider horizontal orientation when category labels are long or numerous
 - Use consistent bar widths and error bar styling across all categories
 - Asymmetric error bars may be needed for skewed distributions or percentage data
+
+## What a good version looks like
+
+- A good version shows: one bar per category extending from a zero baseline to its central value, so bar length stays proportional to the value, on a value axis that is never truncated and spans every error bar in full.
+- A good version shows: an error bar on every bar, drawn through the bar end from the lower to the upper bound (with unequal arms where the errors are asymmetric), with visible caps at both ends, in one styling that stands out against the bars and the page in both themes.
+- A good version shows: a legend or annotation naming what the error bars represent, such as a standard deviation, a standard error or a confidence interval.
+- A good version shows: bars of one width with even gaps, and categories in a meaningful order: by value, or their natural order (a control group first, time points) when they have one, with horizontal bars and error bars when category labels are long.
+- Expected, not a defect: error bars of very different lengths, ranges of neighboring bars that overlap, and asymmetric error bars on skewed or percentage data; they carry the uncertainty the chart exists to show.

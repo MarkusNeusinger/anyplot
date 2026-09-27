@@ -27,3 +27,11 @@ A grouped lollipop chart displays multiple series across categorical variables u
 - Include a legend to identify series colors
 - Consider horizontal orientation if category labels are long
 - Sort categories by a meaningful metric to reveal patterns
+
+## What a good version looks like
+
+- A good version shows: every lollipop as a thin stem from one shared zero baseline to a circular marker at its value, on a value axis that is never truncated, so stem lengths compare directly within a category and across categories.
+- A good version shows: each category's lollipops side by side with a slight offset as one group, a wider gap between groups than within them, and the series in the same order in every group.
+- A good version shows: one distinct color per series, the same in every group and named in a legend, so each series can be followed across the categories.
+- A good version shows: categories in a meaningful order: sorted by a metric such as their total, or their natural order when they have one, with horizontal lollipops when category labels are long.
+- Expected, not a defect: markers of neighboring series at nearly the same height, series that swap rank from one category to the next, and very short stems for values near zero; they are the point of the chart, not an imbalance to fix.

@@ -27,3 +27,12 @@ A bullet chart displays a single measure against qualitative ranges and a target
 - Horizontal orientation is most common; vertical can be used when space requires it
 - Consider adding the actual value as a text label for precise reading
 - Multiple bullet charts should align on a common scale when comparing related metrics
+
+## What a good version looks like
+
+- A good version shows: a measure bar, narrower than the bands behind it, extending from zero to the actual value on a linear scale, so its length stays proportional to the value.
+- A good version shows: the target as a thin marker line perpendicular to the measure bar at the target value, contrasting with both the bar and the bands in both themes.
+- A good version shows: the qualitative bands as grayscale shades in a steady light-to-dark progression behind the bar, each ending at its threshold and distinguishable from its neighbors and from the page in both themes.
+- A good version shows: several bullets, if drawn, stacked with their labels beside them and aligned on one common scale where they compare related metrics.
+- A good version shows: the basic variant's three layers per bullet (bands, measure bar and target marker), with the actual-value label the Notes allow, one measure-bar color throughout, and no color change by performance, trend line or extra series.
+- Expected, not a defect: the target marker drawn across the measure bar, a measure that falls short of or passes the target, and bands with no color bar or legend entry, since their shading marks qualitative ranges, not a measured value.

@@ -24,3 +24,11 @@ A Pareto chart combining descending-sorted bars (by frequency or count) with a c
 - Include an 80% horizontal reference line to highlight the 80/20 threshold
 - Primary y-axis shows raw counts/frequency; secondary y-axis shows cumulative percentage
 - Cumulative line markers should be placed at the center-top of each bar
+
+## What a good version looks like
+
+- A good version shows: bars sorted by count from the largest on the left to the smallest on the right, each rising from a zero baseline on a count axis that is never truncated.
+- A good version shows: a cumulative percentage line with one marker per bar, centered over its bar, rising at every step to the full total at the last bar, on a secondary percentage axis spanning the whole cumulative range.
+- A good version shows: the 80/20 reference line the Notes ask for, drawn across the percentage axis and visible in both themes, so the vital few categories left of where the cumulative line crosses it stand out.
+- A good version shows: both y axes labeled, counts on one side and cumulative percentage on the other, so the bars read against one axis and the line against the other.
+- Expected, not a defect: a few tall bars followed by a long tail of short ones, a cumulative line that flattens toward the end, and a crossing of the reference line wherever the data puts it rather than at an exact 80/20 split.
