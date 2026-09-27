@@ -2,9 +2,9 @@ library: matplotlib
 language: python
 specification_id: bubble-basic
 created: '2025-12-23T01:30:44Z'
-updated: '2026-09-27T01:50:12Z'
+updated: '2026-09-27T02:39:02Z'
 generated_by: claude-sonnet
-workflow_run: 36285898399
+workflow_run: 36288671244
 issue: 755
 language_version: 3.13.15
 library_version: 3.11.2
@@ -12,43 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 94
 review:
   strengths:
-  - 'Both Attempt 1 weaknesses are fully resolved: the Product Category legend is
-    now fully opaque (framealpha=1.0, no bubble bleed-through) and the ''Premium standout''
-    annotation leader now approaches from below, clear of the legend box, in both
-    renders'
-  - Correct Imprint palette usage in canonical order, identical across both themes
-  - Theme-adaptive chrome fully correct in both renders (backgrounds, text, grid,
-    legend frames all theme-correct)
-  - 'Genuine matplotlib-distinctive technique: a real inset_axes panel used as a size
-    legend, placed in the one empty region of the data'
-  - Log-scale x-axis well-reasoned for the right-skewed retail price data
-  - Bubble sizing scales by area with alpha=0.5 for overlap handling, per spec notes
-  - Clean, reproducible, KISS-structured code with no fake interactivity
+  - Bubble size correctly scaled by area (not radius) via matplotlib's s= area semantics,
+    matching the spec's explicit requirement
+  - Real inset-axes size legend (Sales Volume) placed in the one empty data gap, plus
+    a category color legend, both styled with theme-adaptive elevated backgrounds
+  - Log-scaled price axis is a thoughtful, well-justified choice for the heavily right-skewed
+    price distribution across categories
+  - Focal-point annotation ("Premium standout") picked from the non-outlier core points
+    adds a genuine storytelling touch beyond color/size alone
+  - Explicit per-category bargain/flagship outlier injection ensures every category
+    visibly spans its full realistic range instead of relying on random luck
+  - Full theme-adaptive chrome (background, ink tokens, legend frames, annotation
+    box) correctly threaded through both renders with identical Imprint data colors
+  - Title fontsize scaling formula correctly applied for the longer descriptive-prefixed
+    title, avoiding overflow
   weaknesses:
-  - 'Design Excellence is solid but not yet top-tier: the standout annotation and
-    size legend are functional and clean, but the overall composition stops short
-    of an immediately obvious single narrative (DE-03) or FiveThirtyEight-level polish
-    (DE-01)'
-  - 'Data Quality is good but not maximal: category spreads are realistic but a slightly
-    wider range of outliers per category would push DQ-01 to a perfect score'
+  - The Kitchenware cluster around $50-70 price has heavy bubble overlap that blurs
+    into a blob, making individual bubble sizes hard to distinguish in that region
+    - slightly larger alpha spread or minor jitter could help
+  - Design Excellence is strong but not yet at flawless publication level - the dense
+    overlap region above keeps it just short of top marks
+  - 'Library Mastery could go further: inset_axes size legend is a nice touch, but
+    no other distinctly matplotlib-only feature (e.g. custom Path/patches) is used'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1, not pure white.
-      Chrome: Title "Retail Product Portfolio · bubble-basic · python · matplotlib · anyplot.ai" and both axis labels ("Retail Price ($, log scale)" / "Customer Quality Rating (1–10)") render in dark ink, fully legible. Tick labels legible in dark-gray. Subtle y-axis-only gridlines. All spines removed.
-      Data: ~90 bubbles across 4 categories (Electronics=#009E73 green, Furniture=lavender #C475FD, Kitchenware=blue #4467A3, Outdoor Gear=ochre #BD8233), area-scaled by sales volume, alpha=0.5, theme-colored edges. First series is confirmed brand green #009E73. Two legends: a fully opaque "Product Category" box (upper right, no bubbles bleeding through it now) and a "Sales Volume" size-legend built from a real inset_axes panel (lower right). The "Premium standout" annotation callout sits below-left of its target bubble, with its leader line approaching cleanly from outside the legend's bounding box — no crossing.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "Retail Product Portfolio · bubble-basic · python · matplotlib · anyplot.ai" in dark ink, fully visible and not clipped or overflowing. X-axis label "Retail Price ($, log scale)" and Y-axis label "Customer Quality Rating (1-10)" both dark and readable. Tick labels dark gray, readable. Subtle horizontal gridlines only (y-axis), visible but not competing with data. Category legend (upper right, "Product Category") and size legend (lower right, "Sales Volume", rendered as a real inset axes) both use an elevated off-white panel with dark border and dark/soft-dark text - fully readable. "Premium standout" annotation box uses the same elevated panel style with a thin connecting line to the flagged Electronics bubble.
+      Data: Four product categories colored Electronics=#009E73 (brand green, first series), Furniture=lavender (#C475FD), Kitchenware=blue (#4467A3), Outdoor Gear=ochre (#BD8233) - canonical Imprint order. Bubbles are alpha-blended (~0.5) with a background-colored edge for definition. Sizes scale with sales volume by area.
+      Legibility verdict: PASS - no light-on-light issues, all text and data clearly distinguishable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17, not pure black.
-      Chrome: Same title and axis labels in light ink (#F0EFE8-consistent), fully readable. Tick labels in light gray. No dark-on-dark failures anywhere — all chrome elements flipped correctly.
-      Data: Bubble colors are pixel-identical to the light render (green/lavender/blue/ochre confirmed); only chrome (background, text, grid, legend frames, annotation box) flips. Legend box is fully opaque with no bleed-through; annotation leader line stays clear of the legend, same as light render.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Title now rendered in light ink (near-white), fully readable against the dark background. Axis labels and tick labels flipped to light/soft-light tones, all legible. Gridlines subtle and still visible on the dark surface. Both legends and the annotation box switched to the darker elevated panel (#242420) with light-toned text and borders - no dark-on-dark failures observed anywhere (title, axis text, tick labels, legend text, annotation text all clearly readable).
+      Data: Same four category colors (#009E73 green, lavender, blue, ochre) as the light render - confirmed identical, only the chrome (background, text, legend/annotation panels) flipped. Bubble alpha and edge treatment unchanged.
+      Legibility verdict: PASS - no dark-on-dark text, brand green and all categorical hues remain clearly visible.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -56,49 +59,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit, readable in both themes, title fontsize
-          scaled for length
+        comment: All font sizes explicitly set (title scaled for length, 10pt axis
+          labels, 8pt ticks); fully readable in both themes at full and mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Prior legend collision and bleed-through both fixed; no overlap in
-          either render
+        comment: No text overlaps other text, data, or legend/annotation boxes
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bubble sizes and alpha well-adapted to density
+        comment: Marker sizes well adapted to data density overall, but the dense
+          Kitchenware cluster near $50-70 blends into a hard-to-parse blob
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, alpha 0.5 with theme-colored edges, CVD-safe palette
+        comment: Imprint palette is CVD-safe; alpha 0.5 plus background-colored edges
+          give good separation of overlapping markers
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot fills a healthy portion of canvas, nothing
-          cut off
+        comment: Plot fills a large, balanced share of the 3200x1800 canvas; legends
+          sit near the plot, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: Both axis labels are descriptive with units/scale ($, log scale;
+          1-10)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
-          in both renders'
+        comment: 'First series is #009E73, remaining categories use canonical Imprint
+          order 2-4, background and chrome are theme-correct in both renders'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -106,22 +111,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Log-scale axis choice, custom inset size legend, canonical palette
-          — strong design, not yet publication-ready tier
+        comment: Thoughtful custom palette use, intentional hierarchy via annotation
+          and log axis, clearly above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, legend/annotation collision from Attempt
-          1 fully resolved
+        comment: All spines removed, subtle single-axis grid, styled legends - held
+          back slightly by clutter in the dense overlap region
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color/size hierarchy plus one annotation creates emphasis, but not
-          yet a single obvious narrative
+        comment: Focal-point annotation plus color/size hierarchy guides the viewer
+          to a clear insight
     spec_compliance:
       score: 15
       max: 15
@@ -131,49 +136,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bubble chart with x/y/size encoding
+        comment: 'Correct bubble chart: x/y position plus size-encoded third dimension'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area scaling, alpha for overlap, size legend all present
+        comment: Area-scaled bubbles, alpha transparency (0.5), size legend, optional
+          category coloring all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Price on x, quality on y, size on sales volume — correctly mapped
+        comment: x=price, y=quality rating, size=sales volume; axes show the full
+          data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match category names
+        comment: Title matches the mandated format with a descriptive prefix; legend
+          labels match the category data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows spread across 4 categories with varying price/quality/sales,
-          though not every category shows extreme outliers
+        comment: Four categories each span their full realistic range via explicit
+          bargain/flagship outliers plus normal distributions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral retail scenario
+        comment: Retail product portfolio (price vs. quality vs. sales) is a real,
+          neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Prices, quality ratings, sales volumes all plausible and internally
-          consistent
+        comment: Price, quality rating, and sales volume ranges are all plausible
+          and internally consistent per category
     code_quality:
       score: 10
       max: 10
@@ -183,7 +192,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear imports/data/plot/save structure
+        comment: Flat imports -> data -> plot -> save structure, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -195,19 +204,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Every import (os, numpy, FuncFormatter, NullLocator, inset_axes)
+          is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex, no fake functionality
+        comment: Appropriately complex for the storytelling goal, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with default bbox_inches
+        comment: Saves plot-{THEME}.png with default bbox_inches, no deprecated API
     library_mastery:
       score: 9
       max: 10
@@ -217,26 +227,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Axes-based API throughout, idiomatic scatter/legend/annotate usage
+        comment: Axes-level API throughout, FuncFormatter/NullLocator for ticks, idiomatic
+          patterns
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: inset_axes-built size legend is a genuinely matplotlib-specific technique
+        comment: Hand-built inset_axes size legend is a distinctive matplotlib-native
+          technique, though it's the only such feature used
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - inset-axes
+  - annotations
   - manual-ticks
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting

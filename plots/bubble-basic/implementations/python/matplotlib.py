@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: matplotlib 3.11.2 | Python 3.13.15
-Quality: 93/100 | Updated: 2026-09-27
+Quality: 94/100 | Updated: 2026-09-27
 """
 
 import os
@@ -69,18 +69,37 @@ category_specs = [
     },
 ]
 
-price_parts, quality_parts, sales_parts, category_parts = [], [], [], []
+price_parts, quality_parts, sales_parts, category_parts, is_outlier_parts = [], [], [], [], []
 for spec in category_specs:
     n = spec["n"]
-    price_parts.append(np.random.normal(spec["price_mean"], spec["price_std"], n))
-    quality_parts.append(np.random.normal(spec["quality_mean"], spec["quality_std"], n))
-    sales_parts.append(np.random.normal(spec["sales_mean"], spec["sales_std"], n))
-    category_parts.extend([spec["name"]] * n)
+    prices = np.random.normal(spec["price_mean"], spec["price_std"], n)
+    qualities = np.random.normal(spec["quality_mean"], spec["quality_std"], n)
+    sales = np.random.normal(spec["sales_mean"], spec["sales_std"], n)
+
+    # Explicit outlier pair per category — a bargain-bin low and a flagship
+    # high, derived from that category's own mean/std — so every category
+    # visibly spans its full realistic range instead of relying on luck.
+    bargain_price = max(spec["price_mean"] - 2.2 * spec["price_std"], 5)
+    flagship_price = spec["price_mean"] + 2.6 * spec["price_std"]
+    prices = np.append(prices, [bargain_price, flagship_price])
+    qualities = np.append(
+        qualities, [spec["quality_mean"] - 1.6 * spec["quality_std"], spec["quality_mean"] + 1.7 * spec["quality_std"]]
+    )
+    sales = np.append(
+        sales, [spec["sales_mean"] + 1.4 * spec["sales_std"], spec["sales_mean"] - 0.9 * spec["sales_std"]]
+    )
+
+    price_parts.append(prices)
+    quality_parts.append(qualities)
+    sales_parts.append(sales)
+    category_parts.extend([spec["name"]] * (n + 2))
+    is_outlier_parts.extend([False] * n + [True, True])
 
 price = np.clip(np.concatenate(price_parts), 8, 1200)
 quality_rating = np.clip(np.concatenate(quality_parts), 1, 10)
 sales_volume = np.clip(np.concatenate(sales_parts), 3, 130)
 category = np.array(category_parts)
+is_outlier = np.array(is_outlier_parts)
 
 category_names = [spec["name"] for spec in category_specs]
 category_colors = IMPRINT_PALETTE[:4]
@@ -159,11 +178,14 @@ plt.setp(category_legend.get_texts(), color=INK_SOFT)
 
 # Focal-point annotation — call out the standout premium Electronics bubble
 # (highest price x quality among its category) to sharpen the storytelling
-# beyond color/size hierarchy alone.
-electronics_mask = category == "Electronics"
-standout_local_idx = np.argmax(price[electronics_mask] * quality_rating[electronics_mask])
-standout_x = price[electronics_mask][standout_local_idx]
-standout_y = quality_rating[electronics_mask][standout_local_idx]
+# beyond color/size hierarchy alone. Restricted to the non-outlier core points
+# — the explicit flagship/bargain outliers above can land under the category
+# legend (upper right) and must never become the annotation target.
+electronics_core_mask = (category == "Electronics") & ~is_outlier
+standout_local_idx = np.argmax(price[electronics_core_mask] * quality_rating[electronics_core_mask])
+standout_x = price[electronics_core_mask][standout_local_idx]
+standout_y = quality_rating[electronics_core_mask][standout_local_idx]
+
 ax.annotate(
     "Premium standout",
     xy=(standout_x, standout_y),
