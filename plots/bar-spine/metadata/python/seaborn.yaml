@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: bar-spine
 created: '2026-05-08T15:13:42Z'
-updated: '2026-09-27T03:09:43Z'
+updated: '2026-09-27T03:17:32Z'
 generated_by: claude-sonnet
 workflow_run: 36290177487
 issue: 5249
@@ -12,43 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Semantic color mapping (green=Retained, red=Churned) is well-justified per the
-    style guide's semantic exception, and reinforced with explicit legend text so
-    it doesn't rely on color alone.
-  - 'All spec requirements implemented faithfully: proportional widths, no-gap adjacency,
-    in-segment percentage labels, and centered x-axis captions with sample sizes.'
-  - Realistic, well-scaled business data that itself tells a clear channel-quality
-    story.
-  - Clean, deterministic, KISS-structured code.
+  - 'Correct spine-plot mechanics: bar widths are proportional to each channel''s
+    marginal frequency (n=850 down to n=290), and every bar''s stacked segments sum
+    to exactly 100%, matching the spec''s core requirement'
+  - Theme-adaptive chrome is fully correct in both renders — backgrounds, text, grid,
+    and legend box all flip appropriately while the Retained/Churned data colors stay
+    pixel-identical between light and dark
+  - Percentage labels inside segments with a sensible visibility threshold (only shown
+    when proportion > 6%) keep the chart readable without clutter in thin segments
+  - 'Smart semantic color assignment: Retained uses brand green (#009E73), Churned
+    uses the semantic-red anchor (#AE3030) per the style guide''s status exception
+    — matches reader intuition immediately'
+  - X-axis labels double as the marginal-frequency context (channel name plus n=count),
+    reinforcing the spine plot's variable-width semantics for the viewer
+  - Channels are ordered by descending retention rate, creating an implicit best-to-worst
+    narrative across the row of bars
   weaknesses:
-  - 'Library Mastery is weak: no actual seaborn plotting function (sns.barplot, etc.)
-    is used - only sns.set_theme/sns.despine for styling, while all data marks are
-    drawn via raw matplotlib ax.bar/ax.text. Consider routing colors through sns.color_palette
-    or otherwise leaning on a seaborn idiom in the data-drawing path.'
-  - 'Design Excellence is solid but not exceptional: the plot would benefit from a
-    stronger focal-point callout (e.g., an annotation or highlight on the highest-churn
-    channel) to elevate data storytelling from ''visible pattern'' to ''immediately
-    obvious insight''.'
-  - Minor refinement headroom (cleaner legend frame, tick-mark removal) to move visual
-    refinement from 'good' to 'every detail polished'.
+  - Legend (loc='upper right') sits very close to the top of the Paid Social bar's
+    Churned segment — add bbox_to_anchor or extra ylim headroom to guarantee a clean
+    gap between the legend box and bar tops
+  - All bar drawing goes through raw matplotlib ax.bar() rather than a seaborn plotting
+    function (seaborn's barplot can't vary width per category) — seaborn usage is
+    limited to theming/palette routing, so Library Mastery scores low; consider whether
+    any seaborn-native statistical or faceting feature could be layered in without
+    breaking the variable-width requirement
+  - Design Excellence is solid but not yet publication-grade — consider a subtle secondary
+    visual cue (e.g. faint category-total labels above bars, or a reference line)
+    to push Data Storytelling further
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: dark title "Customer Retention by Channel · bar-spine · python · seaborn · anyplot.ai" fully visible at top; y-axis "Proportion of Customers" with 0/25/50/75/100% ticks; x-axis channel names with (n=...) sample sizes; subtle horizontal grid; upper-right legend box with "Retained"/"Churned" swatches. All chrome text is dark ink on the light surface and clearly readable.
-      Data: 5 variable-width bars (Referral, Organic Search, Email, Direct, Paid Social), each stacked into a green (#009E73) "Retained" segment (bottom) and a matte-red (#AE3030) "Churned" segment (top), each with a bold white percentage label. First series confirmed #009E73.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Customer Retention by Channel · bar-spine · python · seaborn · anyplot.ai" in dark ink, centered, comfortably fitting the width without clipping. Y-axis shows 0%/25%/50%/75%/100% tick labels in soft dark gray. X-axis shows five channel names (Referral, Organic Search, Email, Direct, Paid Social) each with an "(n=...)" subtitle, centered under their variable-width bars. Legend box (top right, cream fill, soft border) labels "Retained" (green swatch) and "Churned" (red swatch).
+      Data: Five adjacent bars of varying width (widest = Referral, narrowest = Paid Social), each split into a green "Retained" segment (bottom) and a red "Churned" segment (top), with bold white percentage labels centered in each segment (e.g. 78%/22% for Referral down to 42%/58% for Paid Social). First series is #009E73 (brand green).
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: title, axis label, and x-axis captions render in light cream/off-white; tick labels and channel captions in a softer light grey; grid in a faint light tint; legend box uses a dark elevated fill with light border and light text. No dark-on-dark issues found - all chrome text is clearly legible against the dark surface.
-      Data: identical green (#009E73) and matte-red (#AE3030) segments in the same positions/proportions as the light render - confirmed unchanged across themes. White in-segment percentage labels remain legible on both fills.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, tick labels, and legend now rendered in light ink/cream tones, fully legible against the dark surface. Legend box background flips to the elevated dark tone with a light border.
+      Data: Same five bars with identical green/red proportions and identical percentage values as the light render — the Retained/Churned data colors are pixel-identical to the light version; only the chrome (background, text, grid, legend fill) has flipped.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all tick labels, title, and legend text remain visible. Brand green and matte red both read clearly against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -56,49 +64,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (dynamic title scaling, 11pt segment
-          labels, 9pt axis captions, 8pt ticks); readable in both themes, no clipping
+        comment: All font sizes explicitly set; title fits without clipping in both
+          themes; readable at full res
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No collisions between labels, captions, or legend
+        comment: Legend sits close to the top of the Paid Social bar's Churned segment
+          but no readable content is lost
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Large, unambiguous bar segments; labels only shown on segments >6%
+        comment: Percentage labels shown only when segment > 6%, avoiding clutter
+          in thin segments
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant encoding via fixed position (retained bottom, churned top)
-          plus text labels, not hue alone
+        comment: Bold white labels plus hue give redundant encoding; green/red are
+          distinguishable with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, good canvas utilization, nothing cut off
+        comment: Plot fills the canvas well with balanced margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis descriptive with % ticks; x-axis channel names include sample
-          sizes
+        comment: Y-axis labeled 'Proportion of Customers' with % ticks; x-axis shows
+          channel + n=count
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Churned uses semantic-red anchor #AE3030 with
-          explicit legend mapping; theme-correct chrome in both renders'
+        comment: 'First series #009E73, Churned uses semantic-red anchor #AE3030;
+          backgrounds and chrome theme-correct in both renders'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -106,22 +116,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful documented color semantics, in-segment labels, edge-highlighted
-          borders - above default but not publication-grade
+        comment: Thoughtful semantic palette, dynamic title sizing, clean typography
+          — above default but not fully publication-grade
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid, 3 of 4 spines removed, decent whitespace - good but
-          not fully polished
+        comment: Spines despined, subtle 10% grid, generous whitespace; minor legend-proximity
+          issue
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Channels sorted best-to-worst with width variation reinforcing volume,
-          but no explicit callout on the standout finding
+        comment: Descending retention-rate ordering creates a clear best-to-worst
+          narrative across channels
     spec_compliance:
       score: 15
       max: 15
@@ -131,27 +141,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct spine plot with variable widths and normalized 100% stacking
+        comment: 'Correct spine plot: variable-width bars normalized to 100% height'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Proportional widths, no-gap adjacency, legend, centered labels, and
-          percentage labels all implemented
+        comment: Percentage labels, adjacent bars, centered x-labels, clear legend
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=channel (width-encoded), Y=proportion 0-100%
+        comment: Width = marginal frequency, height = conditional proportion, correctly
+          mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labels match
-          data
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match data (Retained/Churned)
     data_quality:
       score: 15
       max: 15
@@ -161,20 +172,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows varying marginal frequency and varying conditional proportion
+        comment: Retention ranges from 78% down to 42% across channels of varying
+          size, showing full range of the concept
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible business retention-by-channel scenario
+        comment: Neutral, realistic business scenario (customer retention by acquisition
+          channel)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proportions align with real-world marketing intuition; internally
-          consistent sample sizes
+        comment: Plausible counts and retention rates for each channel type
     code_quality:
       score: 10
       max: 10
@@ -184,61 +196,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure, no functions/classes
+        comment: Linear imports/data/plot/save structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex, no fake functionality
+        comment: Appropriately complex for a plot type seaborn doesn't natively support;
+          no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via current API, no bbox_inches='tight'
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight', current API
     library_mastery:
-      score: 2
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: seaborn used only for set_theme/despine styling; all data marks drawn
-          via raw matplotlib ax.bar/ax.text, no sns.* plotting function
+        passed: true
+        comment: Bars drawn via raw matplotlib ax.bar() since sns.barplot can't vary
+          width per category; seaborn limited to theming/palette routing
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Nothing here is specific to seaborn versus plain matplotlib
-  verdict: REJECTED
+        comment: No feature distinctive to seaborn specifically is leveraged
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - custom-legend
+  - annotations
   - manual-ticks
   patterns:
-  - data-generation
+  - explicit-figure
   - iteration-over-groups
   dataprep:
   - cumulative-sum
-  - normalization
   styling:
   - edge-highlighting
   - grid-styling

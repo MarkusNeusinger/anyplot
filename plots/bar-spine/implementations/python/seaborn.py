@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
 Library: seaborn 0.13.2 | Python 3.13.15
-Quality: 86/100 | Updated: 2026-09-27
+Quality: 89/100 | Updated: 2026-09-27
 """
 
 import os
