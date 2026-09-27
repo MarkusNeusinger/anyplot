@@ -685,12 +685,20 @@ def build_record(
     prev_criteria_version: str | None = None,
     at: str | None = None,
 ) -> dict[str, Any]:
-    """The gate record: scores, counts, codes and provenance — nothing a model wrote."""
+    """The gate record: scores, counts, codes and provenance — nothing a model wrote.
+
+    ``improvements`` counts what the review listed: ``total`` and the per-kind
+    counts (``W``/``P``/``C``/``new``) cover every listed item, ``permission``
+    the items that cite an "Expected, not a defect" bullet, and ``visible`` only
+    the counted ones (not a permission) with a non-empty ``where_visible`` —
+    the number the gate decided on.
+    """
     kinds = {"W": 0, "P": 0, "C": 0, "new": 0}
     for item in result.improvements:
         kind = _ref_kind(item["ref"])
         if kind in kinds:
             kinds[kind] += 1
+    counted = [i for i in result.improvements if i["ref"] not in result.permission_refs]
     return {
         "v": RECORD_VERSION,
         "pr": pr,
@@ -708,8 +716,9 @@ def build_record(
         "code": result.code,
         "improvements": {
             "total": len(result.improvements),
-            "visible": len([i for i in result.improvements if i["where_visible"]]),
+            "visible": len([i for i in counted if i["where_visible"]]),
             **kinds,
+            "permission": len(result.improvements) - len(counted),
         },
         "regressions": len(result.regressions),
         "scenario_changed": result.scenario_changed,

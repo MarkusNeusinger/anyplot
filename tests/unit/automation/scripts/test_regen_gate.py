@@ -565,14 +565,20 @@ class TestCli:
         imp = [{"ref": "C2", "what": "Bubbles overlap in the dense cluster now", "where_visible": "centre, both renders"}]
         regen.write_text(json.dumps(_regen(prev_rescored=80, improvements=imp)), encoding="utf-8")
         summary = tmp_path / "summary.md"
+        record_file = tmp_path / "record.json"
         args = ["decide", "--spec-id", "bubble-basic", "--library", "d3", "--score", "84", "--regen-json", str(regen)]
         args += ["--spec-file", str(spec), "--prev-renders", "available", "--summary-out", str(summary)]
+        args += ["--record-out", str(record_file)]
         assert main(args) == 0
         stdout = capsys.readouterr().out
         assert "verdict=keep" in stdout
+        assert "code=no_visible_improvement" in stdout
         assert "C2 = 'Expected, not a defect' bullet, not counted as an improvement" in stdout
         assert "verdict=keep" in out.read_text()
         assert "_(permission, not counted)_" in summary.read_text()
+        record = json.loads(record_file.read_text(encoding="utf-8"))
+        assert record["improvements"]["visible"] == 0
+        assert record["improvements"]["permission"] == 1
 
     def test_decide_invalid_json_keeps(self, tmp_path, monkeypatch, capsys):
         monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
@@ -630,6 +636,11 @@ class TestReasonCodes:
         assert decide(_inp(score=80)).code == "below_tolerance"
         assert decide(_inp()).code == "merge"
 
+    def test_permission_only_improvement_is_no_visible_improvement(self):
+        imp = [{"ref": "C2", "what": "Overlap visible", "where_visible": "centre"}]
+        result = decide(_inp(regen=_regen(improvements=imp), characteristic_count=3, permission_refs=frozenset({"C2"})))
+        assert (result.verdict, result.code) == (KEEP, "no_visible_improvement")
+
     def test_every_code_is_declared(self):
         seen = {
             decide(_inp(canvas_failed=True)).code,
@@ -678,9 +689,28 @@ class TestGateRecord:
         assert record["verdict"] == "merge"
         assert record["code"] == "merge"
         assert (record["prev_stored"], record["prev_rescored"], record["new"]) == (92, 85, 85)
-        assert record["improvements"] == {"total": 2, "visible": 1, "W": 1, "P": 0, "C": 0, "new": 1}
+        assert record["improvements"] == {"total": 2, "visible": 1, "W": 1, "P": 0, "C": 0, "new": 1, "permission": 0}
         assert record["regressions"] == 0
         assert record["prev_model"] == "n/a"
+        assert validate_record(record) == []
+
+    def test_permission_is_listed_but_not_counted_as_visible(self):
+        """``visible`` is the number the gate decided on, so it agrees with the code."""
+        imp = [
+            {"ref": "C2", "what": "Overlap visible", "where_visible": "centre"},
+            {"ref": "C4", "what": "Size legend circles filled", "where_visible": "legend"},
+        ]
+        permissions = frozenset({"C2"})
+        merged = decide(_inp(regen=_regen(improvements=imp), characteristic_count=5, permission_refs=permissions))
+        record = build_record(merged, spec_id="bubble-basic", library="d3", score=85, prev_stored=90)
+        assert (record["verdict"], record["code"]) == ("merge", "merge")
+        assert record["improvements"] == {"total": 2, "visible": 1, "W": 0, "P": 0, "C": 2, "new": 0, "permission": 1}
+
+        kept = decide(_inp(regen=_regen(improvements=imp[:1]), characteristic_count=5, permission_refs=permissions))
+        record = build_record(kept, spec_id="bubble-basic", library="d3", score=85, prev_stored=90)
+        assert (record["verdict"], record["code"]) == ("keep", "no_visible_improvement")
+        assert record["improvements"]["visible"] == 0
+        assert record["improvements"]["permission"] == 1
         assert validate_record(record) == []
 
     def test_contains_no_model_written_text(self):
