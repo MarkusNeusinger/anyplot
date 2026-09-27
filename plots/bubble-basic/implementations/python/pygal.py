@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 89/100 | Created: 2026-09-27
@@ -36,7 +36,7 @@ transit_coverage = np.concatenate(
 )
 np.random.shuffle(transit_coverage)
 
-congestion_index = np.clip(85 - transit_coverage * 0.65 + np.random.normal(0, 6, n_cities), 15, 95)
+congestion_index = np.clip(85 - transit_coverage * 0.65 + np.random.normal(0, 9, n_cities), 15, 95)
 vehicle_registrations = np.clip(200 + congestion_index * 4 + np.random.normal(0, 60, n_cities), 150, 700)
 
 # Area-scaled bubble sizing via 7 tiers (pygal has no per-point size API).
@@ -48,9 +48,11 @@ n_tiers = 7
 bin_edges_vr = np.quantile(vehicle_registrations, np.linspace(0, 1, n_tiers + 1))
 tier_bins = np.clip(np.digitize(vehicle_registrations, bin_edges_vr[1:-1]), 0, n_tiers - 1)
 
-# sqrt of each tier's actual midpoint value (not tier index) for accurate area scaling
+# sqrt of each tier's actual midpoint value (not tier index) for accurate area scaling.
+# Widened range (18-130, up from 20-120) so adjacent tiers stay visually separable
+# as nested rings when bubbles overlap in the dense low-coverage cluster.
 tier_mid_norm = [((bin_edges_vr[t] + bin_edges_vr[t + 1]) / 2 - vr_min) / (vr_max - vr_min) for t in range(n_tiers)]
-tier_sizes = [int(20 + 100 * norm**0.5) for norm in tier_mid_norm]
+tier_sizes = [int(18 + 112 * norm**0.5) for norm in tier_mid_norm]
 
 # Imprint sequential colormap (imprint_seq): #009E73 (brand green) → #4467A3 (blue), equidistant stops
 tier_colors = tuple(
@@ -184,7 +186,9 @@ chart = pygal.XY(
 chart.css = (
     "file://style.css",
     "file://graph.css",
-    f"inline:#chart-{chart.uuid} .dot {{ stroke: {PAGE_BG}; stroke-width: 3px; stroke-opacity: 1; }}",
+    # stroke-width bumped 3px -> 4px so the halo ring stays a visible boundary
+    # in the dense low-coverage cluster even where several bubbles overlap.
+    f"inline:#chart-{chart.uuid} .dot {{ stroke: {PAGE_BG}; stroke-width: 4px; stroke-opacity: 1; }}",
     f"inline:#chart-{chart.uuid} .text-overlay text.label {{ fill: {INK}; }}",
 )
 
