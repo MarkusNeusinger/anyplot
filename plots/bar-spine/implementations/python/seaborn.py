@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 87/100 | Created: 2026-05-08
+Quality: pending | Updated: 2026-09-27
 """
 
 import os
@@ -19,6 +19,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
+# Imprint palette — Retained uses the brand green, Churned uses the semantic
+# red anchor (bad/loss role), per the style guide's status semantic exception.
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 sns.set_theme(
@@ -38,36 +40,28 @@ sns.set_theme(
     },
 )
 
-# Data
-titanic = sns.load_dataset("titanic")
-titanic = titanic.dropna(subset=["pclass", "survived"])
-titanic["survived_label"] = titanic["survived"].map({1: "Survived", 0: "Did Not Survive"})
+# Data — customers acquired per channel, six months later split into retained/churned
+channels = ["Referral", "Organic Search", "Email", "Direct", "Paid Social"]
+retained_counts = np.array([663, 440, 280, 186, 122])
+churned_counts = np.array([187, 180, 150, 124, 168])
+channel_totals = retained_counts + churned_counts
+total_customers = channel_totals.sum()
 
-ct = titanic.groupby(["pclass", "survived_label"]).size().reset_index(name="count")
-pclass_totals = titanic.groupby("pclass").size()
-total = pclass_totals.sum()
+fill_order = ["Retained", "Churned"]
+colors = [IMPRINT[0], IMPRINT[4]]
 
-pclass_order = [1, 2, 3]
-pclass_labels = ["1st Class", "2nd Class", "3rd Class"]
-fill_order = ["Survived", "Did Not Survive"]
-colors = [IMPRINT[0], IMPRINT[1]]
-
-widths = [pclass_totals[p] / total for p in pclass_order]
-x_positions = np.cumsum([0] + widths[:-1])
+widths = channel_totals / total_customers
+x_positions = np.cumsum(np.concatenate([[0], widths[:-1]]))
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-for i, pclass in enumerate(pclass_order):
-    pclass_data = ct[ct["pclass"] == pclass].set_index("survived_label")
-    class_total = pclass_totals[pclass]
+for i in range(len(channels)):
+    proportions = [retained_counts[i] / channel_totals[i], churned_counts[i] / channel_totals[i]]
     bottom = 0.0
 
-    for j, fill_cat in enumerate(fill_order):
-        count = pclass_data.loc[fill_cat, "count"] if fill_cat in pclass_data.index else 0
-        proportion = count / class_total
-
+    for j, proportion in enumerate(proportions):
         ax.bar(
             x=x_positions[i],
             height=proportion,
@@ -76,7 +70,7 @@ for i, pclass in enumerate(pclass_order):
             color=colors[j],
             align="edge",
             edgecolor=PAGE_BG,
-            linewidth=1.0,
+            linewidth=0.8,
         )
 
         if proportion > 0.06:
@@ -86,7 +80,7 @@ for i, pclass in enumerate(pclass_order):
                 f"{proportion:.0%}",
                 ha="center",
                 va="center",
-                fontsize=18,
+                fontsize=11,
                 color="white",
                 fontweight="bold",
             )
@@ -94,35 +88,32 @@ for i, pclass in enumerate(pclass_order):
         bottom += proportion
 
 # X-axis labels centered under variable-width bars
-ax.set_ylim(-0.09, 1.05)
-for i, (pclass, label) in enumerate(zip(pclass_order, pclass_labels, strict=True)):
+ax.set_ylim(-0.14, 1.05)
+for i, channel in enumerate(channels):
     center = x_positions[i] + widths[i] / 2
-    ax.text(center, -0.04, f"{label}\n(n={pclass_totals[pclass]})", ha="center", va="top", fontsize=16, color=INK_SOFT)
+    ax.text(center, -0.05, f"{channel}\n(n={channel_totals[i]})", ha="center", va="top", fontsize=9, color=INK_SOFT)
 
 # Style
+title = "Customer Retention by Channel · bar-spine · python · seaborn · anyplot.ai"
+title_fontsize = round(12 * min(1.0, 67 / len(title)))
+title_fontsize = max(title_fontsize, 8)
+
 ax.set_xlim(0, 1)
 ax.set_xticks([])
 ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0])
-ax.set_yticklabels(["0%", "25%", "50%", "75%", "100%"], fontsize=16, color=INK_SOFT)
-ax.set_ylabel("Proportion of Passengers", fontsize=20, color=INK)
-ax.set_title(
-    "Titanic Survival by Passenger Class · bar-spine · seaborn · anyplot.ai",
-    fontsize=24,
-    fontweight="medium",
-    color=INK,
-)
+ax.set_yticklabels(["0%", "25%", "50%", "75%", "100%"], fontsize=8, color=INK_SOFT)
+ax.set_ylabel("Proportion of Customers", fontsize=10, color=INK)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
 
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["bottom"].set_visible(False)
+sns.despine(ax=ax, bottom=True)
 ax.spines["left"].set_color(INK_SOFT)
 
 ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
 
 legend_patches = [mpatches.Patch(color=colors[j], label=fill_order[j]) for j in range(len(fill_order))]
 ax.legend(
-    handles=legend_patches, loc="upper right", fontsize=16, frameon=True, facecolor=ELEVATED_BG, edgecolor=INK_SOFT
+    handles=legend_patches, loc="upper right", fontsize=8, frameon=True, facecolor=ELEVATED_BG, edgecolor=INK_SOFT
 )
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
