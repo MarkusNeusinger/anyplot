@@ -10,6 +10,7 @@ Best practices for workflow testing:
 6. Best practices - Uses recommended patterns
 """
 
+import json
 import re
 from pathlib import Path
 from typing import Any
@@ -34,6 +35,8 @@ EXPECTED_WORKFLOWS = [
     "impl-repair.yml",
     "impl-merge.yml",
     "bulk-generate.yml",
+    # Measurement (opt-in, dispatch-only)
+    "review-retest.yml",
     # Database sync
     "sync-postgres.yml",
     # Utility
@@ -425,6 +428,143 @@ class TestCiTestsSpecSectionCheck:
     def test_step_needs_no_dependency_install(self) -> None:
         names = [s.get("name") for s in self._steps()]
         assert names.index("Check spec characteristic sections") < names.index("Set up Python")
+
+
+def _variable_names(prompt: str) -> set[str]:
+    block = prompt.split("Variables for this run:", 1)[1]
+    return set(re.findall(r"^- ([A-Z_]+):", block, re.MULTILINE))
+
+
+def _action_step(workflow: dict[str, Any], job: str) -> dict[str, Any]:
+    return next(
+        s for s in workflow["jobs"][job]["steps"] if str(s.get("uses", "")).startswith("anthropics/claude-code-action@")
+    )
+
+
+class TestReviewRetestWorkflow:
+    """The retest harness is opt-in and can never write anywhere (P6 A2)."""
+
+    WORKFLOW = load_workflow("review-retest.yml")
+    TEXT = (WORKFLOWS_DIR / "review-retest.yml").read_text(encoding="utf-8")
+    SETTINGS_FILE = WORKFLOWS_DIR.parent.parent / "automation" / "retest" / "claude-settings.json"
+
+    def test_dispatch_only(self) -> None:
+        assert set(get_workflow_trigger(self.WORKFLOW)) == {"workflow_dispatch"}
+
+    def test_no_job_can_write(self) -> None:
+        assert self.WORKFLOW.get("permissions") == {}
+        for name, job in self.WORKFLOW["jobs"].items():
+            perms = job.get("permissions")
+            assert isinstance(perms, dict), f"{name} must declare its permissions"
+            assert "id-token" not in perms, name
+            assert all(value == "read" for value in perms.values()), f"{name}: {perms}"
+        assert self.WORKFLOW["jobs"]["review"]["permissions"] == {"contents": "read"}
+
+    def test_no_github_writes_or_dispatches(self) -> None:
+        scripts = "\n".join(
+            str(step.get("run", "")) for job in self.WORKFLOW["jobs"].values() for step in job.get("steps", [])
+        )
+        for needle in ("gh ", "repository_dispatch", "git push", "git commit", "curl", "gsutil", "gcloud"):
+            assert needle not in scripts, needle
+        assert "repository_dispatch" not in self.TEXT
+
+    def test_sessions_use_the_retest_settings(self) -> None:
+        step = _action_step(self.WORKFLOW, "review")
+        args = step["with"]["claude_args"]
+        assert "--settings ${{ github.workspace }}/automation/retest/claude-settings.json" in args
+        assert step["with"]["github_token"] == "${{ github.token }}"
+        assert step["continue-on-error"] is True
+
+    def test_retest_settings_deny_github_writes(self) -> None:
+        settings = json.loads(self.SETTINGS_FILE.read_text(encoding="utf-8"))
+        production = json.loads((WORKFLOWS_DIR.parent.parent / ".claude" / "settings.json").read_text(encoding="utf-8"))
+        deny = set(settings["permissions"]["deny"])
+        assert {"Bash(gh *)", "Bash(git push *)", "Bash(git commit *)", "WebFetch"} <= deny
+        allow = set(settings["permissions"]["allow"])
+        assert "Read(/tmp/*)" in allow  # predecessor files live in /tmp, as in production
+        # Production's allow list minus what the retest denies — nothing else drifts.
+        assert allow == set(production["permissions"]["allow"]) - deny
+        assert settings.get("env") == production.get("env")
+
+    def test_prompt_matches_impl_review(self) -> None:
+        retest = _action_step(self.WORKFLOW, "review")["with"]["prompt"]
+        review = _action_step(load_workflow("impl-review.yml"), "review")["with"]["prompt"]
+        assert retest.splitlines()[0] == review.splitlines()[0]
+        assert _variable_names(retest) >= _variable_names(review)
+        assert "write the exact comment body to `review_comment.md`" in retest
+        assert "test" not in retest.lower() and "measurement" not in retest.lower()
+
+    def test_same_action_pin_as_impl_review(self) -> None:
+        retest = _action_step(self.WORKFLOW, "review")["uses"]
+        review = _action_step(load_workflow("impl-review.yml"), "review")["uses"]
+        assert retest == review
+        # Workflow-level: the review job records it, plan checks resumed records against it.
+        assert self.WORKFLOW["env"]["ACTION_SHA"] == retest.split("@", 1)[1]
+
+    def test_resume_reuses_only_what_plan_accepted(self) -> None:
+        steps = {s.get("name"): s for job in self.WORKFLOW["jobs"].values() for s in job.get("steps", [])}
+        plan = steps["Plan"]["run"]
+        assert '--action-sha "$ACTION_SHA"' in plan and '--spec-source "$SPEC_SOURCE"' in plan
+        assert steps["Plan"]["env"]["SPEC_SOURCE"] == "${{ inputs.spec_source }}"
+        collect = steps["Collect the cell"]
+        assert '--spec-source "$SPEC_SOURCE"' in collect["run"]
+        assert collect["env"]["SPEC_SOURCE"] == "${{ inputs.spec_source }}"
+        assert self.WORKFLOW["jobs"]["prep"]["outputs"]["resumed"] == "${{ steps.plan.outputs.resumed }}"
+        report = steps["Report"]
+        assert report["env"]["RESUMED"] == "${{ needs.prep.outputs.resumed }}"
+        assert '--resumed-cells "$RESUMED"' in report["run"]
+
+    def test_matrix_and_limits(self) -> None:
+        review = self.WORKFLOW["jobs"]["review"]
+        assert review["strategy"]["fail-fast"] is False
+        assert review["strategy"]["max-parallel"] == "${{ fromJSON(inputs.max_parallel) }}"
+        assert review["timeout-minutes"] == 30
+        assert self.WORKFLOW["concurrency"]["group"] == "review-retest"
+        assert self.WORKFLOW["concurrency"]["cancel-in-progress"] is False
+
+    def test_rules_overlay_and_shallow_checkout(self) -> None:
+        steps = {s.get("name"): s for s in self.WORKFLOW["jobs"]["review"]["steps"]}
+        checkout = steps["Checkout harness"]
+        assert checkout["with"]["fetch-depth"] == 1
+        assert checkout["with"]["persist-credentials"] is False
+        overlay = steps["Overlay the rules under test"]["run"]
+        assert 'git fetch -q --depth=1 origin "$RULES_SHA"' in overlay
+        # Nothing from the harness commit survives: prompts/ and the gate come
+        # from the rules under test, and rules older than the gate have none.
+        assert "rm -rf prompts automation/scripts/regen_gate.py" in overlay
+        assert "git checkout FETCH_HEAD -- prompts/" in overlay
+        assert "git cat-file -e FETCH_HEAD:automation/scripts/regen_gate.py" in overlay
+        assert "git checkout FETCH_HEAD -- automation/scripts/regen_gate.py" in overlay
+        names = [s.get("name") for s in self.WORKFLOW["jobs"]["review"]["steps"]]
+        assert names.index("Copy the harness out of the workspace") < names.index("Overlay the rules under test")
+        assert (
+            names.index("Overlay the rules under test")
+            < names.index("Record rules version")
+            < names.index("Run AI Quality Review")
+        )
+
+    def test_uploads_survive_a_rerun(self) -> None:
+        # Artifacts belong to the run, not the attempt: without overwrite a
+        # "Re-run failed jobs" attempt fails its upload with a conflict.
+        uploads = [
+            step
+            for job in self.WORKFLOW["jobs"].values()
+            for step in job.get("steps", [])
+            if str(step.get("uses", "")).startswith("actions/upload-artifact@")
+        ]
+        assert len(uploads) == 3
+        for step in uploads:
+            assert step["with"].get("overwrite") is True, step["name"]
+
+    def test_frozen_set_is_read_anonymously(self) -> None:
+        # The prep job has no GCP credentials: renders come over public HTTPS.
+        assert "google-github-actions/auth" not in self.TEXT
+        assert "gsutil" not in self.TEXT and "gcloud" not in self.TEXT
+
+    def test_every_input_is_used(self) -> None:
+        inputs = get_workflow_trigger(self.WORKFLOW)["workflow_dispatch"]["inputs"]
+        for name in inputs:
+            assert f"inputs.{name}" in self.TEXT, name
 
 
 class TestSpecCreateCharacteristicsSection:

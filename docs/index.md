@@ -13,6 +13,7 @@ Welcome to the anyplot documentation. Start here to find what you're looking for
 | Set up local development | [Development Guide](development.md) |
 | See how automation works | [Workflows](workflows/overview.md) |
 | Report a broken plot | [Report Issues](workflows/report-issue.md) |
+| Measure a review-rubric change | [Review Retest](workflows/review-retest.md) |
 | Look up API endpoints | [API Reference](reference/api.md) |
 | Integrate anyplot into AI workflow | [MCP Server](reference/mcp.md) |
 | Understand the database | [Database Schema](reference/database.md) |
@@ -34,7 +35,8 @@ docs/
 │   └── library-expansion.md  # Roadmap for multi-language gallery expansion
 ├── workflows/            # Process documentation
 │   ├── overview.md       # GitHub Actions automation
-│   └── report-issue.md   # Reporting issues with specs or implementations
+│   ├── report-issue.md   # Reporting issues with specs or implementations
+│   └── review-retest.md  # Measuring review-rubric changes on a frozen set
 └── reference/            # Technical details
     ├── api.md            # REST API endpoints
     ├── mcp.md            # MCP server integration
@@ -64,6 +66,7 @@ How the automation pipeline works.
 
 - **[Overview](workflows/overview.md)** - Specification and implementation pipelines, label system
 - **[Report Issues](workflows/report-issue.md)** - How plot spec/implementation issue reports are submitted, validated, and queued
+- **[Review Retest](workflows/review-retest.md)** - Re-running the AI quality review on a frozen set to measure a rubric or model change, and monitoring the regen gate
 
 ---
 

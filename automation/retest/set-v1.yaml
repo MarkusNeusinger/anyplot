@@ -1,0 +1,455 @@
+# Review retest set v1 — the hand-curated half of the frozen set.
+#
+# What each item pins:
+#   - implementation and metadata: `plots/<spec>/…` at the role's `commit`
+#     (git history is permanent);
+#   - spec text: `plots/<spec>/specification.md` at `spec_commit` (per item, or
+#     the default below) unless an arm runs with spec_source=rules_ref;
+#   - renders: public objects `gs://anyplot-images/<gcs_prefix>/<id>/<role>-<theme>.png`
+#     with the sha256, size and pair pixel statistics that `review_retest.py
+#     freeze` writes to set-v1.lock.json. `render` names the freeze source:
+#     `production` (the live object, refused if the implementation changed on
+#     main after `commit`) or a local regen-experiment snapshot whose
+#     manifest.yaml main_sha must equal `commit`.
+#
+# Labels (defects, permitted, expected) are ground truth: pre-screened (the
+# `note` of each item is the pre-screen), then confirmed by the owner in the
+# pull request that adds the set (decision D4). While `labels: draft` the
+# lists hold the proposals: `validate` checks them, but the report ignores
+# them and skips the named-defect, false-alarm and gate-accuracy metrics.
+# `labels: confirmed` switches them on; a corrected label re-scores old
+# records when their report is rebuilt. Labels may change without a new set;
+# a changed item, pin or render means a new set (v2), and v1 is never
+# rewritten.
+#
+# Label shapes (`match` is a case-insensitive Python regex; a defect counts as
+# caught in a run when one of its criteria is below max and `match` finds a
+# weakness or that criterion's comment; a permitted feature raises a false
+# alarm when `match` finds a weakness, or a listed criterion is deducted with
+# a comment it finds). AR-09 edge clipping is labelled under VQ-05:
+#   defects:   [{id: D1, criteria: [VQ-03, SC-04], match: '<regex>', note: '…'}]
+#   permitted: [{id: A1, criteria: [VQ-02], match: '<regex>', note: '…'}]
+#   expected:  {forward: keep|merge, reversed: keep|merge}   # regen pairs only
+
+version: 1
+set: v1
+gcs_prefix: retest/sets/v1
+baseline_rules_sha: &base 0674ab6b55acc71f5015a6aae07145424cbac7cb
+spec_commit: *base
+labels: draft
+
+# bubble-basic regen experiment rounds (2026-09-26/27): main_sha of each
+# snapshot and its local directory, relative to the repository root of the
+# checkout that runs freeze. Only freeze reads the directories.
+snapshots:
+  v0: {commit: &v0 f68ff4e5033e058f828cdcfa11e7b5d3c9b2c03b, render: &r-v0 {snapshot: agentic/runs/regen-exp-bubble-basic/v0}}
+  v1: {commit: &v1 356e3356ace0105d04b2652af6a7afd0575d3271, render: &r-v1 {snapshot: agentic/runs/regen-exp-bubble-basic/v1}}
+  v2: {commit: &v2 bb3369527b50f66e634fafb0e94adbbe9ef970f3, render: &r-v2 {snapshot: agentic/runs/regen-exp-bubble-basic/v2}}
+  v3: {commit: &v3 bdc8d83f79692239a27dda8774a949588c5912b1, render: &r-v3 {snapshot: agentic/runs/regen-exp-bubble-basic/v3}}
+  v4: {commit: &v4 7a3e19f4b4e9551e7e2b0de2bd002b1874a46d08, render: &r-v4 {snapshot: agentic/runs/regen-exp-bubble-basic/v4}}
+  v5: {commit: &v5 b10d535f7047005184c1d688319cb21754defb09, render: &r-v5 {snapshot: agentic/runs/regen-exp-bubble-basic/v5}}
+
+items:
+  # ---- core: fresh, one candidate hard case per library ------------------
+  - id: f-bubble-basic-ggplot2
+    kind: fresh
+    tier: core
+    spec_id: bubble-basic
+    library: ggplot2
+    new: {commit: *v5, render: *r-v5}
+    note: "candidate: size-legend circles near-invisible (VQ-03, SC-04); probe: translucent overlap (VQ-02)"
+    defects:
+      - {id: D1, criteria: [VQ-03, SC-04], match: '(size|bubble|area)[- ]?legend|legend (circles?|glyphs?|keys?|symbols?|markers?|bubbles?)', note: 'size-legend circles near-invisible against the page'}
+    permitted:
+      - {id: A1, criteria: [VQ-02], match: '(bubble|circle|marker|point|glyph|disc)s?.{0,40}(overlap|occlu|obscur|on top of)|(overlap|occlu|obscur)\w*.{0,40}(bubble|circle|marker|point|glyph|disc)s?', note: 'translucent overlap in dense regions is expected (spec characteristic)'}
+
+  - id: f-area-elevation-profile-seaborn
+    kind: fresh
+    tier: core
+    spec_id: area-elevation-profile
+    library: seaborn
+    new: {commit: *base, render: production}
+    note: "candidate: y-axis title clipped at the left edge (AR-09)"
+    defects:
+      - {id: D1, criteria: [VQ-05], match: '(\b(y[- ]?axis|vertical[- ]axis|y)[- ](title|label)|\bylabel|elevation (\(m\) )?(axis )?(title|label)).{0,60}(clip|cut|crop|truncat|chopped|off[- ]canvas|touch\w* the (left |canvas |figure |image )*edge|(runs|extends|spills) (past|beyond|off|outside))|(clip|cut|crop|truncat|chopped)\w*.{0,60}(\b(y[- ]?axis|vertical[- ]axis|y)[- ](title|label)|\bylabel)|\bleft (canvas |figure |image |plot )?(edge|side|margin|border|boundary).{0,60}(clip|cut|crop|truncat|chopped)|(clip|cut|crop|truncat|chopped)\w*.{0,60}\bleft (canvas |figure |image |plot )?(edge|side|margin|border|boundary)', note: 'y-axis title clipped at the left canvas edge (AR-09 edge clipping)'}
+    permitted: []
+
+  - id: f-bar-horizontal-makie
+    kind: fresh
+    tier: core
+    spec_id: bar-horizontal
+    library: makie
+    new: {commit: *base, render: production}
+    note: "candidate: content fills about 27 % of the width, subtitle above the title (VQ-05)"
+    defects:
+      - {id: D1, criteria: [VQ-05], match: 'white ?space|empty space|unused space|wasted space|(plot|chart|content|panel|bars?|data) (area |region )?(is |are |looks? )?(narrow|squeez|compress|cramped|confined|small)|small (portion|fraction|part) of the (canvas|width|figure)|(only|about|~) ?\d+ ?% of the (canvas|width|figure)', note: 'plot content fills about 27 % of the canvas width'}
+      - {id: D2, criteria: [VQ-05, DE-01], match: 'subtitle.{0,40}(above|\bover\b|before|on top of|precedes|ahead of)|\b(title|heading)s?\b.{0,40}(below|beneath|under|after) (the )?subtitle|\b(title|heading)s?\b.{0,40}subtitle.{0,40}(order|hierarch|swapped|reversed|inverted|backwards|flipped)|(inverted|reversed|swapped|backwards|flipped|wrong) (title|heading)[- ]?(hierarchy|order)|\b(title|heading) (hierarchy|order) (is )?(inverted|reversed|swapped|backwards|flipped|wrong)', note: 'subtitle placed above the title'}
+    permitted: []
+
+  - id: f-bode-basic-altair
+    kind: fresh
+    tier: core
+    spec_id: bode-basic
+    library: altair
+    new: {commit: *base, render: production}
+    note: "candidate: axis titles and tick labels dark on dark in the dark render (VQ-01, VQ-07); bright white grid there (DE-02)"
+    defects:
+      - {id: D1, criteria: [VQ-01, VQ-07], match: '(?s)^(?=.*\bdark\b).*(\b(axis|axes|tick|x[- ]?label|y[- ]?label|xlabel|ylabel|labels? and (axis )?titles?|titles? and (tick )?labels?)\w*.{0,60}(dark[- ]on[- ]dark|dark (grey|gray)\w*( text| ink)? on|contrast|illegib|hard to (read|see)|unreadable|invisible|barely (visible|legible|readable)|faint|disappear|vanish|blend)|(dark[- ]on[- ]dark|dark (grey|gray)\w*( text| ink)? on|contrast|illegib|hard to (read|see)|unreadable|invisible|barely (visible|legible|readable)|faint|disappear|vanish|blend)\w*.{0,60}\b(axis|axes|tick|x[- ]?label|y[- ]?label|xlabel|ylabel|labels? and (axis )?titles?|titles? and (tick )?labels?))', note: 'axis titles and tick labels dark on dark in the dark render'}
+      - {id: D2, criteria: [DE-02, VQ-07], match: '(white|bright|light|harsh|heavy|strong) grid|grid ?lines?.{0,40}(white|bright|harsh|glar|stand out|too strong|too prominent|heavy)', note: 'bright white grid in the dark render'}
+    permitted: []
+
+  - id: f-bar-diverging-plotnine
+    kind: fresh
+    tier: core
+    spec_id: bar-diverging
+    library: plotnine
+    new: {commit: *base, render: production}
+    note: "candidate: bright white major grid lines in the dark render only (DE-02, VQ-07)"
+    defects:
+      - {id: D1, criteria: [DE-02, VQ-07], match: '(white|bright|light|harsh|heavy|strong) (major )?grid|grid ?lines?.{0,40}(white|bright|harsh|glar|stand out|too strong|too prominent|heavy)', note: 'bright white major grid lines in the dark render only'}
+    permitted: []
+
+  - id: f-pie-basic-highcharts
+    kind: fresh
+    tier: core
+    spec_id: pie-basic
+    library: highcharts
+    new: {commit: *base, render: production}
+    note: "candidate: donut drawn for a pie (SC-01)"
+    defects:
+      - {id: D1, criteria: [SC-01], match: 'donut|doughnut|\bring\b|inner ?size|\bhole\b|annul', note: 'donut drawn for a pie'}
+    permitted: []
+
+  - id: f-bar-pareto-letsplot
+    kind: fresh
+    tier: core
+    spec_id: bar-pareto
+    library: letsplot
+    new: {commit: *base, render: production}
+    note: "candidate: fake secondary axis drawn with geom_text (SC-03)"
+    defects:
+      - {id: D1, criteria: [SC-03, LM-01], match: 'second(ary)? (y[- ]?)?axis|right(-hand)? (y[- ]?)?axis|dual[- ]axis|twin axis|(fake|simulated|manual|hand[- ]?drawn|drawn|text[- ]based|pseudo)[- ](secondary )?axis|geom_text.{0,40}(axis|tick|scale|percent)|(axis|tick|scale).{0,40}geom_text', note: 'secondary axis faked with geom_text'}
+    permitted: []
+
+  - id: f-waterfall-basic-muix
+    kind: fresh
+    tier: core
+    spec_id: waterfall-basic
+    library: muix
+    new: {commit: *base, render: production}
+    note: "candidate: connectors cross value labels (VQ-02); labels show running totals (SC-03)"
+    defects:
+      - {id: D1, criteria: [VQ-02], match: 'connector.{0,60}(cross|through|over|overlap|strik|collid|behind|intersect)|(cross|through|overlap|strik|collid|intersect)\w*.{0,60}connector', note: 'connector lines cross the value labels'}
+      - {id: D2, criteria: [SC-03, DQ-03], match: '\b(value |data |bar |step )?labels?\b.{0,40}\b(show|display|report|give|print|read|reflect|are|is|contain|use|carry|encode|indicat|represent|denot|depict)\w* (the |a |an |as |only |just |each |their |its |cumulative |running )*(running|cumulative)|(running|cumulative) (total|sum|balance|value|amount|figure)s?.{0,40}(instead of|rather than|not (the )?(per[- ]step |step |individual |incremental )?(change|delta|increment|step))|\b(value |data |bar )?labels?\b.{0,60}(not|n.t) (show|display|report|give) (the )?(per[- ]step |step |individual |incremental )?(change|delta|increment|step value)', note: 'value labels show running totals instead of the step values'}
+    permitted: []
+
+  - id: f-line-win-probability-chartjs
+    kind: fresh
+    tier: core
+    spec_id: line-win-probability
+    library: chartjs
+    new: {commit: *base, render: production}
+    note: "candidate: labels struck by the curve (VQ-02); real teams with invented numbers (DQ-02)"
+    defects:
+      - {id: D1, criteria: [VQ-02], match: '(label|annotation|text|callout)s?.{0,60}(struck|crossed|cut|overlap|collid|clash|through|obscur|occlu)|(line|curve).{0,60}(through|across|over|overlap|strik|cross|collid)\w*.{0,30}(label|annotation|text|callout)', note: 'event labels struck by the probability curve'}
+      - {id: D2, criteria: [DQ-02, DQ-03], match: 'real (team|club|franchise|name|player|game|match)|actual (team|club|player|game|match)|(invented|fabricated|fictional|made[- ]up|fake|false|inaccurate|misleading) (data|number|probabilit|score|result|game|stat|event)|lakers|celtics|lebron|nba', note: 'real NBA teams and players (Lakers, Celtics, LeBron) with invented numbers'}
+    permitted: []
+
+  - id: f-bubble-basic-d3
+    kind: fresh
+    tier: core
+    spec_id: bubble-basic
+    library: d3
+    new: {commit: *v5, render: *r-v5}
+    note: "candidate: force collision moves marks off their values (SC-03)"
+    defects:
+      - {id: D1, criteria: [SC-03], match: 'force[- ]?(layout|simulation|collide|collision|directed|based)|forcecollide|d3[.-]force|collision[- ](detection|simulation|resolution|avoidance|force|layout)|\b(bubble|circle|marker|mark|point|dot|disc)s?\b(?! labels?\b| annotations?\b| text\b).{0,60}(displac|nudg|jitter|moved|pushed|shifted|repositioned|spread apart|off (their|its) (true |data |actual |exact )?(value|position|coordinate|location)|not at (their|its)|no longer (sit |lie )?(at|on|encode|match|reflect))|(displac|nudg|jitter)\w* (of |the |apart )*(bubble|circle|marker|mark|point|dot|disc)s?|position\w*.{0,40}(do(es)? not|do(es)?n.t|no longer|fail to) (encode|reflect|match|represent|show) (the )?(true |actual |underlying )?(data|value|x|coordinate)', note: 'force collision moves bubbles off their (x, y) values'}
+    permitted: []
+
+  - id: f-network-basic-bokeh
+    kind: fresh
+    tier: core
+    spec_id: network-basic
+    library: bokeh
+    new: {commit: *base, render: production}
+    note: "candidate: labels far from their nodes (VQ-02); probe: layout-positioned nodes are not SC-03"
+    defects:
+      - {id: D1, criteria: [VQ-02], match: '(label|text)s?.{0,60}(far|away|detached|offset|distant|disconnected|separated|misplac|not (next|adjacent|close))|(far|away) from (their|the|its) (node|circle|marker)|label (placement|position)', note: 'node labels sit far from their nodes'}
+    permitted:
+      - {id: A1, criteria: [SC-03], match: 'displac|off (their|its) (true |data )?(value|position|coordinate)|not (at|on) (their|its) (data |true )?(value|position)|position\w* (does|do) not (encode|reflect|map)|(nodes?|marks?) (are |were )?(moved|nudged|pushed|shifted)', note: 'layout-positioned nodes: position is not data, so no SC-03 deduction'}
+
+  - id: f-bar-diverging-likert-matplotlib
+    kind: fresh
+    tier: core
+    spec_id: bar-diverging-likert
+    library: matplotlib
+    new: {commit: *base, render: production}
+    note: "candidate: axis title collides with the legend row (VQ-02)"
+    defects:
+      - {id: D1, criteria: [VQ-02], match: '(axis (title|label)|x[- ]?label|xlabel|x[- ]axis title).{0,60}(collid|overlap|clash|crowd|touch|crash)|legend.{0,60}(collid|overlap|clash|crowd|touch|crash).{0,60}(axis|title|label)|(collid|overlap|clash|crowd|touch)\w*.{0,40}legend', note: 'axis title collides with the legend row'}
+    permitted: []
+
+  - id: f-acf-pacf-plotly
+    kind: fresh
+    tier: core
+    spec_id: acf-pacf
+    library: plotly
+    new: {commit: *base, render: production}
+    note: "candidate: bright white vertical zero-lag line in both dark panes, near-invisible in the light render (DE-02, VQ-07)"
+    defects:
+      - {id: D1, criteria: [DE-02, VQ-07], match: '(zero|lag[- ]?0|lag[- ]zero|reference)[- ]?(lag )?(line|bar|stem|rule|marker)|(white|bright|harsh|glaring|faint|invisible|washed).{0,30}(vertical |reference )?(line|rule) at (lag )?(0|zero)', note: 'bright white zero-lag line in both dark panes, near-invisible in the light render'}
+    permitted: []
+
+  - id: f-line-stock-comparison-pygal
+    kind: fresh
+    tier: core
+    spec_id: line-stock-comparison
+    library: pygal
+    new: {commit: *base, render: production}
+    note: "candidate: false real-world returns (DQ-02/03); tiny legend squares (VQ-03)"
+    defects:
+      - {id: D1, criteria: [DQ-02, DQ-03], match: 'real(-world)? (stock|ticker|compan|return|price|firm)|actual (stock|ticker|compan|return|price)|(fabricated|invented|fictional|made[- ]up|fake|synthetic|false|inaccurate|random|misleading) (return|price|stock|data|number|performance)|\b(aapl|googl|msft)\b|\bapple\b|\balphabet\b|\bmicrosoft\b', note: 'real tickers (AAPL, GOOGL, MSFT) with invented returns'}
+      - {id: D2, criteria: [VQ-03], match: 'legend.{0,60}(tiny|small|minuscule|hard to see|barely|faint|square|swatch|box|marker|symbol)|(tiny|small|minuscule) (legend|swatch|square|marker)', note: 'tiny legend squares'}
+    permitted: []
+
+  - id: f-gantt-basic-echarts
+    kind: fresh
+    tier: core
+    spec_id: gantt-basic
+    library: echarts
+    new: {commit: *base, render: production}
+    note: "candidate: last bar ends on the frame (SC-03, VQ-05)"
+    defects:
+      - {id: D1, criteria: [SC-03, VQ-05], match: '(last|final|right(most)?|end) (bar|task|segment|item).{0,60}(frame|edge|border|clip|cut|touch|flush|boundary)|(axis|x)[- ]?(range|max|maximum|limit|extent|domain).{0,40}(tight|short|end|too small|cut)|(no|without|lacks?|missing) (right(-hand)? )?(padding|margin|headroom|breathing room)', note: 'last bar ends on the plot frame'}
+    permitted: []
+
+  # ---- core: regen pairs (bubble-basic experiment), run in both orders ----
+  - id: r-bubble-basic-chartjs-v5-v4
+    kind: regen
+    tier: core
+    spec_id: bubble-basic
+    library: chartjs
+    class: near-identical
+    new: {commit: *v5, render: *r-v5}
+    prev: {commit: *v4, render: *r-v4}
+    note: "alpha 0.48 -> 0.55 only; lock: 13.03 % / 13.02 % of pixels differ (light / dark), max channel delta 37"
+    expected: {forward: keep, reversed: keep}
+
+  - id: r-bubble-basic-matplotlib-v5-v5
+    kind: regen
+    tier: core
+    spec_id: bubble-basic
+    library: matplotlib
+    class: identity
+    new: {commit: *v5, render: *r-v5}
+    prev: {commit: *v5, render: *r-v5}
+    note: "identity control (Python)"
+    expected: {forward: keep, reversed: keep}
+
+  - id: r-bubble-basic-chartjs-v5-v5
+    kind: regen
+    tier: core
+    spec_id: bubble-basic
+    library: chartjs
+    class: identity
+    new: {commit: *v5, render: *r-v5}
+    prev: {commit: *v5, render: *r-v5}
+    note: "identity control (JavaScript), decision D14"
+    expected: {forward: keep, reversed: keep}
+
+  - id: r-bubble-basic-letsplot-v3-v3
+    kind: regen
+    tier: core
+    spec_id: bubble-basic
+    library: letsplot
+    class: identity
+    new: {commit: *v3, render: *r-v3}
+    prev: {commit: *v3, render: *r-v3}
+    note: "identity control (Python), decision D14"
+    expected: {forward: keep, reversed: keep}
+
+  - id: r-bubble-basic-bokeh-v1-v0
+    kind: regen
+    tier: core
+    spec_id: bubble-basic
+    library: bokeh
+    class: different
+    new: {commit: *v1, render: *r-v1}
+    prev: {commit: *v0, render: *r-v0}
+    note: "size legend becomes legible (plan: merge forward, keep reversed)"
+    expected: {forward: merge, reversed: keep}
+
+  - id: r-bubble-basic-d3-v1-v0
+    kind: regen
+    tier: core
+    spec_id: bubble-basic
+    library: d3
+    class: different
+    new: {commit: *v1, render: *r-v1}
+    prev: {commit: *v0, render: *r-v0}
+    note: "force collision introduced (plan: keep forward, merge reversed)"
+    expected: {forward: keep, reversed: merge}
+
+  - id: r-bubble-basic-pygal-v1-v0
+    kind: regen
+    tier: core
+    spec_id: bubble-basic
+    library: pygal
+    class: different
+    new: {commit: *v1, render: *r-v1}
+    prev: {commit: *v0, render: *r-v0}
+    note: "data scenario swapped on a -basic spec, symmetric (plan: keep both orders)"
+    expected: {forward: keep, reversed: keep}
+
+  # ---- full: a second fresh item per library ------------------------------
+  - id: f-bubble-basic-matplotlib
+    kind: fresh
+    tier: full
+    spec_id: bubble-basic
+    library: matplotlib
+    new: {commit: *v5, render: *r-v5}
+    note: "candidate clean overlap probe"
+    defects: []
+    permitted:
+      - {id: A1, criteria: [VQ-02], match: '(bubble|circle|marker|point|glyph|disc)s?.{0,40}(overlap|occlu|obscur|on top of)|(overlap|occlu|obscur)\w*.{0,40}(bubble|circle|marker|point|glyph|disc)s?', note: 'translucent overlap in dense regions is expected (spec characteristic)'}
+
+  - id: f-heatmap-basic-seaborn
+    kind: fresh
+    tier: full
+    spec_id: heatmap-basic
+    library: seaborn
+    new: {commit: *base, render: production}
+    note: "candidate: colorbar squeezed into the top-left corner, its title clipped at the canvas edge; x-axis title cut at the bottom (AR-09, VQ-05); seeded spec"
+    defects:
+      - {id: D1, criteria: [VQ-05], match: 'colou?r ?bar.{0,60}(corner|squeez|cramped|small|tiny|misplac|clip|cut|truncat|crop|overlap)|(clip|cut|truncat|crop)\w*.{0,60}colou?r ?bar', note: 'colorbar squeezed into the top-left corner, its title clipped at the canvas edge (AR-09 edge clipping)'}
+      - {id: D2, criteria: [VQ-05], match: '(x[- ]?axis|bottom|x) (title|label).{0,60}(clip|cut|truncat|crop|missing|hidden)|(clip|cut[- ]?off|truncat|crop)\w*.{0,60}(x[- ]?axis|bottom)', note: 'x-axis title cut at the bottom edge'}
+    permitted: []
+
+  - id: f-sankey-basic-plotly
+    kind: fresh
+    tier: full
+    spec_id: sankey-basic
+    library: plotly
+    new: {commit: *base, render: production}
+    defects: []
+    permitted: []
+
+  - id: f-histogram-basic-altair
+    kind: fresh
+    tier: full
+    spec_id: histogram-basic
+    library: altair
+    new: {commit: *base, render: production}
+    defects: []
+    permitted: []
+
+  - id: f-bubble-basic-plotnine-v1
+    kind: fresh
+    tier: full
+    spec_id: bubble-basic
+    library: plotnine
+    new: {commit: *v1, render: *r-v1}
+    note: "candidate: unrequested trend line on a -basic spec (SC-01)"
+    defects:
+      - {id: D1, criteria: [SC-01], match: 'trend ?line|regression|fit(ted)? line|best[- ]fit|smooth(ed|ing)? (line|curve|fit)|geom_smooth|loess|linear fit|reference line', note: 'unrequested trend line on a -basic spec'}
+    permitted: []
+
+  - id: f-box-grouped-makie
+    kind: fresh
+    tier: full
+    spec_id: box-grouped
+    library: makie
+    new: {commit: *base, render: production}
+    defects: []
+    permitted: []
+
+  - id: f-bar-stacked-labeled-d3
+    kind: fresh
+    tier: full
+    spec_id: bar-stacked-labeled
+    library: d3
+    new: {commit: *base, render: production}
+    defects: []
+    permitted: []
+
+  - id: f-line-multi-muix
+    kind: fresh
+    tier: full
+    spec_id: line-multi
+    library: muix
+    new: {commit: *base, render: production}
+    defects: []
+    permitted: []
+
+  - id: f-scatter-hr-diagram-letsplot
+    kind: fresh
+    tier: full
+    spec_id: scatter-hr-diagram
+    library: letsplot
+    new: {commit: *base, render: production}
+    note: "candidate: 'Main Sequence' label in empty space away from the band, 'White Dwarfs' partly under a marker (VQ-02); yellow 'Sun' label on the light page (VQ-01)"
+    defects:
+      - {id: D1, criteria: [VQ-02], match: '(main sequence|white dwarfs?|giants?|region|group|annotation)s? labels?.{0,60}(away|far|off|empty|misplac|under|behind|overlap|cover|obscur|detached)|labels?.{0,60}(misplac|away from|off (their|the)|far from|under|behind|overlap)', note: 'Main Sequence label in empty space away from the band; White Dwarfs label partly under a marker'}
+      - {id: D2, criteria: [VQ-01, VQ-04], match: '\bsun\b.{0,60}(yellow|contrast|hard to (read|see)|illegib|legib|readab|washed[- ]out)|(yellow|contrast|hard to (read|see)|illegib|legib|readab|washed[- ]out)\w*.{0,60}\bsun\b|yellow (label|text|annotation)s?.{0,60}(light|white|pale|cream) (page|background|canvas|render)|yellow (text|label|annotation) on (a |the )?(light|white|pale|cream)', note: 'yellow Sun label on the light page'}
+    permitted: []
+
+  - id: f-survival-kaplan-meier-ggplot2
+    kind: fresh
+    tier: full
+    spec_id: survival-kaplan-meier
+    library: ggplot2
+    new: {commit: *base, render: production}
+    defects: []
+    permitted: []
+
+  - id: f-heatmap-calendar-chartjs
+    kind: fresh
+    tier: full
+    spec_id: heatmap-calendar
+    library: chartjs
+    new: {commit: *base, render: production}
+    defects: []
+    permitted: []
+
+  - id: f-area-stacked-pygal
+    kind: fresh
+    tier: full
+    spec_id: area-stacked
+    library: pygal
+    new: {commit: *base, render: production}
+    defects: []
+    permitted: []
+
+  # ---- full: further regen pairs ------------------------------------------
+  - id: r-bubble-basic-letsplot-v3-v2
+    kind: regen
+    tier: full
+    spec_id: bubble-basic
+    library: letsplot
+    class: near-identical
+    new: {commit: *v3, render: *r-v3}
+    prev: {commit: *v2, render: *r-v2}
+    note: "alpha 0.55 -> 0.5 only; lock: 10.48 % / 10.40 % of pixels differ (light / dark), max channel delta 28 / 37"
+    expected: {forward: keep, reversed: keep}
+
+  - id: r-bubble-basic-highcharts-v4-v3
+    kind: regen
+    tier: full
+    spec_id: bubble-basic
+    library: highcharts
+    class: different
+    new: {commit: *v4, render: *r-v4}
+    prev: {commit: *v3, render: *r-v3}
+    note: "declutter pass rewrites the data (plan: keep forward, merge reversed)"
+    expected: {forward: keep, reversed: merge}
+
+  - id: r-bubble-basic-plotnine-v1-v0
+    kind: regen
+    tier: full
+    spec_id: bubble-basic
+    library: plotnine
+    class: different
+    new: {commit: *v1, render: *r-v1}
+    prev: {commit: *v0, render: *r-v0}
+    note: "trend line added on a -basic spec, in the renders only: both sources call geom_smooth(method='lm'), but v0's production render (2026-05-28) shows no line; v1 also doubles the bubbles (40 -> 72) and moves the size-legend breaks (plan: keep forward; reversed is an owner call, proposed merge)"
+    expected: {forward: keep, reversed: merge}

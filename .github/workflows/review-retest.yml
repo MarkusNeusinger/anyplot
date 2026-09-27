@@ -1,0 +1,418 @@
+name: "Review: Retest"
+run-name: "Retest: ${{ inputs.label || 'unlabelled' }} · ${{ inputs.subset }} · rules ${{ inputs.rules_ref || github.sha }}"
+
+# Re-runs the AI quality review on the frozen retest set (automation/retest/)
+# several times per item, so a change to the review rubric or the review model
+# can be measured as an arm against a baseline before it merges. Opt-in and
+# measurement-only: dispatch-only, read-only tokens, no GCP credentials, and
+# nothing is written to a PR, an issue, a label, plots/ or another workflow.
+# How to run and read it: docs/workflows/review-retest.md.
+#
+#   gh workflow run review-retest.yml -f rules_ref=<sha> -f label=baseline
+#
+# An arm = rules_ref (whose prompts/ and regen_gate.py the reviewer uses) ×
+# the harness at the dispatched commit. Cells run in fresh sessions; the
+# aggregate job writes the report and a PR-body snippet.
+
+on:
+  workflow_dispatch:
+    inputs:
+      rules_ref:
+        description: "Commit or branch whose prompts/ and regen_gate.py the reviewer uses (default: the dispatched commit)"
+        required: false
+        default: ''
+        type: string
+      label:
+        description: "Arm label for the report, e.g. baseline or p0-candidate"
+        required: false
+        default: ''
+        type: string
+      subset:
+        description: "core, full, or a comma-separated list of item ids from automation/retest/set-v1.yaml"
+        required: false
+        default: 'core'
+        type: string
+      models:
+        description: "production = fresh items on Opus and regen pairs on Sonnet (as impl-review routes them); or one model for every cell"
+        required: false
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - sonnet
+          - opus
+      runs:
+        description: "Sessions per item and order (1-10)"
+        required: false
+        default: '3'
+        type: string
+      orders:
+        description: "Regen pairs: both orders (forward and reversed) or forward only"
+        required: false
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - forward
+      spec_source:
+        description: "pinned = spec text at the set's spec_commit; rules_ref = the spec text at rules_ref"
+        required: false
+        default: 'pinned'
+        type: choice
+        options:
+          - pinned
+          - rules_ref
+      compare_to:
+        description: "Run ID of an earlier retest to compare against (baseline arm)"
+        required: false
+        default: ''
+        type: string
+      resume_from:
+        description: "Run ID of an incomplete retest whose successful cells are reused"
+        required: false
+        default: ''
+        type: string
+      max_parallel:
+        description: "Concurrent review sessions (shares the Claude usage window with the pipeline)"
+        required: false
+        default: '6'
+        type: string
+
+permissions: {}
+
+env:
+  # Keep in sync with the claude-code-action pin in the review job (a test
+  # checks it). Cells record it, and plan reuses a resumed cell only when it
+  # matches.
+  ACTION_SHA: 4036a180cf690f49529f5d8c79c998855287f590
+
+concurrency:
+  group: review-retest
+  cancel-in-progress: false
+
+jobs:
+  prep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read  # idle check (gh run list) and resume_from's artifacts
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      sessions: ${{ steps.plan.outputs.sessions }}
+      resumed: ${{ steps.plan.outputs.resumed }}
+      rules_sha: ${{ steps.rules.outputs.sha }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve rules_ref
+        id: rules
+        env:
+          RULES_REF: ${{ inputs.rules_ref }}
+        run: |
+          REF="${RULES_REF:-$GITHUB_SHA}"
+          if SHA=$(git rev-parse -q --verify "${REF}^{commit}"); then
+            :
+          elif SHA=$(git rev-parse -q --verify "origin/${REF}^{commit}"); then
+            :
+          else
+            echo "::error::rules_ref '${REF}' is neither a commit nor a branch of this repository"
+            exit 1
+          fi
+          echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
+          echo "::notice::rules under test: ${SHA} · harness: ${GITHUB_SHA}"
+
+      - name: Fetch the run to resume
+        if: inputs.resume_from != ''
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: retest-report
+          run-id: ${{ inputs.resume_from }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/resume
+
+      - name: Install helper dependencies
+        run: pip install --quiet pyyaml
+
+      # Refuses (fails the run) when the set is not frozen, over 240 sessions,
+      # while the production pipeline is busy, or for regen cells on rules
+      # that predate the gate's --omit-scores. A resumed cell is reused only
+      # when its record matches this arm (set, harness version, action pin,
+      # rules commit, spec source, model); the others run again, with a warning.
+      - name: Plan
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SUBSET: ${{ inputs.subset }}
+          MODELS: ${{ inputs.models }}
+          RUNS: ${{ inputs.runs }}
+          ORDERS: ${{ inputs.orders }}
+          SPEC_SOURCE: ${{ inputs.spec_source }}
+          RULES_SHA: ${{ steps.rules.outputs.sha }}
+          RESUME_FROM: ${{ inputs.resume_from }}
+        run: |
+          RESUME=()
+          if [ -n "$RESUME_FROM" ]; then
+            RESUME=(--resume-records "$RUNNER_TEMP/resume/records.jsonl")
+          fi
+          python3 -m automation.scripts.review_retest plan \
+            --subset "$SUBSET" --models "$MODELS" --runs "$RUNS" --orders "$ORDERS" \
+            --rules-sha "$RULES_SHA" --action-sha "$ACTION_SHA" --spec-source "$SPEC_SOURCE" \
+            --repo . "${RESUME[@]}"
+
+      - name: Bundle pinned sources and frozen renders
+        if: steps.plan.outputs.sessions != '0'
+        env:
+          ITEMS: ${{ steps.plan.outputs.items }}
+        run: |
+          python3 -m automation.scripts.review_retest bundle --items "$ITEMS" --repo . --out "$RUNNER_TEMP/bundles"
+
+      - name: Upload bundles
+        if: steps.plan.outputs.sessions != '0'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        with:
+          name: retest-bundles
+          path: ${{ runner.temp }}/bundles
+          retention-days: 3
+          if-no-files-found: error
+          overwrite: true  # artifacts are per run, not per attempt: a re-run replaces them
+
+  review:
+    name: ${{ matrix.cell.id }}
+    needs: prep
+    if: needs.prep.outputs.sessions != '0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Read-only and no id-token: the action cannot mint the Claude GitHub App
+    # token, so a session has no way to write to the repository.
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJSON(inputs.max_parallel) }}
+      matrix:
+        cell: ${{ fromJSON(needs.prep.outputs.matrix) }}
+    env:
+      CELL_JSON: ${{ toJSON(matrix.cell) }}
+      RULES_SHA: ${{ needs.prep.outputs.rules_sha }}
+    steps:
+      - name: Checkout harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      # The harness runs from a copy outside the workspace: the next step
+      # overlays prompts/ and regen_gate.py from the rules under test.
+      - name: Copy the harness out of the workspace
+        run: |
+          mkdir -p "$RUNNER_TEMP/harness/automation"
+          cp automation/__init__.py "$RUNNER_TEMP/harness/automation/"
+          cp -r automation/scripts automation/retest "$RUNNER_TEMP/harness/automation/"
+          echo "HARNESS=$RUNNER_TEMP/harness" >> "$GITHUB_ENV"
+
+      # The same overlay impl-review applies on a branch dispatch, except that
+      # prompts/ is replaced whole, so no file from the harness commit lingers.
+      # Shallow on purpose: the reviewer cannot look anything up in history.
+      # regen_gate.py exists from 02e1a7974 on; plan refuses regen cells on
+      # older rules and a fresh cell never calls it, so such rules get none.
+      - name: Overlay the rules under test
+        env:
+          SPEC_SOURCE: ${{ inputs.spec_source }}
+          SPEC_ID: ${{ matrix.cell.spec_id }}
+        run: |
+          git fetch -q --depth=1 origin "$RULES_SHA"
+          rm -rf prompts automation/scripts/regen_gate.py
+          git checkout FETCH_HEAD -- prompts/
+          if git cat-file -e FETCH_HEAD:automation/scripts/regen_gate.py 2>/dev/null; then
+            git checkout FETCH_HEAD -- automation/scripts/regen_gate.py
+          fi
+          if [ "$SPEC_SOURCE" = "rules_ref" ]; then
+            git checkout FETCH_HEAD -- "plots/${SPEC_ID}/specification.md"
+            git checkout FETCH_HEAD -- "plots/${SPEC_ID}/specification.yaml" 2>/dev/null || true
+          fi
+          git reset -q
+          echo "::notice::rules ${RULES_SHA} over harness ${GITHUB_SHA}"
+
+      - name: Download bundles
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: retest-bundles
+          path: ${{ runner.temp }}/bundles
+
+      - name: Install helper dependencies
+        run: pip install --quiet pyyaml
+
+      - name: Materialize the cell
+        id: cell
+        env:
+          SPEC_SOURCE: ${{ inputs.spec_source }}
+        run: |
+          cd "$HARNESS"
+          python3 -m automation.scripts.review_retest materialize \
+            --workspace "$GITHUB_WORKSPACE" --bundles "$RUNNER_TEMP/bundles" --cell "$CELL_JSON" \
+            --gate-script "$GITHUB_WORKSPACE/automation/scripts/regen_gate.py" --spec-source "$SPEC_SOURCE"
+
+      - name: Record rules version
+        id: rules
+        continue-on-error: true
+        env:
+          LIBRARY: ${{ matrix.cell.library }}
+        run: |
+          python3 "$HARNESS/automation/scripts/review_provenance.py" criteria-version \
+            --root "$GITHUB_WORKSPACE" --library "$LIBRARY"
+
+      # The prompt is impl-review.yml's, variable for variable (a test checks
+      # the names), plus the three-line addendum for the missing PR.
+      - name: Run AI Quality Review
+        id: review
+        if: steps.cell.outcome == 'success'
+        continue-on-error: true
+        timeout-minutes: 25
+        uses: anthropics/claude-code-action@4036a180cf690f49529f5d8c79c998855287f590  # v1
+        env:
+          LIBRARY: ${{ matrix.cell.library }}
+          SPEC_ID: ${{ matrix.cell.spec_id }}
+          PR_NUMBER: '0'
+          ATTEMPT: '1'
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          claude_args: "--model ${{ matrix.cell.model }} --settings ${{ github.workspace }}/automation/retest/claude-settings.json"
+          prompt: |
+            Read `prompts/workflow-prompts/ai-quality-review.md` and follow those instructions.
+
+            Variables for this run:
+            - LIBRARY: ${{ matrix.cell.library }}
+            - SPEC_ID: ${{ matrix.cell.spec_id }}
+            - PR_NUMBER: 0
+            - ATTEMPT: 1
+            - LANGUAGE: ${{ steps.cell.outputs.language }}
+            - EXT: ${{ steps.cell.outputs.ext }}
+            - IS_REGENERATION: ${{ steps.cell.outputs.is_regen }}
+            - PREV_RENDERS: ${{ steps.cell.outputs.prev_renders }}
+            - PREV_RENDER_LIGHT: ${{ steps.cell.outputs.prev_light }}
+            - PREV_RENDER_DARK: ${{ steps.cell.outputs.prev_dark }}
+            - PREV_LINES: ${{ steps.cell.outputs.prev_lines }}
+            - NEW_LINES: ${{ steps.cell.outputs.new_lines }}
+
+            There is no pull request for this run. Wherever the instructions say to post a comment
+            to the PR, write the exact comment body to `review_comment.md` in the repository root
+            instead. Do not run `gh` or `git push`; every other instruction applies unchanged.
+
+      - name: Collect the cell
+        if: always()
+        env:
+          EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
+          REVIEW_OUTCOME: ${{ steps.review.outcome }}
+          MATERIALIZE_OUTCOME: ${{ steps.cell.outcome }}
+          PREV_STORED: ${{ steps.cell.outputs.prev_stored }}
+          STARTED_AT: ${{ steps.cell.outputs.started_at }}
+          CRITERIA_VERSION: ${{ steps.rules.outputs.criteria_version }}
+          PROMPTS_TREE: ${{ steps.rules.outputs.prompts_tree }}
+          SPEC_SOURCE: ${{ inputs.spec_source }}
+        run: |
+          cd "$HARNESS"
+          python3 -m automation.scripts.review_retest collect \
+            --workspace "$GITHUB_WORKSPACE" --cell "$CELL_JSON" --out "$RUNNER_TEMP/cell" \
+            --execution-file "${EXECUTION_FILE:-}" --review-outcome "${REVIEW_OUTCOME:-skipped}" \
+            --materialize-outcome "${MATERIALIZE_OUTCOME:-skipped}" \
+            --gate-script "$GITHUB_WORKSPACE/automation/scripts/regen_gate.py" \
+            --prev-stored "${PREV_STORED:-n/a}" --started-at "${STARTED_AT:-0}" --timeout-minutes 25 \
+            --criteria-version "${CRITERIA_VERSION:-n/a}" --prompts-tree "${PROMPTS_TREE:-n/a}" \
+            --harness-sha "$GITHUB_SHA" --rules-sha "$RULES_SHA" --action-sha "$ACTION_SHA" \
+            --spec-source "$SPEC_SOURCE"
+
+      - name: Upload the cell
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        with:
+          name: cell-${{ matrix.cell.id }}
+          path: ${{ runner.temp }}/cell
+          retention-days: 90
+          if-no-files-found: warn
+          overwrite: true  # "Re-run failed jobs" keeps the earlier attempt's cell artifact
+
+  aggregate:
+    needs: [prep, review]
+    if: always() && needs.prep.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read  # compare_to / resume_from artifacts of earlier runs
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Download cells
+        continue-on-error: true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          pattern: cell-*
+          path: ${{ runner.temp }}/cells
+
+      - name: Download the baseline arm
+        if: inputs.compare_to != ''
+        continue-on-error: true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: retest-report
+          run-id: ${{ inputs.compare_to }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/compare
+
+      - name: Download the resumed run
+        if: inputs.resume_from != ''
+        continue-on-error: true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: retest-report
+          run-id: ${{ inputs.resume_from }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/resume
+
+      - name: Install helper dependencies
+        run: pip install --quiet pyyaml
+
+      - name: Report
+        env:
+          LABEL: ${{ inputs.label }}
+          SUBSET: ${{ inputs.subset }}
+          RULES_SHA: ${{ needs.prep.outputs.rules_sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          COMPARE_TO: ${{ inputs.compare_to }}
+          RESUME_FROM: ${{ inputs.resume_from }}
+          RESUMED: ${{ needs.prep.outputs.resumed }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/cells"
+          EXTRA=()
+          if [ -n "$COMPARE_TO" ] && [ -f "$RUNNER_TEMP/compare/records.jsonl" ]; then
+            EXTRA+=(--compare-records "$RUNNER_TEMP/compare/records.jsonl")
+          fi
+          # Only the cells plan reused; a record it rejected ran again.
+          if [ -n "$RESUME_FROM" ] && [ -f "$RUNNER_TEMP/resume/records.jsonl" ]; then
+            EXTRA+=(--resume-records "$RUNNER_TEMP/resume/records.jsonl" --resumed-cells "$RESUMED")
+          fi
+          python3 -m automation.scripts.review_retest report \
+            --cells "$RUNNER_TEMP/cells" --out "$RUNNER_TEMP/report" \
+            --label "$LABEL" --subset "$SUBSET" --rules-sha "$RULES_SHA" --harness-sha "$GITHUB_SHA" \
+            --run-url "$RUN_URL" "${EXTRA[@]}"
+          cat "$RUNNER_TEMP/report/retest-report.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        with:
+          name: retest-report
+          path: ${{ runner.temp }}/report
+          retention-days: 90
+          if-no-files-found: error
+          overwrite: true
