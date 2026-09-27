@@ -469,16 +469,34 @@ class TestImplReviewModel:
 
 
 def _run_repair(
-    repo: Path, tmp_path: Path, *, library: str, model_input: str, body: str = ""
+    repo: Path, tmp_path: Path, *, library: str, model_input: str, body: str = "", gh_failures: int = 0
 ) -> subprocess.CompletedProcess[str]:
-    """Run impl-repair's "Resolve model" step; the fake `gh pr view` prints `body`."""
+    """Run impl-repair's "Resolve model" step.
+
+    The fake `gh pr view` fails its first `gh_failures` calls, then prints
+    `body`; every call is counted in tmp_path/gh_calls. `sleep` is stubbed so
+    the retry backoff costs no time.
+    """
     language, ext = LANG_EXT[library]
-    path = _fake_gh(tmp_path, f"cat <<'EOF'\n{body}\nEOF\n")
+    path = _fake_gh(
+        tmp_path,
+        'n=$(cat "$GH_CALLS" 2>/dev/null || echo 0); n=$((n + 1)); echo "$n" > "$GH_CALLS"\n'
+        'if [ "$n" -le "$GH_FAILURES" ]; then echo "HTTP 502: Bad Gateway" >&2; exit 1; fi\n'
+        f"cat <<'EOF'\n{body}\nEOF\n",
+    )
+    sleep = tmp_path / "bin" / "sleep"
+    sleep.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    sleep.chmod(0o755)
+    (tmp_path / "gh_calls").unlink(missing_ok=True)
+    # The step parks gh's stderr under /tmp; keep the test inside tmp_path.
+    script = _step("impl-repair.yml", "Resolve model")["run"].replace("/tmp/", f"{tmp_path}/")
     return _exec(
-        _step("impl-repair.yml", "Resolve model")["run"],
+        script,
         repo,
         tmp_path,
         PATH=path,
+        GH_CALLS=str(tmp_path / "gh_calls"),
+        GH_FAILURES=str(gh_failures),
         GH_TOKEN="unused",
         PR_NUMBER="7",
         MODEL_INPUT=model_input,
@@ -487,6 +505,11 @@ def _run_repair(
         LANGUAGE=language,
         EXT=ext,
     )
+
+
+def _gh_calls(tmp_path: Path) -> int:
+    calls = tmp_path / "gh_calls"
+    return int(calls.read_text(encoding="utf-8")) if calls.exists() else 0
 
 
 def _repair_model(repo: Path, tmp_path: Path, **kwargs: str) -> str:
@@ -523,6 +546,32 @@ class TestImplRepairModel:
         assert result.returncode == 0, result.stdout + result.stderr
         assert NO_MAIN_WARNING in result.stdout
         assert _outputs(tmp_path / "github_output")["model"] == "opus"
+
+    def test_body_lookup_retries_transient_failures(self, repo, tmp_path):
+        # plotly is a first run: routing would say opus, the recorded pin says haiku.
+        result = _run_repair(
+            repo, tmp_path, library="plotly", model_input="auto", body="**Model:** haiku", gh_failures=2
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert _outputs(tmp_path / "github_output")["model"] == "haiku"
+        assert _gh_calls(tmp_path) == 3
+        assert "gh pr view failed (attempt 1/3): HTTP 502" in result.stdout
+        assert "gh pr view failed (attempt 2/3)" in result.stdout
+
+    def test_body_lookup_fails_closed_instead_of_rerouting(self, repo, tmp_path):
+        result = _run_repair(
+            repo, tmp_path, library="plotly", model_input="auto", body="**Model:** haiku", gh_failures=99
+        )
+        assert result.returncode != 0
+        assert "::error::gh pr view failed after 3 attempts for PR #7" in result.stdout
+        assert _gh_calls(tmp_path) == 3
+        assert "model" not in _outputs(tmp_path / "github_output")
+
+    def test_threaded_model_skips_the_body_lookup(self, repo, tmp_path):
+        result = _run_repair(repo, tmp_path, library="plotly", model_input="sonnet", gh_failures=99)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert _outputs(tmp_path / "github_output")["model"] == "sonnet"
+        assert _gh_calls(tmp_path) == 0
 
     def test_resolution_runs_before_claude_and_after_language(self):
         names = [s.get("name") for s in _steps("impl-repair.yml")]
@@ -585,9 +634,51 @@ class TestModelInputs:
     def test_daily_regen_run_name_shows_auto(self):
         assert "github.event.inputs.model || 'auto'" in _workflow("daily-regen.yml")["run-name"]
 
-    def test_babysit_queue_defaults_to_auto(self):
-        script = (REPO_ROOT / ".claude" / "skills" / "babysit-pipeline" / "run_queue.sh").read_text(encoding="utf-8")
-        assert 'MODEL="${MODEL:-auto}"' in script
+
+RUN_QUEUE = REPO_ROOT / ".claude" / "skills" / "babysit-pipeline" / "run_queue.sh"
+
+
+def _queue_settings(tmp_path: Path, *args: str, **env: str) -> dict[str, str]:
+    """Source run_queue.sh in its library mode and read back its settings."""
+    queue = tmp_path / "queue"
+    queue.mkdir(exist_ok=True)
+    (queue / "full_queue.txt").touch()
+    fake_repo = tmp_path / "fake-repo"  # ANYPLOT_REPO: nothing is resolved via git
+    (fake_repo / "plots").mkdir(parents=True, exist_ok=True)
+    script = (
+        'RUN_QUEUE_LIB=1 source "$RUN_QUEUE" "$@"\n'
+        'printf "SETTING_MODEL=%s\\nSETTING_SLOTS=%s\\nSETTING_STAGGER=%s\\n" "$MODEL" "$SLOTS" "$STAGGER"\n'
+    )
+    base = {k: v for k, v in _clean_env().items() if k not in {"MODEL", "STAGGER"}}
+    base.update(RUN_QUEUE=str(RUN_QUEUE), ANYPLOT_REPO=str(fake_repo), **env)
+    result = subprocess.run(
+        ["bash", "-c", script, "run_queue.sh", str(queue), *args], env=base, capture_output=True, text=True
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    return {
+        key.removeprefix("SETTING_"): value
+        for key, _, value in (line.partition("=") for line in result.stdout.splitlines())
+        if key.startswith("SETTING_")
+    }
+
+
+class TestBabysitQueueDefaults:
+    """Under auto a gap backfill is all-Opus, so the unattended queue starts gently."""
+
+    @pytest.mark.parametrize(
+        ("env", "expected"),
+        [
+            ({}, {"MODEL": "auto", "SLOTS": "1", "STAGGER": "180"}),
+            ({"MODEL": "opus"}, {"MODEL": "opus", "SLOTS": "1", "STAGGER": "180"}),
+            ({"MODEL": "sonnet"}, {"MODEL": "sonnet", "SLOTS": "2", "STAGGER": "90"}),
+            ({"MODEL": "haiku"}, {"MODEL": "haiku", "SLOTS": "2", "STAGGER": "90"}),
+        ],
+    )
+    def test_defaults_follow_the_model(self, tmp_path, env, expected):
+        assert _queue_settings(tmp_path, **env) == expected
+
+    def test_slots_argument_and_stagger_env_still_override(self, tmp_path):
+        assert _queue_settings(tmp_path, "3", STAGGER="60") == {"MODEL": "auto", "SLOTS": "3", "STAGGER": "60"}
 
 
 class TestBulkGeneratePacing:

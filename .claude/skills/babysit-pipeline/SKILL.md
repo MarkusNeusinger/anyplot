@@ -171,7 +171,9 @@ still run one spec at a time: their stall logic reads *any* active
 `impl-*` run as belonging to the spec they are watching (§3), so a
 second spec in flight makes them call a stalled spec healthy. Never
 mix the two modes on the same queue. The slot count is the user's
-call: **2 is the default**, 4 with their OK. A 5-slot trial on
+call: **1 is the default** under `MODEL=auto` or `opus` (see the
+all-Opus note below), 2 for a pinned `sonnet`/`haiku`, and more only
+with their OK. A 5-slot trial on
 2026-09-01 was clean on the GitHub side (API quota untouched, impl-*
 runner wait ≤4 min; only CodeQL piled up) — the binding limit is the
 Claude usage window, which is why the user pulled it back the same
@@ -181,10 +183,11 @@ never cancel runs that already spent Claude time.
 **A gap backfill is all-Opus.** Every missing library is a first
 implementation, so under `auto` each generate, review, and repair runs
 on Opus and burns the usage window much faster than the Sonnet runs
-the numbers above came from. Run it with `slots=1` or a longer
-`STAGGER` unless the owner explicitly accepts the faster burn; pinning
-`MODEL=sonnet` is the owner's call, since it gives up Opus on first
-runs.
+the numbers above came from. `run_queue.sh` therefore defaults to one
+slot and a 180 s `STAGGER` when `MODEL` is `auto` or `opus` (2 slots
+and 90 s for a pinned `sonnet`/`haiku`). Raise either only when the
+owner explicitly accepts the faster burn; pinning `MODEL=sonnet` is
+the owner's call too, since it gives up Opus on first runs.
 
 **For an unattended queue use the scheduler**,
 `.claude/skills/babysit-pipeline/run_queue.sh <queue-dir> [slots]`,
@@ -192,8 +195,8 @@ started detached so it survives the session, with both streams
 captured:
 
 ```bash
-setsid nohup .claude/skills/babysit-pipeline/run_queue.sh agentic/runs/<run> 2 \
-  > agentic/runs/<run>/queue.out 2>&1 &      # the 2 is the slot count
+setsid nohup .claude/skills/babysit-pipeline/run_queue.sh agentic/runs/<run> 1 \
+  > agentic/runs/<run>/queue.out 2>&1 &      # the 1 is the slot count
 ```
 
 It keeps `[slots]` drivers in flight over

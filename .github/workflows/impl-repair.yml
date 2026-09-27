@@ -120,7 +120,27 @@ jobs:
           MODEL="${MODEL_INPUT:-auto}"
           MODEL_FROM="input"
           if [ "$MODEL" = "auto" ]; then
-            BODY=$(gh pr view "$PR_NUMBER" --json body -q .body 2>/dev/null || true)
+            # Same retry shape as impl-review's "Extract PR info": three
+            # attempts with linear backoff (5 s, 10 s). A failed lookup must
+            # not pass for "no Model line" and silently reroute a pinned
+            # model, so fail closed once the attempts are spent.
+            BODY=""
+            LOOKUP_OK=""
+            for attempt in 1 2 3; do
+              if BODY=$(gh pr view "$PR_NUMBER" --json body -q .body 2> /tmp/pr-body.err); then
+                LOOKUP_OK=1
+                break
+              fi
+              PERR=$(head -c 500 /tmp/pr-body.err | tr '\n' ' ')
+              echo "::warning::gh pr view failed (attempt ${attempt}/3): ${PERR}"
+              if [ "$attempt" -lt 3 ]; then
+                sleep $((attempt * 5))
+              fi
+            done
+            if [ -z "$LOOKUP_OK" ]; then
+              echo "::error::gh pr view failed after 3 attempts for PR #${PR_NUMBER} — cannot read the PR's recorded model"
+              exit 1
+            fi
             MODEL_BODY=$(echo "$BODY" | tr -d '\r' | grep -oP '^\*\*Model:\*\* \K(haiku|sonnet|opus)$' | head -1 || true)
             MODEL="${MODEL_BODY:-auto}"
             MODEL_FROM="PR body"
