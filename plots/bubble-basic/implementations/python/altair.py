@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: altair 6.3.0 | Python 3.13.15
 Quality: 89/100 | Created: 2026-09-27
@@ -158,13 +158,17 @@ top3_highlight = (
     )
 )
 
-# Annotation layers — sort by revenue descending and alternate dy/dx to prevent collision
+# Annotation layers — sort by revenue descending and alternate dy/dx to prevent collision.
+# The lowest-funding point (Series A · $54.0M, near the left plot edge) is left-aligned
+# with a positive dx so its text extends rightward into the plot instead of leftward
+# into the rotated "Revenue ($M)" axis-title gutter.
 _labeled = df[df["label"] != ""].sort_values("Revenue ($M)", ascending=False).reset_index(drop=True)
-_dy_offsets = [-24, 18, -26]
-_dx_offsets = [-14, -18, -14]
+_align_offsets = ["right", "left", "right"]
+_dy_offsets = [-24, -18, -26]
+_dx_offsets = [-14, 10, -14]
 _annotation_layers = [
     alt.Chart(_labeled.iloc[[k]])
-    .mark_text(align="right", dx=_dx_offsets[k], dy=_dy_offsets[k], fontSize=12, fontWeight="bold")
+    .mark_text(align=_align_offsets[k], dx=_dx_offsets[k], dy=_dy_offsets[k], fontSize=12, fontWeight="bold")
     .encode(x="Funding ($M):Q", y="Revenue ($M):Q", text="label:N", color=alt.value(INK))
     for k in range(len(_labeled))
 ]
