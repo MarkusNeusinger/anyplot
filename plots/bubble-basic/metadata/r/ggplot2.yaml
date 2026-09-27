@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: bubble-basic
 created: '2026-05-28T17:41:39Z'
-updated: '2026-09-26T23:55:28Z'
+updated: '2026-09-27T00:02:44Z'
 generated_by: claude-sonnet
 workflow_run: 36280205654
 issue: 755
@@ -12,50 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 92
 review:
   strengths:
-  - Correct 3-dimension bubble encoding (x=price on a log scale, y=rating, size=sales
-    via area-accurate scale_size_area) plus a well-motivated 4th channel (color=category)
-    per the spec's optional-color note
-  - Data generation follows a real-world price ladder across categories (Beauty <
-    Apparel < Home & Kitchen < Sports < Electronics) instead of arbitrary overlapping
-    distributions
-  - Top-3 best-seller callouts with alternating directional leader lines add genuine
-    data storytelling beyond a raw data dump
-  - 'Theme-adaptive chrome verified pixel-exact in both renders (#FAF8F1 / #1A1A17
-    backgrounds), Imprint palette in canonical order with identical data hues across
-    themes'
-  - All font sizes explicitly set (axis.title=10, axis.text=8, plot.title=12, legend
-    text/title=8/10), with a dollar-formatted log-scale price axis
+  - Annual Sales size legend now renders all four defined breaks (5K/50K/150K/400K)
+    in both themes, giving the largest bubbles a reference size — fixes the attempt-1
+    defect
+  - Legend background no longer carries a visible outline frame (legend.background/legend.key
+    use color = NA), matching the style guide's decoration-removal checklist
+  - Correct 3-dimension bubble encoding (x = price on a log/$ axis, y = rating, size
+    = sales via area-accurate scale_size_area) plus a well-motivated category color
+    channel
+  - Page-background-colored point stroke (color = PAGE_BG) keeps individual bubble
+    edges distinguishable even where the dense low-price cluster overlaps
+  - Top-3 best-seller callouts with alternating directional leader lines create a
+    genuine focal point and data story
+  - Theme-adaptive chrome verified pixel-correct in both renders; Imprint palette
+    in canonical order with identical data hues across themes
+  - All font sizes explicitly set; clean KISS structure with a fixed seed
   weaknesses:
-  - The 'Annual Sales' size legend only renders 3 of the 4 breaks defined in scale_size_area(breaks=c(5000,50000,150000,400000))
-    — the 400K key/label never appears in the legend box in EITHER theme, so the largest
-    bubbles on the chart (products near ~450K annual sales, e.g. the biggest Beauty
-    bubble) have no corresponding reference size. Fix the guide/scale_size_area configuration
-    so all 4 breaks render (check for key-spacing or override.aes conflicts with guide_legend).
-  - The dense low-price cluster (~$10-$60, spanning Beauty/Apparel/Home & Kitchen)
-    has such heavy bubble overlap that individual points and their category color
-    blend into indistinct muddy patches despite alpha=0.65 — consider slightly higher
-    transparency, a small horizontal jitter, or thinning that region for clarity.
-  - Both legend boxes (Category, Annual Sales) keep a visible outline frame; the style
-    guide's decoration-removal checklist recommends dropping box frames around legends
-    for a cleaner look.
+  - The dense low-price cluster (~$10-$60, Beauty/Apparel/Home & Kitchen) still shows
+    heavy bubble overlap; alpha was only nudged from 0.65 to 0.55 rather than adding
+    jitter or thinning, so colors still blend into a muddier patch there than in the
+    sparser high-price region.
+  - DE-01/DE-02 are solid but not yet at the top of the scale — the composition still
+    reads as a well-executed default rather than a fully custom, art-directed layout.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, pixel-verified #FAF8F1 (RGB 250,248,241) — matches the required light surface.
-      Chrome: Title "bubble-basic · r · ggplot2 · anyplot.ai" in dark ink top-left, spans ~56% of the plot panel width (within the 50-70% guidance). X-axis "Price ($, log scale)" with $10/$30/$100/$300/$1,000 ticks; Y-axis "Customer Rating (out of 5)" 1-5. All titles, axis labels, and tick labels render in dark ink against the light background and are clearly readable.
-      Data: Bubbles colored by category — Electronics=#009E73 (green), Apparel=#C475FD (lavender), Home & Kitchen=#4467A3 (blue), Beauty=#BD8233 (ochre), Sports=#AE3030 (red), semi-transparent (alpha 0.65) with a light-colored edge stroke. Three top-selling products (BEAU-013, APRL-008, BEAU-004) are labeled with bold text and thin leader lines pointing to their bubbles. "Category" legend (color swatches) and "Annual Sales" size legend (bubble-size key) sit at upper/lower right; the size legend only shows 5K/50K/150K keys — the 400K key defined in code is missing.
-      Legibility verdict: PASS — no light-on-light text; all chrome is dark ink on the warm off-white surface.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "bubble-basic · r · ggplot2 · anyplot.ai" top-left in dark ink (~35% of the plot panel width, well within proportion for a short title). X-axis "Price ($, log scale)" with $10-$1,000 log-spaced ticks; Y-axis "Customer Rating (out of 5)" 1-5. Grid lines are subtle light gray, visible but not competing with data. "Category" and "Annual Sales" legend blocks sit at upper/lower right without a visible outline frame (fixed from attempt 1).
+      Data: Bubbles colored by category — Electronics=green (#009E73, first series), Apparel=lavender, Home & Kitchen=blue, Beauty=ochre, Sports=red — all Imprint categorical hues in canonical order. Bubble size encodes annual sales via scale_size_area; the "Annual Sales" legend now shows all four defined keys (5K/50K/150K/400K), fixing the attempt-1 defect where 400K silently disappeared. Three top-sellers (BEAU-013, APRL-008, BEAU-004) are labeled with bold text and leader lines.
+      Legibility verdict: PASS — title, axis labels, tick labels, and legend text are all clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, pixel-verified #1A1A17 (RGB 26,26,23) — matches the required dark surface.
-      Chrome: Same title/axis/tick layout, now rendered in light ink (#F0EFE8 primary / #B8B7B0 secondary) against the dark background. All text is clearly legible with no dark-on-dark failures.
-      Data: Confirmed identical hues to the light render (same 5 Imprint categorical colors at the same positions) — only the chrome (background, text, grid, legend box, bubble edge stroke) flips with the theme. Size legend again shows only 5K/50K/150K, missing the 400K key.
-      Legibility verdict: PASS — no dark-on-dark text; all labels and ticks are clearly visible against the near-black surface.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout as the light render; title/axis/tick text renders in light ink (#F0EFE8 primary / #B8B7B0 secondary). Grid lines are subtle and visible against the dark surface. Legend blocks again have no visible outline frame.
+      Data: Category colors are identical to the light render (same 5 Imprint hues at the same positions) — only chrome flipped, confirming theme-adaptive tokens were threaded through correctly. The size legend shows the same complete 5K/50K/150K/400K set as the light render.
+      Legibility verdict: PASS — no dark-on-dark failures; all text is clearly readable against the dark background, and the brand green (Electronics) remains visible.
+
+    Both paragraphs describe both renders per the mandatory format.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -63,79 +61,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title occupies ~56% of the plot panel
-          width (within 50-70% guidance); readable in both themes.
+        comment: All font sizes explicitly set; readable in both themes; title proportion
+          appropriate for its length
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data overlap; bubble-to-bubble overlap
-          is expected/spec-mandated (alpha 0.65), not a text/legibility defect.
+        comment: No text/data collisions; bubble-on-bubble overlap is spec-mandated
+          alpha blending, not a text-overlap defect
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: scale_size_area gives correct area-based sizing, but the dense low-price
-          cluster overlaps so heavily that many individual bubbles and their category
-          color become indistinguishable.
+        passed: true
+        comment: Page-bg-colored point stroke keeps bubble edges distinguishable even
+          in the dense low-price cluster; alpha nudged from 0.65 to 0.55 per attempt-1
+          feedback, though the densest region still blends somewhat
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette + alpha blending give adequate CVD-safe contrast;
-          no red-green-only encoding.
+        comment: Good contrast, CVD-safe categorical hues
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot panel fills a healthy share of the canvas,
-          nothing cut off at the canvas edge.
+        comment: Plot fills most of the canvas, balanced margins, legend adjacent
+          to plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Both axis titles are descriptive with units: ''Price ($, log scale)'',
-          ''Customer Rating (out of 5)''.'
+        comment: Both axes descriptive with units ($ and /5)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First category (Electronics) renders #009E73; remaining categories
-          follow Imprint canonical order; identical data hues across themes; backgrounds
-          pixel-verified #FAF8F1/#1A1A17.'
+        comment: 'Canonical Imprint order, first series #009E73, theme-correct chrome
+          pixel-verified in both renders'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above-default touches (log/$ price axis, tiered sales legend, price-ladder
-          category ordering, top-seller callouts), undercut by the broken size legend.
+        comment: Log/$ price axis, tiered sales legend now complete, price-ladder
+          category ordering; strong design clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: theme_minimal with tuned grid/ink tokens and generous margins; legend
-          keeps a boxed frame the style guide recommends dropping.
+        comment: Tuned theme_minimal, generous margins, legend box outline removed
+          per style guide
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Top-3 best-seller leader-line callouts create a genuine focal point
-          and narrative beyond a raw data dump.
+        comment: Top-seller callouts with leader lines create a genuine focal point
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -143,28 +137,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bubble chart: x/y position plus size-encoded third dimension.'
+        comment: Correct bubble chart (x, y, size)
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Alpha transparency and area-based size scaling are present, but the
-          mandated size legend is incomplete — the largest defined break (400K) never
-          renders in either theme, leaving the biggest bubbles unexplained.
+        passed: true
+        comment: Size legend now shows all four defined breaks (5K/50K/150K/400K)
+          — fixes attempt-1 defect
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Price on x, rating on y, full data range visible without clipping.
+        comment: X/Y correctly assigned, full data range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'bubble-basic · r · ggplot2 · anyplot.ai';
-          legend labels match category names.
+        comment: Title format correct; legend labels match category/size data
     data_quality:
       score: 14
       max: 15
@@ -174,21 +166,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Five categories with distinct price/rating/sales distributions and
-          a labeled outlier (low-rating, high-price Sports item).
+        comment: Shows most feature-space aspects (price/rating/sales variation across
+          5 categories)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral retail-catalog scenario.
+        comment: Real, neutral retail scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Category price ladder and rating/sales ranges align with real-world
-          retail intuition.
+        comment: Price/rating/sales ranges and category ladder are factually plausible
     code_quality:
       score: 10
       max: 10
@@ -198,34 +189,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward imports → data → plot → save; lapply is a data-construction
-          idiom, not a named helper function.
+        comment: Imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42).
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported packages (dplyr, scales, ragg) are used.
+        comment: Only used packages
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately-scoped code for the annotation layer; no fake
-          functionality.
+        comment: Clean, idiomatic, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct 8x4.5in/400dpi
-          landscape canvas.
+        comment: Saves plot-{theme}.png via ragg::agg_png, current API
     library_mastery:
       score: 9
       max: 10
@@ -235,23 +223,22 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Idiomatic layered grammar: scale_size_area, scale_x_log10 + label_dollar,
-          guide_legend(override.aes=...).'
+        comment: Idiomatic ggplot2 grammar-of-graphics usage
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Combines geom_segment + geom_text annotation layering with override.aes
-          legend tuning — a distinctly ggplot2 grammar-of-graphics composition.
-  verdict: REJECTED
+        comment: scale_size_area for area-accurate bubble sizing, guide_legend override.aes
+          for legend key styling
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
-  - custom-legend
   - manual-ticks
+  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
@@ -259,3 +246,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
+  - publication-ready

@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' bubble-basic: Basic Bubble Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 86/100 | Updated: 2026-09-26
+#' Quality: 92/100 | Updated: 2026-09-27
 
 library(ggplot2)
 library(dplyr)
