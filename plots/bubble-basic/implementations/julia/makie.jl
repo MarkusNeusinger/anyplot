@@ -6,7 +6,6 @@
 using CairoMakie
 using Colors
 using Random
-using Statistics
 
 Random.seed!(42)
 
@@ -29,8 +28,10 @@ budget_norm = rand(n) .^ 1.4                       # skewed toward low end — m
                                                     # films than tentpoles, as in real slates
 budget      = 5.0 .+ 245.0 .* budget_norm          # $5M-$250M production budget
 
-# Rating rises mildly with budget (r ≈ 0.5): bigger productions afford more polish
-rating = clamp.(5.0 .+ 2.5 .* budget_norm .+ 0.9 .* randn(n), 1.5, 9.8)
+# Rating rises mildly with budget (r ≈ 0.5): bigger productions afford more polish.
+# Slightly wider jitter than a plain 0.9 stddev spreads out the high-budget
+# cluster so blockbuster-tier bubbles don't stack as tightly.
+rating = clamp.(5.0 .+ 2.5 .* budget_norm .+ 1.15 .* randn(n), 1.5, 9.8)
 
 # Box office scales with budget but gets an ROI boost near the $80-150M zone
 sweet_spot = (budget .- 115.0) ./ 70.0
@@ -53,7 +54,7 @@ tier_names  = ["Indie (<\$50M)", "Studio (\$50–150M)", "Blockbuster (>\$150M)"
 point_color = IMPRINT_PALETTE[tier_idx]
 
 # Plot
-title_str = "bubble-basic · julia · makie · anyplot.ai"
+title_str = "Film Portfolio Analysis · bubble-basic · julia · makie · anyplot.ai"
 
 fig = Figure(
     size            = (1600, 900),
@@ -64,7 +65,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title             = title_str,
-    titlesize         = 25,
+    titlesize         = 36,
     titlecolor        = INK,
     xlabel            = "Production Budget (USD Millions)",
     ylabel            = "Critic Rating (out of 10)",
@@ -150,38 +151,6 @@ Legend(fig[1, 2],
     patchsize       = (60, 40),
     labelsize       = 13,
 )
-
-# Inset axis — Makie's GridLayout lets a second Axis be placed directly on
-# top of another cell via relative width/height/align, a composition trick
-# most other plotting libraries need a separate subplot grid for. Placed in
-# the sparse low-budget/high-rating corner so it doesn't cover data.
-avg_revenue = [mean(box_office[tier_idx .== i]) for i in eachindex(IMPRINT_PALETTE)]
-
-inset_ax = Axis(fig[1, 1];
-    width           = Relative(0.26),
-    height          = Relative(0.26),
-    halign          = 0.02,
-    valign          = 0.98,
-    backgroundcolor = ELEVATED_BG,
-    title           = "Avg. Revenue by Tier",
-    titlesize       = 11,
-    titlecolor      = INK_SOFT,
-    xticks          = (1:3, ["Indie", "Studio", "Block."]),
-    xticklabelsize  = 9,
-    xticklabelcolor = INK_MUTED,
-    ylabel          = "\$M",
-    ylabelsize      = 9,
-    ylabelcolor     = INK_MUTED,
-    yticklabelsize  = 9,
-    yticklabelcolor = INK_MUTED,
-    topspinevisible   = false,
-    rightspinevisible = false,
-    leftspinecolor    = INK_SOFT,
-    bottomspinecolor  = INK_SOFT,
-    xgridvisible      = false,
-    ygridvisible      = false,
-)
-barplot!(inset_ax, 1:3, avg_revenue; color = IMPRINT_PALETTE, strokewidth = 0)
 
 # Tighten the gap between the plot panel and the legend column — a small,
 # layout-aware polish that Makie's GridLayout makes trivial.
