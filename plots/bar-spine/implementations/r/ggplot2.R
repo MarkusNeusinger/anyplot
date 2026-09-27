@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' bar-spine: Spine Plot for Two-Variable Proportions
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 91/100 | Created: 2026-09-02
+#' Quality: 94/100 | Updated: 2026-09-27
 
 library(ggplot2)
 library(dplyr)
@@ -20,6 +20,9 @@ IMPRINT_PALETTE <- c(
   "#AE3030"  # 5 - matte red   (semantic: churned / bad)
 )
 SEGMENT_TEXT <- "#FFFDF6" # warm near-white, legible on both fills
+# Imprint "neutral" anchor happens to equal INK; used below for a reference
+# trend line so it reads as structural (like gridlines), not a 3rd data series.
+NEUTRAL <- INK
 
 # --- Data -----------------------------------------------------------------
 # SaaS customer base split by subscription tier (bar width = tier size) and
@@ -56,18 +59,42 @@ spine_df <- df_counts %>%
   ) %>%
   ungroup()
 
+# Retained/churned boundary per tier == the retention rate itself; connecting
+# it across tiers turns the width+color pattern into an explicit trend line.
+retention_trend <- spine_df %>%
+  filter(status == "Retained") %>%
+  arrange(xmid)
+
 # --- Plot -------------------------------------------------------------------
 plot_title <- "Customer Retention by Subscription Tier · bar-spine · r · ggplot2 · anyplot.ai"
-title_fontsize <- max(8, round(12 * 67 / nchar(plot_title)))
+plot_subtitle <- "Retention climbs steadily from Basic to Enterprise"
+title_fontsize <- max(8, round(12 * 58 / nchar(plot_title)))
+
+# Push each segment's percentage label away from the retained/churned
+# boundary (where the retention trend-line marker sits) instead of dead
+# center, so the label never crowds the marker even in thin segments.
+label_df <- spine_df %>%
+  filter(prop > 0.06) %>%
+  mutate(y_label = ifelse(status == "Retained", ymin + prop * 0.35, ymin + prop * 0.65))
 
 p <- ggplot(spine_df) +
   geom_rect(
     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = status),
     color = NA
   ) +
+  geom_line(
+    data = retention_trend,
+    aes(x = xmid, y = ymax, group = 1),
+    color = NEUTRAL, linewidth = 0.5, linetype = "22", alpha = 0.85
+  ) +
+  geom_point(
+    data = retention_trend,
+    aes(x = xmid, y = ymax),
+    shape = 21, size = 2.2, stroke = 0.8, color = NEUTRAL, fill = PAGE_BG
+  ) +
   geom_text(
-    data = filter(spine_df, prop > 0.06),
-    aes(x = xmid, y = ymid, label = percent(prop, accuracy = 1)),
+    data = label_df,
+    aes(x = xmid, y = y_label, label = percent(prop, accuracy = 1)),
     color = SEGMENT_TEXT, size = 3.2, fontface = "bold"
   ) +
   scale_fill_manual(
@@ -84,6 +111,7 @@ p <- ggplot(spine_df) +
   ) +
   labs(
     title = plot_title,
+    subtitle = plot_subtitle,
     x = "Subscription Tier (bar width ∝ customer base)",
     y = "Share of Customers"
   ) +
@@ -98,8 +126,10 @@ p <- ggplot(spine_df) +
     axis.text          = element_text(color = INK_SOFT, size = 8),
     axis.ticks         = element_blank(),
     plot.title         = element_text(color = INK, size = title_fontsize, face = "bold"),
+    plot.subtitle      = element_text(color = INK_SOFT, size = 9, face = "italic", margin = margin(t = 2, b = 6)),
     legend.text        = element_text(color = INK_SOFT, size = 8),
-    legend.title       = element_text(color = INK, size = 10)
+    legend.title       = element_text(color = INK, size = 10),
+    plot.margin        = margin(t = 5, r = 12, b = 5, l = 5)
   )
 
 # --- Save -------------------------------------------------------------------
