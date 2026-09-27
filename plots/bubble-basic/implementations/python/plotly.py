@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: plotly 7.1.0 | Python 3.13.15
-Quality: 88/100 | Updated: 2026-09-26
+Quality: 90/100 | Updated: 2026-09-27
 """
 
 import os
@@ -23,9 +23,9 @@ imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
 
 # Data — Tech companies: R&D investment vs. product-market-fit score
 np.random.seed(42)
-n = 38
+n = 62
 rd_pct = np.random.uniform(4, 42, n)  # R&D spend as % of revenue
-pmf = np.clip(rd_pct * 1.3 + np.random.normal(0, 14, n) + 18, 8, 98)
+pmf = np.clip(rd_pct * 1.3 + np.random.normal(0, 17, n) + 18, 8, 98)
 revenue_m = np.clip(np.abs(np.random.normal(750, 380, n)), 40, 2200)
 
 # Anchor key data points for visual storytelling
@@ -36,10 +36,11 @@ rd_pct[5], pmf[5], revenue_m[5] = 7, 24, 180  # underinvestors
 rd_pct[6], pmf[6], revenue_m[6] = 5, 18, 120
 rd_pct[10], pmf[10], revenue_m[10] = 22, 92, 920  # efficient innovator
 
-# Bubble sizing via sizeref (Plotly's idiomatic area-based scaling)
-# sizemin=9 (up from a previous 6) keeps the lowest-revenue bubbles clearly
-# visible against the dense mid-range cluster.
-sizeref = 2.0 * float(revenue_m.max()) / (46.0**2)
+# Bubble sizing via sizeref (Plotly's idiomatic area-based scaling).
+# Max on-screen diameter trimmed from a previous 46 to 40 so the denser
+# n=62 field overlaps less in the mid R&D-spend cluster; sizemin=9 keeps
+# the lowest-revenue bubbles clearly visible.
+sizeref = 2.0 * float(revenue_m.max()) / (40.0**2)
 cmin, cmax = float(revenue_m.min()), float(revenue_m.max())
 
 # Legend swatch colors tinted along imprint_seq (green->blue) so each swatch
@@ -69,7 +70,7 @@ fig.add_trace(
             "cmax": cmax,
             "colorscale": imprint_seq,
             "showscale": False,
-            "opacity": 0.65,
+            "opacity": 0.6,
             "line": {"width": 1.5, "color": PAGE_BG},
         },
         hovertemplate=(
@@ -98,7 +99,7 @@ for size_label in [100, 600, 2000]:
                 "sizeref": sizeref,
                 "sizemin": 9,
                 "color": f"#{r:02X}{g:02X}{b:02X}",
-                "opacity": 0.65,
+                "opacity": 0.6,
                 "line": {"width": 1.5, "color": PAGE_BG},
             },
             name=f"${size_label}M",
@@ -157,7 +158,22 @@ fig.update_layout(
             "bordercolor": INK_SOFT,
             "borderwidth": 0.5,
             "borderpad": 4,
-        }
+        },
+        {
+            "x": rd_pct[6],
+            "y": pmf[6],
+            "text": "Underinvested laggard<br>(low R&D, low PMF)",
+            "font": {"size": 10, "color": INK},
+            "showarrow": True,
+            "arrowhead": 2,
+            "arrowcolor": INK_SOFT,
+            "ax": -50,
+            "ay": 40,
+            "bgcolor": ELEVATED_BG,
+            "bordercolor": INK_SOFT,
+            "borderwidth": 0.5,
+            "borderpad": 4,
+        },
     ],
 )
 
