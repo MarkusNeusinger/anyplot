@@ -88,20 +88,20 @@ g.append("text")
 // --- Force-directed decluttering (d3-specific) -------------------------------
 // A collision force gently nudges overlapping bubbles apart from their true
 // (funding, growth) position so the densest funding cluster (100-150) stays
-// individually legible instead of stacking 3-4 deep. Shrinking the radius
-// range (was 8-28, now 7-21) cuts the raw overlap footprint, which lets the
-// x/y anchor strength rise (0.6 -> 0.85) so rendered positions track their
-// true data coordinate much more closely while the collision force (padding
-// unchanged at +6px, same 320 relaxation ticks) still has enough headroom to
-// fully separate the smaller bubbles in the densest region.
+// individually legible instead of stacking 3-4 deep. Raising the x/y anchor
+// strength (0.85 -> 0.92) and trimming the collision padding (+9 -> +6px)
+// keeps rendered positions tracking their true data coordinate even more
+// tightly, while the collision force still has enough headroom over 380
+// relaxation ticks to fully separate the smaller bubbles in the densest
+// region.
 data.forEach((d) => {
   d.x = x(d.funding);
   d.y = y(d.growth);
 });
 const declutter = d3.forceSimulation(data)
-  .force("x", d3.forceX((d) => x(d.funding)).strength(0.85))
-  .force("y", d3.forceY((d) => y(d.growth)).strength(0.85))
-  .force("collide", d3.forceCollide((d) => r(d.team) + 9))
+  .force("x", d3.forceX((d) => x(d.funding)).strength(0.92))
+  .force("y", d3.forceY((d) => y(d.growth)).strength(0.92))
+  .force("collide", d3.forceCollide((d) => r(d.team) + 6))
   .stop();
 for (let i = 0; i < 380; i++) declutter.tick();
 
@@ -203,9 +203,9 @@ legend.append("text")
   .text("Team Size (employees)");
 
 // Legend circles echo the real bubble treatment (brand-green tint at the
-// same 0.58 fill-opacity as the real marks, not a generic gray outline) and
-// reuse the same team-size stroke-width scale as the real bubbles, so the
-// reference set matches the data both in fill and outline emphasis.
+// same 0.58 fill-opacity as the real marks, with the same background-colored
+// cutout stroke) and reuse the same team-size stroke-width scale as the real
+// bubbles, so the reference set matches the data in fill and outline alike.
 const baselineY = 110;
 const legendX = [60, 140, 210];
 legendValues.forEach((v, i) => {
@@ -215,7 +215,7 @@ legendValues.forEach((v, i) => {
     .attr("r", legendR[i])
     .attr("fill", t.palette[0])
     .attr("fill-opacity", 0.58)
-    .attr("stroke", t.palette[0])
+    .attr("stroke", t.pageBg)
     .attr("stroke-width", strokeWidth(v));
   legend.append("text")
     .attr("x", legendX[i])
