@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 88/100 | Created: 2026-05-08
@@ -15,7 +15,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Data: subscription outcomes by acquisition channel
 channels = ["Direct", "Organic Search", "Social Media", "Email", "Referral"]
@@ -41,8 +41,13 @@ for w in widths:
 # Conditional proportions within each bar (heights sum to 1)
 outcome_props = {k: [cnt / m for cnt, m in zip(v, channel_sizes)] for k, v in outcome_counts.items()}
 
-# imprint semantic anchors: Active=green, On Trial=amber (warning), Cancelled=red (bad)
+# Imprint semantic exception: the fill categories are literal subscription
+# statuses (Active/On Trial/Cancelled), so we map to the status anchors a
+# reader already expects (good=green, warning=amber, bad=red) instead of the
+# canonical 1->2->3 ordinal sequence.
 COLORS = {"Active": "#009E73", "On Trial": "#DDCC77", "Cancelled": "#AE3030"}
+# Amber is light — dark ink reads better than white inside that segment.
+TEXT_COLOR = {"Active": "white", "On Trial": INK, "Cancelled": "white"}
 
 # Plot
 fig = go.Figure()
@@ -60,7 +65,7 @@ for outcome in ["Active", "On Trial", "Cancelled"]:
             marker_line_width=0,
             text=labels,
             textposition="inside",
-            textfont=dict(size=16, color="white"),
+            textfont=dict(size=11, color=TEXT_COLOR[outcome]),
             hovertemplate=[
                 f"<b>{ch}</b><br>{outcome}: {p:.1%}<br>n={m:,}<extra></extra>"
                 for ch, p, m in zip(channels, props, channel_sizes)
@@ -71,20 +76,21 @@ for outcome in ["Active", "On Trial", "Cancelled"]:
 ticktext = [f"<b>{ch}</b><br>n={m:,}" for ch, m in zip(channels, channel_sizes)]
 
 fig.update_layout(
+    autosize=False,
     barmode="stack",
     bargap=0,
     title=dict(
         text="Subscription Outcomes by Channel · bar-spine · plotly · anyplot.ai",
-        font=dict(size=28, color=INK),
+        font=dict(size=16, color=INK),
         x=0.5,
         xanchor="center",
     ),
     xaxis=dict(
-        title=dict(text="Acquisition Channel", font=dict(size=22, color=INK)),
+        title=dict(text="Acquisition Channel", font=dict(size=12, color=INK)),
         tickmode="array",
         tickvals=centers,
         ticktext=ticktext,
-        tickfont=dict(size=18, color=INK_SOFT),
+        tickfont=dict(size=10, color=INK_SOFT),
         range=[0, 1],
         showgrid=False,
         zeroline=False,
@@ -93,10 +99,12 @@ fig.update_layout(
         ticks="",
     ),
     yaxis=dict(
-        title=dict(text="Proportion of Customers", font=dict(size=22, color=INK)),
+        title=dict(text="Proportion of Customers", font=dict(size=12, color=INK)),
         tickformat=".0%",
-        tickfont=dict(size=18, color=INK_SOFT),
-        range=[0, 1.01],
+        tickfont=dict(size=10, color=INK_SOFT),
+        tickvals=[0, 0.2, 0.4, 0.6, 0.8, 1.0],
+        # Headroom above the 100% bar tops for the two storytelling callouts.
+        range=[0, 1.22],
         gridcolor=GRID,
         showgrid=True,
         linecolor=INK_SOFT,
@@ -107,20 +115,60 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font=dict(color=INK),
     legend=dict(
-        title=dict(text="Status", font=dict(color=INK, size=18)),
+        title=dict(text="Status", font=dict(color=INK, size=11)),
         bgcolor=ELEVATED_BG,
         bordercolor=INK_SOFT,
         borderwidth=1,
-        font=dict(color=INK_SOFT, size=16),
+        font=dict(color=INK_SOFT, size=10),
         traceorder="normal",
-        x=0.02,
-        y=0.98,
+        x=1.02,
+        y=1,
         xanchor="left",
         yanchor="top",
     ),
-    margin=dict(l=90, r=40, t=100, b=100),
+    margin=dict(l=90, r=150, t=90, b=90),
 )
 
-# Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+# Storytelling callouts pointing at the two most interesting segments.
+fig.add_annotation(
+    x=centers[2],
+    y=1.0,
+    xref="x",
+    yref="y",
+    text="<b>32% churned</b><br>highest cancellation",
+    showarrow=True,
+    arrowhead=2,
+    arrowwidth=1.5,
+    arrowcolor=INK_SOFT,
+    ax=0,
+    ay=-40,
+    align="center",
+    font=dict(size=11, color=INK),
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
+    borderwidth=1,
+    borderpad=6,
+)
+fig.add_annotation(
+    x=centers[4],
+    y=1.0,
+    xref="x",
+    yref="y",
+    text="<b>77% active</b><br>best retention",
+    showarrow=True,
+    arrowhead=2,
+    arrowwidth=1.5,
+    arrowcolor=INK_SOFT,
+    ax=0,
+    ay=-40,
+    align="center",
+    font=dict(size=11, color=INK),
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
+    borderwidth=1,
+    borderpad=6,
+)
+
+# Save — hard target: 3200 x 1800 (landscape).
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
