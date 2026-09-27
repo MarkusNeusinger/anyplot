@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: matplotlib 3.11.2 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-09-27
@@ -145,7 +145,7 @@ for cap, y in zip(legend_caps, (0.18, 0.5, 0.84), strict=True):
 category_legend = ax.legend(
     fontsize=9,
     loc="upper right",
-    framealpha=0.95,
+    framealpha=1.0,
     facecolor=ELEVATED_BG,
     edgecolor=INK_SOFT,
     title="Product Category",
@@ -167,7 +167,7 @@ standout_y = quality_rating[electronics_mask][standout_local_idx]
 ax.annotate(
     "Premium standout",
     xy=(standout_x, standout_y),
-    xytext=(standout_x * 0.6, standout_y + 1.75),
+    xytext=(standout_x * 0.57, standout_y - 1.6),
     fontsize=9,
     color=INK_SOFT,
     ha="right",
