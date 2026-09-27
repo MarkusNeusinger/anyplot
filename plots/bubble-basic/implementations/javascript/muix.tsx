@@ -1,7 +1,8 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 86/100 | Updated: 2026-09-27
+// Library: MUI X Charts | React | Node 22
+// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
+// Quality: pending | Updated: 2026-09-27
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
@@ -12,6 +13,11 @@ const t = window.ANYPLOT_TOKENS;
 const TITLE = "bubble-basic · javascript · muix · anyplot.ai";
 const TITLE_HEIGHT = 56;
 const MARGIN = { top: 24, right: 210, bottom: 70, left: 90 };
+// Semi-transparent fill composites differently over the two page backgrounds:
+// the same alpha reads visibly darker/more saturated over #1A1A17 than over
+// #FAF8F1, even though the underlying Imprint hex values never change. A
+// small theme-aware opacity bump keeps the perceived hue closer across themes.
+const BUBBLE_OPACITY = window.ANYPLOT_THEME === "dark" ? 0.6 : 0.48;
 
 // --- Data (in-memory, deterministic LCG — no seeded RNG in the browser) -----
 function lcg(seed) {
@@ -75,16 +81,32 @@ function radiusForSize(value) {
   return MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * Math.sqrt(Math.max(0, ratio));
 }
 
+// Legend geometry, computed once so the two legend blocks can be vertically
+// centered against the chart instead of pinned at fixed heights that leave a
+// visible gap of unused whitespace beneath them on tall canvases.
+const LEGEND_GAP = 56;
+const SIZE_LEGEND_VALUES = [
+  Math.round(sizeMax / 10) * 10,
+  Math.round((sizeMin + sizeMax) / 2 / 10) * 10,
+  Math.round(sizeMin / 10) * 10,
+];
+const COLOR_LEGEND_HEIGHT = 20 + (ARCHETYPES.length - 1) * 24 + 12;
+const SIZE_LEGEND_HEIGHT =
+  20 + SIZE_LEGEND_VALUES.reduce((height, value) => height + radiusForSize(value) * 2 + 16, 0);
+
 // Declutter pass: per-archetype spread tuning (see above) can't fully
 // prevent a chance pocket where several bubbles from different archetypes
-// land on top of each other (review flagged x=18-22/y=15-19 fusing into a
-// blob). x and y need different px-per-unit factors since the axes don't
-// share a domain width, so distances are computed in approximate pixel
-// space — mirroring ChartContainer's linear min/max mapping, since the
-// real xScale/yScale hooks aren't available until the chart mounts — and
-// converted back to data units. Only pockets packed tighter than 75% of
-// the summed radii are pushed apart; lighter overlap is left for the alpha
-// blending + pageBg stroke to handle, as designed.
+// land on top of each other. x and y need different px-per-unit factors
+// since the axes don't share a domain width, so distances are computed in
+// approximate pixel space — mirroring ChartContainer's linear min/max
+// mapping, since the real xScale/yScale hooks aren't available until the
+// chart mounts — and converted back to data units. The scale used here is
+// only an approximation (built from the pre-repulsion spread); the real
+// axis domain is recomputed below from the settled positions, so a bubble
+// can never end up padded outside its own axis range. Bubbles closer than
+// 92% of their summed radii are pushed apart — tight enough to still read
+// as an organic cloud, strong enough that no two bubbles fuse into an
+// undifferentiated blob.
 const rawXValues = companies.map((d) => d.x);
 const rawYValues = companies.map((d) => d.y);
 const rawXDomain = [Math.min(...rawXValues) - 4, Math.max(...rawXValues) + 4];
@@ -95,7 +117,7 @@ const PLOT_HEIGHT = CANVAS_HEIGHT - TITLE_HEIGHT - MARGIN.top - MARGIN.bottom;
 const PX_PER_X = PLOT_WIDTH / (rawXDomain[1] - rawXDomain[0]);
 const PX_PER_Y = PLOT_HEIGHT / (rawYDomain[1] - rawYDomain[0]);
 
-for (let iter = 0; iter < 30; iter++) {
+for (let iter = 0; iter < 40; iter++) {
   for (let i = 0; i < companies.length; i++) {
     for (let j = i + 1; j < companies.length; j++) {
       const a = companies[i];
@@ -103,7 +125,7 @@ for (let iter = 0; iter < 30; iter++) {
       const dxPx = (b.x - a.x) * PX_PER_X;
       const dyPx = (b.y - a.y) * PX_PER_Y;
       const dist = Math.hypot(dxPx, dyPx) || 0.001;
-      const minDist = (radiusForSize(a.size) + radiusForSize(b.size)) * 0.75;
+      const minDist = (radiusForSize(a.size) + radiusForSize(b.size)) * 0.92;
       if (dist < minDist) {
         const push = (minDist - dist) / 2;
         const ux = dxPx / dist;
@@ -139,7 +161,7 @@ function Bubbles() {
           cy={yScale(d.y)}
           r={radiusForSize(d.size)}
           fill={d.color}
-          fillOpacity={0.48}
+          fillOpacity={BUBBLE_OPACITY}
           stroke={t.pageBg}
           strokeWidth={2}
         />
@@ -160,7 +182,7 @@ function ColorLegend({ left, top }) {
         const cy = top + i * 24;
         return (
           <g key={a.name}>
-            <circle cx={left + 6} cy={cy} r={6} fill={a.color} fillOpacity={0.48} stroke={a.color} strokeWidth={1.5} />
+            <circle cx={left + 6} cy={cy} r={6} fill={a.color} fillOpacity={BUBBLE_OPACITY} stroke={a.color} strokeWidth={1.5} />
             <text x={left + 20} y={cy} dominantBaseline="middle" fontSize={14} fill={t.inkSoft}>
               {a.name}
             </text>
@@ -173,11 +195,6 @@ function ColorLegend({ left, top }) {
 
 // --- Size legend — three reference bubbles explain the size scaling --------
 function SizeLegend({ left, top }) {
-  const legendValues = [
-    Math.round(sizeMax / 10) * 10,
-    Math.round((sizeMin + sizeMax) / 2 / 10) * 10,
-    Math.round(sizeMin / 10) * 10,
-  ];
   let cursorY = top;
 
   return (
@@ -185,7 +202,7 @@ function SizeLegend({ left, top }) {
       <text x={left} y={top - 20} fontSize={14} fontWeight={600} fill={t.inkSoft}>
         Market share index
       </text>
-      {legendValues.map((value) => {
+      {SIZE_LEGEND_VALUES.map((value) => {
         const r = radiusForSize(value);
         cursorY += r + 10;
         const cy = cursorY;
@@ -221,6 +238,13 @@ export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const chartHeight = height - TITLE_HEIGHT;
   const margin = MARGIN;
+
+  // Center the two-part legend against the chart height instead of pinning
+  // it near the top, so it no longer leaves a tall unused gap underneath.
+  const legendBlockHeight = COLOR_LEGEND_HEIGHT + LEGEND_GAP + SIZE_LEGEND_HEIGHT;
+  const legendBlockTop = Math.max(44, (chartHeight - legendBlockHeight) / 2);
+  const colorLegendTop = legendBlockTop + 20;
+  const sizeLegendTop = legendBlockTop + COLOR_LEGEND_HEIGHT + LEGEND_GAP + 20;
 
   return (
     <div style={{ width, height }}>
@@ -267,8 +291,8 @@ export default function Chart() {
         <Bubbles />
         <ChartsXAxis axisId="growth" />
         <ChartsYAxis axisId="margin" />
-        <ColorLegend left={width - margin.right + 24} top={64} />
-        <SizeLegend left={width - margin.right + 24} top={220} />
+        <ColorLegend left={width - margin.right + 24} top={colorLegendTop} />
+        <SizeLegend left={width - margin.right + 24} top={sizeLegendTop} />
       </ChartContainer>
     </div>
   );
