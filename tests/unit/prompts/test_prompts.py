@@ -560,6 +560,13 @@ class TestPlotTypeCharacteristics:
         assert "Affirmative properties" in content
         assert "absence of a permitted thing never deducts" in content
         assert "not the render's chrome" in content
+        # One kind per bullet, and what a permission never becomes.
+        assert "`A good version shows:`" in content
+        assert "`Expected, not a defect:`" in content
+        assert "Nothing an `Expected, not a defect:` bullet names is ever a weakness" in content
+        assert "A permission is not an aspect to exhibit" in content
+        assert "Related but different form" in content
+        assert "spline overshoot" in content
 
     @pytest.mark.parametrize(
         "prompt_path",
@@ -582,6 +589,29 @@ class TestPlotTypeCharacteristics:
         assert "neither requires nor offers as optional" in content
         assert "wrong variant" in content
         assert "are permissions, not features" in content
+        assert "`A good version shows:` bullets are *affirmative properties*" in content
+        assert "`Expected, not a defect:` bullets are *permissions*" in content
+        assert "Nothing a permission names is ever a weakness" in content
+        assert "A permission is not an aspect to exhibit" in content
+        assert "a donut for a pie" in content
+        assert "spline overshoot" in content
+        assert "Check each Notes bullet and each `A good version shows:` bullet" in content
+
+    def test_regen_step_8b_rules(self) -> None:
+        """Step 8b: a permission is never an improvement ref, an unasked layer
+        is never an improvement, and the regression wording carries the SC-03
+        exemptions and the required-element exception."""
+        content = (WORKFLOW_PROMPTS_DIR / "ai-quality-review.md").read_text()
+        step = content[content.index("### 8b.") : content.index("### 9.")]
+        assert "can never be an improvement `ref`" in step
+        assert "is never an improvement, on any spec" in step
+        assert "Chrome the criteria require (title format, legend, axis labels, color bar) is not an addition" in step
+        assert "jitter in categorical strip and swarm plots" in step
+        assert "layout-positioned types" in step
+        assert "any jitter, dodge or offset the spec's Data or Notes ask for" in step
+        assert "a required element the predecessor lacked is an improvement, not an addition" in step
+        assert "every `C` ref an id of an `A good version shows:` bullet" in step
+        assert "(jitter, force or declutter passes that move the marks)" not in step
 
     def test_generation_prompts_forbid_moving_marks(self) -> None:
         for path in (

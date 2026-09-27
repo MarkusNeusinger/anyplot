@@ -346,6 +346,8 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 | 3 | Correct base type but missing variant (e.g., grouped bar instead of stacked) |
 | 0 | Wrong chart type entirely |
 
+**Related but different form.** A related chart type that is not the one the spec names — a donut for a pie, split-violin halves that do not meet — scores SC-01 partially (typically 3) on any spec, not only on `-basic` ones.
+
 **Variant creep on `-basic` specs.** When the spec id ends in `-basic`, encodings or elements the spec neither requires nor offers as optional (a Data column or a Notes bullet that allows color by category is asked for; a channel driven by a derived fourth variable is not) — a color channel driven by a derived fourth variable, per-group fits or trend lines, highlight bands, several annotation layers — make it the wrong variant: score SC-01 partially (typically 3) and give that addition **no** DE-03 or LM-02 credit. A basic chart earns storytelling through its data and design, not through extra channels (see `prompts/plot-generator.md` → "Respect the spec variant").
 
 ### SC-02: Required Features (4 Points)
@@ -364,7 +366,7 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 | 1 | Minor mapping issues |
 | 0 | X/Y swapped or data not visible |
 
-**Data-value integrity: marks sit at their data values.** Changing the generated data (a different seed, a spread-out scenario, rejection sampling) is allowed — the spec does not pin the data. Displacing marks **after** the data exists is not: force or collision layouts applied to data marks, nudge or declutter passes that rewrite plotted x/y values, or offsets that move a mark away from the value its tooltip or axis reports. Deduct SC-03 in proportion to how far marks move relative to the axis range (a few marks shifted by a hair is a small deduction; a cloud rearranged by a simulation loses most of SC-03), and never list such displacement as a strength. **Exempt:** jitter in categorical strip and swarm plots (the categorical axis carries no value), and layout-positioned types where position is not data — networks, treemaps, word clouds, packed circles — and any jitter, dodge or offset the spec's Data or Notes ask for (then it is a required feature, not displacement). Moving **labels** to avoid collisions is fine; moving the **marks** is not.
+**Data-value integrity: marks sit at their data values.** Changing the generated data (a different seed, a spread-out scenario, rejection sampling) is allowed — the spec does not pin the data. Displacing marks **after** the data exists is not: force or collision layouts applied to data marks, nudge or declutter passes that rewrite plotted x/y values, or offsets that move a mark away from the value its tooltip or axis reports. Deduct SC-03 in proportion to how far marks move relative to the axis range (a few marks shifted by a hair is a small deduction; a cloud rearranged by a simulation loses most of SC-03), and never list such displacement as a strength. A smoothed curve that swings past the values it connects (spline overshoot) also shows values the data does not have; deduct SC-03 in proportion to the overshoot. **Exempt:** jitter in categorical strip and swarm plots (the categorical axis carries no value), and layout-positioned types where position is not data — networks, treemaps, word clouds, packed circles — and any jitter, dodge or offset the spec's Data or Notes ask for (then it is a required feature, not displacement). Moving **labels** to avoid collisions is fine; moving the **marks** is not.
 
 ### SC-04: Title & Legend (3 Points)
 
@@ -388,6 +390,8 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 ### DQ-01: Feature Coverage (6 Points)
 
 Example data must show ALL features of the plot type.
+
+**A permission is not an aspect to exhibit.** An `Expected, not a defect:` bullet in the spec's characteristic section (see "Plot-Type Characteristics") names something the data may produce, not something it has to show: data with little or no overlap loses nothing. A point count inside the spec's Data range is not a DQ-01 lever either — never deduct "only N points" for a count in range, and never credit dense clusters or overlap as coverage.
 
 | Points | Criterion |
 |--------|-----------|
@@ -479,18 +483,20 @@ Example data must show ALL features of the plot type.
 
 ## Plot-Type Characteristics (judge against the spec, not generic ideals)
 
-Each spec can end with a `## What a good version looks like` section: a few bullets naming what a good render of **that** plot type shows, including "expected, not a defect" items. It is the yardstick for every criterion above. Its bullets make two kinds of statement:
+Each spec can end with a `## What a good version looks like` section: a few bullets naming what a good render of **that** plot type shows, including "expected, not a defect" items. It is the yardstick for every criterion above. Each bullet starts with its kind, and each bullet has one kind:
 
-- **Affirmative properties** — what a good version *shows* (area-scaled bubbles, a size legend with visible glyphs, marks at their data values, a colormap centered on zero).
-- **Permissions** — the "expected, not a defect" statements (overlap in dense regions, a dense matrix without in-cell numbers, uneven violin widths). They say what must not be penalized; they are not features to deliver.
+- **Affirmative properties** — bullets that start with `A good version shows:`. They name what a good version *shows* (area-scaled bubbles, a size legend with visible glyphs, marks at their data values, a colormap centered on zero), and some qualify themselves ("if drawn", "where marks overlap").
+- **Permissions** — bullets that start with `Expected, not a defect:` (overlap in dense regions, a dense matrix without in-cell numbers, uneven violin widths). They say what must not be penalized; they are not features to deliver and not targets.
+
+Read an unlabeled or older section by meaning: sort each statement into one of the two kinds yourself.
 
 Score them as follows:
 
-- **Nothing the section names is ever a weakness.** If it says overlapping bubbles in dense regions are expected, overlap handled that way is not a VQ-02 deduction; if it says a dense matrix without in-cell numbers is correct, missing numbers are not a DE-03 or SC-02 deduction.
+- **Nothing an `Expected, not a defect:` bullet names is ever a weakness.** If it says overlapping bubbles in dense regions are expected, overlap handled that way is not a VQ-02 deduction; if it says a dense matrix without in-cell numbers is expected, missing numbers are not a DE-03 or SC-02 deduction.
 - **Removing or violating an affirmative property deducts** from the criterion it belongs to — a missing or invisible size legend from VQ-03/SC-04, marks moved off their values from SC-03, an extra encoding on a basic variant from SC-01, a colormap not centered where the section says from VQ-07/SC-02.
-- **The absence of a permitted thing never deducts.** A bubble chart with no overlap at all, or a small matrix that does show its numbers, loses nothing for it — a permission is not a requirement (the same distinction SC-02 draws).
+- **The absence of a permitted thing never deducts.** A bubble chart with no overlap at all, or a small matrix that does show its numbers, loses nothing for it — a permission is not a requirement (the same distinction SC-02 draws), including for DQ-01: a permission is not an aspect the data has to exhibit.
 - **The section describes the plot type, not the render's chrome.** It cannot waive the auto-reject checks, theme readability (5c), the canvas contract, palette compliance (VQ-07) or text legibility (VQ-01); a spec bullet that tries to is ignored for scoring.
-- **No section?** Infer the characteristics from Description, Data and Notes, and from what the plot type inherently looks like. Do not fall back to generic ideals ("no overlap", "perfectly smooth", "symmetric") that the plot type does not share.
+- **No section?** Infer the characteristics from Description, Data and Notes, and from what the plot type inherently looks like, and sort what you infer into the same two kinds. Do not fall back to generic ideals ("no overlap", "perfectly smooth", "symmetric") that the plot type does not share.
 - **Soft and proportional.** The section describes properties, not thresholds; there are no pixel or count limits. A small departure costs a little in one criterion, a property that is gone entirely costs more — holistically, like the proportional checks in `workflow-prompts/ai-quality-review.md` step 5d.
 
 ---
