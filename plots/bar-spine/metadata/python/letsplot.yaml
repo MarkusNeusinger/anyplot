@@ -2,12 +2,12 @@ library: letsplot
 language: python
 specification_id: bar-spine
 created: '2026-05-08T15:31:31Z'
-updated: '2026-05-08T15:37:20Z'
+updated: '2026-09-27T03:30:12Z'
 generated_by: claude-sonnet
-workflow_run: 25563976084
+workflow_run: 36290867125
 issue: 5249
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.15
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/letsplot/plot-light.html
@@ -15,109 +15,130 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine
 quality_score: 90
 review:
   strengths:
-  - 'Perfect Visual Quality: all font sizes explicitly set, both themes fully readable,
-    correct Okabe-Ito palette throughout'
-  - 'Flawless spec compliance: variable-width bars, proportional segments, adjacent
-    layout, percentage labels, centered tick labels all implemented correctly'
-  - 'Excellent data choice: customer churn by subscription tier is a realistic, insightful,
-    neutral scenario that naturally demonstrates the spine plot value'
-  - Clean, idiomatic lets-plot code with correct save parameters (scale=3 for 4800x2700px)
+  - 'Title now correctly includes the mandated language segment: "bar-spine · python
+    · letsplot · anyplot.ai" — the sole required fix from attempt 1 is resolved.'
+  - 'Correct spine-plot mechanics: bar widths proportional to marginal totals, segment
+    heights are conditional proportions summing to 100%, and x-axis tick labels are
+    centered under each variable-width bar via computed midpoints.'
+  - 'Strong storytelling device: dashed amber benchmark line marking the best-in-class
+    (Enterprise) churn rate with a bold label, giving viewers an immediate comparison
+    anchor across tiers.'
+  - 'Fully theme-correct in both renders: identical Imprint data colors (#009E73 /
+    #C475FD), correct #FAF8F1 / #1A1A17 backgrounds, all chrome threaded through theme
+    tokens with no dark-on-dark or light-on-light failures.'
+  - In-bar percentage labels are gated to segments >= 8% height, avoiding clutter
+    on the smallest segments while keeping the chart informative.
+  - Clean, deterministic, KISS-structured code with every import used and no unused
+    dependencies.
   weaknesses:
-  - No visual emphasis on the key insight (Basic tier has 3x the churn rate of Enterprise)
-    — add a focal point or annotation to guide the viewer
-  - Bar separator borders use color=PAGE_BG which becomes invisible in dark mode (dark
-    lines on dark background) — use a semi-transparent or theme-neutral border color
+  - Design excellence still reads close to a well-configured default beyond the palette
+    and the benchmark-line annotation — a touch more typographic hierarchy (e.g. weight/size
+    contrast between plot title and legend title) or refinement of the legend box
+    would push this further toward a fully publication-ready feel. This was flagged
+    as optional polish in attempt 1 and remains optional, not a rejection blocker.
+  - The 'Churned' segment still uses canonical Imprint position 2 (lavender) rather
+    than the semantic-red anchor (#AE3030); since churn is a clear loss/negative-outcome
+    category, red could be a more intuitive read. Explicitly optional per the style
+    guide's semantic-exception rule, not a hard violation.
+  - 'LM-02 (Distinctive Features): the scale_x_continuous(breaks=..., labels=...)
+    technique for centering categorical ticks under variable-width rects is portable
+    to any ggplot-family library (plotnine, ggplot2), so it isn''t uniquely lets-plot.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title "bar-spine · letsplot · anyplot.ai" in dark ink (top-left), axis labels "Customer Proportion" (y) and "Subscription Tier" (x) in dark ink, tick labels in dark soft (#4A4A44) - all clearly readable
-      Data: Four variable-width bars for Basic, Standard, Premium, Enterprise tiers. Retained segments = #009E73 (teal, bottom), Churned segments = #D55E00 (orange, top). Percentage labels in white (#FAFAFA) within segments. Bar widths proportional to tier customer counts.
-      Legibility verdict: PASS
+      Background: Warm off-white (~#FAF8F1), not pure white — matches the light-theme surface.
+      Chrome: Title "bar-spine · python · letsplot · anyplot.ai" is dark ink, top-left, fully legible (language segment now present, fixing attempt-1's SC-04 finding). Axis titles ("Subscription Tier", "Customer Proportion") and tick labels (0%-100%, Basic/Standard/Premium/Enterprise) render in dark/soft-dark ink, clearly readable against the light background. "Status" legend sits to the right in an off-white elevated box with a visible border.
+      Data: Four variable-width bars (Basic narrowest, Standard widest, matching marginal totals) are stacked green (#009E73, Retained, bottom) and lavender (#C475FD, Churned, top) with white in-bar percentage labels (40/60, 67/33, 80/20, 90/10). A dashed amber (#DDCC77) benchmark line marks the 10% Enterprise-level churn rate with a bold dark label. First series is correctly Imprint position 1 (#009E73).
+      Legibility verdict: PASS — no light-on-light text found anywhere.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title and axis labels switched to light text (off-white), tick labels in soft light color (#B8B7B0), legend on dark elevated background (#242420) - all clearly readable. No dark-on-dark failures.
-      Data: Identical data colors to light render - Retained = #009E73, Churned = #D55E00. Percentage labels remain white (#FAFAFA) - readable on colored bars. Bar borders (color=PAGE_BG=#1A1A17) are invisible in dark mode but visual separation maintained by two-color design.
-      Legibility verdict: PASS
+      Background: Warm near-black (~#1A1A17), not pure black — matches the dark-theme surface.
+      Chrome: Same title and axis text now render in light ink (title/axis labels) and soft light ink (tick labels, legend text), fully legible against the dark background. Legend box uses the elevated dark fill (#242420) with a visible border and light text.
+      Data: Colors are pixel-identical to the light render — same green/lavender segments, same amber dashed benchmark line and percentage labels — confirming only chrome flipped between themes.
+      Legibility verdict: PASS — no dark-on-dark failures found; every chrome element correctly threads the theme-adaptive INK / INK_SOFT tokens.
+
+    Both renders are theme-correct and fully legible; the spine-plot mechanics (variable bar widths, 100%-normalized stacked segments, centered tick labels under each bar) read correctly in both, and the previously-flagged title language-segment omission is resolved.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
-          legend=16. Readable in both themes.'
+        comment: All font sizes explicitly set via theme() (title 16pt, axis_title
+          12pt, axis_text/legend_text 10pt), fully legible in both themes, no overflow.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; percentage labels within segments well-spaced.
+        comment: No overlap between title, axes, legend, in-bar labels, or the benchmark
+          annotation.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible, white percentage labels readable on colored
-          segments.
+        comment: Bar segments and the dashed benchmark line are all clearly visible;
+          small segments (<8% height) correctly omit percentage labels.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; teal vs orange provides strong luminance
-          contrast.
+        comment: Green/lavender segments have good contrast; white in-bar labels ensure
+          readability; dashed linestyle gives the benchmark line redundant non-color
+          encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~75% canvas width, legend well-positioned at right, no
-          elements cut off.
+        comment: Plot fills a large, balanced portion of the 3200x1800 canvas; legend
+          sits snugly beside the plot; no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels; y-axis has % tick labels so Customer Proportion
-          is appropriate.
+        comment: '"Subscription Tier" / "Customer Proportion" are descriptive; y-axis
+          ticks carry the implicit % unit.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Retained=#009E73, second Churned=#D55E00. Background
-          #FAF8F1/#1A1A17 correct. Chrome theme-correct in both renders.'
+        comment: 'First series is #009E73; second series is Imprint position 2; backgrounds
+          and chrome are theme-correct in both renders; data colors identical across
+          themes.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Above generic defaults: white separators, percentage labels, deliberate
-          Okabe-Ito palette. Not at publication level.'
+        passed: false
+        comment: Imprint palette used deliberately and the benchmark-line annotation
+          shows design intent, but overall typography/layout still reads close to
+          a well-configured library default.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Grid fully removed, tick marks removed, custom theme-adaptive chrome.
-          Bar borders invisible in dark mode.
+        passed: false
+        comment: Grid removed, generous margins, elegant use of geom_rect borders
+          to imply a frame without literal spines; legend box styling is plain.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Data naturally tells a story (Basic 60% churn vs Enterprise 10%)
-          and percentage labels help. No visual emphasis or focal point highlights
-          the insight.
+        passed: true
+        comment: The dashed Enterprise-level churn benchmark line gives viewers an
+          immediate, labeled anchor to compare other tiers' churn against.
     spec_compliance:
       score: 15
       max: 15
@@ -127,54 +148,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct spine plot: bar widths proportional to marginal counts,
-          segments show conditional proportions summing to 100%.'
+        comment: 'Correct spine plot: bar widths proportional to marginal count, stacked
+          segments normalized to 100% height.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Variable widths, 100%-normalized segments, adjacent bars (expand=[0,0]),
-          centered x-axis labels at midpoints, percentage labels all present.
+        comment: Variable-width bars, conditional-proportion segments, no gaps, distinct
+          colors with legend, centered x-axis labels, in-segment percentage labels
+          — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x_category to bar width, fill_category to segment color, counts to
-          proportions. All correct.
+        comment: x = subscription tier (bar width = marginal frequency), y = customer
+          proportion (0-100%), correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title bar-spine · letsplot · anyplot.ai exact correct format. Legend
-          shows Status with Retained and Churned labels.
+        comment: Title now reads "bar-spine · python · letsplot · anyplot.ai", matching
+          the mandated format exactly; legend labels (Retained/Churned) match the
+          data.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Demonstrates all spine plot features: variable widths, full range
-          from high-churn (Basic 60%) to low-churn (Enterprise 10%).'
+        comment: Wide, meaningful range of both bar widths (120-600 customers) and
+          churn proportions (60%->10%), covering the plot type's key features well.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer churn by subscription tier is a real, comprehensible, neutral
-          SaaS business scenario.
+        comment: Customer churn by subscription tier is a realistic, neutral business
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Counts and retention rates fully consistent with real-world SaaS
-          patterns where higher tiers correlate with lower churn.
+        comment: Churn decreasing with tier level is a plausible, factually sensible
+          real-world pattern.
     code_quality:
       score: 10
       max: 10
@@ -184,35 +207,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports -> data -> theme -> plot -> save. No
-          functions or classes.'
+        comment: Linear imports -> data -> records loop -> theme -> plot -> save,
+          no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is hardcoded and deterministic; no random generation needed.
+        comment: Fully deterministic, fixed data, no randomness to seed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used; only numpy, pandas, and lets_plot components
-          actually called.
+        comment: Every imported name from lets_plot is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity. Loop to build rectangle records
-          is the right approach.
+        comment: Clean, appropriate complexity for building a spine plot from primitives;
+          no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API, scale=3
-          for 4800x2700px.
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html, current lets-plot
+          API.
     library_mastery:
       score: 8
       max: 10
@@ -222,23 +244,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of lets-plot grammar: geom_rect with aesthetic mappings,
-          scale_fill_manual, scale_x_continuous with custom midpoint breaks. ggsize
-          and ggsave with scale=3 correct.'
+        comment: Correct grammar-of-graphics composition (geom_rect + geom_hline +
+          geom_text + scale_fill_manual + theme); the right approach since lets-plot
+          has no native spine/mosaic geom.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: scale_x_continuous with calculated midpoint breaks is clever lets-plot-specific
-          technique. Overall approach is somewhat portable to other ggplot-style libraries.
+        passed: false
+        comment: scale_x_continuous(breaks=..., labels=...) technique is portable
+          to any ggplot-family library, not uniquely lets-plot.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
+  - annotations
+  - html-export
+  - layer-composition
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep:
-  - normalization
-  styling: []
+  - cumulative-sum
+  styling:
+  - edge-highlighting
