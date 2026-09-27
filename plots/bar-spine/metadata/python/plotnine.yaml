@@ -2,102 +2,115 @@ library: plotnine
 language: python
 specification_id: bar-spine
 created: '2026-05-08T15:27:31Z'
-updated: '2026-05-08T15:33:48Z'
+updated: '2026-09-27T03:24:35Z'
 generated_by: claude-sonnet
-workflow_run: 25563619606
+workflow_run: 36290574399
 issue: 5249
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.13.15
+library_version: 0.15.8
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 89
 review:
   strengths:
-  - 'Flawless spec compliance: all spine plot requirements met including variable-width
-    bars, conditional proportions, adjacent bars, percentage labels, and centered
-    x-axis labels with sample counts'
-  - 'Perfect theme-adaptive chrome: both light and dark renders are fully readable
-    with correctly adapted text and background tokens'
-  - 'Clean plotnine grammar: idiomatic geom_rect + geom_text layer composition with
-    all font sizes explicitly set'
-  - Realistic, neutral business data (SaaS churn) with plausible and varied proportions
-    that fully exercise the spine plot concept
-  - Informative axis label (bar width proportional to customer count) and two-line
-    x-tick labels communicate the encoding clearly
+  - 'Correctly implements spine-plot mechanics that plotnine has no native geom for:
+    bar widths proportional to marginal frequency via geom_rect with cumulative xmin/xmax,
+    segment heights normalized to 100% via per-category cumulative proportions.'
+  - 'The previous review''s two required fixes are both cleanly resolved: the decorative
+    full rectangular panel_border is gone in favor of an L-shaped bottom+left axis_line,
+    and the title fontsize (11pt -> 10pt) now leaves comfortable margin instead of
+    nearly hitting the overflow ceiling.'
+  - 'Thoughtful semantic color mapping: Kept keeps the mandatory brand-green slot,
+    Refunded intentionally borrows the semantic-red Imprint slot (documented in-code
+    as the ''genuine dollar loss'' exception) instead of the next ordinal slot, and
+    categories are pre-sorted worst-return-rate-first for a clear ''where do returns
+    hurt most'' narrative.'
+  - Percentage labels are suppressed below a 6% threshold, avoiding clutter in thin
+    segments while still labeling every meaningfully sized band.
+  - Theme-adaptive chrome (backgrounds, ink tokens, legend fill) is correctly threaded
+    through and holds up identically in both renders.
   weaknesses:
-  - 'DE-01 not yet FiveThirtyEight-level: the implementation follows the style template
-    faithfully but lacks further design elevation such as a focal-point annotation
-    on the highest-churn tier or subtle emphasis on the churn segments'
+  - The thinnest segments (Toys' Exchanged ~1.4%, Books' Exchanged ~0.8% and Refunded
+    ~3.2%) are barely-visible slivers -- correctly left unlabeled under the 6% threshold,
+    but a subtle minimum-visible-width treatment would keep the smallest categories
+    from nearly vanishing.
+  - geom_rect + geom_text manual construction is necessarily low-level since plotnine
+    has no native spine/mosaic geom, so Library Mastery is capped by the library's
+    own limitations rather than the implementation's choices -- no further action
+    expected here.
+  - 'Design Excellence is solid but still fairly restrained: only a two-layer composition
+    (rects + labels) with no additional refinement like within-bar total annotations
+    or a secondary visual cue for the marginal totals beyond the ''(n=...)'' tick
+    sublabels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "Churn Rate by Tier · bar-spine · plotnine · anyplot.ai" in bold dark ink, clearly readable. Y-axis "Proportion of Customers" and X-axis "Subscription Tier (bar width ∝ customer count)" in dark ink. Tick labels (0%–100% on Y, tier names + n=counts on X) in INK_SOFT grey — all readable. Legend box with "Status" title and Retained/Churned labels clearly visible.
-      Data: First series (Retained) = #009E73 teal-green, second series (Churned) = #D55E00 vermillion-orange. Bold white percentage labels inside each segment. Bars are variable-width: Basic (~39%), Standard (~31%), Premium (~22%), Enterprise (~8%). Proportions: Basic 72%/28%, Standard 76%/24%, Premium 84%/16%, Enterprise 82%/18%.
-      Legibility verdict: PASS — all text elements clearly readable against #FAF8F1 background
+      Background: Warm off-white, matching #FAF8F1 -- not pure white.
+      Chrome: Bold dark title "Product Returns by Category · bar-spine · python · plotnine · anyplot.ai" sits comfortably inside the canvas (no clipping, healthy margin after the fontsize fix). Dark-ink axis titles ("Product Category (bar width ∝ order volume)", "Share of Orders") and soft-ink tick labels/percent axis labels are all clearly legible. Only an L-shaped bottom+left axis line remains -- no decorative panel border.
+      Data: Five variable-width bars (Apparel -> Electronics -> Home & Garden -> Toys -> Books, widths proportional to order volume) stack green Kept (#009E73), lavender Exchanged, and matte-red Refunded segments to 100%. White percentage labels appear in every segment >=6% of its bar. First series is confirmed #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, axis labels, tick labels, and legend text all rendered in light off-white/grey tones. No dark-on-dark failures detected — all text clearly readable against the dark background.
-      Data: Colors are identical to light render: #009E73 (Retained) and #D55E00 (Churned) — correctly unchanged between themes. Bold white percentage labels remain readable. Bar separators (PAGE_BG edges) slightly more visible on dark background but do not impair readability.
-      Legibility verdict: PASS — all text elements clearly readable against #1A1A17 background
+      Background: Warm near-black, matching #1A1A17 -- not pure black.
+      Chrome: Title, axis titles, and tick labels render in light ink and are clearly visible against the dark surface; no dark-on-dark failures observed. Legend sits on the elevated dark panel (#242420) with light text, fully readable. Same L-shaped axis-line-only chrome as the light render.
+      Data: Green/lavender/red segment colors and percentage values are pixel-identical to the light render -- only background, ink, and separator-stroke colors flipped, as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: Title=24pt, Axis=20pt, Ticks=16pt,
-          Legend=16pt. Fully readable in both renders.'
+        comment: All font sizes explicitly set; readable in both themes; title now
+          fits with margin after the 11pt->10pt fix
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Percentage labels inside segments, no collisions. Axis tick labels
-          well-spaced.
+        comment: No overlapping text elements in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bars prominently visible. Bold white labels readable even in narrow
-          Enterprise column.
+        comment: Most segments clearly visible; sub-6% slivers (Toys/Books Exchanged)
+          are honestly thin given the real proportions
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette is CVD-safe. Strong luminance contrast between
-          #009E73 and #D55E00.'
+        comment: Three-hue CVD-safe Imprint palette, redundant encoding via percentage
+          labels and legend
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well. Legend at right. Balanced margins.
+        comment: Decorative panel_border removed for an L-shaped axis line; title
+          no longer near the overflow ceiling; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y: Proportion of Customers; X: Subscription Tier (bar width proportional
-          to customer count). Both informative.'
+        comment: Both axis labels are descriptive with context (bar width proportionality,
+          share of orders)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Retained) is #009E73, second (Churned) is #D55E00.
-          Backgrounds #FAF8F1 (light) and #1A1A17 (dark) correct. Theme chrome correct
-          in both renders.'
+        comment: 'First series is #009E73; Refunded uses the documented semantic-red
+          finance-loss exception; both backgrounds theme-correct'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -105,24 +118,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: explicit Okabe-Ito colors, typography hierarchy,
-          clean panel with no grid, PAGE_BG bar separators, informative axis label.
-          Follows template closely without further creative elevation.'
+        comment: Deliberate semantic color choice and category ordering, but overall
+          composition remains fairly restrained
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Panel grid fully removed. Panel border styled with INK_SOFT (appropriate
-          for spine plot bounding box). Good refinement above defaults.
+        comment: Full rectangular panel border replaced with an L-shaped axis line
+          per the style guide's anti-chartjunk rule; grid already off
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Two-color system creates focal contrast. Variable widths encode tier
-          size. Bold percentage labels give precise context. Viewer sees higher tiers
-          retain customers better.
+        comment: Categories pre-sorted worst-return-rate-first; semantic red on Refunded
+          draws the eye to the loss
     spec_compliance:
       score: 15
       max: 15
@@ -132,30 +143,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct spine plot: variable-width bars proportional to marginal
-          counts, conditional proportions within each bar, normalized to 100%.'
+        comment: 'Correct spine plot: variable-width, fully-stacked-to-100% bars'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Variable-width bars, conditional proportions, 100% normalization,
-          adjacent no-gap bars, distinct colors with legend, centered x-labels with
-          sample counts, percentage labels in segments — all present.
+        comment: Width proportional to marginal frequency, adjacent bars, legend,
+          and optional percentage labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=tier mapped to proportional x-position, Y=cumulative conditional
-          proportion, fill=status. All axes labeled and data fully visible.
+        comment: x=category with width=marginal total, y=conditional proportion, correctly
+          mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes all required elements. Legend title 'Status' with
-          'Retained'/'Churned' labels match data.
+        comment: Title matches the mandated format with a descriptive prefix; legend
+          labels match the outcome categories
     data_quality:
       score: 15
       max: 15
@@ -165,22 +174,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4 tiers with varying widths, meaningfully different conditional proportions
-          (churn 16-28%), 2 fill categories. Full coverage of spine plot features.
+        comment: Wide spread of conditional distributions across categories, from
+          Apparel's high refund rate to Books' near-zero
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer churn by SaaS subscription tier is a real, neutral business
-          scenario.
+        comment: Neutral, realistic e-commerce order-outcome scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Retention rates 72-84% and churn rates 16-28% are realistic SaaS
-          benchmarks. Customer counts 200-1000 are credible.
+        comment: Return-rate proportions align with plausible real-world e-commerce
+          patterns (apparel highest, books lowest)
     code_quality:
       score: 10
       max: 10
@@ -190,60 +198,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports -> tokens -> data -> data-prep ->
-          theme -> plot -> save. No functions or classes.'
+        comment: Linear imports -> data -> transform -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is fully deterministic (hardcoded values). No random state needed.
+        comment: Fully deterministic hardcoded data, no randomness involved
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All plotnine imports are used. No unused imports.
+        comment: Only used plotnine symbols and pandas are imported
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity. Data prep for cumulative
-          proportions and bar widths is necessary and well-organized.
+        comment: Appropriate complexity for building a spine plot from geom_rect primitives
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Current plotnine API used throughout.
+        comment: Saves plot-{THEME}.png via plot.save() with correct dpi/width/height
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: 'Expertly uses plotnine grammar: layered geoms, scale_fill_manual,
-          scale_x/y_continuous with breaks/labels, theme() for chrome. geom_rect with
-          explicit coordinate mapping is the correct plotnine approach.'
+        comment: geom_rect + geom_text is the correct grammar-of-graphics technique
+          since plotnine lacks a native spine/mosaic geom, but is inherently low-level
+          rather than high-level API usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_rect coordinate-mapping approach is distinctly plotnine/ggplot2
-          grammar. Does not showcase deeply unique plotnine-only capability beyond
-          standard grammar.
+        comment: Manual mosaic-style construction plus the semantic color-slot exception
+          are distinctive but modest in scope
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - annotations
+  - manual-ticks
+  - layer-composition
   patterns:
+  - data-generation
   - groupby-aggregation
-  dataprep: []
-  styling: []
+  dataprep:
+  - cumulative-sum
+  - normalization
+  styling:
+  - edge-highlighting
+  - minimal-chrome
