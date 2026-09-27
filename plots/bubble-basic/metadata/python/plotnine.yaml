@@ -2,9 +2,9 @@ library: plotnine
 language: python
 specification_id: bubble-basic
 created: '2025-12-23T01:31:30Z'
-updated: '2026-09-26T23:52:54Z'
+updated: '2026-09-27T00:39:25Z'
 generated_by: claude-sonnet
-workflow_run: 36279785831
+workflow_run: 36282498884
 issue: 755
 language_version: 3.13.15
 library_version: 0.15.8
@@ -15,38 +15,32 @@ preview_html_dark: null
 quality_score: 93
 review:
   strengths:
-  - Bubble size uses scale_size_area with an explicit limits=(0, 100) zero-anchor,
-    avoiding the classic radius-vs-area misperception bug and keeping the smallest
-    floor-clipped bubbles visible
-  - Subtitle plus a subtle geom_smooth trend line gives the chart a clear narrative
-    ("higher GDP tracks with longer life expectancy") without cluttering the data
-    layer
-  - Theme-adaptive chrome is threaded correctly through every element (title, subtitle,
-    axis text, legend key/background, grid) and both renders are legible with no dark-on-dark
-    or light-on-light failures
-  - Categorical color uses the Imprint palette in canonical order for the four abstract
-    regions, consistent across light and dark
-  - Alpha (0.65) and stroke are tuned for the ~72-point overlapping bubble density,
-    and the size legend clearly documents the scale
+  - Background-colored bubble stroke creates a subtle halo effect that visually separates
+    overlapping bubbles without adding visual noise
+  - Correct use of scale_size_area with an explicit limits=(0, 100) floor anchor,
+    so bubble area scales accurately and the smallest values stay visible
+  - override_aes on the size legend correctly gives the legend glyphs a visible ink-colored
+    fill/stroke instead of inheriting the page-background stroke
+  - Trend line and insight-driven subtitle give the chart a clear narrative point
+    instead of a flat scatter of dots
+  - Both renders are fully theme-correct with no legibility failures
   weaknesses:
-  - Grid is y-axis only (panel_grid_major_x = element_blank()); the style guide recommends
-    both axes for scatter/bubble plots — consider a very subtle x-axis grid to match
-    convention
-  - geom_point stroke=0.4 has no explicit theme-adaptive edge color, so overlapping
-    bubbles rely solely on alpha rather than the style guide's suggested white/ink
-    edge highlighting for extra separation in the densest cluster (Middle East & Africa,
-    bottom-left)
+  - Library Mastery is solid but fairly standard for a bubble chart; a more distinctive
+    plotnine-specific technique (e.g. geom_smooth with a per-region confidence ribbon)
+    would push it further
+  - 'Minor headroom on VQ-01: tick label weight is a touch light relative to axis
+    titles at very small preview sizes'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "bubble-basic · python · plotnine · anyplot.ai" in dark ink, storytelling subtitle in softer grey below it, axis titles ("GDP per Capita (USD thousands)", "Life Expectancy (years)") in dark ink, tick labels and legend text in softer grey — all clearly readable against the light background.
-      Data: Four regions colored with Imprint palette positions 1-4 (green Asia-Pacific, lavender Europe, blue Americas, ochre Middle East & Africa), bubble size encodes population, a thin grey diagonal trend line shows the GDP-vs-life-expectancy relationship. First series is the brand green #009E73.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "bubble-basic · python · plotnine · anyplot.ai" and subtitle in dark ink, axis titles/tick labels in dark/soft-ink, legend text in soft-ink — all clearly readable against the light background.
+      Data: Four region colors (Asia-Pacific green #009E73, Europe purple, Americas blue, Middle East & Africa tan) mapped via scale_fill_manual; bubble size mapped to Population via scale_size_area; dark gray OLS trend line visible. First series is #009E73 as required.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title and axis titles render in light ink (#F0EFE8), tick labels/legend/subtitle in the lighter secondary grey (#B8B7B0), grid lines and axis line are subtle and visible without competing with data — no dark-on-dark or light-on-light failures observed.
-      Data: Identical four Imprint colors and identical bubble positions/sizes as the light render; only the chrome (background, text, grid) flipped as expected.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, subtitle, axis titles/tick labels, and legend text all flipped to light ink and remain fully readable. No dark-on-dark failures observed anywhere. Trend line flipped to light gray for visibility against the dark surface.
+      Data: Colors identical to the light render (green/purple/blue/tan region hues, bubble sizing) — only chrome (background, text, grid, legend key/background) flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -58,45 +52,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at correct proportional sizes
+        comment: All text legible in both themes; minor headroom in tick-label weight
+          balance
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/legend collisions; bubble overlap is intentional data, well
-          handled with alpha
+        comment: No unwanted text/legend collisions; bubble overlap is intended density
+          signal, handled with alpha + halo stroke
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bubble sizes and alpha well matched to ~72-point density
+        comment: scale_size_area with limits=(0,100) keeps even floor-clipped bubbles
+          visible; alpha=0.65 manages overplotting
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette, CVD-safe, no red-green as sole signal
+        comment: Four hues mutually distinguishable, adequate contrast, not red-green-only
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas, nothing clipped, good proportions
+        comment: Canvas gate passed (3200x1800); good proportions, nothing clipped
+          or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units
+        comment: Both axes descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order, correct theme backgrounds
-          both renders'
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+          in both renders'
     design_excellence:
       score: 16
       max: 20
@@ -106,21 +103,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Trend line + storytelling subtitle + careful theme tuning beyond
-          generic defaults
+        comment: Background-colored bubble stroke halo, trend line, and insight-driven
+          subtitle show real design intent
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines minimal, grid subtle; docked for omitting x-axis grid recommended
-          for scatter plots
+        comment: Panel border removed, grid alpha=0.15, generous margins, elevated
+          legend background
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Clear focal point via subtitle claim + supporting trend line
+        comment: Trend line + subtitle give a clear narrative focal point
     spec_compliance:
       score: 15
       max: 15
@@ -130,25 +127,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bubble chart
+        comment: Correct bubble chart via geom_point + size mapping
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-based sizing, alpha for overlap, size legend all present
+        comment: Area-based size scaling, alpha for overlap, explicit size legend
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y/size correctly mapped, full data range shown
+        comment: x/y correctly mapped, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legends labeled clearly
+        comment: Title matches mandated format; legend labels match semantics
     data_quality:
       score: 15
       max: 15
@@ -158,19 +156,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all three quantitative dimensions plus optional region grouping
+        comment: All three quantitative dimensions plus optional categorical color
+          shown; 72 points within recommended range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Gapminder-style GDP/life-expectancy/population, plausible and neutral
+        comment: Plausible, neutral cross-country dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Value ranges are realistic for the domain
+        comment: GDP, life expectancy, and population values within sensible real-world
+          ranges and spec's recommended band
     code_quality:
       score: 10
       max: 10
@@ -180,7 +180,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: Flat top-to-bottom script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -192,45 +192,47 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Every imported name is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity, well-justified comments, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via plot.save
+        comment: Saves plot-{THEME}.png via plot.save, current API
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic ggplot grammar, scale_size_area, theme() customization
+        comment: Proper grammar-of-graphics layering, idiomatic theme() token wiring
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Zero-anchored area scaling with documented rationale is a distinctly
-          plotnine-aware touch
+        passed: false
+        comment: Good use of scale_size_area and legend override_aes, but otherwise
+          fairly standard bubble-chart construction
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - custom-legend
   - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - regression
   styling:
   - alpha-blending
+  - edge-highlighting
+  - publication-ready
