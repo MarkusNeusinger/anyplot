@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: bar-spine
 created: '2026-09-02T12:46:35Z'
-updated: '2026-09-27T03:31:56Z'
+updated: '2026-09-27T03:40:29Z'
 generated_by: claude-sonnet
 workflow_run: 36291261805
 issue: 5249
@@ -12,47 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/d3/plot-dark.html
-quality_score: 86
+quality_score: 92
 review:
   strengths:
-  - 'Correct spine-plot semantics: bar widths are exactly proportional to marginal
-    n, segments stack to 100%, and bars are adjacent with no gaps between them.'
-  - WCAG-contrast-aware in-segment percentage label coloring (textColorFor picks dark
-    or light text per segment fill) reads correctly in both themes.
-  - 'Correct semantic-anchor usage: brand green (#009E73) for ''Improved'', a matte-red
-    palette member for ''Worsened'', and the theme-adaptive `muted` anchor for ''No
-    Change'' — matches the documented semantic-exception rules in default-style-guide.md
-    exactly.'
-  - getBBox-based legend centering is a genuine, distinctive use of D3's real-browser
-    layout measurement rather than a hard-coded offset.
-  - Clean theme-adaptive chrome throughout; both renders are fully legible with no
-    dark-on-dark or light-on-light failures.
+  - WCAG-contrast-aware in-segment label coloring (textColorFor) picks black or white
+    per fill so percentage labels stay legible regardless of segment color or theme
+  - Largest-remainder rounding (roundToHundred) guarantees the in-segment percentage
+    labels always sum to exactly 100 per bar instead of drifting to 99/101
+  - 'Correctly implements the core spine-plot mechanic: bar widths proportional to
+    marginal n via d3.stack''s expand offset, bars fully adjacent with no gaps, all
+    normalized to 100% height'
+  - Thoughtful semantic color mapping (brand green = Improved, matte red = Worsened,
+    muted gray = No Change) matches the style guide's sentiment/polarity and bad/error
+    semantic exceptions instead of defaulting to ordinal palette order
+  - Graceful label degradation shrinks font size one step before suppressing labels
+    outright on thin segments, rather than jumping straight from readable to invisible
+  - Legend is precisely centered using measured getBBox widths rather than guessed
+    offsets
+  - 'Clear hierarchy: title, legend, category + n labels, and an explicit footnote
+    clarifying that bar width encodes group size — a convention that is easy to miss
+    without it'
   weaknesses:
-  - High Dose column's segment percentage labels (65% + 23% + 13% = 101%) sum to 101%
-    because each segment is independently Math.round()'ed — apply largest-remainder
-    rounding across the three segment shares per bar so labels always sum to exactly
-    100%.
-  - Segment stacking is computed with a hand-rolled running total (`stack += pct`)
-    instead of d3.stack(); using D3's built-in stack layout would be more idiomatic
-    and remove the manual cumulative-sum bookkeeping.
-  - Data storytelling relies entirely on the inherent spine-plot encoding — no added
-    annotation (e.g. a callout contrasting Placebo vs. Medium/High improvement rates)
-    sharpens the takeaway further.
+  - Y-axis gridlines (axisLeft(...).tickSize(-iw)) are drawn before the bar groups
+    and are completely hidden behind the opaque, gapless bar rectangles that tile
+    the full inner width -- the grid extension has zero visible effect in either render.
+    Either drop tickSize(-iw) (keep default short tick marks) or accept the tick labels
+    alone as sufficient, since bar segment boundaries already delineate values.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Clinical Trial Outcome by Dosage · bar-spine · javascript · d3 · anyplot.ai" in bold dark text, centered and fully readable. Legend (green "Improved", gray "No Change", red "Worsened") centered below the title. Y-axis "Share of group" with 0/25/50/75/100% ticks and subtle horizontal gridlines. X-axis shows bold category names (Placebo, Low Dose, Medium Dose, High Dose) with "n = ..." subtitles and an italic caption "Bar width is proportional to group size (n)" below. All chrome text is dark-on-light and clearly legible.
-      Data: Four variable-width bars, widths visibly proportional to n (Medium Dose widest at n=150, High Dose narrowest at n=80). Each bar stacked bottom-to-top as Improved (green #009E73) / No Change (gray) / Worsened (red), with bold percentage labels inside each segment, using dark or white text chosen for contrast against the segment fill. First categorical series is confirmed #009E73.
-      Legibility verdict: PASS
+      Background: Warm off-white (~#FAF8F1), not pure white.
+      Chrome: Bold centered title "Clinical Trial Outcome by Dosage · bar-spine · javascript · d3 · anyplot.ai" in dark ink; a centered legend (Improved / No Change / Worsened swatches) below the title; y-axis tick labels (0%-100%) and a rotated "Share of group" axis label in soft ink; bold category names (Placebo, Low Dose, Medium Dose, High Dose) and lighter "n = ..." counts centered under each bar; an italic footnote at the bottom explaining bar width encodes group size. All chrome text is clearly legible against the light background.
+      Data: Four adjacent, gapless bars with widths proportional to n (Medium Dose widest at n=150, High Dose narrowest at n=80). Each bar is stacked bottom-to-top as Improved (brand green #009E73) / No Change (dark muted gray) / Worsened (matte red), each segment separated by a thin light stroke and labeled with a bold percentage in a text color (black or white) chosen for contrast against that segment's fill. First categorical series is confirmed as the brand green #009E73.
+      Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, legend, axis labels, and caption now rendered in light/white text, fully legible against the dark background. Gridlines are subtle but visible. No dark-on-dark text anywhere.
-      Data: Identical data colors to the light render — green #009E73 for Improved, matte-red for Worsened, and the theme-adaptive muted gray (lighter shade in dark mode, correct per the `muted` semantic anchor) for No Change. In-segment percentage labels remain readable via the same contrast-based text-color logic.
-      Legibility verdict: PASS
+      Background: Warm near-black (~#1A1A17), not pure black.
+      Chrome: Same title, legend, axis labels, category/n labels, and footnote, all recolored to light ink tones (off-white title/labels, softer light-gray secondary text) so everything reads clearly against the dark background. No dark-on-dark text was found anywhere.
+      Data: Identical bar widths, stacking, and segment order as the light render. Data colors are pixel-identical to the light render (brand green, matte red, and the muted gray anchor flips from dark-gray-on-light to light-gray-on-dark as intended for the theme-adaptive "muted" token) -- confirming only chrome flipped, not data hues. In-segment percentage labels remain legible via the same contrast-aware text-color logic (e.g. black text on the now-lighter "No Change" gray, white text on the still-vivid green/red segments).
+      Legibility verdict: PASS.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -60,70 +60,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, responsive title sizing, all text
-          readable in both themes
+        comment: All titles/labels/ticks/in-segment percentages readable in both themes
+          at explicit, well-chosen font sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, data, or legend
+        comment: No collisions between text, segments, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Segment fills well-sized and contrast-adaptive labels stay visible
-          in every band
+        comment: Segments clearly distinguishable; graceful label degradation on thin
+          bands
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Legend text + percentage labels provide redundant encoding beyond
-          color alone
+        comment: WCAG-contrast-picked label text, CVD-safe Imprint hues
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed; proportions clean, nothing clipped or overflowing
+        comment: Good proportions, canvas gate passed, nothing cut off; minor deduction
+          for the fully-hidden y-axis gridline extension (dead visual element)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive Y-axis label with %; X-axis carries category + n
+        comment: Descriptive 'Share of group' axis label with % ticks; category +
+          n labeling on x-axis
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct Imprint brand green + semantic anchors; backgrounds theme-correct
+        comment: 'First series is #009E73; semantic exception correctly applied (green=Improved,
+          red=Worsened, muted=No Change); both theme backgrounds correct'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: WCAG contrast-based label coloring and graceful label degradation
-          show real design thought
+        comment: Custom WCAG contrast picker and largest-remainder rounding go well
+          beyond default styling
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Domain line removed, y-axis-only gridlines, generous whitespace
+        comment: Spines/domain removed, subtle stroke separators, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Dose-response trend is visible but relies on the base encoding with
-          no added emphasis/annotation
+        passed: true
+        comment: Width + color double-encoding creates a clear dose-response focal
+          point, reinforced by an explanatory footnote
     spec_compliance:
       score: 15
       max: 15
@@ -133,29 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct spine plot: variable-width bars, stacked to 100%, adjacent
-          with no gaps'
+        comment: 'Correct spine plot: variable-width bars, normalized stacked segments'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, legend, centered category labels, in-segment percentage
-          labels all present
+        comment: Width proportional to marginal n, no gaps, in-segment % labels, legend,
+          centered x labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Width=marginal n, height=conditional %, correct
+        comment: x_category -> bar position/width, fill_category -> stacked segment,
+          count -> proportions, all correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches spec exactly; legend labels match fill categories
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match data categories
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -163,20 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All spine-plot aspects shown: width, stacking, labels, legend'
+        comment: 4 x-categories x 3 fill-categories, full width and stacking behavior
+          demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Clinical trial dosage response is plausible and neutral
+        comment: Plausible, neutral clinical-trial dosage/outcome scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Sensible group sizes and rates, but High Dose labels round to 101%
-          instead of 100%
+        comment: Group sizes (80-150) and outcome rates are realistic for a clinical
+          trial
     code_quality:
       score: 10
       max: 10
@@ -186,61 +190,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; small helper functions only
+        comment: No classes; small focused helper functions justified by the WCAG/rounding
+          requirements
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the d3 global used
+        comment: Only the d3 global, no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity, appropriate complexity
+        comment: No fake interactivity; complexity matches the accessibility/rounding
+          requirements
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract usage, animations not present
+        comment: Correct mount-node contract, sizes from ANYPLOT_SIZE, no animation
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Idiomatic scales/axes/join, but hand-rolled stacking instead of d3.stack()
+        comment: Idiomatic d3.stack + stackOffsetExpand, join pattern, axisLeft
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: getBBox-based legend centering leverages real-browser layout, a genuine
-          D3-in-Chromium distinctive feature
+        comment: getBBox-measured legend centering, custom contrast/rounding logic
+          beyond basic API usage
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
-  - annotations
   - manual-ticks
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - normalization
-  - cumulative-sum
   styling:
-  - edge-highlighting
   - publication-ready
+  - edge-highlighting

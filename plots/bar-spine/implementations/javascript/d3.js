@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-spine: Spine Plot for Two-Variable Proportions
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 86/100 | Updated: 2026-09-27
+// Quality: 92/100 | Updated: 2026-09-27
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
