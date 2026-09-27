@@ -26,11 +26,11 @@ Read both sources to understand what needs to be fixed:
 
 Read the closing `## What a good version looks like` section of `plots/{SPEC_ID}/specification.md` (without one, use Description, Data and Notes) and decide per weakness:
 
-- **Fix the weaknesses that are real per the section.** A weakness that asks for something the section calls expected — e.g. "bubbles overlap in the dense cluster" on a bubble chart that already uses translucency and outlines — is not real: decline it and name it with a one-line reason in the commit body. The section never waives chrome rules (theme readability, canvas, palette, text legibility, auto-reject checks); those weaknesses are always real.
+- **Fix the weaknesses that are real per the section.** A weakness that asks for something an `Expected, not a defect:` bullet of the section names — e.g. "bubbles overlap in the dense cluster" on a bubble chart that already uses translucency and outlines — is not real: decline it and name it with a one-line reason in the commit body. The section never waives chrome rules (theme readability, canvas, palette, text legibility, auto-reject checks); those weaknesses are always real.
 - **Keep the data scenario and the variant.** Same domain, same story, same encodings unless a weakness names the scenario itself as the problem. On a `-basic` spec, add no new encodings or elements (derived color channels, trend lines, highlight bands, annotation layers).
 - **Don't add code for changes that don't show.** Every edit should be visible in the render or fix a named code-quality item.
 - **Never move marks off their data values** to fix overlap — see the overlap line under "Visual-sizing fixes" below for the endorsed fixes and the SC-03 exemptions.
-- **`Expected, not a defect:` bullets are permissions, not targets.** Never shape the data to produce them, and never count removing one as a fix: a weakness that only asks for less of a permitted thing is declined, as above.
+- **`Expected, not a defect:` bullets are permissions, not targets.** Never shape the data to produce them, and never treat making one disappear as a fix: a weakness that only asks for less of a permitted thing (less overlap, fewer crossings) is declined, as the first bullet says.
 
 ## Step 2: Read reference files
 

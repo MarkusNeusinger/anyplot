@@ -483,7 +483,7 @@ Example data must show ALL features of the plot type.
 
 ## Plot-Type Characteristics (judge against the spec, not generic ideals)
 
-Each spec can end with a `## What a good version looks like` section: a few bullets naming what a good render of **that** plot type shows, including "expected, not a defect" items. It is the yardstick for every criterion above. Each bullet starts with its kind, and each bullet has one kind:
+Each spec can end with a `## What a good version looks like` section: a few bullets naming what a good render of **that** plot type shows and what it may show without penalty. It is the yardstick for every criterion above. Each bullet starts with its kind, and each bullet has one kind:
 
 - **Affirmative properties** — bullets that start with `A good version shows:`. They name what a good version *shows* (area-scaled bubbles, a size legend with visible glyphs, marks at their data values, a colormap centered on zero), and some qualify themselves ("if drawn", "where marks overlap").
 - **Permissions** — bullets that start with `Expected, not a defect:` (overlap in dense regions, a dense matrix without in-cell numbers, uneven violin widths). They say what must not be penalized; they are not features to deliver and not targets.
