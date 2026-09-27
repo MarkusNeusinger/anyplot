@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: matplotlib 3.11.2 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-09-27
@@ -84,8 +84,10 @@ category = np.array(category_parts)
 category_names = [spec["name"] for spec in category_specs]
 category_colors = IMPRINT_PALETTE[:4]
 
-# Scale bubble sizes by area for accurate visual perception (tuned for 3200×1800 canvas)
-size_scaled = (sales_volume / sales_volume.max()) * 520 + 30
+# Scale bubble sizes by area for accurate visual perception (tuned for 3200×1800 canvas).
+# Range narrowed from a prior 30-550 span so the dense low-price Kitchenware cluster
+# doesn't merge into an indistinct mass of large overlapping circles.
+size_scaled = (sales_volume / sales_volume.max()) * 380 + 25
 
 # Plot
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
@@ -97,7 +99,7 @@ for name, color in zip(category_names, category_colors, strict=True):
         price[mask],
         quality_rating[mask],
         s=size_scaled[mask],
-        alpha=0.62,
+        alpha=0.5,
         color=color,
         edgecolors=PAGE_BG,
         linewidths=0.8,
@@ -130,7 +132,7 @@ for cap, y in zip(legend_caps, (0.18, 0.5, 0.84), strict=True):
     legend_ax.scatter(
         0.28,
         y,
-        s=(cap / sales_volume.max()) * 520 + 30,
+        s=(cap / sales_volume.max()) * 380 + 25,
         color=INK_MUTED,
         alpha=0.5,
         edgecolors=PAGE_BG,
@@ -157,10 +159,28 @@ category_legend = ax.legend(
 plt.setp(category_legend.get_title(), color=INK_SOFT)
 plt.setp(category_legend.get_texts(), color=INK_SOFT)
 
+# Focal-point annotation — call out the standout premium Electronics bubble
+# (highest price x quality among its category) to sharpen the storytelling
+# beyond color/size hierarchy alone.
+electronics_mask = category == "Electronics"
+standout_local_idx = np.argmax(price[electronics_mask] * quality_rating[electronics_mask])
+standout_x = price[electronics_mask][standout_local_idx]
+standout_y = quality_rating[electronics_mask][standout_local_idx]
+ax.annotate(
+    "Premium standout",
+    xy=(standout_x, standout_y),
+    xytext=(standout_x + 70, standout_y + 1.55),
+    fontsize=9,
+    color=INK_SOFT,
+    ha="left",
+    arrowprops={"arrowstyle": "-", "color": INK_SOFT, "linewidth": 0.8},
+    bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "linewidth": 0.6, "boxstyle": "round,pad=0.3"},
+    zorder=4,
+)
+
 # Style — descriptive prefix clarifies the retail domain; title fontsize scales
 # down since the prefix pushes past the 67-char baseline the style-guide default
-# is tuned for. No annotations: spec-id is "basic", so storytelling comes from
-# data choice and color/size hierarchy, not text overlays.
+# is tuned for.
 title = "Retail Product Portfolio · bubble-basic · python · matplotlib · anyplot.ai"
 title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 ax.set_xlabel("Retail Price ($)", fontsize=10, color=INK, labelpad=8)
