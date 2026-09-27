@@ -45,7 +45,9 @@ KNOWN = frozenset({"W1", "W2", "W3"})
 def _regen(**overrides) -> dict:
     payload = {
         "prev_rescored": 85,
-        "improvements": [{"ref": "W2", "what": "Size legend circles filled", "where_visible": "size legend, both renders"}],
+        "improvements": [
+            {"ref": "W2", "what": "Size legend circles filled", "where_visible": "size legend, both renders"}
+        ],
         "regressions": [],
         "scenario_changed": False,
         "encodings_added": [],
@@ -169,10 +171,7 @@ class TestPermissionRefs:
         assert "(C2 = 'Expected, not a defect' bullet, not counted as an improvement)" in result.reason
 
     def test_several_permissions_are_listed_in_order(self):
-        imp = [
-            {"ref": "C5", "what": "a", "where_visible": "x"},
-            {"ref": "C2", "what": "b", "where_visible": "y"},
-        ]
+        imp = [{"ref": "C5", "what": "a", "where_visible": "x"}, {"ref": "C2", "what": "b", "where_visible": "y"}]
         result = decide(
             _inp(regen=_regen(improvements=imp), characteristic_count=5, permission_refs=frozenset({"C2", "C5"}))
         )
@@ -190,7 +189,9 @@ class TestPermissionRefs:
         items = parse_characteristics(spec)
         assert permission_refs(items) == frozenset()
         imp = [{"ref": "C1", "what": "Overlap handled", "where_visible": "centre"}]
-        inp = _inp(regen=_regen(improvements=imp), characteristic_count=len(items), permission_refs=permission_refs(items))
+        inp = _inp(
+            regen=_regen(improvements=imp), characteristic_count=len(items), permission_refs=permission_refs(items)
+        )
         assert decide(inp).verdict == MERGE
 
     def test_summary_marks_the_permission(self):
@@ -418,7 +419,11 @@ class TestExtraction:
             "- Overlap is expected\n  - nested detail\n1. Sizes scale by area\n* Legend readable\n\n"
             "## Later\n- not this either\n"
         )
-        assert parse_characteristics(spec) == ["Overlap is expected; nested detail", "Sizes scale by area", "Legend readable"]
+        assert parse_characteristics(spec) == [
+            "Overlap is expected; nested detail",
+            "Sizes scale by area",
+            "Legend readable",
+        ]
 
     def test_parse_characteristics_absent(self):
         assert parse_characteristics("# spec\n\n## Notes\n- a\n") == []
@@ -545,7 +550,10 @@ class TestCli:
             == 0
         )
         stdout = capsys.readouterr().out
-        assert "::notice::regen_gate spec=bubble-basic lib=altair prev_stored=88 prev_rescored=80 new=81 verdict=merge" in stdout
+        assert (
+            "::notice::regen_gate spec=bubble-basic lib=altair prev_stored=88 prev_rescored=80 new=81 verdict=merge"
+            in stdout
+        )
         assert "verdict=merge" in out.read_text()
         assert "| 88 | 80 | 81 |" in summary.read_text()
 
@@ -562,7 +570,9 @@ class TestCli:
             encoding="utf-8",
         )
         regen = tmp_path / "review_regen.json"
-        imp = [{"ref": "C2", "what": "Bubbles overlap in the dense cluster now", "where_visible": "centre, both renders"}]
+        imp = [
+            {"ref": "C2", "what": "Bubbles overlap in the dense cluster now", "where_visible": "centre, both renders"}
+        ]
         regen.write_text(json.dumps(_regen(prev_rescored=80, improvements=imp)), encoding="utf-8")
         summary = tmp_path / "summary.md"
         record_file = tmp_path / "record.json"

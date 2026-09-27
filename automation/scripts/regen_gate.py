@@ -430,15 +430,11 @@ def decide(inp: GateInput) -> GateResult:
         return GateResult(KEEP, "new render scored 0 (auto-reject)", "score_zero")
     if not inp.prev_renders:
         return GateResult(
-            KEEP,
-            "previous production renders unavailable, no before/after comparison possible",
-            "prev_renders_missing",
+            KEEP, "previous production renders unavailable, no before/after comparison possible", "prev_renders_missing"
         )
     if not inp.context_ok:
         return GateResult(
-            KEEP,
-            "regen context extraction failed (previous review not available to the reviewer)",
-            "context_failed",
+            KEEP, "regen context extraction failed (previous review not available to the reviewer)", "context_failed"
         )
     if inp.regen is None:
         error = inp.regen_error or "missing"
