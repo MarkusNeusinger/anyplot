@@ -63,6 +63,19 @@ class TestImplReviewRegenBranch:
         assert "--delete-branch" in block
         assert "impl:${LIBRARY}:done" in block
 
+    def test_verdict_merge_branch_reasserts_ai_approved_before_dispatch(self):
+        block = _code_only(_regen_block(_step("impl-review.yml", "Add verdict label and take action")["run"]))
+        approved = block.index('gh pr edit "$PR_NUM" --add-label "ai-approved"')
+        dispatch = block.index("gh workflow run impl-merge.yml")
+        assert approved < dispatch
+
+    def test_blind_score_never_sees_the_stored_score(self):
+        prompt = _step("impl-review.yml", "Run AI Quality Review")["with"]["prompt"]
+        assert "PREVIOUS_SCORE" not in prompt
+        assert "prev_stored" not in prompt
+        ctx = _step("impl-review.yml", "Regen context")["run"]
+        assert "--omit-scores" in ctx
+
     def test_regen_branch_comes_before_the_cascade(self):
         script = _step("impl-review.yml", "Add verdict label and take action")["run"]
         assert script.index(REGEN_BLOCK_START) < script.index('grep -q "ai-rejected"')
@@ -104,6 +117,11 @@ class TestWatchdog:
     def test_repair_cases_skip_regenerations(self):
         assert self.SCRIPT.count('[[ "$is_regen" == "false" ]]') == 3
 
+    def test_improved_without_ai_approved_is_flagged(self):
+        # regen:improved alone must not silence the "no regen verdict" warning.
+        assert " (regen:kept|ai-approved|ai-review-failed) " in self.SCRIPT
+        assert "regen:improved|regen:kept" not in self.SCRIPT
+
     def test_case0_recloses_kept_regens(self):
         case0 = self.SCRIPT[self.SCRIPT.index("# Case 0") : self.SCRIPT.index("# Case 1")]
         assert 'grep -q " regen:kept "' in case0
@@ -123,11 +141,18 @@ class TestImplGenerate:
 
 
 class TestDailyRegen:
-    def test_pick_reads_closed_regen_prs(self):
+    def test_pick_uses_spec_issue_activity_as_attempt_record(self):
         workflow = yaml.safe_load((WORKFLOWS_DIR / "daily-regen.yml").read_text(encoding="utf-8"))
         pick = workflow["jobs"]["pick"]
-        assert pick["permissions"]["pull-requests"] == "read"
+        assert pick["permissions"]["issues"] == "read"
         step = next(s for s in pick["steps"] if s.get("id") == "pick")
         assert "GH_TOKEN" in step["env"]
-        assert '"--label", "regen"' in step["run"]
         assert "MIN_AGE_HOURS" in step["env"]
+        script = step["run"]
+        assert '"gh", "issue", "list"' in script
+        assert '"--limit", "1000"' in script
+        assert "specification.yaml" in script
+        # The closed-PR window (limit 200) is gone for good.
+        assert '"--label", "regen"' not in script
+        # Fallback to metadata `updated` when the listing fails.
+        assert "picking by metadata 'updated' only" in script

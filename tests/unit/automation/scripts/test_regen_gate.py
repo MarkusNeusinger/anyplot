@@ -127,7 +127,7 @@ class TestImprovements:
         imp = [{"ref": "C2", "what": "Overlap handled with alpha", "where_visible": "dense cluster"}]
         assert decide(_inp(regen=_regen(improvements=imp), characteristic_count=3)).verdict == MERGE
 
-    @pytest.mark.parametrize("ref", ["w2", "W0", "X1", "", None, 3, "new2"])
+    @pytest.mark.parametrize("ref", ["W0", "w0", "X1", "", None, 3, "new2"])
     def test_malformed_ref_keeps(self, ref):
         imp = [{"ref": ref, "what": "x", "where_visible": "y"}]
         assert decide(_inp(regen=_regen(improvements=imp))).verdict == KEEP
@@ -182,7 +182,7 @@ class TestFailClosed:
     @pytest.mark.parametrize(
         "overrides",
         [
-            {"prev_rescored": "85"},
+            {"prev_rescored": "85 points"},
             {"prev_rescored": True},
             {"prev_rescored": 101},
             {"prev_rescored": -1},
@@ -227,7 +227,74 @@ class TestFailClosed:
         assert len(errors) >= 4
 
 
+class TestCoercion:
+    """Predictable model slips are repaired, and the reason says so."""
+
+    def test_digit_string_prev_rescored(self):
+        result = decide(_inp(score=85, regen=_regen(prev_rescored="85")))
+        assert result.verdict == MERGE
+        assert "coerced: prev_rescored '85' -> 85" in result.reason
+
+    def test_lower_case_ref(self):
+        imp = [{"ref": "w2", "what": "Legend fixed", "where_visible": "legend"}]
+        result = decide(_inp(regen=_regen(improvements=imp)))
+        assert result.verdict == MERGE
+        assert "ref 'w2' -> 'W2'" in result.reason
+
+    def test_lower_case_unknown_ref_still_keeps(self):
+        imp = [{"ref": "w9", "what": "Legend fixed", "where_visible": "legend"}]
+        result = decide(_inp(regen=_regen(improvements=imp)))
+        assert result.verdict == KEEP
+        assert "W9 is not a weakness id" in result.reason
+
+    def test_missing_lists_read_as_empty(self):
+        payload = _regen()
+        del payload["regressions"]
+        del payload["encodings_added"]
+        result = decide(_inp(regen=payload))
+        assert result.verdict == MERGE
+        assert "missing regressions -> []" in result.reason
+        assert "missing encodings_added -> []" in result.reason
+
+    @pytest.mark.parametrize("value", ["n/a", "null", "None", ""])
+    def test_change_request_applied_placeholder(self, value):
+        result = decide(_inp(regen=_regen(change_request_applied=value)))
+        assert result.verdict == MERGE
+        assert "change_request_applied" in result.reason
+
+    def test_coercion_noted_on_keep_too(self):
+        result = decide(_inp(score=80, regen=_regen(prev_rescored="85")))
+        assert result.verdict == KEEP
+        assert "coerced" in result.reason
+
+
+class TestSummary:
+    def test_mentions_are_neutralised(self):
+        from automation.scripts.regen_gate import render_summary
+
+        imp = [{"ref": "new", "what": "Pinged @octocat", "where_visible": "legend @team"}]
+        result = decide(_inp(regen=_regen(improvements=imp)))
+        text = render_summary(result, "90", 85)
+        assert "@octocat" not in text
+        assert "@​octocat" in text
+        assert "@​team" in text
+
+
 class TestExtraction:
+    def test_omit_scores_hides_stored_numbers(self):
+        data = {
+            "quality_score": 93,
+            "review": {
+                "weaknesses": ["w"],
+                "criteria_checklist": {"visual_quality": {"score": 27, "max": 30, "items": []}},
+            },
+        }
+        md, _ = render_previous_review(data, "s", "python", "altair", include_scores=False)
+        assert "93" not in md
+        assert "27/30" not in md
+        assert "### visual_quality" in md
+        assert "**W1:** w" in md
+
     def test_weakness_ids_are_stable_and_skip_blanks(self):
         assert weakness_ids(["a", " ", "b"]) == [{"id": "W1", "text": "a"}, {"id": "W2", "text": "b"}]
 

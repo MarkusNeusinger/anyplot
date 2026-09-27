@@ -6,7 +6,7 @@ has an implementation on ``main``) gets exactly one review and no repair loop.
 The review scores the new render blind, then re-scores the predecessor's
 production renders against the same criteria and writes a pairwise judgement
 to ``review_regen.json`` (contract in
-``prompts/workflow-prompts/ai-quality-review.md`` step 5f). This script turns
+``prompts/workflow-prompts/ai-quality-review.md`` step 8b). This script turns
 that judgement into a verdict:
 
 - ``merge`` -- the new implementation replaces the live one
@@ -103,15 +103,26 @@ def parse_characteristics(spec_text: str) -> list[str]:
 
 
 def render_previous_review(
-    data: dict[str, Any], spec_id: str, language: str, library: str, characteristics: list[str] | None = None
+    data: dict[str, Any],
+    spec_id: str,
+    language: str,
+    library: str,
+    characteristics: list[str] | None = None,
+    include_scores: bool = True,
 ) -> tuple[str, list[dict[str, str]]]:
-    """Build ``/tmp/anyplot-prev-review.md`` and the id'd weakness list."""
+    """Build ``/tmp/anyplot-prev-review.md`` and the id'd weakness list.
+
+    ``include_scores=False`` (impl-review) leaves out the stored total and the
+    per-category numbers, so the reviewer's re-score of the predecessor cannot
+    anchor on them; the stored score stays in the gate's notice and summary.
+    """
     review = data.get("review") or {}
     quality = data.get("quality_score")
 
     lines = [f"# Previous Review for {spec_id} / {language} / {library}", ""]
-    lines.append(f"**Previous quality score (stored):** {quality if quality is not None else 'n/a'}")
-    lines.append("")
+    if include_scores:
+        lines.append(f"**Previous quality score (stored):** {quality if quality is not None else 'n/a'}")
+        lines.append("")
 
     desc = review.get("image_description")
     if desc:
@@ -134,9 +145,10 @@ def render_previous_review(
         lines.append("## Criteria checklist (focus on items that failed)")
         for cat, payload in checklist.items():
             payload = payload or {}
-            score = payload.get("score", "?")
-            max_score = payload.get("max", "?")
-            lines.append(f"### {cat}  ({score}/{max_score})")
+            if include_scores:
+                lines.append(f"### {cat}  ({payload.get('score', '?')}/{payload.get('max', '?')})")
+            else:
+                lines.append(f"### {cat}")
             for item in payload.get("items") or []:
                 item = item or {}
                 mark = "✅" if item.get("passed") else "❌"
@@ -181,6 +193,55 @@ class GateResult:
 
 def _is_int(value: Any) -> bool:
     return isinstance(value, int) and not isinstance(value, bool)
+
+
+def normalize_regen(payload: Any) -> tuple[Any, list[str]]:
+    """Coerce predictable model slips; every coercion is recorded for the reason.
+
+    Only unambiguous slips are repaired: a digit-string ``prev_rescored``,
+    lower-case refs (``w2``), missing ``regressions`` / ``encodings_added``
+    (read as empty) and ``"n/a"`` / ``"null"`` for ``change_request_applied``.
+    Anything else is left for ``validate_regen`` to reject.
+    """
+    if not isinstance(payload, dict):
+        return payload, []
+    data = dict(payload)
+    notes: list[str] = []
+
+    prev = data.get("prev_rescored")
+    if isinstance(prev, str) and re.fullmatch(r"\s*\d{1,3}\s*", prev):
+        data["prev_rescored"] = int(prev)
+        notes.append(f"prev_rescored {prev!r} -> {int(prev)}")
+
+    for key in ("regressions", "encodings_added"):
+        if key not in data:
+            data[key] = []
+            notes.append(f"missing {key} -> []")
+
+    applied = data.get("change_request_applied")
+    if isinstance(applied, str) and applied.strip().lower() in {"n/a", "na", "null", "none", ""}:
+        data["change_request_applied"] = None
+        notes.append(f"change_request_applied {applied!r} -> null")
+
+    improvements = data.get("improvements")
+    if isinstance(improvements, list):
+        fixed = []
+        for item in improvements:
+            ref = item.get("ref") if isinstance(item, dict) else None
+            if isinstance(ref, str):
+                canonical = _canonical_ref(ref)
+                if canonical != ref and REF_RE.match(canonical):
+                    notes.append(f"ref {ref!r} -> {canonical!r}")
+                    item = {**item, "ref": canonical}
+            fixed.append(item)
+        data["improvements"] = fixed
+
+    return data, notes
+
+
+def _canonical_ref(ref: str) -> str:
+    ref = ref.strip()
+    return "new" if ref.lower() == "new" else ref.upper()
 
 
 def validate_regen(payload: Any, known_weakness_ids: frozenset[str], characteristic_count: int) -> list[str]:
@@ -253,11 +314,19 @@ def decide(inp: GateInput) -> GateResult:
     if inp.regen is None:
         return GateResult(KEEP, f"review_regen.json {inp.regen_error or 'missing'}")
 
-    errors = validate_regen(inp.regen, inp.known_weakness_ids, inp.characteristic_count)
+    regen, coerced = normalize_regen(inp.regen)
+    result = _judge(inp, regen)
+    if coerced:
+        result.reason += f" (coerced: {'; '.join(coerced)})"
+    return result
+
+
+def _judge(inp: GateInput, regen: Any) -> GateResult:
+    errors = validate_regen(regen, inp.known_weakness_ids, inp.characteristic_count)
     if errors:
         return GateResult(KEEP, "invalid review_regen.json: " + "; ".join(errors))
 
-    payload: dict[str, Any] = inp.regen
+    payload: dict[str, Any] = regen
     prev_rescored: int = payload["prev_rescored"]
     improvements = [
         {
@@ -328,6 +397,15 @@ def _one_line(text: str) -> str:
     return " ".join(str(text).split())
 
 
+def _safe(text: str) -> str:
+    """Model-written text for a GitHub comment: one line, no @-mentions.
+
+    A zero-width space after every ``@`` keeps the text readable while GitHub
+    no longer resolves it as a user or team mention.
+    """
+    return _one_line(text).replace("@", "@​")
+
+
 def load_regen_json(path: Path) -> tuple[Any, str | None]:
     if not path.is_file():
         return None, "missing"
@@ -368,18 +446,18 @@ def render_summary(result: GateResult, prev_stored: str, score: int | None) -> s
     ]
     if result.improvements:
         for item in result.improvements:
-            where = item["where_visible"] or "_not visible_"
-            lines.append(f"- `{item['ref']}` {_one_line(item['what'])} — {_one_line(where)}")
+            where = _safe(item["where_visible"]) if item["where_visible"] else "_not visible_"
+            lines.append(f"- `{item['ref']}` {_safe(item['what'])} — {where}")
     else:
         lines.append("- none")
     lines += ["", "**Regressions**"]
     if result.regressions:
         for item in result.regressions:
-            where = f" — {_one_line(item['where_visible'])}" if item["where_visible"] else ""
-            lines.append(f"- {_one_line(item['what'])}{where}")
+            where = f" — {_safe(item['where_visible'])}" if item["where_visible"] else ""
+            lines.append(f"- {_safe(item['what'])}{where}")
     else:
         lines.append("- none")
-    lines += ["", f"**Reason:** {_one_line(result.reason)}"]
+    lines += ["", f"**Reason:** {_safe(result.reason)}"]
     return "\n".join(lines) + "\n"
 
 
@@ -390,7 +468,9 @@ def cmd_context(args: argparse.Namespace) -> int:
     characteristics: list[str] = []
     if args.spec_file and Path(args.spec_file).is_file():
         characteristics = parse_characteristics(Path(args.spec_file).read_text(encoding="utf-8"))
-    md, weaknesses = render_previous_review(data, args.spec_id, args.language, args.library, characteristics)
+    md, weaknesses = render_previous_review(
+        data, args.spec_id, args.language, args.library, characteristics, include_scores=not args.omit_scores
+    )
     Path(args.out_md).write_text(md, encoding="utf-8")
     Path(args.out_weaknesses).write_text(json.dumps(weaknesses, indent=2, ensure_ascii=False), encoding="utf-8")
     quality = data.get("quality_score")
@@ -442,6 +522,7 @@ def build_parser() -> argparse.ArgumentParser:
     ctx.add_argument("--language", required=True)
     ctx.add_argument("--library", required=True)
     ctx.add_argument("--spec-file", default="")
+    ctx.add_argument("--omit-scores", action="store_true", help="leave stored scores out of the markdown (review)")
     ctx.add_argument("--out-md", default="/tmp/anyplot-prev-review.md")
     ctx.add_argument("--out-weaknesses", default="/tmp/anyplot-prev-weaknesses.json")
     ctx.set_defaults(func=cmd_context)

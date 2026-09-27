@@ -159,8 +159,8 @@ The cascade applies to fresh generations only. A regeneration takes the regen ga
 
 A regeneration is an implementation PR for a (spec, library) pair that already has an implementation on main — for example every PR that `daily-regen.yml` produces. It gets one review and no repair loop, and the live implementation is replaced only when the new one is visibly better:
 
-1. `impl-review.yml` detects the regeneration from `origin/main` (the implementation file exists there), downloads the predecessor's production renders to `prev_images/`, and writes the previous review with stable weakness ids `W1`..`Wn` to `/tmp/anyplot-prev-review.md`.
-2. The review scores the new render blind, then re-scores the predecessor's renders against the same criteria and writes its before/after judgement to `review_regen.json` (step 5f of `prompts/workflow-prompts/ai-quality-review.md`).
+1. `impl-review.yml` detects the regeneration from `origin/main` (the implementation file exists there), downloads the predecessor's production renders to `/tmp/anyplot-prev-plot-{light,dark}.png` (outside the working directory), and writes the previous review with stable weakness ids `W1`..`Wn` — without its stored scores — to `/tmp/anyplot-prev-review.md`.
+2. The review scores the new render blind (the prompt never shows it the stored score), then re-scores the predecessor's renders against the same criteria and writes its before/after judgement to `review_regen.json` (step 8b of `prompts/workflow-prompts/ai-quality-review.md`).
 3. `automation/scripts/regen_gate.py` decides. Replace requires all of:
    - new score >= re-scored predecessor - 1 (the stored score is display-only);
    - at least one improvement with a named, visible location;
@@ -197,7 +197,7 @@ Located in `.github/workflows/`:
 | `impl-repair.yml` | Fixes rejected implementations |
 | `impl-merge.yml` | Merges approved PRs |
 | `bulk-generate.yml` | Batch implementation generation |
-| `daily-regen.yml` | Cron-driven regeneration of the oldest implementations (once a day at 02:17 UTC, off the top of the hour to dodge GitHub's scheduler overload). A spec's age counts from the newer of its last merged update and its last regen attempt (closed `regen` PRs), so a kept regeneration is not re-picked the next night |
+| `daily-regen.yml` | Cron-driven regeneration of the oldest implementations (once a day at 02:17 UTC, off the top of the hour to dodge GitHub's scheduler overload). A spec's age counts from the newer of its last merged update and the last activity on its spec issue (every regen touches the issue), so a kept regeneration is not re-picked the next night. Any activity on the issue — a comment, a label, a report — postpones that spec's regen the same way |
 | `watchdog-stuck-jobs.yml` | 6-hourly safety net: re-dispatches stuck reviews, repairs (including a repair that crashed after a rejection), merges and generations (straight to `impl-generate.yml`, marked only once the run exists), re-closes open `regen:kept` PRs, never rescues a regeneration into repair, and rescues daily-regen when its cron is silently starved by GitHub (>26 h without a run) |
 | `report-validate.yml` | Validates user-submitted issue reports |
 | `sync-postgres.yml` | Syncs `plots/` filesystem state to PostgreSQL on push to main |

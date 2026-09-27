@@ -7,8 +7,8 @@ Evaluate if the **${LIBRARY}** implementation matches the specification for `${S
 - **Spec ID:** ${SPEC_ID}
 - **Library:** ${LIBRARY}
 - **PR Number:** #${PR_NUMBER}
-- **Attempt:** ${ATTEMPT}/3
-- **Regeneration:** ${IS_REGENERATION} (when `true`, step 5f applies: one review, no repair)
+- **Attempt:** ${ATTEMPT} (review 1 of up to 5 — 4 repairs; a regeneration gets exactly one review)
+- **Regeneration:** ${IS_REGENERATION} (when `true`, steps 5f and 8b apply: one review, no repair)
 
 ## Your Task
 
@@ -81,7 +81,7 @@ If it **does** exist:
 - **Copy that paragraph verbatim into your `weaknesses` array as the FIRST item.** Do not paraphrase; the repair model needs the literal "actual=WxH" and signed delta numbers to know which knob to turn and which direction.
 - **Set VQ-05 (Layout & Canvas) to 0/4 regardless of other observations.** Canvas drift is a hard rule; the quality_score must drop low enough to route the PR into impl-repair through the existing 5-review/4-repair cascade.
 - Keep scoring the other categories honestly — useful signal for repair is good signal — but do **not** lift VQ-05 just because the visual proportions look fine inside the wrong-sized canvas.
-- On a regeneration (`IS_REGENERATION` is `true`) there is no repair: the regen gate reads the same file and keeps the live implementation. Still do step 5f — the comparison is recorded for the next attempt.
+- On a regeneration (`IS_REGENERATION` is `true`) there is no repair: the regen gate reads the same file and keeps the live implementation. Still do step 8b — the comparison is recorded for the next attempt.
 
 If it does **not** exist: the gate passed; no canvas-specific action — score VQ-05 normally based on the visual proportional checks in 5d below.
 
@@ -115,46 +115,9 @@ Visually estimate from each PNG — no pixel measurement needed. These are soft 
 
 **JavaScript libraries** (chartjs, d3, echarts, highcharts as `.js`; muix as `.tsx`): the snippet renders into the browser harness's pre-sized `#container` mount node and never saves files itself — the harness (`automation/js-render/render.mjs`) captures `plot-{theme}.png` and `plot-{theme}.html`. For CQ-05, check the mount-node contract and current library API instead of `savefig`-style calls; animations must be disabled (`animation: false` or the library's equivalent) so the harness doesn't screenshot mid-animation.
 
-### 5f. Regeneration: before/after (only when `IS_REGENERATION` is `true`)
+### 5f. Regeneration (only when `IS_REGENERATION` is `true`)
 
-Skip this section entirely when `IS_REGENERATION` is `false`.
-
-A regeneration replaces an implementation that is already live on main. It gets exactly **one** review — this one — and no repair loop. The workflow's regen gate (`automation/scripts/regen_gate.py`) reads your `review_regen.json` and replaces the live implementation only if **all** of these hold; otherwise the PR is closed and the live implementation stays:
-
-- your score for the new render ≥ your re-score of the predecessor − 1;
-- at least one improvement a viewer can see (non-empty `where_visible`);
-- no regressions (on a `*-basic` spec, a replaced data scenario or added encodings count as regressions unless a change request asked for them).
-
-Your job is an honest comparison; the gate does the arithmetic. Workflow variables for this step: `PREVIOUS_SCORE` (the stored score — display only), `PREV_RENDERS` (`available` / `missing`), `PREV_LINES` and `NEW_LINES` (line counts of the previous and the new source).
-
-**Blind first, then compare — in this order:**
-
-1. **Score the new render blind.** Finish steps 6–8 for the new implementation exactly as in any review, **without** opening `prev_images/`, `/tmp/anyplot-prev-review.md` or the previous source. Your score for the new render is final at that point; do not revise it after seeing the predecessor.
-2. **Re-score the predecessor.** If `PREV_RENDERS` is `missing`, skip steps 2–5, do not write `review_regen.json`, and say so in the comment (the gate keeps the live implementation). Otherwise open `prev_images/plot-light.png` and `prev_images/plot-dark.png` (the production renders currently on the website) and `/tmp/anyplot-prev-impl${EXT}` (their source), and score them against the **same** criteria — steps 5c–8, same score caps, same calibration. The result is `prev_rescored`. Score what you see: do not anchor on `PREVIOUS_SCORE` or on the previous review's numbers. Number the predecessor's weaknesses you find `P1`, `P2`, ….
-3. **Read the previous review** `/tmp/anyplot-prev-review.md`. Its weaknesses carry stable ids `W1`..`Wn`. When it has a "Characteristic properties" list (`C1`..`Cn`, taken from the spec's "What a good version looks like" section), those are the properties a good version of this plot type must show. When the list is absent, there are no `C` ids — never invent one.
-4. **Judge the pair side by side** (light against light, dark against dark):
-   - **Improvement** — something a viewer can see in the new renders that is better than in the predecessor. `ref` is the `W` id it resolves, a `P` id, a `C` id it now satisfies, or `"new"`. `where_visible` names the element and the render(s), for example "size legend, both renders: the circles are now visible on the dark background". Code-only changes (refactors, comments, extra code without a visible effect) are **not** improvements. If you cannot point to it in a render, leave `where_visible` empty — it then does not count.
-   - **Regression** — anything that was good in the predecessor and is worse now: a lost or unreadable legend, illegible or overlapping text, clipping, a worse layout, a characteristic property lost, or data marks that no longer sit at their data values (jitter, force or declutter passes that move the marks).
-   - `scenario_changed` — `true` when the data story (domain, variables, labels) was replaced rather than refined.
-   - `encodings_added` — visual encodings the new version maps that the predecessor did not (for example `"color by region"`, `"trend line"`, `"facets"`); empty list when none.
-   - `change_request_applied` — when `/tmp/anyplot-change-request.txt` exists, `true` if the new version applies that request, `false` if not; `null` when the file does not exist.
-   - Code size: `PREV_LINES` → `NEW_LINES`. A large growth without a visible change is a CQ-04 note for the comparison section and `weaknesses` (so the next regeneration sees it). It is not a regression and not a gate condition.
-5. **Write `review_regen.json`** (repository root, next to the other review files):
-
-```json
-{
-  "prev_rescored": 84,
-  "improvements": [
-    {"ref": "W2", "what": "Size legend circles are filled like the data marks", "where_visible": "size legend, both renders"}
-  ],
-  "regressions": [],
-  "scenario_changed": false,
-  "encodings_added": [],
-  "change_request_applied": null
-}
-```
-
-`regressions` entries use `{"what": "...", "where_visible": "..."}`. Every `W` ref must be an id from `/tmp/anyplot-prev-review.md`, and every `C` ref an id from its characteristic list — an unknown id makes the whole file invalid and the gate keeps the live implementation. Report regressions even when you also found improvements; the gate needs both.
+Score this implementation exactly like any other in steps 6–8 — blind, without looking at its predecessor. The before/after comparison comes afterwards, in step 8b.
 
 ### 6. Check for Auto-Reject (AR-08, AR-09)
 
@@ -256,6 +219,46 @@ Read `prompts/quality-criteria.md` and evaluate:
 | DE-01 ≤ 2 AND DE-02 ≤ 2 (generic + no visual refinement) | 75 |
 | CQ-04 = 0 (fake functionality) | 70 |
 
+### 8b. Regeneration: before/after (only when `IS_REGENERATION` is `true`)
+
+Skip this section entirely when `IS_REGENERATION` is `false`.
+
+Your score for the new implementation is final now; do not revise it after seeing the predecessor.
+
+A regeneration replaces an implementation that is already live on main. It gets exactly **one** review — this one — and no repair loop. The workflow's regen gate (`automation/scripts/regen_gate.py`) reads your `review_regen.json` and replaces the live implementation only if **all** of these hold; otherwise the PR is closed and the live implementation stays:
+
+- your score for the new render ≥ your re-score of the predecessor − 1;
+- at least one improvement a viewer can see (non-empty `where_visible`);
+- no regressions (on a `*-basic` spec, a replaced data scenario or added encodings count as regressions unless a change request asked for them).
+
+Your job is an honest comparison; the gate does the arithmetic. Workflow variables for this step: `PREV_RENDERS` (`available` / `missing`), `PREV_RENDER_LIGHT` and `PREV_RENDER_DARK` (paths of the predecessor's renders), `PREV_LINES` and `NEW_LINES` (line counts of the previous and the new source).
+
+1. **Re-score the predecessor.** If `PREV_RENDERS` is `missing`, skip steps 1–4, do not write `review_regen.json`, and say so in the comment (the gate keeps the live implementation). Otherwise open `PREV_RENDER_LIGHT` and `PREV_RENDER_DARK` (the production renders currently on the website) and `/tmp/anyplot-prev-impl${EXT}` (their source), and score them against the **same** criteria — steps 5c–8, same score caps, same calibration. The result is `prev_rescored`. Number the predecessor's weaknesses you find `P1`, `P2`, ….
+2. **Read the previous review** `/tmp/anyplot-prev-review.md`. Its weaknesses carry stable ids `W1`..`Wn`. When it has a "Characteristic properties" list (`C1`..`Cn`, taken from the spec's "What a good version looks like" section), those are the properties a good version of this plot type must show. When the list is absent, there are no `C` ids — never invent one.
+3. **Judge the pair side by side** (light against light, dark against dark):
+   - **Improvement** — something a viewer can see in the new renders that is better than in the predecessor. `ref` is the `W` id it resolves, a `P` id, a `C` id it now satisfies, or `"new"`. `where_visible` names the element and the render(s), for example "size legend, both renders: the circles are now visible on the dark background". Code-only changes (refactors, comments, extra code without a visible effect) are **not** improvements. If you cannot point to it in a render, leave `where_visible` empty — it then does not count.
+   - **Regression** — anything that was good in the predecessor and is worse now: a lost or unreadable legend, illegible or overlapping text, clipping, a worse layout, a characteristic property lost, or data marks that no longer sit at their data values (jitter, force or declutter passes that move the marks).
+   - `scenario_changed` — `true` when the data story (domain, variables, labels) was replaced rather than refined.
+   - `encodings_added` — visual encodings the new version maps that the predecessor did not (for example `"color by region"`, `"trend line"`, `"facets"`); empty list when none.
+   - `change_request_applied` — when `/tmp/anyplot-change-request.txt` exists, `true` if the new version applies that request, `false` if not; `null` when the file does not exist.
+   - Code size: `PREV_LINES` → `NEW_LINES`. A large growth without a visible change is a CQ-04 note for the comparison section and `weaknesses` (so the next regeneration sees it). It is not a regression and not a gate condition.
+4. **Write `review_regen.json`** (repository root, next to the other review files) and check that it parses:
+
+```json
+{
+  "prev_rescored": 84,
+  "improvements": [
+    {"ref": "W2", "what": "Size legend circles are filled like the data marks", "where_visible": "size legend, both renders"}
+  ],
+  "regressions": [],
+  "scenario_changed": false,
+  "encodings_added": [],
+  "change_request_applied": null
+}
+```
+
+`regressions` entries use `{"what": "...", "where_visible": "..."}`. Every `W` ref must be an id from `/tmp/anyplot-prev-review.md`, and every `C` ref an id from its characteristic list — an unknown id makes the whole file invalid and the gate keeps the live implementation. Report regressions even when you also found improvements; the gate needs both.
+
 ### 9. Post Verdict as PR Comment on PR #${PR_NUMBER}
 
 Use this EXACT format:
@@ -344,10 +347,10 @@ Use this EXACT format:
 > Improve design excellence: remove top/right spines, use subtle y-axis-only grid, create visual hierarchy through color contrast or emphasis. Consider a more refined color palette.
 
 ### Regeneration comparison
-<!-- Only when IS_REGENERATION is true (step 5f); omit the whole section otherwise. -->
-| Predecessor (stored) | Predecessor (re-scored) | New |
-|---|---|---|
-| ${PREVIOUS_SCORE} | XX | XX |
+<!-- Only when IS_REGENERATION is true (step 8b); omit the whole section otherwise. -->
+| Predecessor (re-scored) | New |
+|---|---|
+| XX | XX |
 
 **Predecessor weaknesses found while re-scoring:** P1 …, P2 …
 **Improvements:** `W2` size legend circles now visible — size legend, both renders
@@ -414,11 +417,12 @@ cat > review_checklist.json << 'EOF'
 EOF
 
 # Regeneration only (IS_REGENERATION = true and PREV_RENDERS = available):
-# the before/after judgement from step 5f. Missing or malformed = the regen
-# gate keeps the live implementation.
+# the before/after judgement from step 8b. Missing or malformed = the regen
+# gate keeps the live implementation — so check that it parses.
 cat > review_regen.json << 'EOF'
 {"prev_rescored": 84, "improvements": [{"ref": "W2", "what": "...", "where_visible": "..."}], "regressions": [], "scenario_changed": false, "encodings_added": [], "change_request_applied": null}
 EOF
+python3 -c "import json; json.load(open('review_regen.json'))"
 ```
 
 All scores and review files above (`quality_score.txt`, `review_checklist.json`, …) describe the **new** implementation. The predecessor's re-score goes only into `review_regen.json`.

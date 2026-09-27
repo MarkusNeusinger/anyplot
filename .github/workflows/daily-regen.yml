@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read   # closed `regen` PRs = last regen attempt per spec
+      issues: read   # spec issue updatedAt = last regen attempt per spec
     outputs:
       specs: ${{ steps.pick.outputs.specs }}
       specs_json: ${{ steps.pick.outputs.specs_json }}
@@ -137,26 +137,43 @@ jobs:
                   return None
               return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
-          # Last regen ATTEMPT per spec. A regeneration the regen gate kept
-          # closes its PR and never touches `updated` in the metadata, so
-          # without this the same spec would be picked again every night.
-          # One call at pick time; a failure degrades to "updated only".
-          last_attempt: dict[str, datetime] = {}
+          # Last regen ATTEMPT per spec = the spec issue's updatedAt. A
+          # regeneration the regen gate kept closes its PR and never touches
+          # `updated` in the metadata, so without this the same spec would be
+          # picked again every night. Every regen touches its issue (pending
+          # labels, preview and verdict comments), so the issue's updatedAt is
+          # a durable attempt record that — unlike a closed-PR listing — never
+          # falls out of a window. Semantics: ANY activity on a spec's issue
+          # (a comment, a label, a report) postpones that spec's regen by
+          # MIN_AGE_HOURS and moves it back in the oldest-first order.
+          # One call at pick time, most recently updated first (so the
+          # limit only drops issues that are old anyway); a failure degrades
+          # to "metadata updated only". Mapping issue → spec comes from each
+          # plots/<spec>/specification.yaml `issue:` field.
+          issue_updated: dict[int, datetime] = {}
           try:
               raw = subprocess.run(
-                  ["gh", "pr", "list", "--repo", os.environ["GH_REPO"], "--state", "closed",
-                   "--label", "regen", "--limit", "200", "--json", "headRefName,closedAt"],
+                  ["gh", "issue", "list", "--repo", os.environ["GH_REPO"], "--state", "all",
+                   "--search", "sort:updated-desc", "--limit", "1000", "--json", "number,updatedAt"],
                   check=True, capture_output=True, text=True,
               ).stdout
-              for pr in json.loads(raw):
-                  parts = str(pr.get("headRefName") or "").split("/")
-                  closed = parse_ts(str(pr.get("closedAt") or ""))
-                  if len(parts) == 3 and parts[0] == "implementation" and closed:
-                      if parts[1] not in last_attempt or closed > last_attempt[parts[1]]:
-                          last_attempt[parts[1]] = closed
-              print(f"::notice::Closed regen PRs seen for {len(last_attempt)} spec(s)")
+              for issue in json.loads(raw):
+                  ts = parse_ts(str(issue.get("updatedAt") or ""))
+                  if ts and isinstance(issue.get("number"), int):
+                      issue_updated[issue["number"]] = ts
+              print(f"::notice::Issue activity read for {len(issue_updated)} issue(s)")
           except (subprocess.CalledProcessError, ValueError, OSError) as exc:
-              print(f"::warning::Could not list closed regen PRs ({' '.join(str(exc).split())[:200]}) — picking by metadata 'updated' only")
+              print(f"::warning::Could not list issues ({' '.join(str(exc).split())[:200]}) — picking by metadata 'updated' only")
+
+          last_attempt: dict[str, datetime] = {}
+          if issue_updated:
+              for spec_yaml in specs_dir.glob("*/specification.yaml"):
+                  try:
+                      issue_no = (yaml.safe_load(spec_yaml.read_text(encoding="utf-8")) or {}).get("issue")
+                  except Exception:
+                      continue
+                  if isinstance(issue_no, int) and issue_no in issue_updated:
+                      last_attempt[spec_yaml.parent.name] = issue_updated[issue_no]
 
           candidates: list[tuple[datetime, str]] = []
 
@@ -190,7 +207,7 @@ jobs:
                   continue
 
               # Age = time since the newer of the last merged update and the
-              # last regen attempt (kept regens included).
+              # last activity on the spec issue (kept regens included).
               attempt = last_attempt.get(spec_dir.name)
               if attempt and attempt > dt:
                   dt = attempt

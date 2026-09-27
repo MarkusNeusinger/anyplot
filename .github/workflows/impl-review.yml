@@ -224,6 +224,7 @@ jobs:
             --metadata /tmp/anyplot-prev-metadata.yaml \
             --spec-id "$SPEC_ID" --language "$LANGUAGE" --library "$LIBRARY" \
             --spec-file "plots/${SPEC_ID}/specification.md" \
+            --omit-scores \
             --out-md /tmp/anyplot-prev-review.md \
             --out-weaknesses /tmp/anyplot-prev-weaknesses.json
 
@@ -307,9 +308,13 @@ jobs:
           ls -la plot_images/
 
       # Regen only: the predecessor's production renders, which the review
-      # re-scores against the same criteria (prompt step 5f). Anything short
-      # of both files → prev_renders=missing, and the gate keeps the live
-      # implementation (no before/after comparison, no replacement).
+      # re-scores against the same criteria (prompt step 8b) AFTER scoring the
+      # new render blind. Kept out of the working directory so a directory
+      # listing during the blind pass does not surface them, and as
+      # top-level /tmp files because `.claude/settings.json` allows the Read
+      # tool on `/tmp/*` only (a $RUNNER_TEMP path would be a denied read in
+      # the non-interactive action). Anything short of both files →
+      # prev_renders=missing, and the gate keeps the live implementation.
       - name: Download previous production renders (regen)
         id: prev_renders
         if: steps.regen.outputs.is_regen == 'true'
@@ -319,7 +324,9 @@ jobs:
           LANGUAGE: ${{ steps.lang.outputs.language }}
           GCS_OK: ${{ steps.gcs.outcome == 'success' }}
         run: |
-          mkdir -p prev_images
+          LIGHT=/tmp/anyplot-prev-plot-light.png
+          DARK=/tmp/anyplot-prev-plot-dark.png
+          rm -f "$LIGHT" "$DARK"
           if [ "$GCS_OK" != "true" ]; then
             echo "::warning::GCP auth failed — previous renders unavailable"
             echo "prev_renders=missing" >> $GITHUB_OUTPUT
@@ -327,19 +334,22 @@ jobs:
           fi
           SRC="gs://anyplot-images/plots/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
           for attempt in 1 2 3; do
-            if gsutil -m cp "${SRC}/plot-light.png" "${SRC}/plot-dark.png" prev_images/ 2> /tmp/gsutil-prev.err \
-               && [ -s prev_images/plot-light.png ] && [ -s prev_images/plot-dark.png ]; then
+            if gsutil cp "${SRC}/plot-light.png" "$LIGHT" 2> /tmp/gsutil-prev.err \
+               && gsutil cp "${SRC}/plot-dark.png" "$DARK" 2>> /tmp/gsutil-prev.err \
+               && [ -s "$LIGHT" ] && [ -s "$DARK" ]; then
               break
             fi
             echo "::warning::previous render download incomplete (attempt ${attempt}/3): $(head -c 300 /tmp/gsutil-prev.err | tr '\n' ' ')"
             [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
           done
-          if [ -s prev_images/plot-light.png ] && [ -s prev_images/plot-dark.png ]; then
+          if [ -s "$LIGHT" ] && [ -s "$DARK" ]; then
             echo "prev_renders=available" >> $GITHUB_OUTPUT
+            echo "light=$LIGHT" >> $GITHUB_OUTPUT
+            echo "dark=$DARK" >> $GITHUB_OUTPUT
           else
             echo "prev_renders=missing" >> $GITHUB_OUTPUT
           fi
-          ls -la prev_images/
+          ls -la "$LIGHT" "$DARK" 2>/dev/null || true
 
       - name: Verify both theme renders exist
         run: |
@@ -501,8 +511,9 @@ jobs:
             - LANGUAGE: ${{ steps.lang.outputs.language }}
             - EXT: ${{ steps.lang.outputs.ext }}
             - IS_REGENERATION: ${{ steps.regen.outputs.is_regen || 'false' }}
-            - PREVIOUS_SCORE: ${{ steps.regen_ctx.outputs.prev_stored || 'n/a' }}
             - PREV_RENDERS: ${{ steps.prev_renders.outputs.prev_renders || 'missing' }}
+            - PREV_RENDER_LIGHT: ${{ steps.prev_renders.outputs.light || 'n/a' }}
+            - PREV_RENDER_DARK: ${{ steps.prev_renders.outputs.dark || 'n/a' }}
             - PREV_LINES: ${{ steps.regen_ctx.outputs.prev_lines || 'n/a' }}
             - NEW_LINES: ${{ steps.regen_ctx.outputs.new_lines || 'n/a' }}
 
@@ -659,7 +670,7 @@ jobs:
           }
 
       # One review, no repair: automation/scripts/regen_gate.py turns the
-      # review's before/after judgement (review_regen.json, prompt step 5f)
+      # review's before/after judgement (review_regen.json, prompt step 8b)
       # into merge | keep. Runs before any verdict label so impl-merge can
       # never fire on a regeneration the gate did not approve. The helper is
       # the copy taken from this workflow's ref; if it cannot run at all, the
@@ -1179,6 +1190,10 @@ jobs:
           if [ "$IS_REGEN" = "true" ]; then
             if [ "$GATE_VERDICT" = "merge" ]; then
               echo "::notice::Regen gate approved the replacement (${GATE_REASON}), triggering merge"
+              # Idempotent re-assert: impl-merge refuses a PR without
+              # ai-approved, so a label lost after regen:improved would
+              # otherwise strand the PR silently.
+              gh_retry "ai-approved label" gh pr edit "$PR_NUM" --add-label "ai-approved" || exit 1
               gh_retry "impl-merge dispatch" gh workflow run impl-merge.yml -f pr_number="$PR_NUM"
               exit 0
             fi

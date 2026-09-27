@@ -179,16 +179,17 @@ jobs:
 
             # Regenerations never enter the repair loop (one review, then the
             # regen gate). A gated regen that has a score but no regen verdict
-            # means the gate or verdict step crashed after the review: say so
-            # instead of rescuing it into repair. `regen:improved` + stuck
-            # merge falls through to Case 3 (it carries ai-approved).
+            # — or `regen:improved` whose `ai-approved` was lost — means the
+            # gate or verdict step crashed after the review: say so instead of
+            # rescuing it into repair. `regen:improved` + `ai-approved` + stuck
+            # merge falls through to Case 3.
             is_regen=false
             if echo " $labels " | grep -q " regen "; then
               is_regen=true
               if echo " $labels " | grep -qE " quality:[0-9]+ " \
-                 && ! echo " $labels " | grep -qE " (regen:improved|regen:kept|ai-approved|ai-review-failed) " \
+                 && ! echo " $labels " | grep -qE " (regen:kept|ai-approved|ai-review-failed) " \
                  && (( age > STALE_SEC )); then
-                echo "::warning::PR #$num: regeneration reviewed (has quality:*) but no regen verdict — needs manual attention (re-dispatch impl-review.yml -f pr_number=$num once)"
+                echo "::warning::PR #$num: regeneration reviewed (has quality:*) but neither kept nor approved ($(echo " $labels " | grep -o ' regen:improved ' | tr -d ' ' || true)) — needs manual attention: read the review run's ::notice::regen_gate line; with regen:improved add ai-approved and dispatch impl-merge.yml, otherwise re-dispatch impl-review.yml once"
                 continue
               fi
             fi
