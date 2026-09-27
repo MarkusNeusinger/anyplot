@@ -1,13 +1,14 @@
 """Tests for automation.scripts.regen_gate — the regen keep-vs-replace decision.
 
 Locks the contract between prompts/workflow-prompts/ai-quality-review.md step
-5f (review_regen.json), the extractor that assigns weakness ids, and the gate
+8b (review_regen.json), the extractor that assigns weakness ids, and the gate
 step in .github/workflows/impl-review.yml.
 """
 
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -278,6 +279,37 @@ class TestSummary:
         assert "@octocat" not in text
         assert "@​octocat" in text
         assert "@​team" in text
+
+
+class TestSanitizeSource:
+    """The predecessor copy handed to the reviewer never shows the stored score."""
+
+    @pytest.mark.parametrize(
+        "header",
+        [
+            '""" anyplot.ai\nscatter-basic: Basic Scatter\nLibrary: altair 5.5 | Python 3.13\nQuality: 92/100 | Updated: 2026-09-01\n"""\n',
+            "#' anyplot.ai\n#' scatter-basic: Basic\n#' Library: ggplot2 3.5 | R 4.4\n#' Quality: 88/100 | Created: 2026-05-28\n",
+            "# anyplot.ai\n# scatter-basic: Basic\n# Library: makie 0.21 | Julia 1.11\n# Quality: 7/100 | Created: 2026-05-28\n",
+            "// anyplot.ai\n// scatter-basic: Basic\n// Library: d3 7.9 | JavaScript 22\n// Quality: 100 / 100 | Updated: 2026-08-24\n",
+        ],
+    )
+    def test_header_score_hidden(self, header):
+        from automation.scripts.regen_gate import sanitize_source
+
+        body = "import x\nprint('Quality: 50/100 is data, not a header')\n" * 10
+        out = sanitize_source(header + body)
+        head = out.splitlines()[: header.count("\n")]
+        assert not any(re.search(r"Quality:\s*\d+\s*/\s*100", line) for line in head)
+        assert any("Quality: hidden" in line for line in head)
+        assert out.count("\n") == (header + body).count("\n")  # line count unchanged
+        assert out.endswith(body[-60:])  # lines past the header are untouched
+
+    def test_cli(self, tmp_path):
+        src = tmp_path / "raw.py"
+        src.write_text('"""\nQuality: 91/100 | Updated: 2026-09-01\n"""\n', encoding="utf-8")
+        out = tmp_path / "prev.py"
+        main(["sanitize-source", "--source", str(src), "--out", str(out)])
+        assert "91" not in out.read_text(encoding="utf-8")
 
 
 class TestExtraction:

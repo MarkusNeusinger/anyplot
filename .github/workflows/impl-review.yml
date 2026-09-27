@@ -230,7 +230,14 @@ jobs:
 
           # Previous source for the before/after code read, plus both line
           # counts ("grew a lot with no visible change" is a CQ-04 note).
-          git show "origin/main:${IMPL_FILE}" > "/tmp/anyplot-prev-impl${EXT}"
+          # The generated header carries the stored score (`Quality: N/100`);
+          # the reviewer's copy has it hidden so the re-score cannot anchor.
+          # Sanitizing is part of this step: if it fails, the step fails and
+          # the gate keeps (--context-failed) rather than leak the score.
+          git show "origin/main:${IMPL_FILE}" > /tmp/anyplot-prev-impl-raw
+          python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" sanitize-source \
+            --source /tmp/anyplot-prev-impl-raw --out "/tmp/anyplot-prev-impl${EXT}"
+          rm -f /tmp/anyplot-prev-impl-raw
           echo "prev_lines=$(wc -l < "/tmp/anyplot-prev-impl${EXT}" | tr -d ' ')" >> $GITHUB_OUTPUT
           echo "new_lines=$(wc -l < "$IMPL_FILE" | tr -d ' ')" >> $GITHUB_OUTPUT
 

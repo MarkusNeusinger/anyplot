@@ -44,6 +44,8 @@ Subcommands::
         --spec-file plots/S/specification.md --prev-renders available|missing \
         [--canvas-failed] [--change-request-present] [--context-failed] [--summary-out FILE]
 
+    regen_gate.py sanitize-source --source PREV_IMPL --out /tmp/anyplot-prev-impl.EXT
+
 Both write ``key=value`` outputs to ``$GITHUB_OUTPUT`` when it is set.
 """
 
@@ -161,6 +163,24 @@ def render_previous_review(
         lines.append("")
 
     return "\n".join(lines), weaknesses
+
+
+QUALITY_HEADER_RE = re.compile(r"(Quality:\s*)\d{1,3}(\s*/\s*100)")
+HEADER_LINES = 15
+
+
+def sanitize_source(text: str) -> str:
+    """Hide the stored score in the generated file header of the predecessor.
+
+    impl-review writes ``Quality: N/100`` into every implementation's header
+    (docstring for Python, ``#'`` for R, ``#`` for Julia, ``//`` for
+    JavaScript). The copy handed to the reviewer must not reveal N before the
+    predecessor is re-scored, so the value becomes ``hidden`` — only in the
+    leading header lines, and the line count stays the same.
+    """
+    lines = text.splitlines(keepends=True)
+    head = [QUALITY_HEADER_RE.sub(r"\1hidden\2", line) for line in lines[:HEADER_LINES]]
+    return "".join(head + lines[HEADER_LINES:])
 
 
 # ---------------------------------------------------------------------------
@@ -512,6 +532,12 @@ def cmd_decide(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_sanitize_source(args: argparse.Namespace) -> int:
+    text = Path(args.source).read_text(encoding="utf-8")
+    Path(args.out).write_text(sanitize_source(text), encoding="utf-8")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -526,6 +552,11 @@ def build_parser() -> argparse.ArgumentParser:
     ctx.add_argument("--out-md", default="/tmp/anyplot-prev-review.md")
     ctx.add_argument("--out-weaknesses", default="/tmp/anyplot-prev-weaknesses.json")
     ctx.set_defaults(func=cmd_context)
+
+    san = sub.add_parser("sanitize-source", help="Hide the stored score in a source file's generated header")
+    san.add_argument("--source", required=True)
+    san.add_argument("--out", required=True)
+    san.set_defaults(func=cmd_sanitize_source)
 
     dec = sub.add_parser("decide", help="Apply the regen gate to review_regen.json")
     dec.add_argument("--spec-id", required=True)

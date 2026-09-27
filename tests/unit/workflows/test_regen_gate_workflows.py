@@ -10,7 +10,12 @@ never-started reviews, and "is this a regeneration" is read from origin/main.
 
 from __future__ import annotations
 
+import json
+import os
 import re
+import subprocess
+import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -75,6 +80,10 @@ class TestImplReviewRegenBranch:
         assert "prev_stored" not in prompt
         ctx = _step("impl-review.yml", "Regen context")["run"]
         assert "--omit-scores" in ctx
+        # The predecessor source reaches the reviewer only through the sanitizer.
+        assert 'git show "origin/main:${IMPL_FILE}" > /tmp/anyplot-prev-impl-raw' in ctx
+        assert "sanitize-source" in ctx
+        assert 'git show "origin/main:${IMPL_FILE}" > "/tmp/anyplot-prev-impl${EXT}"' not in ctx
 
     def test_regen_branch_comes_before_the_cascade(self):
         script = _step("impl-review.yml", "Add verdict label and take action")["run"]
@@ -122,6 +131,20 @@ class TestWatchdog:
         assert " (regen:kept|ai-approved|ai-review-failed) " in self.SCRIPT
         assert "regen:improved|regen:kept" not in self.SCRIPT
 
+    def test_case1_never_redispatches_a_regen_review(self):
+        case1 = self.SCRIPT[self.SCRIPT.index("# Case 1") : self.SCRIPT.index("# Case 2:")]
+        regen_guard = case1.index('if [[ "$is_regen" == "true" ]]; then')
+        dispatch = case1.index("impl-review.yml -f pr_number")
+        assert regen_guard < dispatch
+        # The regen branch only warns.
+        regen_branch = case1[regen_guard : case1.index("elif", regen_guard)]
+        assert "::warning::" in regen_branch
+        assert "dispatch " not in regen_branch
+
+    def test_regen_detection_also_uses_main_checkout(self):
+        assert '[[ -f "$(impl_path "$spec_id" "$library")" ]]' in self.SCRIPT
+        assert 'grep -q " regen:forced "' in self.SCRIPT
+
     def test_case0_recloses_kept_regens(self):
         case0 = self.SCRIPT[self.SCRIPT.index("# Case 0") : self.SCRIPT.index("# Case 1")]
         assert 'grep -q " regen:kept "' in case0
@@ -131,9 +154,20 @@ class TestWatchdog:
 class TestImplGenerate:
     def test_failure_handler_skips_failed_label_on_regen(self):
         script = _step("impl-generate.yml", "Handle generation failure")["run"]
-        regen = script.index('if [ -n "$REGEN_LABEL" ]; then\n    # Regeneration: the implementation on main')
+        regen = script.index('if [ "$IS_LIVE" = "true" ]; then\n    # Regeneration: the implementation on main')
         failed = script.index('--add-label "impl:${LIBRARY}:failed"')
         assert regen < failed
+
+    def test_failure_handler_detects_live_impl_from_origin_main(self):
+        # REGEN_LABEL comes from a later step; a setup failure before it must
+        # still preserve done, so the handler re-detects on its own.
+        script = _step("impl-generate.yml", "Handle generation failure")["run"]
+        detect = script.index('git cat-file -e "origin/main:plots/$SPEC_ID/implementations/$LANGUAGE/$LIBRARY$EXT"')
+        assert detect < script.index("dispatch_retry() {")
+        code = _code_only(script)
+        # Every live-implementation branch keys on IS_LIVE, never on the label alone.
+        assert code.count('[ "$IS_LIVE" = "true" ]') == 3
+        assert code.count('if [ -n "$REGEN_LABEL" ]; then') == 1  # only feeding IS_LIVE
 
     def test_retry_forwards_regen_gate(self):
         script = _step("impl-generate.yml", "Handle generation failure")["run"]
@@ -156,3 +190,53 @@ class TestDailyRegen:
         assert '"--label", "regen"' not in script
         # Fallback to metadata `updated` when the listing fails.
         assert "picking by metadata 'updated' only" in script
+
+    def test_pick_ages_specs_without_metadata_by_issue_activity(self, tmp_path):
+        """Runs the pick script for real against a fake `gh` and a fake plots/ tree."""
+        workflow = yaml.safe_load((WORKFLOWS_DIR / "daily-regen.yml").read_text(encoding="utf-8"))
+        run = next(s for s in workflow["jobs"]["pick"]["steps"] if s.get("id") == "pick")["run"]
+        script = run.split("<<'PY'\n", 1)[1].rsplit("\nPY", 1)[0]
+
+        now = datetime.now(timezone.utc)
+        recent = (now - timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        old = (now - timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        older = (now - timedelta(days=60)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        def spec(name: str, issue: int | None, updated: str | None) -> None:
+            meta = tmp_path / "plots" / name / "metadata" / "python"
+            meta.mkdir(parents=True)
+            (meta / "altair.yaml").write_text(yaml.safe_dump({"updated": updated} if updated else {}), encoding="utf-8")
+            (tmp_path / "plots" / name / "specification.md").write_text("# s\n", encoding="utf-8")
+            (tmp_path / "plots" / name / "specification.yaml").write_text(
+                yaml.safe_dump({"issue": issue} if issue else {}), encoding="utf-8"
+            )
+
+        spec("a-no-meta-recent-issue", 1, None)  # issue touched 2 h ago → too fresh
+        spec("b-no-meta-no-issue", None, None)  # neither → ancient, picked first
+        spec("c-no-meta-old-issue", 3, None)  # issue 30 d ago → eligible, aged by it
+        spec("d-old-meta-recent-issue", 4, older)  # metadata old, issue fresh → too fresh
+
+        fake_bin = tmp_path / "bin"
+        fake_bin.mkdir()
+        issues = [
+            {"number": 1, "updatedAt": recent},
+            {"number": 3, "updatedAt": old},
+            {"number": 4, "updatedAt": recent},
+        ]
+        gh = fake_bin / "gh"
+        gh.write_text(f"#!/bin/sh\ncat <<'EOF'\n{json.dumps(issues)}\nEOF\n", encoding="utf-8")
+        gh.chmod(0o755)
+
+        out = tmp_path / "gh_output"
+        env = {
+            **os.environ,
+            "PATH": f"{fake_bin}{os.pathsep}{os.environ['PATH']}",
+            "GH_REPO": "owner/repo",
+            "COUNT": "10",
+            "MIN_AGE_HOURS": "20",
+            "SPEC_OVERRIDE": "",
+            "GITHUB_OUTPUT": str(out),
+        }
+        subprocess.run([sys.executable, "-c", script], cwd=tmp_path, env=env, check=True, capture_output=True)
+        picks = json.loads(re.search(r"^specs_json=(.*)$", out.read_text(), re.M).group(1))
+        assert picks == ["b-no-meta-no-issue", "c-no-meta-old-issue"]

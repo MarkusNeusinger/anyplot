@@ -54,9 +54,10 @@ def completion_comment(status: Completion, spec_id: str, run_url: str, source: s
         summary = f"All {status.total} library implementations for `{spec_id}` have been successfully merged."
     else:
         title = ":white_check_mark: Implementations Complete"
+        noun = "library" if len(status.failed) == 1 else "libraries"
         summary = (
             f"{len(status.done)}/{status.total} implementations merged, "
-            f"{len(status.failed)} libraries could not implement this plot type."
+            f"{len(status.failed)} {noun} could not implement this plot type."
         )
     return f"## {title}\n\n{summary}\n\n" + "\n".join(rows) + f"\n\n---\n:robot: *[{source}]({run_url})*"
 

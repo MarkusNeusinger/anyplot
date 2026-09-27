@@ -197,20 +197,20 @@ jobs:
                   if latest_updated is None or s > latest_updated:
                       latest_updated = s
 
-              if not latest_updated:
-                  # No metadata yet → treat as ancient, candidate for regen
-                  candidates.append((datetime.min.replace(tzinfo=timezone.utc), spec_dir.name))
-                  continue
-
-              dt = parse_ts(latest_updated)
-              if dt is None:
-                  continue
+              dt = parse_ts(latest_updated) if latest_updated else None
+              if latest_updated and dt is None:
+                  continue  # unparseable timestamp — skip, as before
 
               # Age = time since the newer of the last merged update and the
-              # last activity on the spec issue (kept regens included).
+              # last activity on the spec issue (kept regens included). No
+              # usable metadata → the issue activity alone is the age; only
+              # when neither exists is the spec treated as ancient.
               attempt = last_attempt.get(spec_dir.name)
-              if attempt and attempt > dt:
+              if attempt and (dt is None or attempt > dt):
                   dt = attempt
+              if dt is None:
+                  candidates.append((datetime.min.replace(tzinfo=timezone.utc), spec_dir.name))
+                  continue
 
               if NOW - dt < MIN_AGE:
                   continue  # too fresh to re-roll

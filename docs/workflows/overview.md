@@ -167,6 +167,8 @@ A regeneration is an implementation PR for a (spec, library) pair that already h
    - no regressions. On a `*-basic` spec, a replaced data scenario or added encodings count as regressions unless a change request asked for them.
 4. Replace: `regen:improved`, then `ai-approved`, then the normal merge. Keep: `regen:kept`, the PR is closed with a comment (stored, re-scored, and new score, improvements, regressions, reason), the issue gets `impl:{library}:done` back, and nothing reaches main, GCS production, or the database.
 
+A crashed regen review is auto-retried once by `impl-review.yml`; after that the PR carries `ai-review-failed` and the watchdog only flags it — it never dispatches a further review for a regeneration.
+
 Anything missing or malformed — no `review_regen.json`, an unknown weakness id, missing previous renders, a failed canvas gate, a score of 0 — keeps the live implementation. The gate step logs one `::notice::regen_gate spec=… lib=… prev_stored=… prev_rescored=… new=… verdict=… reason=…` line per decision.
 
 To replace an implementation without the gate, dispatch with `regen_gate=false` (`impl-generate.yml` or `bulk-generate.yml`): the PR is labelled `regen:forced` and takes the fresh-generation path, including the repair loop — whose exhaustion path removes the old implementation from main.
@@ -198,7 +200,7 @@ Located in `.github/workflows/`:
 | `impl-merge.yml` | Merges approved PRs |
 | `bulk-generate.yml` | Batch implementation generation |
 | `daily-regen.yml` | Cron-driven regeneration of the oldest implementations (once a day at 02:17 UTC, off the top of the hour to dodge GitHub's scheduler overload). A spec's age counts from the newer of its last merged update and the last activity on its spec issue (every regen touches the issue), so a kept regeneration is not re-picked the next night. Any activity on the issue — a comment, a label, a report — postpones that spec's regen the same way |
-| `watchdog-stuck-jobs.yml` | 6-hourly safety net: re-dispatches stuck reviews, repairs (including a repair that crashed after a rejection), merges and generations (straight to `impl-generate.yml`, marked only once the run exists), re-closes open `regen:kept` PRs, never rescues a regeneration into repair, and rescues daily-regen when its cron is silently starved by GitHub (>26 h without a run) |
+| `watchdog-stuck-jobs.yml` | 6-hourly safety net: re-dispatches stuck reviews, repairs (including a repair that crashed after a rejection), merges and generations (straight to `impl-generate.yml`, marked only once the run exists), re-closes open `regen:kept` PRs, never rescues a regeneration into repair or re-dispatches its failed review (it flags it for manual attention instead; "regeneration" = the `regen` label or the implementation file on main, unless `regen:forced`), and rescues daily-regen when its cron is silently starved by GitHub (>26 h without a run) |
 | `report-validate.yml` | Validates user-submitted issue reports |
 | `sync-postgres.yml` | Syncs `plots/` filesystem state to PostgreSQL on push to main |
 | `sync-labels.yml` | Auto-syncs spec/impl labels after manual PR merges |

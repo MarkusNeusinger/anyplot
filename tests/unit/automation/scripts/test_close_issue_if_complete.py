@@ -42,5 +42,11 @@ def test_comment_all_done():
 def test_comment_with_failures():
     status = completion_status(["impl:altair:done", "impl:bokeh:failed", "impl:d3:done"], LIBS)
     body = completion_comment(status, "scatter-basic", "https://example/run/1", "impl-review")
-    assert "2/3 implementations merged, 1 libraries could not implement" in body
+    assert "2/3 implementations merged, 1 library could not implement" in body
     assert "| bokeh | :x: (not supported) |" in body
+
+
+def test_comment_plural_failures():
+    status = completion_status(["impl:altair:done", "impl:bokeh:failed", "impl:d3:failed"], LIBS)
+    body = completion_comment(status, "scatter-basic", "https://example/run/1", "impl-merge")
+    assert "1/3 implementations merged, 2 libraries could not implement" in body

@@ -1085,15 +1085,39 @@ jobs:
           # parked WITHOUT `impl:<lib>:failed` (it is not a capability verdict)
           # and left for the next dispatch.
           INFRA_WINDOW_CAP: '5'
-          # Non-empty when the pair already has an implementation on main
-          # (`regen` or `regen:forced`). That implementation is still live, so
-          # a failed regeneration must never mark the pair `impl:<lib>:failed`
-          # (it would also send watchdog Section B after a pair that is fine).
+          # Non-empty when the "Check for existing implementation" step ran and
+          # found the pair on main (`regen` or `regen:forced`). A failure in an
+          # earlier setup step leaves it empty, so the handler re-detects from
+          # origin/main itself below.
           REGEN_LABEL: ${{ steps.existing.outputs.regen_label }}
+          LANGUAGE: ${{ steps.inputs.outputs.language }}
+          EXT: ${{ steps.inputs.outputs.ext }}
           REGEN_GATE: ${{ (github.event_name == 'workflow_dispatch' && inputs.regen_gate == false) && 'false' || 'true' }}
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           echo "::notice::Handling generation failure for $LIBRARY/$SPEC_ID"
+
+          # Is the pair's implementation live on main? Then this failure must
+          # never mark it `impl:<lib>:failed` (the implementation still
+          # serves; the label would also send watchdog Section B after a pair
+          # that is fine), on EVERY failure path — including setup steps that
+          # fail before "Check for existing implementation" ran. Detected from
+          # origin/main like impl-review does. When the repository itself is
+          # unavailable (checkout failed) the answer is unknown, and unknown
+          # never writes the terminal :failed label.
+          IS_LIVE=false
+          if [ -n "$REGEN_LABEL" ]; then
+            IS_LIVE=true
+          elif git rev-parse --git-dir >/dev/null 2>&1; then
+            git fetch -q origin main 2>/dev/null || true
+            if git cat-file -e "origin/main:plots/$SPEC_ID/implementations/$LANGUAGE/$LIBRARY$EXT" 2>/dev/null; then
+              IS_LIVE=true
+            fi
+          else
+            IS_LIVE=true
+            echo "::warning::No repository checkout — cannot tell whether ${LIBRARY}/${SPEC_ID} is live on main; not marking it failed"
+          fi
+          echo "::notice::Implementation live on main: ${IS_LIVE}"
 
           # Regen only: the pair is back to "done" (its live implementation),
           # so the issue may be complete again.
@@ -1222,7 +1246,7 @@ jobs:
               for stale in "generate:${LIBRARY}" "impl:${LIBRARY}:pending"; do
                 gh issue edit "$ISSUE" --remove-label "$stale" 2>/dev/null || true
               done
-              if [ -n "$REGEN_LABEL" ]; then
+              if [ "$IS_LIVE" = "true" ]; then
                 gh issue edit "$ISSUE" --add-label "impl:${LIBRARY}:done" 2>/dev/null || true
               fi
               gh issue comment "$ISSUE" --body "${MARKER}
@@ -1240,7 +1264,7 @@ jobs:
 
           ---
           :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
-              if [ -n "$REGEN_LABEL" ]; then
+              if [ "$IS_LIVE" = "true" ]; then
                 close_issue_if_complete
               fi
             else
@@ -1280,7 +1304,7 @@ jobs:
               CAP_REASON="${ATTEMPT} failed attempt(s) in the last ${CAMPAIGN_WINDOW_H}h (cap: 3 per campaign)"
             fi
 
-            if [ -n "$REGEN_LABEL" ]; then
+            if [ "$IS_LIVE" = "true" ]; then
               # Regeneration: the implementation on main is untouched and still
               # live — no `impl:<lib>:failed`, the pair stays done.
               echo "::warning::Regeneration of $LIBRARY gave up ($CAP_REASON) — the live implementation stays, not marked failed"

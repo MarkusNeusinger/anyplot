@@ -131,6 +131,20 @@ jobs:
             gh label create "$1" --color "$2" --description "$3" 2>/dev/null || true
           }
 
+          # plots/ path of a (spec, library) implementation — the same
+          # library → language/extension map as impl-generate/review/merge.
+          impl_path() {
+            local spec="$1" lib="$2" lang ext
+            case "$lib" in
+              ggplot2) lang=r; ext=.R ;;
+              makie) lang=julia; ext=.jl ;;
+              chartjs|d3|echarts|highcharts) lang=javascript; ext=.js ;;
+              muix) lang=javascript; ext=.tsx ;;
+              *) lang=python; ext=.py ;;
+            esac
+            echo "plots/${spec}/implementations/${lang}/${lib}${ext}"
+          }
+
           # Resolve issue number → spec_id by parsing the issue title prefix
           # `[spec-id] ...` (set by spec-create.yml when the spec lands).
           spec_id_for_issue() {
@@ -183,9 +197,19 @@ jobs:
             # gate or verdict step crashed after the review: say so instead of
             # rescuing it into repair. `regen:improved` + `ai-approved` + stuck
             # merge falls through to Case 3.
+            # "Regeneration" = the `regen` label OR — like impl-review decides
+            # it — the implementation file exists on main (this checkout is
+            # main), unless the PR opted out with `regen:forced`. A lost
+            # `regen` label therefore never routes a regen into repair or a
+            # third review.
             is_regen=false
             if echo " $labels " | grep -q " regen "; then
               is_regen=true
+            elif ! echo " $labels " | grep -q " regen:forced " \
+                 && [[ -f "$(impl_path "$spec_id" "$library")" ]]; then
+              is_regen=true
+            fi
+            if [[ "$is_regen" == "true" ]]; then
               if echo " $labels " | grep -qE " quality:[0-9]+ " \
                  && ! echo " $labels " | grep -qE " (regen:kept|ai-approved|ai-review-failed) " \
                  && (( age > STALE_SEC )); then
@@ -194,9 +218,14 @@ jobs:
               fi
             fi
 
-            # Case 1: review failed, not yet rescued → re-dispatch review
+            # Case 1: review failed, not yet rescued → re-dispatch review.
+            #   Not for regenerations: impl-review already auto-retried the
+            #   crashed review once, and a regeneration gets one review — a
+            #   watchdog re-dispatch would be its third. Flag it instead.
             if echo " $labels " | grep -q " ai-review-failed "; then
-              if echo " $labels " | grep -q " ai-review-rescued "; then
+              if [[ "$is_regen" == "true" ]]; then
+                echo "::warning::PR #$num: regeneration review failed twice (ai-review-failed) — not re-dispatched (one review per regeneration); needs manual attention: re-run impl-review.yml -f pr_number=$num by hand, or close the PR (the live implementation stays)"
+              elif echo " $labels " | grep -q " ai-review-rescued "; then
                 echo "::warning::PR #$num: ai-review-failed persists after rescue — needs manual attention"
               else
                 ensure_label "ai-review-rescued" "5319e7" "Review re-dispatched once after ai-review-failed"
