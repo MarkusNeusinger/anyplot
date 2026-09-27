@@ -2,9 +2,9 @@ library: seaborn
 language: python
 specification_id: bubble-basic
 created: '2025-12-23T01:30:31Z'
-updated: '2026-09-27T01:43:08Z'
+updated: '2026-09-27T02:38:28Z'
 generated_by: claude-sonnet
-workflow_run: 36286001007
+workflow_run: 36288777188
 issue: 755
 language_version: 3.13.15
 library_version: 0.13.2
@@ -15,95 +15,97 @@ preview_html_dark: null
 quality_score: 92
 review:
   strengths:
-  - Lowess trend line (sns.regplot, scatter=False) makes the inverse spending/mortality
-    relationship immediately visible, adding real data storytelling beyond a plain
-    scatter.
-  - Log-scale x-axis correctly handles the two-order-of-magnitude spread in spending,
-    spacing all four income tiers evenly instead of crushing low-income countries
-    into a sliver.
-  - Combined hue+size legend cleanly explains both encodings under one custom title,
-    with theme-adaptive marker edge coloring (edgecolor=PAGE_BG) for cleaner overlap
-    separation.
-  - 'Perfect Imprint palette compliance: canonical order, first series #009E73, identical
-    data colors across themes, correct theme-adaptive chrome (background/text/grid/legend)
-    in both renders.'
-  - Clean, reproducible KISS code with explicit font sizing throughout and a canvas-safe
-    save (no bbox_inches='tight'), matching the seaborn canvas hard rule exactly.
+  - 'Thoughtful data storytelling: a subtle dashed lowess trend line visualizes the
+    inverse healthcare-spending/mortality relationship without needing a text callout.'
+  - Correct area-based bubble scaling via seaborn's `sizes=(50, 650)` parameter combined
+    with alpha=0.58 to handle overlap, exactly matching the spec's guidance on both
+    points.
+  - 'Well-crafted combined hue+size legend: custom title, tightened borderpad/labelspacing/handletextpad,
+    and size-handle markers explicitly recolored so they stay legible against the
+    elevated panel.'
+  - Log-scale x-axis with clean custom ticks (100/300/1,000/3,000/8,000) avoids crushing
+    the Low Income cluster — smart handling of a spending range that spans two orders
+    of magnitude.
+  - Theme-adaptive chrome correctly threaded end-to-end through matplotlib rc params
+    (background, ink, grid, legend panel); both renders pass legibility and palette
+    checks with identical data colors.
   weaknesses:
-  - Low-income cluster (spending ~$80-120) has several overlapping bubbles that read
-    as a congested blob despite alpha=0.65 — slightly more jitter/spread or a lower
-    alpha would separate the outlines further.
-  - Legend box occupies a fairly large share of the upper-right canvas; tightening
-    its padding would improve overall layout balance.
-  - Data storytelling relies entirely on implicit visual hierarchy (trend line + color);
-    the extreme outlier bubble at ~150 child mortality has no callout, so its anomaly
-    isn't explained to the viewer.
+  - Dataset uses only 60 points (15 per income tier) — the low end of the spec's '50-500
+    data points recommended' range; more density, especially within each tier, would
+    strengthen feature coverage.
+  - The Low Income cluster near $90-150/year has several bubbles heavily stacked;
+    alpha=0.58 helps but individual bubble boundaries are still hard to fully disambiguate
+    in that region.
+  - The Population size legend only shows ticks up to 50 despite the underlying data
+    being clipped to a 10-100 range, so the very largest bubbles on the canvas aren't
+    represented by any legend tick (minor — seaborn's 'brief' legend auto-selects
+    from realized data quantiles, not the sizes= scale bounds).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "bubble-basic · python · seaborn · anyplot.ai" in dark ink, clearly legible; axis labels "Healthcare Spending ($ / year)" and "Child Mortality (per 1,000 births)" in dark ink; tick labels in soft gray, all readable; grid lines subtle (both axes, low alpha) and visible without competing with data; legend box has an off-white elevated fill with a soft border and dark, readable text.
-      Data: Log-scale x-axis with four income-tier bubble clusters colored green (#009E73, Low Income), lavender (Lower-Middle), blue (Upper-Middle), and ochre (High Income) — canonical Imprint order, first series correctly #009E73. Bubble size encodes population, alpha=0.65 with page-background-colored edges handles overlap. A dashed gray lowess trend line traces the inverse spending/mortality relationship across all points.
-      Legibility verdict: PASS — no light-on-light text anywhere.
+      Background: Warm off-white, matches #FAF8F1, clearly not pure white and not dark.
+      Chrome: Title "bubble-basic · python · seaborn · anyplot.ai" in dark ink, fully legible and centered at ~43% of plot width. X-axis label "Healthcare Spending ($ / year)" and y-axis label "Child Mortality (per 1,000 births)" both dark ink, clearly readable. Log-scale x tick labels (100/300/1,000/3,000/8,000) and y tick labels (0-140) are soft gray, legible. Legend box (upper right) has an elevated cream fill with a bold dark title "Income Tier / Population (M)" and readable dark entry labels.
+      Data: First series (Low Income) renders in Imprint green #009E73; Lower-Middle Income in purple, Upper-Middle Income in blue, High Income in amber — canonical Imprint palette order. Bubbles use alpha≈0.58 with page-background-colored edges, so overlapping bubbles remain visually separable via faint ring outlines. A dashed gray lowess trend line traces the inverse spending/mortality relationship across the full x-range.
+      Legibility verdict: PASS — all text is dark against the light background, no light-on-light issues found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis labels rendered in light off-white ink, clearly legible; tick labels in light gray, all readable; grid lines subtle and visible; legend box has a dark elevated fill (#242420-like) with light, readable text and a soft border — no dark-on-dark failures observed anywhere (title, ticks, legend all correctly flipped to light ink).
-      Data: Identical bubble colors to the light render — green #009E73, lavender, blue, ochre — confirming the categorical data colors are unchanged between themes; only chrome (background, text, grid, legend fill) flipped as expected. Trend line and overall layout match the light render exactly.
-      Legibility verdict: PASS — all text reads clearly against the dark surface, brand green remains vivid on both surfaces.
+      Background: Warm near-black, matches #1A1A17, clearly not pure black and not light.
+      Chrome: Title, axis labels, and tick labels all render in light ink (near-white for title/axis labels, soft light gray for ticks), fully legible against the dark surface. Legend panel switches to a dark elevated fill with light title/entry text — no dark-on-dark failures observed anywhere (title, axis labels, ticks, legend text all pass).
+      Data: Confirmed identical to the light render — same green/purple/blue/amber bubble colors, same positions and sizes, same lowess trend line. Only the chrome (background, text, grid, legend panel) flipped between themes as expected.
+      Legibility verdict: PASS — all text is light against the dark background, no dark-on-dark issues found; brand green #009E73 remains vivid and distinguishable on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title formula, xlabel/ylabel=10, ticks/legend=8);
-          readable in both themes, title well within canvas bounds.
+        comment: All text explicitly sized and readable in both themes; title occupies
+          ~43% of plot width, well within readable proportion.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text, data, or the legend box.
+        comment: No text collides with other text, data, or the legend box.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bubble sizes well adapted to population values, but the low-income
-          cluster is somewhat congested despite alpha blending.
+        comment: Alpha blending and background-colored edges handle overlap well overall,
+          but the dense Low Income cluster near $90-150 still has hard-to-disambiguate
+          stacked bubbles.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe Imprint palette, alpha + edge coloring aid
-          overlap discrimination.
+        comment: Good contrast; four distinct hues, not relying on red-green as sole
+          signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot fills a healthy share of the canvas, legend
-          sits near the plot, nothing cut off.
+        comment: Canvas dimension gate passed; nothing clipped; balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels descriptive with units ($/year, per 1,000 births).
+        comment: Descriptive axis labels with units ($ / year, per 1,000 births).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Canonical Imprint order, first series #009E73, identical data colors
-          across themes, theme-correct chrome in both renders.'
+        comment: 'First series is #009E73; remaining tiers follow canonical Imprint
+          order; both renders theme-correct backgrounds.'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -111,22 +113,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful log-scale choice, semantic tier coloring, integrated trend
-          line — clearly above library defaults.
+        comment: Custom trend line, log-scale reasoning, and a carefully tuned combined
+          legend show real design intent beyond defaults.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines removed, ticks hidden, subtle grid, theme-adaptive edge coloring,
-          custom legend framing — close to fully polished.
+        comment: Spines removed, subtle low-alpha grid, generous whitespace, tightened
+          legend padding.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Trend line and color tiers create clear visual hierarchy, but no
-          explicit callout highlights the extreme outlier bubble.
+        comment: The lowess trend line and income-tier color progression create a
+          clear, guided narrative across the spending axis.
     spec_compliance:
       score: 15
       max: 15
@@ -136,27 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bubble chart: x/y position plus size-encoded third dimension.'
+        comment: 'Correct bubble chart: x/y position plus size-encoded third variable.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-based size scaling, alpha 0.65 for overlap, size legend included
-          — all spec notes satisfied.
+        comment: Area-based size scaling, alpha=0.58 transparency, and a size legend
+          are all present per spec notes.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, full data range visible on both axes.
+        comment: X/Y correctly mapped; log scale ensures all tiers are visible across
+          the axis.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match the data
-          (tier names, population values).
+        comment: Title matches the mandated format exactly; legend labels match the
+          Income Tier and Population data.
     data_quality:
       score: 14
       max: 15
@@ -166,22 +169,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows spread, overlap, and outliers across all four tiers; one very
-          high-mortality outlier stands out.
+        comment: All three dimensions (x, y, size) plus an optional category color
+          are shown, but 60 points sits at the low end of the spec's 50-500 recommendation.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real, neutral scenario: national healthcare spending vs. child mortality
-          by income tier.'
+        comment: Plausible, neutral health-economics scenario (spending vs. child
+          mortality vs. population by income tier).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Spending and mortality ranges align with real-world plausible bounds;
-          inverse relationship direction is factually correct.
+        comment: Spending ($35-$8,500), mortality (0.5-150 per 1,000), and population
+          (10-100M) are all sensible for the domain.
     code_quality:
       score: 10
       max: 10
@@ -191,7 +194,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes.
+        comment: Flat top-to-bottom script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -203,19 +206,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, pyplot, numpy, pandas, seaborn, FuncFormatter).
+        comment: Every import is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and appropriately complex, no fake UI or functionality.
+        comment: Appropriate complexity for the effect achieved; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with explicit facecolor, no bbox_inches='tight'.
+        comment: Saves plot-{THEME}.png with no bbox_inches='tight', preserving the
+          exact canvas.
     library_mastery:
       score: 9
       max: 10
@@ -225,15 +229,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of sns.regplot(lowess) + sns.scatterplot(hue+size) + sns.move_legend
-          + sns.set_theme.
+        comment: Idiomatic combined hue+size scatterplot legend, sns.move_legend,
+          sns.set_theme rc customization, and regplot for the trend line.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Integrated lowess trend estimation and combined hue+size semantic
-          legend are seaborn-distinctive capabilities.
+        comment: Uses seaborn's distinctive combined hue+size 'brief' legend and lowess
+          smoothing via regplot.
   verdict: APPROVED
 impl_tags:
   dependencies: []

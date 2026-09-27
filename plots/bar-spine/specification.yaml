@@ -6,7 +6,7 @@ title: Spine Plot for Two-Variable Proportions
 
 # Specification tracking
 created: "2026-04-11T20:24:05Z"
-updated: null
+updated: "2026-09-27T02:41:45Z"
 issue: 5249
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - bar
-    - spine
   data_type:
     - categorical
     - frequency

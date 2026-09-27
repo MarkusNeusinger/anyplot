@@ -27,8 +27,8 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 np.random.seed(42)
 
 tier_params = [
-    ("Low Income", 50, 300, 85, 27, 15),
-    ("Lower-Middle Income", 300, 950, 38, 11, 15),
+    ("Low Income", 35, 380, 85, 30, 15),
+    ("Lower-Middle Income", 380, 950, 38, 11, 15),
     ("Upper-Middle Income", 950, 3200, 14, 5, 15),
     ("High Income", 3200, 8500, 5, 2, 15),
 ]
@@ -94,11 +94,11 @@ sns.scatterplot(
     size="Population (M)",
     hue="Income Tier",
     hue_order=hue_order,
-    sizes=(60, 900),
-    alpha=0.65,
+    sizes=(50, 650),
+    alpha=0.58,
     palette=tier_colors,
     edgecolor=PAGE_BG,
-    linewidth=0.9,
+    linewidth=1.0,
     legend="brief",
     ax=ax,
 )
@@ -129,8 +129,11 @@ ax.spines["bottom"].set_color(INK_SOFT)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8)
 ax.xaxis.grid(True, alpha=0.15, linewidth=0.8)
 
-# Move legend first, then configure the resulting object to avoid losing changes
-sns.move_legend(ax, "upper right", frameon=True)
+# Move legend first, then configure the resulting object to avoid losing changes.
+# Tightened padding (borderpad/labelspacing/handletextpad) and a smaller
+# markerscale keep the combined hue+size legend from dominating the upper-right
+# quadrant, since the size legend's largest swatch tracks the 650pt max marker.
+sns.move_legend(ax, "upper right", frameon=True, borderpad=0.5, labelspacing=0.35, handletextpad=0.5, markerscale=0.85)
 legend = ax.get_legend()
 legend.set_title("Income Tier / Population (M)", prop={"size": 8})
 legend.get_title().set_fontweight("semibold")
@@ -141,7 +144,7 @@ for handle, text_obj in zip(legend.legend_handles, legend.texts, strict=False):
     text_obj.set_color(INK)
     # Size handles (non-tier labels): the combined hue+size legend renders these
     # as Line2D markers, not patches, so recolor via the marker face/edge setters.
-    # alpha is set explicitly to 1.0 (not inherited from the scatter's alpha=0.65)
+    # alpha is set explicitly to 1.0 (not inherited from the scatter's alpha=0.58)
     # so the swatch stays legible against the dark elevated panel.
     if text_obj.get_text() not in tier_names:
         handle.set_markerfacecolor(INK_SOFT)
