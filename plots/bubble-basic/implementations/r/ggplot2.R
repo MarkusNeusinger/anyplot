@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' bubble-basic: Basic Bubble Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 91/100 | Updated: 2026-09-27
+#' Quality: 89/100 | Updated: 2026-09-27
 
 library(ggplot2)
 library(dplyr)
@@ -18,7 +18,10 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 GRID        <- if (THEME == "light") "#D3D1CA" else "#3A3A37"
 
-IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030")
+# Slot 5 (#AE3030, matte red) is the deferred semantic anchor for bad/loss/
+# error — there's no such category here, so Sporting Goods takes slot 6
+# (cyan) instead of spending red on an ordinary category.
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233", "#2ABCCD")
 
 # Data — synthetic retail product-portfolio scenario: customer satisfaction
 # score vs. average retail price, bubble = monthly sales volume, colored by
@@ -76,8 +79,8 @@ top_sellers <- products |>
     dplyr::arrange(satisfaction) |>
     dplyr::mutate(
         direction   = rep(c(1, -1), length.out = dplyr::n()),
-        label_y     = price + direction * pmax(8, price * 0.25),
-        label_vjust = ifelse(direction > 0, -0.4, 1.4)
+        label_y     = price + direction * pmax(14, price * 0.34),
+        label_vjust = ifelse(direction > 0, -0.6, 1.6)
     )
 
 # Plot
@@ -152,6 +155,7 @@ p <- ggplot(products, aes(
         legend.key.size    = unit(0.35, "cm"),
         legend.key.spacing.y = unit(1, "pt"),
         legend.spacing.y   = unit(2, "pt"),
+        legend.justification = "center",
         legend.margin      = margin(4, 6, 4, 6),
         legend.box.spacing = unit(6, "pt"),
         plot.margin        = margin(12, 12, 10, 10)
