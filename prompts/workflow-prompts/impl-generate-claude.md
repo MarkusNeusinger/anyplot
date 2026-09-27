@@ -77,7 +77,7 @@ When regenerating an existing implementation, you MUST read these BEFORE writing
 - Preserve the bits listed under "Strengths" unchanged.
 - **Address the weaknesses that are real per the spec's `## What a good version looks like` section** (and each ❌ item in the checklist that is real in the same sense). A weakness that asks for something the section calls expected — e.g. "bubbles overlap in the dense cluster" on a bubble chart that already uses translucency and outlines — is not real: decline it and name it with a one-line reason in the commit body. Without the section, judge against Description, Data and Notes.
 - **Answer overlap weaknesses through data generation, marker size or alpha — never by moving marks off their data values.** No force/collision simulations, nudge or declutter passes, or offsets on data marks; moving labels is fine. The review deducts displaced marks (SC-03).
-- **Keep the data scenario and the variant.** Same domain, same story, same encodings unless a weakness names the scenario itself as the problem or a change request (below) asks for a different one. On a `-basic` spec, add no new encodings or elements (derived colour channels, trend lines, highlight bands, annotation layers) — the review scores them as the wrong variant.
+- **Keep the data scenario and the variant.** Same domain, same story, same encodings unless a weakness names the scenario itself as the problem or a change request (below) asks for a different one. On a `-basic` spec, add no new encodings or elements (derived color channels, trend lines, highlight bands, annotation layers) — the review scores them as the wrong variant.
 - **Don't add code for changes that don't show.** Every edit should be visible in the render or fix a named code-quality item; a longer file with an unchanged picture is not an improvement.
 - **Canvas size: the Step 0 contract is non-negotiable on regen.** The previous file's `figsize` / `dpi` / `width` / `height` / `scale_factor` values are **historical**, never current — overwrite them to the canonical pair from `prompts/library/{LIBRARY}.md` as your *first* edit, before touching anything else. The post-render gate checks this and re-triggers repair on drift; do not let that fire.
 - **Base style wins on everything else.** If anything in `prompts/default-style-guide.md` or `prompts/library/{LIBRARY}.md` differs from the previous implementation, update the previous code to match. This includes **font sizes** (title, axis labels, tick labels, legend), **marker and line sizes**, **palette** (Imprint palette positions), **theme tokens** (background, INK, INK_SOFT, ELEVATED_BG, GRID), and **chrome** (spines, gridlines, legend frame). The previous review may not have flagged the old values because they were valid at the time — that does NOT make them current. Always re-read the library prompt's "Sizing" section and the style guide's "Visual Sizing Defaults" table on every regen and align. Also normalise any stale "anyplot palette" wording in the previous code's comments to "Imprint palette".
@@ -291,7 +291,7 @@ Regen from quality 78. Addressed:
 - text legibility on dark background
 - grid contrast (VQ-03 failed → fixed)
 Declined:
-- "points overlap in the dense centre" — expected per the spec's
+- "points overlap in the dense center" — expected per the spec's
   characteristic section; alpha already keeps every point visible
 ```
 

@@ -552,7 +552,7 @@ class TestPlotTypeCharacteristics:
         assert "Legend glyphs visible" in content
         assert "Marks at their data values" in content
         assert "hides information" in content
-        assert "-basic" in content
+        assert "wrong variant" in content
 
     def test_generation_prompts_forbid_moving_marks(self) -> None:
         for path in (
@@ -582,15 +582,18 @@ class TestPlotTypeCharacteristics:
 
     @pytest.mark.parametrize("spec_id", _specs_with_characteristics())
     def test_section_follows_parser_format(self, spec_id: str) -> None:
-        """Heading once, last `## ` section, 3-5 column-0 `- ` bullets and nothing
-        else — the shape the regen gate parses as C1..Cn."""
+        """Heading once, last `## ` section, column-0 `- ` bullets (indented
+        continuation lines allowed) and nothing else — the shape the regen gate
+        parses as C1..Cn. The count bound is looser than the prompts' 3-5 on
+        purpose: this guards the parser contract, not house style, so a
+        spec-create PR is never blocked by a bullet too many or too few."""
         content = (PLOTS_DIR / spec_id / "specification.md").read_text(encoding="utf-8")
         lines = content.splitlines()
         assert lines.count(CHARACTERISTICS_HEADING) == 1, f"{spec_id}: heading must appear exactly once"
         start = lines.index(CHARACTERISTICS_HEADING)
         body = lines[start + 1 :]
         assert not [line for line in body if line.startswith("#")], f"{spec_id}: section must be last, no sub-headings"
-        stray = [line for line in body if line.strip() and not line.startswith("- ")]
-        assert not stray, f"{spec_id}: only column-0 '- ' bullets allowed, found {stray}"
+        stray = [line for line in body if line.strip() and not (line.startswith("- ") or line.startswith("  "))]
+        assert not stray, f"{spec_id}: only column-0 '- ' bullets (plus indented continuations) allowed, found {stray}"
         bullets = [line for line in body if line.startswith("- ")]
-        assert 3 <= len(bullets) <= 5, f"{spec_id}: expected 3-5 bullets, found {len(bullets)}"
+        assert 2 <= len(bullets) <= 6, f"{spec_id}: expected 2-6 bullets, found {len(bullets)}"

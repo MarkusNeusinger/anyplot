@@ -496,7 +496,7 @@ anyplot renders at **3200 × 1800 px** (16:9) or **2400 × 2400 px** (1:1) — l
 - Tell a story through good data choice and clear visual hierarchy
 - **Annotation restraint (DEFAULT):** Do NOT add text annotations, callout boxes, arrows, or labeled data points unless the specification explicitly asks for them (e.g., spec-id contains "annotated"). Good storytelling comes from visual design — color contrast, size variation, strategic data choice — not text overlays.
 - **When annotations ARE appropriate:** Only when spec-id contains "annotated" or the spec explicitly describes annotations as a required feature. Even then, use sparingly.
-- **Respect the spec variant:** If the spec-id contains `basic`, storytelling comes from well-chosen data and clean design — NOT from adding annotations, trendlines, or extra visual elements. A basic scatter plot should remain a basic scatter plot. Extra encodings on a `-basic` spec (a colour channel from a derived variable, per-group fits, highlight bands, annotation layers) are scored as the wrong variant (SC-01) and earn no storytelling credit.
+- **Respect the spec variant:** If the spec-id contains `basic`, storytelling comes from well-chosen data and clean design — NOT from adding annotations, trendlines, or extra visual elements. A basic scatter plot should remain a basic scatter plot. Extra encodings on a `-basic` spec (a color channel from a derived variable, per-group fits, highlight bands, annotation layers) are scored as the wrong variant (SC-01) and earn no storytelling credit.
 
 ## Output Files
 

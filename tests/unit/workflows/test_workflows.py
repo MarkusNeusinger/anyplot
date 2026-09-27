@@ -392,3 +392,28 @@ class TestWorkflowTriggers:
                 assert "push" in on_trigger or "pull_request" in on_trigger, (
                     f"CI workflow {filename} should trigger on push or PR"
                 )
+
+
+class TestSpecCreateCharacteristicsSection:
+    """spec-create must ask for the review's yardstick section in BOTH Claude
+    prompts (first attempt and retry), in the one-line-per-bullet shape the
+    regen gate's C1..Cn parser reads."""
+
+    def _spec_create_prompts(self) -> dict[str, str]:
+        workflow = load_workflow("spec-create.yml")
+        prompts: dict[str, str] = {}
+        for job in workflow["jobs"].values():
+            for step in job.get("steps", []):
+                prompt = (step.get("with") or {}).get("prompt", "")
+                if "Task: Create New Specification" in prompt:
+                    prompts[step.get("id", step.get("name", "?"))] = prompt
+        return prompts
+
+    def test_first_attempt_and_retry_prompts_found(self) -> None:
+        assert len(self._spec_create_prompts()) == 2
+
+    def test_both_prompts_request_the_section(self) -> None:
+        for step_id, prompt in self._spec_create_prompts().items():
+            assert "## What a good version looks like" in prompt, step_id
+            assert "one line per bullet (no wrapped continuation lines)" in prompt, step_id
+            assert "expected, not a defect" in prompt, step_id

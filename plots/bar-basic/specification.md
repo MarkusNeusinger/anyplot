@@ -28,6 +28,6 @@ A vertical bar chart that displays categorical data with rectangular bars whose 
 
 - One vertical bar per category rising from a zero baseline, so bar height stays proportional to the value; the value axis is never truncated.
 - Bars share one width and even gaps, and categories follow a meaningful order — by value, or their natural order (months, age groups) when they have one.
-- One colour for all bars is correct; highlighting one or two bars in an accent colour, as the Notes allow, is the only emphasis the basic variant needs.
+- One color for all bars is correct; highlighting a bar or two in an accent color, as the Notes allow, is the only emphasis the basic variant needs.
 - Value labels are optional; when present they sit clear of the bar ends, stay readable in both themes and do not collide with each other.
 - Unequal heights, including one dominant or one near-empty bar, are the point of the chart, not an imbalance to fix; the basic variant adds no error bars, stacking, grouping or trend line.
