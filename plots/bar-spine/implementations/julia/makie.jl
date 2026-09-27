@@ -17,6 +17,14 @@ const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 # ordinal 1st/2nd slots (see default-style-guide.md "Semantic exception").
 const RETAINED_COLOR = colorant"#009E73"  # good outcome — brand green
 const CHURNED_COLOR  = colorant"#AE3030"  # bad outcome — matte red anchor
+const CHURNED_HATCH  = RGB(0.6 * CHURNED_COLOR.r, 0.6 * CHURNED_COLOR.g, 0.6 * CHURNED_COLOR.b)
+
+# Churned segments carry a diagonal hatch on top of the red fill — a
+# CairoMakie-native `Pattern` texture, not achievable as a plain `color=`
+# in most static libraries — so the bad-outcome/good-outcome distinction
+# survives red-green color-vision deficiency, not just hue.
+const CHURNED_FILL = Makie.Pattern('/', linecolor = CHURNED_HATCH, background_color = CHURNED_COLOR,
+                                    width = 2, tilesize = (14, 14))
 
 # --- Data -----------------------------------------------------------------
 # Customer churn by subscription tier: bar width = tier size (marginal
@@ -41,7 +49,7 @@ fig = Figure(
 
 ax = Axis(
     fig[1, 1];
-    title              = "bar-spine · julia · makie · anyplot.ai",
+    title              = "SaaS Subscription Churn · bar-spine · julia · makie · anyplot.ai",
     titlesize          = 20,
     titlecolor         = INK,
     xlabel             = "Subscription Tier  (bar width ∝ customer count)",
@@ -75,7 +83,7 @@ for i in eachindex(tiers)
     poly!(ax, Rect2f(left, 0, right - left, split);
           color = RETAINED_COLOR, strokecolor = PAGE_BG, strokewidth = 3)
     poly!(ax, Rect2f(left, split, right - left, 1 - split);
-          color = CHURNED_COLOR, strokecolor = PAGE_BG, strokewidth = 3)
+          color = CHURNED_FILL, strokecolor = PAGE_BG, strokewidth = 3)
 
     text!(ax, (left + right) / 2, split / 2;
           text = "$(round(Int, split * 100))%", align = (:center, :center),
@@ -87,7 +95,7 @@ end
 
 Legend(
     fig[1, 2],
-    [PolyElement(color = RETAINED_COLOR), PolyElement(color = CHURNED_COLOR)],
+    [PolyElement(color = RETAINED_COLOR), PolyElement(color = CHURNED_FILL)],
     ["Retained", "Churned"];
     labelcolor = INK_SOFT,
     framevisible = false,
