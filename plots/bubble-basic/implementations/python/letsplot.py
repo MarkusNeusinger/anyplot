@@ -89,7 +89,7 @@ plot = (
         tooltips="none",
     )
     + geom_point(
-        alpha=0.42,
+        alpha=0.32,
         tooltips=layer_tooltips()
         .format("payroll", "${.0f}M")
         .format("win_pct", "{.1f}%")
@@ -99,12 +99,12 @@ plot = (
         .line("Win Rate|@win_pct")
         .line("Avg. Attendance|@attendance"),
     )
-    + scale_size_area(max_size=16, name="Avg. Attendance (K)", breaks=[15, 25, 35, 45])
+    + scale_size_area(max_size=13, name="Avg. Attendance (K)", breaks=[15, 25, 35, 45])
     + scale_color_manual(values=IMPRINT_PALETTE[:2], name="Conference")
     + scale_x_continuous(expand=[0.02, 5])
     + guides(
         color=guide_legend(nrow=1, override_aes={"size": 7}),
-        size=guide_legend(nrow=1, override_aes={"color": IMPRINT_PALETTE[0], "alpha": 0.42}),
+        size=guide_legend(nrow=1, override_aes={"color": IMPRINT_PALETTE[0], "alpha": 0.32}),
     )
     + labs(x="Team Payroll (Million USD)", y="Win Rate (%)", title="bubble-basic · python · letsplot · anyplot.ai")
     + theme_minimal()
@@ -121,7 +121,9 @@ plot = (
         plot_margin=[30, 20, 20, 20],
         legend_title=element_text(size=10, color=INK),
         legend_text=element_text(size=10, color=INK_SOFT),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.5),
+        # color must match fill: legend frames are removed per the
+        # decoration-removal checklist (no visible box border).
+        legend_background=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG),
         panel_grid_major=element_line(size=0.3, color=RULE),
         panel_grid_minor=element_blank(),
         legend_position="bottom",
