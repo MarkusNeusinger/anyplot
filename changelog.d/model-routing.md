@@ -16,10 +16,10 @@
   without a model (`impl-review-retry.yml`, the watchdog, a manual rerun)
   read that line back instead of falling back to Sonnet, so an explicit pin
   survives them. Without a readable `origin/main`, generation fails rather
-  than guessing a first run.
+  than guessing a first run. (#11947)
 - **`bulk-generate.yml` paces dispatches 180 s apart for Opus runs.** The
   default pause is 180 s for model `auto` or `opus` and stays 120 s for a
-  pinned `sonnet` or `haiku`; `pace_seconds` still overrides it.
+  pinned `sonnet` or `haiku`; `pace_seconds` still overrides it. (#11947)
 - **The daily-regen spec polish and similarity audit run on Sonnet instead of
   Haiku.** Both pre-flight steps in `daily-regen.yml` stay pinned regardless of
-  the run's `model` input.
+  the run's `model` input. (#11947)
