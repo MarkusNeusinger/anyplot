@@ -64,7 +64,10 @@ const yAxis = g.append("g").call(d3.axisLeft(y));
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
   ax.selectAll("line").attr("stroke", t.inkSoft);
-  ax.select(".domain").attr("stroke", t.inkSoft);
+  // Domain lines stay theme-adaptive but softened (opacity, not inkSoft at
+  // full strength) so the L-shaped frame reads as a subtle anchor rather
+  // than a bold outline, matching the gridlines' restraint.
+  ax.select(".domain").attr("stroke", t.inkSoft).attr("stroke-opacity", 0.55);
 }
 
 // --- Axis labels --------------------------------------------------------------
@@ -93,7 +96,8 @@ g.append("text")
 // keeps rendered positions tracking their true data coordinate even more
 // tightly, while the collision force still has enough headroom over 380
 // relaxation ticks to fully separate the smaller bubbles in the densest
-// region.
+// region. Rendered centers are therefore a close approximation of
+// (funding, growth), not the literal data point.
 data.forEach((d) => {
   d.x = x(d.funding);
   d.y = y(d.growth);
@@ -105,20 +109,12 @@ const declutter = d3.forceSimulation(data)
   .stop();
 for (let i = 0; i < 380; i++) declutter.tick();
 
-// --- Bubbles --------------------------------------------------------------
-g.selectAll("circle.bubble").data(data).join("circle")
-  .attr("class", "bubble")
-  .attr("cx", (d) => d.x)
-  .attr("cy", (d) => d.y)
-  .attr("r", (d) => r(d.team))
-  .attr("fill", t.palette[0])
-  .attr("fill-opacity", 0.58)
-  .attr("stroke", t.pageBg)
-  .attr("stroke-width", (d) => strokeWidth(d.team));
-
-// --- Trend annotation -------------------------------------------------------
+// --- Trend line -------------------------------------------------------------
 // Least-squares fit of growth vs. funding, drawn as a dashed guide so the
 // negative correlation is called out explicitly rather than left implicit.
+// Drawn BEFORE the bubbles (not after) so the translucent bubble fills sit
+// on top of the dashes instead of the dashes cutting across a bubble —
+// a cleaner z-order than layering the line on the very top.
 const sumX = d3.sum(data, (d) => d.funding);
 const sumY = d3.sum(data, (d) => d.growth);
 const sumXY = d3.sum(data, (d) => d.funding * d.growth);
@@ -137,6 +133,20 @@ g.append("line")
   .attr("stroke-dasharray", "8,6")
   .attr("stroke-opacity", 0.75);
 
+// --- Bubbles --------------------------------------------------------------
+g.selectAll("circle.bubble").data(data).join("circle")
+  .attr("class", "bubble")
+  .attr("cx", (d) => d.x)
+  .attr("cy", (d) => d.y)
+  .attr("r", (d) => r(d.team))
+  .attr("fill", t.palette[0])
+  .attr("fill-opacity", 0.58)
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", (d) => strokeWidth(d.team));
+
+// --- Trend annotation card ---------------------------------------------------
+// Drawn last (on top of both the line and the bubbles) so the callout text
+// stays legible against the busy field behind it.
 const trendLabelX = x(fundingMin) + (x(fundingMax) - x(fundingMin)) * 0.74;
 const trendLabelY = y(slope * (fundingMin + (fundingMax - fundingMin) * 0.74) + intercept) - 75;
 const trendLabel = g.append("text")
@@ -222,7 +232,7 @@ legendValues.forEach((v, i) => {
     .attr("y", baselineY + 22)
     .attr("text-anchor", "middle")
     .attr("fill", t.inkSoft)
-    .style("font-size", "13px")
+    .style("font-size", "14px")
     .text(v);
 });
 
