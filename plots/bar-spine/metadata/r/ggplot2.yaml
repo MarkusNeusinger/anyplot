@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: bar-spine
 created: '2026-09-02T12:37:13Z'
-updated: '2026-09-27T03:27:13Z'
+updated: '2026-09-27T03:35:25Z'
 generated_by: claude-sonnet
 workflow_run: 36290966472
 issue: 5249
@@ -12,46 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - Manual geom_rect-based spine plot construction with correctly cumulative proportional
-    widths (marginal frequency) and heights (conditional proportions) — the technically
-    correct approach since ggplot2 has no built-in spineplot geom.
-  - Distinctive dashed trend-line + point-marker overlay connecting the retention
-    rate across tiers, reinforced by the subtitle — turns the width+color pattern
-    into an explicit data story.
-  - Correct semantic color mapping (brand green = Retained, matte red = Churned) using
-    the exact Imprint hex values, identical across both themes — only chrome flips.
-  - Percentage labels are filtered to segments above 6% of bar height, correctly omitting
-    the label from the tiny 4% Enterprise-churn sliver to avoid clutter.
-  - 'Clean theme-adaptive chrome: background, ink tokens, and grid all flip correctly
-    between light and dark renders while data colors stay pixel-identical.'
+  - 'Correct spine-plot semantics: bar widths proportional to marginal tier frequency,
+    segment heights normalized to 100%, bars adjacent with zero gap.'
+  - Title fontsize auto-scales with character count (12 * 58 / nchar(title)) so the
+    descriptive-prefixed title stays proportioned instead of overflowing.
+  - The retained/churned boundary trend line is explicitly designed and commented
+    as structural chrome (not a third data series), reinforcing the 'retention climbs
+    with tier' story without confusing the legend.
+  - Percentage-label placement is offset away from the trend-line marker so labels
+    never crowd it, even in the thinnest churn segments (8%, 18%).
+  - Semantic palette use (green = retained/good, red = churned/bad) matches the documented
+    Imprint semantic-exception order.
   weaknesses:
-  - Title runs very close to the canvas's right edge (~95%+ of width) even after the
-    length-based fontsize scaling formula was applied — reduce the fontsize slightly
-    further or add a bit more right margin so the title isn't crowding the border.
-  - The '8%' churn label for the Premium tier sits very close to the retention trend-line
-    marker directly above it — nudge the label down or the marker up slightly to add
-    breathing room.
-  - Red/green is the only hue distinguishing Retained vs. Churned; position and percentage
-    labels provide redundant cues, but a CVD-safe accent (subtle outline or texture)
-    would strengthen accessibility further.
+  - Retained/Churned still relies on a red-green hue pair as one of the distinguishing
+    cues; position (bottom/top) and the printed percentages mitigate this for CVD
+    viewers, but it's worth keeping in mind if this spec is ever extended to more
+    categories.
+  - Trend-line point markers (size 2.2) are on the small side at full 3200x1800 resolution
+    relative to the bold percentage labels - could be bumped slightly for better visual
+    parity.
+  - Library mastery is solid but generic grammar-of-graphics usage (geom_rect/geom_line/geom_point/geom_text);
+    no ggplot2-distinctive feature (e.g. patchwork, custom stat_*) beyond what any
+    grammar-of-graphics tool provides.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Bold dark title "Customer Retention by Subscription Tier · bar-spine · r · ggplot2 · anyplot.ai" at top, italic gray subtitle below it, dark axis titles ("Share of Customers" / "Subscription Tier (bar width ∝ customer base)"), gray tick labels along both axes, and a "Status" legend at the right with green "Retained" / red "Churned" swatches. Subtle horizontal gridlines only.
-      Data: Four adjacent variable-width bars (Basic, Standard, Premium, Enterprise) stacked green-over-red, normalized to 100% height. Bold white bold percentage labels (68%, 32%, 82%, 18%, 92%, 8%, 96%) inside segments large enough to hold them (Enterprise's 4% churn sliver correctly omits its label). A black dashed line with white-ringed point markers tracks the retention-rate boundary across tiers, rising left to right.
-      Legibility verdict: PASS — all title, subtitle, axis, tick, and legend text is clearly readable against the light background; no light-on-light text found.
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Bold dark title "Customer Retention by Subscription Tier · bar-spine · r · ggplot2 · anyplot.ai", italic grey subtitle, dark axis titles, softer grey tick labels, legend "Status" (Retained/Churned) on the right — all clearly readable against the light background.
+      Data: Four variable-width bars (Basic, Standard, Premium, Enterprise), each stacked to 100% with a green (#009E73) "Retained" base and a red (#AE3030) "Churned" cap. A dashed reference trend line with white-filled/dark-outlined circle markers traces the retained/churned boundary. Bold near-white percentage labels sit inside each segment.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same layout as the light render with all chrome tokens flipped to light colors — white/cream title, light-gray subtitle, light axis titles and tick labels, and a "Status" legend with the same swatches. Gridlines are faint and appropriately subtle against the dark surface.
-      Data: Identical green (#009E73) and red (#AE3030) segment colors to the light render, confirming the data palette is theme-invariant. The trend line and its point markers flip to white so they remain visible on the dark surface, tracking the same tier-over-tier retention climb.
-      Legibility verdict: PASS — title, subtitle, axis titles, tick labels, and legend text are all clearly readable light-on-dark; no dark-on-dark failures found.
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Title, subtitle, axis titles, tick labels, and legend all flip to light ink and remain clearly legible; no dark-on-dark failures observed anywhere.
+      Data: Green/red segment colors are pixel-identical to the light render (only chrome flipped, as required). The trend line and marker outline flip to a light off-white and stay visible against both fills. Percentage labels remain legible near-white text on both segment colors.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -59,72 +59,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; title fontsize correctly scaled
-          down via the length formula for the long descriptive+mandated title.
+        comment: Font sizes explicit and readable in both themes; title auto-scales
+          with length
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: No true collisions, but the Premium '8%' label sits very close to
-          the trend-line marker above it.
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Segments, trend line, and markers are all clearly visible; the sub-6%
-          label filter correctly avoids an unreadable tiny label.
+        comment: Percentage labels deliberately offset from trend-line markers; no
+          collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Trend-line markers (size 2.2) slightly small relative to bold percentage
+          labels
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Retained/Churned rely on green vs. red hue; position and percentage
-          labels provide redundant encoding but hue alone is CVD-marginal.
+        passed: true
+        comment: Red-green pair is redundantly encoded via consistent bottom/top position
+          and printed percentages
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Title runs close to the right edge
-          (~95% width) despite fontsize scaling.
+        comment: Canvas gate passed; good proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units/context; mandated title format
-          followed with a descriptive prefix.
+        comment: Descriptive axis labels with units (%, bar width proportional explanation)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Retained), semantic-exception red #AE3030
-          (Churned); backgrounds match #FAF8F1/#1A1A17 in both themes.'
+        comment: 'First series #009E73, semantic-exception red #AE3030 for churned;
+          correct light/dark backgrounds'
     design_excellence:
-      score: 15
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
-        comment: Custom palette, deliberate hierarchy (title/subtitle/labels/trend
-          line) beyond generic defaults.
+        passed: true
+        comment: Semantic palette, auto-scaled title fontsize, deliberate marker/label
+          placement
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: Minimal theme, subtle y-only grid, generous whitespace; spines effectively
-          removed.
+        passed: true
+        comment: Spines removed via theme_minimal, x-gridlines dropped, ticks blank
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
-        comment: Trend-line overlay plus subtitle explicitly narrates the retention
-          climb — clear focal point.
+        passed: true
+        comment: Subtitle + trend line + labels build a clear retention-by-tier narrative
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct spine plot: width = marginal frequency, height normalized
-          to 100%, subdivisions = conditional distribution.'
+        comment: 'Correct spine-plot geometry: width proportional to marginal count,
+          normalized to 100%'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Adjacent bars, distinct colors, legend, centered x labels, percentage
-          labels where space permits — all present.
+        comment: Adjacent bars, distinct colors + legend, centered x labels, in-segment
+          percentage labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = tier (width-encoded), Y = cumulative share summing to 100%.
+        comment: x = tier (width-weighted), y = conditional proportion
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title matches mandated format with descriptive prefix; legend labels
-          match data (Retained/Churned).
+          match data
     data_quality:
       score: 15
       max: 15
@@ -165,20 +164,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both width and height dimensions of the spine plot are exercised
-          with 4 tiers x 2 statuses.
+        comment: All spec aspects shown, including optional percentage labels
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SaaS subscription retention by tier is plausible and neutral.
+        comment: SaaS tier sizes and retention rates are plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Customer counts (12-816) are sensible for a SaaS customer base example.
+        comment: Customer counts and rates sensible for a subscription business
     code_quality:
       score: 10
       max: 10
@@ -188,58 +186,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward dplyr pipeline.
+        comment: No functions/classes, linear dplyr pipeline
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present; data is fully deterministic hardcoded counts.
+        comment: set.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, scales, ragg all actually used.
+        comment: ggplot2, dplyr, scales, ragg all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a manual spine-plot construction; no fake
-          UI.
+        comment: No fake UI/interactivity, appropriately scoped
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct dimensions.
+        comment: ggsave via ragg::agg_png to plot-{THEME}.png
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        comment: geom_rect + cumsum is the standard idiomatic ggplot2 technique for
-          spine/mosaic plots, which have no built-in geom.
+        passed: true
+        comment: geom_rect + cumulative widths/heights is the standard ggplot2 idiom
+          for spine geometry
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        comment: The retention trend-line overlay across bars is a creative, non-boilerplate
-          addition.
+        passed: true
+        comment: Good use of scales::percent, but no library-unique feature beyond
+          grammar-of-graphics basics
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
-  - manual-ticks
   patterns:
   - groupby-aggregation
   dataprep:
   - cumulative-sum
+  - normalization
   styling:
-  - publication-ready
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
