@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 90/100 | Updated: 2026-09-27
+// Quality: 88/100 | Updated: 2026-09-27
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -13,6 +13,10 @@ function rand() {
   return seed / 0x7fffffff;
 }
 
+const X_MIN = -5;
+const X_MAX = 30;
+const Y_MIN = 10;
+const Y_MAX = 500;
 const Z_MIN = 10;
 const Z_MAX = 100;
 const R_MIN = 9;
@@ -31,113 +35,99 @@ function alphaForShare(share) {
   return 0.6 + 0.15 * (1 - frac);
 }
 
-const companies = [];
-for (let i = 0; i < 90; i += 1) {
-  const growthRate = -5 + rand() * 35;
-  const revenue = 10 + rand() * 490;
-  // Each company's share is relative to its own market segment, not a
-  // shared market — so these values do NOT sum to 100 across companies,
-  // unlike a conventional "market share" metric. Labelled as such below.
-  const segmentShare = Z_MIN + rand() * (Z_MAX - Z_MIN);
-  companies.push({ growthRate, revenue, segmentShare });
-}
+// Rough plot-area pixel box (mount minus title/axis/legend margins), used only
+// to space out bubbles below — it doesn't need to match the real layout exactly.
+const PLOT_W_PX = 1300;
+const PLOT_H_PX = 700;
 
-const X_RANGE = 35;
-const Y_RANGE = 490;
-const X_MIN = -5;
-const Y_MIN = 10;
-
-// Declutter pass: the densest region (~19-24% growth, $300-450M revenue)
-// otherwise lands several similarly sized bubbles almost exactly on top of
-// each other, which reads as one merged blob even with a page-bg stroke.
-// Nudge any pair closer than MIN_SEP (in axis-normalized space, so growth%
-// and revenue$ contribute comparably) apart along their connecting vector.
-const MIN_SEP = 0.035;
-for (let i = 1; i < companies.length; i += 1) {
-  for (let j = 0; j < i; j += 1) {
-    const dx = (companies[i].growthRate - companies[j].growthRate) / X_RANGE;
-    const dy = (companies[i].revenue - companies[j].revenue) / Y_RANGE;
-    const dist = Math.hypot(dx, dy);
-    if (dist > 0 && dist < MIN_SEP) {
-      const push = ((MIN_SEP - dist) / dist) * 0.5;
-      companies[i].growthRate = Math.min(X_MIN + X_RANGE, Math.max(X_MIN, companies[i].growthRate + dx * push * X_RANGE));
-      companies[i].revenue = Math.min(Y_MIN + Y_RANGE, Math.max(Y_MIN, companies[i].revenue + dy * push * Y_RANGE));
-    }
-  }
-}
-
-// Focal point: the standout company that ranks highest on BOTH growth and
-// share (normalized 0-1 and summed) — gives the viewer a guided insight
-// instead of a bare position+size encoding.
-const scored = companies.map((c) => {
-  const growthNorm = (c.growthRate - X_MIN) / X_RANGE;
-  const shareNorm = (c.segmentShare - Z_MIN) / (Z_MAX - Z_MIN);
-  return growthNorm + shareNorm;
-});
-let focalIndex = 0;
-scored.forEach((score, i) => {
-  if (score > scored[focalIndex]) focalIndex = i;
-});
-
-// Secondary cue: a high-scoring point that also has few neighbors nearby, so
-// its label lands in genuinely open space instead of overlapping the dense
-// cluster around it — a second, lighter-weight highlight so the chart isn't
-// a single point of interest floating over an undifferentiated scatter.
-function neighborCount(i) {
+// A candidate is rejected if it would land within 2+ neighbors' combined
+// radius: pairs may still touch (alpha blending is meant to handle that), but
+// 3-way-or-more fusions read as one indistinguishable blob.
+function closeNeighborCount(candidate, placed) {
   let count = 0;
-  companies.forEach((c, j) => {
-    if (j === i) return;
-    const dx = (c.growthRate - companies[i].growthRate) / X_RANGE;
-    const dy = (c.revenue - companies[i].revenue) / Y_RANGE;
-    if (Math.hypot(dx, dy) < 0.1) count += 1;
-  });
+  for (const p of placed) {
+    const dxPx = ((candidate.growthRate - p.growthRate) / (X_MAX - X_MIN)) * PLOT_W_PX;
+    const dyPx = ((candidate.revenue - p.revenue) / (Y_MAX - Y_MIN)) * PLOT_H_PX;
+    const dist = Math.hypot(dxPx, dyPx);
+    if (dist < (candidate.r + p.r) * 0.9) count += 1;
+  }
   return count;
 }
 
-const secondaryCandidates = companies
-  .map((c, i) => {
-    const dx = (c.growthRate - companies[focalIndex].growthRate) / X_RANGE;
-    const dy = (c.revenue - companies[focalIndex].revenue) / Y_RANGE;
-    return { i, distFromFocal: Math.hypot(dx, dy), neighbors: neighborCount(i) };
-  })
-  .filter((cand) => cand.i !== focalIndex && cand.distFromFocal >= 0.25)
-  .sort((a, b) => a.neighbors - b.neighbors || scored[b.i] - scored[a.i]);
+const companies = [];
+for (let i = 0; i < 70; i += 1) {
+  let candidate;
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const growthRate = X_MIN + rand() * (X_MAX - X_MIN);
+    const revenue = Y_MIN + rand() * (Y_MAX - Y_MIN);
+    // Each company's share is relative to its own market segment, not a
+    // shared market — so these values do NOT sum to 100 across companies,
+    // unlike a conventional "market share" metric. Labelled as such below.
+    const segmentShare = Z_MIN + rand() * (Z_MAX - Z_MIN);
+    candidate = { growthRate, revenue, segmentShare, r: radiusForShare(segmentShare) };
+    if (attempt === 9 || closeNeighborCount(candidate, companies) < 2) break;
+  }
+  companies.push(candidate);
+}
 
-const secondaryIndex = secondaryCandidates.length > 0 ? secondaryCandidates[0].i : -1;
+// Highlight one bubble as a focal point instead of leaving the chart a flat
+// scatter of equals — the largest segment share, kept away from the plot
+// edges so its label never risks clipping against the axes.
+const focal = companies
+  .filter((c) => {
+    const nx = (c.growthRate - X_MIN) / (X_MAX - X_MIN);
+    const ny = (c.revenue - Y_MIN) / (Y_MAX - Y_MIN);
+    return nx > 0.12 && nx < 0.88 && ny > 0.12 && ny < 0.88;
+  })
+  .reduce((best, c) => (c.segmentShare > best.segmentShare ? c : best));
+focal.isFocal = true;
 
 const [fr, fg, fb] = [1, 3, 5].map((i) => parseInt(t.palette[0].slice(i, i + 2), 16));
 const fillForShare = (share) => `rgba(${fr}, ${fg}, ${fb}, ${alphaForShare(share)})`;
-const seriesData = companies.map((c, i) => {
-  const isFocal = i === focalIndex;
-  return {
+const seriesData = companies.map((c) => {
+  const point = {
     x: c.growthRate,
     y: c.revenue,
     marker: {
-      radius: radiusForShare(c.segmentShare),
+      radius: c.r,
       fillColor: fillForShare(c.segmentShare),
       // Page-bg stroke carves a visible edge between overlapping same-color
-      // bubbles in the densest cluster. The focal point reuses the brand
-      // green at full opacity (not amber, which is reserved for warning/
-      // caution) so the highlight reads as "notable", not "alert".
-      lineColor: isFocal ? t.palette[0] : t.pageBg,
-      lineWidth: isFocal ? 3.5 : 3,
+      // bubbles instead of them reading as one merged blob.
+      lineColor: t.pageBg,
+      lineWidth: 3,
     },
     custom: { segmentShare: Math.round(c.segmentShare) },
   };
+  if (c.isFocal) {
+    const ny = (c.revenue - Y_MIN) / (Y_MAX - Y_MIN);
+    point.marker.lineColor = t.ink;
+    point.marker.lineWidth = 2.5;
+    point.dataLabels = {
+      enabled: true,
+      format: `Segment leader<br/>${Math.round(c.segmentShare)}% share`,
+      y: ny > 0.5 ? c.r + 20 : -(c.r + 20),
+      style: { color: t.ink, fontSize: "13px", fontWeight: "600", textOutline: "none" },
+    };
+  }
+  return point;
 });
 
 // --- Chart post-render helpers ------------------------------------------------
 function drawSizeLegend(chart) {
   // Highcharts core has no bubbleLegend (that lives in highcharts-more), so
-  // the size key is drawn manually in the reserved right margin.
+  // the size key is drawn manually in the reserved right margin, vertically
+  // centered in the plot area so leftover space splits evenly top/bottom.
   const legendX = chart.plotLeft + chart.plotWidth + 40;
-  let cursorY = chart.plotTop + 30;
+  const rowHeight = 2 * R_MAX + 16;
+  const titleHeight = 54;
+  const totalHeight = titleHeight + 3 * rowHeight;
+  let cursorY = chart.plotTop + Math.max(0, (chart.plotHeight - totalHeight) / 2);
 
   chart.renderer
     .text("Share of Own<br/>Market Segment (%)", legendX, cursorY, true)
     .css({ color: t.ink, fontSize: "15px", fontWeight: "600" })
     .add();
-  cursorY += 54;
+  cursorY += titleHeight;
 
   [Z_MIN, (Z_MIN + Z_MAX) / 2, Z_MAX].forEach((share) => {
     const r = radiusForShare(share);
@@ -150,62 +140,8 @@ function drawSizeLegend(chart) {
       .text(`${Math.round(share)}%`, legendX + 2 * R_MAX + 16, cy + 5)
       .css({ color: t.inkSoft, fontSize: "14px" })
       .add();
-    cursorY += 2 * R_MAX + 16;
+    cursorY += rowHeight;
   });
-}
-
-function highlightFocalPoint(chart) {
-  // Guide the viewer to one standout company (top-ranked on both growth and
-  // share) with a brand-green-ringed marker and a native Highcharts
-  // SVGRenderer "callout" label pointing at it — a focal point beyond the
-  // bare position+size encoding. Brand green (not amber, reserved for
-  // warning/caution) keeps the highlight read as "notable" rather than "alert".
-  const focal = companies[focalIndex];
-  const point = chart.series[0].points[focalIndex];
-  const anchorX = chart.plotLeft + point.plotX;
-  const anchorY = chart.plotTop + point.plotY;
-  const labelX = Math.min(anchorX + 60, chart.plotLeft + chart.plotWidth - 160);
-  const labelY = Math.max(anchorY - 70, chart.plotTop + 10);
-
-  chart.renderer
-    .label(
-      `Standout: ${focal.growthRate.toFixed(0)}% growth, ${Math.round(focal.segmentShare)}% segment share`,
-      labelX,
-      labelY,
-      "callout",
-      anchorX,
-      anchorY,
-    )
-    .css({ color: t.ink, fontSize: "13px", fontWeight: "600" })
-    .attr({ fill: t.elevatedBg, stroke: t.palette[0], "stroke-width": 1.5, padding: 8, r: 5, zIndex: 6 })
-    .add();
-}
-
-function highlightSecondaryPoint(chart) {
-  // A second, deliberately lighter-weight cue: a plain italic note on a thin
-  // dotted leader, no fill box or border. This gives the chart a secondary
-  // point of interest — beyond the single bordered focal callout — without
-  // competing with it for visual weight.
-  if (secondaryIndex < 0) return;
-  const secondary = companies[secondaryIndex];
-  const point = chart.series[0].points[secondaryIndex];
-  const anchorX = chart.plotLeft + point.plotX;
-  const anchorY = chart.plotTop + point.plotY;
-  const labelX = Math.min(Math.max(anchorX + 90, chart.plotLeft + 10), chart.plotLeft + chart.plotWidth - 195);
-  const labelY = Math.min(Math.max(anchorY - 60, chart.plotTop + 10), chart.plotTop + chart.plotHeight - 16);
-
-  chart.renderer
-    .path(["M", anchorX, anchorY, "L", labelX - 6, labelY + 6])
-    .attr({ stroke: t.inkSoft, "stroke-width": 1, dashstyle: "Dot", zIndex: 5 })
-    .add();
-  chart.renderer
-    .text(
-      `Also notable: ${secondary.growthRate.toFixed(0)}% growth, ${Math.round(secondary.segmentShare)}% share`,
-      labelX,
-      labelY,
-    )
-    .css({ color: t.inkSoft, fontSize: "12px", fontStyle: "italic" })
-    .add();
 }
 
 // --- Chart -------------------------------------------------------------------
@@ -276,7 +212,5 @@ Highcharts.chart(
   },
   function drawExtras(chart) {
     drawSizeLegend(chart);
-    highlightFocalPoint(chart);
-    highlightSecondaryPoint(chart);
   },
 );
