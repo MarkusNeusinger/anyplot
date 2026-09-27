@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-spine: Spine Plot for Two-Variable Proportions
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 92/100 | Created: 2026-09-02
+// Quality: 92/100 | Updated: 2026-09-27
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
@@ -31,7 +31,7 @@ const data = [
   { category: "Placebo", n: 120, counts: { Improved: 24, "No Change": 60, Worsened: 36 } },
   { category: "Low Dose", n: 95, counts: { Improved: 43, "No Change": 38, Worsened: 14 } },
   { category: "Medium Dose", n: 150, counts: { Improved: 98, "No Change": 37, Worsened: 15 } },
-  { category: "High Dose", n: 80, counts: { Improved: 56, "No Change": 16, Worsened: 8 } },
+  { category: "High Dose", n: 80, counts: { Improved: 52, "No Change": 18, Worsened: 10 } },
 ];
 
 // Improved/No Change/Worsened read as good/neutral/bad — semantic exception (default-style-guide.md)
@@ -43,20 +43,42 @@ const margin = { top: 155, right: 60, bottom: 115, left: 90 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
-// Bar width proportional to marginal count n; segments stacked to 100 %.
+// Bar width proportional to marginal count n; segments stacked to 100 % via
+// d3.stack's expand offset (exact fractions — no manual cumulative-sum bookkeeping).
 const grandTotal = d3.sum(data, (d) => d.n);
+const series = d3
+  .stack()
+  .keys(fillKeys)
+  .offset(d3.stackOffsetExpand)(data.map((d) => ({ ...d.counts })));
+
+// Largest-remainder rounding: floor every share, then hand the leftover whole
+// points to the segments with the biggest fractional part, so labels always
+// sum to exactly 100 instead of drifting to 99/101 under independent rounding.
+const roundToHundred = (pcts) => {
+  const floors = pcts.map((p) => Math.floor(p));
+  const leftover = 100 - d3.sum(floors);
+  const order = pcts
+    .map((p, i) => ({ i, frac: p - floors[i] }))
+    .sort((a, b) => b.frac - a.frac);
+  const rounded = floors.slice();
+  for (let k = 0; k < leftover; k++) rounded[order[k].i] += 1;
+  return rounded;
+};
+
 let cursor = 0;
-const bars = data.map((d) => {
+const bars = data.map((d, i) => {
   const barWidth = (d.n / grandTotal) * iw;
   const x0 = cursor;
   cursor += barWidth;
-  let stack = 0;
-  const segments = fillKeys.map((key) => {
-    const pct = (d.counts[key] / d.n) * 100;
-    const seg = { key, pct, y0: stack, y1: stack + pct };
-    stack += pct;
-    return seg;
-  });
+  const pcts = fillKeys.map((key) => (d.counts[key] / d.n) * 100);
+  const labels = roundToHundred(pcts);
+  const segments = fillKeys.map((key, k) => ({
+    key,
+    pct: pcts[k],
+    label: labels[k],
+    y0: series[k][i][0] * 100,
+    y1: series[k][i][1] * 100,
+  }));
   return { ...d, x0, barWidth, segments };
 });
 
@@ -114,7 +136,11 @@ barGroups.each(function (bar) {
 
   bar.segments.forEach((seg) => {
     const segHeight = y(seg.y0) - y(seg.y1);
-    if (segHeight < 34 || bar.barWidth < 50) return;
+    if (bar.barWidth < 50) return;
+    // Graceful degradation for thin bands: shrink the label one step before
+    // suppressing it outright, rather than jumping straight from 15px to gone.
+    const fontSize = segHeight >= 34 ? 15 : segHeight >= 22 ? 12 : null;
+    if (fontSize === null) return;
     group
       .append("text")
       .attr("x", bar.barWidth / 2)
@@ -122,9 +148,9 @@ barGroups.each(function (bar) {
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "central")
       .attr("fill", textColorFor(fillColor[seg.key]))
-      .style("font-size", "15px")
+      .style("font-size", `${fontSize}px`)
       .style("font-weight", "600")
-      .text(`${Math.round(seg.pct)}%`);
+      .text(`${seg.label}%`);
   });
 });
 
