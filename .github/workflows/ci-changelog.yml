@@ -44,11 +44,14 @@ jobs:
     # The two exempt authors, which are exactly the classes CLAUDE.md already
     # excuses and a release summarizes in aggregate:
     #
-    # * github-actions[bot] — the automated plot pipeline (spec-create,
-    #   impl-generate/review/repair/merge, spec auto-polish, daily-regen). Its
-    #   PRs touch only `plots/`, so the tool's own path exemption would pass
-    #   them anyway; skipping by author as well keeps the gate off the hundreds
-    #   of them per window entirely.
+    # * github-actions[bot] — the automated plot pipeline (impl-generate/
+    #   review/repair/merge, daily-regen). Its PRs touch only `plots/`, so the
+    #   tool's own path exemption would pass them anyway; skipping by author as
+    #   well keeps the gate off the hundreds of them per window entirely.
+    #   spec-create and spec auto-polish open their PRs as claude[bot] (so CI
+    #   runs on them without a manual approval) and are deliberately NOT
+    #   skipped here: the gate runs and passes on the `plots/` path exemption,
+    #   and a Claude PR that strays outside `plots/` still needs a fragment.
     # * dependabot[bot] — a bot can neither write a fragment nor reach for the
     #   label, so the gate would sit red on every Monday batch. A bump that DOES
     #   deserve a line reaches the changelog through the human PR carrying it.

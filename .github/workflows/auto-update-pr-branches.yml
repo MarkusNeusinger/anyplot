@@ -87,21 +87,29 @@ jobs:
           # it. The point is that the head now stays put, so a branch this
           # workflow already touched needs its gated run approved exactly
           # once instead of being re-gated every few minutes.
+          #
+          # Skip spec PRs (`specification/`) for the same reason. spec-create
+          # has Claude open them as claude[bot] precisely so their CI runs
+          # without an approval, and its merge job turns auto-merge on only
+          # while it waits (up to 15 minutes) for those checks. An update here
+          # would put a github-actions[bot] merge commit on the head — CI held
+          # at action_required, and a head that no longer matches the SHA the
+          # merge job verified, which makes it turn auto-merge off again.
           CANDIDATES=$(echo "$PRS" | jq -c '
             [ .[]
               | select(.autoMergeRequest != null)
-              | select(.headRefName | startswith("dependabot/") | not)
+              | select(.headRefName | (startswith("dependabot/") or startswith("specification/")) | not)
             ]
           ')
 
           SKIPPED=$(echo "$PRS" | jq '
             [ .[]
               | select(.autoMergeRequest != null)
-              | select(.headRefName | startswith("dependabot/"))
+              | select(.headRefName | startswith("dependabot/") or startswith("specification/"))
             ] | length
           ')
           if [[ "$SKIPPED" -gt 0 ]]; then
-            echo "::notice::Skipping $SKIPPED Dependabot PR(s) — updating them gates their CI behind manual approval, and the non-strict ruleset means being behind does not block the merge (see comment above)"
+            echo "::notice::Skipping $SKIPPED Dependabot/spec PR(s) — updating them gates their CI behind manual approval, and the non-strict ruleset means being behind does not block the merge (see comment above)"
           fi
 
           COUNT=$(echo "$CANDIDATES" | jq 'length')
