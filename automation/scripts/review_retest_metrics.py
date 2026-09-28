@@ -11,14 +11,18 @@ Record fields read here (written by ``review_retest.py collect``): ``cell``,
 when the session named none), ``model_alias``, ``ok``, ``error_class``,
 ``score_typed``, ``checklist`` (``{id: {"score", "max", "comment"}}``),
 ``checklist_sum``, ``weaknesses``, ``gate`` (``{"verdict", "prev_rescored",
-"code"}``), ``regen`` (the parsed ``review_regen.json``) and ``regen_counts``
+"code"}``), ``regen`` (the parsed ``review_regen.json``), ``regen_counts``
 (``{"total", "visible", "permission"}``, the gate record's improvement
-counts).
+counts) and ``spec_characteristics`` (``{"count", "permission"}``: how many
+characteristic bullets the spec the reviewer saw has, and which of them are
+"Expected, not a defect" bullets).
 
 Labels (from the set manifest, applied at report time so a corrected label
 re-scores old records): ``defects`` and ``permitted`` per item
-(``[{"id", "criteria", "match"}]``), ``expected`` gate verdicts per order and
-the pair ``class`` (``identity``, ``near-identical`` or ``different``).
+(``[{"id", "criteria", "match"}]``), ``fixes`` per regen item (the same shape:
+predecessor defects the forward new version fixes; ``None`` when the item is
+not labeled for carriers), ``expected`` gate verdicts per order and the pair
+``class`` (``identity``, ``near-identical`` or ``different``).
 """
 
 from __future__ import annotations
@@ -42,6 +46,9 @@ CRITERIA_IDS: tuple[str, ...] = (
     *(f"CQ-0{i}" for i in range(1, 6)),
     *(f"LM-0{i}" for i in range(1, 3)),
 )
+# The criteria a fixed defect can carry a regen merge on: DE and LM levels
+# never do, because stored reviews deduct them almost always (plan P3, D11).
+CARRIER_CRITERIA: tuple[str, ...] = tuple(c for c in CRITERIA_IDS if c[:2] in ("VQ", "SC", "DQ", "CQ"))
 APPROVAL_LINE = 90
 
 # Weakness topics, taxonomy v1. A weakness belongs to every topic it matches.
@@ -441,9 +448,46 @@ def _permission_citations(record: dict[str, Any]) -> int | None:
     return None
 
 
+def _canonical_ref(ref: Any) -> str:
+    """``c2`` -> ``C2``, ``New`` -> ``new``: the gate's own coercion of a ref."""
+    text = str(ref or "").strip()
+    return "new" if text.lower() == "new" else text.upper()
+
+
+def carrier_claimed(record: dict[str, Any], fixes: Sequence[dict[str, Any]]) -> bool | None:
+    """Whether a regen review cites an improvement that can carry a merge.
+
+    A carrier is a visible improvement the gate counts (not a permission, a
+    non-empty ``where_visible``) that either cites an affirmative
+    characteristic (a C id of the spec the reviewer saw that is not an
+    "Expected, not a defect" bullet; an unlabeled bullet counts as affirmative,
+    as the gate reads it) or whose ``what`` matches one of the pair's ``fixes``
+    labels. It needs no field of a newer review prompt, so it reads the same
+    under every rules version. ``None`` when the record does not say which
+    characteristics the spec had.
+    """
+    spec = record.get("spec_characteristics")
+    regen = record.get("regen")
+    if not isinstance(spec, dict) or not isinstance(spec.get("count"), int) or not isinstance(regen, dict):
+        return None
+    permission = {_canonical_ref(ref) for ref in spec.get("permission") or []}
+    affirmative = {f"C{i}" for i in range(1, spec["count"] + 1)} - permission
+    patterns = [re.compile(str(label.get("match") or r"(?!)"), re.IGNORECASE) for label in fixes]
+    for item in regen.get("improvements") or []:
+        if not isinstance(item, dict):
+            continue
+        ref = _canonical_ref(item.get("ref"))
+        if ref in permission or not str(item.get("where_visible") or "").strip():
+            continue
+        if ref in affirmative or any(p.search(str(item.get("what") or "")) for p in patterns):
+            return True
+    return False
+
+
 def gate_metrics(units: dict[str, list[dict[str, Any]]], labels: dict[str, dict[str, Any]]) -> dict[str, Any]:
     """Regen units: verdict stability and accuracy, score spread, tolerance
-    calibration on identity and near-identical pairs, and order bias."""
+    calibration on identity and near-identical pairs, order bias, and forward
+    merges without a labeled carrier."""
     verdict_groups: list[list[str]] = []
     correct: list[bool] = []
     rescored: list[list[float]] = []
@@ -454,6 +498,9 @@ def gate_metrics(units: dict[str, list[dict[str, Any]]], labels: dict[str, dict[
         "near-identical": {"below_tolerance": [], "visible_claims": []},
     }
     permission_cited: list[bool] = []
+    # Forward merges on items labeled for carriers: True when no carrier was cited.
+    uncarried: list[bool] = []
+    carrier_units = 0
     per_item: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(dict)
     for runs in units.values():
         item = str(runs[0]["item"])
@@ -467,6 +514,15 @@ def gate_metrics(units: dict[str, list[dict[str, Any]]], labels: dict[str, dict[
             verdict_groups.append(verdicts)
         if expected:
             correct.extend(v == expected for v in verdicts)
+        fixes = item_labels.get("fixes")
+        if order == "forward" and isinstance(fixes, list):
+            carrier_units += 1
+            for record in runs:
+                if (record.get("gate") or {}).get("verdict") != "merge":
+                    continue
+                claimed = carrier_claimed(record, fixes)
+                if claimed is not None:
+                    uncarried.append(not claimed)
         rs, ns, ds = [], [], []
         for record in runs:
             prev = (record.get("gate") or {}).get("prev_rescored")
@@ -529,6 +585,13 @@ def gate_metrics(units: dict[str, list[dict[str, Any]]], labels: dict[str, dict[
         # by the gate; a sign the reviewer misreads the characteristic kinds).
         "permission_cited": share(permission_cited),
         "permission_cited_n": len(permission_cited),
+        # Forward merges whose review cited no carrier (no visible improvement
+        # matching a `fixes` label or citing an affirmative C id), on the
+        # forward units of items labeled for carriers (`carrier_units`).
+        "merges_without_carrier": share(uncarried),
+        "merges_without_carrier_count": sum(uncarried),
+        "merges_without_carrier_n": len(uncarried),
+        "carrier_units": carrier_units,
     }
 
 

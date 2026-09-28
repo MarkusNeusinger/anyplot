@@ -1,0 +1,471 @@
+{
+  "version": 1,
+  "set": "v2",
+  "frozen_at": "2026-09-28T07:03:14Z",
+  "objects": {
+    "retest/sets/v2/r-bar-error-d3-pr11962/new-dark.png": {
+      "sha256": "77976fc960922ebaf726d6f1c4ce3014b1111690ea89bc2e0d7f6b8ea08bc713",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 48710
+    },
+    "retest/sets/v2/r-bar-error-d3-pr11962/new-light.png": {
+      "sha256": "88236d65fe0d1cea38efb5cbbed9588d2738fa88ab34ebeff16f3357380ce1d3",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 48441
+    },
+    "retest/sets/v2/r-bar-error-d3-pr11962/prev-dark.png": {
+      "sha256": "58605960b97f360f198de8fa8295f2dc645fd95c5ad961e9cb759f23cadbd5f8",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 92828
+    },
+    "retest/sets/v2/r-bar-error-d3-pr11962/prev-light.png": {
+      "sha256": "4bbb8c299167da6292d6c1d822cd61a90e60c1bf21afed2b7617d432e1fc787b",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 91565
+    },
+    "retest/sets/v2/r-bar-error-ggplot2-pr11960/new-dark.png": {
+      "sha256": "0affcc3b6d412374537e772dd3cd2f676a20878432ae69f544b1060625f3f15f",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 59223
+    },
+    "retest/sets/v2/r-bar-error-ggplot2-pr11960/new-light.png": {
+      "sha256": "3420fbafe4331df9ec8db67f19e8c9bc9bb008042de7751a7160a569a18a36b3",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 57594
+    },
+    "retest/sets/v2/r-bar-error-ggplot2-pr11960/prev-dark.png": {
+      "sha256": "d45724835c81c8c830cd00c6fcf23e9d1ae4e4ec77049432c65b7787e5cfda58",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 105410
+    },
+    "retest/sets/v2/r-bar-error-ggplot2-pr11960/prev-light.png": {
+      "sha256": "ec84fc9708e00106293914dedf14960edeb698c28a9e823c08db69bb1c079b00",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 105599
+    },
+    "retest/sets/v2/r-bar-error-makie-pr11963/new-dark.png": {
+      "sha256": "f573b3977c3949a81409a8062783539cc89a1f29c685ce3e9a8694f7418704af",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 51836
+    },
+    "retest/sets/v2/r-bar-error-makie-pr11963/new-light.png": {
+      "sha256": "7e42a3f9b19ff0102e04aa3468094616a3e8b7b765547e9ec86e4de4a11c7bf8",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 51815
+    },
+    "retest/sets/v2/r-bar-error-makie-pr11963/prev-dark.png": {
+      "sha256": "7d7abf5614d8d7f57fd87e19b0a4af275f47d13a9427994da6d71d7c5ab50ce5",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 90514
+    },
+    "retest/sets/v2/r-bar-error-makie-pr11963/prev-light.png": {
+      "sha256": "054264be614f245b4a19b79d95bbb4b4e1b6ee84afd43ee234580ffa22dcaca0",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 89715
+    },
+    "retest/sets/v2/r-bar-error-matplotlib-pr11958/new-dark.png": {
+      "sha256": "f61a77586624286505fefa22a03611e5116a9a9bf098950fca411f5081b775ec",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 58650
+    },
+    "retest/sets/v2/r-bar-error-matplotlib-pr11958/new-light.png": {
+      "sha256": "032803bf4810e47b241a0734f810ab24b8b465b96cfb0b72ad4c08e8e335557e",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 59238
+    },
+    "retest/sets/v2/r-bar-error-matplotlib-pr11958/prev-dark.png": {
+      "sha256": "12b129916ef0d296b82e5ce580937c4f4fba01239a6ddcd78e5349e6bd61c0c8",
+      "width": 4766,
+      "height": 2670,
+      "bytes": 170779
+    },
+    "retest/sets/v2/r-bar-error-matplotlib-pr11958/prev-light.png": {
+      "sha256": "1d8e4016230cea4f9a823c5c891e176d48fc6223be17150b886f557029f2b834",
+      "width": 4766,
+      "height": 2670,
+      "bytes": 171783
+    },
+    "retest/sets/v2/r-bar-error-plotly-pr11961/new-dark.png": {
+      "sha256": "5b5252daa2b4fa069b5a48dde1a62e0893221541f177582c06b6f5615498f43a",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 48278
+    },
+    "retest/sets/v2/r-bar-error-plotly-pr11961/new-light.png": {
+      "sha256": "80a3d95cf33db56e88998f7179aa1c8c1462c5576f4090ba289464d39b63e771",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 51124
+    },
+    "retest/sets/v2/r-bar-error-plotly-pr11961/prev-dark.png": {
+      "sha256": "b14d4c85372ed9c6fe71b42803dd5f6fbd9b934db172668db265666bf4f920bf",
+      "width": 4800,
+      "height": 2700,
+      "bytes": 183314
+    },
+    "retest/sets/v2/r-bar-error-plotly-pr11961/prev-light.png": {
+      "sha256": "095411d4843e5efae65fad53c4bb2bb714a0ecdcdf629d6edd31762af5be59f6",
+      "width": 4800,
+      "height": 2700,
+      "bytes": 184561
+    },
+    "retest/sets/v2/r-bubble-basic-d3-pr11951/new-dark.png": {
+      "sha256": "8e29ae06d4858612b48e88029c269ef5ce54cda5434d26d05226d9bf34e8af75",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 114582
+    },
+    "retest/sets/v2/r-bubble-basic-d3-pr11951/new-light.png": {
+      "sha256": "331d55daa713205bf613ec88c51f228e7d7609e6543b59b5326d7071e6e7eafa",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 94603
+    },
+    "retest/sets/v2/r-bubble-basic-d3-pr11951/prev-dark.png": {
+      "sha256": "cb7c8712957b026d1646673ef5a5fd8a15fa9d9121db844dea76480badb9d734",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 135317
+    },
+    "retest/sets/v2/r-bubble-basic-d3-pr11951/prev-light.png": {
+      "sha256": "89d2f4a3771826723055d7d8b9b6c78f739e3fffca078ea0b435b93104b9ed19",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 111865
+    },
+    "retest/sets/v2/r-bubble-basic-ggplot2-pr11953/new-dark.png": {
+      "sha256": "e76795e564b95d0574ff277716e819c77a6d483ef8296c7f8385c5e493438bde",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 196993
+    },
+    "retest/sets/v2/r-bubble-basic-ggplot2-pr11953/new-light.png": {
+      "sha256": "d291ce54b6481cc568a2dde3f87afd8668e72bc1a7039cbb6c335f0e10dc284c",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 209428
+    },
+    "retest/sets/v2/r-bubble-basic-ggplot2-pr11953/prev-dark.png": {
+      "sha256": "47f84a34eb2bf2be2604d0d0549038149f666cfdbb2c1d8a47d58ae8c5a41e9c",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 529272
+    },
+    "retest/sets/v2/r-bubble-basic-ggplot2-pr11953/prev-light.png": {
+      "sha256": "26458faa46d8047f4166552350c45536a0a0574a74d8a00afda06274ec6fae01",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 557545
+    },
+    "retest/sets/v2/r-bubble-basic-highcharts-pr11952/new-dark.png": {
+      "sha256": "07d6f05572a2d8e7a44d8c5e0873505f2d2c674fa32a1e5750b3ebe7963bdd75",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 144709
+    },
+    "retest/sets/v2/r-bubble-basic-highcharts-pr11952/new-light.png": {
+      "sha256": "a5c9094d5c1dd259ece4a7c168a85481a97031881e8630204d31be35e4f45fc7",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 126974
+    },
+    "retest/sets/v2/r-bubble-basic-highcharts-pr11952/prev-dark.png": {
+      "sha256": "541ffcb1a0324cce0bcad1c715c19d918887c57a151b05d114097f099e0a1d3b",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 308812
+    },
+    "retest/sets/v2/r-bubble-basic-highcharts-pr11952/prev-light.png": {
+      "sha256": "20ba6558543cf32699189aabea393d2813d17ff54fece95bd9cd48d42c896c27",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 281572
+    },
+    "retest/sets/v2/r-count-basic-d3-pr11957/new-dark.png": {
+      "sha256": "d238913ea6b1a34055d721d626e411363fce595cb1ffc74ce2d8812f44173aa4",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 55266
+    },
+    "retest/sets/v2/r-count-basic-d3-pr11957/new-light.png": {
+      "sha256": "3a9b9bf589c53c4422147382176f51b4ca581e205671ec839e76157f8c8d8642",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 54807
+    },
+    "retest/sets/v2/r-count-basic-d3-pr11957/prev-dark.png": {
+      "sha256": "e260b4f40a498c97ffa79d4a3861bd75040c4ddedc6f72fc547ab63340c3a05c",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 55977
+    },
+    "retest/sets/v2/r-count-basic-d3-pr11957/prev-light.png": {
+      "sha256": "7e708ce3767ddf55b43b730fcc8eb7dc6854382f38970406f7d513193c932fcb",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 55230
+    },
+    "retest/sets/v2/r-count-basic-makie-pr11959/new-dark.png": {
+      "sha256": "b19549ed6db5d329043e0dcdd58f1a7782596a920490bbe304dfc76e3116dd55",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 35614
+    },
+    "retest/sets/v2/r-count-basic-makie-pr11959/new-light.png": {
+      "sha256": "145c3c327f5df7e94654ecee549a1ede06bf42f675ff6b975a0e0c4d3de0d6fe",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 35891
+    },
+    "retest/sets/v2/r-count-basic-makie-pr11959/prev-dark.png": {
+      "sha256": "3adb8bfcc2d95623e019dcd30eb8e46cfedc3816050ca9ccdd4eb470d0b6d235",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 29657
+    },
+    "retest/sets/v2/r-count-basic-makie-pr11959/prev-light.png": {
+      "sha256": "c3683f3a05434dda88e130f1cc207b475ad41f8a2533c823e16d3d2e9ac2028c",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 29827
+    },
+    "retest/sets/v2/r-count-basic-matplotlib-pr11954/new-dark.png": {
+      "sha256": "ef8a128d244a49e491181c2526d362ef5bd1b7a89edc1496f38972e744f3d54b",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 49826
+    },
+    "retest/sets/v2/r-count-basic-matplotlib-pr11954/new-light.png": {
+      "sha256": "a1bfeae356d1022536fc72facdf8dcc12cfcebb57473ff12616fd8ab529b48ad",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 50475
+    },
+    "retest/sets/v2/r-count-basic-matplotlib-pr11954/prev-dark.png": {
+      "sha256": "75dd93c622d83b41d9473cd895314884542f124e04d521900afe7d0a99eba1b0",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 47290
+    },
+    "retest/sets/v2/r-count-basic-matplotlib-pr11954/prev-light.png": {
+      "sha256": "dd77fdaf44f3e1f0a65414d3f750b9f4481191952856124ef2f39df68a03f415",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 47713
+    },
+    "retest/sets/v2/r-count-basic-plotly-pr11956/new-dark.png": {
+      "sha256": "99486a6f9004663331948aab4e9a4b417a3b36d2c29f68e98e1eac5dd537fd2f",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 55052
+    },
+    "retest/sets/v2/r-count-basic-plotly-pr11956/new-light.png": {
+      "sha256": "383cc268f6bd8d7cfd7e51d5af09ef12d130f6b7bf6dbfc312e539e810302e53",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 56119
+    },
+    "retest/sets/v2/r-count-basic-plotly-pr11956/prev-dark.png": {
+      "sha256": "8ad868a47a27cd453ae0a47d635d257b7f58c91e2e63c55f6181fee88846442e",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 73709
+    },
+    "retest/sets/v2/r-count-basic-plotly-pr11956/prev-light.png": {
+      "sha256": "6b81429a6c4dc6c3049537fe16faf96f130afd9ad56f89b43d80c75c864a9bd4",
+      "width": 3200,
+      "height": 1800,
+      "bytes": 73819
+    }
+  },
+  "sources": {
+    "retest/sets/v2/r-bar-error-d3-pr11962/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/bar-error/renders/javascript/d3/plot-dark.png",
+    "retest/sets/v2/r-bar-error-d3-pr11962/new-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/bar-error/renders/javascript/d3/plot-light.png",
+    "retest/sets/v2/r-bar-error-d3-pr11962/prev-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/bar-error/renders/javascript/d3/plot-dark.png",
+    "retest/sets/v2/r-bar-error-d3-pr11962/prev-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/bar-error/renders/javascript/d3/plot-light.png",
+    "retest/sets/v2/r-bar-error-ggplot2-pr11960/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/bar-error/renders/r/ggplot2/plot-dark.png",
+    "retest/sets/v2/r-bar-error-ggplot2-pr11960/new-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/bar-error/renders/r/ggplot2/plot-light.png",
+    "retest/sets/v2/r-bar-error-ggplot2-pr11960/prev-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/bar-error/renders/r/ggplot2/plot-dark.png",
+    "retest/sets/v2/r-bar-error-ggplot2-pr11960/prev-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/bar-error/renders/r/ggplot2/plot-light.png",
+    "retest/sets/v2/r-bar-error-makie-pr11963/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/bar-error/renders/julia/makie/plot-dark.png",
+    "retest/sets/v2/r-bar-error-makie-pr11963/new-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/bar-error/renders/julia/makie/plot-light.png",
+    "retest/sets/v2/r-bar-error-makie-pr11963/prev-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/bar-error/renders/julia/makie/plot-dark.png",
+    "retest/sets/v2/r-bar-error-makie-pr11963/prev-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/bar-error/renders/julia/makie/plot-light.png",
+    "retest/sets/v2/r-bar-error-matplotlib-pr11958/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/bar-error/renders/python/matplotlib/plot-dark.png",
+    "retest/sets/v2/r-bar-error-matplotlib-pr11958/new-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/bar-error/renders/python/matplotlib/plot-light.png",
+    "retest/sets/v2/r-bar-error-matplotlib-pr11958/prev-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/bar-error/renders/python/matplotlib/plot-dark.png",
+    "retest/sets/v2/r-bar-error-matplotlib-pr11958/prev-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/bar-error/renders/python/matplotlib/plot-light.png",
+    "retest/sets/v2/r-bar-error-plotly-pr11961/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/bar-error/renders/python/plotly/plot-dark.png",
+    "retest/sets/v2/r-bar-error-plotly-pr11961/new-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/bar-error/renders/python/plotly/plot-light.png",
+    "retest/sets/v2/r-bar-error-plotly-pr11961/prev-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/bar-error/renders/python/plotly/plot-dark.png",
+    "retest/sets/v2/r-bar-error-plotly-pr11961/prev-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/bar-error/renders/python/plotly/plot-light.png",
+    "retest/sets/v2/r-bubble-basic-d3-pr11951/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/bubble-basic/renders/javascript/d3/plot-dark.png",
+    "retest/sets/v2/r-bubble-basic-d3-pr11951/new-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/bubble-basic/renders/javascript/d3/plot-light.png",
+    "retest/sets/v2/r-bubble-basic-d3-pr11951/prev-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/bubble-basic/renders/javascript/d3/plot-dark.png",
+    "retest/sets/v2/r-bubble-basic-d3-pr11951/prev-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/bubble-basic/renders/javascript/d3/plot-light.png",
+    "retest/sets/v2/r-bubble-basic-ggplot2-pr11953/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/bubble-basic/renders/r/ggplot2/plot-dark.png",
+    "retest/sets/v2/r-bubble-basic-ggplot2-pr11953/new-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/bubble-basic/renders/r/ggplot2/plot-light.png",
+    "retest/sets/v2/r-bubble-basic-ggplot2-pr11953/prev-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/bubble-basic/renders/r/ggplot2/plot-dark.png",
+    "retest/sets/v2/r-bubble-basic-ggplot2-pr11953/prev-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/bubble-basic/renders/r/ggplot2/plot-light.png",
+    "retest/sets/v2/r-bubble-basic-highcharts-pr11952/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/bubble-basic/renders/javascript/highcharts/plot-dark.png",
+    "retest/sets/v2/r-bubble-basic-highcharts-pr11952/new-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/bubble-basic/renders/javascript/highcharts/plot-light.png",
+    "retest/sets/v2/r-bubble-basic-highcharts-pr11952/prev-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/bubble-basic/renders/javascript/highcharts/plot-dark.png",
+    "retest/sets/v2/r-bubble-basic-highcharts-pr11952/prev-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/bubble-basic/renders/javascript/highcharts/plot-light.png",
+    "retest/sets/v2/r-count-basic-d3-pr11957/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/count-basic/renders/javascript/d3/plot-dark.png",
+    "retest/sets/v2/r-count-basic-d3-pr11957/new-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/count-basic/renders/javascript/d3/plot-light.png",
+    "retest/sets/v2/r-count-basic-d3-pr11957/prev-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/count-basic/renders/javascript/d3/plot-dark.png",
+    "retest/sets/v2/r-count-basic-d3-pr11957/prev-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/count-basic/renders/javascript/d3/plot-light.png",
+    "retest/sets/v2/r-count-basic-makie-pr11959/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/count-basic/renders/julia/makie/plot-dark.png",
+    "retest/sets/v2/r-count-basic-makie-pr11959/new-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/count-basic/renders/julia/makie/plot-light.png",
+    "retest/sets/v2/r-count-basic-makie-pr11959/prev-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/count-basic/renders/julia/makie/plot-dark.png",
+    "retest/sets/v2/r-count-basic-makie-pr11959/prev-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/count-basic/renders/julia/makie/plot-light.png",
+    "retest/sets/v2/r-count-basic-matplotlib-pr11954/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/count-basic/renders/python/matplotlib/plot-dark.png",
+    "retest/sets/v2/r-count-basic-matplotlib-pr11954/new-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/count-basic/renders/python/matplotlib/plot-light.png",
+    "retest/sets/v2/r-count-basic-matplotlib-pr11954/prev-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/count-basic/renders/python/matplotlib/plot-dark.png",
+    "retest/sets/v2/r-count-basic-matplotlib-pr11954/prev-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/count-basic/renders/python/matplotlib/plot-light.png",
+    "retest/sets/v2/r-count-basic-plotly-pr11956/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/count-basic/renders/python/plotly/plot-dark.png",
+    "retest/sets/v2/r-count-basic-plotly-pr11956/new-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/after/count-basic/renders/python/plotly/plot-light.png",
+    "retest/sets/v2/r-count-basic-plotly-pr11956/prev-dark.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/count-basic/renders/python/plotly/plot-dark.png",
+    "retest/sets/v2/r-count-basic-plotly-pr11956/prev-light.png": "/home/meake/projects/anyplot/agentic/runs/verify-b1-regens/before/count-basic/renders/python/plotly/plot-light.png"
+  },
+  "pairs": {
+    "r-bubble-basic-d3-pr11951": {
+      "light": {
+        "changed_px_pct": 4.87,
+        "max_channel_delta": 250
+      },
+      "dark": {
+        "changed_px_pct": 5.34,
+        "max_channel_delta": 230
+      }
+    },
+    "r-bubble-basic-highcharts-pr11952": {
+      "light": {
+        "changed_px_pct": 3.89,
+        "max_channel_delta": 186
+      },
+      "dark": {
+        "changed_px_pct": 3.98,
+        "max_channel_delta": 100
+      }
+    },
+    "r-bubble-basic-ggplot2-pr11953": {
+      "light": {
+        "changed_px_pct": 6.95,
+        "max_channel_delta": 229
+      },
+      "dark": {
+        "changed_px_pct": 6.67,
+        "max_channel_delta": 215
+      }
+    },
+    "r-count-basic-matplotlib-pr11954": {
+      "light": {
+        "changed_px_pct": 11.83,
+        "max_channel_delta": 250
+      },
+      "dark": {
+        "changed_px_pct": 11.82,
+        "max_channel_delta": 214
+      }
+    },
+    "r-count-basic-plotly-pr11956": {
+      "light": {
+        "changed_px_pct": 17.68,
+        "max_channel_delta": 250
+      },
+      "dark": {
+        "changed_px_pct": 17.69,
+        "max_channel_delta": 238
+      }
+    },
+    "r-count-basic-d3-pr11957": {
+      "light": {
+        "changed_px_pct": 0.92,
+        "max_channel_delta": 224
+      },
+      "dark": {
+        "changed_px_pct": 1.0,
+        "max_channel_delta": 215
+      }
+    },
+    "r-count-basic-makie-pr11959": {
+      "light": {
+        "changed_px_pct": 2.46,
+        "max_channel_delta": 250
+      },
+      "dark": {
+        "changed_px_pct": 2.45,
+        "max_channel_delta": 240
+      }
+    },
+    "r-bar-error-matplotlib-pr11958": {
+      "light": {
+        "changed_px_pct": null,
+        "max_channel_delta": null,
+        "shape_mismatch": true
+      },
+      "dark": {
+        "changed_px_pct": null,
+        "max_channel_delta": null,
+        "shape_mismatch": true
+      }
+    },
+    "r-bar-error-ggplot2-pr11960": {
+      "light": {
+        "changed_px_pct": 38.61,
+        "max_channel_delta": 250
+      },
+      "dark": {
+        "changed_px_pct": 38.61,
+        "max_channel_delta": 240
+      }
+    },
+    "r-bar-error-plotly-pr11961": {
+      "light": {
+        "changed_px_pct": null,
+        "max_channel_delta": null,
+        "shape_mismatch": true
+      },
+      "dark": {
+        "changed_px_pct": null,
+        "max_channel_delta": null,
+        "shape_mismatch": true
+      }
+    },
+    "r-bar-error-d3-pr11962": {
+      "light": {
+        "changed_px_pct": 0.82,
+        "max_channel_delta": 224
+      },
+      "dark": {
+        "changed_px_pct": 0.82,
+        "max_channel_delta": 214
+      }
+    },
+    "r-bar-error-makie-pr11963": {
+      "light": {
+        "changed_px_pct": 2.15,
+        "max_channel_delta": 250
+      },
+      "dark": {
+        "changed_px_pct": 2.15,
+        "max_channel_delta": 240
+      }
+    }
+  }
+}
