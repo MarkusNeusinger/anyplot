@@ -3,7 +3,6 @@ run-name: "Review: PR #${{ inputs.pr_number || github.event.client_payload.pr_nu
 
 # AI quality review for implementation PRs
 # Triggered by impl-generate.yml after PR creation
-# Last updated: 2025-12-23
 
 on:
   workflow_dispatch:

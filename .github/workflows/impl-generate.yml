@@ -1095,7 +1095,7 @@ jobs:
             gh workflow run impl-review.yml --ref "$TRIGGER_REF" \
               -f pr_number="$PR_NUMBER" \
               -f model="$MODEL"
-            echo "::notice::Triggered impl-review.yml on ref ${TRIGGER_REF} for PR #$PR_NUMBER (model=$MODEL)"
+            echo "::notice::Triggered impl-review.yml on ref ${TRIGGER_REF} for PR #$PR_NUMBER (generation model=$MODEL; the review runs on opus)"
             exit 0
           fi
           # Use repository_dispatch as workaround for workflow_dispatch caching issue
@@ -1103,7 +1103,7 @@ jobs:
             -f event_type=review-pr \
             -f "client_payload[pr_number]=$PR_NUMBER" \
             -f "client_payload[model]=$MODEL"
-          echo "::notice::Triggered impl-review.yml via repository_dispatch for PR #$PR_NUMBER (model=$MODEL)"
+          echo "::notice::Triggered impl-review.yml via repository_dispatch for PR #$PR_NUMBER (generation model=$MODEL; the review runs on opus)"
 
       - name: Determine result
         id: result

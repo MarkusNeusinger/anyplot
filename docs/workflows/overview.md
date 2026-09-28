@@ -361,8 +361,10 @@ Every quality review runs on Opus, whatever model generated the
 implementation. That covers the review of a first implementation, the review
 after each repair, and the regen gate's session, which re-scores the live
 implementation and reviews the new render in one go. `impl-review.yml` is the
-only workflow that runs a quality review, and it chooses the review model
-itself: no other workflow forwards one.
+only pipeline workflow that runs a quality review, and it chooses the review
+model itself: no other workflow forwards one. The
+[retest harness](review-retest.md) (`review-retest.yml`) runs the same review
+on a frozen set, for measurement only.
 
 To review one PR on another model, for example for an experiment, dispatch
 `impl-review.yml` with `review_model`:
@@ -376,8 +378,9 @@ after a repair or a rescue, runs on Opus again. The run summary and the notice
 line name both models, for example
 `review model: opus, generation model: sonnet from PR body`.
 
-Opus scores lower than Sonnet: on the same 15 implementations and rules it
-averaged 77.5 against Sonnet's 85.9 (retest runs 36354452853 and 36359464410).
+Opus scores lower than Sonnet: on the 14 fresh core items both scored under
+the same rules, it averaged 77.5 against Sonnet's 85.7 (retest runs
+36354452853 and 36359464410; a 15th item auto-rejected on Opus).
 Most stored scores come from Sonnet or Haiku reviews, so a pair reviewed on
 Opus usually stores a lower score than the one it replaces. `review.model`
 names the model behind a stored score.
