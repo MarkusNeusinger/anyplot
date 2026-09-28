@@ -53,13 +53,14 @@ review:
     - "Clean code structure"
     - "Good color accessibility"
   weaknesses:
-    - "Font sizes too small for canvas"
-    - "Grid too prominent"
+    - "VQ-01 (both): tick labels at 8 pt are hard to read at full size → about 10 pt (+2 pt). Likely cause: tick_params labelsize=8."
+    - "Suggestion: a slightly lighter grid would recede further"
 ```
 
 **Use this feedback to improve!**
-- **Strengths**: Keep these aspects unchanged
-- **Weaknesses**: Fix the ones that are real per the spec's characteristic section (decide HOW yourself); decline the ones that ask for something an `Expected, not a defect:` bullet permits
+- **Strengths**: Keep the ones the current criteria still credit; a strength praising an unrequested addition does not bind
+- **Weaknesses**: A defect line (`<ID> (<light|dark|both|code>): …`) names a violated rule — fix the ones that are real per the spec's characteristic section (decide HOW yourself). Never act on a `Suggestion:` line; decline it as "suggestion, not taken". A line in neither format is an older note, a hint only. Decline a weakness that asks for less of something an `Expected, not a defect:` bullet permits as obsolete, with that bullet's C id
+- **The checklist is context**, not a list of orders: it shows where points were lost; the defect lines say what to fix
 - **Marks stay at their data values**: answer overlap through data generation, marker size or alpha — never by moving marks (force/collision layouts, nudge or declutter passes). Exempt, as in SC-03: jitter in categorical strip/swarm plots, layout-positioned types (networks, treemaps, word clouds, packed circles), and any jitter, dodge or offset the spec's Data or Notes ask for
 
 ## Library Independence (no cross-library cloning)
@@ -496,7 +497,7 @@ anyplot renders at **3200 × 1800 px** (16:9) or **2400 × 2400 px** (1:1) — l
 - Tell a story through good data choice and clear visual hierarchy
 - **Annotation restraint (DEFAULT):** Do NOT add text annotations, callout boxes, arrows, or labeled data points unless the specification explicitly asks for them (e.g., spec-id contains "annotated"). Good storytelling comes from visual design — color contrast, size variation, strategic data choice — not text overlays.
 - **When annotations ARE appropriate:** Only when spec-id contains "annotated" or the spec explicitly describes annotations as a required feature. Even then, use sparingly.
-- **Respect the spec variant:** If the spec-id contains `basic`, storytelling comes from well-chosen data and clean design — NOT from adding annotations, trendlines, or extra visual elements. A basic scatter plot should remain a basic scatter plot. Extra encodings on a `-basic` spec (a color channel from a derived variable, per-group fits, highlight bands, annotation layers) are scored as the wrong variant (SC-01) and earn no storytelling credit.
+- **Respect the spec variant:** If the spec-id contains `basic`, storytelling comes from well-chosen data and clean design — NOT from adding annotations, trendlines, or extra visual elements. A basic scatter plot should remain a basic scatter plot. Extra encodings on a `-basic` spec (a color channel from a derived variable, per-group fits, reference lines, highlights, callouts, annotation layers) are scored as the wrong variant (SC-01) and earn no storytelling credit.
 
 ## Output Files
 

@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from automation.scripts.regen_gate import DEFECT_RE, SUGGESTION_RE
 from automation.scripts.spec_characteristics_lint import check_contract
 from core.constants import INTERACTIVE_LIBRARIES, LANGUAGE_FILE_EXTENSIONS, LIBRARIES_METADATA, SUPPORTED_LANGUAGES
 
@@ -665,3 +666,100 @@ class TestPlotTypeCharacteristics:
         content = (PLOTS_DIR / spec_id / "specification.md").read_text(encoding="utf-8")
         findings = check_contract(content)
         assert not findings, f"{spec_id}: " + "; ".join(f"{f.rule} line {f.line}: {f.message}" for f in findings)
+
+
+REVIEW_PROMPT = WORKFLOW_PROMPTS_DIR / "ai-quality-review.md"
+GENERATION_PROMPTS = [
+    WORKFLOW_PROMPTS_DIR / "impl-generate-claude.md",
+    WORKFLOW_PROMPTS_DIR / "impl-repair-claude.md",
+    PROMPTS_DIR / "plot-generator.md",
+]
+
+
+class TestDefectsAndSuggestions:
+    """P3: a weakness is a defect line or a `Suggestion:` line, a regen review
+    classifies the previous weaknesses (obsolete included), and generation acts
+    on defects only (regen round 1, 2026-09-27: 17 of 30 cited improvements
+    were suggestions and six merges rested on no defect)."""
+
+    def _section(self, content: str, start: str, end: str) -> str:
+        return content[content.index(start) : content.index(end, content.index(start))]
+
+    def test_template_weaknesses_use_the_two_formats(self) -> None:
+        content = REVIEW_PROMPT.read_text()
+        template = self._section(content, "### 9.", "### 10.")
+        weaknesses = self._section(template, "### Weaknesses", "### Regeneration comparison")
+        lines = [line[2:] for line in weaknesses.splitlines() if line.startswith("- ")]
+        assert len(lines) >= 4
+        assert all(DEFECT_RE.match(line) or SUGGESTION_RE.match(line) for line in lines), lines
+        assert any(SUGGESTION_RE.match(line) for line in lines)
+        assert sum(1 for line in lines if DEFECT_RE.match(line)) == 3
+
+    def test_old_order_sections_are_gone(self) -> None:
+        content = REVIEW_PROMPT.read_text()
+        for phrase in ("Issues Found", "AI Feedback for Next Attempt", "Consider a more refined"):
+            assert phrase not in content, phrase
+        gate = (PROMPTS_DIR.parent / "automation" / "scripts" / "regen_gate.py").read_text()
+        assert "FIX these" not in gate
+
+    def test_every_review_reads_the_definitions(self) -> None:
+        content = REVIEW_PROMPT.read_text()
+        section = self._section(content, "### 8a.", "### 8b.")
+        assert "(every review)" in section
+        assert "`Suggestion: <idea>`" in section
+        assert "At most three" in section
+        assert "A behavior is never both a strength and a weakness" in section
+        assert "Never write a defect that asks to add something the spec does not ask for" in section
+        assert "never suggest a layer the spec does not ask for" in section
+        assert "Never propose moving marks" in section
+
+    def test_step_8b_classifies_and_keeps_the_scores_final(self) -> None:
+        content = REVIEW_PROMPT.read_text()
+        step = self._section(content, "### 8b.", "### 9.")
+        for word in ("prev_checklist", "prev_weaknesses", "obsolete", "`rule`"):
+            assert word in step, word
+        assert "change the claim, never the scores" in step
+        assert "`prev_checklist` and `review_checklist.json` are final" in step
+        assert "an unclassified `W` counts as a suggestion" in step
+        # D7: the gate list stays as it is until P6-B, and 8b never says what carries.
+        assert "at least one improvement a viewer can see (non-empty `where_visible`)" in step
+        for phrase in ("carrier", "carries a merge", "never carry", "DE and LM"):
+            assert phrase not in step, phrase
+
+    def test_step_10_runs_the_self_check(self) -> None:
+        content = REVIEW_PROMPT.read_text()
+        step = self._section(content, "### 10.", "### 11.")
+        assert "python3 /tmp/anyplot-regen-gate.py check-feedback" in step
+        assert "--regen review_regen.json --prev-weaknesses /tmp/anyplot-prev-weaknesses.json" in step
+        assert "never `prev_checklist` or `review_checklist.json`" in step
+        assert '"prev_checklist": {' in step and '"prev_weaknesses": [' in step
+
+    def test_important_list_carries_the_rules(self) -> None:
+        important = REVIEW_PROMPT.read_text().split("## Important", 1)[1]
+        assert "Every weakness line is a defect" in important
+        assert "Never write a defect that asks to add something the spec does not ask for" in important
+        assert "On a `-basic` spec, never suggest a layer the spec does not ask for" in important
+        assert "Every weakness is acted on by the next generation" not in important
+
+    def test_canvas_weakness_is_a_defect_line(self) -> None:
+        content = REVIEW_PROMPT.read_text()
+        assert "`VQ-05 (both): Canvas dimensions drifted from required target." in content
+
+    @pytest.mark.parametrize("prompt_path", GENERATION_PROMPTS, ids=lambda p: p.name)
+    def test_generation_acts_on_defects_only(self, prompt_path: Path) -> None:
+        content = prompt_path.read_text()
+        assert "`Suggestion:` line" in content
+        assert "suggestion, not taken" in content
+        assert "obsolete" in content
+        assert "checklist is context" in content
+
+    def test_f5_one_addition_is_creep(self) -> None:
+        criteria = (PROMPTS_DIR / "quality-criteria.md").read_text()
+        assert "one such addition is enough" in criteria
+        assert "several annotation layers" not in criteria
+        assert "the list names the likeliest additions, not all of them" in criteria
+        for path in (REVIEW_PROMPT, *GENERATION_PROMPTS):
+            content = path.read_text()
+            assert "reference lines" in content or "reference or" in content, path.name
+            assert "callouts" in content, path.name
+        assert "one is enough, listed in the variant bullet or not" in REVIEW_PROMPT.read_text()
