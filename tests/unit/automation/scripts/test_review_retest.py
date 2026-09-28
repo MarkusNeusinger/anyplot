@@ -1131,6 +1131,17 @@ def _record(cell: str, item: str, run: int, score: int, **extra) -> dict[str, An
 
 
 class TestReport:
+    def test_headline_counts_forward_only_pairs_with_one_order(self):
+        both = [
+            {"kind": "regen", "item": f"r-{i}", "order": o, "run": 3}
+            for i in range(10)
+            for o in ("forward", "reversed")
+        ]
+        forward_only = [{"kind": "regen", "item": f"r-fwd-{i}", "order": "forward", "run": 3} for i in range(2)]
+        title = rt._headline_title(both + forward_only, "v2", "core")
+        assert title == "### Review retest — set v2 core ((10 pairs × 2 orders + 2 pairs × 1 order) × 3)"
+        assert rt._headline_title(both, "v2", "core") == "### Review retest — set v2 core (10 pairs × 2 orders × 3)"
+
     def test_report_files_and_snippet(self, tmp_path):
         records = [
             _record("f-bubble-basic-matplotlib__r1", "f-bubble-basic-matplotlib", 1, 89),

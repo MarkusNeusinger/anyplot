@@ -27,8 +27,8 @@
   `impl-review.yml` shows the reviewer the predecessor's render as
   production stores it, and round 1 had two off-canvas ones (4766 × 2670 and
   4800 × 2700). A regen pair marked `orders: forward` now runs in the forward
-  order only, and its `prev` render may be off-canvas; every render a
-  session reviews still has to be on a canonical canvas, as the production
-  canvas gate requires. Regen cells also record the spec's characteristic
+  order only, and its `prev` render may keep its production size; the render
+  under review (`new`) still has to be on a canonical canvas, as the
+  production canvas gate requires. Regen cells also record the spec's characteristic
   count and permissions (`spec_characteristics`), which the carrier metric
   reads. (#11966)

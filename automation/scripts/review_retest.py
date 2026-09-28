@@ -62,6 +62,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from collections import Counter
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -1340,8 +1341,10 @@ def _arm_rows(arm: dict[str, Any]) -> dict[str, str]:
 
 def _headline_title(records: Sequence[dict[str, Any]], set_name: str, subset_label: str) -> str:
     fresh_items = {r["item"] for r in records if r.get("kind") == "fresh"}
-    pair_items = {r["item"] for r in records if r.get("kind") == "regen"}
-    orders = {r.get("order") for r in records if r.get("kind") == "regen"}
+    pair_orders: dict[str, set[Any]] = {}
+    for r in records:
+        if r.get("kind") == "regen":
+            pair_orders.setdefault(r["item"], set()).add(r.get("order"))
     runs = max((int(r.get("run") or 0) for r in records), default=0)
 
     def plural(n: int, word: str) -> str:
@@ -1350,8 +1353,11 @@ def _headline_title(records: Sequence[dict[str, Any]], set_name: str, subset_lab
     parts = []
     if fresh_items:
         parts.append(f"{len(fresh_items)} fresh × {runs}")
-    if pair_items:
-        parts.append(f"{plural(len(pair_items), 'pair')} × {plural(len(orders), 'order')} × {runs}")
+    if pair_orders:
+        # Forward-only pairs run one order, so group pairs by how many orders they ran.
+        groups = Counter(len(orders) for orders in pair_orders.values())
+        terms = [f"{plural(n, 'pair')} × {plural(k, 'order')}" for k, n in sorted(groups.items(), reverse=True)]
+        parts.append(f"{terms[0]} × {runs}" if len(terms) == 1 else f"({' + '.join(terms)}) × {runs}")
     return f"### Review retest — set {set_name} {subset_label} ({', '.join(parts) or 'no cells'})"
 
 
