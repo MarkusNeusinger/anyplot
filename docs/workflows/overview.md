@@ -148,7 +148,8 @@ impl-review.yml
        |
        |-- Regeneration (implementation already on main) --> regen gate, one review, no repair
                 |-- Replace --> [regen:improved] + [ai-approved] --> impl-merge.yml
-                |-- Keep    --> [regen:kept] --> PR closed, main and GCS unchanged
+                |-- Keep    --> [regen:kept] --> PR closed, live code and GCS unchanged
+                                   |-- Stored review <-- re-score: [review-writeback] PR --> impl-merge.yml (writeback job)
 ```
 
 ---
@@ -184,6 +185,7 @@ impl-review.yml
 | `regen:forced` | Regeneration dispatched with `regen_gate=false`: bypasses the regen gate and takes the fresh-generation path | Workflow |
 | `regen:improved` | The regen gate replaced the live implementation (added before `ai-approved`) | Workflow |
 | `regen:kept` | The regen gate kept the live implementation; the PR is closed unmerged | Workflow |
+| `review-writeback` | A metadata PR that stores a kept regeneration's re-score as the live implementation's review (branch `review-writeback/{spec}/{library}/{kept PR}`); `impl-merge.yml` merges it | Workflow |
 
 ### Approval labels
 
@@ -232,7 +234,7 @@ A regeneration is an implementation PR for a (spec, library) pair that already h
    - at least one improvement with a named, visible location that doesn't cite an `Expected, not a defect:` bullet of the spec or a weakness the re-score classed obsolete (neither is ever an improvement; the gate lists such an item as not counted);
    - at least one visible improvement fixes a defect: a visual, spec, data, or code defect (a defect-class weakness or a predecessor defect) that scores higher in the new review than in the re-score, or an `A good version shows:` property. Suggestions, design and library-mastery points, and obsolete weaknesses never carry a replacement;
    - no regressions. On a `*-basic` spec, a replaced data scenario or added encodings count as regressions unless a change request asked for them.
-4. Replace: `regen:improved`, then `ai-approved`, a PR comment with the same summary (stored, re-scored, and new score, improvements, regressions, reason), then the normal merge. Keep: `regen:kept`, the PR is closed with that comment, the issue gets `impl:{library}:done` back, and nothing reaches main, GCS production, or the database.
+4. Replace: `regen:improved`, then `ai-approved`, a PR comment with the same summary (stored, re-scored, and new score, improvements, regressions, reason), then the normal merge. Keep: `regen:kept`, the PR is closed with that comment, the issue gets `impl:{library}:done` back, and the live code and GCS production stay as they are. The re-score of the live implementation becomes its stored review through a separate metadata PR (see [Stored review on a keep](#stored-review-on-a-keep)).
 
 A crashed regen review is auto-retried once by `impl-review.yml`; after that the PR carries `ai-review-failed` and the watchdog only flags it — it never dispatches a further review for a regeneration.
 
@@ -242,11 +244,23 @@ Every review writes its weaknesses in the two formats: defect lines first, then 
 
 Every decision leaves three traces:
 
-- **The gate record in the PR comment.** Both the keep and the replace comment end with an invisible `<!-- regen-gate-record:v1 {...} -->` marker: one line of JSON with the scores, improvement and regression counts (the improvements split into carriers, suggestions, and obsolete citations), the reason code (`merge`, `below_tolerance`, `no_visible_improvement`, `no_defect_improvement`, `regression`, `regen_json_invalid`, `canvas_failed`, and so on), and the provenance of both reviews (resolved model and rules version of this review and of the stored one). It holds no model-written text. PR comments are permanent, so read this first.
+- **The gate record in the PR comment.** Both the keep and the replace comment end with an invisible `<!-- regen-gate-record:v1 {...} -->` marker: one line of JSON with the scores, improvement and regression counts (the improvements split into carriers, suggestions, and obsolete citations), the reason code (`merge`, `below_tolerance`, `no_visible_improvement`, `no_defect_improvement`, `regression`, `regen_json_invalid`, `canvas_failed`, and so on), and the provenance of both reviews (resolved model and rules version of this review and of the stored one). A keep record also says what happened to the re-score (`writeback`, see the next section). It holds no model-written text. PR comments are permanent, so read this first.
 - **The notice line in the run log.** `::notice::regen_gate spec=… lib=… prev_stored=… prev_rescored=… new=… verdict=… code=… model=… criteria=… reason=…`. Run logs expire.
 - **The pair artifact.** `regen-pair-<pr>-<attempt>` on the `impl-review.yml` run, kept 60 days: both renders, both sources (the predecessor's with its score hidden), the previous review, this review's files, and the gate record. The predecessor's production renders are overwritten on the next merge, so this is the only copy of what the gate compared.
 
-`uv run python -m automation.scripts.review_retest gate-report` aggregates the records across pull requests: merge rate, reason codes, how far re-scored predecessors land from their stored scores, the counted visible improvements and carriers, cited permissions and obsolete weaknesses, and soft alarms. See [Review retest](review-retest.md#monitor-the-regen-gate).
+`uv run python -m automation.scripts.review_retest gate-report` aggregates the records across pull requests: merge rate, reason codes, how far re-scored predecessors land from their stored scores, the counted visible improvements and carriers, cited permissions and obsolete weaknesses, what happened to the re-scores of kept implementations, and soft alarms. See [Review retest](review-retest.md#monitor-the-regen-gate).
+
+### Stored review on a keep
+
+A kept regeneration still reviewed the live implementation: the gate's re-score. That re-score becomes the implementation's stored review, so the next regeneration starts from current problems under the current model and rules. This happens on every keep, whether or not the model or the rules changed since the stored review.
+
+1. The review writes the re-score as a full review, `review_prev.json` (step 8b of `ai-quality-review.md`, step 5): the image description of the production renders, the criteria checklist (item for item equal to `prev_checklist`), strengths, weaknesses (the predecessor defects `P1`, `P2`, … as defect lines, then at most three suggestions), and a verdict. It has no score: the stored score is the gate's `prev_rescored`.
+2. `impl-review.yml` ("Write back the re-score (regen keep)") checks the file with `automation/scripts/regen_writeback.py check`, confirms that `main` still holds the two files the review read, and commits the new `quality_score`, the five review fields, `review.model`, and `review.criteria_version` in the metadata, plus the number in the implementation's `Quality: N/100` header, on the branch `review-writeback/{spec}/{library}/{kept PR}`. It opens a PR labelled `review-writeback` with `GITHUB_TOKEN` and dispatches `impl-merge.yml`. `updated`, `review.rendered_at`, `impl_tags`, and the previews stay as they are: the code didn't change.
+3. The `writeback` job of `impl-merge.yml` merges the PR with the admin token after three checks: the PR is the bot's and its score equals the `prev_rescored` of the kept PR's gate record (`check-pr`), the diff changes only those keys and the header number (`verify-diff`), and `main` hasn't changed the pair's files since the branch was cut (`check-fresh`, before every merge attempt). Then it triggers the database sync.
+
+Any failure leaves the stored review as it was and closes the write-back PR; the keep itself is never held up. The keep record's `writeback` says what happened: `opened` (the PR exists and its merge was dispatched, not yet that it merged), `unchanged`, `no_rescore` (the gate had no valid `review_regen.json`), `invalid` (`review_prev.json` failed its check), `stale` (`main` changed the pair's files during the review), or `failed`. The kept comment has a matching **Stored review** line. A lost write-back heals at the pair's next gated regeneration, which re-scores the implementation again.
+
+So a stored weakness list in the older format lasts only until the pair's first gated regeneration: a merge stores the new render's review, and a keep stores the re-score, both in the defect and suggestion format.
 
 To replace an implementation without the gate, dispatch with `regen_gate=false` (`impl-generate.yml` or `bulk-generate.yml`): the PR is labelled `regen:forced` and takes the fresh-generation path, including the repair loop — whose exhaustion path removes the old implementation from main.
 
@@ -274,7 +288,7 @@ Located in `.github/workflows/`:
 | `impl-generate.yml` | Generates single implementation |
 | `impl-review.yml` | AI quality review |
 | `impl-repair.yml` | Fixes rejected implementations |
-| `impl-merge.yml` | Merges approved PRs |
+| `impl-merge.yml` | Merges approved PRs, and the review write-back PRs a kept regeneration opens (job `writeback`) |
 | `bulk-generate.yml` | Batch implementation generation |
 | `review-retest.yml` | Dispatch-only measurement: re-runs the AI quality review on the frozen retest set (several fresh sessions per item, regen pairs in both orders) for one rules version, and reports score spread, verdict flips, weakness agreement, and gate order bias against a baseline arm. Read-only tokens; writes nothing outside its own artifacts. See [Review retest](review-retest.md) |
 | `daily-regen.yml` | Cron-driven regeneration of the oldest implementations (once a day at 02:17 UTC, off the top of the hour to dodge GitHub's scheduler overload). A spec's age counts from the newer of its last merged update and the last activity on its spec issue (every regen touches the issue), so a kept regeneration is not re-picked the next night. Any activity on the issue — a comment, a label, a report — postpones that spec's regen the same way |
@@ -363,7 +377,9 @@ reviewed on its own model. Its reviews now run on Opus, so pass
 Every quality review runs on Opus, whatever model generated the
 implementation. That covers the review of a first implementation, the review
 after each repair, and the regen gate's session, which re-scores the live
-implementation and reviews the new render in one go. `impl-review.yml` is the
+implementation and reviews the new render in one go. On a keep, that re-score
+becomes the live implementation's stored review
+([Stored review on a keep](#stored-review-on-a-keep)). `impl-review.yml` is the
 only pipeline workflow that runs a quality review, and it chooses the review
 model itself: no other workflow forwards one. The
 [retest harness](review-retest.md) (`review-retest.yml`) runs the same review
@@ -385,8 +401,9 @@ Opus scores lower than Sonnet: on the 14 fresh core items both scored under
 the same rules, it averaged 77.5 against Sonnet's 85.7 (retest runs
 36354452853 and 36359464410; a 15th item auto-rejected on Opus).
 Most stored scores come from Sonnet or Haiku reviews, so a pair reviewed on
-Opus usually stores a lower score than the one it replaces. `review.model`
-names the model behind a stored score.
+Opus usually stores a lower score than the one it replaces, on a merge and,
+through the write-back, on a keep. `review.model` names the model behind a
+stored score.
 
 An alias such as `opus` points at a newer model after each release, so
 `impl-review.yml` stores what actually ran. The metadata's `review` block

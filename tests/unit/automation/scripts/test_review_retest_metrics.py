@@ -448,6 +448,32 @@ class TestGateMonitor:
         assert any("contrast bias" in a for a in report["alarms"])
         assert report["weekly"]
 
+    def test_writeback_counts_keeps_only(self):
+        """P9b: a keep record's `writeback`; merges and pre-P9b records carry none."""
+        records = [
+            self._record(0, writeback="opened"),
+            self._record(1, writeback="opened"),
+            self._record(2, writeback="stale"),
+            self._record(3),  # before P9b
+            self._record(4, verdict="merge", code="merge"),
+        ]
+        report = m.gate_monitor(records, lambda r: False)
+        assert report["writeback"] == {"n": 3, "counts": {"opened": 2, "stale": 1}}
+        assert not report["alarms"]
+
+    @pytest.mark.parametrize(("invalid", "alarm"), [(2, True), (1, False)])
+    def test_writeback_invalid_alarm(self, invalid, alarm):
+        """More than 10 % invalid over at least 10 keeps: the 8b step 5 prompt needs work."""
+        records = [self._record(i, writeback="invalid") for i in range(invalid)] + [
+            self._record(10 + i, writeback="opened") for i in range(10 - invalid)
+        ]
+        alarms = m.gate_monitor(records, lambda r: False)["alarms"]
+        assert any("review_prev.json invalid in" in a for a in alarms) is alarm
+
+    def test_writeback_alarm_needs_ten_keeps(self):
+        records = [self._record(i, writeback="invalid") for i in range(9)]
+        assert not any("review_prev.json" in a for a in m.gate_monitor(records, lambda r: False)["alarms"])
+
     def test_invalid_json_alarm(self):
         records = [self._record(i, code="regen_json_invalid", prev_rescored=None) for i in range(3)] + [
             self._record(i) for i in range(7)

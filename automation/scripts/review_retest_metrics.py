@@ -840,6 +840,11 @@ def gate_monitor(
     obsolete citations as well; an older record's ``visible`` still counts
     them. Records without the P3 keys are left out of the carrier, obsolete,
     unverified and design-or-library shares (``carrier_n`` is their count).
+
+    From P9b on, a keep record carries ``writeback``: what happened to the
+    session's re-score of the live implementation (``opened``,
+    ``unchanged``, ``no_rescore``, ``invalid``, ``stale`` or ``failed``).
+    ``writeback`` counts those values over the keeps that carry the key.
     """
     n = len(records)
     merges = sum(1 for r in records if r.get("verdict") == "merge")
@@ -913,6 +918,12 @@ def gate_monitor(
         "de_lm_share": over_classified(with_any("de_lm")),
     }
 
+    # P9b keeps; older records and merges carry no `writeback`.
+    writeback = Counter(
+        str(r["writeback"]) for r in records if r.get("verdict") == "keep" and isinstance(r.get("writeback"), str)
+    )
+    writeback_n = sum(writeback.values())
+
     drift_comparable = _summary(drift_of(comparable_records), seed)
     report: dict[str, Any] = {
         "n": n,
@@ -925,6 +936,7 @@ def gate_monitor(
         "margin": _summary(margins, seed),
         "margin_within_tolerance": share(-1 <= m <= 0 for m in margins),
         "improvements": improvements,
+        "writeback": {"n": writeback_n, "counts": dict(writeback.most_common())},
         "weekly": {
             week: {
                 "n": len(rs),
@@ -951,6 +963,12 @@ def gate_monitor(
             f"reviews cite an 'Expected, not a defect' bullet or an obsolete weakness as an improvement in "
             f"{improvements['permission_or_obsolete_cited']}/{improvements['permission_n']} decisions — the 8b "
             "prompt or the specs' characteristic kinds need a look"
+        )
+    invalid_writeback = writeback.get("invalid", 0)
+    if writeback_n >= 10 and invalid_writeback / writeback_n > 0.10:
+        alarms.append(
+            f"review_prev.json invalid in {invalid_writeback}/{writeback_n} keeps, so their re-scores were not "
+            "stored — the 8b step 5 prompt needs work"
         )
     # No alarm for de_lm: DE deductions are normal on specs that are not -basic.
     if improvements["carrier_n"] >= 10 and (improvements["unverified_share"] or 0) > 0.20:

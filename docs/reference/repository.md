@@ -325,6 +325,7 @@ review:
 - Each library has its own file (no merge conflicts!)
 - Created by `impl-generate.yml`, updated by `impl-review.yml`
 - Review feedback persisted for AI to improve on regeneration
+- A kept regeneration replaces `quality_score` and the review with its re-score of the live implementation, through a `review-writeback` PR that `impl-merge.yml` merges; `updated`, `review.rendered_at`, and `impl_tags` stay, because the code didn't change (see [Stored review on a keep](../workflows/overview.md#stored-review-on-a-keep))
 - Extended review data includes `image_description`, `criteria_checklist`, and `verdict` for targeted fixes
 - `review.model`, `review.criteria_version` (git blob IDs of `prompts/quality-criteria.md`, `ai-quality-review.md`, `default-style-guide.md`, and the library prompt), and `review.rendered_at` record which model and rules produced the review; they aren't synced to the database. A value the review run can't determine is left out (removed if an earlier review wrote it), never filled with the model alias
 
@@ -455,6 +456,8 @@ plt.savefig('plot.png', dpi=300)
 - `scripts/workflow_utils.py` - Parsing and utilities for workflows
 - `scripts/label_manager.py` - Label operations and transitions
 - `scripts/workflow_cli.py` - CLI interface for workflow steps
+- `scripts/regen_gate.py` - Regen gate: keeps or replaces a regeneration (used by impl-review.yml)
+- `scripts/regen_writeback.py` - Stores a kept regeneration's re-score as the live implementation's review (used by impl-review.yml and impl-merge.yml)
 
 **Principle**: Only contains components actively used by workflows. One-time or manual scripts belong in `scripts/`.
 

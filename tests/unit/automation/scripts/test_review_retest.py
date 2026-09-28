@@ -1445,6 +1445,29 @@ class TestGateReport:
         text = rt.render_gate_report(rt.metrics.gate_monitor(records, rt.comparable_record))
         assert "Decisions: 1; merge rate 0%" in text
         assert "regression 1" in text
+        assert "Stored review on a keep (writeback, n=0 keeps): opened 0, unchanged 0" in text
+
+    def test_writeback_line_counts_every_status(self):
+        """P9b: one count per writeback value, in the gate's order, zeros included."""
+        from automation.scripts.regen_gate import WRITEBACK_CODES, parse_record_markers, render_record_marker
+
+        base = {"v": 1, "spec": "s", "lib": "altair", "verdict": "keep", "code": "regression"}
+        records = [
+            parse_record_markers(render_record_marker({**base, "writeback": status}))[0]
+            for status in ("opened", "opened", "invalid", "no_rescore")
+        ]
+        text = rt.render_gate_report(rt.metrics.gate_monitor(records, rt.comparable_record))
+        line = next(line for line in text.splitlines() if line.startswith("- Stored review on a keep"))
+        assert line == (
+            "- Stored review on a keep (writeback, n=4 keeps): "
+            "opened 2, unchanged 0, no_rescore 1, invalid 1, stale 0, failed 0"
+        )
+        assert all(code in line for code in WRITEBACK_CODES)
+
+    def test_a_report_without_the_writeback_block_still_renders(self):
+        result = rt.metrics.gate_monitor([], rt.comparable_record)
+        del result["writeback"]
+        assert "Stored review on a keep (writeback, n=0 keeps)" in rt.render_gate_report(result)
 
     def test_reads_permission_and_counted_visible_from_real_records(self):
         """Records as regen_gate.py writes them since #11948: `visible` counts only

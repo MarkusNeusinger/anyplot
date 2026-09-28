@@ -258,7 +258,7 @@ A regeneration replaces an implementation that is already live on main. It gets 
 
 Your job is an honest comparison; the gate does the arithmetic. Workflow variables for this step: `PREV_RENDERS` (`available` / `missing`), `PREV_RENDER_LIGHT` and `PREV_RENDER_DARK` (paths of the predecessor's renders), `PREV_LINES` and `NEW_LINES` (line counts of the previous and the new source).
 
-1. **Re-score the predecessor.** If `PREV_RENDERS` is `missing`, skip steps 1–4, do not write `review_regen.json`, and say so in the comment (the gate keeps the live implementation). Otherwise open `PREV_RENDER_LIGHT` and `PREV_RENDER_DARK` (the production renders currently on the website) and `/tmp/anyplot-prev-impl${EXT}` (their source — its header reads `Quality: hidden/100` on purpose; do not look the stored score up elsewhere, for example in main's metadata or git history), and score them against the **same** criteria — steps 5c–8, same score caps, same calibration. The result is `prev_rescored`, and its 24 item scores are `prev_checklist` (`{"VQ-01": 7, "VQ-02": 4, …}`: every criterion, each an integer from 0 to its maximum). Number the predecessor's *defects* you find (8a) `P1`, `P2`, … and name the rule each one violates: the criterion, or the `C` id of an `A good version shows:` bullet.
+1. **Re-score the predecessor.** If `PREV_RENDERS` is `missing`, skip steps 1–5, do not write `review_regen.json` or `review_prev.json`, and say so in the comment (the gate keeps the live implementation). Otherwise open `PREV_RENDER_LIGHT` and `PREV_RENDER_DARK` (the production renders currently on the website) and `/tmp/anyplot-prev-impl${EXT}` (their source — its header reads `Quality: hidden/100` on purpose; do not look the stored score up elsewhere, for example in main's metadata or git history), and score them against the **same** criteria — steps 5c–8, same score caps, same calibration. The result is `prev_rescored`, and its 24 item scores are `prev_checklist` (`{"VQ-01": 7, "VQ-02": 4, …}`: every criterion, each an integer from 0 to its maximum). Number the predecessor's *defects* you find (8a) `P1`, `P2`, … and name the rule each one violates: the criterion, or the `C` id of an `A good version shows:` bullet. They become the defect lines of `review_prev.json`, in that order (step 5).
 2. **Read the previous review** `/tmp/anyplot-prev-review.md`. Its weaknesses carry stable ids `W1`..`Wn`, each tagged `(defect)`, `(suggestion)` or `(older review)`. When it has a "Characteristic bullets" list (`C1`..`Cn`, taken from the spec's "What a good version looks like" section), its `A good version shows:` bullets are properties a good version must show; its `Expected, not a defect:` bullets are permissions and can never be an improvement `ref`. When the list is absent, there are no `C` ids — never invent one.
 
    Then **classify every `W`**, looking at the predecessor's renders only (not the new ones), as one of:
@@ -306,6 +306,15 @@ Your job is an honest comparison; the gate does the arithmetic. Workflow variabl
 ```
 
 `regressions` entries use `{"what": "...", "where_visible": "..."}`. Every `W` ref must be an id from `/tmp/anyplot-prev-review.md`, and every `C` ref an id of an `A good version shows:` bullet from its characteristic list — an unknown id makes the whole file invalid and the gate keeps the live implementation, and the gate does not count an improvement that cites an `Expected, not a defect:` bullet. Classification entries never invalidate the file: a missing or malformed `prev_weaknesses` entry leaves that `W` unclassified, and an unclassified `W` counts as a suggestion. Report regressions even when you also found improvements; the gate needs both.
+
+5. **Write `review_prev.json`** (repository root, after `review_regen.json` parses): your re-score of the predecessor as a full review. When the gate keeps the live implementation, this file becomes its stored review, and the next regeneration starts from it. So write it as a standalone review of the predecessor: never mention the new render, the comparison, or the regeneration. Writing it changes nothing you decided above; `prev_rescored`, `prev_checklist`, and the comparison stay as they are.
+   - `image_description` — step 10's template, for the predecessor's production renders (`PREV_RENDER_LIGHT` is its light render, `PREV_RENDER_DARK` its dark one).
+   - `criteria_checklist` — the shape of `review_checklist.json`: the six keys, their maxima, every criterion as an item. Every item score equals the same item in `prev_checklist`.
+   - `strengths` and `weaknesses` — as in 8a. The weaknesses are your `P1`, `P2`, … defects as defect lines, in that order and without the `P` id, then at most three `Suggestion:` lines.
+   - `verdict` — `APPROVED` or `REJECTED`, your verdict on the predecessor.
+   - No score key: the stored score is `prev_rescored`.
+
+   Step 10 has the example; its self-check compares the file with `prev_checklist`.
 
 ### 9. Post Verdict as PR Comment on PR #${PR_NUMBER}
 
@@ -471,22 +480,52 @@ cat > review_regen.json << 'EOF'
 EOF
 python3 -c "import json; json.load(open('review_regen.json'))"
 
+# Regeneration only, with review_regen.json (step 8b step 5): your re-score of
+# the predecessor as a full review, stored as its review when the gate keeps
+# it. The shapes of the files above, every criteria_checklist item score equal
+# to prev_checklist, the P1, P2, … defect lines first, and no score key.
+cat > review_prev.json << 'EOF'
+{
+  "image_description": "Light render (plot-light.png):\n  Background: ...\n  Chrome: ...\n  Data: ...\n  Legibility verdict: PASS\n\nDark render (plot-dark.png):\n  Background: ...\n  Chrome: ...\n  Data: ...\n  Legibility verdict: PASS",
+  "criteria_checklist": {
+    "visual_quality": {
+      "score": 26,
+      "max": 30,
+      "items": [
+        {"id": "VQ-01", "name": "Text Legibility", "score": 7, "max": 8, "passed": true, "comment": "..."},
+        {"id": "VQ-02", "name": "No Overlap", "score": 4, "max": 6, "passed": false, "comment": "..."}
+      ]
+    },
+    "design_excellence": {"score": 12, "max": 20, "items": [...]},
+    "spec_compliance": {"score": 15, "max": 15, "items": [...]},
+    "data_quality": {"score": 14, "max": 15, "items": [...]},
+    "code_quality": {"score": 10, "max": 10, "items": [...]},
+    "library_mastery": {"score": 7, "max": 10, "items": [...]}
+  },
+  "strengths": ["Strength 1", "Strength 2"],
+  "weaknesses": ["VQ-02 (light): the BEAU-001 label overlaps the bubble above it … → …. Likely cause: ….", "Suggestion: …"],
+  "verdict": "REJECTED"
+}
+EOF
+python3 -c "import json; json.load(open('review_prev.json'))"
+
 # Self-check, last: the weakness lines against your checklist and, on a
-# regeneration that wrote review_regen.json, the classes and claims of step 8b.
+# regeneration that wrote review_regen.json, the classes and claims of step 8b
+# and review_prev.json against prev_checklist.
 # /tmp/anyplot-regen-gate.py is the workflow's own copy of the regen gate; skip
 # the check when it is missing.
 if [ -f /tmp/anyplot-regen-gate.py ]; then
   FLAGS=(--weaknesses review_weaknesses.json --checklist review_checklist.json)
   if [ -f review_regen.json ]; then
-    FLAGS+=(--regen review_regen.json --prev-weaknesses /tmp/anyplot-prev-weaknesses.json --spec-file plots/${SPEC_ID}/specification.md)
+    FLAGS+=(--regen review_regen.json --prev-weaknesses /tmp/anyplot-prev-weaknesses.json --spec-file plots/${SPEC_ID}/specification.md --prev-review review_prev.json)
   fi
   python3 /tmp/anyplot-regen-gate.py check-feedback "${FLAGS[@]}"
 fi
 ```
 
-All scores and review files above (`quality_score.txt`, `review_checklist.json`, …) describe the **new** implementation. The predecessor's re-score goes only into `review_regen.json`.
+All scores and review files above (`quality_score.txt`, `review_checklist.json`, …) describe the **new** implementation, except `review_regen.json` and `review_prev.json`, which describe your re-score of the predecessor.
 
-Fix what `check-feedback` lists by changing the claim — a weakness line, a class or `rule` in `prev_weaknesses`, a `rule` on an improvement, or an entry in `improvements` — never `prev_checklist` or `review_checklist.json`, which are final. Then run the check once more.
+Fix what `check-feedback` lists by changing the claim — a weakness line, a class or `rule` in `prev_weaknesses`, a `rule` on an improvement, or an entry in `improvements` — never `prev_checklist` or `review_checklist.json`, which are final. A `review_prev.json` problem is fixed in `review_prev.json`: its checklist copies `prev_checklist`, never the other way round. Then run the check once more.
 
 ### 11. Generate impl_tags
 
@@ -523,4 +562,4 @@ The 5 dimensions:
 - Mark criteria as N/A when not applicable (e.g., legend for single-series)
 - **Score strictly**: median implementation should score 72-78, not 90+
 - **Design Excellence defaults are low**: DE-01=4, DE-02=2, DE-03=2 — raise only with evidence
-- All review data (strengths, weaknesses, image_description, criteria_checklist) is saved to metadata for future regeneration. Be specific!
+- All review data (strengths, weaknesses, image_description, criteria_checklist) is saved to metadata for future regeneration, including `review_prev.json`, which is stored as the live implementation's review when it stays. Be specific!
