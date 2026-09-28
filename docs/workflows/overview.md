@@ -84,6 +84,12 @@ The regen gate numbers the bullets `C1`..`Cn` in document order and never
 compares these ids across PRs. Append new bullets at the end, and edit a
 section only when no regeneration PR for that spec is open.
 
+On a `-basic` spec, the `A good version shows:` bullet that sets the basic
+variant's scope names reference lines, highlights, and callouts, as excluded
+or, where the Notes allow them, as allowed. The review and regeneration read
+that list as complete, so a layer the bullet leaves out reads as permitted. The
+style lint warns (W7) when one of the three is missing.
+
 When you review a spec PR before adding `approved`, check this section too: it
 must describe the plot type rather than generic ideals such as "no overlap",
 contain no numeric thresholds, and not contradict Description, Data, or Notes.

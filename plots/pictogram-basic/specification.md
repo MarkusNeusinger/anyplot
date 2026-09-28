@@ -31,5 +31,5 @@ A pictogram chart represents quantities using repeated icons or symbols, where e
 - A good version shows: each category as one left-aligned row of identical icons of one size and spacing, the icon count times one shared unit value giving the category's value, so row length compares like bar length.
 - A good version shows: a legend stating the unit value of one icon, drawn with the same icon the rows use.
 - A good version shows: a fractional remainder, where a value has one, as one partial icon at the row's end, cut or filled in proportion to the fraction, so it reads as part of an icon rather than a smaller whole one.
-- A good version shows: the basic variant's icon rows only: one icon type and one color for every row, or one icon per category as the Data's optional icon column allows, with category labels on the left and no sub-group colors within a row or callouts.
+- A good version shows: the basic variant's icon rows only: one icon type and one color for every row, or one icon per category as the Data's optional icon column allows, with category labels on the left and no highlighted rows or bands, reference lines, sub-group colors within a row or callouts.
 - Expected, not a defect: no value axis, ticks or gridlines, because the icon count carries the value, and rows of very different lengths, including one that is only a partial icon.

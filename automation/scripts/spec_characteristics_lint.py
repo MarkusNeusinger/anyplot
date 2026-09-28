@@ -175,6 +175,23 @@ PERMISSION_WORDS_RE = re.compile(
     r"not a defect|\b(?:is|are) expected\b|\bis fine\b|\bis correct\b|\blegitimate\b|not an imbalance", re.IGNORECASE
 )
 
+# W7: the layer families a -basic variant bullet names, as excluded or as
+# allowed. Only "callout" counts for callouts: "annotation" does not, so "the
+# percentage annotations the Notes allow" cannot satisfy it by accident. A
+# reference needs its line ("reference or mean lines" counts, "reference
+# bubbles" does not).
+SCOPE_LAYERS = (
+    (
+        "reference lines",
+        re.compile(
+            r"\breference\s+(?:or\s+\w+\s+)?lines?\b|\b(?:mean|median|average|target|threshold)\s+lines?\b",
+            re.IGNORECASE,
+        ),
+    ),
+    ("highlights", re.compile(r"\bhighlight", re.IGNORECASE)),
+    ("callouts", re.compile(r"\bcallouts?\b", re.IGNORECASE)),
+)
+
 
 @dataclass(frozen=True)
 class Finding:
@@ -442,6 +459,33 @@ def _contradictions(text: str, lines: list[str], bullets: list[tuple[int, str]])
     return findings
 
 
+def _missing_scope_layers(scope: list[str]) -> list[str]:
+    """W7: the layer families that a -basic spec's variant bullets leave unnamed.
+
+    The review and the regeneration read the variant bullet's list as
+    complete: an unnamed mean line and callout survived a count-basic
+    regeneration, while a named cumulative line was removed and cited as the
+    bullet's C-id. So the bullet names reference lines, highlights and
+    callouts, as excluded or, where the Notes allow one, as allowed.
+
+    The check is mention-only: a family named "as the Notes allow" passes too,
+    because its polarity against the Notes is the backfill reviewer's call.
+    W7 stays a warning even under ``--strict``, since a domain -basic id can
+    have an honest reason to leave a family out.
+
+    Known cost, accepted: spec-create will satisfy W7 on ids where a family
+    cannot occur (reference lines on a pie) by naming it anyway, so those
+    bullets get a formulaic tail. That is intended; do not "fix" it by
+    exempting plot types.
+    """
+    joined = " ".join(scope)
+    return [name for name, pattern in SCOPE_LAYERS if not pattern.search(joined)]
+
+
+def _join_or(names: list[str]) -> str:
+    return names[0] if len(names) == 1 else f"{', '.join(names[:-1])} or {names[-1]}"
+
+
 def check_style(text: str, spec_id: str, strict: bool = False) -> list[Finding]:
     """House-style findings for one spec. Hard rules are errors only when ``strict``."""
     lines = text.splitlines()
@@ -543,17 +587,32 @@ def check_style(text: str, spec_id: str, strict: bool = False) -> list[Finding]:
                     )
                 )
 
-    if spec_id.endswith("-basic") and not any(
-        characteristic_kind(item) == KIND_SHOWS and "basic variant" in item.casefold() for _, item in bullets
-    ):
-        findings.append(
-            Finding(
-                "W4",
-                f"a -basic spec needs an '{SHOWS_PREFIX}' bullet naming the basic variant's scope ('the basic variant's …')",
-                section.heading_line,
-                WARNING,
+    if spec_id.endswith("-basic"):
+        scope = [
+            (number, item)
+            for number, item in bullets
+            if characteristic_kind(item) == KIND_SHOWS and "basic variant" in item.casefold()
+        ]
+        if not scope:
+            findings.append(
+                Finding(
+                    "W4",
+                    f"a -basic spec needs an '{SHOWS_PREFIX}' bullet naming the basic variant's scope "
+                    "('the basic variant's …')",
+                    section.heading_line,
+                    WARNING,
+                )
             )
-        )
+        elif missing := _missing_scope_layers([item for _, item in scope]):
+            findings.append(
+                Finding(
+                    "W7",
+                    f"the basic variant's bullet names no {_join_or(missing)}: the review reads its list as "
+                    "complete, so name them as excluded, or as allowed where the Notes allow them",
+                    scope[0][0],
+                    WARNING,
+                )
+            )
 
     findings += _contradictions(text, lines, bullets)
     return findings

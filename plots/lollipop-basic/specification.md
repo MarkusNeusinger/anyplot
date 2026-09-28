@@ -31,5 +31,5 @@ A lollipop chart displays categorical data with thin lines (stems) extending fro
 - A good version shows: one thin stem per category from a zero baseline to a circular marker at the value, so stem length stays proportional to the value, on a value axis that is never truncated.
 - A good version shows: stems clearly thinner than the markers, so each category reads as a dot on a stick rather than a thin bar, with stems and markers visible in both themes.
 - A good version shows: categories in a meaningful order: by value, as the Notes suggest, or their natural order when they have one, with vertical stems, or horizontal ones when category labels are long.
-- A good version shows: the basic variant's single series: one color for all stems and markers, and no second series, error bars, mean or reference line, value-dependent coloring or callouts.
+- A good version shows: the basic variant's single series: one color for all stems and markers, and no second series, error bars, mean or reference line, highlighted lollipops or bands, value-dependent coloring or callouts.
 - Expected, not a defect: stems of very different lengths, including one dominant value and one near zero whose marker sits almost on the baseline; they are the point of the chart, not an imbalance to fix.

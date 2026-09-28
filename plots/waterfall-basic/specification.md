@@ -32,5 +32,5 @@ A waterfall chart visualizes how an initial value is affected by a series of int
 - A good version shows: connector lines from the end of each bar to the start of the next, so the running total can be followed across the chart.
 - A good version shows: increases and decreases in a contrasting pair of semantic colors (such as green for gains and red for losses), and the start and end totals in a third, distinct color.
 - A good version shows: a running total label on or near every bar, as the Notes ask, with a change bar's delta shown beside it if drawn, and the labels readable in both themes and not colliding with the connectors.
-- A good version shows: the basic variant's single sequence of changes between one start and one end total, with no intermediate subtotal bars, second series or callouts.
+- A good version shows: the basic variant's single sequence of changes between one start and one end total, with no intermediate subtotal bars, second series, reference or target lines, highlights beyond the totals' own color, or callouts beyond the running total and change labels.
 - Expected, not a defect: floating bars that start partway up the value axis rather than at zero, and changes of very different size, including one that dwarfs the rest; floating is how the chart shows each change against the running total.

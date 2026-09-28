@@ -31,4 +31,4 @@ A basic line plot connects data points with straight lines to show how a continu
 - A good version shows: a series that wiggles like real data; a perfectly smooth curve suggests fabricated data unless the scenario is a model output.
 - A good version shows: missing values, if the data has any, as a gap in the line rather than a straight bridge across it.
 - A good version shows: a y axis that spans the data: it includes zero only when the data sits near it or the quantity is a count from zero, and is never forced to zero when that would flatten the signal.
-- A good version shows: the basic variant's single line: no second series, trend line, shaded band or event annotations.
+- A good version shows: the basic variant's single line: no second series, trend or reference lines, shaded or highlight bands, highlighted points, or callouts and event annotations.

@@ -30,4 +30,4 @@ A fundamental 2D scatter plot that displays the relationship between two numeric
 - Expected, not a defect: points overlapping where the cloud is dense, visible noise around the trend and a few outliers.
 - A good version shows: moderate transparency, so piled-up areas read darker, with no point jittered or nudged off its values to separate them.
 - A good version shows: a cloud that scatters like real paired data; one lying exactly on a line suggests fabricated data.
-- A good version shows: the basic variant's x and y only: no color or size channel, no regression or trend line, no marginal distributions and no point labels.
+- A good version shows: the basic variant's x and y only: no color or size channel, no regression, trend or reference lines, no highlighted points or bands, no marginal distributions, and no point labels, callouts or statistic annotations.
