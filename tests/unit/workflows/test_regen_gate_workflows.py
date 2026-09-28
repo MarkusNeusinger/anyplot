@@ -309,6 +309,47 @@ class TestImplReviewProvenance:
         assert "exit 1" not in after
 
 
+class TestReviewFeedbackFormat:
+    """P3: defect lines and suggestions. The workflow side has no local loop,
+    so these pin the wiring: the canvas weakness is a defect line, the
+    reviewer's self-check has its gate copy, the format check never gates,
+    and the generator sees the C ids."""
+
+    def test_canvas_weakness_is_a_defect_line(self):
+        script = _step("impl-review.yml", "Canvas dimension gate")["run"]
+        assert 'f"VQ-05 (both): Canvas dimensions drifted from required target. "' in script
+
+    def test_self_check_copy_comes_from_the_workflow_ref(self):
+        script = _step("impl-review.yml", "Checkout PR code")["run"]
+        copy = script[: script.index("git fetch origin")]
+        assert "cp automation/scripts/regen_gate.py /tmp/anyplot-regen-gate.py" in copy
+
+    def test_format_check_never_gates_and_runs_before_the_metadata_step(self):
+        names = _step_names("impl-review.yml")
+        check = names.index("Check review feedback format (never gating)")
+        assert check < names.index("Update metadata and implementation header")
+        assert names.index("Regen gate") < check
+        step = _step("impl-review.yml", "Check review feedback format (never gating)")
+        assert step["continue-on-error"] is True
+        script = step["run"]
+        assert '"$RUNNER_TEMP/regen-tools/regen_gate.py" check-feedback --warn-only' in script
+        assert "--weaknesses review_weaknesses.json --checklist review_checklist.json" in script
+        assert '[ "$IS_REGEN" = "true" ] && [ -f review_regen.json ]' in script
+        assert "--prev-weaknesses /tmp/anyplot-prev-weaknesses.json" in script
+        # Monitoring only: it writes no file the metadata step reads.
+        assert ">" not in _code_only(script).replace("->", "")
+
+    def test_gate_step_needs_no_new_flag(self):
+        """The gate reads review_checklist.json next to --regen-json (the repo root)."""
+        script = _step("impl-review.yml", "Regen gate")["run"]
+        assert "--regen-json review_regen.json" in script
+        assert "--checklist" not in script
+
+    def test_generator_context_passes_the_spec_file(self):
+        script = _step("impl-generate.yml", "Extract previous review feedback (regeneration)")["run"]
+        assert '--spec-file "plots/${SPEC_ID}/specification.md"' in script
+
+
 class TestImplGenerateHeaderReset:
     """M3: the new file's header says `Quality: pending` before the review sees it."""
 

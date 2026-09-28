@@ -379,11 +379,15 @@ jobs:
           LIBRARY: ${{ steps.inputs.outputs.library }}
         run: |
           # Shared extractor (also used by impl-review.yml): writes
-          # /tmp/anyplot-prev-review.md with stable weakness ids W1..Wn, the
-          # same ids the regen review refers to in review_regen.json.
+          # /tmp/anyplot-prev-review.md with stable weakness ids W1..Wn (each
+          # tagged defect, suggestion or older review), the same ids the regen
+          # review refers to in review_regen.json, and the spec's
+          # characteristic bullets C1..Cn, so the generator can name the
+          # bullet that makes a weakness obsolete.
           .venv/bin/python3 automation/scripts/regen_gate.py context \
             --metadata "plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml" \
             --spec-id "$SPEC_ID" --language "$LANGUAGE" --library "$LIBRARY" \
+            --spec-file "plots/${SPEC_ID}/specification.md" \
             --out-md /tmp/anyplot-prev-review.md \
             --out-weaknesses /tmp/anyplot-prev-weaknesses.json
           echo "::notice::Extracted previous review to /tmp/anyplot-prev-review.md"
