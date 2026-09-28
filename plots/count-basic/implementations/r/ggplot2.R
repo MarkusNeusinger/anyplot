@@ -5,6 +5,7 @@
 
 library(ggplot2)
 library(dplyr)
+library(scales)
 library(ragg)
 
 set.seed(42)
@@ -57,13 +58,20 @@ title_text <- "count-basic · r · ggplot2 · anyplot.ai"
 # geom_text(stat = "count") lets ggplot2's own stat engine tally and label the
 # bars in one pass -- no separate dplyr::count() data frame needed for the
 # labels, exercising the grammar's computed-aesthetic machinery (after_stat())
-# beyond geom_bar()'s implicit tally.
+# beyond geom_bar()'s implicit tally. A second distinctive technique layers on
+# top: scales::comma()/percent() format the computed counts/proportions
+# instead of hand-rolled sprintf() math, the idiomatic ggplot2 pairing for
+# stat-derived labels.
 p <- ggplot(df, aes(x = response)) +
   geom_bar(width = 0.62, fill = BAR_FILL, color = BAR_EDGE, linewidth = 0.4) +
   geom_text(
     stat = "count",
     aes(
-      label    = sprintf("%d (%.0f%%)", after_stat(count), 100 * after_stat(count) / n_total),
+      label = sprintf(
+        "%s (%s)",
+        scales::comma(after_stat(count)),
+        scales::percent(after_stat(count) / n_total, accuracy = 1)
+      ),
       # The most-frequent response's label reads bolder and slightly larger --
       # the same bar color throughout, emphasis carried by type weight alone.
       fontface = ifelse(after_stat(count) == max(after_stat(count)), "bold", "plain"),
@@ -73,7 +81,10 @@ p <- ggplot(df, aes(x = response)) +
     color = INK
   ) +
   scale_size_identity() +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.14))) +
+  # Extra headroom above the tallest bar (was 0.14) so its bold label sits
+  # clear of the panel edge -- a deliberate breathing-room refinement, not a
+  # change to the data-to-baseline mapping.
+  scale_y_continuous(expand = expansion(mult = c(0, 0.19))) +
   labs(
     title    = title_text,
     subtitle = sprintf("Likert-scale survey responses, n = %d", n_total),
@@ -93,7 +104,12 @@ p <- ggplot(df, aes(x = response)) +
     axis.ticks         = element_blank(),
     axis.line.x        = element_line(color = INK_SOFT, linewidth = 0.3),
     plot.title        = element_text(color = INK, size = 12, face = "bold"),
-    plot.subtitle     = element_text(color = INK_SOFT, size = 8.5, margin = margin(b = 8))
+    plot.subtitle     = element_text(color = INK_SOFT, size = 8.5, margin = margin(b = 8)),
+    # Title/subtitle flush to the full plot width (not just the panel) and a
+    # touch more canvas whitespace all around -- a spacing/typography-only
+    # refinement, no new marks or color.
+    plot.title.position = "plot",
+    plot.margin          = margin(t = 14, r = 18, b = 10, l = 10)
   )
 
 # --- Save -------------------------------------------------------------------
