@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' count-basic: Basic Count Plot
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 87/100 | Updated: 2026-09-28
+#' Quality: pending | Updated: 2026-09-28
 
 library(ggplot2)
 library(dplyr)
