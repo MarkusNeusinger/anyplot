@@ -569,8 +569,10 @@ jobs:
       # author app/github-actions); anything else is a no-op. Its score must be
       # the prev_rescored of the kept PR's gate record by github-actions[bot]
       # (verdict keep, writeback opened) — the only model-free source for the
-      # number. Waits up to 5 minutes for that record: impl-review dispatches
-      # this job before its verdict step comments on and closes the kept PR.
+      # number — and its review.model and review.criteria_version the record's
+      # model and criteria_version. Waits up to 5 minutes for that record:
+      # impl-review dispatches this job before its verdict step comments on
+      # and closes the kept PR.
       - name: Check the write-back PR
         id: check
         if: steps.branch.outputs.run == 'true'

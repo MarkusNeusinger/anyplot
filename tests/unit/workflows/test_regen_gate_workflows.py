@@ -379,6 +379,16 @@ class TestReviewWriteback:
         assert step["timeout-minutes"] == 5
         assert step["env"]["GH_TOKEN"] == "${{ secrets.GITHUB_TOKEN }}"
 
+    def test_step_turns_git_hooks_off_for_every_git_call(self):
+        """The workspace's .git/hooks is the model session's to write; the step env covers
+        worktree add, fetch, commit and both pushes (test_review_writeback_step.py runs it)."""
+        env = _step("impl-review.yml", WRITEBACK_STEP)["env"]
+        assert (env["GIT_CONFIG_COUNT"], env["GIT_CONFIG_KEY_0"], env["GIT_CONFIG_VALUE_0"]) == (
+            "1",
+            "core.hooksPath",
+            "/dev/null",
+        )
+
     def test_admin_token_never_enters_impl_review(self):
         assert "ADMIN_TOKEN" not in (WORKFLOWS_DIR / "impl-review.yml").read_text(encoding="utf-8")
 
@@ -438,6 +448,8 @@ class TestReviewWriteback:
         assert "the live code and the production images are unchanged" in comment
         assert "main and the production images are unchanged" not in comment
         assert "**Stored review:** this session's re-score of the live implementation" in keep
+        # `opened` means dispatched, not merged.
+        assert "is stored once impl-merge merges #${WB_PR}." in keep
         assert keep.count('STORED="**Stored review:** unchanged (') == 5
 
     def test_impl_merge_admin_token_only_in_the_two_merge_steps(self):

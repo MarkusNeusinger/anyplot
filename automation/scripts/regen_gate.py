@@ -1036,9 +1036,11 @@ def check_prev_review(prev_review: Any, regen: Any) -> list[str]:
     review when the gate keeps it. So it has the shapes of the new render's
     review files: a non-empty ``image_description``; a ``criteria_checklist``
     with exactly the six category keys, their maxima and every criterion as an
-    item with an integer score in range, each item equal to the same item of
-    ``review_regen.json``'s ``prev_checklist`` (the gate contract stays
-    authoritative); ``strengths`` and ``weaknesses`` as lists of non-empty
+    item with an integer score in range, each category's score the sum of its
+    items, each item equal to the same item of ``review_regen.json``'s
+    ``prev_checklist`` (the gate contract stays authoritative); the total is
+    not compared with ``prev_rescored``, which a score cap (step 8) may hold
+    below it; ``strengths`` and ``weaknesses`` as lists of non-empty
     strings, the weaknesses being defect lines first and then at most
     ``MAX_SUGGESTIONS`` ``Suggestion:`` lines; and ``verdict`` ``APPROVED`` or
     ``REJECTED``. It has no score: the stored score is ``prev_rescored``, and
@@ -1111,17 +1113,23 @@ def _prev_review_checklist_problems(checklist: Any, regen: Any) -> list[str]:
             problems.append(f"criteria_checklist.{key}.items must be a list")
             continue
         seen: set[str] = set()
+        # The category total is compared only when every item of it is sound.
+        items_sound = True
+        total = 0
         for i, item in enumerate(raw_items, start=1):
             where = f"criteria_checklist.{key}.items[{i}]"
             if not isinstance(item, Mapping):
                 problems.append(f"{where} is not an object")
+                items_sound = False
                 continue
             cid = item.get("id")
             if not isinstance(cid, str) or not cid.startswith(f"{prefix}-") or cid not in CRITERIA:
                 problems.append(f"{where}.id {cid!r} is not a {prefix} criterion")
+                items_sound = False
                 continue
             if cid in seen:
                 problems.append(f"{where} repeats {cid}")
+                items_sound = False
                 continue
             seen.add(cid)
             if not (_is_int(item.get("max")) and item["max"] == CRITERIA[cid]):
@@ -1130,11 +1138,17 @@ def _prev_review_checklist_problems(checklist: Any, regen: Any) -> list[str]:
                 problems.append(
                     f"{where} ({cid}) score must be an integer from 0 to {CRITERIA[cid]} (got {item.get('score')!r})"
                 )
+                items_sound = False
                 continue
             items[cid] = item["score"]
+            total += item["score"]
         absent = [cid for cid in CRITERIA if cid.startswith(f"{prefix}-") and cid not in seen]
         if absent:
             problems.append(f"criteria_checklist.{key} lacks the items {', '.join(absent)}")
+        elif items_sound and _is_int(score) and 0 <= score <= top and score != total:
+            problems.append(
+                f"criteria_checklist.{key}.score {score} is not the sum of its item scores ({total}): set it to {total}"
+            )
 
     raw_prev = regen.get("prev_checklist") if isinstance(regen, Mapping) else None
     if not isinstance(raw_prev, Mapping):

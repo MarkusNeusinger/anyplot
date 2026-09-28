@@ -83,9 +83,10 @@ copy never reads the checkout's). The regen gate's re-score of the live
 implementation, written by the review as `review_prev.json` (step 8b of
 `ai-quality-review.md`, step 5), becomes that implementation's stored review:
 
-- `check` — `review_prev.json` has the shapes of the review files, and its
-  checklist equals `review_regen.json`'s `prev_checklist` item for item; any
-  problem means no write-back.
+- `check` — `review_prev.json` has the shapes of the review files, each
+  category score is the sum of its items, and its checklist equals
+  `review_regen.json`'s `prev_checklist` item for item; any problem means no
+  write-back.
 - `apply` — writes the score, the five review fields, `review.model`, and
   `review.criteria_version` into the metadata with the metadata writer's YAML
   settings (an empty provenance value removes the key), and with `--impl` the
@@ -96,7 +97,8 @@ implementation, written by the review as `review_prev.json` (step 8b of
   PR with the `review-writeback` label by `app/github-actions` (otherwise a
   no-op), and its score equals the `prev_rescored` of the first gate record
   `github-actions[bot]` posted on the kept PR after the write-back PR opened
-  (keep, same pair, `writeback: opened`, the same number in the header). It
+  (keep, same pair, `writeback: opened`, the same number in the header, and
+  the record's `model` and `criteria_version` in the metadata's `review`). It
   waits up to `--wait` seconds for that record, because `impl-review.yml`
   dispatches the merge before it closes the kept PR.
 - `check-fresh` — `main` still holds the merge base's blobs of the pair's two

@@ -172,6 +172,28 @@ class TestCheck:
         assert "criteria_checklist differs from prev_checklist at VQ-02 5 vs 4" in out
         assert "change review_prev.json, never prev_checklist" in out
 
+    def test_a_category_score_that_is_not_the_sum_of_its_items(self, tmp_path, capsys):
+        checklist = _checklist_json(PREV_CHECKLIST)
+        checklist["design_excellence"]["score"] += 2
+        code, out = _check(tmp_path, capsys, _prev_review(criteria_checklist=checklist))
+        assert code == 1
+        assert (
+            "criteria_checklist.design_excellence.score 14 is not the sum of its item scores (12): set it to 12" in out
+        )
+
+    def test_a_capped_rescore_keeps_the_item_sums(self, tmp_path, capsys):
+        """A score cap (step 8) holds prev_rescored below the item total; the categories still sum their items."""
+        assert PREV_RESCORED > 49
+        assert _check(tmp_path, capsys, _prev_review(), regen=_regen(prev_rescored=49))[0] == 0
+
+    def test_an_incomplete_category_is_not_summed(self, tmp_path, capsys):
+        checklist = _checklist_json(PREV_CHECKLIST)
+        checklist["library_mastery"]["items"].pop()
+        code, out = _check(tmp_path, capsys, _prev_review(criteria_checklist=checklist))
+        assert code == 1
+        assert "library_mastery lacks the items LM-02" in out
+        assert "is not the sum" not in out
+
     def test_no_prev_checklist_to_compare(self, tmp_path, capsys):
         regen = _regen()
         del regen["prev_checklist"]
@@ -611,8 +633,8 @@ class FakeGh:
         raise AssertionError(f"unexpected gh call {argv}")
 
 
-def _head_files(score: int = 80, header: int | None = 80):
-    meta = yaml.safe_dump({"library": LIB, "quality_score": score})
+def _head_files(score: int = 80, header: int | None = 80, review: dict | None = None):
+    meta = yaml.safe_dump({"library": LIB, "quality_score": score, **({"review": review} if review else {})})
     impl = wb.regen_gate.set_header_score(HEADER_R, header) if header is not None else "library(ggplot2)\n"
 
     def read(sha: str, path: str) -> str | None:
@@ -708,6 +730,35 @@ class TestCheckPr:
         result = _check_pr(FakeGh(), read=_head_files(score=80, header=87))
         assert result.status == "fail"
         assert "differs from the header number 87" in result.reason
+
+    PROVENANCE = {"model": "claude-opus-5", "criteria_version": "qc-a.aqr-b.sg-c.lib-d"}
+
+    def test_the_review_provenance_is_the_records(self):
+        gh = FakeGh(comments=[FakeGh.comment(_record(**self.PROVENANCE))])
+        assert _check_pr(gh, read=_head_files(review=dict(self.PROVENANCE))).status == "ok"
+
+    @pytest.mark.parametrize(
+        ("review", "why"),
+        [
+            (
+                {"model": "claude-sonnet-5", "criteria_version": "qc-a.aqr-b.sg-c.lib-d"},
+                "model 'claude-opus-5' differs from the metadata's review.model 'claude-sonnet-5'",
+            ),
+            ({"model": "claude-opus-5"}, "criteria_version 'qc-a.aqr-b.sg-c.lib-d' differs"),
+            (None, "model 'claude-opus-5' differs from the metadata's review.model None"),
+        ],
+    )
+    def test_other_review_provenance_fails(self, review, why):
+        gh = FakeGh(comments=[FakeGh.comment(_record(**self.PROVENANCE))])
+        result = _check_pr(gh, read=_head_files(review=review))
+        assert result.status == "fail"
+        assert why in result.reason, result.reason
+
+    def test_an_unresolved_model_is_n_a_on_both_sides(self):
+        """apply removes an unresolved review.model; the record says n/a."""
+        gh = FakeGh(comments=[FakeGh.comment(_record(model="n/a", criteria_version="qc-a.aqr-b.sg-c.lib-d"))])
+        read = _head_files(review={"criteria_version": "qc-a.aqr-b.sg-c.lib-d"})
+        assert _check_pr(gh, read=read).status == "ok"
 
     def test_the_metadata_must_carry_an_integer_score(self):
         result = _check_pr(FakeGh(), read=lambda sha, path: yaml.safe_dump({"quality_score": "80"}))

@@ -2017,6 +2017,15 @@ CLEAN_REGEN = _regen(
 BAD_PREV_REVIEWS = [
     pytest.param({"verdict": "OK"}, id="verdict"),
     pytest.param({"criteria_checklist": _checklist_json({**PREV_CHECKLIST, "VQ-03": 5})}, id="checklist-mismatch"),
+    pytest.param(
+        {
+            "criteria_checklist": {
+                **_checklist_json(PREV_CHECKLIST),
+                "code_quality": {**_checklist_json(PREV_CHECKLIST)["code_quality"], "score": 3},
+            }
+        },
+        id="category-sum",
+    ),
     pytest.param({"weaknesses": ["Suggestion: a", DEFECT_LINE]}, id="order"),
     pytest.param({"weaknesses": ["P1: " + DEFECT_LINE]}, id="p-prefix"),
     pytest.param({"image_description": ""}, id="description"),

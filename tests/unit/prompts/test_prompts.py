@@ -767,6 +767,7 @@ class TestDefectsAndSuggestions:
         for key in ("image_description", "criteria_checklist", "strengths", "weaknesses", "verdict"):
             assert f"`{key}`" in step, key
         assert "Every item score equals the same item in `prev_checklist`" in step
+        assert "each category's `score` is the sum of its items" in step
         assert "skip steps 1–5, do not write `review_regen.json` or `review_prev.json`" in step
         assert "They become the defect lines of `review_prev.json`, in that order (step 5)" in step
         assert "without the `P` id, then at most three `Suggestion:` lines" in step
@@ -783,12 +784,17 @@ class TestDefectsAndSuggestions:
             assert f'"{key}"' in example, key
         assert '"quality_score"' not in example and '"prev_rescored"' not in example
         # The example agrees with the review_regen.json example: its items are
-        # prev_checklist's, and its categories add up to prev_rescored.
+        # prev_checklist's, each category is the sum of its prev_checklist
+        # items, and the categories add up to prev_rescored (no cap applies).
         regen = json.loads(step.split("cat > review_regen.json << 'EOF'\n", 1)[1].split("\nEOF", 1)[0])
         items = re.findall(r'"id": "([A-Z]{2}-\d{2})", "name": "[^"]*", "score": (\d+)', example)
         assert items and all(regen["prev_checklist"][cid] == int(score) for cid, score in items)
         categories = re.findall(r'"[a-z_]+": \{\s*"score": (\d+),\s*"max": (\d+)', example)
         assert len(categories) == 6
+        assert [int(score) for score, _ in categories] == [
+            sum(v for cid, v in regen["prev_checklist"].items() if cid.startswith(prefix))
+            for prefix in ("VQ", "DE", "SC", "DQ", "CQ", "LM")
+        ]
         assert sum(int(score) for score, _ in categories) == regen["prev_rescored"]
         assert [int(top) for _, top in categories] == [30, 20, 15, 15, 10, 10]
         weaknesses = json.loads(re.search(r'"weaknesses": (\[.*\]),', example).group(1))

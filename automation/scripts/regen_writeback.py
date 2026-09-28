@@ -19,7 +19,8 @@ travels as one:
   ``review-writeback/{spec}/{library}/{kept PR}`` (label ``review-writeback``,
   ``GITHUB_TOKEN`` only) and dispatches ``impl-merge.yml``.
 - ``impl-merge.yml``'s ``writeback`` job runs ``check-pr`` (the pull request is
-  the bot's, and its score is the one the kept PR's gate record holds),
+  the bot's, and its score, review model and rules version are the ones the
+  kept PR's gate record holds),
   ``verify-diff`` (only the pair's review keys and header number change) and,
   before every merge attempt, ``check-fresh`` (``main`` did not change the
   pair's files since the branch was cut), then merges with the admin token.
@@ -409,6 +410,7 @@ def anchor_to_gate_record(
     since: str,
     score: int | None,
     header: int | None,
+    provenance: Mapping[str, Any] | None = None,
 ) -> tuple[str, str]:
     """``("ok"|"pending"|"fail", reason)`` for the kept PR and its gate record.
 
@@ -416,9 +418,12 @@ def anchor_to_gate_record(
     ``github-actions[bot]`` posted at or after ``since`` (the write-back PR's
     creation): the verdict step of the run that opened the write-back posts
     it right after. It must say keep, for this pair and PR, with
-    ``writeback: opened`` and a ``prev_rescored`` equal to the metadata's new
-    ``quality_score`` and to the header number when the file has a header.
+    ``writeback: opened``, a ``prev_rescored`` equal to the metadata's new
+    ``quality_score`` and to the header number when the file has a header, and
+    the ``model`` and ``criteria_version`` of the metadata's new ``review``
+    (``provenance``; an absent key is the record's ``n/a``).
     """
+    provenance = provenance or {}
     if kept.get("headRefName") != f"implementation/{spec}/{library}":
         return "fail", f"kept PR #{kept_pr} has head {kept.get('headRefName')!r}, not implementation/{spec}/{library}"
     if kept.get("state") == "MERGED" or kept.get("mergedAt"):
@@ -447,6 +452,13 @@ def anchor_to_gate_record(
         (isinstance(rescored, int) and not isinstance(rescored, bool), f"prev_rescored {rescored!r} is no score"),
         (rescored == score, f"prev_rescored {rescored!r} differs from the metadata's new quality_score {score!r}"),
         (header is None or rescored == header, f"prev_rescored {rescored!r} differs from the header number {header!r}"),
+        *(
+            (
+                regen_gate.record_token(record.get(key), limit) == regen_gate.record_token(provenance.get(key), limit),
+                f"{key} {record.get(key)!r} differs from the metadata's review.{key} {provenance.get(key)!r}",
+            )
+            for key, limit in (("model", 100), ("criteria_version", 200))
+        ),
     )
     for ok, why in checks:
         if not ok:
@@ -528,6 +540,8 @@ def _anchor_pr(
         return "fail", "; ".join(problems) or f"{meta} has no integer quality_score"
     impl_text = read_head(head, impl)
     header = regen_gate.header_score(impl_text) if impl_text is not None else None
+    raw_review = meta_data.get("review") if meta_data else None
+    provenance = raw_review if isinstance(raw_review, Mapping) else {}
     outputs.update(
         {
             "spec": spec,
@@ -556,7 +570,15 @@ def _anchor_pr(
         )
         comments = _json_lines(_gh_retry(gh, comments_api, sleep))
         status, reason = anchor_to_gate_record(
-            kept, comments, spec=spec, library=library, kept_pr=kept_pr, since=since, score=score, header=header
+            kept,
+            comments,
+            spec=spec,
+            library=library,
+            kept_pr=kept_pr,
+            since=since,
+            score=score,
+            header=header,
+            provenance=provenance,
         )
         if status != "pending":
             return status, reason

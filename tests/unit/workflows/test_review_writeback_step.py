@@ -5,6 +5,7 @@ pair's metadata and implementation) and a workspace clone detached at a PR
 head, with a fake `gh` that records its calls and a no-op `sleep`. Every path
 ends with exactly one `status` in the output file, and the workspace's branch
 and HEAD are where they were: the verdict step imports core.constants from it.
+The step's own `GIT_CONFIG_*` env applies, so no hook in the workspace runs.
 """
 
 from __future__ import annotations
@@ -175,6 +176,8 @@ class Setup:
         (self.tmp / "step.sh").write_text(script, encoding="utf-8")
         self.output.unlink(missing_ok=True)
         values = {
+            # The step's own git settings (hooks off), as Actions sets them.
+            **{k: str(v) for k, v in step["env"].items() if k.startswith("GIT_CONFIG_")},
             "PATH": f"{self.bin}{os.pathsep}{os.environ['PATH']}",
             "GITHUB_OUTPUT": str(self.output),
             "RUNNER_TEMP": str(self.runner_temp),
@@ -276,6 +279,24 @@ class TestWritebackStep:
         assert "workflow run impl-merge.yml --ref main -f pr_number=12001" in calls
         assert not any(c.startswith("pr close") for c in calls)
         setup.assert_workspace_untouched()
+
+    @pytest.mark.parametrize("hooks_off", [True, False])
+    def test_no_workspace_hook_runs(self, setup, hooks_off):
+        """Hooks the session could plant in the workspace's .git never run; the
+        control run without the step's GIT_CONFIG_* shows they would."""
+        hooks = setup.ws / ".git" / "hooks"
+        names = ("post-checkout", "pre-commit", "commit-msg", "post-commit", "pre-push", "reference-transaction")
+        for name in names:
+            (hooks / name).write_text(f'#!/bin/sh\necho {name} >> "{setup.tmp}/hooks-ran"\nexit 0\n', encoding="utf-8")
+            (hooks / name).chmod(0o755)
+        result = setup.run() if hooks_off else setup.run(GIT_CONFIG_COUNT="0")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert setup.status() == "opened"
+        ran = setup.tmp / "hooks-ran"
+        if hooks_off:
+            assert not ran.exists(), ran.read_text(encoding="utf-8")
+        else:
+            assert {"post-checkout", "pre-commit", "pre-push"} <= set(ran.read_text(encoding="utf-8").split())
 
     def test_a_branch_smoke_dispatches_on_its_own_ref(self, setup):
         assert setup.run(WORKFLOW_REF="feat/review-writeback").returncode == 0

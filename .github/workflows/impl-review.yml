@@ -1393,12 +1393,17 @@ jobs:
       # keep bookkeeping below. It runs the workflow-ref copy of the helper
       # (the model session can edit the workspace) and never checks anything
       # out in the workspace, from which the verdict step imports core.constants.
+      # Git hooks are off for every git call here (GIT_CONFIG_*): the
+      # workspace's .git, hooks included, is shared with that session.
       - name: Write back the re-score (regen keep)
         id: writeback
         if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && steps.regen.outputs.is_regen == 'true' && steps.gate.outputs.verdict != 'merge'
         continue-on-error: true
         timeout-minutes: 5
         env:
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: core.hooksPath
+          GIT_CONFIG_VALUE_0: /dev/null
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
@@ -1530,13 +1535,12 @@ jobs:
             exit 0
           fi
 
-          # 6. One commit with the two files; hooks off (the workspace's .git
-          # is shared with a session that could write into it).
+          # 6. One commit with the two files (hooks off through the step's env).
           git -C "$WT" add -- "$META_FILE" "$IMPL_FILE"
-          git -C "$WT" -c core.hooksPath=/dev/null -c user.name="github-actions[bot]" \
+          git -C "$WT" -c user.name="github-actions[bot]" \
             -c user.email="github-actions[bot]@users.noreply.github.com" \
             commit -q -m "chore(${LIBRARY}): store re-score ${PREV_RESCORED} for ${SPEC_ID} (kept regen #${PR_NUM})"
-          if ! gh_retry "push ${WB_BRANCH}" git -C "$WT" -c core.hooksPath=/dev/null push -q origin "HEAD:refs/heads/${WB_BRANCH}"; then
+          if ! gh_retry "push ${WB_BRANCH}" git -C "$WT" push -q origin "HEAD:refs/heads/${WB_BRANCH}"; then
             set_status failed "push"
             exit 0
           fi
@@ -1716,7 +1720,7 @@ jobs:
             FAILED=0
 
             case "$WB_STATUS" in
-              opened) STORED="**Stored review:** this session's re-score of the live implementation (${PREV_STORED} → ${WB_SCORE}, \`${MODEL_ID}\`) replaces it through #${WB_PR}, which impl-merge merges." ;;
+              opened) STORED="**Stored review:** this session's re-score of the live implementation (${PREV_STORED} → ${WB_SCORE}, \`${MODEL_ID}\`) is stored once impl-merge merges #${WB_PR}." ;;
               unchanged) STORED="**Stored review:** unchanged (the re-score writes the review that is already stored)." ;;
               no_rescore) STORED="**Stored review:** unchanged (the gate has no re-score of the live implementation: ${GATE_CODE:-no code})." ;;
               invalid) STORED="**Stored review:** unchanged (\`review_prev.json\` failed its check; see the run log)." ;;

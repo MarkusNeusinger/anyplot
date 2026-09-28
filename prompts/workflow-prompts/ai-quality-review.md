@@ -309,7 +309,7 @@ Your job is an honest comparison; the gate does the arithmetic. Workflow variabl
 
 5. **Write `review_prev.json`** (repository root, after `review_regen.json` parses): your re-score of the predecessor as a full review. When the gate keeps the live implementation, this file becomes its stored review, and the next regeneration starts from it. So write it as a standalone review of the predecessor: never mention the new render, the comparison, or the regeneration. Writing it changes nothing you decided above; `prev_rescored`, `prev_checklist`, and the comparison stay as they are.
    - `image_description` — step 10's template, for the predecessor's production renders (`PREV_RENDER_LIGHT` is its light render, `PREV_RENDER_DARK` its dark one).
-   - `criteria_checklist` — the shape of `review_checklist.json`: the six keys, their maxima, every criterion as an item. Every item score equals the same item in `prev_checklist`.
+   - `criteria_checklist` — the shape of `review_checklist.json`: the six keys, their maxima, every criterion as an item. Every item score equals the same item in `prev_checklist`, and each category's `score` is the sum of its items.
    - `strengths` and `weaknesses` — as in 8a. The weaknesses are your `P1`, `P2`, … defects as defect lines, in that order and without the `P` id, then at most three `Suggestion:` lines.
    - `verdict` — `APPROVED` or `REJECTED`, your verdict on the predecessor.
    - No score key: the stored score is `prev_rescored`.
