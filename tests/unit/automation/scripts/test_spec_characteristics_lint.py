@@ -271,6 +271,11 @@ class TestStyle:
                 ("callouts",),
                 id="annotations-are-not-callouts",
             ),
+            pytest.param(
+                S + "the basic variant's x, y and size only, with reference bubbles, highlights and callouts.",
+                ("reference lines",),
+                id="reference-bubbles-are-not-reference-lines",
+            ),
         ],
     )
     def test_basic_scope_names_layers(self, scope: str, missing: tuple[str, ...]):
@@ -294,6 +299,14 @@ class TestStyle:
             pytest.param(
                 S + "the basic variant's x and y only, with no average line, highlight bands or callouts.",
                 id="average-line-is-a-reference-line",
+            ),
+            pytest.param(
+                S + "the basic variant's x and y only, with no trend or reference lines, highlights or callouts.",
+                id="reference-line-after-or",
+            ),
+            pytest.param(
+                S + "the basic variant's x and y only, with no reference or mean lines, highlights or callouts.",
+                id="reference-or-mean-lines",
             ),
         ],
     )

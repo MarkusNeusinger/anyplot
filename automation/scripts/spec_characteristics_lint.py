@@ -177,11 +177,16 @@ PERMISSION_WORDS_RE = re.compile(
 
 # W7: the layer families a -basic variant bullet names, as excluded or as
 # allowed. Only "callout" counts for callouts: "annotation" does not, so "the
-# percentage annotations the Notes allow" cannot satisfy it by accident.
+# percentage annotations the Notes allow" cannot satisfy it by accident. A
+# reference needs its line ("reference or mean lines" counts, "reference
+# bubbles" does not).
 SCOPE_LAYERS = (
     (
         "reference lines",
-        re.compile(r"\breference\b|\b(?:mean|median|average|target|threshold)\s+lines?\b", re.IGNORECASE),
+        re.compile(
+            r"\breference\s+(?:or\s+\w+\s+)?lines?\b|\b(?:mean|median|average|target|threshold)\s+lines?\b",
+            re.IGNORECASE,
+        ),
     ),
     ("highlights", re.compile(r"\bhighlight", re.IGNORECASE)),
     ("callouts", re.compile(r"\bcallouts?\b", re.IGNORECASE)),
