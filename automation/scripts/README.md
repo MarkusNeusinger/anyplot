@@ -53,6 +53,25 @@ characteristic bullets as `C1..Cn` (wrapped lines joined),
 `characteristic_kind` reads each bullet's kind, and an improvement that cites
 an `Expected, not a defect:` bullet is not counted.
 
+`weakness_class` reads a stored weakness as a `defect` line
+(`<ID>[, <ID>] (<light|dark|both|code>): …`), a `suggestion`
+(`Suggestion: …`), or `legacy` (any older line); `context` tags every `W`
+with it. `classify_improvements` sorts the review's improvements into
+permissions and obsolete weaknesses (both not counted), carriers (an
+affirmative `C` ref, or a defect whose rule verifies: a VQ, SC, DQ, or CQ
+criterion the new render scores higher on than the re-score's
+`prev_checklist`, an affirmative `C` id, or `AR-06`..`AR-09` after an
+auto-reject), and suggestions (a suggestion, an unverified claim, or a DE or
+LM point). `decide` merges only with a carrier (reason code
+`no_defect_improvement` otherwise) and reads the new review's
+`review_checklist.json` from the directory of `--regen-json`. The record stays
+`v1`; its `improvements` gain `carriers`, `suggestion`, `obsolete`,
+`unverified`, and `de_lm`, with `visible == carriers + suggestion`.
+`check-feedback` checks the weakness lines against the review's checklist
+and, for a regeneration, the classification and claims in `review_regen.json`:
+the review's step-10 self-check, and with `--warn-only` the workflow's
+non-gating format step.
+
 ### `review_provenance.py`
 Review provenance (stdlib): `criteria-version` prints the rules version — git
 blob ids of `prompts/quality-criteria.md`, `ai-quality-review.md`,

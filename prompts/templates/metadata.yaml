@@ -45,7 +45,7 @@ review:
 
   # Summary feedback
   strengths: []        # What's good about this implementation
-  weaknesses: []       # What needs improvement (AI decides HOW to fix)
+  weaknesses: []       # Defect lines (`<criterion> (<render>): …`) first, then up to three `Suggestion:` lines
 
   # Provenance of the review (filled by impl-review, not synced to the database)
   model: null             # Resolved model ID of the review session (e.g., claude-opus-5-5)
