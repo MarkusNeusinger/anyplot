@@ -7,9 +7,9 @@
   `0ccb3fec1`. Set v1 has no pair that a suggestion alone could carry, so it
   can't show whether a gate change stops such merges; set v2 can. The
   workflow's new `set` input (`v1` by default, or `v2`) hands the chosen
-  manifest and lock to `plan`, `bundle` and `report`. The upload of its 48
-  renders is owner-authorized and separate, and its labels stay drafts until
-  the owner confirms them.
+  manifest and lock to `plan`, `bundle` and `report`. Its 48 renders are
+  frozen under `gs://anyplot-images/retest/sets/v2/`, and its labels stay
+  drafts until the owner confirms them. (#11966)
 - **Forward merges without a labeled carrier.** Regen items can carry a
   `fixes` label: the predecessor defects the forward new version fixes, on
   carrier criteria only (VQ, SC, DQ, CQ), each with a pattern for the
@@ -19,7 +19,7 @@
   (`merges_without_carrier`). It reads only fields every rules version
   writes, so a baseline and a candidate arm mean the same by it. Round 1
   replayed through it gives 6 of 12, the number the P3 gate change is
-  measured against.
+  measured against. (#11966)
 
 ### Changed
 
@@ -31,4 +31,4 @@
   session reviews still has to be on a canonical canvas, as the production
   canvas gate requires. Regen cells also record the spec's characteristic
   count and permissions (`spec_characteristics`), which the carrier metric
-  reads.
+  reads. (#11966)
