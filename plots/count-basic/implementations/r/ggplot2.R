@@ -16,6 +16,10 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
+BAR_FILL    <- IMPRINT_PALETTE[1]
+# A single shade of the same hue, applied uniformly to every bar's edge -- a
+# crisp outline for depth, not a second encoding (still "one color" per bar).
+BAR_EDGE    <- if (THEME == "light") "#00714F" else "#00C489"
 # Faint gridline tone -- ggplot2 has no grid alpha, so blend INK ~15% into
 # PAGE_BG instead of using full-opacity INK (which reads as bold as the axis).
 GRID_COLOR  <- colorRampPalette(c(PAGE_BG, INK))(100)[15]
@@ -43,32 +47,36 @@ freq_order <- df %>%
   arrange(desc(n)) %>%
   pull(response)
 df$response <- factor(df$response, levels = freq_order)
-
-counts <- df %>%
-  count(response, name = "n") %>%
-  mutate(
-    pct   = 100 * n / sum(n),
-    label = sprintf("%d (%.0f%%)", n, pct)
-  )
+n_total <- nrow(df)
 
 # --- Plot -----------------------------------------------------------------
 title_text <- "count-basic · r · ggplot2 · anyplot.ai"
 
 # Basic variant: single categorical variable, one color for all bars -- no
 # highlighted bar, reference line, band or callout (spec "good version" rule).
+# geom_text(stat = "count") lets ggplot2's own stat engine tally and label the
+# bars in one pass -- no separate dplyr::count() data frame needed for the
+# labels, exercising the grammar's computed-aesthetic machinery (after_stat())
+# beyond geom_bar()'s implicit tally.
 p <- ggplot(df, aes(x = response)) +
-  geom_bar(width = 0.65, fill = IMPRINT_PALETTE[1]) +
+  geom_bar(width = 0.62, fill = BAR_FILL, color = BAR_EDGE, linewidth = 0.4) +
   geom_text(
-    data = counts,
-    aes(x = response, y = n, label = label),
-    vjust = -0.6,
-    size = 3.2,
-    color = INK,
-    inherit.aes = FALSE
+    stat = "count",
+    aes(
+      label    = sprintf("%d (%.0f%%)", after_stat(count), 100 * after_stat(count) / n_total),
+      # The most-frequent response's label reads bolder and slightly larger --
+      # the same bar color throughout, emphasis carried by type weight alone.
+      fontface = ifelse(after_stat(count) == max(after_stat(count)), "bold", "plain"),
+      size     = ifelse(after_stat(count) == max(after_stat(count)), 3.8, 3.2)
+    ),
+    vjust = -0.7,
+    color = INK
   ) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
+  scale_size_identity() +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.14))) +
   labs(
-    title = title_text,
+    title    = title_text,
+    subtitle = sprintf("Likert-scale survey responses, n = %d", n_total),
     x = "Survey Response",
     y = "Count"
   ) +
@@ -81,8 +89,11 @@ p <- ggplot(df, aes(x = response)) +
     panel.grid.major.y = element_line(color = GRID_COLOR, linewidth = 0.3),
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
+    axis.text.x       = element_text(margin = margin(t = 6)),
     axis.ticks         = element_blank(),
-    plot.title        = element_text(color = INK, size = 12)
+    axis.line.x        = element_line(color = INK_SOFT, linewidth = 0.3),
+    plot.title        = element_text(color = INK, size = 12, face = "bold"),
+    plot.subtitle     = element_text(color = INK_SOFT, size = 8.5, margin = margin(b = 8))
   )
 
 # --- Save -------------------------------------------------------------------
