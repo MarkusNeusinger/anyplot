@@ -7,7 +7,8 @@
 # and start the next queue entry.
 # Usage: run_spec.sh <spec-id> <model> <lib1> [lib2 ...]
 #   <model> auto lets impl-generate route (opus for a first implementation,
-#   sonnet for a regeneration); haiku/sonnet/opus pin one model.
+#   sonnet for a regeneration); haiku/sonnet/opus pin one model for generate
+#   and repair. Reviews always run on opus.
 set -uo pipefail
 
 usage() {

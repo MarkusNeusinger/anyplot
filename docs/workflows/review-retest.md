@@ -28,7 +28,7 @@ Generator-side changes (`prompts/workflow-prompts/impl-generate-claude.md`, `pro
   - **Set v1** (the default): 27 fresh items, one or two per library, and 10 bubble-basic regen pairs from the regen experiment, including three identity controls.
   - **Set v2**: the 12 regen pairs of verification round 1 (2026-09-27, #11951 to #11963 without #11955), each predecessor at `0ccb3fec1` and each new version at `28df16aed`, with the spec pinned at `0ccb3fec1`. It measures what set v1 can't: whether a regeneration merges on a fixed defect or on a suggestion. Two predecessors are off-canvas (bar-error/matplotlib at 4766 × 2670, bar-error/plotly at 4800 × 2700), so those two pairs run in the forward order only (`orders: forward` in the manifest).
 - **An arm.** `rules_ref` names the commit whose `prompts/` and `automation/scripts/regen_gate.py` the reviewer uses. The harness itself always comes from the commit you dispatch, so you can measure any past or unmerged rules version from `main`; rules that predate the regen gate (`02e1a7974`) have no `regen_gate.py`, so only fresh items run on them. The harness hands an overlaid `regen_gate.py` only the `context`, `sanitize-source`, and `decide` flags it has had since `02e1a7974`, and takes everything newer (the header reset, the characteristic kinds, the record markers) from its own copy, so an old arm such as the baseline runs unchanged.
-- **A cell.** One item, one order (regen pairs run forward and reversed), one run. Every cell is a fresh Claude session in its own job. With `models=production`, fresh items run on Opus and regen pairs on Sonnet, as `impl-review.yml` routes them.
+- **A cell.** One item, one order (regen pairs run forward and reversed), one run. Every cell is a fresh Claude session in its own job. With `models=production`, every cell runs on Opus, as `impl-review.yml` reviews (a unit test keeps the two equal).
 - **What a session sees.** Exactly what `impl-review.yml` shows the reviewer, with these deliberate differences:
   - The file under review says `Quality: pending` in every arm (the state `impl-generate.yml` leaves since the header reset).
   - The checkout is shallow, the spec text is pinned to the set's `spec_commit` (unless `spec_source=rules_ref`), and the job has no GCP credentials.
@@ -50,13 +50,15 @@ The pull request that adds the workflow can't dispatch it: a `workflow_dispatch`
 
 2. Download the `cell-f-bubble-basic-ggplot2__r1` artifact and check that `record.json` names a resolved `model` (not `null`) and a `cost_usd`, and that `files/review_comment.md` exists.
 3. Check the repository's activity in the run's time window: no new comment, label, pull request, issue, or workflow run other than the retest itself. The run also confirms that claude-code-action accepts the read-only job token.
-4. Run the baseline arm on the set's baseline rules with production routing (87 sessions):
+4. Run the baseline arm on the set's baseline rules with production routing, every cell on Opus (87 sessions):
 
    ```bash
    gh workflow run review-retest.yml -f rules_ref=0674ab6b55acc71f5015a6aae07145424cbac7cb -f models=production -f label=baseline
    ```
 
-5. Run the one-time cross-model pass, the fresh core items on Sonnet (45 sessions), against the baseline's run ID:
+   This step first ran on 2026-09-27 as run 36354452853, when `production` still sent regen cells to Sonnet. Its all-Opus counterpart is run 36389481950 (see [Run a baseline and a candidate arm](#run-a-baseline-and-a-candidate-arm)).
+
+5. Run the one-time cross-model pass, the fresh core items on Sonnet (45 sessions), against the baseline's run ID. This pass is historical: it ran once on 2026-09-27 as run 36359464410, against the baseline 36354452853, and measured how far Sonnet scores sit above Opus.
 
    ```bash
    gh workflow run review-retest.yml -f rules_ref=0674ab6b55acc71f5015a6aae07145424cbac7cb -f models=sonnet -f label=cross-model-sonnet -f compare_to=<baseline-run-id> -f subset=f-bubble-basic-ggplot2,f-area-elevation-profile-seaborn,f-bar-horizontal-makie,f-bode-basic-altair,f-bar-diverging-plotnine,f-pie-basic-highcharts,f-bar-pareto-letsplot,f-waterfall-basic-muix,f-line-win-probability-chartjs,f-bubble-basic-d3,f-network-basic-bokeh,f-bar-diverging-likert-matplotlib,f-acf-pacf-plotly,f-line-stock-comparison-pygal,f-gantt-basic-echarts
@@ -79,7 +81,7 @@ The pull request that adds the workflow can't dispatch it: a `workflow_dispatch`
    gh workflow run review-retest.yml -f rules_ref=0674ab6b55acc71f5015a6aae07145424cbac7cb -f models=production -f label=baseline
    ```
 
-   The set's baseline is `0674ab6b5` (`baseline_rules_sha` in the manifest). Re-run it whenever the resolved model IDs change.
+   The set's baseline is `0674ab6b5` (`baseline_rules_sha` in the manifest). With `models=production`, every cell runs on Opus. Re-run it whenever the resolved model IDs change.
 3. Note the baseline's run ID once it finishes.
 4. Dispatch the candidate from `main`, naming the commit that carries the rules change (a pushed branch commit works before the merge):
 
@@ -103,6 +105,8 @@ A cell is reused only when its record was measured the way the new run measures:
 
 Reuse a baseline only when the set, the harness version, the action pin, and the resolved models all match and it's less than 14 days old. A model alias (`sonnet`, `opus`) moves between releases, and the report flags "model changed" when two arms resolved different models.
 
+The all-Opus baseline for set v1 at rules `0674ab6b5` is run 36389481950 (2026-09-28, every cell on `claude-opus-5`; its 45 fresh cells are reused from 36354452853). The regen cells of 36354452853 ran on Sonnet, so they are a Sonnet reference only; its fresh cells ran on Opus and stay valid. A rubric pull request that runs a later all-Opus arm at its own rules updates this paragraph.
+
 ---
 
 ## Inputs
@@ -113,7 +117,7 @@ Reuse a baseline only when the set, the harness version, the action pin, and the
 | `label` | none | Arm name in the report |
 | `set` | `v1` | The frozen set: `v1` or `v2` (`automation/retest/set-<set>.yaml` and its lock) |
 | `subset` | `core` | `core`, `full`, or comma-separated item IDs of the chosen set |
-| `models` | `production` | `production` (fresh on Opus, regen on Sonnet), `sonnet`, or `opus` |
+| `models` | `production` | `production` (every cell on Opus, as `impl-review.yml` reviews), `sonnet`, or `opus` |
 | `runs` | `3` | Sessions per item and order (1–10) |
 | `orders` | `both` | Regen pairs: `both` orders or `forward` only; a pair marked `orders: forward` in its manifest runs forward either way |
 | `spec_source` | `pinned` | `pinned` spec text, or the spec text at `rules_ref` (for spec backfills) |
@@ -144,7 +148,7 @@ With 15 items and 3 runs, the pooled standard deviation has about 30 degrees of 
 
 ## Cost and the usage window
 
-API-equivalent cost per session: about $0.63 for a Sonnet fresh review (measured), about $0.90 for a Sonnet regen review, and $1.30–1.60 for an Opus review. A set v1 core arm with production routing is 87 sessions (15 fresh items × 3, 7 pairs × 2 orders × 3), about 1.5 hours at 6 in parallel. A set v2 arm is 66 Sonnet sessions (10 pairs × 2 orders × 3, 2 forward-only pairs × 3), about $59. Under the subscription token the real limit is the rolling usage window shared with production; Opus uses it about twice as fast. Matrix jobs start roughly in list order, which is run-major, so a partial arm still has balanced passes; this is best effort, not a guarantee.
+API-equivalent cost per session, measured on set v1 core at rules `0674ab6b5`: $2.14 for an Opus fresh review (run 36354452853), $2.64 for an Opus regen review (run 36389481950), $0.76 for a Sonnet fresh review (run 36359464410), and $0.98 for a Sonnet regen review (run 36354452853). A set v1 core arm with production routing is 87 Opus sessions (15 fresh items × 3, 7 pairs × 2 orders × 3), about $207 and about 1.5 hours at 6 in parallel. A set v2 arm is 66 Opus regen sessions (10 pairs × 2 orders × 3, 2 forward-only pairs × 3), about $174. Under the subscription token the real limit is the rolling usage window shared with production; an Opus session uses it about 2.7 to 2.8 times as fast as a Sonnet one. Matrix jobs start roughly in list order, which is run-major, so a partial arm still has balanced passes; this is best effort, not a guarantee.
 
 ---
 

@@ -40,7 +40,7 @@ on:
         required: false
         type: string
       model:
-        description: "Claude model (also threaded into review + repair); auto = opus for the pair's first implementation, sonnet for a regeneration"
+        description: "Generation model (also threaded into repair); auto = opus for the pair's first implementation, sonnet for a regeneration. Reviews always run on opus (impl-review.yml)."
         required: false
         type: choice
         default: 'auto'
@@ -163,8 +163,9 @@ jobs:
           # implementation runs on opus and a regeneration on sonnet, except a
           # forced one (regen_gate=false), which runs on opus. "First"
           # means no implementation file on origin/main yet. The resolved value
-          # is threaded into review + repair and recorded in the PR body, so
-          # one PR runs on one model.
+          # is threaded into repair and recorded in the PR body, so one PR
+          # generates and repairs on one model. Reviews are not routed here:
+          # impl-review.yml runs every review on opus (its review_model input).
           if [ -n "$MODEL" ] && [ "$MODEL" != "auto" ]; then
             MODEL_REASON="explicit input"
           else
@@ -867,7 +868,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Recorded in the body: rescues that re-dispatch review or repair
-          # without a model read it back, so an explicit pin survives them.
+          # without a model read it back, so an explicit pin survives them
+          # and is threaded into repair (the review itself runs on opus).
           MODEL: ${{ steps.inputs.outputs.model }}
           SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
           LANGUAGE: ${{ steps.inputs.outputs.language }}
@@ -1093,7 +1095,7 @@ jobs:
             gh workflow run impl-review.yml --ref "$TRIGGER_REF" \
               -f pr_number="$PR_NUMBER" \
               -f model="$MODEL"
-            echo "::notice::Triggered impl-review.yml on ref ${TRIGGER_REF} for PR #$PR_NUMBER (model=$MODEL)"
+            echo "::notice::Triggered impl-review.yml on ref ${TRIGGER_REF} for PR #$PR_NUMBER (generation model=$MODEL; the review runs on opus)"
             exit 0
           fi
           # Use repository_dispatch as workaround for workflow_dispatch caching issue
@@ -1101,7 +1103,7 @@ jobs:
             -f event_type=review-pr \
             -f "client_payload[pr_number]=$PR_NUMBER" \
             -f "client_payload[model]=$MODEL"
-          echo "::notice::Triggered impl-review.yml via repository_dispatch for PR #$PR_NUMBER (model=$MODEL)"
+          echo "::notice::Triggered impl-review.yml via repository_dispatch for PR #$PR_NUMBER (generation model=$MODEL; the review runs on opus)"
 
       - name: Determine result
         id: result
