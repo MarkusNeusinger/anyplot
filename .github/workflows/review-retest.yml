@@ -29,7 +29,7 @@ on:
         default: ''
         type: string
       set:
-        description: "Frozen set: automation/retest/set-<set>.yaml and its lock (v1 = 15 fresh items and 10 pairs, v2 = the 12 pairs of verification round 1)"
+        description: "Frozen set: automation/retest/set-<set>.yaml and its lock (v1 = 27 fresh items and 10 pairs, core 15 and 7; v2 = the 12 pairs of verification round 1)"
         required: false
         default: 'v1'
         type: choice

@@ -349,7 +349,7 @@ class TestRoundOneReplay:
     """Round 1's forward merges through ``merges_without_carrier``, labels confirmed."""
 
     @staticmethod
-    def _spec(spec_id: str) -> dict[str, Any]:
+    def _spec(spec_id: str) -> dict[str, Any] | None:
         text = subprocess.run(
             ["git", "-C", str(REPO_ROOT), "show", f"{T0}:plots/{spec_id}/specification.md"],
             check=True,

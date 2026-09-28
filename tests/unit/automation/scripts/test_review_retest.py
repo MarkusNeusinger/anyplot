@@ -1052,6 +1052,7 @@ class TestCollect:
         section = "## What a good version looks like\n- Expected, not a defect: a\n- x\n- Expected, not a defect: b\n"
         assert rt.characteristics_summary(section) == {"count": 3, "permission": ["C1", "C3"]}
         assert rt.characteristics_summary("# no section\n") == {"count": 0, "permission": []}
+        assert rt.characteristics_summary("") is None  # spec unreadable: unknown, not zero bullets
 
     @pytest.mark.parametrize(
         ("result", "outcome", "materialize_ok", "started_ago", "expected"),
@@ -1219,6 +1220,11 @@ class TestReport:
         rt.report(records, {**manifest, "labels": "draft"}, tmp_path / "draft", lock_sha="c" * 64, **common)
         draft = (tmp_path / "draft" / "snippet.md").read_text(encoding="utf-8")
         assert "| Forward merges without a labeled carrier | – (no labels) |" in draft
+        draft_text = (tmp_path / "draft" / "retest-report.md").read_text(encoding="utf-8")
+        assert (
+            "| Forward merges without a labeled carrier (no `fixes` match, no affirmative C id) | – (no labels) |"
+            in draft_text
+        )
 
     def test_unresolved_model_is_its_own_group(self, tmp_path):
         records = [

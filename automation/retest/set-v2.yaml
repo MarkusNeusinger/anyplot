@@ -44,7 +44,8 @@
 # production shows a predecessor as it is stored, so the forward order is
 # faithful, but in the reversed order that render would be the version under
 # review, which production's canvas gate keeps without a review. Only the
-# `prev` render of a forward-only pair may be off-canvas.
+# `prev` render of a forward-only pair may be off-canvas. A forward-only pair
+# still records `expected.reversed` for completeness; no cell measures it.
 
 version: 1
 set: v2

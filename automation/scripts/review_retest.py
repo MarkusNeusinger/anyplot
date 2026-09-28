@@ -1089,11 +1089,15 @@ def improvement_counts(regen: Any, spec_text: str) -> dict[str, int] | None:
     }
 
 
-def characteristics_summary(spec_text: str) -> dict[str, Any]:
+def characteristics_summary(spec_text: str) -> dict[str, Any] | None:
     """How many characteristic bullets the spec the reviewer saw has, and which
     are "Expected, not a defect" bullets — the rest are affirmative, as the
     gate reads them. The report needs it to tell an affirmative C id from a
-    permission (``merges_without_carrier``) without the spec at hand."""
+    permission (``merges_without_carrier``) without the spec at hand. ``None``
+    when the spec could not be read (empty text): the characteristics are then
+    unknown, not absent, and ``carrier_claimed`` leaves the record out."""
+    if not spec_text:
+        return None
     items = parse_characteristics(spec_text)
     return {"count": len(items), "permission": sorted(permission_refs(items), key=lambda ref: int(ref[1:]))}
 
@@ -1457,13 +1461,15 @@ def render_report(
         ]
         if "gate" in group:
             g = group["gate"]
+            carrier = _uncarried(g)
+            if g["merges_without_carrier"] is not None:
+                carrier = f"{_pct(g['merges_without_carrier'])} ({carrier})"
             lines += [
                 f"| Gate verdict flip rate / accuracy vs expected | {_pct(g['verdict_flip'])} / {_pct(g['accuracy'])} (n={g['accuracy_n']}) |",
                 f"| Pooled SD: prev_rescored / new / new − prev_rescored | {_fmt(g['sd_prev_rescored'])} / {_fmt(g['sd_new'])} / {_fmt(g['sd_delta'])} |",
                 f"| Order bias (pts, negative favours merge) | {_fmt(g['order_bias'])} over {g['order_bias_items']} pairs |",
                 f"| Runs citing a permission as an improvement (not counted) | {_pct(g['permission_cited'])} (n={g['permission_cited_n']}) |",
-                f"| Forward merges without a labeled carrier (no `fixes` match, no affirmative C id) | "
-                f"{_pct(g['merges_without_carrier'])} ({_uncarried(g)}) |",
+                f"| Forward merges without a labeled carrier (no `fixes` match, no affirmative C id) | {carrier} |",
             ]
             for cls, cal in g["calibration"].items():
                 lines.append(

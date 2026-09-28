@@ -95,7 +95,7 @@ To measure on set v2, add `-f set=v2` to both arms, and give the baseline the ru
 gh workflow run review-retest.yml -f set=v2 -f rules_ref=9a6ed19528c5ecaa6b16ab84a9ed20c932d46445 -f label=v2-baseline
 ```
 
-A report compares two arms of the same set only; the report flags "set changed" otherwise.
+Compare two arms of the same set; the report flags "set changed" when they differ.
 
 To finish an arm that stopped early (a usage limit, a cancelled run), dispatch it again with the same inputs and `resume_from=<run-id>`: cells that already produced a review are reused, and only the rest run.
 
