@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' count-basic: Basic Count Plot
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 91/100 | Created: 2026-08-11
+#' Quality: 83/100 | Updated: 2026-09-28
 
 library(ggplot2)
 library(dplyr)
@@ -51,20 +51,13 @@ counts <- df %>%
     label = sprintf("%d (%.0f%%)", n, pct)
   )
 
-# Highlight the leading category as a focal point; other bars get a solid,
-# lightened tint of the same brand hue (opaque, not alpha) so the mix stays
-# identical between light and dark renders -- alpha would blend with the
-# theme background and make the tint shift between themes.
-leader     <- freq_order[1]
-bar_muted  <- colorRampPalette(c(IMPRINT_PALETTE[1], "#FFFFFF"))(100)[55]
-bar_colors <- setNames(rep(bar_muted, length(freq_order)), freq_order)
-bar_colors[leader] <- IMPRINT_PALETTE[1]
-
 # --- Plot -----------------------------------------------------------------
 title_text <- "count-basic · r · ggplot2 · anyplot.ai"
 
-p <- ggplot(df, aes(x = response, fill = response)) +
-  geom_bar(width = 0.65) +
+# Basic variant: single categorical variable, one color for all bars -- no
+# highlighted bar, reference line, band or callout (spec "good version" rule).
+p <- ggplot(df, aes(x = response)) +
+  geom_bar(width = 0.65, fill = IMPRINT_PALETTE[1]) +
   geom_text(
     data = counts,
     aes(x = response, y = n, label = label),
@@ -73,7 +66,6 @@ p <- ggplot(df, aes(x = response, fill = response)) +
     color = INK,
     inherit.aes = FALSE
   ) +
-  scale_fill_manual(values = bar_colors, guide = "none") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
   labs(
     title = title_text,
