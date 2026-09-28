@@ -28,6 +28,6 @@ A vertical bar chart that displays categorical data with rectangular bars whose 
 
 - A good version shows: one vertical bar per category rising from a zero baseline, so bar height stays proportional to the value, on a value axis that is never truncated.
 - A good version shows: bars of one width with even gaps, and categories in a meaningful order: by value, or their natural order (months, age groups) when they have one.
-- A good version shows: the basic variant's emphasis only: one color for all bars, or an accent color on a bar or two as the Notes allow, and no error bars, stacking, grouping or trend line.
+- A good version shows: the basic variant's emphasis only: one color for all bars, or an accent color on a bar or two as the Notes allow, and no reference or average lines, highlight bands, callouts, error bars, stacking, grouping or trend line.
 - A good version shows: value labels, if drawn, clear of the bar ends, readable in both themes and not colliding with each other.
 - Expected, not a defect: unequal heights, including one dominant or one near-empty bar; they are the point of the chart, not an imbalance to fix.

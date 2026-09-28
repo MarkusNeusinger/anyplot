@@ -32,4 +32,4 @@ A heatmap displaying values in a matrix format using color intensity. Each cell'
 - A good version shows: in-cell numbers only when the cells are large enough to read them, switching color with cell darkness so they stay legible in both themes.
 - Expected, not a defect: a large matrix without in-cell numbers, and uneven patches, hot spots and near-empty rows in real data, which are not noise to smooth away.
 - A good version shows: rows and columns in a logical order so blocks and gradients emerge, with long row or column labels rotated or given room, never truncated or overlapping.
-- A good version shows: the basic variant's value grid only: no dendrograms or cluster trees, no marginal bars, and no annotation layer beyond the in-cell numbers the Notes allow.
+- A good version shows: the basic variant's value grid only: no dendrograms or cluster trees, no marginal bars, no highlight boxes on selected cells, no reference lines, and no callouts or other annotation layer beyond the in-cell numbers the Notes allow.
