@@ -24,10 +24,11 @@ run-name: "Scheduled regen (${{ github.event.inputs.specification_id || github.e
 # bulk-generate is serialised via its own concurrency group. Default model is
 # "auto": impl-generate runs a regeneration (a pair already on main, i.e.
 # almost every pair here) on Sonnet and a library the spec never had on Opus.
-# A manual run can pin one model for every pair instead.
+# A manual run can pin one model for every pair instead. The model covers
+# generate and repair; reviews always run on Opus (impl-review.yml).
 #
 # Triggers:
-#   - schedule: once daily at 02:17 UTC → auto (Sonnet for regenerations)
+#   - schedule: once daily at 02:17 UTC → auto (Sonnet regenerations, Opus reviews)
 #   - workflow_dispatch: manual, with inputs for spec id, model, count, dry-run
 #     (also used by the watchdog's cron-liveness rescue, with all defaults)
 
@@ -41,7 +42,7 @@ on:
         required: false
         default: ''
       model:
-        description: "Claude model for all generate / review / repair steps; auto = opus for a pair's first implementation, sonnet for a regeneration"
+        description: "Claude model to generate and repair; auto = opus for a pair's first implementation, sonnet for a regeneration. Reviews always run on Opus."
         required: false
         type: choice
         default: 'auto'
@@ -245,8 +246,8 @@ jobs:
   # The two pre-flight LLM steps are HARDCODED to Sonnet regardless of
   # `inputs.model` — narrow audits (on Haiku until 2026-09). The user-selected
   # model ("auto" unless a manual run pins one) is passed through to
-  # bulk-generate (and from there to impl-generate / review / repair)
-  # unchanged.
+  # bulk-generate (and from there to impl-generate and repair) unchanged;
+  # reviews always run on Opus.
   # ============================================================================
   preflight-dispatch:
     needs: pick

@@ -1,10 +1,15 @@
 """Model routing in the implementation pipeline workflows.
 
-impl-generate.yml resolves one model per (spec, library) pair: an explicit
-`model` input always wins; without one ("auto", or the label trigger) the pair's
-first implementation runs on opus and a regeneration on sonnet. The resolved
-value is threaded into the review and every repair of the PR and recorded in
-the PR body (`**Model:** opus`), which rescues without a model read back.
+impl-generate.yml resolves one generation model per (spec, library) pair: an
+explicit `model` input always wins; without one ("auto", or the label trigger)
+the pair's first implementation runs on opus and a regeneration on sonnet. The
+resolved value is threaded into every repair of the PR and recorded in the PR
+body (`**Model:** opus`), which rescues without a model read back. impl-review
+resolves it too, only to forward it to repair.
+
+The review model is impl-review's own: every quality review runs on opus
+unless a manual dispatch pins `review_model` (carried by that run's own
+auto-retry, and by nothing else). A generation pin never reaches the review.
 
 The step scripts run for real here, against a throwaway git repository whose
 `origin/main` holds a few implementations, with a fake `gh` on PATH. The rest
@@ -23,12 +28,18 @@ from typing import Any
 import pytest
 import yaml
 
+from automation.scripts import review_retest
+
 
 REPO_ROOT = Path(__file__).parent.parent.parent.parent
 WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 EXPRESSION = re.compile(r"\$\{\{\s*(.+?)\s*\}\}")
 MODELS = {"auto", "haiku", "sonnet", "opus"}
+REVIEW_MODELS = {"haiku", "sonnet", "opus"}
 NO_MAIN_WARNING = "::warning::origin/main unavailable — routing assumes a first run (opus)"
+REVIEW_ALIAS = "${{ steps.pr.outputs.review_model_alias }}"
+GENERATION_MODEL = "${{ steps.pr.outputs.model }}"
+SELF_RETRY_STEPS = ("Validate review output", "Handle review failure")
 
 # Implementations present on the fake origin/main.
 ON_MAIN = (
@@ -384,7 +395,15 @@ class TestImplGenerateWiring:
 
 
 def _run_review(
-    repo: Path, tmp_path: Path, *, library: str, model_input: str = "", payload: str = "", body: str = ""
+    repo: Path,
+    tmp_path: Path,
+    *,
+    library: str,
+    model_input: str = "",
+    payload: str = "",
+    body: str = "",
+    review_input: str = "",
+    review_payload: str = "",
 ) -> subprocess.CompletedProcess[str]:
     """Run impl-review's "Extract PR info" step against a fake `gh`."""
     pr = {"headRefName": f"implementation/spec-a/{library}", "headRefOid": "0" * 40, "body": body}
@@ -400,17 +419,30 @@ def _run_review(
         PR_NUMBER="7",
         MODEL_INPUT=model_input,
         MODEL_PAYLOAD=payload,
+        REVIEW_MODEL_INPUT=review_input,
+        REVIEW_MODEL_PAYLOAD=review_payload,
     )
 
 
 def _review_model(repo: Path, tmp_path: Path, **kwargs: str) -> str:
+    """The generation model impl-review resolves (and forwards to repair)."""
     result = _run_review(repo, tmp_path, **kwargs)
     assert result.returncode == 0, result.stdout + result.stderr
     return _outputs(tmp_path / "github_output")["model"]
 
 
+def _review_outputs(repo: Path, tmp_path: Path, **kwargs: str) -> dict[str, str]:
+    result = _run_review(repo, tmp_path, **kwargs)
+    assert result.returncode == 0, result.stdout + result.stderr
+    return _outputs(tmp_path / "github_output")
+
+
 class TestImplReviewModel:
-    """impl-generate always sends its resolved model; rescues send none."""
+    """The generation model impl-review resolves and forwards to repair.
+
+    impl-generate always sends its resolved model; rescues send none. The
+    review itself runs on the review model (TestImplReviewReviewModel).
+    """
 
     @pytest.mark.parametrize(("model_input", "payload"), [("", "opus"), ("", "haiku"), ("sonnet", ""), ("opus", "")])
     def test_threaded_or_explicit_model_wins(self, repo, tmp_path, model_input, payload):
@@ -461,6 +493,179 @@ class TestImplReviewModel:
         assert result.returncode == 0, result.stdout + result.stderr
         assert NO_MAIN_WARNING in result.stdout
         assert _outputs(tmp_path / "github_output")["model"] == "opus"
+
+
+def _run_self_retry(tmp_path: Path, name: str, *, model: str, review_alias: str) -> list[list[str]]:
+    """Run one of impl-review's self-retry steps (first failure) and return its `gh` calls.
+
+    Each call is the list of its arguments. The fake `gh` reports no earlier
+    retry marker, so the step takes the auto-retry branch.
+    """
+    log = tmp_path / "gh_log"
+    log.unlink(missing_ok=True)
+    path = _fake_gh(
+        tmp_path,
+        'for arg in "$@"; do printf "%s\\n" "$arg"; done >> "$GH_LOG"\n'
+        'echo "--END--" >> "$GH_LOG"\n'
+        'if [ "$1 $2" = "api --paginate" ]; then echo 0; fi\n'
+        "exit 0\n",
+    )
+    result = _exec(
+        _step("impl-review.yml", name)["run"],
+        tmp_path,
+        tmp_path,
+        PATH=path,
+        GH_LOG=str(log),
+        GH_TOKEN="unused",
+        PR_NUM="7",
+        SPEC_ID="spec-a",
+        LIBRARY="plotly",
+        REPOSITORY="owner/repo",
+        RUN_ID="1",
+        MODEL=model,
+        REVIEW_MODEL_ALIAS=review_alias,
+    )
+    # Both steps end red after dispatching on purpose: the retry is its own run.
+    assert result.returncode == 1, result.stdout + result.stderr
+    return [call.splitlines() for call in log.read_text(encoding="utf-8").split("--END--\n") if call]
+
+
+def _dispatch_payload(calls: list[list[str]]) -> dict[str, str]:
+    """The `-f key=value` fields of the single repository_dispatch call."""
+    dispatches = [call for call in calls if "repos/owner/repo/dispatches" in call]
+    assert len(dispatches) == 1, calls
+    args = dispatches[0]
+    return dict(args[i + 1].split("=", 1) for i, arg in enumerate(args) if arg == "-f")
+
+
+class TestImplReviewReviewModel:
+    """Every review runs on opus; only `review_model` (input, or the own retry's payload) pins another."""
+
+    @pytest.mark.parametrize("library", ["plotly", "matplotlib"])  # a first run, a regeneration
+    @pytest.mark.parametrize(
+        "generation",
+        [
+            {},
+            {"model_input": "auto"},
+            {"model_input": "sonnet"},
+            {"model_input": "haiku"},
+            {"payload": "sonnet"},
+            {"payload": "haiku"},
+            {"body": "**Model:** sonnet"},
+            {"body": "**Model:** haiku"},
+        ],
+    )
+    def test_every_review_runs_on_opus(self, repo, tmp_path, library, generation):
+        """A Sonnet regeneration, or any other generation pin, is reviewed on opus."""
+        assert _review_outputs(repo, tmp_path, library=library, **generation)["review_model_alias"] == "opus"
+
+    @pytest.mark.parametrize(
+        ("review_input", "review_payload", "expected"),
+        [
+            ("sonnet", "", "sonnet"),
+            ("haiku", "", "haiku"),
+            ("opus", "", "opus"),
+            ("", "haiku", "haiku"),
+            ("", "sonnet", "sonnet"),
+            ("sonnet", "haiku", "sonnet"),  # the input beats the payload
+            ("opus", "haiku", "opus"),
+        ],
+    )
+    def test_review_pin(self, repo, tmp_path, review_input, review_payload, expected):
+        outputs = _review_outputs(
+            repo, tmp_path, library="matplotlib", review_input=review_input, review_payload=review_payload
+        )
+        assert outputs["review_model_alias"] == expected
+
+    def test_review_pin_leaves_the_generation_model_alone(self, repo, tmp_path):
+        outputs = _review_outputs(repo, tmp_path, library="plotly", model_input="sonnet", review_input="haiku")
+        assert (outputs["model"], outputs["review_model_alias"]) == ("sonnet", "haiku")
+        outputs = _review_outputs(repo, tmp_path, library="matplotlib", review_payload="haiku")
+        assert (outputs["model"], outputs["review_model_alias"]) == ("sonnet", "haiku")  # routed regeneration
+
+    @pytest.mark.parametrize("review_payload", ["gpt", "auto", "Opus", "claude-opus-5"])
+    def test_unknown_review_model_falls_back_to_opus(self, repo, tmp_path, review_payload):
+        result = _run_review(repo, tmp_path, library="matplotlib", review_payload=review_payload)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert _outputs(tmp_path / "github_output")["review_model_alias"] == "opus"
+        assert f"::warning::unknown review model '{review_payload}' — using opus" in result.stdout
+
+    def test_summary_and_notice_name_both_models(self, repo, tmp_path):
+        result = _run_review(repo, tmp_path, library="matplotlib")
+        assert result.returncode == 0, result.stdout + result.stderr
+        summary = (tmp_path / "step_summary").read_text(encoding="utf-8")
+        assert "**Review model:** opus" in summary
+        assert "**Generation model:** sonnet (routing; forwarded to repair)" in summary
+        assert "review model: opus, generation model: sonnet from routing" in result.stdout
+
+    def test_pin_covers_the_own_auto_retry(self, repo, tmp_path):
+        """A pinned review's auto-retry is a repository_dispatch with no inputs: the payload carries the pin."""
+        first = _review_outputs(repo, tmp_path, library="matplotlib", review_input="haiku")
+        calls = _run_self_retry(
+            tmp_path, "Handle review failure", model=first["model"], review_alias=first["review_model_alias"]
+        )
+        payload = _dispatch_payload(calls)
+        retry = _review_outputs(
+            repo,
+            tmp_path,
+            library="matplotlib",
+            payload=payload["client_payload[model]"],
+            review_payload=payload["client_payload[review_model]"],
+        )
+        assert (retry["model"], retry["review_model_alias"]) == ("sonnet", "haiku")
+
+
+class TestImplReviewWiring:
+    def test_review_runs_on_the_review_model(self):
+        args = _step("impl-review.yml", "Run AI Quality Review")["with"]["claude_args"]
+        assert args.startswith(f"--model {REVIEW_ALIAS} ")
+
+    def test_no_claude_step_runs_on_the_generation_model(self):
+        for step in _steps("impl-review.yml"):
+            args = (step.get("with") or {}).get("claude_args", "")
+            assert not re.search(r"steps\.pr\.outputs\.model\b", args), step.get("name")
+
+    @pytest.mark.parametrize("name", SELF_RETRY_STEPS)
+    def test_self_retries_get_both_models(self, name):
+        env = _step("impl-review.yml", name)["env"]
+        assert env["REVIEW_MODEL_ALIAS"] == REVIEW_ALIAS
+        assert env["MODEL"] == GENERATION_MODEL
+
+    @pytest.mark.parametrize("name", SELF_RETRY_STEPS)
+    def test_self_retry_dispatch_forwards_both_models(self, tmp_path, name):
+        payload = _dispatch_payload(_run_self_retry(tmp_path, name, model="haiku", review_alias="sonnet"))
+        assert payload["event_type"] == "review-pr"
+        assert payload["client_payload[pr_number]"] == "7"
+        assert payload["client_payload[model]"] == "haiku"
+        assert payload["client_payload[review_model]"] == "sonnet"
+
+    def test_repair_dispatch_forwards_the_generation_model_only(self):
+        step = _step("impl-review.yml", "Add verdict label and take action")
+        assert step["env"]["MODEL"] == GENERATION_MODEL
+        assert "REVIEW_MODEL_ALIAS" not in step["env"]
+        assert '-f model="$MODEL"' in step["run"]
+        assert "review_model" not in step["run"]
+
+    def test_review_model_env_stays_the_resolved_id(self):
+        """`REVIEW_MODEL` is the resolved id (claude-opus-*); the alias never takes that name."""
+        found = 0
+        for step in _steps("impl-review.yml"):
+            value = (step.get("env") or {}).get("REVIEW_MODEL")
+            if value is None:
+                continue
+            found += 1
+            assert "steps.pr.outputs" not in value, step.get("name")
+            assert value == "${{ steps.review_model.outputs.model_id }}", step.get("name")
+        assert found == 1
+
+    def test_no_other_workflow_forwards_a_review_model(self):
+        """Repair, generation and every rescue re-dispatch review without one, so it runs on opus."""
+        for path in sorted(WORKFLOWS_DIR.glob("*.yml")):
+            if path.name == "impl-review.yml":
+                continue
+            text = path.read_text(encoding="utf-8")
+            assert "client_payload[review_model]" not in text, path.name
+            assert "review_model=" not in text, path.name
 
 
 # ---------------------------------------------------------------------------
@@ -611,6 +816,27 @@ class TestModelInputs:
         assert model["default"] == "auto"
         assert model["options"][0] == "auto"
         assert set(model["options"]) == MODELS
+
+    def test_review_model_input_defaults_to_opus(self):
+        review_model = _dispatch_inputs("impl-review.yml")["review_model"]
+        assert review_model["type"] == "choice"
+        assert review_model["default"] == "opus"
+        assert review_model["options"][0] == "opus"
+        assert set(review_model["options"]) == REVIEW_MODELS
+
+    @pytest.mark.parametrize(
+        "filename", ["impl-generate.yml", "bulk-generate.yml", "daily-regen.yml", "impl-repair.yml"]
+    )
+    def test_only_impl_review_declares_review_model(self, filename):
+        assert "review_model" not in _dispatch_inputs(filename)
+
+    def test_harness_production_is_the_review_default(self):
+        """The retest harness's `models=production` measures what impl-review runs."""
+        default = _dispatch_inputs("impl-review.yml")["review_model"]["default"]
+        assert set(review_retest.PRODUCTION_MODELS) == {"fresh", "regen"}
+        assert set(review_retest.PRODUCTION_MODELS.values()) == {default}
+        for kind, model in review_retest.PRODUCTION_MODELS.items():
+            assert (kind, model) in review_retest.COST_ESTIMATE
 
     @pytest.mark.parametrize(
         ("filename", "step"),

@@ -13,7 +13,7 @@ on:
         required: true
         type: string
       model:
-        description: "Claude model (also threaded into repair); auto = opus while the pair has no implementation on main, else sonnet"
+        description: "Generation model threaded into repair; auto = the PR body's **Model:** line, else opus for a first run and sonnet for a regeneration. The review itself runs on review_model."
         required: false
         type: choice
         default: 'auto'
@@ -22,6 +22,15 @@ on:
           - haiku
           - sonnet
           - opus
+      review_model:
+        description: "Model for this review only (default opus). A pin covers this run and its own auto-retry."
+        required: false
+        type: choice
+        default: 'opus'
+        options:
+          - opus
+          - sonnet
+          - haiku
   repository_dispatch:
     types: [review-pr]
 
@@ -52,6 +61,8 @@ jobs:
           PR_NUMBER: ${{ inputs.pr_number || github.event.client_payload.pr_number }}
           MODEL_INPUT: ${{ inputs.model }}
           MODEL_PAYLOAD: ${{ github.event.client_payload.model }}
+          REVIEW_MODEL_INPUT: ${{ inputs.review_model }}
+          REVIEW_MODEL_PAYLOAD: ${{ github.event.client_payload.review_model }}
         run: |
           # Retry gh pr view — transient API blips were the dominant impl-review
           # failure mode (5x in 24h on 2026-05-06). Three attempts with linear
@@ -84,15 +95,17 @@ jobs:
           # Extract issue number from PR body
           ISSUE_NUMBER=$(echo "$BODY" | grep -oP '\*\*Parent Issue:\*\* #\K\d+' | head -1 || echo "")
 
-          # Resolve model: explicit input > repository_dispatch payload > the
-          # PR body's "**Model:**" line > routing. impl-generate and
-          # impl-repair always send the model they resolved, and impl-generate
-          # records it in the body. "auto" (the dispatch default) or no model
-          # at all comes from rescues (impl-review-retry, the watchdog, a
-          # manual rerun): they take the body's model, so an explicit pin
-          # survives, and only a PR without that line routes like
-          # impl-generate — opus while the pair has no implementation on
-          # origin/main yet (its first run), sonnet for a regeneration.
+          # Resolve the generation model, which this run forwards to repair
+          # (the review itself runs on REVIEW_MODEL_ALIAS below): explicit
+          # input > repository_dispatch payload > the PR body's "**Model:**"
+          # line > routing. impl-generate and impl-repair always send the
+          # model they resolved, and impl-generate records it in the body.
+          # "auto" (the dispatch default) or no model at all comes from
+          # rescues (impl-review-retry, the watchdog, a manual rerun): they
+          # take the body's model, so an explicit pin survives, and only a PR
+          # without that line routes like impl-generate — opus while the pair
+          # has no implementation on origin/main yet (its first run), sonnet
+          # for a regeneration.
           MODEL_BODY=$(echo "$BODY" | tr -d '\r' | grep -oP '^\*\*Model:\*\* \K(haiku|sonnet|opus)$' | head -1 || true)
           MODEL="${MODEL_INPUT:-auto}"
           MODEL_FROM="input"
@@ -125,6 +138,17 @@ jobs:
             fi
           fi
 
+          # Review model alias: every quality review runs on opus, whatever model
+          # generated the implementation. Only a manual dispatch (review_model)
+          # or this workflow's own auto-retry (payload) carries another. Not the
+          # resolved id: that is steps.review_model.outputs.model_id (REVIEW_MODEL
+          # in the metadata step).
+          REVIEW_MODEL_ALIAS="${REVIEW_MODEL_INPUT:-${REVIEW_MODEL_PAYLOAD:-opus}}"
+          case "$REVIEW_MODEL_ALIAS" in
+            haiku|sonnet|opus) ;;
+            *) echo "::warning::unknown review model '${REVIEW_MODEL_ALIAS}' — using opus"; REVIEW_MODEL_ALIAS="opus" ;;
+          esac
+
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "specification_id=$SPEC_ID" >> $GITHUB_OUTPUT
           echo "library=$LIBRARY" >> $GITHUB_OUTPUT
@@ -132,8 +156,15 @@ jobs:
           echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
           echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
           echo "model=$MODEL" >> $GITHUB_OUTPUT
+          echo "review_model_alias=$REVIEW_MODEL_ALIAS" >> "$GITHUB_OUTPUT"
 
-          echo "::notice::Reviewing PR #$PR_NUMBER for $LIBRARY implementation of $SPEC_ID (branch: $HEAD_REF, model: $MODEL from $MODEL_FROM)"
+          {
+            echo "**Review model:** ${REVIEW_MODEL_ALIAS}"
+            echo ""
+            echo "**Generation model:** ${MODEL} (${MODEL_FROM}; forwarded to repair)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "::notice::Reviewing PR #$PR_NUMBER for $LIBRARY implementation of $SPEC_ID (branch: $HEAD_REF, review model: $REVIEW_MODEL_ALIAS, generation model: $MODEL from $MODEL_FROM)"
 
       - name: Derive language + extension from library
         id: lang
@@ -569,7 +600,7 @@ jobs:
           ATTEMPT: ${{ steps.attempts.outputs.display }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: "--model ${{ steps.pr.outputs.model }} --settings ${{ github.workspace }}/.claude/settings.json"
+          claude_args: "--model ${{ steps.pr.outputs.review_model_alias }} --settings ${{ github.workspace }}/.claude/settings.json"
           allowed_bots: '*'
           prompt: |
             Read `prompts/workflow-prompts/ai-quality-review.md` and follow those instructions.
@@ -678,6 +709,7 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
           MODEL: ${{ steps.pr.outputs.model }}
+          REVIEW_MODEL_ALIAS: ${{ steps.pr.outputs.review_model_alias }}
         run: |
           echo "::error::AI Review did not produce valid output files (score=0)"
 
@@ -720,8 +752,9 @@ jobs:
           gh api repos/$REPOSITORY/dispatches \
             -f event_type=review-pr \
             -f "client_payload[pr_number]=$PR_NUM" \
-            -f "client_payload[model]=$MODEL"
-          echo "::notice::Auto-re-triggered impl-review.yml for PR #$PR_NUM (model=$MODEL)"
+            -f "client_payload[model]=$MODEL" \
+            -f "client_payload[review_model]=$REVIEW_MODEL_ALIAS"
+          echo "::notice::Auto-re-triggered impl-review.yml for PR #$PR_NUM (review model=$REVIEW_MODEL_ALIAS, generation model=$MODEL)"
           # Mark this run as failed so the run status reflects that no verdict
           # was produced. The auto-retry runs in a separate workflow run.
           exit 1
@@ -1274,6 +1307,7 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
           MODEL: ${{ steps.pr.outputs.model }}
+          REVIEW_MODEL_ALIAS: ${{ steps.pr.outputs.review_model_alias }}
         run: |
           MARKER="<!-- review-retry:${SPEC_ID}:${LIBRARY} -->"
           # Paginate so the marker is found even on PRs with >30 comments.
@@ -1308,8 +1342,9 @@ jobs:
           gh api repos/$REPOSITORY/dispatches \
             -f event_type=review-pr \
             -f "client_payload[pr_number]=$PR_NUM" \
-            -f "client_payload[model]=$MODEL"
-          echo "::notice::Auto-re-triggered impl-review.yml for PR #$PR_NUM (model=$MODEL)"
+            -f "client_payload[model]=$MODEL" \
+            -f "client_payload[review_model]=$REVIEW_MODEL_ALIAS"
+          echo "::notice::Auto-re-triggered impl-review.yml for PR #$PR_NUM (review model=$REVIEW_MODEL_ALIAS, generation model=$MODEL)"
           # Mark this run as failed so the run status reflects that no verdict
           # was produced. The auto-retry runs in a separate workflow run.
           exit 1

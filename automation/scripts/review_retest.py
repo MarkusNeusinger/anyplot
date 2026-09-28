@@ -93,13 +93,17 @@ BUCKET = "gs://anyplot-images"
 CANVASES = ((3200, 1800), (2400, 2400))
 CANVAS_TOLERANCE = 16
 THEMES = ("light", "dark")
-PRODUCTION_MODELS = {"fresh": "opus", "regen": "sonnet"}
-# API-equivalent USD per session (plan P6 §7; the smoke cell replaces these).
+# Mirrors impl-review.yml's review_model default; test_model_routing.py keeps
+# them equal.
+PRODUCTION_MODELS = {"fresh": "opus", "regen": "opus"}
+# API-equivalent USD per session, measured on set v1 core at rules 0674ab6b5:
+# fresh opus and regen sonnet in run 36354452853, fresh sonnet in 36359464410,
+# regen opus in 36389481950. Haiku is still the plan P6 §7 estimate.
 COST_ESTIMATE = {
-    ("fresh", "sonnet"): 0.63,
-    ("regen", "sonnet"): 0.90,
-    ("fresh", "opus"): 1.45,
-    ("regen", "opus"): 2.00,
+    ("fresh", "sonnet"): 0.76,
+    ("regen", "sonnet"): 0.98,
+    ("fresh", "opus"): 2.14,
+    ("regen", "opus"): 2.64,
     ("fresh", "haiku"): 0.20,
     ("regen", "haiku"): 0.30,
 }

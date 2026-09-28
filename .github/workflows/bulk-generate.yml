@@ -43,7 +43,7 @@ on:
         required: false
         default: ''
       model:
-        description: "Claude model for generate / review / repair; auto = opus for a pair's first implementation, sonnet for a regeneration"
+        description: "Claude model to generate and repair; auto = opus for a pair's first implementation, sonnet for a regeneration. Reviews always run on Opus."
         required: false
         type: choice
         default: 'auto'
@@ -176,6 +176,9 @@ jobs:
   # Opus, which is slower and heavier on the Claude usage window — and 120 s
   # (2 min) for a pinned sonnet/haiku, to stay under the Claude Max
   # concurrency budget and avoid spinning up 9 heavy generation runs at once.
+  # The 120 s dates from when a pinned run also reviewed on its own model;
+  # reviews now always run on Opus, so a large pinned run should pass
+  # pace_seconds (180, as for auto).
   # ============================================================================
   generate:
     needs: [build-matrix, preview]

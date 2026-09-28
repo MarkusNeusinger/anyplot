@@ -306,11 +306,19 @@ gh workflow run bulk-generate.yml -f specification_id=all -f library=matplotlib
 
 ## Pipeline models
 
-`impl-generate.yml` picks the Claude model for each (spec, library) pair and
-threads it into the review and every repair of that pair's PR:
+The pipeline chooses two models separately: the generation model, which writes
+and repairs an implementation, and the review model, which scores it. The other
+pipeline LLM steps use fixed models: `spec-create.yml` runs on Opus, and the
+spec polish and cross-library similarity audit in `daily-regen.yml` run on
+Sonnet.
 
-| Situation | Model |
-|-----------|-------|
+### Generation model
+
+`impl-generate.yml` picks the generation model for each (spec, library) pair
+and threads it into every repair of that pair's PR:
+
+| Situation | Generation model |
+|-----------|------------------|
 | First implementation: the pair has no implementation file on `origin/main` yet | Opus |
 | Regeneration: the pair already has an implementation on `origin/main` | Sonnet |
 | Forced regeneration: a regeneration dispatched with `regen_gate=false` (see [Regen gate](#regen-gate-regenerations)) | Opus |
@@ -327,13 +335,15 @@ model; the preview comment and the summary also show why, for example
 Review and repair runs that arrive without a model, such as
 `impl-review-retry.yml`, the watchdog's review and repair rescues, or a manual
 `gh workflow run impl-review.yml -f pr_number=N`, read the `**Model:**` line
-from the PR body, so an explicit pin survives a rescue. Only a PR without that
-line is routed again.
+from the PR body, so an explicit pin survives a rescue and still reaches every
+repair. `impl-review.yml` resolves this value only to forward it to repair; it
+never chooses the review model. Only a PR without that line is routed again.
 
 If `origin/main` can't be read, `impl-generate.yml` fails instead of guessing.
 Review and repair log a warning and assume a first run (Opus).
 
-To pin one model for a whole run, pass it explicitly:
+To pin one generation model for a whole run, pass it explicitly. The pin covers
+generation and repair; the reviews still run on Opus.
 
 ```bash
 gh workflow run bulk-generate.yml -f specification_id=scatter-basic -f library=all -f model=sonnet
@@ -341,15 +351,40 @@ gh workflow run bulk-generate.yml -f specification_id=scatter-basic -f library=a
 
 `bulk-generate.yml` waits 180 seconds between dispatches for `model=auto` or
 `opus`, and 120 seconds for `sonnet` or `haiku`; `pace_seconds` overrides
-either default.
+either default. The 120-second default dates from when a pinned run also
+reviewed on its own model. Its reviews now run on Opus, so pass
+`pace_seconds=180` for a large pinned run.
 
-The other pipeline LLM steps use fixed models: `spec-create.yml` runs on Opus,
-and the spec polish and cross-library similarity audit in `daily-regen.yml` run
-on Sonnet.
+### Review model
 
-An alias such as `sonnet` points at a newer model after each release, so
+Every quality review runs on Opus, whatever model generated the
+implementation. That covers the review of a first implementation, the review
+after each repair, and the regen gate's session, which re-scores the live
+implementation and reviews the new render in one go. `impl-review.yml` is the
+only workflow that runs a quality review, and it chooses the review model
+itself: no other workflow forwards one.
+
+To review one PR on another model, for example for an experiment, dispatch
+`impl-review.yml` with `review_model`:
+
+```bash
+gh workflow run impl-review.yml -f pr_number=123 -f review_model=sonnet
+```
+
+The pin covers that run and its own auto-retry. A later review of the same PR,
+after a repair or a rescue, runs on Opus again. The run summary and the notice
+line name both models, for example
+`review model: opus, generation model: sonnet from PR body`.
+
+Opus scores lower than Sonnet: on the same 15 implementations and rules it
+averaged 77.5 against Sonnet's 85.9 (retest runs 36354452853 and 36359464410).
+Most stored scores come from Sonnet or Haiku reviews, so a pair reviewed on
+Opus usually stores a lower score than the one it replaces. `review.model`
+names the model behind a stored score.
+
+An alias such as `opus` points at a newer model after each release, so
 `impl-review.yml` stores what actually ran. The metadata's `review` block
-records the resolved model ID (`review.model`, for example `claude-sonnet-5`),
+records the resolved model ID (`review.model`, for example `claude-opus-5`),
 the rules version the reviewer read (`review.criteria_version`, the git blob
 IDs of `prompts/quality-criteria.md`, `ai-quality-review.md`,
 `default-style-guide.md`, and the library prompt), and when the reviewed render

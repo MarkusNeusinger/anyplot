@@ -317,9 +317,11 @@ class TestPlan:
     def test_core_production_counts_and_models(self):
         result = _plan()
         assert result["sessions"] == 3 * (1 + 2)
-        assert result["by_model"] == {"fresh/opus": 3, "regen/sonnet": 6}
+        assert result["by_model"] == {"fresh/opus": 3, "regen/opus": 6}
         assert result["items"] == ["f-bubble-basic-matplotlib", "r-bubble-basic-matplotlib-b-a"]
-        assert result["estimate_usd"] == pytest.approx(3 * 1.45 + 6 * 0.90)
+        assert result["estimate_usd"] == pytest.approx(
+            3 * rt.COST_ESTIMATE[("fresh", "opus")] + 6 * rt.COST_ESTIMATE[("regen", "opus")]
+        )
 
     def test_run_major_order(self):
         cells = _plan()["cells"]
@@ -384,7 +386,7 @@ class TestPlan:
         done = [
             _resumed("f-bubble-basic-matplotlib__r1"),
             _resumed("f-bubble-basic-matplotlib__r2", ok=False),
-            _resumed("r-bubble-basic-matplotlib-b-a__rev__r1", model_alias="sonnet", harness_sha=B),
+            _resumed("r-bubble-basic-matplotlib-b-a__rev__r1", harness_sha=B),
         ]
         result = _plan(resume_records=done)
         assert result["resumed"] == 2
@@ -403,8 +405,8 @@ class TestPlan:
         ]
 
     def test_resume_rejects_a_record_from_another_model(self):
-        # models=sonnet: the fresh cell ran on Opus under production routing, the
-        # regen cell on Sonnet either way — only the regen record measures the same.
+        # models=sonnet runs every cell on Sonnet: only the Sonnet regen record
+        # measures the same; the Opus fresh record is run again.
         done = [
             _resumed("f-bubble-basic-matplotlib__r1", model_alias="opus"),
             _resumed("r-bubble-basic-matplotlib-b-a__fwd__r1", model_alias="sonnet"),

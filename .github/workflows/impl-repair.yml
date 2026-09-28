@@ -24,7 +24,7 @@ on:
         required: true
         type: string
       model:
-        description: "Claude model (also threaded back into review); auto = opus while the pair has no implementation on main, else sonnet"
+        description: "Repair (generation) model; auto = the PR body's **Model:** line, else opus while the pair has no implementation on main, else sonnet. The review it re-triggers runs on opus."
         required: false
         type: choice
         default: 'auto'
@@ -110,13 +110,17 @@ jobs:
           LANGUAGE: ${{ steps.lang.outputs.language }}
           EXT: ${{ steps.lang.outputs.ext }}
         run: |
-          # impl-review always forwards the model it resolved. "auto" (the
-          # dispatch default) comes from rescues that carry none (the
-          # watchdog's repair re-dispatches, a manual restart). They take the
-          # model impl-generate recorded in the PR body ("**Model:**"), so an
-          # explicit pin survives; only a PR without that line routes like
-          # impl-generate — opus while the pair has no implementation on
-          # origin/main yet (its first run), sonnet for a regeneration.
+          # The generation model, which repair runs on and hands back to the
+          # review it re-triggers (that review itself runs on opus, from
+          # impl-review.yml's review_model; this value only travels on to the
+          # next repair). impl-review always forwards the generation model it
+          # resolved. "auto" (the dispatch default) comes from rescues that
+          # carry none (the watchdog's repair re-dispatches, a manual
+          # restart). They take the model impl-generate recorded in the PR
+          # body ("**Model:**"), so an explicit pin survives; only a PR
+          # without that line routes like impl-generate — opus while the pair
+          # has no implementation on origin/main yet (its first run), sonnet
+          # for a regeneration.
           MODEL="${MODEL_INPUT:-auto}"
           MODEL_FROM="input"
           if [ "$MODEL" = "auto" ]; then
@@ -354,7 +358,7 @@ jobs:
             -f event_type=review-pr \
             -f "client_payload[pr_number]=$PR_NUM" \
             -f "client_payload[model]=$MODEL"
-          echo "::notice::Triggered impl-review.yml via repository_dispatch for PR #$PR_NUM (model=$MODEL)"
+          echo "::notice::Triggered impl-review.yml via repository_dispatch for PR #$PR_NUM (generation model=$MODEL; the review runs on opus)"
 
       # ========================================================================
       # Failure handling: when the repair workflow itself crashes (e.g. Claude

@@ -13,8 +13,9 @@
 #                queue.log, results/, and an optional rescue_specs.txt
 #   [slots]      drivers in flight at once (default 1 for MODEL auto/opus, 2 for
 #                sonnet/haiku; more only with the user's OK)
-# Env: MODEL (default auto: impl-generate picks opus for a first implementation,
-#      sonnet for a regeneration), DEADLINE (epoch seconds; no launches after it),
+# Env: MODEL (generate and repair; default auto: impl-generate picks opus for a
+#      first implementation, sonnet for a regeneration; reviews always run on
+#      opus), DEADLINE (epoch seconds; no launches after it),
 #      STAGGER (s between launches; default 180 for MODEL auto/opus, 90 for
 #      sonnet/haiku), THROTTLE_WAIT (s, 900), ANYPLOT_REPO.
 # Run it detached so it survives the session, with both streams captured
@@ -43,7 +44,8 @@ MODEL="${MODEL:-auto}"
 # usage window much faster than the Sonnet runs the old 2-slot / 90 s defaults
 # were tuned on. Default to one driver and a longer stagger then; the slots
 # argument and STAGGER still override, and a pinned sonnet/haiku keeps the old
-# defaults.
+# defaults. Its reviews run on Opus too (impl-review.yml reviews everything on
+# opus), so pass the auto values for a large pinned queue.
 case "$MODEL" in
   auto|opus) DEFAULT_SLOTS=1; DEFAULT_STAGGER=180 ;;
   *)         DEFAULT_SLOTS=2; DEFAULT_STAGGER=90 ;;

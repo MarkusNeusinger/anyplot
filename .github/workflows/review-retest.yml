@@ -33,7 +33,7 @@ on:
         default: 'core'
         type: string
       models:
-        description: "production = fresh items on Opus and regen pairs on Sonnet (as impl-review routes them); or one model for every cell"
+        description: "production = every cell on Opus, as impl-review.yml reviews; or one model for every cell"
         required: false
         default: 'production'
         type: choice
