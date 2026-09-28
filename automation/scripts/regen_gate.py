@@ -24,12 +24,29 @@ Merge requires ALL of:
 4. ``new_score >= prev_rescored - 1`` (``prev_rescored`` is the predecessor
    re-scored in the same session; the stored score is display-only);
 5. at least one improvement with a non-empty ``where_visible`` whose ref is
-   not an "Expected, not a defect" bullet (a permission is never an
-   improvement; such an improvement is not counted, and the file stays valid);
-6. no regressions -- on a ``*-basic`` spec a changed data scenario or added
+   neither an "Expected, not a defect" bullet (a permission is never an
+   improvement) nor a previous weakness the re-score classed ``obsolete``
+   (one such a bullet covers); such an item is not counted, and the file
+   stays valid;
+6. at least one of those visible improvements is a *carrier*: an affirmative
+   ``C`` ref, or a ``W`` classed ``defect`` / a ``P`` or ``new`` item whose
+   ``rule`` verifies -- a VQ, SC, DQ or CQ criterion the new render scores
+   higher on (``review_checklist.json`` next to ``review_regen.json``) than
+   the re-score did (``prev_checklist``), an affirmative ``C`` id, or
+   ``AR-06``..``AR-09`` while ``prev_rescored`` is 0. Suggestions, unverified
+   claims and DE or LM points ride along but never carry a merge alone
+   (``classify_improvements``);
+7. no regressions -- on a ``*-basic`` spec a changed data scenario or added
    encodings count as regressions unless a change request asked for them.
 
-Anything missing or malformed fails closed to ``keep``.
+Anything missing or malformed fails closed to ``keep``. The classification
+keys (``prev_checklist``, ``prev_weaknesses``, ``rule``) never invalidate the
+file: a missing or malformed one only leaves fewer carriers.
+
+Stored weaknesses come in two formats (``weakness_class``): a *defect* line
+``<ID>[, <ID>] (<light|dark|both|code>): …`` naming the criterion it violates,
+and a ``Suggestion: …`` line. Anything else is a *legacy* line from an older
+review.
 
 Every decision also carries a machine-readable reason ``code`` (see
 ``REASON_CODES``) and, with ``--record-out``, a gate record: a one-line JSON
@@ -60,8 +77,16 @@ Subcommands::
 
     regen_gate.py marker --record FILE
 
+    regen_gate.py check-feedback [--weaknesses review_weaknesses.json] --checklist review_checklist.json \
+        [--regen review_regen.json --prev-weaknesses /tmp/anyplot-prev-weaknesses.json \
+         --spec-file plots/S/specification.md] [--warn-only]
+
 ``context`` and ``decide`` write ``key=value`` outputs to ``$GITHUB_OUTPUT``
-when it is set.
+when it is set. ``decide`` reads the new render's ``review_checklist.json``
+from the directory of ``--regen-json``. ``check-feedback`` is the review's
+self-check (step 10 of the review prompt) and the workflow's warn-only format
+check: one line per problem, exit 1 when there is any (``--warn-only``:
+``::warning::`` annotations plus a ``weakness_format`` notice, exit 0).
 """
 
 from __future__ import annotations
@@ -71,6 +96,7 @@ import json
 import os
 import re
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -93,6 +119,7 @@ REASON_CODES = (
     "regen_json_invalid",
     "regression",
     "no_visible_improvement",
+    "no_defect_improvement",
     "below_tolerance",
     "merge",
     "script_crashed",
@@ -119,6 +146,118 @@ _KIND_RES = (
     (KIND_SHOWS, re.compile(r"^\s*[*_]{0,2}\s*a good version shows\s*[*_]{0,2}\s*:", re.IGNORECASE)),
     (KIND_EXPECTED, re.compile(r"^\s*[*_]{0,2}\s*expected,?\s*not a defect\s*[*_]{0,2}\s*:", re.IGNORECASE)),
 )
+
+# The 24 rubric criteria and their maxima (prompts/quality-criteria.md, the
+# step 7 tables of prompts/workflow-prompts/ai-quality-review.md).
+CRITERIA: dict[str, int] = {
+    "VQ-01": 8,
+    "VQ-02": 6,
+    "VQ-03": 6,
+    "VQ-04": 2,
+    "VQ-05": 4,
+    "VQ-06": 2,
+    "VQ-07": 2,
+    "DE-01": 8,
+    "DE-02": 6,
+    "DE-03": 6,
+    "SC-01": 5,
+    "SC-02": 4,
+    "SC-03": 3,
+    "SC-04": 3,
+    "DQ-01": 6,
+    "DQ-02": 5,
+    "DQ-03": 4,
+    "CQ-01": 3,
+    "CQ-02": 2,
+    "CQ-03": 2,
+    "CQ-04": 2,
+    "CQ-05": 1,
+    "LM-01": 5,
+    "LM-02": 5,
+}
+# Criteria whose verified fix can carry a regeneration. DE and LM never do:
+# stored reviews deduct DE-01..03 and LM-02 in 96-100 % of cases, so no score
+# delta tells a fix from a taste change there; they ride along instead.
+CARRIER_CRITERIA = frozenset(c for c in CRITERIA if c[:2] in {"VQ", "SC", "DQ", "CQ"})
+# The AI-judged auto-reject checks a defect line may name besides the criteria.
+AR_IDS = ("AR-06", "AR-07", "AR-08", "AR-09")
+
+# Weakness line formats. The class is the format, so the stored text carries it.
+DEFECT = "defect"
+SUGGESTION = "suggestion"
+LEGACY = "legacy"
+OBSOLETE = "obsolete"
+# Classes the re-score may give a previous weakness (8b, ``prev_weaknesses``).
+RESCORE_CLASSES = (DEFECT, SUGGESTION, OBSOLETE)
+_DEFECT_ID = r"(?:VQ|DE|SC|DQ|CQ|LM|AR)-\d{2}"
+# Prefix only: ``<ID>[, <ID>] (<light|dark|both|code>): <text>``. An unknown ID
+# still reads as a defect line; check-feedback reports it.
+DEFECT_RE = re.compile(rf"^(?P<ids>{_DEFECT_ID}(?:, {_DEFECT_ID})*) \((?P<render>light|dark|both|code)\): \S")
+SUGGESTION_RE = re.compile(r"^Suggestion: \S")
+MAX_SUGGESTIONS = 3
+C_REF_RE = re.compile(r"^C(?P<num>[1-9]\d*)$")
+
+
+def weakness_class(text: Any) -> str:
+    """``defect``, ``suggestion`` or ``legacy`` (any other line, blank included)."""
+    line = str(text or "").strip()
+    if DEFECT_RE.match(line):
+        return DEFECT
+    if SUGGESTION_RE.match(line):
+        return SUGGESTION
+    return LEGACY
+
+
+def defect_ids(text: Any) -> list[str]:
+    """The IDs a defect line names, in order; empty for any other line."""
+    m = DEFECT_RE.match(str(text or "").strip())
+    return m.group("ids").split(", ") if m else []
+
+
+def _score_in_range(criterion: str, value: Any) -> bool:
+    return (
+        criterion in CRITERIA
+        and isinstance(value, int)
+        and not isinstance(value, bool)
+        and 0 <= value <= CRITERIA[criterion]
+    )
+
+
+def flat_scores(mapping: Any) -> dict[str, int]:
+    """``{criterion: score}`` for the known criteria with an integer in range; the rest is dropped."""
+    if not isinstance(mapping, Mapping):
+        return {}
+    return {str(k): v for k, v in mapping.items() if _score_in_range(str(k), v)}
+
+
+def checklist_scores(checklist: Any) -> dict[str, int]:
+    """Flatten a six-category ``review_checklist.json`` into ``{criterion: score}``.
+
+    Keeps the first item per id, and only integers from 0 to the item's
+    maximum (a float, a bool or an out-of-range score is dropped).
+    """
+    scores: dict[str, int] = {}
+    if not isinstance(checklist, Mapping):
+        return scores
+    for category in checklist.values():
+        items = category.get("items") if isinstance(category, Mapping) else None
+        for item in items if isinstance(items, list) else []:
+            if not isinstance(item, Mapping):
+                continue
+            cid = item.get("id")
+            if isinstance(cid, str) and cid not in scores and _score_in_range(cid, item.get("score")):
+                scores[cid] = item["score"]
+    return scores
+
+
+def load_checklist_scores(path: Path | None) -> dict[str, int]:
+    """``checklist_scores`` of a ``review_checklist.json`` file; ``{}`` on any error."""
+    if path is None or not path.is_file():
+        return {}
+    try:
+        return checklist_scores(json.loads(path.read_text(encoding="utf-8")))
+    except (OSError, ValueError):
+        return {}
 
 
 # ---------------------------------------------------------------------------
@@ -179,6 +318,17 @@ def permission_refs(items: list[str]) -> frozenset[str]:
     return frozenset(f"C{i}" for i, text in enumerate(items, start=1) if characteristic_kind(text) == KIND_EXPECTED)
 
 
+WEAKNESS_TAGS = {DEFECT: "defect", SUGGESTION: "suggestion", LEGACY: "older review"}
+# Read by the generator AND by the regen reviewer (8b step 2), so it explains
+# the classes only and never says what the gate counts.
+WEAKNESS_GUIDANCE = (
+    "Defects are fixes to make. Suggestions are ideas the previous review did not require; they are not "
+    "acted on. Older notes predate the current rubric: act on one only when it names something visibly "
+    "wrong under the current criteria. A weakness that asks for less of something an "
+    "`Expected, not a defect:` bullet of the spec names is obsolete."
+)
+
+
 def render_previous_review(
     data: dict[str, Any],
     spec_id: str,
@@ -192,6 +342,8 @@ def render_previous_review(
     ``include_scores=False`` (impl-review) leaves out the stored total and the
     per-category numbers, so the reviewer's re-score of the predecessor cannot
     anchor on them; the stored score stays in the gate's notice and summary.
+    Each weakness is tagged with its class (``weakness_class``), and each
+    returned item carries ``id``, ``text`` and ``class``.
     """
     review = data.get("review") or {}
     quality = data.get("quality_score")
@@ -207,27 +359,31 @@ def render_previous_review(
 
     strengths = review.get("strengths") or []
     if strengths:
-        lines.append("## Strengths (KEEP these)")
+        lines.append("## Strengths the previous review credited (keep those the current criteria still credit)")
         lines += [f"- {s}" for s in strengths]
         lines.append("")
 
-    weaknesses = weakness_ids(review.get("weaknesses") or [])
+    weaknesses = [{**w, "class": weakness_class(w["text"])} for w in weakness_ids(review.get("weaknesses") or [])]
     if weaknesses:
-        lines.append("## Weaknesses (FIX these) — stable ids W1..Wn")
-        lines += [f"- **{w['id']}:** {w['text']}" for w in weaknesses]
-        lines.append("")
+        lines.append("## Weaknesses — stable ids W1..Wn")
+        lines += [f"- **{w['id']}** ({WEAKNESS_TAGS[w['class']]}): {w['text']}" for w in weaknesses]
+        lines += ["", WEAKNESS_GUIDANCE, ""]
 
     checklist = review.get("criteria_checklist") or {}
-    if checklist:
-        lines.append("## Criteria checklist (focus on items that failed)")
+    if isinstance(checklist, dict) and checklist:
+        lines.append("## Criteria checklist (context — act on the defects, not on ❌ marks)")
         for cat, payload in checklist.items():
-            payload = payload or {}
+            # Older reviews stored scalars next to the six categories
+            # (total_score, score_caps_applied, …); they are no category.
+            if not isinstance(payload, dict):
+                continue
             if include_scores:
                 lines.append(f"### {cat}  ({payload.get('score', '?')}/{payload.get('max', '?')})")
             else:
                 lines.append(f"### {cat}")
             for item in payload.get("items") or []:
-                item = item or {}
+                if not isinstance(item, dict):
+                    continue
                 mark = "✅" if item.get("passed") else "❌"
                 lines.append(f"- {mark} {item.get('id', '?')} {item.get('name', '')}: {item.get('comment', '')}")
             lines.append("")
@@ -316,6 +472,11 @@ class GateInput:
     canvas_failed: bool = False
     change_request_present: bool = False
     context_ok: bool = True
+    # Stored class of each previous weakness (``load_weakness_classes``): a
+    # stored ``suggestion`` caps the re-score's class. Missing ids read as legacy.
+    weakness_classes: Mapping[str, str] = field(default_factory=dict)
+    # The new render's item scores (``review_checklist.json``, flattened).
+    new_checklist: Mapping[str, int] = field(default_factory=dict)
 
 
 @dataclass
@@ -324,7 +485,10 @@ class GateResult:
     reason: str
     code: str = ""
     prev_rescored: int | None = None
-    improvements: list[dict[str, str]] = field(default_factory=list)
+    # ``ref``/``what``/``where_visible`` plus ``class``, ``basis`` and ``rule``
+    # (``classify_improvements``), and ``prev_score``/``new_score`` when a
+    # criterion was tested.
+    improvements: list[dict[str, Any]] = field(default_factory=list)
     regressions: list[dict[str, str]] = field(default_factory=list)
     # Improvements whose ref is in here were listed but not counted.
     permission_refs: frozenset[str] = frozenset()
@@ -342,9 +506,13 @@ def normalize_regen(payload: Any) -> tuple[Any, list[str]]:
     """Coerce predictable model slips; every coercion is recorded for the reason.
 
     Only unambiguous slips are repaired: a digit-string ``prev_rescored``,
-    lower-case refs (``w2``), missing ``regressions`` / ``encodings_added``
-    (read as empty) and ``"n/a"`` / ``"null"`` for ``change_request_applied``.
-    Anything else is left for ``validate_regen`` to reject.
+    lower-case refs (``w2``) and rules (``vq-02``), missing ``regressions`` /
+    ``encodings_added`` (read as empty) and ``"n/a"`` / ``"null"`` for
+    ``change_request_applied``. Anything else is left for ``validate_regen``
+    to reject. The classification keys are coerced, never rejected: a
+    non-list ``prev_weaknesses`` or a non-object ``prev_checklist`` becomes
+    empty, and ``prev_weaknesses`` entries get a lower-case ``class`` and an
+    upper-case ``ref`` and ``rule``.
     """
     if not isinstance(payload, dict):
         return payload, []
@@ -376,8 +544,35 @@ def normalize_regen(payload: Any) -> tuple[Any, list[str]]:
                 if canonical != ref and REF_RE.match(canonical):
                     notes.append(f"ref {ref!r} -> {canonical!r}")
                     item = {**item, "ref": canonical}
+            rule = item.get("rule") if isinstance(item, dict) else None
+            if isinstance(rule, str) and rule.strip().upper() != rule:
+                notes.append(f"rule {rule!r} -> {rule.strip().upper()!r}")
+                item = {**item, "rule": rule.strip().upper()}
             fixed.append(item)
         data["improvements"] = fixed
+
+    if "prev_checklist" in data and not isinstance(data["prev_checklist"], dict):
+        notes.append(f"prev_checklist {type(data['prev_checklist']).__name__} -> {{}}")
+        data["prev_checklist"] = {}
+
+    if "prev_weaknesses" in data:
+        entries = data["prev_weaknesses"]
+        if not isinstance(entries, list):
+            notes.append(f"prev_weaknesses {type(entries).__name__} -> []")
+            data["prev_weaknesses"] = []
+        else:
+            fixed_entries = []
+            for i, entry in enumerate(entries, start=1):
+                if isinstance(entry, dict):
+                    changed = dict(entry)
+                    for key, canon in (("class", str.lower), ("ref", str.upper), ("rule", str.upper)):
+                        value = entry.get(key)
+                        if isinstance(value, str) and canon(value.strip()) != value:
+                            changed[key] = canon(value.strip())
+                            notes.append(f"prev_weaknesses[{i}].{key} {value!r} -> {changed[key]!r}")
+                    entry = changed
+                fixed_entries.append(entry)
+            data["prev_weaknesses"] = fixed_entries
 
     return data, notes
 
@@ -419,6 +614,9 @@ def validate_regen(payload: Any, known_weakness_ids: frozenset[str], characteris
                 errors.append(f"improvements[{i}].what must be a non-empty string")
             if "where_visible" in item and not isinstance(item["where_visible"], str):
                 errors.append(f"improvements[{i}].where_visible must be a string")
+            # null reads as absent (no rule: the item cannot carry).
+            if item.get("rule") is not None and not isinstance(item["rule"], str):
+                errors.append(f"improvements[{i}].rule must be a string")
 
     regressions = payload.get("regressions")
     if not isinstance(regressions, list):
@@ -471,6 +669,168 @@ def decide(inp: GateInput) -> GateResult:
     return result
 
 
+# Improvement classes (``classify_improvements``). Only a visible ``carrier``
+# can carry a merge; ``permission`` and ``obsolete`` items are not counted at
+# all. ``basis`` says why: a carrier rests on a ``criterion`` delta, a
+# ``characteristic`` or an ``auto_reject`` fix; a suggestion is a
+# ``suggestion`` (a W the re-score classed so, or left unclassified), an
+# ``unverified`` claim, or a ``de_lm`` (design or library-mastery) point.
+PERMISSION = "permission"
+CARRIER = "carrier"
+UNVERIFIED = "unverified"
+DE_LM = "de_lm"
+
+
+def load_weakness_classes(path: Path | None) -> dict[str, str]:
+    """``{W id: stored class}`` from the ``context`` weaknesses JSON.
+
+    An item without a known ``class`` (a file an older gate wrote) reads as
+    ``legacy``; a missing or malformed file gives ``{}``.
+    """
+    if path is None or not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(data, list):
+        return {}
+    classes: dict[str, str] = {}
+    for item in data:
+        if isinstance(item, dict) and "id" in item:
+            cls = item.get("class")
+            classes[str(item["id"])] = cls if cls in (DEFECT, SUGGESTION, LEGACY) else LEGACY
+    return classes
+
+
+def _rescore_classes(payload: Mapping[str, Any]) -> dict[str, tuple[str, str | None]]:
+    """``{W ref: (class, rule)}`` from ``prev_weaknesses``; the first entry per ref wins.
+
+    An entry without a known class reads as a suggestion; a malformed entry is
+    skipped (its W then reads as unclassified, which is a suggestion too).
+    """
+    out: dict[str, tuple[str, str | None]] = {}
+    entries = payload.get("prev_weaknesses")
+    for entry in entries if isinstance(entries, list) else []:
+        if not isinstance(entry, Mapping):
+            continue
+        ref = entry.get("ref")
+        if not isinstance(ref, str) or not re.fullmatch(r"W[1-9]\d*", ref.strip().upper()):
+            continue
+        ref = ref.strip().upper()
+        if ref in out:
+            continue
+        cls = str(entry.get("class") or "").strip().lower()
+        out[ref] = (cls if cls in RESCORE_CLASSES else SUGGESTION, _canonical_rule(entry.get("rule")))
+    return out
+
+
+def _canonical_rule(value: Any) -> str | None:
+    """A rule as the gate compares it (``VQ-02``, ``C3``); None when absent or blank."""
+    return (value.strip().upper() or None) if isinstance(value, str) else None
+
+
+def _affirmative_c(ref: str, inp: GateInput) -> bool:
+    """An "A good version shows" (or unlabeled) bullet within the spec's count."""
+    m = C_REF_RE.match(ref)
+    if m is None:
+        return False
+    return int(m.group("num")) <= inp.characteristic_count and ref not in inp.permission_refs
+
+
+def _verify(rule: str | None, inp: GateInput, prev_checklist: Mapping[str, int], prev_rescored: Any) -> dict[str, Any]:
+    """``class``/``basis`` (and the two scores for a carrier criterion) of one claimed rule."""
+    if not rule:
+        return {"class": SUGGESTION, "basis": UNVERIFIED}
+    if rule in CARRIER_CRITERIA:
+        prev, new = prev_checklist.get(rule), inp.new_checklist.get(rule)
+        scores = {"prev_score": prev, "new_score": new}
+        if isinstance(prev, int) and isinstance(new, int) and new > prev:
+            return {"class": CARRIER, "basis": "criterion", **scores}
+        return {"class": SUGGESTION, "basis": UNVERIFIED, **scores}
+    if rule in CRITERIA:  # DE-01..03, LM-01..02: stored and repaired, never a carrier
+        return {"class": SUGGESTION, "basis": DE_LM}
+    if C_REF_RE.match(rule):
+        return (
+            {"class": CARRIER, "basis": "characteristic"}
+            if _affirmative_c(rule, inp)
+            else {"class": SUGGESTION, "basis": UNVERIFIED}
+        )
+    if rule in AR_IDS and prev_rescored == 0:
+        return {"class": CARRIER, "basis": "auto_reject"}
+    return {"class": SUGGESTION, "basis": UNVERIFIED}
+
+
+def classify_improvements(payload: Any, inp: GateInput) -> list[dict[str, Any]]:
+    """Every listed improvement with its class, the basis of that class and its rule.
+
+    - A ``C`` ref: a ``permission`` when it is an "Expected, not a defect"
+      bullet, otherwise a ``carrier`` (an affirmative characteristic).
+    - A ``W`` ref: the class the re-score gave it in ``prev_weaknesses`` —
+      ``obsolete`` (never counted, whatever C id it names), ``suggestion``, or
+      ``defect``, whose ``rule`` is then verified. A W stored as a
+      ``Suggestion:`` line is capped at suggestion; an unclassified W is a
+      suggestion.
+    - A ``P`` or ``new`` item: its own ``rule``, verified.
+
+    A rule verifies when it is a VQ/SC/DQ/CQ criterion the new render
+    (``inp.new_checklist``) scores higher on than ``prev_checklist``, an
+    affirmative C id, or ``AR-06``..``AR-09`` while ``prev_rescored`` is 0. A
+    DE or LM rule is a ``de_lm`` suggestion. Robust to a payload the gate
+    would reject (the retest harness counts item by item).
+    """
+    if not isinstance(payload, Mapping) or not isinstance(payload.get("improvements"), list):
+        return []
+    prev_checklist = flat_scores(payload.get("prev_checklist"))
+    rescore = _rescore_classes(payload)
+    prev_rescored = payload.get("prev_rescored")
+    out: list[dict[str, Any]] = []
+    for item in payload["improvements"]:
+        if not isinstance(item, Mapping):
+            continue
+        ref = str(item.get("ref") or "")
+        entry: dict[str, Any] = {
+            "ref": ref,
+            "what": str(item.get("what") or "").strip(),
+            "where_visible": str(item.get("where_visible") or "").strip(),
+            "rule": None,
+        }
+        m = REF_RE.match(ref)
+        kind = m.group("kind") if m else None
+        if kind == "C":
+            entry["rule"] = ref
+            if ref in inp.permission_refs:
+                entry.update({"class": PERMISSION, "basis": PERMISSION})
+            elif _affirmative_c(ref, inp):
+                entry.update({"class": CARRIER, "basis": "characteristic"})
+            else:
+                entry.update({"class": SUGGESTION, "basis": UNVERIFIED})
+        elif kind == "W":
+            cls, rule = rescore.get(ref, (SUGGESTION, None))
+            entry["rule"] = rule
+            if cls == DEFECT and inp.weakness_classes.get(ref, LEGACY) == SUGGESTION:
+                cls = SUGGESTION  # a stored Suggestion: line is capped; a real defect becomes a P finding
+                entry["capped"] = True
+            if cls == OBSOLETE:
+                entry.update({"class": OBSOLETE, "basis": "labeled" if rule in inp.permission_refs else "unlabeled"})
+            elif cls == DEFECT:
+                entry.update(_verify(rule, inp, prev_checklist, prev_rescored))
+            else:
+                entry.update({"class": SUGGESTION, "basis": SUGGESTION})
+        elif m:  # P<n> or new
+            entry["rule"] = _canonical_rule(item.get("rule"))
+            entry.update(_verify(entry["rule"], inp, prev_checklist, prev_rescored))
+        else:
+            entry.update({"class": SUGGESTION, "basis": UNVERIFIED})
+        out.append(entry)
+    return out
+
+
+def _counted(item: Mapping[str, Any]) -> bool:
+    """Counted by the gate: neither a permission nor an obsolete weakness."""
+    return item.get("class") not in (PERMISSION, OBSOLETE)
+
+
 def _judge(inp: GateInput, regen: Any) -> GateResult:
     errors = validate_regen(regen, inp.known_weakness_ids, inp.characteristic_count)
     if errors:
@@ -478,14 +838,7 @@ def _judge(inp: GateInput, regen: Any) -> GateResult:
 
     payload: dict[str, Any] = regen
     prev_rescored: int = payload["prev_rescored"]
-    improvements = [
-        {
-            "ref": item["ref"],
-            "what": item["what"].strip(),
-            "where_visible": str(item.get("where_visible") or "").strip(),
-        }
-        for item in payload["improvements"]
-    ]
+    improvements = classify_improvements(payload, inp)
     regressions = [
         {"what": item["what"].strip(), "where_visible": str(item.get("where_visible") or "").strip()}
         for item in payload["regressions"]
@@ -521,20 +874,40 @@ def _judge(inp: GateInput, regen: Any) -> GateResult:
         result.reason = f"{len(regressions)} regression(s): " + "; ".join(r["what"] for r in regressions)
         return result
 
-    # A permission ("Expected, not a defect") is never an improvement: the
-    # item is not counted, but the rest of the file still is.
-    counted = [i for i in improvements if i["ref"] not in inp.permission_refs]
-    cited = sorted({i["ref"] for i in improvements if i["ref"] in inp.permission_refs}, key=lambda ref: int(ref[1:]))
-    note = ""
+    # A permission ("Expected, not a defect") is never an improvement, and a
+    # previous weakness such a bullet covers is obsolete: neither item is
+    # counted, but the rest of the file still is.
+    counted = [i for i in improvements if _counted(i)]
+    cited = sorted({i["ref"] for i in improvements if i["class"] == PERMISSION}, key=lambda ref: int(ref[1:]))
+    obsolete = [i for i in improvements if i["class"] == OBSOLETE]
+    notes = []
     if cited:
         bullets = "bullet" if len(cited) == 1 else "bullets"
-        note = f" ({', '.join(cited)} = 'Expected, not a defect' {bullets}, not counted as an improvement)"
+        notes.append(f"{', '.join(cited)} = 'Expected, not a defect' {bullets}, not counted as an improvement")
+    if obsolete:
+        refs = ", ".join(f"{i['ref']} ({i['rule'] or 'no C id'})" for i in obsolete)
+        notes.append(f"obsolete: {refs}, not counted")
+    note = "".join(f" ({n})" for n in notes)
 
     visible = [i for i in counted if i["where_visible"]]
     if not visible:
-        detail = " (every improvement needs a non-empty where_visible)" if counted or not cited else ""
+        detail = " (every improvement needs a non-empty where_visible)" if counted or not (cited or obsolete) else ""
         result.code = "no_visible_improvement"
         result.reason = f"no visible improvement{detail}{note}"
+        return result
+
+    carriers = [i for i in visible if i["class"] == CARRIER]
+    if not carriers:
+        kinds = [
+            (sum(1 for i in visible if i["basis"] == basis), label)
+            for basis, label in ((SUGGESTION, "suggestion"), (UNVERIFIED, "unverified"), (DE_LM, "design or library"))
+        ]
+        breakdown = ", ".join(f"{n} {label}" for n, label in kinds if n)
+        result.code = "no_defect_improvement"
+        result.reason = (
+            f"{len(visible)} visible improvement(s) ({breakdown}), none fixes a verified defect "
+            f"or an 'A good version shows' property{note}"
+        )
         return result
 
     if inp.score < prev_rescored - 1:
@@ -545,10 +918,182 @@ def _judge(inp: GateInput, regen: Any) -> GateResult:
     result.verdict = MERGE
     result.code = "merge"
     result.reason = (
-        f"{len(visible)} visible improvement(s), no regressions, new score {inp.score} >= "
+        f"{len(visible)} visible improvement(s), {len(carriers)} carrying "
+        f"({', '.join(i['ref'] for i in carriers)}), no regressions, new score {inp.score} >= "
         f"re-scored predecessor {prev_rescored} - 1{note}"
     )
     return result
+
+
+# ---------------------------------------------------------------------------
+# Feedback format and consistency (check-feedback)
+# ---------------------------------------------------------------------------
+
+# The fix direction for every inconsistent claim: the checklists are final.
+CLAIM_FIX = "change the claim, not the scores"
+
+
+def check_weaknesses(weaknesses: Any, checklist: Mapping[str, int]) -> tuple[list[str], dict[str, int]]:
+    """Problems of a ``review_weaknesses.json`` list, and its class counts.
+
+    Every line is a defect or a ``Suggestion:`` line, every defect ID is known,
+    every criterion a defect names is below its maximum in the review's own
+    checklist (skipped when the item is missing), and there are at most
+    ``MAX_SUGGESTIONS`` suggestions.
+    """
+    counts = {DEFECT: 0, SUGGESTION: 0, LEGACY: 0}
+    if not isinstance(weaknesses, list):
+        return ["review_weaknesses.json is not a JSON list of strings"], counts
+    problems: list[str] = []
+    for i, raw in enumerate(weaknesses, start=1):
+        if not isinstance(raw, str):
+            problems.append(f"weakness {i} is not a string")
+            counts[LEGACY] += 1
+            continue
+        text = raw.strip()
+        cls = weakness_class(text)
+        counts[cls] += 1
+        if cls == LEGACY:
+            problems.append(
+                f"weakness {i} is neither a defect line ('<ID> (<light|dark|both|code>): <what is wrong> → <target>. "
+                f"Likely cause: <code element>.') nor a 'Suggestion: …' line: {_one_line(text)[:80]!r}"
+            )
+            continue
+        for cid in defect_ids(text):
+            if cid not in CRITERIA and cid not in AR_IDS:
+                problems.append(
+                    f"weakness {i} names {cid}, which is neither a criterion (VQ-01..LM-02) nor AR-06..AR-09"
+                )
+            elif cid in CRITERIA and checklist.get(cid) == CRITERIA[cid]:
+                problems.append(
+                    f"weakness {i} names {cid}, but your checklist gives {cid} its maximum "
+                    f"({CRITERIA[cid]}/{CRITERIA[cid]}): name the criterion the defect costs points on, "
+                    f"or make it a 'Suggestion:' line"
+                )
+    if counts[SUGGESTION] > MAX_SUGGESTIONS:
+        problems.append(f"{counts[SUGGESTION]} 'Suggestion:' lines; keep at most {MAX_SUGGESTIONS}")
+    return problems, counts
+
+
+def _prev_checklist_problems(raw: Any) -> list[str]:
+    if raw is None:
+        return ["review_regen.json has no prev_checklist: add the 24 item scores of your re-score of the predecessor"]
+    if not isinstance(raw, Mapping):
+        return ["prev_checklist is not an object of criterion ids to item scores"]
+    problems = []
+    missing = [c for c in CRITERIA if c not in raw]
+    if missing:
+        problems.append(f"prev_checklist lacks {', '.join(missing)}")
+    unknown = sorted(str(k) for k in raw if str(k) not in CRITERIA)
+    if unknown:
+        problems.append(f"prev_checklist has unknown ids {', '.join(unknown)}")
+    for cid, value in raw.items():
+        if str(cid) in CRITERIA and not _score_in_range(str(cid), value):
+            problems.append(f"prev_checklist {cid} must be an integer from 0 to {CRITERIA[str(cid)]} (got {value!r})")
+    return problems
+
+
+def check_regen_feedback(
+    regen: Any,
+    prev_weakness_ids: list[str],
+    stored_classes: Mapping[str, str],
+    characteristics: list[str],
+    checklist: Mapping[str, int],
+) -> list[str]:
+    """Contract and consistency problems of a ``review_regen.json`` (8b).
+
+    Structure (``validate_regen``), ``prev_checklist`` completeness, one known
+    class per previous weakness with the rule its class needs, a rule on every
+    ``P`` and ``new`` item, and two consistency tests that treat all 24
+    criteria alike: a ``W`` classed ``defect`` under a criterion names one
+    ``prev_checklist`` deducts, and an improvement that claims a criterion
+    scores higher on it in the new render's ``checklist`` than in
+    ``prev_checklist``. A failed claim is fixed by changing the claim.
+    """
+    payload, _ = normalize_regen(regen)
+    known = frozenset(prev_weakness_ids)
+    problems = [f"review_regen.json: {e}" for e in validate_regen(payload, known, len(characteristics))]
+    if not isinstance(payload, Mapping):
+        return problems
+    permissions = permission_refs(characteristics)
+    probe = GateInput(
+        spec_id="", score=None, regen=None, characteristic_count=len(characteristics), permission_refs=permissions
+    )
+
+    raw_checklist = payload.get("prev_checklist")
+    problems += _prev_checklist_problems(raw_checklist)
+    prev_checklist = flat_scores(raw_checklist)
+
+    entries = payload.get("prev_weaknesses")
+    if prev_weakness_ids and not isinstance(entries, list):
+        problems.append(
+            "review_regen.json has no prev_weaknesses: classify every previous weakness "
+            f"({', '.join(prev_weakness_ids)}) as defect, suggestion or obsolete"
+        )
+    seen: dict[str, int] = {}
+    for i, entry in enumerate(entries if isinstance(entries, list) else [], start=1):
+        ref = entry.get("ref") if isinstance(entry, Mapping) else None
+        if not isinstance(ref, str) or ref not in known:
+            problems.append(f"prev_weaknesses[{i}].ref {ref!r} is not a weakness id of the previous review")
+            continue
+        seen[ref] = seen.get(ref, 0) + 1
+        cls = entry.get("class")
+        rule = _canonical_rule(entry.get("rule"))
+        if cls not in RESCORE_CLASSES:
+            problems.append(f"{ref}: class {cls!r} is not one of defect, suggestion, obsolete")
+        elif cls == DEFECT:
+            if stored_classes.get(ref) == SUGGESTION:
+                problems.append(
+                    f"{ref} was stored as a 'Suggestion:' line and cannot be classed defect: class it suggestion, "
+                    "and number a defect the predecessor shows as a P finding instead"
+                )
+            if not (rule in CRITERIA or rule in AR_IDS or (rule and _affirmative_c(rule, probe))):
+                problems.append(
+                    f"{ref} is classed defect but its rule {rule!r} is neither a criterion nor the C id of an "
+                    "'A good version shows:' bullet"
+                )
+            elif rule in CRITERIA and prev_checklist.get(rule) == CRITERIA[rule]:
+                problems.append(
+                    f"{ref} is classed defect under {rule}, but prev_checklist gives {rule} its maximum "
+                    f"({CRITERIA[rule]}/{CRITERIA[rule]}): reclass {ref} as suggestion or obsolete — {CLAIM_FIX}"
+                )
+        elif cls == OBSOLETE and not (rule and C_REF_RE.match(rule) and int(rule[1:]) <= len(characteristics)):
+            problems.append(f"{ref} is classed obsolete but its rule {rule!r} is not a C id of the spec's section")
+    for ref in prev_weakness_ids:
+        if isinstance(entries, list) and seen.get(ref, 0) == 0:
+            problems.append(f"prev_weaknesses does not classify {ref}")
+        elif seen.get(ref, 0) > 1:
+            problems.append(f"prev_weaknesses classifies {ref} {seen[ref]} times; classify it once")
+
+    rescore = _rescore_classes(payload)
+    improvements = payload.get("improvements")
+    for i, item in enumerate(improvements if isinstance(improvements, list) else [], start=1):
+        if not isinstance(item, Mapping) or not isinstance(item.get("ref"), str):
+            continue
+        ref = item["ref"]
+        m = REF_RE.match(ref)
+        kind = m.group("kind") if m else None
+        if kind == "W":
+            cls, rule = rescore.get(ref, (SUGGESTION, None))
+            claimed = rule if cls == DEFECT else None
+        elif m and kind != "C":  # P<n> or new
+            claimed = _canonical_rule(item.get("rule"))
+            if claimed is None:
+                problems.append(
+                    f"improvement {i} ({ref}) has no rule: name the criterion or the C id of the "
+                    "'A good version shows:' bullet it fixes"
+                )
+        else:
+            claimed = None
+        if claimed in CRITERIA:
+            prev, new = prev_checklist.get(claimed), checklist.get(claimed)
+            if isinstance(prev, int) and isinstance(new, int) and new <= prev:
+                problems.append(
+                    f"improvement {i} ({ref}) claims {claimed}, but your checklist for the new render gives "
+                    f"{claimed} {new} and prev_checklist {prev}: it did not fix {claimed}, so remove it from "
+                    f"improvements or name the rule it does fix — {CLAIM_FIX}"
+                )
+    return problems
 
 
 # ---------------------------------------------------------------------------
@@ -607,6 +1152,46 @@ def parse_score(raw: str | None) -> int | None:
     return value if value <= 100 else None
 
 
+def _score_text(value: Any) -> str:
+    return str(value) if isinstance(value, int) and not isinstance(value, bool) else "n/a"
+
+
+def improvement_flag(item: Mapping[str, Any]) -> str:
+    """The summary's class flag for one classified improvement (empty when unclassified).
+
+    Only fixed ids and integers from the classification appear: the rule is
+    re-checked against the known id shapes, so no model text reaches the flag.
+    """
+    raw = item.get("rule")
+    rule = raw if isinstance(raw, str) and re.fullmatch(r"[A-Z]{1,2}-?\d{1,3}", raw) else None
+    if raw and rule is None:
+        rule = "an unrecognized rule"
+    cls, basis = item.get("class"), item.get("basis")
+    if cls == PERMISSION:
+        return " _(permission, not counted)_"
+    if cls == OBSOLETE:
+        if basis == "labeled":
+            return f" _(obsolete: covered by {rule}, not counted)_"
+        return f" _(obsolete: {rule or 'no C id'} is not an 'Expected, not a defect' bullet; not counted)_"
+    if cls == CARRIER:
+        if basis == "criterion":
+            return f" _(defect: {rule}, {_score_text(item.get('prev_score'))} → {_score_text(item.get('new_score'))})_"
+        if basis == "characteristic" and item.get("ref") == rule:
+            return " _(characteristic)_"
+        return f" _(defect: {rule})_"
+    if basis == DE_LM:
+        return f" _(design or library point {rule}: does not carry)_"
+    if basis == UNVERIFIED:
+        if "prev_score" in item or "new_score" in item:
+            scores = f"{_score_text(item.get('prev_score'))} → {_score_text(item.get('new_score'))}"
+            return f" _(unverified: {rule}, {scores})_"
+        return f" _(unverified: {rule or 'no rule'})_"
+    if cls == SUGGESTION:
+        capped = ", stored as a suggestion" if item.get("capped") else ""
+        return f" _(suggestion{capped}: does not carry)_"
+    return ""
+
+
 def render_summary(result: GateResult, prev_stored: str, score: int | None) -> str:
     """Markdown block for the PR/issue comment (improvements, regressions, reason)."""
     rescored = str(result.prev_rescored) if result.prev_rescored is not None else "n/a"
@@ -620,8 +1205,7 @@ def render_summary(result: GateResult, prev_stored: str, score: int | None) -> s
     if result.improvements:
         for item in result.improvements:
             where = _safe(item["where_visible"]) if item["where_visible"] else "_not visible_"
-            flag = " _(permission, not counted)_" if item["ref"] in result.permission_refs else ""
-            lines.append(f"- `{item['ref']}` {_safe(item['what'])} — {where}{flag}")
+            lines.append(f"- `{item['ref']}` {_safe(item['what'])} — {where}{improvement_flag(item)}")
     else:
         lines.append("- none")
     lines += ["", "**Regressions**"]
@@ -707,16 +1291,25 @@ def build_record(
 
     ``improvements`` counts what the review listed: ``total`` and the per-kind
     counts (``W``/``P``/``C``/``new``) cover every listed item, ``permission``
-    the items that cite an "Expected, not a defect" bullet, and ``visible`` only
-    the counted ones (not a permission) with a non-empty ``where_visible`` —
-    the number the gate decided on.
+    the items that cite an "Expected, not a defect" bullet, ``obsolete`` the
+    previous weaknesses the re-score classed obsolete, and ``visible`` only the
+    counted ones (neither of the two) with a non-empty ``where_visible``. Of
+    those, ``carriers`` can carry a merge and ``suggestion`` cannot, so
+    ``visible == carriers + suggestion``; ``unverified`` (a claimed rule that
+    did not verify, or none) and ``de_lm`` (a DE or LM rule) are disjoint
+    subsets of ``suggestion``. The record stays ``v1``: records written before
+    these five keys lack them, and ``visible`` then still counted obsolete
+    citations.
     """
     kinds = {"W": 0, "P": 0, "C": 0, "new": 0}
     for item in result.improvements:
         kind = _ref_kind(item["ref"])
         if kind in kinds:
             kinds[kind] += 1
-    counted = [i for i in result.improvements if i["ref"] not in result.permission_refs]
+    counted = [i for i in result.improvements if _counted(i)]
+    visible = [i for i in counted if i["where_visible"]]
+    carriers = [i for i in visible if i.get("class") == CARRIER]
+    suggestions = [i for i in visible if i.get("class") != CARRIER]
     return {
         "v": RECORD_VERSION,
         "pr": pr,
@@ -734,9 +1327,14 @@ def build_record(
         "code": result.code,
         "improvements": {
             "total": len(result.improvements),
-            "visible": len([i for i in counted if i["where_visible"]]),
+            "visible": len(visible),
             **kinds,
-            "permission": len(result.improvements) - len(counted),
+            "permission": sum(1 for i in result.improvements if i.get("class") == PERMISSION),
+            "obsolete": sum(1 for i in result.improvements if i.get("class") == OBSOLETE),
+            "carriers": len(carriers),
+            "suggestion": len(suggestions),
+            "unverified": sum(1 for i in suggestions if i.get("basis") == UNVERIFIED),
+            "de_lm": sum(1 for i in suggestions if i.get("basis") == DE_LM),
         },
         "regressions": len(result.regressions),
         "scenario_changed": result.scenario_changed,
@@ -823,6 +1421,8 @@ def cmd_context(args: argparse.Namespace) -> int:
     )
     Path(args.out_md).write_text(md, encoding="utf-8")
     Path(args.out_weaknesses).write_text(json.dumps(weaknesses, indent=2, ensure_ascii=False), encoding="utf-8")
+    counts = {cls: sum(1 for w in weaknesses if w["class"] == cls) for cls in (DEFECT, SUGGESTION, LEGACY)}
+    print("::notice::weakness_classes " + " ".join(f"{cls}={n}" for cls, n in counts.items()))
     quality = data.get("quality_score")
     stored = str(quality) if _is_int(quality) else "n/a"
     # Provenance of the stored review, so a gate decision can later be told
@@ -854,18 +1454,24 @@ def cmd_decide(args: argparse.Namespace) -> int:
     if args.spec_file and Path(args.spec_file).is_file():
         characteristics = parse_characteristics(Path(args.spec_file).read_text(encoding="utf-8"))
     score = parse_score(args.score)
+    weaknesses_json = Path(args.weaknesses_json) if args.weaknesses_json else None
     inp = GateInput(
         spec_id=args.spec_id,
         score=score,
         regen=regen,
         regen_error=regen_error,
-        known_weakness_ids=load_known_weakness_ids(Path(args.weaknesses_json) if args.weaknesses_json else None),
+        known_weakness_ids=load_known_weakness_ids(weaknesses_json),
         characteristic_count=len(characteristics),
         permission_refs=permission_refs(characteristics),
         prev_renders=args.prev_renders == "available",
         canvas_failed=args.canvas_failed,
         change_request_present=args.change_request_present,
         context_ok=not args.context_failed,
+        weakness_classes=load_weakness_classes(weaknesses_json),
+        # The review writes its checklist next to review_regen.json (the
+        # repository root in impl-review, the cell workspace in the retest
+        # harness), so no new flag: every caller's argument set still works.
+        new_checklist=load_checklist_scores(Path(args.regen_json).parent / "review_checklist.json"),
     )
     result = decide(inp)
     rescored = str(result.prev_rescored) if result.prev_rescored is not None else "n/a"
@@ -916,6 +1522,47 @@ def cmd_sanitize_source(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_check_feedback(args: argparse.Namespace) -> int:
+    if not args.weaknesses and not args.regen:
+        print("check-feedback needs --weaknesses, --regen or both", file=sys.stderr)
+        return 2
+    problems: list[str] = []
+    checklist: dict[str, int] = {}
+    if args.checklist:
+        checklist = load_checklist_scores(Path(args.checklist))
+        if not checklist:
+            problems.append(f"{args.checklist} is missing, unreadable or holds no item scores")
+    counts = {DEFECT: 0, SUGGESTION: 0, LEGACY: 0}
+    if args.weaknesses:
+        weaknesses, error = load_regen_json(Path(args.weaknesses))
+        if error:
+            problems.append(f"{args.weaknesses} {error}")
+        else:
+            found, counts = check_weaknesses(weaknesses, checklist)
+            problems += found
+    if args.regen:
+        regen, error = load_regen_json(Path(args.regen))
+        if error:
+            problems.append(f"{args.regen} {error}")
+        else:
+            prev_path = Path(args.prev_weaknesses) if args.prev_weaknesses else None
+            ids = sorted(load_known_weakness_ids(prev_path), key=lambda ref: int(ref[1:]) if ref[1:].isdigit() else 0)
+            characteristics: list[str] = []
+            if args.spec_file and Path(args.spec_file).is_file():
+                characteristics = parse_characteristics(Path(args.spec_file).read_text(encoding="utf-8"))
+            problems += check_regen_feedback(regen, ids, load_weakness_classes(prev_path), characteristics, checklist)
+    for problem in problems:
+        print(f"::warning::{_one_line(problem)}" if args.warn_only else _one_line(problem))
+    if args.warn_only:
+        print(
+            f"::notice::weakness_format defect={counts[DEFECT]} suggestion={counts[SUGGESTION]} other={counts[LEGACY]}"
+        )
+        return 0
+    if not problems:
+        print("check-feedback: no problems")
+    return 1 if problems else 0
+
+
 def cmd_marker(args: argparse.Namespace) -> int:
     try:
         record = json.loads(Path(args.record).read_text(encoding="utf-8"))
@@ -952,6 +1599,17 @@ def build_parser() -> argparse.ArgumentParser:
     mark = sub.add_parser("marker", help="Print the PR-comment marker for a gate record written by --record-out")
     mark.add_argument("--record", required=True)
     mark.set_defaults(func=cmd_marker)
+
+    fb = sub.add_parser("check-feedback", help="Check the review's weakness lines and review_regen.json claims")
+    fb.add_argument("--weaknesses", default="", help="review_weaknesses.json")
+    fb.add_argument("--checklist", default="", help="review_checklist.json of the new render")
+    fb.add_argument("--regen", default="", help="review_regen.json (regeneration only)")
+    fb.add_argument(
+        "--prev-weaknesses", default="", help="context's weaknesses JSON (/tmp/anyplot-prev-weaknesses.json)"
+    )
+    fb.add_argument("--spec-file", default="", help="plots/S/specification.md (C ids and their kinds)")
+    fb.add_argument("--warn-only", action="store_true", help="::warning:: annotations and a notice, exit 0")
+    fb.set_defaults(func=cmd_check_feedback)
 
     dec = sub.add_parser("decide", help="Apply the regen gate to review_regen.json")
     dec.add_argument("--spec-id", required=True)

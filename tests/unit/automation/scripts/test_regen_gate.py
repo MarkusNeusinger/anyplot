@@ -15,15 +15,22 @@ import pytest
 import yaml
 
 from automation.scripts.regen_gate import (
+    CARRIER_CRITERIA,
+    CRITERIA,
     KEEP,
     KIND_EXPECTED,
     KIND_SHOWS,
     MERGE,
     REASON_CODES,
+    RECORD_KEYS,
     GateInput,
     build_record,
     characteristic_kind,
+    checklist_scores,
+    classify_improvements,
     decide,
+    load_checklist_scores,
+    load_weakness_classes,
     main,
     parse_characteristics,
     parse_record_markers,
@@ -35,16 +42,32 @@ from automation.scripts.regen_gate import (
     reset_header_score,
     validate_record,
     validate_regen,
+    weakness_class,
     weakness_ids,
 )
 
 
 KNOWN = frozenset({"W1", "W2", "W3"})
+# The re-score deducts VQ-03 (4 of 6) and the new render scores it 6 of 6, so
+# the fixture's W2 (classed a VQ-03 defect) carries the merge; every other
+# item sits at its maximum in both.
+PREV_CHECKLIST = {**CRITERIA, "VQ-03": 4}
+NEW_CHECKLIST = dict(CRITERIA)
+CATEGORY_KEYS = {
+    "VQ": "visual_quality",
+    "DE": "design_excellence",
+    "SC": "spec_compliance",
+    "DQ": "data_quality",
+    "CQ": "code_quality",
+    "LM": "library_mastery",
+}
 
 
 def _regen(**overrides) -> dict:
     payload = {
         "prev_rescored": 85,
+        "prev_checklist": dict(PREV_CHECKLIST),
+        "prev_weaknesses": [{"ref": "W2", "class": "defect", "rule": "VQ-03"}],
         "improvements": [
             {"ref": "W2", "what": "Size legend circles filled", "where_visible": "size legend, both renders"}
         ],
@@ -67,9 +90,22 @@ def _inp(score: int | None = 85, regen=None, **overrides) -> GateInput:
         "prev_renders": True,
         "canvas_failed": False,
         "change_request_present": False,
+        "new_checklist": NEW_CHECKLIST,
     }
     fields.update(overrides)
     return GateInput(**fields)
+
+
+def _checklist_json(scores: dict[str, int]) -> dict:
+    """The six-category review_checklist.json shape for a flat score map."""
+    out: dict = {}
+    for cid, score in scores.items():
+        cat = out.setdefault(CATEGORY_KEYS[cid[:2]], {"score": 0, "max": 0, "items": []})
+        top = CRITERIA[cid]
+        cat["items"].append({"id": cid, "name": cid, "score": score, "max": top, "passed": score == top, "comment": ""})
+        cat["score"] += score
+        cat["max"] += top
+    return out
 
 
 class TestScoreRule:
@@ -119,7 +155,12 @@ class TestImprovements:
     def test_one_visible_among_invisible_merges(self):
         imp = [
             {"ref": "new", "what": "Refactored loop", "where_visible": ""},
-            {"ref": "P1", "what": "Title no longer crowds the legend", "where_visible": "top right, light render"},
+            {
+                "ref": "P1",
+                "rule": "VQ-03",
+                "what": "Title no longer crowds the legend",
+                "where_visible": "top right, light render",
+            },
         ]
         assert decide(_inp(regen=_regen(improvements=imp))).verdict == MERGE
 
@@ -202,7 +243,7 @@ class TestPermissionRefs:
         result = decide(_inp(regen=_regen(improvements=imp), characteristic_count=3, permission_refs=frozenset({"C2"})))
         text = render_summary(result, "90", 85)
         assert "- `C2` Overlap visible — centre _(permission, not counted)_" in text
-        assert "- `W2` Legend fixed — legend\n" in text
+        assert "- `W2` Legend fixed — legend _(defect: VQ-03, 4 → 6)_\n" in text
 
 
 class TestRegressions:
@@ -421,7 +462,7 @@ class TestExtraction:
         assert "93" not in md
         assert "27/30" not in md
         assert "### visual_quality" in md
-        assert "**W1:** w" in md
+        assert "**W1** (older review): w" in md
 
     def test_weakness_ids_are_stable_and_skip_blanks(self):
         assert weakness_ids(["a", " ", "b"]) == [{"id": "W1", "text": "a"}, {"id": "W2", "text": "b"}]
@@ -432,12 +473,69 @@ class TestExtraction:
             "review": {"strengths": ["clean"], "weaknesses": ["legend invisible", "labels overlap"]},
         }
         md, weaknesses = render_previous_review(data, "bubble-basic", "r", "ggplot2", ["overlap handled with alpha"])
-        assert "**W1:** legend invisible" in md
-        assert "**W2:** labels overlap" in md
+        assert "**W1** (older review): legend invisible" in md
+        assert "**W2** (older review): labels overlap" in md
         assert "**C1:** overlap handled with alpha" in md
         assert '(only "A good version shows" bullets can be improvement refs)' in md
         assert "**Previous quality score (stored):** 90" in md
         assert [w["id"] for w in weaknesses] == ["W1", "W2"]
+        assert [w["class"] for w in weaknesses] == ["legacy", "legacy"]
+
+    def test_tags_and_headings_follow_the_class(self):
+        data = {
+            "review": {
+                "strengths": ["clean"],
+                "weaknesses": [
+                    "VQ-03, SC-04 (both): size legend circles invisible → fill them like the marks. Likely cause: guide.",
+                    "Suggestion: a subtler grid",
+                    "Grid too prominent",
+                ],
+                "criteria_checklist": {"visual_quality": {"score": 27, "max": 30, "items": []}},
+            }
+        }
+        md, weaknesses = render_previous_review(data, "s", "python", "altair", include_scores=False)
+        assert "## Weaknesses — stable ids W1..Wn" in md
+        assert "- **W1** (defect): VQ-03, SC-04 (both): size legend" in md
+        assert "- **W2** (suggestion): Suggestion: a subtler grid" in md
+        assert "- **W3** (older review): Grid too prominent" in md
+        assert "## Strengths the previous review credited (keep those the current criteria still credit)" in md
+        assert "## Criteria checklist (context — act on the defects, not on ❌ marks)" in md
+        assert "FIX these" not in md and "KEEP these" not in md
+        assert [w["class"] for w in weaknesses] == ["defect", "suggestion", "legacy"]
+
+    def test_guidance_explains_the_classes_and_never_mentions_the_gate(self):
+        """The regen reviewer reads the same file (8b step 2), so the paragraph
+        must not reveal what carries a merge (D7)."""
+        md, _ = render_previous_review({"review": {"weaknesses": ["a"]}}, "s", "python", "altair")
+        paragraph = md[md.index("Defects are fixes to make.") :].split("\n\n", 1)[0]
+        assert "Suggestions are ideas the previous review did not require" in paragraph
+        assert "Older notes predate the current rubric" in paragraph
+        assert "is obsolete" in paragraph
+        for word in ("gate", "merge", "carr", "count"):
+            assert word not in paragraph.lower(), word
+
+    def test_legacy_list_is_tagged_older_review_on_every_line(self):
+        weaknesses = ["Legend too small", "DE-02 (4/6): spines remain", "Consider adding a trend line"]
+        md, items = render_previous_review({"review": {"weaknesses": weaknesses}}, "s", "python", "altair")
+        tagged = [line for line in md.splitlines() if line.startswith("- **W")]
+        assert len(tagged) == 3
+        assert all("(older review)" in line for line in tagged)
+        assert {w["class"] for w in items} == {"legacy"}
+
+    def test_scalar_keys_in_an_older_checklist_are_skipped(self):
+        """16 stored reviews carry total_score / score_caps_applied next to the
+        categories; context used to raise on them, so their regens kept with
+        context_failed."""
+        checklist = {
+            "visual_quality": {"score": 27, "max": 30, "items": [{"id": "VQ-01", "passed": True}, "junk", None]},
+            "total_score": 88,
+            "score_caps_applied": "none",
+            "score_caps": ["x"],
+        }
+        md, _ = render_previous_review({"review": {"criteria_checklist": checklist}}, "s", "python", "altair")
+        assert "### visual_quality  (27/30)" in md
+        assert "- ✅ VQ-01" in md
+        assert "total_score" not in md and "score_caps" not in md
 
     def test_parse_characteristics(self):
         spec = (
@@ -545,10 +643,13 @@ class TestCli:
             == 0
         )
         assert "prev_stored=88" in out.read_text()
-        assert json.loads(wj.read_text())[1]["id"] == "W2"
+        assert json.loads(wj.read_text())[1] == {"id": "W2", "text": "b", "class": "legacy"}
+        assert "::notice::weakness_classes defect=0 suggestion=0 legacy=2" in capsys.readouterr().out
 
         regen = tmp_path / "review_regen.json"
         regen.write_text(json.dumps(_regen(prev_rescored=80)), encoding="utf-8")
+        # The gate reads the new render's checklist from the directory of --regen-json.
+        (tmp_path / "review_checklist.json").write_text(json.dumps(_checklist_json(NEW_CHECKLIST)), encoding="utf-8")
         summary = tmp_path / "summary.md"
         assert (
             main(
@@ -583,6 +684,15 @@ class TestCli:
         )
         assert "verdict=merge" in out.read_text()
         assert "| 88 | 80 | 81 |" in summary.read_text()
+        assert "_(defect: VQ-03, 4 → 6)_" in summary.read_text()
+
+        # Without the checklist next to review_regen.json nothing verifies.
+        (tmp_path / "review_checklist.json").unlink()
+        args = ["decide", "--spec-id", "bubble-basic", "--library", "altair", "--score", "81", "--regen-json"]
+        args += [str(regen), "--weaknesses-json", str(wj), "--spec-file", str(spec), "--prev-renders", "available"]
+        assert main([*args, "--summary-out", str(summary)]) == 0
+        assert "verdict=keep" in capsys.readouterr().out
+        assert "_(unverified: VQ-03, 4 → n/a)_" in summary.read_text()
 
     def test_decide_reads_permissions_from_the_spec_file(self, tmp_path, monkeypatch, capsys):
         """cmd_decide derives the permission refs from --spec-file itself."""
@@ -686,10 +796,17 @@ class TestReasonCodes:
             decide(_inp(prev_renders=False)).code,
             decide(_inp(context_ok=False)).code,
             decide(_inp(score=80)).code,
+            decide(_inp(new_checklist={})).code,
             decide(_inp()).code,
         }
+        assert "no_defect_improvement" in seen
         assert seen <= set(REASON_CODES)
         assert "script_crashed" in REASON_CODES  # the workflow's fallback
+
+    def test_carrier_check_comes_before_the_tolerance(self):
+        """Content checks first, as no_visible_improvement already does."""
+        result = decide(_inp(score=70, new_checklist={}))
+        assert (result.verdict, result.code) == (KEEP, "no_defect_improvement")
 
     def test_judgement_facts_are_kept(self):
         result = decide(_inp(spec_id="scatter-x", regen=_regen(scenario_changed=True, encodings_added=["size", " "])))
@@ -726,7 +843,20 @@ class TestGateRecord:
         assert record["verdict"] == "merge"
         assert record["code"] == "merge"
         assert (record["prev_stored"], record["prev_rescored"], record["new"]) == (92, 85, 85)
-        assert record["improvements"] == {"total": 2, "visible": 1, "W": 1, "P": 0, "C": 0, "new": 1, "permission": 0}
+        assert record["improvements"] == {
+            "total": 2,
+            "visible": 1,
+            "W": 1,
+            "P": 0,
+            "C": 0,
+            "new": 1,
+            "permission": 0,
+            "obsolete": 0,
+            "carriers": 1,
+            "suggestion": 0,
+            "unverified": 0,
+            "de_lm": 0,
+        }
         assert record["regressions"] == 0
         assert record["prev_model"] == "n/a"
         assert validate_record(record) == []
@@ -741,7 +871,17 @@ class TestGateRecord:
         merged = decide(_inp(regen=_regen(improvements=imp), characteristic_count=5, permission_refs=permissions))
         record = build_record(merged, spec_id="bubble-basic", library="d3", score=85, prev_stored=90)
         assert (record["verdict"], record["code"]) == ("merge", "merge")
-        assert record["improvements"] == {"total": 2, "visible": 1, "W": 0, "P": 0, "C": 2, "new": 0, "permission": 1}
+        counts = record["improvements"]
+        assert {k: counts[k] for k in ("total", "visible", "W", "P", "C", "new", "permission")} == {
+            "total": 2,
+            "visible": 1,
+            "W": 0,
+            "P": 0,
+            "C": 2,
+            "new": 0,
+            "permission": 1,
+        }
+        assert counts["carriers"] == 1
 
         kept = decide(_inp(regen=_regen(improvements=imp[:1]), characteristic_count=5, permission_refs=permissions))
         record = build_record(kept, spec_id="bubble-basic", library="d3", score=85, prev_stored=90)
@@ -1018,3 +1158,783 @@ class TestResetHeaderScore:
             src.read_text(encoding="utf-8")
             == "// anyplot.ai\n// Quality: pending | Updated: 2026-09-01\nconst a = 1;\n"
         )
+
+
+# ---------------------------------------------------------------------------
+# P3: defects and suggestions, obsolete weaknesses, carriers
+# ---------------------------------------------------------------------------
+
+
+class TestWeaknessClass:
+    @pytest.mark.parametrize(
+        ("text", "cls"),
+        [
+            (
+                "VQ-03, SC-04 (both): size legend circles invisible on dark → fill them like the marks. "
+                "Likely cause: guide_legend without override.aes.",
+                "defect",
+            ),
+            ("AR-09 (light): title clipped at the top edge → shrink the plot area. Likely cause: margin.", "defect"),
+            ("VQ-01 (dark): tick labels at 9 px → 12 px, −3 px short. Likely cause: fontsize.", "defect"),
+            ("CQ-04 (code): 40 lines without a visible change → drop them. Likely cause: helper loop.", "defect"),
+            ("DE-02 (4/6): top and right spines remain", "legacy"),
+            ("Suggestion: a focal highlight on the leading bar", "suggestion"),
+            ("", "legacy"),
+            ("   ", "legacy"),
+            (None, "legacy"),
+            ("VQ-03 (both):no space after the colon", "legacy"),
+            ("vq-03 (both): lower-case id", "legacy"),
+            ("VQ-03 (all): unknown render", "legacy"),
+            ("suggestion: lower-case prefix", "legacy"),
+            ("Grid too prominent", "legacy"),
+            ("  Suggestion: surrounding blanks are stripped  ", "suggestion"),
+        ],
+    )
+    def test_class(self, text, cls):
+        assert weakness_class(text) == cls
+
+    def test_multi_id_defect_names_each_id(self):
+        from automation.scripts.regen_gate import defect_ids
+
+        assert defect_ids("VQ-03, SC-04 (both): x") == ["VQ-03", "SC-04"]
+        assert defect_ids("Suggestion: VQ-03 (both): x") == []
+
+    def test_carrier_criteria_are_the_19_vq_sc_dq_cq_items(self):
+        assert len(CRITERIA) == 24
+        assert sum(CRITERIA.values()) == 100
+        assert len(CARRIER_CRITERIA) == 19
+        assert not any(c.startswith(("DE", "LM")) for c in CARRIER_CRITERIA)
+
+
+class TestLoadChecklistScores:
+    def test_six_category_shape(self, tmp_path):
+        path = tmp_path / "review_checklist.json"
+        path.write_text(json.dumps(_checklist_json({"VQ-01": 7, "DE-02": 3, "CQ-05": 1})), encoding="utf-8")
+        assert load_checklist_scores(path) == {"VQ-01": 7, "DE-02": 3, "CQ-05": 1}
+
+    @pytest.mark.parametrize("score", [6.0, 7.5, -1, 9, True, "7", None])
+    def test_bad_scores_are_dropped(self, score):
+        checklist = {"visual_quality": {"items": [{"id": "VQ-01", "score": score}, {"id": "VQ-02", "score": 5}]}}
+        assert checklist_scores(checklist) == {"VQ-02": 5}
+
+    def test_unknown_ids_and_duplicates(self):
+        checklist = {
+            "visual_quality": {"items": [{"id": "VQ-09", "score": 1}, {"id": "VQ-02", "score": 5}]},
+            "extra": {"items": [{"id": "VQ-02", "score": 1}, "not an item"]},
+            "broken": "not a category",
+        }
+        assert checklist_scores(checklist) == {"VQ-02": 5}
+
+    def test_missing_and_malformed_files(self, tmp_path):
+        assert load_checklist_scores(tmp_path / "absent.json") == {}
+        assert load_checklist_scores(None) == {}
+        bad = tmp_path / "bad.json"
+        bad.write_text("{not json", encoding="utf-8")
+        assert load_checklist_scores(bad) == {}
+        listed = tmp_path / "list.json"
+        listed.write_text("[1, 2]", encoding="utf-8")
+        assert load_checklist_scores(listed) == {}
+
+    def test_weakness_classes_default_to_legacy(self, tmp_path):
+        path = tmp_path / "weak.json"
+        path.write_text(
+            json.dumps([{"id": "W1", "text": "a"}, {"id": "W2", "class": "suggestion"}, {"id": "W3", "class": "x"}]),
+            encoding="utf-8",
+        )
+        assert load_weakness_classes(path) == {"W1": "legacy", "W2": "suggestion", "W3": "legacy"}
+        assert load_weakness_classes(tmp_path / "absent.json") == {}
+
+
+def _classes(result) -> list[tuple[str, str, str]]:
+    return [(i["ref"], i["class"], i["basis"]) for i in result.improvements]
+
+
+class TestCarriers:
+    """Only a visible improvement that fixes a verified defect, or an
+    affirmative characteristic, carries a merge (D2, D11)."""
+
+    def test_verified_w_defect_carries(self):
+        result = decide(_inp())
+        assert (result.verdict, result.code) == (MERGE, "merge")
+        assert _classes(result) == [("W2", "carrier", "criterion")]
+        assert (result.improvements[0]["prev_score"], result.improvements[0]["new_score"]) == (4, 6)
+        assert "1 carrying (W2)" in result.reason
+
+    def test_equal_new_score_is_unverified(self):
+        result = decide(_inp(new_checklist={**NEW_CHECKLIST, "VQ-03": 4}))
+        assert (result.verdict, result.code) == (KEEP, "no_defect_improvement")
+        assert _classes(result) == [("W2", "suggestion", "unverified")]
+        assert "_(unverified: VQ-03, 4 → 4)_" in render_summary(result, "90", 85)
+
+    @pytest.mark.parametrize("rule", ["DE-02", "LM-02", "DE-03", "DE-01", "LM-01"])
+    def test_de_and_lm_never_carry(self, rule):
+        regen = _regen(
+            prev_checklist={**PREV_CHECKLIST, rule: 1}, prev_weaknesses=[{"ref": "W2", "class": "defect", "rule": rule}]
+        )
+        result = decide(_inp(regen=regen, new_checklist={**NEW_CHECKLIST, rule: CRITERIA[rule]}))
+        assert (result.verdict, result.code) == (KEEP, "no_defect_improvement")
+        assert _classes(result) == [("W2", "suggestion", "de_lm")]
+        assert f"_(design or library point {rule}: does not carry)_" in render_summary(result, "90", 85)
+        assert "1 design or library" in result.reason
+
+    @pytest.mark.parametrize("checklist", [{}, {"VQ-01": 8}])
+    def test_missing_new_checklist_leaves_every_criterion_unverified(self, checklist):
+        result = decide(_inp(new_checklist=checklist))
+        assert result.code == "no_defect_improvement"
+
+    def test_missing_prev_checklist_lets_only_c_refs_carry(self):
+        regen = _regen()
+        del regen["prev_checklist"]
+        assert decide(_inp(regen=regen)).code == "no_defect_improvement"
+        regen["improvements"].append({"ref": "C1", "what": "Area-scaled bubbles", "where_visible": "all bubbles"})
+        result = decide(_inp(regen=regen, characteristic_count=2))
+        assert result.verdict == MERGE
+        assert _classes(result)[-1] == ("C1", "carrier", "characteristic")
+
+    def test_w_suggestion_alone_keeps(self):
+        regen = _regen(prev_weaknesses=[{"ref": "W2", "class": "suggestion"}])
+        result = decide(_inp(regen=regen))
+        assert (result.verdict, result.code) == (KEEP, "no_defect_improvement")
+        assert "1 visible improvement(s) (1 suggestion), none fixes a verified defect" in result.reason
+        assert "_(suggestion: does not carry)_" in render_summary(result, "90", 85)
+
+    def test_obsolete_is_not_counted(self):
+        regen = _regen(prev_weaknesses=[{"ref": "W2", "class": "obsolete", "rule": "C2"}])
+        result = decide(_inp(regen=regen, characteristic_count=3, permission_refs=frozenset({"C2"})))
+        assert (result.verdict, result.code) == (KEEP, "no_visible_improvement")
+        assert "obsolete: W2 (C2), not counted" in result.reason
+        assert "where_visible" not in result.reason
+        assert "_(obsolete: covered by C2, not counted)_" in render_summary(result, "90", 85)
+
+    def test_obsolete_next_to_a_carrier_merges(self):
+        regen = _regen(
+            prev_weaknesses=[
+                {"ref": "W1", "class": "obsolete", "rule": "C2"},
+                {"ref": "W2", "class": "defect", "rule": "VQ-03"},
+            ],
+            improvements=[
+                {"ref": "W1", "what": "Less overlap", "where_visible": "cluster"},
+                {"ref": "W2", "what": "Legend fixed", "where_visible": "legend"},
+            ],
+        )
+        result = decide(_inp(regen=regen, characteristic_count=3, permission_refs=frozenset({"C2"})))
+        assert result.verdict == MERGE
+        assert result.reason.startswith("1 visible improvement(s), 1 carrying (W2)")
+
+    @pytest.mark.parametrize("rule", ["C1", "C9", None, "VQ-02"])
+    def test_obsolete_with_a_c_id_that_is_no_permission_is_still_obsolete(self, rule):
+        entry = {"ref": "W2", "class": "obsolete"} | ({"rule": rule} if rule else {})
+        result = decide(_inp(regen=_regen(prev_weaknesses=[entry]), characteristic_count=3))
+        assert (result.verdict, result.code) == (KEEP, "no_visible_improvement")
+        assert _classes(result) == [("W2", "obsolete", "unlabeled")]
+        assert "is not an 'Expected, not a defect' bullet; not counted)_" in render_summary(result, "90", 85)
+
+    def test_stored_suggestion_caps_a_reclassed_defect(self):
+        result = decide(_inp(weakness_classes={"W2": "suggestion"}))
+        assert (result.verdict, result.code) == (KEEP, "no_defect_improvement")
+        assert result.improvements[0]["capped"] is True
+        assert "_(suggestion, stored as a suggestion: does not carry)_" in render_summary(result, "90", 85)
+
+    @pytest.mark.parametrize("stored", ["defect", "legacy"])
+    def test_stored_defect_or_legacy_is_not_capped(self, stored):
+        assert decide(_inp(weakness_classes={"W2": stored})).verdict == MERGE
+
+    def test_downgrade_is_always_allowed(self):
+        regen = _regen(prev_weaknesses=[{"ref": "W2", "class": "suggestion"}])
+        assert decide(_inp(regen=regen, weakness_classes={"W2": "defect"})).code == "no_defect_improvement"
+
+    @pytest.mark.parametrize(
+        "entries",
+        [
+            [],
+            [{"ref": "W1", "class": "defect", "rule": "VQ-03"}],
+            [{"ref": "W2"}],
+            [{"ref": "W2", "class": "bogus", "rule": "VQ-03"}],
+            [{"ref": "W2", "class": "defect"}],
+        ],
+    )
+    def test_unclassified_or_unruled_w_never_carries(self, entries):
+        result = decide(_inp(regen=_regen(prev_weaknesses=entries)))
+        assert (result.verdict, result.code) == (KEEP, "no_defect_improvement")
+
+    def test_first_entry_per_w_wins(self):
+        entries = [{"ref": "W2", "class": "defect", "rule": "VQ-03"}, {"ref": "W2", "class": "suggestion"}]
+        assert decide(_inp(regen=_regen(prev_weaknesses=entries))).verdict == MERGE
+
+    @pytest.mark.parametrize("ref", ["P1", "new"])
+    def test_p_and_new_carry_their_own_verified_rule(self, ref):
+        def run(**item):
+            imp = [{"ref": ref, "what": "Legend fixed", "where_visible": "legend", **item}]
+            return decide(_inp(regen=_regen(improvements=imp, prev_weaknesses=[])))
+
+        assert run(rule="VQ-03").verdict == MERGE
+        assert run(rule="VQ-02").code == "no_defect_improvement"  # 6 → 6: unverified
+        assert run().code == "no_defect_improvement"  # no rule
+        assert run(rule=None).code == "no_defect_improvement"  # null reads as absent
+        assert run(rule="DE-02").code == "no_defect_improvement"
+        assert run(rule="bogus").code == "no_defect_improvement"
+        assert "_(unverified: no rule)_" in render_summary(run(), "90", 85)
+
+    def test_affirmative_c_carries_without_a_rule(self):
+        imp = [{"ref": "C3", "what": "Marks at their data values", "where_visible": "all bubbles"}]
+        result = decide(_inp(regen=_regen(improvements=imp, prev_weaknesses=[]), characteristic_count=5))
+        assert result.verdict == MERGE
+        assert "_(characteristic)_" in render_summary(result, "90", 85)
+
+    def test_c_rule_on_a_w_defect(self):
+        regen = _regen(prev_weaknesses=[{"ref": "W2", "class": "defect", "rule": "C3"}])
+        assert decide(_inp(regen=regen, characteristic_count=5)).verdict == MERGE
+        assert (
+            decide(_inp(regen=regen, characteristic_count=5, permission_refs=frozenset({"C3"}))).code
+            == "no_defect_improvement"
+        )
+        assert decide(_inp(regen=regen, characteristic_count=2)).code == "no_defect_improvement"
+
+    def test_ar_rule_carries_only_after_an_auto_reject(self):
+        imp = [{"ref": "P1", "rule": "AR-09", "what": "Title no longer clipped", "where_visible": "title, light"}]
+        rejected = decide(_inp(score=80, regen=_regen(prev_rescored=0, improvements=imp, prev_weaknesses=[])))
+        assert rejected.verdict == MERGE
+        assert "_(defect: AR-09)_" in render_summary(rejected, "90", 80)
+        scored = decide(_inp(score=80, regen=_regen(prev_rescored=79, improvements=imp, prev_weaknesses=[])))
+        assert scored.code == "no_defect_improvement"
+
+    @pytest.mark.parametrize(
+        "overrides",
+        [
+            {"prev_weaknesses": "W2 defect VQ-03"},
+            {"prev_weaknesses": [1, None, {"ref": 3}, {"ref": "W2", "class": 5}]},
+            {"prev_checklist": "VQ-03 4"},
+            {"prev_checklist": {"VQ-03": "4", "XX-01": 1}},
+        ],
+    )
+    def test_malformed_classification_never_invalidates_the_file(self, overrides):
+        result = decide(_inp(regen=_regen(**overrides)))
+        assert result.code == "no_defect_improvement"
+        assert not result.reason.startswith("invalid")
+
+    def test_classification_slips_are_coerced_and_noted(self):
+        regen = _regen(prev_weaknesses=[{"ref": "w2", "class": "Defect", "rule": "vq-03"}])
+        result = decide(_inp(regen=regen))
+        assert result.verdict == MERGE
+        assert result.coerced is True
+        assert "prev_weaknesses[1].class 'Defect' -> 'defect'" in result.reason
+        imp = [{"ref": "P1", "rule": "vq-03", "what": "x", "where_visible": "y"}]
+        result = decide(_inp(regen=_regen(improvements=imp)))
+        assert result.verdict == MERGE
+        assert "rule 'vq-03' -> 'VQ-03'" in result.reason
+
+    @pytest.mark.parametrize("rule", [3, ["VQ-03"], {"id": "VQ-03"}])
+    def test_non_string_rule_is_invalid(self, rule):
+        imp = [{"ref": "P1", "rule": rule, "what": "x", "where_visible": "y"}]
+        assert decide(_inp(regen=_regen(improvements=imp))).code == "regen_json_invalid"
+
+    def test_classify_is_robust_to_payloads_the_gate_rejects(self):
+        payload = {"improvements": [{"ref": "W9", "where_visible": "x"}, "junk", {"ref": 3}, {"ref": "C9"}]}
+        items = classify_improvements(payload, _inp())
+        assert [(i["ref"], i["class"]) for i in items] == [
+            ("W9", "suggestion"),
+            ("3", "suggestion"),
+            ("C9", "suggestion"),
+        ]
+        assert classify_improvements(None, _inp()) == []
+        assert classify_improvements({"improvements": "W2"}, _inp()) == []
+
+
+# Round 1 of the verification regens after #11949 and #11950 (13 Sonnet
+# regenerations, 2026-09-27): the refs each review cited, the classes P3 gives
+# them (PLAN_p3_v2 §8.5) and the item scores that decide each pair — refs,
+# classes and numbers only, no model text. The stored predecessor review and
+# the new review stand in for prev_checklist and review_checklist.json (round 1
+# wrote no prev_checklist). Where round 1's re-score named a predecessor defect
+# the stored review had missed (#11958 P1-P3: title segment, canvas, palette;
+# #11961: title segment), the re-score deducts it by one point.
+BUBBLE = {"characteristic_count": 5, "permission_refs": frozenset({"C2"})}
+COUNT = {"characteristic_count": 5, "permission_refs": frozenset({"C5"})}
+BAR_ERROR = {"characteristic_count": 5, "permission_refs": frozenset({"C5"})}
+ROUND1: dict[int, dict] = {
+    11951: {
+        "spec": BUBBLE,
+        "scores": (83, 74),
+        "refs": [("W1", None), ("W2", None), ("C3", None), ("C5", None)],
+        "classes": {"W1": ("obsolete", "C2"), "W2": ("suggestion", None)},
+        "items": {},
+        "expected": (MERGE, "merge"),
+    },
+    11952: {
+        "spec": BUBBLE,
+        "scores": (89, 84),
+        "refs": [("W1", None)],
+        "classes": {"W1": ("obsolete", "C2")},
+        "items": {"VQ-02": (4, 6)},
+        "expected": (KEEP, "no_visible_improvement"),
+    },
+    11953: {
+        "spec": BUBBLE,
+        "scores": (89, 87),
+        "refs": [("W1", None), ("W3", None)],
+        "classes": {"W1": ("defect", "VQ-02"), "W3": ("defect", "VQ-07")},
+        "items": {"VQ-02": (5, 5), "VQ-07": (2, 2)},
+        # §8.5 b: merges only when the re-score deducts VQ-02 to 4 or VQ-07 to 1
+        # (TestVerificationRound.test_conditional_pairs); the stored numbers keep.
+        "expected": (KEEP, "no_defect_improvement"),
+    },
+    11954: {
+        "spec": COUNT,
+        "scores": (95, 93),
+        "refs": [("W1", None)],
+        "classes": {"W1": ("defect", "VQ-06")},
+        "items": {"VQ-06": (1, 2)},
+        "expected": (MERGE, "merge"),
+    },
+    11955: {
+        "spec": COUNT,
+        "scores": (81, 80),
+        "refs": [],
+        "classes": {},
+        "items": {},
+        "expected": (KEEP, "no_visible_improvement"),
+    },
+    11956: {
+        "spec": COUNT,
+        "scores": (85, 79),
+        "refs": [("C4", None), ("W2", None)],
+        "classes": {"W2": ("suggestion", None)},
+        "items": {},
+        "expected": (MERGE, "merge"),
+    },
+    11957: {
+        "spec": COUNT,
+        "scores": (85, 84),
+        "refs": [("W1", None)],
+        "classes": {"W1": ("suggestion", None)},
+        "items": {"VQ-07": (2, 1), "SC-01": (5, 3)},
+        "expected": (KEEP, "no_defect_improvement"),
+    },
+    11958: {
+        "spec": BAR_ERROR,
+        "scores": (93, 79),
+        "refs": [("W1", None), ("W2", None), ("W4", None), ("new", "SC-04"), ("new", "VQ-05"), ("new", "VQ-07")],
+        "classes": {"W1": ("suggestion", None), "W2": ("suggestion", None), "W4": ("suggestion", None)},
+        "items": {"SC-04": (2, 3), "VQ-05": (3, 4), "VQ-07": (1, 2), "DE-01": (4, 6), "DE-03": (2, 6)},
+        "expected": (MERGE, "merge"),
+    },
+    11959: {
+        "spec": COUNT,
+        "scores": (85, 82),
+        "refs": [("P1", None), ("P2", None), ("P3", "DE-02")],
+        "classes": {},
+        "items": {"SC-04": (3, 3), "DQ-01": (6, 6), "DE-02": (5, 4)},
+        "expected": (KEEP, "no_defect_improvement"),
+    },
+    11960: {
+        "spec": BAR_ERROR,
+        "scores": (89, 85),
+        "refs": [("W1", None)],
+        "classes": {"W1": ("suggestion", None)},
+        "items": {"LM-02": (2, 3), "VQ-06": (2, 2)},
+        "expected": (KEEP, "no_defect_improvement"),
+    },
+    11961: {
+        "spec": BAR_ERROR,
+        "scores": (85, 63),
+        "refs": [("W1", None), ("W2", None), ("W3", None), ("W4", None), ("new", "SC-04")],
+        "classes": {
+            "W1": ("defect", "VQ-07"),
+            "W2": ("defect", "DE-02"),
+            "W3": ("suggestion", None),
+            "W4": ("suggestion", None),
+        },
+        "items": {"VQ-07": (0, 2), "DE-02": (2, 4), "SC-04": (2, 3)},
+        "expected": (MERGE, "merge"),
+    },
+    11962: {
+        "spec": BAR_ERROR,
+        "scores": (87, 85),
+        "refs": [("W1", None)],
+        "classes": {"W1": ("suggestion", None)},
+        "items": {"VQ-01": (7, 7), "VQ-05": (4, 4)},
+        "expected": (KEEP, "no_defect_improvement"),
+    },
+    11963: {
+        "spec": BAR_ERROR,
+        "scores": (96, 92),
+        "refs": [("W1", None), ("W2", None), ("W3", None)],
+        "classes": {"W1": ("suggestion", None), "W2": ("suggestion", None), "W3": ("suggestion", None)},
+        "items": {"LM-02": (2, 5), "DE-03": (5, 6), "DQ-01": (5, 6)},
+        "expected": (KEEP, "no_defect_improvement"),
+    },
+}
+
+
+def _round1(pr: int, classes: dict | None = None, items: dict | None = None, refs: list | None = None):
+    case = ROUND1[pr]
+    score, prev_rescored = case["scores"]
+    scores = {**case["items"], **(items or {})}
+    classes = {**case["classes"], **(classes or {})}
+    improvements = [
+        {"ref": ref, "what": f"improvement {n}", "where_visible": "both renders"} | ({"rule": rule} if rule else {})
+        for n, (ref, rule) in enumerate(refs or case["refs"], start=1)
+    ]
+    regen = _regen(
+        prev_rescored=prev_rescored,
+        prev_checklist={cid: prev for cid, (prev, _) in scores.items()},
+        prev_weaknesses=[
+            {"ref": ref, "class": cls} | ({"rule": rule} if rule else {}) for ref, (cls, rule) in classes.items()
+        ],
+        improvements=improvements,
+    )
+    known = frozenset(f"W{i}" for i in range(1, 5))
+    return decide(
+        _inp(
+            score=score,
+            regen=regen,
+            spec_id="bubble-basic",
+            known_weakness_ids=known,
+            new_checklist={cid: new for cid, (_, new) in scores.items()},
+            **case["spec"],
+        )
+    )
+
+
+class TestVerificationRound:
+    """P3's verdicts on the 13 round-1 decisions (12 merges and 1 keep before
+    P3): 5 merges and 8 keeps with the stored numbers, 6 and 7 once the
+    re-score deducts #11953's VQ-02 or VQ-07."""
+
+    @pytest.mark.parametrize("pr", sorted(ROUND1))
+    def test_p3_verdict(self, pr):
+        result = _round1(pr)
+        assert (result.verdict, result.code) == ROUND1[pr]["expected"]
+
+    def test_totals(self):
+        verdicts = [_round1(pr).verdict for pr in ROUND1]
+        assert (verdicts.count(MERGE), verdicts.count(KEEP)) == (5, 8)
+
+    @pytest.mark.parametrize(
+        ("pr", "classes"),
+        [
+            (11958, {"W1": ("defect", "DE-01"), "W2": ("defect", "DE-03"), "W4": ("defect", "DE-03")}),
+            (11960, {"W1": ("defect", "LM-02")}),
+            (11963, {"W1": ("defect", "LM-02"), "W3": ("defect", "DE-03")}),
+            (11962, {"W1": ("defect", "VQ-01")}),
+            (11957, {"W1": ("defect", "VQ-07")}),
+            (11959, {}),
+        ],
+    )
+    def test_calling_it_a_defect_does_not_change_the_verdict(self, pr, classes):
+        """The reviewer's likeliest misreadings of round 1: a storytelling
+        layer, a library feature or taste called a DE or LM defect, a title
+        bump called VQ-01 at 7 → 7, a creep recolor called VQ-07 at 2 → 1."""
+        result = _round1(pr, classes=classes)
+        assert (result.verdict, result.code) == ROUND1[pr]["expected"]
+        if pr == 11958:  # carried by the three `new` fixes alone
+            assert [i["ref"] for i in result.improvements if i["class"] == "carrier"] == ["new", "new", "new"]
+            assert sum(1 for i in result.improvements if i["basis"] == "de_lm") == 3
+
+    def test_p_items_named_by_criterion_still_keep(self):
+        """#11959's percentage labels and title prefix claimed as DQ-01 and SC-04 (6 → 6, 3 → 3)."""
+        result = _round1(11959, refs=[("P1", "DQ-01"), ("P2", "SC-04"), ("P3", "DE-02")])
+        assert (result.verdict, result.code) == (KEEP, "no_defect_improvement")
+        assert result.reason.startswith("3 visible improvement(s) (2 unverified, 1 design or library)")
+
+    @pytest.mark.parametrize(
+        ("pr", "classes", "items"),
+        [
+            (11953, {}, {"VQ-07": (1, 2)}),  # §8.5 b: the re-score catches the slot-5 red
+            (11953, {}, {"VQ-02": (4, 5)}),  # §8.5 b: or the BEAU-001 label
+            (11952, {"W1": ("defect", "VQ-02")}, {}),  # §8.5 a: F1 read as a VQ-02 defect
+            (11963, {"W2": ("defect", "DQ-01")}, {}),  # §8.5 f: optional asymmetric bars read as DQ-01
+        ],
+    )
+    def test_conditional_pairs(self, pr, classes, items):
+        """What the stored numbers cannot decide: #11953 merges once the
+        re-score deducts either criterion, and #11952 / #11963 merge only when
+        the reviewer misclasses the weakness — the v2 forward-keep target and
+        class_flip measure exactly those."""
+        assert _round1(pr, classes=classes, items=items).verdict == MERGE
+
+
+class TestRecordCounts:
+    def _record(self, regen, **inp) -> dict:
+        return build_record(
+            decide(_inp(regen=regen, **inp)), spec_id="bar-error", library="plotly", score=85, prev_stored=81
+        )
+
+    def test_nested_counts(self):
+        regen = _regen(
+            prev_checklist={**PREV_CHECKLIST, "VQ-07": 0, "DE-02": 2},
+            prev_weaknesses=[
+                {"ref": "W1", "class": "defect", "rule": "VQ-07"},
+                {"ref": "W2", "class": "defect", "rule": "DE-02"},
+                {"ref": "W3", "class": "obsolete", "rule": "C5"},
+            ],
+            improvements=[
+                {"ref": "W1", "what": "a", "where_visible": "bars"},
+                {"ref": "W2", "what": "b", "where_visible": "frame"},
+                {"ref": "W3", "what": "c", "where_visible": "bars"},
+                {"ref": "P1", "what": "d", "where_visible": "title"},
+                {"ref": "C2", "what": "e", "where_visible": "bars"},
+                {"ref": "C5", "what": "f", "where_visible": "bars"},
+                {"ref": "new", "rule": "SC-04", "what": "g", "where_visible": ""},
+            ],
+        )
+        record = self._record(regen, characteristic_count=5, permission_refs=frozenset({"C5"}))
+        counts = record["improvements"]
+        assert counts == {
+            "total": 7,
+            "visible": 4,
+            "W": 3,
+            "P": 1,
+            "C": 2,
+            "new": 1,
+            "permission": 1,
+            "obsolete": 1,
+            "carriers": 2,
+            "suggestion": 2,
+            "unverified": 1,
+            "de_lm": 1,
+        }
+        assert counts["visible"] == counts["carriers"] + counts["suggestion"]
+        assert counts["unverified"] + counts["de_lm"] <= counts["suggestion"]
+        assert validate_record(record) == []
+
+    def test_marker_roundtrip_and_schema_unchanged(self):
+        record = self._record(_regen())
+        assert parse_record_markers(render_record_marker(record)) == [record]
+        assert record["v"] == 1
+        assert RECORD_KEYS == frozenset(
+            {
+                "v",
+                "pr",
+                "spec",
+                "lib",
+                "model",
+                "criteria_version",
+                "prompts_tree",
+                "prev_model",
+                "prev_criteria_version",
+                "prev_stored",
+                "prev_rescored",
+                "new",
+                "verdict",
+                "code",
+                "improvements",
+                "regressions",
+                "scenario_changed",
+                "encodings_added",
+                "coerced",
+                "at",
+            }
+        )
+
+    def test_a_record_without_the_new_keys_still_validates(self):
+        record = self._record(_regen())
+        for key in ("obsolete", "carriers", "suggestion", "unverified", "de_lm"):
+            del record["improvements"][key]
+        assert validate_record(record) == []
+
+
+def _feedback(tmp_path, capsys, *, weaknesses=None, checklist=None, regen=None, prev=None, spec=None, warn=False):
+    args = ["check-feedback"]
+    if weaknesses is not None:
+        (tmp_path / "review_weaknesses.json").write_text(json.dumps(weaknesses), encoding="utf-8")
+        args += ["--weaknesses", str(tmp_path / "review_weaknesses.json")]
+    if checklist is not None:
+        (tmp_path / "review_checklist.json").write_text(json.dumps(_checklist_json(checklist)), encoding="utf-8")
+        args += ["--checklist", str(tmp_path / "review_checklist.json")]
+    if regen is not None:
+        (tmp_path / "review_regen.json").write_text(json.dumps(regen), encoding="utf-8")
+        weak = [{"id": f"W{i}", "text": t, "class": weakness_class(t)} for i, t in enumerate(prev or [], start=1)]
+        (tmp_path / "prev-weaknesses.json").write_text(json.dumps(weak), encoding="utf-8")
+        spec_file = tmp_path / "specification.md"
+        spec_file.write_text(spec or "# s\n", encoding="utf-8")
+        args += [
+            "--regen",
+            str(tmp_path / "review_regen.json"),
+            "--prev-weaknesses",
+            str(tmp_path / "prev-weaknesses.json"),
+        ]
+        args += ["--spec-file", str(spec_file)]
+    if warn:
+        args.append("--warn-only")
+    code = main(args)
+    return code, capsys.readouterr().out
+
+
+DEFECT_LINE = "VQ-03 (both): size legend circles invisible → fill them. Likely cause: guide."
+SPEC_5 = (
+    "# s\n\n## What a good version looks like\n\n"
+    "- A good version shows: a\n- Expected, not a defect: b\n- A good version shows: c\n"
+)
+
+
+class TestCheckFeedback:
+    def test_clean_weaknesses_pass(self, tmp_path, capsys):
+        weak = [DEFECT_LINE, "Suggestion: a subtler grid"]
+        code, out = _feedback(tmp_path, capsys, weaknesses=weak, checklist={**NEW_CHECKLIST, "VQ-03": 4})
+        assert code == 0
+        assert "check-feedback: no problems" in out
+
+    def test_empty_list_passes(self, tmp_path, capsys):
+        assert _feedback(tmp_path, capsys, weaknesses=[], checklist=NEW_CHECKLIST)[0] == 0
+
+    @pytest.mark.parametrize(
+        ("weaknesses", "message"),
+        [
+            (["Grid too prominent"], "is neither a defect line"),
+            (["VQ-09 (both): x → y. Likely cause: z."], "names VQ-09, which is neither a criterion"),
+            (["AR-02 (both): x → y. Likely cause: z."], "names AR-02"),
+            ([DEFECT_LINE], "names VQ-03, but your checklist gives VQ-03 its maximum"),
+            ([f"Suggestion: idea {i}" for i in range(4)], "4 'Suggestion:' lines; keep at most 3"),
+            ([3], "weakness 1 is not a string"),
+            ("VQ-03", "is not a JSON list of strings"),
+        ],
+    )
+    def test_weakness_problems(self, tmp_path, capsys, weaknesses, message):
+        code, out = _feedback(tmp_path, capsys, weaknesses=weaknesses, checklist=NEW_CHECKLIST)
+        assert code == 1
+        assert message in out
+
+    def test_missing_checklist_item_skips_the_maximum_check(self, tmp_path, capsys):
+        assert _feedback(tmp_path, capsys, weaknesses=[DEFECT_LINE], checklist={"VQ-01": 8})[0] == 0
+
+    def test_ar_line_needs_no_checklist_item(self, tmp_path, capsys):
+        line = "AR-09 (light): title clipped → shrink the plot area. Likely cause: margin."
+        assert _feedback(tmp_path, capsys, weaknesses=[line], checklist=NEW_CHECKLIST)[0] == 0
+
+    def test_clean_regen_passes(self, tmp_path, capsys):
+        regen = _regen(
+            prev_weaknesses=[{"ref": "W1", "class": "suggestion"}, {"ref": "W2", "class": "defect", "rule": "VQ-03"}]
+        )
+        code, out = _feedback(tmp_path, capsys, checklist=NEW_CHECKLIST, regen=regen, prev=["a", "b"])
+        assert (code, out.strip()) == (0, "check-feedback: no problems")
+
+    @pytest.mark.parametrize(
+        ("overrides", "message"),
+        [
+            ({"prev_checklist": None}, "has no prev_checklist"),
+            ({"prev_checklist": {"VQ-01": 8}}, "prev_checklist lacks VQ-02"),
+            ({"prev_checklist": {**PREV_CHECKLIST, "XX-01": 1}}, "prev_checklist has unknown ids XX-01"),
+            ({"prev_checklist": {**PREV_CHECKLIST, "VQ-01": 9}}, "prev_checklist VQ-01 must be an integer from 0 to 8"),
+            ({"prev_weaknesses": None}, "has no prev_weaknesses: classify every previous weakness (W1, W2)"),
+            (
+                {"prev_weaknesses": [{"ref": "W2", "class": "defect", "rule": "VQ-03"}]},
+                "prev_weaknesses does not classify W1",
+            ),
+            (
+                {
+                    "prev_weaknesses": [
+                        {"ref": "W1", "class": "suggestion"},
+                        {"ref": "W1", "class": "suggestion"},
+                        {"ref": "W2", "class": "defect", "rule": "VQ-03"},
+                    ]
+                },
+                "classifies W1 2 times",
+            ),
+            (
+                {"prev_weaknesses": [{"ref": "W7", "class": "suggestion"}]},
+                "prev_weaknesses[1].ref 'W7' is not a weakness id",
+            ),
+            ({"prev_weaknesses": [{"ref": "W1", "class": "maybe"}]}, "W1: class 'maybe' is not one of"),
+            (
+                {"prev_weaknesses": [{"ref": "W1", "class": "defect", "rule": "C2"}]},
+                "W1 is classed defect but its rule 'C2'",
+            ),
+            ({"prev_weaknesses": [{"ref": "W1", "class": "defect"}]}, "W1 is classed defect but its rule None"),
+            (
+                {"prev_weaknesses": [{"ref": "W1", "class": "obsolete", "rule": "VQ-02"}]},
+                "W1 is classed obsolete but its rule",
+            ),
+            (
+                {"prev_weaknesses": [{"ref": "W1", "class": "obsolete", "rule": "C9"}]},
+                "W1 is classed obsolete but its rule 'C9'",
+            ),
+            ({"improvements": [{"ref": "P1", "what": "x", "where_visible": "y"}]}, "improvement 1 (P1) has no rule"),
+            ({"improvements": [{"ref": "W9", "what": "x", "where_visible": "y"}]}, "W9 is not a weakness id"),
+        ],
+    )
+    def test_regen_problems(self, tmp_path, capsys, overrides, message):
+        regen = _regen(
+            prev_weaknesses=[{"ref": "W1", "class": "suggestion"}, {"ref": "W2", "class": "defect", "rule": "VQ-03"}]
+        )
+        regen.update(overrides)
+        if regen.get("prev_checklist") is None:
+            regen.pop("prev_checklist")
+        if regen.get("prev_weaknesses") is None:
+            regen.pop("prev_weaknesses")
+        code, out = _feedback(tmp_path, capsys, checklist=NEW_CHECKLIST, regen=regen, prev=["a", "b"], spec=SPEC_5)
+        assert code == 1
+        assert message in out, out
+
+    def test_defect_the_rescore_did_not_deduct(self, tmp_path, capsys):
+        regen = _regen(
+            prev_checklist=dict(CRITERIA),
+            prev_weaknesses=[{"ref": "W1", "class": "defect", "rule": "VQ-07"}],
+            improvements=[],
+        )
+        code, out = _feedback(tmp_path, capsys, checklist=NEW_CHECKLIST, regen=regen, prev=["a"])
+        assert code == 1
+        assert "W1 is classed defect under VQ-07, but prev_checklist gives VQ-07 its maximum (2/2)" in out
+        assert "reclass W1 as suggestion or obsolete — change the claim, not the scores" in out
+
+    @pytest.mark.parametrize("rule", ["VQ-03", "DE-02"])
+    def test_claim_the_new_render_does_not_score_higher_on(self, tmp_path, capsys, rule):
+        """The same test for all 24 criteria, so the message never reveals which carry."""
+        regen = _regen(
+            prev_checklist={**PREV_CHECKLIST, "VQ-03": 4, "DE-02": 4},
+            prev_weaknesses=[{"ref": "W1", "class": "defect", "rule": rule}],
+            improvements=[{"ref": "W1", "what": "x", "where_visible": "y"}],
+        )
+        checklist = {**NEW_CHECKLIST, "VQ-03": 4, "DE-02": 3}
+        code, out = _feedback(tmp_path, capsys, checklist=checklist, regen=regen, prev=["a"])
+        assert code == 1
+        assert f"improvement 1 (W1) claims {rule}, but your checklist for the new render gives {rule}" in out
+        assert "change the claim, not the scores" in out
+
+    def test_stored_suggestion_cannot_be_classed_defect(self, tmp_path, capsys):
+        regen = _regen(prev_weaknesses=[{"ref": "W1", "class": "defect", "rule": "VQ-03"}], improvements=[])
+        code, out = _feedback(
+            tmp_path, capsys, checklist=NEW_CHECKLIST, regen=regen, prev=["Suggestion: a subtler grid"]
+        )
+        assert code == 1
+        assert "W1 was stored as a 'Suggestion:' line and cannot be classed defect" in out
+
+    def test_missing_files(self, tmp_path, capsys):
+        args = ["check-feedback", "--weaknesses", str(tmp_path / "a.json"), "--checklist", str(tmp_path / "b.json")]
+        assert main([*args, "--regen", str(tmp_path / "c.json")]) == 1
+        out = capsys.readouterr().out
+        assert "a.json missing" in out and "c.json missing" in out and "b.json is missing" in out
+
+    def test_needs_something_to_check(self, capsys):
+        assert main(["check-feedback", "--checklist", "x.json"]) == 2
+
+    def test_warn_only_exits_zero_with_annotations_and_a_notice(self, tmp_path, capsys):
+        weak = [DEFECT_LINE, "Suggestion: a", "Grid too prominent"]
+        code, out = _feedback(tmp_path, capsys, weaknesses=weak, checklist={**NEW_CHECKLIST, "VQ-03": 4}, warn=True)
+        assert code == 0
+        assert "::warning::weakness 3 is neither a defect line" in out
+        assert "::notice::weakness_format defect=1 suggestion=1 other=1" in out
+
+    def test_legacy_artifacts_never_crash(self, tmp_path, capsys):
+        """Round-1 pair artifacts: legacy weaknesses and a review_regen.json without the new keys."""
+        legacy_regen = {
+            "prev_rescored": 84,
+            "improvements": [{"ref": "W1", "what": "x", "where_visible": "y"}],
+            "regressions": [],
+            "scenario_changed": False,
+            "encodings_added": [],
+            "change_request_applied": None,
+        }
+        code, out = _feedback(
+            tmp_path,
+            capsys,
+            weaknesses=["Legend too small", "Grid too prominent"],
+            checklist=NEW_CHECKLIST,
+            regen=legacy_regen,
+            prev=["overlap in the dense cluster"],
+            warn=True,
+        )
+        assert code == 0
+        assert out.count("is neither a defect line") == 2
+        assert "has no prev_checklist" in out and "has no prev_weaknesses" in out
+        assert "::notice::weakness_format defect=0 suggestion=0 other=2" in out
