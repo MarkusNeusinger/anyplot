@@ -566,6 +566,20 @@ class TestReviewRetestWorkflow:
         for name in inputs:
             assert f"inputs.{name}" in self.TEXT, name
 
+    def test_set_input_picks_the_manifest_and_its_lock(self) -> None:
+        """plan, bundle and report read the chosen set; collect and materialize read the cell."""
+        choice = get_workflow_trigger(self.WORKFLOW)["workflow_dispatch"]["inputs"]["set"]
+        assert choice["type"] == "choice" and choice["default"] == "v1"
+        retest_dir = WORKFLOWS_DIR.parent.parent / "automation" / "retest"
+        for name in choice["options"]:
+            assert (retest_dir / f"set-{name}.yaml").is_file(), name
+        steps = {s.get("name"): s for job in self.WORKFLOW["jobs"].values() for s in job.get("steps", [])}
+        pair = '--manifest "automation/retest/set-${SET}.yaml" --lock "automation/retest/set-${SET}.lock.json"'
+        for name in ("Plan", "Bundle pinned sources and frozen renders", "Report"):
+            assert pair in steps[name]["run"], name
+            assert steps[name]["env"]["SET"] == "${{ inputs.set || 'v1' }}", name
+        assert "set ${{ inputs.set || 'v1' }}" in self.WORKFLOW["run-name"]
+
 
 class TestSpecCreateCharacteristicsSection:
     """spec-create must ask for the review's yardstick section in BOTH Claude
