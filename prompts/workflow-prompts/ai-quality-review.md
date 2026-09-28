@@ -258,7 +258,7 @@ A regeneration replaces an implementation that is already live on main. It gets 
 
 Your job is an honest comparison; the gate does the arithmetic. Workflow variables for this step: `PREV_RENDERS` (`available` / `missing`), `PREV_RENDER_LIGHT` and `PREV_RENDER_DARK` (paths of the predecessor's renders), `PREV_LINES` and `NEW_LINES` (line counts of the previous and the new source).
 
-1. **Re-score the predecessor.** If `PREV_RENDERS` is `missing`, skip steps 1–4, do not write `review_regen.json`, and say so in the comment (the gate keeps the live implementation). Otherwise open `PREV_RENDER_LIGHT` and `PREV_RENDER_DARK` (the production renders currently on the website) and `/tmp/anyplot-prev-impl${EXT}` (their source — its header reads `Quality: hidden/100` on purpose; do not look the stored score up elsewhere, for example in main's metadata or git history), and score them against the **same** criteria — steps 5c–8, same score caps, same calibration. The result is `prev_rescored`, and its 24 item scores are `prev_checklist` (`{"VQ-01": 7, "VQ-02": 4, …}`: every criterion, each an integer from 0 to its maximum). Number the predecessor's *defects* you find (8a) `P1`, `P2`, … and name each one's criterion.
+1. **Re-score the predecessor.** If `PREV_RENDERS` is `missing`, skip steps 1–4, do not write `review_regen.json`, and say so in the comment (the gate keeps the live implementation). Otherwise open `PREV_RENDER_LIGHT` and `PREV_RENDER_DARK` (the production renders currently on the website) and `/tmp/anyplot-prev-impl${EXT}` (their source — its header reads `Quality: hidden/100` on purpose; do not look the stored score up elsewhere, for example in main's metadata or git history), and score them against the **same** criteria — steps 5c–8, same score caps, same calibration. The result is `prev_rescored`, and its 24 item scores are `prev_checklist` (`{"VQ-01": 7, "VQ-02": 4, …}`: every criterion, each an integer from 0 to its maximum). Number the predecessor's *defects* you find (8a) `P1`, `P2`, … and name the rule each one violates: the criterion, or the `C` id of an `A good version shows:` bullet.
 2. **Read the previous review** `/tmp/anyplot-prev-review.md`. Its weaknesses carry stable ids `W1`..`Wn`, each tagged `(defect)`, `(suggestion)` or `(older review)`. When it has a "Characteristic bullets" list (`C1`..`Cn`, taken from the spec's "What a good version looks like" section), its `A good version shows:` bullets are properties a good version must show; its `Expected, not a defect:` bullets are permissions and can never be an improvement `ref`. When the list is absent, there are no `C` ids — never invent one.
 
    Then **classify every `W`**, looking at the predecessor's renders only (not the new ones), as one of:
@@ -387,7 +387,7 @@ Use this EXACT format:
 <!-- Defect lines first, then at most three Suggestion: lines (8a). The same lines go into review_weaknesses.json. -->
 - VQ-03, SC-04 (both): the size legend's circles are drawn in the page color and vanish on both backgrounds → fill and outline them like the data marks. Likely cause: `guide_legend()` without `override.aes`.
 - VQ-02 (light): the BEAU-001 label overlaps the bubble above it by about 6 px → clear it by at least 4 px (+10 px). Likely cause: the label's `vjust`, not the bubble position.
-- CQ-04 (code): the file grew from 62 to 118 lines with no visible change in either render → drop the unused helper and the duplicated theme block. Likely cause: `make_legend()` that is never called.
+- CQ-04 (code): a `make_legend()` helper that is never called and a second copy of the theme block add about 40 lines with no effect on either render → delete both. Likely cause: a legend approach that was replaced but not removed.
 - Suggestion: a slightly larger legend title would balance the axis titles.
 
 ### Regeneration comparison
@@ -476,10 +476,11 @@ python3 -c "import json; json.load(open('review_regen.json'))"
 # /tmp/anyplot-regen-gate.py is the workflow's own copy of the regen gate; skip
 # the check when it is missing.
 if [ -f /tmp/anyplot-regen-gate.py ]; then
-  python3 /tmp/anyplot-regen-gate.py check-feedback --weaknesses review_weaknesses.json --checklist review_checklist.json
-  # Regeneration with review_regen.json written — run this form instead:
-  # python3 /tmp/anyplot-regen-gate.py check-feedback --weaknesses review_weaknesses.json --checklist review_checklist.json \
-  #   --regen review_regen.json --prev-weaknesses /tmp/anyplot-prev-weaknesses.json --spec-file plots/${SPEC_ID}/specification.md
+  FLAGS=(--weaknesses review_weaknesses.json --checklist review_checklist.json)
+  if [ -f review_regen.json ]; then
+    FLAGS+=(--regen review_regen.json --prev-weaknesses /tmp/anyplot-prev-weaknesses.json --spec-file plots/${SPEC_ID}/specification.md)
+  fi
+  python3 /tmp/anyplot-regen-gate.py check-feedback "${FLAGS[@]}"
 fi
 ```
 

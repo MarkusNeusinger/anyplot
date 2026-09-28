@@ -731,6 +731,11 @@ class TestDefectsAndSuggestions:
         step = self._section(content, "### 10.", "### 11.")
         assert "python3 /tmp/anyplot-regen-gate.py check-feedback" in step
         assert "--regen review_regen.json --prev-weaknesses /tmp/anyplot-prev-weaknesses.json" in step
+        # The regen flags are code the block runs when review_regen.json exists,
+        # not a commented-out alternative a reviewer following it never runs.
+        assert "if [ -f review_regen.json ]; then" in step
+        regen_lines = [line for line in step.splitlines() if "--regen review_regen.json" in line]
+        assert regen_lines and not any(line.lstrip().startswith("#") for line in regen_lines), regen_lines
         assert "never `prev_checklist` or `review_checklist.json`" in step
         assert '"prev_checklist": {' in step and '"prev_weaknesses": [' in step
 
