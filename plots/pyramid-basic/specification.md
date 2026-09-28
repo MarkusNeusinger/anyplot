@@ -33,5 +33,5 @@ A pyramid chart displays two opposing horizontal bar charts that share a central
 - A good version shows: one symmetric scale for both sides, so equal distances from the center mean equal amounts, with tick labels showing magnitudes on both sides rather than negative numbers on the left.
 - A good version shows: one distinct color per side, used for every bar on that side, and a legend or title naming what each side represents.
 - A good version shows: categories in a meaningful order along the central axis, their natural order when they have one (age groups ascending from bottom to top), with each category's label level with its pair of bars.
-- A good version shows: the basic variant's two mirrored series only, with no overlaid comparison outline, stacked sub-groups, share annotations or callouts.
+- A good version shows: the basic variant's two mirrored series only, with no overlaid comparison outline, stacked sub-groups, reference lines besides the central axis, highlighted categories or bands, share annotations or callouts.
 - Expected, not a defect: the two sides differing in length and a silhouette that bulges, narrows or tapers unevenly; the asymmetry between the sides is what the chart exists to reveal.
