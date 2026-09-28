@@ -69,19 +69,25 @@ Read these files to understand the requirements:
 
 When regenerating an existing implementation, you MUST read these BEFORE writing any code:
 
-1. `/tmp/anyplot-prev-review.md` — structured review from the previous attempt (image description, strengths, weaknesses, failed criteria checklist). The workflow extracts this automatically from the previous `metadata/{LANGUAGE}/{LIBRARY}.yaml`.
+1. `/tmp/anyplot-prev-review.md` — structured review from the previous attempt: image description, the strengths it credited, its weaknesses `W1`..`Wn` (each tagged `(defect)`, `(suggestion)` or `(older review)`), the criteria checklist, and the spec's characteristic bullets `C1`..`Cn`. The workflow extracts this automatically from the previous `metadata/{LANGUAGE}/{LIBRARY}.yaml`.
 2. `plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}` — the previous implementation (`.py` for python, `.R` for r, `.jl` for julia, `.js` for javascript).
 
 **Default regen mindset: incremental improvement, not rewrite.**
 
-- Preserve the bits listed under "Strengths" unchanged.
-- **Address the weaknesses that are real per the spec's `## What a good version looks like` section** (and each ❌ item in the checklist that is real in the same sense). A weakness that asks for something an `Expected, not a defect:` bullet of the section names — e.g. "bubbles overlap in the dense cluster" on a bubble chart that already uses translucency and outlines — is not real: decline it and name it with a one-line reason in the commit body. Without the section, judge against Description, Data and Notes.
+- Keep the strengths the current criteria still credit; a strength praising an unrequested addition does not bind — on a `-basic` spec, removing it is a fix.
+- **Act on the defects, decline the rest.** Judge each weakness by its tag and by the spec's `## What a good version looks like` section (without one, by Description, Data and Notes), and name every declined one with a one-line reason in the commit body:
+  - `(defect)` — a violated rule: fix it and decide HOW yourself.
+  - `(suggestion)` — an idea the previous review did not require. Never act on a `Suggestion:` line; decline it as `Declined: W2 — suggestion, not taken`.
+  - `(older review)` — a note written before the current rubric, a hint only: act on it when it names something visibly wrong under the current criteria, otherwise decline it.
+  - Whatever its tag, a weakness that asks for less of something an `Expected, not a defect:` bullet names is obsolete — e.g. "bubbles overlap in the dense cluster" on a bubble chart that already uses translucency and outlines: decline it as `W1 — obsolete (C2)`.
+  - The checklist is context, not a list of orders: a ❌ item tells you where to look, and you act on it only when it is a defect in the same sense.
 - **Answer overlap weaknesses through data generation, marker size or alpha — never by moving marks off their data values.** No force/collision simulations, nudge or declutter passes, or offsets on data marks; moving labels is fine. The review deducts displaced marks (SC-03). Exempt, as in SC-03: jitter in categorical strip/swarm plots, layout-positioned types (networks, treemaps, word clouds, packed circles), and any jitter, dodge or offset the spec's Data or Notes ask for.
-- **Keep the data scenario and the variant.** Same domain, same story, same encodings unless a weakness names the scenario itself as the problem or a change request (below) asks for a different one. On a `-basic` spec, add no new encodings or elements (derived color channels, trend lines, highlight bands, annotation layers) — the review scores them as the wrong variant.
+- **Keep the data scenario and the variant.** Same domain, same story, same encodings unless a weakness names the scenario itself as the problem or a change request (below) asks for a different one. On a `-basic` spec, add no new encodings or elements (derived color channels, trend or reference lines, highlights, callouts, annotation layers) — the review scores them as the wrong variant.
 - **Don't add code for changes that don't show.** Every edit should be visible in the render or fix a named code-quality item; a longer file with an unchanged picture is not an improvement.
 - **Canvas size: the Step 0 contract is non-negotiable on regen.** The previous file's `figsize` / `dpi` / `width` / `height` / `scale_factor` values are **historical**, never current — overwrite them to the canonical pair from `prompts/library/{LIBRARY}.md` as your *first* edit, before touching anything else. The post-render gate checks this and re-triggers repair on drift; do not let that fire.
 - **Base style wins on everything else.** If anything in `prompts/default-style-guide.md` or `prompts/library/{LIBRARY}.md` differs from the previous implementation, update the previous code to match. This includes **font sizes** (title, axis labels, tick labels, legend), **marker and line sizes**, **palette** (Imprint palette positions), **theme tokens** (background, INK, INK_SOFT, ELEVATED_BG, GRID), and **chrome** (spines, gridlines, legend frame). The previous review may not have flagged the old values because they were valid at the time — that does NOT make them current. Always re-read the library prompt's "Sizing" section and the style guide's "Visual Sizing Defaults" table on every regen and align. Also normalise any stale "anyplot palette" wording in the previous code's comments to "Imprint palette".
 - Do NOT discard working structure / data generation / layout choices that the previous review did not flag.
+- No defect listed and nothing in Step 0 or the base style to align → a small edit, and a kept regeneration, is the expected outcome. Do not invent changes to have something to show.
 - Your deliverable is a refined version of the previous file, not a fresh rewrite from the spec.
 
 ### Library Independence — DO NOT read sibling implementations
@@ -282,17 +288,20 @@ git commit -m "feat({LIBRARY}): implement {SPEC_ID}"
 git push -u origin implementation/{SPEC_ID}/{LIBRARY}
 ```
 
-If `IS_REGENERATION=true`, use an expanded commit body that names what you addressed and which weaknesses you declined, with the reason. Example:
+If `IS_REGENERATION=true`, use an expanded commit body that names the weaknesses you addressed and the ones you declined, by W id with the tag the previous review gave them, each declined one with its reason. Example:
 
 ```
 feat(matplotlib): implement scatter-basic
 
 Regen from quality 78. Addressed:
-- text legibility on dark background
-- grid contrast (VQ-03 failed → fixed)
+- W3 (defect, VQ-01): tick labels on the dark background now use INK_SOFT
+- W4 (older review): grid contrast lowered to the style guide's opacity
 Declined:
-- "points overlap in the dense center" — expected per the spec's
-  characteristic section; alpha already keeps every point visible
+- W1 — obsolete (C2): "points overlap in the dense center" asks for less
+  of what the spec's Expected, not a defect bullet permits; alpha already
+  keeps every point visible
+- W2 — suggestion, not taken: "a focal highlight on the densest cluster"
+- W5 — asks for something the spec does not require: "add a trend line"
 ```
 
 Pass the multi-line message via `-F -` or a heredoc so git preserves the body.
@@ -304,7 +313,7 @@ Before finishing, confirm:
 2. ✅ `plot-light.png` AND `plot-dark.png` were generated successfully (plus `plot-light.html` / `plot-dark.html` for interactive libs — ggplot2 and makie are PNG-only)
 3. ✅ First categorical series renders in `#009E73` in both themes
 4. ✅ Changes were committed and pushed
-5. ✅ If regenerating: `/tmp/anyplot-prev-review.md` and the previous source file were read, and each weakness / failed criterion was either addressed or declined as not real per the spec's characteristic section (declined ones named with a reason in the commit body)
+5. ✅ If regenerating: `/tmp/anyplot-prev-review.md` and the previous source file were read; every defect was fixed, every `Suggestion:` line was declined as "suggestion, not taken", every obsolete weakness was declined with its C id, and each older note was acted on only when it names something visibly wrong under the current criteria (declined ones named with a reason in the commit body)
 6. ✅ Every data mark sits at its data value — overlap was handled through data generation, marker size or alpha, not by moving marks (SC-03 exemptions only: categorical strip/swarm jitter, layout-positioned types, jitter/dodge/offset the spec asks for)
 7. ✅ If regenerating: same data scenario and variant as before (unless a weakness or change request asked otherwise), no new encodings on a `-basic` spec, and no added code whose effect does not show in the render
 

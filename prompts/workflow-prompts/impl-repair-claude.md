@@ -11,10 +11,10 @@ Read both sources to understand what needs to be fixed:
 1. `/tmp/ai_feedback.md` - Full review from PR comments
 2. `plots/{SPEC_ID}/metadata/{LANGUAGE}/{LIBRARY}.yaml` - Look at:
    - `review.strengths` (keep these aspects!)
-   - `review.weaknesses` (fix the ones that are real per the spec's `## What a good version looks like` section - decide HOW yourself; see "Which weaknesses to fix" below)
+   - `review.weaknesses` (fix the defect lines — `<ID> (<render>): …` — that are real per the spec's `## What a good version looks like` section and decide HOW yourself; never act on a `Suggestion:` line; see "Which weaknesses to fix" below)
    - `review.image_description` (understand what was generated visually)
-   - `review.criteria_checklist` (see exactly which criteria failed)
-     - Look for items with `passed: false` - these need fixing, unless the failure contradicts the characteristic section (then decline it, see below)
+   - `review.criteria_checklist` (context, not a list of orders: it shows where points were lost)
+     - Items with `passed: false` tell you where to look; act on one when a defect line names it, or when it is a defect in the same sense and the characteristic section does not contradict it (then decline it, see below)
      - Focus on categories with low scores (e.g., visual_quality.score < visual_quality.max)
      - VQ-XX items for visual issues
      - SC-XX items for spec compliance
@@ -26,8 +26,10 @@ Read both sources to understand what needs to be fixed:
 
 Read the closing `## What a good version looks like` section of `plots/{SPEC_ID}/specification.md` (without one, use Description, Data and Notes) and decide per weakness:
 
-- **Fix the weaknesses that are real per the section.** A weakness that asks for something an `Expected, not a defect:` bullet of the section names — e.g. "bubbles overlap in the dense cluster" on a bubble chart that already uses translucency and outlines — is not real: decline it and name it with a one-line reason in the commit body. The section never waives chrome rules (theme readability, canvas, palette, text legibility, auto-reject checks); those weaknesses are always real.
-- **Keep the data scenario and the variant.** Same domain, same story, same encodings unless a weakness names the scenario itself as the problem. On a `-basic` spec, add no new encodings or elements (derived color channels, trend lines, highlight bands, annotation layers).
+- **Fix the defects that are real per the section.** A defect line names the criterion it violates, the render and the observed value (`VQ-02 (light): … → …. Likely cause: ….`). A weakness that asks for something an `Expected, not a defect:` bullet of the section names — e.g. "bubbles overlap in the dense cluster" on a bubble chart that already uses translucency and outlines — is obsolete: decline it as `W1 — obsolete (C2)` or, without W ids, with the bullet's text. The section never waives chrome rules (theme readability, canvas, palette, text legibility, auto-reject checks); those weaknesses are always real.
+- **Never act on a `Suggestion:` line.** It names no violated rule and costs no points; decline it as "suggestion, not taken". A line in neither format comes from an older review: act on it only when it names something visibly wrong under the current criteria.
+- **The checklist is context, not a list of orders.** A deducted item tells you where to look; the defect lines say what to fix.
+- **Keep the data scenario and the variant.** Same domain, same story, same encodings unless a weakness names the scenario itself as the problem. On a `-basic` spec, add no new encodings or elements (derived color channels, trend or reference lines, highlights, callouts, annotation layers).
 - **Don't add code for changes that don't show.** Every edit should be visible in the render or fix a named code-quality item.
 - **Never move marks off their data values** to fix overlap — see the overlap line under "Visual-sizing fixes" below for the endorsed fixes and the SC-03 exemptions.
 - **`Expected, not a defect:` bullets are permissions, not targets.** Never shape the data to produce them, and never treat making one disappear as a fix: a weakness that only asks for less of a permitted thing (less overlap, fewer crossings) is declined, as the first bullet says.
@@ -53,7 +55,7 @@ Adjust the canvas-controlling knobs of the relevant library family:
 - Scale-based (plotly / altair / lets-plot): `width`/`height`/`scale_factor`, theme font sizes
 - Native-pixel (bokeh / highcharts / pygal): `width`/`height` directly, `text_font_size` / `style.fontSize` / `Style(... _font_size=...)` — for highcharts keep the three canvas-size spots in sync (Selenium `--window-size`, HTML `<div style="width:height:">`, `chart.options.chart = {'width':,'height':}`); for bokeh keep Selenium `W, H` matching `figure(width=, height=)`
 
-**Do NOT re-read `prompts/quality-criteria.md`** — the review already distilled all criteria into `review.criteria_checklist` in the metadata YAML (Step 1). Use that checklist directly: items with `passed: false` are the ones to fix.
+**Do NOT re-read `prompts/quality-criteria.md`** — the review already distilled all criteria into `review.criteria_checklist` in the metadata YAML (Step 1) and the defect lines in `review.weaknesses`. The checklist is context: items with `passed: false` show where points were lost, and the defect lines say what to fix.
 
 **Common VQ-07 failures and fixes:**
 - Legacy `#306998` still in code → replace with `#009E73` (Imprint palette position 1).
@@ -78,7 +80,7 @@ having multiple libraries in the catalog. See `prompts/plot-generator.md` →
 
 ## Step 4: Fix the issues
 
-Based on the AI feedback, fix the weaknesses you kept in "Which weaknesses to fix" (Step 1):
+Based on the AI feedback, fix the defects you kept in "Which weaknesses to fix" (Step 1):
 - Visual quality issues
 - Code quality issues
 - Spec compliance issues
@@ -156,7 +158,14 @@ Attempt {ATTEMPT}/4 - fixes based on AI review"
 git push origin {BRANCH}
 ```
 
-If you declined any weakness in Step 1, add a `Declined:` list to the commit body, one line per weakness with its reason (e.g. `- "bubbles overlap in the dense cluster" — expected per the spec's characteristic section; alpha already keeps every bubble visible`).
+If you declined any weakness in Step 1, add a `Declined:` list to the commit body, one line per weakness with its reason, for example:
+
+```
+Declined:
+- "bubbles overlap in the dense cluster" — obsolete (C2): expected per the spec's characteristic section; alpha already keeps every bubble visible
+- "Suggestion: a focal highlight on the leading bar" — suggestion, not taken
+- "add a trend line" — asks for something the spec does not require
+```
 
 ## Report result
 

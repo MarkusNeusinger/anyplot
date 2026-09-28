@@ -205,6 +205,9 @@ jobs:
           mkdir -p "$RUNNER_TEMP/regen-tools"
           cp automation/scripts/regen_gate.py automation/scripts/close_issue_if_complete.py \
              automation/scripts/review_provenance.py "$RUNNER_TEMP/regen-tools/"
+          # The reviewer's step-10 self-check (`check-feedback`) runs this
+          # same workflow-ref copy of the gate.
+          cp automation/scripts/regen_gate.py /tmp/anyplot-regen-gate.py
           git fetch origin ${{ steps.pr.outputs.head_sha }}
           git checkout ${{ steps.pr.outputs.head_sha }}
 
@@ -547,8 +550,9 @@ jobs:
           }
           cause = causes.get(LIBRARY, f"Review `prompts/library/{LIBRARY}.md` 'Canvas — hard rule' section.")
 
+          # A defect line (regen_gate.DEFECT_RE): the review copies it verbatim.
           weakness = (
-              f"Canvas dimensions drifted from required target. "
+              f"VQ-05 (both): Canvas dimensions drifted from required target. "
               f"Actual: {w}×{h}. Closest valid target: {tw}×{th} (±{TOLERANCE} px tolerance). "
               f"Signed delta: {dw:+d} × {dh:+d} — {direction}.{aspect_note} "
               f"{cause} "
@@ -977,6 +981,25 @@ jobs:
       - name: Install Python dependencies for metadata update
         if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true'
         run: pip install pyyaml
+
+      # Monitoring only: every weakness line is a defect (`<ID> (<render>): …`)
+      # or a `Suggestion: …` line, and a regeneration's review_regen.json
+      # classifies the previous weaknesses consistently with its checklists.
+      # Problems become ::warning:: annotations plus one weakness_format
+      # notice; the step never fails the review and changes nothing it stores.
+      - name: Check review feedback format (never gating)
+        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true'
+        continue-on-error: true
+        env:
+          SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+          IS_REGEN: ${{ steps.regen.outputs.is_regen }}
+        run: |
+          FLAGS=(--weaknesses review_weaknesses.json --checklist review_checklist.json)
+          if [ "$IS_REGEN" = "true" ] && [ -f review_regen.json ]; then
+            FLAGS+=(--regen review_regen.json --prev-weaknesses /tmp/anyplot-prev-weaknesses.json \
+                    --spec-file "plots/${SPEC_ID}/specification.md")
+          fi
+          python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" check-feedback --warn-only "${FLAGS[@]}"
 
       # Skipped on a kept regeneration: the PR is closed unmerged, so there is
       # nothing to record on its branch.

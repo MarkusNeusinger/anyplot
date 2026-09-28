@@ -86,6 +86,13 @@ class TestTextHeuristics:
         assert m.has_limiting_word("Good, but the legend is small")
         assert not m.has_limiting_word("Excellent execution")
 
+    def test_add_order_behind_the_defect_prefix(self):
+        """P3's defect line: the render tag must not hide an add order; a suggestion is no order."""
+        assert m.is_add_weakness("VQ-03 (both): add a size legend → three reference circles. Likely cause: none.")
+        assert m.is_add_weakness("VQ-03, SC-04 (both): Include a legend title → 'Revenue'. Likely cause: x.")
+        assert not m.is_add_weakness("VQ-03 (both): the legend circles vanish → fill them. Likely cause: guide.")
+        assert not m.is_add_weakness("Suggestion: add percentage labels")
+
     def test_criteria_ids_are_the_24(self):
         assert len(m.CRITERIA_IDS) == 24
         assert m.CRITERIA_IDS[0] == "VQ-01" and m.CRITERIA_IDS[-1] == "LM-02"
@@ -224,6 +231,41 @@ class TestGateMetrics:
         assert gate["calibration"]["identity"]["visible_claims"] == pytest.approx(1 / 2)
         assert gate["permission_cited"] == pytest.approx(1 / 2)
         assert gate["permission_cited_n"] == 2
+
+    def test_carrier_claims_and_obsolete_citations(self):
+        """P3: on an identity pair a carrier claim is always wrong; older records stay out."""
+        labels = {"p": {"class": "identity"}}
+        suggestion = _regen_rec("p", "forward", 1, 90, 90, "keep", visible=1)
+        suggestion["regen_counts"] = {"total": 2, "visible": 1, "permission": 0, "obsolete": 1, "carriers": 0}
+        carrier = _regen_rec("p", "forward", 2, 90, 90, "merge", visible=1)
+        carrier["regen_counts"] = {"total": 1, "visible": 1, "permission": 0, "obsolete": 0, "carriers": 1}
+        older = _regen_rec("p", "forward", 3, 90, 90, "merge", visible=1)
+        older["regen_counts"] = {"total": 1, "visible": 1, "permission": 0}
+        gate = m.group_metrics([suggestion, carrier, older], labels)["gate"]
+        identity = gate["calibration"]["identity"]
+        assert identity["visible_claims"] == pytest.approx(1.0)
+        assert identity["carrier_claims"] == pytest.approx(1 / 2)
+        assert (gate["obsolete_cited"], gate["obsolete_cited_n"]) == (pytest.approx(1 / 2), 2)
+
+    def test_class_flip(self):
+        def run(n: int, classes: dict[str, str] | None) -> dict:
+            record = _regen_rec("p", "forward", n, 90, 88, "keep")
+            if classes is not None:
+                record["regen"]["prev_weaknesses"] = [{"ref": k, "class": v} for k, v in classes.items()]
+            return record
+
+        records = [
+            run(1, {"W1": "obsolete", "W2": "suggestion", "W3": "defect"}),
+            run(2, {"W1": "Obsolete", "w2": "suggestion", "W3": "suggestion"}),
+            run(3, {"W1": "obsolete", "W3": "defect"}),  # W2 unclassified: read as a suggestion
+            run(4, None),  # older prompts: no classification, not part of the metric
+        ]
+        gate = m.group_metrics(records, {})["gate"]
+        assert (gate["class_flip"], gate["class_flip_n"]) == (pytest.approx(1 / 3), 3)  # W3 flips
+        assert m.weakness_classes(records[1]) == {"W1": "obsolete", "W2": "suggestion", "W3": "suggestion"}
+        assert m.weakness_classes(run(5, {"W1": "maybe"})) == {"W1": "suggestion"}
+        single = m.group_metrics(records[:1], {})["gate"]
+        assert (single["class_flip"], single["class_flip_n"]) == (None, 0)
 
 
 SPEC = {"count": 5, "permission": ["C2"]}
@@ -447,3 +489,56 @@ class TestGateMonitor:
         assert any("'Expected, not a defect' bullet" in a and "2/10" in a for a in report["alarms"])
         quiet = m.gate_monitor(cited[:1] + clean + clean[:1], lambda r: False)
         assert not any("Expected, not a defect" in a for a in quiet["alarms"])
+
+    @staticmethod
+    def _classified(carriers: int = 0, obsolete: int = 0, unverified: int = 0, de_lm: int = 0) -> dict:
+        suggestion = unverified + de_lm
+        return {
+            "total": carriers + suggestion + obsolete,
+            "visible": carriers + suggestion,
+            "W": 0,
+            "P": 0,
+            "C": 0,
+            "new": 0,
+            "permission": 0,
+            "obsolete": obsolete,
+            "carriers": carriers,
+            "suggestion": suggestion,
+            "unverified": unverified,
+            "de_lm": de_lm,
+        }
+
+    def test_carrier_counts(self):
+        records = [
+            self._record(0, verdict="merge", code="merge", improvements=self._classified(carriers=2, de_lm=1)),
+            self._record(1, code="no_defect_improvement", improvements=self._classified(unverified=1)),
+            self._record(2, code="no_visible_improvement", improvements=self._classified(obsolete=1)),
+            # A record from before P3 stays out of the carrier shares.
+            self._record(3, improvements=self._improvements(1, 0)),
+        ]
+        imp = m.gate_monitor(records, lambda r: False)["improvements"]
+        assert imp["carrier_n"] == 3
+        assert imp["carriers_mean"] == pytest.approx(2 / 3)
+        assert imp["with_carrier"] == pytest.approx(1 / 3)
+        assert imp["no_defect_improvement"] == 1
+        assert (imp["obsolete_cited"], imp["obsolete_cited_share"]) == (1, pytest.approx(1 / 3))
+        assert imp["unverified_share"] == pytest.approx(1 / 3)
+        assert imp["de_lm_share"] == pytest.approx(1 / 3)
+        assert imp["permission_or_obsolete_cited"] == 1
+
+    def test_obsolete_citations_join_the_permission_alarm(self):
+        cited = [self._record(i, improvements=self._classified(obsolete=1)) for i in range(2)]
+        clean = [self._record(10 + i, improvements=self._classified(carriers=1)) for i in range(8)]
+        report = m.gate_monitor(cited + clean, lambda r: False)
+        assert any("or an obsolete weakness" in a and "2/10" in a for a in report["alarms"])
+
+    def test_unverified_alarm(self):
+        unverified = [self._record(i, improvements=self._classified(unverified=1)) for i in range(3)]
+        clean = [self._record(10 + i, improvements=self._classified(carriers=1, de_lm=1)) for i in range(7)]
+        report = m.gate_monitor(unverified + clean, lambda r: False)
+        assert any("unverified claim" in a and "30% of 10 decisions" in a for a in report["alarms"])
+        quiet = m.gate_monitor(unverified[:2] + clean + clean[:1], lambda r: False)
+        assert not any("unverified" in a for a in quiet["alarms"])
+        # DE and LM points are normal: no alarm however many.
+        de_lm = [self._record(i, improvements=self._classified(de_lm=2)) for i in range(10)]
+        assert not m.gate_monitor(de_lm, lambda r: False)["alarms"]

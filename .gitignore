@@ -256,6 +256,16 @@ secrets/
 /out/
 .migration-progress.json
 
+# AI review output files (prompts/workflow-prompts/ai-quality-review.md step 10),
+# written to the repository root by impl-review.yml and the retest harness. Root
+# only: the repair loop's exhaustion path runs `git add -A` on main, which must
+# never pick them up.
+/quality_score.txt
+/review_*.json
+/review_image_description.txt
+/review_verdict.txt
+/review_comment.md
+
 # Rendered plot artifacts must NOT be checked into the repo — they live in
 # GCS production (gs://anyplot-images/plots/...). The .regen-preview/ rule
 # above already excludes the staging dir; this rule catches the rarer case

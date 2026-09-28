@@ -750,6 +750,9 @@ class TestMaterialize:
         assert (workspace / "plot_images/plot-light.png").is_file()
         assert not (workspace / "review_regen.json").exists()  # stale output removed
         assert "## What a good version looks like" in (workspace / "plots/bubble-basic/specification.md").read_text()
+        # The review's step-10 self-check runs the rules-under-test gate, as impl-review's copy.
+        assert tmp.regen_gate == tmp.base / "anyplot-regen-gate.py"
+        assert tmp.regen_gate.read_bytes() == GATE_SCRIPT.read_bytes()
 
     @pytest.mark.parametrize(
         ("order", "subject_marker", "prev_marker"),
@@ -774,8 +777,10 @@ class TestMaterialize:
         assert out["prev_light"] == str(tmp.base / "anyplot-prev-plot-light.png")
         assert out["prev_stored"] == ("88" if order == "forward" else "92")
         review = tmp.prev_review.read_text(encoding="utf-8")
-        assert "**W1:**" in review and "Previous quality score" not in review  # --omit-scores
+        assert "**W1** (older review):" in review and "Previous quality score" not in review  # --omit-scores
         assert "**C1:** Overlap is expected" in review
+        assert json.loads(tmp.prev_weaknesses.read_text(encoding="utf-8"))[0]["class"] == "legacy"
+        assert tmp.regen_gate.read_bytes() == GATE_SCRIPT.read_bytes()
         assert out["prev_lines"] == str(prev_impl.count("\n"))
         assert out["new_lines"] == str(impl.count("\n"))
         subject = "new" if order == "forward" else "prev"
@@ -961,6 +966,9 @@ class TestCollect:
         out = rt.materialize(bundles["out"] / cell["item"], workspace, cell, GATE_SCRIPT, tmp=tmp)
         regen = {
             "prev_rescored": 87,
+            # The workspace checklist scores VQ-03 4 of 6, so a re-score of 2 verifies.
+            "prev_checklist": {"VQ-03": 2},
+            "prev_weaknesses": [{"ref": "W1", "class": "defect", "rule": "VQ-03"}],
             "improvements": [{"ref": "W1", "what": "legend larger", "where_visible": "legend"}],
             "regressions": [],
             "scenario_changed": False,
@@ -984,8 +992,37 @@ class TestCollect:
         assert record["gate"]["code"] == "merge"
         assert record["prev_stored"] == 88
         assert record["regen"]["prev_rescored"] == 87
-        assert record["regen_counts"] == {"total": 1, "visible": 1, "permission": 0}
+        assert record["regen_counts"] == {
+            "total": 1,
+            "visible": 1,
+            "permission": 0,
+            "obsolete": 0,
+            "carriers": 1,
+            "suggestion": 0,
+            "unverified": 0,
+            "de_lm": 0,
+        }
         assert record["order"] == "forward"
+
+    def test_unclassified_weakness_keeps_as_no_defect_improvement(self, bundles, workspace, tmp_path):
+        """A review under older prompts writes no classification: its W reads as a suggestion."""
+        tmp = rt.TmpPaths(tmp_path / "tmp")
+        cell = _cell("r-bubble-basic-matplotlib-v1-v0", "regen", "forward")
+        out = rt.materialize(bundles["out"] / cell["item"], workspace, cell, GATE_SCRIPT, tmp=tmp)
+        _write_review(workspace, score=88, regen=_merge_regen())
+        record = rt.collect(
+            workspace,
+            cell,
+            tmp_path / "cell",
+            execution_file="",
+            review_outcome="success",
+            materialize_ok=True,
+            gate_script=GATE_SCRIPT,
+            prev_stored=out["prev_stored"],
+            tmp=tmp,
+        )
+        assert (record["gate"]["verdict"], record["gate"]["code"]) == ("keep", "no_defect_improvement")
+        assert record["regen_counts"]["suggestion"] == 1 and record["regen_counts"]["carriers"] == 0
 
     @pytest.mark.parametrize("ref", ["C2", "c2"])  # c2: the gate coerces the ref before judging
     def test_permission_citation_is_counted_apart(self, bundles, workspace, tmp_path, ref):
@@ -1022,7 +1059,16 @@ class TestCollect:
             prev_stored=out["prev_stored"],
             tmp=tmp,
         )
-        assert record["regen_counts"] == {"total": 2, "visible": 0, "permission": 1}
+        assert record["regen_counts"] == {
+            "total": 2,
+            "visible": 0,
+            "permission": 1,
+            "obsolete": 0,
+            "carriers": 0,
+            "suggestion": 0,
+            "unverified": 0,
+            "de_lm": 0,
+        }
         # What the report needs to tell an affirmative C id from a permission.
         assert record["spec_characteristics"] == {"count": 2, "permission": ["C2"]}
         assert record["gate"]["verdict"] == "keep"
@@ -1039,16 +1085,68 @@ class TestCollect:
                 "not an item",
             ]
         }
-        assert rt.improvement_counts(regen, labelled) == {"total": 4, "visible": 1, "permission": 2}
+        zero = {"obsolete": 0, "suggestion": 0, "unverified": 0, "de_lm": 0}
+        assert rt.improvement_counts(regen, labelled) == {
+            "total": 4,
+            "visible": 1,
+            "permission": 2,
+            "carriers": 1,  # C1, an affirmative characteristic
+            **zero,
+        }
         assert regen["improvements"][3]["ref"] == "c2"  # the record's raw regen stays untouched
         # A section without kind prefixes (the pinned v1 specs) has no permissions.
         assert rt.improvement_counts(regen, "## What a good version looks like\n- x\n- y\n") == {
             "total": 4,
             "visible": 3,
             "permission": 0,
+            "carriers": 3,
+            **zero,
         }
         assert rt.improvement_counts(None, labelled) is None
         assert rt.improvement_counts({"improvements": "none"}, labelled) is None
+
+    def test_improvement_counts_classes(self, tmp_path):
+        """The classification counts, from the cell's prev-weaknesses JSON and the review's checklist."""
+        weaknesses = tmp_path / "prev-weaknesses.json"
+        weaknesses.write_text(
+            json.dumps(
+                [
+                    {"id": "W1", "text": "a", "class": "legacy"},
+                    {"id": "W2", "text": "Suggestion: b", "class": "suggestion"},
+                    {"id": "W3", "text": "c", "class": "legacy"},
+                    {"id": "W4", "text": "d", "class": "legacy"},
+                    {"id": "W5", "text": "e", "class": "legacy"},
+                ]
+            ),
+            encoding="utf-8",
+        )
+        checklist = tmp_path / "review_checklist.json"
+        items = [{"id": "VQ-02", "score": 6}, {"id": "VQ-07", "score": 2}, {"id": "DE-02", "score": 5}]
+        checklist.write_text(json.dumps({"visual_quality": {"items": items}}), encoding="utf-8")
+        regen = {
+            "prev_checklist": {"VQ-02": 4, "VQ-07": 2, "DE-02": 2},
+            "prev_weaknesses": [
+                {"ref": "W1", "class": "obsolete", "rule": "C2"},
+                {"ref": "W2", "class": "defect", "rule": "VQ-02"},  # stored as a suggestion: capped
+                {"ref": "W3", "class": "defect", "rule": "VQ-02"},
+                {"ref": "W4", "class": "defect", "rule": "VQ-07"},  # 2 → 2: unverified
+                {"ref": "W5", "class": "defect", "rule": "DE-02"},
+            ],
+            "improvements": [{"ref": f"W{i}", "what": "x", "where_visible": "y"} for i in range(1, 6)],
+        }
+        spec = "## What a good version looks like\n- A good version shows: x\n- Expected, not a defect: y\n"
+        assert rt.improvement_counts(regen, spec, weaknesses, checklist) == {
+            "total": 5,
+            "visible": 4,
+            "permission": 0,
+            "obsolete": 1,
+            "carriers": 1,
+            "suggestion": 3,
+            "unverified": 1,
+            "de_lm": 1,
+        }
+        # Without the checklist no criterion verifies.
+        assert rt.improvement_counts(regen, spec, weaknesses, tmp_path / "absent.json")["carriers"] == 0
 
     def test_characteristics_summary(self):
         section = "## What a good version looks like\n- Expected, not a defect: a\n- x\n- Expected, not a defect: b\n"
@@ -1362,6 +1460,8 @@ class TestGateReport:
         def record(improvements: list[dict[str, str]], permissions: frozenset[str]) -> dict[str, Any]:
             regen = {
                 "prev_rescored": 90,
+                "prev_checklist": {"VQ-03": 4},
+                "prev_weaknesses": [{"ref": "W1", "class": "defect", "rule": "VQ-03"}],
                 "improvements": improvements,
                 "regressions": [],
                 "scenario_changed": False,
@@ -1376,6 +1476,7 @@ class TestGateReport:
                     known_weakness_ids=frozenset({"W1"}),
                     characteristic_count=3,
                     permission_refs=permissions,
+                    new_checklist={"VQ-03": 6},
                 )
             )
             built = build_record(result, spec_id="bubble-basic", library="altair", score=91, prev_stored=92)
@@ -1394,13 +1495,28 @@ class TestGateReport:
         )
         assert merged["verdict"] == "merge" and merged["improvements"]["visible"] == 1
 
+        assert merged["improvements"]["carriers"] == 1
+        obsolete_only = record([{"ref": "W1", "what": "less overlap", "where_visible": "centre"}], frozenset())
+        obsolete_only["improvements"]["obsolete"] = 1  # as the gate writes it for an obsolete W
+        obsolete_only["improvements"]["carriers"] = 0
+        obsolete_only["improvements"]["visible"] = 0
+        obsolete_only["code"], obsolete_only["verdict"] = "no_visible_improvement", "keep"
+
         result = rt.metrics.gate_monitor([permission_only, merged], rt.comparable_record)
         assert result["improvements"]["visible_mean"] == pytest.approx(0.5)
         assert result["improvements"]["permission_cited"] == 2
         assert result["improvements"]["permission_only_keeps"] == 1
         text = rt.render_gate_report(result)
-        assert "Counted visible improvements (never a permission): mean 0.5 per decision, at least one in 50%" in text
+        assert (
+            "Counted visible improvements (never a permission or an obsolete weakness): mean 0.5 per decision, "
+            "at least one in 50%"
+        ) in text
         assert "Permission cited as an improvement: 2/2 decisions (100%); kept with nothing else counted: 1" in text
+        assert "Carriers (a verified defect or an affirmative characteristic): mean 0.5 per decision" in text
+        assert "kept as no_defect_improvement: 0" in text
+
+        text = rt.render_gate_report(rt.metrics.gate_monitor([merged, obsolete_only], rt.comparable_record))
+        assert "Obsolete weakness cited: 1/2 decisions (50%)" in text
 
 
 # Every flag the harness may pass to a rules-under-test gate: exactly what
@@ -1522,8 +1638,21 @@ class TestBaselineOverlay:
         )
         assert record["gate"]["verdict"] == "merge" and record["gate"]["prev_rescored"] == 87
         assert record["gate"]["code"] is None  # reason codes arrived with #11950
-        assert record["regen_counts"] == {"total": 1, "visible": 1, "permission": 0}
+        # The harness classifies with its own gate: the baseline review writes
+        # no classification, so its merge rests on a suggestion.
+        assert record["regen_counts"] == {
+            "total": 1,
+            "visible": 1,
+            "permission": 0,
+            "obsolete": 0,
+            "carriers": 0,
+            "suggestion": 1,
+            "unverified": 0,
+            "de_lm": 0,
+        }
         assert record["model"] is None and record["model_alias"] == "sonnet"
+        # The overlay gate at the baseline rules is what the self-check copy holds.
+        assert tmp.regen_gate.read_bytes() == gate.read_bytes()
 
 
 # ---------------------------------------------------------------------------

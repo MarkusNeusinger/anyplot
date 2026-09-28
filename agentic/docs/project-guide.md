@@ -301,8 +301,9 @@ review:
   strengths:
     - "Clean code structure"
     - "Good use of alpha for overlapping points"
-  weaknesses:
-    - "Grid could be more subtle"
+  weaknesses:  # defect lines first, then at most three "Suggestion:" lines
+    - "VQ-01 (both): tick labels at 8 pt are hard to read at full size → about 10 pt (+2 pt). Likely cause: tick_params labelsize=8."
+    - "Suggestion: a slightly lighter grid would recede further"
 ```
 
 **3. Implementation headers:** `plots/{specification-id}/implementations/python/{library}.py`
