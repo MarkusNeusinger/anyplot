@@ -42,7 +42,8 @@ GOOD = [
     S + "every mark at its exact (x, y) value, so the cloud's shape reads at a glance.",
     E + "overlapping marks in dense regions.",
     S + "where marks overlap, translucency keeps each one distinguishable.",
-    S + "the basic variant's x and y only, with one color for all marks.",
+    S + "the basic variant's x and y only, with one color for all marks, "
+    "and no reference lines, highlights or callouts.",
 ]
 
 
@@ -243,6 +244,80 @@ class TestStyle:
         assert "W4" in _rules(check_style(_spec(bullets), "demo-basic"))
         assert "W4" not in _rules(check_style(_spec(bullets, spec_id="demo-annotated"), "demo-annotated"))
         assert "W4" not in _rules(check_style(_spec(), "demo-basic"))
+
+    @pytest.mark.parametrize(
+        ("scope", "missing"),
+        [
+            pytest.param(
+                S + "the basic variant's x and y only.", ("reference lines", "highlights", "callouts"), id="names-none"
+            ),
+            pytest.param(
+                S + "the basic variant's x and y only, with no highlighted points or callouts.",
+                ("reference lines",),
+                id="no-reference-lines",
+            ),
+            pytest.param(
+                S + "the basic variant's x and y only, with no mean lines or callouts.",
+                ("highlights",),
+                id="no-highlights",
+            ),
+            pytest.param(
+                S + "the basic variant's x and y only, with no reference lines or highlight bands.",
+                ("callouts",),
+                id="no-callouts",
+            ),
+            pytest.param(
+                S + "the basic variant's x and y only, with no reference lines, highlights or annotations.",
+                ("callouts",),
+                id="annotations-are-not-callouts",
+            ),
+            pytest.param(
+                S + "the basic variant's x, y and size only, with reference bubbles, highlights and callouts.",
+                ("reference lines",),
+                id="reference-bubbles-are-not-reference-lines",
+            ),
+        ],
+    )
+    def test_basic_scope_names_layers(self, scope: str, missing: tuple[str, ...]):
+        text = _spec([*GOOD[:3], scope])
+        (finding,) = [f for f in check_style(text, "demo-basic", strict=True) if f.rule == "W7"]
+        assert finding.severity == WARNING  # never hard, even under --strict
+        assert text.splitlines()[finding.line - 1] == f"- {scope}"
+        for name in missing:
+            assert name in finding.message
+        for name in {"reference lines", "highlights", "callouts"} - set(missing):
+            assert name not in finding.message
+
+    @pytest.mark.parametrize(
+        "scope",
+        [
+            pytest.param(
+                S + "the basic variant's x and y only, with the reference lines and callouts the Notes allow, "
+                "and no highlighted points.",
+                id="named-as-allowed",
+            ),
+            pytest.param(
+                S + "the basic variant's x and y only, with no average line, highlight bands or callouts.",
+                id="average-line-is-a-reference-line",
+            ),
+            pytest.param(
+                S + "the basic variant's x and y only, with no trend or reference lines, highlights or callouts.",
+                id="reference-line-after-or",
+            ),
+            pytest.param(
+                S + "the basic variant's x and y only, with no reference or mean lines, highlights or callouts.",
+                id="reference-or-mean-lines",
+            ),
+        ],
+    )
+    def test_basic_scope_that_names_every_layer(self, scope: str):
+        assert "W7" not in _rules(check_style(_spec([*GOOD[:3], scope]), "demo-basic", strict=True))
+
+    def test_basic_scope_layers_only_on_basic_specs_with_a_scope_bullet(self):
+        scope = S + "the basic variant's x and y only."
+        assert "W7" not in _rules(check_style(_spec([*GOOD[:3], scope]), "demo-annotated"))
+        rules = _rules(check_style(_spec(GOOD[:3]), "demo-basic"))
+        assert "W4" in rules and "W7" not in rules
 
     def test_negation_against_notes(self):
         notes = ("Include a size legend to explain the scaling",)

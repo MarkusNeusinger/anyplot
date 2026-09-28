@@ -319,6 +319,9 @@ directly. That means the regen flow is the **only** place the metadata's `qualit
 get filled in. Skipping this step leaves the merged metadata with stale or null evaluation data, which
 breaks Postgres sync, the catalog UI, and the next regen's "previous review" lookup.
 
+This review runs on the local session's model, not on the pipeline's review model (Opus, see
+`docs/workflows/overview.md#review-model`), so its score isn't on the same scale as a pipeline-reviewed one.
+
 **Open both rendered PNGs** with the `Read` tool and inspect them as you would a Cloud AI review:
 
 ```

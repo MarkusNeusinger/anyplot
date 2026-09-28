@@ -137,6 +137,15 @@ class TestManifest:
             (lambda m: m["items"][0]["new"].update(render="somewhere"), "render must be"),
             (lambda m: m.update(gcs_prefix="elsewhere"), "gcs_prefix"),
             (lambda m: m["items"][0].update(id="Bad_ID"), "id must match"),
+            (
+                lambda m: m["items"][1].update(fixes=[{"id": "F1", "criteria": ["DE-01"], "match": "spines"}]),
+                "carrier criterion ids",
+            ),
+            (lambda m: m["items"][1].update(fixes=[{"id": "F1", "criteria": ["VQ-02"]}]), "match is missing"),
+            (lambda m: m["items"][1].update(fixes=None), "fixes must be a list"),
+            (lambda m: m["items"][0].update(fixes=[]), "a fresh item has no fixes"),
+            (lambda m: m["items"][0].update(orders="forward"), "orders is both or forward"),
+            (lambda m: m["items"][1].update(orders="reversed"), "orders is both or forward"),
         ],
     )
     def test_invalid(self, mutate, message):
@@ -179,6 +188,18 @@ class TestLabelGate:
         labels = rt.item_labels(_confirmed_manifest())
         assert [d["id"] for d in labels["f-bubble-basic-matplotlib"]["defects"]] == ["D1"]
         assert labels["r-bubble-basic-matplotlib-b-a"]["expected"] == {"forward": "merge", "reversed": "keep"}
+
+    def test_fixes_apply_only_when_confirmed(self):
+        pair = "r-bubble-basic-matplotlib-b-a"
+        manifest = _confirmed_manifest()
+        # No `fixes` key: the pair is not labeled for carriers.
+        assert rt.item_labels(manifest)[pair]["fixes"] is None
+        manifest["items"][1]["fixes"] = [{"id": "F1", "criteria": ["VQ-02"], "match": "label"}]
+        assert rt.validate_manifest(manifest) == []
+        assert [f["id"] for f in rt.item_labels(manifest)[pair]["fixes"]] == ["F1"]
+        assert rt.item_labels({**manifest, "labels": "draft"})[pair]["fixes"] is None
+        manifest["items"][1]["fixes"] = []  # labeled: the new version fixes no defect
+        assert rt.item_labels(manifest)[pair]["fixes"] == []
 
 
 # Scoped defect patterns of set v1 (PR #11964 review): each matches a phrasing
@@ -317,9 +338,19 @@ class TestPlan:
     def test_core_production_counts_and_models(self):
         result = _plan()
         assert result["sessions"] == 3 * (1 + 2)
-        assert result["by_model"] == {"fresh/opus": 3, "regen/sonnet": 6}
+        assert result["by_model"] == {"fresh/opus": 3, "regen/opus": 6}
         assert result["items"] == ["f-bubble-basic-matplotlib", "r-bubble-basic-matplotlib-b-a"]
-        assert result["estimate_usd"] == pytest.approx(3 * 1.45 + 6 * 0.90)
+        assert result["estimate_usd"] == pytest.approx(
+            3 * rt.COST_ESTIMATE[("fresh", "opus")] + 6 * rt.COST_ESTIMATE[("regen", "opus")]
+        )
+
+    def test_forward_only_pair_gets_no_reversed_cell(self):
+        manifest = _manifest()
+        manifest["items"][1]["orders"] = "forward"
+        result = _plan(manifest, runs=2)
+        regen = [c["id"] for c in result["cells"] if c["kind"] == "regen"]
+        assert regen == ["r-bubble-basic-matplotlib-b-a__fwd__r1", "r-bubble-basic-matplotlib-b-a__fwd__r2"]
+        assert result["sessions"] == 2 * (1 + 1)
 
     def test_run_major_order(self):
         cells = _plan()["cells"]
@@ -384,7 +415,7 @@ class TestPlan:
         done = [
             _resumed("f-bubble-basic-matplotlib__r1"),
             _resumed("f-bubble-basic-matplotlib__r2", ok=False),
-            _resumed("r-bubble-basic-matplotlib-b-a__rev__r1", model_alias="sonnet", harness_sha=B),
+            _resumed("r-bubble-basic-matplotlib-b-a__rev__r1", harness_sha=B),
         ]
         result = _plan(resume_records=done)
         assert result["resumed"] == 2
@@ -403,8 +434,8 @@ class TestPlan:
         ]
 
     def test_resume_rejects_a_record_from_another_model(self):
-        # models=sonnet: the fresh cell ran on Opus under production routing, the
-        # regen cell on Sonnet either way — only the regen record measures the same.
+        # models=sonnet runs every cell on Sonnet: only the Sonnet regen record
+        # measures the same; the Opus fresh record is run again.
         done = [
             _resumed("f-bubble-basic-matplotlib__r1", model_alias="opus"),
             _resumed("r-bubble-basic-matplotlib-b-a__fwd__r1", model_alias="sonnet"),
@@ -862,6 +893,7 @@ class TestCollect:
         assert record["checklist_sum"] == 11  # canonical items only
         assert record["weaknesses"] == ["Legend circles invisible", "Add a subtitle"]
         assert record["gate"] is None and record["order"] is None
+        assert record["spec_characteristics"] is None  # regen cells only
         assert record["comment_written"] is True
         assert record["rules_sha"] == B and record["criteria_version"] == "qc-a"
         saved = json.loads((out / "record.json").read_text(encoding="utf-8"))
@@ -1037,6 +1069,8 @@ class TestCollect:
             "unverified": 0,
             "de_lm": 0,
         }
+        # What the report needs to tell an affirmative C id from a permission.
+        assert record["spec_characteristics"] == {"count": 2, "permission": ["C2"]}
         assert record["gate"]["verdict"] == "keep"
         assert record["gate"]["code"] == "no_visible_improvement"
 
@@ -1113,6 +1147,12 @@ class TestCollect:
         }
         # Without the checklist no criterion verifies.
         assert rt.improvement_counts(regen, spec, weaknesses, tmp_path / "absent.json")["carriers"] == 0
+
+    def test_characteristics_summary(self):
+        section = "## What a good version looks like\n- Expected, not a defect: a\n- x\n- Expected, not a defect: b\n"
+        assert rt.characteristics_summary(section) == {"count": 3, "permission": ["C1", "C3"]}
+        assert rt.characteristics_summary("# no section\n") == {"count": 0, "permission": []}
+        assert rt.characteristics_summary("") is None  # spec unreadable: unknown, not zero bullets
 
     @pytest.mark.parametrize(
         ("result", "outcome", "materialize_ok", "started_ago", "expected"),
@@ -1191,6 +1231,17 @@ def _record(cell: str, item: str, run: int, score: int, **extra) -> dict[str, An
 
 
 class TestReport:
+    def test_headline_counts_forward_only_pairs_with_one_order(self):
+        both = [
+            {"kind": "regen", "item": f"r-{i}", "order": o, "run": 3}
+            for i in range(10)
+            for o in ("forward", "reversed")
+        ]
+        forward_only = [{"kind": "regen", "item": f"r-fwd-{i}", "order": "forward", "run": 3} for i in range(2)]
+        title = rt._headline_title(both + forward_only, "v2", "core")
+        assert title == "### Review retest — set v2 core ((10 pairs × 2 orders + 2 pairs × 1 order) × 3)"
+        assert rt._headline_title(both, "v2", "core") == "### Review retest — set v2 core (10 pairs × 2 orders × 3)"
+
     def test_report_files_and_snippet(self, tmp_path):
         records = [
             _record("f-bubble-basic-matplotlib__r1", "f-bubble-basic-matplotlib", 1, 89),
@@ -1247,6 +1298,44 @@ class TestReport:
         snippet = (tmp_path / "report" / "snippet.md").read_text(encoding="utf-8")
         assert "| Named-defect miss rate | – (no labels) |" in snippet
         assert "(labels: draft)" in (tmp_path / "report" / "retest-report.md").read_text(encoding="utf-8")
+
+    def test_merges_without_carrier_row(self, tmp_path):
+        pair = "r-bubble-basic-matplotlib-b-a"
+        manifest = _confirmed_manifest()
+        manifest["items"][1]["fixes"] = [{"id": "F1", "criteria": ["VQ-03"], "match": "size legend"}]
+
+        def merge(run: int, what: str) -> dict[str, Any]:
+            return _record(
+                f"{pair}__fwd__r{run}",
+                pair,
+                run,
+                88,
+                kind="regen",
+                order="forward",
+                model="claude-sonnet-5",
+                gate={"verdict": "merge", "prev_rescored": 85, "code": "merge"},
+                regen={"improvements": [{"ref": "W1", "what": what, "where_visible": "legend"}]},
+                spec_characteristics={"count": 0, "permission": []},
+            )
+
+        records = [merge(1, "size legend now legible"), merge(2, "title font larger")]
+        common = {"label": "v2", "subset_label": "core", "rules_sha": B, "harness_sha": A, "run_url": "u"}
+        rt.report(records, manifest, tmp_path / "report", lock_sha="c" * 64, **common)
+        snippet = (tmp_path / "report" / "snippet.md").read_text(encoding="utf-8")
+        assert "| Forward merges without a labeled carrier | 1/2 |" in snippet
+        text = (tmp_path / "report" / "retest-report.md").read_text(encoding="utf-8")
+        assert (
+            "| Forward merges without a labeled carrier (no `fixes` match, no affirmative C id) | 50% (1/2) |" in text
+        )
+        # Draft labels leave it empty, like every other label metric.
+        rt.report(records, {**manifest, "labels": "draft"}, tmp_path / "draft", lock_sha="c" * 64, **common)
+        draft = (tmp_path / "draft" / "snippet.md").read_text(encoding="utf-8")
+        assert "| Forward merges without a labeled carrier | – (no labels) |" in draft
+        draft_text = (tmp_path / "draft" / "retest-report.md").read_text(encoding="utf-8")
+        assert (
+            "| Forward merges without a labeled carrier (no `fixes` match, no affirmative C id) | – (no labels) |"
+            in draft_text
+        )
 
     def test_unresolved_model_is_its_own_group(self, tmp_path):
         records = [
@@ -1679,6 +1768,20 @@ class TestFreeze:
         with pytest.raises(rt.HarnessError, match="labelled identity but its renders differ"):
             self._freeze(setup, repo, tmp_path)
 
+    def test_off_canvas_predecessor_of_a_forward_only_pair_is_frozen(self, repo, tmp_path):
+        setup = self._setup(repo, tmp_path)
+        for theme in rt.THEMES:
+            path = setup["snaps"] / "v0" / "renders" / "python" / "matplotlib" / f"plot-{theme}.png"
+            path.write_bytes(fake_png(4766, 2670, salt=theme.encode()))
+        pair = setup["manifest"]["items"][1]
+        pair["class"] = "different"
+        with pytest.raises(rt.HarnessError, match="needs `orders: forward`"):
+            self._freeze(setup, repo, tmp_path)
+        pair["orders"] = "forward"
+        lock = self._freeze(setup, repo, tmp_path / "again")["lock"]
+        assert lock["objects"]["retest/sets/v1/r-pair/prev-light.png"]["width"] == 4766
+        assert lock["objects"]["retest/sets/v1/r-pair/prev-light.png"]["height"] == 2670
+
     def test_existing_object_is_skipped_or_refused(self, repo, tmp_path):
         setup = self._setup(repo, tmp_path, identity=True)
         obj = "retest/sets/v1/f-bubble-basic-matplotlib/new-light.png"
@@ -1748,6 +1851,9 @@ class TestFreeze:
         img.save(b)
         assert rt.pixel_stats(a, b) == {"changed_px_pct": 6.25, "max_channel_delta": 37}
         assert rt.pixel_stats(a, a) == {"changed_px_pct": 0.0, "max_channel_delta": 0}
+        c = tmp_path / "c.png"
+        Image.new("RGBA", (6, 4), (10, 10, 10, 255)).save(c)
+        assert rt.pixel_stats(a, c) == {"changed_px_pct": None, "max_channel_delta": None, "shape_mismatch": True}
 
 
 class TestCheckRenders:
@@ -1815,21 +1921,67 @@ class TestCheckRenders:
         assert [p.split(":")[0] for p in result["problems"]] == ["f-a new light", "f-a new dark"]
         assert all("not found" in p for p in result["problems"])
 
+    def test_off_canvas_predecessor_needs_a_forward_only_pair(self, repo, tmp_path):
+        """Production shows a predecessor as stored; only a reviewed render must be canonical."""
+        snaps = tmp_path / "snaps"
+        _snapshot(snaps, "v1", repo["v1"], {("matplotlib", t): fake_png() for t in rt.THEMES})
+        _snapshot(snaps, "v0", repo["v0"], {("matplotlib", t): fake_png(4766, 2670) for t in rt.THEMES})
+        pair = {
+            "id": "r-c",
+            "kind": "regen",
+            "tier": "core",
+            "spec_id": "bubble-basic",
+            "library": "matplotlib",
+            "class": "different",
+            "new": {"commit": repo["v1"], "render": {"snapshot": "v1"}},
+            "prev": {"commit": repo["v0"], "render": {"snapshot": "v0"}},
+        }
+        manifest = _manifest(baseline_rules_sha=repo["v1"], spec_commit=repo["v1"], items=[pair])
+        refused = rt.check_renders(manifest, repo=repo["root"], snapshots_root=snaps)
+        assert [p.split(":")[0] for p in refused["problems"]] == ["r-c prev light", "r-c prev dark"]
+        assert all(
+            p.endswith("an off-canvas predecessor needs `orders: forward` on its pair") for p in refused["problems"]
+        )
+
+        pair["orders"] = "forward"
+        accepted = rt.check_renders(manifest, repo=repo["root"], snapshots_root=snaps)
+        assert accepted["problems"] == [] and accepted["checked"] == 4
+        assert accepted["off_canvas"] == [
+            "r-c prev light: 4766x2670 (predecessor of a forward-only pair)",
+            "r-c prev dark: 4766x2670 (predecessor of a forward-only pair)",
+        ]
+
+        # The version under review is never off-canvas, forward only or not.
+        pair["new"], pair["prev"] = pair["prev"], pair["new"]
+        swapped = rt.check_renders(manifest, repo=repo["root"], snapshots_root=snaps)
+        assert [p.split(":")[0] for p in swapped["problems"]] == ["r-c new light", "r-c new dark"]
+        assert "orders: forward" not in swapped["problems"][0]
+
     def test_cli(self, monkeypatch, capsys, tmp_path):
         calls: list[Path] = []
 
         def fake(manifest, *, repo, snapshots_root, head=None):
             calls.append(snapshots_root)
-            return {"problems": [], "checked": 94, "skipped": []}
+            return {"problems": [], "checked": 94, "skipped": [], "off_canvas": ["r-x prev light: 4800x2700 (…)"]}
 
         monkeypatch.setattr(rt, "check_renders", fake)
         lock = str(tmp_path / "absent.json")
         assert rt.main(["validate", "--manifest", str(MANIFEST), "--lock", lock, "--check-renders"]) == 0
-        assert "renders ok: 94 PNG headers on canonical canvases, 0 skipped" in capsys.readouterr().out
+        out = capsys.readouterr().out
+        assert "  off-canvas r-x prev light: 4800x2700" in out
+        assert (
+            "renders ok: 94 PNG headers, 93 on canonical canvases and 1 off-canvas predecessors of forward-only "
+            "pairs; 0 skipped"
+        ) in out
         assert calls == [Path(".")]
 
         def failing(manifest, *, repo, snapshots_root, head=None):
-            return {"problems": ["x new light: 4800x2700 is not a canonical canvas"], "checked": 1, "skipped": []}
+            return {
+                "problems": ["x new light: 4800x2700 is not a canonical canvas"],
+                "checked": 1,
+                "skipped": [],
+                "off_canvas": [],
+            }
 
         monkeypatch.setattr(rt, "check_renders", failing)
         assert rt.main(["validate", "--manifest", str(MANIFEST), "--lock", lock, "--check-renders"]) == 1
@@ -1867,6 +2019,18 @@ class TestCli:
             rt.main(["validate", "--manifest", str(MANIFEST), "--lock", str(MANIFEST.with_suffix(".lock.json"))]) == 0
         )
         assert "manifest ok: set v1" in capsys.readouterr().out
+
+    def test_validate_every_shipped_set_against_its_own_lock(self, capsys):
+        """Each set-v<N>.yaml the workflow's `set` input can pick, with the lock next to it."""
+        sets = sorted(MANIFEST.parent.glob("set-v*.yaml"))
+        assert [p.name for p in sets][:2] == ["set-v1.yaml", "set-v2.yaml"]
+        for path in sets:
+            lock = path.with_suffix(".lock.json")
+            assert rt.main(["validate", "--manifest", str(path), "--lock", str(lock)]) == 0
+            out = capsys.readouterr().out
+            assert f"manifest ok: set {path.stem.removeprefix('set-')}" in out
+            # A set is frozen once, by the owner-authorized upload; until then plan refuses it.
+            assert ("lock ok:" in out) == lock.is_file()
 
     def test_plan_refuses_an_unfrozen_set(self, tmp_path, capsys):
         code = rt.main(

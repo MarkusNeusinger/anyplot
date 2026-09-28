@@ -33,12 +33,14 @@ gh workflow run bulk-generate.yml -f specification_id=<spec> -f library=all
 gh workflow run impl-generate.yml -f specification_id=<spec> -f library=<lib> -f model=<model>
 ```
 
-`model` threads through generate→review→repair→merge. Leave it out
-(or pass `auto`) and impl-generate routes per pair: Opus when the pair
-has no implementation on `origin/main` yet, Sonnet for a regeneration.
-An explicit `haiku`/`sonnet`/`opus` pins the model for every pair —
-for a gap backfill that means giving up Opus on first runs. impl-generate
-auto-closes any existing open PR for the same spec/lib.
+`model` threads through generate→repair. Leave it out (or pass `auto`)
+and impl-generate routes per pair: Opus when the pair has no
+implementation on `origin/main` yet, Sonnet for a regeneration. An
+explicit `haiku`/`sonnet`/`opus` pins the generation model for every
+pair — for a gap backfill that means giving up Opus on first runs.
+Reviews always run on Opus whatever `model` says (only a manual
+`impl-review.yml` dispatch with `review_model` changes that).
+impl-generate auto-closes any existing open PR for the same spec/lib.
 
 ## 2 · Monitor — use the bundled scripts, don't hand-roll
 
@@ -122,7 +124,9 @@ with evidence — never let the user ask "still running?".
 - **Halt the whole queue** only on a failure CLUSTER: **≥3 distinct
   (spec, library) pairs** failing within minutes of each other = model
   daily quota exhausted; a fallback model via `-f model=` can finish
-  leftovers. The threshold is pairs, full stop — the raw run count
+  leftovers' generation and repair, but their reviews still run on
+  Opus, so an exhausted Opus quota still stalls them at review. The
+  threshold is pairs, full stop — the raw run count
   says nothing, because one impossible pair spends three runs on its
   own auto-retries, so two bad pairs already produce six failures with
   the pipeline entirely healthy (observed 2026-08-24).
@@ -185,9 +189,11 @@ implementation, so under `auto` each generate, review, and repair runs
 on Opus and burns the usage window much faster than the Sonnet runs
 the numbers above came from. `run_queue.sh` therefore defaults to one
 slot and a 180 s `STAGGER` when `MODEL` is `auto` or `opus` (2 slots
-and 90 s for a pinned `sonnet`/`haiku`). Raise either only when the
-owner explicitly accepts the faster burn; pinning `MODEL=sonnet` is
-the owner's call too, since it gives up Opus on first runs.
+and 90 s for a pinned `sonnet`/`haiku`, whose reviews still run on
+Opus — pass the `auto` values for a large pinned queue). Raise either
+only when the owner explicitly accepts the faster burn; pinning
+`MODEL=sonnet` is the owner's call too, since it gives up Opus on
+first-run generation and repair.
 
 **For an unattended queue use the scheduler**,
 `.claude/skills/babysit-pipeline/run_queue.sh <queue-dir> [slots]`,

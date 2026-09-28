@@ -268,6 +268,79 @@ class TestGateMetrics:
         assert (single["class_flip"], single["class_flip_n"]) == (None, 0)
 
 
+SPEC = {"count": 5, "permission": ["C2"]}
+FIXES = [{"id": "F1", "criteria": ["SC-03"], "match": r"force (layout|simulation)"}]
+
+
+def _imp(ref: str, what: str = "x", where: str = "both renders") -> dict:
+    return {"ref": ref, "what": what, "where_visible": where}
+
+
+def _merge(item: str, run: int, improvements: list, *, order: str = "forward", verdict: str = "merge", spec=SPEC):
+    record = _rec(
+        item,
+        run,
+        90,
+        kind="regen",
+        order=order,
+        model="claude-sonnet-5",
+        gate={"verdict": verdict, "prev_rescored": 85, "code": "x"},
+        regen={"improvements": improvements},
+    )
+    if spec is not None:
+        record["spec_characteristics"] = spec
+    return record
+
+
+class TestMergesWithoutCarrier:
+    def test_carrier_criteria_leave_out_de_and_lm(self):
+        assert len(m.CARRIER_CRITERIA) == 19  # 7 VQ + 4 SC + 3 DQ + 5 CQ
+        assert not any(c.startswith(("DE", "LM")) for c in m.CARRIER_CRITERIA)
+
+    @pytest.mark.parametrize(
+        ("improvements", "fixes", "expected"),
+        [
+            ([_imp("C3")], [], True),  # an affirmative characteristic
+            ([_imp("c3")], [], True),  # the gate coerces c3 -> C3
+            ([_imp("C2")], [], False),  # a permission never carries
+            ([_imp("C9")], [], False),  # not a bullet of this spec
+            ([_imp("W1", "force layout removed")], FIXES, True),  # a labeled fix, whatever its ref
+            ([_imp("new", "Force simulation dropped")], FIXES, True),
+            ([_imp("W1", "force layout removed", " ")], FIXES, False),  # not visible
+            ([_imp("C2", "force layout removed")], FIXES, False),  # a permission, even when the text matches
+            ([_imp("W2", "legend font larger"), _imp("P1", "title prefix")], FIXES, False),
+            ([], FIXES, False),
+        ],
+    )
+    def test_carrier_claimed(self, improvements, fixes, expected):
+        assert m.carrier_claimed(_merge("p", 1, improvements), fixes) is expected
+
+    def test_unknown_characteristics_are_left_out(self):
+        assert m.carrier_claimed(_merge("p", 1, [_imp("C3")], spec=None), FIXES) is None
+        # An unlabeled section: every bullet reads as affirmative, as the gate reads it.
+        assert m.carrier_claimed(_merge("p", 1, [_imp("C2")], spec={"count": 5, "permission": []}), []) is True
+
+    def test_share_of_forward_merges_on_labeled_items(self):
+        labels = {"p": {"fixes": FIXES}, "q": {"fixes": None}}
+        records = [
+            _merge("p", 1, [_imp("W1", "force layout removed")]),  # carried
+            _merge("p", 2, [_imp("W2", "legend font larger")]),  # not carried
+            _merge("p", 3, [_imp("W2", "legend font larger")], verdict="keep"),  # a keep: not counted
+            _merge("p", 4, [_imp("W2", "legend font larger")], spec=None),  # unknown spec: left out
+            _merge("p", 1, [_imp("W2", "legend")], order="reversed"),  # reversed: not counted
+            _merge("q", 1, [_imp("W2", "legend")]),  # not labeled for carriers
+        ]
+        gate = m.group_metrics(records, labels)["gate"]
+        assert gate["carrier_units"] == 1
+        assert (gate["merges_without_carrier_count"], gate["merges_without_carrier_n"]) == (1, 2)
+        assert gate["merges_without_carrier"] == pytest.approx(0.5)
+
+    def test_no_labels_no_value(self):
+        gate = m.group_metrics([_merge("p", 1, [_imp("W2")])], {})["gate"]
+        assert gate["merges_without_carrier"] is None
+        assert gate["carrier_units"] == 0 and gate["merges_without_carrier_n"] == 0
+
+
 class TestArm:
     def test_cells_errors_and_groups(self):
         records = [
