@@ -42,8 +42,10 @@ revision since ``02e1a7974`` understands; a later addition (``decide
 --record-out``, the ``marker`` subcommand, ``sanitize-source --pending``) is
 never passed to an overlay, so the baseline rules (``0674ab6b5``) run
 unchanged. What the harness needs beyond that — the header reset, the
-characteristic kinds, record-marker parsing — comes from its own copy of
-``regen_gate.py``.
+characteristic kinds, the improvement classes, record-marker parsing — comes
+from its own copy of ``regen_gate.py``. ``decide`` reads the review's
+``review_checklist.json`` next to ``--regen-json`` by itself, so the harness
+passes no new flag for it.
 """
 
 from __future__ import annotations
@@ -70,6 +72,15 @@ from typing import Any
 from automation.scripts import review_provenance
 from automation.scripts import review_retest_metrics as metrics
 from automation.scripts.regen_gate import (
+    CARRIER,
+    DE_LM,
+    OBSOLETE,
+    PERMISSION,
+    UNVERIFIED,
+    GateInput,
+    classify_improvements,
+    load_checklist_scores,
+    load_weakness_classes,
     normalize_regen,
     parse_characteristics,
     parse_record_markers,
@@ -810,6 +821,11 @@ class TmpPaths:
     def change_request(self) -> Path:
         return self.base / "anyplot-change-request.txt"
 
+    @property
+    def regen_gate(self) -> Path:
+        """The gate copy the review prompt's step-10 self-check runs (impl-review "Checkout PR code")."""
+        return self.base / "anyplot-regen-gate.py"
+
 
 def reset_metadata(stored: dict[str, Any], spec_id: str, library: str) -> str:
     """The metadata file impl-generate.yml writes before a review: the stored
@@ -858,9 +874,11 @@ def materialize(
     """Lay the cell out exactly as impl-review sees a PR; returns the prompt variables.
 
     The file under review gets ``Quality: pending`` in every arm (the state
-    impl-generate leaves since M3). A regen cell also gets the predecessor's
+    impl-generate leaves since M3), and every cell gets the rules-under-test
+    gate script at ``tmp.regen_gate`` for the review's self-check (an older
+    arm's prompt never calls it). A regen cell also gets the predecessor's
     renders, stored review (``context --omit-scores``) and sanitized source
-    under /tmp, produced by the rules-under-test gate script.
+    under /tmp, produced by the same gate script.
     """
     tmp = tmp or TmpPaths(Path("/tmp"))
     info = json.loads((bundle_dir / "item.json").read_text(encoding="utf-8"))
@@ -878,6 +896,8 @@ def materialize(
             stale.unlink()
     for path in (tmp.canvas_gate, tmp.change_request, tmp.prev_light, tmp.prev_dark, tmp.prev_impl(ext)):
         path.unlink(missing_ok=True)
+    tmp.base.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(gate_script, tmp.regen_gate)
 
     plots = workspace / "plots" / spec_id
     if spec_source == "pinned":
@@ -920,7 +940,6 @@ def materialize(
     if not regen:
         return outputs
 
-    tmp.base.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(bundle_dir / predecessor / "plot-light.png", tmp.prev_light)
     shutil.copyfile(bundle_dir / predecessor / "plot-dark.png", tmp.prev_dark)
     shutil.copyfile(bundle_dir / predecessor / "metadata.yaml", tmp.prev_metadata)
@@ -1017,31 +1036,54 @@ def _strings(value: Any) -> list[str]:
     return [str(v) for v in value if str(v).strip()] if isinstance(value, list) else []
 
 
-def improvement_counts(regen: Any, spec_text: str) -> dict[str, int] | None:
+def improvement_counts(
+    regen: Any, spec_text: str, prev_weaknesses: Path | None = None, checklist: Path | None = None
+) -> dict[str, int] | None:
     """The improvement counts a production gate record carries, for one cell.
 
     ``total`` is every listed improvement, ``permission`` those whose ref is an
-    "Expected, not a defect" bullet of the spec the reviewer saw, and
-    ``visible`` only the counted ones (not a permission) with a non-empty
-    ``where_visible`` — the gate record's ``improvements`` semantics. Computed
-    with the harness's own ``regen_gate``, so it works under any rules_ref; a
-    spec without kind prefixes has no permissions, and the counts then equal
-    the plain ones. ``None`` when ``review_regen.json`` lists no improvements.
-    Refs are judged after the gate's own ``normalize_regen`` (``c2`` counts as
-    ``C2``). One divergence is deliberate: a payload the gate rejects as
-    ``regen_json_invalid`` (its record zeroes the counts) is still counted
-    here, item by item — mirroring ``validate_regen`` is not worth it.
+    "Expected, not a defect" bullet of the spec the reviewer saw, ``obsolete``
+    the previous weaknesses the review classed obsolete, and ``visible`` only
+    the counted ones (neither of the two) with a non-empty ``where_visible``;
+    ``carriers`` + ``suggestion`` == ``visible``, and ``unverified`` and
+    ``de_lm`` are disjoint subsets of ``suggestion`` — the gate record's
+    ``improvements`` semantics. Computed with the harness's own
+    ``classify_improvements``, so it works under any rules_ref, from the
+    cell's ``prev_weaknesses`` JSON (the stored classes) and the review's own
+    ``checklist``. A review under older rules writes no classification, so
+    every ``W`` counts as a suggestion there; a spec without kind prefixes has
+    no permissions. ``None`` when ``review_regen.json`` lists no
+    improvements. Refs are judged after the gate's own ``normalize_regen``
+    (``c2`` counts as ``C2``). One divergence is deliberate: a payload the
+    gate rejects as ``regen_json_invalid`` (its record zeroes the counts) is
+    still counted here, item by item — mirroring ``validate_regen`` is not
+    worth it.
     """
     if not isinstance(regen, dict) or not isinstance(regen.get("improvements"), list):
         return None
     normalized, _ = normalize_regen(regen)  # the gate judges the coerced payload (c2 -> C2)
-    permissions = permission_refs(parse_characteristics(spec_text))
-    items = [i for i in normalized["improvements"] if isinstance(i, dict)]
-    counted = [i for i in items if str(i.get("ref") or "") not in permissions]
+    characteristics = parse_characteristics(spec_text)
+    inp = GateInput(
+        spec_id="",
+        score=None,
+        regen=None,
+        characteristic_count=len(characteristics),
+        permission_refs=permission_refs(characteristics),
+        weakness_classes=load_weakness_classes(prev_weaknesses),
+        new_checklist=load_checklist_scores(checklist),
+    )
+    items = classify_improvements(normalized, inp)
+    visible = [i for i in items if i["class"] not in (PERMISSION, OBSOLETE) and i["where_visible"]]
+    suggestions = [i for i in visible if i["class"] != CARRIER]
     return {
         "total": len(items),
-        "visible": sum(1 for i in counted if str(i.get("where_visible") or "").strip()),
-        "permission": len(items) - len(counted),
+        "visible": len(visible),
+        "permission": sum(1 for i in items if i["class"] == PERMISSION),
+        "obsolete": sum(1 for i in items if i["class"] == OBSOLETE),
+        "carriers": len(visible) - len(suggestions),
+        "suggestion": len(suggestions),
+        "unverified": sum(1 for i in suggestions if i["basis"] == UNVERIFIED),
+        "de_lm": sum(1 for i in suggestions if i["basis"] == DE_LM),
     }
 
 
@@ -1091,7 +1133,7 @@ def collect(
             spec_text = spec_file.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             spec_text = ""
-        counts = improvement_counts(regen, spec_text)
+        counts = improvement_counts(regen, spec_text, tmp.prev_weaknesses, workspace / "review_checklist.json")
         if score is not None and materialize_ok:
             try:
                 out = _run_gate(
@@ -1544,10 +1586,16 @@ def render_gate_report(result: dict[str, Any]) -> str:
         "",
         f"- Decisions: {result['n']}; merge rate {_pct(result['merge_rate'])}",
         f"- Reason codes: {', '.join(f'{k} {v}' for k, v in result['codes'].items()) or 'none'}",
-        f"- Counted visible improvements (never a permission): mean {_fmt(imp['visible_mean'])} per decision, "
-        f"at least one in {_pct(imp['with_visible'])} (n={imp['n']})",
+        f"- Counted visible improvements (never a permission or an obsolete weakness): mean "
+        f"{_fmt(imp['visible_mean'])} per decision, at least one in {_pct(imp['with_visible'])} (n={imp['n']})",
+        f"- Carriers (a verified defect or an affirmative characteristic): mean {_fmt(imp['carriers_mean'])} per "
+        f"decision, at least one in {_pct(imp['with_carrier'])} (n={imp['carrier_n']}); "
+        f"kept as no_defect_improvement: {imp['no_defect_improvement']}",
         f"- Permission cited as an improvement: {imp['permission_cited']}/{imp['permission_n']} decisions "
         f"({_pct(imp['permission_cited_share'])}); kept with nothing else counted: {imp['permission_only_keeps']}",
+        f"- Obsolete weakness cited: {imp['obsolete_cited']}/{imp['carrier_n']} decisions "
+        f"({_pct(imp['obsolete_cited_share'])}); unverified claim in {_pct(imp['unverified_share'])}, "
+        f"design or library point in {_pct(imp['de_lm_share'])}",
         f"- prev_rescored − prev_stored, comparable: {drift(result['drift_comparable'])}",
         f"- prev_rescored − prev_stored, all: {drift(result['drift_all'])}",
         f"- new − prev_rescored: {drift(result['margin'])}; inside [−1, 0]: {_pct(result['margin_within_tolerance'])}",

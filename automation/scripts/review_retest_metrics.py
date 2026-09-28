@@ -11,9 +11,11 @@ Record fields read here (written by ``review_retest.py collect``): ``cell``,
 when the session named none), ``model_alias``, ``ok``, ``error_class``,
 ``score_typed``, ``checklist`` (``{id: {"score", "max", "comment"}}``),
 ``checklist_sum``, ``weaknesses``, ``gate`` (``{"verdict", "prev_rescored",
-"code"}``), ``regen`` (the parsed ``review_regen.json``) and ``regen_counts``
-(``{"total", "visible", "permission"}``, the gate record's improvement
-counts).
+"code"}``), ``regen`` (the parsed ``review_regen.json``, whose
+``prev_weaknesses`` feeds ``class_flip``) and ``regen_counts`` (``{"total",
+"visible", "permission"}`` plus, from P3 on, ``"obsolete"``, ``"carriers"``,
+``"suggestion"``, ``"unverified"`` and ``"de_lm"``: the gate record's
+improvement counts).
 
 Labels (from the set manifest, applied at report time so a corrected label
 re-scores old records): ``defects`` and ``permitted`` per item
@@ -74,7 +76,15 @@ TOPICS: dict[str, re.Pattern[str]] = {
     }.items()
 }
 CRITERION_PREFIX_RE = re.compile(r"^\s*\W*((?:VQ|DE|SC|DQ|CQ|LM)-\d{2})\b")
-ADD_RE = re.compile(r"^\s*(?:\W*\b(?:VQ|DE|SC|DQ|CQ|LM)-\d{2}\W*)?(?:add|consider adding|include|introduce)\b", re.I)
+# An order to add something, behind an optional criterion prefix: the legacy
+# "VQ-03: add …" and, from P3 on, the defect line's "VQ-03, SC-04 (both): add …".
+# A "Suggestion: …" line is no order and never counts.
+_ID = r"(?:VQ|DE|SC|DQ|CQ|LM|AR)-\d{2}"
+ADD_RE = re.compile(
+    rf"^\s*(?:\W*\b{_ID}(?:,\s*{_ID})*\W*(?:\((?:light|dark|both|code)\)\W*)?)?"
+    r"(?:add|consider adding|include|introduce)\b",
+    re.I,
+)
 LIMITING_VERSION = "limiting-v1"
 LIMITING_RE = re.compile(
     r"\b(but|however|although|though|slight(ly)?|minor|could|should|lacks?|lacking|missing|too|not|no|only|"
@@ -435,10 +445,51 @@ def _visible_improvements(record: dict[str, Any]) -> int:
 
 def _permission_citations(record: dict[str, Any]) -> int | None:
     """Improvements citing an "Expected, not a defect" bullet; None when unknown."""
+    return _regen_count(record, "permission")
+
+
+def _regen_count(record: dict[str, Any], key: str) -> int | None:
+    """One of the record's ``regen_counts``; None when the record predates the key."""
     counts = record.get("regen_counts")
-    if isinstance(counts, dict) and isinstance(counts.get("permission"), int):
-        return int(counts["permission"])
-    return None
+    value = counts.get(key) if isinstance(counts, dict) else None
+    return value if isinstance(value, int) and not isinstance(value, bool) else None
+
+
+RESCORE_CLASSES = ("defect", "suggestion", "obsolete")
+
+
+def weakness_classes(record: dict[str, Any]) -> dict[str, str]:
+    """``{W id: class}`` the review's ``prev_weaknesses`` gave, read as the gate reads it.
+
+    The first entry per ``W`` wins; an unknown class reads as ``suggestion``.
+    Empty for a review under older rules, which wrote no classification.
+    """
+    regen = record.get("regen")
+    entries = regen.get("prev_weaknesses") if isinstance(regen, dict) else None
+    out: dict[str, str] = {}
+    for entry in entries if isinstance(entries, list) else []:
+        ref = entry.get("ref") if isinstance(entry, dict) else None
+        if not isinstance(ref, str) or not re.fullmatch(r"W[1-9]\d*", ref.strip().upper()):
+            continue
+        cls = str(entry.get("class") or "").strip().lower()
+        out.setdefault(ref.strip().upper(), cls if cls in RESCORE_CLASSES else "suggestion")
+    return out
+
+
+def class_flips(units: dict[str, list[dict[str, Any]]]) -> list[bool]:
+    """One flag per (unit, W id) seen in at least two classified runs: the class differs.
+
+    A run that classified other W's but not this one reads it as the gate
+    does, as a suggestion.
+    """
+    flips: list[bool] = []
+    for runs in units.values():
+        classified = [c for r in runs if (c := weakness_classes(r))]
+        if len(classified) < 2:
+            continue
+        for ref in sorted({ref for c in classified for ref in c}):
+            flips.append(len({c.get(ref, "suggestion") for c in classified}) > 1)
+    return flips
 
 
 def gate_metrics(units: dict[str, list[dict[str, Any]]], labels: dict[str, dict[str, Any]]) -> dict[str, Any]:
@@ -450,10 +501,11 @@ def gate_metrics(units: dict[str, list[dict[str, Any]]], labels: dict[str, dict[
     new: list[list[float]] = []
     delta: list[list[float]] = []
     calibration: dict[str, dict[str, list[bool]]] = {
-        "identity": {"below_tolerance": [], "visible_claims": []},
-        "near-identical": {"below_tolerance": [], "visible_claims": []},
+        "identity": {"below_tolerance": [], "visible_claims": [], "carrier_claims": []},
+        "near-identical": {"below_tolerance": [], "visible_claims": [], "carrier_claims": []},
     }
     permission_cited: list[bool] = []
+    obsolete_cited: list[bool] = []
     per_item: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(dict)
     for runs in units.values():
         item = str(runs[0]["item"])
@@ -478,11 +530,17 @@ def gate_metrics(units: dict[str, list[dict[str, Any]]], labels: dict[str, dict[
                 ds.append(float(score - prev))
                 if pair_class in calibration:
                     calibration[pair_class]["below_tolerance"].append(score - prev < -1)
+            carriers = _regen_count(record, "carriers")
             if pair_class in calibration:
                 calibration[pair_class]["visible_claims"].append(_visible_improvements(record) > 0)
+                if carriers is not None:
+                    calibration[pair_class]["carrier_claims"].append(carriers > 0)
             cited = _permission_citations(record)
             if cited is not None:
                 permission_cited.append(cited > 0)
+            obsolete = _regen_count(record, "obsolete")
+            if obsolete is not None:
+                obsolete_cited.append(obsolete > 0)
         rescored.append(rs)
         new.append(ns)
         delta.append(ds)
@@ -512,6 +570,7 @@ def gate_metrics(units: dict[str, list[dict[str, Any]]], labels: dict[str, dict[
         # the gate toward merge.
         biases.append(((rescore_a - blind_a) + (rescore_b - blind_b)) / 2)
 
+    flips = class_flips(units)
     return {
         "verdict_flip": share(len(set(v)) > 1 for v in verdict_groups if len(v) >= 2),
         "accuracy": share(correct),
@@ -529,6 +588,13 @@ def gate_metrics(units: dict[str, list[dict[str, Any]]], labels: dict[str, dict[
         # by the gate; a sign the reviewer misreads the characteristic kinds).
         "permission_cited": share(permission_cited),
         "permission_cited_n": len(permission_cited),
+        # Runs citing a previous weakness the review itself classed obsolete.
+        "obsolete_cited": share(obsolete_cited),
+        "obsolete_cited_n": len(obsolete_cited),
+        # (unit, W id) pairs whose class differs across runs: how stable the
+        # re-score's defect / suggestion / obsolete reading is.
+        "class_flip": share(flips),
+        "class_flip_n": len(flips),
     }
 
 
@@ -705,6 +771,12 @@ def gate_monitor(
     cites an "Expected, not a defect" bullet), ``permission`` the cited
     permissions. A record without ``permission`` (none is expected: the key
     shipped with the first record) is left out of the permission shares.
+
+    From P3 on, a record also carries ``obsolete``, ``carriers``,
+    ``suggestion``, ``unverified`` and ``de_lm``, and its ``visible`` excludes
+    obsolete citations as well; an older record's ``visible`` still counts
+    them. Records without the P3 keys are left out of the carrier, obsolete,
+    unverified and design-or-library shares (``carrier_n`` is their count).
     """
     n = len(records)
     merges = sum(1 for r in records if r.get("verdict") == "merge")
@@ -742,6 +814,19 @@ def gate_monitor(
     with_permission = [(r, c) for r, c in counted if count(c.get("permission")) is not None]
     visible = [float(v) for _, c in counted if (v := count(c.get("visible"))) is not None]
     cited = [(r, c) for r, c in with_permission if c["permission"] > 0]
+    # P3 records (the classification counts); older ones are left out.
+    classified = [c for _, c in counted if count(c.get("carriers")) is not None]
+    carriers = [float(c["carriers"]) for c in classified]
+
+    def with_any(key: str) -> int:
+        return sum(1 for c in classified if (count(c.get(key)) or 0) > 0)
+
+    def over_classified(n: int) -> float | None:
+        return n / len(classified) if classified else None
+
+    permission_or_obsolete = sum(
+        1 for _, c in with_permission if c["permission"] > 0 or (count(c.get("obsolete")) or 0) > 0
+    )
     improvements: dict[str, Any] = {
         "n": len(counted),
         "visible_mean": mean(visible),
@@ -753,6 +838,16 @@ def gate_monitor(
         "permission_only_keeps": sum(
             1 for r, c in cited if r.get("code") == "no_visible_improvement" and count(c.get("visible")) == 0
         ),
+        "permission_or_obsolete_cited": permission_or_obsolete,
+        "permission_or_obsolete_share": permission_or_obsolete / len(with_permission) if with_permission else None,
+        "carrier_n": len(classified),
+        "carriers_mean": mean(carriers),
+        "with_carrier": share(v > 0 for v in carriers),
+        "no_defect_improvement": codes.get("no_defect_improvement", 0),
+        "obsolete_cited": with_any("obsolete"),
+        "obsolete_cited_share": over_classified(with_any("obsolete")),
+        "unverified_share": over_classified(with_any("unverified")),
+        "de_lm_share": over_classified(with_any("de_lm")),
     }
 
     drift_comparable = _summary(drift_of(comparable_records), seed)
@@ -788,10 +883,17 @@ def gate_monitor(
         alarms.append(f"regen_json_invalid in {invalid}/{n} decisions — a contract or prompt problem")
     if n >= 30 and report["merge_rate"] is not None and not 0.05 <= report["merge_rate"] <= 0.50:
         alarms.append(f"merge rate {report['merge_rate']:.0%} over {n} decisions — look at the reason codes")
-    if improvements["permission_n"] >= 10 and (improvements["permission_cited_share"] or 0) > 0.10:
+    if improvements["permission_n"] >= 10 and (improvements["permission_or_obsolete_share"] or 0) > 0.10:
         alarms.append(
-            f"reviews cite an 'Expected, not a defect' bullet as an improvement in "
-            f"{improvements['permission_cited']}/{improvements['permission_n']} decisions — the 8b prompt or "
-            "the specs' characteristic kinds need a look"
+            f"reviews cite an 'Expected, not a defect' bullet or an obsolete weakness as an improvement in "
+            f"{improvements['permission_or_obsolete_cited']}/{improvements['permission_n']} decisions — the 8b "
+            "prompt or the specs' characteristic kinds need a look"
+        )
+    # No alarm for de_lm: DE deductions are normal on specs that are not -basic.
+    if improvements["carrier_n"] >= 10 and (improvements["unverified_share"] or 0) > 0.20:
+        alarms.append(
+            f"an unverified claim (a rule the scores do not confirm, or none) in "
+            f"{improvements['unverified_share']:.0%} of {improvements['carrier_n']} decisions — the review's "
+            "self-check or the defect definitions need work"
         )
     return report
