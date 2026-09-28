@@ -12,4 +12,4 @@
   model and rules version must be the kept PR's gate record's, only the review
   keys may change, and `main` must still hold the files the re-score judged). The code and the production
   images stay as they are; the gate record's new `writeback` key and
-  `gate-report` count what happened on every keep.
+  `gate-report` count what happened on every keep. (#11972)
