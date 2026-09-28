@@ -11,14 +11,15 @@ agreement, named-defect misses, false alarms, gate accuracy and order bias.
 
 ``.github/workflows/review-retest.yml`` drives it (dispatch-only, read-only
 job tokens, one fresh Claude session per cell); ``docs/workflows/review-retest.md``
-is the how-to. The set lives in two files next to this repository's copy of
-the harness:
+is the how-to. Each frozen set lives in two files next to this repository's
+copy of the harness (``v1`` is the default; ``--manifest``/``--lock`` or the
+workflow's ``set`` input pick another):
 
-- ``automation/retest/set-v1.yaml`` -- the hand-curated manifest: items, the
+- ``automation/retest/set-v<N>.yaml`` -- the hand-curated manifest: items, the
   commits that pin their sources, where their renders come from, and labels.
-- ``automation/retest/set-v1.lock.json`` -- written by ``freeze``: sha256,
+- ``automation/retest/set-v<N>.lock.json`` -- written by ``freeze``: sha256,
   dimensions and pair pixel statistics of every frozen render. The renders
-  themselves are public objects under ``gs://anyplot-images/retest/sets/v1/``
+  themselves are public objects under ``gs://anyplot-images/retest/sets/v<N>/``
   and are downloaded anonymously over HTTPS.
 
 Subcommands::
@@ -207,6 +208,27 @@ def canonical_canvas(size: tuple[int, int]) -> bool:
     return any(abs(w - tw) <= CANVAS_TOLERANCE and abs(h - th) <= CANVAS_TOLERANCE for tw, th in CANVASES)
 
 
+def forward_only(item: dict[str, Any]) -> bool:
+    """A regen pair that runs in the forward order only (``orders: forward``)."""
+    return item["kind"] == "regen" and item.get("orders") == "forward"
+
+
+def canvas_problem(item: dict[str, Any], role: str, size: tuple[int, int], where: str) -> str | None:
+    """Why a frozen render's canvas is refused, or None.
+
+    Every render a session reviews must be on a canonical canvas, as the
+    production canvas gate requires before a review. A predecessor is shown
+    as production stores it (impl-review downloads it unchecked), so the
+    ``prev`` render of a forward-only pair may be off-canvas: in the reversed
+    order it would be the version under review, which production's canvas
+    gate keeps without a review.
+    """
+    if canonical_canvas(size) or (role == "prev" and forward_only(item)):
+        return None
+    hint = " — an off-canvas predecessor needs `orders: forward` on its pair" if role == "prev" else ""
+    return f"{size[0]}x{size[1]} is not a canonical canvas ({where}){hint}"
+
+
 def write_outputs(values: dict[str, str]) -> None:
     for key, value in values.items():
         if "\n" in value:
@@ -281,7 +303,7 @@ def http_get(url: str, *, attempts: int = 3, timeout: int = 60, first_bytes: int
 # ---------------------------------------------------------------------------
 
 
-def _label_errors(where: str, labels: Any, criteria: Iterable[str]) -> list[str]:
+def _label_errors(where: str, labels: Any, criteria: Iterable[str], allowed: str = "known criterion ids") -> list[str]:
     known = set(criteria)
     errors: list[str] = []
     if labels is None:
@@ -303,7 +325,7 @@ def _label_errors(where: str, labels: Any, criteria: Iterable[str]) -> list[str]
             seen.add(lid)
         crit = label.get("criteria")
         if not isinstance(crit, list) or not crit or any(c not in known for c in crit):
-            errors.append(f"{at}.criteria must name known criterion ids (got {crit!r})")
+            errors.append(f"{at}.criteria must name {allowed} (got {crit!r})")
         try:
             re.compile(str(label.get("match") or ""))
         except re.error as exc:
@@ -375,6 +397,8 @@ def validate_manifest(manifest: Any) -> list[str]:
             errors += _role_errors(f"{at}: {role}", item.get(role))
         if kind == "fresh" and "prev" in item:
             errors.append(f"{at}: a fresh item has no prev")
+        if "orders" in item and (kind != "regen" or item["orders"] not in ("both", "forward")):
+            errors.append(f"{at}: orders is both or forward, on a regen pair only")
         if kind == "regen":
             cls = item.get("class")
             if cls not in PAIR_CLASSES:
@@ -389,6 +413,16 @@ def validate_manifest(manifest: Any) -> list[str]:
                 errors.append(f"{at}: expected must give keep|merge for forward and reversed")
         errors += _label_errors(f"{at}: defects", item.get("defects"), metrics.CRITERIA_IDS)
         errors += _label_errors(f"{at}: permitted", item.get("permitted"), metrics.CRITERIA_IDS)
+        if "fixes" in item:
+            # Predecessor defects the forward new version fixes: regen pairs
+            # only, and only criteria that can carry a merge (never DE or LM).
+            if kind == "fresh":
+                errors.append(f"{at}: a fresh item has no fixes")
+            elif item["fixes"] is None:
+                errors.append(f"{at}: fixes must be a list ([] when the new version fixes no defect)")
+            errors += _label_errors(
+                f"{at}: fixes", item["fixes"], metrics.CARRIER_CRITERIA, "carrier criterion ids (VQ, SC, DQ or CQ)"
+            )
     return errors
 
 
@@ -419,17 +453,21 @@ def load_lock(path: Path, manifest: dict[str, Any]) -> dict[str, Any]:
 def item_labels(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
     """Per-item labels the metrics apply at report time.
 
-    Defects, permission probes and expected verdicts count only once the owner
-    has confirmed them (``labels: confirmed``). Draft proposals are validated
-    with the manifest but never reach a report, so no PR body quotes a miss
-    rate against unconfirmed ground truth. The pair ``class`` is measured
-    (pixel statistics in the lock), not a label, and always applies.
+    Defects, permission probes, fixes and expected verdicts count only once
+    the owner has confirmed them (``labels: confirmed``). Draft proposals are
+    validated with the manifest but never reach a report, so no PR body quotes
+    a miss rate against unconfirmed ground truth. ``fixes`` stays ``None`` for
+    an item without the key, which leaves it out of ``merges_without_carrier``;
+    ``[]`` labels a pair whose new version fixes no defect. The pair ``class``
+    is measured (pixel statistics in the lock), not a label, and always
+    applies.
     """
     confirmed = manifest.get("labels") == "confirmed"
     return {
         item["id"]: {
             "defects": (item.get("defects") or []) if confirmed else [],
             "permitted": (item.get("permitted") or []) if confirmed else [],
+            "fixes": item.get("fixes") if confirmed and isinstance(item.get("fixes"), list) else None,
             "expected": (item.get("expected") or {}) if confirmed else {},
             "class": item.get("class"),
         }
@@ -546,15 +584,20 @@ def build_cells(
     manifest: dict[str, Any], items: Sequence[dict[str, Any]], models: str, runs: int, orders: str
 ) -> list[dict[str, Any]]:
     """Run-major: every item's run 1 comes before any run 2 (best effort — the
-    matrix scheduler starts jobs roughly in list order)."""
+    matrix scheduler starts jobs roughly in list order). A forward-only pair
+    (``orders: forward`` in the manifest) never gets a reversed cell."""
     if orders not in ("both", "forward"):
         raise HarnessError("orders must be both or forward")
     cells = []
     for run in range(1, runs + 1):
         for item in items:
-            item_orders: tuple[str | None, ...] = (
-                (ORDERS if orders == "both" else ("forward",)) if item["kind"] == "regen" else (None,)
-            )
+            item_orders: tuple[str | None, ...]
+            if item["kind"] != "regen":
+                item_orders = (None,)
+            elif orders == "both" and not forward_only(item):
+                item_orders = ORDERS
+            else:
+                item_orders = ("forward",)
             for order in item_orders:
                 cells.append(
                     {
@@ -746,8 +789,9 @@ def bundle_item(
             if sha256_bytes(data) != expected["sha256"]:
                 raise HarnessError(f"{obj}: sha256 mismatch against the lock")
             size = png_size(data)
-            if not canonical_canvas(size):
-                raise HarnessError(f"{obj}: {size[0]}x{size[1]} is not a canonical canvas")
+            problem = canvas_problem(item, role, size, "frozen object")
+            if problem:
+                raise HarnessError(f"{obj}: {problem}")
             (role_dir / f"plot-{theme}.png").write_bytes(data)
             canvas[f"{role}-{theme}"] = list(size)
     info = {
@@ -1045,6 +1089,15 @@ def improvement_counts(regen: Any, spec_text: str) -> dict[str, int] | None:
     }
 
 
+def characteristics_summary(spec_text: str) -> dict[str, Any]:
+    """How many characteristic bullets the spec the reviewer saw has, and which
+    are "Expected, not a defect" bullets — the rest are affirmative, as the
+    gate reads them. The report needs it to tell an affirmative C id from a
+    permission (``merges_without_carrier``) without the spec at hand."""
+    items = parse_characteristics(spec_text)
+    return {"count": len(items), "permission": sorted(permission_refs(items), key=lambda ref: int(ref[1:]))}
+
+
 def collect(
     workspace: Path,
     cell: dict[str, Any],
@@ -1083,6 +1136,7 @@ def collect(
     regen, regen_error = (None, None)
     gate = None
     counts = None
+    spec_characteristics = None
     is_regen = cell.get("kind") == "regen"
     if is_regen:
         regen, regen_error = _read_json(workspace / "review_regen.json")
@@ -1092,6 +1146,7 @@ def collect(
         except (OSError, UnicodeDecodeError):
             spec_text = ""
         counts = improvement_counts(regen, spec_text)
+        spec_characteristics = characteristics_summary(spec_text)
         if score is not None and materialize_ok:
             try:
                 out = _run_gate(
@@ -1176,6 +1231,7 @@ def collect(
         "regen": regen if isinstance(regen, dict) else None,
         "regen_error": regen_error if is_regen else None,
         "regen_counts": counts,
+        "spec_characteristics": spec_characteristics,
         "gate": gate,
         "prev_stored": int(prev_stored) if (prev_stored or "").isdigit() else None,
         "comment_written": (workspace / "review_comment.md").is_file(),
@@ -1232,6 +1288,15 @@ def _kind_group(arm: dict[str, Any], kind: str) -> dict[str, Any] | None:
     return max(groups, key=lambda g: g["runs"]) if groups else None
 
 
+def _uncarried(gate: dict[str, Any]) -> str:
+    """``merges_without_carrier`` as ``k/n``, or why it has no value."""
+    if not gate.get("carrier_units"):
+        return "– (no labels)"
+    if not gate.get("merges_without_carrier_n"):
+        return "– (no forward merge)"
+    return f"{gate['merges_without_carrier_count']}/{gate['merges_without_carrier_n']}"
+
+
 def _arm_rows(arm: dict[str, Any]) -> dict[str, str]:
     """The snippet's metric cells for one arm."""
     fresh = _kind_group(arm, "fresh")
@@ -1264,6 +1329,7 @@ def _arm_rows(arm: dict[str, Any]) -> dict[str, str]:
         )
         rows["Gate verdict = expected / order bias (pts)"] = f"{accuracy} / {_fmt(gate['order_bias'])}"
         rows["Gate verdict flip rate (regen items)"] = _pct(gate["verdict_flip"])
+        rows["Forward merges without a labeled carrier"] = _uncarried(gate)
     rows["Sessions / API-equivalent cost"] = f"{arm['cells']['ok']}/{arm['cells']['total']} / ${arm['cost_usd']:.0f}"
     return rows
 
@@ -1396,6 +1462,8 @@ def render_report(
                 f"| Pooled SD: prev_rescored / new / new − prev_rescored | {_fmt(g['sd_prev_rescored'])} / {_fmt(g['sd_new'])} / {_fmt(g['sd_delta'])} |",
                 f"| Order bias (pts, negative favours merge) | {_fmt(g['order_bias'])} over {g['order_bias_items']} pairs |",
                 f"| Runs citing a permission as an improvement (not counted) | {_pct(g['permission_cited'])} (n={g['permission_cited_n']}) |",
+                f"| Forward merges without a labeled carrier (no `fixes` match, no affirmative C id) | "
+                f"{_pct(g['merges_without_carrier'])} ({_uncarried(g)}) |",
             ]
             for cls, cal in g["calibration"].items():
                 lines.append(
@@ -1659,6 +1727,7 @@ def check_renders(
     head = head or default_head
     problems: list[str] = []
     skipped: list[str] = []
+    off_canvas: list[str] = []
     checked = 0
     for item in manifest["items"]:
         for role in roles_of(item):
@@ -1688,9 +1757,12 @@ def check_renders(
                     problems.append(str(exc) if str(exc).startswith(item["id"]) else f"{at}: {exc}")
                     continue
                 checked += 1
-                if not canonical_canvas(size):
-                    problems.append(f"{at}: {size[0]}x{size[1]} is not a canonical canvas ({where})")
-    return {"problems": list(dict.fromkeys(problems)), "checked": checked, "skipped": skipped}
+                problem = canvas_problem(item, role, size, where)
+                if problem:
+                    problems.append(f"{at}: {problem}")
+                elif not canonical_canvas(size):
+                    off_canvas.append(f"{at}: {size[0]}x{size[1]} (predecessor of a forward-only pair)")
+    return {"problems": list(dict.fromkeys(problems)), "checked": checked, "skipped": skipped, "off_canvas": off_canvas}
 
 
 def freeze(
@@ -1732,8 +1804,9 @@ def freeze(
                         problems.append(f"{at}: source {where} not found")
                         continue
                     size = png_size(data)
-                    if not canonical_canvas(size):
-                        problems.append(f"{at}: {size[0]}x{size[1]} is not a canonical canvas ({where})")
+                    problem = canvas_problem(item, role, size, where)
+                    if problem:
+                        problems.append(f"{at}: {problem}")
                         continue
                     target = staging / obj
                     target.parent.mkdir(parents=True, exist_ok=True)
@@ -1758,7 +1831,10 @@ def freeze(
                 )
                 for theme in THEMES
             }
-            if item.get("class") == "identity" and any(p.get("changed_px_pct") for p in pairs[item["id"]].values()):
+            # None (renders of different sizes) differs as well.
+            if item.get("class") == "identity" and any(
+                p.get("changed_px_pct") != 0 for p in pairs[item["id"]].values()
+            ):
                 problems.append(f"{item['id']} is labelled identity but its renders differ")
     if problems:
         raise _refusal(problems, "freeze refused")
@@ -1797,11 +1873,17 @@ def verify_uploaded(lock: dict[str, Any], fetch: Callable[[str], bytes | None] =
 
 
 def _manifest_arg(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--manifest", default="automation/retest/set-v1.yaml")
+    parser.add_argument(
+        "--manifest",
+        default="automation/retest/set-v1.yaml",
+        help="the set's manifest (automation/retest/set-v<N>.yaml)",
+    )
 
 
 def _lock_arg(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--lock", default="automation/retest/set-v1.lock.json")
+    parser.add_argument(
+        "--lock", default="automation/retest/set-v1.lock.json", help="the set's lock (set-v<N>.lock.json, same set)"
+    )
 
 
 def cmd_validate(args: argparse.Namespace) -> int:
@@ -1834,7 +1916,14 @@ def cmd_validate(args: argparse.Namespace) -> int:
             print(f"  skipped {line}")
         if result["problems"]:
             raise _refusal(result["problems"], "freeze would refuse these renders")
-        print(f"renders ok: {result['checked']} PNG headers on canonical canvases, {len(result['skipped'])} skipped")
+        for line in result["off_canvas"]:
+            print(f"  off-canvas {line}")
+        print(
+            f"renders ok: {result['checked']} PNG headers, "
+            f"{result['checked'] - len(result['off_canvas'])} on canonical canvases and "
+            f"{len(result['off_canvas'])} off-canvas predecessors of forward-only pairs; "
+            f"{len(result['skipped'])} skipped"
+        )
     return 0
 
 
@@ -2019,7 +2108,10 @@ def cmd_freeze(args: argparse.Namespace) -> int:
         print(
             f"  pair {obj}: "
             + ", ".join(
-                f"{t} {p.get('changed_px_pct')}% px, max Δ {p.get('max_channel_delta')}" for t, p in pair.items()
+                f"{t} renders differ in size"
+                if p.get("shape_mismatch")
+                else f"{t} {p.get('changed_px_pct')}% px, max Δ {p.get('max_channel_delta')}"
+                for t, p in pair.items()
             )
         )
     if args.write_lock:

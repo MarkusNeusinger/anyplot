@@ -1,0 +1,231 @@
+# Review retest set v2 — the 12 regen pairs of verification round 1.
+#
+# Round 1 was the 13 verification regenerations of 2026-09-27 (PRs #11951 to
+# #11963, after the gate changes of #11949 and #11950). Twelve merged; #11955
+# (count-basic/ggplot2) kept under both rule sets and is left out, because it
+# tells two arms nothing apart. Set v1 stays as it is; this set measures what
+# v1 cannot: whether a regen merges on a fixed defect or on a suggestion.
+#
+# What each item pins (the same contract as set v1, see set-v1.yaml):
+#   - prev: `plots/<spec>/…` at 0ccb3fec1, main when round 1 started (T0);
+#   - new: `plots/<spec>/…` at 28df16aed, main after the last round-1 merge.
+#     Each pair's files there equal the ones at its own merge commit (named in
+#     the item's note): no other commit touched them in between;
+#   - spec text: `plots/<spec>/specification.md` at T0, the labeled spec the
+#     round ran on (no spec changed between T0 and 28df16aed);
+#   - renders: the round's local before/after snapshots, whose manifest.yaml
+#     main_sha equals the role's commit; freeze copies them to
+#     `gs://anyplot-images/retest/sets/v2/<id>/<role>-<theme>.png`.
+#
+# Labels stay `draft` until the owner confirms them in the pull request that
+# adds the set; while draft, every report ignores them. Besides the shapes
+# set-v1.yaml documents, a regen item carries:
+#
+#   fixes: [{id: F1, criteria: [SC-03], match: '<regex>', note: '…'}]
+#
+# one entry per predecessor defect that the forward new version visibly fixes.
+# `criteria` names carrier criteria only (VQ, SC, DQ, CQ; DE and LM levels
+# never carry a merge). `match` is a case-insensitive Python regex applied to
+# the `what` text of the review's improvements. `fixes: []` labels a pair
+# whose forward new version fixes no defect. The report's
+# `merges_without_carrier` is the share of forward merges, on items with a
+# `fixes` list, in which no visible improvement (not a permission, non-empty
+# `where_visible`) matches a `fixes` label or cites an affirmative C id of the
+# spec the reviewer saw. The `fixes` patterns match every improvement round 1
+# cited for a fixed defect, and none of the suggestions or obsolete
+# weaknesses it cited (tests/unit/automation/scripts/test_retest_set_v2.py).
+#
+# expected: forward = the round-1 new version replaces its predecessor;
+# reversed = the predecessor, as the new version, replaces the round-1 one.
+#
+# orders: forward (optional, regen pairs only) runs a pair in the forward order
+# whatever the workflow's `orders` input says. Two predecessors here are
+# off-canvas (bar-error/matplotlib 4766x2670, bar-error/plotly 4800x2700):
+# production shows a predecessor as it is stored, so the forward order is
+# faithful, but in the reversed order that render would be the version under
+# review, which production's canvas gate keeps without a review. Only the
+# `prev` render of a forward-only pair may be off-canvas.
+
+version: 1
+set: v2
+gcs_prefix: retest/sets/v2
+# The merge base of P3 (plan PLAN_p3_v2.md §8.3): the rules the V2 baseline arm runs on.
+baseline_rules_sha: 9a6ed19528c5ecaa6b16ab84a9ed20c932d46445
+spec_commit: &t0 0ccb3fec15888aae4772a7b5c09ea9692f330c22
+labels: draft
+
+# Round-1 snapshots (agentic/runs/verify-b1-regens/{before,after}/<spec>),
+# relative to the repository root of the checkout that runs freeze. Only
+# freeze and `validate --check-renders` read the directories.
+snapshots:
+  before-bubble-basic: {commit: *t0, render: &b-bubble {snapshot: agentic/runs/verify-b1-regens/before/bubble-basic}}
+  before-count-basic: {commit: *t0, render: &b-count {snapshot: agentic/runs/verify-b1-regens/before/count-basic}}
+  before-bar-error: {commit: *t0, render: &b-bar {snapshot: agentic/runs/verify-b1-regens/before/bar-error}}
+  after-bubble-basic: {commit: &after 28df16aeda6f3ed2c9778053764bc5d88128549d, render: &a-bubble {snapshot: agentic/runs/verify-b1-regens/after/bubble-basic}}
+  after-count-basic: {commit: *after, render: &a-count {snapshot: agentic/runs/verify-b1-regens/after/count-basic}}
+  after-bar-error: {commit: *after, render: &a-bar {snapshot: agentic/runs/verify-b1-regens/after/bar-error}}
+
+# A pattern two items share (the title-language fix of #11958 and #11961).
+patterns:
+  title-language: &title-language 'language (segment|part|component|token|field|name)|\btitle\b.{0,80}\bpython\b|\bpython\b.{0,60}\btitle\b|(incomplete|missing|wrong|malformed|truncated|non[- ]?compliant|mandated|required|canonical|correct) title (format|pattern|string|text)|title (format|pattern|string) (is |now )?(complete|correct|fixed|compliant|canonical)'
+
+items:
+  # ---- bubble-basic ----------------------------------------------------------
+  - id: r-bubble-basic-d3-pr11951
+    kind: regen
+    tier: core
+    spec_id: bubble-basic
+    library: d3
+    class: different
+    new: {commit: *after, render: *a-bubble}
+    prev: {commit: *t0, render: *b-bubble}
+    note: "#11951, merged in 925b29ead: round 1 merged 83 over 74 on C3 and C5 (force layout and creep removed); W1 (radius cut for overlap) is obsolete under C2, W2 (legend font) a suggestion"
+    expected: {forward: merge, reversed: keep}
+    fixes:
+      - {id: F1, criteria: [SC-03], match: 'force[- ]?(layout|simulation|collide|collision|directed|based)|forcecollide|d3[.-]force|collision (simulation|force|detection|layout|resolution|avoidance)|(exact|true|actual|correct|real|original|own) (\([^)]{0,40}\) )?(data |x[,/ ]+y |\(x, ?y\) )?(coordinates|positions|values|locations)|(back|again|now|sits?|renders?|drawn|placed|plotted) (at|on) (their|its) (exact |true |actual |data |own |correct )?(\([^)]{0,40}\) )?(coordinates|positions|values|locations)|no longer (displac|mov|nudg|push|shift|reposition)\w*', note: 'force collision removed: bubbles back at their (x, y) values (C3)'}
+      - {id: F2, criteria: [SC-01], match: 'trend ?line|regression|best[- ]fit|fit(ted)? line|call-?out|annotation (card|layer|box|panel)|narrative (layer|annotation)|derived[- ]variable', note: 'trend line and callout card removed from a -basic spec (C5)'}
+
+  - id: r-bubble-basic-highcharts-pr11952
+    kind: regen
+    tier: core
+    spec_id: bubble-basic
+    library: highcharts
+    class: different
+    new: {commit: *after, render: *a-bubble}
+    prev: {commit: *t0, render: *b-bubble}
+    note: "#11952, merged in 4b42dd7fe: round 1 merged 89 over 84 on W1 alone (a near-fused bubble pair separated), obsolete under C2 (overlap is expected); no defect fixed (plan footnote a)"
+    expected: {forward: keep, reversed: keep}
+    fixes: []
+
+  - id: r-bubble-basic-ggplot2-pr11953
+    kind: regen
+    tier: core
+    spec_id: bubble-basic
+    library: ggplot2
+    class: different
+    new: {commit: *after, render: *a-bubble}
+    prev: {commit: *t0, render: *b-bubble}
+    note: "#11953, merged in ac29068a6: round 1 merged 89 over 87 on W1 (BEAU-001 label clear of the bubbles above) and W3 (Sporting Goods off slot-5 red); owner reading: the fixes are real, so merge. Uncertain under P3: it needs a re-score deduction on VQ-02 or VQ-07 that round 1 did not record (plan footnote b); a keep counts as a false keep"
+    expected: {forward: merge, reversed: keep}
+    fixes:
+      - {id: F1, criteria: [VQ-02], match: '(label|callout|annotation|text|tag)s?\b.{0,100}(clear of|no longer (touch|overlap|collid|clash|sit)|away from|(more|extra|added|larger|bigger|better|cleaner) (clearance|spacing|separation|offset|room)|separated from)|(label|callout|annotation)[- ]?(offset|clearance|placement|position|nudge)\w*.{0,60}(widen|increas|larger|bigger|raised|moved|improv|adjust)|\bbeau-0\d\d\b', note: 'top-seller callout label (BEAU-001) clear of the bubbles above it'}
+      - {id: F2, criteria: [VQ-07], match: 'sporting goods.{0,80}(recolou?r|colou?r|cyan|\bred\b|swatch|hue|palette|slot)|(recolou?r|colou?r|cyan|\bred\b|swatch|hue)\w*.{0,80}sporting goods|#?ae3030|#?2abccd|\bred\b.{0,80}(semantic|reserv|anchor|bad|loss|error)|(semantic|reserv)\w*.{0,60}\bred\b|\bslot[- ]?5\b|\b(fifth|5th) (category|colou?r|slot|palette)', note: 'Sporting Goods moved off the slot-5 semantic red'}
+
+  # ---- count-basic -----------------------------------------------------------
+  - id: r-count-basic-matplotlib-pr11954
+    kind: regen
+    tier: core
+    spec_id: count-basic
+    library: matplotlib
+    class: different
+    new: {commit: *after, render: *a-count}
+    prev: {commit: *t0, render: *b-count}
+    note: "#11954, merged in 1eab6446b: round 1 merged 95 over 93 on W1 (y-axis title added; the stored review gave VQ-06 1/2, the new one 2/2). Its only improvement: under P3 the merge needs the re-score to deduct VQ-06 (plan footnote c); a keep counts as a false keep"
+    expected: {forward: merge, reversed: keep}
+    fixes:
+      - {id: F1, criteria: [VQ-06], match: '(y[- ]?axis|vertical[- ]axis|count[- ]axis|value[- ]axis|left[- ]axis|\by\b) (title|label)|\bylabel|set_ylabel|number of responses', note: 'explicit y-axis title added'}
+
+  - id: r-count-basic-plotly-pr11956
+    kind: regen
+    tier: core
+    spec_id: count-basic
+    library: plotly
+    class: different
+    new: {commit: *after, render: *a-count}
+    prev: {commit: *t0, render: *b-count}
+    note: "#11956, merged in 79af306c0: round 1 merged 85 over 79 on C4 (cumulative line, threshold and second axis removed); W2 (larger text) is a suggestion"
+    expected: {forward: merge, reversed: keep}
+    fixes:
+      - {id: F1, criteria: [SC-01], match: 'cumulative|pareto|second(ary)?[- ]?(y[- ]?)?axis|dual[- ]axis|twin[- ]axis|80 ?%.{0,30}(threshold|line|mark|annotation|reference)|threshold (line|annotation|marker)', note: 'cumulative-% line, 80 % threshold and secondary axis removed from a -basic spec (C4)'}
+
+  - id: r-count-basic-d3-pr11957
+    kind: regen
+    tier: core
+    spec_id: count-basic
+    library: d3
+    class: different
+    new: {commit: *after, render: *a-count}
+    prev: {commit: *t0, render: *b-count}
+    note: "#11957, merged in 8df3f111d: round 1 merged 85 over 84 on W1 alone, a recolor of the mean line (creep on a -basic spec: a suggestion, plan D3); no defect fixed (plan footnote d)"
+    expected: {forward: keep, reversed: keep}
+    fixes: []
+
+  - id: r-count-basic-makie-pr11959
+    kind: regen
+    tier: core
+    spec_id: count-basic
+    library: makie
+    class: different
+    new: {commit: *after, render: *a-count}
+    prev: {commit: *t0, render: *b-count}
+    note: "#11959, merged in bea31a8fd: round 1 merged 85 over 82 on P1 to P3 (percentage labels, title prefix, bar stroke), none a violated rule; the predecessor's real W1 (dead alpha emphasis) was not cited"
+    expected: {forward: keep, reversed: keep}
+    fixes: []
+
+  # ---- bar-error -------------------------------------------------------------
+  - id: r-bar-error-matplotlib-pr11958
+    kind: regen
+    tier: core
+    spec_id: bar-error
+    library: matplotlib
+    class: different
+    new: {commit: *after, render: *a-bar}
+    prev: {commit: *t0, render: *b-bar}
+    note: "#11958, merged in f817f5a29: round 1 merged 93 over 79 on three `new` fixes (title language segment, canonical canvas, off-palette outline) plus three storytelling layers (W1, W2, W4: suggestions). Forward only: the predecessor render is 4766x2670, the canvas defect F2 names; production's canvas gate would keep it unreviewed as the new version"
+    orders: forward
+    expected: {forward: merge, reversed: keep}
+    fixes:
+      - {id: F1, criteria: [SC-04], match: *title-language, note: 'language segment added to the title'}
+      - {id: F2, criteria: [VQ-05], match: '\bcanvas\b.{0,60}(canonical|target|exact|correct|3200|2400)|canonical (canvas|size|dimensions?|resolution)|\b3200 ?[x×] ?1800\b|\b4766\b|bbox_inches|(image|figure|output|png|render) (size|dimensions?).{0,60}(canonical|target|correct|fixed|exact)|(oversized|non[- ]?canonical|wrong|incorrect) (canvas|figure|image|output|dimensions?)', note: 'canonical 3200 x 1800 canvas (the predecessor was 4766 x 2670)'}
+      - {id: F3, criteria: [VQ-07], match: 'off[- ]palette|vermill?ion|palette[- ](compliant|violation|breach)|(outside|not (in|from|on)) the (imprint |brand )?palette|non[- ]palette|\b(red|orange|vermill?ion)(dish|[- ]like)?[- ](outline|stroke|edge|border)', note: 'off-palette vermillion outline replaced'}
+
+  - id: r-bar-error-ggplot2-pr11960
+    kind: regen
+    tier: core
+    spec_id: bar-error
+    library: ggplot2
+    class: different
+    new: {commit: *after, render: *a-bar}
+    prev: {commit: *t0, render: *b-bar}
+    note: "#11960, merged in 299563d38: round 1 merged 89 over 85 on W1 alone (unit tick labels and coord_flip, an LM-02 ask: a suggestion)"
+    expected: {forward: keep, reversed: keep}
+    fixes: []
+
+  - id: r-bar-error-plotly-pr11961
+    kind: regen
+    tier: core
+    spec_id: bar-error
+    library: plotly
+    class: different
+    new: {commit: *after, render: *a-bar}
+    prev: {commit: *t0, render: *b-bar}
+    note: "#11961, merged in 99c7e886b: round 1 merged 85 over 63 on W1 (bar colors match the code) and a `new` title fix; W2 (spines), W3 and W4 (control-baseline line) are suggestions. Forward only: the predecessor render is 4800x2700, which production's canvas gate would keep unreviewed as the new version"
+    orders: forward
+    expected: {forward: merge, reversed: keep}
+    fixes:
+      - {id: F1, criteria: [VQ-07], match: 'mismatch|rainbow|(match(es|ing)?|agree\w*|consistent with) (the )?code|#?009e73|brand green|(consistent|single|uniform|one) (imprint |brand )?(green|colou?r|fill|hue)|(different|varied|multiple|distinct) colou?rs? (per|for each|on each) bar|per[- ]bar colou?rs?', note: 'bars render in the one color the code sets (the predecessor showed a rainbow)'}
+      - {id: F2, criteria: [SC-04], match: *title-language, note: 'language segment added to the title'}
+
+  - id: r-bar-error-d3-pr11962
+    kind: regen
+    tier: core
+    spec_id: bar-error
+    library: d3
+    class: different
+    new: {commit: *after, render: *a-bar}
+    prev: {commit: *t0, render: *b-bar}
+    note: "#11962, merged in 6fc6aa65b: round 1 merged 87 over 85 on W1 alone, a title font bump (30 to 36 px; a small mandated title is not a deduction, plan footnote e)"
+    expected: {forward: keep, reversed: keep}
+    fixes: []
+
+  - id: r-bar-error-makie-pr11963
+    kind: regen
+    tier: core
+    spec_id: bar-error
+    library: makie
+    class: different
+    new: {commit: *after, render: *a-bar}
+    prev: {commit: *t0, render: *b-bar}
+    note: "#11963, merged in 28df16aed: round 1 merged 96 over 92 on W1 (bracket! annotation, LM-02), W2 (optional asymmetric error bars) and W3 (focal outline, DE-03), all suggestions (plan footnote f)"
+    expected: {forward: keep, reversed: keep}
+    fixes: []

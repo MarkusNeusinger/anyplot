@@ -1,5 +1,5 @@
 name: "Review: Retest"
-run-name: "Retest: ${{ inputs.label || 'unlabelled' }} · ${{ inputs.subset }} · rules ${{ inputs.rules_ref || github.sha }}"
+run-name: "Retest: ${{ inputs.label || 'unlabelled' }} · set ${{ inputs.set || 'v1' }} · ${{ inputs.subset }} · rules ${{ inputs.rules_ref || github.sha }}"
 
 # Re-runs the AI quality review on the frozen retest set (automation/retest/)
 # several times per item, so a change to the review rubric or the review model
@@ -9,10 +9,11 @@ run-name: "Retest: ${{ inputs.label || 'unlabelled' }} · ${{ inputs.subset }} �
 # How to run and read it: docs/workflows/review-retest.md.
 #
 #   gh workflow run review-retest.yml -f rules_ref=<sha> -f label=baseline
+#   gh workflow run review-retest.yml -f set=v2 -f rules_ref=<sha> -f label=v2-baseline
 #
 # An arm = rules_ref (whose prompts/ and regen_gate.py the reviewer uses) ×
-# the harness at the dispatched commit. Cells run in fresh sessions; the
-# aggregate job writes the report and a PR-body snippet.
+# the harness at the dispatched commit, on one frozen set. Cells run in fresh
+# sessions; the aggregate job writes the report and a PR-body snippet.
 
 on:
   workflow_dispatch:
@@ -27,8 +28,16 @@ on:
         required: false
         default: ''
         type: string
+      set:
+        description: "Frozen set: automation/retest/set-<set>.yaml and its lock (v1 = 15 fresh items and 10 pairs, v2 = the 12 pairs of verification round 1)"
+        required: false
+        default: 'v1'
+        type: choice
+        options:
+          - v1
+          - v2
       subset:
-        description: "core, full, or a comma-separated list of item ids from automation/retest/set-v1.yaml"
+        description: "core, full, or a comma-separated list of item ids from the chosen set's manifest"
         required: false
         default: 'core'
         type: string
@@ -148,6 +157,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          SET: ${{ inputs.set || 'v1' }}
           SUBSET: ${{ inputs.subset }}
           MODELS: ${{ inputs.models }}
           RUNS: ${{ inputs.runs }}
@@ -161,6 +171,7 @@ jobs:
             RESUME=(--resume-records "$RUNNER_TEMP/resume/records.jsonl")
           fi
           python3 -m automation.scripts.review_retest plan \
+            --manifest "automation/retest/set-${SET}.yaml" --lock "automation/retest/set-${SET}.lock.json" \
             --subset "$SUBSET" --models "$MODELS" --runs "$RUNS" --orders "$ORDERS" \
             --rules-sha "$RULES_SHA" --action-sha "$ACTION_SHA" --spec-source "$SPEC_SOURCE" \
             --repo . "${RESUME[@]}"
@@ -168,9 +179,12 @@ jobs:
       - name: Bundle pinned sources and frozen renders
         if: steps.plan.outputs.sessions != '0'
         env:
+          SET: ${{ inputs.set || 'v1' }}
           ITEMS: ${{ steps.plan.outputs.items }}
         run: |
-          python3 -m automation.scripts.review_retest bundle --items "$ITEMS" --repo . --out "$RUNNER_TEMP/bundles"
+          python3 -m automation.scripts.review_retest bundle \
+            --manifest "automation/retest/set-${SET}.yaml" --lock "automation/retest/set-${SET}.lock.json" \
+            --items "$ITEMS" --repo . --out "$RUNNER_TEMP/bundles"
 
       - name: Upload bundles
         if: steps.plan.outputs.sessions != '0'
@@ -386,6 +400,7 @@ jobs:
       - name: Report
         env:
           LABEL: ${{ inputs.label }}
+          SET: ${{ inputs.set || 'v1' }}
           SUBSET: ${{ inputs.subset }}
           RULES_SHA: ${{ needs.prep.outputs.rules_sha }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -403,6 +418,7 @@ jobs:
             EXTRA+=(--resume-records "$RUNNER_TEMP/resume/records.jsonl" --resumed-cells "$RESUMED")
           fi
           python3 -m automation.scripts.review_retest report \
+            --manifest "automation/retest/set-${SET}.yaml" --lock "automation/retest/set-${SET}.lock.json" \
             --cells "$RUNNER_TEMP/cells" --out "$RUNNER_TEMP/report" \
             --label "$LABEL" --subset "$SUBSET" --rules-sha "$RULES_SHA" --harness-sha "$GITHUB_SHA" \
             --run-url "$RUN_URL" "${EXTRA[@]}"
