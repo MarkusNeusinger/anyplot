@@ -516,7 +516,7 @@ Read these files to understand what you're working with:
 2. `plots/{SPEC_ID}/implementations/python/{LIBRARY}.py` — current implementation to update
 3. `plots/{SPEC_ID}/metadata/python/{LIBRARY}.yaml` — review feedback from last review:
     - `review.strengths` — PRESERVE these (don't break what works)
-    - `review.weaknesses` — FIX these
+    - `review.weaknesses` — fix the defect lines (`VQ-02 (light): …`); decline the `Suggestion:` lines; act on an older line in neither format only when it names something visibly wrong under the current criteria
     - `review.criteria_checklist` — items with `passed: false` need fixing
     - `quality_score` — current score to beat
 4. `prompts/library/{LIBRARY}.md` — library-specific rules (**CRITICAL**: follow these exactly)

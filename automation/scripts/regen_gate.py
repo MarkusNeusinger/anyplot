@@ -1057,8 +1057,17 @@ def check_regen_feedback(
                     f"{ref} is classed defect under {rule}, but prev_checklist gives {rule} its maximum "
                     f"({CRITERIA[rule]}/{CRITERIA[rule]}): reclass {ref} as suggestion or obsolete — {CLAIM_FIX}"
                 )
-        elif cls == OBSOLETE and not (rule and C_REF_RE.match(rule) and int(rule[1:]) <= len(characteristics)):
-            problems.append(f"{ref} is classed obsolete but its rule {rule!r} is not a C id of the spec's section")
+        elif cls == OBSOLETE:
+            num = int(rule[1:]) if rule and C_REF_RE.match(rule) else 0
+            if not 0 < num <= len(characteristics):
+                problems.append(f"{ref} is classed obsolete but its rule {rule!r} is not a C id of the spec's section")
+            elif characteristic_kind(characteristics[num - 1]) == KIND_SHOWS:
+                # Only a labeled "A good version shows:" bullet: an unlabeled
+                # (older) section has no permissions to name instead.
+                problems.append(
+                    f"{ref} is classed obsolete under {rule}, an 'A good version shows:' bullet, not an "
+                    f"'Expected, not a defect:' one: name the bullet that permits it, or class {ref} defect or suggestion"
+                )
     for ref in prev_weakness_ids:
         if isinstance(entries, list) and seen.get(ref, 0) == 0:
             problems.append(f"prev_weaknesses does not classify {ref}")

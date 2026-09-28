@@ -1899,6 +1899,27 @@ class TestCheckFeedback:
         assert code == 1
         assert "W1 was stored as a 'Suggestion:' line and cannot be classed defect" in out
 
+    @pytest.mark.parametrize(
+        ("spec", "rule", "flagged"),
+        [
+            (SPEC_5, "C1", True),  # labeled "A good version shows:" bullet
+            (SPEC_5, "C2", False),  # the "Expected, not a defect:" bullet
+            ("# s\n\n## What a good version looks like\n\n- a\n- b\n", "C1", False),  # unlabeled section
+        ],
+    )
+    def test_obsolete_names_a_permission_bullet(self, tmp_path, capsys, spec, rule, flagged):
+        regen = _regen(
+            prev_weaknesses=[
+                {"ref": "W1", "class": "obsolete", "rule": rule},
+                {"ref": "W2", "class": "defect", "rule": "VQ-03"},
+            ]
+        )
+        code, out = _feedback(tmp_path, capsys, checklist=NEW_CHECKLIST, regen=regen, prev=["a", "b"], spec=spec)
+        message = f"W1 is classed obsolete under {rule}, an 'A good version shows:' bullet"
+        assert (code, message in out) == ((1, True) if flagged else (0, False)), out
+        if flagged:
+            assert "name the bullet that permits it, or class W1 defect or suggestion" in out
+
     def test_missing_files(self, tmp_path, capsys):
         args = ["check-feedback", "--weaknesses", str(tmp_path / "a.json"), "--checklist", str(tmp_path / "b.json")]
         assert main([*args, "--regen", str(tmp_path / "c.json")]) == 1
