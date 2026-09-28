@@ -5,4 +5,4 @@
   Sonnet) is judged, and its predecessor re-scored, on Opus. The `model` input
   still chooses the generation and repair model; a manual review can pin
   another model with the new `review_model` input. The retest harness's
-  `models=production` now runs every cell on Opus.
+  `models=production` now runs every cell on Opus. (#11968)
