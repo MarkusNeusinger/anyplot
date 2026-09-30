@@ -125,7 +125,7 @@ items:
     note: "#11954, merged in 1eab6446b: round 1 merged 95 over 93 on W1 (y-axis title added; the stored review gave VQ-06 1/2, the new one 2/2). Its only improvement: under P3 the merge needs the re-score to deduct VQ-06 (plan footnote c); a keep counts as a false keep"
     expected: {forward: merge, reversed: keep}
     fixes:
-      - {id: F1, criteria: [VQ-06], match: '(y[- ]?axis|vertical[- ]axis|count[- ]axis|value[- ]axis|left[- ]axis|\by\b) (title|label)|\bylabel|set_ylabel|number of responses', note: 'explicit y-axis title added'}
+      - {id: F1, criteria: [VQ-06], match: '(y[- ]?axis|vertical[- ]axis|count[- ]axis|value[- ]axis|left[- ]axis|\by\b) (title|label)|(y[- ]?axis|count[- ]axis|value[- ]axis|left[- ]axis) (is )?(now )?((carries|has|gains|gets|shows)( an?| the| its)?( explicit| proper| clear)? title|titled)\b|\bylabel|set_ylabel|number of responses', note: 'explicit y-axis title added'}
 
   - id: r-count-basic-plotly-pr11956
     kind: regen
@@ -192,7 +192,7 @@ items:
     note: "#11960, merged in 299563d38: round 1 merged 89 over 85 on W1 alone (unit tick labels and coord_flip, an LM-02 ask: a suggestion). Owner reading at confirmation: merge, because the new version also fixes a defect round 1 did not cite, the y = 8 gridline running through the bold 7.0 value label (F1; the retest arms cite it)"
     expected: {forward: merge, reversed: keep}
     fixes:
-      - {id: F1, criteria: [VQ-02], match: '(value|data|bar|bold)[- ]?labels?.{0,80}grid ?(lines?|rules?)|grid ?(lines?|rules?).{0,60}(through|across|strik|cross)\w*.{0,40}(labels?|digits|glyphs|text)\b|\b7\.0\b.{0,60}grid ?(lines?|rules?)', note: 'the y = 8 gridline no longer runs through the bold 7.0 value label'}
+      - {id: F1, criteria: [VQ-02], match: '(value|data|bar|bold)[- ]?labels?.{0,80}grid( ?(lines?|rules?))?\b|grid ?(lines?|rules?).{0,60}(through|across|strik|cross)\w*.{0,40}(labels?|digits|glyphs|text)\b|\b7\.0\b.{0,60}grid ?(lines?|rules?)', note: 'the y = 8 gridline no longer runs through the bold 7.0 value label'}
 
   - id: r-bar-error-plotly-pr11961
     kind: regen
