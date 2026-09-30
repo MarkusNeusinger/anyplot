@@ -12,49 +12,64 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/muix/plot-dark.html
-quality_score: 92
+quality_score: 83
 review:
   strengths:
-  - Custom SVG bubble layer built on ChartContainer's useXScale/useYScale hooks —
-    a genuinely distinctive MUI X technique since the community package has no native
-    z-size scatter mode
-  - Per-hue luma-scaled dark-theme opacity bump keeps all three archetype colors equally
-    legible on both surfaces instead of a flat alpha bump over-saturating the paler
-    hue
-  - Bubbles scaled by area (sqrt of value ratio), not radius, matching the spec's
-    accuracy requirement
-  - Two well-constructed legends (color archetype + size reference circles) explain
-    both encodings, vertically centered against the chart to avoid wasted whitespace
-  - Subtitle names the actual insight (growth/margin correlation across archetypes)
-    rather than just displaying data
-  - Explicit font sizes throughout (title 26px, axis labels 16px, tick/legend 14px)
-    with balanced X/Y axis label and tick sizing
-  - Deterministic seeded LCG data generation, three realistic company archetypes with
-    sensible business-metric ranges
+  - Custom SVG bubble layer composed on ChartContainer and positioned with the useXScale/useYScale
+    context hooks — the community @mui/x-charts package has no z-size scatter mode,
+    and this is the library's own documented escape hatch for custom marks rather
+    than a foreign dependency
+  - Bubbles scaled by area (sqrt of the normalised size ratio) with an explicit MIN_RADIUS/MAX_RADIUS
+    envelope, so the smallest market-share values stay visible and the largest do
+    not swallow the plot
+  - 'Overlap handled exactly as the spec asks: fill-opacity in the 0.52-0.68 band
+    plus a page-background stroke (thickened to 3 px for the densest green cluster),
+    so bubbles in the crowded x≈18-21 region keep individual boundaries in both themes'
+  - 'Per-hue, luma-scaled dark-theme opacity bump keeps the darker blue and the paler
+    lavender equally legible on #1A1A17 instead of a flat bump over-saturating the
+    pale hue'
+  - Explicit font sizes throughout (title 26 px, axis titles 16 px, ticks and legend
+    14 px) with balanced x/y axis-title and tick sizing, and an L-shaped frame with
+    a subtle grid
+  - Deterministic in-browser data generation via a fixed-seed LCG (seed 42) feeding
+    a Box-Muller normal — reproducible without a seeded RNG, exactly as the library
+    prompt requires
+  - 'Correct harness contract: default-exported component, skipAnimation set, sized
+    from window.ANYPLOT_SIZE, interactive self-contained HTML emitted alongside the
+    PNG'
   weaknesses:
-  - The densest cluster (growth leaders, x≈18-20) still has several bubbles fused
-    into each other despite the thicker stroke — individual boundaries are discernible
-    but the region reads as a blob at a glance
-  - Grid could be pushed slightly more subtle relative to the data ink; currently
-    on the higher end of the acceptable 15-25% opacity range
-  - Legend uses fixed pixel offsets (top-20, +24 per row) rather than measured text
-    height, which works here but is not resilient if archetype/legend label counts
-    changed
+  - 'VQ-03, SC-02 (both): the size legend''s three reference circles are drawn with
+    fill="none" and an inkSoft stroke, so they do not match the data marks they explain
+    (translucent Imprint fill + page-background stroke) → fill them with the data
+    fill and opacity and stroke them like the bubbles. Likely cause: the circle in
+    SizeLegend uses fill="none" stroke={t.inkSoft} instead of the archetype fill and
+    d.opacity.'
+  - 'SC-01 (both): the subtitle "Growth leaders combine the strongest revenue growth
+    and profit margin" is an interpretive callout the -basic spec''s scope excludes
+    (its characteristic section allows x, y and size with an optional categorical
+    colour and no callouts or other annotation layer) → remove the SUBTITLE line and
+    keep the mandated title only. Likely cause: the SUBTITLE constant rendered in
+    the title block.'
+  - 'Suggestion: the right-hand legend column leaves a tall empty band below the size
+    legend; a slightly narrower right margin would give the plot area more width.'
+  - 'Suggestion: the smallest reference bubble (10) is drawn at the MIN_RADIUS floor,
+    so the legend''s 10-to-50 step reads as a much larger area jump than the 50-to-100
+    step.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "bubble-basic · javascript · muix · anyplot.ai" in dark ink, subtitle "Growth leaders combine the strongest revenue growth and profit margin" in softer gray beneath it. X-axis "Revenue growth rate (%)" and Y-axis "Profit margin (%)" both dark, clearly readable, with light tick labels along both axes. Grid lines are thin and subtle, visible but not competing with data. Legend on the right ("Company archetype" with 3 colored dots + names, "Market share index" with 3 outlined reference circles + values) is fully readable.
-      Data: ~50 bubbles in three colors — brand green (#009E73, "Growth leaders"), lavender (#C475FD, "Mid-market"), and slate blue (#4467A3, "Niche players") — matching Imprint canonical positions 1-3. Bubbles use semi-transparent fill with a page-background-colored stroke so overlapping bubbles remain distinguishable; sizes vary clearly with the market-share value, scaled by area.
-      Legibility verdict: PASS — all title, subtitle, axis, tick, and legend text is clearly readable against the light background; no light-on-light text.
+      Background: Warm off-white matching #FAF8F1 — not pure white, not dark. Grid lines are thin, low-opacity warm grey, visible but never competing with the bubbles.
+      Chrome: Title "bubble-basic · javascript · muix · anyplot.ai" top-left in dark ink at ~26 px CSS, with a softer grey subtitle line beneath it ("Growth leaders combine the strongest revenue growth and profit margin"). X-axis title "Revenue growth rate (%)" centred below the axis, Y-axis title "Profit margin (%)" rotated at the left; tick labels −8…40 on x and −10…35 on y, all dark on cream. L-shaped axis frame (no top/right spines). Right-hand legend column: "Company archetype" (three filled dots + Growth leaders / Mid-market / Niche players) and "Market share index" (three nested-size reference circles + 100 / 50 / 10). All chrome text readable; no light-on-light anywhere.
+      Data: 50 translucent bubbles in three Imprint hues — brand green #009E73 (Growth leaders, upper-right), lavender #C475FD (Mid-market, centre), blue #4467A3 (Niche players, lower-left). Each bubble carries a page-background-coloured stroke (2 px, 3 px for the green cluster) so overlapping circles stay individually readable. First categorical series is brand green, confirmed.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and subtitle now render in light ink/soft-gray, fully legible. Axis titles and tick labels are light-colored against the dark background. Grid lines remain subtle but visible. Legend text and dot/circle labels are light-colored and readable.
-      Data: Same three colors as the light render (green, lavender, slate blue) — confirmed identical hex values, only the chrome (background, text, grid) flipped. The dark-theme opacity bump is visibly applied per-hue (the paler lavender bubbles look nearly the same as light-theme, while the darker blue and green bubbles read slightly more saturated) — data reads clearly on the dark surface without over-saturation.
-      Legibility verdict: PASS — no dark-on-dark text found; all chrome elements are light-colored and legible on the near-black background; brand green remains clearly visible.
+      Background: Warm near-black matching #1A1A17 — not pure black. Grid lines flip to a faint light rule, still subtle and visible.
+      Chrome: Title and subtitle now render in light ink / soft grey, fully legible. Both axis titles, all tick labels, both legend headings and every legend label are light-coloured against the near-black surface. No dark-on-dark text found anywhere — title, ticks, axis titles and legend text all flipped correctly.
+      Data: Same three Imprint hex values as the light render (green / lavender / blue); only the chrome flipped. The bubbles composite slightly more saturated here because the implementation applies a per-hue, luma-scaled fill-opacity bump on dark (0.52 → up to 0.68), but the underlying palette hexes are unchanged and category identity is preserved. Brand green #009E73 remains clearly visible on the dark surface. The page-background stroke is now near-black, still separating overlapping bubbles cleanly.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -62,52 +77,58 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 26px, axis labels 16px, ticks/legend
-          14px), readable in both themes, balanced X/Y axis sizing
+        comment: Every size explicitly set (title 26 px, axis titles 16 px, ticks/legend
+          14 px in the 1600x900 CSS mount); all chrome readable in both themes, x/y
+          titles and ticks balanced. Title runs ~32% of the canvas width, which 5d
+          treats as no deduction.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap; bubble-on-bubble overlap is expected for this chart
-          type and handled via alpha + pageBg stroke
+        comment: No text collides with text, data or the legends. Bubble-on-bubble
+          overlap is permitted by the spec and is handled with translucency plus a
+          page-background stroke, so it hides no information.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Radius scaled by area with sensible min/max, but the densest growth-leaders
-          cluster still partially fuses despite the thicker stroke
+        passed: false
+        comment: Bubble radii match the data density well (50 marks, 7-38 px CSS).
+          But the size legend's reference circles are unfilled outlines and do not
+          match the translucent, page-stroked marks they explain.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe Imprint hues, per-hue luma-scaled dark opacity
-          keeps all series distinguishable
+        comment: 'Three CVD-safe Imprint hues from distinct hue families; no red-green
+          pairing, and the per-hue dark opacity keeps all three separable on #1A1A17.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the large majority of the canvas, legend positioned
-          near the chart and vertically centered, no cutoff
+        comment: Canvas gate passed (3200x1800). Plot area fills most of the canvas,
+          legend block vertically centred in the right margin, nothing overflows or
+          is cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Revenue growth rate (%)" and "Profit margin (%)" — descriptive
-          with units'
+        comment: '"Revenue growth rate (%)" and "Profit margin (%)" - both descriptive
+          and carrying units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order 1-3 for abstract archetypes,
-          theme-correct backgrounds and chrome in both renders'
+        comment: 'First series is brand green #009E73, then Imprint canonical positions
+          2-3 for the abstract archetype labels. Backgrounds are #FAF8F1 / #1A1A17
+          and the data hexes are identical across themes.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -115,116 +136,131 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful per-hue dark-theme opacity scaling and area-based sizing
-          show real design thought, clearly above a configured default
+        comment: 'Clearly above a configured default: area-based radius envelope,
+          per-hue luma-scaled dark opacity, a thicker page stroke for the densest
+          cluster, and a legend block sized from its own geometry.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: L-shaped axes, subtle grid, generous whitespace, centered legend
-          block
+        comment: L-shaped frame, subtle grid on both axes (appropriate for a scatter
+          family), no legend box frames, generous margins.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Subtitle explicitly names the insight and color-coded archetypes
-          create visual hierarchy guiding the viewer
+        passed: false
+        comment: The colour-coded archetypes do create a readable diagonal and a clear
+          hierarchy. The subtitle that names the insight is an unasked callout for
+          a -basic spec and earns no credit here.
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Correct bubble chart with x, y, and size all present
+        passed: false
+        comment: 'A genuine bubble chart with x, y and size, and the optional categorical
+          colour the Notes allow. Partial: the interpretive subtitle is a callout
+          the characteristic section excludes from the basic variant.'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Area-based sizing, alpha transparency (0.5-0.68), size legend, minimum/maximum
-          bubble size bounded
+        passed: false
+        comment: Area scaling, alpha 0.52-0.68, bounded min/max radius and a size
+          legend are all present. The size legend's reference bubbles are not drawn
+          like the data marks, so that characteristic bullet is only partly met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=growth, y=margin, size=share correctly mapped, full data range
-          visible
+        comment: x = revenue growth, y = profit margin, size = market-share index;
+          domains padded by 4 units so no bubble is clipped, and every bubble sits
+          at its own (x, y) with no collision or nudge pass.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match archetype/size
-          data
+        comment: Title is exactly "bubble-basic · javascript · muix · anyplot.ai".
+          Both legends are labelled and their entries match the archetype names and
+          size values.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Three distinct clusters with different spreads, sizes, and overlap
-          patterns
+        comment: 50 points across three clusters with different spreads exercise the
+          full 10-100 size domain, dense overlap and sparse regions. At the low end
+          of the spec's 50-500 range, which is not itself a lever.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible business scenario (growth vs margin vs market
-          share by company archetype)
+        comment: Company growth vs profit margin vs market-share index - plausible,
+          neutral and free of any contentious subject.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Growth/margin/share ranges and relative archetype positioning are
-          plausible for real company financials
+        comment: Growth roughly -10 to 37%, margin -10 to 35%, share index clamped
+          to 10-100 - all sensible for company financials, including the loss-making
+          niche players.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Structure matches the required React component pattern with no unnecessary
-          abstraction
+        comment: React forces component functions, and Bubbles/ColorLegend/SizeLegend
+          are the idiomatic split. The extra helpers (lcg, randomNormal, relativeLuma,
+          radiusForSize) are justified but push the file past a flat top-to-bottom
+          script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42)
+        comment: Fixed-seed LCG (seed 42) with deterministic Box-Muller - identical
+          output on every run.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only community @mui/x-charts imports used
+        comment: ChartContainer, ChartsGrid, ChartsXAxis, ChartsYAxis and the two
+          scale hooks - all used, all community @mui/x-charts, no Pro/Premium subpaths.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; the custom bubble layer is a documented, justified workaround
-          for a real community-package gap
+        comment: No fake interactivity or drawn UI controls; the custom SVG layer
+          is a documented workaround for a real community-package gap and the comments
+          explain each non-obvious constant.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct harness mount-node contract, skipAnimation set
+        comment: Default-exported component, skipAnimation set, sized from window.ANYPLOT_SIZE;
+          the harness writes plot-light/dark.png plus the interactive HTML.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -232,16 +268,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct low-level ChartContainer composition with axis/grid components,
-          the recommended pattern for custom marks
+        comment: ChartContainer composed with ChartsGrid/ChartsXAxis/ChartsYAxis is
+          the documented MUI X pattern for charts with custom marks, and the axis
+          configs use the library's own labelStyle/tickLabelStyle knobs.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: useXScale/useYScale context hooks for a custom SVG layer are a MUI
-          X-specific technique not easily replicated in other libraries
+        comment: useXScale/useYScale context hooks reading the chart's live scales
+          are genuinely MUI X-specific. Tempered because the marks themselves are
+          hand-written SVG circles rather than any MUI X series.
   verdict: APPROVED
+  model: claude-opus-5
+  criteria_version: qc-0af6a3cb51.aqr-5ae4f38ad1.sg-7006008fc6.lib-24c68e2eac
 impl_tags:
   dependencies: []
   techniques:
