@@ -61,8 +61,16 @@ for (const grid of [gridX, gridY]) {
 }
 
 // --- Axes ---------------------------------------------------------------------
-const xAxis = g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x));
-const yAxis = g.append("g").call(d3.axisLeft(y));
+// Tick labels carry their units via d3.format's specifier mini-language
+// (",.0f" for grouped millions, "+.0f" to surface the sign on growth) rather
+// than a plain d3.axisBottom(x) default — a d3-distinctive touch that needs
+// no library.format() equivalent in the DOM-agnostic charting libraries.
+const fundingTick = d3.format(",.0f");
+const growthTick = d3.format("+.0f");
+const xAxis = g.append("g")
+  .attr("transform", `translate(0,${ih})`)
+  .call(d3.axisBottom(x).tickFormat((d) => `$${fundingTick(d)}M`));
+const yAxis = g.append("g").call(d3.axisLeft(y).tickFormat((d) => `${growthTick(d)}%`));
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
   ax.selectAll("line").attr("stroke", t.inkSoft);
