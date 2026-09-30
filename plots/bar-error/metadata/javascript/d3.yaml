@@ -12,54 +12,71 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Error bars are drawn as a single d3.line() path with .defined() gaps forming stem
-    + top cap + bottom cap in one draw call per bar — a distinctive, elegant D3-only
-    technique (LM-02)
-  - Peak callout (triangle marker + bold 'Peak' label + bolded x-axis tick for 400°C)
-    gives the chart a clear focal point and visual hierarchy (DE-03)
-  - 'Explicit top-right annotation ''Error bars: ±1 SD (n = 20 samples per group)''
-    clearly names what the error bars represent, satisfying the spec''s Notes requirement
-    (SC-02)'
-  - All font sizes are explicit and both light and dark renders are fully legible,
-    with the error-bar stroke correctly flipping from dark ink on light to light ink
-    on dark
-  - Title font size increased from 30px to 36px, giving it noticeably more visual
-    presence than the previous underweight title
-  - Realistic, neutral materials-science scenario (tensile strength vs. annealing
-    temperature) with a physically plausible rise-then-fall trend and appropriate
-    SD magnitudes (DQ-02, DQ-03)
+  - Each error bar is a single d3.line() path whose .defined() gaps emit top cap,
+    stem and bottom cap as three disjoint segments in one draw call per datum — a
+    genuinely D3-specific use of the shape module rather than three separate line
+    joins (LM-02)
+  - The error-bar stroke is taken from the theme's ink token, so it flips from near-black
+    on the cream page to near-white on the dark page and stays clearly separated from
+    the green bar fill in both renders (C2)
+  - 'The top-right annotation ''Error bars: ±1 SD (n = 20 samples per group)'' names
+    exactly what the error bars represent and adds the sample size, satisfying the
+    spec''s legend-or-annotation requirement without a redundant single-series legend
+    (C3)'
+  - Every font size is set explicitly (36 / 18 / 16 / 15 px) and the y-axis runs from
+    zero to 500, past the tallest upper bound of 422 MPa, so bar length stays proportional
+    to the value and no error bar is clipped (C1)
+  - Bars are one width with even scaleBand padding and treatments run in their natural
+    order (untreated, then rising anneal temperature), so the rise-then-fall trend
+    reads without sorting (C4)
+  - Neutral materials-science scenario with per-treatment SD magnitudes that genuinely
+    differ (14–33 MPa) and neighbouring ranges that overlap — the uncertainty the
+    chart exists to show (DQ-01, DQ-02)
   weaknesses:
-  - Axis domain lines (default d3 baseline spines) are still drawn on both axes —
-    removing them (e.g. .select('.domain').remove()) would tighten the minimal, refined
-    look (DE-02)
-  - No asymmetric error bars are demonstrated — the spec names this as optional for
-    skewed or percentage data, so exercising it on at least one category would cover
-    a currently-unexercised data-quality aspect (DQ-01)
-  - Bar corners are rounded on all four corners via rx=4, including the bottom edge
-    where bars meet the zero baseline — rounding only the top corners reads as more
-    conventional bar-chart polish
-  - Outside the single-path error-bar technique, the rest of the code is fairly conventional
-    scaleBand/scaleLinear/axis boilerplate — leaning further into distinctive D3-only
-    idioms (custom tick formatting, d3.format for the annotation) would raise Library
-    Mastery further
+  - 'VQ-01 (both): the annotation ''Error bars: ±1 SD (n = 20 samples per group)''
+    is set at 15 px, smaller than the 16 px tick labels, and is the first text to
+    become illegible when the PNG is scaled to the 400 px mobile width even though
+    it carries the spec-required explanation of the error bars → about 18 px (+3 px).
+    Likely cause: the annotation text''s .style("font-size", "15px").'
+  - 'SC-01 (both): a ''Peak'' label, a triangle marker above the 400 °C error bar
+    and a bolded, darkened 400 °C tick label add an emphasis/annotation layer the
+    spec neither requires nor offers as optional (the style guide allows callouts
+    only when the specification explicitly requests them) → remove the triangle, the
+    ''Peak'' text and the tick-weight override. Likely cause: the ''--- Peak callout''
+    block and the xAxis.selectAll("text").filter(...) font-weight override.'
+  - 'DE-02 (both): the axis tick marks are stroked in t.inkSoft, the full-strength
+    secondary-text token, instead of the t.grid token the d3 prompt specifies, so
+    the little tick dashes read heavier than the gridlines they continue → stroke
+    .tick line from t.grid. Likely cause: g.selectAll(".tick line").attr("stroke",
+    t.inkSoft) plus the same assignment inside the axis loop.'
+  - 'LM-01 (code): the y-gridlines are hand-drawn as a separate <line> join over y.ticks(6),
+    duplicating the tick computation the axis generator already performs, instead
+    of the canonical d3 gridline idiom d3.axisLeft(y).tickSize(-iw) → derive the grid
+    from the axis generator. Likely cause: the ''--- Gridlines (y-axis only)'' block.'
+  - 'Suggestion: rounding only the bars'' top corners would keep them reading flush
+    on the zero baseline instead of on rounded feet.'
+  - 'Suggestion: giving one treatment an asymmetric error range would exercise the
+    asymmetric case the spec''s Notes name as optional.'
+  - 'Suggestion: d3.format on the y tick labels (or a unit suffix on the topmost tick)
+    would let the value axis carry its unit inline.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matching #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark-ink title "bar-error · javascript · d3 · anyplot.ai" centered at top, now at a larger 36px that reads with clear presence. X-axis label "Annealing Treatment" and Y-axis label "Tensile Strength (MPa)" in dark ink, both fully readable. Tick labels in a softer dark gray, subtle horizontal-only gridlines. Top-right annotation "Error bars: ±1 SD (n = 20 samples per group)" in soft ink, fully legible.
-      Data: Five Imprint-green (#009E73) bars for "Untreated", "200°C", "400°C", "600°C", "800°C", each rising from a zero baseline. Every bar has a dark I-beam error bar (stem + capped ends) drawn from mean−SD to mean+SD. The 400°C bar (peak) carries a small triangle marker and bold "Peak" label above its cap, and its x-axis tick label is bolded.
-      Legibility verdict: PASS — all text and error-bar strokes are clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white matching #FAF8F1 across the whole canvas — not pure white, not dark.
+      Chrome: Bold dark-ink title "bar-error · javascript · d3 · anyplot.ai" centred at the top (36 px, ~40 % of canvas width). Y-axis label "Tensile Strength (MPa)" rotated on the left, x-axis label "Annealing Treatment" centred below the categories, both dark ink at 18 px. Tick labels ("0"–"500" on Y, "Untreated"/"200°C"/"400°C"/"600°C"/"800°C" on X) in softer dark grey at 16 px, with the "400°C" tick bolded and darkened. Five horizontal-only gridlines are subtle but visible. A top-right annotation "Error bars: ±1 SD (n = 20 samples per group)" sits above the plot frame in soft ink at 15 px — legible at full size, but the first element to fade at the 400 px mobile width.
+      Data: Five Imprint-green (#009E73) bars with rounded corners on all four sides, rising from the zero baseline. Each carries a near-black I-beam error bar (2.5 px stem plus horizontal caps at both ends) from mean−SD to mean+SD; arm lengths clearly differ between treatments (14–33 MPa) and the 400 °C and 600 °C ranges overlap. A small dark triangle and a bold "Peak" label sit above the 400 °C error bar. First (and only) series is #009E73.
+      Legibility verdict: PASS — all text is dark on the light surface, nothing is light-on-light, nothing is clipped at the canvas border.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matching #1A1A17 — not pure black, not light.
-      Chrome: Title, axis labels, tick labels, and the annotation all render in light/white ink, fully readable against the dark background. Error-bar stems and caps flip to a light stroke (from the ink token) for contrast against the dark surface. Gridlines remain subtle.
-      Data: Bars remain the identical Imprint green (#009E73) as the light render — colors are unchanged, only chrome flipped. The peak triangle marker and "Peak" label are in light ink, still clearly visible; the 400°C tick label remains bolded.
-      Legibility verdict: PASS — no dark-on-dark failures; all text and error-bar strokes are clearly visible against the near-black background.
+      Background: Warm near-black matching #1A1A17 across the whole canvas — not pure black, not light.
+      Chrome: Title, both axis labels, tick labels, the bolded "400°C" tick and the "Peak" label all flip to light ink and are clearly readable; no dark-on-dark text anywhere. The top-right ±1 SD annotation renders in the lighter tertiary ink and stays readable. Gridlines flip to a subtle light rule and remain visible without competing with the bars.
+      Data: Bars are the identical Imprint green #009E73 as in the light render — the data color does not change, only the chrome. The error-bar strokes and caps flip from near-black to near-white so the I-beams stand out against both the green fill and the near-black page. The peak triangle is light-ink and clearly visible.
+      Legibility verdict: PASS — no dark-on-dark failures; brand green #009E73 reads well on the near-black surface and every text element is legible.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -67,127 +84,139 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit and readable in both themes; title bumped
-          from 30px to 36px giving it more presence
+        comment: All sizes explicit (36/18/16/15/14 px) and readable in both themes;
+          the 15 px ±1 SD annotation is smaller than the tick labels and is the first
+          text to go illegible at the 400 px mobile width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Peak marker/label, annotation, and axis text are all clear of each
-          other and the bars
+        comment: No text collides with text, bars or error bars; the Peak label clears
+          the upper cap and the annotation sits above the plot frame
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars and I-beam error strokes (2.5px) are clearly visible and well-proportioned
-          for 5 categories
+        comment: Five wide bars and 2.5 px I-beam strokes with visible caps read clearly
+          in both themes; density is right for five categories
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: High-contrast ink error bars against green fill in both themes; no
-          red-green reliance
+        comment: Single green series with full-contrast ink error bars; no hue-only
+          distinction, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced proportions, nothing cut off, no overflow
+        comment: Plot fills the canvas with balanced margins; nothing cut off, no
+          text overflows its bounds
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis label includes units (MPa); title matches mandated format
+        comment: '''Tensile Strength (MPa)'' carries its unit; ''Annealing Treatment''
+          is descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; backgrounds and
-          chrome are theme-correct'
+        comment: 'Single series is #009E73, identical across themes; backgrounds #FAF8F1
+          / #1A1A17 and all chrome is theme-correct'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Rounded bar corners, bolded peak label, and callout marker read as
-          intentional beyond a plain default bar chart
+        comment: Clear typographic hierarchy, rounded bar corners, horizontal-only
+          grid and generous margins put it above a configured default, but it is still
+          a plain single-hue bar chart
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Subtle horizontal-only grid and generous whitespace, but default
-          axis domain lines are still present
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Peak marker + bold label + triangle draws the eye to the 400°C peak
-          with clear visual hierarchy
+        comment: Subtle y-only grid, tickSizeOuter(0) and an L-shaped frame; tick
+          marks are stroked in inkSoft rather than the grid token so they read heavier
+          than the grid
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: The rise-then-fall data with widening uncertainty at 800 °C carries
+          a story on its own; the Peak callout is an unrequested addition and earns
+          no credit here
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Correct bar chart with error bars, no unasked encodings
+        comment: Correct bar chart with error bars, but a Peak triangle, Peak label
+          and bolded tick add an emphasis layer the spec does not ask for
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible caps, explanatory annotation, consistent bar width and gaps
-          all present
+        comment: Visible caps at both ends, an annotation naming ±1 SD with n, consistent
+          bar widths and error-bar styling; short category labels make the horizontal-orientation
+          note inapplicable and asymmetric errors are optional
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on X, value on Y from a zero baseline, axis spans every
-          error bar in full
+        comment: Category on X, mean on Y from a zero baseline; the axis spans every
+          error bar (max 422 of 500) and no mark is displaced from its value
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; annotation substitutes appropriately for a single-series
-          legend
+        comment: Title is exactly 'bar-error · javascript · d3 · anyplot.ai'; single
+          series needs no legend and the ±1 SD annotation labels the error bars
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Varying error magnitudes and a realistic rise-then-fall trend; no
-          asymmetric error demonstrated (optional per spec)
+        comment: Five categories inside the spec's 3–12 range, SD magnitudes from
+          14 to 33 MPa, and neighbouring ranges that overlap — every aspect of the
+          type is exercised
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral materials-science scenario, fully plausible
+        comment: 'Neutral materials-science scenario: mean tensile strength of alloy
+          samples across annealing treatments'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Tensile strength and SD magnitudes are realistic for metal alloys
+        comment: 289–401 MPa tensile strengths and 5–11 % relative SDs are realistic
+          for metal alloys, and the rise-then-fall with temperature is physically
+          plausible
     code_quality:
       score: 10
       max: 10
@@ -197,34 +226,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions/classes
+        comment: 'Flat script: data literal → scales → grid → marks → axes → labels
+          → title, with no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data
+        comment: Data is a hard-coded literal array — fully deterministic, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses only the global d3
+        comment: Uses only the d3 global and the harness tokens; no imports, no network
+          access
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI or over-engineering; single-path error bar is elegant
+        comment: Linear, well-sectioned and commented; no fake UI and no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly builds into #container per the mount-node contract, current
-          D3 7.x API'
+        comment: 'Appends exactly one svg sized from ANYPLOT_SIZE into #container
+          per the mount-node contract; current d3 7.x API, no animations'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -232,17 +263,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct scaleBand/scaleLinear/axis usage and .join() data binding
+        comment: Correct scaleBand/scaleLinear, axisBottom/axisLeft with tickSizeOuter(0)
+          and .data().join() binding; the gridlines are hand-drawn over y.ticks(6)
+          instead of the canonical tickSize(-iw) idiom
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Single d3.line().defined() path drawing stem+caps as disjoint segments
-          is a genuinely D3-specific technique
+        comment: d3.line().defined() emitting stem and both caps as disjoint segments
+          of one path per datum is a technique that does not transfer to the other
+          libraries
   verdict: APPROVED
-  model: claude-sonnet-5
-  criteria_version: qc-4374db4964.aqr-815475d157.sg-7006008fc6.lib-10a34e8881
+  model: claude-opus-5
+  criteria_version: qc-0af6a3cb51.aqr-5ae4f38ad1.sg-7006008fc6.lib-10a34e8881
   rendered_at: '2026-09-27T21:00:14Z'
 impl_tags:
   dependencies: []
