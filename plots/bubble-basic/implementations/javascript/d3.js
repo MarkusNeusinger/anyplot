@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 83/100 | Updated: 2026-09-27
+// Quality: pending | Updated: 2026-09-27
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
