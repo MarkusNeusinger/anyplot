@@ -11,6 +11,7 @@ Best practices for prompt testing:
 
 import json
 import re
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -882,3 +883,153 @@ class TestDefectsAndSuggestions:
             assert "reference lines" in content or "reference or" in content, path.name
             assert "callouts" in content, path.name
         assert "one is enough, listed in the variant bullet or not" in REVIEW_PROMPT.read_text()
+
+
+REPO_ROOT = PROMPTS_DIR.parent
+JS_LIBRARY_PROMPTS = ["d3.md", "echarts.md", "chartjs.md", "highcharts.md", "muix.md"]
+LANGUAGE_BLOCK_RE = re.compile(r"^\*\*(Python|R|Julia|JavaScript) — compute with:\*\*$")
+
+
+def _language_blocks(content: str) -> dict[str, str]:
+    """The four "compute with" blocks: the lead-in line and its list lines."""
+    blocks: dict[str, str] = {}
+    lines = content.splitlines()
+    for i, line in enumerate(lines):
+        m = LANGUAGE_BLOCK_RE.match(line)
+        if not m:
+            continue
+        body = [line]
+        for follow in lines[i + 1 :]:
+            if not follow.startswith(("- ", "  ")):
+                break
+            body.append(follow)
+        blocks[m.group(1)] = "\n".join(body)
+    return blocks
+
+
+class TestLeanCode:
+    """P8: implementations compute with the runtime's libraries, and CQ-04
+    deducts one point for a written-out algorithm an available call computes,
+    naming the call and the lines."""
+
+    def test_quality_criteria_carries_the_rule(self) -> None:
+        criteria = (PROMPTS_DIR / "quality-criteria.md").read_text()
+        cq04 = criteria[criteria.index("### CQ-04") : criteria.index("## Library Mastery")]
+        assert "#### Available to compute with" in cq04
+        assert "no algorithm written out that an available call computes" in cq04
+        assert "``CQ-04 (code): lines A–B" in cq04 and "→ `<call>` (<package>)" in cq04
+        assert "Without a concrete replacement it is a `Suggestion:` line" in cq04
+        assert "never takes CQ-04 to 0" in cq04
+        assert "never a new helper function" in cq04
+        assert "never credit a hand-roll for avoiding one" in cq04
+        assert "ok but slightly verbose" not in criteria
+
+    def test_scoring_rows_name_the_rule(self) -> None:
+        review_row = next(line for line in REVIEW_PROMPT.read_text().splitlines() if line.startswith("| CQ-04 |"))
+        assert "No algorithm written out that an available call computes" in review_row
+        assert "Name the call and the line range" in review_row
+        evaluator = (PROMPTS_DIR / "quality-evaluator.md").read_text()
+        evaluator_row = next(line for line in evaluator.splitlines() if line.startswith("| CQ-04 |"))
+        assert "No algorithm written out that an available call computes" in evaluator_row
+        important = REVIEW_PROMPT.read_text().split("## Important", 1)[1]
+        assert "never credit a hand-roll for avoiding one" in important
+
+    def test_generator_has_the_lean_code_section(self) -> None:
+        content = (PROMPTS_DIR / "plot-generator.md").read_text()
+        section = content[content.index("### Lean code") : content.index("## Visual Quality")]
+        assert "never by hand" in section
+        assert "never a new helper function" in section
+        assert "no code golf" in section
+        assert 'Installed packages are not "dependencies" to avoid' in section
+        assert "(CQ-04 includes the lean-code rule below)" in content
+
+    def test_regen_prompt_applies_only_a_named_replacement(self) -> None:
+        content = (WORKFLOW_PROMPTS_DIR / "impl-generate-claude.md").read_text()
+        assert "A `CQ-04` weakness names its replacement: apply exactly that replacement" in content
+        assert "Without a CQ-04 weakness, leave computations as they are on a regeneration" in content
+        assert "names a call the runtime does not provide" in content
+
+    @pytest.mark.parametrize("filename", JS_LIBRARY_PROMPTS)
+    def test_js_library_prompt_has_a_computation_line(self, filename: str) -> None:
+        assert "**Computation:**" in (LIBRARY_PROMPTS_DIR / filename).read_text()
+
+
+class TestAvailablePackages:
+    """P8: the per-language "compute with" blocks exist twice — for the
+    generator and for the reviewer, which read different files — and both
+    copies match each other and what CI installs."""
+
+    @pytest.fixture
+    def blocks(self) -> dict[str, str]:
+        generator = _language_blocks((PROMPTS_DIR / "plot-generator.md").read_text())
+        criteria = _language_blocks((PROMPTS_DIR / "quality-criteria.md").read_text())
+        assert set(generator) == set(criteria) == {"Python", "R", "Julia", "JavaScript"}
+        return generator
+
+    @pytest.mark.parametrize("language", ["Python", "R", "Julia", "JavaScript"])
+    def test_blocks_are_identical(self, language: str) -> None:
+        generator = _language_blocks((PROMPTS_DIR / "plot-generator.md").read_text())
+        criteria = _language_blocks((PROMPTS_DIR / "quality-criteria.md").read_text())
+        assert generator[language] == criteria[language]
+
+    def test_python_block_matches_pyproject(self, blocks: dict[str, str]) -> None:
+        project = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
+        extras = {k: v for k, v in project["project"]["optional-dependencies"].items() if k.startswith("lib-")}
+
+        def names(specs: list[str]) -> set[str]:
+            return {re.split(r"[<>=\[; ]", spec, maxsplit=1)[0].lower() for spec in specs}
+
+        shared = set.intersection(*(names(v) for v in extras.values()))
+        main = names(project["project"]["dependencies"])
+        block = blocks["Python"].lower()
+        for package in shared | ({"numpy", "matplotlib"} & main):
+            assert package in block, package
+        assert "its plotting calls belong only in matplotlib and seaborn implementations" in blocks["Python"]
+        installed = set().union(*(names(v) for v in extras.values())) | main
+        for package in ("networkx", "squarify", "cartopy"):
+            assert package not in installed, package
+            assert package in block, package
+
+    def test_r_block_matches_setup_r(self, blocks: dict[str, str]) -> None:
+        action = (REPO_ROOT / ".github" / "actions" / "setup-r" / "action.yml").read_text()
+        call = action[action.index("install.packages(") : action.index("dependencies =")]
+        installed = set(re.findall(r'"([A-Za-z0-9.]+)"', call))
+        lead = blocks["R"].splitlines()[1]
+        named = set(re.findall(r"\b[A-Za-z][A-Za-z0-9.]+\b", lead.split("their imports")[0]))
+        named -= {"and"}
+        assert installed == named, sorted(installed ^ named)
+        recommended = set(re.findall(r"\(([^)]*)\)", lead)[0].replace(" ", "").split(","))
+        assert recommended <= {
+            "survival",
+            "MASS",
+            "class",
+            "cluster",
+            "lattice",
+            "Matrix",
+            "nlme",
+            "mgcv",
+            "KernSmooth",
+        }
+
+    def test_julia_block_matches_project_toml(self, blocks: dict[str, str]) -> None:
+        deps = set(tomllib.loads((REPO_ROOT / "Project.toml").read_text())["deps"])
+        lead = blocks["Julia"].splitlines()[1]
+        packages, stdlibs = lead.split(", plus the standard libraries ")
+        named = set(re.findall(r"\b[A-Z][A-Za-z]+\b", packages.split(". Examples")[0]))
+        assert deps == named, sorted(deps ^ named)
+        assert set(re.findall(r"\b[A-Z][A-Za-z]+\b", stdlibs.split(". Examples")[0])) <= {
+            "LinearAlgebra",
+            "Dates",
+            "Printf",
+            "Statistics",
+            "Random",
+        }
+        missing = re.search(r"Not loadable: ([^.]*)\.", blocks["Julia"]).group(1)
+        assert not set(re.findall(r"\b[A-Z][A-Za-z]+\b", missing)) & deps
+
+    def test_javascript_block_matches_the_render_harness(self, blocks: dict[str, str]) -> None:
+        render = (REPO_ROOT / "automation" / "js-render" / "render.mjs").read_text()
+        bundles = render[render.index("const BUNDLES = {") : render.index("};", render.index("const BUNDLES = {"))]
+        keys = set(re.findall(r"^\s{2}(\w+): \{", bundles, re.MULTILINE))
+        listed = re.search(r"Only the snippet's own library is loaded: ([^.]*)\.", blocks["JavaScript"]).group(1)
+        assert keys == set(re.findall(r"\b[a-z0-9]+\b", listed)) - {"or"}

@@ -37,7 +37,8 @@ gcs_prefix: retest/sets/v1
 baseline_rules_sha: &base 0674ab6b55acc71f5015a6aae07145424cbac7cb
 spec_commit: *base
 # Confirmed by the owner on 2026-09-30, with one correction: the d3 v1-v0
-# pair keeps in both orders.
+# pair keeps in both orders. P8 adds D2 (f-acf-pacf-plotly) and A2
+# (f-network-basic-bokeh), confirmed with the P8 plan (O11) and its PR.
 labels: confirmed
 
 # bubble-basic regen experiment rounds (2026-09-26/27): main_sha of each
@@ -179,6 +180,7 @@ items:
       - {id: D1, criteria: [VQ-02], match: '(label|text)s?.{0,60}(far|away|detached|offset|distant|disconnected|separated|misplac|not (next|adjacent|close))|(far|away) from (their|the|its) (node|circle|marker)|label (placement|position)', note: 'node labels sit far from their nodes'}
     permitted:
       - {id: A1, criteria: [SC-03], match: 'displac|off (their|its) (true |data )?(value|position|coordinate)|not (at|on) (their|its) (data |true )?(value|position)|position\w* (does|do) not (encode|reflect|map)|(nodes?|marks?) (are |were )?(moved|nudged|pushed|shifted)', note: 'layout-positioned nodes: position is not data, so no SC-03 deduction'}
+      - {id: A2, criteria: [CQ-04, LM-01], match: 'networkx|(hand[- ]?(rolled|written|coded)|writ(e|es|ten|ing)[- ]out|by hand|re-?implement|manual(ly)? (comput|implement)).{0,80}(layout|spring|force)|(layout|spring|force).{0,80}(hand[- ]?(rolled|written|coded)|writ(e|es|ten|ing)[- ]out|by hand|re-?implement|networkx)', note: 'spring layout written out (bokeh.py:95-120); networkx is in no lib-* extra, so no call replaces it (P8)'}
 
   - id: f-bar-diverging-likert-matplotlib
     kind: fresh
@@ -200,6 +202,7 @@ items:
     note: "candidate: bright white vertical zero-lag line in both dark panes, near-invisible in the light render (DE-02, VQ-07)"
     defects:
       - {id: D1, criteria: [DE-02, VQ-07], match: '(zero|lag[- ]?0|lag[- ]zero|reference)[- ]?(lag )?(line|bar|stem|rule|marker)|(white|bright|harsh|glaring|faint|invisible|washed).{0,30}(vertical |reference )?(line|rule) at (lag )?(0|zero)', note: 'bright white zero-lag line in both dark panes, near-invisible in the light render'}
+      - {id: D2, criteria: [CQ-04], match: 'durbin|levinson|statsmodels|hand[- ]?(rolled|written|coded)|writ(e|es|ten|ing)[- ]out|by hand|re-?implement|manual(ly)? (comput|implement)', note: 'ACF and Durbin-Levinson PACF written out (plotly.py:39-60); statsmodels acf/pacf are installed (P8)'}
     permitted: []
 
   - id: f-line-stock-comparison-pygal

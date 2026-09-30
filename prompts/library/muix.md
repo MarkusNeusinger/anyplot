@@ -228,6 +228,10 @@ export default function Chart() {
   gradients** — use the Imprint palette from `window.ANYPLOT_TOKENS`.
 - **No left-on animation** — always `skipAnimation`.
 
+**Computation:** only `@mui/x-charts` and `@mui/material` are available, and
+neither has statistics helpers, so short written-out binning, box statistics,
+densities or fits are fine.
+
 ## MUI X-Specific Gotchas
 
 - **`export default` is mandatory** — the harness imports the component as the

@@ -200,7 +200,7 @@ Read `prompts/quality-criteria.md` and evaluate:
 | CQ-01 | KISS Structure | 3 | No functions/classes? |
 | CQ-02 | Reproducibility | 2 | Seed or deterministic? |
 | CQ-03 | Clean Imports | 2 | Only used imports? |
-| CQ-04 | Code Elegance | 2 | Appropriate complexity? No fake UI? |
+| CQ-04 | Code Elegance | 2 | Appropriate complexity? No fake UI? No algorithm written out that an available call computes (`quality-criteria.md` → CQ-04 → Available to compute with, and the library prompt's Computation line)? Nothing a named shorter form replaces? Name the call and the line range. |
 | CQ-05 | Output & API | 1 | Saves as `plot-{THEME}.png` (+ `plot-{THEME}.html` for interactive libs)? No bare `plot.png`? Current API? |
 
 #### Library Mastery (10 pts)
@@ -568,6 +568,7 @@ The 5 dimensions:
 - Every weakness line is a defect (`<ID> (<light|dark|both|code>): …`, a violated rule the next generation fixes) or a `Suggestion: …` line (at most three, never acted on) — see 8a. A behavior is never both a strength and a weakness
 - Never write a defect that asks to add something the spec does not ask for, and never list something an `Expected, not a defect:` bullet of the spec's "What a good version looks like" section names. Phrase an overlap defect so that its fix is data generation, marker size or alpha — never moving marks off their values
 - On a `-basic` spec, never suggest a layer the spec does not ask for, such as a reference line, a highlight or a callout; removing one is the fix
+- Installed packages are not dependencies to avoid; never credit a hand-roll for avoiding one
 - Mark criteria as N/A when not applicable (e.g., legend for single-series)
 - **Score strictly**: median implementation should score 72-78, not 90+
 - **Design Excellence defaults are low**: DE-01=4, DE-02=2, DE-03=2 — raise only with evidence

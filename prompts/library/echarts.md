@@ -25,6 +25,17 @@ value is genuine interactivity (hover/zoom/brush) with no static form, return
 Do **not** `import` extra ECharts extension packages or GL (`echarts-gl`) — only
 the pinned `echarts` global is available, and `echarts-gl` is not installed.
 
+**Computation:** ECharts computes box statistics for you with the built-in
+dataset transform `{type: 'boxplot'}` (quartiles, whiskers and outliers from
+raw values), and filters and sorts with the `filter` and `sort` transforms: for
+a plain box series, use them rather than computing quartiles by hand. The
+transform's whiskers end at the 1.5 × IQR fences clamped to the data range, not
+at the last value inside them, and its output feeds a series, not JavaScript
+variables, so a hand computation is fine when the chart needs other whiskers or
+the numbers in code (a custom `renderItem`, a notch, a KDE bandwidth). ECharts
+has no KDE, FFT, regression or clustering, so short written-out versions of
+those are fine.
+
 ## The mount-node contract (how your snippet connects to the harness)
 
 The harness gives you a pre-sized `<div id="container">` and these globals (the

@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 import math
+from pathlib import Path
 
 import pytest
+import yaml
 
 from automation.scripts import review_retest_metrics as m
+
+
+REPO_ROOT = Path(__file__).resolve().parents[4]
 
 
 def _checklist(**scores: tuple[int, int, str]) -> dict:
@@ -177,6 +182,25 @@ class TestLabels:
     def test_never_detected_is_flagged(self):
         records = [_rec("a", r, 90, checklist=_checklist(VQ_03=(6, 6, "x"))) for r in (1, 2)]
         assert m.group_metrics(records, self.LABELS)["defects"]["never_detected"] == ["a/D1@a"]
+
+    def test_p8_lean_code_labels(self):
+        """D2 (acf-pacf/plotly) is caught only by the hand-roll sense of a CQ-04
+        deduction, and A2 (network-basic/bokeh) fires on a spring-layout
+        hand-roll complaint but not on the item's D1 wording (P8)."""
+        manifest = yaml.safe_load((REPO_ROOT / "automation" / "retest" / "set-v1.yaml").read_text())
+        items = {item["id"]: item for item in manifest["items"]}
+        d2 = next(d for d in items["f-acf-pacf-plotly"]["defects"] if d["id"] == "D2")
+        a2 = next(p for p in items["f-network-basic-bokeh"]["permitted"] if p["id"] == "A2")
+        deducted = _checklist(CQ_04=(1, 2, "verbose"))
+        durbin = "CQ-04 (code): lines 39–60 write out the ACF and a Durbin-Levinson PACF → `acf()`. Likely cause: x."
+        d1_wording = "DE-02 (dark): bright white vertical zero-lag line in both panes → a GRID-colored rule."
+        assert m.defect_hit(d2, _rec("f-acf-pacf-plotly", 1, 80, weaknesses=[durbin], checklist=deducted))
+        assert not m.defect_hit(d2, _rec("f-acf-pacf-plotly", 2, 80, weaknesses=[d1_wording], checklist=deducted))
+        assert not m.defect_hit(d2, _rec("f-acf-pacf-plotly", 3, 80, weaknesses=[durbin], checklist={}))
+        hand_roll = "CQ-04 (code): spring layout written out by hand → networkx. Likely cause: x."
+        labels_far = "VQ-02 (both): the force-directed layout leaves labels far from their nodes → closer."
+        assert m.probe_false_alarm(a2, _rec("f-network-basic-bokeh", 1, 80, weaknesses=[hand_roll]))
+        assert not m.probe_false_alarm(a2, _rec("f-network-basic-bokeh", 2, 80, weaknesses=[labels_far]))
 
     def test_no_labels_means_no_rates(self):
         d = m.group_metrics([_rec("a", 1, 90)], {})["defects"]
