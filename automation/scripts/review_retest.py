@@ -1676,6 +1676,9 @@ def render_gate_report(result: dict[str, Any]) -> str:
         f"{_pct(imp.get('addition_share'))}, polish in {_pct(imp.get('polish_share'))}, a would-be carrier "
         f"without a kind in {_pct(imp.get('no_kind_share'))}; merges carried only by P or new items: "
         f"{_pct(imp.get('pn_only_merge_share'))} (n={imp.get('pn_merge_n', 0)})",
+        # Reports built before P8 have no code-path keys.
+        f"- Code path (merged with no carrier, on a CQ-04 code fix): {imp.get('code_path_merges', 0)} "
+        f"(n={imp.get('code_path_n', 0)} decisions)",
         f"- Stored review on a keep (writeback, n={writeback['n']} keeps): "
         + ", ".join(f"{code} {writeback['counts'].get(code, 0)}" for code in WRITEBACK_CODES),
         f"- prev_rescored − prev_stored, comparable: {drift(result['drift_comparable'])}",

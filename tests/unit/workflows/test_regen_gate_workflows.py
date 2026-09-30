@@ -187,6 +187,16 @@ class TestImplReviewProvenance:
         # Same notice shape as the script's own line (docs/workflows/overview.md).
         assert "code=script_crashed model=${MODEL_ID} criteria=${CRITERIA_VERSION} reason=" in fallback
 
+    def test_gate_reads_both_sources_for_the_code_path(self):
+        """P8: the code path compares the sanitized predecessor with the regenerated file."""
+        step = _step("impl-review.yml", "Regen gate")
+        assert '--prev-impl "/tmp/anyplot-prev-impl${EXT}"' in step["run"]
+        assert '--new-impl "plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}"' in step["run"]
+        assert step["env"]["LANGUAGE"] == "${{ steps.lang.outputs.language }}"
+        assert step["env"]["EXT"] == "${{ steps.lang.outputs.ext }}"
+        context = _step("impl-review.yml", "Regen context")["run"]
+        assert '--out "/tmp/anyplot-prev-impl${EXT}"' in context
+
     def test_regen_context_feeds_prev_provenance(self):
         env = _step("impl-review.yml", "Regen gate")["env"]
         assert "steps.regen_ctx.outputs.prev_model" in env["PREV_MODEL"]

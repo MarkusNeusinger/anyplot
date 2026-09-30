@@ -857,6 +857,11 @@ def gate_monitor(
     session's re-score of the live implementation (``opened``,
     ``unchanged``, ``no_rescore``, ``invalid``, ``stale`` or ``failed``).
     ``writeback`` counts those values over the keeps that carry the key.
+
+    From P8 on, a record also carries ``code`` (the code improvements that
+    held). ``code_path_merges`` counts the merges with ``carriers == 0`` and
+    ``code >= 1`` — the code path — over the ``code_path_n`` records with both
+    keys; suggestions may ride along, so ``visible`` is not tested.
     """
     n = len(records)
     merges = sum(1 for r in records if r.get("verdict") == "merge")
@@ -922,6 +927,8 @@ def gate_monitor(
     unnamed = sum(count(h.get("none")) or 0 for h in histograms)
     carried_merges = [c for r, c in kinded if r.get("verdict") == "merge" and (count(c.get("carriers")) or 0) > 0]
     pn_only = sum(1 for c in carried_merges if count(c.get("carriers_pn")) == count(c.get("carriers")))
+    # P8 records; older ones lack ``code`` and are left out.
+    coded = [(r, c) for r, c in counted if count(c.get("code")) is not None and count(c.get("carriers")) is not None]
     improvements: dict[str, Any] = {
         "n": len(counted),
         "visible_mean": mean(visible),
@@ -953,6 +960,13 @@ def gate_monitor(
         "kind_valid_share": (listed - unnamed) / listed if listed else None,
         "pn_merge_n": len(carried_merges),
         "pn_only_merge_share": pn_only / len(carried_merges) if carried_merges else None,
+        # P8 records (the code count): merges no carrier carried, only a code improvement.
+        "code_path_n": len(coded),
+        "code_path_merges": sum(
+            1
+            for r, c in coded
+            if r.get("verdict") == "merge" and count(c.get("carriers")) == 0 and (count(c.get("code")) or 0) >= 1
+        ),
     }
 
     # P9b keeps; older records and merges carry no `writeback`.

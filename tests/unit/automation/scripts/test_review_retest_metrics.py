@@ -491,6 +491,18 @@ class TestGateMonitor:
         assert report["writeback"] == {"n": 3, "counts": {"opened": 2, "stale": 1}}
         assert not report["alarms"]
 
+    def test_code_path_merges(self):
+        """P8: a merge with no carrier and a counted code improvement; older records are unknown."""
+        records = [
+            self._record(0, verdict="merge", code="merge", improvements={"carriers": 0, "code": 1, "visible": 2}),
+            self._record(1, verdict="merge", code="merge", improvements={"carriers": 1, "code": 1}),
+            self._record(2, improvements={"carriers": 0, "code": 1}),  # a keep (below tolerance)
+            self._record(3, verdict="merge", code="merge", improvements={"carriers": 0}),  # before P8
+            self._record(4, verdict="merge", code="merge", improvements={"code": 1}),  # no carrier key
+        ]
+        imp = m.gate_monitor(records, lambda r: False)["improvements"]
+        assert (imp["code_path_merges"], imp["code_path_n"]) == (1, 3)
+
     @pytest.mark.parametrize(("invalid", "alarm"), [(2, True), (1, False)])
     def test_writeback_invalid_alarm(self, invalid, alarm):
         """More than 10 % invalid over at least 10 keeps: the 8b step 5 prompt needs work."""
