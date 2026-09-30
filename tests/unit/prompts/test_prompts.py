@@ -9,6 +9,7 @@ Best practices for prompt testing:
 5. Consistent formatting - Markdown is well-formed
 """
 
+import json
 import re
 from pathlib import Path
 
@@ -757,6 +758,59 @@ class TestDefectsAndSuggestions:
         assert "suggestion, not taken" in content
         assert "obsolete" in content
         assert "checklist is context" in content
+
+    def test_step_8b_writes_the_rescore_as_a_full_review(self) -> None:
+        """P9b: 8b step 5 writes review_prev.json, which a keep stores as the
+        live implementation's review; its checklist is prev_checklist."""
+        step = self._section(REVIEW_PROMPT.read_text(), "### 8b.", "### 9.")
+        assert step.index("4. **Write `review_regen.json`**") < step.index("5. **Write `review_prev.json`**")
+        for key in ("image_description", "criteria_checklist", "strengths", "weaknesses", "verdict"):
+            assert f"`{key}`" in step, key
+        assert "Every item score equals the same item in `prev_checklist`" in step
+        assert "each category's `score` is the sum of its items" in step
+        assert "skip steps 1–5, do not write `review_regen.json` or `review_prev.json`" in step
+        assert "They become the defect lines of `review_prev.json`, in that order (step 5)" in step
+        assert "without the `P` id, then at most three `Suggestion:` lines" in step
+        assert "never mention the new render, the comparison, or the regeneration" in step
+        assert "No score key: the stored score is `prev_rescored`" in step
+        assert "changes nothing you decided above" in step
+
+    def test_step_10_has_the_review_prev_example_and_checks_it(self) -> None:
+        content = REVIEW_PROMPT.read_text()
+        step = self._section(content, "### 10.", "### 11.")
+        example = step.split("cat > review_prev.json << 'EOF'\n", 1)[1].split("\nEOF", 1)[0]
+        assert "python3 -c \"import json; json.load(open('review_prev.json'))\"" in step
+        for key in ("image_description", "criteria_checklist", "strengths", "weaknesses", "verdict"):
+            assert f'"{key}"' in example, key
+        assert '"quality_score"' not in example and '"prev_rescored"' not in example
+        # The example agrees with the review_regen.json example: its items are
+        # prev_checklist's, each category is the sum of its prev_checklist
+        # items, and the categories add up to prev_rescored (no cap applies).
+        regen = json.loads(step.split("cat > review_regen.json << 'EOF'\n", 1)[1].split("\nEOF", 1)[0])
+        items = re.findall(r'"id": "([A-Z]{2}-\d{2})", "name": "[^"]*", "score": (\d+)', example)
+        assert items and all(regen["prev_checklist"][cid] == int(score) for cid, score in items)
+        categories = re.findall(r'"[a-z_]+": \{\s*"score": (\d+),\s*"max": (\d+)', example)
+        assert len(categories) == 6
+        assert [int(score) for score, _ in categories] == [
+            sum(v for cid, v in regen["prev_checklist"].items() if cid.startswith(prefix))
+            for prefix in ("VQ", "DE", "SC", "DQ", "CQ", "LM")
+        ]
+        assert sum(int(score) for score, _ in categories) == regen["prev_rescored"]
+        assert [int(top) for _, top in categories] == [30, 20, 15, 15, 10, 10]
+        weaknesses = json.loads(re.search(r'"weaknesses": (\[.*\]),', example).group(1))
+        assert DEFECT_RE.match(weaknesses[0]) and SUGGESTION_RE.match(weaknesses[-1])
+        # The self-check covers the file whenever review_regen.json exists.
+        flags = [line for line in step.splitlines() if "--prev-review review_prev.json" in line]
+        assert len(flags) == 1 and "FLAGS+=(--regen review_regen.json" in flags[0]
+        assert "goes only into `review_regen.json`" not in content
+        assert (
+            "except `review_regen.json` and `review_prev.json`, which describe your re-score of the predecessor" in step
+        )
+        assert "A `review_prev.json` problem is fixed in `review_prev.json`" in step
+
+    def test_important_list_names_the_stored_rescore(self) -> None:
+        important = REVIEW_PROMPT.read_text().split("## Important", 1)[1]
+        assert "including `review_prev.json`, which is stored as the live implementation's review" in important
 
     def test_f5_one_addition_is_creep(self) -> None:
         criteria = (PROMPTS_DIR / "quality-criteria.md").read_text()

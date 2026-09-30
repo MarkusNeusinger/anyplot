@@ -638,10 +638,10 @@ Located in `.github/workflows/`:
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | **impl-generate.yml** | `generate:{library}` label OR workflow_dispatch | Generates single library implementation |
-| **impl-review.yml** | Called by impl-generate | AI quality review, adds `quality:XX` and `ai-approved`/`ai-rejected`; on a regeneration (implementation already on `origin/main`) the regen gate decides instead: `regen:improved` + `ai-approved` or `regen:kept` (PR closed, never `ai-rejected`) — see `docs/workflows/overview.md#regen-gate-regenerations` |
+| **impl-review.yml** | Called by impl-generate | AI quality review, adds `quality:XX` and `ai-approved`/`ai-rejected`; on a regeneration (implementation already on `origin/main`) the regen gate decides instead: `regen:improved` + `ai-approved` or `regen:kept` (PR closed, never `ai-rejected`; the re-score of the live implementation goes to a `review-writeback` metadata PR) — see `docs/workflows/overview.md#regen-gate-regenerations` |
 | **impl-review-retry.yml** | PR labeled `ai-review-failed` | Re-dispatches impl-review exactly once after a failed/timed-out review |
 | **impl-repair.yml** | Called by impl-review (on rejection) | Fixes rejected implementation (max 4 attempts) |
-| **impl-merge.yml** | `ai-approved` label OR workflow_dispatch | Merges approved PR, creates metadata/{language}/{library}.yaml |
+| **impl-merge.yml** | `ai-approved` label OR workflow_dispatch | Merges approved PR, creates metadata/{language}/{library}.yaml; its `writeback` job (workflow_dispatch only) merges a kept regeneration's `review-writeback` PR after `regen_writeback.py` `check-pr`, `verify-diff`, and `check-fresh` |
 | **bulk-generate.yml** | workflow_dispatch only | Sequential paced dispatch of impl-generate per (spec, library) pair (default 180 s between dispatches for model `auto`/`opus`, 120 s for `sonnet`/`haiku`) |
 | **review-retest.yml** | workflow_dispatch only | Measurement, not pipeline: re-runs the AI quality review on the frozen retest set for one `rules_ref` and reports spread, flips, and gate order bias against a baseline arm; read-only, writes only its own artifacts — see `docs/workflows/review-retest.md` |
 
@@ -917,6 +917,7 @@ These are set automatically by `impl-review.yml` after AI evaluation and used by
        -> regeneration (impl on main) -> regen gate, one review, no repair
                                           -> regen:improved + ai-approved -> impl-merge
                                           -> regen:kept -> PR closed, live implementation stays
+                                                       -> review-writeback PR (stored review <- re-score) -> impl-merge (writeback job)
 ```
 
 **Test Issues:** When creating issues for testing workflows, add the `test` label to exclude them from production searches.

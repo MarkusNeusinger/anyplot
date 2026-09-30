@@ -70,7 +70,44 @@ LM point). `decide` merges only with a carrier (reason code
 `check-feedback` checks the weakness lines against the review's checklist
 and, for a regeneration, the classification and claims in `review_regen.json`:
 the review's step-10 self-check, and with `--warn-only` the workflow's
-non-gating format step.
+non-gating format step. With `--prev-review` it also checks `review_prev.json`
+(`check_prev_review`, the same function `regen_writeback.py check` runs, plus
+its defect IDs against `prev_checklist`). A keep record may carry `writeback`
+(one of `WRITEBACK_CODES`, keep records only). `set_header_score` puts a score
+into the first `Quality: N/100` header line and `header_score` reads it.
+
+### `regen_writeback.py`
+Review write-back on a kept regeneration (stdlib and PyYAML; imports
+`regen_gate` from its own directory when it runs as a script, so a workflow's
+copy never reads the checkout's). The regen gate's re-score of the live
+implementation, written by the review as `review_prev.json` (step 8b of
+`ai-quality-review.md`, step 5), becomes that implementation's stored review:
+
+- `check` — `review_prev.json` has the shapes of the review files, each
+  category score is the sum of its items, and its checklist equals
+  `review_regen.json`'s `prev_checklist` item for item; any problem means no
+  write-back.
+- `apply` — writes the score, the five review fields, `review.model`, and
+  `review.criteria_version` into the metadata with the metadata writer's YAML
+  settings (an empty provenance value removes the key), and with `--impl` the
+  score into the `Quality: N/100` header. Nothing else changes.
+- `verify-diff` — against the merge base: only the pair's metadata (as parsed
+  YAML, `quality_score` and those review keys) and its header number change.
+- `check-pr` — the PR is an open `review-writeback/{spec}/{library}/{kept PR}`
+  PR with the `review-writeback` label by `app/github-actions` (otherwise a
+  no-op), and its score equals the `prev_rescored` of the first gate record
+  `github-actions[bot]` posted on the kept PR after the write-back PR opened
+  (keep, same pair, `writeback: opened`, the same number in the header, and
+  the record's `model` and `criteria_version` in the metadata's `review`). It
+  waits up to `--wait` seconds for that record, because `impl-review.yml`
+  dispatches the merge before it closes the kept PR.
+- `check-fresh` — `main` still holds the merge base's blobs of the pair's two
+  files, and the branch changes nothing else.
+
+`impl-review.yml` ("Write back the re-score (regen keep)") runs `check` and
+`apply` and opens the PR; the `writeback` job of `impl-merge.yml` runs
+`check-pr`, `verify-diff`, and `check-fresh` before every merge attempt, then
+merges with the admin token.
 
 ### `review_provenance.py`
 Review provenance (stdlib): `criteria-version` prints the rules version — git

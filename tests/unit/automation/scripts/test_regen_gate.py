@@ -23,6 +23,7 @@ from automation.scripts.regen_gate import (
     MERGE,
     REASON_CODES,
     RECORD_KEYS,
+    WRITEBACK_CODES,
     GateInput,
     build_record,
     characteristic_kind,
@@ -962,6 +963,32 @@ class TestGateRecord:
         text = "\n".join([*markers, render_record_marker(good)])
         assert parse_record_markers(text) == [good]
 
+    @pytest.mark.parametrize("status", WRITEBACK_CODES)
+    def test_writeback_on_a_keep(self, status):
+        """P9b: the verdict step adds `writeback` to keep records, and the marker carries it."""
+        kept = decide(_inp(regen=_regen(improvements=[])))
+        record = {
+            **build_record(kept, spec_id="count-basic", library="ggplot2", score=80, prev_stored=91),
+            "writeback": status,
+        }
+        assert validate_record(record) == []
+        assert parse_record_markers(render_record_marker(record)) == [record]
+
+    @pytest.mark.parametrize("value", ["merged", "OPENED", "", None, 1])
+    def test_writeback_rejects_other_values(self, value):
+        kept = decide(_inp(regen=_regen(improvements=[])))
+        record = {
+            **build_record(kept, spec_id="count-basic", library="ggplot2", score=80, prev_stored=91),
+            "writeback": value,
+        }
+        assert "record.writeback is not one of WRITEBACK_CODES" in validate_record(record)
+
+    def test_writeback_belongs_to_a_keep(self):
+        record = {**self._record(), "writeback": "opened"}
+        assert record["verdict"] == "merge"
+        assert validate_record(record) == ["record.writeback belongs to a keep record only"]
+        assert parse_record_markers(f"<!-- regen-gate-record:v1 {json.dumps(record, separators=(',', ':'))} -->") == []
+
     def test_record_token(self):
         assert record_token(None) == "n/a"
         assert record_token("  ") == "n/a"
@@ -1724,6 +1751,7 @@ class TestRecordCounts:
                 "encodings_added",
                 "coerced",
                 "at",
+                "writeback",
             }
         )
 
@@ -1734,8 +1762,13 @@ class TestRecordCounts:
         assert validate_record(record) == []
 
 
-def _feedback(tmp_path, capsys, *, weaknesses=None, checklist=None, regen=None, prev=None, spec=None, warn=False):
+def _feedback(
+    tmp_path, capsys, *, weaknesses=None, checklist=None, regen=None, prev=None, spec=None, warn=False, prev_review=None
+):
     args = ["check-feedback"]
+    if prev_review is not None:
+        (tmp_path / "review_prev.json").write_text(json.dumps(prev_review), encoding="utf-8")
+        args += ["--prev-review", str(tmp_path / "review_prev.json")]
     if weaknesses is not None:
         (tmp_path / "review_weaknesses.json").write_text(json.dumps(weaknesses), encoding="utf-8")
         args += ["--weaknesses", str(tmp_path / "review_weaknesses.json")]
@@ -1959,3 +1992,123 @@ class TestCheckFeedback:
         assert out.count("is neither a defect line") == 2
         assert "has no prev_checklist" in out and "has no prev_weaknesses" in out
         assert "::notice::weakness_format defect=0 suggestion=0 other=2" in out
+
+
+# ---------------------------------------------------------------------------
+# P9b: review_prev.json, the re-score as a full review
+# ---------------------------------------------------------------------------
+
+
+def _prev_review(**overrides) -> dict:
+    review = {
+        "image_description": "Light render (plot-light.png): …\n\nDark render (plot-dark.png): …",
+        "criteria_checklist": _checklist_json(PREV_CHECKLIST),
+        "strengths": ["Native size legend"],
+        "weaknesses": [DEFECT_LINE, "Suggestion: a subtler grid"],
+        "verdict": "REJECTED",
+    }
+    review.update(overrides)
+    return review
+
+
+CLEAN_REGEN = _regen(
+    prev_weaknesses=[{"ref": "W1", "class": "suggestion"}, {"ref": "W2", "class": "defect", "rule": "VQ-03"}]
+)
+BAD_PREV_REVIEWS = [
+    pytest.param({"verdict": "OK"}, id="verdict"),
+    pytest.param({"criteria_checklist": _checklist_json({**PREV_CHECKLIST, "VQ-03": 5})}, id="checklist-mismatch"),
+    pytest.param(
+        {
+            "criteria_checklist": {
+                **_checklist_json(PREV_CHECKLIST),
+                "code_quality": {**_checklist_json(PREV_CHECKLIST)["code_quality"], "score": 3},
+            }
+        },
+        id="category-sum",
+    ),
+    pytest.param({"weaknesses": ["Suggestion: a", DEFECT_LINE]}, id="order"),
+    pytest.param({"weaknesses": ["P1: " + DEFECT_LINE]}, id="p-prefix"),
+    pytest.param({"image_description": ""}, id="description"),
+    pytest.param({"strengths": "one"}, id="strengths"),
+]
+
+
+class TestCheckPrevReview:
+    """The step-10 self-check runs the same checks as regen_writeback.py check."""
+
+    def test_clean(self, tmp_path, capsys):
+        code, out = _feedback(
+            tmp_path, capsys, checklist=NEW_CHECKLIST, regen=CLEAN_REGEN, prev=["a", "b"], prev_review=_prev_review()
+        )
+        assert (code, out.strip()) == (0, "check-feedback: no problems")
+
+    @pytest.mark.parametrize("overrides", BAD_PREV_REVIEWS)
+    def test_same_problems_as_the_writeback_check(self, tmp_path, capsys, overrides):
+        from automation.scripts import regen_writeback
+
+        review = _prev_review(**overrides)
+        (tmp_path / "review_prev.json").write_text(json.dumps(review), encoding="utf-8")
+        (tmp_path / "review_regen.json").write_text(json.dumps(CLEAN_REGEN), encoding="utf-8")
+        args = [
+            "--prev-review",
+            str(tmp_path / "review_prev.json"),
+            "--regen-json",
+            str(tmp_path / "review_regen.json"),
+        ]
+        assert regen_writeback.main(["check", *args]) == 1
+        expected = [line for line in capsys.readouterr().out.splitlines() if line.strip()]
+        assert expected
+
+        code, out = _feedback(
+            tmp_path, capsys, checklist=NEW_CHECKLIST, regen=CLEAN_REGEN, prev=["a", "b"], prev_review=review
+        )
+        assert code == 1
+        for line in expected:
+            assert f"review_prev.json: {line}" in out, (line, out)
+
+    def test_defect_ids_are_checked_against_prev_checklist(self, tmp_path, capsys):
+        """The content check stays in check-feedback: a defect under a criterion the re-score maxed."""
+        line = "VQ-01 (both): tick labels small → larger. Likely cause: size."
+        code, out = _feedback(
+            tmp_path,
+            capsys,
+            checklist=NEW_CHECKLIST,
+            regen=CLEAN_REGEN,
+            prev=["a", "b"],
+            prev_review=_prev_review(weaknesses=[line]),
+        )
+        assert code == 1
+        assert "review_prev.json: weakness 1 names VQ-01, but your checklist gives VQ-01 its maximum (8/8)" in out
+
+    def test_a_missing_file_is_reported(self, tmp_path, capsys):
+        (tmp_path / "review_regen.json").write_text(json.dumps(CLEAN_REGEN), encoding="utf-8")
+        code = main(
+            [
+                "check-feedback",
+                "--regen",
+                str(tmp_path / "review_regen.json"),
+                "--prev-review",
+                str(tmp_path / "x.json"),
+            ]
+        )
+        assert code == 1
+        assert "x.json missing" in capsys.readouterr().out
+
+    def test_without_the_regen_file_there_is_nothing_to_compare(self, tmp_path, capsys):
+        code, out = _feedback(tmp_path, capsys, prev_review=_prev_review())
+        assert code == 1
+        assert "review_prev.json: review_regen.json has no prev_checklist" in out
+
+    def test_warn_only_never_fails(self, tmp_path, capsys):
+        code, out = _feedback(
+            tmp_path,
+            capsys,
+            weaknesses=[],
+            checklist=NEW_CHECKLIST,
+            regen=CLEAN_REGEN,
+            prev=["a", "b"],
+            prev_review=_prev_review(verdict="OK"),
+            warn=True,
+        )
+        assert code == 0
+        assert "::warning::review_prev.json: verdict must be APPROVED or REJECTED" in out

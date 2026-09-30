@@ -204,7 +204,8 @@ jobs:
           # it, and a PR branched off an older main does not carry them.
           mkdir -p "$RUNNER_TEMP/regen-tools"
           cp automation/scripts/regen_gate.py automation/scripts/close_issue_if_complete.py \
-             automation/scripts/review_provenance.py "$RUNNER_TEMP/regen-tools/"
+             automation/scripts/review_provenance.py automation/scripts/regen_writeback.py \
+             "$RUNNER_TEMP/regen-tools/"
           # The reviewer's step-10 self-check (`check-feedback`) runs this
           # same workflow-ref copy of the gate.
           cp automation/scripts/regen_gate.py /tmp/anyplot-regen-gate.py
@@ -241,7 +242,7 @@ jobs:
           EXT: ${{ steps.lang.outputs.ext }}
         run: |
           # A stale file must never stand in for this run's judgement.
-          rm -f review_regen.json
+          rm -f review_regen.json review_prev.json
 
           git fetch origin main
           if ! git cat-file -e "origin/main:plots/$SPEC_ID/implementations/$LANGUAGE/$LIBRARY$EXT" 2>/dev/null; then
@@ -282,9 +283,16 @@ jobs:
           LANGUAGE: ${{ steps.lang.outputs.language }}
           EXT: ${{ steps.lang.outputs.ext }}
         run: |
-          pip install --quiet pyyaml
           IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}"
           META_FILE="plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml"
+
+          # The exact files this review re-scores: on a keep, the write-back
+          # stores the re-score only while main still holds these two blobs.
+          # First, so a later failure in this step cannot leave them unset.
+          echo "prev_meta_blob=$(git rev-parse -q --verify "origin/main:${META_FILE}" || echo n/a)" >> "$GITHUB_OUTPUT"
+          echo "prev_impl_blob=$(git rev-parse -q --verify "origin/main:${IMPL_FILE}" || echo n/a)" >> "$GITHUB_OUTPUT"
+
+          pip install --quiet pyyaml
 
           # Previous review from main's metadata (the PR branch's copy was
           # reset to quality_score: null by impl-generate). Missing metadata
@@ -983,8 +991,9 @@ jobs:
         run: pip install pyyaml
 
       # Monitoring only: every weakness line is a defect (`<ID> (<render>): …`)
-      # or a `Suggestion: …` line, and a regeneration's review_regen.json
-      # classifies the previous weaknesses consistently with its checklists.
+      # or a `Suggestion: …` line, a regeneration's review_regen.json
+      # classifies the previous weaknesses consistently with its checklists,
+      # and its review_prev.json matches prev_checklist.
       # Problems become ::warning:: annotations plus one weakness_format
       # notice; the step never fails the review and changes nothing it stores.
       - name: Check review feedback format (never gating)
@@ -997,12 +1006,13 @@ jobs:
           FLAGS=(--weaknesses review_weaknesses.json --checklist review_checklist.json)
           if [ "$IS_REGEN" = "true" ] && [ -f review_regen.json ]; then
             FLAGS+=(--regen review_regen.json --prev-weaknesses /tmp/anyplot-prev-weaknesses.json \
-                    --spec-file "plots/${SPEC_ID}/specification.md")
+                    --spec-file "plots/${SPEC_ID}/specification.md" --prev-review review_prev.json)
           fi
           python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" check-feedback --warn-only "${FLAGS[@]}"
 
       # Skipped on a kept regeneration: the PR is closed unmerged, so there is
-      # nothing to record on its branch.
+      # nothing to record on its branch (the live implementation's re-score
+      # goes to main through "Write back the re-score (regen keep)").
       - name: Update metadata and implementation header
         if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && (steps.regen.outputs.is_regen != 'true' || steps.gate.outputs.verdict == 'merge')
         env:
@@ -1371,6 +1381,220 @@ jobs:
           # was produced. The auto-retry runs in a separate workflow run.
           exit 1
 
+      # Regen keep only: this session's re-score of the live implementation
+      # (review_prev.json, prompt step 8b step 5) becomes its stored review.
+      # main takes changes only through a merged PR, so this step commits the
+      # pair's metadata and the number in its Quality header on
+      # review-writeback/{spec}/{library}/{PR}, opens that PR and dispatches
+      # impl-merge.yml; its `writeback` job checks the PR against the gate
+      # record and merges it with the admin token, which never enters this job.
+      # Every early exit writes its status (no_rescore, invalid, stale,
+      # unchanged, failed) for the gate record; the step never holds up the
+      # keep bookkeeping below. It runs the workflow-ref copy of the helper
+      # (the model session can edit the workspace) and never checks anything
+      # out in the workspace, from which the verdict step imports core.constants.
+      # Git hooks are off for every git call here (GIT_CONFIG_*): the
+      # workspace's .git, hooks included, is shared with that session.
+      - name: Write back the re-score (regen keep)
+        id: writeback
+        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && steps.regen.outputs.is_regen == 'true' && steps.gate.outputs.verdict != 'merge'
+        continue-on-error: true
+        timeout-minutes: 5
+        env:
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: core.hooksPath
+          GIT_CONFIG_VALUE_0: /dev/null
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ steps.pr.outputs.pr_number }}
+          SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+          LIBRARY: ${{ steps.pr.outputs.library }}
+          LANGUAGE: ${{ steps.lang.outputs.language }}
+          EXT: ${{ steps.lang.outputs.ext }}
+          GATE_CODE: ${{ steps.gate.outputs.code }}
+          PREV_RESCORED: ${{ steps.gate.outputs.prev_rescored }}
+          PREV_STORED: ${{ steps.regen_ctx.outputs.prev_stored || 'n/a' }}
+          PREV_META_BLOB: ${{ steps.regen_ctx.outputs.prev_meta_blob }}
+          PREV_IMPL_BLOB: ${{ steps.regen_ctx.outputs.prev_impl_blob }}
+          # Resolved id and rules version of this session; empty removes the key.
+          REVIEW_MODEL: ${{ steps.review_model.outputs.model_id }}
+          CRITERIA_VERSION: ${{ steps.rules.outputs.criteria_version }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          # main for every production run (repository_dispatch included), the
+          # branch for a branch smoke: impl-merge runs from the same ref.
+          WORKFLOW_REF: ${{ github.ref_name }}
+        run: |
+          TOOL="$RUNNER_TEMP/regen-tools/regen_writeback.py"
+          META_FILE="plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml"
+          IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}"
+          WB_BRANCH="review-writeback/${SPEC_ID}/${LIBRARY}/${PR_NUM}"
+          WT="$RUNNER_TEMP/review-writeback"
+          RUN_URL="https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}"
+          STATUS=""
+          PUSHED=0
+          WB_PR=""
+
+          set_status() {
+            STATUS="$1"
+            echo "status=$1" >> "$GITHUB_OUTPUT"
+            echo "::notice::review_writeback spec=${SPEC_ID} lib=${LIBRARY} pr=${PR_NUM} status=$1${2:+ reason=$2}"
+          }
+          # Any exit without a status (a command that failed) is `failed`. A
+          # pushed branch that got no PR is deleted; the worktree always goes.
+          finish() {
+            if [ -z "$STATUS" ]; then
+              set_status failed "unexpected error, see above"
+            fi
+            if [ "$PUSHED" = "1" ] && [ -z "$WB_PR" ]; then
+              git push -q origin --delete "$WB_BRANCH" 2>/dev/null || true
+            fi
+            git worktree remove --force "$WT" 2>/dev/null || true
+          }
+          trap finish EXIT
+          gh_retry() {
+            local what="$1"; shift
+            local attempt
+            for attempt in 1 2 3; do
+              if "$@" 2> /tmp/anyplot-writeback-gh.err; then
+                return 0
+              fi
+              echo "::warning::${what} failed (attempt ${attempt}/3): $(head -c 300 /tmp/anyplot-writeback-gh.err | tr '\n' ' ')"
+              [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+            done
+            return 1
+          }
+
+          # 1. Only a validated review_regen.json gives the gate an integer re-score.
+          if ! [[ "$PREV_RESCORED" =~ ^[0-9]+$ ]]; then
+            set_status no_rescore "gate code ${GATE_CODE:-none}"
+            exit 0
+          fi
+
+          # 2. The re-score as a full review, its checklist equal to prev_checklist.
+          if ! python3 "$TOOL" check --prev-review review_prev.json --regen-json review_regen.json \
+               > /tmp/anyplot-writeback-check.txt 2>&1; then
+            while IFS= read -r line; do
+              echo "::warning::review_prev.json: ${line}"
+            done < /tmp/anyplot-writeback-check.txt
+            set_status invalid
+            exit 0
+          fi
+
+          # 3. The re-score belongs to exactly the two files the review read.
+          if ! gh_retry "git fetch origin main" git fetch -q origin main; then
+            set_status failed "git fetch"
+            exit 0
+          fi
+          META_NOW=$(git rev-parse -q --verify "origin/main:${META_FILE}" || echo n/a)
+          IMPL_NOW=$(git rev-parse -q --verify "origin/main:${IMPL_FILE}" || echo n/a)
+          if [ "$META_NOW" = "n/a" ] || [ "$IMPL_NOW" = "n/a" ]; then
+            set_status stale "the pair's files are not on main"
+            exit 0
+          fi
+          if [ "$META_NOW" != "${PREV_META_BLOB:-unset}" ] || [ "$IMPL_NOW" != "${PREV_IMPL_BLOB:-unset}" ]; then
+            set_status stale "main changed the pair's files during the review"
+            exit 0
+          fi
+
+          # 4. A newer re-score supersedes an open write-back of this pair, and a
+          # rescue re-run of this kept PR reuses the branch name.
+          OPEN=""
+          LISTED=0
+          for attempt in 1 2 3; do
+            if OPEN=$(gh pr list --state open --label review-writeback --limit 100 --json number,headRefName \
+                        --jq ".[] | select(.headRefName | startswith(\"review-writeback/${SPEC_ID}/${LIBRARY}/\")) | .number" \
+                        2> /tmp/anyplot-writeback-gh.err); then
+              LISTED=1
+              break
+            fi
+            echo "::warning::gh pr list failed (attempt ${attempt}/3): $(head -c 300 /tmp/anyplot-writeback-gh.err | tr '\n' ' ')"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+          done
+          if [ "$LISTED" != "1" ]; then
+            set_status failed "listing open write-back PRs"
+            exit 0
+          fi
+          for n in $OPEN; do
+            gh_retry "close superseded #${n}" gh pr close "$n" --delete-branch \
+              --comment "Superseded by the re-score of kept regeneration #${PR_NUM} ([impl-review](${RUN_URL}))." \
+              || echo "::warning::superseded write-back #${n} is still open"
+          done
+          if git ls-remote --exit-code --heads origin "refs/heads/${WB_BRANCH}" > /dev/null 2>&1; then
+            git push -q origin --delete "$WB_BRANCH"
+          fi
+
+          # 5. A worktree of the current origin/main under $RUNNER_TEMP.
+          git worktree remove --force "$WT" 2>/dev/null || true
+          rm -rf "$WT"
+          git worktree add -q --detach "$WT" origin/main
+          python3 "$TOOL" apply --metadata "$WT/$META_FILE" --prev-review review_prev.json \
+            --score "$PREV_RESCORED" --model "$REVIEW_MODEL" --criteria-version "$CRITERIA_VERSION" \
+            --impl "$WT/$IMPL_FILE"
+          if git -C "$WT" diff --quiet; then
+            set_status unchanged
+            exit 0
+          fi
+
+          # 6. One commit with the two files (hooks off through the step's env).
+          git -C "$WT" add -- "$META_FILE" "$IMPL_FILE"
+          git -C "$WT" -c user.name="github-actions[bot]" \
+            -c user.email="github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "chore(${LIBRARY}): store re-score ${PREV_RESCORED} for ${SPEC_ID} (kept regen #${PR_NUM})"
+          if ! gh_retry "push ${WB_BRANCH}" git -C "$WT" push -q origin "HEAD:refs/heads/${WB_BRANCH}"; then
+            set_status failed "push"
+            exit 0
+          fi
+          PUSHED=1
+
+          # 7. The PR. Explicit base and head: a branch smoke runs from a branch
+          # ref, and the worktree has no branch checked out.
+          gh label create review-writeback --color "c5def5" \
+            --description "Stored review replaced by a kept regeneration's re-score (impl-merge merges it)" 2>/dev/null || true
+          TITLE="chore(${LIBRARY}): store re-score ${PREV_RESCORED} for ${SPEC_ID} (kept regen #${PR_NUM})"
+          {
+            echo "## Stored review: re-score of the live implementation"
+            echo ""
+            echo "The regen gate kept the live implementation of \`${SPEC_ID}\` / ${LIBRARY} in #${PR_NUM}. That review session re-scored the live implementation; this PR stores the re-score as its review."
+            echo ""
+            echo "| Kept regeneration | Stored score | Review model | Rules version |"
+            echo "|---|---|---|---|"
+            echo "| #${PR_NUM} | ${PREV_STORED} → ${PREV_RESCORED} | \`${REVIEW_MODEL:-n/a}\` | \`${CRITERIA_VERSION:-n/a}\` |"
+            echo ""
+            echo "Only \`quality_score\` and the review in \`${META_FILE}\` and the number in the \`Quality:\` header of \`${IMPL_FILE}\` change. The code and the production images stay as they are."
+            echo ""
+            echo "\`impl-merge.yml\` merges this PR after checking it against the gate record on #${PR_NUM}. Do not merge it by hand; to retry, run \`gh workflow run impl-merge.yml -f pr_number=<this PR>\`."
+            echo ""
+            echo "---"
+            echo ":robot: *[impl-review](${RUN_URL})*"
+          } > /tmp/anyplot-writeback-body.md
+          for attempt in 1 2 3; do
+            if gh pr create --base main --head "$WB_BRANCH" --label review-writeback --title "$TITLE" \
+                 --body-file /tmp/anyplot-writeback-body.md > /tmp/anyplot-writeback-pr.txt 2> /tmp/anyplot-writeback-gh.err; then
+              WB_PR=$(grep -oE '[0-9]+$' /tmp/anyplot-writeback-pr.txt | tail -1 || true)
+              [ -n "$WB_PR" ] && break
+            fi
+            # A create that succeeded but lost its response.
+            WB_PR=$(gh pr list --state open --head "$WB_BRANCH" --json number --jq '.[0].number // empty' 2>/dev/null || true)
+            [ -n "$WB_PR" ] && break
+            echo "::warning::gh pr create failed (attempt ${attempt}/3): $(head -c 300 /tmp/anyplot-writeback-gh.err | tr '\n' ' ')"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+          done
+          if [ -z "$WB_PR" ]; then
+            set_status failed "pull request"
+            exit 0
+          fi
+
+          # 8. The merge: impl-merge.yml's writeback job, on this workflow's ref.
+          if ! gh_retry "impl-merge dispatch" gh workflow run impl-merge.yml --ref "$WORKFLOW_REF" -f pr_number="$WB_PR"; then
+            gh_retry "close #${WB_PR}" gh pr close "$WB_PR" --delete-branch \
+              --comment "Closed: impl-merge.yml could not be dispatched ([impl-review](${RUN_URL}))." || true
+            set_status failed "impl-merge dispatch"
+            exit 0
+          fi
+          echo "pr=${WB_PR}" >> "$GITHUB_OUTPUT"
+          echo "score=${PREV_RESCORED}" >> "$GITHUB_OUTPUT"
+          set_status opened "#${WB_PR}"
+
       - name: Add verdict label and take action
         if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true'
         env:
@@ -1390,7 +1614,12 @@ jobs:
           IS_REGEN: ${{ steps.regen.outputs.is_regen }}
           GATE_VERDICT: ${{ steps.gate.outputs.verdict }}
           GATE_REASON: ${{ steps.gate.outputs.reason }}
+          GATE_CODE: ${{ steps.gate.outputs.code }}
           PREV_STORED: ${{ steps.regen_ctx.outputs.prev_stored || 'n/a' }}
+          MODEL_ID: ${{ steps.review_model.outputs.model_id || 'n/a' }}
+          WB_STATUS: ${{ steps.writeback.outputs.status }}
+          WB_PR: ${{ steps.writeback.outputs.pr }}
+          WB_SCORE: ${{ steps.writeback.outputs.score }}
         run: |
           # Cascading thresholds:
           # Attempt 0 (Review 1): >= 90
@@ -1436,6 +1665,21 @@ jobs:
             if [ ! -s "$SUMMARY_FILE" ]; then
               printf '**Reason:** %s\n' "${GATE_REASON:-regen gate produced no verdict}" > "$SUMMARY_FILE"
             fi
+            # Keep only: what happened to the re-score of the live
+            # implementation ("Write back the re-score", previous step). A
+            # missing status (the step was skipped or cut off) reads as failed.
+            if [ "$GATE_VERDICT" != "merge" ]; then
+              case "$WB_STATUS" in
+                opened|unchanged|no_rescore|invalid|stale|failed) ;;
+                *) WB_STATUS=failed ;;
+              esac
+              if [ -s /tmp/anyplot-regen-record.json ]; then
+                jq -c --arg wb "$WB_STATUS" '. + {writeback: $wb}' /tmp/anyplot-regen-record.json \
+                  > /tmp/anyplot-regen-record-wb.json \
+                  && mv /tmp/anyplot-regen-record-wb.json /tmp/anyplot-regen-record.json \
+                  || echo "::warning::writeback=${WB_STATUS} not added to the gate record"
+              fi
+            fi
             # Machine-readable gate record (`<!-- regen-gate-record:v1 {...} -->`)
             # for both comments; empty when the gate wrote none.
             GATE_RECORD_MARKER=$(python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" marker \
@@ -1469,18 +1713,30 @@ jobs:
               exit 0
             fi
 
-            # keep: close the PR, leave main and GCS production untouched.
-            # Nothing reaches main, so sync-postgres is not triggered either.
+            # keep: close the PR; the live code and GCS production stay. The
+            # only write to main is the stored review: the previous step's
+            # write-back PR, which impl-merge merges and syncs.
             echo "::notice::Regen gate kept the live implementation (${GATE_REASON:-no verdict})"
             FAILED=0
+
+            case "$WB_STATUS" in
+              opened) STORED="**Stored review:** this session's re-score of the live implementation (${PREV_STORED} → ${WB_SCORE}, \`${MODEL_ID}\`) is stored once impl-merge merges #${WB_PR}." ;;
+              unchanged) STORED="**Stored review:** unchanged (the re-score writes the review that is already stored)." ;;
+              no_rescore) STORED="**Stored review:** unchanged (the gate has no re-score of the live implementation: ${GATE_CODE:-no code})." ;;
+              invalid) STORED="**Stored review:** unchanged (\`review_prev.json\` failed its check; see the run log)." ;;
+              stale) STORED="**Stored review:** unchanged (main changed the implementation or its metadata during the review)." ;;
+              *) STORED="**Stored review:** unchanged (the write-back failed; see the run log)." ;;
+            esac
 
             {
               echo "<!-- regen-kept:${SPEC_ID}:${LIBRARY} -->"
               echo "## :leftwards_arrow_with_hook: Regeneration kept the live implementation"
               echo ""
-              echo "The regen gate compared this render (score ${SCORE}) with the implementation on main and kept the latter. This PR is closed without merging; main and the production images are unchanged."
+              echo "The regen gate compared this render (score ${SCORE}) with the implementation on main and kept the latter. This PR is closed without merging; the live code and the production images are unchanged."
               echo ""
               cat "$SUMMARY_FILE"
+              echo ""
+              echo "$STORED"
               echo ""
               echo "The staging render of this PR must **not** be promoted by hand. To replace the implementation anyway, re-run with \`regen_gate=false\`:"
               echo ""

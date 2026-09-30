@@ -647,16 +647,20 @@ class TestImplReviewWiring:
         assert "review_model" not in step["run"]
 
     def test_review_model_env_stays_the_resolved_id(self):
-        """`REVIEW_MODEL` is the resolved id (claude-opus-*); the alias never takes that name."""
-        found = 0
+        """`REVIEW_MODEL` is the resolved id (claude-opus-*); the alias never takes that name.
+
+        Its consumers store it as `review.model`: the metadata writer on the
+        merge path and the re-score write-back on a keep (P9b).
+        """
+        found = []
         for step in _steps("impl-review.yml"):
             value = (step.get("env") or {}).get("REVIEW_MODEL")
             if value is None:
                 continue
-            found += 1
+            found.append(step.get("name"))
             assert "steps.pr.outputs" not in value, step.get("name")
             assert value == "${{ steps.review_model.outputs.model_id }}", step.get("name")
-        assert found == 1
+        assert found == ["Update metadata and implementation header", "Write back the re-score (regen keep)"]
 
     def test_no_other_workflow_forwards_a_review_model(self):
         """Repair, generation and every rescue re-dispatch review without one, so it runs on opus."""

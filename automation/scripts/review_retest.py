@@ -79,6 +79,7 @@ from automation.scripts.regen_gate import (
     OBSOLETE,
     PERMISSION,
     UNVERIFIED,
+    WRITEBACK_CODES,
     GateInput,
     classify_improvements,
     load_checklist_scores,
@@ -1665,6 +1666,8 @@ def render_gate_report(result: dict[str, Any]) -> str:
         )
 
     imp = result["improvements"]
+    # Reports built before P9b have no writeback block.
+    writeback = result.get("writeback") or {"n": 0, "counts": {}}
     lines = [
         "# Regen gate report",
         "",
@@ -1680,6 +1683,8 @@ def render_gate_report(result: dict[str, Any]) -> str:
         f"- Obsolete weakness cited: {imp['obsolete_cited']}/{imp['carrier_n']} decisions "
         f"({_pct(imp['obsolete_cited_share'])}); unverified claim in {_pct(imp['unverified_share'])}, "
         f"design or library point in {_pct(imp['de_lm_share'])}",
+        f"- Stored review on a keep (writeback, n={writeback['n']} keeps): "
+        + ", ".join(f"{code} {writeback['counts'].get(code, 0)}" for code in WRITEBACK_CODES),
         f"- prev_rescored − prev_stored, comparable: {drift(result['drift_comparable'])}",
         f"- prev_rescored − prev_stored, all: {drift(result['drift_all'])}",
         f"- new − prev_rescored: {drift(result['margin'])}; inside [−1, 0]: {_pct(result['margin_within_tolerance'])}",

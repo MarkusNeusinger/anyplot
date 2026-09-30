@@ -3,6 +3,7 @@ run-name: "Merge: PR #${{ github.event.inputs.pr_number || github.event.pull_req
 
 # Auto-merge implementation PRs when ai-approved label is added
 # Creates per-library metadata file and promotes GCS images
+# Also merges the review write-back PRs a kept regeneration opens (job `writeback`)
 
 on:
   pull_request:
@@ -19,6 +20,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Every workflow_dispatch runs both jobs; this one merges implementation/*
+  # PRs and is a no-op for a review write-back PR (see `writeback` below).
   merge:
     runs-on: ubuntu-latest
     permissions:
@@ -511,3 +514,186 @@ jobs:
         run: |
           gh workflow run sync-postgres.yml
           echo "::notice::Triggered sync-postgres.yml"
+
+  # Every workflow_dispatch runs both jobs; this one merges the review
+  # write-back PRs impl-review.yml opens on a kept regeneration (the live
+  # implementation's re-score as its stored review) and is a no-op for any
+  # other PR, implementation/* included. main takes changes only through an
+  # admin-merged PR; ADMIN_TOKEN appears in the merge step only, and no step of
+  # this job runs a model. Every check runs from this job's own checkout (the
+  # workflow ref), never from the PR.
+  writeback:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write  # Required for gh workflow run sync-postgres.yml
+
+    steps:
+      # A cheap pre-filter, so an implementation PR's dispatch costs one gh
+      # call here; `check-pr` below checks the whole identity. An unreadable
+      # PR goes on to check-pr, which retries and fails loudly.
+      - name: Check the branch
+        id: branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUM: ${{ github.event.inputs.pr_number }}
+        run: |
+          HEAD_REF=""
+          for attempt in 1 2 3; do
+            if HEAD_REF=$(gh pr view "$PR_NUM" --json headRefName -q .headRefName 2> /tmp/pr.err); then
+              break
+            fi
+            echo "::warning::gh pr view failed (attempt ${attempt}/3): $(head -c 300 /tmp/pr.err | tr '\n' ' ')"
+            HEAD_REF=""
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+          done
+          if [ -n "$HEAD_REF" ] && [[ "$HEAD_REF" != review-writeback/* ]]; then
+            echo "::notice::Skipping: branch '${HEAD_REF}' is not review-writeback/*"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout repository
+        if: steps.branch.outputs.run == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+
+      # The PR must be the bot's write-back (open, head
+      # review-writeback/{spec}/{library}/{kept PR}, label review-writeback,
+      # author app/github-actions); anything else is a no-op. Its base must be
+      # main (check-fresh re-checks it before every merge attempt). Its score must be
+      # the prev_rescored of the kept PR's gate record by github-actions[bot]
+      # (verdict keep, writeback opened) — the only model-free source for the
+      # number — and its review.model and review.criteria_version the record's
+      # model and criteria_version. Waits up to 5 minutes for that record:
+      # impl-review dispatches this job before its verdict step comments on
+      # and closes the kept PR.
+      - name: Check the write-back PR
+        id: check
+        if: steps.branch.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUM: ${{ github.event.inputs.pr_number }}
+        run: |
+          pip install --quiet pyyaml
+          python3 automation/scripts/regen_writeback.py check-pr --pr "$PR_NUM" --wait 300
+
+      # Only the pair's metadata (quality_score and the review keys, compared
+      # as parsed YAML) and the number in its Quality header may change.
+      - name: Verify the diff
+        if: steps.check.outputs.writeback_pr == 'true'
+        env:
+          SPEC_ID: ${{ steps.check.outputs.spec }}
+          LIBRARY: ${{ steps.check.outputs.library }}
+          LANGUAGE: ${{ steps.check.outputs.language }}
+          EXT: ${{ steps.check.outputs.ext }}
+          HEAD_SHA: ${{ steps.check.outputs.head_sha }}
+        run: |
+          python3 automation/scripts/regen_writeback.py verify-diff --base origin/main --head "$HEAD_SHA" \
+            --spec "$SPEC_ID" --language "$LANGUAGE" --library "$LIBRARY" --ext "$EXT"
+
+      # A squash merge is three-way: a change main made to the pair's files
+      # after the branch was cut would merge without a conflict and carry the
+      # re-score of the old code. So check-fresh runs before every attempt
+      # (and fails on a PR retargeted away from main, as gh pr merge merges
+      # into the PR's own base),
+      # and a stale PR is closed, never updated (no `gh pr update-branch`: the
+      # required checks are non-strict). --match-head-commit merges exactly the
+      # commit the checks above verified.
+      - name: Merge the write-back PR (with retry)
+        id: merge
+        if: steps.check.outputs.writeback_pr == 'true'
+        env:
+          # Same PAT as the merge job's merge step, for the same ruleset bypass.
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUM: ${{ github.event.inputs.pr_number }}
+          HEAD_SHA: ${{ steps.check.outputs.head_sha }}
+          HAS_ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN != '' }}
+        run: |
+          if [ "$HAS_ADMIN_TOKEN" != "true" ]; then
+            echo "::warning::ADMIN_TOKEN secret is not set — the merge will fail on the main ruleset"
+          fi
+          MAX_ATTEMPTS=3
+          for attempt in $(seq 1 $MAX_ATTEMPTS); do
+            STATE=""
+            for probe in 1 2 3; do
+              if STATE=$(gh pr view "$PR_NUM" --json state -q .state 2> /tmp/state.err); then
+                break
+              fi
+              echo "::warning::gh pr view (state) failed (probe ${probe}/3): $(head -c 300 /tmp/state.err | tr '\n' ' ')"
+              STATE=""
+              [ "$probe" -lt 3 ] && sleep $((probe * 5))
+            done
+            if [ "$STATE" = "MERGED" ]; then
+              echo "::notice::PR #${PR_NUM} is already merged"
+              echo "merged=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            FRESH=0
+            python3 automation/scripts/regen_writeback.py check-fresh --pr "$PR_NUM" --head "$HEAD_SHA" || FRESH=$?
+            if [ "$FRESH" -eq 1 ]; then
+              echo "::notice::PR #${PR_NUM} is stale — closing it instead of merging"
+              echo "stale=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if [ "$FRESH" -eq 0 ]; then
+              if gh pr merge "$PR_NUM" --squash --admin --delete-branch --match-head-commit "$HEAD_SHA" 2> /tmp/merge.err; then
+                echo "::notice::Merged the review write-back #${PR_NUM} on attempt ${attempt}"
+                echo "merged=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              # A merge that succeeded but lost its response reads as "already merged".
+              if grep -qiE 'already merged|pull request is (already )?merged' /tmp/merge.err; then
+                echo "::notice::PR #${PR_NUM} reported as already merged"
+                echo "merged=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              echo "::warning::merge attempt ${attempt}/${MAX_ATTEMPTS} failed: $(head -c 300 /tmp/merge.err | tr '\n' ' ')"
+            fi
+            [ "$attempt" -lt "$MAX_ATTEMPTS" ] && sleep $((attempt * 10))
+          done
+          echo "::error::Merging the review write-back #${PR_NUM} failed after ${MAX_ATTEMPTS} attempts"
+          exit 1
+
+      - name: Close a stale write-back PR
+        if: steps.merge.outputs.stale == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUM: ${{ github.event.inputs.pr_number }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh pr close "$PR_NUM" --delete-branch --comment "Closed as stale: main changed this pair's implementation or metadata after the branch was cut, so the re-score no longer belongs to the live files ([impl-merge](${RUN_URL})). The pair's next gated regeneration writes a new re-score."
+
+      # The push to main also triggers the sync (and IndexNow); this dispatch
+      # is belt-and-braces, as in the merge job.
+      - name: Trigger database sync
+        if: steps.merge.outputs.merged == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh workflow run sync-postgres.yml
+          echo "::notice::Triggered sync-postgres.yml"
+
+      # Never after a successful merge: a failed sync dispatch must not
+      # comment "closed" on a merged PR.
+      - name: Close the write-back PR on failure
+        if: failure() && steps.check.outputs.writeback_pr == 'true' && steps.merge.outcome != 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUM: ${{ github.event.inputs.pr_number }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh pr close "$PR_NUM" --delete-branch --comment "Closed: the writeback job of impl-merge.yml failed ([impl-merge](${RUN_URL})). The stored review is unchanged; the pair's next gated regeneration writes a new re-score." \
+            || echo "::warning::could not close #${PR_NUM}"

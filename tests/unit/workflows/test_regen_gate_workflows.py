@@ -350,6 +350,162 @@ class TestReviewFeedbackFormat:
         assert '--spec-file "plots/${SPEC_ID}/specification.md"' in script
 
 
+WRITEBACK_STEP = "Write back the re-score (regen keep)"
+
+
+def _job_steps(filename: str, job: str) -> list[dict[str, Any]]:
+    workflow = yaml.safe_load((WORKFLOWS_DIR / filename).read_text(encoding="utf-8"))
+    return workflow["jobs"][job]["steps"]
+
+
+class TestReviewWriteback:
+    """P9b: a kept regeneration stores its re-score through a bot PR that
+    impl-merge's `writeback` job merges. The step script runs for real in
+    test_review_writeback_step.py; these pin the wiring around it."""
+
+    def test_step_sits_before_the_verdict_step_and_runs_on_keeps_only(self):
+        names = _step_names("impl-review.yml")
+        step_at = names.index(WRITEBACK_STEP)
+        assert names.index("Handle review failure") < step_at
+        assert names[step_at + 1] == "Add verdict label and take action"
+        step = _step("impl-review.yml", WRITEBACK_STEP)
+        assert step["id"] == "writeback"
+        assert "steps.regen.outputs.is_regen == 'true'" in step["if"]
+        assert "steps.gate.outputs.verdict != 'merge'" in step["if"]
+
+    def test_step_never_gates_and_never_holds_the_keep_up(self):
+        step = _step("impl-review.yml", WRITEBACK_STEP)
+        assert step["continue-on-error"] is True
+        assert step["timeout-minutes"] == 5
+        assert step["env"]["GH_TOKEN"] == "${{ secrets.GITHUB_TOKEN }}"
+
+    def test_step_turns_git_hooks_off_for_every_git_call(self):
+        """The workspace's .git/hooks is the model session's to write; the step env covers
+        worktree add, fetch, commit and both pushes (test_review_writeback_step.py runs it)."""
+        env = _step("impl-review.yml", WRITEBACK_STEP)["env"]
+        assert (env["GIT_CONFIG_COUNT"], env["GIT_CONFIG_KEY_0"], env["GIT_CONFIG_VALUE_0"]) == (
+            "1",
+            "core.hooksPath",
+            "/dev/null",
+        )
+
+    def test_admin_token_never_enters_impl_review(self):
+        assert "ADMIN_TOKEN" not in (WORKFLOWS_DIR / "impl-review.yml").read_text(encoding="utf-8")
+
+    def test_step_runs_the_workflow_ref_copy_and_checks_nothing_out(self):
+        script = _step("impl-review.yml", WRITEBACK_STEP)["run"]
+        assert 'TOOL="$RUNNER_TEMP/regen-tools/regen_writeback.py"' in script
+        assert "automation/scripts/regen_writeback.py" not in script
+        assert "git checkout" not in script
+        assert 'WT="$RUNNER_TEMP/review-writeback"' in script
+        assert 'git worktree add -q --detach "$WT" origin/main' in script
+        assert "${{" not in script  # every input comes through env
+
+    def test_step_opens_the_pr_with_explicit_base_and_head_and_dispatches_on_its_ref(self):
+        step = _step("impl-review.yml", WRITEBACK_STEP)
+        assert 'gh pr create --base main --head "$WB_BRANCH" --label review-writeback' in step["run"]
+        assert 'gh workflow run impl-merge.yml --ref "$WORKFLOW_REF" -f pr_number="$WB_PR"' in step["run"]
+        assert step["env"]["WORKFLOW_REF"] == "${{ github.ref_name }}"
+        assert 'WB_BRANCH="review-writeback/${SPEC_ID}/${LIBRARY}/${PR_NUM}"' in step["run"]
+
+    def test_the_helper_is_copied_before_the_pr_checkout(self):
+        script = _step("impl-review.yml", "Checkout PR code")["run"]
+        copy = script[: script.index("git fetch origin")]
+        assert "automation/scripts/regen_writeback.py" in copy
+
+    def test_a_stale_review_prev_never_stands_in(self):
+        assert "rm -f review_regen.json review_prev.json" in _step("impl-review.yml", "Detect regeneration")["run"]
+
+    def test_regen_context_records_the_blobs_the_review_reads(self):
+        script = _step("impl-review.yml", "Regen context")["run"]
+        meta = script.index('echo "prev_meta_blob=$(git rev-parse -q --verify "origin/main:${META_FILE}" || echo n/a)"')
+        impl = script.index('echo "prev_impl_blob=$(git rev-parse -q --verify "origin/main:${IMPL_FILE}" || echo n/a)"')
+        assert max(meta, impl) < script.index("pip install")
+        env = _step("impl-review.yml", WRITEBACK_STEP)["env"]
+        assert env["PREV_META_BLOB"] == "${{ steps.regen_ctx.outputs.prev_meta_blob }}"
+        assert env["PREV_IMPL_BLOB"] == "${{ steps.regen_ctx.outputs.prev_impl_blob }}"
+        assert env["PREV_RESCORED"] == "${{ steps.gate.outputs.prev_rescored }}"
+
+    def test_the_format_check_covers_review_prev(self):
+        script = _step("impl-review.yml", "Check review feedback format (never gating)")["run"]
+        assert "--prev-review review_prev.json" in script
+
+    def test_the_verdict_step_records_the_status_on_keeps_only(self):
+        step = _step("impl-review.yml", "Add verdict label and take action")
+        assert step["env"]["WB_STATUS"] == "${{ steps.writeback.outputs.status }}"
+        block = _regen_block(step["run"])
+        record = block.index("'. + {writeback: $wb}'")
+        assert block.index('if [ "$GATE_VERDICT" != "merge" ]; then') < record
+        assert record < block.index('regen_gate.py" marker')
+        assert "*) WB_STATUS=failed ;;" in block
+
+    def test_the_kept_comment_carries_the_stored_review_line(self):
+        block = _regen_block(_step("impl-review.yml", "Add verdict label and take action")["run"])
+        keep = block[block.index("# keep: close the PR") :]
+        comment = keep[: keep.index("} > /tmp/anyplot-regen-kept.md")]
+        assert 'echo "$STORED"' in comment
+        assert comment.index('cat "$SUMMARY_FILE"') < comment.index('echo "$STORED"')
+        assert "the live code and the production images are unchanged" in comment
+        assert "main and the production images are unchanged" not in comment
+        assert "**Stored review:** this session's re-score of the live implementation" in keep
+        # `opened` means dispatched, not merged.
+        assert "is stored once impl-merge merges #${WB_PR}." in keep
+        assert keep.count('STORED="**Stored review:** unchanged (') == 5
+
+    def test_impl_merge_admin_token_only_in_the_two_merge_steps(self):
+        steps = [
+            (job, step.get("name"))
+            for job in ("merge", "writeback")
+            for step in _job_steps("impl-merge.yml", job)
+            if "ADMIN_TOKEN" in json.dumps(step)
+        ]
+        assert steps == [
+            ("merge", "Merge PR to main (with retry)"),
+            ("writeback", "Merge the write-back PR (with retry)"),
+        ]
+
+    def test_writeback_job_runs_on_dispatch_and_checks_before_it_merges(self):
+        workflow = yaml.safe_load((WORKFLOWS_DIR / "impl-merge.yml").read_text(encoding="utf-8"))
+        job = workflow["jobs"]["writeback"]
+        assert job["if"] == "github.event_name == 'workflow_dispatch'"
+        assert set(job["permissions"]) == {"contents", "pull-requests", "actions"}
+        names = [s.get("name") for s in job["steps"]]
+        steps = {s.get("name"): s for s in job["steps"]}
+        merge_at = names.index("Merge the write-back PR (with retry)")
+        assert names.index("Check the write-back PR") < names.index("Verify the diff") < merge_at
+        # An implementation PR's dispatch stops at one gh call, before the checkout.
+        assert names[:2] == ["Check the branch", "Checkout repository"]
+        assert "review-writeback/*" in steps["Check the branch"]["run"]
+        for name in ("Checkout repository", "Check the write-back PR"):
+            assert steps[name]["if"] == "steps.branch.outputs.run == 'true'", name
+        assert "regen_writeback.py check-pr" in steps["Check the write-back PR"]["run"]
+        assert "regen_writeback.py verify-diff" in steps["Verify the diff"]["run"]
+        merge = steps["Merge the write-back PR (with retry)"]
+        assert merge["id"] == "merge"
+        script = merge["run"]
+        # Staleness before every merge attempt, inside the retry loop.
+        loop = script[script.index("for attempt in") :]
+        assert loop.index("regen_writeback.py check-fresh") < loop.index("gh pr merge")
+        assert '--match-head-commit "$HEAD_SHA"' in script
+        assert "--squash --admin --delete-branch" in script
+        assert "update-branch" not in json.dumps(job)
+
+    def test_writeback_job_closes_on_failure_but_never_after_a_merge(self):
+        steps = {s.get("name"): s for s in _job_steps("impl-merge.yml", "writeback")}
+        close = steps["Close the write-back PR on failure"]
+        assert "failure()" in close["if"]
+        assert "steps.merge.outcome != 'success'" in close["if"]
+        assert "steps.check.outputs.writeback_pr == 'true'" in close["if"]
+        assert "--delete-branch" in close["run"]
+        assert steps["Close a stale write-back PR"]["if"] == "steps.merge.outputs.stale == 'true'"
+        assert steps["Trigger database sync"]["if"] == "steps.merge.outputs.merged == 'true'"
+        assert "gh workflow run sync-postgres.yml" in steps["Trigger database sync"]["run"]
+
+    def test_the_merge_job_still_skips_other_branches(self):
+        steps = {s.get("name"): s for s in _job_steps("impl-merge.yml", "merge")}
+        assert '[[ ! "$BRANCH" =~ ^implementation/ ]]' in steps["Check conditions"]["run"]
+
+
 class TestImplGenerateHeaderReset:
     """M3: the new file's header says `Quality: pending` before the review sees it."""
 

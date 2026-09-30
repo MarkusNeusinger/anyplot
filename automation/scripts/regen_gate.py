@@ -54,7 +54,11 @@ object with scores, counts, codes and provenance, and no model-written text.
 ``impl-review.yml`` embeds it in the PR comment on both paths as
 ``<!-- regen-gate-record:v1 {...} -->`` (``marker``), where it outlives the
 run log; ``review_retest.py gate-report`` aggregates them with
-``parse_record_markers``.
+``parse_record_markers``. On a keep the record also carries ``writeback``
+(``WRITEBACK_CODES``): what happened to the session's re-score of the live
+implementation, which ``regen_writeback.py`` stores as its review; that
+file's checks (``check_prev_review``) live here, so the review's step-10
+self-check (``check-feedback --prev-review``) runs the same code.
 
 The script is stdlib-only except for the ``context`` subcommand, which needs
 PyYAML to read the previous metadata. ``impl-review.yml`` runs it from a copy
@@ -79,7 +83,7 @@ Subcommands::
 
     regen_gate.py check-feedback [--weaknesses review_weaknesses.json] --checklist review_checklist.json \
         [--regen review_regen.json --prev-weaknesses /tmp/anyplot-prev-weaknesses.json \
-         --spec-file plots/S/specification.md] [--warn-only]
+         --spec-file plots/S/specification.md [--prev-review review_prev.json]] [--warn-only]
 
 ``context`` and ``decide`` write ``key=value`` outputs to ``$GITHUB_OUTPUT``
 when it is set. ``decide`` reads the new render's ``review_checklist.json``
@@ -196,6 +200,23 @@ DEFECT_RE = re.compile(rf"^(?P<ids>{_DEFECT_ID}(?:, {_DEFECT_ID})*) \((?P<render
 SUGGESTION_RE = re.compile(r"^Suggestion: \S")
 MAX_SUGGESTIONS = 3
 C_REF_RE = re.compile(r"^C(?P<num>[1-9]\d*)$")
+
+# The six categories of review_checklist.json (step 10 of the review prompt)
+# and the criterion prefix each one holds; a category's maximum is the sum of
+# its criteria (30/20/15/15/10/10).
+CHECKLIST_CATEGORIES: dict[str, str] = {
+    "visual_quality": "VQ",
+    "design_excellence": "DE",
+    "spec_compliance": "SC",
+    "data_quality": "DQ",
+    "code_quality": "CQ",
+    "library_mastery": "LM",
+}
+CATEGORY_MAX: dict[str, int] = {
+    key: sum(top for cid, top in CRITERIA.items() if cid.startswith(f"{prefix}-"))
+    for key, prefix in CHECKLIST_CATEGORIES.items()
+}
+REVIEW_VERDICTS = ("APPROVED", "REJECTED")
 
 
 def weakness_class(text: Any) -> str:
@@ -406,17 +427,17 @@ def render_previous_review(
 # mentions a score — ``print('Quality: 50/100 …')``, a sentence in a comment —
 # is never rewritten.
 QUALITY_HEADER_RE = re.compile(
-    r"(?P<head>(?:(?:#'|#|//)[ \t]?)?Quality:[ \t]*)\d{1,3}(?P<scale>[ \t]*/[ \t]*100)"
+    r"(?P<head>(?:(?:#'|#|//)[ \t]?)?Quality:[ \t]*)(?P<score>\d{1,3})(?P<scale>[ \t]*/[ \t]*100)"
     r"(?P<tail>[ \t]*(?:\|[ \t]*(?:Created|Updated):.*)?)"
 )
 HEADER_LINES = 15
 
 
-def _rewrite_header_score(text: str, template: str) -> str:
+def _rewrite_header_score(text: str, template: str, first_only: bool = False) -> str:
     """Apply ``template`` (``QUALITY_HEADER_RE`` groups) to each header line.
 
     Only the first ``HEADER_LINES`` lines are read; line endings and the line
-    count stay as they were.
+    count stay as they were. ``first_only`` stops after the first header line.
     """
     lines = text.splitlines(keepends=True)
     for i, line in enumerate(lines[:HEADER_LINES]):
@@ -424,6 +445,8 @@ def _rewrite_header_score(text: str, template: str) -> str:
         match = QUALITY_HEADER_RE.fullmatch(body)
         if match:
             lines[i] = match.expand(template) + line[len(body) :]
+            if first_only:
+                break
     return "".join(lines)
 
 
@@ -451,6 +474,31 @@ def reset_header_score(text: str) -> str:
     lines in the leading lines only, line count unchanged.
     """
     return _rewrite_header_score(text, r"\g<head>pending\g<tail>")
+
+
+def set_header_score(text: str, score: int) -> str:
+    """Put ``score`` into the ``Quality: N/100`` header (O9: the write-back on a keep).
+
+    Only the number changes: the ``Created:`` / ``Updated:`` tail stays, and
+    so does everything else. Whole header lines in the leading lines only,
+    line count unchanged; a file without a header is returned as it is. Only
+    the first header line is rewritten, the one ``header_score`` reads: a few
+    JavaScript files carry a stale second header below an ``//#`` directive
+    (the header writer's prepend fallback), which keeps its number, so a
+    write-back changes exactly one line (``regen_writeback.verify-diff``).
+    """
+    if not _is_int(score) or not 0 <= score <= 100:
+        raise ValueError(f"score must be an integer 0-100 (got {score!r})")
+    return _rewrite_header_score(text, rf"\g<head>{score}\g<scale>\g<tail>", first_only=True)
+
+
+def header_score(text: str) -> int | None:
+    """The number of the first ``Quality: N/100`` header line, or None without one."""
+    for line in text.splitlines()[:HEADER_LINES]:
+        match = QUALITY_HEADER_RE.fullmatch(line)
+        if match:
+            return int(match.group("score"))
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -959,20 +1007,174 @@ def check_weaknesses(weaknesses: Any, checklist: Mapping[str, int]) -> tuple[lis
                 f"Likely cause: <code element>.') nor a 'Suggestion: …' line: {_one_line(text)[:80]!r}"
             )
             continue
-        for cid in defect_ids(text):
-            if cid not in CRITERIA and cid not in AR_IDS:
-                problems.append(
-                    f"weakness {i} names {cid}, which is neither a criterion (VQ-01..LM-02) nor AR-06..AR-09"
-                )
-            elif cid in CRITERIA and checklist.get(cid) == CRITERIA[cid]:
-                problems.append(
-                    f"weakness {i} names {cid}, but your checklist gives {cid} its maximum "
-                    f"({CRITERIA[cid]}/{CRITERIA[cid]}): name the criterion the defect costs points on, "
-                    f"or make it a 'Suggestion:' line"
-                )
+        problems += _defect_id_problems(i, text, checklist)
     if counts[SUGGESTION] > MAX_SUGGESTIONS:
         problems.append(f"{counts[SUGGESTION]} 'Suggestion:' lines; keep at most {MAX_SUGGESTIONS}")
     return problems, counts
+
+
+def _defect_id_problems(i: int, text: str, checklist: Mapping[str, int]) -> list[str]:
+    """Every ID a defect line names is known, and a criterion it names is below its maximum."""
+    problems: list[str] = []
+    for cid in defect_ids(text):
+        if cid not in CRITERIA and cid not in AR_IDS:
+            problems.append(f"weakness {i} names {cid}, which is neither a criterion (VQ-01..LM-02) nor AR-06..AR-09")
+        elif cid in CRITERIA and checklist.get(cid) == CRITERIA[cid]:
+            problems.append(
+                f"weakness {i} names {cid}, but your checklist gives {cid} its maximum "
+                f"({CRITERIA[cid]}/{CRITERIA[cid]}): name the criterion the defect costs points on, "
+                f"or make it a 'Suggestion:' line"
+            )
+    return problems
+
+
+def check_prev_review(prev_review: Any, regen: Any) -> list[str]:
+    """Problems of a ``review_prev.json`` (8b step 5); empty when it can be stored.
+
+    The file is the session's re-score of the predecessor written as a full
+    review, and ``regen_writeback.py`` stores it as the live implementation's
+    review when the gate keeps it. So it has the shapes of the new render's
+    review files: a non-empty ``image_description``; a ``criteria_checklist``
+    with exactly the six category keys, their maxima and every criterion as an
+    item with its ``id``, a non-empty ``name``, an integer ``score`` in range,
+    its ``max``, a boolean ``passed`` and a string ``comment`` (the stored
+    checklist is rendered as is), each category's score the sum of its
+    items, each item equal to the same item of ``review_regen.json``'s
+    ``prev_checklist`` (the gate contract stays authoritative); the total is
+    not compared with ``prev_rescored``, which a score cap (step 8) may hold
+    below it; ``strengths`` and ``weaknesses`` as lists of non-empty
+    strings, the weaknesses being defect lines first and then at most
+    ``MAX_SUGGESTIONS`` ``Suggestion:`` lines; and ``verdict`` ``APPROVED`` or
+    ``REJECTED``. It has no score: the stored score is ``prev_rescored``, and
+    other keys are ignored. The content of a defect line (its IDs against the
+    checklist) is ``check-feedback``'s, which only warns.
+    """
+    if not isinstance(prev_review, Mapping):
+        return ["review_prev.json is not a JSON object"]
+    problems: list[str] = []
+    desc = prev_review.get("image_description")
+    if not isinstance(desc, str) or not desc.strip():
+        problems.append("image_description must be a non-empty string describing both production renders")
+    problems += _prev_review_checklist_problems(prev_review.get("criteria_checklist"), regen)
+    for key in ("strengths", "weaknesses"):
+        value = prev_review.get(key)
+        if not isinstance(value, list) or not all(isinstance(v, str) and v.strip() for v in value):
+            problems.append(f"{key} must be a list of non-empty strings")
+        elif key == "weaknesses":
+            problems += _prev_weakness_order_problems(value)
+    if prev_review.get("verdict") not in REVIEW_VERDICTS:
+        problems.append(f"verdict must be APPROVED or REJECTED (got {prev_review.get('verdict')!r})")
+    return problems
+
+
+def _prev_weakness_order_problems(weaknesses: list[str]) -> list[str]:
+    problems: list[str] = []
+    suggestions = 0
+    for i, raw in enumerate(weaknesses, start=1):
+        cls = weakness_class(raw)
+        if cls == LEGACY:
+            problems.append(
+                f"weakness {i} is neither a defect line ('<ID> (<light|dark|both|code>): …', no P id in front) "
+                f"nor a 'Suggestion: …' line: {_one_line(raw)[:80]!r}"
+            )
+        elif cls == DEFECT and suggestions:
+            problems.append(f"weakness {i} is a defect line after a 'Suggestion:' line: list the defect lines first")
+        elif cls == SUGGESTION:
+            suggestions += 1
+    if suggestions > MAX_SUGGESTIONS:
+        problems.append(f"{suggestions} 'Suggestion:' lines; keep at most {MAX_SUGGESTIONS}")
+    return problems
+
+
+def _prev_review_checklist_problems(checklist: Any, regen: Any) -> list[str]:
+    if not isinstance(checklist, Mapping):
+        return ["criteria_checklist must be an object with the six category keys of review_checklist.json"]
+    problems: list[str] = []
+    missing = [key for key in CHECKLIST_CATEGORIES if key not in checklist]
+    if missing:
+        problems.append(f"criteria_checklist lacks {', '.join(missing)}")
+    unknown = sorted(str(key) for key in checklist if key not in CHECKLIST_CATEGORIES)
+    if unknown:
+        problems.append(f"criteria_checklist has unknown keys {', '.join(unknown)}")
+    items: dict[str, int] = {}
+    for key, prefix in CHECKLIST_CATEGORIES.items():
+        category = checklist.get(key)
+        if key not in checklist:
+            continue
+        if not isinstance(category, Mapping):
+            problems.append(f"criteria_checklist.{key} is not an object")
+            continue
+        top = CATEGORY_MAX[key]
+        if not (_is_int(category.get("max")) and category["max"] == top):
+            problems.append(f"criteria_checklist.{key}.max must be {top} (got {category.get('max')!r})")
+        score = category.get("score")
+        if not (_is_int(score) and 0 <= score <= top):
+            problems.append(f"criteria_checklist.{key}.score must be an integer from 0 to {top} (got {score!r})")
+        raw_items = category.get("items")
+        if not isinstance(raw_items, list):
+            problems.append(f"criteria_checklist.{key}.items must be a list")
+            continue
+        seen: set[str] = set()
+        # The category total is compared only when every item of it is sound.
+        items_sound = True
+        total = 0
+        for i, item in enumerate(raw_items, start=1):
+            where = f"criteria_checklist.{key}.items[{i}]"
+            if not isinstance(item, Mapping):
+                problems.append(f"{where} is not an object")
+                items_sound = False
+                continue
+            cid = item.get("id")
+            if not isinstance(cid, str) or not cid.startswith(f"{prefix}-") or cid not in CRITERIA:
+                problems.append(f"{where}.id {cid!r} is not a {prefix} criterion")
+                items_sound = False
+                continue
+            if cid in seen:
+                problems.append(f"{where} repeats {cid}")
+                items_sound = False
+                continue
+            seen.add(cid)
+            if not (_is_int(item.get("max")) and item["max"] == CRITERIA[cid]):
+                problems.append(f"{where} ({cid}) max must be {CRITERIA[cid]} (got {item.get('max')!r})")
+            # The stored checklist renders as is: the name is the criterion's
+            # label, passed its mark (render_previous_review), comment its text.
+            name = item.get("name")
+            if not isinstance(name, str) or not name.strip():
+                problems.append(f"{where} ({cid}) name must be a non-empty string (got {name!r})")
+            if not isinstance(item.get("passed"), bool):
+                problems.append(f"{where} ({cid}) passed must be true or false (got {item.get('passed')!r})")
+            if not isinstance(item.get("comment"), str):
+                problems.append(f"{where} ({cid}) comment must be a string (got {item.get('comment')!r})")
+            if not _score_in_range(cid, item.get("score")):
+                problems.append(
+                    f"{where} ({cid}) score must be an integer from 0 to {CRITERIA[cid]} (got {item.get('score')!r})"
+                )
+                items_sound = False
+                continue
+            items[cid] = item["score"]
+            total += item["score"]
+        absent = [cid for cid in CRITERIA if cid.startswith(f"{prefix}-") and cid not in seen]
+        if absent:
+            problems.append(f"criteria_checklist.{key} lacks the items {', '.join(absent)}")
+        elif items_sound and _is_int(score) and 0 <= score <= top and score != total:
+            problems.append(
+                f"criteria_checklist.{key}.score {score} is not the sum of its item scores ({total}): set it to {total}"
+            )
+
+    raw_prev = regen.get("prev_checklist") if isinstance(regen, Mapping) else None
+    if not isinstance(raw_prev, Mapping):
+        problems.append("review_regen.json has no prev_checklist to compare criteria_checklist with")
+        return problems
+    prev = flat_scores(raw_prev)
+    differ = [f"{cid} {score} vs {prev.get(cid, 'n/a')}" for cid, score in items.items() if prev.get(cid) != score]
+    if differ:
+        problems.append(
+            "criteria_checklist differs from prev_checklist at "
+            + ", ".join(differ)
+            + " (review_prev.json vs review_regen.json): the item scores must be equal — change review_prev.json, "
+            "never prev_checklist"
+        )
+    return problems
 
 
 def _prev_checklist_problems(raw: Any) -> list[str]:
@@ -1260,8 +1462,15 @@ RECORD_KEYS = frozenset(
         "encodings_added",
         "coerced",
         "at",
+        "writeback",
     }
 )
+# What happened to the re-score of the live implementation on a keep
+# (impl-review.yml "Write back the re-score (regen keep)"). ``opened`` means the
+# write-back PR exists and its merge was dispatched, not that it merged. The
+# verdict step adds the key to keep records only; a missing step status reads
+# as ``failed``.
+WRITEBACK_CODES = ("opened", "unchanged", "no_rescore", "invalid", "stale", "failed")
 
 
 def record_token(value: Any, limit: int = 100) -> str:
@@ -1358,7 +1567,8 @@ def validate_record(record: Any) -> list[str]:
 
     Known keys only, no free text anywhere, and a ``v`` / ``verdict`` /
     ``code`` this module can have written: ``RECORD_VERSION``, ``MERGE`` or
-    ``KEEP``, and one of ``REASON_CODES``.
+    ``KEEP``, and one of ``REASON_CODES``. ``writeback`` is optional, one of
+    ``WRITEBACK_CODES``, and only on a keep.
     """
     if not isinstance(record, dict):
         return ["record is not a JSON object"]
@@ -1372,6 +1582,11 @@ def validate_record(record: Any) -> list[str]:
         errors.append(f"record.verdict must be {MERGE!r} or {KEEP!r}")
     if "code" in record and not (isinstance(record["code"], str) and record["code"] in REASON_CODES):
         errors.append("record.code is not one of REASON_CODES")
+    if "writeback" in record:
+        if not (isinstance(record["writeback"], str) and record["writeback"] in WRITEBACK_CODES):
+            errors.append("record.writeback is not one of WRITEBACK_CODES")
+        elif record.get("verdict") != KEEP:
+            errors.append("record.writeback belongs to a keep record only")
 
     def walk(value: Any, where: str) -> None:
         if isinstance(value, dict):
@@ -1532,8 +1747,8 @@ def cmd_sanitize_source(args: argparse.Namespace) -> int:
 
 
 def cmd_check_feedback(args: argparse.Namespace) -> int:
-    if not args.weaknesses and not args.regen:
-        print("check-feedback needs --weaknesses, --regen or both", file=sys.stderr)
+    if not args.weaknesses and not args.regen and not args.prev_review:
+        print("check-feedback needs --weaknesses, --regen, --prev-review or several", file=sys.stderr)
         return 2
     problems: list[str] = []
     checklist: dict[str, int] = {}
@@ -1549,6 +1764,7 @@ def cmd_check_feedback(args: argparse.Namespace) -> int:
         else:
             found, counts = check_weaknesses(weaknesses, checklist)
             problems += found
+    regen: Any = None
     if args.regen:
         regen, error = load_regen_json(Path(args.regen))
         if error:
@@ -1560,6 +1776,18 @@ def cmd_check_feedback(args: argparse.Namespace) -> int:
             if args.spec_file and Path(args.spec_file).is_file():
                 characteristics = parse_characteristics(Path(args.spec_file).read_text(encoding="utf-8"))
             problems += check_regen_feedback(regen, ids, load_weakness_classes(prev_path), characteristics, checklist)
+    if args.prev_review:
+        prev_review, error = load_regen_json(Path(args.prev_review))
+        if error:
+            problems.append(f"{args.prev_review} {error}")
+        else:
+            problems += [f"review_prev.json: {p}" for p in check_prev_review(prev_review, regen)]
+            # The content of its defect lines, against the re-score's own checklist.
+            prev_checklist = flat_scores(regen.get("prev_checklist")) if isinstance(regen, Mapping) else {}
+            lines = prev_review.get("weaknesses") if isinstance(prev_review, Mapping) else None
+            for i, line in enumerate(lines if isinstance(lines, list) else [], start=1):
+                if isinstance(line, str) and weakness_class(line) == DEFECT:
+                    problems += [f"review_prev.json: {p}" for p in _defect_id_problems(i, line.strip(), prev_checklist)]
     for problem in problems:
         print(f"::warning::{_one_line(problem)}" if args.warn_only else _one_line(problem))
     if args.warn_only:
@@ -1617,6 +1845,9 @@ def build_parser() -> argparse.ArgumentParser:
         "--prev-weaknesses", default="", help="context's weaknesses JSON (/tmp/anyplot-prev-weaknesses.json)"
     )
     fb.add_argument("--spec-file", default="", help="plots/S/specification.md (C ids and their kinds)")
+    fb.add_argument(
+        "--prev-review", default="", help="review_prev.json, the re-score as a full review (checked against --regen)"
+    )
     fb.add_argument("--warn-only", action="store_true", help="::warning:: annotations and a notice, exit 0")
     fb.set_defaults(func=cmd_check_feedback)
 
