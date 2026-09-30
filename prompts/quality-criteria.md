@@ -393,6 +393,8 @@ Example data must show ALL features of the plot type.
 
 **A permission is not an aspect to exhibit.** An `Expected, not a defect:` bullet in the spec's characteristic section (see "Plot-Type Characteristics") names something the data may produce, not something it has to show: data with little or no overlap loses nothing. A point count inside the spec's Data range is not a DQ-01 lever either — never deduct "only N points" for a count in range, and never credit dense clusters or overlap as coverage.
 
+**An optional feature is not an aspect to exhibit either.** A feature the Notes only allow, such as percentage labels or asymmetric error bars, is a display choice: a version without it loses nothing on DQ-01.
+
 | Points | Criterion |
 |--------|-----------|
 | 6 | Shows all aspects (e.g., boxplot with outliers AND different distributions) |

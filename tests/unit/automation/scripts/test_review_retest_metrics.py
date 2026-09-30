@@ -293,9 +293,15 @@ def _merge(item: str, run: int, improvements: list, *, order: str = "forward", v
 
 
 class TestMergesWithoutCarrier:
-    def test_carrier_criteria_leave_out_de_and_lm(self):
-        assert len(m.CARRIER_CRITERIA) == 19  # 7 VQ + 4 SC + 3 DQ + 5 CQ
+    def test_carrier_criteria_leave_out_de_lm_and_dq01(self):
+        assert len(m.CARRIER_CRITERIA) == 18  # 7 VQ + 4 SC + 2 DQ + 5 CQ
         assert not any(c.startswith(("DE", "LM")) for c in m.CARRIER_CRITERIA)
+        assert "DQ-01" not in m.CARRIER_CRITERIA
+
+    def test_carrier_criteria_match_the_gate(self):
+        from automation.scripts.regen_gate import CARRIER_CRITERIA
+
+        assert set(m.CARRIER_CRITERIA) == CARRIER_CRITERIA
 
     @pytest.mark.parametrize(
         ("improvements", "fixes", "expected"),
@@ -568,3 +574,62 @@ class TestGateMonitor:
         # DE and LM points are normal: no alarm however many.
         de_lm = [self._record(i, improvements=self._classified(de_lm=2)) for i in range(10)]
         assert not m.gate_monitor(de_lm, lambda r: False)["alarms"]
+
+    @classmethod
+    def _kinded(
+        cls, carriers: int = 0, carriers_pn: int = 0, addition: int = 0, polish: int = 0, no_kind: int = 0
+    ) -> dict:
+        """A P3.1 record's counts; every carrier is a fix, and a demoted item has its kind (or none)."""
+        counts = cls._classified(carriers=carriers)
+        suggestion = addition + polish + no_kind
+        counts.update(
+            {
+                "total": carriers + suggestion,
+                "visible": carriers + suggestion,
+                "suggestion": suggestion,
+                "addition": addition,
+                "polish": polish,
+                "no_kind": no_kind,
+                "carriers_pn": carriers_pn,
+                "by_kind": {"fix": carriers, "removal": 0, "addition": addition, "polish": polish, "none": no_kind},
+            }
+        )
+        return counts
+
+    def test_kind_shares(self):
+        records = [
+            self._record(0, verdict="merge", code="merge", improvements=self._kinded(carriers=2, carriers_pn=2)),
+            self._record(1, verdict="merge", code="merge", improvements=self._kinded(carriers=2, carriers_pn=1)),
+            self._record(2, code="no_defect_improvement", improvements=self._kinded(polish=1, addition=1)),
+            self._record(3, code="no_defect_improvement", improvements=self._kinded(no_kind=2)),
+            # A P3 record (no kind keys) stays out of the kind shares.
+            self._record(4, verdict="merge", code="merge", improvements=self._classified(carriers=1)),
+        ]
+        imp = m.gate_monitor(records, lambda r: False)["improvements"]
+        assert imp["kind_n"] == 4
+        assert imp["addition_share"] == pytest.approx(1 / 4)
+        assert imp["polish_share"] == pytest.approx(1 / 4)
+        assert imp["no_kind_share"] == pytest.approx(1 / 4)
+        assert imp["kind_valid_share"] == pytest.approx(6 / 8)
+        assert (imp["pn_merge_n"], imp["pn_only_merge_share"]) == (2, pytest.approx(1 / 2))
+        assert imp["carrier_n"] == 5
+
+    def test_kind_shares_without_p31_records(self):
+        imp = m.gate_monitor([self._record(0, improvements=self._classified(carriers=1))], lambda r: False)[
+            "improvements"
+        ]
+        assert imp["kind_n"] == 0
+        for key in ("addition_share", "polish_share", "no_kind_share", "kind_valid_share", "pn_only_merge_share"):
+            assert imp[key] is None, key
+
+    def test_no_kind_alarm(self):
+        unnamed = [self._record(0, improvements=self._kinded(no_kind=1))]
+        clean = [self._record(10 + i, improvements=self._kinded(carriers=1)) for i in range(27)]
+        fired = m.gate_monitor(unnamed + clean[:9], lambda r: False)  # 1 of 10 decisions: 10 %
+        assert any("without a kind" in a and "10% of 10 decisions" in a for a in fired["alarms"])
+        # The unverified alarm never sees a missing kind.
+        assert not any("unverified" in a for a in fired["alarms"])
+        few = m.gate_monitor(unnamed + clean[:8], lambda r: False)  # 9 decisions
+        assert not any("without a kind" in a for a in few["alarms"])
+        low = m.gate_monitor(unnamed + clean, lambda r: False)  # 1 of 28 decisions: under 5 %
+        assert not any("without a kind" in a for a in low["alarms"])

@@ -28,6 +28,8 @@ NOW = datetime(2026, 10, 1, 12, 0, tzinfo=timezone.utc)
 A = "a" * 40
 B = "b" * 40
 ACTION = "c" * 40
+# The P3.1 suggestion bases and the P or new carrier count, all zero.
+KIND_ZERO = {"unverified": 0, "de_lm": 0, "addition": 0, "polish": 0, "no_kind": 0, "carriers_pn": 0}
 
 pytestmark = pytest.mark.skipif(shutil.which("git") is None, reason="needs git")
 
@@ -969,7 +971,7 @@ class TestCollect:
             # The workspace checklist scores VQ-03 4 of 6, so a re-score of 2 verifies.
             "prev_checklist": {"VQ-03": 2},
             "prev_weaknesses": [{"ref": "W1", "class": "defect", "rule": "VQ-03"}],
-            "improvements": [{"ref": "W1", "what": "legend larger", "where_visible": "legend"}],
+            "improvements": [{"ref": "W1", "kind": "fix", "what": "legend larger", "where_visible": "legend"}],
             "regressions": [],
             "scenario_changed": False,
             "encodings_added": [],
@@ -999,8 +1001,8 @@ class TestCollect:
             "obsolete": 0,
             "carriers": 1,
             "suggestion": 0,
-            "unverified": 0,
-            "de_lm": 0,
+            **KIND_ZERO,
+            "by_kind": {"fix": 1, "removal": 0, "addition": 0, "polish": 0, "none": 0},
         }
         assert record["order"] == "forward"
 
@@ -1066,8 +1068,8 @@ class TestCollect:
             "obsolete": 0,
             "carriers": 0,
             "suggestion": 0,
-            "unverified": 0,
-            "de_lm": 0,
+            **KIND_ZERO,
+            "by_kind": {"fix": 0, "removal": 0, "addition": 0, "polish": 0, "none": 2},
         }
         # What the report needs to tell an affirmative C id from a permission.
         assert record["spec_characteristics"] == {"count": 2, "permission": ["C2"]}
@@ -1078,20 +1080,23 @@ class TestCollect:
         labelled = "## What a good version looks like\n- A good version shows: x\n- Expected, not a defect: y\n"
         regen = {
             "improvements": [
-                {"ref": "C2", "where_visible": "a"},
-                {"ref": "C1", "where_visible": "b"},
-                {"ref": "new", "where_visible": " "},
-                {"ref": "c2", "where_visible": "a"},  # the gate coerces c2 -> C2: a permission, never visible
+                {"ref": "C2", "kind": "fix", "where_visible": "a"},
+                {"ref": "C1", "kind": "fix", "where_visible": "b"},
+                {"ref": "new", "kind": "fix", "where_visible": " "},
+                # the gate coerces c2 -> C2: a permission, never visible
+                {"ref": "c2", "kind": "fix", "where_visible": "a"},
                 "not an item",
             ]
         }
-        zero = {"obsolete": 0, "suggestion": 0, "unverified": 0, "de_lm": 0}
+        zero = {"obsolete": 0, "suggestion": 0, **KIND_ZERO}
+        fixes = {"by_kind": {"fix": 4, "removal": 0, "addition": 0, "polish": 0, "none": 0}}
         assert rt.improvement_counts(regen, labelled) == {
             "total": 4,
             "visible": 1,
             "permission": 2,
             "carriers": 1,  # C1, an affirmative characteristic
             **zero,
+            **fixes,
         }
         assert regen["improvements"][3]["ref"] == "c2"  # the record's raw regen stays untouched
         # A section without kind prefixes (the pinned v1 specs) has no permissions.
@@ -1101,7 +1106,12 @@ class TestCollect:
             "permission": 0,
             "carriers": 3,
             **zero,
+            **fixes,
         }
+        # P3.1: an affirmative C id without a kind rides along as no_kind.
+        unnamed = {"improvements": [{"ref": "C1", "where_visible": "b"}]}
+        counts = rt.improvement_counts(unnamed, labelled)
+        assert (counts["carriers"], counts["no_kind"], counts["by_kind"]["none"]) == (0, 1, 1)
         assert rt.improvement_counts(None, labelled) is None
         assert rt.improvement_counts({"improvements": "none"}, labelled) is None
 
@@ -1132,7 +1142,7 @@ class TestCollect:
                 {"ref": "W4", "class": "defect", "rule": "VQ-07"},  # 2 → 2: unverified
                 {"ref": "W5", "class": "defect", "rule": "DE-02"},
             ],
-            "improvements": [{"ref": f"W{i}", "what": "x", "where_visible": "y"} for i in range(1, 6)],
+            "improvements": [{"ref": f"W{i}", "kind": "fix", "what": "x", "where_visible": "y"} for i in range(1, 6)],
         }
         spec = "## What a good version looks like\n- A good version shows: x\n- Expected, not a defect: y\n"
         assert rt.improvement_counts(regen, spec, weaknesses, checklist) == {
@@ -1142,9 +1152,15 @@ class TestCollect:
             "obsolete": 1,
             "carriers": 1,
             "suggestion": 3,
+            **KIND_ZERO,
             "unverified": 1,
             "de_lm": 1,
+            "by_kind": {"fix": 5, "removal": 0, "addition": 0, "polish": 0, "none": 0},
         }
+        # P3.1: the W3 carrier named polish rides along; the others keep their basis.
+        regen["improvements"][2]["kind"] = "polish"
+        counts = rt.improvement_counts(regen, spec, weaknesses, checklist)
+        assert (counts["carriers"], counts["polish"], counts["unverified"], counts["de_lm"]) == (0, 1, 1, 1)
         # Without the checklist no criterion verifies.
         assert rt.improvement_counts(regen, spec, weaknesses, tmp_path / "absent.json")["carriers"] == 0
 
@@ -1511,8 +1527,8 @@ class TestGateReport:
         assert permission_only["improvements"]["permission"] == 1
         merged = record(
             [
-                {"ref": "W1", "what": "legend", "where_visible": "legend"},
-                {"ref": "C2", "what": "overlap", "where_visible": "centre"},
+                {"ref": "W1", "kind": "fix", "what": "legend", "where_visible": "legend"},
+                {"ref": "C2", "kind": "fix", "what": "overlap", "where_visible": "centre"},
             ],
             frozenset({"C2"}),
         )
@@ -1670,8 +1686,8 @@ class TestBaselineOverlay:
             "obsolete": 0,
             "carriers": 0,
             "suggestion": 1,
-            "unverified": 0,
-            "de_lm": 0,
+            **KIND_ZERO,
+            "by_kind": {"fix": 0, "removal": 0, "addition": 0, "polish": 0, "none": 1},
         }
         assert record["model"] is None and record["model_alias"] == "sonnet"
         # The overlay gate at the baseline rules is what the self-check copy holds.

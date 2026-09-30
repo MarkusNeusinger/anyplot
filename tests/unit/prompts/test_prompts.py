@@ -769,8 +769,14 @@ class TestDefectsAndSuggestions:
         assert "Every item score equals the same item in `prev_checklist`" in step
         assert "each category's `score` is the sum of its items" in step
         assert "skip steps 1–5, do not write `review_regen.json` or `review_prev.json`" in step
-        assert "They become the defect lines of `review_prev.json`, in that order (step 5)" in step
+        # P3.1: a P item of kind addition or polish is a suggestion line, not a defect line.
+        assert (
+            "They become the defect lines of `review_prev.json` (step 5), except the ones step 3 lists as an "
+            "`addition` or `polish`"
+        ) in step
         assert "without the `P` id, then at most three `Suggestion:` lines" in step
+        assert "with kind `addition` or `polish` is one of those `Suggestion:` lines, not a defect line" in step
+        assert "in that order" not in step
         assert "never mention the new render, the comparison, or the regeneration" in step
         assert "No score key: the stored score is `prev_rescored`" in step
         assert "changes nothing you decided above" in step
@@ -807,6 +813,56 @@ class TestDefectsAndSuggestions:
             "except `review_regen.json` and `review_prev.json`, which describe your re-score of the predecessor" in step
         )
         assert "A `review_prev.json` problem is fixed in `review_prev.json`" in step
+
+    def test_step_8b_names_the_improvement_kinds(self) -> None:
+        """P3.1: every improvement names a kind; the prompt defines the four
+        kinds but never says which carry (D7)."""
+        content = REVIEW_PROMPT.read_text()
+        step = self._section(content, "### 8b.", "### 9.")
+        for kind in ("fix", "removal", "addition", "polish"):
+            assert f"     - `{kind}` — " in step, kind
+        assert "every improvement names one `kind`" in step
+        assert "An `addition` or `polish` item names no violated rule (8a)" in step
+        assert "in `review_prev.json` it is a `Suggestion:` line" in step
+        # Definitions only: nothing says which kinds count for the gate.
+        for phrase in ("only a fix", "do not count", "does not count toward", "kinds that count", "gate ignores"):
+            assert phrase not in step.lower(), phrase
+        # Both examples carry a kind on every improvement.
+        example = json.loads(step.split("```json\n", 1)[1].split("\n```", 1)[0])
+        assert all(item.get("kind") in ("fix", "removal", "addition", "polish") for item in example["improvements"])
+        one_liner = self._section(content, "### 10.", "### 11.")
+        regen = json.loads(one_liner.split("cat > review_regen.json << 'EOF'\n", 1)[1].split("\nEOF", 1)[0])
+        assert all(item.get("kind") == "fix" for item in regen["improvements"])
+
+    def test_examples_use_an_in_scope_collision(self) -> None:
+        """P3.1: the BEAU-001 callout is polish on bubble-basic, so the prompt's
+        examples use the size legend's label, which the Notes require."""
+        content = REVIEW_PROMPT.read_text()
+        assert "BEAU-001" not in content
+        assert '"Size-legend value labels clear of their reference bubbles"' in content
+        assert 'the size legend\'s "500" label overlaps its reference bubble' in content
+
+    def test_8a_scope_and_counter_examples(self) -> None:
+        section = self._section(REVIEW_PROMPT.read_text(), "### 8a.", "### 8b.")
+        assert (
+            "polishing an element the spec's scope excludes (on a `-basic` spec, the layers SC-01 lists; on any "
+            "spec, an annotation or callout the spec does not request), including moving another element clear of it"
+        ) in section
+        assert "moving the label clear of it, like recoloring the line, is a suggestion" in section
+        assert "A count plot without percentage labels has no DQ-01 defect" in section
+        assert '"if drawn"' in section and '"the Notes allow"' in section
+
+    @pytest.mark.parametrize(
+        "prompt_path",
+        [WORKFLOW_PROMPTS_DIR / "ai-quality-review.md", PROMPTS_DIR / "quality-evaluator.md"],
+        ids=lambda p: p.name,
+    )
+    def test_dq01_row_names_optional_features(self, prompt_path: Path) -> None:
+        row = next(line for line in prompt_path.read_text().splitlines() if line.startswith("| DQ-01 |"))
+        assert "neither is an optional feature the Notes only allow" in row
+        assert "a missing optional feature deducts nothing" in row
+        criteria = (PROMPTS_DIR / "quality-criteria.md").read_text()
+        assert "**An optional feature is not an aspect to exhibit either.**" in criteria
 
     def test_important_list_names_the_stored_rescore(self) -> None:
         important = REVIEW_PROMPT.read_text().split("## Important", 1)[1]

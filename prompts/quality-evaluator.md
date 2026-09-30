@@ -240,7 +240,7 @@ Not AR-09 (handle via VQ-05 instead): text overflowing its axis but staying on t
 
 | ID | Criterion | Max | Key Question |
 |----|-----------|-----|--------------|
-| DQ-01 | Feature Coverage | 6 | Shows ALL aspects of plot type? (A permission is not an aspect to exhibit: data with little or no overlap loses nothing, and a point count inside the spec's Data range is not a lever.) |
+| DQ-01 | Feature Coverage | 6 | Shows ALL aspects of plot type? (A permission is not an aspect to exhibit: data with little or no overlap loses nothing, and a point count inside the spec's Data range is not a lever; neither is an optional feature the Notes only allow, such as percentage labels or asymmetric error bars: DQ-01 is about what the example data shows, and a missing optional feature deducts nothing.) |
 | DQ-02 | Realistic Context | 5 | Real-world plausible **AND neutral** scenario? |
 | DQ-03 | Factual Correctness | 4 | Do values and proportions align with real-world facts? |
 
