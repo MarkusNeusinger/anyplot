@@ -42,16 +42,25 @@ g.append("g")
   .attr("stroke-width", 1);
 
 // --- Bars --------------------------------------------------------------------
+// Rounded top corners only (radius clamped at the zero baseline) so bars still
+// read as sitting flush on the axis, not floating rounded boxes.
+function topRoundedBar(bx, by, bw, bh, r) {
+  const rr = Math.min(r, bw / 2, bh);
+  return `M${bx},${by + bh}
+          L${bx},${by + rr}
+          Q${bx},${by} ${bx + rr},${by}
+          L${bx + bw - rr},${by}
+          Q${bx + bw},${by} ${bx + bw},${by + rr}
+          L${bx + bw},${by + bh}
+          Z`;
+}
+
 g.selectAll(".bar")
   .data(data)
-  .join("rect")
+  .join("path")
   .attr("class", "bar")
-  .attr("x", (d) => x(d.treatment))
-  .attr("y", (d) => y(d.mean))
-  .attr("width", x.bandwidth())
-  .attr("height", (d) => ih - y(d.mean))
-  .attr("fill", t.palette[0])
-  .attr("rx", 4);
+  .attr("d", (d) => topRoundedBar(x(d.treatment), y(d.mean), x.bandwidth(), ih - y(d.mean), 4))
+  .attr("fill", t.palette[0]);
 
 // --- Error bars (stem + caps, drawn as one d3-shape "I-beam" path per bar) --
 const capWidth = Math.min(x.bandwidth() * 0.4, 36);
