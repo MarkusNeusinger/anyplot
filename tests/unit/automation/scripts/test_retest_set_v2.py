@@ -284,12 +284,31 @@ GRIDLINE_FIX = [
     "Value labels no longer collide with a grid rule: they now sit beside the error-bar caps",
     "The value labels moved off the gridlines: in the predecessor the y=8 gridline ran straight through the "
     "bold 7.0 label",
+    # Run p3-1-v2: "grid" alone, "grid line" only 108 characters after "labels".
+    "Value labels are clear of the grid: each one now sits to the right of its upper error-bar cap instead of "
+    "riding the top grid line",
 ]
 NOT_GRIDLINE_FIX = [
     "Fewer gridlines cross the translucent bars (10 crossings instead of 18), so the alpha-0.6 bar fills read "
     "as solid blocks instead of being banded by bright rules",
     "the value axis now stops just above the tallest upper cap instead of running past a '9 t/ha' tick and "
     "gridline over empty panel, so the bars fill the panel",
+]
+# #11954's count-axis title, as the retest arms word it (run p3-1-v2 names no
+# title text), and the texts around it that are not the fix.
+AXIS_TITLE_FIX = [
+    "The count axis now carries an explicit title, so a reader skimming the axis learns the bars are response "
+    "counts before reaching the bar labels",
+    "The y-axis now has a title, so the bar heights read as counts",
+    "The value axis is now titled, so the axis says what the bars measure",
+]
+NOT_AXIS_TITLE_FIX = [
+    # A regression's wording: the title is gone, not added.
+    "The count axis now carries neither a title nor numeric ticks and nothing on it says what the bar heights "
+    "measure",
+    "Category tick labels go 8 -> 10 pt, the x-axis title 10 -> 11 pt and the title 12 -> 13 pt, so the smallest "
+    "chrome text no longer sits at the mobile floor",
+    "The 'avg 40' annotation went from 9 pt to 10 pt, matching the other secondary labels",
 ]
 
 
@@ -383,6 +402,16 @@ class TestFixesAgainstRoundOne:
     @pytest.mark.parametrize("what", NOT_GRIDLINE_FIX)
     def test_other_gridline_texts_do_not_match(self, what):
         (label,) = _items_by_pr()[11960]["fixes"]
+        assert not re.search(label["match"], what, re.IGNORECASE)
+
+    @pytest.mark.parametrize("what", AXIS_TITLE_FIX)
+    def test_the_axis_title_fix_matches(self, what):
+        (label,) = _items_by_pr()[11954]["fixes"]
+        assert re.search(label["match"], what, re.IGNORECASE)
+
+    @pytest.mark.parametrize("what", NOT_AXIS_TITLE_FIX)
+    def test_other_axis_texts_do_not_match(self, what):
+        (label,) = _items_by_pr()[11954]["fixes"]
         assert not re.search(label["match"], what, re.IGNORECASE)
 
 
