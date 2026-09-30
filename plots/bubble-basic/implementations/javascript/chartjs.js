@@ -47,18 +47,6 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-// Best-value product (highest quality per dollar) drives the storytelling
-// highlight below — a genuine insight beyond the raw x/y/size encoding.
-let bestValueProduct = products[0];
-let bestValueScore = -Infinity;
-products.forEach((p) => {
-  const score = p.quality / p.price;
-  if (score > bestValueScore) {
-    bestValueScore = score;
-    bestValueProduct = p;
-  }
-});
-
 // Draw largest bubbles first so smaller ones render on top of them instead of
 // being buried underneath — meaningfully improves individuation in the dense
 // $80-140 cluster where same-size bubbles previously stacked in insert order.
@@ -70,7 +58,6 @@ const bubbleData = orderedProducts.map((p) => ({
   y: p.quality,
   r: bubbleRadius(p.salesVolume),
 }));
-const bestValueIndex = orderedProducts.indexOf(bestValueProduct);
 
 // --- Size legend plugin (static key explaining the bubble-area encoding) ---
 // Drawn as an elevated card (ELEVATED_BG + thin rule) rather than bare text
@@ -121,56 +108,6 @@ const sizeLegend = {
   },
 };
 
-// --- Depth-cue glow for the best-value bubble (drawn under the datasets) --
-// A soft radial falloff behind the highlighted bubble gives it a subtle
-// "lifted" depth cue beyond the flat ring/opacity treatment alone.
-const bestValueGlow = {
-  id: "bestValueGlow",
-  beforeDatasetsDraw(chart) {
-    const { ctx, scales } = chart;
-    const p = bestValueProduct;
-    const px = scales.x.getPixelForValue(p.price);
-    const py = scales.y.getPixelForValue(p.quality);
-    const r = bubbleRadius(p.salesVolume);
-    ctx.save();
-    const glow = ctx.createRadialGradient(px, py, r * 0.5, px, py, r * 2.2);
-    glow.addColorStop(0, hexToRgba(t.palette[0], 0.3));
-    glow.addColorStop(1, hexToRgba(t.palette[0], 0));
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(px, py, r * 2.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  },
-};
-
-// --- Standout annotation plugin (points at the best-value product) --------
-const standoutAnnotation = {
-  id: "standoutAnnotation",
-  afterDraw(chart) {
-    const { ctx, chartArea, scales } = chart;
-    const p = bestValueProduct;
-    const px = scales.x.getPixelForValue(p.price);
-    const py = scales.y.getPixelForValue(p.quality);
-    // Point below-right when near the top-left legend, otherwise above-right.
-    const nearLegend = px < chartArea.left + 160 && py < chartArea.top + 140;
-    const labelX = px + 20;
-    const labelY = nearLegend ? py + 34 : py - 30;
-    ctx.save();
-    ctx.strokeStyle = t.ink;
-    ctx.lineWidth = 1.25;
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(labelX, labelY);
-    ctx.stroke();
-    ctx.font = "bold 14px sans-serif";
-    ctx.fillStyle = t.ink;
-    ctx.textAlign = "left";
-    ctx.fillText("Best value", labelX + 4, labelY + (nearLegend ? 4 : -4));
-    ctx.restore();
-  },
-};
-
 // --- Mount -------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
@@ -183,21 +120,12 @@ new Chart(canvas, {
       {
         label: "Products",
         data: bubbleData,
-        // Scriptable options single out the best-value bubble (full opacity,
-        // brand-green ring) while the rest stay at the spec-range overlap alpha.
-        // Ordinary bubbles get a higher-contrast ink stroke (not a page-bg-matched
-        // one) so overlapping bubbles in the dense clusters stay separable from
-        // each other, not only from the page.
-        backgroundColor: (ctx) =>
-          hexToRgba(
-            t.palette[0],
-            ctx.dataIndex === bestValueIndex ? 0.9 : 0.55,
-          ),
-        borderColor: (ctx) =>
-          ctx.dataIndex === bestValueIndex
-            ? t.palette[0]
-            : hexToRgba(t.ink, 0.65),
-        borderWidth: (ctx) => (ctx.dataIndex === bestValueIndex ? 2.5 : 1.5),
+        // A single ink stroke (not page-bg-matched) so overlapping bubbles in
+        // the dense clusters stay separable from each other, not only from
+        // the page; alpha keeps every bubble visible through overlap.
+        backgroundColor: hexToRgba(t.palette[0], 0.55),
+        borderColor: hexToRgba(t.ink, 0.65),
+        borderWidth: 1.5,
       },
     ],
   },
@@ -251,5 +179,5 @@ new Chart(canvas, {
       },
     },
   },
-  plugins: [bestValueGlow, sizeLegend, standoutAnnotation],
+  plugins: [sizeLegend],
 });
