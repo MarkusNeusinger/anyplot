@@ -36,7 +36,9 @@ set: v1
 gcs_prefix: retest/sets/v1
 baseline_rules_sha: &base 0674ab6b55acc71f5015a6aae07145424cbac7cb
 spec_commit: *base
-labels: draft
+# Confirmed by the owner on 2026-09-30, with one correction: the d3 v1-v0
+# pair keeps in both orders.
+labels: confirmed
 
 # bubble-basic regen experiment rounds (2026-09-26/27): main_sha of each
 # snapshot and its local directory, relative to the repository root of the
@@ -287,8 +289,8 @@ items:
     class: different
     new: {commit: *v1, render: *r-v1}
     prev: {commit: *v0, render: *r-v0}
-    note: "force collision introduced (plan: keep forward, merge reversed)"
-    expected: {forward: keep, reversed: merge}
+    note: "force collision introduced (plan: keep forward, merge reversed; owner: keep both orders)"
+    expected: {forward: keep, reversed: keep}
 
   - id: r-bubble-basic-pygal-v1-v0
     kind: regen

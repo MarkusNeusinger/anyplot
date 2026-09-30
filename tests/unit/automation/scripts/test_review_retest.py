@@ -111,14 +111,17 @@ class TestManifest:
         assert {"r-bubble-basic-chartjs-v5-v5", "r-bubble-basic-letsplot-v3-v3"} <= identity  # decision D14
 
     def test_shipped_labels_are_complete(self):
-        """The owner's confirmation (decision D4) is the one-line switch to `labels: confirmed`."""
+        """The owner confirmed the labels (decision D4): the one-line switch to `labels: confirmed`."""
         manifest = yaml.safe_load(MANIFEST.read_text(encoding="utf-8"))
-        assert rt.validate_manifest({**manifest, "labels": "confirmed"}) == []
+        assert manifest["labels"] == "confirmed"
         core_fresh = [i for i in manifest["items"] if i["tier"] == "core" and i["kind"] == "fresh"]
         assert all(i["defects"] for i in core_fresh), "every core fresh item carries its named defect"
         for item in manifest["items"]:
             if item["kind"] == "regen" and item["class"] == "identity":
                 assert item["expected"] == {"forward": "keep", "reversed": "keep"}, item["id"]
+        by_id = {item["id"]: item for item in manifest["items"]}
+        # The owner's correction: the force-collision pair keeps in both orders.
+        assert by_id["r-bubble-basic-d3-v1-v0"]["expected"] == {"forward": "keep", "reversed": "keep"}
 
     def test_valid_example(self):
         assert rt.validate_manifest(_manifest()) == []
