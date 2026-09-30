@@ -746,6 +746,8 @@ KINDS = ("fix", "removal", "addition", "polish")
 CARRYING_KINDS = frozenset({"fix", "removal"})
 ADDITION = "addition"
 POLISH = "polish"
+# Kinds that fix no rule: they need no ``rule`` and claim no score delta.
+NON_FIX_KINDS = frozenset({ADDITION, POLISH})
 NO_KIND = "no_kind"
 
 
@@ -849,8 +851,11 @@ def classify_improvements(payload: Any, inp: GateInput) -> list[dict[str, Any]]:
     The item's ``kind`` (``kind`` in the entry: one of ``KINDS``, or None) is
     read only after the class is set, and only demotes a would-be carrier: an
     ``addition`` or ``polish`` becomes a suggestion with that basis, and a
-    missing, unknown or non-string kind one with basis ``no_kind``. Every
-    other class keeps its basis, whatever the kind. Robust to a payload the
+    missing, unknown or non-string kind one with basis ``no_kind``. An
+    ``addition`` or ``polish`` that would be ``unverified`` (its rule does not
+    verify, or it names none, which it need not) takes its kind as basis: it
+    claims no defect. Every other class keeps its basis, whatever the kind
+    (a DQ-01 addition stays ``de_lm``). Robust to a payload the
     gate would reject (the retest harness counts item by item).
     """
     if not isinstance(payload, Mapping) or not isinstance(payload.get("improvements"), list):
@@ -900,6 +905,8 @@ def classify_improvements(payload: Any, inp: GateInput) -> list[dict[str, Any]]:
             entry.update({"class": SUGGESTION, "basis": UNVERIFIED})
         if entry["class"] == CARRIER and entry["kind"] not in CARRYING_KINDS:
             entry.update({"class": SUGGESTION, "basis": entry["kind"] or NO_KIND})
+        elif entry.get("basis") == UNVERIFIED and entry["kind"] in NON_FIX_KINDS:
+            entry["basis"] = entry["kind"]  # it claims no defect, so it cannot fail to verify one
         out.append(entry)
     return out
 
@@ -1243,9 +1250,11 @@ def check_regen_feedback(
 
     Structure (``validate_regen``), ``prev_checklist`` completeness, one known
     class per previous weakness with the rule its class needs, a rule on every
-    ``P`` and ``new`` item, a ``kind`` (``KINDS``) on every improvement (the
-    message never says which kinds carry), and two consistency tests that
-    treat all 24 criteria alike: a ``W`` classed ``defect`` under a criterion names one
+    ``P`` and ``new`` item of kind ``fix`` or ``removal``, a ``kind``
+    (``KINDS``) on every improvement (the message never says which kinds
+    carry), and two consistency tests that treat all 24 criteria alike (an
+    ``addition`` or ``polish`` item claims no criterion, so it skips the
+    second): a ``W`` classed ``defect`` under a criterion names one
     ``prev_checklist`` deducts, and an improvement that claims a criterion
     scores higher on it in the new render's ``checklist`` than in
     ``prev_checklist``. A failed claim is fixed by changing the claim.
@@ -1326,7 +1335,9 @@ def check_regen_feedback(
             problems.append(f"improvement {i} ({ref}) has no kind{unknown}: name fix, removal, addition or polish")
         m = REF_RE.match(ref)
         ref_kind = m.group("kind") if m else None
-        if ref_kind == "W":
+        if raw_kind in NON_FIX_KINDS:
+            claimed = None  # an addition or polish fixes no rule: nothing to name or to verify
+        elif ref_kind == "W":
             cls, rule = rescore.get(ref, (SUGGESTION, None))
             claimed = rule if cls == DEFECT else None
         elif m and ref_kind != "C":  # P<n> or new
@@ -1597,8 +1608,9 @@ def build_record(
     those, ``carriers`` can carry a merge and ``suggestion`` cannot, so
     ``visible == carriers + suggestion``; ``unverified`` (a claimed rule that
     did not verify, or none), ``de_lm`` (a DE, LM or DQ-01 rule),
-    ``addition``, ``polish`` and ``no_kind`` (a would-be carrier whose kind
-    does not carry, or is missing) are disjoint subsets of ``suggestion``, and
+    ``addition``, ``polish`` (an item of that kind that is neither a DE, LM
+    or DQ-01 point nor a W the re-score classed a suggestion) and ``no_kind``
+    (a would-be carrier without a valid kind) are disjoint subsets of ``suggestion``, and
     ``carriers_pn`` (carriers with a ``P`` or ``new`` ref) is a subset of
     ``carriers``. ``by_kind`` counts the ``kind`` of every listed item
     (``none`` for a missing or unknown one), so it sums to ``total``. The

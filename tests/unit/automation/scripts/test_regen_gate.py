@@ -1569,7 +1569,9 @@ class TestKinds:
     @pytest.mark.parametrize("kind", ["addition", None])
     def test_other_classes_keep_their_basis(self, kind):
         """The kind only demotes a would-be carrier: a permission, an obsolete W,
-        a W suggestion, an unverified claim and a DE point stay what they were."""
+        a W suggestion and a DE point stay what they were. An unverified claim
+        stays unverified without a kind; an addition claims no defect, so it
+        takes its kind as basis instead (it never fails to verify one)."""
         regen = _regen(
             prev_checklist={**PREV_CHECKLIST, "DE-02": 3},
             prev_weaknesses=[{"ref": "W1", "class": "obsolete", "rule": "C2"}, {"ref": "W3", "class": "suggestion"}],
@@ -1586,9 +1588,19 @@ class TestKinds:
             ("C2", "permission", "permission"),
             ("W1", "obsolete", "labeled"),
             ("W3", "suggestion", "suggestion"),
-            ("P1", "suggestion", "unverified"),
+            ("P1", "suggestion", kind or "unverified"),
             ("P2", "suggestion", "de_lm"),
         ]
+
+    @pytest.mark.parametrize("kind", ["addition", "polish"])
+    def test_non_fix_kind_needs_no_rule(self, kind):
+        """An addition or polish without a rule is counted under its kind, never as unverified."""
+        imp = [{"ref": "P1", "kind": kind, "what": "Percentage labels added", "where_visible": "bars"}]
+        result = decide(_inp(regen=_regen(improvements=imp, prev_weaknesses=[])))
+        assert (result.verdict, result.code) == (KEEP, "no_defect_improvement")
+        assert _classes(result) == [("P1", "suggestion", kind)]
+        record = build_record(result, spec_id="count-basic", library="d3", score=85, prev_stored=90)
+        assert (record["improvements"][kind], record["improvements"]["unverified"]) == (1, 0)
 
     def test_one_carrying_item_is_enough(self):
         imp = [{**CARRIER_ITEMS["P"], "kind": "polish"}, {**CARRIER_ITEMS["W"], "kind": "fix"}]
@@ -2255,6 +2267,32 @@ class TestCheckFeedback:
         assert "(C1)" not in out  # 'Polish' is coerced
         for phrase in ("carr", "merge"):
             assert phrase not in out, phrase
+
+    def test_addition_and_polish_need_no_rule_or_score_delta(self, tmp_path, capsys):
+        """A compliant addition (percentage labels, which leave DQ-01 as it was)
+        and a polish item pass the self-check: they fix no rule, so there is no
+        rule to name and no score delta to show."""
+        regen = _regen(
+            prev_weaknesses=[{"ref": "W1", "class": "suggestion"}, {"ref": "W2", "class": "defect", "rule": "VQ-03"}],
+            improvements=[
+                {"ref": "W2", "kind": "fix", "what": "a", "where_visible": "legend"},
+                {"ref": "P1", "kind": "addition", "what": "percentage labels", "where_visible": "bars"},
+                {
+                    "ref": "new",
+                    "rule": "DQ-01",
+                    "kind": "addition",
+                    "what": "percentage labels",
+                    "where_visible": "bars",
+                },
+                {"ref": "W1", "kind": "polish", "what": "mean rule recolored", "where_visible": "mean rule"},
+            ],
+        )
+        code, out = _feedback(tmp_path, capsys, checklist=NEW_CHECKLIST, regen=regen, prev=["a", "b"])
+        assert (code, out.strip()) == (0, "check-feedback: no problems"), out
+        # A fix still names its rule and still shows in the scores.
+        regen["improvements"][1]["kind"] = "fix"
+        code, out = _feedback(tmp_path, capsys, checklist=NEW_CHECKLIST, regen=regen, prev=["a", "b"])
+        assert code == 1 and "improvement 2 (P1) has no rule" in out
 
     def test_defect_the_rescore_did_not_deduct(self, tmp_path, capsys):
         regen = _regen(

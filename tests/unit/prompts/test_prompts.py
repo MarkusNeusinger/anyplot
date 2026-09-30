@@ -824,6 +824,10 @@ class TestDefectsAndSuggestions:
         assert "every improvement names one `kind`" in step
         assert "An `addition` or `polish` item names no violated rule (8a)" in step
         assert "in `review_prev.json` it is a `Suggestion:` line" in step
+        # An addition or polish fixes no rule: it names none and claims no score delta.
+        assert "or, for an `addition` or `polish` (see **Kind**), changes something no rule required" in step
+        assert 'A `P` or `"new"` item of kind `fix` or `removal` also names its `rule`' in step
+        assert "An improvement of kind `fix` or `removal` that claims a criterion" in step
         # Definitions only: nothing says which kinds count for the gate.
         for phrase in ("only a fix", "do not count", "does not count toward", "kinds that count", "gate ignores"):
             assert phrase not in step.lower(), phrase

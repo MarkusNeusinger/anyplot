@@ -605,14 +605,19 @@ class TestGateMonitor:
             # A P3 record (no kind keys) stays out of the kind shares.
             self._record(4, verdict="merge", code="merge", improvements=self._classified(carriers=1)),
         ]
+        # A DQ-01 percentage-label addition: counted as de_lm, but by_kind still names it.
+        dq01 = self._kinded()
+        dq01.update({"total": 1, "visible": 1, "suggestion": 1, "de_lm": 1})
+        dq01["by_kind"] = {**dq01["by_kind"], "addition": 1}
+        records.append(self._record(5, code="no_defect_improvement", improvements=dq01))
         imp = m.gate_monitor(records, lambda r: False)["improvements"]
-        assert imp["kind_n"] == 4
-        assert imp["addition_share"] == pytest.approx(1 / 4)
-        assert imp["polish_share"] == pytest.approx(1 / 4)
-        assert imp["no_kind_share"] == pytest.approx(1 / 4)
-        assert imp["kind_valid_share"] == pytest.approx(6 / 8)
+        assert imp["kind_n"] == 5
+        assert imp["addition_share"] == pytest.approx(2 / 5)
+        assert imp["polish_share"] == pytest.approx(1 / 5)
+        assert imp["no_kind_share"] == pytest.approx(1 / 5)
+        assert imp["kind_valid_share"] == pytest.approx(7 / 9)
         assert (imp["pn_merge_n"], imp["pn_only_merge_share"]) == (2, pytest.approx(1 / 2))
-        assert imp["carrier_n"] == 5
+        assert imp["carrier_n"] == 6
 
     def test_kind_shares_without_p31_records(self):
         imp = m.gate_monitor([self._record(0, improvements=self._classified(carriers=1))], lambda r: False)[

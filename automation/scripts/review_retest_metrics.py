@@ -846,8 +846,10 @@ def gate_monitor(
 
     From P3.1 on, a record also carries ``addition``, ``polish``, ``no_kind``,
     ``carriers_pn`` and the ``by_kind`` histogram. Only those records
-    (``kind_n``) enter the addition, polish and no-kind shares (decisions
-    with at least one), ``kind_valid_share`` (listed improvements that name a
+    (``kind_n``) enter the addition and polish shares (decisions listing at
+    least one item of that kind, from ``by_kind``), the no-kind share
+    (decisions with a would-be carrier without a kind, from ``no_kind``),
+    ``kind_valid_share`` (listed improvements that name a
     kind) and ``pn_only_merge_share`` (merges whose every carrier is a ``P``
     or ``new`` item, over ``pn_merge_n`` merges).
 
@@ -908,10 +910,14 @@ def gate_monitor(
     # P3.1 records (the kind counts); older ones are left out.
     kinded = [(r, c) for r, c in counted if count(c.get("no_kind")) is not None]
 
-    def kinded_share(key: str) -> float | None:
-        return sum(1 for _, c in kinded if (count(c.get(key)) or 0) > 0) / len(kinded) if kinded else None
+    def by_kind(c: dict[str, Any]) -> dict[str, Any]:
+        value = c.get("by_kind")
+        return value if isinstance(value, dict) else {}
 
-    histograms = [h for _, c in kinded if isinstance(h := c.get("by_kind"), dict)]
+    def kinded_share(present: Callable[[dict[str, Any]], bool]) -> float | None:
+        return sum(1 for _, c in kinded if present(c)) / len(kinded) if kinded else None
+
+    histograms = [by_kind(c) for _, c in kinded]
     listed = sum(count(v) or 0 for h in histograms for v in h.values())
     unnamed = sum(count(h.get("none")) or 0 for h in histograms)
     carried_merges = [c for r, c in kinded if r.get("verdict") == "merge" and (count(c.get("carriers")) or 0) > 0]
@@ -938,9 +944,11 @@ def gate_monitor(
         "unverified_share": over_classified(with_any("unverified")),
         "de_lm_share": over_classified(with_any("de_lm")),
         "kind_n": len(kinded),
-        "addition_share": kinded_share("addition"),
-        "polish_share": kinded_share("polish"),
-        "no_kind_share": kinded_share("no_kind"),
+        # Any listed item of that kind (by_kind), whatever its class.
+        "addition_share": kinded_share(lambda c: (count(by_kind(c).get("addition")) or 0) > 0),
+        "polish_share": kinded_share(lambda c: (count(by_kind(c).get("polish")) or 0) > 0),
+        # A would-be carrier without a kind: the top-level count, which the alarm reads.
+        "no_kind_share": kinded_share(lambda c: (count(c.get("no_kind")) or 0) > 0),
         # Improvements, not decisions: the share of listed items that name a kind.
         "kind_valid_share": (listed - unnamed) / listed if listed else None,
         "pn_merge_n": len(carried_merges),
