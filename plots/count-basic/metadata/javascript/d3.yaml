@@ -2,9 +2,9 @@ library: d3
 language: javascript
 specification_id: count-basic
 created: '2026-08-11T06:55:36Z'
-updated: '2026-09-27T20:55:12Z'
+updated: '2026-09-30T12:10:00Z'
 generated_by: claude-sonnet
-workflow_run: 36349126868
+workflow_run: 36711751078
 issue: 2033
 language_version: 22.23.2
 library_version: 7.9.0
@@ -12,54 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/d3/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Genuinely counts raw per-respondent observations via d3.rollup instead of pre-aggregating
-    — matches the count-basic spec's defining distinction from a basic bar chart
-  - Sorted descending by frequency with count labels above each bar, exactly per the
-    spec's notes
-  - 'Fixed W1 from the previous review: the mean-reference line and its label now
-    use the theme-adaptive ink/neutral token instead of amber, so it no longer competes
-    semantically with the amber ''Most common'' leader callout'
-  - 'Count-label halo (paint-order: stroke with pageBg) keeps digits legible where
-    they sit close to the mean line'
-  - 'Clean chrome: tick marks removed, axis domains removed, y-axis-only subtle gridlines,
-    generous margins'
-  - Deterministic LCG-seeded weighted sampling produces realistic, plausible developer-survey
-    proportions (Python > JavaScript > TypeScript > Java > Go > Rust > C++)
-  - All font sizes explicitly set and legible in both themes; no clipping or overflow
-    at the canvas edges
+  - Genuinely counts raw per-respondent observations with d3.rollup over a 640-element
+    response array instead of pre-aggregating, which is exactly the distinction the
+    count-basic spec draws against a plain bar chart
+  - 'Idiomatic modern D3 7 throughout: selection.join() data-joins for bars, labels
+    and gridlines, scaleBand/scaleLinear().nice(), axisBottom/axisLeft with tickSize(0)+tickPadding,
+    d3.format(",d") for whole-number count ticks, d3.descending for the sort'
+  - All seven bars use a single full-opacity t.palette[0] (#009E73), so the data color
+    is pixel-identical between the light and dark renders and only chrome flips
+  - 'Clean chrome per the style guide: axis domains removed, tick marks removed, y-axis-only
+    gridlines at the subtle t.grid token, generous margins, nothing crowding the canvas
+    edge'
+  - 'Every font size is set explicitly (title 26px, subtitle 17px, axis titles 18px,
+    ticks and count labels 16px in the 1600x900 mount) and every element reads clearly
+    on both #FAF8F1 and #1A1A17'
+  - Deterministic fixed-seed LCG weighted sampling -- the reproducibility pattern
+    the d3 prompt prescribes for a browser runtime with no seeded RNG -- yielding
+    a plausible descending language distribution that sums exactly to the stated n
+    = 640
+  - Count axis starts at zero, is never truncated, and carries whole-number ticks,
+    so bar height stays strictly proportional to the count
+  - Thin ink stroke at 0.15 opacity gives the bars definition against both surfaces
+    without reading as a border
   weaknesses:
-  - 'Data-color identity is broken between themes for 5 of the 7 bars: the emphasis
-    scale applies fill-opacity (0.6-1.0) to the same palette[0] hex, but that opacity
-    composites against the theme''s page background, so e.g. the TypeScript bar renders
-    as roughly rgb(48,176,140) — pale mint — on the #FAF8F1 light background and roughly
-    rgb(5,133,97) — dark forest green — on the #1A1A17 dark background. These are
-    visibly different colors, not just a chrome flip. Fix: keep all bars at fill-opacity
-    1 with the single palette[0] hex (matching the spec''s ''one color for all bars''
-    requirement) and create emphasis through sort order, a thin ink-colored stroke,
-    or a callout instead of opacity blended over the page background.'
-  - 'Variant creep on this -basic spec: the dashed mean-reference line (with its ''Mean
-    = 91'' label) and the diamond ''Most common'' callout are annotation layers that
-    the spec''s Notes (count labels, optional percentage annotations only) and the
-    characteristic bullet (''one color for all bars ... no second grouping variable,
-    stacking, error bars or cumulative line'') do not ask for. Consider removing these
-    two extra layers, or limiting embellishment to what the Notes/characteristics
-    explicitly permit, so the basic variant earns its storytelling from data and sort
-    order rather than added encodings.'
+  - 'Suggestion: the Notes allow percentage annotations -- a small share figure under
+    each count label would let readers read each language''s slice of the 640 respondents
+    without arithmetic.'
+  - 'Suggestion: the title at 26px against 18px axis titles is a fairly shallow typographic
+    step; a slightly larger title would sharpen the hierarchy.'
+  - 'Suggestion: the top margin (170 of 900 mount px) leaves a wide band between the
+    subtitle and the 180 gridline; tightening it a little would give the bars more
+    vertical presence.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "count-basic · javascript · d3 · anyplot.ai" in bold dark ink at top center, subtitle "Developer survey · n = 640 respondents · sorted by frequency" below it in softer gray. X-axis label "Primary Programming Language" and Y-axis label "Number of Respondents" both in dark ink. Y-axis ticks (0-180 by 20s) and 7 category tick labels (Python, JavaScript, TypeScript, Java, Go, Rust, C++) in soft gray. Subtle horizontal gridlines only, no visible spines. All text is clearly legible against the light background.
-      Data: 7 vertical bars in brand green (#009E73), fill-opacity fading from full strength on Python (165) down toward ~0.6 on C++ (32) to create a visual focal point. Black count labels with a light halo sit above each bar (165, 154, 101, 87, 65, 36, 32). A now gray/ink dashed mean line (91) with a "Mean = 91" label sits at the right (recolored from amber in the previous version). An amber diamond marker and "Most common" text sit above the Python bar.
-      Legibility verdict: PASS — no overlapping or clipped text, all chrome and data elements readable.
+      Background: Warm off-white matching #FAF8F1 across the full 3200x1800 canvas -- not pure white, not dark. No painted rect over the harness page background.
+      Chrome: Bold dark-ink title "count-basic - javascript - d3 - anyplot.ai" centered at the top, with a softer gray subtitle "Developer survey - n = 640 respondents - sorted by frequency" directly beneath it. X-axis title "Primary Programming Language" and rotated Y-axis title "Number of Respondents" both in dark ink. Y tick labels 0/20/.../180 and the seven category tick labels (Python, JavaScript, TypeScript, Java, Go, Rust, C++) in soft gray. Horizontal gridlines only, subtle but clearly visible; no spines, no tick marks. All text is clearly readable against the light background; nothing is light-on-light, nothing overlaps, nothing is clipped at any canvas edge.
+      Data: Seven vertical bars, all in the same full-opacity brand green #009E73 (t.palette[0]) with a hairline ink stroke at 0.15 opacity for definition. Equal bar width, even gaps, descending order. Bold dark-ink count labels sit above each bar: 165, 154, 101, 87, 65, 36, 32 (sum = 640, matching the stated n). Bars rise from a zero baseline; no reference line, no highlight, no callout, no second color.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and subtitle render in light ink (white/near-white for title, soft light gray for subtitle) — fully readable against the dark surface. Axis titles in light ink, tick labels in soft light gray. Gridlines remain subtle and visible. No dark-on-dark text found anywhere.
-      Data: Bars use the same palette[0] hex and the same fill-opacity gradient as the light render, but composited against the near-black background the faded bars (TypeScript through C++) render as noticeably darker, more saturated greens than their pale-mint counterparts in the light render — the data color is NOT visually identical between the two themes for these 5 bars (confirmed by pixel sampling: TypeScript ≈ rgb(48,176,140) light vs. rgb(5,133,97) dark). Only Python (full opacity) is a true, unshifted #009E73 in both themes. The mean line, its label, the diamond marker, and the "Most common" text are all unchanged in hue and legible on the dark surface.
-      Legibility verdict: PASS for text — all title/axis/tick/annotation text uses theme-adaptive light ink tokens correctly; FAIL for strict data-color identity on the 5 opacity-faded bars (see weaknesses).
+      Background: Warm near-black matching #1A1A17 -- not pure black, not light.
+      Chrome: Title and count labels flip to near-white primary ink; subtitle and tick labels to soft light gray; axis titles to light ink. Gridlines remain subtle and visible against the dark surface. No dark-on-dark text anywhere -- every title, axis title, tick label and count label is comfortably readable.
+      Data: Identical to the light render. All seven bars are the same full-opacity #009E73; because no fill-opacity is applied there is no compositing against the page background, so the bar green is pixel-identical between the two themes. Same heights, same widths, same gaps, same count labels.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -67,58 +65,58 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes and at desktop/mobile
-          widths; title fits without clipping
+        comment: Every size set explicitly (title 26px, subtitle 17px, axis titles
+          18px, ticks and count labels 16px in the 1600x900 mount); all readable in
+          both themes and at mobile downscale. Title-to-axis-title step is on the
+          shallow side, so not full marks.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; halo strokes keep count labels legible near
-          the mean line
+        comment: 'No collisions anywhere: count labels clear their bars and the gridlines,
+          tick labels are well spaced, axis titles sit in their own margins.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Wide bars well-sized for 7 sparse categories; no legend needed for
-          single series
+        comment: Seven wide bars (0.35 band padding) are prominent for this sparse
+          categorical data; gridlines subtle but visible; single series needs no legend.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue green with good contrast on both surfaces; amber accent
-          distinguishable
+        comment: Single brand green at full saturation with strong contrast on both
+          surfaces; no red-green signal, no color-only encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills most of the canvas with balanced margins; nothing
-          cut off
+        comment: Exactly 3200x1800; canvas gate passed. Balanced margins, no overflow,
+          no clipping, plot area fills the canvas well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive axis titles: ''Primary Programming Language'', ''Number
-          of Respondents'''
+        comment: '''Primary Programming Language'' and ''Number of Respondents'' are
+          descriptive and carry their unit implicitly.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First bar (max count) is a true #009E73 in both themes, but the
-          fill-opacity emphasis scale on the other 5 bars composites against the theme
-          background, producing visibly different RGB between light and dark (e.g.
-          TypeScript: rgb(48,176,140) light vs rgb(5,133,97) dark) — data colors are
-          not identical across themes'
+        passed: true
+        comment: 'All bars are Imprint palette[0] #009E73 at full opacity, pixel-identical
+          across themes; backgrounds are #FAF8F1 / #1A1A17; chrome uses ink/inkSoft/grid
+          tokens.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -126,59 +124,62 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful typography, halo-protected labels, and now-corrected mean-line
-          color above a plain default bar chart, though the layout itself is a standard
-          sorted bar chart
+        comment: 'Above the default: deliberate four-level type hierarchy, an informative
+          subtitle, hairline bar stroke for definition, generous margins. The composition
+          itself is still a standard sorted bar chart.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axis domains and tick marks removed, y-axis-only subtle grid, generous
-          whitespace
+        comment: Axis domains removed, tick marks removed via tickSize(0) with explicit
+          tickPadding, y-axis-only grid at the subtle token, whitespace generous.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Sort order (a required feature) is present, but the mean-line and
-          leader-callout annotations that drive most of the perceived hierarchy are
-          unasked additions on this -basic spec and earn no storytelling credit per
-          the SC-01 variant-creep rule
+        passed: true
+        comment: Descending sort plus count labels plus the 'sorted by frequency'
+          subtitle guide the eye from the mode down the tail -- but the sort is a
+          required feature, and the -basic spec's scope rules out further storytelling
+          layers.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Genuine count plot via d3.rollup on raw observations, but the opacity-graded
-          bars (not 'one color for all bars') plus the mean-reference line and 'Most
-          common' diamond callout are encodings/annotation layers the -basic spec's
-          Notes and characteristic section do not ask for
+        passed: true
+        comment: 'A genuine count plot: d3.rollup counts raw per-respondent observations
+          rather than plotting pre-aggregated values. One color for all bars, no reference
+          line, no highlight, no callout, no second grouping variable -- exactly the
+          basic variant.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sorted descending, count labels above bars, consistent bar width/spacing
-          — all Notes items present
+        comment: 'All Notes and ''A good version shows'' bullets met: descending frequency
+          sort, count labels above bars, one bar width with even gaps, zero-baseline
+          untruncated count axis with whole-number ticks. Percentage annotations are
+          optional and their absence deducts nothing.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = category, Y = count, all categories shown, bars sit exactly at
-          their counted values
+        comment: X is the category, Y is the count; all seven categories shown; bars
+          sit at exactly their counted values (165+154+101+87+65+36+32 = 640); no
+          nudging or displacement.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; no legend needed for single-series
-          chart
+        comment: Title is exactly 'count-basic - javascript - d3 - anyplot.ai'. Single
+          series, so no legend is required (N/A).
     data_quality:
       score: 15
       max: 15
@@ -188,21 +189,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Clear frequency spread from a dominant category down through a long
-          tail — matches the spec's 'unequal heights' permission
+        comment: 'Seven categories inside the spec''s 3-20 range, showing the count
+          plot''s characteristic shape: a dominant category, a clear mid-band and
+          a thinning tail, with the counts labelled.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, realistic developer-survey scenario
+        comment: Developer-survey primary language -- neutral, uncontroversial, and
+          a canonical real use of a count plot.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Language popularity ranking and proportions are plausible for a real
-          developer survey
+        comment: '640 respondents, counts 32-165, axis 0-180: plausible survey magnitudes
+          and a plausible popularity ordering.'
     code_quality:
       score: 10
       max: 10
@@ -212,33 +215,38 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports/data/plot flow; the small LCG helper is the idiomatic
-          reproducibility pattern for D3
+        comment: Straight top-to-bottom data -> scales -> grid -> axes -> bars ->
+          labels -> titles flow; the only helper is the tiny LCG the d3 prompt prescribes
+          for determinism.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed 42) makes data deterministic
+        comment: Fixed-seed (42) LCG drives the weighted sampling, so both theme runs
+          produce identical counts.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Uses only the global d3 bundle, no extraneous imports
+        comment: No import/require at all -- uses only the global d3 bundle and the
+          harness globals, as the mount-node contract requires.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for the effects delivered, no fake UI
+        comment: 161 lines with no dead code, no fake UI, no leftover helpers; comments
+          explain intent rather than restate the API.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Renders into #container per the mount-node contract, animations
-          not used'
+        comment: 'Appends exactly one svg to #container sized from window.ANYPLOT_SIZE,
+          writes no files, adds no transitions or animations -- the harness captures
+          plot-{theme}.png and .html.'
     library_mastery:
       score: 7
       max: 10
@@ -248,20 +256,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic d3-array rollup, scaleBand/scaleLinear, axisBottom/axisLeft,
-          d3-shape symbol generator
+        comment: 'Modern D3 7 throughout: selection.join() for every mark layer, scaleBand/scaleLinear().nice(),
+          the axis component with tickSize/tickPadding/tickFormat, d3.max/d3.descending/d3.format.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
         comment: d3.rollup counting raw observations is genuinely D3-distinctive for
-          implementing a count plot; the diamond leader marker is a nice touch but
-          decorative rather than load-bearing
-  verdict: REJECTED
-  model: claude-sonnet-5
-  criteria_version: qc-4374db4964.aqr-815475d157.sg-7006008fc6.lib-10a34e8881
-  rendered_at: '2026-09-27T20:48:43Z'
+          realising a count plot, and the gridlines are a hand-rolled data-join over
+          y.ticks(6) rather than a canned option -- but the rest is a build any charting
+          library could produce.
+  verdict: APPROVED
+  model: claude-opus-5
+  criteria_version: qc-0af6a3cb51.aqr-5ae4f38ad1.sg-7006008fc6.lib-10a34e8881
+  rendered_at: '2026-09-30T12:02:18Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -271,4 +280,7 @@ impl_tags:
   - groupby-aggregation
   dataprep: []
   styling:
-  - alpha-blending
+  - publication-ready
+  - minimal-chrome
+  - grid-styling
+  - edge-highlighting
