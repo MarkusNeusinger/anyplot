@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: pending | Updated: 2026-09-30
+// Quality: 86/100 | Updated: 2026-09-30
 
 const t = window.ANYPLOT_TOKENS;
 const size = window.ANYPLOT_SIZE;
