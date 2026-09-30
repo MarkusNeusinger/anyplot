@@ -1,6 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: 89/100 | Updated: 2026-09-27
 
 const t = window.ANYPLOT_TOKENS;
@@ -72,47 +73,21 @@ for (let i = 0; i < 70; i += 1) {
   companies.push(candidate);
 }
 
-// Highlight one bubble as a focal point instead of leaving the chart a flat
-// scatter of equals — the largest segment share, kept away from the plot
-// edges so its label never risks clipping against the axes.
-const focal = companies
-  .filter((c) => {
-    const nx = (c.growthRate - X_MIN) / (X_MAX - X_MIN);
-    const ny = (c.revenue - Y_MIN) / (Y_MAX - Y_MIN);
-    return nx > 0.12 && nx < 0.88 && ny > 0.12 && ny < 0.88;
-  })
-  .reduce((best, c) => (c.segmentShare > best.segmentShare ? c : best));
-focal.isFocal = true;
-
 const [fr, fg, fb] = [1, 3, 5].map((i) => parseInt(t.palette[0].slice(i, i + 2), 16));
 const fillForShare = (share) => `rgba(${fr}, ${fg}, ${fb}, ${alphaForShare(share)})`;
-const seriesData = companies.map((c) => {
-  const point = {
-    x: c.growthRate,
-    y: c.revenue,
-    marker: {
-      radius: c.r,
-      fillColor: fillForShare(c.segmentShare),
-      // Page-bg stroke carves a visible edge between overlapping same-color
-      // bubbles instead of them reading as one merged blob.
-      lineColor: t.pageBg,
-      lineWidth: 3,
-    },
-    custom: { segmentShare: Math.round(c.segmentShare) },
-  };
-  if (c.isFocal) {
-    const ny = (c.revenue - Y_MIN) / (Y_MAX - Y_MIN);
-    point.marker.lineColor = t.ink;
-    point.marker.lineWidth = 2.5;
-    point.dataLabels = {
-      enabled: true,
-      format: `Segment leader<br/>${Math.round(c.segmentShare)}% share`,
-      y: ny > 0.5 ? c.r + 20 : -(c.r + 20),
-      style: { color: t.ink, fontSize: "13px", fontWeight: "600", textOutline: "none" },
-    };
-  }
-  return point;
-});
+const seriesData = companies.map((c) => ({
+  x: c.growthRate,
+  y: c.revenue,
+  marker: {
+    radius: c.r,
+    fillColor: fillForShare(c.segmentShare),
+    // Page-bg stroke carves a visible edge between overlapping same-color
+    // bubbles instead of them reading as one merged blob.
+    lineColor: t.pageBg,
+    lineWidth: 3,
+  },
+  custom: { segmentShare: Math.round(c.segmentShare) },
+}));
 
 // --- Chart post-render helpers ------------------------------------------------
 function drawSizeLegend(chart) {
