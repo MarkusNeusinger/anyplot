@@ -30,18 +30,20 @@ Merge requires ALL of:
    stays valid;
 6. at least one of those visible improvements is a *carrier*: an affirmative
    ``C`` ref, or a ``W`` classed ``defect`` / a ``P`` or ``new`` item whose
-   ``rule`` verifies -- a VQ, SC, DQ or CQ criterion the new render scores
-   higher on (``review_checklist.json`` next to ``review_regen.json``) than
-   the re-score did (``prev_checklist``), an affirmative ``C`` id, or
-   ``AR-06``..``AR-09`` while ``prev_rescored`` is 0. Suggestions, unverified
-   claims and DE or LM points ride along but never carry a merge alone
-   (``classify_improvements``);
+   ``rule`` verifies -- a VQ, SC, DQ or CQ criterion other than DQ-01 the new
+   render scores higher on (``review_checklist.json`` next to
+   ``review_regen.json``) than the re-score did (``prev_checklist``), an
+   affirmative ``C`` id, or ``AR-06``..``AR-09`` while ``prev_rescored`` is
+   0 -- and whose ``kind`` is ``fix`` or ``removal``. Suggestions, unverified
+   claims, design, library-mastery and feature-coverage (DQ-01) points,
+   additions, polish and items without a kind ride along but never carry a
+   merge alone (``classify_improvements``);
 7. no regressions -- on a ``*-basic`` spec a changed data scenario or added
    encodings count as regressions unless a change request asked for them.
 
 Anything missing or malformed fails closed to ``keep``. The classification
-keys (``prev_checklist``, ``prev_weaknesses``, ``rule``) never invalidate the
-file: a missing or malformed one only leaves fewer carriers.
+keys (``prev_checklist``, ``prev_weaknesses``, ``rule``, ``kind``) never
+invalidate the file: a missing or malformed one only leaves fewer carriers.
 
 Stored weaknesses come in two formats (``weakness_class``): a *defect* line
 ``<ID>[, <ID>] (<light|dark|both|code>): …`` naming the criterion it violates,
@@ -100,7 +102,7 @@ import json
 import os
 import re
 import sys
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -181,8 +183,10 @@ CRITERIA: dict[str, int] = {
 }
 # Criteria whose verified fix can carry a regeneration. DE and LM never do:
 # stored reviews deduct DE-01..03 and LM-02 in 96-100 % of cases, so no score
-# delta tells a fix from a taste change there; they ride along instead.
-CARRIER_CRITERIA = frozenset(c for c in CRITERIA if c[:2] in {"VQ", "SC", "DQ", "CQ"})
+# delta tells a fix from a taste change there; they ride along instead. DQ-01
+# (feature coverage) rides along for the same reason: Opus deducts it in 65-98 %
+# of reviews, and what a regeneration must show is SC-02 or an affirmative C id.
+CARRIER_CRITERIA = frozenset(c for c in CRITERIA if c[:2] in {"VQ", "SC", "DQ", "CQ"} and c != "DQ-01")
 # The AI-judged auto-reject checks a defect line may name besides the criteria.
 AR_IDS = ("AR-06", "AR-07", "AR-08", "AR-09")
 
@@ -559,8 +563,9 @@ def normalize_regen(payload: Any) -> tuple[Any, list[str]]:
     ``change_request_applied``. Anything else is left for ``validate_regen``
     to reject. The classification keys are coerced, never rejected: a
     non-list ``prev_weaknesses`` or a non-object ``prev_checklist`` becomes
-    empty, and ``prev_weaknesses`` entries get a lower-case ``class`` and an
-    upper-case ``ref`` and ``rule``.
+    empty, ``prev_weaknesses`` entries get a lower-case ``class`` and an
+    upper-case ``ref`` and ``rule``, and an improvement's string ``kind`` is
+    lower-cased and stripped.
     """
     if not isinstance(payload, dict):
         return payload, []
@@ -596,6 +601,10 @@ def normalize_regen(payload: Any) -> tuple[Any, list[str]]:
             if isinstance(rule, str) and rule.strip().upper() != rule:
                 notes.append(f"rule {rule!r} -> {rule.strip().upper()!r}")
                 item = {**item, "rule": rule.strip().upper()}
+            kind = item.get("kind") if isinstance(item, dict) else None
+            if isinstance(kind, str) and kind.strip().lower() != kind:
+                notes.append(f"kind {kind!r} -> {kind.strip().lower()!r}")
+                item = {**item, "kind": kind.strip().lower()}
             fixed.append(item)
         data["improvements"] = fixed
 
@@ -722,11 +731,24 @@ def decide(inp: GateInput) -> GateResult:
 # all. ``basis`` says why: a carrier rests on a ``criterion`` delta, a
 # ``characteristic`` or an ``auto_reject`` fix; a suggestion is a
 # ``suggestion`` (a W the re-score classed so, or left unclassified), an
-# ``unverified`` claim, or a ``de_lm`` (design or library-mastery) point.
+# ``unverified`` claim, a ``de_lm`` (design, library-mastery or DQ-01
+# feature-coverage) point, or a would-be carrier whose ``kind`` does not carry:
+# an ``addition`` (an element nothing requires), ``polish`` (of an element the
+# spec's scope excludes) or ``no_kind`` (a missing or unknown kind).
 PERMISSION = "permission"
 CARRIER = "carrier"
 UNVERIFIED = "unverified"
 DE_LM = "de_lm"
+# The ``kind`` every improvement names (8b step 3); only a fix or a removal
+# carries. A missing or unknown kind fails toward keep, and never reads as
+# ``unverified``: its scores may well confirm the claim.
+KINDS = ("fix", "removal", "addition", "polish")
+CARRYING_KINDS = frozenset({"fix", "removal"})
+ADDITION = "addition"
+POLISH = "polish"
+# Kinds that fix no rule: they need no ``rule`` and claim no score delta.
+NON_FIX_KINDS = frozenset({ADDITION, POLISH})
+NO_KIND = "no_kind"
 
 
 def load_weakness_classes(path: Path | None) -> dict[str, str]:
@@ -796,7 +818,7 @@ def _verify(rule: str | None, inp: GateInput, prev_checklist: Mapping[str, int],
         if isinstance(prev, int) and isinstance(new, int) and new > prev:
             return {"class": CARRIER, "basis": "criterion", **scores}
         return {"class": SUGGESTION, "basis": UNVERIFIED, **scores}
-    if rule in CRITERIA:  # DE-01..03, LM-01..02: stored and repaired, never a carrier
+    if rule in CRITERIA:  # DE, LM and DQ-01: stored and repaired, never a carrier
         return {"class": SUGGESTION, "basis": DE_LM}
     if C_REF_RE.match(rule):
         return (
@@ -821,11 +843,20 @@ def classify_improvements(payload: Any, inp: GateInput) -> list[dict[str, Any]]:
       suggestion.
     - A ``P`` or ``new`` item: its own ``rule``, verified.
 
-    A rule verifies when it is a VQ/SC/DQ/CQ criterion the new render
-    (``inp.new_checklist``) scores higher on than ``prev_checklist``, an
-    affirmative C id, or ``AR-06``..``AR-09`` while ``prev_rescored`` is 0. A
-    DE or LM rule is a ``de_lm`` suggestion. Robust to a payload the gate
-    would reject (the retest harness counts item by item).
+    A rule verifies when it is a VQ/SC/DQ/CQ criterion other than DQ-01 the
+    new render (``inp.new_checklist``) scores higher on than
+    ``prev_checklist``, an affirmative C id, or ``AR-06``..``AR-09`` while
+    ``prev_rescored`` is 0. A DE, LM or DQ-01 rule is a ``de_lm`` suggestion.
+
+    The item's ``kind`` (``kind`` in the entry: one of ``KINDS``, or None) is
+    read only after the class is set, and only demotes a would-be carrier: an
+    ``addition`` or ``polish`` becomes a suggestion with that basis, and a
+    missing, unknown or non-string kind one with basis ``no_kind``. An
+    ``addition`` or ``polish`` that would be ``unverified`` (its rule does not
+    verify, or it names none, which it need not) takes its kind as basis: it
+    claims no defect. Every other class keeps its basis, whatever the kind
+    (a DQ-01 addition stays ``de_lm``). Robust to a payload the
+    gate would reject (the retest harness counts item by item).
     """
     if not isinstance(payload, Mapping) or not isinstance(payload.get("improvements"), list):
         return []
@@ -837,15 +868,17 @@ def classify_improvements(payload: Any, inp: GateInput) -> list[dict[str, Any]]:
         if not isinstance(item, Mapping):
             continue
         ref = str(item.get("ref") or "")
+        raw_kind = item.get("kind")
         entry: dict[str, Any] = {
             "ref": ref,
             "what": str(item.get("what") or "").strip(),
             "where_visible": str(item.get("where_visible") or "").strip(),
             "rule": None,
+            "kind": raw_kind if raw_kind in KINDS else None,
         }
         m = REF_RE.match(ref)
-        kind = m.group("kind") if m else None
-        if kind == "C":
+        ref_kind = m.group("kind") if m else None
+        if ref_kind == "C":
             entry["rule"] = ref
             if ref in inp.permission_refs:
                 entry.update({"class": PERMISSION, "basis": PERMISSION})
@@ -853,7 +886,7 @@ def classify_improvements(payload: Any, inp: GateInput) -> list[dict[str, Any]]:
                 entry.update({"class": CARRIER, "basis": "characteristic"})
             else:
                 entry.update({"class": SUGGESTION, "basis": UNVERIFIED})
-        elif kind == "W":
+        elif ref_kind == "W":
             cls, rule = rescore.get(ref, (SUGGESTION, None))
             entry["rule"] = rule
             if cls == DEFECT and inp.weakness_classes.get(ref, LEGACY) == SUGGESTION:
@@ -870,6 +903,10 @@ def classify_improvements(payload: Any, inp: GateInput) -> list[dict[str, Any]]:
             entry.update(_verify(entry["rule"], inp, prev_checklist, prev_rescored))
         else:
             entry.update({"class": SUGGESTION, "basis": UNVERIFIED})
+        if entry["class"] == CARRIER and entry["kind"] not in CARRYING_KINDS:
+            entry.update({"class": SUGGESTION, "basis": entry["kind"] or NO_KIND})
+        elif entry.get("basis") == UNVERIFIED and entry["kind"] in NON_FIX_KINDS:
+            entry["basis"] = entry["kind"]  # it claims no defect, so it cannot fail to verify one
         out.append(entry)
     return out
 
@@ -948,7 +985,14 @@ def _judge(inp: GateInput, regen: Any) -> GateResult:
     if not carriers:
         kinds = [
             (sum(1 for i in visible if i["basis"] == basis), label)
-            for basis, label in ((SUGGESTION, "suggestion"), (UNVERIFIED, "unverified"), (DE_LM, "design or library"))
+            for basis, label in (
+                (SUGGESTION, "suggestion"),
+                (UNVERIFIED, "unverified"),
+                (DE_LM, "design, library or coverage"),
+                (ADDITION, "addition"),
+                (POLISH, "polish of an out-of-scope element"),
+                (NO_KIND, "no kind named"),
+            )
         ]
         breakdown = ", ".join(f"{n} {label}" for n, label in kinds if n)
         result.code = "no_defect_improvement"
@@ -1206,8 +1250,11 @@ def check_regen_feedback(
 
     Structure (``validate_regen``), ``prev_checklist`` completeness, one known
     class per previous weakness with the rule its class needs, a rule on every
-    ``P`` and ``new`` item, and two consistency tests that treat all 24
-    criteria alike: a ``W`` classed ``defect`` under a criterion names one
+    ``P`` and ``new`` item of kind ``fix`` or ``removal``, a ``kind``
+    (``KINDS``) on every improvement (the message never says which kinds
+    carry), and two consistency tests that treat all 24 criteria alike (an
+    ``addition`` or ``polish`` item claims no criterion, so it skips the
+    second): a ``W`` classed ``defect`` under a criterion names one
     ``prev_checklist`` deducts, and an improvement that claims a criterion
     scores higher on it in the new render's ``checklist`` than in
     ``prev_checklist``. A failed claim is fixed by changing the claim.
@@ -1282,12 +1329,18 @@ def check_regen_feedback(
         if not isinstance(item, Mapping) or not isinstance(item.get("ref"), str):
             continue
         ref = item["ref"]
+        raw_kind = item.get("kind")
+        if raw_kind not in KINDS:
+            unknown = f" ({_one_line(str(raw_kind))[:40]!r} is not one)" if raw_kind is not None else ""
+            problems.append(f"improvement {i} ({ref}) has no kind{unknown}: name fix, removal, addition or polish")
         m = REF_RE.match(ref)
-        kind = m.group("kind") if m else None
-        if kind == "W":
+        ref_kind = m.group("kind") if m else None
+        if raw_kind in NON_FIX_KINDS:
+            claimed = None  # an addition or polish fixes no rule: nothing to name or to verify
+        elif ref_kind == "W":
             cls, rule = rescore.get(ref, (SUGGESTION, None))
             claimed = rule if cls == DEFECT else None
-        elif m and kind != "C":  # P<n> or new
+        elif m and ref_kind != "C":  # P<n> or new
             claimed = _canonical_rule(item.get("rule"))
             if claimed is None:
                 problems.append(
@@ -1391,7 +1444,13 @@ def improvement_flag(item: Mapping[str, Any]) -> str:
             return " _(characteristic)_"
         return f" _(defect: {rule})_"
     if basis == DE_LM:
-        return f" _(design or library point {rule}: does not carry)_"
+        return f" _(design, library or coverage point {rule}: does not carry)_"
+    if basis == ADDITION:
+        return " _(addition: does not carry)_"
+    if basis == POLISH:
+        return " _(polish of an out-of-scope element: does not carry)_"
+    if basis == NO_KIND:
+        return " _(no kind named: does not carry)_"
     if basis == UNVERIFIED:
         if "prev_score" in item or "new_score" in item:
             scores = f"{_score_text(item.get('prev_score'))} → {_score_text(item.get('new_score'))}"
@@ -1490,6 +1549,40 @@ def _ref_kind(ref: str) -> str:
     return "new" if ref == "new" else ref[:1]
 
 
+def improvement_class_counts(items: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """The class counts of classified improvements (``classify_improvements``).
+
+    The gate record's ``improvements`` block without the per-ref counts, and
+    what ``review_retest.py`` records per cell, so the two cannot drift apart;
+    ``build_record`` documents each key.
+    """
+    visible = [i for i in items if _counted(i) and i["where_visible"]]
+    carriers = [i for i in visible if i.get("class") == CARRIER]
+    suggestions = [i for i in visible if i.get("class") != CARRIER]
+    by_kind = dict.fromkeys((*KINDS, "none"), 0)
+    for item in items:
+        by_kind[item["kind"] if item.get("kind") in KINDS else "none"] += 1
+
+    def basis(value: str) -> int:
+        return sum(1 for i in suggestions if i.get("basis") == value)
+
+    return {
+        "total": len(items),
+        "visible": len(visible),
+        "permission": sum(1 for i in items if i.get("class") == PERMISSION),
+        "obsolete": sum(1 for i in items if i.get("class") == OBSOLETE),
+        "carriers": len(carriers),
+        "suggestion": len(suggestions),
+        "unverified": basis(UNVERIFIED),
+        "de_lm": basis(DE_LM),
+        "addition": basis(ADDITION),
+        "polish": basis(POLISH),
+        "no_kind": basis(NO_KIND),
+        "carriers_pn": sum(1 for i in carriers if _ref_kind(str(i["ref"])) in ("P", "new")),
+        "by_kind": by_kind,
+    }
+
+
 def build_record(
     result: GateResult,
     *,
@@ -1514,20 +1607,23 @@ def build_record(
     counted ones (neither of the two) with a non-empty ``where_visible``. Of
     those, ``carriers`` can carry a merge and ``suggestion`` cannot, so
     ``visible == carriers + suggestion``; ``unverified`` (a claimed rule that
-    did not verify, or none) and ``de_lm`` (a DE or LM rule) are disjoint
-    subsets of ``suggestion``. The record stays ``v1``: records written before
-    these five keys lack them, and ``visible`` then still counted obsolete
-    citations.
+    did not verify, or none), ``de_lm`` (a DE, LM or DQ-01 rule),
+    ``addition``, ``polish`` (an item of that kind that is neither a DE, LM
+    or DQ-01 point nor a W the re-score classed a suggestion) and ``no_kind``
+    (a would-be carrier without a valid kind) are disjoint subsets of ``suggestion``, and
+    ``carriers_pn`` (carriers with a ``P`` or ``new`` ref) is a subset of
+    ``carriers``. ``by_kind`` counts the ``kind`` of every listed item
+    (``none`` for a missing or unknown one), so it sums to ``total``. The
+    record stays ``v1``: records written before P3 lack the five
+    classification keys, and ``visible`` then still counted obsolete
+    citations; records written before P3.1 lack the kind keys.
     """
     kinds = {"W": 0, "P": 0, "C": 0, "new": 0}
     for item in result.improvements:
         kind = _ref_kind(item["ref"])
         if kind in kinds:
             kinds[kind] += 1
-    counted = [i for i in result.improvements if _counted(i)]
-    visible = [i for i in counted if i["where_visible"]]
-    carriers = [i for i in visible if i.get("class") == CARRIER]
-    suggestions = [i for i in visible if i.get("class") != CARRIER]
+    counts = improvement_class_counts(result.improvements)
     return {
         "v": RECORD_VERSION,
         "pr": pr,
@@ -1543,17 +1639,7 @@ def build_record(
         "new": score,
         "verdict": result.verdict,
         "code": result.code,
-        "improvements": {
-            "total": len(result.improvements),
-            "visible": len(visible),
-            **kinds,
-            "permission": sum(1 for i in result.improvements if i.get("class") == PERMISSION),
-            "obsolete": sum(1 for i in result.improvements if i.get("class") == OBSOLETE),
-            "carriers": len(carriers),
-            "suggestion": len(suggestions),
-            "unverified": sum(1 for i in suggestions if i.get("basis") == UNVERIFIED),
-            "de_lm": sum(1 for i in suggestions if i.get("basis") == DE_LM),
-        },
+        "improvements": {"total": counts.pop("total"), "visible": counts.pop("visible"), **kinds, **counts},
         "regressions": len(result.regressions),
         "scenario_changed": result.scenario_changed,
         "encodings_added": result.encodings_added,

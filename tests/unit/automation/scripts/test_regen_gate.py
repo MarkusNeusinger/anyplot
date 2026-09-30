@@ -64,7 +64,16 @@ CATEGORY_KEYS = {
 }
 
 
+def _with_kind(improvements, kind: str = "fix"):
+    """Every improvement object without a ``kind`` gets one (P3-era fixtures keep their meaning)."""
+    if not isinstance(improvements, list):
+        return improvements
+    return [{"kind": kind, **item} if isinstance(item, dict) and "kind" not in item else item for item in improvements]
+
+
 def _regen(**overrides) -> dict:
+    """A valid review_regen.json; every improvement without a ``kind`` is a ``fix``.
+    A missing kind is tested through explicit fixtures (``_no_kind``)."""
     payload = {
         "prev_rescored": 85,
         "prev_checklist": dict(PREV_CHECKLIST),
@@ -78,7 +87,20 @@ def _regen(**overrides) -> dict:
         "change_request_applied": None,
     }
     payload.update(overrides)
+    if "improvements" in payload:
+        payload["improvements"] = _with_kind(payload["improvements"])
     return payload
+
+
+def _no_kind(payload: dict) -> dict:
+    """``payload`` with the ``kind`` key removed from every improvement."""
+    return {
+        **payload,
+        "improvements": [
+            {k: v for k, v in item.items() if k != "kind"} if isinstance(item, dict) else item
+            for item in payload["improvements"]
+        ],
+    }
 
 
 def _inp(score: int | None = 85, regen=None, **overrides) -> GateInput:
@@ -857,6 +879,11 @@ class TestGateRecord:
             "suggestion": 0,
             "unverified": 0,
             "de_lm": 0,
+            "addition": 0,
+            "polish": 0,
+            "no_kind": 0,
+            "carriers_pn": 0,
+            "by_kind": {"fix": 2, "removal": 0, "addition": 0, "polish": 0, "none": 0},
         }
         assert record["regressions"] == 0
         assert record["prev_model"] == "n/a"
@@ -1226,11 +1253,13 @@ class TestWeaknessClass:
         assert defect_ids("VQ-03, SC-04 (both): x") == ["VQ-03", "SC-04"]
         assert defect_ids("Suggestion: VQ-03 (both): x") == []
 
-    def test_carrier_criteria_are_the_19_vq_sc_dq_cq_items(self):
+    def test_carrier_criteria_are_the_18_vq_sc_dq_cq_items(self):
         assert len(CRITERIA) == 24
         assert sum(CRITERIA.values()) == 100
-        assert len(CARRIER_CRITERIA) == 19
+        assert len(CARRIER_CRITERIA) == 18
         assert not any(c.startswith(("DE", "LM")) for c in CARRIER_CRITERIA)
+        assert "DQ-01" not in CARRIER_CRITERIA
+        assert {"DQ-02", "DQ-03", "SC-02", "VQ-06"} <= CARRIER_CRITERIA
 
 
 class TestLoadChecklistScores:
@@ -1293,16 +1322,24 @@ class TestCarriers:
         assert _classes(result) == [("W2", "suggestion", "unverified")]
         assert "_(unverified: VQ-03, 4 → 4)_" in render_summary(result, "90", 85)
 
-    @pytest.mark.parametrize("rule", ["DE-02", "LM-02", "DE-03", "DE-01", "LM-01"])
-    def test_de_and_lm_never_carry(self, rule):
+    @pytest.mark.parametrize("rule", ["DE-02", "LM-02", "DE-03", "DE-01", "LM-01", "DQ-01"])
+    def test_de_lm_and_dq01_never_carry(self, rule):
         regen = _regen(
             prev_checklist={**PREV_CHECKLIST, rule: 1}, prev_weaknesses=[{"ref": "W2", "class": "defect", "rule": rule}]
         )
         result = decide(_inp(regen=regen, new_checklist={**NEW_CHECKLIST, rule: CRITERIA[rule]}))
         assert (result.verdict, result.code) == (KEEP, "no_defect_improvement")
         assert _classes(result) == [("W2", "suggestion", "de_lm")]
-        assert f"_(design or library point {rule}: does not carry)_" in render_summary(result, "90", 85)
-        assert "1 design or library" in result.reason
+        assert f"_(design, library or coverage point {rule}: does not carry)_" in render_summary(result, "90", 85)
+        assert "1 design, library or coverage" in result.reason
+
+    @pytest.mark.parametrize("rule", ["SC-02", "VQ-06", "DQ-02"])
+    def test_other_criteria_still_carry(self, rule):
+        regen = _regen(
+            prev_checklist={**PREV_CHECKLIST, rule: 1}, prev_weaknesses=[{"ref": "W2", "class": "defect", "rule": rule}]
+        )
+        result = decide(_inp(regen=regen, new_checklist={**NEW_CHECKLIST, rule: CRITERIA[rule]}))
+        assert _classes(result) == [("W2", "carrier", "criterion")]
 
     @pytest.mark.parametrize("checklist", [{}, {"VQ-01": 8}])
     def test_missing_new_checklist_leaves_every_criterion_unverified(self, checklist):
@@ -1313,7 +1350,9 @@ class TestCarriers:
         regen = _regen()
         del regen["prev_checklist"]
         assert decide(_inp(regen=regen)).code == "no_defect_improvement"
-        regen["improvements"].append({"ref": "C1", "what": "Area-scaled bubbles", "where_visible": "all bubbles"})
+        regen["improvements"].append(
+            {"ref": "C1", "kind": "fix", "what": "Area-scaled bubbles", "where_visible": "all bubbles"}
+        )
         result = decide(_inp(regen=regen, characteristic_count=2))
         assert result.verdict == MERGE
         assert _classes(result)[-1] == ("C1", "carrier", "characteristic")
@@ -1467,6 +1506,109 @@ class TestCarriers:
         assert classify_improvements({"improvements": "W2"}, _inp()) == []
 
 
+# One would-be carrier per ref type: a W classed defect, a P and a new item
+# with a verified rule, and an affirmative C id.
+CARRIER_ITEMS = {
+    "W": {"ref": "W2", "what": "Legend fixed", "where_visible": "legend"},
+    "P": {"ref": "P1", "rule": "VQ-03", "what": "Legend fixed", "where_visible": "legend"},
+    "new": {"ref": "new", "rule": "VQ-03", "what": "Legend fixed", "where_visible": "legend"},
+    "C": {"ref": "C1", "what": "Legend fixed", "where_visible": "legend"},
+}
+
+
+class TestKinds:
+    """P3.1: only a fix or a removal carries; an addition, polish or a missing
+    kind demotes a would-be carrier to a suggestion and never invalidates the file."""
+
+    def _decide(self, ref_type: str, **kind):
+        item = {**CARRIER_ITEMS[ref_type], **kind}
+        regen = _regen(improvements=[item])
+        if not kind:
+            regen = _no_kind(regen)
+        return decide(_inp(regen=regen, characteristic_count=3))
+
+    @pytest.mark.parametrize("ref_type", sorted(CARRIER_ITEMS))
+    @pytest.mark.parametrize("kind", ["fix", "removal"])
+    def test_fix_and_removal_carry(self, ref_type, kind):
+        result = self._decide(ref_type, kind=kind)
+        assert result.verdict == MERGE
+        assert result.improvements[0]["class"] == "carrier"
+        assert result.improvements[0]["kind"] == kind
+
+    @pytest.mark.parametrize("ref_type", sorted(CARRIER_ITEMS))
+    @pytest.mark.parametrize(
+        ("kind", "flag", "label"),
+        [
+            ("addition", "_(addition: does not carry)_", "1 addition"),
+            ("polish", "_(polish of an out-of-scope element: does not carry)_", "1 polish of an out-of-scope element"),
+        ],
+    )
+    def test_addition_and_polish_ride_along(self, ref_type, kind, flag, label):
+        result = self._decide(ref_type, kind=kind)
+        assert (result.verdict, result.code) == (KEEP, "no_defect_improvement")
+        assert (result.improvements[0]["class"], result.improvements[0]["basis"]) == ("suggestion", kind)
+        assert flag in render_summary(result, "90", 85)
+        assert f"1 visible improvement(s) ({label}), none fixes" in result.reason
+
+    @pytest.mark.parametrize("ref_type", sorted(CARRIER_ITEMS))
+    @pytest.mark.parametrize("kind", [{}, {"kind": "kinda"}, {"kind": 3}, {"kind": None}, {"kind": ["fix"]}])
+    def test_missing_or_unknown_kind_is_no_kind(self, ref_type, kind):
+        result = self._decide(ref_type, **kind)
+        assert (result.verdict, result.code) == (KEEP, "no_defect_improvement")
+        assert (result.improvements[0]["class"], result.improvements[0]["basis"]) == ("suggestion", "no_kind")
+        assert result.improvements[0]["kind"] is None
+        assert "_(no kind named: does not carry)_" in render_summary(result, "90", 85)
+        assert "1 no kind named" in result.reason
+        assert validate_regen(_regen(improvements=[{**CARRIER_ITEMS[ref_type], **kind}]), KNOWN, 3) == []
+
+    def test_kind_is_coerced_and_noted(self):
+        result = self._decide("P", kind=" Removal")
+        assert result.verdict == MERGE
+        assert "kind ' Removal' -> 'removal'" in result.reason
+
+    @pytest.mark.parametrize("kind", ["addition", None])
+    def test_other_classes_keep_their_basis(self, kind):
+        """The kind only demotes a would-be carrier: a permission, an obsolete W,
+        a W suggestion and a DE point stay what they were. An unverified claim
+        stays unverified without a kind; an addition claims no defect, so it
+        takes its kind as basis instead (it never fails to verify one)."""
+        regen = _regen(
+            prev_checklist={**PREV_CHECKLIST, "DE-02": 3},
+            prev_weaknesses=[{"ref": "W1", "class": "obsolete", "rule": "C2"}, {"ref": "W3", "class": "suggestion"}],
+            improvements=[
+                {"ref": "C2", "what": "a", "where_visible": "x", "kind": kind},
+                {"ref": "W1", "what": "b", "where_visible": "x", "kind": kind},
+                {"ref": "W3", "what": "c", "where_visible": "x", "kind": kind},
+                {"ref": "P1", "rule": "VQ-02", "what": "d", "where_visible": "x", "kind": kind},
+                {"ref": "P2", "rule": "DE-02", "what": "e", "where_visible": "x", "kind": kind},
+            ],
+        )
+        result = decide(_inp(regen=regen, characteristic_count=3, permission_refs=frozenset({"C2"})))
+        assert _classes(result) == [
+            ("C2", "permission", "permission"),
+            ("W1", "obsolete", "labeled"),
+            ("W3", "suggestion", "suggestion"),
+            ("P1", "suggestion", kind or "unverified"),
+            ("P2", "suggestion", "de_lm"),
+        ]
+
+    @pytest.mark.parametrize("kind", ["addition", "polish"])
+    def test_non_fix_kind_needs_no_rule(self, kind):
+        """An addition or polish without a rule is counted under its kind, never as unverified."""
+        imp = [{"ref": "P1", "kind": kind, "what": "Percentage labels added", "where_visible": "bars"}]
+        result = decide(_inp(regen=_regen(improvements=imp, prev_weaknesses=[])))
+        assert (result.verdict, result.code) == (KEEP, "no_defect_improvement")
+        assert _classes(result) == [("P1", "suggestion", kind)]
+        record = build_record(result, spec_id="count-basic", library="d3", score=85, prev_stored=90)
+        assert (record["improvements"][kind], record["improvements"]["unverified"]) == (1, 0)
+
+    def test_one_carrying_item_is_enough(self):
+        imp = [{**CARRIER_ITEMS["P"], "kind": "polish"}, {**CARRIER_ITEMS["W"], "kind": "fix"}]
+        result = decide(_inp(regen=_regen(improvements=imp)))
+        assert result.verdict == MERGE
+        assert "1 carrying (W2)" in result.reason
+
+
 # Round 1 of the verification regens after #11949 and #11950 (13 Sonnet
 # regenerations, 2026-09-27): the refs each review cited, the classes P3 gives
 # them (PLAN_p3_v2 §8.5) and the item scores that decide each pair — refs,
@@ -1593,13 +1735,17 @@ ROUND1: dict[int, dict] = {
 }
 
 
-def _round1(pr: int, classes: dict | None = None, items: dict | None = None, refs: list | None = None):
+def _round1(
+    pr: int, classes: dict | None = None, items: dict | None = None, refs: list | None = None, kinds: dict | None = None
+):
+    """One round-1 decision; every improvement is a ``fix`` unless ``kinds`` (``{ref: kind}``) says otherwise."""
     case = ROUND1[pr]
     score, prev_rescored = case["scores"]
     scores = {**case["items"], **(items or {})}
     classes = {**case["classes"], **(classes or {})}
     improvements = [
-        {"ref": ref, "what": f"improvement {n}", "where_visible": "both renders"} | ({"rule": rule} if rule else {})
+        {"ref": ref, "what": f"improvement {n}", "where_visible": "both renders", "kind": (kinds or {}).get(ref, "fix")}
+        | ({"rule": rule} if rule else {})
         for n, (ref, rule) in enumerate(refs or case["refs"], start=1)
     ]
     regen = _regen(
@@ -1662,23 +1808,180 @@ class TestVerificationRound:
         """#11959's percentage labels and title prefix claimed as DQ-01 and SC-04 (6 → 6, 3 → 3)."""
         result = _round1(11959, refs=[("P1", "DQ-01"), ("P2", "SC-04"), ("P3", "DE-02")])
         assert (result.verdict, result.code) == (KEEP, "no_defect_improvement")
-        assert result.reason.startswith("3 visible improvement(s) (2 unverified, 1 design or library)")
+        assert result.reason.startswith("3 visible improvement(s) (1 unverified, 2 design, library or coverage)")
 
     @pytest.mark.parametrize(
         ("pr", "classes", "items"),
         [
             (11953, {}, {"VQ-07": (1, 2)}),  # §8.5 b: the re-score catches the slot-5 red
-            (11953, {}, {"VQ-02": (4, 5)}),  # §8.5 b: or the BEAU-001 label
+            # §8.5 b: or the BEAU-001 callout clearance, misread as a `fix`
+            # (P3.1: polish of a callout SC-01 lists; (b) has no mechanical backstop)
+            (11953, {}, {"VQ-02": (4, 5)}),
             (11952, {"W1": ("defect", "VQ-02")}, {}),  # §8.5 a: F1 read as a VQ-02 defect
-            (11963, {"W2": ("defect", "DQ-01")}, {}),  # §8.5 f: optional asymmetric bars read as DQ-01
         ],
     )
     def test_conditional_pairs(self, pr, classes, items):
         """What the stored numbers cannot decide: #11953 merges once the
-        re-score deducts either criterion, and #11952 / #11963 merge only when
-        the reviewer misclasses the weakness — the v2 forward-keep target and
+        re-score deducts either criterion, and #11952 merges only when the
+        reviewer misclasses the weakness — the v2 forward-keep target and
         class_flip measure exactly those."""
         assert _round1(pr, classes=classes, items=items).verdict == MERGE
+
+    def test_callout_clearance_named_polish_keeps(self):
+        """P31-7: the #11953 BEAU-001 clearance, named `polish`, no longer carries."""
+        result = _round1(11953, items={"VQ-02": (4, 5)}, kinds={"W1": "polish"})
+        assert (result.verdict, result.code) == (KEEP, "no_defect_improvement")
+        assert ("W1", "suggestion", "polish") in _classes(result)
+        assert "_(polish of an out-of-scope element: does not carry)_" in render_summary(result, "89", 89)
+
+    def test_optional_error_bars_read_as_dq01_keep(self):
+        """P3.1 M1 (§8.5 f): optional asymmetric bars read as a DQ-01 defect no longer carry."""
+        result = _round1(11963, classes={"W2": ("defect", "DQ-01")})
+        assert (result.verdict, result.code) == (KEEP, "no_defect_improvement")
+        assert ("W2", "suggestion", "de_lm") in _classes(result)
+
+
+# Nine forward cells of the set v2 P3 arm (run 36413159640, PLAN_p3_1 §3): the
+# refs, rules, classes and the item scores each claim rests on — no model
+# text. `kinds` are appendix A's hand-assigned kinds; every other item is a
+# `fix`. P3 merged all nine.
+V2_CELLS: dict[str, dict] = {
+    "11957-r1": {
+        "spec": "count-basic",
+        "scores": (85, 82),
+        "classes": {"W1": ("suggestion", None), "W2": ("defect", "VQ-02"), "W3": ("suggestion", None)},
+        "refs": [("W2", None), ("P1", "VQ-01")],
+        "items": {"VQ-01": (6, 7), "VQ-02": (5, 6)},
+        "kinds": {"W2": "polish", "P1": "polish"},
+        "expected": KEEP,
+    },
+    "11957-r2": {
+        "spec": "count-basic",
+        "scores": (83, 80),
+        "classes": {"W1": ("suggestion", None), "W2": ("defect", "VQ-02"), "W3": ("suggestion", None)},
+        "refs": [("W2", None), ("P1", "VQ-04")],
+        "items": {"VQ-02": (4, 6), "VQ-04": (1, 2)},
+        "kinds": {"W2": "polish", "P1": "polish"},
+        "expected": KEEP,
+    },
+    "11957-r3": {
+        "spec": "count-basic",
+        "scores": (79, 77),
+        "classes": {"W1": ("suggestion", None), "W2": ("suggestion", None), "W3": ("suggestion", None)},
+        "refs": [("P1", "VQ-02")],
+        "items": {"VQ-02": (4, 6)},
+        "kinds": {"P1": "polish"},
+        "expected": KEEP,
+    },
+    "11963-r2": {
+        "spec": "bar-error",
+        "scores": (86, 85),
+        "classes": {"W1": ("suggestion", None), "W2": ("obsolete", "C5"), "W3": ("suggestion", None)},
+        "refs": [("P1", "VQ-02")],
+        "items": {"VQ-02": (5, 6)},
+        "kinds": {"P1": "polish"},
+        "expected": KEEP,
+    },
+    "11963-r3": {
+        "spec": "bar-error",
+        "scores": (83, 82),
+        "classes": {"W1": ("suggestion", None), "W2": ("suggestion", None), "W3": ("suggestion", None)},
+        "refs": [("P1", "VQ-02")],
+        "items": {"VQ-02": (5, 6)},
+        "kinds": {"P1": "polish"},
+        "expected": KEEP,
+    },
+    "11959-r1": {
+        "spec": "count-basic",
+        "scores": (85, 81),
+        "classes": {"W1": ("defect", "CQ-04"), "W2": ("suggestion", None), "W3": ("suggestion", None)},
+        "refs": [("P2", "DQ-01"), ("P3", "DE-03")],
+        "items": {"CQ-04": (1, 2), "DE-03": (2, 3), "DQ-01": (4, 5)},
+        "kinds": {"P2": "addition", "P3": "addition"},
+        "expected": KEEP,
+    },
+    "11959-r2": {
+        "spec": "count-basic",
+        "scores": (87, 85),
+        "classes": {"W1": ("defect", "CQ-04"), "W2": ("suggestion", None), "W3": ("suggestion", None)},
+        "refs": [("new", "DQ-01")],
+        "items": {"CQ-04": (1, 2), "DQ-01": (5, 6)},
+        "kinds": {"new": "addition"},
+        "expected": KEEP,
+    },
+    "11960-r1": {
+        "spec": "bar-error",
+        "scores": (84, 83),
+        "classes": {"W1": ("suggestion", None), "W2": ("suggestion", None), "W3": ("suggestion", None)},
+        "refs": [("P1", "VQ-02")],
+        "items": {"VQ-02": (5, 6)},
+        "kinds": {},
+        "expected": MERGE,
+    },
+    "11960-r2": {
+        "spec": "bar-error",
+        "scores": (83, 81),
+        "classes": {"W1": ("suggestion", None), "W2": ("suggestion", None), "W3": ("suggestion", None)},
+        "refs": [("P1", "VQ-02"), ("W1", None)],
+        "items": {"VQ-02": (5, 6)},
+        "kinds": {},
+        "expected": MERGE,
+    },
+}
+
+
+def _v2_cell(key: str, kinds: dict | None = None, with_kind: bool = True):
+    case = V2_CELLS[key]
+    score, prev_rescored = case["scores"]
+    kinds = case["kinds"] if kinds is None else kinds
+    improvements = [
+        {"ref": ref, "what": f"improvement {n}", "where_visible": "both renders"}
+        | ({"rule": rule} if rule else {})
+        | ({"kind": kinds.get(ref, "fix")} if with_kind else {})
+        for n, (ref, rule) in enumerate(case["refs"], start=1)
+    ]
+    regen = _regen(
+        prev_rescored=prev_rescored,
+        prev_checklist={**CRITERIA, **{cid: prev for cid, (prev, _) in case["items"].items()}},
+        prev_weaknesses=[
+            {"ref": ref, "class": cls} | ({"rule": rule} if rule else {})
+            for ref, (cls, rule) in case["classes"].items()
+        ],
+        improvements=improvements,
+    )
+    if not with_kind:
+        regen = _no_kind(regen)
+    return decide(
+        _inp(
+            score=score,
+            regen=regen,
+            spec_id=case["spec"],
+            new_checklist={**CRITERIA, **{cid: new for cid, (_, new) in case["items"].items()}},
+            characteristic_count=5,
+            permission_refs=frozenset({"C5"}),
+        )
+    )
+
+
+class TestVerificationRoundP31:
+    """P3.1 on nine set v2 forward cells that P3 merged: polish (#11957,
+    #11963) and additions (#11959) keep, the #11960 collision fix merges."""
+
+    @pytest.mark.parametrize("key", sorted(V2_CELLS))
+    def test_p31_verdict(self, key):
+        assert _v2_cell(key).verdict == V2_CELLS[key]["expected"]
+
+    @pytest.mark.parametrize("key", sorted(V2_CELLS))
+    def test_p3_merged_every_cell_when_everything_is_a_fix(self, key):
+        """Every kind `fix` (the compliance floor): only M1 changes a verdict."""
+        expected = KEEP if key.startswith("11959") else MERGE
+        assert _v2_cell(key, kinds={}).verdict == expected
+
+    @pytest.mark.parametrize("key", ["11959-r1", "11959-r2"])
+    def test_m1_alone_keeps_the_percentage_labels(self, key):
+        result = _v2_cell(key, with_kind=False)
+        assert (result.verdict, result.code) == (KEEP, "no_defect_improvement")
+        assert {i["basis"] for i in result.improvements} == {"de_lm"}
 
 
 class TestRecordCounts:
@@ -1720,9 +2023,56 @@ class TestRecordCounts:
             "suggestion": 2,
             "unverified": 1,
             "de_lm": 1,
+            "addition": 0,
+            "polish": 0,
+            "no_kind": 0,
+            "carriers_pn": 0,
+            "by_kind": {"fix": 7, "removal": 0, "addition": 0, "polish": 0, "none": 0},
         }
         assert counts["visible"] == counts["carriers"] + counts["suggestion"]
         assert counts["unverified"] + counts["de_lm"] <= counts["suggestion"]
+        assert validate_record(record) == []
+
+    def test_kind_counts(self):
+        """P3.1: addition, polish and no_kind are disjoint subsets of suggestion,
+        disjoint from unverified and de_lm; carriers_pn is a subset of carriers,
+        and by_kind sums to total."""
+        regen = _regen(
+            prev_checklist={**PREV_CHECKLIST, "VQ-02": 4, "VQ-07": 0, "SC-04": 2, "DE-02": 2, "DQ-01": 3},
+            prev_weaknesses=[{"ref": "W1", "class": "defect", "rule": "VQ-07"}],
+            improvements=[
+                {"ref": "W1", "kind": "removal", "what": "a", "where_visible": "bars"},
+                {"ref": "P1", "rule": "VQ-02", "kind": "fix", "what": "b", "where_visible": "labels"},
+                {"ref": "P2", "rule": "VQ-03", "kind": "polish", "what": "c", "where_visible": "mean line"},
+                {"ref": "P3", "rule": "DQ-01", "kind": "addition", "what": "d", "where_visible": "labels"},
+                {"ref": "new", "rule": "SC-04", "kind": "addition", "what": "e", "where_visible": "title"},
+                {"ref": "C1", "what": "f", "where_visible": "bars"},
+                {"ref": "P4", "rule": "DE-02", "kind": "Fix ", "what": "g", "where_visible": "frame"},
+                {"ref": "P5", "kind": "tweak", "what": "h", "where_visible": "grid"},
+            ],
+        )
+        del regen["improvements"][5]["kind"]
+        record = self._record(regen, characteristic_count=5)
+        counts = record["improvements"]
+        assert {k: counts[k] for k in ("total", "visible", "carriers", "suggestion", "carriers_pn")} == {
+            "total": 8,
+            "visible": 8,
+            "carriers": 2,  # W1 (removal) and P1 (fix)
+            "suggestion": 6,
+            "carriers_pn": 1,
+        }
+        assert {k: counts[k] for k in ("unverified", "de_lm", "addition", "polish", "no_kind")} == {
+            "unverified": 1,  # P5: no rule, whatever its kind
+            "de_lm": 2,  # P3 (DQ-01, an addition) and P4 (DE-02): already suggestions, so they keep their basis
+            "addition": 1,  # new (SC-04 2 → 3)
+            "polish": 1,  # P2 (VQ-03 4 → 6)
+            "no_kind": 1,  # C1
+        }
+        assert counts["by_kind"] == {"fix": 2, "removal": 1, "addition": 2, "polish": 1, "none": 2}
+        assert sum(counts["by_kind"].values()) == counts["total"]
+        assert counts["visible"] == counts["carriers"] + counts["suggestion"]
+        assert sum(counts[k] for k in ("unverified", "de_lm", "addition", "polish", "no_kind")) == counts["suggestion"]
+        assert counts["carriers_pn"] <= counts["carriers"]
         assert validate_record(record) == []
 
     def test_marker_roundtrip_and_schema_unchanged(self):
@@ -1898,6 +2248,51 @@ class TestCheckFeedback:
         code, out = _feedback(tmp_path, capsys, checklist=NEW_CHECKLIST, regen=regen, prev=["a", "b"], spec=SPEC_5)
         assert code == 1
         assert message in out, out
+
+    def test_missing_or_unknown_kind_is_reported_once_per_item(self, tmp_path, capsys):
+        regen = _regen(
+            prev_weaknesses=[{"ref": "W1", "class": "suggestion"}, {"ref": "W2", "class": "defect", "rule": "VQ-03"}],
+            improvements=[
+                {"ref": "W2", "what": "a", "where_visible": "legend"},
+                {"ref": "W1", "kind": "tweak", "what": "b", "where_visible": "grid"},
+                {"ref": "C1", "kind": "Polish", "what": "c", "where_visible": "bars"},
+            ],
+        )
+        del regen["improvements"][0]["kind"]
+        code, out = _feedback(tmp_path, capsys, checklist=NEW_CHECKLIST, regen=regen, prev=["a", "b"], spec=SPEC_5)
+        assert code == 1
+        assert out.count("has no kind") == 2, out
+        assert "improvement 1 (W2) has no kind: name fix, removal, addition or polish" in out
+        assert "improvement 2 (W1) has no kind ('tweak' is not one): name fix, removal, addition or polish" in out
+        assert "(C1)" not in out  # 'Polish' is coerced
+        for phrase in ("carr", "merge"):
+            assert phrase not in out, phrase
+
+    def test_addition_and_polish_need_no_rule_or_score_delta(self, tmp_path, capsys):
+        """A compliant addition (percentage labels, which leave DQ-01 as it was)
+        and a polish item pass the self-check: they fix no rule, so there is no
+        rule to name and no score delta to show."""
+        regen = _regen(
+            prev_weaknesses=[{"ref": "W1", "class": "suggestion"}, {"ref": "W2", "class": "defect", "rule": "VQ-03"}],
+            improvements=[
+                {"ref": "W2", "kind": "fix", "what": "a", "where_visible": "legend"},
+                {"ref": "P1", "kind": "addition", "what": "percentage labels", "where_visible": "bars"},
+                {
+                    "ref": "new",
+                    "rule": "DQ-01",
+                    "kind": "addition",
+                    "what": "percentage labels",
+                    "where_visible": "bars",
+                },
+                {"ref": "W1", "kind": "polish", "what": "mean rule recolored", "where_visible": "mean rule"},
+            ],
+        )
+        code, out = _feedback(tmp_path, capsys, checklist=NEW_CHECKLIST, regen=regen, prev=["a", "b"])
+        assert (code, out.strip()) == (0, "check-feedback: no problems"), out
+        # A fix still names its rule and still shows in the scores.
+        regen["improvements"][1]["kind"] = "fix"
+        code, out = _feedback(tmp_path, capsys, checklist=NEW_CHECKLIST, regen=regen, prev=["a", "b"])
+        assert code == 1 and "improvement 2 (P1) has no rule" in out
 
     def test_defect_the_rescore_did_not_deduct(self, tmp_path, capsys):
         regen = _regen(

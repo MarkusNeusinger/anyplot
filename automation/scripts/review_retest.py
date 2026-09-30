@@ -74,14 +74,10 @@ from typing import Any
 from automation.scripts import review_provenance
 from automation.scripts import review_retest_metrics as metrics
 from automation.scripts.regen_gate import (
-    CARRIER,
-    DE_LM,
-    OBSOLETE,
-    PERMISSION,
-    UNVERIFIED,
     WRITEBACK_CODES,
     GateInput,
     classify_improvements,
+    improvement_class_counts,
     load_checklist_scores,
     load_weakness_classes,
     normalize_regen,
@@ -1088,16 +1084,19 @@ def _strings(value: Any) -> list[str]:
 
 def improvement_counts(
     regen: Any, spec_text: str, prev_weaknesses: Path | None = None, checklist: Path | None = None
-) -> dict[str, int] | None:
+) -> dict[str, Any] | None:
     """The improvement counts a production gate record carries, for one cell.
 
     ``total`` is every listed improvement, ``permission`` those whose ref is an
     "Expected, not a defect" bullet of the spec the reviewer saw, ``obsolete``
     the previous weaknesses the review classed obsolete, and ``visible`` only
     the counted ones (neither of the two) with a non-empty ``where_visible``;
-    ``carriers`` + ``suggestion`` == ``visible``, and ``unverified`` and
-    ``de_lm`` are disjoint subsets of ``suggestion`` — the gate record's
-    ``improvements`` semantics. Computed with the harness's own
+    ``carriers`` + ``suggestion`` == ``visible``; ``unverified``, ``de_lm``,
+    ``addition``, ``polish`` and ``no_kind`` are disjoint subsets of
+    ``suggestion``, ``carriers_pn`` a subset of ``carriers``, and ``by_kind``
+    the kind histogram over every listed item — the gate record's
+    ``improvements`` semantics (``improvement_class_counts``, the gate's own
+    function, without the per-ref counts). Computed with the harness's own
     ``classify_improvements``, so it works under any rules_ref, from the
     cell's ``prev_weaknesses`` JSON (the stored classes) and the review's own
     ``checklist``. A review under older rules writes no classification, so
@@ -1122,19 +1121,7 @@ def improvement_counts(
         weakness_classes=load_weakness_classes(prev_weaknesses),
         new_checklist=load_checklist_scores(checklist),
     )
-    items = classify_improvements(normalized, inp)
-    visible = [i for i in items if i["class"] not in (PERMISSION, OBSOLETE) and i["where_visible"]]
-    suggestions = [i for i in visible if i["class"] != CARRIER]
-    return {
-        "total": len(items),
-        "visible": len(visible),
-        "permission": sum(1 for i in items if i["class"] == PERMISSION),
-        "obsolete": sum(1 for i in items if i["class"] == OBSOLETE),
-        "carriers": len(visible) - len(suggestions),
-        "suggestion": len(suggestions),
-        "unverified": sum(1 for i in suggestions if i["basis"] == UNVERIFIED),
-        "de_lm": sum(1 for i in suggestions if i["basis"] == DE_LM),
-    }
+    return improvement_class_counts(classify_improvements(normalized, inp))
 
 
 def characteristics_summary(spec_text: str) -> dict[str, Any] | None:
@@ -1682,7 +1669,13 @@ def render_gate_report(result: dict[str, Any]) -> str:
         f"({_pct(imp['permission_cited_share'])}); kept with nothing else counted: {imp['permission_only_keeps']}",
         f"- Obsolete weakness cited: {imp['obsolete_cited']}/{imp['carrier_n']} decisions "
         f"({_pct(imp['obsolete_cited_share'])}); unverified claim in {_pct(imp['unverified_share'])}, "
-        f"design or library point in {_pct(imp['de_lm_share'])}",
+        f"design, library or coverage point in {_pct(imp['de_lm_share'])}",
+        # Reports built before P3.1 have no kind keys.
+        f"- Improvement kinds (n={imp.get('kind_n', 0)} decisions): named on "
+        f"{_pct(imp.get('kind_valid_share'))} of the listed improvements; an addition in "
+        f"{_pct(imp.get('addition_share'))}, polish in {_pct(imp.get('polish_share'))}, a would-be carrier "
+        f"without a kind in {_pct(imp.get('no_kind_share'))}; merges carried only by P or new items: "
+        f"{_pct(imp.get('pn_only_merge_share'))} (n={imp.get('pn_merge_n', 0)})",
         f"- Stored review on a keep (writeback, n={writeback['n']} keeps): "
         + ", ".join(f"{code} {writeback['counts'].get(code, 0)}" for code in WRITEBACK_CODES),
         f"- prev_rescored − prev_stored, comparable: {drift(result['drift_comparable'])}",

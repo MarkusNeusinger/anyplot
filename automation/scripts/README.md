@@ -59,14 +59,21 @@ an `Expected, not a defect:` bullet is not counted.
 with it. `classify_improvements` sorts the review's improvements into
 permissions and obsolete weaknesses (both not counted), carriers (an
 affirmative `C` ref, or a defect whose rule verifies: a VQ, SC, DQ, or CQ
-criterion the new render scores higher on than the re-score's
-`prev_checklist`, an affirmative `C` id, or `AR-06`..`AR-09` after an
-auto-reject), and suggestions (a suggestion, an unverified claim, or a DE or
-LM point). `decide` merges only with a carrier (reason code
-`no_defect_improvement` otherwise) and reads the new review's
-`review_checklist.json` from the directory of `--regen-json`. The record stays
-`v1`; its `improvements` gain `carriers`, `suggestion`, `obsolete`,
-`unverified`, and `de_lm`, with `visible == carriers + suggestion`.
+criterion other than DQ-01 the new render scores higher on than the
+re-score's `prev_checklist`, an affirmative `C` id, or `AR-06`..`AR-09`
+after an auto-reject), and suggestions (a suggestion, an unverified claim, a
+DE, LM, or DQ-01 point). Every improvement names a `kind` (`fix`, `removal`,
+`addition`, or `polish`); a would-be carrier of kind `addition` or `polish`,
+or without a valid kind (`no_kind`), becomes a suggestion. An `addition` or
+`polish` fixes no rule, so it needs no `rule` and claims no score delta, and
+it is never counted as `unverified`. `decide` merges
+only with a carrier (reason code `no_defect_improvement` otherwise) and reads
+the new review's `review_checklist.json` from the directory of
+`--regen-json`. The record stays `v1`; its `improvements` carry `carriers`,
+`suggestion`, `obsolete`, `unverified`, `de_lm`, `addition`, `polish`,
+`no_kind`, `carriers_pn` (carriers with a `P` or `new` ref), and the `by_kind`
+histogram, with `visible == carriers + suggestion`
+(`improvement_class_counts`, which `review_retest.py` reuses per cell).
 `check-feedback` checks the weakness lines against the review's checklist
 and, for a regeneration, the classification and claims in `review_regen.json`:
 the review's step-10 self-check, and with `--warn-only` the workflow's

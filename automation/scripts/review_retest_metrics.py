@@ -14,8 +14,10 @@ when the session named none), ``model_alias``, ``ok``, ``error_class``,
 "code"}``), ``regen`` (the parsed ``review_regen.json``, whose
 ``prev_weaknesses`` feeds ``class_flip``), ``regen_counts`` (``{"total",
 "visible", "permission"}`` plus, from P3 on, ``"obsolete"``, ``"carriers"``,
-``"suggestion"``, ``"unverified"`` and ``"de_lm"``: the gate record's
-improvement counts) and ``spec_characteristics`` (``{"count",
+``"suggestion"``, ``"unverified"`` and ``"de_lm"``, and from P3.1 on,
+``"addition"``, ``"polish"``, ``"no_kind"``, ``"carriers_pn"`` and
+``"by_kind"``: the gate record's improvement counts) and
+``spec_characteristics`` (``{"count",
 "permission"}``: how many characteristic bullets the spec the reviewer saw
 has, and which of them are "Expected, not a defect" bullets).
 
@@ -49,8 +51,9 @@ CRITERIA_IDS: tuple[str, ...] = (
     *(f"LM-0{i}" for i in range(1, 3)),
 )
 # The criteria a fixed defect can carry a regen merge on: DE and LM levels
-# never do, because stored reviews deduct them almost always (plan P3, D11).
-CARRIER_CRITERIA: tuple[str, ...] = tuple(c for c in CRITERIA_IDS if c[:2] in ("VQ", "SC", "DQ", "CQ"))
+# never do, because stored reviews deduct them almost always (plan P3, D11),
+# and neither does DQ-01 feature coverage, for the same reason (P3.1).
+CARRIER_CRITERIA: tuple[str, ...] = tuple(c for c in CRITERIA_IDS if c[:2] in ("VQ", "SC", "DQ", "CQ") and c != "DQ-01")
 APPROVAL_LINE = 90
 
 # Weakness topics, taxonomy v1. A weakness belongs to every topic it matches.
@@ -841,6 +844,15 @@ def gate_monitor(
     them. Records without the P3 keys are left out of the carrier, obsolete,
     unverified and design-or-library shares (``carrier_n`` is their count).
 
+    From P3.1 on, a record also carries ``addition``, ``polish``, ``no_kind``,
+    ``carriers_pn`` and the ``by_kind`` histogram. Only those records
+    (``kind_n``) enter the addition and polish shares (decisions listing at
+    least one item of that kind, from ``by_kind``), the no-kind share
+    (decisions with a would-be carrier without a kind, from ``no_kind``),
+    ``kind_valid_share`` (listed improvements that name a
+    kind) and ``pn_only_merge_share`` (merges whose every carrier is a ``P``
+    or ``new`` item, over ``pn_merge_n`` merges).
+
     From P9b on, a keep record carries ``writeback``: what happened to the
     session's re-score of the live implementation (``opened``,
     ``unchanged``, ``no_rescore``, ``invalid``, ``stale`` or ``failed``).
@@ -895,6 +907,21 @@ def gate_monitor(
     permission_or_obsolete = sum(
         1 for _, c in with_permission if c["permission"] > 0 or (count(c.get("obsolete")) or 0) > 0
     )
+    # P3.1 records (the kind counts); older ones are left out.
+    kinded = [(r, c) for r, c in counted if count(c.get("no_kind")) is not None]
+
+    def by_kind(c: dict[str, Any]) -> dict[str, Any]:
+        value = c.get("by_kind")
+        return value if isinstance(value, dict) else {}
+
+    def kinded_share(present: Callable[[dict[str, Any]], bool]) -> float | None:
+        return sum(1 for _, c in kinded if present(c)) / len(kinded) if kinded else None
+
+    histograms = [by_kind(c) for _, c in kinded]
+    listed = sum(count(v) or 0 for h in histograms for v in h.values())
+    unnamed = sum(count(h.get("none")) or 0 for h in histograms)
+    carried_merges = [c for r, c in kinded if r.get("verdict") == "merge" and (count(c.get("carriers")) or 0) > 0]
+    pn_only = sum(1 for c in carried_merges if count(c.get("carriers_pn")) == count(c.get("carriers")))
     improvements: dict[str, Any] = {
         "n": len(counted),
         "visible_mean": mean(visible),
@@ -916,6 +943,16 @@ def gate_monitor(
         "obsolete_cited_share": over_classified(with_any("obsolete")),
         "unverified_share": over_classified(with_any("unverified")),
         "de_lm_share": over_classified(with_any("de_lm")),
+        "kind_n": len(kinded),
+        # Any listed item of that kind (by_kind), whatever its class.
+        "addition_share": kinded_share(lambda c: (count(by_kind(c).get("addition")) or 0) > 0),
+        "polish_share": kinded_share(lambda c: (count(by_kind(c).get("polish")) or 0) > 0),
+        # A would-be carrier without a kind: the top-level count, which the alarm reads.
+        "no_kind_share": kinded_share(lambda c: (count(c.get("no_kind")) or 0) > 0),
+        # Improvements, not decisions: the share of listed items that name a kind.
+        "kind_valid_share": (listed - unnamed) / listed if listed else None,
+        "pn_merge_n": len(carried_merges),
+        "pn_only_merge_share": pn_only / len(carried_merges) if carried_merges else None,
     }
 
     # P9b keeps; older records and merges carry no `writeback`.
@@ -976,5 +1013,10 @@ def gate_monitor(
             f"an unverified claim (a rule the scores do not confirm, or none) in "
             f"{improvements['unverified_share']:.0%} of {improvements['carrier_n']} decisions — the review's "
             "self-check or the defect definitions need work"
+        )
+    if improvements["kind_n"] >= 10 and (improvements["no_kind_share"] or 0) > 0.05:
+        alarms.append(
+            f"a would-be carrier without a kind in {improvements['no_kind_share']:.0%} of "
+            f"{improvements['kind_n']} decisions — the 8b kind sentence or the self-check needs a look"
         )
     return report

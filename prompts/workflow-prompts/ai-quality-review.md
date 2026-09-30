@@ -190,7 +190,7 @@ Read `prompts/quality-criteria.md` and evaluate:
 #### Data Quality (15 pts)
 | ID | Criterion | Max | Check |
 |----|-----------|-----|-------|
-| DQ-01 | Feature Coverage | 6 | Shows ALL aspects of plot type? (A permission is not an aspect to exhibit: data with little or no overlap loses nothing, and a point count inside the spec's Data range is not a lever.) |
+| DQ-01 | Feature Coverage | 6 | Shows ALL aspects of plot type? (A permission is not an aspect to exhibit: data with little or no overlap loses nothing, and a point count inside the spec's Data range is not a lever; neither is an optional feature the Notes only allow, such as percentage labels or asymmetric error bars: DQ-01 is about what the example data shows, and a missing optional feature deducts nothing.) |
 | DQ-02 | Realistic Context | 5 | Real-world plausible AND neutral? |
 | DQ-03 | Appropriate Scale | 4 | Sensible values for domain? |
 
@@ -227,7 +227,7 @@ Read `prompts/quality-criteria.md` and evaluate:
 Every weakness is one of two kinds of line. The next generation fixes the defects and never acts on a suggestion.
 
 - **Defect** — the render (or the code, for CQ) visibly violates a named rule: a rubric criterion, a style-guide rule, or an `A good version shows:` bullet of the spec. Write it as `<ID>[, <ID>] (<light|dark|both|code>): <what is wrong, with the observed value> → <target or direction, signed delta when numeric>. Likely cause: <code element>.` The ID is the criterion the defect costs points on (`VQ-01` … `LM-02`), or `AR-06` … `AR-09`. Every criterion you name is below its maximum in your checklist. Any criterion may name a defect, DE and LM included.
-- **Suggestion** — everything that names no violated rule: a storytelling layer or a focal highlight, a library showcase ("could use X"), "larger", "more presence" or "more distinctive", an optional feature the spec only allows (asymmetric error bars, percentage labels), or polishing an element the spec's scope excludes. Write it as `Suggestion: <idea>`. At most three; none is fine. A suggestion costs no points.
+- **Suggestion** — everything that names no violated rule: a storytelling layer or a focal highlight, a library showcase ("could use X"), "larger", "more presence" or "more distinctive", an optional feature the spec only allows (asymmetric error bars, percentage labels), or polishing an element the spec's scope excludes (on a `-basic` spec, the layers SC-01 lists; on any spec, an annotation or callout the spec does not request), including moving another element clear of it. Write it as `Suggestion: <idea>`. At most three; none is fine. A suggestion costs no points.
 
 List the defects first, then the suggestions. Rules:
 
@@ -243,6 +243,8 @@ Counter-examples:
 - "No distinctive ggplot2 feature" is a suggestion.
 - A near-hidden bubble that is still distinguishable by its outline, on a spec whose `Expected, not a defect:` bullet permits overlap, is covered by that bullet. It is not a VQ-02 defect.
 - An amber mean-reference line on a `-basic` bar chart is variant creep (SC-01): the line itself is the defect, and removing it is the fix. Recoloring it is a suggestion.
+- A count label that collides with a mean-reference line on a `-basic` bar chart: the line is the defect (SC-01), and moving the label clear of it, like recoloring the line, is a suggestion. The same holds for a callout the spec does not request that sits on data marks.
+- A count plot without percentage labels has no DQ-01 defect: the Notes allow them, and a missing optional feature deducts nothing. Adding them is a suggestion. An `A good version shows:` bullet that describes them "if drawn" or as the labels "the Notes allow" is not missed by a version that draws none, so adding them does not fix that bullet either.
 
 ### 8b. Regeneration: before/after (only when `IS_REGENERATION` is `true`)
 
@@ -258,7 +260,7 @@ A regeneration replaces an implementation that is already live on main. It gets 
 
 Your job is an honest comparison; the gate does the arithmetic. Workflow variables for this step: `PREV_RENDERS` (`available` / `missing`), `PREV_RENDER_LIGHT` and `PREV_RENDER_DARK` (paths of the predecessor's renders), `PREV_LINES` and `NEW_LINES` (line counts of the previous and the new source).
 
-1. **Re-score the predecessor.** If `PREV_RENDERS` is `missing`, skip steps 1–5, do not write `review_regen.json` or `review_prev.json`, and say so in the comment (the gate keeps the live implementation). Otherwise open `PREV_RENDER_LIGHT` and `PREV_RENDER_DARK` (the production renders currently on the website) and `/tmp/anyplot-prev-impl${EXT}` (their source — its header reads `Quality: hidden/100` on purpose; do not look the stored score up elsewhere, for example in main's metadata or git history), and score them against the **same** criteria — steps 5c–8, same score caps, same calibration. The result is `prev_rescored`, and its 24 item scores are `prev_checklist` (`{"VQ-01": 7, "VQ-02": 4, …}`: every criterion, each an integer from 0 to its maximum). Number the predecessor's *defects* you find (8a) `P1`, `P2`, … and name the rule each one violates: the criterion, or the `C` id of an `A good version shows:` bullet. They become the defect lines of `review_prev.json`, in that order (step 5).
+1. **Re-score the predecessor.** If `PREV_RENDERS` is `missing`, skip steps 1–5, do not write `review_regen.json` or `review_prev.json`, and say so in the comment (the gate keeps the live implementation). Otherwise open `PREV_RENDER_LIGHT` and `PREV_RENDER_DARK` (the production renders currently on the website) and `/tmp/anyplot-prev-impl${EXT}` (their source — its header reads `Quality: hidden/100` on purpose; do not look the stored score up elsewhere, for example in main's metadata or git history), and score them against the **same** criteria — steps 5c–8, same score caps, same calibration. The result is `prev_rescored`, and its 24 item scores are `prev_checklist` (`{"VQ-01": 7, "VQ-02": 4, …}`: every criterion, each an integer from 0 to its maximum). Number the predecessor's *defects* you find (8a) `P1`, `P2`, … and name the rule each one violates: the criterion, or the `C` id of an `A good version shows:` bullet. They become the defect lines of `review_prev.json` (step 5), except the ones step 3 lists as an `addition` or `polish`.
 2. **Read the previous review** `/tmp/anyplot-prev-review.md`. Its weaknesses carry stable ids `W1`..`Wn`, each tagged `(defect)`, `(suggestion)` or `(older review)`. When it has a "Characteristic bullets" list (`C1`..`Cn`, taken from the spec's "What a good version looks like" section), its `A good version shows:` bullets are properties a good version must show; its `Expected, not a defect:` bullets are permissions and can never be an improvement `ref`. When the list is absent, there are no `C` ids — never invent one.
 
    Then **classify every `W`**, looking at the predecessor's renders only (not the new ones), as one of:
@@ -268,8 +270,15 @@ Your job is an honest comparison; the gate does the arithmetic. Workflow variabl
 
    A `W` tagged `(suggestion)` becomes `suggestion` or `obsolete`, never `defect`: if the predecessor really shows a defect there, number it as a `P` finding instead. An `(older review)` note predates the current rubric and gets whatever class the current criteria give it. Apply the counter-examples of 8a: a weakness asking for less overlap between bubbles that stay distinguishable by their outline, on a spec that permits overlap, is `obsolete`; a weakness asking to restyle a mean line that a `-basic` spec's scope excludes is a `suggestion` (the line itself is the defect, and the fix is removing it).
 3. **Judge the pair side by side** (light against light, dark against dark):
-   - **Improvement** — something a viewer can see in the new renders that fixes something visibly wrong or missing in the predecessor. `ref` is the `W` id it resolves, your `P` id, a `C` id of an `A good version shows:` bullet the predecessor missed, or `"new"` for a predecessor defect you did not number. A `P` or `"new"` item also names its `rule`: the criterion, or the `C` id of the `A good version shows:` bullet, it fixes (a `W` carries the rule you gave it in step 2). An encoding or layer the spec does not ask for — a derived color channel, a trend, fit or reference line, a band, an annotation layer, facets or marginals — is never an improvement, on any spec: list it under `encodings_added`. Chrome the criteria require (title format, legend, axis labels, color bar) is not an addition. `where_visible` names the element and the render(s), for example "size legend, both renders: the circles are now visible on the dark background". Code-only changes (refactors, comments, extra code without a visible effect) are **not** improvements. If you cannot point to it in a render, leave `where_visible` empty — it then does not count.
-   - **Claims must show in the scores.** A `W` classed `defect` under a criterion names a criterion that `prev_checklist` deducts. An improvement that claims a criterion (a `defect` `W`, or a `P` or `"new"` item) scores higher on that criterion in your checklist for the new render than in `prev_checklist`. When a claim fails either test, change the claim, never the scores: reclass the `W` (`suggestion` or `obsolete`), or remove the improvement from `improvements` — it did not fix that criterion. `prev_checklist` and `review_checklist.json` are final.
+   - **Improvement** — something a viewer can see in the new renders that fixes something visibly wrong or missing in the predecessor, or, for an `addition` or `polish` (see **Kind**), changes something no rule required. `ref` is the `W` id it resolves, your `P` id, a `C` id of an `A good version shows:` bullet the predecessor missed, or `"new"` for a predecessor defect you did not number. A `P` or `"new"` item of kind `fix` or `removal` also names its `rule`: the criterion, or the `C` id of the `A good version shows:` bullet, it fixes (a `W` carries the rule you gave it in step 2). An encoding or layer the spec does not ask for — a derived color channel, a trend, fit or reference line, a band, an annotation layer, facets or marginals — is never an improvement, on any spec: list it under `encodings_added`. Chrome the criteria require (title format, legend, axis labels, color bar) is not an addition. `where_visible` names the element and the render(s), for example "size legend, both renders: the circles are now visible on the dark background". Code-only changes (refactors, comments, extra code without a visible effect) are **not** improvements. If you cannot point to it in a render, leave `where_visible` empty — it then does not count.
+   - **Kind** — every improvement names one `kind`, by the same test for a `W`, `P`, `C` or `"new"` item:
+     - `fix` — an element the spec or the criteria ask for, or allow within the spec's scope, was wrong and is now right; or a required element the predecessor lacked is now there (a title segment, an axis title, a legend the criteria require, an `A good version shows:` property).
+     - `removal` — something that broke a rule is gone: an element the spec's scope excludes, fake UI, marks displaced from their values, a box over the data.
+     - `addition` — the new version adds an element the predecessor lacked and nothing requires: an optional feature the Notes allow (percentage labels, asymmetric error bars) or a descriptive title prefix.
+     - `polish` — a change to an element the spec's scope excludes (8a), or to how another element meets it: restyle, recolor, move or de-collide. The element itself is the defect, and removing it is the fix.
+
+     An `addition` or `polish` item names no violated rule (8a): it is not a predecessor defect, even when you numbered it as a `P`; in `review_prev.json` it is a `Suggestion:` line.
+   - **Claims must show in the scores.** A `W` classed `defect` under a criterion names a criterion that `prev_checklist` deducts. An improvement of kind `fix` or `removal` that claims a criterion (a `defect` `W`, or a `P` or `"new"` item) scores higher on that criterion in your checklist for the new render than in `prev_checklist`. When a claim fails either test, change the claim, never the scores: reclass the `W` (`suggestion` or `obsolete`), or remove the improvement from `improvements` — it did not fix that criterion. `prev_checklist` and `review_checklist.json` are final.
    - **Regression** — anything that was good in the predecessor and is worse now: a lost or unreadable legend, illegible or overlapping text, clipping, a worse layout, a lost `A good version shows:` property, or data marks that no longer sit at their data values (force, collision, nudge or declutter passes applied to data marks after the data exists). Exempt, as in SC-03: jitter in categorical strip and swarm plots (the categorical axis carries no value), layout-positioned types where position is not data (networks, treemaps, word clouds, packed circles), and any jitter, dodge or offset the spec's Data or Notes ask for.
    - `scenario_changed` — `true` when the data story (domain, variables, labels) was replaced rather than refined.
    - `encodings_added` — visual encodings the new version maps that the predecessor did not, beyond what the spec's Data, Notes or characteristic section ask for (for example `"color by region"`, `"trend line"`, `"facets"`); a required element the predecessor lacked is an improvement, not an addition. Empty list when none.
@@ -294,9 +303,9 @@ Your job is an honest comparison; the gate does the arithmetic. Workflow variabl
     {"ref": "W3", "class": "defect", "rule": "VQ-07"}
   ],
   "improvements": [
-    {"ref": "W3", "what": "Sporting Goods moved off the red loss anchor", "where_visible": "legend and bubbles, both renders"},
-    {"ref": "P1", "rule": "VQ-02", "what": "BEAU-001 label clear of the bubble above", "where_visible": "label, both renders"},
-    {"ref": "C3", "what": "Overlapping bubbles now have a thin outline", "where_visible": "dense cluster, both renders"}
+    {"ref": "W3", "kind": "fix", "what": "Sporting Goods moved off the red loss anchor", "where_visible": "legend and bubbles, both renders"},
+    {"ref": "P1", "rule": "VQ-02", "kind": "fix", "what": "Size-legend value labels clear of their reference bubbles", "where_visible": "size legend, both renders"},
+    {"ref": "C3", "kind": "fix", "what": "Overlapping bubbles now have a thin outline", "where_visible": "dense cluster, both renders"}
   ],
   "regressions": [],
   "scenario_changed": false,
@@ -310,7 +319,7 @@ Your job is an honest comparison; the gate does the arithmetic. Workflow variabl
 5. **Write `review_prev.json`** (repository root, after `review_regen.json` parses): your re-score of the predecessor as a full review. When the gate keeps the live implementation, this file becomes its stored review, and the next regeneration starts from it. So write it as a standalone review of the predecessor: never mention the new render, the comparison, or the regeneration. Writing it changes nothing you decided above; `prev_rescored`, `prev_checklist`, and the comparison stay as they are.
    - `image_description` — step 10's template, for the predecessor's production renders (`PREV_RENDER_LIGHT` is its light render, `PREV_RENDER_DARK` its dark one).
    - `criteria_checklist` — the shape of `review_checklist.json`: the six keys, their maxima, every criterion as an item. Every item score equals the same item in `prev_checklist`, and each category's `score` is the sum of its items.
-   - `strengths` and `weaknesses` — as in 8a. The weaknesses are your `P1`, `P2`, … defects as defect lines, in that order and without the `P` id, then at most three `Suggestion:` lines.
+   - `strengths` and `weaknesses` — as in 8a. The weaknesses are your `P` defects as defect lines, without the `P` id, then at most three `Suggestion:` lines. A `P` item that step 3 lists with kind `addition` or `polish` is one of those `Suggestion:` lines, not a defect line.
    - `verdict` — `APPROVED` or `REJECTED`, your verdict on the predecessor.
    - No score key: the stored score is `prev_rescored`.
 
@@ -395,7 +404,7 @@ Use this EXACT format:
 ### Weaknesses
 <!-- Defect lines first, then at most three Suggestion: lines (8a). The same lines go into review_weaknesses.json. -->
 - VQ-03, SC-04 (both): the size legend's circles are drawn in the page color and vanish on both backgrounds → fill and outline them like the data marks. Likely cause: `guide_legend()` without `override.aes`.
-- VQ-02 (light): the BEAU-001 label overlaps the bubble above it by about 6 px → clear it by at least 4 px (+10 px). Likely cause: the label's `vjust`, not the bubble position.
+- VQ-02 (light): the size legend's "500" label overlaps its reference bubble by about 6 px → clear it by at least 4 px (+10 px). Likely cause: the legend label's offset, not the bubble radius.
 - CQ-04 (code): a `make_legend()` helper that is never called and a second copy of the theme block add about 40 lines with no effect on either render → delete both. Likely cause: a legend approach that was replaced but not removed.
 - Suggestion: a slightly larger legend title would balance the axis titles.
 
@@ -405,7 +414,7 @@ Use this EXACT format:
 |---|---|
 | XX | XX |
 
-**Predecessor defects:** P1 (VQ-02) the BEAU-001 label overlaps the bubble above it, …
+**Predecessor defects:** P1 (VQ-02) the size legend's "500" label overlaps its reference bubble, …
 **Previous weaknesses:** W1 obsolete (C2) · W2 suggestion · W3 defect (VQ-07)
 **Improvements:** `W3` Sporting Goods moved off the red loss anchor — legend and bubbles, both renders
 **Regressions:** none
@@ -476,14 +485,14 @@ EOF
 # 24 prev_checklist items, one prev_weaknesses entry per W). Missing or
 # malformed = the regen gate keeps the live implementation — so check that it parses.
 cat > review_regen.json << 'EOF'
-{"prev_rescored": 84, "prev_checklist": {"VQ-01": 7, "VQ-02": 4, "VQ-03": 6, "VQ-04": 2, "VQ-05": 4, "VQ-06": 2, "VQ-07": 1, "DE-01": 5, "DE-02": 4, "DE-03": 3, "SC-01": 5, "SC-02": 4, "SC-03": 3, "SC-04": 3, "DQ-01": 6, "DQ-02": 4, "DQ-03": 4, "CQ-01": 3, "CQ-02": 2, "CQ-03": 2, "CQ-04": 2, "CQ-05": 1, "LM-01": 4, "LM-02": 3}, "prev_weaknesses": [{"ref": "W1", "class": "obsolete", "rule": "C2"}, {"ref": "W2", "class": "suggestion"}, {"ref": "W3", "class": "defect", "rule": "VQ-07"}], "improvements": [{"ref": "W3", "what": "...", "where_visible": "..."}, {"ref": "P1", "rule": "VQ-02", "what": "...", "where_visible": "..."}], "regressions": [], "scenario_changed": false, "encodings_added": [], "change_request_applied": null}
+{"prev_rescored": 84, "prev_checklist": {"VQ-01": 7, "VQ-02": 4, "VQ-03": 6, "VQ-04": 2, "VQ-05": 4, "VQ-06": 2, "VQ-07": 1, "DE-01": 5, "DE-02": 4, "DE-03": 3, "SC-01": 5, "SC-02": 4, "SC-03": 3, "SC-04": 3, "DQ-01": 6, "DQ-02": 4, "DQ-03": 4, "CQ-01": 3, "CQ-02": 2, "CQ-03": 2, "CQ-04": 2, "CQ-05": 1, "LM-01": 4, "LM-02": 3}, "prev_weaknesses": [{"ref": "W1", "class": "obsolete", "rule": "C2"}, {"ref": "W2", "class": "suggestion"}, {"ref": "W3", "class": "defect", "rule": "VQ-07"}], "improvements": [{"ref": "W3", "kind": "fix", "what": "...", "where_visible": "..."}, {"ref": "P1", "rule": "VQ-02", "kind": "fix", "what": "...", "where_visible": "..."}], "regressions": [], "scenario_changed": false, "encodings_added": [], "change_request_applied": null}
 EOF
 python3 -c "import json; json.load(open('review_regen.json'))"
 
 # Regeneration only, with review_regen.json (step 8b step 5): your re-score of
 # the predecessor as a full review, stored as its review when the gate keeps
 # it. The shapes of the files above, every criteria_checklist item score equal
-# to prev_checklist, the P1, P2, … defect lines first, and no score key.
+# to prev_checklist, the P defect lines first, and no score key.
 cat > review_prev.json << 'EOF'
 {
   "image_description": "Light render (plot-light.png):\n  Background: ...\n  Chrome: ...\n  Data: ...\n  Legibility verdict: PASS\n\nDark render (plot-dark.png):\n  Background: ...\n  Chrome: ...\n  Data: ...\n  Legibility verdict: PASS",
@@ -503,7 +512,7 @@ cat > review_prev.json << 'EOF'
     "library_mastery": {"score": 7, "max": 10, "items": [...]}
   },
   "strengths": ["Strength 1", "Strength 2"],
-  "weaknesses": ["VQ-02 (light): the BEAU-001 label overlaps the bubble above it … → …. Likely cause: ….", "Suggestion: …"],
+  "weaknesses": ["VQ-02 (light): the size legend's \"500\" label overlaps its reference bubble … → …. Likely cause: ….", "Suggestion: …"],
   "verdict": "REJECTED"
 }
 EOF
@@ -525,7 +534,7 @@ fi
 
 All scores and review files above (`quality_score.txt`, `review_checklist.json`, …) describe the **new** implementation, except `review_regen.json` and `review_prev.json`, which describe your re-score of the predecessor.
 
-Fix what `check-feedback` lists by changing the claim — a weakness line, a class or `rule` in `prev_weaknesses`, a `rule` on an improvement, or an entry in `improvements` — never `prev_checklist` or `review_checklist.json`, which are final. A `review_prev.json` problem is fixed in `review_prev.json`: its checklist copies `prev_checklist`, never the other way round. Then run the check once more.
+Fix what `check-feedback` lists by changing the claim — a weakness line, a class or `rule` in `prev_weaknesses`, a `rule` or `kind` on an improvement, or an entry in `improvements` — never `prev_checklist` or `review_checklist.json`, which are final. A `review_prev.json` problem is fixed in `review_prev.json`: its checklist copies `prev_checklist`, never the other way round. Then run the check once more.
 
 ### 11. Generate impl_tags
 
