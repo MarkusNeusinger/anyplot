@@ -52,8 +52,7 @@ products <- tibble::tibble(
     category      = row_params$category,
     satisfaction  = pmin(98, pmax(35, rnorm(n_total, mean = row_params$quality_mu, sd = row_params$quality_sd))),
     price         = pmin(650, pmax(22, rnorm(n_total, mean = row_params$price_mu, sd = row_params$price_sd))),
-    sales_volume  = pmin(100, pmax(10, rlnorm(n_total, meanlog = row_params$sales_meanlog, sdlog = row_params$sales_sd))),
-    product_id    = sprintf("%s-%03d", row_params$code, rep(seq_len(n_per_category), times = nrow(category_params)))
+    sales_volume  = pmin(100, pmax(10, rlnorm(n_total, meanlog = row_params$sales_meanlog, sdlog = row_params$sales_sd)))
 ) |>
     dplyr::mutate(category = factor(category, levels = category_params$category)) |>
     # Draw largest bubbles first (bottom layer) so smaller bubbles stay
@@ -69,20 +68,6 @@ category_colors <- stats::setNames(IMPRINT_PALETTE, levels(products$category))
 sales_range <- range(products$sales_volume)
 size_limits <- c(sales_range[1] * 0.75, sales_range[2])
 
-# Top 3 products by monthly sales volume — labeled with a short leader line.
-# Direction alternates by satisfaction-score order (not sales-volume order) so
-# two best-sellers that happen to sit close together on price don't get
-# pushed to the same side and collide. The offset scales with each point's
-# own price so the label never lands below zero for low-price best-sellers.
-top_sellers <- products |>
-    dplyr::slice_max(sales_volume, n = 3) |>
-    dplyr::arrange(satisfaction) |>
-    dplyr::mutate(
-        direction   = rep(c(1, -1), length.out = dplyr::n()),
-        label_y     = price + direction * pmax(14, price * 0.34),
-        label_vjust = ifelse(direction > 0, -0.6, 1.6)
-    )
-
 # Plot
 p <- ggplot(products, aes(
     x    = satisfaction,
@@ -96,21 +81,6 @@ p <- ggplot(products, aes(
         alpha  = 0.42,
         stroke = 1.0
     ) +
-    geom_segment(
-        data        = top_sellers,
-        mapping     = aes(x = satisfaction, y = price, xend = satisfaction, yend = label_y),
-        inherit.aes = FALSE,
-        color       = INK_SOFT,
-        linewidth   = 0.3
-    ) +
-    geom_text(
-        data        = top_sellers,
-        mapping     = aes(x = satisfaction, y = label_y, label = product_id, vjust = label_vjust),
-        inherit.aes = FALSE,
-        color       = INK,
-        size        = 3.2,
-        fontface    = "bold"
-    ) +
     scale_x_continuous(
         breaks = seq(40, 100, 10),
         expand = expansion(mult = c(0.08, 0.06))
@@ -118,7 +88,7 @@ p <- ggplot(products, aes(
     scale_y_continuous(
         breaks = seq(0, 600, 100),
         labels = label_dollar(),
-        expand = expansion(mult = c(0.22, 0.08))
+        expand = expansion(mult = c(0.08, 0.08))
     ) +
     scale_size_area(
         max_size = 13,
@@ -155,7 +125,7 @@ p <- ggplot(products, aes(
         legend.key.size    = unit(0.35, "cm"),
         legend.key.spacing.y = unit(1, "pt"),
         legend.spacing.y   = unit(2, "pt"),
-        legend.justification = "center",
+        legend.justification.right = "center",
         legend.margin      = margin(4, 6, 4, 6),
         legend.box.spacing = unit(6, "pt"),
         plot.margin        = margin(12, 12, 10, 10)
