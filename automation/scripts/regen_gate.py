@@ -1036,7 +1036,9 @@ def check_prev_review(prev_review: Any, regen: Any) -> list[str]:
     review when the gate keeps it. So it has the shapes of the new render's
     review files: a non-empty ``image_description``; a ``criteria_checklist``
     with exactly the six category keys, their maxima and every criterion as an
-    item with an integer score in range, each category's score the sum of its
+    item with its ``id``, a non-empty ``name``, an integer ``score`` in range,
+    its ``max``, a boolean ``passed`` and a string ``comment`` (the stored
+    checklist is rendered as is), each category's score the sum of its
     items, each item equal to the same item of ``review_regen.json``'s
     ``prev_checklist`` (the gate contract stays authoritative); the total is
     not compared with ``prev_rescored``, which a score cap (step 8) may hold
@@ -1134,6 +1136,15 @@ def _prev_review_checklist_problems(checklist: Any, regen: Any) -> list[str]:
             seen.add(cid)
             if not (_is_int(item.get("max")) and item["max"] == CRITERIA[cid]):
                 problems.append(f"{where} ({cid}) max must be {CRITERIA[cid]} (got {item.get('max')!r})")
+            # The stored checklist renders as is: the name is the criterion's
+            # label, passed its mark (render_previous_review), comment its text.
+            name = item.get("name")
+            if not isinstance(name, str) or not name.strip():
+                problems.append(f"{where} ({cid}) name must be a non-empty string (got {name!r})")
+            if not isinstance(item.get("passed"), bool):
+                problems.append(f"{where} ({cid}) passed must be true or false (got {item.get('passed')!r})")
+            if not isinstance(item.get("comment"), str):
+                problems.append(f"{where} ({cid}) comment must be a string (got {item.get('comment')!r})")
             if not _score_in_range(cid, item.get("score")):
                 problems.append(
                     f"{where} ({cid}) score must be an integer from 0 to {CRITERIA[cid]} (got {item.get('score')!r})"

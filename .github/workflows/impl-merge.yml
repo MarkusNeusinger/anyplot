@@ -566,7 +566,8 @@ jobs:
 
       # The PR must be the bot's write-back (open, head
       # review-writeback/{spec}/{library}/{kept PR}, label review-writeback,
-      # author app/github-actions); anything else is a no-op. Its score must be
+      # author app/github-actions); anything else is a no-op. Its base must be
+      # main (check-fresh re-checks it before every merge attempt). Its score must be
       # the prev_rescored of the kept PR's gate record by github-actions[bot]
       # (verdict keep, writeback opened) — the only model-free source for the
       # number — and its review.model and review.criteria_version the record's
@@ -600,7 +601,9 @@ jobs:
 
       # A squash merge is three-way: a change main made to the pair's files
       # after the branch was cut would merge without a conflict and carry the
-      # re-score of the old code. So check-fresh runs before every attempt,
+      # re-score of the old code. So check-fresh runs before every attempt
+      # (and fails on a PR retargeted away from main, as gh pr merge merges
+      # into the PR's own base),
       # and a stale PR is closed, never updated (no `gh pr update-branch`: the
       # required checks are non-strict). --match-head-commit merges exactly the
       # commit the checks above verified.

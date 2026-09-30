@@ -19,11 +19,12 @@ travels as one:
   ``review-writeback/{spec}/{library}/{kept PR}`` (label ``review-writeback``,
   ``GITHUB_TOKEN`` only) and dispatches ``impl-merge.yml``.
 - ``impl-merge.yml``'s ``writeback`` job runs ``check-pr`` (the pull request is
-  the bot's, and its score, review model and rules version are the ones the
-  kept PR's gate record holds),
+  the bot's, it targets ``main``, and its score, review model and rules version
+  are the ones the kept PR's gate record holds),
   ``verify-diff`` (only the pair's review keys and header number change) and,
-  before every merge attempt, ``check-fresh`` (``main`` did not change the
-  pair's files since the branch was cut), then merges with the admin token.
+  before every merge attempt, ``check-fresh`` (it still targets ``main``, and
+  ``main`` did not change the pair's files since the branch was cut), then
+  merges with the admin token.
 
 Subcommands::
 
@@ -71,6 +72,9 @@ BRANCH_PREFIX = "review-writeback"
 BRANCH_RE = re.compile(r"^review-writeback/(?P<spec>[a-z0-9-]+)/(?P<library>[a-z0-9]+)/(?P<pr>[0-9]+)$")
 LABEL = "review-writeback"
 KEPT_LABEL = "regen:kept"
+# verify-diff and check-fresh compare against origin/main, and `gh pr merge`
+# merges into the PR's own base, so a write-back PR must target main.
+BASE_BRANCH = "main"
 # The author of a pull request GITHUB_TOKEN opened, as `gh pr view --json
 # author` names it, and the login of its comments in the REST API.
 BOT_AUTHOR = "app/github-actions"
@@ -396,6 +400,14 @@ def writeback_pr_identity(data: Mapping[str, Any]) -> str:
     return ""
 
 
+def base_problem(data: Mapping[str, Any]) -> str:
+    """Empty when the PR targets ``main``; otherwise why it must not merge."""
+    base = data.get("baseRefName")
+    if base != BASE_BRANCH:
+        return f"its base {base!r} is not {BASE_BRANCH}"
+    return ""
+
+
 def _json_lines(text: str) -> list[Any]:
     return [json.loads(line) for line in text.splitlines() if line.strip()]
 
@@ -493,7 +505,7 @@ def check_pr(
                 "view",
                 str(pr),
                 "--json",
-                "number,state,headRefName,headRefOid,labels,author,createdAt,isCrossRepository",
+                "number,state,headRefName,headRefOid,baseRefName,labels,author,createdAt,isCrossRepository",
             ],
             sleep,
         )
@@ -524,6 +536,10 @@ def _anchor_pr(
 ) -> tuple[str, str]:
     match = BRANCH_RE.match(str(data["headRefName"]))
     assert match is not None  # writeback_pr_identity checked it
+    # The bot's PR, retargeted: a fail, so the job's failure step closes it.
+    why = base_problem(data)
+    if why:
+        return "fail", f"PR #{data.get('number')}: {why}"
     spec, library, kept_pr = match["spec"], match["library"], int(match["pr"])
     if library not in LIBRARY_LANGUAGE:
         return "fail", f"unknown library {library!r}"
@@ -663,11 +679,17 @@ def cmd_check_fresh(args: argparse.Namespace) -> int:
     repo = Path(args.repo)
     try:
         data = json.loads(
-            _gh_retry(run_gh, ["pr", "view", str(args.pr), "--json", "state,headRefName,headRefOid"], time.sleep)
+            _gh_retry(
+                run_gh, ["pr", "view", str(args.pr), "--json", "state,headRefName,headRefOid,baseRefName"], time.sleep
+            )
         )
         match = BRANCH_RE.match(str(data.get("headRefName") or ""))
         if match is None:
             print(f"::error::check-fresh: PR #{args.pr} is no review write-back")
+            return 2
+        why = base_problem(data)
+        if why:
+            print(f"::error::check-fresh: PR #{args.pr}: {why}")
             return 2
         branch = match.group(0)
         _git_fetch(repo, "main", f"+refs/heads/{branch}:refs/remotes/origin/{branch}")

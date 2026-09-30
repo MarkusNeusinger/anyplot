@@ -165,6 +165,42 @@ class TestCheck:
         assert code == 1
         assert "items[8].id 'DE-01' is not a VQ criterion" in out
 
+    @pytest.mark.parametrize(
+        ("key", "value", "message"),
+        [
+            ("name", None, "(VQ-03) name must be a non-empty string (got None)"),
+            ("name", " ", "(VQ-03) name must be a non-empty string (got ' ')"),
+            ("name", 3, "(VQ-03) name must be a non-empty string (got 3)"),
+            ("passed", None, "(VQ-03) passed must be true or false (got None)"),
+            ("passed", "true", "(VQ-03) passed must be true or false (got 'true')"),
+            ("passed", 1, "(VQ-03) passed must be true or false (got 1)"),
+            ("comment", None, "(VQ-03) comment must be a string (got None)"),
+            ("comment", ["c"], "(VQ-03) comment must be a string (got ['c'])"),
+        ],
+    )
+    def test_an_item_field_missing_or_mistyped(self, tmp_path, capsys, key, value, message):
+        """The stored checklist renders as is: a blank name or a missing passed reads as a failed criterion."""
+        for drop in (True, False):
+            checklist = _checklist_json(PREV_CHECKLIST)
+            item = checklist["visual_quality"]["items"][2]
+            if drop:
+                del item[key]
+            else:
+                item[key] = value
+            code, out = _check(tmp_path, capsys, _prev_review(criteria_checklist=checklist))
+            assert code == 1
+            if drop:
+                assert f"(VQ-03) {key} must be" in out
+            else:
+                assert message in out
+            # A shape problem is not a score problem: the category total is still summed.
+            assert "is not the sum" not in out
+
+    def test_an_empty_comment_is_fine(self, tmp_path, capsys):
+        checklist = _checklist_json(PREV_CHECKLIST)
+        checklist["visual_quality"]["items"][2]["comment"] = ""
+        assert _check(tmp_path, capsys, _prev_review(criteria_checklist=checklist))[0] == 0
+
     def test_one_item_differs_from_prev_checklist(self, tmp_path, capsys):
         checklist = _checklist_json({**PREV_CHECKLIST, "VQ-02": 5})
         code, out = _check(tmp_path, capsys, _prev_review(criteria_checklist=checklist))
@@ -597,6 +633,7 @@ class FakeGh:
             "state": "OPEN",
             "headRefName": BRANCH,
             "headRefOid": "a" * 40,
+            "baseRefName": "main",
             "labels": [{"name": "review-writeback"}],
             "author": {"login": "app/github-actions", "is_bot": True},
             "createdAt": CREATED,
@@ -719,6 +756,16 @@ class TestCheckPr:
         assert why in result.reason, result.reason
         assert result.outputs["writeback_pr"] == "true"
 
+    @pytest.mark.parametrize("base", ["release/v1", "", None])
+    def test_a_writeback_pr_retargeted_away_from_main_fails(self, base):
+        """gh pr merge merges into the PR's own base; the checks compare against main."""
+        gh = FakeGh(wb_pr={"baseRefName": base})
+        result = _check_pr(gh)
+        assert (result.status, result.outputs["writeback_pr"]) == ("fail", "true")
+        assert f"its base {base!r} is not main" in result.reason
+        # It fails before the kept PR is read.
+        assert not any(c[:3] == ["pr", "view", str(KEPT_PR)] for c in gh.calls)
+
     def test_a_record_with_a_merge_verdict_fails_even_when_valid(self):
         """A merge record cannot carry writeback, so it is skipped; without the key it names the verdict."""
         record = _record(verdict="merge", code="merge")
@@ -821,6 +868,28 @@ class TestCheckFresh:
         _git(repo, "commit", "-q", "-am", "main changes the pair")
         problems = wb.fresh_problems(repo, "main", head, SPEC, LIB)
         assert any(f"main changed {path} after the write-back branch was cut" in p for p in problems)
+
+    def _cli(self, monkeypatch, capsys, tmp_path, base: Any) -> tuple[int, str, list[tuple[str, ...]]]:
+        repo = _repo(tmp_path)
+        head = _branch(repo, {META: _written_back()}, name=BRANCH)
+        _git(repo, "update-ref", "refs/remotes/origin/main", "main")
+        view = {"state": "OPEN", "headRefName": BRANCH, "headRefOid": head, "baseRefName": base}
+        fetches: list[tuple[str, ...]] = []
+        monkeypatch.setattr(wb, "run_gh", lambda argv: json.dumps(view))
+        monkeypatch.setattr(wb, "_git_fetch", lambda repo, *refspecs: fetches.append(refspecs))
+        code = wb.main(["check-fresh", "--pr", str(WB_PR), "--head", head, "--repo", str(repo)])
+        return code, capsys.readouterr().out, fetches
+
+    def test_cli_fresh_on_main(self, monkeypatch, capsys, tmp_path):
+        code, out, fetches = self._cli(monkeypatch, capsys, tmp_path, "main")
+        assert (code, len(fetches)) == (0, 1), out
+        assert "main still holds the pair's files" in out
+
+    def test_cli_refuses_a_pr_retargeted_away_from_main(self, monkeypatch, capsys, tmp_path):
+        """Re-checked before every merge attempt: the base can change after check-pr ran."""
+        code, out, fetches = self._cli(monkeypatch, capsys, tmp_path, "release/v1")
+        assert (code, fetches) == (2, [])
+        assert "its base 'release/v1' is not main" in out
 
 
 class TestLibraries:
