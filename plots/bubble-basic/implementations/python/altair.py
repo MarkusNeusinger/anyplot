@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: altair 6.3.0 | Python 3.13.15
-Quality: 96/100 | Created: 2026-09-27
+Quality: 91/100 | Created: 2026-09-30
 """
 
 import os
@@ -51,8 +51,9 @@ df = pd.DataFrame(
     }
 )
 
-# Add two counter-examples to break the near-linear funding->revenue trend:
-# a high-funded, low-revenue laggard, and a capital-efficient, low-funded high-revenue climber.
+# Add two counter-examples so funding and revenue don't form a single
+# near-linear cloud: a high-funded, low-revenue laggard, and a
+# capital-efficient, low-funded high-revenue climber.
 outlier_laggard = pd.DataFrame(
     {
         "Funding ($M)": [68.5],
@@ -71,33 +72,14 @@ outlier_climber = pd.DataFrame(
 )
 df = pd.concat([df, outlier_laggard, outlier_climber], ignore_index=True)
 
-# Flag three storytelling companies: the organic top performer by revenue, plus
-# the two hand-placed counter-example outliers. Spans three different stages
-# instead of a strict top-3-by-revenue set, which collapsed onto one dominant
-# stage and gave the callouts near-duplicate text.
-top1_idx = df["Revenue ($M)"].iloc[:n].idxmax()
-laggard_idx = n
-climber_idx = n + 1
-df["label"] = ""
-for i in (top1_idx, laggard_idx, climber_idx):
-    df.loc[i, "label"] = f"{df.loc[i, 'Stage']} · ${df.loc[i, 'Revenue ($M)']}M"
-
 title = "bubble-basic · python · altair · anyplot.ai"
 
 # Legend-bound point selection — clicking a Stage in the legend spotlights that
 # cohort by dimming the rest, an interactive capability distinctive to Altair's
-# Vega-Lite selection grammar (preserved in the saved interactive HTML).
+# Vega-Lite selection grammar (preserved in the saved interactive HTML). The
+# default "select all" state renders every bubble at the same 0.5 opacity, so
+# the static PNG shows no highlight — only the saved HTML is interactive.
 stage_selection = alt.selection_point(fields=["Stage"], bind="legend")
-
-# Regression trend — Vega-Lite's transform_regression fits the funding->revenue
-# trend server-side (no scipy/sklearn call in this script), a distinctive
-# declarative capability that sits underneath the bubbles as context.
-trend = (
-    alt.Chart(df)
-    .transform_regression("Funding ($M)", "Revenue ($M)")
-    .mark_line(strokeDash=[5, 4], strokeWidth=1.5, opacity=0.55)
-    .encode(x="Funding ($M):Q", y="Revenue ($M):Q", color=alt.value(INK_SOFT))
-)
 
 # Plot — bubble layer
 bubbles = (
@@ -146,37 +128,8 @@ bubbles = (
     .add_params(stage_selection)
 )
 
-# Highlight rings — a stroke-only outline sized to match each bubble gives the
-# three storytelling companies an instant, at-a-glance visual anchor beyond the text labels.
-top3_highlight = (
-    alt.Chart(df[df["label"] != ""])
-    .mark_circle(filled=False, stroke=INK, strokeWidth=2.5, opacity=0.9)
-    .encode(
-        x="Funding ($M):Q",
-        y="Revenue ($M):Q",
-        size=alt.Size("Segment Share (%):Q", scale=alt.Scale(range=[50, 1500], domain=[8, 62]), legend=None),
-    )
-)
-
-# Annotation layers — sort by revenue descending and alternate dy/dx to prevent collision.
-# The lowest-funding point (Series A · $54.0M, near the left plot edge) is left-aligned
-# with a positive dx so its text extends rightward into the plot instead of leftward
-# into the rotated "Revenue ($M)" axis-title gutter.
-_labeled = df[df["label"] != ""].sort_values("Revenue ($M)", ascending=False).reset_index(drop=True)
-_align_offsets = ["right", "left", "right"]
-_dy_offsets = [-24, -18, -26]
-_dx_offsets = [-14, 10, -14]
-_annotation_layers = [
-    alt.Chart(_labeled.iloc[[k]])
-    .mark_text(align=_align_offsets[k], dx=_dx_offsets[k], dy=_dy_offsets[k], fontSize=12, fontWeight="bold")
-    .encode(x="Funding ($M):Q", y="Revenue ($M):Q", text="label:N", color=alt.value(INK))
-    for k in range(len(_labeled))
-]
-annotations = alt.layer(*_annotation_layers)
-
 chart = (
-    (trend + bubbles + top3_highlight + annotations)
-    .properties(
+    bubbles.properties(
         width=620,
         height=320,
         background=PAGE_BG,
