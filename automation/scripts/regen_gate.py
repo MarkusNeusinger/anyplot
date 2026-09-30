@@ -246,11 +246,13 @@ def defect_ids(text: Any) -> list[str]:
 
 # The code-only path (``_code_path``): a CQ-04 defect line the previous review
 # named, fixed in the source alone. Its target — the text after the arrow, up
-# to "Likely cause:" — names the replacement call in backticks, or "remove".
+# to "Likely cause:" (``defect_target``) — names the replacement call in
+# backticks, or "remove".
 CODE_RULE = "CQ-04"
-_TARGET_RE = re.compile(r"(?:→|->)(?P<target>.*?)(?:\bLikely cause:|$)", re.DOTALL)
+_LIKELY_CAUSE_RE = re.compile(r"\bLikely cause:")
 _BACKTICK_RE = re.compile(r"`([^`]+)`")
 _CALL_NAME_RE = re.compile(r"^[A-Za-z_][\w.:]*!?$")
+_CALL_RE = re.compile(r"([A-Za-z_][\w!]*)\s*\(")
 # Sources larger than this are not read (--prev-impl/--new-impl); the code path is then off.
 SOURCE_LIMIT = 1_000_000
 
@@ -262,34 +264,51 @@ def is_cq04_code_defect(text: Any) -> bool:
 
 
 def defect_target(text: Any) -> str:
-    """What a defect line asks for: the text after its first arrow, without the "Likely cause:" part."""
-    m = _TARGET_RE.search(str(text or ""))
-    return m.group("target").strip() if m else ""
+    """What a defect line asks for: the text after its first arrow, without the "Likely cause:" part.
+
+    The arrow is the first ``→``; only a line without one falls back to the
+    first ``->``, which a description may contain (``x -> x^2``, an R pipe).
+    """
+    line = str(text or "")
+    arrow = "→" if "→" in line else "->"
+    if arrow not in line:
+        return ""
+    target = line.split(arrow, 1)[1]
+    return _LIKELY_CAUSE_RE.split(target, maxsplit=1)[0].strip()
 
 
 def replacement_tokens(text: Any) -> list[str]:
     """The call names a defect line's target names in backticks, in order.
 
-    Each backticked span yields the last component (split on ``.`` and
-    ``::``) of the name before its ``(``, or of the whole span when it is a
-    bare name: `` `acf(series, nlags=35)` `` → ``acf``, `` `stats::acf()` `` →
-    ``acf``, `` `density!(ax, x)` `` → ``density!``, `` `d3.bin()` `` → ``bin``.
-    A span that is no name (``{type: 'boxplot'}``, ``X \\ y``) yields nothing.
+    A span with calls yields every name called at its top level (not inside
+    another call's arguments), each the last component split on ``.`` and
+    ``::``: `` `acf(series, nlags=35)` `` → ``acf``, `` `stats::acf()` `` →
+    ``acf``, `` `density!(ax, x)` `` → ``density!``, `` `d3.bin()` `` → ``bin``,
+    `` `df["v"].rolling(7).mean()` `` → ``rolling``, ``mean``. A span without
+    a call yields its last component when it is a bare name
+    (`` `scipy.stats.gaussian_kde` `` → ``gaussian_kde``), and nothing
+    otherwise (``{type: 'boxplot'}``, ``X \\ y``).
     """
     tokens: list[str] = []
     for span in _BACKTICK_RE.findall(defect_target(text)):
-        name = span.split("(", 1)[0].strip()
-        if not _CALL_NAME_RE.match(name):
-            continue
-        last = re.split(r"\.|::", name)[-1]
-        if last and last not in tokens:
-            tokens.append(last)
+        if "(" in span:
+            names = [
+                m.group(1)
+                for m in _CALL_RE.finditer(span)
+                if span.count("(", 0, m.start()) == span.count(")", 0, m.start())
+            ]
+        else:
+            name = span.strip()
+            names = [re.split(r"\.|::", name)[-1]] if _CALL_NAME_RE.match(name) else []
+        for name in names:
+            if name and name not in tokens:
+                tokens.append(name)
     return tokens
 
 
 def is_removal(text: Any) -> bool:
-    """The defect line's target is a removal: it starts with "remove" or "delete"."""
-    return defect_target(text).lstrip("`* ").lower().startswith(("remove", "delete"))
+    """The defect line's target is a removal: it starts with the word "remove" or "delete"."""
+    return re.match(r"(?:remove|delete)\b", defect_target(text).lstrip("`* ").lower()) is not None
 
 
 def call_count(source: str, token: str) -> int:

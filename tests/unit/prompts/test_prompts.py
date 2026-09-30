@@ -615,6 +615,13 @@ class TestPlotTypeCharacteristics:
         assert "a required element the predecessor lacked is an improvement, not an addition" in step
         assert "every `C` ref an id of an `A good version shows:` bullet" in step
         assert "(jitter, force or declutter passes that move the marks)" not in step
+        # P8: the code improvement bullet and the source carve-out for CQ items.
+        assert "List it under `code_improvements`" in step
+        assert "Only `W` ids qualify" in step
+        assert "(or its source, `/tmp/anyplot-prev-impl${EXT}`, for CQ items" in step
+        assert "code-only changes still never go under `improvements`" in step
+        example = json.loads(step.split("```json\n", 1)[1].split("\n```", 1)[0])
+        assert example["code_improvements"] == []
 
     def test_generation_prompts_forbid_moving_marks(self) -> None:
         for path in (

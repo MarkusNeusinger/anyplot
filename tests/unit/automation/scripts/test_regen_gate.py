@@ -2726,6 +2726,9 @@ class TestCodeHelpers:
             ("CQ-04 (code): lines 3–20 → `scipy.stats.gaussian_kde` (SciPy). Likely cause: x.", ["gaussian_kde"]),
             ("CQ-04 (code): lines 3–20 → the `{type: 'boxplot'}` transform. Likely cause: x.", []),
             ("CQ-04 (code): `x` lines 3–20 without arrow", []),
+            ('CQ-04 (code): lines 5–15 → `df["v"].rolling(7).mean()` (pandas). Likely cause: x.', ["rolling", "mean"]),
+            ("CQ-04 (code): lines 5–15 → `gaussian_kde(v)(np.linspace(0, 1, 50))`. Likely cause: x.", ["gaussian_kde"]),
+            ("CQ-04 (code): lines 10–30 map `x -> y` by hand → `d3.rollup()` (d3). Likely cause: x.", ["rollup"]),
         ],
     )
     def test_replacement_tokens(self, text, tokens):
@@ -2734,6 +2737,7 @@ class TestCodeHelpers:
     def test_is_removal_and_call_count(self):
         assert is_removal(REMOVE_LINE) and is_removal("CQ-04 (code): x -> delete the dead branch. Likely cause: y.")
         assert not is_removal(CODE_LINE)
+        assert not is_removal("CQ-04 (code): x → `remove_outliers()` helper. Likely cause: y.")
         assert call_count("a = acf(x)\nb = stattools.acf (y)\nc = pacf(z)", "acf") == 2
         assert call_count("density!(ax, x)", "density!") == 1
 
