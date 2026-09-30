@@ -2738,6 +2738,14 @@ class TestCodeHelpers:
         assert is_removal(REMOVE_LINE) and is_removal("CQ-04 (code): x -> delete the dead branch. Likely cause: y.")
         assert not is_removal(CODE_LINE)
         assert not is_removal("CQ-04 (code): x → `remove_outliers()` helper. Likely cause: y.")
+        # Definitions and comment lines are not calls.
+        source = "def acf(x):\n    return 1\n# acf() would do\n// acf(y)\nfunction acf(z) {}\nv = acf(series)\n"
+        assert call_count(source, "acf") == 1
+
+    def test_line_counts_on_an_early_keep(self):
+        result = decide(_code_inp(canvas_failed=True))
+        assert (result.code, result.prev_lines, result.new_lines) == ("canvas_failed", 31, 4)
+        assert decide(_inp(canvas_failed=True)).prev_lines is None
         assert call_count("a = acf(x)\nb = stattools.acf (y)\nc = pacf(z)", "acf") == 2
         assert call_count("density!(ax, x)", "density!") == 1
 

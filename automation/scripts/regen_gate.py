@@ -311,9 +311,24 @@ def is_removal(text: Any) -> bool:
     return re.match(r"(?:remove|delete)\b", defect_target(text).lstrip("`* ").lower()) is not None
 
 
+_COMMENT_LINE_RE = re.compile(r"^\s*(?:#|//|\*|/\*)")
+_DEFINITION_RE = re.compile(r"(?:\bdef|\bfunction)\s+$")
+
+
 def call_count(source: str, token: str) -> int:
-    """How often ``source`` calls ``token``: the name, not preceded by a word character, then ``(``."""
-    return len(re.findall(rf"(?<!\w){re.escape(token)}\s*\(", source))
+    """How often ``source`` calls ``token``: the name, not preceded by a word character, then ``(``.
+
+    Comment lines (``#``, ``//``, ``*``) and definitions (``def name(``,
+    ``function name(``) do not count: a hand-roll named after the call it
+    imitates is not that call.
+    """
+    pattern = re.compile(rf"(?<!\w){re.escape(token)}\s*\(")
+    count = 0
+    for line in source.splitlines():
+        if _COMMENT_LINE_RE.match(line):
+            continue
+        count += sum(1 for m in pattern.finditer(line) if not _DEFINITION_RE.search(line[: m.start()]))
+    return count
 
 
 def _score_in_range(criterion: str, value: Any) -> bool:
@@ -804,7 +819,19 @@ def validate_regen(payload: Any, known_weakness_ids: frozenset[str], characteris
 
 
 def decide(inp: GateInput) -> GateResult:
-    """Apply the regen gate. Every uncertain input resolves to ``keep``."""
+    """Apply the regen gate. Every uncertain input resolves to ``keep``.
+
+    The two sources' line counts are on every result when both were read,
+    so an early keep still reports them.
+    """
+    result = _decide(inp)
+    if inp.prev_source is not None and inp.new_source is not None:
+        result.prev_lines = len(inp.prev_source.splitlines())
+        result.new_lines = len(inp.new_source.splitlines())
+    return result
+
+
+def _decide(inp: GateInput) -> GateResult:
     if inp.canvas_failed:
         return GateResult(KEEP, "canvas dimension gate failed", "canvas_failed")
     if inp.score is None:
