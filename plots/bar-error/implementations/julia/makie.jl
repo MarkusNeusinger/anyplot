@@ -126,6 +126,17 @@ bracket!(ax,
     linewidth   = 1.5,
 )
 
+# The raincloud dots and the top-bar outline are otherwise unexplained
+# layering on top of the named error-bar metric — a short corner annotation
+# names both so no visual element is left for the reader to guess at.
+text!(ax, 1.0, 1.0;
+    text     = "Gray dots: individual runs  ·  Bold outline: top performer",
+    space    = :relative,
+    align    = (:right, :top),
+    color    = INK_SOFT,
+    fontsize = 12,
+)
+
 ylims!(ax, 0, maximum(mean_yield .+ upper_err) * 1.22)
 
 # Save
