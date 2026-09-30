@@ -98,7 +98,13 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     try:
-        _gh("issue", "comment", args.issue, "--body", completion_comment(status, args.spec_id, args.run_url, args.source))
+        _gh(
+            "issue",
+            "comment",
+            args.issue,
+            "--body",
+            completion_comment(status, args.spec_id, args.run_url, args.source),
+        )
         _gh("issue", "close", args.issue)
     except subprocess.CalledProcessError as exc:
         err = " ".join((exc.stderr or "").split())[:300]

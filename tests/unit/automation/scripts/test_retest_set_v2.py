@@ -304,8 +304,7 @@ AXIS_TITLE_FIX = [
 ]
 NOT_AXIS_TITLE_FIX = [
     # A regression's wording: the title is gone, not added.
-    "The count axis now carries neither a title nor numeric ticks and nothing on it says what the bar heights "
-    "measure",
+    "The count axis now carries neither a title nor numeric ticks and nothing on it says what the bar heights measure",
     "Category tick labels go 8 -> 10 pt, the x-axis title 10 -> 11 pt and the title 12 -> 13 pt, so the smallest "
     "chrome text no longer sits at the mobile floor",
     "The 'avg 40' annotation went from 9 pt to 10 pt, matching the other secondary labels",

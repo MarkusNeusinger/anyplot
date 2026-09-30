@@ -126,7 +126,10 @@ exclude = [
     "dist",
     "temp",
     "plots",
-    "scripts",
+    # The top-level one-off maintenance scripts only. A bare "scripts" matches
+    # every directory of that name, which silently skipped automation/scripts/
+    # and its tests; "./" anchors the pattern to the project root.
+    "./scripts",
     # ruff 0.16 formats Python code blocks inside Markdown. Twenty tracked .md
     # files change under it — including prompts/library/*.md, whose snippets
     # steer code generation, so a quote-style rewrite there would be a pipeline

@@ -121,7 +121,11 @@ class TestCheckRawDiff:
         assert check_raw_diff("", SPEC) == ["the pull request changes no files"]
 
     def test_a_path_is_quoted_so_it_cannot_break_out_of_the_comment(self) -> None:
-        raw = entry("x`\n## injected") + entry(f"plots/{SPEC}/specification.md") + entry(f"plots/{SPEC}/specification.yaml")
+        raw = (
+            entry("x`\n## injected")
+            + entry(f"plots/{SPEC}/specification.md")
+            + entry(f"plots/{SPEC}/specification.yaml")
+        )
         (violation,) = check_raw_diff(raw, SPEC)
         assert violation.startswith('"x\\u0060\\n## injected"')
         assert "`" not in violation and "\n" not in violation
