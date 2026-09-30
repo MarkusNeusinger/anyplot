@@ -5,4 +5,4 @@
   `ruff check .` and `ruff format --check .` skipped `automation/scripts/` and
   `tests/unit/automation/scripts/` along with the top-level one-off scripts it
   was meant for. The entry is now `"./scripts"`, anchored to the project root,
-  and the one import-order and three format errors it had hidden are fixed.
+  and the one import-order and three format errors it had hidden are fixed (#12003).
