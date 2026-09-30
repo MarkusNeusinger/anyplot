@@ -50,7 +50,6 @@ const counts = Array.from(
   ),
   ([language, count]) => ({ language, count }),
 ).sort((a, b) => d3.descending(a.count, b.count));
-const meanCount = d3.mean(counts, (d) => d.count);
 
 // --- SVG mount ---------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -95,13 +94,9 @@ for (const axis of [xAxis, yAxis]) {
 yAxis.selectAll(".tick line").attr("stroke", t.grid);
 
 // --- Bars ---------------------------------------------------------------------
-// Opacity fades from the leading language (full strength) down through the
-// long tail, giving the top result a visual focal point beyond sort order.
-const emphasis = d3
-  .scaleLinear()
-  .domain([d3.min(counts, (d) => d.count), d3.max(counts, (d) => d.count)])
-  .range([0.6, 1]);
-
+// Single Imprint color at full opacity for every bar, so the data color stays
+// identical between themes (no opacity-over-background blending) — the basic
+// variant's single categorical variable, per the spec.
 g.selectAll("rect")
   .data(counts)
   .join("rect")
@@ -110,76 +105,22 @@ g.selectAll("rect")
   .attr("width", x.bandwidth())
   .attr("height", (d) => ih - y(d.count))
   .attr("fill", t.palette[0])
-  .attr("fill-opacity", (d) => emphasis(d.count))
   .attr("stroke", t.ink)
   .attr("stroke-opacity", 0.15)
   .attr("stroke-width", 1);
 
-// --- Mean reference line (secondary encoding beyond sort/opacity) --------------
-// A dashed neutral rule at the across-category mean lets the eye split the long
-// tail into above-/below-average languages at a glance. Neutral (not amber) per
-// the style guide's semantic anchors: neutral is for baseline/reference lines,
-// amber is reserved for warning/caution — here the leader callout below. Drawn
-// before the count labels so their page-bg halo (below) can mask the line where
-// they land close to it, instead of the line cutting through the digits.
-g.append("line")
-  .attr("x1", 0)
-  .attr("x2", iw)
-  .attr("y1", y(meanCount))
-  .attr("y2", y(meanCount))
-  .attr("stroke", t.ink)
-  .attr("stroke-opacity", 0.5)
-  .attr("stroke-width", 2)
-  .attr("stroke-dasharray", "6,5");
-
-g.append("text")
-  .attr("x", iw)
-  .attr("y", y(meanCount) - 10)
-  .attr("text-anchor", "end")
-  .attr("fill", t.inkSoft)
-  .style("font-size", "14px")
-  .style("font-weight", "600")
-  .text(`Mean = ${d3.format(",.0f")(meanCount)}`);
-
 // --- Count labels above bars ---------------------------------------------------
-// A page-bg halo (paint-order: stroke) keeps the mean line above from visually
-// clashing with labels that land close to it (e.g. Java at 87 vs. mean 91); the
-// extra vertical offset (vs. a plain "just above the bar" placement) gives that
-// pairing more breathing room.
 g.selectAll(".count-label")
   .data(counts)
   .join("text")
   .attr("class", "count-label")
   .attr("x", (d) => x(d.language) + x.bandwidth() / 2)
-  .attr("y", (d) => y(d.count) - 20)
+  .attr("y", (d) => y(d.count) - 16)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .attr("stroke", t.pageBg)
-  .attr("stroke-width", 6)
-  .attr("stroke-linejoin", "round")
-  .style("paint-order", "stroke")
   .style("font-size", "16px")
   .style("font-weight", "600")
   .text((d) => d.count);
-
-// --- Leading-category annotation (d3-shape symbol generator) -------------------
-// A small amber diamond over the top bar calls out the mode without adding a
-// second data color, exercising d3.symbol alongside the rollup/scale/axis idiom.
-const leader = counts[0];
-const leaderX = x(leader.language) + x.bandwidth() / 2;
-const leaderY = y(leader.count) - 48;
-g.append("path")
-  .attr("d", d3.symbol().type(d3.symbolDiamond).size(140)())
-  .attr("transform", `translate(${leaderX},${leaderY})`)
-  .attr("fill", t.amber);
-g.append("text")
-  .attr("x", leaderX)
-  .attr("y", leaderY - 14)
-  .attr("text-anchor", "middle")
-  .attr("fill", t.amber)
-  .style("font-size", "14px")
-  .style("font-weight", "600")
-  .text("Most common");
 
 // --- Axis titles -----------------------------------------------------------------
 g.append("text")
