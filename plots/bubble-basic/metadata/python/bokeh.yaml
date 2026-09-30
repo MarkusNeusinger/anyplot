@@ -2,9 +2,9 @@ library: bokeh
 language: python
 specification_id: bubble-basic
 created: 2025-12-14 11:09:30+00:00
-updated: '2026-09-27T02:45:44Z'
+updated: '2026-09-30T12:32:16Z'
 generated_by: claude-sonnet
-workflow_run: 36288973978
+workflow_run: 36714046987
 issue: 755
 language_version: 3.13.15
 library_version: 3.10.0
@@ -12,116 +12,152 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/python/bokeh/plot-dark.html
-quality_score: 94
+quality_score: 89
 review:
   strengths:
-  - Theme-adaptive chrome tokens are threaded through every element (title, axes,
-    ticks, grid, colorbar, legend, annotation) - both renders pass the light/dark
-    readability check cleanly.
-  - Correct, informative use of the imprint_seq continuous colormap for a genuinely
-    independent fourth variable (transit score), rather than decoration.
-  - Area-proportional bubble sizing (size proportional to sqrt(value)) with a clear,
-    well-placed size legend - matches the spec's "scale by area" and "include a size
-    legend" notes precisely.
-  - Trend line + outlier callout add real data storytelling without cluttering the
-    chart.
-  - Idiomatic native Bokeh widgets (ColorBar, HoverTool with vectorized hover props,
-    BoxAnnotation, Arrow) instead of manual/custom workarounds.
+  - 'Renders exactly the basic variant the spec asks for: x, y and size only, a single
+    brand-green fill for every bubble, and no colour scale, colour bar, trend or reference
+    line, highlight, band or annotation layer.'
+  - 'Area-proportional sizing with a visible floor: bubble_size = sqrt(16^2 + (80^2
+    - 16^2) * norm) makes bubble AREA grow linearly with green space, so the smallest
+    marks stay readable and the largest do not swallow the plot.'
+  - 'The size legend''s reference bubbles are drawn with exactly the data marks''
+    glyph - same #009E73 fill, same 0.65 alpha, same 2 px page-coloured stroke - on
+    an ELEVATED_BG card, labelled in m2/capita, and clearly visible on both the #FAF8F1
+    and the #1A1A17 surface.'
+  - Theme tokens (PAGE_BG / ELEVATED_BG / INK / INK_SOFT) are threaded through every
+    chrome element - title, axis titles, tick labels, tick marks, grid, legend card
+    and legend labels - so both renders pass the light/dark readability check with
+    no dark-on-dark or light-on-light element.
+  - 'Library-native interactivity (5e): bokeh''s vectorized hover_fill_alpha / hover_line_color
+    / hover_line_width glyph props auto-build the hover glyph with no custom JS, and
+    the HoverTool is scoped with renderers=[main_renderer] so the legend''s reference
+    bubbles do not fire tooltips in the HTML artifact.'
+  - 'Overplotting is handled the way the spec''s characteristic section asks for:
+    alpha 0.65 plus a thin page-coloured outline keeps each bubble distinguishable
+    inside the dense mid-density cluster, and every bubble sits at its true (x, y)
+    values.'
+  - Visual refinement beyond bokeh defaults - toolbar and plot outline removed, axis
+    lines and minor ticks removed, grid at 12% alpha, explicit min_border_* reservations
+    so nothing crowds the canvas edge.
   weaknesses:
-  - The italic outlier-annotation text (28pt) is the smallest text element in the
-    chart; consider bumping it a notch (e.g. 30-32pt) so it holds up as well as the
-    rest of the chrome at mobile widths.
-  - The size-legend and colorbar together with the trend line and outlier callout
-    add moderate visual density - nothing overlaps, but a future pass could simplify
-    if the catalog wants an even cleaner default bubble-chart look.
+  - 'DQ-01 (both): green space is generated as an almost deterministic inverse of
+    the x variable (100 - density_norm * 90 plus only sigma=5 noise), so the bubble-size
+    channel largely restates the x axis and the third dimension adds little independent
+    information -> loosen the coupling in the data generation (larger noise term,
+    or a partly independent driver) so size varies visibly at a given density. Likely
+    cause: `green_space = 100 - density_norm * 90 + np.random.normal(0, 5, n_cities)`.'
+  - 'Suggestion: the smallest reference bubble in the size legend is a ~16 px dot;
+    a slightly higher size_min floor would keep it legible in the 400 px thumbnail
+    as well as at full canvas.'
+  - 'Suggestion: the title occupies roughly 42% of the canvas width and leaves the
+    upper-right chrome band empty - a slightly larger title size would balance the
+    top of the composition.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1, not pure white.
-      Chrome: Bold dark title "bubble-basic · python · bokeh · anyplot.ai" top-left; dark axis labels ("Population Density (people/km²)", "Median Income (thousands USD)"); softer-gray tick labels; ColorBar titled "Transit Score (0-10)" on the right; "Green Space" size legend (three reference bubbles + labels) in the bottom-right; dashed trend line; arrow + italic annotation calling out the outlier. All readable against the light background.
-      Data: 55 bubbles positioned by density (x) and income (y), sized by green space (area-proportional), colored on the green->blue imprint_seq ramp by transit score. First/only continuous series uses imprint_seq (brand green -> blue), matching the palette rules for single-polarity continuous data.
+      Background: Warm off-white matching #FAF8F1 across both the plot area and the outer border — not pure white, not dark.
+      Chrome: Bold near-black title "bubble-basic · python · bokeh · anyplot.ai" top-left; italic dark axis titles "Population Density (people/km²)" (bottom) and "Median Income (thousands USD)" (left); softer gray tick labels (0/2000/…/12000 and 30/40/50/60); a very subtle ink grid at ~12% alpha on both axes; no spines or outline. A "Green Space" size legend sits on an elevated #FFFDF6 card with a faint gray border in the sparse bottom-right region, holding three reference bubbles labelled "10 m²/capita", "55 m²/capita" and "100 m²/capita". Every text element is clearly readable against the light background; nothing is light-on-light and nothing is clipped at a canvas edge.
+      Data: 55 bubbles, all one colour — Imprint brand green #009E73 at fill_alpha 0.65 with a 2 px page-coloured (#FAF8F1) stroke. Bubble diameters run ~16–80 px, area-proportional to green space per capita. The cloud rises from bottom-left (low density, low income, large bubbles) to top-right (high density, high income, small bubbles). Overlapping bubbles in the mid-density cluster stay individually readable thanks to the translucency plus the page-coloured outline. First (and only) series is #009E73 as required.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17, not pure black.
-      Chrome: Same title, axis labels, tick labels, colorbar text, legend text, and outlier annotation, all flipped to light ink tones (INK / INK_SOFT). No dark-on-dark issues - text remains fully legible.
-      Data: Bubble colors and sizes are identical to the light render (same transit-score -> color mapping and same green-space -> size mapping); only chrome adapted to the theme.
+      Background: Warm near-black matching #1A1A17 across plot area and border — not pure black.
+      Chrome: Identical layout with every chrome token flipped: title and axis titles in light ink #F0EFE8, tick labels and legend labels in #B8B7B0, grid drawn in light ink at ~12% alpha. The "Green Space" legend card is the elevated #242420 surface with a faint light border; its title and labels read clearly. No dark-on-dark failure anywhere — no near-black text sits on the near-black surface. No clipping at any canvas edge.
+      Data: Bubble fill, alpha and sizes are identical to the light render — the same #009E73 at 0.65 alpha; only the 2 px stroke follows the page colour (#1A1A17 here), which is the intended theme-adaptive outline. Brand green remains clearly visible against the dark surface.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All sizes explicit and readable in both themes; the 28pt italic outlier
-          annotation is the smallest element and would strain first at mobile widths
+        comment: 'All sizes explicitly set (title 50pt, axis titles 42pt, ticks 34pt,
+          legend title 38pt, legend labels 34pt) and every element is readable on
+          both the #FAF8F1 and the #1A1A17 surface; X/Y axis titles and tick labels
+          are balanced, nothing overflows.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/legend collisions; legend sits in the naturally sparse bottom-right
-          region
+        comment: No text collides with other text or with data; the legend card sits
+          in the genuinely sparse bottom-right corner and no bubble intrudes into
+          it. Bubble-on-bubble overlap in the mid-density cluster is permitted by
+          the spec and is handled with alpha 0.65 plus a page-coloured outline.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Area-proportional bubble sizes (16-80px) well adapted to the 55-point
-          density
+        comment: 16-80 px diameters are well matched to 55 points on a 3200x1800 canvas;
+          the size legend's glyphs are the data marks' glyph (same fill, alpha and
+          stroke) and are visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq ramp is CVD-safe and legible on both surfaces
+        comment: 'Single-hue encoding, so no hue discrimination is needed; #009E73
+          at 0.65 alpha holds ample contrast on both surfaces and the page-coloured
+          stroke adds a luminance separator between overlapping marks.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot dominates the canvas, balanced margins, legend near the data
+        comment: Plot area fills the canvas with balanced margins from the explicit
+          min_border_* reservations; legend sits inside the data region rather than
+          floating; nothing is cut off at any edge.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with units
+        comment: 'Both axis titles are descriptive and carry units: ''Population Density
+          (people/km2)'' and ''Median Income (thousands USD)''; the legend is labelled
+          in m2/capita.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq correctly chosen for single-polarity transit score; identical
-          data colors across themes; backgrounds match spec exactly
+        comment: 'Single categorical series rendered in Imprint brand green #009E73,
+          identical across both renders; backgrounds are #FAF8F1 / #1A1A17 and every
+          chrome token is theme-correct. No continuous colormap is used.'
     design_excellence:
-      score: 16
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Color genuinely encodes a fourth variable rather than decorating;
-          clear typographic hierarchy
+        comment: 'Clearly above a configured bokeh default - Imprint green, page-coloured
+          strokes, elevated legend card, italic axis titles, clean typographic hierarchy.
+          Short of publication-grade: the composition is a plain bubble cloud with
+          a large empty upper-left quadrant.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines/minor ticks removed, subtle grid, generous whitespace; legend+colorbar+trend+callout
-          together add moderate visual load
+        comment: Toolbar, plot outline, axis lines and minor ticks removed; grid at
+          12% alpha; generous borders. The legend card's box frame is a small departure
+          from the style guide's 'remove box frames around legends' preference.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Trend line + outlier callout give an immediate takeaway beyond raw
-          data display
+        comment: Size variation creates real hierarchy - large bubbles bottom-left,
+          small ones top-right - so the inverse density/green-space relation reads
+          immediately. Above the default of 2, but the story is partly tautological
+          because size closely tracks x.
     spec_compliance:
       score: 15
       max: 15
@@ -131,49 +167,64 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bubble chart (scatter with area-mapped size)
+        comment: 'Correct bubble chart and correct variant: x, y and size only, one
+          colour for all bubbles, no derived colour channel, colour bar, trend or
+          reference line, highlight, band or annotation layer.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: x/y/size present, alpha transparency, size legend included
+        comment: 'Every Notes bullet and every ''A good version shows'' bullet is
+          met: area (not radius) scaling, alpha 0.65 inside the 0.5-0.7 band, a size
+          legend with reference bubbles drawn like the data marks and labelled in
+          units, thin page-coloured outlines on overlapping marks, visible minimum
+          and non-overwhelming maximum bubble size.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Density on X, income on Y, size on green space; axes show full data
-          range
+        comment: Density on X, income on Y, green space on size; symmetric padding
+          keeps the full data range on-axis; no jitter, nudge, collision or declutter
+          pass - every bubble sits at its data values.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend/colorbar labels match
-          data with units
+        comment: Title is exactly 'bubble-basic · python · bokeh · anyplot.ai'; legend
+          title 'Green Space' and labels 10/55/100 m2/capita match the plotted size
+          variable and its real range.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Full range of size/color variation plus an explicit outlier
+        comment: Full size range (10-100 m2/capita, matching the spec's recommended
+          size-column range), a clear x/y trend, dense and sparse regions. Deducted
+          because green space is generated as a near-deterministic inverse of density,
+          so the third channel largely restates the x axis.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible urban-metrics scenario
+        comment: City metrics - population density vs median income with green space
+          per capita - a neutral, comprehensible, real-world urban-planning scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Value ranges and relationships are internally consistent and realistic
+        comment: 500-12000 people/km2, 28-65 thousand USD and 10-100 m2 green space
+          per capita are all realistic municipal ranges, and the density-up/income-up,
+          density-up/green-space-down relations are the directions real city data
+          shows.
     code_quality:
       score: 10
       max: 10
@@ -183,65 +234,77 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes
+        comment: Strictly linear imports -> theme tokens -> data -> plot -> save;
+          no functions or classes. The one loop builds the three legend rows.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) before every draw.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: 'Every import is used: os, time, Path, numpy, output_file/save, BoxAnnotation,
+          ColumnDataSource, HoverTool, Label, Range1d, figure, webdriver, Options.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, no over-engineering
+        comment: 230 lines with no dead code and no over-engineering; the hand-built
+          size legend is justified because bokeh has no native size guide, and the
+          comments explain the non-obvious choices (area scaling, CDP viewport pin,
+          legend placement).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + plot-{THEME}.html via the prescribed Selenium
-          pattern
+        comment: Writes plot-{THEME}.html via output_file/save and plot-{THEME}.png
+          via the prescribed Selenium + CDP pattern; uses current p.scatter(size=...)
+          rather than the deprecated p.circle(size=...).
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, transform(), native ColorBar/LinearColorMapper,
-          HoverTool
+        comment: ColumnDataSource with vectorized size and display columns, figure()
+          with explicit min_border_*, Range1d, p.scatter, HoverTool scoped to a renderer,
+          BoxAnnotation at level='underlay', Label - all the library's recommended
+          patterns. Short of 5 because the size legend is composed by hand in data
+          coordinates rather than through bokeh's legend machinery.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Vectorized hover_* glyph props, Arrow/BoxAnnotation callout - short
-          of a fully unique feature for top score
+        comment: Bokeh's vectorized hover_fill_alpha / hover_line_color / hover_line_width
+          glyph props build the hover glyph declaratively with no callback JS - a
+          genuinely bokeh-specific feature - plus a formatted HoverTool scoped via
+          renderers=[...] and an underlay BoxAnnotation.
   verdict: APPROVED
+  model: claude-opus-5
+  criteria_version: qc-0af6a3cb51.aqr-5ae4f38ad1.sg-7006008fc6.lib-2bd3b4f3e3
+  rendered_at: '2026-09-30T12:24:09Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - colorbar
-  - hover-tooltips
-  - annotations
   - custom-legend
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - columndatasource
   dataprep:
-  - regression
   - normalization
   styling:
-  - custom-colormap
   - alpha-blending
+  - edge-highlighting

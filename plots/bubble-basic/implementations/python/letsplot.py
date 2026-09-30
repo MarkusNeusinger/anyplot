@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: letsplot 4.11.0 | Python 3.13.15
-Quality: 92/100 | Updated: 2026-09-27
+Quality: 87/100 | Updated: 2026-09-30
 """
 
 import os
@@ -15,10 +15,7 @@ from lets_plot import (
     element_line,
     element_rect,
     element_text,
-    geom_hline,
     geom_point,
-    geom_smooth,
-    geom_vline,
     ggplot,
     ggsave,
     ggsize,
@@ -27,7 +24,7 @@ from lets_plot import (
     guides,
     labs,
     layer_tooltips,
-    scale_color_manual,
+    scale_fill_manual,
     scale_size_area,
     scale_x_continuous,
     theme,
@@ -68,28 +65,15 @@ for conference in conferences:
         rows.append({"payroll": payroll, "win_pct": win, "attendance": attendance, "conference": conference})
 
 df = pd.DataFrame(rows)
-avg_payroll = df["payroll"].mean()
-avg_win_pct = df["win_pct"].mean()
 
 # Plot
 plot = (
-    ggplot(df, aes(x="payroll", y="win_pct", size="attendance", color="conference"))
-    + geom_hline(yintercept=avg_win_pct, linetype="dotted", color=INK_SOFT, alpha=0.4, size=0.6, tooltips="none")
-    + geom_vline(xintercept=avg_payroll, linetype="dotted", color=INK_SOFT, alpha=0.4, size=0.6, tooltips="none")
-    + geom_smooth(
-        aes(x="payroll", y="win_pct"),
-        method="lm",
-        se=False,
-        color=INK_SOFT,
-        linetype="dashed",
-        size=0.8,
-        alpha=0.6,
-        inherit_aes=False,
-        show_legend=False,
-        tooltips="none",
-    )
+    ggplot(df, aes(x="payroll", y="win_pct", size="attendance", fill="conference"))
     + geom_point(
-        alpha=0.32,
+        shape=21,
+        color=INK_SOFT,
+        stroke=0.4,
+        alpha=0.55,
         tooltips=layer_tooltips()
         .format("payroll", "${.0f}M")
         .format("win_pct", "{.1f}%")
@@ -100,11 +84,11 @@ plot = (
         .line("Avg. Attendance|@attendance"),
     )
     + scale_size_area(max_size=13, name="Avg. Attendance (K)", breaks=[15, 25, 35, 45])
-    + scale_color_manual(values=IMPRINT_PALETTE[:2], name="Conference")
+    + scale_fill_manual(values=IMPRINT_PALETTE[:2], name="Conference")
     + scale_x_continuous(expand=[0.02, 5])
     + guides(
-        color=guide_legend(nrow=1, override_aes={"size": 7}),
-        size=guide_legend(nrow=1, override_aes={"color": IMPRINT_PALETTE[0], "alpha": 0.32}),
+        fill=guide_legend(nrow=1, override_aes={"size": 7}),
+        size=guide_legend(nrow=1, override_aes={"fill": IMPRINT_PALETTE[0], "color": INK_SOFT, "alpha": 0.55}),
     )
     + labs(x="Team Payroll (Million USD)", y="Win Rate (%)", title="bubble-basic · python · letsplot · anyplot.ai")
     + theme_minimal()
