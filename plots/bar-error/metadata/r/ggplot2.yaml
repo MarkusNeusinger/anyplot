@@ -12,47 +12,66 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 81
 review:
   strengths:
-  - 'Direct fix of prior review''s W1: added coord_flip (horizontal bars) and scales::label_number
-    axis suffix (" t/ha") — the two distinctive ggplot2 features the previous review
-    called out as missing'
-  - 'Direct fix of prior review''s W2: explicit "★ Best yield" annotation next to
-    the top bar removes reliance on subtitle text alone for the highlighted bar''s
-    meaning'
-  - Meaningful category ordering preserved (ranked descending by mean yield) after
-    reversing factor levels for coord_flip, with correct top_x indexing so the annotation
-    aligns with the right bar
-  - 'Clean theme-token wiring maintained: PAGE_BG/INK/INK_SOFT flip correctly between
-    renders, brand-green bars identical across themes'
-  - Error bars retain visible caps in both renders, matching the spec's requirement
-    that they stand out against bars and page in both themes
+  - 'Idiomatic grammar-of-graphics layering: geom_col + geom_errorbar(width = 0.2)
+    with visible caps on every bar, composed with coord_flip(clip = ''off'') so the
+    long treatment names read horizontally as the spec''s characteristic bullet asks'
+  - The subtitle names the uncertainty statistic exactly ('error bars show +/-1 SD
+    across 8 replicate plots per treatment'), satisfying the spec's annotation requirement
+    without spending a legend on a single series
+  - scale_y_continuous(labels = scales::label_number(suffix = ' t/ha')) carries the
+    unit onto every tick label, so the value axis is self-describing alongside the
+    'Crop Yield (tons/hectare)' axis title
+  - 'Error bars are drawn in the theme INK token, so they read as near-black on the
+    #FAF8F1 page and near-white on the #1A1A17 page - one styling that stands out
+    against both the green bars and both surfaces'
+  - Value axis starts at a true zero baseline and expands far enough that every error
+    bar, including the 7.0 +/- 0.6 arm of NPK Mix, is fully inside the panel; categories
+    are ranked descending by mean yield via rev(factor) releveling
+  - 'Theme wiring is complete and correct: plot.background, panel.background, grid,
+    axis titles, tick labels, title and subtitle all branch on ANYPLOT_THEME, and
+    the canvas is exactly 3200x1800 from ggsave(8 x 4.5 in, dpi = 400, device = ragg::agg_png)'
   weaknesses:
-  - 'LM-02 still has room to grow: only one annotate() text layer plus coord_flip/label
-    formatting demonstrate distinctive usage — facet_wrap or a ggrepel-equivalent
-    dynamic label placement remain unexplored'
-  - Only symmetric ±1 SD error bars are shown; the spec's optional asymmetric (lower,
-    upper) error format is never demonstrated, which would round out DQ-01 feature
-    coverage
-  - The "★ Best yield" annotation is a nice storytelling touch but is not requested
-    by the spec text itself — keep it lightweight so future iterations don't read
-    it as an added data encoding
+  - 'VQ-07 (both): the five non-top bars are drawn at alpha = 0.6, so the brand green
+    composites against the page and reads pale mint on the light surface but deep
+    forest on the dark one - the data color is no longer identical across themes ->
+    draw every bar at solid #009E73. Likely cause: geom_col(aes(alpha = is_top)) with
+    scale_alpha_manual(values = c(TRUE = 1, FALSE = 0.6)).'
+  - 'DE-03 (both): the ''* Best yield'' callout and the two-level bar opacity are
+    a highlight layer the spec never requests (style guide, Data Presentation: annotations
+    and callouts only when the specification explicitly requests them) -> remove the
+    callout and draw all six bars alike; the descending rank already carries the focus.
+    Likely cause: annotate(''text'', label = ''* Best yield'') plus the is_top flag.'
+  - 'DE-02 (both): the x-axis gridlines are drawn at full ink (color = INK, no alpha)
+    and read as hard black/white rules competing with the bars instead of sitting
+    behind them -> a faint rule at roughly 15 % ink. Likely cause: panel.grid.major.x
+    = element_line(color = INK, linewidth = 0.3).'
+  - 'VQ-05 (both): expansion(mult = c(0, 0.32)) pushes the value axis to about 9.5
+    t/ha while the longest error bar ends near 7.6, leaving roughly a quarter of the
+    panel empty to the right of the data -> about 0.12 (-0.20). Likely cause: the
+    expansion multiplier sized to make room for the callout.'
+  - 'CQ-04 (code): the is_top column, top_row, top_x and the annotate() block exist
+    only to place that callout -> delete them together with it. Likely cause: the
+    highlight layer.'
+  - 'Suggestion: with the category names already on the axis, the ''Fertilizer Treatment''
+    y-axis title could be dropped to give the bars more width.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "Crop Yield by Fertilizer Treatment · bar-error · r · ggplot2 · anyplot.ai" and grey subtitle "Ranked by mean yield (highest first) · error bars show ±1 SD across 8 replicate plots per treatment" are both clearly legible. Y-axis category labels (NPK Mix, Nitrogen, Compost, Potassium, Phosphorus, Control) and the "Fertilizer Treatment" axis title are dark and crisp. X-axis title "Crop Yield (tons/hectare)" and tick labels ("0 t/ha", "3 t/ha", "6 t/ha", "9 t/ha") are readable, softer dark grey for ticks. Only vertical major gridlines are shown, subtle against the background.
-      Data: Six horizontal green bars sorted descending top-to-bottom by mean yield (NPK Mix, Nitrogen, Compost, Potassium, Phosphorus, Control). NPK Mix renders at full alpha (brand green #009E73) with a bold "7.0" value label and a green bold "★ Best yield" annotation to its right; the remaining five bars are the same hue at reduced alpha (0.6), each with a black error bar with visible caps and a plain-weight value label (6.2, 6.1, 4.9, 4.2, 3.4). No overlap between labels, caps, bars, or the annotation.
+      Background: Warm off-white (#FAF8F1), not pure white; panel and margin share the same surface with no panel border.
+      Chrome: Bold near-black title "Crop Yield by Fertilizer Treatment - bar-error - r - ggplot2 - anyplot.ai" spanning about 75 % of the canvas width, with a soft-grey subtitle "Ranked by mean yield (highest first) - error bars show +/-1 SD across 8 replicate plots per treatment" directly under it. Rotated y-axis title "Fertilizer Treatment" and x-axis title "Crop Yield (tons/hectare)" are near-black; category labels (NPK Mix, Nitrogen, Compost, Potassium, Phosphorus, Control) and x tick labels (0 t/ha, 3 t/ha, 6 t/ha, 9 t/ha) are soft grey. Tick marks and the y-grid are removed; four vertical x-gridlines run the full panel height at full ink strength - visible but harder than the subtle rule the style guide asks for. Nothing is clipped at any edge.
+      Data: Six horizontal bars in brand green #009E73. The top bar (NPK Mix) is solid; the other five are the same hue at alpha 0.6 and read as a pale mint against the cream page. Each bar carries a near-black error bar with visible caps at both ends, drawn through the bar end, plus a value label to the right of the upper cap (7.0 bold, then 6.2, 6.1, 4.9, 4.2, 3.4). A bold green "* Best yield" callout sits to the right of the top bar. No text overlaps another text element, a cap or a bar.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and subtitle render in light tones (white / light grey) and are clearly legible — no dark-on-dark issue. Axis titles are light-colored and crisp; tick labels are a softer light grey and fully readable. Gridlines flip to a light color, remaining subtle.
-      Data: Same six bars in identical positions, heights, and hue as the light render, confirming data colors are unchanged between themes (only alpha differentiates NPK Mix). Error bar caps and value labels flip to a light color for contrast against the dark background; the "★ Best yield" annotation stays brand green and remains clearly legible on the dark surface. No overlap.
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Title flips to near-white (#F0EFE8) and the subtitle to light grey (#B8B7B0); both axis titles are near-white and both sets of tick labels light grey - all clearly readable, no dark-on-dark anywhere. Gridlines flip to light ink at the same full strength, so they are if anything more prominent here than on the light page. Layout, canvas (3200x1800) and element positions match the light render.
+      Data: The same six bars at the same lengths. The solid top bar is the identical brand green #009E73, but the five alpha-0.6 bars composite against the near-black page and read as a dark forest green instead of the light render's pale mint - the same series is a visibly different color in the two themes. Error bars and value labels flip to near-white and stand out cleanly against both the bars and the page; caps are visible on every bar. The "* Best yield" callout stays brand green and remains legible on the dark surface.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -60,75 +79,84 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; dynamic title fontsize avoids overflow;
-          tick, axis, and value labels are crisp.
+        comment: All sizes set explicitly (axis.title 10 pt, axis.text 8 pt, geom_text
+          size 3 mm, title scaled by the 67/nchar formula). Title, subtitle, axis
+          titles, tick labels and value labels are all crisp in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between bars, error-bar caps, value labels, or the
-          new annotation in either render.
+        comment: 'No collisions: value labels sit clear of the upper error-bar caps,
+          category labels clear of the bars, the callout clear of the 7.0 label, in
+          both renders.'
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Error bar caps and bars clearly visible for 6 categories; annotation
-          glyph reads well against both surfaces.
+        comment: Six sparse bars at width 0.6 are prominent; error-bar caps (width
+          0.2, linewidth 0.6) are clearly visible on every bar in both themes. No
+          legend to check.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: High-contrast ink error bars against green bars; single-hue + alpha
-          encoding avoids red-green reliance.
+        comment: Single-hue encoding with high-contrast ink error bars; no red-green
+          signal, CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Canvas dimension gate passed (3200x1800); coord_flip(clip='off')
-          keeps the annotation inside canvas bounds with no clipping.
+        passed: false
+        comment: Canvas exactly 3200x1800 and nothing clipped, but expansion(mult
+          = c(0, 0.32)) leaves about a quarter of the panel empty to the right of
+          the longest error bar.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units; tick labels now carry the ' t/ha'
-          suffix directly.
+        comment: Both axis titles descriptive; the value axis carries units twice
+          over ('tons/hectare' title plus ' t/ha' tick suffix).
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73 in both renders; backgrounds match #FAF8F1/#1A1A17;
-          identical data colors across themes.'
+        passed: false
+        comment: 'Backgrounds are #FAF8F1 / #1A1A17 and the first series is #009E73,
+          but alpha 0.6 on five of six bars makes that series composite to a pale
+          mint on light and a dark forest green on dark - the data color is not identical
+          across themes.'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Deliberate horizontal reorientation, alpha-highlighted top bar, unit-aware
-          axis, and callout annotation show real design intent beyond defaults.
+        comment: 'Above the default: deliberate horizontal reorientation for the long
+          treatment names, unit-bearing tick labels, a subtitle that carries the statistic,
+          and value labels on every bar. The highlight layer earns no credit.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Minimal vertical gridlines only, ticks removed, generous margin for
-          labels/annotation; still a fairly standard theme_minimal base.
+        passed: false
+        comment: Spines, tick marks, y-grid and minor grid all removed, and whitespace
+          is generous; but the remaining x-gridlines are drawn at full ink strength
+          rather than the subtle rule the style guide asks for.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Ranking + highlighted top bar + explicit 'Best yield' tag give an
-          unambiguous focal point, resolving the prior round's ambiguity.
+        passed: false
+        comment: Default. The descending rank is genuine hierarchy, but the focal
+          point is built from a callout and an opacity split the spec never requests,
+          which the criteria do not credit.
     spec_compliance:
       score: 15
       max: 15
@@ -138,28 +166,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bar chart with error bars; no unasked encodings (no color-by-category,
-          no trend line).
+        comment: A bar chart with error bars, exactly the requested type; no derived
+          color channel, trend line or facets.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible caps on every error bar; subtitle names the ±1 SD statistic.
+        comment: 'Every Notes bullet and every ''A good version shows'' bullet is
+          met: caps at both ends, a subtitle naming +/-1 SD, one bar width with even
+          gaps, a value ranking with horizontal orientation, and a zero baseline on
+          an untruncated axis spanning every error bar.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on the category axis, mean yield on the value axis, error
-          mapped to ymin/ymax; no post-hoc mark displacement.
+        comment: Treatment on the category axis, mean yield on the value axis, sd
+          mapped to ymin/ymax; marks sit exactly at their data values with no nudge,
+          dodge or collision pass.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format with descriptive prefix; single
-          series needs no legend.
+        comment: Title is 'Crop Yield by Fertilizer Treatment - bar-error - r - ggplot2
+          - anyplot.ai', the mandated format with the optional descriptive prefix;
+          a single series correctly needs no legend.
     data_quality:
       score: 14
       max: 15
@@ -169,22 +202,26 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Symmetric ±1 SD bars covered; asymmetric bounds (allowed by spec)
-          still unused.
+        comment: Six categories inside the spec's 3-12 range, SDs computed from 8
+          simulated replicates so the arms genuinely differ in length across bars;
+          error bars sized 0.5-0.7 t/ha show the neighbouring-range overlap the spec
+          expects.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral agricultural field-trial scenario.
+        comment: A fertilizer field trial with a Control arm is plausible, neutral
+          and a textbook use of error bars.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Yield values (3.2-7.4 t/ha) and SDs are realistic for the domain.
+        comment: Yields of 3.4-7.0 t/ha with SDs of 0.5-0.7 t/ha are realistic magnitudes
+          for cereal crop trials.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -192,34 +229,38 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; linear script.
+        comment: Linear top-to-bottom script; the only closure is the anonymous lapply
+          used for replicate generation, which is the idiomatic R form.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42).
+        comment: set.seed(42) before the rnorm draws.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, ragg all used; no unused imports.
+        comment: 'ggplot2, dplyr and ragg are all used; scales:: and tibble:: are
+          reached by namespace rather than loaded.'
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity for the ranking/highlight/annotation logic;
-          no fake functionality.
+        passed: false
+        comment: The is_top column, top_row, top_x and the annotate() block exist
+          purely to position a callout the spec does not ask for, adding branching
+          to an otherwise clean pipeline. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ggsave/ragg::agg_png.
+        comment: ggsave(sprintf('plot-%s.png', THEME), device = ragg::agg_png, 8 x
+          4.5 in, dpi = 400) - current API, correct filename, correct canvas.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -227,19 +268,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic geom_col + geom_errorbar + geom_text + annotate + coord_flip
-          layering; correct factor releveling for the flipped axis.
+        comment: 'Textbook ggplot2: a dplyr summarise pipeline into aes(), layered
+          geom_col/geom_errorbar/geom_text, factor releveling for the flipped axis,
+          theme_minimal plus targeted theme() overrides, linewidth rather than size.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: coord_flip, scales::label_number axis formatting, and a text annotate()
-          layer now demonstrate distinctive usage beyond bare geoms, though facet_wrap/ggrepel-equivalents
-          remain unexplored.
+        comment: coord_flip(clip = 'off'), scales::label_number(suffix) and expansion()
+          are real ggplot2-specific tools; scale_alpha_manual serves only the unrequested
+          highlight, and facets or stat-based error bars stay unexplored.
   verdict: APPROVED
-  model: claude-sonnet-5
-  criteria_version: qc-4374db4964.aqr-815475d157.sg-7006008fc6.lib-2476dd0292
+  model: claude-opus-5
+  criteria_version: qc-0af6a3cb51.aqr-5ae4f38ad1.sg-7006008fc6.lib-2476dd0292
   rendered_at: '2026-09-27T20:57:38Z'
 impl_tags:
   dependencies: []
