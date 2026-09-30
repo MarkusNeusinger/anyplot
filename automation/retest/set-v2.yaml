@@ -17,8 +17,10 @@
 #     main_sha equals the role's commit; freeze copies them to
 #     `gs://anyplot-images/retest/sets/v2/<id>/<role>-<theme>.png`.
 #
-# Labels stay `draft` until the owner confirms them in the pull request that
-# adds the set; while draft, every report ignores them. Besides the shapes
+# Labels were `draft` until the owner confirmed them on 2026-09-30 (while
+# draft, every report ignores them), with three corrections: #11960 merges
+# forward on a fixed VQ-02 defect, #11963 keeps, and #11953's label-clearance
+# fix is dropped (a suggestion, not a defect). Besides the shapes
 # set-v1.yaml documents, a regen item carries:
 #
 #   fixes: [{id: F1, criteria: [SC-03], match: '<regex>', note: '…'}]
@@ -53,7 +55,7 @@ gcs_prefix: retest/sets/v2
 # The merge base of P3 (plan PLAN_p3_v2.md §8.3): the rules the V2 baseline arm runs on.
 baseline_rules_sha: 9a6ed19528c5ecaa6b16ab84a9ed20c932d46445
 spec_commit: &t0 0ccb3fec15888aae4772a7b5c09ea9692f330c22
-labels: draft
+labels: confirmed
 
 # Round-1 snapshots (agentic/runs/verify-b1-regens/{before,after}/<spec>),
 # relative to the repository root of the checkout that runs freeze. Only
@@ -106,10 +108,9 @@ items:
     class: different
     new: {commit: *after, render: *a-bubble}
     prev: {commit: *t0, render: *b-bubble}
-    note: "#11953, merged in ac29068a6: round 1 merged 89 over 87 on W1 (BEAU-001 label clear of the bubbles above) and W3 (Sporting Goods off slot-5 red); owner reading: the fixes are real, so merge. Uncertain under P3: it needs a re-score deduction on VQ-02 or VQ-07 that round 1 did not record (plan footnote b); a keep counts as a false keep"
+    note: "#11953, merged in ac29068a6: round 1 merged 89 over 87 on W1 (BEAU-001 label clear of the bubbles above) and W3 (Sporting Goods off slot-5 red); owner reading: W3 is a real fix, so merge, while W1 is a suggestion (label F1 dropped at confirmation; F2 keeps its id). Uncertain under P3: it needs a re-score deduction on VQ-07 that round 1 did not record (plan footnote b); a keep counts as a false keep"
     expected: {forward: merge, reversed: keep}
     fixes:
-      - {id: F1, criteria: [VQ-02], match: '(label|callout|annotation|text|tag)s?\b.{0,100}(clear of|no longer (touch|overlap|collid|clash|sit)|away from|(more|extra|added|larger|bigger|better|cleaner) (clearance|spacing|separation|offset|room)|separated from)|(label|callout|annotation)[- ]?(offset|clearance|placement|position|nudge)\w*.{0,60}(widen|increas|larger|bigger|raised|moved|improv|adjust)|\bbeau-0\d\d\b', note: 'top-seller callout label (BEAU-001) clear of the bubbles above it'}
       - {id: F2, criteria: [VQ-07], match: 'sporting goods.{0,80}(recolou?r|colou?r|cyan|\bred\b|swatch|hue|palette|slot)|(recolou?r|colou?r|cyan|\bred\b|swatch|hue)\w*.{0,80}sporting goods|#?ae3030|#?2abccd|\bred\b.{0,80}(semantic|reserv|anchor|bad|loss|error)|(semantic|reserv)\w*.{0,60}\bred\b|\bslot[- ]?5\b|\b(fifth|5th) (category|colou?r|slot|palette)', note: 'Sporting Goods moved off the slot-5 semantic red'}
 
   # ---- count-basic -----------------------------------------------------------
@@ -188,9 +189,10 @@ items:
     class: different
     new: {commit: *after, render: *a-bar}
     prev: {commit: *t0, render: *b-bar}
-    note: "#11960, merged in 299563d38: round 1 merged 89 over 85 on W1 alone (unit tick labels and coord_flip, an LM-02 ask: a suggestion)"
-    expected: {forward: keep, reversed: keep}
-    fixes: []
+    note: "#11960, merged in 299563d38: round 1 merged 89 over 85 on W1 alone (unit tick labels and coord_flip, an LM-02 ask: a suggestion). Owner reading at confirmation: merge, because the new version also fixes a defect round 1 did not cite, the y = 8 gridline running through the bold 7.0 value label (F1; the retest arms cite it)"
+    expected: {forward: merge, reversed: keep}
+    fixes:
+      - {id: F1, criteria: [VQ-02], match: '(value|data|bar|bold)[- ]?labels?.{0,80}grid ?(lines?|rules?)|grid ?(lines?|rules?).{0,60}(through|across|strik|cross)\w*.{0,40}(labels?|digits|glyphs|text)\b|\b7\.0\b.{0,60}grid ?(lines?|rules?)', note: 'the y = 8 gridline no longer runs through the bold 7.0 value label'}
 
   - id: r-bar-error-plotly-pr11961
     kind: regen
