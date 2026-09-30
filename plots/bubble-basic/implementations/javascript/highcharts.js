@@ -2,7 +2,7 @@
 // bubble-basic: Basic Bubble Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
 // License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: 89/100 | Updated: 2026-09-27
+// Quality: pending | Updated: 2026-09-27
 
 const t = window.ANYPLOT_TOKENS;
 
