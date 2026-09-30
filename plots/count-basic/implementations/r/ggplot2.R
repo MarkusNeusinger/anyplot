@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' count-basic: Basic Count Plot
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 87/100 | Updated: 2026-09-28
+#' Quality: 87/100 | Updated: 2026-09-30
 
 library(ggplot2)
 library(dplyr)
@@ -18,9 +18,9 @@ INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 BAR_FILL    <- IMPRINT_PALETTE[1]
-# A single shade of the same hue, applied uniformly to every bar's edge -- a
-# crisp outline for depth, not a second encoding (still "one color" per bar).
-BAR_EDGE    <- if (THEME == "light") "#00714F" else "#00C489"
+# Bar edge uses the ink token -- the style guide's endorsed outline pattern --
+# never a custom hex; a crisp stroke for depth, not a second color encoding.
+BAR_EDGE    <- INK
 # Faint gridline tone -- ggplot2 has no grid alpha, so blend INK ~15% into
 # PAGE_BG instead of using full-opacity INK (which reads as bold as the axis).
 GRID_COLOR  <- colorRampPalette(c(PAGE_BG, INK))(100)[15]
@@ -53,15 +53,10 @@ n_total <- nrow(df)
 # --- Plot -----------------------------------------------------------------
 title_text <- "count-basic · r · ggplot2 · anyplot.ai"
 
-# Basic variant: single categorical variable, one color for all bars -- no
-# highlighted bar, reference line, band or callout (spec "good version" rule).
-# geom_text(stat = "count") lets ggplot2's own stat engine tally and label the
-# bars in one pass -- no separate dplyr::count() data frame needed for the
-# labels, exercising the grammar's computed-aesthetic machinery (after_stat())
-# beyond geom_bar()'s implicit tally. A second distinctive technique layers on
-# top: scales::comma()/percent() format the computed counts/proportions
-# instead of hand-rolled sprintf() math, the idiomatic ggplot2 pairing for
-# stat-derived labels.
+# Basic variant: single categorical variable, one bar color, no reference
+# line, highlighted bar or second grouping. geom_text(stat = "count") tallies
+# and labels the bars in the same pass as geom_bar() -- no separate
+# dplyr::count() table needed for the labels.
 p <- ggplot(df, aes(x = response)) +
   geom_bar(width = 0.62, fill = BAR_FILL, color = BAR_EDGE, linewidth = 0.4) +
   geom_text(
@@ -72,8 +67,8 @@ p <- ggplot(df, aes(x = response)) +
         scales::comma(after_stat(count)),
         scales::percent(after_stat(count) / n_total, accuracy = 1)
       ),
-      # The most-frequent response's label reads bolder and slightly larger --
-      # the same bar color throughout, emphasis carried by type weight alone.
+      # Most-frequent bar's label reads bolder and larger for a single focal
+      # point -- same fill color throughout, emphasis from type weight alone.
       fontface = ifelse(after_stat(count) == max(after_stat(count)), "bold", "plain"),
       size     = ifelse(after_stat(count) == max(after_stat(count)), 3.8, 3.2)
     ),
