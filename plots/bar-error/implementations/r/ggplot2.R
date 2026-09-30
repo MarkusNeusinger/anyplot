@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' bar-error: Bar Chart with Error Bars
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 89/100 | Updated: 2026-09-27
+#' Quality: 89/100 | Updated: 2026-09-30
 
 library(ggplot2)
 library(dplyr)
