@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-basic: Basic Bubble Chart
 Library: matplotlib 3.11.2 | Python 3.13.15
 Quality: 94/100 | Updated: 2026-09-27
@@ -69,7 +69,7 @@ category_specs = [
     },
 ]
 
-price_parts, quality_parts, sales_parts, category_parts, is_outlier_parts = [], [], [], [], []
+price_parts, quality_parts, sales_parts, category_parts = [], [], [], []
 for spec in category_specs:
     n = spec["n"]
     prices = np.random.normal(spec["price_mean"], spec["price_std"], n)
@@ -93,13 +93,11 @@ for spec in category_specs:
     quality_parts.append(qualities)
     sales_parts.append(sales)
     category_parts.extend([spec["name"]] * (n + 2))
-    is_outlier_parts.extend([False] * n + [True, True])
 
 price = np.clip(np.concatenate(price_parts), 8, 1200)
 quality_rating = np.clip(np.concatenate(quality_parts), 1, 10)
 sales_volume = np.clip(np.concatenate(sales_parts), 3, 130)
 category = np.array(category_parts)
-is_outlier = np.array(is_outlier_parts)
 
 category_names = [spec["name"] for spec in category_specs]
 category_colors = IMPRINT_PALETTE[:4]
@@ -175,28 +173,6 @@ category_legend = ax.legend(
 )
 plt.setp(category_legend.get_title(), color=INK, fontweight="bold")
 plt.setp(category_legend.get_texts(), color=INK_SOFT)
-
-# Focal-point annotation — call out the standout premium Electronics bubble
-# (highest price x quality among its category) to sharpen the storytelling
-# beyond color/size hierarchy alone. Restricted to the non-outlier core points
-# — the explicit flagship/bargain outliers above can land under the category
-# legend (upper right) and must never become the annotation target.
-electronics_core_mask = (category == "Electronics") & ~is_outlier
-standout_local_idx = np.argmax(price[electronics_core_mask] * quality_rating[electronics_core_mask])
-standout_x = price[electronics_core_mask][standout_local_idx]
-standout_y = quality_rating[electronics_core_mask][standout_local_idx]
-
-ax.annotate(
-    "Premium standout",
-    xy=(standout_x, standout_y),
-    xytext=(standout_x * 0.57, standout_y - 1.6),
-    fontsize=9,
-    color=INK_SOFT,
-    ha="right",
-    arrowprops={"arrowstyle": "-", "color": INK_SOFT, "linewidth": 0.8},
-    bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "linewidth": 0.6, "boxstyle": "round,pad=0.3"},
-    zorder=4,
-)
 
 # Style — descriptive prefix clarifies the retail domain; title fontsize scales
 # down since the prefix pushes past the 67-char baseline the style-guide default
