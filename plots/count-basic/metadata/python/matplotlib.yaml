@@ -2,9 +2,9 @@ library: matplotlib
 language: python
 specification_id: count-basic
 created: '2025-12-25T12:41:15Z'
-updated: '2026-09-27T20:45:47Z'
+updated: '2026-09-30T12:35:00Z'
 generated_by: claude-sonnet
-workflow_run: 36348756379
+workflow_run: 36714494880
 issue: 2033
 language_version: 3.13.15
 library_version: 3.11.2
@@ -12,130 +12,147 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 95
+quality_score: 86
 review:
   strengths:
-  - Rank-graded opacity on the single Imprint brand hue (#009E73) creates clear visual
-    hierarchy while staying fully single-series compliant — no second hue introduced.
-  - Dashed average-reference line with bbox-masked crossing labels adds genuine data-storytelling
-    context without clutter.
-  - Leading category is deliberately emphasized (larger bold value label + path-effect
-    stroke) — an immediate, unambiguous focal point.
-  - 'Minimalist y-axis: numeric ticks/labels removed and replaced with direct count+percentage
-    labels on each bar, now paired with an explicit ''Number of Responses'' axis title
-    so a reader skimming only the axis still knows what is being counted.'
-  - Theme-adaptive chrome is correctly implemented in both renders; the brand green
-    and its opacity ramp are pixel-identical between light and dark, only chrome (background,
-    text, grid) flips.
-  - 'Idiomatic, modern matplotlib usage: Axes-based API throughout, ax.bar_label for
-    direct labeling, path_effects.withStroke for the winner''s stroke — clean KISS
-    structure with no functions/classes.'
+  - 'Every bar is the same Imprint brand green #009E73 at full opacity with page-colored
+    (1.5 px) bar edges for separation — the basic variant''s single categorical variable
+    reads as exactly one series, with no second hue and no per-bar emphasis.'
+  - ax.bar_label with a custom labels= list and linespacing=1.3 puts the count and
+    its share on two lines above each bar — a matplotlib-native direct-labeling idiom
+    that makes every value readable without hunting along an axis.
+  - 'Theme-adaptive chrome is complete in both renders: backgrounds #FAF8F1 / #1A1A17,
+    title and both axis titles in INK, category tick labels in INK_SOFT, grid derived
+    from INK at alpha 0.08 — and the brand green is identical between light and dark.'
+  - Categories are sorted by descending frequency at one uniform bar width (0.62)
+    with even gaps, so the distribution (69 / 47 / 39 / 33 / 12) reads left-to-right
+    at a glance.
+  - Idiomatic Axes-based matplotlib throughout (ax.bar, ax.bar_label, ax.yaxis.grid,
+    ax.spines, ax.tick_params) with the top/right/left spines removed and only a soft
+    bottom spine kept — flat KISS script, seeded, no functions or classes.
   weaknesses:
-  - The secondary bar labels (count + percentage on the four non-leading bars) and
-    the 'avg 40' annotation remain the smallest text elements on the canvas; they
-    are legible now but sit close to the floor for a ~400px mobile thumbnail — consider
-    a small further bump if a future regeneration touches this file again.
-  - DE-01/DE-02 are strong but short of full publication-grade polish (e.g. the label-mask
-    boxes where text crosses the average line are functional but slightly visible
-    as boxes) — room for further refinement, not a defect.
+  - 'SC-02, VQ-06 (both): the count axis carries no whole-number ticks — the five
+    gridlines are unlabeled and sit at 0, 22.4, 44.9, 67.3 and 89.7, so a reader cannot
+    read a count off the axis even though it is titled ''Number of Responses'' → label
+    the y ticks at whole-number counts (e.g. 0 / 20 / 40 / 60) in INK_SOFT at 8 pt.
+    Likely cause: ax.set_yticks(np.linspace(0, counts.max() * 1.3, 5)) followed by
+    ax.set_yticklabels([]).'
+  - 'Suggestion: the category tick labels at 8 pt are the smallest text on the canvas;
+    9 pt would hold up better on a ~400 px mobile thumbnail.'
+  - 'Suggestion: the two near-identical comment blocks explaining the minimalist y-axis
+    (above ax.bar_label and above ax.set_xlabel) could be collapsed into one.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "count-basic · python · matplotlib · anyplot.ai" in dark ink, clearly readable, occupying a comfortable share of the plot width. X-axis label "Survey Response" and, new in this version, a rotated y-axis label "Number of Responses" are both present in dark ink at matching fontsize — the axis no longer relies solely on the direct bar labels to convey what is being measured. Category tick labels (Agree, Neutral, Disagree, Strongly Agree, Strongly Disagree) are legible in soft-dark ink. Faint horizontal gridlines and a dashed grey "avg 40" reference line are visible but subtle. Only the bottom spine remains; top/right/left spines removed.
-      Data: Five vertical bars in a single-hue green ramp (full-opacity #009E73 for the leading "Agree" bar at 69/34%, decreasing opacity for lower-ranked bars). Each bar is direct-labeled above with count and percentage; the leading label is bold/larger with a light-colored stroke effect that keeps it crisp against the gridline it crosses.
-      Legibility verdict: PASS — all text (title, both axis labels, tick labels, value labels, avg annotation) reads clearly against the light background; no light-on-light issues found.
+      Background: Warm off-white matching #FAF8F1 — not pure white, not dark. Fills the full 3200x1800 canvas including the area behind the title.
+      Chrome: Title "count-basic · python · matplotlib · anyplot.ai" centered in dark INK at 12 pt medium, spanning roughly 47% of the canvas width with comfortable breathing room — no clipping, no overflow. X-axis title "Survey Response" and rotated y-axis title "Number of Responses" both in dark INK at 10 pt, visually balanced against each other. Category tick labels (Agree, Neutral, Disagree, Strongly Agree, Strongly Disagree) in soft-dark INK_SOFT at 8 pt, horizontal, no rotation, no collisions. Only the bottom spine is drawn, in INK_SOFT; top, right and left spines removed. Five faint horizontal gridlines at alpha 0.08 are visible but subtle and carry NO numeric labels — the count axis has no whole-number ticks.
+      Data: Five vertical bars, all in the identical Imprint brand green #009E73 at full opacity, uniform width with even gaps, rising from a zero baseline. Thin page-colored (#FAF8F1) bar edges separate each bar from the grid. Each bar carries a two-line label above it in dark INK at 10 pt: 69/34%, 47/24%, 39/20%, 33/16%, 12/6%. No reference line, no highlighted bar, no annotation layer, no legend (single series).
+      Legibility verdict: PASS — title, both axis titles, category tick labels and all ten value/percentage labels read clearly against the warm off-white; no light-on-light text anywhere; no element touches or crosses a canvas border.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Same title, both axis labels ("Survey Response" and "Number of Responses"), and category tick labels now rendered in light ink, clearly legible against the dark surface. Gridlines and the dashed "avg 40" line are rendered in a lighter muted grey, still subtle but visible.
-      Data: The same five-bar green ramp — the leading "Agree" bar renders as the identical #009E73 seen in the light render, with the fainter, lower-ranked bars showing the same relative opacity ramp on the same hue. No new colors introduced; only chrome flipped as required.
-      Legibility verdict: PASS — no dark-on-dark failures; every title/axis-label/tick/value-label/annotation is clearly readable, and the brand green remains vivid against the near-black surface.
+      Background: Warm near-black matching #1A1A17 — not pure black, not light. Same full-canvas coverage.
+      Chrome: Identical layout. Title and both axis titles now render in light INK (#F0EFE8), category tick labels in light INK_SOFT (#B8B7B0) — every one clearly legible against the near-black surface. NO dark-on-dark failures: no near-black text survives anywhere on the dark render. The bottom spine and the five gridlines flip to the light ink token and stay subtle but visible.
+      Data: The same five bars in exactly the same Imprint brand green #009E73 — the data color is unchanged between themes, only chrome flipped, as required. Bar edges flip to the dark page color (#1A1A17). The two-line count/percentage labels (69/34%, 47/24%, 39/20%, 33/16%, 12/6%) render in light INK and are fully readable. Brand green remains vivid and clearly distinguishable from the near-black background.
+      Legibility verdict: PASS — all text readable, no dark-on-dark, no clipping at any canvas edge.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit (title 12pt, axis labels 10pt, ticks 8pt,
-          bar labels 10/13pt, avg annotation now 10pt vs. 9pt previously), matching
-          the style-guide defaults; readable in both themes with no overflow.
+        comment: All sizes explicitly set (title 12 pt medium, axis titles 10 pt,
+          category ticks 8 pt, bar labels 10 pt); readable in both themes, no overflow,
+          balanced x/y axis titles. Title fills about 47% of the canvas width, well
+          clear of the 90% overflow bar. The 8 pt category ticks are the smallest
+          text and sit near the floor for a ~400 px mobile thumbnail.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Bar labels are bbox-masked where they cross the average line; new
-          y-axis label does not collide with tick labels or bars.
+        comment: 'No collisions anywhere: the two-line bar labels clear the bar tops
+          by a 10 pt pad, the tallest label sits well below the title inside the 1.3x
+          headroom, and category tick labels do not touch each other in either render.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 5 categories, bar width 0.62 with clear spacing; all bars clearly
-          visible at every opacity level in the ramp.
+        comment: Five bars at width 0.62 with even gaps; all clearly visible and fully
+          opaque in both themes, including the shortest (12). Page-colored 1.5 px
+          edges keep each bar distinct from the grid. No legend needed for a single
+          series.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue ramp with strong luminance/opacity separation between
-          ranks; no red-green or hue-only signal used.
+        comment: 'Single brand hue #009E73 against both surfaces; strong luminance
+          contrast in light and dark, no hue-only signal, no red-green reliance. Categories
+          are distinguished by position and label, not color.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills a well-balanced majority of the canvas; margins even;
-          nothing cut off.
+        comment: 3200x1800 exactly (canvas gate passed, no gate file). Plot area fills
+          a well-balanced majority of the canvas, margins even on all four sides,
+          nothing cut off or pushed outside the frame in either render.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Both x-axis ('Survey Response') and y-axis ('Number of Responses')
-          now carry descriptive titles — the previous partial (missing y-axis title)
-          is fixed.
+        passed: false
+        comment: 'Both axis titles are descriptive (''Survey Response'', ''Number
+          of Responses'') but the y axis they title carries no readable scale: the
+          gridlines are unlabeled and land on non-integer values, so the count axis
+          has no whole-number ticks.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Leading bar is exactly Imprint #009E73 at full opacity, identical
-          between light and dark renders; backgrounds and chrome are theme-correct
-          in both.'
+        comment: 'Single series is exactly Imprint position 1 (#009E73), identical
+          between the two renders. Backgrounds are #FAF8F1 / #1A1A17, and title, axis
+          titles, tick labels, spine and grid all come from the theme-adaptive INK
+          / INK_SOFT tokens. No custom hexes, no non-Imprint colormap.'
     design_excellence:
-      score: 16
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Rank-graded opacity ramp and deliberate typography hierarchy (bold
-          + stroked leader) are clearly above library defaults, short of full publication-grade
-          polish.
+        comment: 'Clearly above a configured default: intentional typography hierarchy
+          (12 pt medium title / 10 pt axis titles / 10 pt value labels / 8 pt ticks),
+          page-colored bar edges, restrained single-hue treatment. Short of publication-grade
+          polish — the unlabeled decorative gridlines and the generous but unstructured
+          headroom keep it from the top band.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines reduced to bottom-only, grid alpha=0.08, generous whitespace;
-          minor deduction for the visible label-mask boxes where text crosses the
-          average line.
+        comment: 'Spines reduced to a soft bottom rule only, y tick marks length 0,
+          grid at alpha 0.08 (well inside the subtle band), generous whitespace, tight_layout.
+          Minor deduction: the five gridlines carry no labels and sit at arbitrary
+          non-integer positions, so they read as decoration rather than a scale.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Average reference line plus emphasized leading category gives an
-          immediate, unambiguous read of the story (Agree dominates, well above average).
+        comment: 'Above the default 2: descending-frequency sorting plus direct count+share
+          labels on every bar let a viewer read the whole distribution without decoding
+          an axis. No focal emphasis beyond that, which is correct for the basic variant
+          — the spec''s C4 bullet excludes highlighted bars and callouts.'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -143,31 +160,40 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct count plot: raw categorical responses counted via np.unique,
-          rendered as vertical bars.'
+        comment: 'Correct count plot: raw categorical responses counted with np.unique(...,
+          return_counts=True) and drawn as vertical bars from a zero baseline. No
+          variant creep — one color for all bars, no reference or mean line, no highlighted
+          bar or band, no callout, no second grouping variable, no stacking, error
+          bars or cumulative line.'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Sorted by frequency descending, count labels, and percentage annotations
-          all present per spec Notes.
+        passed: false
+        comment: 'Notes bullets all met: sorted by descending frequency, count labels
+          above the bars, percentage annotations, consistent bar width with adequate
+          spacing. C2, C3 and C4 met. C1 partially missed: the count axis is not truncated
+          (0 to 1.3x max) but has no whole-number ticks — the five gridlines are unlabeled
+          and sit at 0, 22.4, 44.9, 67.3, 89.7.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on x, count on y (via bar height + direct labels); all 5
-          categories shown at their true values.
+        comment: Category on x, count on y; all five categories present at their true
+          values; bars rise from a zero baseline so height stays proportional to the
+          count. No jitter, nudge, dodge or collision pass anywhere — marks sit exactly
+          at their data values.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches the mandated 'count-basic · python · matplotlib
-          · anyplot.ai' format; no legend needed for single-series data.
+        comment: Title is exactly 'count-basic · python · matplotlib · anyplot.ai'
+          — spec-id, language, library, domain, correct separators. Legend correctly
+          omitted for a single-series count plot.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -175,22 +201,28 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Clear varying frequencies across 5 categories, none flat or identical
-          — dominant category, mid-range and a smaller tail present.
+        comment: 'Five categories with genuinely varied frequencies: a dominant one
+          (69), a mid band (47 / 39 / 33) and a small tail (12). The unequal heights
+          are exactly what the spec''s C5 permission calls the point of the chart,
+          and every aspect of a count plot — zero baseline, proportional heights,
+          ordered categories, count and share labels — is exercised.'
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Neutral Likert-scale survey-response scenario, fully comprehensible
-          and non-controversial.
+        comment: A five-point Likert survey-response distribution — real, comprehensible
+          and fully neutral (no politics, no sensitive topic). Deducted one point
+          because the scenario is the generic textbook survey rather than a specific
+          domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 total responses, counts and percentages are internally consistent
-          and sum correctly.
+        comment: 200 total responses; the five counts sum to exactly 200 and the printed
+          shares (34+24+20+16+6) sum to 100%. Response magnitudes are plausible for
+          a survey of that size and the Likert ordering is internally coherent.
     code_quality:
       score: 10
       max: 10
@@ -200,36 +232,42 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat imports → data → plot → save script, no functions/classes.
+        comment: Flat imports -> theme tokens -> data -> count -> sort -> plot ->
+          style -> save. No functions, no classes, no branching beyond the theme ternaries.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42) set before np.random.choice, so both the light
+          and the dark run produce identical counts.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, matplotlib.patheffects, matplotlib.pyplot, numpy, and
-          to_rgba — all used.
+        comment: Only os, sys, matplotlib.pyplot and numpy — every one used. The patheffects
+          and to_rgba imports the predecessor needed are gone with the code that used
+          them.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No over-engineering, no fake UI; the +3 lines vs. the predecessor
-          are exactly the new y-axis label, a visible, justified addition.
+        comment: '82 lines, appropriate for the plot; no over-engineering, no dead
+          code, no fake UI. Uses strict=True on the label zip. Only nit: the minimalist-y-axis
+          rationale is written out twice in near-identical comment blocks.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via current bar_label/path_effects APIs,
-          no deprecated calls, no bbox_inches='tight'.
+        comment: Saves f'plot-{THEME}.png' at dpi=400 with facecolor=PAGE_BG and no
+          bbox_inches='tight', so figsize x dpi yields the exact 3200x1800 target.
+          Current API throughout (bar_label, tick_params, set_facecolor) — no deprecated
+          calls.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -237,20 +275,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Axes-based API throughout (ax.bar, ax.bar_label, ax.axhline, ax.yaxis.grid)
-          — textbook idiomatic matplotlib.
+        comment: Axes-based API throughout (ax.bar, ax.bar_label, ax.set_xlabel/ylabel/title,
+          ax.tick_params, ax.spines, ax.yaxis.grid, ax.set_ylim) — never the pyplot
+          state machine for plotting, exactly the pattern the library prompt asks
+          for, closed with plt.tight_layout() and plt.savefig.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: path_effects.withStroke for the winner's label stroke and bar_label's
-          list-based multi-line labeling are matplotlib-specific, low-level text-rendering
-          techniques.
+        comment: ax.bar_label with a custom labels= list, padding and linespacing
+          to emit two-line count+share labels is a matplotlib-specific convenience
+          that other libraries need manual text placement for. Above the default of
+          1, but a single such feature rather than a deeper showcase.
   verdict: APPROVED
-  model: claude-sonnet-5
-  criteria_version: qc-4374db4964.aqr-815475d157.sg-7006008fc6.lib-e97ebfa5c3
-  rendered_at: '2026-09-27T20:40:59Z'
+  model: claude-opus-5
+  criteria_version: qc-0af6a3cb51.aqr-5ae4f38ad1.sg-7006008fc6.lib-e97ebfa5c3
+  rendered_at: '2026-09-30T12:27:11Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -261,6 +302,7 @@ impl_tags:
   - explicit-figure
   dataprep: []
   styling:
-  - alpha-blending
-  - edge-highlighting
+  - publication-ready
+  - minimal-chrome
   - grid-styling
+  - edge-highlighting

@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-basic: Basic Bubble Chart
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 94/100 | Updated: 2026-09-27
+// Quality: 86/100 | Updated: 2026-09-30
 
 const t = window.ANYPLOT_TOKENS;
 const size = window.ANYPLOT_SIZE;
@@ -16,10 +16,7 @@ function rand() {
 
 // Market analysis: R&D investment vs. revenue growth, bubble size = a relative
 // market-strength index (0-100 scale, scored independently per company — not a
-// literal share of one shared 100% pie). A fourth derived quantity — growth
-// earned per R&D dollar — drives a continuous color encoding on top of the
-// size encoding, so overlapping bubbles in the dense cluster stay visually
-// separable by hue, not just by alpha blending.
+// literal share of one shared 100% pie).
 const companyCount = 65;
 const bubbles = [];
 for (let i = 0; i < companyCount; i++) {
@@ -32,34 +29,19 @@ for (let i = 0; i < companyCount; i++) {
   // bubbles at a single y.
   const growthRate = rawGrowth > 1 ? rawGrowth : 0.3 + rand() * 1.7; // revenue growth, %
   const marketIndex = 10 + rand() * 90; // relative market-strength index
-  const efficiency = growthRate / rdSpend; // growth % earned per R&D dollar
-  bubbles.push([rdSpend, growthRate, marketIndex, efficiency]);
+  bubbles.push([rdSpend, growthRate, marketIndex]);
 }
 
 // A handful of deliberate outliers break the x/y trend, showing what the
 // bubble encoding reveals that a plain 2D scatter would blur: heavy R&D spend
 // doesn't guarantee growth, and a small agile spender can still break out.
-bubbles[3] = [88, 5, 71, 5 / 88]; // legacy incumbent: heavy spend, weak growth
-bubbles[17] = [9, 46, 24, 46 / 9]; // agile startup: tiny spend, breakout growth
-bubbles[41] = [61, 3, 85, 3 / 61]; // large but stagnant market leader
+bubbles[3] = [88, 5, 71]; // legacy incumbent: heavy spend, weak growth
+bubbles[17] = [9, 46, 24]; // agile startup: tiny spend, breakout growth
+bubbles[41] = [61, 3, 85]; // large but stagnant market leader
 
 const indexValues = bubbles.map((b) => b[2]);
 const indexMin = Math.min(...indexValues);
 const indexMax = Math.max(...indexValues);
-
-// The raw efficiency values pile up in a narrow band for the 55-95 R&D-spend
-// cluster (heavy spend converges toward the same growth-per-dollar ratio), so
-// a linear color scale over the raw value left most of that cluster the same
-// dark blue. Mapping color to each bubble's PERCENTILE RANK instead spreads
-// the full color range evenly across all 65 bubbles regardless of how the
-// underlying efficiency values are distributed — order is preserved (still
-// low-to-high growth-per-R&D-dollar), only the color spacing changes.
-const rankOrder = bubbles.map((_, i) => i).sort((a, b) => bubbles[a][3] - bubbles[b][3]);
-const ranks = new Array(bubbles.length);
-rankOrder.forEach((bubbleIdx, order) => {
-  ranks[bubbleIdx] = order / (bubbles.length - 1);
-});
-bubbles.forEach((b, i) => b.push(ranks[i]));
 
 // Scale bubble diameter by sqrt(value) so on-screen AREA (not radius) is
 // proportional to the market index.
@@ -70,25 +52,10 @@ function diameterFor(value) {
   return Math.max(minDiameter, sizeScale * Math.sqrt(value));
 }
 
-// Data-storytelling focal point: the company with the best revenue growth per
-// R&D dollar invested is drawn as a separate, fully-opaque, ink-outlined series
-// on top of the rest so it reads as the chart's standout performer.
-let standoutIdx = 0;
-let bestRatio = -Infinity;
-bubbles.forEach((b, i) => {
-  if (b[3] > bestRatio) {
-    bestRatio = b[3];
-    standoutIdx = i;
-  }
-});
-const standout = bubbles[standoutIdx];
-const restBubbles = bubbles
-  .filter((_, i) => i !== standoutIdx)
-  // Painter's-order fix: draw the largest bubbles first and the smallest
-  // last, so small bubbles in the dense low-spend cluster render on top of
-  // large ones instead of disappearing underneath them.
-  .slice()
-  .sort((a, b) => b[2] - a[2]);
+// Painter's-order fix: draw the largest bubbles first and the smallest last,
+// so small bubbles in the dense low-spend cluster render on top of large ones
+// instead of disappearing underneath them.
+const orderedBubbles = bubbles.slice().sort((a, b) => b[2] - a[2]);
 
 // --- Init ---------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -118,7 +85,7 @@ const legendGraphics = [
     return {
       type: "circle",
       shape: { cx: legendCx, cy: sample.cy, r },
-      style: { fill: t.inkSoft, opacity: 0.45, stroke: t.pageBg, lineWidth: 1.5 },
+      style: { fill: t.palette[0], opacity: 0.68, stroke: t.pageBg, lineWidth: 1.5 },
     };
   }),
   ...legendSamples.map((sample) => ({
@@ -143,7 +110,7 @@ chart.setOption({
     left: "center",
     textStyle: { color: t.ink, fontSize: 22 },
   },
-  grid: { left: 170, right: 210, top: 110, bottom: 100 },
+  grid: { left: 100, right: 210, top: 110, bottom: 100 },
   xAxis: {
     type: "value",
     name: "R&D Investment ($M)",
@@ -166,70 +133,17 @@ chart.setOption({
     axisTick: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
   },
-  // Idiomatic ECharts feature: a continuous visualMap drives the bubble-cloud
-  // color from the derived efficiency-rank dimension (index 4), giving every
-  // bubble a distinct hue by relative growth-per-R&D-dollar instead of one
-  // flat wash — ranking (rather than the raw ratio) is what separates
-  // individual bubbles in the densest cluster, where raw efficiency values
-  // converge too tightly for a linear scale to distinguish. It targets only
-  // the main cloud (seriesIndex 0); the standout series keeps its solid
-  // brand-green spotlight untouched.
-  // Positioned in the top portion of the left margin (well above the
-  // vertically-centered y-axis name) so its side labels never collide with
-  // the rotated axis title.
-  visualMap: {
-    type: "continuous",
-    dimension: 4,
-    min: 0,
-    max: 1,
-    seriesIndex: 0,
-    orient: "vertical",
-    left: 24,
-    top: 130,
-    itemHeight: 105,
-    itemWidth: 16,
-    calculable: false,
-    hoverLink: false,
-    // Reversed stop order (blue=low, green=high) so the gradient's "high" end
-    // lands on brand green — matching the standout series below, which is the
-    // chart's highest-efficiency point and is also drawn in brand green.
-    text: ["High growth / R&D $", "Low growth / R&D $"],
-    textGap: 12,
-    textStyle: { color: t.inkSoft, fontSize: 16 },
-    inRange: { color: [...t.seq].reverse() },
-    outOfRange: { color: [...t.seq].reverse() },
-  },
   series: [
     {
       type: "scatter",
-      data: restBubbles,
-      symbolSize: (value) => diameterFor(value[2]),
-      itemStyle: {
-        opacity: 0.68,
-        borderColor: t.pageBg,
-        borderWidth: 1.75,
-      },
-    },
-    {
-      type: "scatter",
-      data: [standout],
+      data: orderedBubbles,
       symbolSize: (value) => diameterFor(value[2]),
       itemStyle: {
         color: t.palette[0],
-        opacity: 0.95,
-        borderColor: t.ink,
-        borderWidth: 2.5,
+        opacity: 0.68,
+        borderColor: t.pageBg,
+        borderWidth: 1.5,
       },
-      label: {
-        show: true,
-        formatter: "Best growth per R&D $",
-        position: "top",
-        distance: 10,
-        color: t.ink,
-        fontSize: 13,
-        fontWeight: "bold",
-      },
-      z: 10,
     },
   ],
   graphic: legendGraphics,
