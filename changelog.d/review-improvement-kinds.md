@@ -10,4 +10,4 @@
   library-mastery criteria, and a missing optional feature no longer costs
   DQ-01 points. A kept regeneration stores a predecessor finding of kind
   addition or polish as a suggestion, not a defect, and the gate record and
-  `gate-report` count the kinds.
+  `gate-report` count the kinds. (#11977)
