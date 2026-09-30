@@ -4,8 +4,11 @@ The ``fixes`` labels are checked against what round 1's reviews actually wrote
 (the gate comments of #11951 to #11963, and the defect / suggestion / obsolete
 reading of every cited improvement in plan P3 v2, §8.5): each improvement read
 as a fixed defect matches exactly one ``fixes`` label of its pair, and no
-suggestion or obsolete improvement matches any. Replaying round 1 through the
-metric gives the plan's baseline: 6 of the 12 forward merges had no carrier.
+suggestion or obsolete improvement matches any. The owner's confirmation moved
+two readings: #11953's W1 is a suggestion, and #11960 fixes a defect round 1
+did not cite. Replaying round 1 through the metric with the confirmed labels
+still gives the plan's baseline: 6 of the 12 forward merges had no carrier
+(#11960 among them, since round 1 cited only a suggestion there).
 """
 
 from __future__ import annotations
@@ -72,7 +75,7 @@ ROUND1: dict[int, list[tuple[str, str, str, str]]] = {
     11953: [
         (
             "W1",
-            "defect",
+            "suggestion",  # the owner's reading at confirmation; the plan read it as a defect
             "Top-seller label offset formula widened (min offset 8→14, price multiplier 0.25→0.34, vjust magnitude "
             "increased) — the BEAU-001 callout now sits clear of the bubble cluster above it instead of touching it",
             "BEAU-001 label, both renders",
@@ -265,8 +268,29 @@ ROUND1: dict[int, list[tuple[str, str, str, str]]] = {
         ),
     ],
 }
-# Round 1's merges that rested on no fixed defect (plan P3 v2, §8.5).
-UNCARRIED = {11952, 11957, 11959, 11960, 11962, 11963}
+# Round 1's merges that rested on no cited fixed defect (plan P3 v2, §8.5). #11960
+# is carried under the confirmed labels (F1), but round 1 cited only W1, a
+# suggestion, so its replay still finds no carrier.
+UNCARRIED = {11952, 11957, 11959, 11962, 11963}
+UNCARRIED_IN_REPLAY = UNCARRIED | {11960}
+# The retest arms' improvements for #11960 (runs v2-baseline and p3-v2): every
+# forward citation of the gridline fix, and the texts around it that are not it.
+GRIDLINE_FIX = [
+    "Value labels no longer collide with a gridline: in the predecessor the bold '7.0' sat on the topmost "
+    "(y = 8) gridline and the rule ran through the digits",
+    "The top bar's bold value label no longer sits on a grid line or against the panel ceiling",
+    "Value labels moved beside the bar ends, so the bold '7.0' is no longer crossed by a grid line",
+    "The bold 7.0 value label no longer has a gridline running through it",
+    "Value labels no longer collide with a grid rule: they now sit beside the error-bar caps",
+    "The value labels moved off the gridlines: in the predecessor the y=8 gridline ran straight through the "
+    "bold 7.0 label",
+]
+NOT_GRIDLINE_FIX = [
+    "Fewer gridlines cross the translucent bars (10 crossings instead of 18), so the alpha-0.6 bar fills read "
+    "as solid blocks instead of being banded by bright rules",
+    "the value axis now stops just above the tallest upper cap instead of running past a '9 t/ha' tick and "
+    "gridline over empty panel, so the bars fill the panel",
+]
 
 
 def _manifest() -> dict[str, Any]:
@@ -283,11 +307,10 @@ def _cases(kinds: set[str]) -> list[tuple[int, str, str, str]]:
 
 
 class TestShippedSet:
-    def test_valid_and_ready_to_confirm(self):
+    def test_valid_and_confirmed(self):
         manifest = _manifest()
         assert rt.validate_manifest(manifest) == []
-        assert rt.validate_manifest({**manifest, "labels": "confirmed"}) == []
-        assert manifest["labels"] == "draft"
+        assert manifest["labels"] == "confirmed"
         assert manifest["gcs_prefix"] == "retest/sets/v2"
         assert manifest["spec_commit"] == T0
         assert manifest["baseline_rules_sha"].startswith("9a6ed1952")
@@ -322,8 +345,17 @@ class TestShippedSet:
                 assert set(label["criteria"]) <= set(metrics.CARRIER_CRITERIA), (item["id"], label["id"])
 
     def test_draft_labels_never_reach_a_report(self):
-        labels = rt.item_labels(_manifest())
+        labels = rt.item_labels({**_manifest(), "labels": "draft"})
         assert all(entry["fixes"] is None and entry["expected"] == {} for entry in labels.values())
+
+    def test_confirmed_labels_reach_the_report(self):
+        labels = rt.item_labels(_manifest())
+        by_pr = {int(item_id.rsplit("-pr", 1)[1]): entry for item_id, entry in labels.items()}
+        assert all(isinstance(entry["fixes"], list) for entry in by_pr.values())
+        # The owner's corrections.
+        assert [f["id"] for f in by_pr[11953]["fixes"]] == ["F2"]
+        assert [(f["id"], f["criteria"]) for f in by_pr[11960]["fixes"]] == [("F1", ["VQ-02"])]
+        assert by_pr[11963]["fixes"] == [] and by_pr[11963]["expected"]["forward"] == "keep"
 
 
 class TestFixesAgainstRoundOne:
@@ -341,7 +373,17 @@ class TestFixesAgainstRoundOne:
 
     def test_round_one_counts(self):
         kinds = [kind for rows in ROUND1.values() for _, kind, _, _ in rows]
-        assert (kinds.count("defect"), kinds.count("suggestion"), kinds.count("obsolete")) == (11, 17, 2)
+        assert (kinds.count("defect"), kinds.count("suggestion"), kinds.count("obsolete")) == (10, 18, 2)
+
+    @pytest.mark.parametrize("what", GRIDLINE_FIX)
+    def test_the_gridline_fix_matches(self, what):
+        (label,) = _items_by_pr()[11960]["fixes"]
+        assert re.search(label["match"], what, re.IGNORECASE)
+
+    @pytest.mark.parametrize("what", NOT_GRIDLINE_FIX)
+    def test_other_gridline_texts_do_not_match(self, what):
+        (label,) = _items_by_pr()[11960]["fixes"]
+        assert not re.search(label["match"], what, re.IGNORECASE)
 
 
 @pytest.mark.skipif(shutil.which("git") is None, reason="needs git")
@@ -359,7 +401,8 @@ class TestRoundOneReplay:
         return rt.characteristics_summary(text)
 
     def test_half_of_the_merges_had_no_carrier(self):
-        manifest = {**_manifest(), "labels": "confirmed"}
+        """Round 1 cited no carrier in 6 of 12 merges, #11960 among them."""
+        manifest = _manifest()
         items = _items_by_pr()
         specs = {spec: self._spec(spec) for spec in {i["spec_id"] for i in items.values()}}
         # C2 of bubble-basic and C5 of count-basic and bar-error are the permissions.
@@ -390,4 +433,4 @@ class TestRoundOneReplay:
             for pr, record in zip(ROUND1, records, strict=True)
             if not metrics.carrier_claimed(record, items[pr]["fixes"])
         }
-        assert uncarried == UNCARRIED
+        assert uncarried == UNCARRIED_IN_REPLAY
