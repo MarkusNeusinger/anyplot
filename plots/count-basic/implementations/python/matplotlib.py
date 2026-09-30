@@ -1,7 +1,7 @@
 """ anyplot.ai
 count-basic: Basic Count Plot
 Library: matplotlib 3.11.2 | Python 3.13.15
-Quality: 95/100 | Updated: 2026-09-27
+Quality: 86/100 | Updated: 2026-09-30
 """
 
 import os
@@ -9,10 +9,8 @@ import sys
 
 
 sys.path.pop(0)
-import matplotlib.patheffects as path_effects
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import to_rgba
 
 
 # Theme tokens
@@ -20,7 +18,6 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 BRAND = "#009E73"  # Imprint palette position 1 — ALWAYS first series
 
 # Data - Survey responses with varying frequencies
@@ -43,29 +40,13 @@ percentages = counts / total * 100
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Rank-graded opacity on the single brand hue — draws the eye to the leading
-# response without introducing a second color (single-series data stays one series).
-fade = np.linspace(1.0, 0.5, len(counts))
-bar_colors = [to_rgba(BRAND, alpha=a) for a in fade]
-bars = ax.bar(unique, counts, color=bar_colors, edgecolor=PAGE_BG, linewidth=1.5, width=0.62)
+# Basic variant: one color for every bar, no per-bar emphasis.
+bars = ax.bar(unique, counts, color=BRAND, edgecolor=PAGE_BG, linewidth=1.5, width=0.62)
 
-# Average reference line for storytelling context (how far each bar sits from the mean)
-avg = counts.mean()
-ax.axhline(avg, color=INK_MUTED, linewidth=1.2, linestyle=(0, (5, 4)), zorder=1)
-ax.text(
-    0.985,
-    avg,
-    f"avg {avg:.0f}",
-    transform=ax.get_yaxis_transform(),
-    ha="right",
-    va="bottom",
-    fontsize=10,
-    color=INK_MUTED,
-)
-
-# Direct value + share labels replace the y-axis (matplotlib's bar_label API
-# returns the created Text artists, letting the leading category stand out).
-value_labels = ax.bar_label(
+# Direct value + share labels replace the y-axis (matplotlib's bar_label API);
+# an explicit axis title still tells a reader skimming the axis that these
+# are response counts before they reach the bar labels.
+ax.bar_label(
     bars,
     labels=[f"{c}\n{p:.0f}%" for c, p in zip(counts, percentages, strict=True)],
     padding=10,
@@ -73,19 +54,10 @@ value_labels = ax.bar_label(
     color=INK,
     linespacing=1.3,
 )
-value_labels[0].set_fontsize(13)
-value_labels[0].set_fontweight("bold")
-# Path-effect stroke on the leading label — a matplotlib-specific text-rendering
-# trick (draws a background-colored outline pass under the glyphs) that makes the
-# winner pop a little further without adding a second color or a heavier box.
-value_labels[0].set_path_effects([path_effects.withStroke(linewidth=4, foreground=PAGE_BG)])
-# Mask the average line where a label would otherwise cross it
-for lbl in value_labels:
-    lbl.set_bbox({"facecolor": PAGE_BG, "edgecolor": "none", "pad": 3})
 
-# Style — minimalist: no numeric y-axis ticks, values are direct-labeled on the bars
-# instead; an explicit axis title still tells a reader skimming the axis that these
-# are response counts before they reach the bar labels.
+# Style — minimalist: no numeric y-axis ticks, values are direct-labeled on the
+# bars instead; an explicit axis title still tells a reader skimming the axis
+# that these are response counts.
 ax.set_xlabel("Survey Response", fontsize=10, color=INK)
 ax.set_ylabel("Number of Responses", fontsize=10, color=INK)
 ax.set_title("count-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
@@ -96,12 +68,12 @@ ax.spines["left"].set_visible(False)
 ax.spines["bottom"].set_color(INK_SOFT)
 
 # Headroom for the two-line bar labels above the tallest bar
-ax.set_ylim(0, counts.max() * 1.35)
+ax.set_ylim(0, counts.max() * 1.3)
 
 # Faint reference gridlines (no numeric labels) give returning readers a scale
 # anchor without reintroducing a full y-axis — the direct bar labels stay the
 # primary reading mode.
-ax.set_yticks(np.linspace(0, counts.max() * 1.35, 5))
+ax.set_yticks(np.linspace(0, counts.max() * 1.3, 5))
 ax.set_yticklabels([])
 ax.tick_params(axis="y", length=0)
 ax.yaxis.grid(True, color=INK, alpha=0.08, linewidth=0.8, zorder=0)
