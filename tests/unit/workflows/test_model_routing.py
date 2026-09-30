@@ -39,7 +39,10 @@ REVIEW_MODELS = {"haiku", "sonnet", "opus"}
 NO_MAIN_WARNING = "::warning::origin/main unavailable — routing assumes a first run (opus)"
 REVIEW_ALIAS = "${{ steps.pr.outputs.review_model_alias }}"
 GENERATION_MODEL = "${{ steps.pr.outputs.model }}"
-SELF_RETRY_STEPS = ("Validate review output", "Handle review failure")
+SELF_RETRY_STEPS = ("Validate review output", "Re-dispatch review after a post-score failure")
+# The self-retry that dispatches through repository_dispatch; the post-score
+# rescue uses `gh workflow run --ref` and runs in test_pipeline_retry_gaps.py.
+PAYLOAD_RETRY_STEP = "Validate review output"
 
 # Implementations present on the fake origin/main.
 ON_MAIN = (
@@ -602,7 +605,7 @@ class TestImplReviewReviewModel:
         """A pinned review's auto-retry is a repository_dispatch with no inputs: the payload carries the pin."""
         first = _review_outputs(repo, tmp_path, library="matplotlib", review_input="haiku")
         calls = _run_self_retry(
-            tmp_path, "Handle review failure", model=first["model"], review_alias=first["review_model_alias"]
+            tmp_path, PAYLOAD_RETRY_STEP, model=first["model"], review_alias=first["review_model_alias"]
         )
         payload = _dispatch_payload(calls)
         retry = _review_outputs(
@@ -631,9 +634,8 @@ class TestImplReviewWiring:
         assert env["REVIEW_MODEL_ALIAS"] == REVIEW_ALIAS
         assert env["MODEL"] == GENERATION_MODEL
 
-    @pytest.mark.parametrize("name", SELF_RETRY_STEPS)
-    def test_self_retry_dispatch_forwards_both_models(self, tmp_path, name):
-        payload = _dispatch_payload(_run_self_retry(tmp_path, name, model="haiku", review_alias="sonnet"))
+    def test_self_retry_dispatch_forwards_both_models(self, tmp_path):
+        payload = _dispatch_payload(_run_self_retry(tmp_path, PAYLOAD_RETRY_STEP, model="haiku", review_alias="sonnet"))
         assert payload["event_type"] == "review-pr"
         assert payload["client_payload[pr_number]"] == "7"
         assert payload["client_payload[model]"] == "haiku"

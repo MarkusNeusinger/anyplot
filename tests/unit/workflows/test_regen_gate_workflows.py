@@ -2,8 +2,8 @@
 
 The decision itself is unit-tested in tests/unit/automation/scripts/
 test_regen_gate.py. These tests pin the workflow-side invariants that have no
-local execution loop: a regeneration never gets `ai-rejected` (the repair
-loop's exhaustion path deletes the live implementation from main), the
+local execution loop: a regeneration never gets `ai-rejected` (that would
+send it into the repair loop instead of the gate's one review), the
 watchdog neither rescues regenerations into repair nor ignores their
 never-started reviews, and "is this a regeneration" is read from origin/main.
 """
@@ -366,7 +366,7 @@ class TestReviewWriteback:
     def test_step_sits_before_the_verdict_step_and_runs_on_keeps_only(self):
         names = _step_names("impl-review.yml")
         step_at = names.index(WRITEBACK_STEP)
-        assert names.index("Handle review failure") < step_at
+        assert names.index("Re-dispatch review after a post-score failure") < step_at
         assert names[step_at + 1] == "Add verdict label and take action"
         step = _step("impl-review.yml", WRITEBACK_STEP)
         assert step["id"] == "writeback"
@@ -535,7 +535,11 @@ class TestWatchdog:
         assert pattern.search("regen:forced")
         assert pattern.search("watchdog:review-bootstrap")
         assert not pattern.search("regen:kept")
-        assert not pattern.search("quality:88")
+        # A lone score is a review that never reached a verdict (the regen
+        # block above flags scored regenerations before Case 5).
+        assert pattern.search("quality:88")
+        assert not pattern.search("quality:pending")
+        assert not pattern.search("ai-approved")
 
     def test_repair_cases_skip_regenerations(self):
         assert self.SCRIPT.count('[[ "$is_regen" == "false" ]]') == 3

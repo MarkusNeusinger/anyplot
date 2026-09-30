@@ -1163,6 +1163,11 @@ jobs:
           LANGUAGE: ${{ steps.inputs.outputs.language }}
           EXT: ${{ steps.inputs.outputs.ext }}
           REGEN_GATE: ${{ (github.event_name == 'workflow_dispatch' && inputs.regen_gate == false) && 'false' || 'true' }}
+          # The ref this run was dispatched on: the auto-retry runs there too,
+          # so a branch smoke retries on its branch instead of on main
+          # (runs 36400546243/36402058602 retried on main and opened
+          # #11969–#11971). `main` for every label-triggered run.
+          TRIGGER_REF: ${{ github.ref_name }}
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           echo "::notice::Handling generation failure for $LIBRARY/$SPEC_ID"
@@ -1289,7 +1294,7 @@ jobs:
           # read from env to keep raw quotes/$/backticks inside the hint from
           # breaking shell parsing.
           dispatch_retry() {
-            gh workflow run impl-generate.yml \
+            gh workflow run impl-generate.yml --ref "${TRIGGER_REF:-main}" \
               -f specification_id="${SPEC_ID}" \
               -f library="${LIBRARY}" \
               -f issue_number="${ISSUE}" \

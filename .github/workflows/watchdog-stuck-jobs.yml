@@ -346,8 +346,12 @@ jobs:
             #   warn"), we check the marker explicitly. The regeneration markers
             #   impl-generate sets at PR creation (`regen`, `regen:forced`) are
             #   treated the same way: a regen whose review never started is
-            #   exactly this case.
-            non_marker_labels=$(echo " $labels " | tr ' ' '\n' | grep -v '^$' | grep -vE '^(watchdog:|regen$|regen:forced$)' || true)
+            #   exactly this case. So is a lone `quality:N`: the review scored,
+            #   but no verdict and no `ai-review-failed` ever landed (a runner
+            #   lost after the score label, or impl-review's post-score rescue
+            #   itself failing) — no other case matches that state. Regens
+            #   never get here: the regen block above flags them.
+            non_marker_labels=$(echo " $labels " | tr ' ' '\n' | grep -v '^$' | grep -vE '^(watchdog:|regen$|regen:forced$|quality:[0-9]+$)' || true)
             if [[ -z "$non_marker_labels" ]] && (( age > STALE_SEC )); then
               marker="watchdog:review-bootstrap"
               if echo " $labels " | grep -q " $marker "; then

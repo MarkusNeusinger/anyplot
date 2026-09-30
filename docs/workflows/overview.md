@@ -217,9 +217,20 @@ impl-review.yml
 - **Review 3 (Repair 2)**: Score >= 70
 - **Review 4 (Repair 3)**: Score >= 60
 - **Review 5 (Repair 4)**: Score >= 50
-- **Failure**: < 50 after 4 repairs -> close PR, mark as failed
+- **Failure**: < 50 after 4 repairs -> close PR, mark as failed (a forced regeneration keeps its live implementation and stays `impl:{library}:done`)
 
 The cascade applies to fresh generations only. A regeneration takes the regen gate below.
+
+### Review recovery
+
+`impl-review.yml` re-runs a review at most once by itself, whatever the cause. A comment carrying the `<!-- review-retry:{spec}:{library} -->` marker records that retry:
+
+- **No score.** The review wrote no `quality_score.txt` and no review comment ("Validate review output"): one retry through `repository_dispatch`.
+- **Scored, then a later step failed before any verdict label landed.** For example, a GitHub 5xx on the `quality:N` label ("Re-dispatch review after a post-score failure"): one retry through `gh workflow run --ref` on the run's own ref. If the PR already has a verdict label (`ai-approved`, `ai-rejected`, `regen:improved`, or `regen:kept`), the step does nothing, and the watchdog's merge or repair cases take over.
+
+When the retry is spent, or the dispatch itself fails, the PR gets `ai-review-failed`. The watchdog re-dispatches the review once for a fresh generation and only flags a regeneration. A PR left with only `quality:N` and no verdict is picked up by the watchdog's never-reviewed case. `impl-review.yml` adds these labels with `GITHUB_TOKEN`, which doesn't start workflow runs, so `impl-review-retry.yml` reacts only to a label that a person adds.
+
+The generation retry of `impl-generate.yml` and the post-score review retry run on the ref of the run that failed: a run dispatched from a feature branch retries on that branch, and a production run retries on `main`. The no-score review retry still goes through `repository_dispatch`, which always runs on `main`.
 
 ---
 
@@ -236,7 +247,7 @@ A regeneration is an implementation PR for a (spec, library) pair that already h
    - no regressions. On a `*-basic` spec, a replaced data scenario or added encodings count as regressions unless a change request asked for them.
 4. Replace: `regen:improved`, then `ai-approved`, a PR comment with the same summary (stored, re-scored, and new score, improvements, regressions, reason), then the normal merge. Keep: `regen:kept`, the PR is closed with that comment, the issue gets `impl:{library}:done` back, and the live code and GCS production stay as they are. The re-score of the live implementation becomes its stored review through a separate metadata PR (see [Stored review on a keep](#stored-review-on-a-keep)).
 
-A crashed regen review is auto-retried once by `impl-review.yml`; after that the PR carries `ai-review-failed` and the watchdog only flags it — it never dispatches a further review for a regeneration.
+A crashed regen review is auto-retried once by `impl-review.yml`; after that the PR carries `ai-review-failed` and the watchdog only flags it — it never dispatches a further review for a regeneration. The same one-retry budget covers a review of any PR that scored but failed before a verdict label landed, for example on a GitHub 5xx (see [Review recovery](#review-recovery)).
 
 Anything missing or malformed — no `review_regen.json`, an unknown weakness id, missing previous renders, a failed canvas gate, a score of 0 — keeps the live implementation. The classification never invalidates the file, but every gap points toward keep: an unclassified weakness counts as a suggestion, and without `prev_checklist` or the new review's `review_checklist.json` no criterion claim verifies, so only an `A good version shows:` property can carry the replacement.
 
@@ -262,7 +273,7 @@ Any failure leaves the stored review as it was and closes the write-back PR; the
 
 So a stored weakness list in the older format lasts only until the pair's first gated regeneration: a merge stores the new render's review, and a keep stores the re-score, both in the defect and suggestion format.
 
-To replace an implementation without the gate, dispatch with `regen_gate=false` (`impl-generate.yml` or `bulk-generate.yml`): the PR is labelled `regen:forced` and takes the fresh-generation path, including the repair loop — whose exhaustion path removes the old implementation from main.
+To replace an implementation without the gate, dispatch with `regen_gate=false` (`impl-generate.yml` or `bulk-generate.yml`): the PR is labelled `regen:forced` and takes the fresh-generation path, including the repair loop. If the repairs are exhausted, the PR is closed and the live implementation stays on main; nothing is deleted.
 
 The local `/regen` command (`agentic/commands/regen.md`) is an owner override without the review gate; it only withholds `ai-approved` when the new score is more than one point below the stored score.
 
