@@ -74,9 +74,12 @@ barplot!(
 
 total_sessions = sum(sorted_counts)
 for (i, count) in enumerate(sorted_counts)
+    # Leading category gets a bold count label via Makie's rich-text markup —
+    # a typography-only emphasis, no color or layout change to the mark itself.
+    count_text = i == 1 ? rich(string(count); font = :bold) : string(count)
     text!(
         ax, i, count;
-        text = string(count),
+        text = count_text,
         align = (:center, :bottom),
         offset = (0, 6),
         fontsize = 14,
