@@ -30,3 +30,12 @@ A theoretical visualization of the bias-variance tradeoff showing how total pred
 - Use annotations to label each curve directly on the plot
 - Include the formula: Total Error = Bias² + Variance + Irreducible Error
 - Consider adding shaded regions to indicate underfitting zone (left) and overfitting zone (right)
+
+## What a good version looks like
+
+- A good version shows: four curves over model complexity: bias squared falling, variance rising, the irreducible error as a flat horizontal line, and the total error as a U-shaped curve that lies above the other three as their sum.
+- A good version shows: the four curves in distinct colors and line styles, each labeled by an annotation directly on the plot, as the Notes ask, with every label next to its own curve.
+- A good version shows: the optimal complexity marked with a vertical line or an annotation, as the Notes ask, exactly at the minimum of the total error curve.
+- A good version shows: the formula that decomposes the total error into bias squared, variance and irreducible error written on the plot, as the Notes ask, legible and clear of the curves.
+- A good version shows: shaded underfitting and overfitting zones, if drawn, to the left and right of the optimum, labeled and light enough that the curves stay dominant in both themes.
+- Expected, not a defect: perfectly smooth curves without noise, because the plot is theoretical, a complexity axis that reads only from Low to High without numeric ticks, and bias and variance curves that cross at a point other than the optimum.

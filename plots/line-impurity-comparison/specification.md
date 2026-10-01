@@ -27,3 +27,12 @@ A theoretical comparison plot showing Gini impurity and entropy (information gai
 - Annotate maximum impurity point at p=0.5 (both maxima occur here)
 - Handle edge cases at p=0 and p=1 where entropy is defined as 0
 - Consider adding a light grid for readability
+
+## What a good version looks like
+
+- A good version shows: Gini impurity and entropy as two smooth arch-shaped curves on shared axes over the whole probability range, each symmetric about p = 0.5 and following its formula exactly.
+- A good version shows: both curves drawn all the way to p = 0 and p = 1, where they reach zero, with no gap, spike or missing end where the entropy formula is undefined, as the Notes ask.
+- A good version shows: the two curves clearly told apart by color or line style, as the Notes ask, also where they run close together near the ends of the range.
+- A good version shows: a legend that explains both metrics with their formulas, as the Notes ask, the formulas set as readable mathematics and not as raw markup.
+- A good version shows: the maximum impurity point at p = 0.5 annotated, as the Notes ask, with the marker or text placed at the peaks without covering them.
+- Expected, not a defect: perfectly smooth curves without noise, because the plot is theoretical, two curves of nearly the same shape, and peaks at different heights or at the same height depending on how the measures are scaled.

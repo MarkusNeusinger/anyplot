@@ -25,3 +25,12 @@ A Receiver Operating Characteristic (ROC) curve visualizes the performance of a 
 - Display AUC score in legend or annotation
 - Use distinct colors/styles when comparing multiple models
 - Axes should range from 0 to 1 with equal aspect ratio preferred
+
+## What a good version looks like
+
+- A good version shows: the true positive rate on the y axis against the false positive rate on the x axis, each curve running from the bottom-left corner to the top-right corner through its computed operating points, never smoothed.
+- A good version shows: the diagonal reference line of a random classifier, as the Notes ask, running from corner to corner, told apart from the model curves at a glance and visible in both themes.
+- A good version shows: the AUC score in the legend or an annotation, as the Notes ask, placed so that it is clear which curve it belongs to.
+- A good version shows: both axes spanning the full range of the rates, as the Notes ask, on a square plot area when the equal aspect ratio the Notes prefer is used, so the diagonal runs at the same slope as it does in the data.
+- A good version shows: when several models are compared, each curve in its own color or line style, as the Notes ask, and named in a legend or by a direct label.
+- Expected, not a defect: a stair-step curve from a finite sample, a curve that hugs the top-left corner for a strong model, curves that cross each other, and a stretch that dips below the diagonal.

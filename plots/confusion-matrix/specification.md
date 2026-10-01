@@ -27,3 +27,12 @@ A specialized heatmap visualization for evaluating classification model performa
 - Use sequential colormap (e.g., Blues) for count data
 - Include colorbar showing the value scale
 - Consider highlighting diagonal (correct predictions) for visual clarity
+
+## What a good version looks like
+
+- A good version shows: a square grid with the true labels on the y axis and the predicted labels on the x axis, as the Notes ask, the same class names in the same order on both axes, so the correct predictions fall on one diagonal.
+- A good version shows: every cell annotated with its count or percentage, as the Notes ask, legible against light and dark cells alike in both themes.
+- A good version shows: a sequential colormap and a color bar showing the value scale, as the Notes ask, with color intensity rising with the cell value, so the strongest cells stand out in both themes.
+- A good version shows: values that say what they are: raw counts, or proportions under one of the normalizations the Notes list, with the color bar or a label naming which.
+- A good version shows: the diagonal highlight the Notes allow, if drawn, as an outline or emphasis that leaves the cell colors and numbers readable.
+- Expected, not a defect: off-diagonal cells at or near zero that look empty, a diagonal that takes up most of the color range, diagonal cells of unequal depth when classes are imbalanced, and a matrix that is not symmetric.

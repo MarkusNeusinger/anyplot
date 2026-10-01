@@ -29,3 +29,12 @@ A logistic regression visualization showing the characteristic S-shaped (sigmoid
 - Label axes clearly: x-axis with the predictor name, y-axis as "Probability" (0 to 1)
 - Consider displaying model coefficients or accuracy metrics as annotations
 - Points should have moderate transparency (alpha ~0.6) to show density patterns
+
+## What a good version looks like
+
+- A good version shows: the observations as points at their exact x values in two rows, one near each end of the probability axis, jittered slightly along the y axis only and in a distinct color per class, as the Notes ask.
+- A good version shows: moderate transparency on the points, as the Notes ask, so stretches of x where many observations pile up read darker.
+- A good version shows: the fitted curve as a smooth, solid and prominent line, as the Notes ask, S-shaped, staying inside the probability range and not hidden by the points or the band.
+- A good version shows: a semi-transparent confidence band around the fitted curve, as the Notes ask, that encloses the curve at every x and leaves the points and gridlines visible through it in both themes.
+- A good version shows: a horizontal dashed line at probability 0.5 for the default decision threshold, as the Notes ask, running across the whole x range and subordinate to the fitted curve.
+- Expected, not a defect: the two classes overlapping along x in the middle of the range, single points far on the other class's side, a band that widens toward the ends where data is sparse, and a curve that reaches neither end of the probability range inside the plot.
