@@ -27,3 +27,12 @@ A geographic heatmap visualizes spatial density or intensity values across a map
 - Add geographic context with country boundaries, coastlines, or street maps as a basemap
 - Consider adjusting the bandwidth/radius parameter based on data density and geographic scale
 - For interactive libraries, enable zoom to explore density at different scales
+
+## What a good version looks like
+
+- A good version shows: a smooth, continuous density or intensity layer whose hot spots lie where the points concentrate on the map, reading as gradual color transitions rather than as separate dots or bounded regions.
+- A good version shows: a sequential colormap rising with density, applied with transparency, as the Notes ask, so the basemap stays readable beneath the layer around and between the hot spots.
+- A good version shows: a color bar legend, as the Notes ask, that shows the density or intensity scale and says what it measures; a relative scale from sparse to dense is acceptable for pure density.
+- A good version shows: a basemap of country boundaries, coastlines or streets, as the Notes ask, that locates each hot spot.
+- A good version shows: smoothing matched to the data density and geographic scale, as the Notes suggest: separate hot spots stay separate, yet the layer does not break up into one blob per point.
+- Expected, not a defect: soft edges that spread past the outermost points, also over water or across borders where nothing was recorded, individual points no longer visible, and large parts of the map with no color.
