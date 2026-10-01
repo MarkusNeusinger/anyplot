@@ -31,3 +31,12 @@ A Point and Figure (P&F) chart is a price-action focused visualization that uses
 - Draw support trend lines connecting ascending lows (45-degree up) and resistance trend lines connecting descending highs (45-degree down)
 - Box size significantly impacts chart appearance: smaller boxes show more detail, larger boxes emphasize major trends
 - Consider adding a price scale on the Y-axis with grid lines at box size intervals
+
+## What a good version looks like
+
+- A good version shows: columns of X for rising and O for falling prices, as the Notes ask, every column holding one symbol only and neighboring columns alternating between X and O, the two also told apart by color where colored, green for X and red for O being the pair the Notes suggest.
+- A good version shows: every symbol in its own box of a regular grid whose rows are one box size apart on the price axis, so stacked symbols stay separate glyphs and a column's top and bottom can be read as prices.
+- A good version shows: a horizontal position that is construction, not time, as the Notes state: each column sits one even step to the right of the last, and a new column begins only where the price reversed by the reversal amount.
+- A good version shows: support trend lines rising from lows and resistance trend lines falling from highs at the 45-degree slope the Notes ask for, one box per column, so on square boxes they run diagonally through the grid, leaving the symbols readable.
+- A good version shows: the basic variant's X and O columns: besides the symbols, the price scale and box grid the Notes allow and the trend lines the Notes ask for, no price line or candles, volume panel, moving averages, other reference or mean lines, highlighted columns or bands, price targets, or callouts.
+- Expected, not a defect: no time axis, columns of very different heights, many empty boxes, price levels revisited by several columns, and trend lines that cover only part of the chart.

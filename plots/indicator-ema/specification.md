@@ -27,3 +27,12 @@ An Exponential Moving Average (EMA) overlay chart displays price data with one o
 - Common periods to display: 12, 26 (short-term), 50, 200 (long-term)
 - Consider highlighting crossover points where short EMA crosses long EMA
 - Label each EMA line with its period in the legend
+
+## What a good version looks like
+
+- A good version shows: the price drawn prominently as a line or as candlesticks with the EMA lines overlaid on the same price axis, as the Notes ask, every line at its computed value on every date.
+- A good version shows: a distinct color for each EMA and EMA lines slightly thinner than the price line, as the Notes ask, so the price stays the dominant series and the EMAs can be told apart in both themes.
+- A good version shows: a legend that labels each EMA line with its period, as the Notes ask.
+- A good version shows: EMAs that behave like their periods: the short one follows the price closely and turns soon after it, the long one is smoother and turns later, and neither drifts away from the level of recent prices.
+- A good version shows: crossover highlights, if drawn as the Notes allow, exactly where the short EMA crosses the long one, small enough that the lines beneath stay visible.
+- Expected, not a defect: EMAs that lag the price, lines that run close together and cross repeatedly in sideways stretches, and an EMA that begins at the first price or only after a short warm-up stretch.
