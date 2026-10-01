@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-10
@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from statsmodels.tsa.stattools import acf, pacf
 
 
 # Theme tokens (Imprint chrome — see prompts/default-style-guide.md)
@@ -65,25 +66,10 @@ for t in range(1, n_obs):
     seasonal = seasonal_strength * np.sin(2 * np.pi * t / seasonal_period)
     series[t] = ar1_coeff * series[t - 1] + noise[t] + ma1_coeff * noise[t - 1] + seasonal
 
-# Compute ACF
+# ACF (biased/full-sample denominator) and PACF (Durbin-Levinson, no bias correction)
 n_lags = 35
-mean = np.mean(series)
-var = np.sum((series - mean) ** 2)
-acf_values = np.array([np.sum((series[: n_obs - k] - mean) * (series[k:] - mean)) / var for k in range(n_lags + 1)])
-
-# Compute PACF via Durbin-Levinson recursion
-pacf_values = np.zeros(n_lags + 1)
-pacf_values[0] = 1.0
-pacf_values[1] = acf_values[1]
-phi = np.zeros((n_lags + 1, n_lags + 1))
-phi[1, 1] = acf_values[1]
-for k in range(2, n_lags + 1):
-    num = acf_values[k] - np.sum(phi[k - 1, 1:k] * acf_values[k - 1 : 0 : -1])
-    den = 1.0 - np.sum(phi[k - 1, 1:k] * acf_values[1:k])
-    phi[k, k] = num / den if den != 0 else 0
-    for j in range(1, k):
-        phi[k, j] = phi[k - 1, j] - phi[k, k] * phi[k - 1, k - j]
-    pacf_values[k] = phi[k, k]
+acf_values = acf(series, nlags=n_lags, fft=False)
+pacf_values = pacf(series, nlags=n_lags, method="ldb")
 
 lags_acf = np.arange(0, n_lags + 1)
 lags_pacf = np.arange(1, n_lags + 1)
@@ -219,7 +205,7 @@ ax_acf.annotate(
     "Gradual decay → AR process",
     xy=(4, acf_values[4]),
     xytext=(13, 0.58),
-    fontsize=7,
+    fontsize=8,
     color=INK_MUTED,
     arrowprops={"arrowstyle": "->", "color": INK_MUTED, "lw": 0.7},
 )
@@ -227,7 +213,7 @@ ax_pacf.annotate(
     "Spike at lag 1 → AR(1) order",
     xy=(1, pacf_values[1]),
     xytext=(7, 0.63),
-    fontsize=7,
+    fontsize=8,
     color=INK_MUTED,
     arrowprops={"arrowstyle": "->", "color": INK_MUTED, "lw": 0.7},
 )
