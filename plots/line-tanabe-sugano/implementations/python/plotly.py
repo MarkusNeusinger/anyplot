@@ -43,8 +43,8 @@ terms = [
     ("<sup>3</sup>T<sub>2g</sub>", 2 * dq, True, 0.5),
     ("<sup>3</sup>T<sub>1g</sub>(P)", e_3t1[:, 1], True, 0.0),
     ("<sup>3</sup>A<sub>2g</sub>", 12 * dq, True, 0.0),
-    ("<sup>1</sup>T<sub>2g</sub>(D)", e_1t2[:, 0], False, -1.6),
-    ("<sup>1</sup>E<sub>g</sub>(D)", e_1eg[:, 0], False, 1.6),
+    ("<sup>1</sup>T<sub>2g</sub>(D)", e_1t2[:, 0], False, -2.1),
+    ("<sup>1</sup>E<sub>g</sub>(D)", e_1eg[:, 0], False, 2.1),
     ("<sup>1</sup>A<sub>1g</sub>(G)", e_1a1[:, 0], False, -0.5),
     ("<sup>1</sup>T<sub>2g</sub>(G)", e_1t2[:, 1], False, 0.0),
     ("<sup>1</sup>T<sub>1g</sub>(G)", 2 * dq + 12 + 2 * c_over_b, False, 0.0),
@@ -75,7 +75,7 @@ for label, energy, spin_allowed, label_nudge in terms:
         yref="y",
         text=label,
         showarrow=False,
-        font=dict(size=11, color=INK if spin_allowed else INK_SOFT),
+        font=dict(size=13, color=INK if spin_allowed else INK_SOFT),
     )
 
 # Style
@@ -90,11 +90,11 @@ fig.add_annotation(
         "solid: spin-allowed (triplet) · dashed: spin-forbidden (singlet)"
     ),
     showarrow=False,
-    font=dict(size=11, color=INK_SOFT),
+    font=dict(size=13, color=INK_SOFT),
 )
 fig.update_layout(
     autosize=False,
-    margin=dict(l=70, r=92, t=72, b=62),
+    margin=dict(l=70, r=104, t=72, b=62),
     showlegend=False,
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
