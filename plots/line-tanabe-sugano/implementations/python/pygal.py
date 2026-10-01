@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-tanabe-sugano: Tanabe-Sugano Diagram for Crystal Field Theory
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 85/100 | Created: 2026-10-01
@@ -109,12 +109,18 @@ term_curves = [
     ("²A₁g", -2 * dq - 11 + 3 * racah_c - ground_energy, False, 40.0),
 ]
 
-# pygal pins stroke-width on every reactive path and hard-codes black label text, so
-# the thin spin-forbidden lines and the theme-adaptive term labels need one more sheet
+# pygal pins stroke-width on every reactive path, hard-codes black label text and drops
+# every curve label below its anchor point, so the thin spin-forbidden lines, the
+# theme-adaptive label color and the flat ground term's label need one more sheet: at
+# E/B = 0 that drop would land ⁴A₂g inside the x-tick row, hence the lift
 spin_forbidden_lines = ",".join(
     f".serie-{i} .line" for i, (_, _, spin_allowed, _) in enumerate(term_curves) if not spin_allowed
 )
-extra_css = f"inline:{spin_forbidden_lines}{{stroke-width:5 !important}}.text-overlay text{{fill:{INK} !important}}"
+ground_label_lift = ".text-overlay .serie-0 text.label{transform:translate(0px,-100px)}"
+extra_css = (
+    f"inline:{spin_forbidden_lines}{{stroke-width:5 !important}}"
+    f".text-overlay text{{fill:{INK} !important}}{ground_label_lift}"
+)
 
 # Plot — square canvas, since the diagram reads best on a near-square plot area
 title = "Cr³⁺ d³, C/B = 4.5 · line-tanabe-sugano · python · pygal · anyplot.ai"
@@ -140,6 +146,9 @@ custom_style = Style(
 )
 
 chart = pygal.XY(
+    # pygal pins the title at title_font_size + spacing from the canvas top, so spacing
+    # — not margin_top — is what buys air above it; the margins then centre the plot area
+    spacing=45,
     width=2400,
     height=2400,
     style=custom_style,
@@ -157,8 +166,8 @@ chart = pygal.XY(
     dots_size=0,
     print_labels=True,
     print_values=False,
-    margin_top=120,
-    margin_bottom=200,
+    margin_top=130,
+    margin_bottom=70,
     margin_left=180,
     margin_right=300,
 )
