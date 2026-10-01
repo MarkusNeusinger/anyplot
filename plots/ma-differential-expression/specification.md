@@ -27,3 +27,12 @@ An MA plot (M-versus-A plot) visualizes the relationship between log fold change
 - Include a LOESS smoothing curve to reveal any systematic expression-dependent bias
 - Use transparency (alpha ~0.3) to handle overplotting in dense regions
 - Optionally label a small number of top differentially expressed genes by name
+
+## What a good version looks like
+
+- A good version shows: one point per gene at its mean expression on the x axis and its log fold change on the y axis, every point at its values and never jittered or displaced to thin the cloud.
+- A good version shows: significant genes in a distinct color against the non-significant genes in gray, as the Notes ask, drawn so they are not buried under the gray mass.
+- A good version shows: a horizontal reference line at no change and dashed lines at the two fold-change thresholds above and below it, as the Notes ask, running across the whole expression range and visible through the points in both themes.
+- A good version shows: a LOESS curve through the cloud, as the Notes ask, following the local average of the fold changes and distinguishable from the reference line and from the points.
+- A good version shows: transparency on the points, as the Notes ask, so the dense band reads as density, and gene names, if drawn, on only a small number of top genes, as the Notes allow.
+- Expected, not a defect: heavy overplotting in the band around no change, a cloud whose spread changes with expression and is often widest at low expression, a smoothing curve lying almost on the reference line, far more gray points than colored ones, and significant genes inside the fold-change lines.

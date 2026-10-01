@@ -26,3 +26,12 @@ A lift curve visualizes how much better a predictive model performs compared to 
 - Higher lift at lower percentages indicates better model discrimination
 - Curve should start high and gradually approach 1 as percentage increases
 - Consider showing decile markers or actual values at key percentiles
+
+## What a good version looks like
+
+- A good version shows: the cumulative lift ratio on the y axis against the percentage of the population targeted on the x axis, as the Notes ask, the curve drawn through its computed values and not smoothed.
+- A good version shows: a horizontal reference line at a lift of 1 for random selection, as the Notes ask, running across the whole population axis, told apart from the model curve and visible in both themes.
+- A good version shows: a curve that starts high and approaches the reference line as the percentage grows, as the Notes ask, meeting it where the whole population is targeted.
+- A good version shows: a lift axis that holds both the reference line and the curve's highest value, so the height above random selection reads directly from the axis.
+- A good version shows: decile markers or values at key percentiles, if drawn, sitting on the curve at their percentiles, with any value label matching the curve at that point.
+- Expected, not a defect: an erratic first stretch where a few top-ranked cases decide the ratio, small wiggles along the descent, and a right end that lies almost flat on the reference line.

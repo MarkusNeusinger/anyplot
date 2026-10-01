@@ -26,3 +26,12 @@ A scatter plot displaying high-dimensional data projected into 2D space using no
 - Use moderate point size with slight transparency (alpha) to handle overlapping points in dense regions
 - Include a subtitle noting the algorithm and key parameter (e.g., "t-SNE (perplexity=30)" or "UMAP (n_neighbors=15)")
 - Axes represent embedding dimensions and typically should not have tick labels, as the coordinates are not directly interpretable
+
+## What a good version looks like
+
+- A good version shows: one point per sample at its two embedding coordinates, never jittered or moved apart; the axes carry no units, so only the positions of points relative to each other matter.
+- A good version shows: each cluster or class in its own distinct color, with a legend that maps the colors to the labels, as the Notes ask, neighboring groups told apart in both themes.
+- A good version shows: moderate point size with slight transparency, as the Notes ask, so dense regions read darker and no group is buried under another.
+- A good version shows: a subtitle that names the algorithm and its key parameter, as the Notes ask.
+- A good version shows: cluster labels at the centroids, if drawn, each on its own cluster, legible against the points and matching the legend.
+- Expected, not a defect: axes without tick labels, groups of unequal size and density, gaps between groups whose width carries no meaning, irregular group shapes, and a few points stranded inside another group.

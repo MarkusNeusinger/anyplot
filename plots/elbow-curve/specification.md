@@ -25,3 +25,11 @@ An elbow curve visualizes the relationship between the number of clusters (k) an
 - Consider annotating or highlighting the optimal k value
 - Use markers at each data point to show discrete k values tested
 - A smooth connecting line helps visualize the curve shape
+
+## What a good version looks like
+
+- A good version shows: inertia on the y axis against the number of clusters on the x axis, with a marker at every tested k, as the Notes ask, at its own inertia value, and a line joining the markers in order of k.
+- A good version shows: an x axis whose ticks fall on whole numbers of clusters, because k is a count.
+- A good version shows: a curve that falls as k grows, steeply at first and then gently, with the bend between the two parts visible at the plot's proportions.
+- A good version shows: the optimal k, if annotated or highlighted, marked at the curve's own point for that k, by a marker, a vertical line or a label that names the value.
+- Expected, not a defect: an elbow that is a soft bend and not a sharp corner, inertia still falling slowly after the elbow, without reaching zero, and a first drop that dwarfs all later ones.

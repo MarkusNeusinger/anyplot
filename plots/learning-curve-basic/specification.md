@@ -26,3 +26,12 @@ A learning curve visualizes model performance (training and validation scores) a
 - Include a legend distinguishing training from validation curves
 - X-axis should show actual sample sizes or percentages of total training data
 - Consider using distinct colors (e.g., blue for training, orange for validation) for clarity
+
+## What a good version looks like
+
+- A good version shows: the training score and the validation score as two lines against training set size, each passing through its mean across folds at every evaluated size and not smoothed between them.
+- A good version shows: a shaded band around each line for the variability across folds, as the Notes ask, translucent enough that the other curve and band stay visible where they overlap, in both themes.
+- A good version shows: a legend that distinguishes the training curve from the validation curve, as the Notes ask, with the two told apart at a glance, by distinct colors if the Notes' suggestion is followed.
+- A good version shows: the x axis in actual sample sizes or percentages of the training data and the y axis labeled with the metric being evaluated, as the Notes ask.
+- A good version shows: the basic variant's single model and metric: the training and validation curves, their bands and the legend the Notes ask for, and no second model, no reference, target or mean lines, no highlighted regions or points, no callouts and no second panel.
+- Expected, not a defect: a gap between the two curves, a training score that falls while the validation score rises, bands that are wider at small training sizes or overlap each other, and curves that have not converged at the largest size.

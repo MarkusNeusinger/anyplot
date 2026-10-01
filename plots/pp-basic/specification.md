@@ -25,3 +25,11 @@ A diagnostic plot comparing the cumulative distribution function (CDF) of observ
 - Sort observed data and compute empirical CDF as i/(n+1) or similar plotting position formula
 - Evaluate theoretical CDF using fitted or specified distribution parameters
 - S-shaped deviations from the diagonal suggest the data has heavier or lighter tails than the reference distribution
+
+## What a good version looks like
+
+- A good version shows: one point per observation, pairing its empirical cumulative probability from the sorted data with the theoretical cumulative probability at the same value, as the Notes ask, every point at its computed values and never jittered or smoothed.
+- A good version shows: both axes running from 0 to 1, as the Notes ask, in a square plot area, so that equal steps of probability are equally long on both axes.
+- A good version shows: the 45-degree reference line of perfect fit, as the Notes ask, running from corner to corner of the unit square, distinct from the points and visible in both themes.
+- A good version shows: the basic variant's one sample against one theoretical distribution: besides the diagonal the Notes ask for, no confidence band, second sample or distribution, further reference lines, highlighted points or regions, callouts or statistic annotations, or marginal plots.
+- Expected, not a defect: points that bow away from the diagonal or snake around it in an S shape, with the widest gaps in the middle of the range, while both ends close in on the corners without quite reaching them; the ends are held near the diagonal by construction and the departures are the plot's finding.

@@ -25,3 +25,12 @@ A Weibull probability plot displays failure or lifetime data on Weibull probabil
 - Use median rank approximation (i-0.3)/(n+0.4) for plotting positions
 - Distinguish censored points visually (e.g., hollow markers vs filled markers for failures)
 - Include a horizontal reference line at 63.2% cumulative probability (characteristic life)
+
+## What a good version looks like
+
+- A good version shows: a logarithmic time axis and a linearized Weibull probability axis, as the Notes ask, so that a Weibull model is a straight line across the plot.
+- A good version shows: each failure as a point at its failure time and its plotting position, the median rank the Notes ask for, never jittered, displaced or smoothed.
+- A good version shows: the fitted line drawn straight through the failures and annotated with the shape parameter beta and the scale parameter eta, as the Notes ask, the annotated values agreeing with the line.
+- A good version shows: a horizontal reference line at the 63.2 percent cumulative probability, as the Notes ask, crossing the fitted line at the characteristic life eta.
+- A good version shows: censored observations visually distinct from failures, as the Notes ask, for example hollow markers against filled ones, with the difference still readable in both themes.
+- Expected, not a defect: points that wander around the fitted line, most at the earliest and latest failures, probability ticks unevenly spaced along the y axis, a fitted line that extends beyond the data, and censored points mixed in among the failures.

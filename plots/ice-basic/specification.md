@@ -27,3 +27,12 @@ An Individual Conditional Expectation (ICE) plot visualizes how the predicted ou
 - A rug plot along the x-axis can indicate the distribution of observed feature values
 - Color-coding lines by a second feature can help reveal interaction effects
 - Complements the existing `pdp-basic` spec by showing individual-level detail behind the average
+
+## What a good version looks like
+
+- A good version shows: one line per observation through its predictions at the grid values across the feature's range, the lines semi-transparent, as the Notes ask, so stretches where many lines pile up read darker.
+- A good version shows: the partial dependence line overlaid as a bold, opaque curve, as the Notes ask, on top of the individual lines, running through their average and standing out from them in both themes.
+- A good version shows: in the centered variant the Notes allow, if used, every line starting at zero at the low end of the feature range, with the y axis saying that the predictions are centered.
+- A good version shows: lines colored by a second feature, if the Notes' option is used, with a legend or color bar that names that feature, while the partial dependence line stays distinct from every line color.
+- A good version shows: the basic variant's one feature and one model: the individual lines and the bold partial dependence line the Notes ask for, plus the centering, rug and color by a second feature they allow, and no further reference or mean lines, highlighted lines or regions, callouts or second panel.
+- Expected, not a defect: heavy overplotting in the bulk of the lines, lines that cross, lines that run parallel at different levels, a few lines far from the average, and steps and kinks from a tree-based model.

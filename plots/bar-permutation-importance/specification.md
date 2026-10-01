@@ -25,3 +25,12 @@ A horizontal bar chart displaying permutation feature importance from machine le
 - Use a sequential color gradient mapped to importance values for visual emphasis
 - Add a vertical reference line at x=0 to distinguish positive from negative importance values
 - Consider showing only top N features if the model has many features
+
+## What a good version looks like
+
+- A good version shows: one horizontal bar per displayed feature, all features or the top ones the Notes allow, from zero to its mean importance, a negative mean extending to the other side of zero, with each name written out in full beside its bar.
+- A good version shows: the bars sorted by mean importance with the highest at the top, as the Notes ask.
+- A good version shows: a horizontal error bar on every bar for the variability across shuffles, as the Notes ask, centered on the bar's end and visible against the bar's fill in both themes.
+- A good version shows: a vertical reference line at zero, as the Notes ask, running the full height of the bars and visible in both themes, so positive and negative importances separate at a glance.
+- A good version shows: a sequential color gradient mapped to the importance values, as the Notes ask, so color and bar length tell the same ranking, with the weakest bars still distinct from the page in both themes.
+- Expected, not a defect: negative importances, error bars that cross zero, error bars of very different widths, and a long tail of features near zero.

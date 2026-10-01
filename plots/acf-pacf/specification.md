@@ -25,3 +25,11 @@ Displays the autocorrelation function (ACF) and partial autocorrelation function
 - Include lag 0 in ACF (always 1.0) but start PACF from lag 1
 - Label x-axis as "Lag" and y-axes as "ACF" and "PACF" respectively
 - Use 30-40 lags by default, adjusting based on data length
+
+## What a good version looks like
+
+- A good version shows: the ACF in the top panel and the PACF in the bottom panel, as the Notes ask, sharing one lag axis so each lag lines up vertically across the two, with the x axis labeled Lag and the y axes ACF and PACF.
+- A good version shows: one thin vertical stem per lag from the zero baseline to its correlation value, not a filled bar, as the Notes ask, every stem at its own lag and ending at its computed value.
+- A good version shows: horizontal dashed lines at the upper and lower confidence bounds, as the Notes ask, the same distance above and below zero, running across all lags and visible in both themes.
+- A good version shows: the ACF including lag 0, where its value is 1.0, and the PACF starting at lag 1, as the Notes ask, with y axes that leave room for negative correlations and the lower bound.
+- Expected, not a defect: a lag 0 stem that towers over the rest, an ACF that decays slowly or oscillates with many stems outside the bounds, a PACF that drops inside the bounds after a few lags, spikes at seasonal lags, an occasional stem just outside the bounds by chance, and mostly short stems.

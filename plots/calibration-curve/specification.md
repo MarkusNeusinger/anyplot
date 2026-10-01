@@ -25,3 +25,12 @@ A calibration curve (reliability diagram) visualizes how well the predicted prob
 - Display Brier score or Expected Calibration Error (ECE) as a summary metric
 - Optional: include histogram of predicted probabilities as a secondary subplot to show prediction distribution
 - For multiple models comparison, use distinct colors with clear legend
+
+## What a good version looks like
+
+- A good version shows: the fraction of positives on the y axis against the mean predicted probability on the x axis, the curve passing through each bin's computed pair of values, never smoothed, with the bins readable as individual points.
+- A good version shows: the diagonal reference line of perfect calibration, as the Notes ask, on axes that share one probability scale, told apart from the model curves and visible in both themes.
+- A good version shows: the Brier score or the Expected Calibration Error as a summary metric, as the Notes ask, in the legend, an annotation or the subtitle, placed so that it is clear which model it belongs to.
+- A good version shows: the histogram of predicted probabilities the Notes allow, if drawn, as a secondary panel that shares the probability axis with the curve and stays smaller than it.
+- A good version shows: when several models are compared, each curve in a distinct color and named in a legend, as the Notes ask.
+- Expected, not a defect: a curve that leaves the diagonal in an S shape or an inverted S shape, points unevenly spaced along the x axis because predictions bunch, a jagged stretch where a bin holds few samples, and no point for an empty bin.

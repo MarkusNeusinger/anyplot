@@ -26,3 +26,12 @@ A volcano plot displays statistical significance (-log10 p-value) on the y-axis 
 - Color points by significance status: non-significant (gray), significant up-regulated (red), significant down-regulated (blue)
 - Consider labeling top significant features by name
 - Use alpha transparency to handle overlapping points in dense datasets
+
+## What a good version looks like
+
+- A good version shows: one point per feature at its log2 fold change on the x axis and its -log10 p-value on the y axis, every point at its values and never jittered or displaced to thin the cloud.
+- A good version shows: a horizontal significance threshold line and two vertical fold-change threshold lines, one on each side of zero, as the Notes ask, at their threshold values and visible through the points in both themes.
+- A good version shows: points colored by significance status, as the Notes ask: non-significant features in gray, significant up-regulated ones in red and significant down-regulated ones in blue, so the colored points stand out against the gray mass.
+- A good version shows: transparency on the points, as the Notes ask, so the dense mass of overlapping features reads as density instead of a solid blot.
+- A good version shows: the basic variant's single comparison: besides the threshold lines and status colors the Notes ask for and the names of a few top significant features the Notes allow, no further reference lines, highlighted regions or bands, other callouts, size encoding or marginal distributions.
+- Expected, not a defect: heavy overplotting in the non-significant mass near the base, an empty wedge above the center between the two arms, arms of unequal height or size, far more gray points than colored ones, and most features left unlabeled.

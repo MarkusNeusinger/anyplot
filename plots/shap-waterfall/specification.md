@@ -28,3 +28,12 @@ A waterfall-style chart showing how each feature contributes to pushing a model 
 - Show numeric SHAP values on or beside each bar segment
 - Use a horizontal layout with feature names on the y-axis for readability
 - Consider a connector line between segments to emphasize the cumulative flow
+
+## What a good version looks like
+
+- A good version shows: one horizontal bar segment per displayed feature, plus at most one for the remaining features together, each starting where its neighbor ends, right for a positive contribution and left for a negative one, so the chain runs unbroken from the base value to the final prediction, as the Notes ask.
+- A good version shows: the features ordered by the absolute size of their contribution with the largest at the top, as the Notes ask, and the feature names on the y axis.
+- A good version shows: positive contributions in red or pink and negative ones in blue, as the Notes ask, the two told apart in both themes.
+- A good version shows: the base value and the final prediction as labeled reference lines or annotations, as the Notes ask, each at the end of the chain it belongs to.
+- A good version shows: the numeric contribution on or beside each bar segment, as the Notes ask, readable for the shortest segments too.
+- Expected, not a defect: segments of very unequal length down to slivers, a value axis that covers only the range of the chain and leaves out zero, a chain that doubles back where signs alternate, and one collapsed row for the remaining features.

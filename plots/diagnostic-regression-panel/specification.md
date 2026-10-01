@@ -29,3 +29,12 @@ A 2x2 panel of diagnostic plots for evaluating linear regression model assumptio
 - **Subplot 4 (Residuals vs Leverage):** Standardized residuals vs leverage with Cook's distance contour lines (e.g., at 0.5 and 1.0) to highlight influential points
 - Label the 2-3 most influential points (highest Cook's distance) with observation indices in each subplot
 - Use consistent point styling across all four subplots
+
+## What a good version looks like
+
+- A good version shows: four panels in a 2x2 grid under one shared figure title, as the Notes ask (residuals against fitted values, normal Q-Q, scale-location, and residuals against leverage), each named, with the same point styling in all four.
+- A good version shows: in the residuals-against-fitted panel a horizontal zero line and a LOWESS smoother, and in the scale-location panel the square root of the absolute standardized residuals with a LOWESS smoother, as the Notes ask, each smoother following its own points.
+- A good version shows: in the Q-Q panel the standardized residuals against theoretical normal quantiles with a 45-degree reference line, as the Notes ask, every point at its computed quantiles.
+- A good version shows: in the leverage panel the standardized residuals against leverage with Cook's distance contour lines, as the Notes ask, mirrored above and below zero, closing in on it as leverage grows, and identifiable by their level.
+- A good version shows: the few most influential observations, those with the highest Cook's distance, labeled with their observation index in every panel, as the Notes ask, each label beside its own point.
+- Expected, not a defect: a smoother that bends at the sparse ends of the fitted range, Q-Q points leaving the line in the tails, a scale-location trend that is not flat, points crowded at low leverage with a few far out, and labeled points that lie inside the Cook's distance contours.

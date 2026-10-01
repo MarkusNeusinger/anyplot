@@ -27,3 +27,12 @@ A line plot showing the cumulative proportion of explained variance as a functio
 - Use clear markers at each component count to show discrete values
 - Consider including individual variance ratios as a secondary bar plot overlay (optional enhancement)
 - X-axis should start at 1 (first component), not 0
+
+## What a good version looks like
+
+- A good version shows: the cumulative explained variance, not the variance of each single component, as the Notes ask, as a curve that never falls from one component count to the next.
+- A good version shows: a clear marker at every component count, as the Notes ask, each at its own cumulative value, on an x axis that starts at the first component and has whole-number ticks.
+- A good version shows: horizontal dashed reference lines at the 90 and 95 percent thresholds, as the Notes ask, and at 99 percent if that optional line is drawn, each readable against the y axis or identified by a label, and visible in both themes.
+- A good version shows: the elbow point marked or annotated where one can be detected, as the Notes ask, on the curve's own marker for that component count.
+- A good version shows: the individual variance ratios, if drawn as the bar overlay the Notes allow, as bars behind the cumulative curve that stay subordinate to it and are named in the legend or on their own axis.
+- Expected, not a defect: a steep rise followed by a long flat approach to the full variance, thresholds crossed between two component counts, reference lines that sit close together near the top of the plot, and a curve with no sharp elbow.
