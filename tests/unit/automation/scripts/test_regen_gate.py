@@ -46,6 +46,7 @@ from automation.scripts.regen_gate import (
     render_summary,
     replacement_tokens,
     reset_header_score,
+    source_language,
     validate_record,
     validate_regen,
     weakness_class,
@@ -2738,9 +2739,60 @@ class TestCodeHelpers:
         assert is_removal(REMOVE_LINE) and is_removal("CQ-04 (code): x -> delete the dead branch. Likely cause: y.")
         assert not is_removal(CODE_LINE)
         assert not is_removal("CQ-04 (code): x → `remove_outliers()` helper. Likely cause: y.")
-        # Definitions and comment lines are not calls.
-        source = "def acf(x):\n    return 1\n# acf() would do\n// acf(y)\nfunction acf(z) {}\nv = acf(series)\n"
-        assert call_count(source, "acf") == 1
+
+    @pytest.mark.parametrize(
+        ("language", "source", "count"),
+        [
+            # A comment that spells the call is not the call (Copilot, #12005).
+            ("python", "# use acf(series)\nx = 1\n", 0),
+            ("python", "x = np.sum(a)  # acf(series) would do\n", 0),
+            ("r", "#' acf(series)\nx <- 1 # acf(x)\n", 0),
+            ("julia", "# acf(series)\n#= acf(a)\n #= acf(b) =#\nacf(c) =#\nx = 1\n", 0),
+            ("javascript", "// acf(series)\n/* acf(a)\n * acf(b)\n */\nconst x = 1; // acf(c)\n", 0),
+            # Neither is a string literal.
+            ("python", 't = \'acf(x)\'\nu = "acf(y)"\nv = f"{acf(z)}"\n', 0),
+            ("python", '"""Docstring.\n\nacf(series) by hand.\n"""\nx = 1\n', 0),
+            ("r", "t <- 'acf(x)'\nu <- \"acf(\ny)\"\n", 0),
+            ("julia", 't = "acf(x)"\nu = """\nacf(y)\n"""\n', 0),
+            ("javascript", "const t = 'acf(x)', u = \"acf(y)\", v = `acf(${acf(z)})\nacf(w)`;\n", 0),
+            # Neither is a definition: a hand-roll named after the call it imitates.
+            ("python", "def acf(x):\n    return 1\n", 0),
+            ("python", "async def acf(x):\n    return 1\nclass acf(Base):\n    pass\n", 0),
+            ("r", "acf <- function(x) {\n  1\n}\n", 0),
+            ("julia", "function acf(x)\n    1\nend\nacf(x) = 1\nacf(x::Vector{T}) where {T} = 1\n", 0),
+            ("javascript", "function acf(x) {}\nasync function* acf(y) {}\nconst acf = (x) => 1;\n", 0),
+            ("javascript", "class A {\n  acf(x) {\n  }\n  static async acf(y): number {\n  }\n}\n", 0),
+            # The call itself counts, next to all of the above.
+            ("python", "# acf(a)\ndef acf(x):\n    return 'acf(b)'\nv = acf(series)\n", 1),
+            ("python", "a = acf(x)\nb = stattools.acf (y)\nc = pacf(z)\nd = 7 // acf(w)\n", 3),
+            ("python", "s = 'it''s'\nv = acf(x)  # '\nw = acf(y)\n", 2),
+            ("r", "v <- stats::acf(x, plot = FALSE)  # 'quoted\nw <- acf(y)\n", 2),
+            ("julia", "v = acf(x') * acf(y)'\nc = 'a'; w = acf(z)\nacf(q) == 1\n", 4),
+            ("javascript", "const v = d3.acf(x); if (acf(y)) {\n}\nconst u = 'a' + acf(z) + \"b\";\n", 3),
+        ],
+    )
+    def test_call_count_reads_executable_text_only(self, language, source, count):
+        assert call_count(source, "acf", language) == count
+
+    def test_a_comment_or_a_definition_alone_does_not_carry_the_code_path(self):
+        for extra in ("# use acf(series)\n", "note = 'acf(series)'\n", "def acf(series):\n    return series\n"):
+            new = "import numpy as np\n" + extra + "v = np.correlate(x, x)\n"
+            result = decide(_code_inp(new_source=new))
+            assert result.verdict == KEEP and "not called more often" in result.reason
+        julia = decide(_code_inp(new_source="acf(x) = sum(x)\n# pacf(x)\n", source_language="julia"))
+        assert julia.verdict == KEEP and "not called more often" in julia.reason
+
+    def test_source_language(self):
+        assert [source_language(p) for p in ("/tmp/anyplot-prev-impl.py", "plots/s/implementations/r/ggplot2.R")] == [
+            "python",
+            "r",
+        ]
+        assert [source_language(p) for p in ("a/makie.jl", "a/d3.js", "a/muix.tsx")] == [
+            "julia",
+            "javascript",
+            "javascript",
+        ]
+        assert source_language("a/notes.txt") is None and source_language("") is None
 
     def test_line_counts_on_an_early_keep(self):
         result = decide(_code_inp(canvas_failed=True))
@@ -2757,7 +2809,7 @@ class TestCodeHelpers:
 
 
 class TestCodePathCli:
-    def _run(self, tmp_path, monkeypatch, capsys, *, prev_text=PREV_SOURCE, with_flags=True):
+    def _run(self, tmp_path, monkeypatch, capsys, *, prev_text=PREV_SOURCE, with_flags=True, ext=".py"):
         monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
         (tmp_path / "review_regen.json").write_text(json.dumps(_code_regen()), encoding="utf-8")
         (tmp_path / "review_checklist.json").write_text(json.dumps(_checklist_json(NEW_CHECKLIST)), encoding="utf-8")
@@ -2767,12 +2819,12 @@ class TestCodePathCli:
         ]
         (tmp_path / "weak.json").write_text(json.dumps(weak), encoding="utf-8")
         (tmp_path / "prev.py").write_text(prev_text, encoding="utf-8")
-        (tmp_path / "new.py").write_text(NEW_SOURCE, encoding="utf-8")
+        (tmp_path / f"new{ext}").write_text(NEW_SOURCE, encoding="utf-8")
         args = ["decide", "--spec-id", "acf-pacf", "--library", "plotly", "--score", "85", "--prev-stored", "91"]
         args += ["--regen-json", str(tmp_path / "review_regen.json"), "--weaknesses-json", str(tmp_path / "weak.json")]
         args += ["--prev-renders", "available", "--record-out", str(tmp_path / "record.json")]
         if with_flags:
-            args += ["--prev-impl", str(tmp_path / "prev.py"), "--new-impl", str(tmp_path / "new.py")]
+            args += ["--prev-impl", str(tmp_path / "prev.py"), "--new-impl", str(tmp_path / f"new{ext}")]
         assert main(args) == 0
         out = capsys.readouterr().out
         notice = next(line for line in out.splitlines() if line.startswith("::notice::regen_gate"))
@@ -2790,6 +2842,12 @@ class TestCodePathCli:
 
     def test_an_unreadable_or_oversized_source_turns_the_path_off(self, tmp_path, monkeypatch, capsys):
         notice, _ = self._run(tmp_path, monkeypatch, capsys, prev_text="x\n" * 600_000)
+        assert " code=no_visible_improvement prev_lines=n/a new_lines=n/a reason=" in notice
+        assert "code path off" in notice
+
+    @pytest.mark.parametrize("ext", [".txt", ".jl"])
+    def test_an_unknown_or_a_different_language_turns_the_path_off(self, tmp_path, monkeypatch, capsys, ext):
+        notice, _ = self._run(tmp_path, monkeypatch, capsys, ext=ext)
         assert " code=no_visible_improvement prev_lines=n/a new_lines=n/a reason=" in notice
         assert "code path off" in notice
 

@@ -90,7 +90,11 @@ cites a `W` the re-score classed a `CQ-04` defect whose stored line is a
 the new review, the new source calls a call the line names
 (`replacement_tokens`, `call_count`) more often than the predecessor or the
 line's target is a removal (`is_removal`), and the new source is shorter with
-the data scenario and encodings unchanged. With no carrier, a counted entry
+the data scenario and encodings unchanged. `call_count` reads executable text
+only (`executable_text`, by the language of the file suffix: Python, R, Julia,
+JavaScript or TypeScript): a comment, a string literal, or a definition of the
+same name is no call, and an unknown suffix leaves the code path off. With no
+carrier, a counted entry
 carries the merge; with one, it rides along. A malformed list never
 invalidates `review_regen.json`. The record's `improvements.code` counts the
 entries that held, the notice line gains `prev_lines=`/`new_lines=` when the

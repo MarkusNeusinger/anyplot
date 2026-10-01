@@ -14,5 +14,6 @@
   defect, a regeneration still replaces the live implementation if it fixes a
   `CQ-04 (code)` defect the previous review named, calls the named replacement
   or removes the named code, is shorter, scores CQ-04 higher, and regresses
-  nothing. The gate reads both sources for it, and the record counts it as
-  `improvements.code`. (#12005)
+  nothing. The gate reads both sources for it, counts a call only in executable
+  text (a comment, a string literal or a definition of the same name is none),
+  and the record counts it as `improvements.code`. (#12005)

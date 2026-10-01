@@ -311,24 +311,162 @@ def is_removal(text: Any) -> bool:
     return re.match(r"(?:remove|delete)\b", defect_target(text).lstrip("`* ").lower()) is not None
 
 
-_COMMENT_LINE_RE = re.compile(r"^\s*(?:#|//|\*|/\*)")
-_DEFINITION_RE = re.compile(r"(?:\bdef|\bfunction)\s+$")
+# The languages the pipeline generates (``impl-review.yml`` picks the suffix).
+SOURCE_LANGUAGES = {
+    ".py": "python",
+    ".r": "r",
+    ".jl": "julia",
+    ".js": "javascript",
+    ".jsx": "javascript",
+    ".mjs": "javascript",
+    ".ts": "javascript",
+    ".tsx": "javascript",
+}
 
 
-def call_count(source: str, token: str) -> int:
+def source_language(path_text: str | None) -> str | None:
+    """The language of a source file by its suffix, or None for a suffix the gate cannot read."""
+    return SOURCE_LANGUAGES.get(Path(path_text).suffix.lower()) if path_text else None
+
+
+_JULIA_CHAR_RE = re.compile(r"'(?:\\[^'\n]+|[^\\'\n])'")
+
+
+def _string_end(source: str, start: int, language: str) -> int:
+    """The index after the string literal that opens at ``start``."""
+    quote = source[start]
+    if language in ("python", "julia") and source.startswith(quote * 3, start):
+        closer, pos, multiline = quote * 3, start + 3, True
+    else:
+        # A Python or JavaScript one-quote string ends with its line, so an
+        # unbalanced quote costs one line; R, Julia and a template span lines.
+        closer, pos, multiline = quote, start + 1, language in ("r", "julia") or quote == "`"
+    while pos < len(source):
+        if source[pos] == "\\":
+            pos += 2
+        elif source.startswith(closer, pos):
+            return pos + len(closer)
+        elif source[pos] == "\n" and not multiline:
+            return pos
+        else:
+            pos += 1
+    return len(source)
+
+
+def _julia_comment_end(source: str, start: int) -> int:
+    """The index after the ``#= … =#`` comment that opens at ``start``; these nest."""
+    depth, pos = 0, start
+    while pos < len(source):
+        if source.startswith("#=", pos):
+            depth, pos = depth + 1, pos + 2
+        elif source.startswith("=#", pos):
+            depth, pos = depth - 1, pos + 2
+            if depth == 0:
+                return pos
+        else:
+            pos += 1
+    return len(source)
+
+
+def executable_text(source: str, language: str) -> str:
+    """``source`` with every comment and string literal blanked; the line structure stays.
+
+    Comments: ``#`` (Python, R, Julia), ``#= … =#`` (Julia), ``//`` and
+    ``/* … */`` (JavaScript, TypeScript). Strings: ``'``, ``"``, the triple
+    quotes of Python and Julia, a JavaScript template and a Julia character
+    (a lone ``'`` is Julia's adjoint and stays). The inside of an f-string, an
+    interpolation or a template goes with its string, so a call in there is
+    not counted.
+    """
+    quotes = {"python": "'\"", "r": "'\"", "julia": '"', "javascript": "'\"`"}.get(language, "")
+    out: list[str] = []
+    pos = 0
+    while pos < len(source):
+        end = pos
+        if language == "javascript":
+            if source.startswith("//", pos):
+                end = source.find("\n", pos)
+            elif source.startswith("/*", pos):
+                end = source.find("*/", pos + 2)
+                end = end + 2 if end >= 0 else -1
+        elif language == "julia" and source.startswith("#=", pos):
+            end = _julia_comment_end(source, pos)
+        elif language in ("python", "r", "julia") and source[pos] == "#":
+            end = source.find("\n", pos)
+        if end == pos and source[pos] in quotes:
+            end = _string_end(source, pos, language)
+        elif end == pos and language == "julia" and (char := _JULIA_CHAR_RE.match(source, pos)):
+            end = char.end()
+        if end == pos:
+            out.append(source[pos])
+            pos += 1
+            continue
+        end = len(source) if end < 0 else end
+        out.append("".join("\n" if c == "\n" else " " for c in source[pos:end]))
+        pos = end
+    return "".join(out)
+
+
+# What precedes a name that is being defined, not called.
+_DEFINITION_KEYWORD = {
+    "python": re.compile(r"\b(?:def|class)\s+$"),
+    "julia": re.compile(r"\b(?:function|macro)\s+$"),
+    "javascript": re.compile(r"\bfunction\s*\*?\s*$"),
+}
+# A definition without a keyword: Julia's ``name(x) = …`` and a JavaScript
+# method ``name(x) {``, each at the start of its line (what may precede the
+# name there, and what follows its closing parenthesis).
+_DEFINITION_SHORT = {
+    "julia": (
+        re.compile(r"\s*(?:@\w+\s+)*(?:[\w.]+\.)?"),
+        re.compile(r"\s*(?:::[^=]+?)?\s*(?:where\b[^=]*)?=(?![=>])"),
+    ),
+    "javascript": (
+        re.compile(r"\s*(?:(?:async|static|get|set|public|private|protected|override)\s+)*[*#]?"),
+        re.compile(r"\s*(?::[^={;]+)?\{"),
+    ),
+}
+
+
+def _after_arguments(text: str) -> str | None:
+    """What follows the parenthesis that closes the one just before ``text``; None when it closes on a later line."""
+    depth = 1
+    for index, char in enumerate(text):
+        depth += (char == "(") - (char == ")")
+        if depth == 0:
+            return text[index + 1 :]
+    return None
+
+
+def _is_definition(line: str, match: re.Match[str], language: str) -> bool:
+    before = line[: match.start()]
+    keyword = _DEFINITION_KEYWORD.get(language)
+    if keyword is not None and keyword.search(before):
+        return True
+    lead, tail = _DEFINITION_SHORT.get(language, (None, None))
+    if lead is None or tail is None or not lead.fullmatch(before):
+        return False
+    rest = _after_arguments(line[match.end() :])
+    return rest is not None and tail.match(rest) is not None
+
+
+def call_count(source: str, token: str, language: str = "python") -> int:
     """How often ``source`` calls ``token``: the name, not preceded by a word character, then ``(``.
 
-    Comment lines (``#``, ``//``, ``*``) and definitions (``def name(``,
-    ``function name(``) do not count: a hand-roll named after the call it
-    imitates is not that call.
+    Only executable text counts (``executable_text``): a comment such as
+    ``# use acf(series)`` or a string that spells the call is not the call.
+    Neither is a definition (``def name(``, ``class name(``, ``function
+    name(``, Julia's ``name(x) = …``, a JavaScript method ``name(x) {``): a
+    hand-roll named after the call it imitates is not that call. R defines
+    with ``name <- function(``, which is no call of ``name`` to begin with.
     """
     pattern = re.compile(rf"(?<!\w){re.escape(token)}\s*\(")
-    count = 0
-    for line in source.splitlines():
-        if _COMMENT_LINE_RE.match(line):
-            continue
-        count += sum(1 for m in pattern.finditer(line) if not _DEFINITION_RE.search(line[: m.start()]))
-    return count
+    return sum(
+        1
+        for line in executable_text(source, language).splitlines()
+        for match in pattern.finditer(line)
+        if not _is_definition(line, match, language)
+    )
 
 
 def _score_in_range(criterion: str, value: Any) -> bool:
@@ -627,6 +765,9 @@ class GateInput:
     weakness_texts: Mapping[str, str] = field(default_factory=dict)
     prev_source: str | None = None
     new_source: str | None = None
+    # The sources' language (``source_language`` of ``--new-impl``): what
+    # ``call_count`` reads as a comment, a string and a definition.
+    source_language: str = "python"
 
 
 @dataclass
@@ -1111,7 +1252,8 @@ def _code_item_problem(item: Any, inp: GateInput, payload: Mapping[str, Any]) ->
     if not tokens:
         return None, "its stored line names no call and no removal"
     prev_source, new_source = inp.prev_source or "", inp.new_source or ""
-    if not any(call_count(new_source, t) > call_count(prev_source, t) for t in tokens):
+    language = inp.source_language
+    if not any(call_count(new_source, t, language) > call_count(prev_source, t, language) for t in tokens):
         return None, f"the named call ({', '.join(tokens)}) is not called more often than before"
     return "fix", None
 
@@ -2114,6 +2256,9 @@ def cmd_decide(args: argparse.Namespace) -> int:
         characteristics = parse_characteristics(Path(args.spec_file).read_text(encoding="utf-8"))
     score = parse_score(args.score)
     weaknesses_json = Path(args.weaknesses_json) if args.weaknesses_json else None
+    language = source_language(args.new_impl)
+    if language != source_language(args.prev_impl):
+        language = None
     inp = GateInput(
         spec_id=args.spec_id,
         score=score,
@@ -2134,8 +2279,11 @@ def cmd_decide(args: argparse.Namespace) -> int:
         # Both optional: without them the code path is off and every older
         # caller (the retest harness at any rules_ref) decides as before.
         weakness_texts=load_weakness_texts(weaknesses_json),
-        prev_source=load_source(args.prev_impl),
-        new_source=load_source(args.new_impl),
+        # A suffix the gate cannot read as code (or two different languages)
+        # leaves the code path off, like an unreadable file.
+        prev_source=load_source(args.prev_impl) if language else None,
+        new_source=load_source(args.new_impl) if language else None,
+        source_language=language or "python",
     )
     result = decide(inp)
     rescored = str(result.prev_rescored) if result.prev_rescored is not None else "n/a"
