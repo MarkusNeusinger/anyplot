@@ -32,7 +32,7 @@ A drawdown chart visualizes the percentage decline from peak value over time, sh
 
 - A good version shows: the drawdown as a percentage decline from the running maximum, a curve that stays at or below zero at every date and touches zero only at new highs, with zero at the top of its axis and deeper losses further down.
 - A good version shows: a semi-transparent fill between the curve and the zero baseline in a loss color such as red, as the Notes ask, with the zero line clearly visible in both themes.
-- A good version shows: the maximum drawdown highlighted with a distinct marker or annotation at its trough, and recovery points marked where the curve returns to zero, as the Notes ask.
+- A good version shows: the maximum drawdown period highlighted with a distinct marker or annotation, and recovery points marked where the curve returns to zero, as the Notes ask.
 - A good version shows: the key statistics the Notes ask for (maximum drawdown percentage, its duration and the recovery time) as text that matches the curve and stays clear of it.
 - A good version shows: the basic variant's single drawdown series: besides the zero baseline, the highlight, recovery markers and statistics the Notes ask for and the underlying value series the Notes allow, no second asset, other reference or mean lines, highlight bands on other periods, or further callouts.
 - Expected, not a defect: a last drawdown still open at the end of the window, so its recovery is reported as not yet reached, long flat stretches at zero during runs of new highs, sharp drops followed by slow climbs, and many shallow dips.

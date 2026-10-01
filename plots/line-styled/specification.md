@@ -37,7 +37,7 @@ x    | Series A | Series B | Series C
 
 ## What a good version looks like
 
-- A good version shows: every series as a line joining its values in x order, each in a different one of the standard styles the Notes list: solid, dashed, dotted or dash-dot.
+- A good version shows: every series as a line joining its values in x order, each in its own line style, drawing first on the standard styles the Notes list: solid, dashed, dotted and dash-dot.
 - A good version shows: series that can be told apart by line style alone, so the chart still works in monochrome; color, if used, comes on top of the style difference and does not replace it.
 - A good version shows: dash and dot patterns that stay recognizable along the whole line: dots read as dots and dashes as dashes, rather than merging into a solid line or breaking into scattered specks.
 - A good version shows: one line width across all styles, as the Notes ask, so that no series looks heavier only because of its pattern.
