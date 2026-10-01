@@ -26,3 +26,12 @@ A MACD (Moving Average Convergence Divergence) chart displaying three components
 - MACD and signal lines should use distinct colors (e.g., blue and orange)
 - Standard parameters are 12, 26, 9 but should be noted in the chart
 - Typically shown as a separate panel below a price chart, but can stand alone
+
+## What a good version looks like
+
+- A good version shows: the MACD line and the signal line as two continuous lines in distinct colors, as the Notes ask, each at its computed value on every date and identified so a reader can tell which is which.
+- A good version shows: the histogram as bars reaching from zero to the difference between the MACD and signal lines, green when positive and red when negative, as the Notes ask, changing sign exactly where the two lines cross.
+- A good version shows: a zero reference line, as the Notes ask, visible in both themes, on an axis that covers the positive and negative values around it, with the lines readable over the histogram bars.
+- A good version shows: the parameters noted in the chart, as the Notes ask.
+- A good version shows: a price panel above the MACD panel, if drawn as the Notes allow, sharing its date axis while the MACD panel keeps its own scale around zero.
+- Expected, not a defect: an oscillator with no fixed bounds whose axis is not symmetric around zero, turns that lag the price, histogram bars much shorter than the swings of the lines, many shallow crossovers in sideways stretches, and lines that begin only once the averages are filled.

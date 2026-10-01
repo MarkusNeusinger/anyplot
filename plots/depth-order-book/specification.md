@@ -27,3 +27,12 @@ A market depth chart visualizes a snapshot of an exchange order book as two cumu
 - Leave the bid-ask spread as a visible empty gap at the center; optionally draw a dashed vertical line at the mid price and annotate the mid price and spread value
 - The y-axis starts at zero; the x-axis is centered so the mirrored areas are roughly balanced visually
 - Derive a plausible static snapshot synthetically (e.g. quantities drawn from a distribution that grows away from the mid price) — no live feed is required
+
+## What a good version looks like
+
+- A good version shows: two cumulative areas on a price x-axis, bids to the left and asks to the right, each accumulating from the best price nearest the mid price outward, as the Notes ask, so both curves are lowest at the center and never fall as they move away from it.
+- A good version shows: both areas as step curves rather than smooth lines, as the Notes ask, with every step at its price level and every plateau at its cumulative quantity.
+- A good version shows: the bid area in green and the ask area in red, with semi-transparent fills and matching solid outlines, as the Notes ask, distinguishable in both themes.
+- A good version shows: the bid-ask spread left as a visible empty gap at the center, as the Notes ask; the dashed mid price line and the mid price and spread annotation the Notes allow, if drawn, sit at that gap and leave the areas uncovered.
+- A good version shows: a y-axis that starts at zero and an x-axis centered on the mid price, as the Notes ask, so the two mirrored areas look roughly balanced.
+- Expected, not a defect: tall single steps where a large order rests, two sides that end at different heights, steps of uneven width and height, a spread that is narrow against the price range shown, and empty space above the curves near the center.

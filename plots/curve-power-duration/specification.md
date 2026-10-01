@@ -28,3 +28,12 @@ A power duration curve plots an athlete's best mean-maximal power output (watts)
 - The empirical curve is monotonically non-increasing; the model fit smoothly approaches the CP asymptote at long durations
 - Use a clean sports-science / analytics style; ensure the log-x decay shape and the model fit are both clearly legible
 - Distinct from `line-load-duration` (electrical grid load duration curve) — this is the cycling/endurance power-vs-duration curve
+
+## What a good version looks like
+
+- A good version shows: power in watts against effort duration on a logarithmic time axis whose tick labels are human-readable durations, seconds for the shortest and minutes and hours for the longer ones, as the Notes require, not bare second counts throughout or powers of ten.
+- A good version shows: the empirical mean-maximal curve as the primary series, every point at its duration and power, falling or staying level as duration grows and never rising, as the Notes describe.
+- A good version shows: the fitted critical power model overlaid as a distinct line, dashed for example, as the Notes ask, clearly secondary to the empirical curve yet still distinguishable where the two run close together, and leveling off toward CP at long durations.
+- A good version shows: the reference durations (5 s sprint, 1 min, 5 min and 20 min) annotated with vertical markers and labels, as the Notes ask, each at its position on the log axis; power values beside them, if annotated, match the curve there.
+- A good version shows: the critical power asymptote the Notes allow, if drawn, as a labeled horizontal line at the CP value that the model line approaches at long durations.
+- Expected, not a defect: a steep fall over the first seconds and minutes followed by a long, almost flat tail, the model line leaving the empirical curve at the shortest and the longest durations, where the hyperbolic model does not hold, and the two nearly coinciding in between.

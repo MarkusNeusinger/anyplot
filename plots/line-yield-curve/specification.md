@@ -26,3 +26,12 @@ A yield curve plots interest rates (yields) of bonds against their maturities, f
 - Highlight the inversion region where short-term yields exceed long-term yields using shading or annotation
 - Use a clean, professional style consistent with financial publications (minimal gridlines, muted colors)
 - Add a legend indicating the date for each curve
+
+## What a good version looks like
+
+- A good version shows: every curve as a line through its yields in order of maturity, each point at its maturity in years on a linear or log axis, as the Notes ask, so the distance between maturities reflects time rather than even category spacing, and never smoothed away from its points.
+- A good version shows: tick marks labeled with the maturity labels, as the Notes ask, each at the position of its maturity.
+- A good version shows: at least two curves on the same axes, as the Notes ask, distinguishable in both themes, with a legend that gives the date of each curve.
+- A good version shows: the inversion region, where short-term yields exceed long-term yields, highlighted by shading or an annotation, as the Notes ask, without hiding the curves.
+- A good version shows: a yield axis in percent that spans all curves, with the minimal gridlines the Notes ask for staying behind them.
+- Expected, not a defect: short maturities bunched together at the left of a linear axis, unevenly spaced ticks, curves that cross or sit far apart in level, a nearly flat curve, and a hump or kink at a single maturity.

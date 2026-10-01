@@ -29,3 +29,12 @@ A Simple Moving Average (SMA) chart displays price or value data with one or mor
 - Longer SMAs will have more initial null values due to the calculation window
 - Standard periods are 20/50/200 for daily data, but other combinations like 10/20/50 are also common
 - Grid lines on the y-axis improve price level readability
+
+## What a good version looks like
+
+- A good version shows: the close drawn prominently, as the Notes ask, with every SMA overlaid on the same axis at its computed value on every date where it is defined, so the price stays the dominant series.
+- A good version shows: a distinct color for each SMA, as the Notes ask, so the SMAs can be told apart from one another and from the price in both themes.
+- A good version shows: a legend that gives the period of each SMA, as the Notes ask.
+- A good version shows: each SMA beginning only where its window is full, so the longer SMAs start later, as the Notes describe, never back-filled, joined to the axis or drawn from zero.
+- A good version shows: SMAs that behave like their periods: the short one follows the price closely, the long one is the smoothest and slowest to turn, and each runs through the middle of the prices it averages.
+- Expected, not a defect: SMAs that lag the price, an empty warm-up stretch that leaves the longest SMA covering only part of the window, and lines that run close together and cross repeatedly in sideways stretches.

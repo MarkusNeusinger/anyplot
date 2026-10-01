@@ -32,3 +32,12 @@ A stock price chart with flag-style markers annotating significant events such a
 - Hover or click interactions should reveal full event details where supported
 - Consider using highlighted background regions for extended events (e.g., earnings blackout periods)
 - Price can be displayed as a line chart or candlesticks depending on the library's capabilities
+
+## What a good version looks like
+
+- A good version shows: the price as a line of closes or as candlesticks, as the Notes allow, at its data values on every date, remaining the main series of the chart.
+- A good version shows: every event as a flag at its event date, placed above or below the price so that it does not obscure the price data, by alternating heights or other placement, as the Notes ask, and clear of its neighboring flags.
+- A good version shows: a vertical dashed line from each flag to the price level at its date, as the Notes ask, so the day an event belongs to can be read exactly.
+- A good version shows: event types told apart by distinct icons or colors, as the Notes ask, and each flag carrying its short label, legible in both themes.
+- A good version shows: highlighted background regions for extended events, if drawn as the Notes allow, spanning the dates of the event and staying behind the price and the flags.
+- Expected, not a defect: flags unevenly spaced along the time axis and bunched where events fall close together, connector lines of different lengths, room above or below the price that only flags occupy, and price jumps at event dates.

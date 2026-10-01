@@ -29,3 +29,12 @@ A Performance Management Chart (PMC), popularized by TrainingPeaks, summarizes a
 - Keep a single shared time (date) x-axis; use a clear legend distinguishing Fitness (CTL), Fatigue (ATL), Form (TSB), and daily TSS
 - A horizontal reference line at TSB = 0 helps separate "fresh/positive form" from "fatigued/negative form"
 - If the library supports it, a secondary y-axis for TSB keeps it readable against the larger CTL/ATL magnitudes; otherwise scale all series onto one axis
+
+## What a good version looks like
+
+- A good version shows: CTL and ATL as two lines at their daily values over one shared date axis, the CTL line visibly smoother and lagging behind the spikier ATL line, as the Notes ask.
+- A good version shows: TSB as a filled area or band relative to a zero baseline, as the Notes ask, ideally two-toned so that positive and negative form differ in color, with both fills recognizable in both themes and a zero reference line, if drawn, visible against them.
+- A good version shows: the daily TSS values as light points or thin bars near the bottom, as the Notes ask, at their dates and values, reading as the raw input without dominating the smoothed lines.
+- A good version shows: a legend that distinguishes Fitness (CTL), Fatigue (ATL), Form (TSB) and daily TSS, as the Notes ask.
+- A good version shows: TSB on a secondary y axis or on the same axis as the other series, as the Notes allow, with each y axis labeled for what it carries so the form values are not read against the load scale by mistake.
+- Expected, not a defect: an ATL line that spikes above CTL, negative form through most of a build that turns positive only in a taper or rest period, gaps or zeros in the daily TSS on rest days, daily TSS scattered far more widely than the smoothed lines, and CTL climbing from a low start.

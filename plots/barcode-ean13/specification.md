@@ -27,3 +27,12 @@ A standard EAN-13 barcode visualization commonly used for retail products worldw
 - Recommended output size: at least 200 pixels wide for reliable scanning
 - Libraries: `python-barcode`, `treepoem`, or manual rendering with matplotlib
 - Print resolution should be 300 DPI minimum for physical labels
+
+## What a good version looks like
+
+- A good version shows: the symbol's standard structure from left to right: a start guard, the left group of digit patterns, a center guard, the right group of digit patterns and an end guard, with the three guard patterns the Notes ask for recognizable as thin paired bars.
+- A good version shows: bar and space widths that follow from the encoded digits, each a whole number of modules, as the Notes ask; position is construction here, so widths are never drawn at random or evened out.
+- A good version shows: the human-readable digits below the bars, as the Notes ask, matching the encoded number, with the first digit outside the left guard and the other digits under the two halves of the symbol.
+- A good version shows: guard bars that stand out from the digit bars, by convention drawn longer so that they reach down between the groups of digits.
+- A good version shows: quiet zones as blank space to the left and right of the bars, as the Notes ask, with solid, sharp-edged bars in strong contrast with the spaces in both themes.
+- Expected, not a defect: no data axes, ticks, grid or legend, a sparse monochrome picture, an irregular rhythm of thick and thin bars, and a light tile behind the symbol in the dark theme.

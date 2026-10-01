@@ -28,3 +28,12 @@ A soccer pitch event map positions match events (passes, shots, tackles, interce
 - Show directional arrows for passes and shots indicating start-to-end or trajectory direction
 - Use a green or white pitch background with contrasting line colors for clear readability
 - Maintain correct aspect ratio matching the 105:68 pitch proportions
+
+## What a good version looks like
+
+- A good version shows: the pitch outline in the standard FIFA dimensions with penalty areas, goal areas, center circle, halfway line, corner arcs and goal posts, as the Notes ask, every marking in its true position and proportion and the corner arcs curving into the pitch.
+- A good version shows: the 105:68 aspect ratio, as the Notes ask, so the center circle is round and the whole pitch is in view, on a green or white pitch background with line colors that contrast with it in both themes.
+- A good version shows: a distinct marker shape and color for each event type, as the Notes ask, every marker sitting at its event's pitch coordinates and never moved to thin out a crowded area.
+- A good version shows: the outcome encoded through marker fill or opacity, as the Notes ask, so successful and unsuccessful events of one type can be told apart while the unsuccessful ones remain visible on the pitch background.
+- A good version shows: directional arrows for passes and shots, as the Notes ask, each anchored at its event's position with a visible arrowhead that gives the direction, and fine enough that the markers stay readable beneath them.
+- Expected, not a defect: markers and arrows crowding in front of goal and in midfield, shot arrows fanning into one goal mouth, arrows crossing each other, empty stretches of the pitch, and axis ticks and labels left out, since the pitch markings give the spatial reference.

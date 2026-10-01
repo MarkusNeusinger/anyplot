@@ -29,3 +29,12 @@ A sigmoidal dose-response curve that plots biological response against drug conc
 - Show horizontal dashed lines for top and bottom asymptotes
 - Include at least 2 compounds/curves to demonstrate comparison capability
 - Use a legend to distinguish compounds and include a confidence band (95% CI) around at least one fitted curve
+
+## What a good version looks like
+
+- A good version shows: response against concentration on a logarithmic x axis, as the Notes require, with each compound's fitted 4PL curve a smooth sigmoid running from one plateau to the other and the compounds told apart by a legend, as the Notes ask.
+- A good version shows: the measured data points at their concentration and response values with SEM error bars, overlaid on the fitted curve, as the Notes ask, each curve running through the scatter of its own points.
+- A good version shows: EC50/IC50 marked with dashed horizontal and vertical reference lines that meet on the curve at its half-maximal response, as the Notes ask, which lies halfway between that curve's bottom and top plateau.
+- A good version shows: horizontal dashed lines at the top and bottom asymptotes, as the Notes ask, at the levels where the fitted curve flattens and subordinate to the curves and points.
+- A good version shows: a confidence band around at least one fitted curve, as the Notes ask, enclosing that curve between a lower and an upper bound and translucent enough that the curve, points and reference lines stay visible through it in both themes.
+- Expected, not a defect: only a few points per compound, points scattering around the fit, curves shifted along the concentration axis or differing in steepness and plateau height, plateaus that stop short of the axis ends, and EC50 lines of two compounds lying close together.

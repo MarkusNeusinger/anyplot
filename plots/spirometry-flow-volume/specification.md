@@ -32,3 +32,12 @@ A pulmonary function test visualization that plots airflow rate (L/s) against lu
 - X-axis label: "Volume (L)", Y-axis label: "Flow (L/s)"
 - The flow-volume loop should form a closed shape connecting expiratory and inspiratory limbs
 - Use distinct styling (e.g., solid line for measured, dashed for predicted) to differentiate curves
+
+## What a good version looks like
+
+- A good version shows: flow in L/s against volume in L, with the expiratory limb above the zero flow line and the inspiratory limb below it, the two joined into one closed loop, as the Notes ask.
+- A good version shows: an expiratory limb that rises sharply to PEF and then declines roughly linearly, and an inspiratory limb that is a more symmetric, U-shaped curve, as the Notes ask, both drawn through their data values.
+- A good version shows: Peak Expiratory Flow marked with a labeled point or annotation, as the Notes ask, sitting on the highest point of the measured expiratory limb.
+- A good version shows: FEV1, FVC and PEF with their numeric values in a text box or legend, as the Notes ask, placed clear of the loop and agreeing with it where the loop shows them (PEF with the peak, FVC with the loop's width).
+- A good version shows: the predicted normal loop as a dashed overlay, as the Notes ask, styled so that the measured and the predicted loop are told apart at once and the measured one stays the more prominent.
+- Expected, not a defect: a lopsided loop with a tall early expiratory peak over a shallower rounded inspiratory limb, empty corners of the plot area, a measured loop that lies inside or departs from the predicted one, and FEV1 given only as a number, since the loop has no time axis.

@@ -27,3 +27,11 @@ An OHLC (Open-High-Low-Close) bar chart displays financial price data using vert
 - Consider using different colors for up bars (close > open) vs down bars (close < open) for easier reading
 - Time axis should have appropriate date formatting based on data frequency
 - Grid lines help read exact price levels
+
+## What a good version looks like
+
+- A good version shows: one bar per period at its date: a thin vertical line from the low to the high, with a short horizontal tick to the left at the open and one to the right at the close, as the Notes ask, all at their data values on the price axis.
+- A good version shows: ticks long enough to tell left from right at a glance, yet short enough that they do not touch the ticks of the neighboring bars, so every period stays a separate bar.
+- A good version shows: up bars and down bars in different colors, if colored by direction as the Notes allow, distinguishable in both themes; with a single color the direction still reads from the two ticks.
+- A good version shows: a time axis whose date labels fit the data frequency, as the Notes ask, a price axis that spans the lows and highs without being forced to zero, and grid lines, if drawn, that stay behind the bars.
+- Expected, not a defect: no filled bodies, gaps at weekends and holidays or their deliberate removal, open and close ticks at the same level, a tick sitting at the very end of its line when the open or close is the high or low, and bars of very different lengths.
