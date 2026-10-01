@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: line-tanabe-sugano
 created: '2026-10-01T19:57:06Z'
-updated: '2026-10-01T20:03:43Z'
+updated: '2026-10-01T20:16:39Z'
 generated_by: claude-opus
 workflow_run: 36915757253
 issue: 11846
@@ -12,49 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-tana
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - 'Term energies come from diagonalizing the d3 strong-field Tanabe-Sugano matrices
-    with a short cyclic-Jacobi solver, not from fitted splines: 4T2g is exactly Delta_o/B,
-    4T1g(P) starts at 15 B, and the four 2G-derived doublets start together at 17.5
-    B for C/B = 4.5 - the textbook Cr3+ diagram.'
-  - 'Every curve is labelled at the right edge by a single-point `dataLabels` entry
-    with `useHTML`, `crop: false` and `overflow: "allow"`, so the term symbols carry
-    true <sup> multiplicities and <sub> subscripts and are coloured to match their
-    curve, replacing a legend entirely.'
-  - 'Spin-allowed quartets at `lineWidth: 4` solid versus spin-forbidden doublets
-    at 2.2 `ShortDash` make the two classes separable at a glance in both themes,
-    with the convention spelled out in the subtitle together with the configuration
-    and C/B ratio.'
-  - 'Theme handling is exact: `chart.backgroundColor: "transparent"` over the harness
-    page, chrome from `t.ink` / `t.inkSoft` / `t.grid`, and the Imprint palette identical
-    in both renders (sampled #009E73, #C475FD, #4467A3, #BD8233, #AE3030, #2ABCCD,
-    #954477, #99B314 in light and dark alike).'
-  - 'Highcharts-native interactivity is configured without touching the static render:
-    a `useHTML` tooltip reporting Delta_o/B and E/B per term and `states.inactive.opacity:
-    1` so hovering one curve does not dim the rest in the HTML output.'
+  - 'Term energies are genuine Tanabe-Sugano eigenvalues, not hand-fitted curves:
+    the strong-field matrices for ⁴T₁g, ²Eᵍ, ²T₁g and ²T₂g are diagonalized per field-strength
+    sample, so the avoided crossing between ⁴T₁g(F) and ⁴T₁g(P) falls out of the physics
+    and the terms never swap identity'
+  - 'Factually exact at the limits a chemist checks first: ⁴T₂g and ⁴T₁g(F) start
+    degenerate with the ⁴A₂g ground term at Δₒ/B = 0, ⁴T₁g(P) at the free-ion 15B,
+    and all four ²G-derived doublets at 17.5B for C/B = 4.5, with ⁴T₂g rising at exactly
+    slope 1'
+  - 'Highcharts-native direct labelling replaces a legend: per-point `dataLabels`
+    on each series'' last point with `crop: false` / `overflow: "allow"` push the
+    term symbols into the reserved `marginRight`, each tinted with its own curve color'
+  - '`useHTML` markup typesets the term symbols properly — multiplicity as a true
+    superscript, the numeral and g as true subscripts — in the labels, the subtitle
+    and the axis title (Δₒ/B)'
+  - 'Spin emphasis is encoded redundantly and reads in both themes: lineWidth 4 solid
+    for the spin-allowed quartets against 2.2 ShortDash for the spin-forbidden doublets,
+    with the key spelled out in the subtitle alongside the d³ configuration and C/B
+    ratio'
+  - 'Interactive HTML view is configured deliberately: an HTML tooltip with sub/superscript
+    markup and Δₒ/B / E /B readouts, plus `states.inactive.opacity: 1` so hovering
+    one term does not dim the other seven'
+  - Theme tokens are threaded through every chrome element — transparent chart background
+    over the page surface, `t.ink` title, `t.inkSoft` ticks and axis titles, 15 %-alpha
+    `t.grid` gridlines — and the eight Imprint data colors are pixel-identical between
+    the two renders
   weaknesses:
-  - 'Suggestion: the Notes allow a vertical marker at a real Cr3+ complex''s Delta_o/B
-    with arrows from the ground term up to the excited terms - it would tie the curves
-    to measured UV-Vis bands.'
-  - 'Suggestion: slightly larger tick labels would keep the axis numbers legible in
-    the 400 px gallery thumbnail.'
-  - 'Suggestion: `termEnergies` currently returns only the lowest root of each doublet
-    block; exposing the second root of the 2T1g or 2T2g block would show an avoided
-    crossing explicitly.'
+  - 'CQ-01 (code): the script defines two helper arrow functions where the rubric
+    asks for a straight Data → Plot body; `termEnergies` (lines 58–96) is called once
+    per sample and folds into the sweep loop at lines 112–115 → one function, the
+    `eigenvalues` solver the browser has no call for (−1 helper). Likely cause: the
+    per-sample energy block was factored out alongside the solver.'
+  - 'Suggestion: the Notes allow an example complex''s Δₒ/B marker with arrows from
+    the ground term up to the excited terms — a vertical line at the Cr(NH₃)₆³⁺ value
+    would show how the diagram is read in reverse.'
+  - 'Suggestion: the cyan ²T₁g and lime ²A₁g labels sit at the faint end on the cream
+    page; a slightly heavier weight or a thin ink outline would lift them without
+    breaking the color match to their curves.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, sampled #FAF8F1 (250,248,241) across the page and the plot area; square 2400x2400 canvas, plot area very nearly square.
-      Chrome: bold near-black title "line-tanabe-sugano · javascript · highcharts · anyplot.ai" centred at the top, grey subtitle "d3 (Cr3+), octahedral · C/B = 4.5 · solid = spin-allowed, dashed = spin-forbidden" with true superscripts; y-axis title "Term energy E/B" rotated at the left, x-axis title "Ligand-field strength Delta_o/B" with a subscript o at the bottom; ticks 0-40 every 5 on x and 0-90 every 10 on y, all dark grey and clearly readable; grid lines are faint 15 %-alpha ink, visible but sitting behind the curves; no legend box and no credits watermark.
-      Data: eight term curves. Four spin-allowed quartets are thick and solid - 4A2g brand green #009E73 flat along E/B = 0, 4T2g lavender rising linearly to 40, 4T1g(F) blue curving to 51, 4T1g(P) ochre from 15 up to 84. Four spin-forbidden doublets are thinner and short-dashed - 2Eg matte red and 2T1g cyan both nearly flat near 21-22, 2T2g rose levelling at 33, 2A1g lime rising straight to 58. All four doublets start together at 17.5 at Delta_o/B = 0. Every curve carries its term symbol at the right edge in its own colour with the multiplicity as a superscript and the numeral plus g as subscripts; the 2Eg and 2T1g labels are offset vertically so they stay apart where the curves converge. First categorical series is #009E73 as required.
-      Legibility verdict: PASS - title, subtitle, both axis titles, every tick label and all eight term labels are dark on the off-white surface with ample contrast; nothing is clipped at any canvas edge and no text overlaps text or data.
+      Background: warm off-white #FAF8F1 across the full 2400x2400 square canvas (sampled: 5.52 M px of exactly #FAF8F1) — not pure white, not dark. Gridlines on both axes at #D8D7D0 (15 %-alpha ink), subtle and clearly behind the curves.
+      Chrome: bold near-black title "line-tanabe-sugano · javascript · highcharts · anyplot.ai" (#1A1A17) spanning ~53 % of the canvas width; grey subtitle "d³ (Cr³⁺), octahedral · C/B = 4.5 · solid = spin-allowed, dashed = spin-forbidden" (#4A4A44) with real superscripts; y-axis title "Term energy E/B" rotated at left, x-axis title "Ligand-field strength Δ_o/B" centred below with a true subscript o; tick labels 0–90 in steps of 10 on y and 0–40 in steps of 5 on x, all #4A4A44. Every piece of chrome is dark on the light surface and fully readable; nothing is light-on-light, nothing is clipped at any canvas border.
+      Data: eight term curves, first series ⁴A₂g the brand green #009E73 drawn as a visible flat line along E/B = 0; then ⁴T₂g lavender #C475FD, ⁴T₁g(F) blue #4467A3, ⁴T₁g(P) ochre #BD8233 (all four thick solid = spin-allowed), and ²Eg matte red #AE3030, ²T₁g cyan #2ABCCD, ²T₂g rose #954477, ²A₁g lime #99B314 (all four thin dashed = spin-forbidden). Each curve is labelled at its right-hand end in its own color, outside the plot area in the reserved right margin, with superscript multiplicity and subscript Mulliken label (⁴T₁g(P), ²A₁g, ⁴T₁g(F), ⁴T₂g, ²T₂g, ²T₁g, ²Eg, ⁴A₂g top to bottom). The two converging labels ²T₁g and ²Eg are separated vertically and do not touch. No markers, no legend box, no annotation boxes.
+      Legibility verdict: PASS. The cyan ²T₁g and lime ²A₁g labels are the faintest elements on the cream page (the known sub-3:1 Imprint/WCAG tension the style guide accepts) but remain legible at full size.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, sampled #1A1A17 (26,26,23); same square 2400x2400 canvas and same layout.
-      Chrome: title now light cream on the near-black surface, subtitle in soft light grey, axis titles and all tick labels light grey - no dark-on-dark anywhere; grid lines flip to 15 %-alpha light ink and remain subtle but visible.
-      Data: identical to the light render. Pixel sampling of the label/curve strip returns exactly the same hexes in both files - #009E73, #C475FD, #4467A3, #BD8233, #AE3030, #2ABCCD, #954477, #99B314 - so only the chrome flipped. Line weights, dash pattern, curve shapes and label positions are unchanged; the brand green 4A2g ground line is clearly visible along the axis.
-      Legibility verdict: PASS - all chrome text is light on dark, every curve including the thinner dashed doublets stays distinguishable from the background, and the term labels keep their curve colours.
+      Background: warm near-black #1A1A17 across the same 2400x2400 canvas (sampled: 5.52 M px of exactly #1A1A17) — not pure black. Gridlines at #3A3A36 (15 %-alpha light ink), subtle and visible.
+      Chrome: title now #F0EFE8, subtitle and all axis titles and tick labels #B8B7B0 — every text element is light on the near-black surface. No dark-on-dark failure anywhere: no title, axis title, tick label or curve label renders in a near-black ink. Layout is identical to the light render, nothing clipped.
+      Data: identical to the light render, verified by pixel sampling — #009E73, #C475FD, #4467A3, #BD8233, #AE3030, #2ABCCD, #954477, #99B314 all appear with the same pixel counts in both PNGs, so only chrome flipped. The brand green ⁴A₂g ground line stays clearly visible along the axis, and all four dashed spin-forbidden curves remain distinguishable from the background.
+      Legibility verdict: PASS.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -65,62 +74,61 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes set explicitly (title 24px, subtitle 16px, axis titles
-          17px, ticks 15px, term labels 19px in the 1200 CSS square mount). Everything
-          is readable at full size in both themes; tick labels get small at the 400
-          px thumbnail scale.
+        comment: All font sizes explicitly set (title 24px, subtitle 16px, axis titles
+          17px, ticks 15px, curve labels 19px in the 1200px square mount, i.e. proportionally
+          larger than the landscape baseline) and every text element is readable in
+          both themes; the cyan and lime curve labels sit at the faint end of the
+          contrast range on the cream page
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with text or with data. The right-edge term labels
-          sit outside the plot area, and the 2Eg / 2T1g pair is offset vertically
-          where the curves converge. Curves of different symmetry crossing is permitted
-          by the spec.
+        comment: Curve labels live in the reserved 112px right margin and never touch
+          the plot or each other; the converging 2T1g and 2Eg labels are offset apart;
+          curves crossing each other is inherent to the diagram and permitted by the
+          spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Quartets at lineWidth 4 solid, doublets at 2.2 ShortDash, markers
-          disabled for 321 points per series; the flat 4A2g ground term stays visible
-          along the x-axis in both themes. Direct labels stand in for a legend and
-          are legible.
+        comment: lineWidth 4 solid vs 2.2 ShortDash reads cleanly at 8 curves in both
+          themes; no legend glyphs to check since direct end-of-curve labels carry
+          the identity, each matching its curve color exactly
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Eight Imprint colours with redundant encoding: solid vs dashed separates
-          the two spin classes, and every curve is named at its right end in its own
-          colour, so identity never depends on hue alone.'
+        comment: 'Imprint palette is CVD-safe, and at 8 series the style guide''s
+          required redundant encoding is present twice over: dash style for spin class
+          and a direct per-curve label, so color is never the sole signal'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square via the //# anyplot-orientation directive (canvas
-          gate did not fire); near-square plot area with both axes starting at 0,
-          as the Notes ask. marginRight 112 holds the term labels fully inside the
-          canvas - nothing clipped or overflowing.
+        comment: Exactly 2400x2400 (square directive), near-square plot area with
+          both axes starting at 0 as the spec asks; title ~53% of width, x and y axis
+          titles both 17px, tick labels balanced, no overflow and nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Ligand-field strength Delta_o/B'' with a true subscript and ''Term
-          energy E/B'' - both correctly name the reduced, dimensionless quantities.'
+        comment: '''Ligand-field strength Delta_o/B'' and ''Term energy E/B'' name
+          both reduced quantities, with the subscript typeset via useHTML'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, the rest follow the canonical Imprint order;
-          sampling both PNGs returns identical data hexes, and backgrounds are #FAF8F1
-          / #1A1A17 with chrome from the theme tokens.'
+        comment: 'colors = t.palette, first series 4A2g is #009E73, canonical order
+          through all 8 slots; backgrounds #FAF8F1 / #1A1A17 via the transparent chart
+          over the page surface; data hexes pixel-identical between renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -128,26 +136,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Above the default: direct colour-matched labelling instead of a
-          legend, term symbols typeset with real superscripts and subscripts, and
-          a subtitle that carries the configuration, the C/B ratio and the line-style
-          convention.'
+        comment: 'Textbook-grade polish: legend replaced by colored direct labels,
+          the encoding key carried in the subtitle, deliberate two-level line weight,
+          Imprint palette throughout, generous margins'
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: y-axis line removed, x-axis line and ticks in the subtle grid color,
+          markers disabled, 15%-alpha grid on both axes as the spec's 'light grid'
+          asks, credits watermark off, no chartjunk
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: y-axis line removed, grid at 15 % alpha behind the curves, credits
-          off, markers off, generous margins. The x-axis line is kept in grid colour
-          as the E/B = 0 baseline.
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: true
-        comment: Line weight separates spin-allowed from spin-forbidden and the subtitle
-          teaches the reading convention, but the chart offers no focal point - eight
-          curves are presented at equal emphasis and the viewer decodes them unaided.
+        comment: 'Clear hierarchy: the thick solid quartets read as the spectroscopically
+          relevant transitions while the thin dashed doublets recede, and the flat
+          green ground term anchors the baseline; no single focal point beyond that'
     spec_compliance:
       score: 15
       max: 15
@@ -157,36 +164,37 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'A genuine Tanabe-Sugano diagram: continuous term energies E/B against
-          ligand-field strength Delta_o/B for one d-n configuration.'
+        comment: 'A genuine Tanabe-Sugano diagram: continuous term-energy curves against
+          reduced ligand-field strength for one d-n configuration'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'Every Notes bullet met: one configuration with C/B stated in the
-          subtitle, energies from diagonalised Tanabe-Sugano matrices rather than
-          fitted splines, ground term drawn as a visible flat line at 0, thick solid
-          vs thin dashed by spin, markup-typeset labels per curve, same-symmetry terms
-          never crossing, near-square area with both axes at 0 and a light grid. The
-          crossover line is correctly absent for d3, and the example-complex marker
-          is optional.'
+        comment: 'Every Notes bullet met: single d3 configuration with C/B stated
+          in the subtitle, energies from diagonalized matrices rather than fitted
+          splines, ground term drawn as a visible flat line at E/B = 0, spin-allowed
+          thick solid vs spin-forbidden thin dashed, term symbols typeset with markup
+          near the right edge, avoided crossings preserved, near-square area with
+          both axes at 0 and a light grid; the crossover line and the example-complex
+          marker are not required for d3'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x = Delta_o/B over 0-40 (321 samples at 0.125 steps), y = E/B over
-          0-90 covering all curves. Marks sit at their computed values; only the two
-          converging labels carry a vertical offset, never the data.
+        comment: Delta_o/B on x (0-40), E/B on y (0-90) covering all data with headroom;
+          every point sits at its computed eigenvalue, no displacement pass (only
+          the two label annotations are offset, not the curves)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'line-tanabe-sugano · javascript · highcharts ·
-          anyplot.ai'. Legend disabled in favour of the per-curve end labels the spec
-          asks for; label text matches each series name.
+        comment: Title is exactly 'line-tanabe-sugano | javascript | highcharts |
+          anyplot.ai'; no legend is needed because each curve is labelled in place
+          with its term symbol in its own color, and the subtitle decodes solid vs
+          dashed
     data_quality:
       score: 15
       max: 15
@@ -196,25 +204,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Eight terms spanning both spin classes: a flat ground term, a strictly
-          linear 4T2g, two curved quartets with the 4T1g avoided-crossing behaviour,
-          and four doublets including the near-field-independent 2Eg / 2T1g pair that
-          makes the ruby R lines.'
+        comment: 8 term curves (inside the spec's 6-12) at 321 samples each (inside
+          200-400), both spin classes, the ground term, the 4T1g(F)/4T1g(P) avoided
+          crossing, and the near-degenerate 2Eg/2T1g pair are all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: d3 Cr3+ in an octahedral field at the textbook C/B = 4.5 - the spec's
-          own worked example, and chemically neutral.
+        comment: d3 Cr(III) in an octahedral field at C/B = 4.5 - the canonical textbook
+          case named by the spec, neutral science
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Delta_o/B 0-40 and E/B 0-90 are the conventional textbook ranges;
-          the highest curve tops out at 84 with modest headroom, and the four 2G-derived
-          doublets correctly converge at 4B + 3C = 17.5.
+        comment: 'Values check out against the literature: 4T2g and 4T1g(F) degenerate
+          with the ground term at Delta = 0, 4T1g(P) at the free-ion 15B, all 2G-derived
+          doublets at 17.5B for C/B = 4.5, 4T2g rising at exactly slope 1, 4T1g(P)
+          at slope ~2 reaching 84 at Delta_o/B = 40'
     code_quality:
       score: 9
       max: 10
@@ -223,80 +231,80 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: Linear top-to-bottom script with no classes, but two helper arrow
-          functions (`eigenvalues`, `termEnergies`) are defined - justified here,
-          since the solver has to run at every field-strength sample.
+        passed: false
+        comment: 'Data -> Plot order with no classes, but two helper arrow functions:
+          the eigensolver genuinely needs one, while termEnergies (lines 58-96) could
+          fold into the sweep loop'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: no RNG at all, every value comes from fixed
-          matrix elements at C/B = 4.5.'
+        comment: Fully deterministic - no RNG at all, every value computed from the
+          fixed matrices on a fixed 0.125 grid
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No import or require; uses only the harness globals ANYPLOT_TOKENS
-          and Highcharts, as the mount-node contract requires.
+        comment: No imports (correct - Highcharts and the tokens are globals), and
+          every constant declared is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: The ~35-line Jacobi solver is warranted - the core Highcharts bundle
-          ships no linear algebra and the library prompt explicitly allows short hand-written
-          computation. Comments explain the physics rather than the syntax, and no
-          fake UI is drawn.
+        comment: The Jacobi eigensolver is a hand-roll nothing available reproduces
+          (no JS linear algebra in the core bundle), which the rubric does not deduct;
+          no dead code, no duplicated blocks, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Honours the mount-node contract: Highcharts.chart("container", ...)
+        comment: 'Correct mount-node contract: Highcharts.chart(''container'', ...)
           with no explicit width/height, animation disabled on both chart and plotOptions.series,
-          credits off, and the //# anyplot-orientation: square directive on its own
-          line. The harness writes plot-{theme}.png and .html.'
+          no filesystem writes - the harness saves plot-{theme}.png/.html'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Pure high-level config-object Highcharts: top-level colors array,
+          plotOptions.series defaults, per-series lineWidth/dashStyle, chart.marginRight
+          to reserve label room, credits disabled, series built by mapping over the
+          term table'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic Highcharts config object throughout: top-level `colors`,
-          plotOptions.series defaults, per-series lineWidth and dashStyle, axis title/label
-          style objects from the theme tokens, and a declarative series map.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: 'Uses Highcharts-specific capabilities: a point-level dataLabels
-          override with useHTML, crop:false and overflow:"allow" to place labels outside
-          the plot area, HTML sup/sub markup in series names and axis titles, dashStyle
-          presets, and states.inactive.opacity for the interactive HTML. Stays within
-          the core bundle as required.'
+        comment: 'Several Highcharts-specific levers: per-point dataLabels with useHTML,
+          crop:false and overflow:''allow'' to place labels outside the plot area,
+          dashStyle ''ShortDash'', states.inactive.opacity to keep all curves lit
+          on hover, and an HTML tooltip with sub/superscript markup for the interactive
+          view'
   verdict: APPROVED
   model: claude-opus-5
   criteria_version: qc-08c3141e4a.aqr-cfd364e1ff.sg-7006008fc6.lib-b432d94054
-  rendered_at: '2026-10-01T19:57:24Z'
+  rendered_at: '2026-10-01T20:08:28Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
+  - html-export
   - hover-tooltips
+  - manual-ticks
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
+  - matrix-construction
   dataprep:
-  - eigendecomposition
+  - eigenvalue-decomposition
   styling:
   - publication-ready
   - grid-styling
