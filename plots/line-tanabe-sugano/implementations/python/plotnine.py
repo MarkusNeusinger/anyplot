@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-tanabe-sugano: Tanabe-Sugano Diagram for Crystal Field Theory
 Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 87/100 | Created: 2026-10-01
@@ -69,42 +69,54 @@ for (lower_term, upper_term), (first, mixing, second) in blocks.items():
     energies[lower_term], energies[upper_term] = np.linalg.eigvalsh(block).T
 
 # Every energy is measured from the ground term, which is flat at E/B = 0 by
-# construction; the two terms running off the top are left out of the window
+# construction; the upper partners of the avoided crossings keep climbing past
+# the top of the window, so they are clipped where they leave the frame
 terms = pd.DataFrame(energies, index=delta_over_b)
 terms = terms.sub(terms[ground_term], axis=0)
-terms = terms.loc[:, terms.max() <= 80]
 
 df = terms.stack().reset_index()
 df.columns = ["delta_over_b", "term", "energy_over_b"]
+df = df[df["energy_over_b"] <= 80]
 df["spin"] = pd.Categorical(
     np.where(df["term"].str.startswith("$^{3}"), "Spin-allowed (triplet)", "Spin-forbidden (singlet)"),
     categories=["Spin-allowed (triplet)", "Spin-forbidden (singlet)"],
     ordered=True,
 )
 
-# Term labels sit in a gutter right of the curves; the two 1D-derived terms stay
-# near-coincident all the way across, so their labels are nudged apart
-nudge = {
-    r"$^{1}E_{g}(D)$": 2.2,
-    r"$^{1}T_{2g}(D)$": -2.2,
-    r"$^{3}T_{2g}$": 1.2,
-    r"$^{1}A_{1g}(G)$": -1.2,
-    ground_term: 1.6,
-}
-curve_ends = df[df["delta_over_b"] == delta_over_b[-1]].copy()
-curve_ends["energy_over_b"] += curve_ends["term"].map(nudge).fillna(0.0)
+# Term labels sit in a gutter right of the curves, each at its own end value. The
+# two 1D-derived terms stay near-coincident all the way across and the two upper
+# partners leave the window, so those four are labelled along the curve instead,
+# each resting on the line it names — above it for the upper term of a pair,
+# below it for the lower one
+along_curve = {r"$^{1}E_{g}(D)$": 35.0, r"$^{1}T_{2g}(D)$": 22.0, r"$^{1}E_{g}(G)$": 30.0, r"$^{1}A_{1g}(S)$": 17.0}
+anchors = pd.DataFrame(
+    [
+        {
+            "delta_over_b": x,
+            "term": term,
+            "energy_over_b": terms[term].to_numpy()[np.searchsorted(delta_over_b, x)],
+            "spin": "Spin-forbidden (singlet)",  # all four along-curve terms are singlets
+        }
+        for term, x in along_curve.items()
+    ]
+)
+lower_of_pair = anchors["term"] == r"$^{1}T_{2g}(D)$"
+
+curve_ends = df[(df["delta_over_b"] == delta_over_b[-1]) & ~df["term"].isin(along_curve)].copy()
 curve_ends["delta_over_b"] = 41.2
 
 # Plot
 plot = (
     ggplot(df, aes("delta_over_b", "energy_over_b", group="term", color="spin"))
     + geom_line(aes(linetype="spin", size="spin"))
-    + geom_text(aes(label="term"), data=curve_ends, size=8, ha="left", show_legend=False)
+    + geom_text(aes(label="term"), data=curve_ends, size=10, ha="left", show_legend=False)
+    + geom_text(aes(label="term"), data=anchors[~lower_of_pair], size=10, ha="right", va="bottom", show_legend=False)
+    + geom_text(aes(label="term"), data=anchors[lower_of_pair], size=10, ha="right", va="top", show_legend=False)
     + scale_color_manual(values=[SPIN_ALLOWED, SPIN_FORBIDDEN])
     + scale_linetype_manual(values=["solid", "dashed"])
     + scale_size_manual(values=[1.7, 0.75])
     + scale_x_continuous(limits=(0, 47.5), breaks=range(0, 41, 5), expand=(0.008, 0))
-    + scale_y_continuous(limits=(0, 80), breaks=range(0, 81, 10), expand=(0.012, 0))
+    + scale_y_continuous(limits=(0, 80), breaks=range(0, 81, 10), expand=(0.022, 0))
     + labs(
         x="Ligand-field strength  $\\Delta_{o}/B$",
         y="Term energy  $E/B$",
@@ -128,8 +140,7 @@ plot = (
         axis_text=element_text(size=8, color=INK_SOFT),
         plot_title=element_text(size=12, color=INK),
         plot_subtitle=element_text(size=9, color=INK_SOFT),
-        legend_position="inside",
-        legend_position_inside=(0.26, 0.9),
+        legend_position="bottom",
         legend_background=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG),
         legend_key=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG),
         legend_key_width=26,
