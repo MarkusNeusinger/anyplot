@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
-Library: plotly 6.8.0 | Python 3.13.13
-Quality: pending | Updated: 2026-06-10
+Library: plotly 7.1.0 | Python 3.13.15
+Quality: 84/100 | Updated: 2026-10-01
 """
 
 import os
