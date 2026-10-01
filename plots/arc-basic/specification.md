@@ -29,8 +29,8 @@ An arc diagram arranges nodes along a single horizontal line and draws connectio
 ## What a good version looks like
 
 - A good version shows: all nodes on one horizontal line in the order the data gives, a position that comes from the sequence and not from data values, so there are no value axes or grid.
-- A good version shows: every connection as a smooth arc above the line joining its two nodes, its height growing with the distance between them, as the Notes ask, so long-range links rise above short-range ones.
+- A good version shows: every connection as a smooth arc above the line joining its two nodes, its height growing with the distance between them, as the Notes ask, so long-range links rise above short-range ones, unless height carries the weight, as the Data allows.
 - A good version shows: semi-transparent arcs where many connections overlap, as the Notes ask, so that single arcs can still be followed to both end nodes in both themes.
 - A good version shows: each node's label at its node along the line, readable, as the Notes ask, and not running into its neighbors.
-- A good version shows: the basic variant's single row of nodes and its arcs above the line, with the arc thickness by weight and the arc color by type or weight that the Data and Notes allow, and no reference lines, highlighted nodes or arcs, callouts, node sizing by a metric, arcs below the line or second row.
+- A good version shows: the basic variant's single row of nodes and its arcs above it, with the arc thickness or height by weight and the arc color by type or weight that the Data and Notes allow, and no reference lines, highlighted nodes or arcs, callouts, node sizing by a metric, arcs below the line or a second row.
 - Expected, not a defect: arcs that cross and nest, one or two tall arcs spanning most of the line above many low ones, arcs piling up at a well-connected node and empty space beside the tallest arcs.

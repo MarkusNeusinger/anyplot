@@ -30,7 +30,7 @@ A Venn diagram visualizes the logical relationships between two or three sets us
 ## What a good version looks like
 
 - A good version shows: two or three overlapping circles, one per set, each named by its set label at or outside its circle, with every pairwise overlap and, for three sets, the triple overlap present as its own region.
-- A good version shows: a count or a percentage in each region, as the Notes ask, giving the elements of that region alone and placed inside the region it belongs to.
+- A good version shows: a count or a percentage in each region, as the Notes ask, placed inside the region it belongs to and consistent with the set and intersection sizes in the data.
 - A good version shows: circle and overlap areas that follow the set and intersection sizes as far as circles permit, as the Notes ask, so a larger set is never the smaller circle; where the circles sit is a layout choice, not data.
 - A good version shows: one distinct translucent color per circle, as the Notes ask, so each overlap reads as a blend with its outlines visible, and region text readable against every fill in both themes.
 - A good version shows: the basic variant's circles, set labels and region counts or percentages: no further set, highlighted or outlined focus region, reference lines, callouts, or item names listed inside the regions.
