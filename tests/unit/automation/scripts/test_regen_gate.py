@@ -26,12 +26,16 @@ from automation.scripts.regen_gate import (
     WRITEBACK_CODES,
     GateInput,
     build_record,
+    call_count,
     characteristic_kind,
     checklist_scores,
     classify_improvements,
     decide,
+    is_cq04_code_defect,
+    is_removal,
     load_checklist_scores,
     load_weakness_classes,
+    load_weakness_texts,
     main,
     parse_characteristics,
     parse_record_markers,
@@ -40,7 +44,9 @@ from automation.scripts.regen_gate import (
     render_previous_review,
     render_record_marker,
     render_summary,
+    replacement_tokens,
     reset_header_score,
+    source_language,
     validate_record,
     validate_regen,
     weakness_class,
@@ -884,6 +890,7 @@ class TestGateRecord:
             "no_kind": 0,
             "carriers_pn": 0,
             "by_kind": {"fix": 2, "removal": 0, "addition": 0, "polish": 0, "none": 0},
+            "code": 0,
         }
         assert record["regressions"] == 0
         assert record["prev_model"] == "n/a"
@@ -2028,6 +2035,7 @@ class TestRecordCounts:
             "no_kind": 0,
             "carriers_pn": 0,
             "by_kind": {"fix": 7, "removal": 0, "addition": 0, "polish": 0, "none": 0},
+            "code": 0,
         }
         assert counts["visible"] == counts["carriers"] + counts["suggestion"]
         assert counts["unverified"] + counts["de_lm"] <= counts["suggestion"]
@@ -2507,3 +2515,371 @@ class TestCheckPrevReview:
         )
         assert code == 0
         assert "::warning::review_prev.json: verdict must be APPROVED or REJECTED" in out
+
+
+# ---------------------------------------------------------------------------
+# P8: the code-only path
+# ---------------------------------------------------------------------------
+
+CODE_LINE = (
+    "CQ-04 (code): lines 39–60 write out the ACF and a Durbin-Levinson PACF (22 lines) → "
+    '`acf(series, nlags=35)` and `pacf(series, nlags=35, method="ldb")` (statsmodels.tsa.stattools). '
+    "Likely cause: `np.sum` loops; statsmodels unused although lib-plotly installs it."
+)
+REMOVE_LINE = "CQ-04 (code): lines 80–120 define a legend helper that is never called → remove it. Likely cause: x."
+LEGACY_CQ = "CQ-04: code is somewhat verbose, the ACF could use statsmodels"
+PREV_SOURCE = "import numpy as np\n" + "".join(f"acf_values[{i}] = np.sum(x[:n - {i}] * x[{i}:])\n" for i in range(30))
+NEW_SOURCE = "import numpy as np\nfrom statsmodels.tsa.stattools import acf, pacf\n" + (
+    "acf_values = acf(series, nlags=35)\npacf_values = pacf(series, nlags=35, method='ldb')\n"
+)
+CODE_ITEM = {"ref": "W1", "what": "ACF/PACF via statsmodels", "where_in_code": "prev lines 39–60 → new lines 3–4"}
+
+
+def _code_regen(**overrides) -> dict:
+    """No visible improvement; W1 is a CQ-04 defect the re-score deducts (1 of 2)."""
+    payload = _regen(
+        prev_checklist={**PREV_CHECKLIST, "CQ-04": 1},
+        prev_weaknesses=[{"ref": "W1", "class": "defect", "rule": "CQ-04"}],
+        improvements=[],
+        code_improvements=[dict(CODE_ITEM)],
+    )
+    payload.update(overrides)
+    payload["improvements"] = _with_kind(payload["improvements"])
+    return payload
+
+
+def _code_inp(regen=None, **overrides) -> GateInput:
+    fields = {
+        "regen": _code_regen() if regen is None else regen,
+        "weakness_texts": {"W1": CODE_LINE, "W2": DEFECT_LINE, "W3": LEGACY_CQ},
+        "prev_source": PREV_SOURCE,
+        "new_source": NEW_SOURCE,
+    }
+    fields.update(overrides)
+    score = fields.pop("score", 85)
+    return _inp(score, **fields)
+
+
+class TestCodePath:
+    def test_merges_with_no_visible_improvement(self):
+        result = decide(_code_inp())
+        assert (result.verdict, result.code) == (MERGE, "merge")
+        assert result.reason.startswith("code path: W1 (CQ-04, fix) fixed, 31 → 4 lines, no carrier")
+        assert [c["counted"] for c in result.code_improvements] == [True]
+        assert (
+            build_record(result, spec_id="acf-pacf", library="plotly", score=85, prev_stored=91)["improvements"]["code"]
+            == 1
+        )
+
+    def test_merges_with_visible_suggestions_riding_along(self):
+        """The base-style case: the regeneration also aligned fonts, which the re-score lists as suggestions."""
+        regen = _code_regen(
+            improvements=[{"ref": "P1", "rule": "DE-02", "what": "fonts aligned", "where_visible": "both renders"}]
+        )
+        result = decide(_code_inp(regen))
+        assert result.verdict == MERGE and result.reason.startswith("code path: W1")
+
+    def test_a_removal_needs_no_call(self):
+        result = decide(_code_inp(weakness_texts={"W1": REMOVE_LINE}))
+        assert result.verdict == MERGE
+        assert result.code_improvements[0]["kind"] == "removal"
+
+    @pytest.mark.parametrize(
+        ("change", "why"),
+        [
+            ({"regen": {"code_improvements": [{**CODE_ITEM, "ref": "P1"}]}}, "only a W id"),
+            ({"regen": {"code_improvements": [{**CODE_ITEM, "ref": "new"}]}}, "only a W id"),
+            ({"regen": {"code_improvements": [{**CODE_ITEM, "ref": "W9"}]}}, "not a weakness id"),
+            ({"regen": {"prev_weaknesses": [{"ref": "W1", "class": "suggestion"}]}}, "classed suggestion"),
+            ({"regen": {"prev_weaknesses": [{"ref": "W1", "class": "obsolete", "rule": "C2"}]}}, "classed obsolete"),
+            ({"regen": {"prev_weaknesses": [{"ref": "W1", "class": "defect", "rule": "CQ-01"}]}}, "(CQ-01)"),
+            ({"regen": {"prev_checklist": dict(PREV_CHECKLIST)}}, "did not score higher (2 → 2)"),
+            ({"new_checklist": {**NEW_CHECKLIST, "CQ-04": 1}}, "did not score higher (1 → 1)"),
+            ({"weakness_texts": {"W1": LEGACY_CQ}}, "not a 'CQ-04 (code)' defect line"),
+            ({"weakness_texts": {"W1": "CQ-04 (both): verbose → `acf()`. Likely cause: x."}}, "defect line"),
+            ({"weakness_texts": {"W1": "Suggestion: use `acf()`"}}, "defect line"),
+            ({"weakness_texts": {"W1": "CQ-04 (code): verbose ACF → shorter. Likely cause: x."}}, "no call"),
+            ({"new_source": "".join(PREV_SOURCE.splitlines(keepends=True)[:10])}, "not called more often"),
+            ({"new_source": PREV_SOURCE + "x = 1\n"}, "not shorter"),
+            ({"new_source": NEW_SOURCE * 8}, "not shorter"),
+            ({"regen": {"code_improvements": [{**CODE_ITEM, "where_in_code": " "}]}}, "non-empty what"),
+            ({"regen": {"code_improvements": ["W1"]}}, "not an object"),
+            ({"regen": {"scenario_changed": True}}, "unchanged data scenario"),
+            ({"regen": {"encodings_added": ["color by lag sign"]}}, "no added encodings"),
+            ({"prev_source": None}, "code path off"),
+            ({"new_source": None}, "code path off"),
+        ],
+    )
+    def test_not_counted_keeps_with_p3s_code(self, change, why):
+        change = dict(change)
+        regen = _code_regen(**change.pop("regen", {}))
+        result = decide(_code_inp(regen, spec_id="acf-pacf", **change))
+        assert result.verdict == KEEP
+        assert result.code == "no_visible_improvement"
+        assert "code path: nothing counted" in result.reason and why in result.reason
+        assert not any(c["counted"] for c in result.code_improvements)
+
+    def test_a_call_the_predecessor_already_made_is_not_new(self):
+        prev = PREV_SOURCE + "a = acf(series)\nb = pacf(series)\n"
+        new = NEW_SOURCE + "c = acf(other)\n"  # acf 2 → 2, pacf 1 → 1
+        assert (
+            decide(_code_inp(prev_source=prev, new_source=new.replace("pacf(series, nlags=35", "pacf(series"))).verdict
+            == MERGE
+        )
+        same = decide(_code_inp(prev_source=prev + "d = acf(x)\n", new_source=NEW_SOURCE))
+        assert same.verdict == KEEP and "not called more often" in same.reason
+
+    def test_suggestions_only_keep_with_no_defect_improvement(self):
+        regen = _code_regen(
+            improvements=[{"ref": "P1", "rule": "DE-02", "what": "fonts", "where_visible": "both renders"}],
+            prev_weaknesses=[{"ref": "W1", "class": "suggestion"}],
+        )
+        result = decide(_code_inp(regen))
+        assert (result.verdict, result.code) == (KEEP, "no_defect_improvement")
+        assert "code path: nothing counted — W1: classed suggestion" in result.reason
+
+    def test_below_tolerance(self):
+        result = decide(_code_inp(score=80, regen=_code_regen(prev_rescored=85)))
+        assert (result.verdict, result.code) == (KEEP, "below_tolerance")
+
+    def test_a_regression_beats_the_code_path(self):
+        regen = _code_regen(regressions=[{"what": "legend lost", "where_visible": "both renders"}])
+        assert decide(_code_inp(regen)).code == "regression"
+
+    def test_basic_spec_scenario_change_is_a_regression_first(self):
+        result = decide(_code_inp(_code_regen(scenario_changed=True), spec_id="bubble-basic"))
+        assert result.code == "regression"
+
+    def test_a_carrier_takes_the_carrier_path_and_the_code_fix_rides_along(self):
+        regen = _code_regen(
+            prev_checklist={**PREV_CHECKLIST, "CQ-04": 1},
+            prev_weaknesses=[
+                {"ref": "W1", "class": "defect", "rule": "CQ-04"},
+                {"ref": "W2", "class": "defect", "rule": "VQ-03"},
+            ],
+            improvements=[{"ref": "W2", "what": "legend", "where_visible": "size legend, both renders"}],
+        )
+        result = decide(_code_inp(regen))
+        assert result.verdict == MERGE and "1 carrying (W2)" in result.reason
+        record = build_record(result, spec_id="s", library="b", score=85, prev_stored=90)
+        assert (record["improvements"]["carriers"], record["improvements"]["code"]) == (1, 1)
+        assert "_(rides along)_" in render_summary(result, "90", 85)
+
+    def test_without_the_sources_every_p3_verdict_stands(self):
+        """Flags absent: a code_improvements list changes no verdict, code or merge reason."""
+        for regen in (_regen(), _regen(improvements=[]), _regen(prev_weaknesses=[])):
+            base = decide(_inp(regen=regen))
+            with_code = decide(_inp(regen={**regen, "code_improvements": [dict(CODE_ITEM)]}))
+            assert (with_code.verdict, with_code.code) == (base.verdict, base.code)
+            assert with_code.reason.startswith(base.reason)
+            assert decide(_inp(regen=regen)).reason == base.reason
+
+    @pytest.mark.parametrize("bad", [None, "W1", {"ref": "W1"}, [None], [{"ref": 5}]])
+    def test_a_malformed_list_never_invalidates_the_file(self, bad):
+        result = decide(_code_inp(_regen(code_improvements=bad)))
+        assert result.code != "regen_json_invalid"
+        assert (result.verdict, result.code) == (MERGE, "merge")  # the carrier fixture W2 still carries
+        assert not any(c["counted"] for c in result.code_improvements)
+
+    def test_lower_case_refs_are_coerced(self):
+        result = decide(_code_inp(_code_regen(code_improvements=[{**CODE_ITEM, "ref": "w1"}])))
+        assert result.verdict == MERGE and result.coerced and "code ref 'w1' -> 'W1'" in result.reason
+
+    def test_summary_lists_the_code_improvements_and_the_size(self):
+        summary = render_summary(decide(_code_inp()), "91", 85)
+        assert "**Code improvements**" in summary
+        assert (
+            "- `W1` ACF/PACF via statsmodels — prev lines 39–60 → new lines 3–4 _(code path: counted, fix)_" in summary
+        )
+        assert "**Code size:** 31 → 4 lines" in summary
+        kept = render_summary(decide(_code_inp(weakness_texts={"W1": LEGACY_CQ})), "91", 85)
+        assert "_(not counted: its stored line is not a 'CQ-04 (code)' defect line)_" in kept
+
+    def test_record_without_code_path_counts_zero_and_old_parsers_accept_it(self):
+        record = build_record(decide(_inp()), spec_id="s", library="b", score=85, prev_stored=90)
+        assert record["improvements"]["code"] == 0
+        assert validate_record(record) == []
+        assert set(record) <= RECORD_KEYS
+
+
+class TestCodeHelpers:
+    @pytest.mark.parametrize(
+        ("text", "expected"),
+        [
+            (CODE_LINE, True),
+            ("CQ-01, CQ-04 (code): a helper function computes the KDE → `gaussian_kde()`. Likely cause: x.", True),
+            ("CQ-04 (both): verbose → `acf()`. Likely cause: x.", False),
+            (LEGACY_CQ, False),
+            ("Suggestion: `acf()` would be shorter", False),
+            ("VQ-03 (code): x → y. Likely cause: z.", False),
+        ],
+    )
+    def test_is_cq04_code_defect(self, text, expected):
+        assert is_cq04_code_defect(text) is expected
+
+    @pytest.mark.parametrize(
+        ("text", "tokens"),
+        [
+            (CODE_LINE, ["acf", "pacf"]),
+            ("CQ-04 (code): lines 3–20 → `stats::acf()` (base R). Likely cause: x.", ["acf"]),
+            ("CQ-04 (code): lines 3–20 → `density!(ax, x)` (Makie). Likely cause: x.", ["density!"]),
+            ("CQ-04 (code): lines 3–20 → `d3.bin()` (d3). Likely cause: `manualBins`.", ["bin"]),
+            ("CQ-04 (code): lines 3–20 → `scipy.stats.gaussian_kde` (SciPy). Likely cause: x.", ["gaussian_kde"]),
+            ("CQ-04 (code): lines 3–20 → the `{type: 'boxplot'}` transform. Likely cause: x.", []),
+            ("CQ-04 (code): `x` lines 3–20 without arrow", []),
+            ('CQ-04 (code): lines 5–15 → `df["v"].rolling(7).mean()` (pandas). Likely cause: x.', ["rolling", "mean"]),
+            ("CQ-04 (code): lines 5–15 → `gaussian_kde(v)(np.linspace(0, 1, 50))`. Likely cause: x.", ["gaussian_kde"]),
+            ("CQ-04 (code): lines 10–30 map `x -> y` by hand → `d3.rollup()` (d3). Likely cause: x.", ["rollup"]),
+        ],
+    )
+    def test_replacement_tokens(self, text, tokens):
+        assert replacement_tokens(text) == tokens
+
+    def test_is_removal_and_call_count(self):
+        assert is_removal(REMOVE_LINE) and is_removal("CQ-04 (code): x -> delete the dead branch. Likely cause: y.")
+        assert not is_removal(CODE_LINE)
+        assert not is_removal("CQ-04 (code): x → `remove_outliers()` helper. Likely cause: y.")
+
+    @pytest.mark.parametrize(
+        ("language", "source", "count"),
+        [
+            # A comment that spells the call is not the call (Copilot, #12005).
+            ("python", "# use acf(series)\nx = 1\n", 0),
+            ("python", "x = np.sum(a)  # acf(series) would do\n", 0),
+            ("r", "#' acf(series)\nx <- 1 # acf(x)\n", 0),
+            ("julia", "# acf(series)\n#= acf(a)\n #= acf(b) =#\nacf(c) =#\nx = 1\n", 0),
+            ("javascript", "// acf(series)\n/* acf(a)\n * acf(b)\n */\nconst x = 1; // acf(c)\n", 0),
+            # Neither is a string literal.
+            ("python", 't = \'acf(x)\'\nu = "acf(y)"\nv = f"{acf(z)}"\n', 0),
+            ("python", '"""Docstring.\n\nacf(series) by hand.\n"""\nx = 1\n', 0),
+            ("r", "t <- 'acf(x)'\nu <- \"acf(\ny)\"\n", 0),
+            ("julia", 't = "acf(x)"\nu = """\nacf(y)\n"""\n', 0),
+            ("javascript", "const t = 'acf(x)', u = \"acf(y)\", v = `acf(${acf(z)})\nacf(w)`;\n", 0),
+            # Neither is a definition: a hand-roll named after the call it imitates.
+            ("python", "def acf(x):\n    return 1\n", 0),
+            ("python", "async def acf(x):\n    return 1\nclass acf(Base):\n    pass\n", 0),
+            ("r", "acf <- function(x) {\n  1\n}\n", 0),
+            ("julia", "function acf(x)\n    1\nend\nacf(x) = 1\nacf(x::Vector{T}) where {T} = 1\n", 0),
+            ("javascript", "function acf(x) {}\nasync function* acf(y) {}\nconst acf = (x) => 1;\n", 0),
+            ("javascript", "class A {\n  acf(x) {\n  }\n  static async acf(y): number {\n  }\n}\n", 0),
+            # The call itself counts, next to all of the above.
+            ("python", "# acf(a)\ndef acf(x):\n    return 'acf(b)'\nv = acf(series)\n", 1),
+            ("python", "a = acf(x)\nb = stattools.acf (y)\nc = pacf(z)\nd = 7 // acf(w)\n", 3),
+            ("python", "s = 'it''s'\nv = acf(x)  # '\nw = acf(y)\n", 2),
+            ("r", "v <- stats::acf(x, plot = FALSE)  # 'quoted\nw <- acf(y)\n", 2),
+            ("julia", "v = acf(x') * acf(y)'\nc = 'a'; w = acf(z)\nacf(q) == 1\n", 4),
+            ("javascript", "const v = d3.acf(x); if (acf(y)) {\n}\nconst u = 'a' + acf(z) + \"b\";\n", 3),
+        ],
+    )
+    def test_call_count_reads_executable_text_only(self, language, source, count):
+        assert call_count(source, "acf", language) == count
+
+    def test_a_comment_or_a_definition_alone_does_not_carry_the_code_path(self):
+        for extra in ("# use acf(series)\n", "note = 'acf(series)'\n", "def acf(series):\n    return series\n"):
+            new = "import numpy as np\n" + extra + "v = np.correlate(x, x)\n"
+            result = decide(_code_inp(new_source=new))
+            assert result.verdict == KEEP and "not called more often" in result.reason
+        julia = decide(_code_inp(new_source="acf(x) = sum(x)\n# pacf(x)\n", source_language="julia"))
+        assert julia.verdict == KEEP and "not called more often" in julia.reason
+
+    def test_source_language(self):
+        assert [source_language(p) for p in ("/tmp/anyplot-prev-impl.py", "plots/s/implementations/r/ggplot2.R")] == [
+            "python",
+            "r",
+        ]
+        assert [source_language(p) for p in ("a/makie.jl", "a/d3.js", "a/muix.tsx")] == [
+            "julia",
+            "javascript",
+            "javascript",
+        ]
+        assert source_language("a/notes.txt") is None and source_language("") is None
+
+    def test_line_counts_on_an_early_keep(self):
+        result = decide(_code_inp(canvas_failed=True))
+        assert (result.code, result.prev_lines, result.new_lines) == ("canvas_failed", 31, 4)
+        assert decide(_inp(canvas_failed=True)).prev_lines is None
+        assert call_count("a = acf(x)\nb = stattools.acf (y)\nc = pacf(z)", "acf") == 2
+        assert call_count("density!(ax, x)", "density!") == 1
+
+    def test_load_weakness_texts(self, tmp_path):
+        path = tmp_path / "w.json"
+        path.write_text(json.dumps([{"id": "W1", "text": CODE_LINE, "class": "defect"}, {"id": "W2"}, 3]))
+        assert load_weakness_texts(path) == {"W1": CODE_LINE}
+        assert load_weakness_texts(tmp_path / "missing.json") == {}
+
+
+class TestCodePathCli:
+    def _run(self, tmp_path, monkeypatch, capsys, *, prev_text=PREV_SOURCE, with_flags=True, ext=".py"):
+        monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
+        (tmp_path / "review_regen.json").write_text(json.dumps(_code_regen()), encoding="utf-8")
+        (tmp_path / "review_checklist.json").write_text(json.dumps(_checklist_json(NEW_CHECKLIST)), encoding="utf-8")
+        weak = [
+            {"id": "W1", "text": CODE_LINE, "class": "defect"},
+            {"id": "W2", "text": DEFECT_LINE, "class": "defect"},
+        ]
+        (tmp_path / "weak.json").write_text(json.dumps(weak), encoding="utf-8")
+        (tmp_path / "prev.py").write_text(prev_text, encoding="utf-8")
+        (tmp_path / f"new{ext}").write_text(NEW_SOURCE, encoding="utf-8")
+        args = ["decide", "--spec-id", "acf-pacf", "--library", "plotly", "--score", "85", "--prev-stored", "91"]
+        args += ["--regen-json", str(tmp_path / "review_regen.json"), "--weaknesses-json", str(tmp_path / "weak.json")]
+        args += ["--prev-renders", "available", "--record-out", str(tmp_path / "record.json")]
+        if with_flags:
+            args += ["--prev-impl", str(tmp_path / "prev.py"), "--new-impl", str(tmp_path / f"new{ext}")]
+        assert main(args) == 0
+        out = capsys.readouterr().out
+        notice = next(line for line in out.splitlines() if line.startswith("::notice::regen_gate"))
+        return notice, json.loads((tmp_path / "record.json").read_text())
+
+    def test_flags_turn_the_code_path_on(self, tmp_path, monkeypatch, capsys):
+        notice, record = self._run(tmp_path, monkeypatch, capsys)
+        assert " verdict=merge code=merge prev_lines=31 new_lines=4 reason=code path: W1" in notice
+        assert record["improvements"]["code"] == 1 and record["improvements"]["carriers"] == 0
+
+    def test_old_argument_set_keeps_the_old_notice(self, tmp_path, monkeypatch, capsys):
+        notice, record = self._run(tmp_path, monkeypatch, capsys, with_flags=False)
+        assert " code=no_visible_improvement reason=" in notice and "prev_lines=" not in notice
+        assert record["improvements"]["code"] == 0
+
+    def test_an_unreadable_or_oversized_source_turns_the_path_off(self, tmp_path, monkeypatch, capsys):
+        notice, _ = self._run(tmp_path, monkeypatch, capsys, prev_text="x\n" * 600_000)
+        assert " code=no_visible_improvement prev_lines=n/a new_lines=n/a reason=" in notice
+        assert "code path off" in notice
+
+    @pytest.mark.parametrize("ext", [".txt", ".jl"])
+    def test_an_unknown_or_a_different_language_turns_the_path_off(self, tmp_path, monkeypatch, capsys, ext):
+        notice, _ = self._run(tmp_path, monkeypatch, capsys, ext=ext)
+        assert " code=no_visible_improvement prev_lines=n/a new_lines=n/a reason=" in notice
+        assert "code path off" in notice
+
+
+class TestCodeFeedback:
+    def test_a_clean_entry_passes(self, tmp_path, capsys):
+        regen = _code_regen(prev_weaknesses=[{"ref": f"W{i}", "class": "suggestion"} for i in (2, 3)])
+        regen["prev_weaknesses"].insert(0, {"ref": "W1", "class": "defect", "rule": "CQ-04"})
+        code, out = _feedback(
+            tmp_path, capsys, checklist=NEW_CHECKLIST, regen=regen, prev=[CODE_LINE, DEFECT_LINE, "Suggestion: x"]
+        )
+        assert "code improvement" not in out, out
+
+    @pytest.mark.parametrize(
+        ("entries", "classes", "texts", "message"),
+        [
+            ([{**CODE_ITEM, "ref": "P1"}], None, None, "must cite a W id of the previous review"),
+            ([dict(CODE_ITEM)], [{"ref": "W1", "class": "suggestion"}], None, "cites a W you classed suggestion"),
+            ([{**CODE_ITEM, "what": ""}], None, None, "needs a non-empty what"),
+            ([dict(CODE_ITEM)], None, [LEGACY_CQ], "is not a 'CQ-04 (code): …' defect line"),
+            ("W1", None, None, "code_improvements must be a list"),
+        ],
+    )
+    def test_problems(self, tmp_path, capsys, entries, classes, texts, message):
+        regen = _code_regen(code_improvements=entries)
+        if classes is not None:
+            regen["prev_weaknesses"] = classes
+        _, out = _feedback(tmp_path, capsys, checklist=NEW_CHECKLIST, regen=regen, prev=texts or [CODE_LINE])
+        assert message in out, out
+
+    def test_the_claim_must_show_in_the_scores(self, tmp_path, capsys):
+        _, out = _feedback(
+            tmp_path, capsys, checklist={**NEW_CHECKLIST, "CQ-04": 1}, regen=_code_regen(), prev=[CODE_LINE]
+        )
+        assert "code improvement 1 (W1) claims CQ-04, but your checklist for the new render gives CQ-04 1" in out

@@ -200,7 +200,7 @@ Read `prompts/quality-criteria.md` and evaluate:
 | CQ-01 | KISS Structure | 3 | No functions/classes? |
 | CQ-02 | Reproducibility | 2 | Seed or deterministic? |
 | CQ-03 | Clean Imports | 2 | Only used imports? |
-| CQ-04 | Code Elegance | 2 | Appropriate complexity? No fake UI? |
+| CQ-04 | Code Elegance | 2 | Appropriate complexity? No fake UI? No algorithm written out that an available call computes (`quality-criteria.md` → CQ-04 → Available to compute with, and the library prompt's Computation line)? Nothing a named shorter form replaces? Name the call and the line range. |
 | CQ-05 | Output & API | 1 | Saves as `plot-{THEME}.png` (+ `plot-{THEME}.html` for interactive libs)? No bare `plot.png`? Current API? |
 
 #### Library Mastery (10 pts)
@@ -263,7 +263,7 @@ Your job is an honest comparison; the gate does the arithmetic. Workflow variabl
 1. **Re-score the predecessor.** If `PREV_RENDERS` is `missing`, skip steps 1–5, do not write `review_regen.json` or `review_prev.json`, and say so in the comment (the gate keeps the live implementation). Otherwise open `PREV_RENDER_LIGHT` and `PREV_RENDER_DARK` (the production renders currently on the website) and `/tmp/anyplot-prev-impl${EXT}` (their source — its header reads `Quality: hidden/100` on purpose; do not look the stored score up elsewhere, for example in main's metadata or git history), and score them against the **same** criteria — steps 5c–8, same score caps, same calibration. The result is `prev_rescored`, and its 24 item scores are `prev_checklist` (`{"VQ-01": 7, "VQ-02": 4, …}`: every criterion, each an integer from 0 to its maximum). Number the predecessor's *defects* you find (8a) `P1`, `P2`, … and name the rule each one violates: the criterion, or the `C` id of an `A good version shows:` bullet. They become the defect lines of `review_prev.json` (step 5), except the ones step 3 lists as an `addition` or `polish`.
 2. **Read the previous review** `/tmp/anyplot-prev-review.md`. Its weaknesses carry stable ids `W1`..`Wn`, each tagged `(defect)`, `(suggestion)` or `(older review)`. When it has a "Characteristic bullets" list (`C1`..`Cn`, taken from the spec's "What a good version looks like" section), its `A good version shows:` bullets are properties a good version must show; its `Expected, not a defect:` bullets are permissions and can never be an improvement `ref`. When the list is absent, there are no `C` ids — never invent one.
 
-   Then **classify every `W`**, looking at the predecessor's renders only (not the new ones), as one of:
+   Then **classify every `W`**, looking at the predecessor's renders only (or its source, `/tmp/anyplot-prev-impl${EXT}`, for CQ items; not the new ones), as one of:
    - `defect` — the predecessor's render visibly violates a named rule (8a). `rule` is the criterion, or the `C` id of the `A good version shows:` bullet it violates.
    - `suggestion` — it names no violated rule (8a), or the predecessor does not show it.
    - `obsolete` — an `Expected, not a defect:` bullet covers it: it asks for less of something that bullet permits. `rule` is that bullet's `C` id.
@@ -283,7 +283,8 @@ Your job is an honest comparison; the gate does the arithmetic. Workflow variabl
    - `scenario_changed` — `true` when the data story (domain, variables, labels) was replaced rather than refined.
    - `encodings_added` — visual encodings the new version maps that the predecessor did not, beyond what the spec's Data, Notes or characteristic section ask for (for example `"color by region"`, `"trend line"`, `"facets"`); a required element the predecessor lacked is an improvement, not an addition. Empty list when none.
    - `change_request_applied` — when `/tmp/anyplot-change-request.txt` exists, `true` if the new version applies that request, `false` if not; `null` when the file does not exist.
-   - Code size: `PREV_LINES` → `NEW_LINES`. A large growth without a visible change is a note for the comparison section and, when your checklist deducts CQ-04 for it, a `CQ-04 (code): …` defect in `weaknesses` (so the next regeneration sees it). It is not a regression and not a gate condition.
+   - **Code improvement** — a `W` you classed `defect` with rule `CQ-04` whose named replacement the new source applies: the named lines are gone, and the named call is used or the dead code is removed. The render must show the same result. List it under `code_improvements`, with `where_in_code` naming the predecessor's line range and the new line, for example "prev lines 39–60 → new lines 39–40 `acf(series, nlags=35)`, `pacf(series, nlags=35, method="ldb")`". Only `W` ids qualify: a code issue you numbered yourself while re-scoring (a `P` id) is never a code improvement. List a code fix under `code_improvements` only; code-only changes still never go under `improvements`.
+   - Code size: `PREV_LINES` → `NEW_LINES`. Growth without a visible change is scored in the new implementation's CQ-04 when you can name what to remove. It is not a regression.
 4. **Write `review_regen.json`** (repository root, next to the other review files) and check that it parses:
 
 ```json
@@ -307,6 +308,7 @@ Your job is an honest comparison; the gate does the arithmetic. Workflow variabl
     {"ref": "P1", "rule": "VQ-02", "kind": "fix", "what": "Size-legend value labels clear of their reference bubbles", "where_visible": "size legend, both renders"},
     {"ref": "C3", "kind": "fix", "what": "Overlapping bubbles now have a thin outline", "where_visible": "dense cluster, both renders"}
   ],
+  "code_improvements": [],
   "regressions": [],
   "scenario_changed": false,
   "encodings_added": [],
@@ -314,7 +316,7 @@ Your job is an honest comparison; the gate does the arithmetic. Workflow variabl
 }
 ```
 
-`regressions` entries use `{"what": "...", "where_visible": "..."}`. Every `W` ref must be an id from `/tmp/anyplot-prev-review.md`, and every `C` ref an id of an `A good version shows:` bullet from its characteristic list — an unknown id makes the whole file invalid and the gate keeps the live implementation, and the gate does not count an improvement that cites an `Expected, not a defect:` bullet. Classification entries never invalidate the file: a missing or malformed `prev_weaknesses` entry leaves that `W` unclassified, and an unclassified `W` counts as a suggestion. Report regressions even when you also found improvements; the gate needs both.
+`regressions` entries use `{"what": "...", "where_visible": "..."}`. `code_improvements` entries use `{"ref", "what", "where_in_code"}`; a `W` ref must be an id from `/tmp/anyplot-prev-review.md`, and a slip there never invalidates the file. Every `W` ref in `improvements` must be an id from `/tmp/anyplot-prev-review.md`, and every `C` ref an id of an `A good version shows:` bullet from its characteristic list — an unknown id makes the whole file invalid and the gate keeps the live implementation, and the gate does not count an improvement that cites an `Expected, not a defect:` bullet. Classification entries never invalidate the file: a missing or malformed `prev_weaknesses` entry leaves that `W` unclassified, and an unclassified `W` counts as a suggestion. Report regressions even when you also found improvements; the gate needs both.
 
 5. **Write `review_prev.json`** (repository root, after `review_regen.json` parses): your re-score of the predecessor as a full review. When the gate keeps the live implementation, this file becomes its stored review, and the next regeneration starts from it. So write it as a standalone review of the predecessor: never mention the new render, the comparison, or the regeneration. Writing it changes nothing you decided above; `prev_rescored`, `prev_checklist`, and the comparison stay as they are.
    - `image_description` — step 10's template, for the predecessor's production renders (`PREV_RENDER_LIGHT` is its light render, `PREV_RENDER_DARK` its dark one).
@@ -417,6 +419,7 @@ Use this EXACT format:
 **Predecessor defects:** P1 (VQ-02) the size legend's "500" label overlaps its reference bubble, …
 **Previous weaknesses:** W1 obsolete (C2) · W2 suggestion · W3 defect (VQ-07)
 **Improvements:** `W3` Sporting Goods moved off the red loss anchor — legend and bubbles, both renders
+**Code improvements:** none
 **Regressions:** none
 **Scenario changed:** no · **Encodings added:** none · **Change request applied:** n/a
 **Code size:** ${PREV_LINES} → ${NEW_LINES} lines
@@ -485,7 +488,7 @@ EOF
 # 24 prev_checklist items, one prev_weaknesses entry per W). Missing or
 # malformed = the regen gate keeps the live implementation — so check that it parses.
 cat > review_regen.json << 'EOF'
-{"prev_rescored": 84, "prev_checklist": {"VQ-01": 7, "VQ-02": 4, "VQ-03": 6, "VQ-04": 2, "VQ-05": 4, "VQ-06": 2, "VQ-07": 1, "DE-01": 5, "DE-02": 4, "DE-03": 3, "SC-01": 5, "SC-02": 4, "SC-03": 3, "SC-04": 3, "DQ-01": 6, "DQ-02": 4, "DQ-03": 4, "CQ-01": 3, "CQ-02": 2, "CQ-03": 2, "CQ-04": 2, "CQ-05": 1, "LM-01": 4, "LM-02": 3}, "prev_weaknesses": [{"ref": "W1", "class": "obsolete", "rule": "C2"}, {"ref": "W2", "class": "suggestion"}, {"ref": "W3", "class": "defect", "rule": "VQ-07"}], "improvements": [{"ref": "W3", "kind": "fix", "what": "...", "where_visible": "..."}, {"ref": "P1", "rule": "VQ-02", "kind": "fix", "what": "...", "where_visible": "..."}], "regressions": [], "scenario_changed": false, "encodings_added": [], "change_request_applied": null}
+{"prev_rescored": 84, "prev_checklist": {"VQ-01": 7, "VQ-02": 4, "VQ-03": 6, "VQ-04": 2, "VQ-05": 4, "VQ-06": 2, "VQ-07": 1, "DE-01": 5, "DE-02": 4, "DE-03": 3, "SC-01": 5, "SC-02": 4, "SC-03": 3, "SC-04": 3, "DQ-01": 6, "DQ-02": 4, "DQ-03": 4, "CQ-01": 3, "CQ-02": 2, "CQ-03": 2, "CQ-04": 2, "CQ-05": 1, "LM-01": 4, "LM-02": 3}, "prev_weaknesses": [{"ref": "W1", "class": "obsolete", "rule": "C2"}, {"ref": "W2", "class": "suggestion"}, {"ref": "W3", "class": "defect", "rule": "VQ-07"}], "improvements": [{"ref": "W3", "kind": "fix", "what": "...", "where_visible": "..."}, {"ref": "P1", "rule": "VQ-02", "kind": "fix", "what": "...", "where_visible": "..."}], "code_improvements": [], "regressions": [], "scenario_changed": false, "encodings_added": [], "change_request_applied": null}
 EOF
 python3 -c "import json; json.load(open('review_regen.json'))"
 
@@ -568,6 +571,7 @@ The 5 dimensions:
 - Every weakness line is a defect (`<ID> (<light|dark|both|code>): …`, a violated rule the next generation fixes) or a `Suggestion: …` line (at most three, never acted on) — see 8a. A behavior is never both a strength and a weakness
 - Never write a defect that asks to add something the spec does not ask for, and never list something an `Expected, not a defect:` bullet of the spec's "What a good version looks like" section names. Phrase an overlap defect so that its fix is data generation, marker size or alpha — never moving marks off their values
 - On a `-basic` spec, never suggest a layer the spec does not ask for, such as a reference line, a highlight or a callout; removing one is the fix
+- Installed packages are not dependencies to avoid; never credit a hand-roll for avoiding one
 - Mark criteria as N/A when not applicable (e.g., legend for single-series)
 - **Score strictly**: median implementation should score 72-78, not 90+
 - **Design Excellence defaults are low**: DE-01=4, DE-02=2, DE-03=2 — raise only with evidence

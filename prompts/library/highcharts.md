@@ -37,6 +37,10 @@ sankey, networkgraph, heatmap, …), or `highcharts-3d`: they are **not loaded**
 If a spec needs a series type that lives in one of those add-on modules, return
 `NOT_FEASIBLE` rather than `import`ing it (there is no import — see Forbidden).
 
+**Computation:** the core bundle has no statistics helpers: the histogram and
+bell-curve series live in modules that are not loaded, so hand-written binning,
+box statistics and densities are fine. Keep them short.
+
 ## The mount-node contract (how your snippet connects to the harness)
 
 The harness gives you a pre-sized `<div id="container">` and these globals (the

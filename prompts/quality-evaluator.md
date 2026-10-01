@@ -261,7 +261,7 @@ Only award full points (5/5) for real, neutral contexts:
 | CQ-01 | KISS Structure | 3 | No functions/classes? |
 | CQ-02 | Reproducibility | 2 | Fixed seed or deterministic? |
 | CQ-03 | Clean Imports | 2 | Only used imports? (data utilities count as used) |
-| CQ-04 | Code Elegance | 2 | Appropriate complexity? No fake UI elements? No over-engineering? |
+| CQ-04 | Code Elegance | 2 | Appropriate complexity? No fake UI elements? No over-engineering? No algorithm written out that an available call computes (`quality-criteria.md` → CQ-04 → Available to compute with)? |
 | CQ-05 | Output & API | 1 | Saves as `plot-{THEME}.png` (+ `plot-{THEME}.html` for interactive libs)? No deprecated functions? No bare `plot.png`? |
 
 **Note on cross-library usage:** Using data utilities from other libraries (e.g., `sns.load_dataset()` in a highcharts plot, `sklearn.datasets` in plotly) is allowed and should NOT be penalized. Only using other libraries' **plotting functions** is forbidden.

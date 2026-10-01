@@ -310,7 +310,7 @@ jobs:
             --out-weaknesses /tmp/anyplot-prev-weaknesses.json
 
           # Previous source for the before/after code read, plus both line
-          # counts ("grew a lot with no visible change" is a CQ-04 note).
+          # counts (the regen gate's code path reads both sources).
           # The generated header carries the stored score (`Quality: N/100`);
           # the reviewer's copy has it hidden so the re-score cannot anchor.
           # Sanitizing is part of this step: if it fails, the step fails and
@@ -892,6 +892,8 @@ jobs:
           PROMPTS_TREE: ${{ steps.rules.outputs.prompts_tree || 'n/a' }}
           PREV_MODEL: ${{ steps.regen_ctx.outputs.prev_model || 'n/a' }}
           PREV_CRITERIA_VERSION: ${{ steps.regen_ctx.outputs.prev_criteria_version || 'n/a' }}
+          LANGUAGE: ${{ steps.lang.outputs.language }}
+          EXT: ${{ steps.lang.outputs.ext }}
         run: |
           RECORD=/tmp/anyplot-regen-record.json
           rm -f "$RECORD"
@@ -911,6 +913,8 @@ jobs:
                --criteria-version "$CRITERIA_VERSION" --prompts-tree "$PROMPTS_TREE" \
                --prev-model "$PREV_MODEL" --prev-criteria-version "$PREV_CRITERIA_VERSION" \
                --record-out "$RECORD" \
+               --prev-impl "/tmp/anyplot-prev-impl${EXT}" \
+               --new-impl "plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}" \
                "${FLAGS[@]}"; then
             echo "::notice::regen_gate spec=${SPEC_ID} lib=${LIBRARY} prev_stored=${PREV_STORED} prev_rescored=n/a new=${SCORE} verdict=keep code=script_crashed model=${MODEL_ID} criteria=${CRITERIA_VERSION} reason=gate script crashed"
             {

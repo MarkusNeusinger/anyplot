@@ -29,6 +29,9 @@ Out of scope for this entry:
   treemap, matrix, etc.) — those plugins are **not** installed in the runtime.
   Do not `import` them; return `NOT_FEASIBLE` if the spec's core value needs one.
 
+**Computation:** Chart.js has no statistics helpers, so short written-out
+binning, box statistics, densities or fits are fine.
+
 ## The mount-node contract (how your snippet connects to the harness)
 
 The harness gives you a pre-sized `<div id="container">` and these globals (the

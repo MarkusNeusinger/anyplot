@@ -439,18 +439,61 @@ Example data must show ALL features of the plot type.
 | CQ-01 | KISS Structure | 3 | Imports → Data → Plot → Save (no functions/classes) |
 | CQ-02 | Reproducibility | 2 | `np.random.seed(42)` or deterministic data |
 | CQ-03 | Clean Imports | 2 | Only used imports (including data utilities like `sns.load_dataset()`) |
-| CQ-04 | Code Elegance | 2 | Appropriate complexity, no over-engineering, no fake functionality |
+| CQ-04 | Code Elegance | 2 | Appropriate complexity, no algorithm written out that an available call computes, no over-engineering, no fake functionality |
 | CQ-05 | Output & API | 1 | Saves as `plot.png`, no deprecated functions |
 
 ### CQ-04: Code Elegance (2 Points)
 
 | Points | Criterion |
 |--------|-----------|
-| 2 | Clean, Pythonic, appropriate complexity for the visualization |
-| 1 | Acceptable but could be cleaner (e.g., overly verbose, duplicated logic) |
+| 2 | Clean, appropriate complexity for the visualization, and no algorithm written out that an available call computes |
+| 1 | A named block could be much leaner with the same output and equal readability: an algorithm written out that an available call computes the same way (a KDE, binning, quantiles, ACF/PACF, a fit, a linkage), or a block that a named, clearly shorter form replaces (duplicated logic, dead code, a pass without a visible effect) |
 | 0 | Over-engineered, draws fake UI elements, or contains fake-functionality code/comments |
 
 **CQ-04 = 0 if code draws fake interactive elements** (buttons, sliders, tooltip boxes) or contains comments like "simulating hover/click."
+
+#### Available to compute with
+
+What CI installs for the library under review. These four blocks are the same, word for word, as in `prompts/plot-generator.md` → "Available Standard Packages", which the generator reads.
+
+**Python — compute with:**
+- Every Python library gets numpy, pandas, SciPy, scikit-learn and statsmodels. Examples:
+  - density and fits: `scipy.stats.gaussian_kde`, `np.histogram`, `np.percentile`, `np.polyfit`, `scipy.stats.linregress`, `statsmodels.api.OLS`;
+  - time series and signals: `np.fft.rfft`, `scipy.signal.welch`, `scipy.signal.spectrogram`, `statsmodels.tsa.stattools.acf` / `pacf`, `statsmodels.nonparametric.smoothers_lowess.lowess`;
+  - clustering and geometry: `scipy.cluster.hierarchy.linkage` / `dendrogram`, `sklearn.cluster.KMeans`, `scipy.spatial.ConvexHull` / `Voronoi`, `scipy.interpolate`, `scipy.integrate.solve_ivp`;
+  - model evaluation: `sklearn.metrics.roc_curve` / `confusion_matrix`;
+  - data wrangling: pandas `rolling` / `ewm` / `groupby` / `pivot_table` / `cut`;
+  - the plotting library's own stat functions (`sns.kdeplot`, `transform_density`, `stat_density`, …).
+- matplotlib is installed everywhere, but its plotting calls belong only in matplotlib and seaborn implementations; elsewhere use only its non-plotting utilities, such as `matplotlib.colors`.
+- Not available: networkx, squarify, cartopy, and any package outside these.
+
+**R — compute with:**
+- ggplot2, dplyr, tidyr, scales, tibble, ragg, viridis, patchwork, systemfonts, textshaping, palmerpenguins and gapminder, their imports, base R and R's recommended packages (survival, MASS, class, cluster). Examples:
+  - base `stats`: `acf`, `pacf`, `density`, `loess`, `lm`, `hclust` / `dist` / `cutree`, `kmeans`, `prcomp`, `fft` / `spectrum`, `ecdf`, `quantile`, `smooth.spline`;
+  - ggplot2 stat layers: `stat_density`, `geom_smooth`, `stat_ecdf`, `stat_qq`, `geom_density_2d`, `stat_summary`;
+  - `survival::survfit`.
+
+**Julia — compute with:**
+- CairoMakie, Makie, DataFrames, CSV, Colors, ColorSchemes, RDatasets, PalmerPenguins, PNGFiles, QRCoders, Random and Statistics, plus the standard libraries LinearAlgebra, Dates and Printf. Examples:
+  - Makie recipes that compute for you: `density!`, `hist!`, `stephist!`, `boxplot!`, `violin!`, `qqplot!`, `ecdfplot!`, `rainclouds!`, `contour!`;
+  - Statistics: `mean`, `median`, `quantile`, `std`, `cor`;
+  - least squares with `X \ y`.
+- Not loadable: StatsBase, KernelDensity, FFTW, Clustering, GLM and Loess. A short written-out ACF, FFT or linkage is therefore fine.
+
+**JavaScript — compute with:**
+- Only the snippet's own library is loaded: chartjs, d3, echarts, highcharts or muix. No JavaScript runtime here has a 1-D KDE, an FFT, a regression or clustering, so short written-out versions are fine. What each library computes for you is in `prompts/library/{library}.md` → **Computation**.
+
+Library-specific facts: `prompts/library/{library}.md` → Computation.
+
+How to score it:
+
+- What nothing available provides may be written out, and it is not a deduction.
+- A leanness deduction is a defect line only when it names the replacement and the lines: ``CQ-04 (code): lines A–B <what is written out, with the saving in lines> → `<call>` (<package>). Likely cause: ….``, or `→ remove` for dead or duplicated code. The call names the arguments that reproduce the output (a bandwidth, `ddof`, a `method`, a window): a library default that gives different numbers is not the same computation. Without a concrete replacement it is a `Suggestion:` line.
+- "Clearly shorter" is proportional: a block that shrinks to a fraction of its length is a defect, and a few lines of taste is a suggestion. A block of a handful of lines (a closed-form slope and intercept, a four-line loop) is a suggestion whatever the ratio. There is no line threshold.
+- Not deducted: the mandated header, theme and palette token blocks, the `sys.path` self-shadowing guard, and a hand-roll whose output no available call reproduces.
+- A replacement is a call or a removal, never a new helper function (CQ-01), and never code golf: a shorter version that reads worse is not leaner.
+- Installed packages are not dependencies to avoid: never credit a hand-roll for avoiding one.
+- Leanness costs 1 point at most, however many blocks it names, and never takes CQ-04 to 0. CQ-04 = 0 stays reserved for fake functionality and gross over-engineering.
 
 ---
 
@@ -574,7 +617,7 @@ CODE QUALITY (9/10)
   CQ-01: 3/3   (KISS)
   CQ-02: 2/2   (seed set)
   CQ-03: 2/2   (clean imports)
-  CQ-04: 1/2   (ok but slightly verbose)
+  CQ-04: 1/2   (lines 39–60 write out ACF/PACF → `statsmodels.tsa.stattools.acf`/`pacf`)
   CQ-05: 1/1   (correct output)
 
 LIBRARY MASTERY (9/10)

@@ -18,17 +18,40 @@ Create a script for the specified plot type and library. The code should be simp
 
 ## Available Standard Packages
 
-**Python libraries** have access to: `numpy`, `pandas`, `scipy`, `scikit-learn`, `statsmodels`.
+What each runtime installs is what you compute with (see "Lean code" below). The four language blocks are mirrored word for word in `prompts/quality-criteria.md` → CQ-04, which the review reads.
+
+**Python — compute with:**
+- Every Python library gets numpy, pandas, SciPy, scikit-learn and statsmodels. Examples:
+  - density and fits: `scipy.stats.gaussian_kde`, `np.histogram`, `np.percentile`, `np.polyfit`, `scipy.stats.linregress`, `statsmodels.api.OLS`;
+  - time series and signals: `np.fft.rfft`, `scipy.signal.welch`, `scipy.signal.spectrogram`, `statsmodels.tsa.stattools.acf` / `pacf`, `statsmodels.nonparametric.smoothers_lowess.lowess`;
+  - clustering and geometry: `scipy.cluster.hierarchy.linkage` / `dendrogram`, `sklearn.cluster.KMeans`, `scipy.spatial.ConvexHull` / `Voronoi`, `scipy.interpolate`, `scipy.integrate.solve_ivp`;
+  - model evaluation: `sklearn.metrics.roc_curve` / `confusion_matrix`;
+  - data wrangling: pandas `rolling` / `ewm` / `groupby` / `pivot_table` / `cut`;
+  - the plotting library's own stat functions (`sns.kdeplot`, `transform_density`, `stat_density`, …).
+- matplotlib is installed everywhere, but its plotting calls belong only in matplotlib and seaborn implementations; elsewhere use only its non-plotting utilities, such as `matplotlib.colors`.
+- Not available: networkx, squarify, cartopy, and any package outside these.
+
+**R — compute with:**
+- ggplot2, dplyr, tidyr, scales, tibble, ragg, viridis, patchwork, systemfonts, textshaping, palmerpenguins and gapminder, their imports, base R and R's recommended packages (survival, MASS, class, cluster). Examples:
+  - base `stats`: `acf`, `pacf`, `density`, `loess`, `lm`, `hclust` / `dist` / `cutree`, `kmeans`, `prcomp`, `fft` / `spectrum`, `ecdf`, `quantile`, `smooth.spline`;
+  - ggplot2 stat layers: `stat_density`, `geom_smooth`, `stat_ecdf`, `stat_qq`, `geom_density_2d`, `stat_summary`;
+  - `survival::survfit`.
+
+**Julia — compute with:**
+- CairoMakie, Makie, DataFrames, CSV, Colors, ColorSchemes, RDatasets, PalmerPenguins, PNGFiles, QRCoders, Random and Statistics, plus the standard libraries LinearAlgebra, Dates and Printf. Examples:
+  - Makie recipes that compute for you: `density!`, `hist!`, `stephist!`, `boxplot!`, `violin!`, `qqplot!`, `ecdfplot!`, `rainclouds!`, `contour!`;
+  - Statistics: `mean`, `median`, `quantile`, `std`, `cor`;
+  - least squares with `X \ y`.
+- Not loadable: StatsBase, KernelDensity, FFTW, Clustering, GLM and Loess. A short written-out ACF, FFT or linkage is therefore fine.
+
+**JavaScript — compute with:**
+- Only the snippet's own library is loaded: chartjs, d3, echarts, highcharts or muix. No JavaScript runtime here has a 1-D KDE, an FFT, a regression or clustering, so short written-out versions are fine. What each library computes for you is in `prompts/library/{library}.md` → **Computation**.
 
 **Built-in datasets** (prefer over synthetic when showing real patterns):
 - `sklearn.datasets`: `load_iris()`, `load_wine()`, `load_breast_cancer()`, `load_digits()`, `make_classification()`, `make_regression()`, `make_blobs()`
 - `sns.load_dataset(name)`: `'tips'`, `'titanic'`, `'iris'`, `'flights'`, `'planets'`, `'penguins'`
 
-**R / ggplot2** has access to: `ggplot2`, `dplyr`, `tidyr`, `scales`, `ragg`, `viridis`, `tibble`, `palmerpenguins`, `gapminder`.
-
 **Built-in R datasets**: `mtcars`, `iris`, `diamonds`, `economics`, `mpg`, `faithful`, `palmerpenguins::penguins`, `gapminder::gapminder`.
-
-**Julia / Makie** has access to: `CairoMakie`, `Makie`, `DataFrames`, `CSV`, `Colors`, `ColorSchemes`, `RDatasets`, `PalmerPenguins`, `Random`, `Statistics`.
 
 **Built-in Julia datasets** (via `RDatasets.dataset("datasets", "iris")` etc.): `iris`, `mtcars`, `diamonds`. Plus `PalmerPenguins.load()`.
 
@@ -305,7 +328,7 @@ The workflow will update `Quality: {score}/100` and add version numbers after re
 
 ### Rules
 
-Must pass all code quality criteria (CQ-01 through CQ-05) from `prompts/quality-criteria.md`.
+Must pass all code quality criteria (CQ-01 through CQ-05) from `prompts/quality-criteria.md` (CQ-04 includes the lean-code rule below).
 
 **Forbidden (Python):**
 - Functions or classes
@@ -466,6 +489,14 @@ ax.scatter(study_hours, exam_scores,
            alpha=0.7, s=100,
            color=BRAND, edgecolors=PAGE_BG)
 ```
+
+### Lean code
+
+- Compute with the libraries listed under "Available Standard Packages", never by hand. When a call computes it (a KDE, histogram bins, quantiles or box statistics, an FFT or spectrogram, ACF/PACF, a regression or LOESS fit, smoothing, clustering and dendrogram linkage, hulls and Voronoi cells, survival curves, ROC), call it.
+- Write an algorithm out only when nothing available provides it, and keep it short.
+- Aim for the shortest version that reads as well as the longer one: no duplicated blocks, no dead code, no pass without a visible effect, and no code golf.
+- A replacement is a call or a removal, never a new helper function.
+- Installed packages are not "dependencies" to avoid.
 
 ---
 

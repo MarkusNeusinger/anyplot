@@ -37,7 +37,11 @@ Merge requires ALL of:
    0 -- and whose ``kind`` is ``fix`` or ``removal``. Suggestions, unverified
    claims, design, library-mastery and feature-coverage (DQ-01) points,
    additions, polish and items without a kind ride along but never carry a
-   merge alone (``classify_improvements``);
+   merge alone (``classify_improvements``); 5 and 6 are also met, with no
+   carrier, by a counted *code improvement* (``classify_code_improvements``):
+   a previous CQ-04 ``(code)`` defect line the re-score classed ``defect``,
+   fixed with the named call or removal in a shorter source, with the data
+   scenario and encodings unchanged (``decide --prev-impl/--new-impl``);
 7. no regressions -- on a ``*-basic`` spec a changed data scenario or added
    encodings count as regressions unless a change request asked for them.
 
@@ -77,7 +81,8 @@ Subcommands::
         --spec-file plots/S/specification.md --prev-renders available|missing \
         [--canvas-failed] [--change-request-present] [--context-failed] [--summary-out FILE] \
         [--pr N] [--model ID] [--criteria-version V] [--prompts-tree SHA] \
-        [--prev-model ID] [--prev-criteria-version V] [--record-out FILE]
+        [--prev-model ID] [--prev-criteria-version V] [--record-out FILE] \
+        [--prev-impl /tmp/anyplot-prev-impl.EXT --new-impl plots/S/implementations/L/B.EXT]
 
     regen_gate.py sanitize-source --source PREV_IMPL --out /tmp/anyplot-prev-impl.EXT [--pending]
 
@@ -237,6 +242,231 @@ def defect_ids(text: Any) -> list[str]:
     """The IDs a defect line names, in order; empty for any other line."""
     m = DEFECT_RE.match(str(text or "").strip())
     return m.group("ids").split(", ") if m else []
+
+
+# The code-only path (``_code_path``): a CQ-04 defect line the previous review
+# named, fixed in the source alone. Its target — the text after the arrow, up
+# to "Likely cause:" (``defect_target``) — names the replacement call in
+# backticks, or "remove".
+CODE_RULE = "CQ-04"
+_LIKELY_CAUSE_RE = re.compile(r"\bLikely cause:")
+_BACKTICK_RE = re.compile(r"`([^`]+)`")
+_CALL_NAME_RE = re.compile(r"^[A-Za-z_][\w.:]*!?$")
+_CALL_RE = re.compile(r"([A-Za-z_][\w!]*)\s*\(")
+# Sources larger than this are not read (--prev-impl/--new-impl); the code path is then off.
+SOURCE_LIMIT = 1_000_000
+
+
+def is_cq04_code_defect(text: Any) -> bool:
+    """A defect line (``DEFECT_RE``) that names ``CQ-04`` with the render tag ``code``."""
+    m = DEFECT_RE.match(str(text or "").strip())
+    return m is not None and CODE_RULE in m.group("ids").split(", ") and m.group("render") == "code"
+
+
+def defect_target(text: Any) -> str:
+    """What a defect line asks for: the text after its first arrow, without the "Likely cause:" part.
+
+    The arrow is the first ``→``; only a line without one falls back to the
+    first ``->``, which a description may contain (``x -> x^2``, an R pipe).
+    """
+    line = str(text or "")
+    arrow = "→" if "→" in line else "->"
+    if arrow not in line:
+        return ""
+    target = line.split(arrow, 1)[1]
+    return _LIKELY_CAUSE_RE.split(target, maxsplit=1)[0].strip()
+
+
+def replacement_tokens(text: Any) -> list[str]:
+    """The call names a defect line's target names in backticks, in order.
+
+    A span with calls yields every name called at its top level (not inside
+    another call's arguments), each the last component split on ``.`` and
+    ``::``: `` `acf(series, nlags=35)` `` → ``acf``, `` `stats::acf()` `` →
+    ``acf``, `` `density!(ax, x)` `` → ``density!``, `` `d3.bin()` `` → ``bin``,
+    `` `df["v"].rolling(7).mean()` `` → ``rolling``, ``mean``. A span without
+    a call yields its last component when it is a bare name
+    (`` `scipy.stats.gaussian_kde` `` → ``gaussian_kde``), and nothing
+    otherwise (``{type: 'boxplot'}``, ``X \\ y``).
+    """
+    tokens: list[str] = []
+    for span in _BACKTICK_RE.findall(defect_target(text)):
+        if "(" in span:
+            names = [
+                m.group(1)
+                for m in _CALL_RE.finditer(span)
+                if span.count("(", 0, m.start()) == span.count(")", 0, m.start())
+            ]
+        else:
+            name = span.strip()
+            names = [re.split(r"\.|::", name)[-1]] if _CALL_NAME_RE.match(name) else []
+        for name in names:
+            if name and name not in tokens:
+                tokens.append(name)
+    return tokens
+
+
+def is_removal(text: Any) -> bool:
+    """The defect line's target is a removal: it starts with the word "remove" or "delete"."""
+    return re.match(r"(?:remove|delete)\b", defect_target(text).lstrip("`* ").lower()) is not None
+
+
+# The languages the pipeline generates (``impl-review.yml`` picks the suffix).
+SOURCE_LANGUAGES = {
+    ".py": "python",
+    ".r": "r",
+    ".jl": "julia",
+    ".js": "javascript",
+    ".jsx": "javascript",
+    ".mjs": "javascript",
+    ".ts": "javascript",
+    ".tsx": "javascript",
+}
+
+
+def source_language(path_text: str | None) -> str | None:
+    """The language of a source file by its suffix, or None for a suffix the gate cannot read."""
+    return SOURCE_LANGUAGES.get(Path(path_text).suffix.lower()) if path_text else None
+
+
+_JULIA_CHAR_RE = re.compile(r"'(?:\\[^'\n]+|[^\\'\n])'")
+
+
+def _string_end(source: str, start: int, language: str) -> int:
+    """The index after the string literal that opens at ``start``."""
+    quote = source[start]
+    if language in ("python", "julia") and source.startswith(quote * 3, start):
+        closer, pos, multiline = quote * 3, start + 3, True
+    else:
+        # A Python or JavaScript one-quote string ends with its line, so an
+        # unbalanced quote costs one line; R, Julia and a template span lines.
+        closer, pos, multiline = quote, start + 1, language in ("r", "julia") or quote == "`"
+    while pos < len(source):
+        if source[pos] == "\\":
+            pos += 2
+        elif source.startswith(closer, pos):
+            return pos + len(closer)
+        elif source[pos] == "\n" and not multiline:
+            return pos
+        else:
+            pos += 1
+    return len(source)
+
+
+def _julia_comment_end(source: str, start: int) -> int:
+    """The index after the ``#= … =#`` comment that opens at ``start``; these nest."""
+    depth, pos = 0, start
+    while pos < len(source):
+        if source.startswith("#=", pos):
+            depth, pos = depth + 1, pos + 2
+        elif source.startswith("=#", pos):
+            depth, pos = depth - 1, pos + 2
+            if depth == 0:
+                return pos
+        else:
+            pos += 1
+    return len(source)
+
+
+def executable_text(source: str, language: str) -> str:
+    """``source`` with every comment and string literal blanked; the line structure stays.
+
+    Comments: ``#`` (Python, R, Julia), ``#= … =#`` (Julia), ``//`` and
+    ``/* … */`` (JavaScript, TypeScript). Strings: ``'``, ``"``, the triple
+    quotes of Python and Julia, a JavaScript template and a Julia character
+    (a lone ``'`` is Julia's adjoint and stays). The inside of an f-string, an
+    interpolation or a template goes with its string, so a call in there is
+    not counted.
+    """
+    quotes = {"python": "'\"", "r": "'\"", "julia": '"', "javascript": "'\"`"}.get(language, "")
+    out: list[str] = []
+    pos = 0
+    while pos < len(source):
+        end = pos
+        if language == "javascript":
+            if source.startswith("//", pos):
+                end = source.find("\n", pos)
+            elif source.startswith("/*", pos):
+                end = source.find("*/", pos + 2)
+                end = end + 2 if end >= 0 else -1
+        elif language == "julia" and source.startswith("#=", pos):
+            end = _julia_comment_end(source, pos)
+        elif language in ("python", "r", "julia") and source[pos] == "#":
+            end = source.find("\n", pos)
+        if end == pos and source[pos] in quotes:
+            end = _string_end(source, pos, language)
+        elif end == pos and language == "julia" and (char := _JULIA_CHAR_RE.match(source, pos)):
+            end = char.end()
+        if end == pos:
+            out.append(source[pos])
+            pos += 1
+            continue
+        end = len(source) if end < 0 else end
+        out.append("".join("\n" if c == "\n" else " " for c in source[pos:end]))
+        pos = end
+    return "".join(out)
+
+
+# What precedes a name that is being defined, not called.
+_DEFINITION_KEYWORD = {
+    "python": re.compile(r"\b(?:def|class)\s+$"),
+    "julia": re.compile(r"\b(?:function|macro)\s+$"),
+    "javascript": re.compile(r"\bfunction\s*\*?\s*$"),
+}
+# A definition without a keyword: Julia's ``name(x) = …`` and a JavaScript
+# method ``name(x) {``, each at the start of its line (what may precede the
+# name there, and what follows its closing parenthesis).
+_DEFINITION_SHORT = {
+    "julia": (
+        re.compile(r"\s*(?:@\w+\s+)*(?:[\w.]+\.)?"),
+        re.compile(r"\s*(?:::[^=]+?)?\s*(?:where\b[^=]*)?=(?![=>])"),
+    ),
+    "javascript": (
+        re.compile(r"\s*(?:(?:async|static|get|set|public|private|protected|override)\s+)*[*#]?"),
+        re.compile(r"\s*(?::[^={;]+)?\{"),
+    ),
+}
+
+
+def _after_arguments(text: str) -> str | None:
+    """What follows the parenthesis that closes the one just before ``text``; None when it closes on a later line."""
+    depth = 1
+    for index, char in enumerate(text):
+        depth += (char == "(") - (char == ")")
+        if depth == 0:
+            return text[index + 1 :]
+    return None
+
+
+def _is_definition(line: str, match: re.Match[str], language: str) -> bool:
+    before = line[: match.start()]
+    keyword = _DEFINITION_KEYWORD.get(language)
+    if keyword is not None and keyword.search(before):
+        return True
+    lead, tail = _DEFINITION_SHORT.get(language, (None, None))
+    if lead is None or tail is None or not lead.fullmatch(before):
+        return False
+    rest = _after_arguments(line[match.end() :])
+    return rest is not None and tail.match(rest) is not None
+
+
+def call_count(source: str, token: str, language: str = "python") -> int:
+    """How often ``source`` calls ``token``: the name, not preceded by a word character, then ``(``.
+
+    Only executable text counts (``executable_text``): a comment such as
+    ``# use acf(series)`` or a string that spells the call is not the call.
+    Neither is a definition (``def name(``, ``class name(``, ``function
+    name(``, Julia's ``name(x) = …``, a JavaScript method ``name(x) {``): a
+    hand-roll named after the call it imitates is not that call. R defines
+    with ``name <- function(``, which is no call of ``name`` to begin with.
+    """
+    pattern = re.compile(rf"(?<!\w){re.escape(token)}\s*\(")
+    return sum(
+        1
+        for line in executable_text(source, language).splitlines()
+        for match in pattern.finditer(line)
+        if not _is_definition(line, match, language)
+    )
 
 
 def _score_in_range(criterion: str, value: Any) -> bool:
@@ -529,6 +759,15 @@ class GateInput:
     weakness_classes: Mapping[str, str] = field(default_factory=dict)
     # The new render's item scores (``review_checklist.json``, flattened).
     new_checklist: Mapping[str, int] = field(default_factory=dict)
+    # Stored text of each previous weakness (``load_weakness_texts``), and the
+    # predecessor's and the new source (``--prev-impl``/``--new-impl``). The
+    # code path (``_code_path``) is off unless both sources are read.
+    weakness_texts: Mapping[str, str] = field(default_factory=dict)
+    prev_source: str | None = None
+    new_source: str | None = None
+    # The sources' language (``source_language`` of ``--new-impl``): what
+    # ``call_count`` reads as a comment, a string and a definition.
+    source_language: str = "python"
 
 
 @dataclass
@@ -548,6 +787,11 @@ class GateResult:
     scenario_changed: bool | None = None
     encodings_added: int | None = None
     coerced: bool = False
+    # ``ref``/``what``/``where_in_code`` plus ``kind``, ``counted`` and ``why``
+    # (``classify_code_improvements``); line counts when both sources were read.
+    code_improvements: list[dict[str, Any]] = field(default_factory=list)
+    prev_lines: int | None = None
+    new_lines: int | None = None
 
 
 def _is_int(value: Any) -> bool:
@@ -565,7 +809,8 @@ def normalize_regen(payload: Any) -> tuple[Any, list[str]]:
     non-list ``prev_weaknesses`` or a non-object ``prev_checklist`` becomes
     empty, ``prev_weaknesses`` entries get a lower-case ``class`` and an
     upper-case ``ref`` and ``rule``, and an improvement's string ``kind`` is
-    lower-cased and stripped.
+    lower-cased and stripped. ``code_improvements`` is coerced the same way:
+    a non-list becomes empty, and its refs are upper-cased.
     """
     if not isinstance(payload, dict):
         return payload, []
@@ -630,6 +875,23 @@ def normalize_regen(payload: Any) -> tuple[Any, list[str]]:
                     entry = changed
                 fixed_entries.append(entry)
             data["prev_weaknesses"] = fixed_entries
+
+    # Coerced, never rejected, like the classification keys. A missing list is
+    # simply empty (older reviews have none), so it adds no note.
+    if "code_improvements" in data:
+        code = data["code_improvements"]
+        if not isinstance(code, list):
+            notes.append(f"code_improvements {type(code).__name__} -> []")
+            data["code_improvements"] = []
+        else:
+            fixed_code = []
+            for item in code:
+                ref = item.get("ref") if isinstance(item, dict) else None
+                if isinstance(ref, str) and _canonical_ref(ref) != ref and REF_RE.match(_canonical_ref(ref)):
+                    notes.append(f"code ref {ref!r} -> {_canonical_ref(ref)!r}")
+                    item = {**item, "ref": _canonical_ref(ref)}
+                fixed_code.append(item)
+            data["code_improvements"] = fixed_code
 
     return data, notes
 
@@ -698,7 +960,19 @@ def validate_regen(payload: Any, known_weakness_ids: frozenset[str], characteris
 
 
 def decide(inp: GateInput) -> GateResult:
-    """Apply the regen gate. Every uncertain input resolves to ``keep``."""
+    """Apply the regen gate. Every uncertain input resolves to ``keep``.
+
+    The two sources' line counts are on every result when both were read,
+    so an early keep still reports them.
+    """
+    result = _decide(inp)
+    if inp.prev_source is not None and inp.new_source is not None:
+        result.prev_lines = len(inp.prev_source.splitlines())
+        result.new_lines = len(inp.new_source.splitlines())
+    return result
+
+
+def _decide(inp: GateInput) -> GateResult:
     if inp.canvas_failed:
         return GateResult(KEEP, "canvas dimension gate failed", "canvas_failed")
     if inp.score is None:
@@ -771,6 +1045,36 @@ def load_weakness_classes(path: Path | None) -> dict[str, str]:
             cls = item.get("class")
             classes[str(item["id"])] = cls if cls in (DEFECT, SUGGESTION, LEGACY) else LEGACY
     return classes
+
+
+def load_weakness_texts(path: Path | None) -> dict[str, str]:
+    """``{W id: stored text}`` from the ``context`` weaknesses JSON; ``{}`` on any error."""
+    if path is None or not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(data, list):
+        return {}
+    return {
+        str(item["id"]): item["text"]
+        for item in data
+        if isinstance(item, dict) and "id" in item and isinstance(item.get("text"), str)
+    }
+
+
+def load_source(path_text: str | None) -> str | None:
+    """A source file for the code path, or None when absent, unreadable or over ``SOURCE_LIMIT`` bytes."""
+    if not path_text:
+        return None
+    path = Path(path_text)
+    try:
+        if not path.is_file() or path.stat().st_size > SOURCE_LIMIT:
+            return None
+        return path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
 
 
 def _rescore_classes(payload: Mapping[str, Any]) -> dict[str, tuple[str, str | None]]:
@@ -916,6 +1220,93 @@ def _counted(item: Mapping[str, Any]) -> bool:
     return item.get("class") not in (PERMISSION, OBSOLETE)
 
 
+def _code_item_problem(item: Any, inp: GateInput, payload: Mapping[str, Any]) -> tuple[str | None, str | None]:
+    """``(kind, None)`` when one ``code_improvements`` entry holds on its own, else ``(None, why)``.
+
+    The kind is ``removal`` when the stored line's target is one, else ``fix``.
+    The sources are checked here only for the new-call test; the path-wide
+    conditions are ``classify_code_improvements``'.
+    """
+    if not isinstance(item, Mapping):
+        return None, "not an object"
+    ref = str(item.get("ref") or "")
+    if not re.fullmatch(r"W[1-9]\d*", ref):
+        return None, "only a W id of the previous review qualifies"
+    if ref not in inp.known_weakness_ids:
+        return None, "not a weakness id of the previous review"
+    if not str(item.get("what") or "").strip() or not str(item.get("where_in_code") or "").strip():
+        return None, "needs a non-empty what and where_in_code"
+    cls, rule = _rescore_classes(payload).get(ref, (SUGGESTION, None))
+    if cls != DEFECT or rule != CODE_RULE:
+        return None, f"classed {cls} ({rule or 'no rule'}), not a {CODE_RULE} defect"
+    text = inp.weakness_texts.get(ref, "")
+    if not is_cq04_code_defect(text):
+        return None, f"its stored line is not a '{CODE_RULE} (code)' defect line"
+    prev = flat_scores(payload.get("prev_checklist")).get(CODE_RULE)
+    new = inp.new_checklist.get(CODE_RULE)
+    if not (isinstance(prev, int) and isinstance(new, int) and new > prev):
+        return None, f"{CODE_RULE} did not score higher ({_score_text(prev)} → {_score_text(new)})"
+    if is_removal(text):
+        return "removal", None
+    tokens = replacement_tokens(text)
+    if not tokens:
+        return None, "its stored line names no call and no removal"
+    prev_source, new_source = inp.prev_source or "", inp.new_source or ""
+    language = inp.source_language
+    if not any(call_count(new_source, t, language) > call_count(prev_source, t, language) for t in tokens):
+        return None, f"the named call ({', '.join(tokens)}) is not called more often than before"
+    return "fix", None
+
+
+def classify_code_improvements(payload: Any, inp: GateInput) -> list[dict[str, Any]]:
+    """Every ``code_improvements`` entry, with ``kind``, ``counted`` and ``why``.
+
+    An entry counts when all of these hold (the code path, P8):
+
+    - its ``ref`` is a previous weakness (a ``W`` id) the re-score classed
+      ``defect`` with rule ``CQ-04``, and ``what`` and ``where_in_code`` are
+      non-empty;
+    - the stored line of that ``W`` is a ``CQ-04 (code)`` defect line
+      (``is_cq04_code_defect``): an older line names no checkable replacement;
+    - the new render scores CQ-04 higher than ``prev_checklist`` does;
+    - its target is a removal, or the new source calls one of the named calls
+      (``replacement_tokens``) more often than the predecessor's source;
+    - path-wide: both sources were read, the new one has fewer lines, the data
+      scenario is unchanged and no encoding was added (on any spec).
+
+    A malformed entry is listed as not counted with the reason; it never
+    invalidates ``review_regen.json``. ``kind`` is ``fix`` or ``removal`` for an
+    entry that holds on its own, else None.
+    """
+    raw = payload.get("code_improvements") if isinstance(payload, Mapping) else None
+    if not isinstance(raw, list) or not raw:
+        return []
+    path_why = None
+    if inp.prev_source is None or inp.new_source is None:
+        path_why = "code path off: the previous or the new source was not read"
+    elif len(inp.new_source.splitlines()) >= len(inp.prev_source.splitlines()):
+        path_why = "the new source is not shorter"
+    elif payload.get("scenario_changed") is True:
+        path_why = "the code path needs an unchanged data scenario"
+    elif any(str(e).strip() for e in payload.get("encodings_added") or []):
+        path_why = "the code path needs no added encodings"
+    out: list[dict[str, Any]] = []
+    for item in raw:
+        kind, why = _code_item_problem(item, inp, payload) if path_why is None else (None, path_why)
+        entry = item if isinstance(item, Mapping) else {}
+        out.append(
+            {
+                "ref": str(entry.get("ref") or ""),
+                "what": str(entry.get("what") or "").strip(),
+                "where_in_code": str(entry.get("where_in_code") or "").strip(),
+                "kind": kind,
+                "counted": why is None,
+                "why": why,
+            }
+        )
+    return out
+
+
 def _judge(inp: GateInput, regen: Any) -> GateResult:
     errors = validate_regen(regen, inp.known_weakness_ids, inp.characteristic_count)
     if errors:
@@ -952,7 +1343,11 @@ def _judge(inp: GateInput, regen: Any) -> GateResult:
         permission_refs=inp.permission_refs,
         scenario_changed=bool(payload["scenario_changed"]),
         encodings_added=len([e for e in payload["encodings_added"] if e.strip()]),
+        code_improvements=classify_code_improvements(payload, inp),
     )
+    if inp.prev_source is not None and inp.new_source is not None:
+        result.prev_lines = len(inp.prev_source.splitlines())
+        result.new_lines = len(inp.new_source.splitlines())
 
     if regressions:
         result.code = "regression"
@@ -975,14 +1370,22 @@ def _judge(inp: GateInput, regen: Any) -> GateResult:
     note = "".join(f" ({n})" for n in notes)
 
     visible = [i for i in counted if i["where_visible"]]
-    if not visible:
+    carriers = [i for i in visible if i["class"] == CARRIER]
+    # The code path (P8): with no carrier, a counted code improvement still
+    # carries; visible suggestions ride along as they do with any carrier.
+    code_counted = [c for c in result.code_improvements if c["counted"]]
+    code_note = ""
+    if result.code_improvements and not code_counted:
+        why = "; ".join(f"{c['ref'] or '?'}: {c['why']}" for c in result.code_improvements)
+        code_note = f" (code path: nothing counted — {why})"
+
+    if not visible and not code_counted:
         detail = " (every improvement needs a non-empty where_visible)" if counted or not (cited or obsolete) else ""
         result.code = "no_visible_improvement"
-        result.reason = f"no visible improvement{detail}{note}"
+        result.reason = f"no visible improvement{detail}{note}{code_note}"
         return result
 
-    carriers = [i for i in visible if i["class"] == CARRIER]
-    if not carriers:
+    if not carriers and not code_counted:
         kinds = [
             (sum(1 for i in visible if i["basis"] == basis), label)
             for basis, label in (
@@ -998,7 +1401,7 @@ def _judge(inp: GateInput, regen: Any) -> GateResult:
         result.code = "no_defect_improvement"
         result.reason = (
             f"{len(visible)} visible improvement(s) ({breakdown}), none fixes a verified defect "
-            f"or an 'A good version shows' property{note}"
+            f"or an 'A good version shows' property{note}{code_note}"
         )
         return result
 
@@ -1009,11 +1412,18 @@ def _judge(inp: GateInput, regen: Any) -> GateResult:
 
     result.verdict = MERGE
     result.code = "merge"
-    result.reason = (
-        f"{len(visible)} visible improvement(s), {len(carriers)} carrying "
-        f"({', '.join(i['ref'] for i in carriers)}), no regressions, new score {inp.score} >= "
-        f"re-scored predecessor {prev_rescored} - 1{note}"
-    )
+    if carriers:
+        result.reason = (
+            f"{len(visible)} visible improvement(s), {len(carriers)} carrying "
+            f"({', '.join(i['ref'] for i in carriers)}), no regressions, new score {inp.score} >= "
+            f"re-scored predecessor {prev_rescored} - 1{note}"
+        )
+    else:
+        fixed = ", ".join(f"{c['ref']} ({CODE_RULE}, {c['kind']})" for c in code_counted)
+        result.reason = (
+            f"code path: {fixed} fixed, {result.prev_lines} → {result.new_lines} lines, no carrier, "
+            f"no regressions, new score {inp.score} >= re-scored predecessor {prev_rescored} - 1{note}"
+        )
     return result
 
 
@@ -1245,6 +1655,7 @@ def check_regen_feedback(
     stored_classes: Mapping[str, str],
     characteristics: list[str],
     checklist: Mapping[str, int],
+    weakness_texts: Mapping[str, str] | None = None,
 ) -> list[str]:
     """Contract and consistency problems of a ``review_regen.json`` (8b).
 
@@ -1258,6 +1669,8 @@ def check_regen_feedback(
     ``prev_checklist`` deducts, and an improvement that claims a criterion
     scores higher on it in the new render's ``checklist`` than in
     ``prev_checklist``. A failed claim is fixed by changing the claim.
+    ``code_improvements`` entries are checked by ``_code_feedback`` (the stored
+    line format only when ``weakness_texts`` is given).
     """
     payload, _ = normalize_regen(regen)
     known = frozenset(prev_weakness_ids)
@@ -1357,6 +1770,59 @@ def check_regen_feedback(
                     f"{claimed} {new} and prev_checklist {prev}: it did not fix {claimed}, so remove it from "
                     f"improvements or name the rule it does fix — {CLAIM_FIX}"
                 )
+    # The raw file: normalize_regen would already have coerced a non-list to [].
+    return problems + _code_feedback(regen, known, rescore, prev_checklist, checklist, weakness_texts or {})
+
+
+def _code_feedback(
+    payload: Mapping[str, Any],
+    known: frozenset[str],
+    rescore: Mapping[str, tuple[str, str | None]],
+    prev_checklist: Mapping[str, int],
+    checklist: Mapping[str, int],
+    weakness_texts: Mapping[str, str],
+) -> list[str]:
+    """Problems of ``code_improvements`` (8b): each entry cites a known ``W`` classed
+    ``defect`` under CQ-04 whose stored line is a ``CQ-04 (code)`` defect line,
+    names ``what`` and ``where_in_code``, and CQ-04 scores higher in the new
+    render's checklist than in ``prev_checklist``."""
+    raw = payload.get("code_improvements")
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        return ["review_regen.json: code_improvements must be a list (use [] when there is none)"]
+    problems: list[str] = []
+    for i, item in enumerate(raw, start=1):
+        if not isinstance(item, Mapping):
+            problems.append(f"code improvement {i} is not an object with ref, what and where_in_code")
+            continue
+        ref = _canonical_ref(str(item.get("ref") or ""))
+        if not re.fullmatch(r"W[1-9]\d*", ref) or ref not in known:
+            problems.append(
+                f"code improvement {i} ({ref or 'no ref'}) must cite a W id of the previous review; "
+                "a code issue you found yourself is never a code improvement"
+            )
+            continue
+        for key in ("what", "where_in_code"):
+            if not isinstance(item.get(key), str) or not item[key].strip():
+                problems.append(f"code improvement {i} ({ref}) needs a non-empty {key}")
+        cls, rule = rescore.get(ref, (SUGGESTION, None))
+        if cls != DEFECT or rule != CODE_RULE:
+            problems.append(
+                f"code improvement {i} ({ref}) cites a W you classed {cls} ({rule or 'no rule'}); only a W classed "
+                f"defect under {CODE_RULE} qualifies — remove it from code_improvements"
+            )
+        elif weakness_texts and not is_cq04_code_defect(weakness_texts.get(ref, "")):
+            problems.append(
+                f"code improvement {i} ({ref}): its stored line is not a '{CODE_RULE} (code): …' defect line, "
+                "so it names no replacement — remove it from code_improvements"
+            )
+        prev, new = prev_checklist.get(CODE_RULE), checklist.get(CODE_RULE)
+        if isinstance(prev, int) and isinstance(new, int) and new <= prev:
+            problems.append(
+                f"code improvement {i} ({ref}) claims {CODE_RULE}, but your checklist for the new render gives "
+                f"{CODE_RULE} {new} and prev_checklist {prev}: remove it from code_improvements — {CLAIM_FIX}"
+            )
     return problems
 
 
@@ -1478,6 +1944,21 @@ def render_summary(result: GateResult, prev_stored: str, score: int | None) -> s
             lines.append(f"- `{item['ref']}` {_safe(item['what'])} — {where}{improvement_flag(item)}")
     else:
         lines.append("- none")
+    if result.code_improvements:
+        rides = any(i.get("class") == CARRIER and i.get("where_visible") for i in result.improvements)
+        lines += ["", "**Code improvements**"]
+        for item in result.code_improvements:
+            if not item["counted"]:
+                flag = f" _(not counted: {_safe(str(item['why']))})_"
+            elif rides:
+                flag = " _(rides along)_"
+            else:
+                flag = f" _(code path: counted, {item['kind']})_"
+            where = _safe(item["where_in_code"]) or "_no location_"
+            ref = _safe(item["ref"]) or "?"
+            lines.append(f"- `{ref}` {_safe(item['what'])} — {where}{flag}")
+    if result.prev_lines is not None and result.new_lines is not None:
+        lines += ["", f"**Code size:** {result.prev_lines} → {result.new_lines} lines"]
     lines += ["", "**Regressions**"]
     if result.regressions:
         for item in result.regressions:
@@ -1616,7 +2097,11 @@ def build_record(
     (``none`` for a missing or unknown one), so it sums to ``total``. The
     record stays ``v1``: records written before P3 lack the five
     classification keys, and ``visible`` then still counted obsolete
-    citations; records written before P3.1 lack the kind keys.
+    citations; records written before P3.1 lack the kind keys. ``code``
+    (from P8) counts the code improvements that hold
+    (``classify_code_improvements``): with no carrier they carried the merge
+    (the code path), with one they rode along; records written before P8
+    lack it.
     """
     kinds = {"W": 0, "P": 0, "C": 0, "new": 0}
     for item in result.improvements:
@@ -1639,7 +2124,13 @@ def build_record(
         "new": score,
         "verdict": result.verdict,
         "code": result.code,
-        "improvements": {"total": counts.pop("total"), "visible": counts.pop("visible"), **kinds, **counts},
+        "improvements": {
+            "total": counts.pop("total"),
+            "visible": counts.pop("visible"),
+            **kinds,
+            **counts,
+            "code": sum(1 for c in result.code_improvements if c["counted"]),
+        },
         "regressions": len(result.regressions),
         "scenario_changed": result.scenario_changed,
         "encodings_added": result.encodings_added,
@@ -1765,6 +2256,9 @@ def cmd_decide(args: argparse.Namespace) -> int:
         characteristics = parse_characteristics(Path(args.spec_file).read_text(encoding="utf-8"))
     score = parse_score(args.score)
     weaknesses_json = Path(args.weaknesses_json) if args.weaknesses_json else None
+    language = source_language(args.new_impl)
+    if language != source_language(args.prev_impl):
+        language = None
     inp = GateInput(
         spec_id=args.spec_id,
         score=score,
@@ -1782,6 +2276,14 @@ def cmd_decide(args: argparse.Namespace) -> int:
         # repository root in impl-review, the cell workspace in the retest
         # harness), so no new flag: every caller's argument set still works.
         new_checklist=load_checklist_scores(Path(args.regen_json).parent / "review_checklist.json"),
+        # Both optional: without them the code path is off and every older
+        # caller (the retest harness at any rules_ref) decides as before.
+        weakness_texts=load_weakness_texts(weaknesses_json),
+        # A suffix the gate cannot read as code (or two different languages)
+        # leaves the code path off, like an unreadable file.
+        prev_source=load_source(args.prev_impl) if language else None,
+        new_source=load_source(args.new_impl) if language else None,
+        source_language=language or "python",
     )
     result = decide(inp)
     rescored = str(result.prev_rescored) if result.prev_rescored is not None else "n/a"
@@ -1793,10 +2295,14 @@ def cmd_decide(args: argparse.Namespace) -> int:
         provenance += f" model={record_token(args.model)}"
     if args.criteria_version:
         provenance += f" criteria={record_token(args.criteria_version, limit=200)}"
+    # Only with the code path's flags, so an older argument set prints the old line.
+    lines = ""
+    if args.prev_impl or args.new_impl:
+        lines = f" prev_lines={_score_text(result.prev_lines)} new_lines={_score_text(result.new_lines)}"
     print(
         f"::notice::regen_gate spec={args.spec_id} lib={args.library} prev_stored={args.prev_stored} "
         f"prev_rescored={rescored} new={score if score is not None else 'n/a'} verdict={result.verdict} "
-        f"code={result.code}{provenance} reason={reason}"
+        f"code={result.code}{provenance}{lines} reason={reason}"
     )
     if args.summary_out:
         Path(args.summary_out).write_text(render_summary(result, args.prev_stored, score), encoding="utf-8")
@@ -1861,7 +2367,9 @@ def cmd_check_feedback(args: argparse.Namespace) -> int:
             characteristics: list[str] = []
             if args.spec_file and Path(args.spec_file).is_file():
                 characteristics = parse_characteristics(Path(args.spec_file).read_text(encoding="utf-8"))
-            problems += check_regen_feedback(regen, ids, load_weakness_classes(prev_path), characteristics, checklist)
+            problems += check_regen_feedback(
+                regen, ids, load_weakness_classes(prev_path), characteristics, checklist, load_weakness_texts(prev_path)
+            )
     if args.prev_review:
         prev_review, error = load_regen_json(Path(args.prev_review))
         if error:
@@ -1959,6 +2467,9 @@ def build_parser() -> argparse.ArgumentParser:
     dec.add_argument("--prev-model", default="", help="context's prev_model")
     dec.add_argument("--prev-criteria-version", default="", help="context's prev_criteria_version")
     dec.add_argument("--record-out", default="", help="write the gate record (one-line JSON) here")
+    # The code path's sources; without both, it is off (older callers unchanged).
+    dec.add_argument("--prev-impl", default="", help="the predecessor's source (/tmp/anyplot-prev-impl.EXT)")
+    dec.add_argument("--new-impl", default="", help="the regenerated source")
     dec.set_defaults(func=cmd_decide)
     return parser
 

@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 import math
+from pathlib import Path
 
 import pytest
+import yaml
 
 from automation.scripts import review_retest_metrics as m
+
+
+REPO_ROOT = Path(__file__).resolve().parents[4]
 
 
 def _checklist(**scores: tuple[int, int, str]) -> dict:
@@ -177,6 +182,115 @@ class TestLabels:
     def test_never_detected_is_flagged(self):
         records = [_rec("a", r, 90, checklist=_checklist(VQ_03=(6, 6, "x"))) for r in (1, 2)]
         assert m.group_metrics(records, self.LABELS)["defects"]["never_detected"] == ["a/D1@a"]
+
+    def test_p8_lean_code_labels(self):
+        """D2 (acf-pacf/plotly) is caught only by the hand-roll sense of a CQ-04
+        deduction, and A2 (network-basic/bokeh) fires on a spring-layout
+        hand-roll complaint but not on the item's D1 wording (P8)."""
+        manifest = yaml.safe_load((REPO_ROOT / "automation" / "retest" / "set-v1.yaml").read_text())
+        items = {item["id"]: item for item in manifest["items"]}
+        d2 = next(d for d in items["f-acf-pacf-plotly"]["defects"] if d["id"] == "D2")
+        a2 = next(p for p in items["f-network-basic-bokeh"]["permitted"] if p["id"] == "A2")
+        deducted = _checklist(CQ_04=(1, 2, "verbose"))
+        durbin = "CQ-04 (code): lines 39–60 write out the ACF and a Durbin-Levinson PACF → `acf()`. Likely cause: x."
+        d1_wording = "DE-02 (dark): bright white vertical zero-lag line in both panes → a GRID-colored rule."
+        assert m.defect_hit(d2, _rec("f-acf-pacf-plotly", 1, 80, weaknesses=[durbin], checklist=deducted))
+        assert not m.defect_hit(d2, _rec("f-acf-pacf-plotly", 2, 80, weaknesses=[d1_wording], checklist=deducted))
+        assert not m.defect_hit(d2, _rec("f-acf-pacf-plotly", 3, 80, weaknesses=[durbin], checklist={}))
+        hand_roll = "CQ-04 (code): spring layout written out by hand → networkx. Likely cause: x."
+        labels_far = "VQ-02 (both): the force-directed layout leaves labels far from their nodes → closer."
+        assert m.probe_false_alarm(a2, _rec("f-network-basic-bokeh", 1, 80, weaknesses=[hand_roll]))
+        assert not m.probe_false_alarm(a2, _rec("f-network-basic-bokeh", 2, 80, weaknesses=[labels_far]))
+
+    # Verbatim criterion comments of the P8 arms (baseline 36782558185 at rules
+    # 748d230c9, candidate 36782726606 at d87bcebd4), each on a deducted item.
+    @pytest.mark.parametrize(
+        ("label_id", "criterion", "comment", "hit"),
+        [
+            # A2, baseline: the hand-rolled spring layout is blamed (3 of 3).
+            (
+                "A2",
+                "CQ_04",
+                "Readable and well commented, but the PIL pad/crop block re-normalises a canvas the CDP viewport pin "
+                "already fixes, and the hull computation plus the greedy eight-direction label search stack another "
+                "~50 lines on top of the hand-rolled force loop.",
+                True,
+            ),
+            (
+                "A2",
+                "LM_01",
+                "ColumnDataSource, column-driven glyph properties and Legend/LegendItem models are correct bokeh, but "
+                "31 individual p.line() calls instead of one multi_line glyph, and a hand-rolled force loop instead of "
+                "from_networkx, miss the library's own patterns.",
+                True,
+            ),
+            (
+                "A2",
+                "CQ_04",
+                "About 100 lines of hand-rolled machinery: an O(n^2) force loop, a greedy 8-direction label placer "
+                "whose scoring is what detaches the labels, and a pad/crop normalisation that the CDP viewport pin "
+                "already makes unreachable.",
+                True,
+            ),
+            # A2, candidate: the comment declines the deduction (0 of 3).
+            (
+                "A2",
+                "CQ_04",
+                "Lines 197-203 create one p.line() renderer per edge (31 glyph renderers for a single visual layer) "
+                "where two p.multi_line() calls do the same in about four lines. The hand-written spring layout is "
+                "not a deduction - networkx is not available.",
+                False,
+            ),
+            (
+                "A2",
+                "CQ_04",
+                "The hand-rolled spring layout is correct and not deducted — networkx is explicitly unavailable, so "
+                "no installed call reproduces it. Two leanness issues: 51 one-item glyph renderers (31 p.line, 20 "
+                "p.text) where multi_line and a source-driven text do the same, and a 9-line PIL pad/crop pass that "
+                "the CDP viewport pin already makes a no-op.",
+                False,
+            ),
+            (
+                "A2",
+                "CQ_04",
+                "Lines 314-322 pad/crop the PNG to a size the CDP viewport pin already guarantees - nine dead lines "
+                "plus a mid-module PIL import. The hand-rolled spring layout is not a deduction: networkx is not "
+                "available to this environment",
+                False,
+            ),
+            # D2, baseline: the duplication of trace blocks is not the hand-rolled ACF/PACF.
+            (
+                "D2",
+                "CQ_04",
+                "The Durbin-Levinson recursion is appropriately compact, but six hand-unrolled add_trace blocks for "
+                "the ACF/PACF stems and markers - each behind an if guard that cannot be false for this data - repeat "
+                "the same shape roughly 100 lines with no effect on either render.",
+                False,
+            ),
+            (
+                "D2",
+                "CQ_04",
+                "Likely cause: the per-row trace construction written out twice instead of once in a loop.",
+                False,
+            ),
+            # D2, candidate.
+            (
+                "D2",
+                "CQ_04",
+                "Lines 39-59 write out the ACF sum and the Durbin-Levinson PACF recursion by hand, ~21 lines that "
+                "statsmodels.tsa.stattools.acf/pacf reproduce in two. No fake UI and no over-engineering elsewhere.",
+                True,
+            ),
+        ],
+    )
+    def test_p8_labels_on_the_arms_own_wording(self, label_id, criterion, comment, hit):
+        manifest = yaml.safe_load((REPO_ROOT / "automation" / "retest" / "set-v1.yaml").read_text())
+        items = {item["id"]: item for item in manifest["items"]}
+        labels = items["f-network-basic-bokeh"]["permitted"] + items["f-acf-pacf-plotly"]["defects"]
+        label = next(entry for entry in labels if entry["id"] == label_id and "CQ-04" in entry["criteria"])
+        record = _rec("x", 1, 80, checklist=_checklist(**{criterion: (1, 2, comment)}))
+        check = m.probe_false_alarm if label_id == "A2" else m.defect_hit
+        assert check(label, record) is hit
 
     def test_no_labels_means_no_rates(self):
         d = m.group_metrics([_rec("a", 1, 90)], {})["defects"]
@@ -466,6 +580,18 @@ class TestGateMonitor:
         report = m.gate_monitor(records, lambda r: False)
         assert report["writeback"] == {"n": 3, "counts": {"opened": 2, "stale": 1}}
         assert not report["alarms"]
+
+    def test_code_path_merges(self):
+        """P8: a merge with no carrier and a counted code improvement; older records are unknown."""
+        records = [
+            self._record(0, verdict="merge", code="merge", improvements={"carriers": 0, "code": 1, "visible": 2}),
+            self._record(1, verdict="merge", code="merge", improvements={"carriers": 1, "code": 1}),
+            self._record(2, improvements={"carriers": 0, "code": 1}),  # a keep (below tolerance)
+            self._record(3, verdict="merge", code="merge", improvements={"carriers": 0}),  # before P8
+            self._record(4, verdict="merge", code="merge", improvements={"code": 1}),  # no carrier key
+        ]
+        imp = m.gate_monitor(records, lambda r: False)["improvements"]
+        assert (imp["code_path_merges"], imp["code_path_n"]) == (1, 3)
 
     @pytest.mark.parametrize(("invalid", "alarm"), [(2, True), (1, False)])
     def test_writeback_invalid_alarm(self, invalid, alarm):

@@ -105,7 +105,7 @@ A cell is reused only when its record was measured the way the new run measures:
 
 Reuse a baseline only when the set, the harness version, the action pin, and the resolved models all match and it's less than 14 days old. A model alias (`sonnet`, `opus`) moves between releases, and the report flags "model changed" when two arms resolved different models.
 
-The all-Opus baseline for set v1 at rules `0674ab6b5` is run 36389481950 (2026-09-28, every cell on `claude-opus-5`; its 45 fresh cells are reused from 36354452853). The regen cells of 36354452853 ran on Sonnet, so they are a Sonnet reference only; its fresh cells ran on Opus and stay valid. A rubric pull request that runs a later all-Opus arm at its own rules updates this paragraph.
+The all-Opus baseline for set v1 at rules `0674ab6b5` is run 36389481950 (2026-09-28, every cell on `claude-opus-5`; its 45 fresh cells are reused from 36354452853). The regen cells of 36354452853 ran on Sonnet, so they are a Sonnet reference only; its fresh cells ran on Opus and stay valid. The latest all-Opus baseline is run 36782558185 (2026-10-01, rules `748d230c9`, 87 cells on `claude-opus-5`), which the lean-code change (#12005) was measured against. A rubric pull request that runs a later all-Opus arm at its own rules updates this paragraph.
 
 ---
 
