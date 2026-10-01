@@ -1,0 +1,291 @@
+library: plotnine
+language: python
+specification_id: line-tanabe-sugano
+created: '2026-10-01T19:45:03Z'
+updated: '2026-10-01T20:09:30Z'
+generated_by: claude-opus
+workflow_run: 36915012673
+issue: 11846
+language_version: 3.13.15
+library_version: 0.15.8
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Term energies come from the real d2 Tanabe-Sugano matrices rather than hand-fitted
+    splines: at Delta_o/B = 0 the eigenvalues reproduce the free-ion terms exactly
+    (3F = -8B, 3P = +7B, 1D = -3B + 2C, 1G = 4B + 2C, 1S = 14B + 7C), and np.linalg.eigvalsh
+    on each 2x2 same-symmetry block (lines 54-69) keeps every pair an avoided crossing
+    that never swaps identity.'
+  - All eleven terms of the d2 configuration are drawn (3F -> 3T1g/3T2g/3A2g, 3P,
+    1D -> 1Eg/1T2g, 1G -> 1A1g/1Eg/1T1g/1T2g, 1S), with the ground 3T1g(F) a visible
+    thick line along E/B = 0 rather than an omitted baseline.
+  - 'Mapping color, linetype and size to the same `spin` factor is the plotnine/ggplot
+    merged-guide idiom: the single bottom legend draws a thick solid #009E73 key and
+    a thin dashed #C475FD key that match the curves exactly, in both themes.'
+  - Theme tokens are threaded through plot background, panel background, major grid,
+    axis line, axis titles, tick text, title, subtitle and legend, so both renders
+    are theme-correct with identical data colors and only the chrome flipping.
+  - Term labels are typeset with matplotlib mathtext through geom_text, so the multiplicity
+    is a true superscript and the Mulliken numeral and g a true subscript; the two
+    near-coincident 1D-derived curves and the two window-leaving upper partners are
+    labelled along the curve instead of in the right gutter, each resting on the line
+    it names.
+  weaknesses:
+  - 'VQ-01 (both): axis tick labels are the smallest text on the 2400x2400 canvas
+    at 8 pt and fall to roughly 7 px in the 400 px thumbnail, below the 9-10 pt the
+    rest of the chrome sits at -> about 9-10 pt (+1 to +2 pt). Likely cause: axis_text=element_text(size=8)
+    in the theme block (line 140).'
+  - 'Suggestion: the x-axis line runs about 7.5 Delta_o/B past the last tick at 40
+    into the empty label gutter; ending it at the last tick would tidy the lower right.'
+  - 'Suggestion: the band of empty space between the x-axis title and the legend box
+    is generous even for this style; a smaller legend_margin would tighten the lower
+    third of the square canvas.'
+  - 'Suggestion: a more distinctive plotnine idiom - for example coord_fixed() to
+    lock the near-square panel aspect the Notes ask for, instead of leaning on figure_size
+    alone - would show more of the library.'
+  image_description: |-
+    Light render (plot-light.png): 2400x2400 px square canvas.
+      Background: warm off-white #FAF8F1 across both the plot background and the panel — not pure white, not dark. Major grid only, drawn in INK at alpha 0.15, so it stays clearly behind the curves; no minor grid, no panel border.
+      Chrome: title "line-tanabe-sugano · python · plotnine · anyplot.ai" in near-black at the top left, spanning roughly 67 % of the canvas width; subtitle "V³⁺ d² in an octahedral field, C/B = 4.42" below it in soft ink. Axis titles "Ligand-field strength Δ_o/B" (x) and "Term energy E/B" (y) in near-black, visually balanced in size; tick labels 0,5,…,40 and 0,10,…,80 in soft grey. Thin left and bottom axis lines, no ticks. A faint elevated-surface legend box at the bottom centre with two keys: a thick solid green line "Spin-allowed (triplet)" and a thin dashed purple line "Spin-forbidden (singlet)". All text is clearly readable against the light background; nothing is light-on-light and nothing is clipped at any canvas edge.
+      Data: eleven term curves. The four triplets are thick solid #009E73 (Imprint position 1, the first series): the ground ³T₁g(F) flat along E/B = 0 the full width of the panel, ³T₂g and ³A₂g both rising from the origin to about 37.8 and 77.5, and ³T₁g(P) from 15 to about 50. The seven singlets are thin dashed #C475FD (Imprint position 2): ¹A₁g(S) from 53 and ¹Eg(G) from 21 both leaving the top of the window, ¹T₁g(G) and ¹T₂g(G) converging near 55–58 at the right, ¹A₁g(G) flattening to about 34.7, and the near-coincident ¹Eg(D)/¹T₂g(D) pair holding at about 15. Same-symmetry pairs curve around each other as avoided crossings and never swap. Each curve carries its term symbol in its own series colour — seven in the right-hand gutter past Δ_o/B = 40, four along the curve — with the multiplicity as a true superscript and the Mulliken numeral and g as true subscripts.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png): 2400x2400 px square canvas.
+      Background: warm near-black #1A1A17 across plot and panel — not pure black, not light. Grid drawn in the light ink token at alpha 0.15, subtle but visible; legend box on the slightly lighter #242420 elevated surface.
+      Chrome: title and axis titles in #F0EFE8, subtitle, tick labels and legend text in #B8B7B0 — every one of them clearly readable against the near-black background. No dark-on-dark failure anywhere: no title, axis title, tick label, subtitle or legend label renders in a near-black ink. Nothing clipped at any edge.
+      Data: identical to the light render — triplets in #009E73, singlets in #C475FD, same line weights (thick solid vs. thin dashed), same curve geometry, same label positions and same label colours. Only the chrome flipped. The brand green reads strongly on the dark surface and the purple stays clearly separable from it.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; tick labels
+          at 8 pt are the smallest element on the 2400x2400 canvas and drop to ~7
+          px in the 400 px thumbnail.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 'No text collides with other text or with a curve: the closest pairs
+          measure 27 px (1T2g(D) label to the 3T2g curve) and 22 px (3T2g to 1A1g(G)
+          in the gutter). Gutter labels sitting close where curves converge is named
+          as expected, not a defect, by the spec.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line weights 1.7 vs 0.75 plus solid/dashed make the two spin classes
+          separable at a glance; the legend keys are drawn with the same colour, weight
+          and linetype as the curves and are visible on both backgrounds.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple is CVD-safe and is redundantly encoded by line weight
+          and dash pattern; no red-green signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square hits the canonical target exactly; near-square panel
+          with both axes starting at 0, title at ~67 % width, balanced axis titles,
+          no overflow and no clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes named with their reduced quantities (Delta_o/B, E/B) in
+          mathtext; the configuration and C/B ratio are stated in the subtitle.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD, both Imprint positions 1-2
+          and identical across themes; backgrounds exactly #FAF8F1 / #1A1A17.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Deliberate composition: a dedicated right-hand label gutter, per-series
+          label colours, a subtitle carrying the physical parameters, and a merged
+          single legend. Polished well beyond theme_minimal defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Panel border and ticks removed, minor grid dropped, major grid at
+          alpha 0.15, thin axis lines. Whitespace in the lower third is more generous
+          than the composition needs.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Thick green spin-allowed curves read as the foreground the chemist
+          actually measures while the dashed singlets recede; the ground term along
+          the axis anchors the reading. No further emphasis guides the eye to the
+          avoided crossings.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'A Tanabe-Sugano diagram: E/B against Delta_o/B, one continuous curve
+          per term for one d-n configuration.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Every Notes bullet met: one configuration with C/B in the subtitle,
+          energies from diagonalized TS matrices, ground term as a visible flat line,
+          spin-allowed thick solid vs spin-forbidden thin dashed, marked-up term labels,
+          avoided crossings held as near-touches, near-square panel with both axes
+          at 0 and a light grid. The d4-d7 crossover line does not apply to d2.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 321 samples over Delta_o/B = 0-40 against E/B = 0-80, every point
+          at its computed value; no smoothing, nudging or displacement. Upper partners
+          are clipped at the window top by design.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'line-tanabe-sugano · python · plotnine · anyplot.ai';
+          legend labels name the two spin classes and match the curves they explain.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All eleven d2 terms, both spin classes, four avoided crossings, the
+          flat ground term and the linear single-occurrence symmetries — the full
+          feature set of the diagram for this configuration.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: V(III) d2 in an octahedral field at the literature C/B = 4.42; a
+          textbook-plausible and entirely neutral subject.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Delta_o/B 0-40 and E/B 0-80 are the conventional reduced ranges the
+          spec names, and the free-ion limits at Delta_o/B = 0 land on their textbook
+          values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat top-to-bottom script: tokens, data, plot, save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — closed-form matrices on a linspace, no randomness
+          at all.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every one of the sixteen plotnine names plus os, numpy and pandas
+          is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: np.linalg.eigvalsh on a stacked (n,2,2) array does the diagonalization
+          in one vectorized call instead of a hand-written quadratic formula or a
+          Python loop; nothing dead or duplicated.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=6, height=6, units='in')
+          — current API, correct themed filename, canonical square size.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Grammar-of-graphics throughout: one long-form frame, aes with group
+          and colour, layered geom_text layers with their own data, scale_*_manual,
+          theme_minimal plus a theme() override. No matplotlib escape hatch.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Mapping colour, linetype and size to the same factor so plotnine
+          merges them into one guide is a real ggplot-family idiom, as is show_legend=False
+          on the annotation layers. Stays within scales and theme otherwise.
+  verdict: APPROVED
+  model: claude-opus-5
+  criteria_version: qc-08c3141e4a.aqr-cfd364e1ff.sg-7006008fc6.lib-336b5823b3
+  rendered_at: '2026-10-01T20:02:15Z'
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  - wide-to-long
+  dataprep:
+  - eigendecomposition
+  styling:
+  - publication-ready
+  - grid-styling
