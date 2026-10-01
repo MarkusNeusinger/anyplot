@@ -28,3 +28,12 @@ A Schmidt equal-area (lower-hemisphere) stereographic projection for plotting ge
 - Color-code features by `feature_type` with a legend
 - Overlay Kamb density contours on pole data to highlight preferred orientations
 - Grid lines (equal-area net grid) should be subtle (light gray, thin lines) to avoid visual clutter
+
+## What a good version looks like
+
+- A good version shows: a round, undistorted net whose primitive circle is the horizontal plane, with North at the top marked by an arrow or an N label and degree tick marks every 10 degrees around the perimeter, as the Notes ask.
+- A good version shows: planes as great-circle arcs in the lower-hemisphere equal-area projection the Notes ask for, each running from one end of its strike on the primitive to the other, bowed toward its dip direction and inside the primitive, steep planes nearly straight through the center and gentle ones near the rim.
+- A good version shows: the pole to each plane as a point at 90 degrees to that plane, as the Notes ask, at its true projected position on the side opposite the dip direction, so poles of steep planes sit near the primitive and poles of gentle planes near the center.
+- A good version shows: poles and great circles color-coded by feature type and explained in a legend, as the Notes ask, with the equal-area net grid, where drawn, in thin, light lines that stay behind the data.
+- A good version shows: Kamb density contours overlaid on the pole data, as the Notes ask, closing around the pole clusters, kept inside the primitive and distinguishable from the great circles and from the feature-type colors.
+- Expected, not a defect: many great circles crossing each other and the pole clusters, poles piled up within a cluster, poles lying across the net from their planes' arcs, a cluster of steep-plane poles and its contours split across opposite rims, and large empty parts of the net.

@@ -28,3 +28,12 @@ The Hertzsprung-Russell (HR) diagram is the iconic astrophysics scatter plot tha
 - Label the four main regions: main sequence, red giants, supergiants, white dwarfs
 - Mark the Sun's position as a distinct reference point
 - Optional: include secondary x-axis labels showing spectral class (O, B, A, F, G, K, M)
+
+## What a good version looks like
+
+- A good version shows: the temperature axis reversed, hot stars on the left and cool stars on the right, as the Notes require, and luminosity on a logarithmic y axis increasing upward, as the Notes ask, with every star at its own temperature and luminosity.
+- A good version shows: points color-coded by spectral type in the conventional order the Notes give, the bluest colors at the hot end and the reddest at the cool end, with neighboring types distinguishable in both themes.
+- A good version shows: the four regions the Notes name, each labeled at its own population: the main sequence as a diagonal band from upper left to lower right, red giants and supergiants above it, white dwarfs below it toward the hot side.
+- A good version shows: the Sun marked as a distinct reference point, as the Notes ask, at its own temperature and luminosity on the main sequence, with a marker that stands out from the stars around it.
+- A good version shows: spectral class letters, if added as the Notes allow, as secondary x-axis labels in the order O, B, A, F, G, K, M from the hot side to the cool side, each at its temperature range.
+- Expected, not a defect: a dense, overlapping band of points along the main sequence, large empty areas between the populations, far fewer giants, supergiants and white dwarfs than main-sequence stars, and a temperature axis that reads backward.

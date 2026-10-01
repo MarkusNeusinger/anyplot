@@ -28,3 +28,12 @@ A pressure-temperature (P-T) phase diagram showing the boundaries between solid,
 - A logarithmic pressure axis is common to accommodate the wide range of pressures
 - Use representative data (e.g., water or CO2) rather than purely synthetic curves for realism
 - The solid-liquid boundary is nearly vertical for most substances (positive slope); water is a notable exception with a negative slope
+
+## What a good version looks like
+
+- A good version shows: pressure on the y axis against temperature on the x axis, with the solid-liquid, liquid-gas and solid-gas boundary curves drawn through their data and meeting at the triple point; a logarithmic pressure axis, if used, has ticks that show it.
+- A good version shows: the triple point and the critical point marked with distinct markers at their temperature and pressure coordinates and annotated, as the Notes ask.
+- A good version shows: the liquid-gas boundary ending at the critical point, as the Notes say, never drawn on past it, and the supercritical fluid region, where it is labeled or shaded, lying beyond that point.
+- A good version shows: the solid, liquid and gas regions each labeled inside its own area, as the Notes ask, solid on the cold, high-pressure side, gas on the hot, low-pressure side and liquid between the two boundaries above the triple point.
+- A good version shows: a solid-liquid boundary that rises steeply from the triple point with the slope of the substance shown, as the Notes say: leaning toward lower temperature for water, toward higher temperature for most other substances.
+- Expected, not a defect: a solid-liquid line that looks almost vertical, curves squeezed toward one edge on a linear pressure axis or flattened on a logarithmic one, regions of very unequal size, and a triple point close to an axis; they follow from the substance's real values.

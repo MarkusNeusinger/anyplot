@@ -32,3 +32,12 @@ A Walter-Lieth climate diagram (climograph) is the canonical visualization of a 
 - Indicate frost months along the baseline: typically a colored band/blocks beneath the x-axis marking months with mean temperature below 0 °C (likely frost) and a lighter band for months with absolute minimum below 0 °C if available
 - Left axis ticks conventionally at 0, 10, 20, 30 °C; right axis ticks at 0, 20, 40, 60, 100 mm to preserve the alignment
 - The plot is fully static-renderable with no interactivity required
+
+## What a good version looks like
+
+- A good version shows: the twelve months in order on the x-axis, temperature on the left axis and precipitation on the right, scaled so that 10 °C lines up with 20 mm, as the Notes ask, with both zeros on one baseline and every monthly value at its own scale position.
+- A good version shows: temperature as a line and precipitation as a line or bars, as the Notes allow, told apart by color (often red and blue) and each attributable to its own axis.
+- A good version shows: the area between the two curves filled as the Notes ask, blue or hatched wherever precipitation lies above the temperature curve (humid) and red or dotted wherever temperature lies above precipitation (arid), the fills switching exactly where the curves cross and visible in both themes.
+- A good version shows: where a month exceeds 100 mm, the precipitation scale compressed above that level and the band above it filled solid blue, as the Notes describe.
+- A good version shows: a header with the station name, elevation, annual mean temperature and annual precipitation total, and frost months, when the data has any, marked along the baseline at their months, as the Notes ask.
+- Expected, not a defect: no arid fill at an always-humid station or no humid fill at a desert one, no frost marks at a frost-free station, no compressed band where no month exceeds 100 mm, a precipitation axis that changes scale at 100 mm, and thin slivers of fill where the curves run close.

@@ -30,3 +30,12 @@ A celestial map that plots stars on a sky projection (stereographic or azimuthal
 - Draw a coordinate grid (RA/Dec) with labeled tick marks at regular intervals
 - Optionally include the ecliptic line as a dashed curve and the Milky Way band as a faint filled region
 - Limit displayed stars by a magnitude threshold (e.g., mag <= 5.0) to avoid clutter
+
+## What a good version looks like
+
+- A good version shows: every star at its right ascension and declination in a stereographic or azimuthal equidistant projection with a circular sky boundary, as the Notes ask, never moved to clear a label, the constellations shaped as they appear in the sky rather than mirrored.
+- A good version shows: point size falling with magnitude, as the Notes ask, so the brightest stars are the largest dots and the faintest ones shown remain visible as small points, white or pale yellow on the dark navy or black sky the Notes ask for.
+- A good version shows: constellation stick figures as thin, semi-transparent lines that join exactly the star pairs in the data and end on their stars, fainter than the stars, with each constellation's name near the centroid of its stars, as the Notes ask.
+- A good version shows: a right ascension and declination grid drawn in the same projection as the stars, with labeled tick marks at regular intervals, as the Notes ask, and fainter than the stars and constellation lines.
+- A good version shows: the ecliptic, if drawn as the Notes allow, as a dashed curve, and the Milky Way, if drawn, as a faint filled band behind the stars, neither competing with the constellation figures.
+- Expected, not a defect: many faint stars as tiny dots, no stars fainter than the magnitude limit the Notes allow, stars that belong to no stick figure, constellation shapes stretched toward the edge of the projection, and a dark sky in both themes.

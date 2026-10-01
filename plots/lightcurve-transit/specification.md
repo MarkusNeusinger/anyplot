@@ -26,3 +26,11 @@ A time-series plot showing the brightness of an astronomical object over time, d
 - Include a smooth model curve overlaid on the scatter data to show the fitted transit shape
 - Data should be phase-folded (time mapped to orbital phase 0.0-1.0) to stack multiple transits
 - Use a clean, minimal style appropriate for scientific publication
+
+## What a good version looks like
+
+- A good version shows: relative flux on the y axis, not magnitude, as the Notes ask, with a flat out-of-transit baseline at the normalized level and the transit as a dip going downward.
+- A good version shows: the data phase-folded, as the Notes ask, with orbital phase on the x axis so that the transits stack into one dip, every measurement at its own phase and flux; on the unfolded time axis in days the Data section also allows, each transit is its own dip.
+- A good version shows: an error bar on each data point, as the Notes ask, light enough that the points and the dip stay visible through them.
+- A good version shows: a smooth model curve drawn over the scatter, as the Notes ask, distinct from the points in both themes, flat outside the transit and following the dip from ingress through its bottom to egress.
+- Expected, not a defect: a dip that is tiny against the flux level, scatter that is a good fraction of the transit depth, a dense band of overlapping points and error bars along the baseline, a transit that fills only a narrow slice of the phase axis, and a flux axis that does not start at zero.

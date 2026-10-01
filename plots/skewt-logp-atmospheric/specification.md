@@ -29,3 +29,12 @@ A Skew-T Log-P diagram is a specialized thermodynamic chart used in meteorology 
 - Temperature profile typically shown as solid line, dewpoint as dashed line
 - Wind barbs along right edge are optional but enhance the diagram's utility
 - Color coding can distinguish different reference line types for clarity
+
+## What a good version looks like
+
+- A good version shows: pressure on a logarithmic vertical axis with the surface at the bottom and pressure decreasing upward, as the Notes ask, so the isobars are horizontal lines that spread apart toward the top.
+- A good version shows: straight isotherms skewed to the right at the 45-degree angle the Notes ask for, rising from lower left to upper right, with every level of the sounding at its own pressure and at its temperature read along those skewed isotherms.
+- A good version shows: families of dry adiabats, moist adiabats and mixing ratio lines behind the sounding, as the Notes ask, each family told apart from the others and from the isotherms by color or line style, and all of them lighter than the two profiles.
+- A good version shows: the temperature and dewpoint profiles as the two most prominent lines, told apart in both themes by line style or color (typically temperature solid and dewpoint dashed), with the dewpoint trace at or to the left of the temperature trace at every level.
+- A good version shows: wind barbs, if drawn as the Notes allow, in a column along the right edge, each at its pressure level and clear of the profiles.
+- Expected, not a defect: a dense web of crossing reference lines, temperature tick values that hold only along the bottom edge because the isotherms are skewed, profiles that run together in saturated layers, and kinks and inversions in the sounding.

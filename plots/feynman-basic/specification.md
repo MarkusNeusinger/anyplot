@@ -26,3 +26,12 @@ A Feynman diagram visualizes interactions between subatomic particles in quantum
 - Place vertex dots or small circles at interaction points
 - Label each propagator with the particle symbol (e-, e+, gamma, g, H, etc.)
 - Keep the layout clean and symmetric where possible; Feynman diagrams prioritize clarity over data density
+
+## What a good version looks like
+
+- A good version shows: each propagator in the line style of its particle type, as the Notes ask: fermions as solid straight lines with an arrow, photons as wavy lines, gluons as curly, looped lines and scalar bosons as dashed lines, the styles distinguishable by shape alone.
+- A good version shows: arrows on fermion lines that follow the convention the Notes give, forward in time for particles and backward for antiparticles, so the arrow direction runs unbroken through every vertex.
+- A good version shows: a dot or small circle at every interaction point, as the Notes ask, with the lines meeting exactly at it, and every propagator labeled with its particle symbol next to its own line.
+- A good version shows: time running in one direction across the diagram, typically left to right as the Notes say, labeled if helpful, with positions schematic: vertices are laid out, not plotted, symmetric where possible, and only which lines meet at which vertex carries meaning.
+- A good version shows: the basic variant's standard diagram: besides the line styles, arrows, vertex dots and particle labels the Notes ask for, the time-direction label the Notes allow and a key to the line styles, no reference lines, highlighted lines or regions, callouts, formulas or data plots alongside.
+- Expected, not a defect: no data axes, ticks or grid, positions and line lengths that carry no scale, lines of very different lengths, a diagram that uses only some of the line styles because its process has only those particles, and empty space around the diagram.
