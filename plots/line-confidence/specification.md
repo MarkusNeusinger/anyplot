@@ -27,3 +27,12 @@ A line plot with a confidence interval displays a central trend line (typically 
 - Include a legend that clearly identifies both the central line and confidence band
 - Consider using contrasting but related colors (e.g., dark blue line with light blue band)
 - Grid lines improve readability of the underlying values
+
+## What a good version looks like
+
+- A good version shows: a solid, prominent central line joining the central values in x order, as the Notes ask, drawn on top of the band and the strongest mark in the plot.
+- A good version shows: a shaded band that spans from the lower to the upper bound at every x and encloses the central line, with nothing filled outside the bounds.
+- A good version shows: a semi-transparent band, as the Notes ask, so gridlines and any overlapping band stay visible through it in both themes, while the band stays distinct from the page.
+- A good version shows: a legend that identifies both the central line and the confidence band, as the Notes ask, and says what the band represents, such as a confidence or a prediction interval.
+- A good version shows: a band that visibly belongs to its line, in a lighter tone of the line's color if the related colors the Notes suggest are used, and in any case not mistakable for a second series.
+- Expected, not a defect: a band whose width changes along x, including one that widens toward the end of a forecast, a band that is not symmetric about the line, and a central line with short-term noise.
