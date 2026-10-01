@@ -26,3 +26,12 @@ A packed bubble chart displays data as circles where size represents value, and 
 - Labels can be placed inside circles (if large enough) or as tooltips
 - Color can encode category or group membership
 - Optional grouping clusters related circles with spacing between groups
+
+## What a good version looks like
+
+- A good version shows: one circle per item whose area, not radius, is proportional to its value, as the Notes ask, so a value twice as large has twice the area.
+- A good version shows: circles packed into one compact cluster, or one cluster per group where the grouping the Notes allow is used, touching or nearly touching and none crossing another, as the Notes ask; position comes from the packing, not from data, so no axes or grid.
+- A good version shows: color, if it encodes category or group membership as the Notes allow, identified by a legend or by labels, with every circle visible against the page in both themes.
+- A good version shows: grouping, if used, as clusters of related circles with spacing between the groups, as the Notes allow.
+- A good version shows: labels, if placed inside circles, only in circles large enough to hold them, as the Notes allow, readable against the fill in both themes and not colliding with a neighbor's label.
+- Expected, not a defect: circles of very different size, small unlabeled ones, small gaps between circles, and an irregular cluster outline with empty canvas corners, since circles cannot tile a rectangle.

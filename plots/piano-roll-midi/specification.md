@@ -27,3 +27,12 @@ A grid-based visualization of musical notes over time, as seen in digital audio 
 - Vertical grid lines should mark beat divisions (quarter notes) with stronger lines at measure boundaries
 - Color scale for velocity should use a sequential or diverging colormap (e.g., blue for piano/soft to red for forte/loud)
 - The pitch range displayed should auto-fit to the data with a small margin, not show all 128 MIDI notes
+
+## What a good version looks like
+
+- A good version shows: each note as a horizontal rectangle in the row of its pitch, starting at its onset beat and as long as its duration, with higher pitches higher up; notes sit at their data values and are never snapped or stretched to the grid.
+- A good version shows: a pitch axis labeled with note names, alongside or instead of MIDI numbers, and fitted to the pitches in the data with a small margin rather than showing all 128 MIDI notes, as the Notes ask.
+- A good version shows: background rows shaded in the piano keyboard's pattern, as the Notes ask, with black-key rows distinguishable from white-key rows in both themes and the shading staying behind the notes.
+- A good version shows: vertical grid lines at the beats with visibly stronger lines at the measure boundaries, as the Notes ask, all drawn behind the notes.
+- A good version shows: note color from velocity on one sequential or diverging scale, as the Notes ask, with a color bar or legend that says which end is soft and which is loud, and every note distinguishable from both row shades in both themes.
+- Expected, not a defect: notes stacked at the same beat in chords, notes of very different length, including very short ones, rests and empty pitch rows inside the range, and repeated notes that touch end to start in one row; they are the music, not gaps or clutter to fix.

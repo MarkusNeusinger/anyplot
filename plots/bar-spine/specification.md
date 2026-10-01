@@ -29,3 +29,12 @@ A spine plot (spineplot) is a stacked bar chart where bar widths are proportiona
 - X-axis labels should be centered under each variable-width bar
 - Consider adding percentage labels within segments when space permits
 - Complements the existing mosaic-categorical spec as a simpler 1D alternative
+
+## What a good version looks like
+
+- A good version shows: one bar per x category whose width is proportional to that category's marginal count, as the Notes ask, with the bars set side by side and no gaps between them, so the widths together span all observations.
+- A good version shows: every bar the same full height, from zero to the whole, divided into segments whose heights are the conditional proportions of the fill categories within that bar, on a proportion axis that is never truncated.
+- A good version shows: one distinct color per fill category, the same in every bar and stacked in the same order, named in a legend, as the Notes ask.
+- A good version shows: each x category's label centered under its own variable-width bar, as the Notes ask.
+- A good version shows: percentage labels, if drawn, inside segments large enough to hold them, matching each segment's conditional proportion and readable against their own fill in both themes.
+- Expected, not a defect: bars of very different width, including a narrow one for a small category, thin segments that are left unlabeled, segment boundaries at a different height in every bar, and a hairline outline that marks where two adjacent bars meet.
