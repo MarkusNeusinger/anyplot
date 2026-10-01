@@ -29,7 +29,7 @@ A 3D contour plot displays contour lines or filled contour bands on a three-dime
 ## What a good version looks like
 
 - A good version shows: the field in three dimensions, its level curves lifted to their z heights over the x-y plane, with or without the surface drawn beneath them, seen from an oblique angle with all three axes drawn, so the shape reads as relief rather than as a flat map.
-- A good version shows: level curves on the surface at regular intervals, as the Notes ask, drawn as lines or as the edges of filled bands, each staying at one height all the way around and distinguishable from the surface in both themes.
+- A good version shows: level curves at regular intervals, as the Notes ask, drawn as lines or as the edges of filled bands, each staying at one height all the way around and, where a surface is drawn, distinguishable from it in both themes.
 - A good version shows: contours projected onto the base plane, if drawn as the Notes suggest, lying flat directly below the level curves they repeat and at the same levels.
 - A good version shows: a sequential or diverging colormap tied to height, with the color bar the Notes ask for naming the quantity and covering the range of the contour levels.
 - A good version shows: a view angle that keeps the main peaks and valleys and their level curves in sight, so a fully hidden feature is the exception rather than the rule.

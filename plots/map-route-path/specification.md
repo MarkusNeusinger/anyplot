@@ -32,7 +32,7 @@ A geographic map visualization showing a connected path or route between sequent
 
 ## What a good version looks like
 
-- A good version shows: one continuous line through the waypoints in sequence order, as the Notes ask, each vertex at its latitude and longitude and no segment joining points that are not consecutive.
+- A good version shows: one continuous line through the waypoints in sequence order, as the Notes ask, following their latitudes and longitudes apart from the smoothing or simplification the Notes ask for, and never jumping between points out of order.
 - A good version shows: distinct markers for the start and the end of the route, as the Notes ask, told apart by shape or color so that a reader can tell at which end the journey began.
 - A good version shows: a color gradient along the path, if used as the Notes suggest, following time progression, speed or elevation and explained by a color bar or legend that names the variable.
 - A good version shows: direction arrows, if drawn as the Notes allow, pointing along the direction of travel and sparse enough to leave the line visible.
