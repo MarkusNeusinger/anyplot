@@ -227,8 +227,8 @@ jobs:
 
       # Regen = the pair already has an implementation on main. Decided here
       # from origin/main, never from the PR's `regen` label (a lost label must
-      # not route a regeneration into the repair loop, whose exhaustion path
-      # deletes the live implementation). Only `regen:forced` (dispatch input
+      # not route a regeneration into the repair loop and its cascading
+      # thresholds instead of the gate). Only `regen:forced` (dispatch input
       # regen_gate=false) opts out; if the labels cannot be read the PR is
       # gated — the fail-safe direction.
       - name: Detect regeneration
@@ -726,16 +726,52 @@ jobs:
 
           MARKER="<!-- review-retry:${SPEC_ID}:${LIBRARY} -->"
           # Paginate so the marker is found even on PRs with >30 comments.
-          RETRY_COUNT=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
-            --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2>/dev/null || echo "0")
+          # `--paginate --jq` prints one count per page, so the pages are
+          # summed. A read that fails three times counts as a spent budget
+          # (fail closed): the brown-out that breaks the read must not buy a
+          # second automatic re-review.
+          RETRY_COUNT=""
+          for attempt in 1 2 3; do
+            if PAGES=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
+                 --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2> /tmp/retry-count.err) \
+               && RETRY_COUNT=$(printf '%s\n' "$PAGES" | jq -s 'add // 0' 2>> /tmp/retry-count.err) \
+               && [[ "$RETRY_COUNT" =~ ^[0-9]+$ ]]; then
+              break
+            fi
+            RETRY_COUNT=""
+            echo "::warning::retry-marker read failed (attempt ${attempt}/3): $(head -c 500 /tmp/retry-count.err | tr '\n' ' ')"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+          done
+          EXHAUSTED="Auto-retry already tried once."
+          if [ -z "$RETRY_COUNT" ]; then
+            echo "::error::Could not read the retry marker for PR #${PR_NUM} after 3 attempts — not auto-retrying"
+            EXHAUSTED="Whether the one auto-retry was already used could not be read, so none was started."
+            RETRY_COUNT=1
+          fi
 
           if [ "$RETRY_COUNT" -ge 1 ]; then
-            # Already auto-retried once → final fail, require manual rerun
-            gh pr edit "$PR_NUM" --add-label "ai-review-failed" 2>/dev/null || true
-            gh pr comment "$PR_NUM" --body "${MARKER}
+            # Already auto-retried once → final fail, require manual rerun.
+            # Both writes retried: an unreadable budget lands here in the
+            # middle of a brown-out, and `ai-review-failed` is the hand-off to
+            # the watchdog.
+            gh_retry() {
+              local what="$1"; shift
+              local attempt
+              for attempt in 1 2 3; do
+                if "$@" 2> /tmp/retry-count.err; then
+                  return 0
+                fi
+                echo "::warning::${what} failed (attempt ${attempt}/3): $(head -c 500 /tmp/retry-count.err | tr '\n' ' ')"
+                [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+              done
+              return 1
+            }
+            gh_retry "ai-review-failed label" gh pr edit "$PR_NUM" --add-label "ai-review-failed" \
+              || echo "::error::could not add ai-review-failed to PR #${PR_NUM} — left to the watchdog's scan of stalled PRs"
+            gh_retry "PR comment" gh pr comment "$PR_NUM" --body "${MARKER}
           ## :x: AI Review Failed (auto-retry exhausted)
 
-          The AI review action completed but did not produce valid output files. Auto-retry already tried once.
+          The AI review action completed but did not produce valid output files. ${EXHAUSTED}
 
           **What happened:**
           - The Claude Code Action ran
@@ -747,7 +783,8 @@ jobs:
           \`\`\`
 
           ---
-          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"
+          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*" \
+              || echo "::error::failure comment not posted on PR #${PR_NUM}"
             exit 1
           fi
 
@@ -778,26 +815,57 @@ jobs:
           SCORE: ${{ steps.score.outputs.score }}
         run: |
           LABEL="quality:${SCORE}"
-          gh label create "$LABEL" --color "0e8a16" --description "Quality score ${SCORE}/100" 2>/dev/null || true
+          # Every call retried with backoff: the verdict steps are gated on
+          # this step, and impl-merge reads the score from this label. Two
+          # tries 2 s apart were not enough for the HTTP 502 brown-out of
+          # run 36712916551 (a post-score failure is rescued by "Re-dispatch
+          # review after a post-score failure", but a retry here is cheaper
+          # than a second review).
+          gh_retry() {
+            local what="$1"; shift
+            local attempt
+            for attempt in 1 2 3 4; do
+              if "$@" 2> /tmp/quality-label.err; then
+                return 0
+              fi
+              echo "::warning::${what} failed (attempt ${attempt}/4): $(head -c 500 /tmp/quality-label.err | tr '\n' ' ')"
+              [ "$attempt" -lt 4 ] && sleep $((attempt * 10))
+            done
+            echo "::error::${what} failed after 4 attempts for PR #${PR_NUM}"
+            return 1
+          }
+          # `--force` makes the creation idempotent (an existing label is not
+          # an error), so it can be retried like the rest: a `quality:N` that
+          # was never created makes every add below fail. A creation that
+          # still fails is not fatal by itself — the add decides.
+          gh_retry "quality label creation" gh label create "$LABEL" --force --color "0e8a16" --description "Quality score ${SCORE}/100" \
+            || echo "::warning::could not create ${LABEL} — the add below fails unless the label already exists"
 
           # Strip stale quality:* labels from prior review attempts so the PR
           # carries exactly one authoritative score. Without this, repaired
           # PRs accumulate (e.g. quality:73 + quality:81 on the same PR)
-          # and downstream readers may pick the wrong one.
-          STALE=$(gh pr view "$PR_NUM" --json labels --jq '[.labels[].name | select(startswith("quality:")) | select(. != "'"$LABEL"'")] | join(",")')
+          # and downstream readers may pick the wrong one. Read with its own
+          # loop: gh_retry's warnings go to stdout, into STALE.
+          STALE=""
+          READ_OK=0
+          for attempt in 1 2 3 4; do
+            if STALE=$(gh pr view "$PR_NUM" --json labels --jq '[.labels[].name | select(startswith("quality:")) | select(. != "'"$LABEL"'")] | join(",")' 2> /tmp/quality-label.err); then
+              READ_OK=1
+              break
+            fi
+            echo "::warning::gh pr view (labels) failed (attempt ${attempt}/4): $(head -c 500 /tmp/quality-label.err | tr '\n' ' ')"
+            [ "$attempt" -lt 4 ] && sleep $((attempt * 10))
+          done
+          if [ "$READ_OK" -ne 1 ]; then
+            echo "::error::Could not read labels for PR #${PR_NUM} after 4 attempts"
+            exit 1
+          fi
           if [ -n "$STALE" ]; then
             echo "::notice::Removing stale quality labels: $STALE"
-            gh pr edit "$PR_NUM" --remove-label "$STALE" 2>/dev/null || true
+            gh_retry "stale quality label removal" gh pr edit "$PR_NUM" --remove-label "$STALE"
           fi
 
-          # Retry on transient GitHub API failures (e.g. 504) — without this,
-          # a single 5xx leaves the PR stuck with no quality label and the
-          # downstream verdict step is gated on this step's success.
-          gh pr edit "$PR_NUM" --add-label "$LABEL" 2>/dev/null || {
-            echo "::warning::Failed to add quality score label, retrying..."
-            sleep 2
-            gh pr edit "$PR_NUM" --add-label "$LABEL"
-          }
+          gh_retry "quality label" gh pr edit "$PR_NUM" --add-label "$LABEL"
 
       # One review, no repair: automation/scripts/regen_gate.py turns the
       # review's before/after judgement (review_regen.json, prompt step 8b)
@@ -914,6 +982,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Add preliminary verdict label (early)
+        id: early_verdict
         if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -930,8 +999,8 @@ jobs:
           # merge → `regen:improved` FIRST, then `ai-approved` (impl-merge
           # listens for the latter, so the marker must already be there).
           # keep → `regen:kept` only. Never `ai-rejected`: that would start
-          # the repair loop, whose exhaustion path deletes the live
-          # implementation from main.
+          # the repair loop, which a regeneration never enters (one review,
+          # then the gate).
           if [ "$IS_REGEN" = "true" ]; then
             add_label() {
               local label="$1" attempt
@@ -1329,56 +1398,138 @@ jobs:
             echo "::notice::Changes committed to ${BRANCH}"
           fi
 
-      - name: Handle review failure
-        if: steps.attempts.outputs.count != '4' && steps.review.conclusion == 'failure'
+      # The review scored, then a later step died before any verdict label
+      # landed — every step after a failure is skipped, so nothing downstream
+      # would ever run. Run 36712916551 (PR #11984, 2026-09-30): "Add quality
+      # score label" hit HTTP 502 twice and the PR sat without a verdict for
+      # ~7 h. A crashed or empty review never gets here (has_output is false:
+      # "Validate review output" owns it). Once a verdict label is on the PR
+      # the watchdog's merge/repair cases own the state, and a second review
+      # could add a contradicting verdict, so this step then does nothing.
+      # It shares the `review-retry` marker with "Validate review output": at
+      # most one automatic re-review per PR, whatever the cause. The marker is
+      # written before the dispatch, and an unreadable budget counts as spent.
+      # After that, or when the marker or the dispatch itself fails, the PR
+      # gets `ai-review-failed`, which watchdog Case 1 rescues once (a
+      # regeneration is only flagged).
+      # The retry runs on this run's ref, so a branch smoke stays on its branch.
+      - name: Re-dispatch review after a post-score failure
+        if: failure() && steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && steps.early_verdict.conclusion != 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
+          SCORE: ${{ steps.score.outputs.score }}
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
           MODEL: ${{ steps.pr.outputs.model }}
           REVIEW_MODEL_ALIAS: ${{ steps.pr.outputs.review_model_alias }}
+          WORKFLOW_REF: ${{ github.ref_name }}
         run: |
+          RUN_URL="https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}"
           MARKER="<!-- review-retry:${SPEC_ID}:${LIBRARY} -->"
-          # Paginate so the marker is found even on PRs with >30 comments.
-          RETRY_COUNT=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
-            --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2>/dev/null || echo "0")
+          # Same shape as the verdict step's helper; one GitHub brown-out is
+          # the likely reason this step runs at all.
+          gh_retry() {
+            local what="$1"; shift
+            local attempt
+            for attempt in 1 2 3; do
+              if "$@" 2> /tmp/rescue-gh.err; then
+                return 0
+              fi
+              echo "::warning::${what} failed (attempt ${attempt}/3): $(head -c 500 /tmp/rescue-gh.err | tr '\n' ' ')"
+              [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+            done
+            return 1
+          }
+          give_up() {
+            gh label create "ai-review-failed" --color "d73a4a" --description "AI review failed; watchdog re-dispatches once" 2>/dev/null || true
+            gh_retry "ai-review-failed label" gh pr edit "$PR_NUM" --add-label "ai-review-failed" \
+              || echo "::error::could not add ai-review-failed to PR #${PR_NUM} — left to the watchdog's scan of stalled PRs"
+            {
+              echo "${MARKER}"
+              echo "## :x: AI Review Failed After Scoring"
+              echo ""
+              echo "The review scored ${SCORE}/100, but $1 No verdict was applied."
+              echo ""
+              echo "**Manual rerun:**"
+              echo "\`\`\`"
+              echo "gh workflow run impl-review.yml -f pr_number=${PR_NUM}"
+              echo "\`\`\`"
+              echo ""
+              echo "---"
+              echo ":robot: *[impl-review](${RUN_URL})*"
+            } > /tmp/rescue-comment.md
+            gh_retry "PR comment" gh pr comment "$PR_NUM" --body-file /tmp/rescue-comment.md || true
+            exit 1
+          }
 
-          if [ "$RETRY_COUNT" -ge 1 ]; then
-            gh pr edit "$PR_NUM" --add-label "ai-review-failed" 2>/dev/null || true
-            gh pr comment "$PR_NUM" --body "${MARKER}
-          ## :x: AI Review Failed (auto-retry exhausted)
-
-          The AI review action failed or timed out twice in a row.
-
-          **Manual rerun:**
-          \`\`\`
-          gh workflow run impl-review.yml -f pr_number=$PR_NUM
-          \`\`\`
-
-          ---
-          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"
-            exit 0
+          # Not through gh_retry: its warnings go to stdout, into LABELS.
+          LABELS=""
+          READ_OK=0
+          for attempt in 1 2 3; do
+            if LABELS=$(gh pr view "$PR_NUM" --json labels -q '.labels[].name' 2> /tmp/rescue-gh.err); then
+              READ_OK=1
+              break
+            fi
+            echo "::warning::gh pr view (labels) failed (attempt ${attempt}/3): $(head -c 500 /tmp/rescue-gh.err | tr '\n' ' ')"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+          done
+          if [ "$READ_OK" -ne 1 ]; then
+            give_up "a later step failed and the PR's labels could not be read afterwards."
+          fi
+          if echo "$LABELS" | grep -qxE "ai-approved|ai-rejected|regen:improved|regen:kept"; then
+            echo "::notice::PR #${PR_NUM} already carries a verdict label — left to the watchdog, no re-review"
+            exit 1
           fi
 
-          gh pr comment "$PR_NUM" --body "${MARKER}
-          ## :wrench: AI Review Crashed — Auto-Retrying
+          # Paginate so the marker is found even on PRs with >30 comments.
+          # `--paginate --jq` prints one count per page, so the pages are
+          # summed. An unreadable budget counts as spent (fail closed): the
+          # brown-out that brought this step here must not lift the cap.
+          RETRY_COUNT=""
+          for attempt in 1 2 3; do
+            if PAGES=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
+                 --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2> /tmp/rescue-gh.err) \
+               && RETRY_COUNT=$(printf '%s\n' "$PAGES" | jq -s 'add // 0' 2>> /tmp/rescue-gh.err) \
+               && [[ "$RETRY_COUNT" =~ ^[0-9]+$ ]]; then
+              break
+            fi
+            RETRY_COUNT=""
+            echo "::warning::retry-marker read failed (attempt ${attempt}/3): $(head -c 500 /tmp/rescue-gh.err | tr '\n' ' ')"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+          done
+          if [ -z "$RETRY_COUNT" ]; then
+            give_up "a later step failed, and whether the one automatic re-review was already used could not be read."
+          fi
+          if [ "$RETRY_COUNT" -ge 1 ]; then
+            give_up "a later step failed, and the one automatic re-review this PR gets is already used."
+          fi
 
-          The Claude Code Action failed or timed out. Auto-retrying review once...
+          # The marker comment is the retry budget, so it is written BEFORE
+          # the dispatch and the dispatch only happens once it is durable: a
+          # review dispatched without a marker could fail after its score and
+          # dispatch yet another one.
+          {
+            echo "${MARKER}"
+            echo "## :wrench: AI Review Failed After Scoring — Re-Reviewing"
+            echo ""
+            echo "The review scored ${SCORE}/100, but a later step failed before a verdict was applied (see the run log). A fresh review is dispatched once."
+            echo ""
+            echo "---"
+            echo ":robot: *[impl-review](${RUN_URL})*"
+          } > /tmp/rescue-comment.md
+          if ! gh_retry "retry marker comment" gh pr comment "$PR_NUM" --body-file /tmp/rescue-comment.md; then
+            give_up "a later step failed and the retry marker could not be recorded, so no re-review was dispatched."
+          fi
 
-          ---
-          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"
-
-          gh api repos/$REPOSITORY/dispatches \
-            -f event_type=review-pr \
-            -f "client_payload[pr_number]=$PR_NUM" \
-            -f "client_payload[model]=$MODEL" \
-            -f "client_payload[review_model]=$REVIEW_MODEL_ALIAS"
-          echo "::notice::Auto-re-triggered impl-review.yml for PR #$PR_NUM (review model=$REVIEW_MODEL_ALIAS, generation model=$MODEL)"
-          # Mark this run as failed so the run status reflects that no verdict
-          # was produced. The auto-retry runs in a separate workflow run.
+          if ! gh_retry "impl-review dispatch" gh workflow run impl-review.yml --ref "${WORKFLOW_REF:-main}" \
+               -f pr_number="$PR_NUM" -f model="$MODEL" -f review_model="$REVIEW_MODEL_ALIAS"; then
+            give_up "a later step failed and the re-review could not be dispatched."
+          fi
+          echo "::notice::Re-dispatched impl-review.yml on ${WORKFLOW_REF:-main} for PR #${PR_NUM} (review model=${REVIEW_MODEL_ALIAS}, generation model=${MODEL})"
+          # The run stays red: it produced no verdict. The re-review is its own run.
           exit 1
 
       # Regen keep only: this session's re-score of the live implementation
@@ -1872,7 +2023,37 @@ jobs:
             else
               # All 4 repair attempts exhausted
               echo "::notice::All 4 repair attempts exhausted (Score $SCORE < 50)"
-              gh pr edit "$PR_NUM" --add-label "quality-poor"
+              gh_retry "quality-poor label" gh pr edit "$PR_NUM" --add-label "quality-poor" || true
+
+              # Is the pair live on main? Only a forced regeneration
+              # (`regen:forced`) reaches the repair loop with an implementation
+              # on main — every other regeneration goes through the regen gate.
+              # That live implementation is fine; only its replacement failed,
+              # so it stays, and the pair is never marked failed. (This path
+              # used to delete it with `git push origin main`, which the main
+              # ruleset refuses — the step died after closing the PR and the
+              # issue never got its label.) If main cannot be read the answer
+              # is unknown: neither terminal label (a fresh pair wrongly marked
+              # done would drop out of gap backfill, a live one wrongly marked
+              # failed would be regenerated), and the run ends red.
+              IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}"
+              RUN_URL="https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}"
+              IS_LIVE=unknown
+              if GH_RETRY_LEVEL=warning gh_retry "git fetch origin main" git fetch -q origin main; then
+                if git cat-file -e "origin/main:${IMPL_FILE}" 2>/dev/null; then
+                  IS_LIVE=true
+                else
+                  IS_LIVE=false
+                fi
+              else
+                echo "::warning::origin/main unavailable — cannot tell whether ${LIBRARY}/${SPEC_ID} is live; no terminal label"
+              fi
+              echo "::notice::Implementation live on main: ${IS_LIVE}"
+              case "$IS_LIVE" in
+                true) OUTCOME="The PR is closed. The implementation on main is unchanged and stays live." ;;
+                false) OUTCOME="The PR is closed and the pair is marked \`impl:${LIBRARY}:failed\`." ;;
+                *) OUTCOME="The PR is closed. Whether an implementation is live on main could not be read, so the issue is left for manual attention." ;;
+              esac
 
               # Unquoted delimiter so $SCORE/$LIBRARY/$REPOSITORY/$RUN_ID expand
               # — with <<'EOF' this comment rendered a literal "$SCORE/100".
@@ -1881,14 +2062,17 @@ jobs:
               # substitution. Expanding the variables is safe even though
               # $LIBRARY derives from a branch name, because bash does not
               # re-evaluate substituted values.
-              gh pr comment "$PR_NUM" --body "$(cat <<EOF
+              # Rendered to a file and posted through gh_retry: a failed comment
+              # must not stop the close and the issue bookkeeping below.
+              FAILED=0
+              cat > /tmp/anyplot-exhausted.md <<EOF
           ## AI Review - Final Status
 
           ### Score: $SCORE/100 (Below Threshold)
 
           After **4 repair attempts**, the score ($SCORE) is still below the minimum acceptable threshold of 50.
 
-          **This is treated like an auto-reject.** The PR will be closed and any old implementation will be removed from main.
+          **This is treated like an auto-reject.** $OUTCOME
 
           **Options:**
           1. Regenerate from scratch with \`generate:$LIBRARY\` label
@@ -1897,33 +2081,77 @@ jobs:
           ---
           :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*
           EOF
-          )"
-
-              gh pr close "$PR_NUM"
-
-              # Remove old implementation from main if it exists
-              IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}"
-              META_FILE="plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml"
-
-              git fetch origin main
-              if git show origin/main:"$IMPL_FILE" &>/dev/null; then
-                echo "::notice::Removing old implementation from main: $IMPL_FILE"
-                git checkout main
-                git pull origin main
-
-                # Delete implementation and metadata
-                rm -f "$IMPL_FILE" "$META_FILE"
-
-                # Commit and push
-                git add -A
-                git commit -m "chore(${LIBRARY}): remove ${SPEC_ID} impl (score ${SCORE} < 50 after 4 attempts)"
-                git push origin main
-                echo "::notice::Old implementation removed from main"
-              fi
+              gh_retry "final status PR comment" gh pr comment "$PR_NUM" --body-file /tmp/anyplot-exhausted.md || FAILED=1
+              gh_retry "PR close" gh pr close "$PR_NUM" || FAILED=1
 
               if [ -n "$ISSUE_NUMBER" ]; then
-                gh issue edit "$ISSUE_NUMBER" --add-label "impl:${LIBRARY}:failed" 2>/dev/null || true
-                gh issue comment "$ISSUE_NUMBER" --body "**${LIBRARY}** implementation: score ${SCORE}/100 after 4 repair attempts (< 50 = rejected). PR #${PR_NUM} closed. Old implementation removed from repository."
+                STALE_LABELS=("generate:${LIBRARY}" "impl:${LIBRARY}:pending")
+                case "$IS_LIVE" in
+                  true)
+                    # The pair is done again (its live implementation): re-assert
+                    # done FIRST, then drop the labels that say it is in flight.
+                    gh label create "impl:${LIBRARY}:done" --color "0e8a16" --description "${LIBRARY} implementation merged" 2>/dev/null || true
+                    gh_retry "impl:${LIBRARY}:done" gh issue edit "$ISSUE_NUMBER" --add-label "impl:${LIBRARY}:done" || FAILED=1
+                    STALE_LABELS+=("impl:${LIBRARY}:failed" "watchdog:retried-${LIBRARY}")
+                    ISSUE_TEXT="**${LIBRARY}** replacement: score ${SCORE}/100 after 4 repair attempts (< 50 = rejected). PR #${PR_NUM} closed; the implementation on main is unchanged and stays live."
+                    ;;
+                  false)
+                    gh label create "impl:${LIBRARY}:failed" --color "d73a4a" --description "${LIBRARY} implementation failed" 2>/dev/null || true
+                    gh_retry "impl:${LIBRARY}:failed" gh issue edit "$ISSUE_NUMBER" --add-label "impl:${LIBRARY}:failed" || FAILED=1
+                    ISSUE_TEXT="**${LIBRARY}** implementation: score ${SCORE}/100 after 4 repair attempts (< 50 = rejected). PR #${PR_NUM} closed."
+                    ;;
+                  *)
+                    FAILED=1
+                    ISSUE_TEXT="**${LIBRARY}**: score ${SCORE}/100 after 4 repair attempts (< 50 = rejected). PR #${PR_NUM} closed. Whether an implementation is live on main could not be read, so no \`impl:${LIBRARY}:done\` or \`impl:${LIBRARY}:failed\` label was set: check main and set the right one ([impl-review](${RUN_URL}))."
+                    ;;
+                esac
+                # One label per call: a name `gh` cannot resolve fails a whole
+                # comma-separated edit. Only labels the issue carries are
+                # removed, so a failed removal is a real API error and turns
+                # the run red: a left-over `generate:`/`pending` label lets the
+                # watchdog re-dispatch a pair that was just finalized. Read
+                # with its own loop: gh_retry's warnings go to stdout.
+                PRESENT=""
+                PRESENT_OK=0
+                for attempt in 1 2 3; do
+                  if PRESENT=$(gh issue view "$ISSUE_NUMBER" --json labels -q '.labels[].name' 2> /tmp/labels.err); then
+                    PRESENT_OK=1
+                    break
+                  fi
+                  echo "::warning::gh issue view (labels) failed (attempt ${attempt}/3): $(head -c 500 /tmp/labels.err | tr '\n' ' ')"
+                  [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+                done
+                if [ "$PRESENT_OK" -ne 1 ]; then
+                  echo "::error::Could not read labels of issue #${ISSUE_NUMBER} — stale labels (${STALE_LABELS[*]}) may be left"
+                  FAILED=1
+                fi
+                for stale in "${STALE_LABELS[@]}"; do
+                  if [ "$PRESENT_OK" -ne 1 ]; then
+                    # Blind best effort; the run is already red.
+                    GH_RETRY_LEVEL=warning gh_retry "remove ${stale}" gh issue edit "$ISSUE_NUMBER" --remove-label "$stale" || true
+                  elif echo "$PRESENT" | grep -qxF "$stale"; then
+                    gh_retry "remove ${stale}" gh issue edit "$ISSUE_NUMBER" --remove-label "$stale" || FAILED=1
+                  fi
+                done
+                gh_retry "issue comment" gh issue comment "$ISSUE_NUMBER" --body "$ISSUE_TEXT" || FAILED=1
+
+                if [ "$IS_LIVE" = "true" ]; then
+                  # Same as a kept regeneration: the pair is done again, so the
+                  # issue may be complete.
+                  LIBRARIES=$(python3 -c "from core.constants import SUPPORTED_LIBRARIES; print(' '.join(sorted(SUPPORTED_LIBRARIES)))" 2>/dev/null || echo "")
+                  if [ -n "$LIBRARIES" ]; then
+                    python3 "$RUNNER_TEMP/regen-tools/close_issue_if_complete.py" \
+                      --issue "$ISSUE_NUMBER" --spec-id "$SPEC_ID" --libraries "$LIBRARIES" \
+                      --run-url "$RUN_URL" --source impl-review || true
+                  else
+                    echo "::warning::Could not read SUPPORTED_LIBRARIES — issue #${ISSUE_NUMBER} left open"
+                  fi
+                fi
+              fi
+
+              if [ "$FAILED" -ne 0 ]; then
+                echo "::error::Repair exhaustion of PR #${PR_NUM}: some bookkeeping calls failed (see warnings above)"
+                exit 1
               fi
             fi
             exit 0
