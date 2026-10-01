@@ -180,7 +180,7 @@ items:
       - {id: D1, criteria: [VQ-02], match: '(label|text)s?.{0,60}(far|away|detached|offset|distant|disconnected|separated|misplac|not (next|adjacent|close))|(far|away) from (their|the|its) (node|circle|marker)|label (placement|position)', note: 'node labels sit far from their nodes'}
     permitted:
       - {id: A1, criteria: [SC-03], match: 'displac|off (their|its) (true |data )?(value|position|coordinate)|not (at|on) (their|its) (data |true )?(value|position)|position\w* (does|do) not (encode|reflect|map)|(nodes?|marks?) (are |were )?(moved|nudged|pushed|shifted)', note: 'layout-positioned nodes: position is not data, so no SC-03 deduction'}
-      - {id: A2, criteria: [CQ-04, LM-01], match: 'networkx|(hand[- ]?(rolled|written|coded)|writ(e|es|ten|ing)[- ]out|by hand|re-?implement|manual(ly)? (comput|implement)).{0,80}(layout|spring|force)|(layout|spring|force).{0,80}(hand[- ]?(rolled|written|coded)|writ(e|es|ten|ing)[- ]out|by hand|re-?implement|networkx)', note: 'spring layout written out (bokeh.py:95-120); networkx is in no lib-* extra, so no call replaces it (P8)'}
+      - {id: A2, criteria: [CQ-04, LM-01], match: 'networkx(?!\W+((is|are) )?(explicitly )?(not |un)available)|(hand[- ]?(rolled|written|coded)|writ(e|es|ten|ing)[- ]out|by hand|re-?implement|manual(ly)? (comput|implement)).{0,80}(layout|spring|force)(?!.{0,60}(not (a )?deduct|no deduction|(not |un)available))|(layout|spring|force).{0,80}(hand[- ]?(rolled|written|coded)|writ(e|es|ten|ing)[- ]out|by hand|re-?implement)(?!.{0,60}(not (a )?deduct|no deduction|(not |un)available))', note: 'spring layout written out (bokeh.py:95-120); networkx is in no lib-* extra, so no call replaces it (P8). The lookaheads skip a sentence that declines the deduction ("is not a deduction", "networkx is not available"): owner decision 2026-10-01 after the P8 arms'}
 
   - id: f-bar-diverging-likert-matplotlib
     kind: fresh
@@ -202,7 +202,7 @@ items:
     note: "candidate: bright white vertical zero-lag line in both dark panes, near-invisible in the light render (DE-02, VQ-07)"
     defects:
       - {id: D1, criteria: [DE-02, VQ-07], match: '(zero|lag[- ]?0|lag[- ]zero|reference)[- ]?(lag )?(line|bar|stem|rule|marker)|(white|bright|harsh|glaring|faint|invisible|washed).{0,30}(vertical |reference )?(line|rule) at (lag )?(0|zero)', note: 'bright white zero-lag line in both dark panes, near-invisible in the light render'}
-      - {id: D2, criteria: [CQ-04], match: 'durbin|levinson|statsmodels|hand[- ]?(rolled|written|coded)|writ(e|es|ten|ing)[- ]out|by hand|re-?implement|manual(ly)? (comput|implement)', note: 'ACF and Durbin-Levinson PACF written out (plotly.py:39-60); statsmodels acf/pacf are installed (P8)'}
+      - {id: D2, criteria: [CQ-04], match: 'statsmodels|(hand[- ]?(rolled|written|coded)|writ(e|es|ten|ing)[- ]out|by hand|re-?implement|manual(ly)? (comput|implement)).{0,80}(acf|pacf|autocorrelation|durbin|levinson|recursion)', note: 'ACF and Durbin-Levinson PACF written out (plotly.py:39-60); statsmodels acf/pacf are installed (P8). The hand-roll wording must name what is written out: a bare "Durbin" or "written out" also matched the trace-block duplication in the P8 baseline arm'}
     permitted: []
 
   - id: f-line-stock-comparison-pygal

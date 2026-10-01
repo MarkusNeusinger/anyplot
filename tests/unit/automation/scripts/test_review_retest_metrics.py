@@ -202,6 +202,96 @@ class TestLabels:
         assert m.probe_false_alarm(a2, _rec("f-network-basic-bokeh", 1, 80, weaknesses=[hand_roll]))
         assert not m.probe_false_alarm(a2, _rec("f-network-basic-bokeh", 2, 80, weaknesses=[labels_far]))
 
+    # Verbatim criterion comments of the P8 arms (baseline 36782558185 at rules
+    # 748d230c9, candidate 36782726606 at d87bcebd4), each on a deducted item.
+    @pytest.mark.parametrize(
+        ("label_id", "criterion", "comment", "hit"),
+        [
+            # A2, baseline: the hand-rolled spring layout is blamed (3 of 3).
+            (
+                "A2",
+                "CQ_04",
+                "Readable and well commented, but the PIL pad/crop block re-normalises a canvas the CDP viewport pin "
+                "already fixes, and the hull computation plus the greedy eight-direction label search stack another "
+                "~50 lines on top of the hand-rolled force loop.",
+                True,
+            ),
+            (
+                "A2",
+                "LM_01",
+                "ColumnDataSource, column-driven glyph properties and Legend/LegendItem models are correct bokeh, but "
+                "31 individual p.line() calls instead of one multi_line glyph, and a hand-rolled force loop instead of "
+                "from_networkx, miss the library's own patterns.",
+                True,
+            ),
+            (
+                "A2",
+                "CQ_04",
+                "About 100 lines of hand-rolled machinery: an O(n^2) force loop, a greedy 8-direction label placer "
+                "whose scoring is what detaches the labels, and a pad/crop normalisation that the CDP viewport pin "
+                "already makes unreachable.",
+                True,
+            ),
+            # A2, candidate: the comment declines the deduction (0 of 3).
+            (
+                "A2",
+                "CQ_04",
+                "Lines 197-203 create one p.line() renderer per edge (31 glyph renderers for a single visual layer) "
+                "where two p.multi_line() calls do the same in about four lines. The hand-written spring layout is "
+                "not a deduction - networkx is not available.",
+                False,
+            ),
+            (
+                "A2",
+                "CQ_04",
+                "The hand-rolled spring layout is correct and not deducted — networkx is explicitly unavailable, so "
+                "no installed call reproduces it. Two leanness issues: 51 one-item glyph renderers (31 p.line, 20 "
+                "p.text) where multi_line and a source-driven text do the same, and a 9-line PIL pad/crop pass that "
+                "the CDP viewport pin already makes a no-op.",
+                False,
+            ),
+            (
+                "A2",
+                "CQ_04",
+                "Lines 314-322 pad/crop the PNG to a size the CDP viewport pin already guarantees - nine dead lines "
+                "plus a mid-module PIL import. The hand-rolled spring layout is not a deduction: networkx is not "
+                "available to this environment",
+                False,
+            ),
+            # D2, baseline: the duplication of trace blocks is not the hand-rolled ACF/PACF.
+            (
+                "D2",
+                "CQ_04",
+                "The Durbin-Levinson recursion is appropriately compact, but six hand-unrolled add_trace blocks for "
+                "the ACF/PACF stems and markers - each behind an if guard that cannot be false for this data - repeat "
+                "the same shape roughly 100 lines with no effect on either render.",
+                False,
+            ),
+            (
+                "D2",
+                "CQ_04",
+                "Likely cause: the per-row trace construction written out twice instead of once in a loop.",
+                False,
+            ),
+            # D2, candidate.
+            (
+                "D2",
+                "CQ_04",
+                "Lines 39-59 write out the ACF sum and the Durbin-Levinson PACF recursion by hand, ~21 lines that "
+                "statsmodels.tsa.stattools.acf/pacf reproduce in two. No fake UI and no over-engineering elsewhere.",
+                True,
+            ),
+        ],
+    )
+    def test_p8_labels_on_the_arms_own_wording(self, label_id, criterion, comment, hit):
+        manifest = yaml.safe_load((REPO_ROOT / "automation" / "retest" / "set-v1.yaml").read_text())
+        items = {item["id"]: item for item in manifest["items"]}
+        labels = items["f-network-basic-bokeh"]["permitted"] + items["f-acf-pacf-plotly"]["defects"]
+        label = next(entry for entry in labels if entry["id"] == label_id and "CQ-04" in entry["criteria"])
+        record = _rec("x", 1, 80, checklist=_checklist(**{criterion: (1, 2, comment)}))
+        check = m.probe_false_alarm if label_id == "A2" else m.defect_hit
+        assert check(label, record) is hit
+
     def test_no_labels_means_no_rates(self):
         d = m.group_metrics([_rec("a", 1, 90)], {})["defects"]
         assert d["miss_rate"] is None and d["false_alarm_rate"] is None
