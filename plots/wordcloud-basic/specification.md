@@ -24,3 +24,12 @@ A word cloud displays text data where word size represents frequency or importan
 - Very long words may need truncation for proper display
 - Color can be decorative or encode additional information like category
 - Libraries may use different algorithms for word placement (spiral, rectangular, etc.)
+
+## What a good version looks like
+
+- A good version shows: word size growing with frequency or importance, so the most frequent words are plainly the largest and the size range runs down to small but still readable words.
+- A good version shows: words placed by the layout algorithm, not by data, so no axes or grid, arranged to fill the cloud's area with no word covering or touching another and none cut off at the edge.
+- A good version shows: preprocessed text, as the Notes ask: stop words absent and each term appearing once rather than in several spellings or capitalizations.
+- A good version shows: color either decorative or encoding one more property such as category, as the Notes allow; when it encodes something a legend or key says what, and every word stays readable against the page in both themes.
+- A good version shows: the basic variant's words only: no second cloud for comparison, reference lines, highlighted words set apart by boxes, outlines or underlines, or callouts.
+- Expected, not a defect: words of very different size, rotated words, an irregular outline, small gaps the layout could not fill, a long word shortened to fit, and long words that look heavier than short ones of the same frequency.

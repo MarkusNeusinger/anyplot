@@ -26,3 +26,12 @@ A range interval chart displays min-max ranges or intervals as vertical or horiz
 - Consider adding markers at min/max endpoints for emphasis
 - Semi-transparent fill or distinct colors help differentiate overlapping ranges
 - Optional: show midpoint markers or reference lines for context
+
+## What a good version looks like
+
+- A good version shows: one bar or line segment per category spanning exactly from its minimum to its maximum value on a shared value axis, floating between the two bounds rather than anchored at zero, so the span itself is the mark.
+- A good version shows: ranges of one thickness with even spacing, in an order the Notes ask for: by range size, by midpoint or a logical order such as chronological, and drawn horizontally when category labels are long.
+- A good version shows: both ends of every range readable against the page in both themes, with markers at the minimum and maximum, if drawn as the Notes allow, sitting exactly on the two bounds.
+- A good version shows: each range distinguishable from its neighbors, with a semi-transparent fill or distinct colors, as the Notes suggest, where ranges would otherwise cover each other.
+- A good version shows: midpoint markers and reference lines, if drawn as the Notes allow, kept subordinate to the ranges, with each midpoint marker at the middle of its own range.
+- Expected, not a defect: ranges of very different length, including a very short one, ranges whose spans overlap along the value axis, and a value axis that does not start at zero, because the bounds, not a length from zero, carry the values.

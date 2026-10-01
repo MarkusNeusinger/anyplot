@@ -35,3 +35,10 @@ Value
 - Often displayed as steps (not smooth curves) to show discrete bins
 - Can use `density=True` or `cumulative=True` parameters
 - Useful for determining what proportion of data falls below any threshold
+
+## What a good version looks like
+
+- A good version shows: one level per bin over contiguous bins, each at the running total of observations up to that bin's upper edge, so no level is ever lower than the one before it.
+- A good version shows: a y axis that starts at zero, is labeled as cumulative count or cumulative proportion, and is reached in full at the last bin: the total sample size on a count axis, or 1 on a proportion axis.
+- A good version shows: the discrete bins still readable in the shape, usually as steps or adjacent bars as the Notes describe, with any overlaid reference curve, if drawn, distinguishable from the binned data.
+- Expected, not a defect: flat runs across empty bins, a steep rise through the middle of the data, a flattening toward the top and the tallest levels crowded at the right end; the one-sided rise is the point of the chart.

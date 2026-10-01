@@ -28,3 +28,12 @@ A wind barb plot displays wind speed and direction at specific locations using s
 - Calm winds (< 2.5 knots) shown as an open circle without a staff
 - Grid spacing should prevent barb overlap for readability
 - Consider using a map projection background for geographic data
+
+## What a good version looks like
+
+- A good version shows: one barb per observation with its staff anchored at the observation's x and y position and pointing toward the direction the wind blows from, as the Notes ask, the opposite of an arrow.
+- A good version shows: speed in the standard notation the Notes give: half barbs, full barbs and filled triangular pennants whose values add up to the wind speed in knots, all drawn on one and the same side of the staff, as the Notes ask.
+- A good version shows: calm winds, when the data has any, as an open circle alone, with the staff omitted, at the observation's position, as the Notes ask.
+- A good version shows: barbs sized and spaced so that neighbors stay out of each other, as the Notes ask, with every half barb, full barb and pennant countable and visible in both themes.
+- Expected, not a defect: staffs that point upwind and so look reversed to a reader used to arrows, light winds drawn with a single half barb, barbs turning from one observation to the next around a pressure center, and very different feather counts side by side.
+- A good version shows: the basic variant's standard barb plot: besides the barbs, the calm circles the Notes ask for, the map background the Notes allow and a key that decodes the notation, no isobars or other overlaid field, reference or mean lines, highlighted barbs or regions, or callouts on pressure centers.

@@ -25,3 +25,11 @@ Climate warming stripes (also known as "warming stripes") display temperature an
 - Each bar should fill equal width with no gaps between bars
 - Target aspect ratio approximately 3:1 (wide and short) to emphasize the horizontal time progression
 - Color scale should be symmetric around zero so that equal positive and negative anomalies have equal visual intensity
+
+## What a good version looks like
+
+- A good version shows: a vertical stripe for every year, in chronological order from left to right, each colored by that year's anomaly, all of equal width and touching, with no gaps between them, as the Notes ask.
+- A good version shows: a blue-to-red diverging colormap centered on zero with limits symmetric around it, as the Notes ask, so cold and warm anomalies of equal size get equal intensity and years near zero are the palest.
+- A good version shows: the stripes alone as the plot, with no axes, labels, tick marks or gridlines, as the Notes ask, and each stripe running the full height of a band that is wider than it is tall.
+- A good version shows: year-to-year variation within the long-term trend, warm and cool years interleaved instead of a smooth gradient, so the stripes read as observed data.
+- Expected, not a defect: no axes, no legend and no color bar, so no value can be read off the plot, and far more of one end of the symmetric scale in use than the other, with the deepest blue or red going unused.

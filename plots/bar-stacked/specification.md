@@ -25,3 +25,12 @@ A stacked bar chart that displays multiple data series stacked on top of each ot
 - Order components consistently across all bars (largest at bottom or by logical grouping)
 - Ensure adequate spacing between bars for visual clarity
 - For precise segment comparisons, consider using a grouped bar chart instead
+
+## What a good version looks like
+
+- A good version shows: one stack per category rising from a shared zero baseline, each segment starting where the one below it ends, so a segment's height is its value and the top of the stack is the category total, on a value axis that is never truncated.
+- A good version shows: the components in the same order in every bar, with the largest at the bottom or in a logical grouping, as the Notes ask.
+- A good version shows: one distinct color per component, the same in every bar and named in a legend, with neighboring segments distinguishable in both themes.
+- A good version shows: bars of one width with even gaps between them, so each stack reads as one category.
+- A good version shows: total labels, if drawn, above each complete stack and equal to the sum of its segments, readable in both themes and not colliding with each other.
+- Expected, not a defect: stacks of unequal height, thin segments for small components, and upper segments that start at different heights from bar to bar because the segments beneath them differ.

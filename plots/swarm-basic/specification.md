@@ -25,3 +25,11 @@ A swarm plot (beeswarm plot) displays individual data points for categorical com
 - Consider adding a subtle mean or median marker for each category
 - Color can distinguish categories or encode an additional variable
 - Maintain clear spacing between category groups
+
+## What a good version looks like
+
+- A good version shows: every observation as its own point at its value on the value axis, pushed sideways only as far as needed to sit beside its neighbors instead of on them, so each swarm is widest where values are densest.
+- A good version shows: points of one size throughout, as the Notes ask, sized so each swarm shows its spread without points hiding one another.
+- A good version shows: clear space between the swarms of neighboring categories, as the Notes ask, even where the swarms are widest.
+- A good version shows: the basic variant's swarms only, with color that distinguishes the categories or encodes an additional variable and the subtle per-category mean or median marker the Notes allow, and no box or violin behind the points, other reference lines, highlighted points or bands, or callouts.
+- Expected, not a defect: sideways offsets, which are layout rather than data, swarms of different width with lumpy or lopsided outlines, points packed edge to edge in the densest value range, and isolated outliers.
