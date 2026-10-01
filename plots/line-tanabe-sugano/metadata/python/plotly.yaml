@@ -1,0 +1,301 @@
+library: plotly
+language: python
+specification_id: line-tanabe-sugano
+created: '2026-10-01T19:36:09Z'
+updated: '2026-10-01T19:53:55Z'
+generated_by: claude-opus
+workflow_run: 36913884827
+issue: 11846
+language_version: 3.13.15
+library_version: 7.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/python/plotly/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Term energies come from diagonalizing the Tanabe-Sugano 2x2 matrices with np.linalg.eigvalsh
+    over a stacked (N,2,2) array (lines 30-38), so the avoided crossing inside the
+    1T2g pair emerges from the physics instead of a hand-fitted spline, exactly as
+    the Notes demand; the numbers check out against the textbook d2 diagram (3P-3F
+    gap is exactly 15 B at delta_o/B = 0, 3A2g reaches 58 at delta_o/B = 30).
+  - 'Spin class is encoded three times over and CVD-safely: spin-allowed terms are
+    Imprint #009E73 solid at width 3.0, spin-forbidden #C475FD dashed at width 1.8,
+    and the in-plot caption names the convention, so the two classes are separable
+    in both themes without relying on hue alone.'
+  - Direct right-margin labelling via paper-referenced annotations (xref='paper',
+    lines 70-79) with plotly's <sup>/<sub> markup typesets true term symbols (3T1g(F),
+    1A1g(G)) and removes the need for a legend box sitting over the curves.
+  - Theme chrome is fully tokenised (PAGE_BG / INK / INK_SOFT / GRID, lines 14-18),
+    so the two renders carry identical data colours and flip only background, text,
+    grid and axis lines - the dark render has no dark-on-dark element anywhere.
+  - The interactive HTML companion keeps plotly's native hover and zoom, which is
+    how this diagram is actually used - matching observed band-energy ratios against
+    the curves to read off delta_o and B (5e).
+  - Square 2400x2400 canvas with a near-square plot area, x anchored at 0 and the
+    ground term 3T1g(F) drawn as a visible flat line along E/B = 0 rather than an
+    omitted baseline, as the Notes ask.
+  weaknesses:
+  - 'VQ-01 (both): axis tick labels sit at size 10 against 12 pt axis titles and 13
+    pt term labels, and in the 400 px preview the x ticks ''10''/''20''/''30'' are
+    barely legible -> about 12 (+2). Likely cause: tickfont=dict(size=10) on both
+    xaxis and yaxis (lines 107, 118).'
+  - 'Suggestion: hovermode=''x unified'' would let a reader pick one delta_o/B in
+    the HTML view and see every term''s E/B at once - the exact reading operation
+    the Description describes.'
+  - 'Suggestion: a hovertemplate naming the term and the two reduced coordinates would
+    make the HTML hover label as informative as the printed diagram, since showlegend=False
+    means the trace name is the only hover text today.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 across both paper and plot area — not pure white, not dark. Square 2400x2400 canvas with a near-square plot area.
+      Chrome: Centred title "line-tanabe-sugano · python · plotly · anyplot.ai" in near-black #1A1A17 at the top, spanning roughly 55% of the canvas width — clearly readable, no clipping. X-axis title "Δo/B  (reduced ligand-field strength)" below the axis, Y-axis title "E/B  (reduced term energy)" rotated at the left — both dark and fully legible. Tick labels 0/10/20/30/40 on x and 0/10/.../80 on y in muted #4A4A44; readable at full size, small but still legible at the 400 px preview. A two-line caption inside the upper-left of the plot area reads "d² (V³⁺) in an octahedral field, C/B = 4.5" and "solid: spin-allowed (triplet) · dashed: spin-forbidden (singlet)" in the same muted ink, overlapping nothing. Grid lines at 10-unit intervals are faint and sit behind the curves. No tick marks; left and bottom axis lines only.
+      Data: Nine term curves. Four spin-allowed (triplet) terms in Imprint position 1 #009E73, solid, thick: ³T1g(F) flat at E/B = 0 along the x-axis, ³T2g rising to ~38, ³T1g(P) from 15 at Δo/B = 0 to ~50, ³A2g steepest to ~78. Five spin-forbidden (singlet) terms in Imprint position 2 #C475FD, dashed, thinner: ¹T2g(D) and ¹Eg(D) near-flat around 14–16, ¹A1g(G) curving from 21 to ~35, ¹T2g(G) and ¹T1g(G) rising to ~55 and ~59. First categorical series is #009E73. Every curve is labelled in the right margin with a typeset term symbol (true superscript multiplicity, true subscript Mulliken label), spin-allowed labels in dark ink and spin-forbidden in soft ink. All nine labels sit fully inside the canvas with margin to spare — no clipping.
+      Legibility verdict: PASS — title, both axis titles, all tick labels, the caption and all nine term labels are clearly dark-on-light; no light-on-light element anywhere.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 across paper and plot area — not pure black, not light. Same square 2400x2400 canvas and same layout.
+      Chrome: Title in light #F0EFE8, clearly readable against the near-black surface. Both axis titles in the same light ink, fully legible. Tick labels in muted light #B8B7B0 — readable, no dark-on-dark anywhere. The two-line caption in the upper-left renders in the same muted light ink and reads cleanly. Grid lines are light at 15% alpha — subtle but visible, still behind the curves. No dark-on-dark failures found.
+      Data: Identical to the light render — the four spin-allowed curves are the same #009E73 (the brand green reads well on the dark surface) and the five spin-forbidden curves the same #C475FD, at the same widths and the same dash pattern. Only background, text, grid and axis-line colours flipped; no data colour changed. The nine right-margin term labels flip to light ink (#F0EFE8 for spin-allowed, #B8B7B0 for spin-forbidden) and all remain readable and unclipped.
+      Legibility verdict: PASS — every text element is light-on-dark and readable; the ground-term line at E/B = 0 and all eight other curves are clearly distinguishable from the background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 16, axis titles 12, ticks 10,
+          term labels 13) and every element is readable in both themes. Tick labels
+          at size 10 are the one element that gets tight at the 400 px preview.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collides with text or with data. The nine right-margin term
+          labels are each separated vertically; the upper-left caption sits in empty
+          canvas well above every curve at that x range.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Spin-allowed curves at width 3.0 solid and spin-forbidden at 1.8
+          dashed are both clearly visible against #FAF8F1 and #1A1A17; the two classes
+          are told apart at a glance in both themes.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple is a CVD-safe pair, and spin class is redundantly encoded
+          by dash pattern and line width, so colour is never the sole signal. No red-green
+          coding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 (canvas gate passed), near-square plot area as the
+          Notes ask, title at about 55% of width, x and y axis titles balanced at
+          12 pt, explicit margins leave room for the right-margin labels with nothing
+          overflowing.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Both axis titles name the reduced quantity and gloss it in plain
+          words: ''Delta_o/B (reduced ligand-field strength)'' and ''E/B (reduced
+          term energy)''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical series is Imprint #009E73, second is #C475FD;
+          backgrounds are exactly #FAF8F1 (light) and #1A1A17 (dark); data colours
+          identical between renders with only chrome flipping.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above the default on evidence: typeset term symbols via sup/sub
+          markup, a restrained two-colour semantic scheme, an in-plot caption instead
+          of a legend box, and fully tokenised theme chrome. Stops short of a striking
+          composition.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Tick marks removed (ticks=''), grid at 15% alpha stays behind the
+          curves, axis lines in INK_SOFT, zerolines off, generous explicit margins.
+          Clean rather than lavish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear hierarchy: thick solid green spin-allowed terms dominate,
+          thin dashed purple spin-forbidden terms recede, label ink follows the same
+          split (INK vs INK_SOFT), and the ground term anchors the read along the
+          x-axis.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'A genuine Tanabe-Sugano diagram: term energies as continuous functions
+          of reduced ligand-field strength, one curve per term, for a single d-n configuration.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Every Notes bullet met: one configuration with C/B stated in the
+          caption; energies from diagonalized Tanabe-Sugano matrices, not splines;
+          ground term drawn as a visible flat line at E/B = 0; spin-allowed thicker
+          and solid, spin-forbidden thinner and dashed; each curve labelled near the
+          right edge with true superscript/subscript markup; the 1T2g(D)/1T2g(G) avoided
+          crossing stays a curved near-touch; near-square plot area with a light grid.
+          No crossover line is required outside d4-d7, which the spec names as expected.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x is Delta_o/B over the full 0-40 range, y is E/B measured from the
+          ground term, and the values are physically right (3P-3F = 15 B at zero field,
+          3A2g = 58 at Delta_o/B = 30, 1D = 14 B and 1G = 21 B at C/B = 4.5). Curves
+          sit at their computed values; the label nudges move annotations only, never
+          the data.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'line-tanabe-sugano · python · plotly · anyplot.ai'.
+          Direct labelling replaces a legend and every label matches its curve's term
+          symbol; the caption supplies the solid/dashed key.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Nine curves exercise every aspect available for this configuration:
+          the flat ground term, both spin classes, an avoided crossing within the
+          1T2g pair, a near-degenerate 1T2g(D)/1Eg(D) pair, and strongly contrasting
+          slopes across the full field range.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: d2 V(III) in an octahedral field at C/B = 4.5 is a real, standard
+          and entirely neutral textbook system.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Delta_o/B spans 0-40 at 320 samples and E/B spans 0-80, all inside
+          the spec's stated ranges and at the conventional magnitudes for a Tanabe-Sugano
+          chart.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Straight-line script: tokens, data, one loop over the term list,
+          layout, save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — the curves are computed from closed-form matrices,
+          with no randomness to seed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, numpy and plotly.graph_objects, all three used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'No hand-rolled algorithm where a call exists: np.linalg.eigvalsh
+          does the diagonalization, and the np.array([[a, off], [off, b]]).T idiom
+          builds the whole stack of 2x2 matrices in one expression. No fake UI, no
+          dead code.'
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Writes plot-{THEME}.png at width=600, height=600, scale=4 (the square
+          2400x2400 target) plus plot-{THEME}.html; autosize=False with explicit margins
+          per the library prompt.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Clean graph_objects usage — go.Figure with add_trace, dict-based
+          line and font styling, a single update_layout, and the theme-adaptive chrome
+          mapping from the library prompt applied verbatim.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Raised above the default for paper-referenced annotations placing
+          labels outside the axes and plotly's HTML text markup typesetting real term
+          symbols, plus the interactive HTML companion. Does not reach for the interaction
+          features this chart type would benefit most from (unified hover, hovertemplate,
+          spike lines).
+  verdict: APPROVED
+  model: claude-opus-5
+  criteria_version: qc-08c3141e4a.aqr-cfd364e1ff.sg-7006008fc6.lib-212804a6a0
+  rendered_at: '2026-10-01T19:46:48Z'
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - grid-styling
+  - minimal-chrome

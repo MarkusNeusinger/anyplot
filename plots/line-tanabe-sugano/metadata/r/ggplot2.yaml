@@ -1,0 +1,311 @@
+library: ggplot2
+language: r
+specification_id: line-tanabe-sugano
+created: '2026-10-01T19:59:00Z'
+updated: '2026-10-01T20:18:38Z'
+generated_by: claude-opus
+workflow_run: 36916501104
+issue: 11846
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'The term energies come from the real d2 Tanabe-Sugano secular blocks rather than
+    fitted splines: at Delta_o/B = 0 the roots reproduce the free-ion separations
+    exactly (3F at -8B, 3P at +7B giving the 15B gap, 1D at -3B+2C, 1G at +4B+2C,
+    1S at +14B+7C with C/B = 4.42), and 3T1g(F), 3T2g and 3A2g correctly emanate together
+    from E/B = 0 because all three descend from 3F.'
+  - plotmath direct labels (`parse = TRUE` on `geom_text` with `coord_cartesian(clip
+    = "off")` and a reserved right margin) typeset every term symbol with a true superscript
+    multiplicity and true subscript Mulliken index and g parity - the R/ggplot2-distinctive
+    answer to the spec's text-markup requirement.
+  - One variable drives three matched manual scales (`scale_color_manual` + `scale_linetype_manual`
+    + `scale_linewidth_manual`), so spin-allowed versus spin-forbidden is encoded
+    redundantly by Imprint color, dash pattern and line weight and still merges into
+    a single legend.
+  - 'Chrome is fully theme-tokenised: both renders are theme-correct (#FAF8F1 / #1A1A17),
+    the Imprint data colors #009E73 and #C475FD are pixel-identical across themes,
+    and the grid at alpha(INK, 0.15) with linewidth 0.25 stays behind the curves in
+    both.'
+  - The 2x2 secular blocks are solved in closed form (centre +/- split) and vectorised
+    with `expand_grid` over all 321 field-strength samples - no loop, no per-row `eigen()`
+    call.
+  weaknesses:
+  - 'VQ-03 (both): the "Spin-forbidden (singlet)" legend key draws as one solid lavender
+    segment because the 0.55 cm key is shorter than a single `longdash` period at
+    linewidth 0.8, so the legend never shows the dash pattern that tells the two classes
+    apart -> widen the key to about 1.2 cm (+0.65 cm). Likely cause: `legend.key.width
+    = unit(0.55, "cm")`.'
+  - 'VQ-05 (both): the margins are lopsided - the rotated y-axis title "Term energy
+    E/B" starts about 2 % from the left canvas edge (all pixels visible, but no breathing
+    room) while about 7 % of empty canvas sits to the right of the term labels ->
+    raise the left margin to about 20 pt and trim the right to about 50 pt. Likely
+    cause: `plot.margin = margin(t = 10, r = 62, b = 6, l = 8)`.'
+  - 'Suggestion: a d6 configuration (the spec''s other classic textbook example) would
+    additionally exercise the high-spin/low-spin crossover line and the slope kinks
+    that d2 cannot show.'
+  - 'Suggestion: the curve labels at `size = 4.1` mm (about 11.7 pt) sit above the
+    10 pt axis titles in the type hierarchy; about 3.6 mm would place them just under.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas and the panel - not pure white, no separate panel fill.
+      Chrome: bold near-black title "line-tanabe-sugano · r · ggplot2 · anyplot.ai" at ~66 % of canvas width; grey subtitle "d2 octahedral field, V3+, C/B = 4.42" with the 2 and 3+ as true superscripts; axis titles "Ligand-field strength Delta_o/B" (bottom) and "Term energy E/B" (rotated, left); grey tick labels 0-40 by 5 on x and 0-80 by 10 on y; very faint grid on both axes; thin L-shaped axis lines, no tick marks; a bottom legend with two line samples, "Spin-allowed (triplet)" and "Spin-forbidden (singlet)". All of it is clearly readable against the light background; nothing is light-on-light and nothing is clipped at the canvas border.
+      Data: nine term curves. Five spin-allowed triplets in brand green #009E73, thick and solid: 3T1g(F) flat along E/B = 0, 3T2g and 3A2g rising straight out of the origin to ~38 and ~78, and 3T1g(P) from 15 to ~50. Four spin-forbidden singlets in Imprint lavender #C475FD, thinner and long-dashed: 1T2g(D) and 1Eg(D) near-coincident and almost flat at ~14-15, 1T1g(G) and 1T2g(G) rising from ~20.8 to ~59 and ~55, and 1A1g(G) bending from ~20.8 up to a flat ~34.5. Every curve carries a plotmath term symbol outside the right panel edge with superscript multiplicity and subscript index/g. First series is #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 across canvas and panel - not pure black.
+      Chrome: title in near-white #F0EFE8, subtitle and tick labels in the soft grey #B8B7B0, axis titles in #F0EFE8, grid lines a faint light rule on the dark surface, axis lines mid-grey, legend text light grey. Every text element is readable; there is no dark-on-dark failure anywhere - no near-black title, label, tick or legend entry on the near-black surface.
+      Data: identical to the light render - the same #009E73 green for the five triplets and the same #C475FD lavender for the four singlets, same dash patterns, same line weights, same curve positions and the same plotmath labels. Only the chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Every size explicitly set (title 12 pt bold, subtitle 9, axis titles
+          10, ticks 8, legend 8, curve labels 4.1 mm). Title fills ~66 % of canvas
+          width, x and y axis titles and tick labels are balanced, nothing overflows,
+          and all text is readable in both themes and at a 400 px downscale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collides with text or with data. The nine right-edge term
+          labels sit entirely outside the panel; the 1Eg(D) / 1T2g(D) pair is nudged
+          apart by +/-2.7 E/B units and keeps a clear gap. Curve crossings between
+          different symmetries are permitted by the spec's characteristic section.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: false
+        comment: 'Curve weights are well matched to nine series (1.4 solid for spin-allowed,
+          0.8 long-dashed for spin-forbidden) and both are clearly visible on both
+          surfaces. Deduction: the spin-forbidden legend key renders as a solid segment
+          because the 0.55 cm key is shorter than one longdash period, so the glyph
+          does not match the marks it explains.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender is CVD-safe and the two classes carry redundant encoding
+          (color + dash + line weight), so hue is never the sole signal. No red-green
+          pairing.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: false
+        comment: '2400x2400 square canvas as required, near-square plot area with
+          both axes starting at 0, panel plus labels fill the canvas well, nothing
+          cut off. Deduction: margins are lopsided - the y-axis title starts ~2 %
+          from the left edge while ~7 % of empty canvas sits right of the term labels.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Ligand-field strength Delta_o/B" and "Term energy E/B" name the
+          quantity and its reduced unit convention, and the subtitle states the configuration
+          and C/B ratio.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is Imprint #009E73, second is Imprint position 2 #C475FD,
+          both identical across renders. Backgrounds are #FAF8F1 / #1A1A17 and every
+          chrome token (INK, INK_SOFT, grid) flips correctly with ANYPLOT_THEME.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clearly above a configured default: Imprint colors, a title/subtitle/axis/tick/label
+          type scale, direct plotmath labelling instead of a nine-entry legend, hairline
+          grid. Short of publication-perfect only on the margin balance.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minor grid removed, major grid at alpha 0.15 and linewidth 0.25,
+          tick marks removed, legend key and background stripped, round line ends,
+          zero x-expansion so the curves meet the axes. Whitespace is not generous
+          on the left side.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Real hierarchy: thick solid green for the spin-allowed terms a chemist
+          actually reads off a UV-Vis spectrum, thin dashed lavender for the weak
+          spin-forbidden ones, direct labels so no legend lookup is needed. Stops
+          short of pointing at the insight itself.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'A genuine Tanabe-Sugano diagram: continuous term energies E/B as
+          functions of Delta_o/B for one d-n configuration, one curve per term.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Every Notes bullet met: one configuration with C/B in the subtitle;
+          energies from the secular matrices, not fitted splines; ground term drawn
+          as a visible flat line at E/B = 0; spin-allowed thicker and solid, spin-forbidden
+          thinner and dashed; each curve labelled with markup superscripts/subscripts
+          near the right edge; same-symmetry terms never cross; near-square panel,
+          both axes from 0, light grid. The crossover line is d4-d7 only, which the
+          characteristic section permits for d2.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = Delta_o/B over 0-40 (321 samples), y = E/B over 0-80, both fully
+          shown. Curves sit at their computed values; only the text labels are offset
+          to de-collide, which the criteria allow.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly "line-tanabe-sugano · r · ggplot2 · anyplot.ai".
+          Legend labels "Spin-allowed (triplet)" / "Spin-forbidden (singlet)" name
+          the encoded classes correctly and match the curve colors.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Nine curves inside the spec''s 6-12 range show every aspect the
+          type can show for d2: the flat ground term, both spin classes, configuration-interaction
+          curvature in all four 2x2 blocks, a near-coincident pair, straight single-configuration
+          terms, and a full 0-80 E/B spread.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: V3+ in an octahedral ligand field at C/B = 4.42 - a real ion with
+          a realistic Racah ratio, a neutral teaching-chemistry scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Factually correct: the four blocks reproduce the free-ion d2 term
+          energies exactly at zero field (3P-3F = 15B, 1D = -3B+2C, 1G = 4B+2C, 1S
+          = 14B+7C) and the strong-field slopes are the right 0 / 1 / 2 ratios for
+          t2g^2, t2g-eg and eg^2 relative to the ground term.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Straight-line imports -> theme tokens -> data -> plot -> save, no
+          functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic - the data is computed from fixed matrix constants
+          and a fixed seq(), with no RNG at all.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All five libraries are used: ggplot2, dplyr (mutate/transmute/bind_rows/case_when),
+          tidyr (expand_grid), scales (alpha), ragg (agg_png); tibble is reached by
+          namespace.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: The 2x2 blocks are solved by the closed-form centre +/- split rather
+          than a per-sample eigen() loop, which is both shorter and faster; no dead
+          code, no duplicated layer, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ggsave with device = ragg::agg_png at
+          6x6 in / 400 dpi; uses modern linewidth and case_when(.default = ), no deprecated
+          calls, no print(p).
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Textbook grammar-of-graphics: one tidy frame, one variable mapped
+          to three aesthetics with three matched manual scales merging into one legend,
+          scale_*_continuous with explicit breaks and expansion(), coord_cartesian
+          for limits, theme_minimal layered with a single theme() override.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses R plotmath end to end - parse = TRUE in geom_text plus expression()
+          in labs - for real superscripts and subscripts, combined with coord_cartesian(clip
+          = "off") and a reserved right margin to place direct labels outside the
+          panel. Hard to reproduce in most other libraries.
+  verdict: APPROVED
+  model: claude-opus-5
+  criteria_version: qc-08c3141e4a.aqr-cfd364e1ff.sg-7006008fc6.lib-2476dd0292
+  rendered_at: '2026-10-01T20:10:29Z'
+impl_tags:
+  dependencies:
+  - ragg
+  techniques:
+  - annotations
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - eigenvalue-decomposition
+  styling:
+  - grid-styling
+  - minimal-chrome
