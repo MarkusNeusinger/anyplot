@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-tanabe-sugano: Tanabe-Sugano Diagram for Crystal Field Theory
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-10-01
+Library: plotnine 0.15.8 | Python 3.13.15
+Quality: 87/100 | Created: 2026-10-01
 """
 
 import os
