@@ -25,3 +25,11 @@ A SHAP (SHapley Additive exPlanations) summary plot displaying the distribution 
 - Add vertical line at x=0 to clearly separate positive and negative impacts
 - Consider jittering points vertically to reduce overlap
 - For many features, show only top 10-20 most important
+
+## What a good version looks like
+
+- A good version shows: one row per feature shown (all of them, or only the most important ones where there are many, as the Notes allow), labeled with the feature name and sorted by mean absolute SHAP value with the most important feature at the top, as the Notes ask.
+- A good version shows: in every row one dot per sample at its SHAP value on the horizontal axis; vertical spread inside a row, where used as the Notes suggest, is layout only, so dots pile up where SHAP values are dense and stay within their own row.
+- A good version shows: every dot colored by its feature's value on a diverging blue-to-red scale from low to high, as the Notes ask, with a color bar marking the low and the high end, and mid-scale dots still visible against the page in both themes.
+- A good version shows: a vertical line at a SHAP value of zero, as the Notes ask, visible in both themes without covering the dots, so positive and negative impacts separate at a glance.
+- Expected, not a defect: rows of very different width, from widely spread top features to tight clumps at zero, dots that overlap where a row is dense, lopsided rows, separate clumps for a binary feature, and both colors mixed on one side of zero.

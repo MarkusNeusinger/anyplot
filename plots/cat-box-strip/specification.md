@@ -32,3 +32,11 @@ B        | 41.3
 - Box shows median, Q1, Q3; whiskers show range
 - Points use jitter and transparency to reduce overlap
 - Reveals sample size and distribution shape together
+
+## What a good version looks like
+
+- A good version shows: for each category a box from the first to the third quartile with a median line and whiskers, and that category's observations drawn as individual points over the box, as the Notes ask.
+- A good version shows: every point at its value on the value axis and spread only across the category direction by jitter, inside its own category's band rather than drifting into a neighbor's.
+- A good version shows: translucent points, as the Notes ask, small or faint enough that the box, its median line and its whiskers stay readable through and between them in both themes.
+- A good version shows: one shared value axis for all categories that is not forced to zero, so boxes and point clouds compare directly.
+- Expected, not a defect: sideways jitter offsets, which are layout rather than data, points that still overlap where a category is dense, points beyond the whiskers, categories with visibly different numbers of points, and skewed or lumpy point clouds.
