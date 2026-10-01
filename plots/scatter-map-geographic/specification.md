@@ -29,3 +29,11 @@ A geographic scatter plot that displays data points on a world or regional map, 
 - Consider using transparency (alpha) to handle overlapping points in dense regions
 - For interactive libraries, enable zoom and pan to explore point clusters
 - Ensure point colors have sufficient contrast against the basemap
+
+## What a good version looks like
+
+- A good version shows: every point at its latitude and longitude on a basemap of country boundaries, coastlines or terrain, in a map projection suited to the mapped extent, as the Notes ask, with no point jittered or moved to separate it from its neighbors.
+- A good version shows: point colors that stand out against the basemap in both themes, as the Notes ask, with the basemap kept quieter than the points.
+- A good version shows: a color legend or color bar when color encodes the value and a size legend when point size varies, as the Notes ask, each naming its variable.
+- A good version shows: transparency, if used as the Notes suggest, that makes dense areas read darker while stacked points remain distinguishable.
+- Expected, not a defect: points piling up where events or places concentrate, large stretches of empty map, and shapes and distances distorted by the projection away from its center.

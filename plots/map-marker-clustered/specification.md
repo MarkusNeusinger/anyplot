@@ -28,3 +28,12 @@ A geographic map that dynamically clusters nearby markers based on the current z
 - Enable click-to-zoom behavior on clusters to expand and reveal contents
 - Consider showing a convex hull or spider lines when hovering over clusters to indicate member locations
 - Include a basemap with appropriate geographic context (boundaries, streets, or terrain)
+
+## What a good version looks like
+
+- A good version shows: nearby points merged into cluster markers that each display the count of the points they group, as the Notes ask, with the count legible on its marker in both themes.
+- A good version shows: each cluster marker at the center of the points it stands for, and points with no close neighbors drawn as individual markers at their own latitude and longitude.
+- A good version shows: cluster markers whose size or color strength, if it varies, grows with the count, so the largest groups stand out.
+- A good version shows: distinct colors for the categories, when the optional category is used, with each cluster marker reflecting its dominant or mixed category, as the Notes ask, and a legend naming the categories.
+- A good version shows: a basemap with boundaries, streets or terrain, as the Notes ask, quieter than the markers.
+- Expected, not a defect: cluster markers standing in for nearby points, which are then not drawn at their own coordinates, by design; a marker sitting where no single point lies; a static image showing one zoom level only; and very unequal counts.
