@@ -28,3 +28,12 @@ An UpSet plot visualizes intersections of multiple sets using a matrix-based lay
 - Lines connecting dots in the same column should be clearly visible to indicate set combinations
 - Consider using color or shading to distinguish intersection degree (number of sets involved)
 - Superior to Venn diagrams for more than 3 sets; complements the existing venn-basic specification
+
+## What a good version looks like
+
+- A good version shows: a dot matrix with one row per set and one column per intersection, vertical intersection-size bars on top and horizontal set-size bars on the left, as the Notes ask, each bar aligned with its matrix column or row.
+- A good version shows: in each column, the dots of the participating sets filled and joined by a clearly visible line, and the other sets' dots muted but still present, as the Notes ask, the two kinds distinguishable in both themes.
+- A good version shows: intersections sorted by size in descending order, or by degree as the alternative the Notes name, so the order of the columns can be read from the bars or the matrix.
+- A good version shows: every bar rising from a zero baseline with a length proportional to its count, readable against a count axis or count labels, each intersection bar counting the elements of exactly that combination of sets.
+- A good version shows: the basic variant's dot matrix, intersection bars and set-size bars, with the degree coloring or shading the Notes allow: no highlighted intersection, reference or mean lines, callouts, attribute plots per intersection, or second matrix.
+- Expected, not a defect: one or two dominant intersections followed by a long tail of small ones, combinations that are empty or too small left out, a matrix that is mostly muted dots, and set-size bars of similar or very different length.

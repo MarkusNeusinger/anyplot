@@ -25,3 +25,12 @@ A rose chart (also called Nightingale or coxcomb diagram) displays categorical d
 - Use consistent color scheme; single color with varying saturation or distinct colors per category
 - Start position typically at top (12 o'clock) for time data or north for directional data
 - Include radial gridlines to aid value estimation
+
+## What a good version looks like
+
+- A good version shows: one wedge per category, all wedges of the same angle and together filling the circle, each reaching from the center to a radius proportional to its value (radius, not area, as the Notes ask) on a radial scale that starts at zero.
+- A good version shows: the categories in their natural circular order (months, compass directions, hours), each labeled at its wedge, with the first one typically at the top, as the Notes describe.
+- A good version shows: radial gridlines with value labels, as the Notes ask, lighter than the wedges and visible in both themes.
+- A good version shows: one consistent color scheme, as the Notes ask: a single color, whose saturation may vary, or one distinct color per category, with neighboring wedges told apart by a thin separator or their colors.
+- A good version shows: the basic variant's single value per category: besides the radial gridlines the Notes ask for, no stacked or subdivided wedges, second series, reference or mean lines or rings, highlighted wedges or sectors, or callouts and annotations of extrema.
+- Expected, not a defect: wedges of very different radius, including one dominant wedge and one that is a sliver near the center, a lopsided outline, and large wedges that look more dominant than their values because wedge area grows faster than radius.

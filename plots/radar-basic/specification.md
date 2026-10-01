@@ -24,3 +24,12 @@ A radar chart (also known as spider or web chart) displays multivariate data on 
 - Label each axis clearly at the outer edge
 - Use distinct colors for multiple series with a legend
 - Close the polygon by connecting the last point back to the first
+
+## What a good version looks like
+
+- A good version shows: one axis spoke per variable, the spokes evenly spaced around a common center and sharing one value scale from the center outward, each labeled at its outer end, as the Notes ask.
+- A good version shows: each series as a polygon whose vertices lie on the spokes at their values, closed by joining the last point back to the first, as the Notes ask, and never smoothed past its vertices.
+- A good version shows: gridlines at regular value intervals, as the Notes ask, drawn as rings or polygons with their values labeled, lighter than the data and visible in both themes.
+- A good version shows: where several series are compared, translucent fills that keep every polygon visible through the others, a distinct color per series and a legend, as the Notes ask.
+- A good version shows: the basic variant's polygons for the series the Data allows: besides the axis spokes and gridlines, no reference or mean lines, rings or polygons, highlighted axis, sector or band, callouts on gaps or extremes, or second panel.
+- Expected, not a defect: polygons that overlap or nearly coincide on some axes, irregular and spiky outlines, and a shape and enclosed area that depend on the order of the axes.

@@ -26,3 +26,11 @@ A hierarchical network graph organizes nodes in distinct levels from root to lea
 - Edges should be straight or curved lines without arrows unless direction needs emphasis
 - Consider edge bundling for trees with many nodes to reduce visual clutter
 - Node spacing should be proportional to prevent overlap at crowded levels
+
+## What a good version looks like
+
+- A good version shows: the root at the top with each level on its own row below it, or at the left with each level in its own column, as the Notes ask, so nodes of equal depth line up and depth reads from position.
+- A good version shows: node positions from the tree or hierarchical layout the Notes ask for, not from data: no axes or grid, every child further from the root than its parent and siblings grouped together.
+- A good version shows: edges as straight or curved lines without arrowheads, unless direction needs emphasis, as the Notes ask, thinner and lighter than the nodes and traceable from parent to child.
+- A good version shows: nodes spaced so that neighbors on a crowded level and their labels stay apart, as the Notes ask, with each label on or beside its own node.
+- Expected, not a defect: levels of very different width, a wide and crowded lowest level, branches of unequal depth, subtrees of unequal size and empty space beside the narrow upper levels.
