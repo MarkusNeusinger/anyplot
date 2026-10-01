@@ -24,3 +24,12 @@ A 3D surface plot visualizes a function of two variables as a continuous surface
 - Include axis labels for x, y, and z dimensions
 - Consider adding a colorbar to show the value scale
 - For interactive libraries, enable rotation to explore the surface from different angles
+
+## What a good version looks like
+
+- A good version shows: one continuous surface over the grid of x and y whose height at each grid point is its z value, without holes, tears or gaps between facets, read against a z axis with ticks.
+- A good version shows: color following height through a smooth colormap, as the Notes ask, so color and height tell the same story, with the color bar, if drawn as the Notes suggest, naming the quantity.
+- A good version shows: all three axes drawn and labeled, as the Notes ask, from an oblique view that shows peaks and valleys together rather than looking straight down on the surface or at it edge-on.
+- A good version shows: a grid fine enough that the surface reads as smooth rather than faceted, with mesh lines or shading, if drawn, light enough to show the curvature without hiding the color.
+- Expected, not a defect: far slopes and valleys hidden behind nearer peaks, foreshortening that makes the far side look smaller, and shading that darkens steep faces; they are inherent to a 3D view.
+- A good version shows: the basic variant's single surface: besides the color bar the Notes allow, no second surface, contour lines on the surface or projected onto the base plane or walls, reference lines or planes, highlighted regions or bands, markers or callouts on peaks and valleys, or overlaid scatter points.

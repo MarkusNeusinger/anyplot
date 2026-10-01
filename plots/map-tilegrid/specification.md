@@ -28,3 +28,11 @@ A tile grid map represents geographic regions (states, countries, provinces) as 
 - Include a colorbar or legend showing the value-to-color mapping
 - Predefined grid layouts are commonly available for US states and European countries
 - Maintain consistent tile sizing — equal area for all tiles is the defining characteristic
+
+## What a good version looks like
+
+- A good version shows: one tile per region, all tiles the same size and shape, squares or hexagons as the Notes allow, each at its grid row and column, so every region carries the same visual weight.
+- A good version shows: an arrangement that approximates the real geography: the overall outline is recognizable, north is at the top and regions sit near their real neighbors.
+- A good version shows: the region abbreviation on every tile, as the Notes ask, legible against the tile color in both themes, for instance by switching the text color with the tile's darkness.
+- A good version shows: tile color from a sequential colormap for unipolar data or a diverging one when a meaningful midpoint exists, as the Notes ask, with a color bar or legend that shows the value-to-color mapping.
+- Expected, not a defect: tiles that only approximate geography, since their positions are a layout and not coordinates: a region drawn away from its true location, real neighbors that do not touch, tiles touching that do not border each other, and holes or a ragged edge in the grid.

@@ -26,3 +26,12 @@ A cartogram distorts geographic regions so that their area becomes proportional 
 - Use a color scale to encode a secondary variable or to reinforce the size variable
 - Label major regions with abbreviations for readability
 - A legend should clarify what the area represents and the color encoding
+
+## What a good version looks like
+
+- A good version shows: each region's drawn area proportional to its value rather than to its land area, so a region with twice the value covers twice the area.
+- A good version shows: regions that still share borders with their real neighbors after the distortion, as the Notes ask, each near its true relative position and with a rough shape that keeps the map recognizable.
+- A good version shows: the undistorted geography for comparison, as the Notes ask, either as the original region outlines or as a reference map inset.
+- A good version shows: a color scale that encodes a secondary variable or reinforces the size variable, and a legend that says what the area represents and what the colors mean, as the Notes ask.
+- A good version shows: abbreviations on the major regions, as the Notes ask, legible against their fill in both themes, while the smallest regions may stay unlabeled.
+- Expected, not a defect: regions resized, stretched and moved away from their true outlines and coordinates, which is the point of the type; large regions with small values shrinking to slivers and compact ones swelling until the familiar map shape is gone.

@@ -25,3 +25,11 @@ A Kolmogorov-Smirnov (K-S) plot compares two empirical cumulative distribution f
 - Include the p-value from the K-S test to indicate statistical significance
 - Label each distribution clearly in a legend
 - Y-axis should range from 0 to 1 representing cumulative proportion
+
+## What a good version looks like
+
+- A good version shows: both empirical CDFs as step functions on the same axes, each rising only at its own sample's values and never falling, on a y axis that ranges from 0 to 1 as cumulative proportion, as the Notes ask.
+- A good version shows: the two step lines in distinct colors or line styles, each named in a legend, as the Notes ask, and both traceable in both themes where they run close together.
+- A good version shows: the point of maximum distance highlighted, as the Notes ask, by a vertical line or an annotation at the x value where the gap between the two curves is widest, so the distance the statistic reports can be located on the plot.
+- A good version shows: the K-S statistic value shown prominently and the p-value included on the plot, as the Notes ask, placed where they cover neither of the two curves.
+- Expected, not a defect: visible stair steps, steps of different height when the samples differ in size, curves that cross, a maximum distance that falls wherever the data puts it, and a narrow gap when the samples are alike.

@@ -28,3 +28,11 @@ A heatmap wrapped around a circle where the angular axis represents a cyclic var
 - Include a colorbar legend for value interpretation
 - Consider adding thin gridlines or borders between cells for readability
 - Outer rings have larger area than inner rings; interpret color (not area) as the encoded channel
+
+## What a good version looks like
+
+- A good version shows: each cell as a ring segment at its angular and radial category, the rings concentric with the first radial category innermost, as the Notes ask, and each ring identifiable by a label.
+- A good version shows: the angular axis closing on itself, the last angular bin directly next to the first with no gap or seam between them, as the Notes ask, and angular labels at readable intervals in cyclic order.
+- A good version shows: a sequential colormap for single-sign data, or a diverging one centered on the midpoint when the data has a meaningful midpoint, as the Notes ask, with the color bar the Notes ask for.
+- A good version shows: the segments of each ring in equal angular widths, tiling the ring; thin gridlines or borders between cells, if drawn, stay subordinate to the cell colors.
+- Expected, not a defect: outer-ring cells much larger than inner ones and narrow cells in the innermost rings, both inherent to the polar layout; color, not area, carries the value.

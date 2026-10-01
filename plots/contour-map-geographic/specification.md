@@ -27,3 +27,12 @@ A contour map overlays isolines (lines of equal value) onto a geographic basemap
 - Use colormap appropriate to data type (terrain colors for elevation, temperature scales for weather)
 - Include a colorbar legend showing the value range
 - Ensure contour intervals are meaningful for the data (e.g., 100m for elevation, 4mb for pressure)
+
+## What a good version looks like
+
+- A good version shows: smooth isolines that trace equal values of the gridded field at their latitude and longitude, overlaid on a basemap of coastlines, borders or terrain that stays legible beneath them, as the Notes ask.
+- A good version shows: contour levels at an interval that is meaningful for the data, as the Notes ask: round values in the variable's unit, evenly stepped unless the variable's range calls for another spacing.
+- A good version shows: value labels on the contour lines at appropriate intervals, as the Notes ask, set along their lines and readable against the basemap, thinned where lines crowd.
+- A good version shows: filled bands between levels, if drawn as the Notes allow, that match the line levels and leave the basemap readable; a line-only version is equally valid.
+- A good version shows: a colormap appropriate to the data type and a color bar legend showing the value range, as the Notes ask, naming the variable and its unit.
+- Expected, not a defect: closed loops around highs and lows, lines bunching where the field changes steeply and spreading where it is flat, lines that run off the map edge, and lines crossing coastlines and borders, which the field ignores.
