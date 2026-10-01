@@ -28,7 +28,7 @@ A horizontal bar chart displaying feature importances from machine learning mode
 
 ## What a good version looks like
 
-- A good version shows: one horizontal bar per feature rising from a zero baseline to its importance, so bar length stays proportional to the score, with every feature name written out in full beside its bar.
+- A good version shows: one horizontal bar per displayed feature, all features or the top ones the Notes allow, rising from a zero baseline to its importance, so bar length stays proportional to the score, with each name written out in full beside its bar.
 - A good version shows: the bars sorted by importance with the highest at the top, as the Notes ask.
 - A good version shows: a sequential color gradient mapped to the importance values, as the Notes ask, so color and bar length tell the same ranking, with the weakest bars still distinct from the page in both themes.
 - A good version shows: the importance values as text at the end of the bars, as the Notes ask, each matching its bar's length and clear of any error bar.

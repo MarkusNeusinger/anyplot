@@ -28,7 +28,7 @@ A horizontal bar chart displaying permutation feature importance from machine le
 
 ## What a good version looks like
 
-- A good version shows: one horizontal bar per feature from zero to its mean importance, a negative mean extending to the other side of zero, with every feature name written out in full beside its bar.
+- A good version shows: one horizontal bar per displayed feature, all features or the top ones the Notes allow, from zero to its mean importance, a negative mean extending to the other side of zero, with each name written out in full beside its bar.
 - A good version shows: the bars sorted by mean importance with the highest at the top, as the Notes ask.
 - A good version shows: a horizontal error bar on every bar for the variability across shuffles, as the Notes ask, centered on the bar's end and visible against the bar's fill in both themes.
 - A good version shows: a vertical reference line at zero, as the Notes ask, running the full height of the bars and visible in both themes, so positive and negative importances separate at a glance.
