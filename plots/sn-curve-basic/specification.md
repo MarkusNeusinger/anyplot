@@ -25,3 +25,12 @@ An S-N curve (also known as a Wöhler curve) visualizes the relationship between
 - The curve typically shows three distinct regions: low-cycle fatigue (plastic), high-cycle fatigue (elastic), and infinite life (below endurance limit)
 - Data points may include scatter from multiple test specimens at the same stress level
 - A power-law or Basquin equation fit line is commonly overlaid on the data points
+
+## What a good version looks like
+
+- A good version shows: stress on the y axis against cycles to failure on the x axis, both on logarithmic scales, as the Notes ask, with ticks that show the scales and every test result as a point at its own cycle count and stress.
+- A good version shows: horizontal reference lines for ultimate strength, yield strength and endurance limit, as the Notes ask, each at its stress value, labeled by name and visible in both themes.
+- A good version shows: a power-law or Basquin fit line, if overlaid as the Notes suggest, running through the middle of the scatter along the sloping part of the data, distinct from the points and from the reference lines.
+- A good version shows: points that fall from high stress at few cycles toward the endurance limit at many cycles, so that the low-cycle, high-cycle and infinite-life regions the Notes describe can be read where the data spans them.
+- A good version shows: the basic variant's single material: besides the three reference lines the Notes ask for, the fit line the Notes suggest and plain labels or light shading for the three regions the Notes name, no second material, further reference lines, highlighted points, callouts, or probability bands.
+- Expected, not a defect: several specimens at one stress level spread widely along the cycle axis and partly overlapping, a fit line that misses individual points, unbroken run-out specimens marked with arrows at the longest lives, and a stress axis that spans far fewer decades than the cycle axis.

@@ -27,3 +27,12 @@ An eye diagram visualizes signal integrity by overlaying many periods of a digit
 - Generate synthetic data by simulating a random bit stream with controlled noise (sigma ~5% of amplitude) and jitter (sigma ~3% of UI)
 - Smooth transitions between bit levels using a raised-cosine or sigmoid filter to simulate realistic bandwidth-limited signals
 - Optionally annotate eye height and eye width measurements on the diagram
+
+## What a good version looks like
+
+- A good version shows: many signal periods overlaid in one time window, folded so that the transitions line up into crossings with an eye-shaped opening between them, on a time axis labeled in unit intervals (UI), as the Notes ask.
+- A good version shows: density coloring, as the Notes ask: color intensity that rises with how often traces pass through a region, so the signal levels and the common transition paths stand out from rare excursions in both themes.
+- A good version shows: a voltage axis that shows the signal levels, as the Notes ask, with the levels as the densest horizontal bands and an eye that stays open between them, in keeping with the modest noise and jitter the Notes specify.
+- A good version shows: smooth, band-limited transitions between the levels, as the Notes ask, with rising and falling edges crossing each other, instead of square steps or straight ramps.
+- A good version shows: the basic variant's single eye diagram: besides the density coloring the Notes ask for, a color bar for it and the eye height and eye width annotations the Notes allow, no compliance mask, reference or threshold lines, highlighted regions, other callouts, histogram panel or second signal.
+- Expected, not a defect: overlapping traces too dense to follow one by one, levels and crossings thickened into fuzzy bands by noise and jitter, a few outlying traces reaching into the eye, and partial eyes cut off at the edges of the time window.
