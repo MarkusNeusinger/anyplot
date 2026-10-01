@@ -1,0 +1,306 @@
+library: pygal
+language: python
+specification_id: line-tanabe-sugano
+created: '2026-10-01T19:56:32Z'
+updated: '2026-10-01T20:21:22Z'
+generated_by: claude-opus
+workflow_run: 36915384273
+issue: 11846
+language_version: 3.13.15
+library_version: 3.1.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/python/pygal/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Term energies come from diagonalizing the d³ Tanabe-Sugano matrices at every
+    field strength with `np.linalg.eigvalsh` (lines 89–96), not from fitted splines
+    as the Notes forbid: the four ²G-derived doublets all converge on E/B ≈ 17.5 at
+    Δₒ/B = 0 and ⁴T₁g(F) / ⁴T₁g(P) separate as a genuine avoided crossing of the quartet
+    block.'
+  - 'Direct curve labeling with pygal''s native `print_labels` plus the per-point
+    `{"value": …, "label": …}` dict (lines 177–181) replaces a legend entirely, and
+    the ²Eg label is anchored at Δₒ/B = 30 instead of 40 so it does not pile onto
+    the converged right edge.'
+  - 'Spin-allowed and spin-forbidden terms carry two independent cues — per-series
+    `stroke_style={"dasharray": "26, 20"}` and a thinner stroke — so the two classes
+    are told apart without relying on color, and the ⁴A₂g ground term sits as a visible
+    brand-green line along E/B = 0 exactly as the Notes ask.'
+  - 'Theme handling is complete: one `Style` object carries every token and pygal''s
+    `css=["file://style.css", "file://graph.css", "inline:…"]` hook (lines 116–123,
+    155) overrides the hard-coded black label fill. Sampled pixels confirm the data
+    colors are byte-identical across renders (#009E73, #C475FD, #4467A3, #BD8233,
+    #AE3030, #2ABCCD, #954477, #99B314) while only the chrome flips between #FAF8F1
+    and #1A1A17.'
+  - Both `plot-{theme}.png` and `plot-{theme}.html` are written, so the HTML detail
+    view keeps pygal's native per-point tooltips over all 241 samples of every curve.
+  weaknesses:
+  - 'SC-02 (both): pygal drops every curve label below its anchor point, so the ²T₁g
+    label at Δₒ/B = 40 lands about 25 px under the red ²Eg curve rather than beside
+    its own cyan curve (the two curve ends are only ~17 px apart), and the label reads
+    as belonging to the wrong term → anchor ²T₁g where the two curves separate (around
+    Δₒ/B = 8–12) or lift it with the same `transform:translate` trick used for the
+    ground term. Likely cause: `label_at = 40.0` for ²T₁g in `term_curves` with no
+    entry in the lift CSS.'
+  - 'VQ-03 (both): the spin-forbidden curves are pinned to `stroke-width:5` against
+    the spin-allowed 11, so at the 400 px preview width they fall below one device
+    pixel and the dashes read as faint grey hairlines → about 7 (+2), which still
+    keeps them clearly thinner than the solid quartets. Likely cause: `stroke-width:5
+    !important` in `extra_css` (line 120).'
+  - 'DQ-01 (both): only the lowest eigenvalue of each doublet block is drawn (`doublet_e[:,
+    0]`, `doublet_t1[:, 0]`, `doublet_t2[:, 0]`), so no pair of same-symmetry doublets
+    is on the chart and the near-touch the diagonalization exists for is never shown
+    — the four doublet curves simply fan out → add the second branch of the ²T₁g and
+    ²T₂g blocks, which keeps the curve count at 10, inside the spec''s 6–12. Likely
+    cause: `term_curves` (lines 101–110) takes index 0 of every block.'
+  - 'Suggestion: tick labels and curve term symbols sit at 44 and 46 units on the
+    2400 px canvas; a couple of units more on the term symbols would hold up better
+    in the 400 px gallery thumbnail.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 across the full 2400x2400 canvas and the plot area alike (sampled: #FAF8F1 is the dominant pixel value). Square canvas, near-square plot area, both axes starting at 0.
+      Chrome: title "Cr3+ d3, C/B = 4.5 - line-tanabe-sugano - python - pygal - anyplot.ai" centred at the top in near-black #1A1A17, spanning about 70% of the canvas width with clear air above it. Y-axis title "E / B (reduced term energy)" rotated at the left, x-axis title "D_o / B (reduced ligand-field strength)" centred at the bottom with all descenders fully inside the canvas. Tick labels 0..40 step 5 on x and 0..90 step 10 on y, dark grey, all readable. Grid lines are pale warm grey, visible but clearly behind the curves. Nothing clipped at any edge.
+      Data: eight term curves rising from the left. Four thick solid spin-allowed quartets - 4A2g flat on E/B = 0 in brand green #009E73, 4T2g linear to 40 in #C475FD, 4T1g(F) curving to 51 in #4467A3, 4T1g(P) from 15 to 84 in #BD8233 - and four thin dashed spin-forbidden doublets: 2Eg #AE3030, 2T1g #2ABCCD, 2T2g #954477, 2A1g #99B314, all four converging on E/B ~ 17.5 at the left axis. First series is #009E73. Each curve carries its term symbol in Unicode super/subscripts (pygal has no text markup, so the g stays on the baseline, which the spec permits); seven labels sit in the right margin, 2Eg is anchored inside the plot at D_o/B = 30.
+      Legibility verdict: PASS - every piece of text is dark on the off-white surface and readable at full size; no overlap and no overflow.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 over the whole canvas and the plot area (sampled: #1A1A17 is the dominant pixel value). Not pure black.
+      Chrome: identical layout. Title, axis titles, tick labels and all eight curve labels render in light ink #F0EFE8 - the hard-coded black pygal label fill is overridden by the inline CSS, so there is no dark-on-dark text anywhere. Grid lines are faint light grey on the dark surface: subtle but still visible.
+      Data: colors are identical to the light render, confirmed by pixel sampling - #009E73, #C475FD, #4467A3, #BD8233, #AE3030, #2ABCCD, #954477, #99B314 appear with the same pixel counts in both files. Only the chrome flips. Brand green #009E73 on E/B = 0 stays clearly visible. The dimmest marks are the thin dashed #AE3030 (2Eg) and #954477 (2T2g) lines, which are still legible at full size but thin.
+      Legibility verdict: PASS - no dark-on-dark failure; every label, tick and axis title is light ink against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set in the Style object (title 50, labels
+          44, value labels 46) and scaled to the 2400 px square canvas. Every string
+          readable in both themes; the term symbols get tight in the 400 px thumbnail.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collides with text or with a curve. The right-margin labels
+          are vertically well separated and the 2Eg label was moved inside to D_o/B
+          = 30 to avoid the converged right edge.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: false
+        comment: Solid quartets at stroke-width 11 are prominent, but the spin-forbidden
+          curves pinned to stroke-width 5 fall under a device pixel in the 400 px
+          preview and read as faint hairlines.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe, and spin class is carried redundantly
+          by dash pattern and stroke width, not by color alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exactly 2400x2400 square, near-square plot area as the Notes ask.
+          Title spans about 70 % of the width (expected for the mandated title), balanced
+          axis titles, nothing cut off at any edge.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Both axis titles name the reduced quantity and spell it out: ''D_o
+          / B (reduced ligand-field strength)'' and ''E / B (reduced term energy)''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 and the remaining seven follow the canonical
+          Imprint order. Backgrounds are #FAF8F1 / #1A1A17 and data colors are pixel-identical
+          across both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Deliberate choices throughout: square canvas for a diagram read
+          with a ruler, direct curve labeling instead of a legend box, dual encoding
+          of spin class, theme tokens threaded through one Style object.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid is light and stays behind the curves, no legend frame, generous
+          margins, only the two axis lines as chrome. Dash pattern 26,20 is tuned
+          to the canvas scale.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear hierarchy: the brand-green ground term anchors the baseline,
+          thick solid quartets carry the spin-allowed transitions a chemist reads
+          off, thin dashes recede. Labels at the curve ends guide the eye without
+          a lookup step.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'A true Tanabe-Sugano diagram: term energies as continuous functions
+          of the reduced ligand-field strength for one d-n configuration.'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: false
+        comment: 'One configuration with C/B stated in the title, matrices diagonalized
+          rather than splined, ground term drawn flat at 0, spin-allowed thicker and
+          solid vs forbidden thinner and dashed, light grid, both axes from 0, no
+          crossover line (correct for d3). Missed: the 2T1g label drops below the
+          near-coincident 2Eg curve and reads as belonging to the wrong term.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = D_o/B over the full 0-40 sampled range, y = E/B referenced to
+          the ground term at every field strength. 241 samples plotted at their computed
+          values, no smoothing pass and no displacement.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is 'Cr3+ d3, C/B = 4.5 - line-tanabe-sugano - python - pygal
+          - anyplot.ai', the mandated form with an allowed descriptive prefix. Legend
+          replaced by direct labels whose text matches the series keys exactly.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: false
+        comment: Eight curves and 241 samples, both spin classes, the flat ground
+          term and a quartet avoided-crossing pair. Only the lowest eigenvalue of
+          each doublet block is drawn, so no same-symmetry doublet pair and hence
+          no near-touch is on display.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Cr(3+) d3 at C/B = 4.5 is the textbook case the spec names, with
+          real Tanabe-Sugano matrix elements. Entirely neutral subject matter.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: D_o/B 0-40 and E/B 0-90 are the conventional ranges; the free-ion
+          separations fall where theory puts them (4P at 15 B, the 2G-derived doublets
+          at 17.5 B for C/B = 4.5).
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Straight-line script, no functions and no classes; two short loops
+          for block assembly and series addition.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic - no randomness at all, the curves follow from
+          the matrices and np.linspace.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, numpy, pygal and pygal.style.Style - all four used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Diagonalization delegated to np.linalg.eigvalsh over a batched array
+          instead of a hand-rolled solver; the matrix tables are irreducible input
+          data. The CSS workarounds are each one line and explain which pygal limitation
+          they answer.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Writes plot-{THEME}.png via render_to_png and plot-{THEME}.html via
+          render_to_file, both theme-suffixed. Current pygal 3.x API throughout.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: pygal.XY with a single Style object, xrange/range, explicit x_labels/y_labels,
+          show_x_guides/show_y_guides, per-series stroke_style - the recommended high-level
+          path. The !important CSS overrides are the one non-declarative part.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Reaches for several pygal-only facilities: the css=[''file://style.css'',
+          ''file://graph.css'', ''inline:...''] stylesheet hook, print_labels with
+          per-point value/label dicts, per-series dasharray via stroke_style, and
+          the native interactive SVG/HTML output.'
+  verdict: APPROVED
+  model: claude-opus-5
+  criteria_version: qc-08c3141e4a.aqr-cfd364e1ff.sg-7006008fc6.lib-54d55755be
+  rendered_at: '2026-10-01T20:12:15Z'
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - html-export
+  patterns:
+  - matrix-construction
+  - iteration-over-groups
+  - data-generation
+  dataprep:
+  - eigendecomposition
+  styling:
+  - publication-ready
+  - grid-styling
+  - custom-css
