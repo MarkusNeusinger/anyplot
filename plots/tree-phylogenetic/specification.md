@@ -26,3 +26,12 @@ A phylogenetic tree (evolutionary tree) visualization showing hierarchical relat
 - Consider both rectangular (cladogram) and circular (radial) tree layouts
 - Add scale bar to indicate branch length units (e.g., substitutions per site)
 - Color-code clades or highlight specific lineages for emphasis
+
+## What a good version looks like
+
+- A good version shows: each branch drawn with a length proportional to its branch length, as the Notes ask, along the horizontal direction in a rectangular layout or the radial direction in a circular one; branch lengths are the data and are never equalized to line the tips up.
+- A good version shows: a rectangular layout with right-angled branches or a circular one, as the Notes allow; the order and spacing of the tips come from the layout, so only a branch's own length, never the gap between tips, stands for evolutionary distance.
+- A good version shows: every tip labeled with its species or sequence name at the end of its branch, readable in both themes.
+- A good version shows: a scale bar, as the Notes ask, labeled with the branch length it stands for and its unit and drawn to the same scale as the branches; a labeled branch-length axis does the same job.
+- A good version shows: clades color-coded or a specific lineage highlighted, as the Notes ask, the color covering all branches of the clade and explained by a legend or clade labels.
+- Expected, not a defect: tips that end at different distances from the root, very short internal branches that nearly merge neighboring splits, one long branch that stretches the scale, a lopsided, ladder-like tree and empty space beside short clades.

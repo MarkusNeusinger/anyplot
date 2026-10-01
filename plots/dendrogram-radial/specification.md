@@ -26,3 +26,12 @@ A radial dendrogram renders hierarchical clustering in a circular layout where t
 - Optional: add a color-coded ring around the outer edge to encode additional metadata (e.g., species family, department)
 - Use scipy.cluster.hierarchy for linkage computation; polar projection in matplotlib or dedicated libraries for radial rendering
 - Consider adding interactive tooltips for leaf labels when the number of leaves exceeds readable text size
+
+## What a good version looks like
+
+- A good version shows: the root at the center and every leaf on the outer circumference at equal angular spacing, as the Notes ask; the angular order of leaves comes from the tree, arranged so that branches do not cross, and is not a measured quantity.
+- A good version shows: every merge at a radial position set by its merge distance, as the Notes ask, so radial distances are the data and are never equalized by tree depth.
+- A good version shows: branches colored by cluster assignment in categorical colors, as the Notes ask, where the data carries one, so each cluster reads as one colored sector of the circle.
+- A good version shows: leaf labels, where drawn, outside their leaves around the circumference, oriented so that neighboring labels fan out around the circle instead of colliding, for instance rotated to follow their branches or set along the rim.
+- A good version shows: the outer ring the Notes allow, if drawn, as a band of colored segments outside the leaves, each segment aligned with its leaf, with a legend for its colors.
+- Expected, not a defect: merges at very uneven radii, junctions crowding toward the rim where similar leaves merge at small distances, long bare branches near the center, and, with hundreds of leaves, leaf labels that are tiny or left out.
