@@ -31,7 +31,7 @@ A scatter plot displaying the relationship between two numeric variables with a 
 ## What a good version looks like
 
 - A good version shows: every observation as a translucent point at its exact (x, y) value, as the Notes ask, with one solid fitted curve in a contrasting color, drawn smoothly rather than as straight segments with visible kinks between the data points.
-- A good version shows: a curve whose number of bends fits the visible pattern, quadratic by default as the Notes say: it follows the cloud's curvature without extra wiggles between points or wild swings at the ends of the x range.
+- A good version shows: a curve whose number of bends fits the visible pattern, quadratic unless the pattern calls for the higher degree the Notes allow: it follows the cloud's curvature without extra wiggles between points or swings at the ends of the x range that the data does not follow.
 - A good version shows: R² stated on the plot, as the Notes ask, and the polynomial equation, if annotated, both placed clear of points and curve, with a title that mentions the polynomial regression, as the Notes ask.
 - A good version shows: the confidence band, if drawn as the Notes allow, semi-transparent around the curve and widening toward the ends of the x range, with the points inside it still visible.
 - Expected, not a defect: points scattered on both sides of the curve along its whole length, many of them outside the confidence band, and a few outliers the curve does not pass through.

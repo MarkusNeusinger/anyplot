@@ -33,4 +33,4 @@ A scatter plot where data points are represented by text labels instead of marke
 - A good version shows: text large enough that every isolated label can be read in both themes, in a font size that fits the number of labels, as the Notes ask.
 - A good version shows: in dense regions, translucency, smaller text or rotation, as the Notes suggest, so overlapping labels can still be made out; labels are not moved away from their coordinates to separate them.
 - A good version shows: color, if used as the Notes allow, explained by a legend for categories or a color bar for a numeric variable, with every color legible as text against the page in both themes.
-- Expected, not a defect: labels that partly overlap where items sit close together, labels of different length covering different areas, and empty regions between clusters.
+- Expected, not a defect: labels that partly overlap where items sit close together, because the text is the mark at its own coordinates, labels of different length covering different areas, and empty regions between clusters.

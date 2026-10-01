@@ -29,6 +29,6 @@ A scatter plot enhanced with marginal distribution plots (histograms or kernel d
 
 - A good version shows: the scatter as the largest panel at the lower left, one point per observation at its exact (x, y) value, with the x distribution above it and the y distribution to its right, as the Notes ask.
 - A good version shows: each marginal sharing its axis with the scatter, as the Notes require, so a peak in a marginal sits directly above or beside the points that cause it; the right marginal is drawn sideways, growing away from the scatter.
-- A good version shows: marginals as histograms, density curves or both, as the Notes allow, rising from a zero baseline at the scatter's edge and visually quieter than the points.
+- A good version shows: marginals as histograms, density curves or both, as the Notes allow, rising from a zero baseline at the scatter's edge, in the points' own color or the quieter tone the Notes suggest, so the scatter stays the main panel.
 - A good version shows: translucent points, as the Notes ask, so dense regions read darker and agree with the marginal peaks, and only a small gap between the three panels.
 - Expected, not a defect: skewed, lumpy or two-peaked marginals, marginals of different shape for x and y, an empty corner at the top right, and marginal count axes with few or no tick labels.

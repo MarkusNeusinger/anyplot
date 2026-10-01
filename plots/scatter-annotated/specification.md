@@ -29,7 +29,7 @@ A scatter plot where each data point can have a text label annotation, useful fo
 
 ## What a good version looks like
 
-- A good version shows: every point as a marker at its exact (x, y) value with its text label beside it; labels shift to make room for each other, the points never do.
+- A good version shows: every point as a marker at its exact (x, y) value, and each labeled point with its text beside it; labels shift to make room for each other, the points never do.
 - A good version shows: labels that collide neither with each other nor with the markers, as the Notes ask, each one close enough to its point, or tied to it by a thin leader line when offset, that the point it names is unambiguous.
 - A good version shows: label text legible in both themes, in a size that fits the number of labels, with leader lines, if drawn, subtler than the markers and the text.
 - A good version shows: translucent markers, as the Notes ask, so points that overlap can still be told apart under the labels.

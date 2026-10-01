@@ -30,6 +30,6 @@ A scatter plot that displays the relationship between two numeric variables with
 
 - A good version shows: every observation as a translucent point at its exact (x, y) value, as the Notes ask, with one straight fitted line drawn over the points, solid and in a color that contrasts with them.
 - A good version shows: a semi-transparent confidence band around the line, as the Notes ask, narrowest near the middle of the data and widening toward both ends, light enough that the points inside it remain visible.
-- A good version shows: R² or the correlation coefficient stated on the plot, as the Notes ask, and the regression equation, if added, both placed where they cover neither points nor line, with a sign that agrees with the drawn slope.
-- A good version shows: a title that mentions the regression, as the Notes ask, and a legend or annotation that says what the band is, for instance the 95 percent confidence interval the Notes recommend.
+- A good version shows: R² or the correlation coefficient stated on the plot, as the Notes ask, and the regression equation, if added, both placed where they cover neither points nor line, and where r or a slope is shown, its sign agreeing with the direction of the drawn line.
+- A good version shows: a title that mentions the regression, as the Notes ask, and, where a legend is drawn, an entry that says what the band is, such as the 95 percent confidence interval the Notes recommend.
 - Expected, not a defect: many points lying outside the confidence band, which bounds the fitted line and not the individual observations, visible scatter around the line, and a few outliers.
