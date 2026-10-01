@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: line-tanabe-sugano
 created: '2026-10-01T19:44:31Z'
-updated: '2026-10-01T19:52:13Z'
+updated: '2026-10-01T20:02:30Z'
 generated_by: claude-opus
 workflow_run: 36914626318
 issue: 11846
@@ -12,51 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-tana
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - Term energies come from np.linalg.eigvalsh on the actual d2 Tanabe-Sugano 2x2
-    blocks at C/B = 4.42 (lines 32-84), so the 3T1g(F)/3T1g(P) and 1T2g(D)/1T2g(G)
-    pairs repel as genuine avoided crossings, the three triplet terms converge correctly
-    to E/B = 0 at zero field, and 3T1g(P) starts at the textbook 15B separation -
-    no hand-fitted curves anywhere, exactly as the Notes demand
-  - Idiomatic altair encodes the spin class three ways at once - color, strokeDash
-    and strokeWidth on spin_class:N - while detail='term:N' keeps the nine curves
-    as separate lines, and Vega merges the color and strokeDash legends into one two-entry
-    key whose glyphs match the marks in both themes
-  - Direct right-edge term labels as a layered mark_text in each curve's own color
-    (lines 147-156) replace what would otherwise be a nine-entry legend, with the
-    x-scale padded to 47 to open a dedicated label gutter
-  - Per-point alt.Tooltip on term, delta_o/B and E/B makes the HTML export readable
-    curve by curve - real added value in the interactive detail view that the PNG
-    cannot show
-  - Theme tokens are threaded through every non-data element (page and view fill,
-    grid, ticks, axis and title ink, elevated legend fill), and the pad-only PIL block
-    lands the file exactly on 2400x2400 without cropping
+  - Diagonalises the Tanabe-Sugano 2×2 symmetry blocks with np.linalg.eigvalsh broadcast
+    over all 301 field strengths (lines 32–70), so the ³T₁g(F)/³T₁g(P) and ¹T₂g(D)/¹T₂g(G)
+    pairs repel by construction and same-symmetry curves can never cross or swap identity
+    — the Notes' "no hand-fitted splines" requirement satisfied at the source rather
+    than by eyeballing.
+  - 'Idiomatic Vega-Lite grammar: detail="term:N" splits a single mark_line into nine
+    curves while color, strokeDash and strokeWidth all key off spin_class, and Vega-Lite
+    merges the colour and dash channels into one two-row legend — a result a per-term
+    Python loop could not produce.'
+  - Right-edge term labels are a layered text mark coloured from the same spin_class
+    scale, so each symbol carries its curve's hue and stays attributable even where
+    ¹Eg and ¹T₂g(D) run nearly coincident at E/B ≈ 15.
+  - 'Theme chrome threaded end to end through PAGE_BG / ELEVATED_BG / INK / INK_SOFT:
+    both renders sit on the correct surfaces (#FAF8F1 / #1A1A17 verified at the pixel
+    level), the Imprint green #009E73 and lavender #C475FD are identical between themes,
+    and the elevated legend fill reads on both.'
+  - Native tooltip channel (term, Δₒ/B, E/B) turns the HTML export into the lookup
+    tool a chemist actually uses a Tanabe-Sugano diagram for — matching band ratios
+    against curves — without costing the static PNG anything.
+  - Canvas lands exactly 2400×2400 via the pad-only block with the fail-loud SystemExit
+    guard (lines 203–214), never a crop, and both PNG and HTML are saved per the altair
+    output contract.
   weaknesses:
-  - 'VQ-01 (both): the right-edge term labels are the chart''s primary reading aid
-    but render at fontSize 11 (~44 source px), one notch above the tick labels and
-    smaller than the axis titles, and the lavender #C475FD labels sit below 3:1 contrast
-    on the #FAF8F1 page, so the spin-forbidden symbols blur first when the 2400 px
-    square is scaled to the 400 px mobile variant → about 13 px (+2 px). Likely cause:
-    mark_text(align=''left'', baseline=''middle'', fontSize=11, dx=7) in term_labels.'
-  - 'Suggestion: the 1Eg block is a 2x2 but only its lower eigenvalue is drawn, while
-    both 1T2g roots are, so the singlet set is slightly asymmetric; drawing both 1Eg
-    roots would make the term list uniform.'
-  - 'Suggestion: the x-domain runs to 47 while the last tick is at 40, leaving a stretch
-    of unlabelled axis line under the label gutter; a slightly tighter domain would
-    tidy that edge.'
+  - 'VQ-01 (both): legend labels and axis tick labels are set at fontSize 10, which
+    lands at roughly 7 px once the 2400 px square is scaled to the 400 px gallery
+    thumbnail — below the mobile-readable floor, while the term labels next to them
+    sit at 13 → about 12 for both (+2). Likely cause: configure_legend(labelFontSize=10)
+    on line 193 and configure_axis(labelFontSize=10) on line 184.'
+  - 'DQ-01 (both): no avoided crossing is actually visible — the ¹T₂g(D)/¹T₂g(G) pair
+    reach closest approach at Δₒ/B ≈ 1 already about 7 E/B apart and the ³T₁g(F)/³T₁g(P)
+    pair diverge straight from the origin, so the curved near-touch the Notes single
+    out never appears in the drawn window → pick a configuration or root selection
+    where one same-symmetry pair closes to within about 2 E/B inside 0–40. Likely
+    cause: the d² singlet blocks'' off-diagonal 2√3 (lines 39, 51) and the ¹Eg / ¹A₁g
+    upper roots left out of term_energies (lines 74–84).'
+  - 'Suggestion: drawing the upper ¹Eg and ¹A₁g roots would make the singlet set complete,
+    at the cost of a taller E/B window.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the full 2400x2400 square canvas; plot view fill matches the page, no frame box, only the left and bottom axis domain lines in soft ink.
-      Chrome: bold near-black title "line-tanabe-sugano · python · altair · anyplot.ai" top-left, two softer subtitle lines ("d² octahedral ion (V³⁺) at C/B = 4.42", "E/B measured from the ³T₁g(F) ground term"); y-axis title "E/B — reduced term energy" rotated at left, x-axis title "Δₒ/B — reduced ligand-field strength" centered at the bottom; ticks 0/20/40/60/80 and 0/10/20/30/40 in soft grey; horizontal + vertical grid lines at about 15% opacity, clearly behind the curves. A small elevated-cream legend box sits top-left inside the plot with a thick green line sample ("Spin-allowed (ΔS = 0)") and a thin dashed lavender sample ("Spin-forbidden (ΔS ≠ 0)"). All chrome text is dark on light — readable, nothing light-on-light.
-      Data: nine term curves for the d² ion. Four thick solid brand-green #009E73 curves (spin-allowed): ³T₁g(F) flat along E/B = 0, ³T₂g rising to about 38, ³T₁g(P) to about 51, ³A₂g steepest to about 77; three triplets leave the origin together at zero field. Five thinner dashed lavender #C475FD curves (spin-forbidden): ¹T₂g(D) and ¹Eg near-coincident around E/B ≈ 15, ¹A₁g bending from 21 to about 34, ¹T₂g(G) to 55 and ¹T₁g to 58. Each curve carries its term symbol in its own color in the right-hand gutter, with Unicode superscript multiplicity and subscript numerals. First series colour is #009E73 as required.
-      Legibility verdict: PASS (the lavender term labels at fontSize 11 are the lowest-contrast text on the cream page and the first thing to go at the 400 px thumbnail width, but every element is legible at full size).
+      Background: warm off-white, pixel-sampled at #FAF8F1 (250, 248, 241) — not pure white, not dark. Canvas exactly 2400x2400 (square target).
+      Chrome: bold near-black title "line-tanabe-sugano · python · altair · anyplot.ai" at the top left spanning about 57% of canvas width, with a two-line soft-ink subtitle "d² octahedral ion (V³⁺) at C/B = 4.42" and "E/B measured from the ³T₁g(F) ground term". Y-axis title "E/B — reduced term energy" rotated at the left, x-axis title "Δₒ/B — reduced ligand-field strength" centred at the bottom; ticks 0/20/40/60/80 and 0/10/20/30/40 in soft grey. Horizontal and vertical grid lines are present at the tick values at low opacity, clearly behind the curves. A legend box with an elevated off-white fill sits inside the plot at the top left, carrying a thick solid green line sample labelled "Spin-allowed (ΔS = 0)" and a thinner dashed lavender sample labelled "Spin-forbidden (ΔS ≠ 0)". All text is readable against the light background; nothing is light-on-light, nothing is clipped at any canvas edge.
+      Data: nine term curves for the d² ion. Four spin-allowed triplets in Imprint green #009E73 drawn thick and solid — ³T₁g(F) flat along E/B = 0 on the x-axis, ³T₂g rising from the origin to about 38, ³T₁g(P) starting at 15 and rising to about 50, ³A₂g rising from the origin to about 78. Five spin-forbidden singlets in Imprint lavender #C475FD drawn thinner and dashed — ¹Eg and ¹T₂g(D) nearly coincident and almost flat at about 14–15, ¹A₁g and ¹T₁g and ¹T₂g(G) starting near 21 and fanning up to about 34, 58 and 55. Every curve is labelled at the right edge with its term symbol in its own series colour, multiplicity as a Unicode superscript and the numeral as a Unicode subscript, g on the baseline. First series colour is #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, not pure black; identical layout and canvas size.
-      Chrome: title in near-white #F0EFE8, subtitles and tick labels in the lighter secondary ink #B8B7B0, axis titles light against the dark page; grid lines are pale ink at ~15% and stay subtle but visible; the legend box flips to the elevated #242420 fill with light label text. No dark-on-dark anywhere — every title, subtitle, axis title and tick label flips to light ink.
-      Data: colors are identical to the light render — the same #009E73 for the four spin-allowed curves and the same #C475FD for the five spin-forbidden dashed curves, same dash pattern and stroke widths, same right-edge term labels in matching colors. Only the chrome flipped. Brand green remains clearly visible on the near-black surface.
+      Background: warm near-black, pixel-sampled at #1A1A17 (26, 26, 23) — not pure black, not light. Canvas exactly 2400x2400.
+      Chrome: identical layout. Title and y/x axis titles render in light ink (#F0EFE8), subtitle and tick labels in the softer #B8B7B0 — all clearly readable against the near-black surface. No dark-on-dark anywhere: no title, subtitle, axis title, tick label, legend label or term label is drawn in a near-black ink. Grid lines flip to a faint light stroke, still subtle and still behind the curves. The legend box flips to the elevated #242420 surface and both its line samples remain plainly visible.
+      Data: colours are identical to the light render — the four spin-allowed curves are the same Imprint green #009E73 and the five spin-forbidden curves the same lavender #C475FD, at the same stroke widths and the same dash pattern; only the chrome flipped. Brand green #009E73 reads strongly on the dark surface, including the ground-term line sitting on the x-axis. Right-edge term labels keep their series colours and stay readable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -68,86 +74,97 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 16px, subtitles 12px, axis titles 12px, ticks 10px all match
-          the scale-based defaults and read cleanly in both themes; the right-edge
-          term labels at 11px are the chart's main reading aid yet sit near the bottom
-          of the hierarchy and the lavender ones are the first text to blur at the
-          400px mobile width
+        comment: All font sizes explicitly set (title 16, subtitle 12, term labels
+          13 semibold, axis titles 12). Everything readable at full size in both themes.
+          Legend and tick labels at fontSize 10 drop to roughly 7 px in the 400 px
+          thumbnail, the one element at the mobile-readable floor.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with text or with curves; the legend sits in empty
-          space top-left; the 1Eg / 1T2g(D) labels straddle their near-coincident
-          pair, which the spec's permission bullet explicitly covers
+        comment: No text collides with text or with curves in either render. The nine
+          right-edge labels are separated by small offsets where curves converge;
+          the legend sits in the empty upper-left region and no curve passes under
+          it. Curve crossings between different symmetry/multiplicity terms and the
+          near-coincident Eg/T2g(D) pair are named as expected by the spec.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stroke widths 4.2 (spin-allowed) and 2.0 (spin-forbidden) scale to
-          prominent lines on a 2400px canvas; both legend glyphs show the right color,
-          thickness and dash pattern on both backgrounds
+        comment: Stroke widths 4.2 (spin-allowed) and 2.0 (spin-forbidden) make both
+          classes prominent against both backgrounds. Legend glyphs are a thick solid
+          green line and a thinner dashed lavender line, matching the marks exactly,
+          and both are visible on the elevated fill in light and dark.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender is a CVD-safe pair and the dash pattern plus the direct
-          term labels make the spin class redundantly encoded; no red-green signal
+        comment: Green/lavender is a CVD-safe pair and the spin class is redundantly
+          encoded by stroke width and dash pattern, so colour is never the sole signal.
+          No red-green coding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exactly 2400x2400 (canvas gate did not fire), near-square 500x460
-          plot area with both axes at 0 as the Notes ask, right gutter for labels,
-          nothing overflows or is cut off
+        comment: Canvas measured at exactly 2400x2400; the canvas dimension gate did
+          not fire. Near-square plot area as the Notes ask, both axes starting at
+          0. Title spans about 57% of canvas width, inside the 50-70% band. Axis titles
+          balanced, tick labels balanced, nothing overflows the plot or canvas. The
+          x-domain extends to 47 to open a right gutter for the term labels.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis titles spell out the reduced quantity ('Do/B - reduced
-          ligand-field strength', 'E/B - reduced term energy') and the subtitle states
-          configuration, C/B and the reference ground term
+        comment: 'Both axis titles are descriptive and name the quantity: ''Delta_o/B
+          — reduced ligand-field strength'' and ''E/B — reduced term energy''. Both
+          quantities are dimensionless ratios, so no unit is omitted.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD in canonical Imprint order,
-          data colors identical across themes, backgrounds #FAF8F1 / #1A1A17 with
-          elevated legend fill #FFFDF6 / #242420'
+        comment: 'First categorical series is Imprint #009E73, second is Imprint position
+          2 #C475FD; no other colours used for data. Backgrounds verified by pixel
+          sample at #FAF8F1 and #1A1A17, data colours identical between themes, only
+          chrome flips.'
     design_excellence:
       score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above generic: Lato typography with a three-level title/subtitle/axis
-          hierarchy, Imprint palette used semantically for the two spin classes, color-matched
-          direct labels; the composition itself is still a plain line field'
+        comment: 'Above the default on evidence: Lato typeface, a compact title with
+          a two-line informative subtitle, a deliberate triple encoding (hue + dash
+          + width) of one variable, right-edge direct labelling in series colour instead
+          of a nine-row legend, and an elevated legend surface with padding and corner
+          radius. Polished rather than remarkable.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid at 15% opacity stays behind the curves, no view frame, L-shaped
-          domain lines only, generous padding, direct labels instead of a nine-entry
-          legend
+        comment: 'Above the default on three concrete pieces of evidence: view stroke
+          set to None so no frame is drawn, grid at gridOpacity 0.15 so it stays behind
+          the curves, and generous whitespace with labelPadding 7 / titlePadding 12
+          and a right gutter.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Thick-solid vs thin-dashed splits the terms into the two classes
-          a chemist reads first, labels land where the eye exits each curve, subtitle
-          names the reference term; no further focal guidance
+        comment: 'One point above the default: direct labelling leads the eye curve
+          by curve and the subtitle names the reference term, so the viewer knows
+          what E/B is measured from. Held low because the spin-class hierarchy is
+          mandated by the spec rather than an authored emphasis, and the chart has
+          no single focal point.'
     spec_compliance:
       score: 15
       max: 15
@@ -158,61 +175,74 @@ review:
         max: 5
         passed: true
         comment: 'A Tanabe-Sugano diagram: continuous term-energy curves against reduced
-          field strength for one d-n configuration'
+          ligand-field strength for one d-n configuration. No encoding beyond what
+          the spec''s Data block offers (the spin_allowed column drives the spin-class
+          channel).'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: One configuration per chart with C/B stated in the subtitle, energies
-          from diagonalised matrices, ground term drawn as a visible flat line at
-          E/B = 0, spin-allowed thicker solid and spin-forbidden thinner dashed, every
-          curve labelled near the right edge, avoided crossings intact; no crossover
-          line is correct for d2, and Vega-Lite text has no rich markup so the Unicode
-          term keys are the fallback the Notes permit
+        comment: 'Every Notes bullet met: one configuration per chart with d2 and
+          C/B = 4.42 stated in the subtitle; energies from diagonalised Tanabe-Sugano
+          matrices, not splines; the ground term drawn as a visible flat line at E/B
+          = 0; spin-allowed thicker and solid, spin-forbidden thinner and dashed;
+          all nine curves labelled at the right edge with Unicode super/subscripts,
+          which the spec permits for a library without text markup (Vega-Lite mark_text
+          has none); avoided crossings never cross; near-square area, both axes from
+          0, light grid. The crossover line applies only to d4-d7, which the spec
+          names as expected-not-a-defect here. The example-complex marker is optional
+          and not drawn.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x = delta_o/B over 0-40, y = E/B over 0-80, both axes start at 0;
-          curves sit exactly on their computed values - the only offsets are on the
-          text labels, not on the marks
+        comment: x = delta_over_b, y = energy_over_b as specified. The y domain [0,
+          80] contains the maximum curve value of about 78 and the x domain contains
+          all samples, so no data is cut off. Marks sit exactly at their computed
+          values; the only offsets in the code are applied to the text labels' y positions,
+          never to the curves.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'line-tanabe-sugano - python - altair - anyplot.ai';
-          the single merged legend's two labels name the spin classes the colors and
-          dashes encode
+        comment: Title is exactly 'line-tanabe-sugano · python · altair · anyplot.ai'
+          with the configuration carried in the subtitle. Legend labels 'Spin-allowed
+          (DS = 0)' and 'Spin-forbidden (DS != 0)' match the two encoded classes and
+          their glyph styling matches the curves.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Nine terms x 301 samples, inside the spec's 6-12 curves and 200-400
-          points; shows the flat ground term, both spin classes, two avoided-crossing
-          pairs and the 1A1g bend - the crossover line is absent only because d2 lies
-          outside d4-d7, which the spec names as expected
+        comment: 'Nine term curves across both spin classes, the ground term on the
+          axis, visible curvature in the triplet set and the ground-term-subtraction
+          effect on the singlets. Held one point back because no avoided crossing
+          is visibly exhibited: the same-symmetry pairs either diverge from the origin
+          or reach closest approach already about 7 E/B apart, so the curved near-touch
+          the Notes single out does not appear in the drawn window.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: V3+ as a d2 octahedral ion at C/B = 4.42 is a real, neutral textbook
-          system with a literature-consistent Racah ratio
+        comment: V(III) as a d2 octahedral ion at C/B = 4.42 is a standard textbook
+          case with a literature-plausible Racah ratio; term symbols are the real
+          ones. Entirely neutral subject matter.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: delta_o/B 0-40 and E/B 0-80 are exactly the ranges the spec's Data
-          section gives, and the 15B F-P separation at zero field is the correct magnitude
+        comment: delta_o/B sampled 0-40 over 301 points and E/B spanning 0-80 sit
+          exactly in the ranges and sample count the spec's Data block calls for,
+          and the curve shapes are smooth at that density.
     code_quality:
       score: 10
       max: 10
@@ -222,35 +252,41 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level script, no functions or classes
+        comment: 'Straight-line script: tokens, matrices, dataframe, chart, save.
+          No functions, no classes, no loops.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic - analytic matrices on a linspace, no randomness
+        comment: Fully deterministic — the data comes from np.linspace and closed-form
+          matrices run through eigvalsh, with no random number generator anywhere,
+          so no seed is needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas and PIL.Image are each used
+        comment: os, altair, numpy, pandas and PIL.Image are each used; nothing imported
+          and left unused.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Uses the available call (np.linalg.eigvalsh) rather than writing
-          out a 2x2 diagonalisation; vectorised over all 301 field strengths at once,
-          no dead code, no fake UI
+        comment: 'Uses the available call rather than writing the algorithm out: np.linalg.eigvalsh
+          on a moveaxis-stacked array diagonalises all 301 field strengths at once,
+          instead of a per-point loop or a hand-rolled quadratic root. No fake UI,
+          no dead code.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at scale_factor 4 plus plot-{THEME}.html,
-          with the prescribed pad-only-to-target block; current alt.Chart/alt.layer
-          API throughout
+        comment: Saves plot-{THEME}.png at scale_factor 4.0 plus plot-{THEME}.html
+          for the interactive view, with the mandated pad-only-to-target block and
+          fail-loud SystemExit guard. No bare plot.png. Current altair 6 API throughout
+          (alt.Title, alt.Legend, alt.StrokeDash, alt.Scale).
     library_mastery:
       score: 7
       max: 10
@@ -260,23 +296,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Long-format DataFrame, typed encoding shorthand, explicit alt.Scale
-          domains/ranges, alt.layer composition and the configure_* chain - all the
-          recommended altair patterns; data prep is done in pandas rather than with
-          transform_* '
+        comment: 'Above the default: tidy long dataframe fed to the declarative grammar,
+          the detail channel used correctly to split series without colouring them,
+          alt.layer to compose lines with text marks, a shared alt.X object reused
+          across both layers, and the configure_* chain for theming rather than per-mark
+          overrides.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: detail channel to split series without spending a color, strokeDash
-          and strokeWidth as real encoding channels with their own scales, automatic
-          legend merging across color+strokeDash, layered mark_text labels and alt.Tooltip
-          for the HTML view
+        comment: 'Two points above the default on evidence: color and strokeDash encodings
+          declared with matching domains so Vega-Lite merges them into one legend
+          while strokeWidth stays legend-less, a native tooltip channel that makes
+          the HTML export interrogable, and layered text marks for direct labelling
+          — all things specific to the Vega-Lite grammar rather than generic plotting.'
   verdict: APPROVED
   model: claude-opus-5
   criteria_version: qc-08c3141e4a.aqr-cfd364e1ff.sg-7006008fc6.lib-c26969a0f8
-  rendered_at: '2026-10-01T19:44:50Z'
+  rendered_at: '2026-10-01T19:54:48Z'
 impl_tags:
   dependencies:
   - pillow
@@ -285,6 +323,7 @@ impl_tags:
   - annotations
   - hover-tooltips
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
@@ -292,3 +331,4 @@ impl_tags:
   - eigendecomposition
   styling:
   - publication-ready
+  - grid-styling
