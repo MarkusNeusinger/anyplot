@@ -31,7 +31,7 @@ A waterfall-style chart showing how each feature contributes to pushing a model 
 
 ## What a good version looks like
 
-- A good version shows: one horizontal bar segment per displayed feature, with at most one more for the remaining features taken together, each starting where its neighbor ends, extending right for a positive contribution and left for a negative one, so the chain runs unbroken from the base value to the final prediction, as the Notes ask.
+- A good version shows: one horizontal bar segment per displayed feature, with at most one more for the remaining features taken together, each starting where its neighbor ends, right for a positive contribution and left for a negative one, so the chain runs unbroken from the base value to the final prediction, as the Notes ask.
 - A good version shows: the features ordered by the absolute size of their contribution with the largest at the top, as the Notes ask, and the feature names on the y axis.
 - A good version shows: positive contributions in red or pink and negative ones in blue, as the Notes ask, the two told apart in both themes.
 - A good version shows: the base value and the final prediction as labeled reference lines or annotations, as the Notes ask, each at the end of the chain it belongs to.
