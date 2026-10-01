@@ -90,12 +90,13 @@ curve_labels <- terms |>
     mutate(
         symbol  = TERM_SYMBOLS[term],
         label_y = energy_over_b + case_when(
-            term == "1Eg(D)" ~ 2.1,
-            term == "1T2g(D)" ~ -2.1,
-            term == "3T2g" ~ 1.1,
-            term == "1A1g(G)" ~ -1.1,
-            term == "1T1g(G)" ~ 0.9,
-            term == "1T2g(G)" ~ -0.9,
+            term == "1Eg(D)" ~ 2.7,
+            term == "1T2g(D)" ~ -2.7,
+            term == "3T2g" ~ 1.4,
+            term == "1A1g(G)" ~ -1.4,
+            term == "1T1g(G)" ~ 1.15,
+            term == "1T2g(G)" ~ -1.15,
+            term == "3T1g(P)" ~ -0.8,
             .default = 0
         )
     )
@@ -107,7 +108,7 @@ p <- ggplot(terms, aes(delta_over_b, energy_over_b, group = term,
     geom_text(
         data = curve_labels,
         aes(x = delta_over_b + 0.7, y = label_y, label = symbol, color = spin),
-        parse = TRUE, hjust = 0, size = 3.2,
+        parse = TRUE, hjust = 0, size = 4.1,
         inherit.aes = FALSE, show.legend = FALSE
     ) +
     scale_color_manual(values = c(SPIN_ALLOWED, SPIN_FORBIDDEN) |>
@@ -146,7 +147,7 @@ p <- ggplot(terms, aes(delta_over_b, energy_over_b, group = term,
         legend.key.width  = unit(0.55, "cm"),
         legend.background = element_blank(),
         legend.box.spacing = unit(0.25, "cm"),
-        plot.margin       = margin(t = 10, r = 50, b = 6, l = 8)
+        plot.margin       = margin(t = 10, r = 62, b = 6, l = 8)
     )
 
 # --- Save -------------------------------------------------------------------
