@@ -28,3 +28,12 @@ A residual plot displays the difference between observed and predicted values (r
 - Optional: Add LOWESS or kernel smoothing line to detect non-linear patterns in residuals
 - Consider adding horizontal bands at ±2 standard deviations to identify potential outliers
 - Color outliers differently if residuals exceed threshold (e.g., 2 or 3 standard deviations)
+
+## What a good version looks like
+
+- A good version shows: one point per observation, its residual (observed minus predicted) on the y axis against its fitted value on the x axis, as the Notes ask, every point at its computed values and never jittered or displaced.
+- A good version shows: a horizontal reference line at zero, as the Notes ask, running across the whole range of fitted values and visible through the point cloud in both themes.
+- A good version shows: transparency on the points when the sample is large, as the Notes ask, so that areas where residuals pile up read darker.
+- A good version shows: residuals beyond the chosen outlier threshold in a color different from the rest, as the Notes ask, so the outliers stand out from the bulk of the cloud.
+- A good version shows: the smoothing line and the standard-deviation bands the Notes allow, if drawn, computed from the plotted residuals: the line following their local average, the bands horizontal and equally far above and below zero.
+- Expected, not a defect: a cloud that widens or narrows along the fitted values, a curved drift away from the zero line, a few outliers far from it and overlapping points in the dense middle; these patterns are what the diagnostic is for.

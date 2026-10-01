@@ -27,3 +27,12 @@ A PCA biplot simultaneously displays both observation scores (as points) and var
 - Scale loadings appropriately so arrows are visible alongside score points (often requires separate scaling)
 - Include axis labels showing component name and variance explained percentage (e.g., "PC1 (45.2%)")
 - Consider adding a unit circle as reference for loading magnitudes when using correlation biplot scaling
+
+## What a good version looks like
+
+- A good version shows: observation scores as points at their PC1 and PC2 coordinates, as the Notes ask, never jittered or displaced, and, where they are colored by group as the Notes allow, a legend naming the groups.
+- A good version shows: one arrow per original variable starting at the origin, as the Notes ask, its direction and relative length following that variable's loadings on the two components.
+- A good version shows: each arrow labeled with its variable name, as the Notes ask, the name placed at the arrowhead so it is attributable to one arrow even where arrows point the same way.
+- A good version shows: loadings scaled so the arrows are visible alongside the score points, as the Notes ask, by one common factor for all arrows, neither shrunk to a knot at the origin nor running out of the plot; the unit circle the Notes suggest, if drawn, is centered on the origin and round.
+- A good version shows: axis labels naming each component with its percentage of variance explained, as the Notes ask.
+- Expected, not a defect: arrows of very different lengths, arrows bunched together for correlated variables or opposed for negatively correlated ones, arrows and scores on different scales, groups that overlap, and points spread wider along the first component than the second.

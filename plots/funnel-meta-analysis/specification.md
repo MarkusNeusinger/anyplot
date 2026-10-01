@@ -28,3 +28,11 @@ A funnel plot used in meta-analysis to assess publication bias by plotting indiv
 - Plot individual studies as points (optionally sized by weight or sample size)
 - Include a vertical dashed reference line at the null effect (0 for differences, 1 for ratios) if different from summary effect
 - Asymmetry in the scatter pattern suggests publication bias
+
+## What a good version looks like
+
+- A good version shows: one point per study at its effect size on the x axis and its standard error on the y axis, as the Notes ask, never jittered or displaced, with marker size, if it varies, growing with study weight or sample size as the Notes allow.
+- A good version shows: the standard error axis inverted, as the Notes ask, so that the more precise studies sit at the top and the less precise ones spread out toward the bottom.
+- A good version shows: a vertical line at the pooled effect and the pseudo confidence limits as two straight diagonal lines, as the Notes ask, closing in on the pooled effect toward the top and widening symmetrically about it toward the bottom, where their formula puts them.
+- A good version shows: a dashed vertical reference line at the null effect when it differs from the pooled effect, as the Notes ask, distinguishable from the pooled-effect line.
+- Expected, not a defect: studies outside the funnel limits, a lopsided scatter with one lower corner empty, few points near the top and a wider spread at the bottom, and a pooled effect away from the null; asymmetry is the finding the plot exists to show.
