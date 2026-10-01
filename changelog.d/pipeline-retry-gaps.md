@@ -5,7 +5,8 @@
   with backoff, and a run that dies after the score but before any verdict
   label now dispatches one fresh review on its own ref (sharing the existing
   `review-retry` budget), or labels the PR `ai-review-failed` for the watchdog.
-  The watchdog's never-reviewed case also counts a lone `quality:N` as a
+  The budget marker is written before the dispatch and an unreadable budget
+  counts as spent, so an outage cannot buy a second re-review. The watchdog's never-reviewed case also counts a lone `quality:N` as a
   marker. Before, an HTTP 502 on the label left PR #11984 without a verdict
   for about seven hours. (#12004)
 - **impl-generate's auto-retry runs on the ref that dispatched it.** A branch
@@ -18,4 +19,6 @@
   closing the PR and before labelling the issue. Only a forced regeneration
   reaches that point with an implementation on main, and that live
   implementation now stays: the issue gets `impl:{library}:done` back. A
-  fresh pair is marked `impl:{library}:failed` as before. (#12004)
+  fresh pair is marked `impl:{library}:failed` as before. A stale
+  `generate:`/`pending` label that cannot be removed now fails the run
+  instead of passing silently. (#12004)

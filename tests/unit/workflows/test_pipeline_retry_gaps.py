@@ -35,8 +35,11 @@ VERDICT_STEP = "Add verdict label and take action"
 QUALITY_STEP = "Add quality score label"
 MARKER = "<!-- review-retry:spec-a:plotly -->"
 
-# Answers `pr view` with $GH_LABELS (fails with GH_FAIL_VIEW=1), `api` with
-# $GH_MARKERS, `workflow run` with exit $GH_DISPATCH_RC; logs every call.
+# Answers `pr view` with $GH_LABELS (fails with GH_FAIL_VIEW=1), `issue view`
+# with $GH_ISSUE_LABELS (fails with GH_FAIL_ISSUE_VIEW=1), `api` with one
+# $GH_MARKERS count per page (fails with GH_FAIL_API=1), `workflow run`,
+# `pr comment` and `label create` with exit $GH_*_RC; an `issue edit
+# --remove-label` fails with GH_FAIL_REMOVE=1. Logs every call.
 FAKE_GH = """\
 for arg in "$@"; do printf '%s\\n' "$arg"; done >> "$GH_LOG"
 echo "--END--" >> "$GH_LOG"
@@ -45,9 +48,20 @@ case "$1 $2" in
     [ "${GH_FAIL_VIEW:-0}" = "1" ] && { echo "HTTP 502" >&2; exit 1; }
     [ -n "$GH_LABELS" ] && printf '%s\\n' $GH_LABELS
     exit 0 ;;
-  "api --paginate") echo "${GH_MARKERS:-0}"; exit 0 ;;
+  "issue view")
+    [ "${GH_FAIL_ISSUE_VIEW:-0}" = "1" ] && { echo "HTTP 502" >&2; exit 1; }
+    [ -n "$GH_ISSUE_LABELS" ] && printf '%s\\n' $GH_ISSUE_LABELS
+    exit 0 ;;
+  "issue edit")
+    [ "${GH_FAIL_REMOVE:-0}" = "1" ] && [ "$4" = "--remove-label" ] && { echo "HTTP 502" >&2; exit 1; }
+    exit 0 ;;
+  "api --paginate")
+    [ "${GH_FAIL_API:-0}" = "1" ] && { echo "HTTP 502" >&2; exit 1; }
+    printf '%s\\n' ${GH_MARKERS:-0}
+    exit 0 ;;
   "workflow run") exit "${GH_DISPATCH_RC:-0}" ;;
   "pr comment") exit "${GH_COMMENT_RC:-0}" ;;
+  "label create") exit "${GH_LABEL_CREATE_RC:-0}" ;;
 esac
 exit 0
 """
@@ -143,10 +157,40 @@ class TestPostScoreRescue:
         assert len(_calls(calls, "pr", "comment")) == 1  # the marker
         assert not _calls(calls, "pr", "edit")
 
-    def test_marker_comment_is_posted_after_the_dispatch(self, tmp_path):
+    def test_marker_comment_is_durable_before_the_dispatch(self, tmp_path):
         _, calls = self._rescue(tmp_path)
         kinds = [" ".join(c[:2]) for c in calls]
-        assert kinds.index("workflow run") < kinds.index("pr comment")
+        assert kinds.index("pr comment") < kinds.index("workflow run")
+        (comment,) = _calls(calls, "pr", "comment")
+        assert MARKER in Path(comment[-1]).read_text(encoding="utf-8")
+
+    def test_a_lost_marker_comment_never_dispatches(self, tmp_path):
+        # Without a durable marker the re-review would have no budget record.
+        result, calls = self._rescue(tmp_path, GH_COMMENT_RC="1")
+        assert result.returncode == 1
+        assert not _calls(calls, "workflow", "run")
+        assert ["pr", "edit", "7", "--add-label", "ai-review-failed"] in calls
+
+    def test_an_unreadable_budget_counts_as_spent(self, tmp_path):
+        result, calls = self._rescue(tmp_path, GH_FAIL_API="1")
+        assert result.returncode == 1
+        assert len(_calls(calls, "api", "--paginate")) == 3  # retried
+        assert not _calls(calls, "workflow", "run")
+        assert ["pr", "edit", "7", "--add-label", "ai-review-failed"] in calls
+
+    @pytest.mark.parametrize(("pages", "dispatches"), [("0 0 0", 1), ("0 1", 0), ("0 0 1", 0), ("1 1", 0)])
+    def test_the_marker_is_counted_across_comment_pages(self, tmp_path, pages, dispatches):
+        # `gh api --paginate --jq` prints one count per page.
+        result, calls = self._rescue(tmp_path, GH_MARKERS=pages)
+        assert result.returncode == 1
+        assert len(_calls(calls, "workflow", "run")) == dispatches
+        assert (["pr", "edit", "7", "--add-label", "ai-review-failed"] in calls) == (dispatches == 0)
+
+    def test_a_non_numeric_budget_counts_as_spent(self, tmp_path):
+        result, calls = self._rescue(tmp_path, GH_MARKERS="oops")
+        assert result.returncode == 1
+        assert not _calls(calls, "workflow", "run")
+        assert ["pr", "edit", "7", "--add-label", "ai-review-failed"] in calls
 
     def test_empty_ref_falls_back_to_main(self, tmp_path):
         _, calls = self._rescue(tmp_path, WORKFLOW_REF="")
@@ -203,6 +247,37 @@ class TestPostScoreRescue:
         assert marker in _step("impl-review.yml", "Validate review output")["run"]
 
 
+class TestNoScoreRetryBudget:
+    """ "Validate review output" reads the same budget the same way."""
+
+    ENV = {
+        "PR_NUM": "7",
+        "SPEC_ID": "spec-a",
+        "LIBRARY": "plotly",
+        "REPOSITORY": "owner/repo",
+        "RUN_ID": "1",
+        "MODEL": "sonnet",
+        "REVIEW_MODEL_ALIAS": "opus",
+    }
+
+    def _validate(self, tmp_path: Path, **env: str) -> tuple[subprocess.CompletedProcess[str], list[list[str]]]:
+        script = _step("impl-review.yml", "Validate review output")["run"]
+        return _run(script, tmp_path, tmp_path, **{**self.ENV, **env})
+
+    def test_first_failure_retries_once(self, tmp_path):
+        result, calls = self._validate(tmp_path, GH_MARKERS="0 0")
+        assert result.returncode == 1
+        assert len(_calls(calls, "api", "repos/owner/repo/dispatches")) == 1
+        assert not _calls(calls, "pr", "edit")
+
+    @pytest.mark.parametrize("env", [{"GH_MARKERS": "0 1"}, {"GH_FAIL_API": "1"}])
+    def test_spent_or_unreadable_budget_never_retries(self, tmp_path, env):
+        result, calls = self._validate(tmp_path, **env)
+        assert result.returncode == 1
+        assert not _calls(calls, "api", "repos/owner/repo/dispatches")
+        assert ["pr", "edit", "7", "--add-label", "ai-review-failed"] in calls
+
+
 class TestQualityLabelStep:
     ENV = {"PR_NUM": "7", "SCORE": "86"}
 
@@ -233,6 +308,16 @@ class TestQualityLabelStep:
         result, calls = _run(script, tmp_path, tmp_path, GH_LABELS="quality:73", **self.ENV)
         assert result.returncode == 0, result.stdout + result.stderr
         assert ["pr", "edit", "7", "--remove-label", "quality:73"] in calls
+        assert ["pr", "edit", "7", "--add-label", "quality:86"] in calls
+
+    def test_label_creation_is_idempotent_and_retried(self, tmp_path):
+        script = _step("impl-review.yml", QUALITY_STEP)["run"]
+        result, calls = _run(script, tmp_path, tmp_path, GH_LABEL_CREATE_RC="1", **self.ENV)
+        creates = _calls(calls, "label", "create")
+        assert len(creates) == 4
+        assert all(c[2:4] == ["quality:86", "--force"] for c in creates)
+        # A creation that never lands does not gate by itself: the add decides.
+        assert result.returncode == 0, result.stdout + result.stderr
         assert ["pr", "edit", "7", "--add-label", "quality:86"] in calls
 
     def test_unreadable_labels_fail_the_step(self, tmp_path):
@@ -324,6 +409,7 @@ class TestRepairExhaustion:
         "MODEL": "opus",
         "IS_REGEN": "false",
         "GH_LABELS": "ai-rejected quality:41 ai-attempt-4",
+        "GH_ISSUE_LABELS": "generate:plotly impl:plotly:pending impl:plotly:failed watchdog:retried-plotly",
     }
 
     def _exhaust(self, tmp_path: Path, files: tuple[str, ...], **env: str):
@@ -366,6 +452,34 @@ class TestRepairExhaustion:
         assert ["issue", "edit", "42", "--add-label", "impl:plotly:failed"] in calls
         assert ["issue", "edit", "42", "--remove-label", "impl:plotly:pending"] in calls
         assert not any("impl:plotly:done" in c for c in calls)
+
+    def test_fresh_pair_keeps_a_failed_label_it_did_not_ask_to_drop(self, tmp_path):
+        _, calls = self._exhaust(tmp_path, ())
+        removed = [c[-1] for c in calls if c[:2] == ["issue", "edit"] and "--remove-label" in c]
+        assert removed == ["generate:plotly", "impl:plotly:pending"]
+
+    def test_absent_stale_labels_are_not_removed(self, tmp_path):
+        result, calls = self._exhaust(tmp_path, (), GH_ISSUE_LABELS="impl:plotly:pending")
+        assert result.returncode == 0, result.stdout + result.stderr
+        removed = [c[-1] for c in calls if c[:2] == ["issue", "edit"] and "--remove-label" in c]
+        assert removed == ["impl:plotly:pending"]
+
+    def test_a_failed_stale_label_removal_is_retried_and_ends_red(self, tmp_path):
+        result, calls = self._exhaust(tmp_path, (), GH_FAIL_REMOVE="1")
+        assert result.returncode == 1
+        for label in ("generate:plotly", "impl:plotly:pending"):
+            assert calls.count(["issue", "edit", "42", "--remove-label", label]) == 3
+        # ... and only after the rest of the bookkeeping ran.
+        assert ["issue", "edit", "42", "--add-label", "impl:plotly:failed"] in calls
+        assert len(_calls(calls, "issue", "comment")) == 1
+
+    def test_unreadable_issue_labels_end_red_after_a_blind_removal(self, tmp_path):
+        result, calls = self._exhaust(tmp_path, (), GH_FAIL_ISSUE_VIEW="1")
+        assert result.returncode == 1
+        assert len(_calls(calls, "issue", "view")) == 3
+        assert ["issue", "edit", "42", "--remove-label", "generate:plotly"] in calls
+        assert ["issue", "edit", "42", "--remove-label", "impl:plotly:pending"] in calls
+        assert len(_calls(calls, "issue", "comment")) == 1
 
     def test_pr_is_closed_before_the_issue_bookkeeping(self, tmp_path):
         _, calls = self._exhaust(tmp_path, ())

@@ -726,8 +726,28 @@ jobs:
 
           MARKER="<!-- review-retry:${SPEC_ID}:${LIBRARY} -->"
           # Paginate so the marker is found even on PRs with >30 comments.
-          RETRY_COUNT=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
-            --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2>/dev/null || echo "0")
+          # `--paginate --jq` prints one count per page, so the pages are
+          # summed. A read that fails three times counts as a spent budget
+          # (fail closed): the brown-out that breaks the read must not buy a
+          # second automatic re-review.
+          RETRY_COUNT=""
+          for attempt in 1 2 3; do
+            if PAGES=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
+                 --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2> /tmp/retry-count.err) \
+               && RETRY_COUNT=$(printf '%s\n' "$PAGES" | jq -s 'add // 0' 2>> /tmp/retry-count.err) \
+               && [[ "$RETRY_COUNT" =~ ^[0-9]+$ ]]; then
+              break
+            fi
+            RETRY_COUNT=""
+            echo "::warning::retry-marker read failed (attempt ${attempt}/3): $(head -c 500 /tmp/retry-count.err | tr '\n' ' ')"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+          done
+          EXHAUSTED="Auto-retry already tried once."
+          if [ -z "$RETRY_COUNT" ]; then
+            echo "::error::Could not read the retry marker for PR #${PR_NUM} after 3 attempts — not auto-retrying"
+            EXHAUSTED="Whether the one auto-retry was already used could not be read, so none was started."
+            RETRY_COUNT=1
+          fi
 
           if [ "$RETRY_COUNT" -ge 1 ]; then
             # Already auto-retried once → final fail, require manual rerun
@@ -735,7 +755,7 @@ jobs:
             gh pr comment "$PR_NUM" --body "${MARKER}
           ## :x: AI Review Failed (auto-retry exhausted)
 
-          The AI review action completed but did not produce valid output files. Auto-retry already tried once.
+          The AI review action completed but did not produce valid output files. ${EXHAUSTED}
 
           **What happened:**
           - The Claude Code Action ran
@@ -797,7 +817,12 @@ jobs:
             echo "::error::${what} failed after 4 attempts for PR #${PR_NUM}"
             return 1
           }
-          gh label create "$LABEL" --color "0e8a16" --description "Quality score ${SCORE}/100" 2>/dev/null || true
+          # `--force` makes the creation idempotent (an existing label is not
+          # an error), so it can be retried like the rest: a `quality:N` that
+          # was never created makes every add below fail. A creation that
+          # still fails is not fatal by itself — the add decides.
+          gh_retry "quality label creation" gh label create "$LABEL" --force --color "0e8a16" --description "Quality score ${SCORE}/100" \
+            || echo "::warning::could not create ${LABEL} — the add below fails unless the label already exists"
 
           # Strip stale quality:* labels from prior review attempts so the PR
           # carries exactly one authoritative score. Without this, repaired
@@ -1365,9 +1390,11 @@ jobs:
       # the watchdog's merge/repair cases own the state, and a second review
       # could add a contradicting verdict, so this step then does nothing.
       # It shares the `review-retry` marker with "Validate review output": at
-      # most one automatic re-review per PR, whatever the cause. After that,
-      # or when the dispatch itself fails, the PR gets `ai-review-failed`,
-      # which watchdog Case 1 rescues once (a regeneration is only flagged).
+      # most one automatic re-review per PR, whatever the cause. The marker is
+      # written before the dispatch, and an unreadable budget counts as spent.
+      # After that, or when the marker or the dispatch itself fails, the PR
+      # gets `ai-review-failed`, which watchdog Case 1 rescues once (a
+      # regeneration is only flagged).
       # The retry runs on this run's ref, so a branch smoke stays on its branch.
       - name: Re-dispatch review after a post-score failure
         if: failure() && steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && steps.early_verdict.conclusion != 'success'
@@ -1441,29 +1468,49 @@ jobs:
           fi
 
           # Paginate so the marker is found even on PRs with >30 comments.
-          RETRY_COUNT=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
-            --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2>/dev/null || echo "0")
+          # `--paginate --jq` prints one count per page, so the pages are
+          # summed. An unreadable budget counts as spent (fail closed): the
+          # brown-out that brought this step here must not lift the cap.
+          RETRY_COUNT=""
+          for attempt in 1 2 3; do
+            if PAGES=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
+                 --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2> /tmp/rescue-gh.err) \
+               && RETRY_COUNT=$(printf '%s\n' "$PAGES" | jq -s 'add // 0' 2>> /tmp/rescue-gh.err) \
+               && [[ "$RETRY_COUNT" =~ ^[0-9]+$ ]]; then
+              break
+            fi
+            RETRY_COUNT=""
+            echo "::warning::retry-marker read failed (attempt ${attempt}/3): $(head -c 500 /tmp/rescue-gh.err | tr '\n' ' ')"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+          done
+          if [ -z "$RETRY_COUNT" ]; then
+            give_up "a later step failed, and whether the one automatic re-review was already used could not be read."
+          fi
           if [ "$RETRY_COUNT" -ge 1 ]; then
             give_up "a later step failed, and the one automatic re-review this PR gets is already used."
+          fi
+
+          # The marker comment is the retry budget, so it is written BEFORE
+          # the dispatch and the dispatch only happens once it is durable: a
+          # review dispatched without a marker could fail after its score and
+          # dispatch yet another one.
+          {
+            echo "${MARKER}"
+            echo "## :wrench: AI Review Failed After Scoring — Re-Reviewing"
+            echo ""
+            echo "The review scored ${SCORE}/100, but a later step failed before a verdict was applied (see the run log). A fresh review is dispatched once."
+            echo ""
+            echo "---"
+            echo ":robot: *[impl-review](${RUN_URL})*"
+          } > /tmp/rescue-comment.md
+          if ! gh_retry "retry marker comment" gh pr comment "$PR_NUM" --body-file /tmp/rescue-comment.md; then
+            give_up "a later step failed and the retry marker could not be recorded, so no re-review was dispatched."
           fi
 
           if ! gh_retry "impl-review dispatch" gh workflow run impl-review.yml --ref "${WORKFLOW_REF:-main}" \
                -f pr_number="$PR_NUM" -f model="$MODEL" -f review_model="$REVIEW_MODEL_ALIAS"; then
             give_up "a later step failed and the re-review could not be dispatched."
           fi
-          {
-            echo "${MARKER}"
-            echo "## :wrench: AI Review Failed After Scoring — Re-Reviewing"
-            echo ""
-            echo "The review scored ${SCORE}/100, but a later step failed before a verdict was applied (see the run log). A fresh review was dispatched once."
-            echo ""
-            echo "---"
-            echo ":robot: *[impl-review](${RUN_URL})*"
-          } > /tmp/rescue-comment.md
-          # The marker comment is the retry budget: without it the next
-          # failure would re-review again, so its loss is loud.
-          gh_retry "PR comment" gh pr comment "$PR_NUM" --body-file /tmp/rescue-comment.md \
-            || echo "::error::retry marker not posted on PR #${PR_NUM} — a further post-score failure would re-review again"
           echo "::notice::Re-dispatched impl-review.yml on ${WORKFLOW_REF:-main} for PR #${PR_NUM} (review model=${REVIEW_MODEL_ALIAS}, generation model=${MODEL})"
           # The run stays red: it produced no verdict. The re-review is its own run.
           exit 1
@@ -2042,10 +2089,32 @@ jobs:
                     ;;
                 esac
                 # One label per call: a name `gh` cannot resolve fails a whole
-                # comma-separated edit. Absent labels make the removal fail
-                # harmlessly, so these never turn the run red.
+                # comma-separated edit. Only labels the issue carries are
+                # removed, so a failed removal is a real API error and turns
+                # the run red: a left-over `generate:`/`pending` label lets the
+                # watchdog re-dispatch a pair that was just finalized. Read
+                # with its own loop: gh_retry's warnings go to stdout.
+                PRESENT=""
+                PRESENT_OK=0
+                for attempt in 1 2 3; do
+                  if PRESENT=$(gh issue view "$ISSUE_NUMBER" --json labels -q '.labels[].name' 2> /tmp/labels.err); then
+                    PRESENT_OK=1
+                    break
+                  fi
+                  echo "::warning::gh issue view (labels) failed (attempt ${attempt}/3): $(head -c 500 /tmp/labels.err | tr '\n' ' ')"
+                  [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+                done
+                if [ "$PRESENT_OK" -ne 1 ]; then
+                  echo "::error::Could not read labels of issue #${ISSUE_NUMBER} — stale labels (${STALE_LABELS[*]}) may be left"
+                  FAILED=1
+                fi
                 for stale in "${STALE_LABELS[@]}"; do
-                  gh issue edit "$ISSUE_NUMBER" --remove-label "$stale" 2>/dev/null || true
+                  if [ "$PRESENT_OK" -ne 1 ]; then
+                    # Blind best effort; the run is already red.
+                    GH_RETRY_LEVEL=warning gh_retry "remove ${stale}" gh issue edit "$ISSUE_NUMBER" --remove-label "$stale" || true
+                  elif echo "$PRESENT" | grep -qxF "$stale"; then
+                    gh_retry "remove ${stale}" gh issue edit "$ISSUE_NUMBER" --remove-label "$stale" || FAILED=1
+                  fi
                 done
                 gh_retry "issue comment" gh issue comment "$ISSUE_NUMBER" --body "$ISSUE_TEXT" || FAILED=1
 
