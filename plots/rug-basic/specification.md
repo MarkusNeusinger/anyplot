@@ -23,3 +23,11 @@ A rug plot displays individual data points as small tick marks along an axis, ty
 - Tick height should be consistent and small relative to the plot
 - Position along x-axis by default, but can be placed on y-axis
 - Works best as a complement to histograms, density plots, or scatter plots
+
+## What a good version looks like
+
+- A good version shows: one tick per observation at its exact value along the axis it sits on (the x axis by default, or the y axis as the Notes allow), drawn perpendicular to that axis.
+- A good version shows: ticks of one consistent height, small relative to the plot, as the Notes ask, and visible against the page in both themes.
+- A good version shows: semi-transparent ticks where observations overlap, as the Notes ask, so clusters read darker, with no tick moved along the value axis to separate it from its neighbors.
+- A good version shows: the basic variant's rug: the ticks, besides the histogram, density curve or scatter plot the Notes allow it to complement, and no mean, median or other reference lines, highlighted ticks or bands, or callouts.
+- Expected, not a defect: ticks that merge into solid bands in clusters, wide bare gaps, isolated ticks at the edges, and a mostly empty plot area beside a rug that stands alone.

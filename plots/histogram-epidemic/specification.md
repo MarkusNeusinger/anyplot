@@ -26,3 +26,12 @@ An epidemic curve (epi curve) is a histogram showing the number of new disease c
 - Mark key intervention events (e.g., lockdown start, vaccination campaign) with annotated vertical lines
 - X-axis should show dates with appropriate tick intervals; y-axis shows case counts
 - Consider a secondary y-axis with a cumulative case count line overlay for total burden context
+
+## What a good version looks like
+
+- A good version shows: adjacent bars with no gaps between them over equal time bins on a date axis in chronological order, each rising from zero to the number of new cases with onset in its interval, on a case-count axis.
+- A good version shows: one bin width for the whole curve, daily for a short outbreak or weekly for a longer epidemic, as the Notes ask, and date ticks at intervals that place the bars in time without crowding the axis, which need not be one tick per bar.
+- A good version shows: where the data carries a case classification, bars stacked by it in distinct colors named in a legend, as the Notes ask, in the same stacking order in every bar.
+- A good version shows: key intervention events as vertical lines at their dates, each annotated with what happened, as the Notes ask, visible against the bars in both themes.
+- A good version shows: a cumulative case line, if drawn as the Notes suggest, on its own labeled secondary axis, never falling, and not mistakable for the daily or weekly counts.
+- Expected, not a defect: empty intervals on dates with zero cases, jagged counts from one interval to the next, several waves, a long thin tail, and low bars before and after the peak.
