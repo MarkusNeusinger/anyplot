@@ -1,0 +1,332 @@
+library: letsplot
+language: python
+specification_id: line-tanabe-sugano
+created: '2026-10-01T20:19:54Z'
+updated: '2026-10-01T20:40:10Z'
+generated_by: claude-opus
+workflow_run: 36916132738
+issue: 11846
+language_version: 3.13.15
+library_version: 4.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/python/letsplot/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Curve energies come from diagonalizing the real d8 Tanabe-Sugano blocks with np.linalg.eigvalsh
+    (lines 83-86) rather than hand-fitted splines, and taking the eigenvalues in ascending
+    order per block keeps 1Eg(D)/1Eg(G) and 1T2g(D)/1T2g(G) from swapping identity,
+    so their avoided crossings stay as near-touches exactly as the Notes require.
+  - Term symbols are typeset with lets-plot's LaTeX markup - the regex at line 115
+    turns the plain-text keys into \(^{3}T_{1g}\)(P) and the labs() strings carry
+    \(d^{8}\), \(Ni^{2+}\) and \(\Delta_{o}/B\) - so multiplicities render as true
+    superscripts and the numeral plus g as true subscripts, a lets-plot-specific capability
+    the spec's label bullet asks for.
+  - The right-hand label gutter (scale_x_continuous(limits=(0, 48.5))) with a per-curve
+    leader segment and a 4.2-unit minimum label spacing keeps all ten term labels
+    attached to one curve each, even where 1T2g(G) and 1Eg(G) run within 0.15 E/B
+    of each other over the whole domain.
+  - 'The spin classes carry three redundant encodings at once - #009E73 solid at size
+    1.9 against #C475FD dashed at size 0.9 - so the distinction survives greyscale
+    and every CVD type, and the ground term 3A2g is drawn as a visible thick line
+    along E/B = 0 instead of an omitted baseline.'
+  - 'Theme tokens are threaded through every chrome element and the data colors are
+    measurably identical between renders (#009E73 and #C475FD sampled in both PNGs);
+    only background, ink, grid and legend frame flip, and the dark render has no dark-on-dark
+    text anywhere.'
+  - Interactive HTML is exported alongside the PNG (ggsave(plot, f'plot-{THEME}.html')),
+    so the detail view keeps lets-plot's hover inspection of the individual term curves
+    that the static preview cannot show.
+  weaknesses:
+  - 'DQ-01 (both): the 1A1g(S) term is dropped from the diagram entirely by the ENERGY_MAX
+    = 100 filter, although it runs inside the frame from E/B = 53.5 at Delta_o/B =
+    0 and only leaves the panel top at Delta_o/B = 30.5 - about 76 % of the plotted
+    domain - so the chart shows 10 of the 11 d8 terms where a textbook d8 diagram
+    lets that curve exit the top edge instead. Likely cause: the `if (energy - ground).max()
+    <= ENERGY_MAX` guard in the pd.concat comprehension (lines 100-101) filters the
+    whole series rather than clipping it to the panel.'
+  - 'DE-02 (both): each legend glyph sits on a key patch painted in the page color
+    (#FAF8F1 light / #1A1A17 dark) against the elevated legend card (#FFFDF6 / #242420),
+    so two rectangles one shade off the card are visible behind the line samples ->
+    match the card fill. Likely cause: `legend_key` is never set in the theme() block
+    (lines 151-168); add legend_key=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG).'
+  - 'Suggestion: an optional descriptive prefix on the title ("Tanabe-Sugano diagram
+    · line-tanabe-sugano · python · letsplot · anyplot.ai") would name the chart type
+    for readers arriving from the gallery.'
+  - 'Suggestion: the Notes allow a vertical marker at an example complex''s Delta_o/B
+    with arrows from the ground term up to the excited terms; Ni(H2O)6^2+ at Delta_o/B
+    around 8.5 would show how chemists read the diagram in reverse.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 (sampled (250,248,241)) across both plot and panel — not pure white, not dark. Canvas 2400x2400 (square target, gate passed).
+      Chrome: title "line-tanabe-sugano · python · letsplot · anyplot.ai" in near-black #1A1A17 at the top left, spanning roughly 63% of the canvas width; subtitle "d^8 ion (Ni^2+) in an octahedral ligand field · C/B = 4.5" below it in soft ink #4A4A44 with true superscripts. Y-axis title "Reduced term energy E/B" rotated at the left, x-axis title "Reduced ligand-field strength Delta_o/B" centred at the bottom with a true subscript o. Tick labels 0/20/40/60/80/100 on y and 0/10/20/30/40 on x in #4A4A44. A single light y-axis rule at x=0; no bottom rule, no ticks. Grid: faint #D8D7D0 horizontal segments at each y break stopping at Delta_o/B = 40, plus vertical rules at the x breaks — subtle, clearly behind the curves. Legend band at the bottom on an elevated #FFFDF6 card: green solid line sample "Spin-allowed (ΔS = 0)", purple dashed sample "Spin-forbidden (ΔS ≠ 0)". All text is dark on light and fully readable; nothing is light-on-light. Nothing is clipped — the rightmost label ends ~115 px inside the canvas and the legend card's bottom border sits ~9 px above the edge with every pixel present.
+      Data: four thick solid curves in brand green #009E73 (sampled (0,158,115) in the legend key) — the ground term 3A2g flat along E/B = 0, then 3T2g, 3T1g(F) and 3T1g(P) rising to 40, 51 and 84. Six thinner dashed curves in Imprint position 2 #C475FD — 1Eg(D) nearly flat at ~17, 1A1g(G) at ~31, 1T2g(D) at ~57, 1T1g(G) at ~61, and the near-coincident 1T2g(G)/1Eg(G) pair reaching ~98. Each curve ends in a short leader segment into a right-hand gutter carrying its typeset term symbol with superscript multiplicity and subscript Mulliken label. First series is #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 (sampled (26,26,23)) — not pure black, not light. Same 2400x2400 canvas.
+      Chrome: identical layout. Title and axis titles now in light ink #F0EFE8, subtitle, tick labels and legend text in #B8B7B0 — all clearly readable against the near-black surface. No dark-on-dark anywhere: every title, subtitle, axis title, tick label, term label and legend entry is light on dark. Grid flips to #3A3A36 and stays subtle but visible; the y-axis rule and legend frame flip with it; the legend card is the elevated #242420. No clipping on any edge.
+      Data: colors are identical to the light render — #009E73 for the four solid spin-allowed curves (legend key sampled (0,158,115), same as light) and #C475FD for the six dashed spin-forbidden curves. Brand green reads clearly against the dark surface, as does the purple. Only chrome flipped; no data color changed.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'Every size is explicit and on the style guide''s scale-based targets
+          for a 600x600 base at scale 4: plot_title 16, axis_title 12, axis_text 10,
+          legend_text 10, subtitle 12. The geom_text term labels at size=5.4 mm land
+          around 61 source-px, between the title and the axis titles, so they stay
+          readable in the 400 px thumbnail. All chrome readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: The 4.2-unit minimum label spacing plus leader segments keeps all
+          ten term labels apart; no text touches text, data, the legend card or the
+          axes. Curve convergence on the left and the near-coincident 1T2g(G)/1Eg(G)
+          pair are both named as expected by the spec's permissions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line widths 1.9 vs 0.9 and solid vs dashed read clearly at full size
+          and at 400 px; the grid is subtle but present in both themes; both legend
+          line samples are visible and match the curves they explain (green solid,
+          purple dashed).
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Green/purple is CVD-safe and never the sole signal - linetype and
+          line width carry the same distinction. Both colors hold contrast against
+          #FAF8F1 and #1A1A17.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 exactly (canvas gate passed, no /tmp/anyplot-canvas-gate.txt).
+          Near-square plot area with both axes starting at 0 as the spec asks; title
+          about 63 % of width; axis titles balanced; nothing overflows and nothing
+          is clipped on any edge.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Reduced ligand-field strength Delta_o/B'' and ''Reduced term energy
+          E/B'' name both the quantity and its reduced unit, typeset with real subscripts.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is Imprint #009E73 and the second is Imprint position
+          2 #C475FD; no continuous scale is used. Backgrounds measured at (250,248,241)
+          light and (26,26,23) dark; data colors identical across renders, only chrome
+          flips.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Above the default on evidence: a deliberate label gutter with per-curve
+          leaders, a hand-placed horizontal grid that stops at the last sample so
+          no rule runs behind a label, typeset term symbols, a two-weight hierarchy
+          between spin classes and a subtitle that carries the configuration. Reads
+          like a textbook figure rather than a default ggplot.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines reduced to a single light y-axis rule, ticks and minor grid
+          removed, grid very subtle. Held below max by the legend key patches rendering
+          in the page color against the elevated legend card, and by tight outer margins
+          (title 20 px from the top, legend card 9 px from the bottom).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above the default: the thick green spin-allowed curves - the ones
+          that correspond to observable UV-Vis bands - dominate, the weak spin-forbidden
+          terms recede as thin dashes, the ground term anchors the x-axis, and the
+          labelled gutter leads the eye to the right. No single focal point beyond
+          that, which is appropriate for a reference diagram.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'A Tanabe-Sugano diagram: one continuous curve per term, E/B against
+          Delta_o/B, for a single d8 configuration. Not a related-but-different form.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Every Notes bullet is met: one d-n configuration with the C/B ratio
+          in the subtitle; energies from diagonalized matrices, not splines; the ground
+          term drawn flat at E/B = 0; spin-allowed thicker solid and spin-forbidden
+          thinner dashed; term labels near the right edge with markup super/subscripts;
+          avoided crossings preserved as near-touches; near-square area with both
+          axes at 0 and a light grid. The d4-d7 crossover line is correctly absent
+          for d8, which the spec''s permissions name explicitly. The example-complex
+          marker is optional and deducts nothing.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = Delta_o/B over the spec's full 0-40 domain at 301 samples, y
+          = E/B measured from the ground term. No force, collision, nudge or declutter
+          pass touches a data mark - the 4.2-unit spacing is applied only to the gutter
+          labels, each tied back to its curve by a leader segment. No spline overshoot;
+          the curves are the eigenvalues themselves.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'line-tanabe-sugano · python · letsplot · anyplot.ai'.
+          Legend labels 'Spin-allowed (ΔS = 0)' / 'Spin-forbidden (ΔS ≠ 0)' name the
+          encoding they map and match the drawn styles.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows the ground term on the axis, both spin classes, avoided crossings
+          as near-touches, and ten labelled curves - inside the spec's 6-12 range.
+          Held below max because the eleventh d8 term, 1A1g(S), is filtered out entirely
+          even though it is inside the frame for Delta_o/B = 0 to 30.5.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: An octahedral Ni(2+) d8 ion at C/B = 4.5 is a standard, entirely
+          neutral inorganic-chemistry example, and the term set and ordering are the
+          real ones.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Delta_o/B spans the spec's full 0-40 at 301 samples (inside the 200-400
+          guidance); E/B runs 0 to about 105, slightly above the spec's 'typically
+          0-80' because the highest retained term reaches 98.3 - the extension is
+          driven by the data, not by padding.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; a flat top-to-bottom script with one loop
+          over the symmetry blocks and one over the label positions.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic - no RNG at all; every value follows from np.linspace
+          and the closed-form matrix elements.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All 22 imported names are used: os, numpy, pandas and every lets-plot
+          symbol including element_blank, geom_segment, scale_linetype_manual and
+          ggsize.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.linalg.eigvalsh over a stacked block array instead of writing
+          out the 2x2 quadratic formula, and one regex instead of per-term label strings.
+          No dead code and no fake UI; the two short loops are the shortest honest
+          form of what they do.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave(plot, f'plot-{THEME}.png', scale=4) plus the HTML sibling,
+          with ggsize(600, 600) - the library prompt's square pairing, landing exactly
+          on 2400x2400. No bare plot.png; current lets-plot 4.11 API throughout.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Above the default: proper grammar-of-graphics layering with a top-level
+          aes(), per-layer data frames, scale_*_manual with explicit breaks so the
+          legend order is pinned, theme_classic() plus a token-driven theme() override,
+          and ggsize/ggsave with scale. Short of max because the horizontal grid is
+          hand-drawn as geom_segment with panel_grid_major_y blanked - a justified
+          workaround for the label gutter, but a workaround.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Well above the default on lets-plot's LaTeX markup in labs() and
+          geom_text labels, which gives real superscript multiplicities and subscript
+          Mulliken labels where plain text would not, plus LetsPlot.setup_html() and
+          the interactive HTML export. Does not reach into layer_tooltips(), ggtb()
+          or the lets-plot-only geoms.
+  verdict: APPROVED
+  model: claude-opus-5
+  criteria_version: qc-08c3141e4a.aqr-cfd364e1ff.sg-7006008fc6.lib-96f4a9ab01
+  rendered_at: '2026-10-01T20:31:25Z'
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - manual-ticks
+  - html-export
+  patterns:
+  - iteration-over-groups
+  - matrix-construction
+  - data-generation
+  dataprep:
+  - eigendecomposition
+  styling:
+  - minimal-chrome
+  - grid-styling
+  - publication-ready
