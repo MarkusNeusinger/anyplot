@@ -63,7 +63,7 @@ terms = [
 ]
 
 # Plot
-fig = Figure(size = (1200, 1200), fontsize = 16, backgroundcolor = PAGE_BG)
+fig = Figure(size = (1200, 1200), fontsize = 20, backgroundcolor = PAGE_BG)
 
 ax = Axis(
     fig[1, 1];
@@ -71,7 +71,7 @@ ax = Axis(
     titlesize = 26,
     titlecolor = INK,
     subtitle = "d⁸ (Ni²⁺), octahedral field, C/B = 4.71 · solid = spin-allowed, dashed = spin-forbidden",
-    subtitlesize = 16,
+    subtitlesize = 20,
     subtitlecolor = INK_SOFT,
     subtitlegap = 10,
     xlabel = rich("Δ", subscript("o"), "/B — reduced ligand-field strength"),
@@ -80,8 +80,8 @@ ax = Axis(
     ylabelsize = 20,
     xlabelcolor = INK,
     ylabelcolor = INK,
-    xticklabelsize = 16,
-    yticklabelsize = 16,
+    xticklabelsize = 20,
+    yticklabelsize = 20,
     xticklabelcolor = INK_SOFT,
     yticklabelcolor = INK_SOFT,
     xtickcolor = INK_SOFT,
@@ -111,7 +111,7 @@ for (symbol, energy, position, spin_allowed) in terms
         ax, 41.0, energy[end];
         text = symbol,
         color = IMPRINT_PALETTE[position],
-        fontsize = 17,
+        fontsize = 22,
         align = (:left, :center),
     )
 end
