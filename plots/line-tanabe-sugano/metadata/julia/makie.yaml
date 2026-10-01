@@ -1,0 +1,291 @@
+library: makie
+language: julia
+specification_id: line-tanabe-sugano
+created: '2026-10-01T20:07:30Z'
+updated: '2026-10-01T20:30:04Z'
+generated_by: claude-opus
+workflow_run: 36916876021
+issue: 11846
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Term energies come from a real eigen-decomposition of the Tanabe-Sugano symmetry
+    blocks — the ³T₁g block [[6Dq, 4Dq], [4Dq, 15B]] plus the two singlet 2×2 blocks,
+    `eigvals(Symmetric(...))` broadcast over 320 Δ_o/B samples with the +12Dq ground-term
+    shift — so the ³T₁g(F)/³T₁g(P) pair repels instead of crossing by construction,
+    exactly as the Notes demand rather than hand-fitted curves.
+  - Makie's `rich` / `superscript` / `subscript` markup typesets every term symbol
+    with a true superscript multiplicity and true subscript Mulliken label, drawn
+    at the right-hand curve end in that curve's own Imprint color; the x-axis title
+    uses the same markup for Δₒ, so direct labeling fully replaces a legend.
+  - Two-tier line encoding (linewidth 6 solid for the spin-allowed triplets, 3 dashed
+    for the spin-forbidden singlets) separates the two classes at a glance in both
+    themes, and the subtitle carries the d⁸ (Ni²⁺) configuration, C/B = 4.71 and the
+    solid/dashed key.
+  - Chrome is fully tokenized (`PAGE_BG` / `INK` / `INK_SOFT`), top and right spines
+    are dropped and the grid sits at 15 % ink, so both renders are theme-correct while
+    the Imprint data colors stay identical across themes in canonical order starting
+    at `#009E73`.
+  - Canvas is the canonical 2400×2400 square via `Figure(size = (1200, 1200))` + `px_per_unit
+    = 2` — matching the spec's near-square plot area — using the current `size =`
+    keyword rather than the deprecated `resolution =`.
+  - The ground term is drawn as a visible green line at E/B = 0 with `limits` starting
+    at −2.2, so it reads as a curve along the axis instead of being collapsed into
+    the bottom spine, as the Notes require.
+  weaknesses:
+  - 'VQ-01 (both): on the 1200-unit square figure the 20 pt tick labels and 20 pt
+    axis titles scale to roughly 7 px once the 2400 px render is shown at a 400 px
+    mobile width, where they stop being comfortably readable while the 26 pt title
+    still holds → about 24 pt (+4 pt each). Likely cause: `xticklabelsize`/`yticklabelsize`
+    = 20 and `xlabelsize`/`ylabelsize` = 20 on the Axis.'
+  - 'Suggestion: y ticks every 20 and x ticks every 10 leave a coarse grid for a chart
+    readers slide a ruler across; a finer light grid would make band-ratio reading
+    easier.'
+  - 'Suggestion: the upper eigenvalues of the ¹Eg, ¹T₂g and ¹A₁g blocks are already
+    computed and then discarded — drawing one of them would put a second same-symmetry
+    pair on the chart.'
+  - 'Suggestion: a d⁶ or d³ configuration would additionally exercise the high-spin/low-spin
+    crossover line and the slope kink the spec highlights for d⁴–d⁷.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 across both the figure and the axis area — not pure white, not dark. Canvas is the square 2400×2400.
+      Chrome: bold near-black title "line-tanabe-sugano · julia · makie · anyplot.ai" centred over a soft-grey subtitle "d⁸ (Ni²⁺), octahedral field, C/B = 4.71 · solid = spin-allowed, dashed = spin-forbidden". X-axis title "Δ_o/B — reduced ligand-field strength" with a true subscript o, ticks 0/10/20/30/40; y-axis title "E/B — reduced term energy", ticks 0/20/40/60/80. Only the left and bottom spines are drawn, in INK_SOFT; grid lines sit at ~15 % ink behind the curves. All chrome is clearly readable against the light background; nothing is light-on-light and no element is clipped at any canvas edge.
+      Data: eight term curves rising from the left. Flat brand-green #009E73 ³A₂g ground term along E/B = 0 (first series = brand green, confirmed); lavender #C475FD ³T₂g rising linearly to 40; blue #4467A3 ³T₁g(F) curving to ~51; ochre #BD8233 ³T₁g(P) climbing to ~85 — all four thick and solid. Matte-red #AE3030 ¹Eg flattening near 17.5, cyan #2ABCCD ¹T₂g to ~57, rose #954477 ¹A₁g flattening near 32, lime #99B314 ¹T₁g to ~61 — all four thin and dashed. Each curve carries its typeset term symbol at its right-hand end in its own colour inside a dedicated label gutter (x 40–47); no label collides with another or with a curve. No crossover line — correct for d⁸.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 across figure and axis area — not pure black, not light.
+      Chrome: title in #F0EFE8, subtitle and tick labels in soft #B8B7B0, axis titles in #F0EFE8, spines and tick marks in INK_SOFT, grid as faint light strokes at 15 % — every text element flipped to the light ink tokens. No dark-on-dark failure anywhere: no near-black text appears on the near-black surface.
+      Data: colours are identical to the light render — the IMPRINT_PALETTE constants carry no theme branch — same canonical order, same linewidths (6 solid / 3 dashed), same dash patterns, same right-edge labels in matching colours. Brand green #009E73 stays vivid on the dark surface; matte-red ¹Eg is the lowest-contrast mark but remains clearly distinguishable as a dashed line.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set (title 26, subtitle 20, axis titles 20,
+          ticks 20, term labels 22) and fully readable at full size in both themes;
+          at a 400 px mobile width the 20 pt chrome scales to about 7 px and gets
+          tight.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Right-edge term labels sit in their own gutter (x 40-47) and none
+          collides with another label or with a curve; near-coincident curves at low
+          field are permitted by the spec.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Linewidth 6 solid vs 3 dashed keeps both classes plainly visible
+          on both surfaces; direct labels replace a legend, so no legend glyphs to
+          check.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Eight Imprint hues, but colour is never the sole signal: every curve
+          is directly labelled and solid/dashed encodes spin class redundantly.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canonical 2400x2400 square (gate passed), both axes start at 0, title
+          spans about 55 % of the plot width, nothing overflows or is cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis titles name the reduced quantity and its meaning; the subtitle
+          supplies the configuration and C/B ratio.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, positions 1-8 in canonical Imprint order,
+          identical across themes; backgrounds #FAF8F1 / #1A1A17.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Typeset term symbols, a dedicated label gutter and the two-tier line
+          encoding give real polish; the coarse 20-unit grid and the large empty lower-right
+          quadrant hold it back.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top and right spines dropped, minor grid off, grid at 15 % ink, no
+          legend box, generous margins; grid granularity is the remaining rough edge.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear hierarchy: the green flat ground term anchors the baseline,
+          thick solid triplets read first, thin dashed singlets second, and direct
+          labels let the eye follow each curve to its symbol.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'A Tanabe-Sugano diagram: continuous term energies E/B as functions
+          of Delta_o/B for one d-n configuration.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: One configuration with C/B stated in the subtitle, energies from
+          diagonalized TS matrices, ground term a visible flat curve at 0, spin-allowed
+          thicker solid vs spin-forbidden thinner dashed, markup-typeset labels per
+          curve, no crossover line (correct outside d4-d7), near-square area with
+          both axes at 0 and a light grid.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Delta_o/B on x over 0-40 at 320 samples, E/B on y; curves are plotted
+          at their computed eigenvalues with no nudge, offset or smoothing pass.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'line-tanabe-sugano · julia · makie · anyplot.ai';
+          legend N/A - direct per-curve labels match the term symbols.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Eight curves inside the spec's 6-12 range covering both spin classes,
+          the flat ground term, the linear 10Dq term, the curved avoided-crossing
+          pair and the flattening singlets.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: d8 Ni(2+) in an octahedral field at C/B = 4.71 is the literature
+          value for the ion; neutral textbook chemistry.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Delta_o/B 0-40 and E/B 0-85 both sit inside the ranges the spec's
+          Data section names.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat top-level script: tokens, matrices, one comprehension per symmetry
+          block, one loop over the term tuples.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic - closed-form matrices and eigenvalues, no randomness,
+          so no seed is needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors (colorant) and LinearAlgebra (eigvals/Symmetric)
+          are all used; nothing unused.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses eigvals(Symmetric(...)) instead of writing out a 2x2 diagonalization
+          by hand; no fake UI, no dead code.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) with the current
+          size = keyword rather than the deprecated resolution =.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Keyword-configured Axis, lines!/text! mutating calls, broadcast comprehensions
+          over the sample grid and px_per_unit scaling - all the recommended CairoMakie
+          patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: rich / superscript / subscript text markup in both the labels and
+          the x-axis title is genuinely Makie-specific, as is px_per_unit resolution
+          scaling at save time.
+  verdict: APPROVED
+  model: claude-opus-5
+  criteria_version: qc-08c3141e4a.aqr-cfd364e1ff.sg-7006008fc6.lib-d4a232663e
+  rendered_at: '2026-10-01T20:24:48Z'
+impl_tags:
+  dependencies:
+  - colors
+  techniques:
+  - annotations
+  - manual-ticks
+  - text-markup
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - eigendecomposition
+  styling:
+  - publication-ready
+  - grid-styling
