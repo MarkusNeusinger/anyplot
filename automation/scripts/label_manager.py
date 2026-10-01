@@ -16,8 +16,8 @@ from core.constants import (
     QUALITY_THRESHOLD_GOOD,
     QUALITY_THRESHOLD_NEEDS_WORK,
     STATUS_LABELS,
-    get_library_label as _get_library_label,
 )
+from core.constants import get_library_label as _get_library_label
 
 
 @dataclass
