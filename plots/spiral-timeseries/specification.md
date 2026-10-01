@@ -28,3 +28,12 @@ A time series plotted along a spiral (Archimedean or logarithmic), where each fu
 - The spiral should expand outward from center, with the earliest data closest to the center
 - An Archimedean spiral (constant spacing between revolutions) is preferred for uniform readability
 - Include a color bar or legend when using color mapping for values
+
+## What a good version looks like
+
+- A good version shows: the series along one continuous spiral in time order, the earliest data closest to the center and the spiral expanding outward, as the Notes ask, with no break or step where one cycle passes into the next.
+- A good version shows: each full revolution covering exactly one cycle period, as the Notes ask, so the same phase of every cycle lies at the same angle and recurring patterns line up along a radius.
+- A good version shows: the value encoded by color or line thickness along the spiral, as the Notes ask, with a color bar or legend when color is used; position on the spiral carries time only.
+- A good version shows: radial grid lines marking the subdivisions within a cycle, labeled around the rim and lighter than the spiral, and the start of each cycle labeled on the spiral, as the Notes ask.
+- A good version shows: revolutions that stay clear of each other, preferably with the constant spacing of the Archimedean spiral the Notes prefer.
+- Expected, not a defect: inner revolutions that are shorter, so the same time span looks denser there, a first or last revolution that is incomplete, and abrupt color or thickness changes along the spiral where the data is noisy.

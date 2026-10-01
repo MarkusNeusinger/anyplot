@@ -35,3 +35,12 @@ A scatter plot displayed in polar coordinates where data points are positioned u
 - Ensure the plot is properly centered with appropriate padding
 - The radius axis should start at 0 and extend to accommodate all data points
 - Add appropriate title and legend if using color encoding
+
+## What a good version looks like
+
+- A good version shows: one marker per observation at its own angle and radius, every one left at its values rather than jittered or nudged to separate it from its neighbors.
+- A good version shows: a radius axis that starts at zero at the center and reaches past the largest value, as the Notes ask, so every marker lies inside the rim.
+- A good version shows: radial gridlines at regular intervals and angular ticks at meaningful intervals, as the Notes ask, labeled in degrees or with the compass directions they stand for rather than in radians, and lighter than the markers.
+- A good version shows: categories, if encoded with the colors or markers the Notes suggest, kept distinguishable in both themes and named in a legend, as the Notes ask.
+- A good version shows: where markers pile up, translucency or a thin outline so that dense areas read darker and single markers stay visible.
+- Expected, not a defect: markers overlapping in the clusters around the prevailing directions, sparse or empty sectors, a few outliers far from the center, and categories whose clouds interleave.

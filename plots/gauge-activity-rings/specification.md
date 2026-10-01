@@ -28,3 +28,12 @@ An activity rings chart displays goal completion for several metrics at once usi
 - Order rings from outer (first/primary metric) to inner with consistent gap/thickness; keep stroke widths equal
 - Optional center label area can show a headline summary (e.g., percent complete or the primary metric); per-ring labels or a legend map colors to metric names
 - Keep the aspect ratio square so rings remain circular; equal axis scaling is required
+
+## What a good version looks like
+
+- A good version shows: one thick arc per metric that starts at the top and sweeps clockwise through the share of the full circle given by its value divided by its goal, with rounded end caps, as the Notes ask.
+- A good version shows: a faint full-circle track behind every arc, typically the ring's own color at low opacity as the Notes describe, visible in both themes, so the remaining progress can be read.
+- A good version shows: concentric rings that are true circles, ordered from the first metric outermost to the last innermost, with equal stroke widths and consistent gaps, as the Notes ask.
+- A good version shows: a distinct color per ring and per-ring labels or a legend that map the colors to the metric names, as the Notes ask; a center headline, if drawn, stays inside the innermost ring.
+- A good version shows: a metric at or beyond its goal as a complete ring, its sweep held at one full turn as the Notes ask, with the excess indicated, for instance by a label, where the library permits.
+- Expected, not a defect: arcs of very different length, a fully closed ring that hides its own track, a barely started ring that shows little more than its rounded cap, inner rings that are shorter than outer ones at the same completion, and no axes, ticks or gridlines.

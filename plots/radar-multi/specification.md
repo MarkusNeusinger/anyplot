@@ -27,3 +27,12 @@ A multi-series radar chart overlays multiple data polygons on shared axes radiat
 - Label each axis clearly at the outer edge
 - Close each polygon by connecting the last point back to the first
 - Consider using both fill and outline for each polygon to enhance visibility
+
+## What a good version looks like
+
+- A good version shows: one axis spoke per variable, the spokes evenly spaced around a common center and shared by all series on one value scale, each labeled at its outer end, as the Notes ask.
+- A good version shows: one polygon per series, its vertices on the spokes at that series' values, closed by joining the last point back to the first, as the Notes ask, and never smoothed past its vertices.
+- A good version shows: translucent fills, as the Notes ask, so that every polygon and the gridlines stay visible where polygons overlap; an outline, if drawn as the Notes suggest, follows the same vertices in the series' color.
+- A good version shows: a distinct, contrasting color per series, distinguishable in both themes, and a legend naming each series by its color, as the Notes ask.
+- A good version shows: gridlines at regular value intervals, as the Notes ask, drawn as rings or polygons with their values labeled and lighter than the data.
+- Expected, not a defect: overlapping polygons and crossing outlines, vertices that nearly coincide where series score alike, a polygon lying wholly inside another, and shapes and enclosed areas that depend on the order of the axes.
