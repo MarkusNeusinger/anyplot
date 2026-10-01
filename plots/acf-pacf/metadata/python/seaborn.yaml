@@ -2,56 +2,72 @@ library: seaborn
 language: python
 specification_id: acf-pacf
 created: '2026-03-14T22:17:47Z'
-updated: '2026-06-10T02:01:03Z'
+updated: '2026-10-01T13:09:07Z'
 generated_by: claude-sonnet
-workflow_run: 27247064537
+workflow_run: 36864822176
 issue: 4663
-language_version: 3.13.13
+language_version: 3.13.15
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Creative use of seaborn lineplot with units= parameter to render individual significance-colored
-    stem segments — idiomatic seaborn approach for a plot type it does not natively
-    support
-  - 'Excellent data storytelling: annotations pointing to ''Gradual decay → AR process''
-    and ''Spike at lag 1 → AR(1) order'' actively guide the viewer to ARIMA modeling
-    insights'
-  - Perfect spec compliance — ACF includes lag 0, PACF starts at lag 1, 35 lags, shared
-    x-axis, CI bounds as dashed lines, all required features present
-  - 'Clean theme-adaptive chrome with correct Imprint palette: significance green
-    (#009E73) constant across both themes, amber CI bounds, muted anchor for within-CI
-    elements'
-  - Realistic ARMA(1,1) data with seasonal component produces meaningful ACF/PACF
-    patterns that demonstrate the full diagnostic value of these plots
+  - 'sns.lineplot(units="Lag", estimator=None) renders every lag as its own vertical
+    segment: seaborn''s long-form statistical-unit pattern turned into a stem plot,
+    for a chart type seaborn has no native function for.'
+  - ACF and PACF come from statsmodels.tsa.stattools with the estimators that match
+    the plot — acf(..., fft=False) for the full-sample ACF and pacf(..., method="ldb")
+    for the Levinson-Durbin PACF — so the numbers behind the stems are library-computed
+    rather than written out.
+  - 'Theme chrome is threaded once through sns.set_theme(rc={...}) instead of being
+    patched artist by artist: backgrounds, spines, ticks, text and the legend box
+    all flip correctly between #FAF8F1 and #1A1A17, while the #009E73 data color is
+    pixel-identical in both renders.'
+  - 'Every Notes bullet of the spec is met: ACF on top including lag 0, PACF below
+    from lag 1, shared x-axis, stem lines rather than filled bars, dashed 95% bounds
+    at 1.96/sqrt(200) = 0.139, 35 lags, and the mandated "Lag" / "ACF" / "PACF" labels.'
+  - sns.despine plus a 15% y-only grid and INK_SOFT spines keep the chrome quiet,
+    and the amber CI band fill at alpha 0.07 reads as a region without competing with
+    the stems in either theme.
+  - 'The legend glyphs match the marks they explain in both themes — the green dot,
+    the theme-adaptive muted dot and the amber dashed sample are all clearly visible
+    on the #242420 elevated legend face in the dark render.'
   weaknesses:
-  - make_stem_df helper function breaks the KISS (no-functions) structure — the paired-row
-    DataFrame construction could be inlined or vectorized with pd.concat/np.repeat
-  - Annotation font size 7pt is borderline mobile-readable (~5 px at 400px viewport
-    width); consider 8pt to stay consistently legible at mobile scale
-  - 'DE-01 could be stronger: the design intent is clearly above defaults but stops
-    short of publication-ready polish — legend placement, panel spacing, and typography
-    hierarchy could be tightened further'
-  - 'CQ-04 (code): lines 68–86 write out the ACF and a Durbin-Levinson PACF (19 lines
-    for what two calls compute) → `acf(series, nlags=35)` and `pacf(series, nlags=35,
-    method="ldb")` (statsmodels.tsa.stattools). Likely cause: statsmodels unused although
-    lib-seaborn installs it.'
+  - 'CQ-01 (code): the make_stem_df helper at lines 97-104 makes the script Imports
+    -> Data -> def -> Plot -> Save instead of the flat KISS order the criterion asks
+    for -> inline the paired-row frame, e.g. `pd.concat([acf_df.assign(y=0.0), acf_df.assign(y=acf_df["Correlation"])])`.
+    Likely cause: the stem pairing was factored out so the two panels could share
+    it.'
+  - 'VQ-01 (both): the 8 pt y-tick labels, legend text and annotations measure about
+    5 px once the PNG is scaled to a ~400 px mobile width and blur into unreadable
+    mush there, while the 12 pt title and 10 pt axis titles still hold -> about 10
+    pt for ticks and annotations (+2 pt). Likely cause: tick_params(labelsize=8),
+    legend(fontsize=8) and annotate(fontsize=8).'
+  - 'Suggestion: the ARMA(1,1)-with-seasonality series is named "airline passenger
+    residuals" only in a code comment, so the render itself carries no domain context;
+    the optional `{Descriptive Title} · ` title prefix would put it in front of the
+    viewer.'
+  - 'Suggestion: the seasonal term (period 12, strength 0.3) never surfaces as visible
+    ACF bumps at lags 12 and 24 — a stronger seasonal component would let the example
+    data demonstrate that diagnostic pattern as well as the AR decay.'
+  - 'Suggestion: hspace=0.3 leaves a wide gap between two panels that share an x-axis;
+    tightening it would let the ACF/PACF pair read as one diagnostic unit and give
+    the stems more vertical room.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct Imprint light surface.
-      Chrome: Title "acf-pacf · python · seaborn · anyplot.ai" at top in dark ink — fully readable. Y-axis labels "ACF" and "PACF" in dark ink, X-axis label "Lag" at bottom — all clear. Tick labels in INK_SOFT (dark gray) — readable. Legend (upper right) with three entries: Significant (green dot), Within CI (gray dot), 95% CI (dashed amber line) — clean and legible.
-      Data: Two stacked panels. Top (ACF): vertical stem segments from zero to correlation value, dots at each lag. Significant lags rendered in #009E73 green (lag 0 = 1.0, plus several early lags and periodic seasonal bumps), within-CI lags in muted gray. Amber (#DDCC77) dashed CI bounds at ±0.139. Bottom (PACF): same approach from lag 1; dominant green spike at lag 1 (~0.79), minor green lags at 2–4, remaining in gray. Amber CI band fill (alpha 0.07) visible as subtle shaded region.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 across figure and both axes faces — not pure white. 3200x1800 px.
+      Chrome: Title "acf-pacf · python · seaborn · anyplot.ai" centred at the top in dark ink (12 pt), fully inside the canvas with clear air above and below. Y-axis titles "ACF" (top panel) and "PACF" (bottom panel) and the x-axis title "Lag" (bottom) in dark ink at 10 pt. Tick labels in INK_SOFT dark grey at 8 pt; the ACF panel shares the x-axis so only the PACF panel carries the 0/5/10/.../35 lag labels. L-shaped spines (top and right despined) in INK_SOFT, horizontal grid at 15% alpha. Legend box top-right of the ACF panel on the #FFFDF6 elevated face with an INK_SOFT border: green dot "Significant", grey dot "Within CI", amber dashed sample "95% CI". Two grey annotations with thin arrows: "Gradual decay → AR process" pointing at ACF lag 4 and "Spike at lag 1 → AR(1) order" pointing at PACF lag 1. Nothing is clipped at any canvas edge; no element overflows its axis.
+      Data: Two vertically stacked stem panels. Top (ACF): lag 0 at 1.00 then a geometric decay 0.79, 0.52, 0.35, 0.27, 0.26, 0.23, 0.15, with lags 0-7 above the upper bound drawn in #009E73 green (stem + dot) and lags 8-35 inside the band drawn in the theme-adaptive muted anchor #6B6A63. Bottom (PACF): a dominant green spike at lag 1 (0.79), a significant negative green spike at lag 2 (-0.26), a further green lag 5 (0.15), the rest muted grey and inside the band. Amber #DDCC77 dashed 95% bounds at +/-0.139 in both panels, with a 7%-alpha amber fill between them. First and only categorical series is #009E73 as required.
+      Legibility verdict: PASS at canvas size — every text element is dark on the warm off-white surface with ample contrast, no light-on-light anywhere, no text/text or text/data collision. At a scaled-down ~400 px mobile width the title, "Lag" and the axis titles survive, but the 8 pt y-tick labels, legend entries and annotations degrade into unreadable mush (VQ-01 deduction, not a theme failure).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct Imprint dark surface.
-      Chrome: Title in light cream (#F0EFE8) — clearly visible. Y-axis and X-axis labels in light INK — readable. Tick labels in light INK_SOFT (#B8B7B0) — readable against dark background. No dark-on-dark failures observed. Legend box uses elevated dark background (#242420) with INK_SOFT border — correct.
-      Data: #009E73 green for significant lags is identical to light render — correct. Within-CI dots render as lighter gray (#A8A79F, adaptive muted anchor) vs darker gray in light theme — this is correct semantic anchor behavior, not a palette violation. Amber CI bounds (#DDCC77) remain identical across themes. Data pattern (ACF decay, PACF spike at lag 1) is consistent with light render.
-      Legibility verdict: PASS — all text readable against dark background; chrome adaptation correct.
+      Background: Warm near-black #1A1A17 across figure and both axes faces — not pure black. 3200x1800 px, same layout as light.
+      Chrome: Title in light cream #F0EFE8 — clearly visible. Axis titles "ACF", "PACF", "Lag" in the same light ink; tick labels in the light INK_SOFT #B8B7B0. Spines and grid flip to the light tokens and stay subtle. Legend box sits on the #242420 elevated face with a light INK_SOFT border; all three glyphs (green dot, light-grey dot, amber dashed sample) and their labels are plainly readable. Annotations render in the light muted token #A8A79F with matching arrows. NO dark-on-dark failure anywhere — every title, axis label, tick label, legend entry and annotation is light text on the near-black surface.
+      Data: #009E73 green for the significant stems and dots is identical to the light render (verified pixel-for-pixel), as is the #DDCC77 amber of the CI bounds and band. The only color that changes is the "Within CI" grey, which moves from #6B6A63 to #A8A79F — that is the style guide's theme-adaptive `muted` semantic anchor behaving as designed, not a palette drift. Stem heights, marker positions and the +/-0.139 bounds are identical to the light render.
+      Legibility verdict: PASS at canvas size — brand green #009E73, the amber bounds and the light muted dots all separate cleanly from the warm near-black background. Same ~400 px mobile caveat as the light render for the 8 pt text.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -62,50 +78,65 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, labels=10, ticks=8, legend=8,
-          annotations=7). Annotations at 7pt borderline mobile-readable.
+        comment: 'Every size explicitly set (title 12, axis titles 10, ticks/legend/annotations
+          8) and well proportioned with no overflow or clipping in either theme. One
+          point off: at a ~400 px mobile width the 8 pt ticks, legend text and annotations
+          fall to about 5 px and stop being readable.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render.
+        comment: No text collides with text or with data in either render. The legend
+          sits in the empty upper-right of the ACF panel, both annotations sit in
+          empty plot space, and the 36 stem markers are clearly separated from one
+          another.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stems and scatter dots well-sized (s=55, linewidth=1.8), all elements
-          clearly visible.
+        comment: 'Stems at linewidth 1.8 and markers at s=55 are prominent and individually
+          distinguishable for 36 lags per panel, including the near-zero cluster at
+          lags 25-35. Legend glyphs match the marks they explain and are visible on
+          both the #FFFDF6 and the #242420 legend face.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/gray significance distinction is CVD-safe via luminance and
-          hue differences.
+        comment: Significant versus within-CI is carried by luminance as well as hue
+          (green against a muted grey), and the amber CI bounds are a dashed line
+          rather than a colour-only cue. No red-green pairing anywhere.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, balanced margins, two panels well-distributed.
-          No content cut off.
+        comment: Exact 3200x1800 canvas (canvas gate passed, no /tmp/anyplot-canvas-gate.txt).
+          Two stacked panels fill roughly 78% of the canvas width and 75% of its height,
+          margins are balanced left/right, nothing is cut off, and the legend sits
+          inside the plot rather than floating.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Domain-standard labels: ACF, PACF, Lag.'
+        comment: '"Lag", "ACF" and "PACF" are exactly the labels the spec mandates
+          and are the domain-standard names; ACF and PACF are dimensionless correlations,
+          so no unit is missing.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 as primary (Significant) series. Amber anchor for CI. Muted
-          anchor for Within CI. Correct backgrounds.'
+        comment: 'First and only categorical series is #009E73, identical in both
+          renders. Amber #DDCC77 is used for its caution/threshold role on the CI
+          bounds and the theme-adaptive muted anchor for the non-significant lags
+          — both sanctioned semantic anchors. Backgrounds are #FAF8F1 and #1A1A17;
+          all chrome is theme-correct.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -113,22 +144,29 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Clear design intent above defaults: significance encoding, amber
-          CI, annotations. Not quite publication-ready.'
+        comment: 'Clearly above a well-configured default: deliberate significance
+          encoding, amber CI bounds backed by a soft band fill, consistent type hierarchy
+          and fully theme-aware chrome. Short of publication-ready — the ACF panel
+          still shows naked x tick marks under an unlabelled axis and the inter-panel
+          gap is loose.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed (despine), subtle y-axis grid (alpha=0.15), clean
-          chrome, explicit spine/tick colors.
+        comment: 'sns.despine for the L-shaped frame, y-only grid at 15% alpha, explicit
+          spine and tick colours, markers edged in the page colour so adjacent dots
+          separate, and generous margins. Not perfect: hspace=0.3 is wide for a shared-x
+          pair and the ACF panel''s unlabelled tick marks add noise.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Annotations actively guide viewer to ARIMA diagnostics. Significance
-          encoding creates immediate visual hierarchy.
+        comment: The significance colouring puts the reader's eye straight on the
+          lags that matter, and the two annotations name the ARIMA reading (gradual
+          ACF decay plus a single PACF spike = AR(1)). Short of 6 because the seasonal
+          component the data carries never becomes a visible part of the story.
     spec_compliance:
       score: 15
       max: 15
@@ -138,90 +176,110 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ACF/PACF with two stacked panels.
+        comment: 'Exactly the chart the spec names: ACF and PACF as vertical stem
+          plots in two vertically stacked subplots sharing the x-axis. Not a -basic
+          spec, so the significance hue and the annotations are not variant creep.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: lag 0 in ACF, PACF from lag 1, 95% CI dashed
-          lines, shared x-axis, 35 lags.'
+        comment: 'All six Notes bullets are met: ACF top / PACF bottom with sharex=True;
+          stem lines, not filled bars; dashed 95% bounds at 1.96/sqrt(200) = 0.139;
+          lag 0 present in ACF at 1.0 and PACF started at lag 1; "Lag"/"ACF"/"PACF"
+          labels; 35 lags over 200 observations.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lag on x-axis, ACF/PACF correlation on y-axes. Correct.
+        comment: Lag on x, correlation on y in both panels; xlim -0.5 to 35.5 shows
+          every lag; each stem runs from the zero baseline to the value its marker
+          sits at. No jitter, nudge or collision pass anywhere.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''acf-pacf · python · seaborn · anyplot.ai'' — correct format.
-          Legend: Significant/Within CI/95% CI — appropriate.'
+        comment: Title is exactly "acf-pacf · python · seaborn · anyplot.ai". Legend
+          labels (Significant / Within CI / 95% CI) match the marks and the dashed
+          bounds they explain.
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows gradual ACF decay, sharp PACF cutoff at lag 1, seasonal bumps
-          at multiples of 12.
+        comment: Shows the geometric ACF decay, the sharp PACF cutoff after lag 1,
+          a significant negative lag, both significant and within-CI lags, and values
+          on both sides of zero. The seasonal term (period 12) produces no visible
+          bumps at lags 12 or 24, so that aspect of ACF/PACF reading is not exhibited.
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: ARMA(1,1) airline passenger residuals — neutral scientific scenario.
+        comment: 'Neutral, scientific scenario: ARMA(1,1) residuals of a monthly series,
+          exactly the kind of data an ACF/PACF diagnostic is for. The "airline passenger"
+          framing lives only in a code comment, so the render on its own reads as
+          a generic synthetic series.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic ARMA(1,1) coefficients (ar1=0.7, ma1=0.4). ACF/PACF values
-          in [-1,1] range.
+        comment: n=200 sits inside the spec's 100-500 range; ar1=0.7 and ma1=0.4 are
+          ordinary, stationary ARMA coefficients; correlations stay inside [-1, 1]
+          with ACF lag 0 = 1.0; the plotted bounds match 1.96/sqrt(200) = 0.139.
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: Has make_stem_df helper function — breaks KISS no-function rule.
+        passed: false
+        comment: Otherwise a flat Imports -> Data -> Plot -> Save script, but the
+          make_stem_df helper (lines 97-104) is a function definition the criterion
+          asks scripts not to have.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) before the single np.random.randn call; everything
+          downstream is deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports present.
+        comment: os, sys, matplotlib.pyplot, numpy, pandas, seaborn and the two statsmodels
+          functions are all used; nothing imported and left unused.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 'CQ-04 (code): lines 68–86 write out the ACF and a Durbin-Levinson
-          PACF (19 lines for what two calls compute) → `acf(series, nlags=35)` and
-          `pacf(series, nlags=35, method="ldb")` (statsmodels.tsa.stattools). Likely
-          cause: statsmodels unused although lib-seaborn installs it.'
+        comment: Both correlation functions are delegated to statsmodels.tsa.stattools
+          with the arguments that reproduce the intended estimators (fft=False, method="ldb");
+          no algorithm is written out that an available call computes, no dead or
+          duplicated block, no fake UI. The remaining stem-pairing loop is a handful
+          of lines of taste.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png without bbox_inches. Correct API.
+        comment: Saves to plot-{THEME}.png at dpi=400 with facecolor set and no bbox_inches,
+          preserving the exact canvas. Current seaborn 0.13 API throughout (hue +
+          palette, no deprecated palette-without-hue call).
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -229,29 +287,41 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Creative use of sns.lineplot with units= and estimator=None to render
-          individual stem segments. Combined with sns.scatterplot for significance-encoded
-          dots.
+        comment: Axes-level seaborn throughout (lineplot/scatterplot with ax=), long-form
+          tidy DataFrames, a dict palette keyed by hue level, theme set once via sns.set_theme(rc=...)
+          and sns.despine for the frame. The hand-built paired-row frame is the one
+          un-seaborn-ish step.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Seaborn's hue + units pattern for significance-colored stems is distinctively
-          seaborn. Could not be replicated trivially in matplotlib without manual
-          loop.
+        comment: sns.lineplot(units="Lag", estimator=None) — seaborn's statistical-unit
+          mechanism for drawing one line per unit without aggregation — is used to
+          synthesise a stem geometry seaborn has no function for, with hue carrying
+          the significance split. That pattern does not transfer to another library
+          with a syntax swap.
   verdict: APPROVED
+  model: claude-opus-5
+  criteria_version: qc-08c3141e4a.aqr-cfd364e1ff.sg-7006008fc6.lib-cc2f0f595b
+  rendered_at: '2026-10-01T12:56:53Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - statsmodels
   techniques:
   - subplots
   - annotations
   - custom-legend
   - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
+  - explicit-figure
+  - iteration-over-groups
   dataprep:
   - autocorrelation
+  - time-series
   styling:
-  - alpha-blending
+  - grid-styling
   - edge-highlighting
+  - alpha-blending
