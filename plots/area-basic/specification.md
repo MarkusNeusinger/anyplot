@@ -24,3 +24,11 @@ An area chart showing quantitative data over a continuous axis with the area bel
 - Include gridlines for value estimation
 - Add clear axis labels with units
 - Consider gradient fill from bottom to line for visual appeal
+
+## What a good version looks like
+
+- A good version shows: one line joining the values in x order, never smoothed past them, with the area between that line and the baseline filled at every x, so the top edge is the series and the filled area reads as quantity.
+- A good version shows: a value axis that starts at zero, so the height of the fill stays proportional to the value it stands for.
+- A good version shows: a semi-transparent fill under a solid top edge, as the Notes ask, so the gridlines the Notes ask for stay visible through the area in both themes; a gradient fading from the line toward the baseline, if used, keeps the top edge distinct.
+- A good version shows: the basic variant's single filled series: no second series or stacking, trend or reference and mean lines, shaded or highlight bands, highlighted points, or callouts and event annotations.
+- Expected, not a defect: short-term noise, dips and spikes along the top edge, a fill paler than its edge line, and no legend for a single series, because the axis label names the quantity.

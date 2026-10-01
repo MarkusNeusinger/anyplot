@@ -28,3 +28,11 @@ A cumulative flow diagram (CFD) displays the cumulative count of items in each w
 - Use a sequential or distinct color palette where earlier stages are visually distinguishable from later stages
 - Include a legend identifying each workflow stage
 - X-axis should display date labels at reasonable intervals
+
+## What a good version looks like
+
+- A good version shows: one filled band per workflow stage, stacked in workflow order with the earliest stage on top and the latest at the bottom, as the Notes ask, the bottom band rising from a zero baseline on a cumulative count axis.
+- A good version shows: band boundaries at the cumulative counts, never descending from left to right and never crossing, so each stage's boundary stays at or above the next stage's.
+- A good version shows: bands that tile the stack without gaps, so a band's vertical thickness at any date is the number of items in that stage and widening or narrowing can be followed along the date axis.
+- A good version shows: one color per stage, sequential or distinct so that earlier stages are distinguishable from later ones in both themes, each named in the legend the Notes ask for.
+- Expected, not a defect: bands that widen where work piles up or narrow where a stage drains, flat stretches where nothing arrives or leaves, steps on dates when many items move at once, and a stage so thin it is nearly a line; they are the signal the diagram exists to show.
