@@ -28,3 +28,12 @@ A recurrence plot is a binary or distance-based matrix visualization that reveal
 - A color-mapped variant showing continuous distances (instead of binary) is acceptable as an enhancement
 - The plot should be square with equal axis scales, and axes labeled as time indices
 - Typical visual encoding: dark points on light background for recurrent pairs, or a blue-to-white color scale for distance-based variant
+
+## What a good version looks like
+
+- A good version shows: a square plot with time indices on both axes at equal scales, as the Notes ask, and, in the standard thresholded form, a mark at every pair of times whose states are closer than the threshold.
+- A good version shows: the main diagonal filled along its whole length, as the Notes ask, and the pattern mirrored across it.
+- A good version shows: recurrent pairs in a tone that contrasts with the background in both themes, at a threshold and resolution where line structures and blocks can be told apart instead of a nearly full or nearly empty matrix.
+- A good version shows: for the distance-based variant the Notes allow, a continuous color scale explained by a color bar that names the distance, with the smallest distances along the main diagonal.
+- A good version shows: the basic variant's single recurrence matrix: besides the main diagonal and the continuous distance coloring the Notes allow, no reference or threshold lines, highlighted regions or bands, callouts on structures, time-series panel alongside, or recurrence statistics.
+- Expected, not a defect: short diagonal line segments, isolated points, empty bands and corners, and block or checkerboard textures; they are the dynamics the plot exists to show, not noise to clean up.

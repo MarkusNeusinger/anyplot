@@ -23,3 +23,11 @@ A density histogram displays the distribution of a continuous variable normalize
 - Total area under histogram bars equals 1
 - Bin width affects visual interpretation; use consistent binning for comparisons
 - Consider adding a reference line or theoretical PDF overlay for context
+
+## What a good version looks like
+
+- A good version shows: contiguous bars over consistent bins with no gaps between them, each rising from a zero baseline to its bin's density, on a y axis labeled as density, not count, as the Notes ask.
+- A good version shows: bar heights scaled so the bar areas sum to 1, as the Notes ask, so the axis values follow from the unit of the x axis and do not read as counts or shares of the sample.
+- A good version shows: a theoretical density curve or reference line, if drawn as the Notes suggest, on the same density scale as the bars, drawn over them in a contrasting style and identified by a legend or label.
+- A good version shows: a bin count that fits the sample: enough bins to show skew, clusters and tails, and not so many that the outline breaks into isolated spikes.
+- Expected, not a defect: density values above 1 when the data spans a narrow range, a lumpy or skewed outline with empty bins in the tails, and bars that rise above or fall below an overlaid theoretical curve.

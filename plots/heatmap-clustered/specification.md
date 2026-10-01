@@ -26,3 +26,12 @@ A heatmap with hierarchical clustering dendrograms on rows and/or columns, showi
 - Include a colorbar legend showing the value scale
 - Consider adding row/column color bars for group annotations
 - Ward's method with Euclidean distance is a common default for clustering
+
+## What a good version looks like
+
+- A good version shows: a dendrogram along the rows and another along the columns, as the Notes ask, each leaf lined up with its row or column of cells.
+- A good version shows: rows and columns reordered by the clustering, as the Notes ask, so similar rows and columns sit next to each other and blocks of like values emerge, with every label still at its own row or column.
+- A good version shows: a diverging colormap centered on zero when the data is centered around zero, as the Notes ask, and a color bar showing the value scale.
+- A good version shows: dendrogram branches whose merge heights can be told apart, drawn in lines visible in both themes and taking a smaller share of the figure than the matrix.
+- A good version shows: row or column color strips for group annotations, if drawn, aligned cell by cell with the rows or columns they annotate and explained by a legend.
+- Expected, not a defect: a row and column order that looks arbitrary by label, blocks of unequal size, rows that fit no cluster, and no in-cell numbers on a large matrix.

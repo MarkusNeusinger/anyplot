@@ -26,3 +26,12 @@ A visualization of the Mandelbrot set, the most iconic fractal in mathematics. E
 - Label axes with real and imaginary coordinate values
 - Points inside the set (that never escape) should be colored black or a distinct solid color
 - The aspect ratio should preserve the mathematical proportions of the complex plane
+
+## What a good version looks like
+
+- A good version shows: the full set, as the Notes ask: the main cardioid with the period-2 bulb attached and the smaller bulbs and filaments around them, mirror-symmetric about the real axis and not cropped by the plot window.
+- A good version shows: every point inside the set in black or one distinct solid color, as the Notes ask, uniform across the whole interior and clearly apart from the exterior colors around it.
+- A good version shows: the exterior colored by escape iteration count through a smooth, perceptually uniform colormap with continuous transitions, as the Notes ask, without stepped bands between whole iteration counts.
+- A good version shows: the real and imaginary axes on the same scale, as the Notes ask, so the set is not stretched, each axis labeled as the real or the imaginary part and ticked in coordinates of the complex plane.
+- A good version shows: a pixel grid fine enough that the small bulbs and filaments on the boundary are resolved rather than blocky, with no seams or stripes between pixels.
+- Expected, not a defect: a wide exterior in nearly one color far from the set, where points escape within the first few iterations, color variation concentrated in a thin fringe along the boundary, and a ragged, speckled boundary with detached-looking specks.

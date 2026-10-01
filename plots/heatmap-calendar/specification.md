@@ -25,3 +25,11 @@ A calendar heatmap visualizes time-series data on a calendar grid, where each da
 - Use a sequential colormap (light to dark) for positive values
 - Handle missing dates gracefully with neutral or empty cells
 - Include a color scale legend for value interpretation
+
+## What a good version looks like
+
+- A good version shows: each day as an equal-sized cell at its own date in a calendar grid, with the weekday labels (Mon-Sun) the Notes ask for on the y axis, so a cell's weekday and week read from its position.
+- A good version shows: month labels along the top or as section headers, as the Notes ask, lined up with where each month's days begin; where the data spans more than a year, each year is set apart or labeled.
+- A good version shows: a sequential colormap running from light to dark for positive values, as the Notes ask, and a color scale legend from which a cell's color can be read back as a value.
+- A good version shows: days without data as neutral or empty cells, as the Notes ask, distinguishable in both themes from days with a low value.
+- Expected, not a defect: partial first and last weeks that leave the ends of the grid ragged, months that begin in mid-week so month boundaries are stepped, many pale days with a few dark ones, and a weekly rhythm that shows as stripes.

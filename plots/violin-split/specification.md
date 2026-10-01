@@ -24,3 +24,12 @@ A split violin plot displaying two distributions side-by-side within each violin
 - Ensure the two halves meet at the center line
 - Consider adding inner box plot or quartile markers
 - Alpha transparency helps when distributions overlap at center
+
+## What a good version looks like
+
+- A good version shows: for each category one violin made of two half densities, one split group on each side of a shared center line, each half the density of its own group rather than a mirror of the other.
+- A good version shows: the two halves meeting at the center line, as the Notes ask, with the same split group on the same side in every category.
+- A good version shows: a distinct color for each split group, the same in every category, and a legend naming the two groups, as the Notes ask.
+- A good version shows: an inner box plot or quartile markers, if drawn as the Notes suggest, at the quartiles of the half they describe and visible against the fill in both themes.
+- A good version shows: one shared value axis for all violins that is not forced to zero, with each half's tails ending near its data range instead of trailing far beyond it.
+- Expected, not a defect: lopsided violins whose two halves differ in width, length and shape, peaks and medians at different positions on the two sides, and multimodal or skewed halves; the asymmetry is the comparison the chart exists to show.

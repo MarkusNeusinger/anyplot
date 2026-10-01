@@ -25,3 +25,12 @@ A 3D wireframe plot displays a mathematical surface as a mesh of lines connectin
 - Consider using a consistent line color or optional height-based coloring
 - 3D perspective projection with appropriate viewing angle (e.g., elevation 30, azimuth 45)
 - Label all three axes (X, Y, Z) with appropriate tick marks
+
+## What a good version looks like
+
+- A good version shows: the surface as a mesh of lines only, running in both the x and the y direction as the Notes ask and meeting at the grid points, every vertex at its z value, with open cells between the lines.
+- A good version shows: one consistent line color, or the height-based coloring the Notes allow, in which case color follows z and a color bar or legend says so; either way the lines are visible in both themes.
+- A good version shows: a perspective view from an oblique angle, as the Notes ask, that reveals the surface's rise and fall, with all three axes labeled and ticked and their labels kept clear of the mesh lines.
+- A good version shows: a mesh density that shows the shape: enough lines for curved parts to read as smooth, yet open enough that the cells stay distinguishable over most of the surface instead of merging into solid patches.
+- Expected, not a defect: front and back mesh lines crossing in the projection because the mesh is see-through, lines bunching where the surface turns edge-on to the viewer or rises steeply, and far cells looking smaller than near ones.
+- A good version shows: the basic variant's single mesh: besides the height-based coloring the Notes allow, no filled or shaded surface under the mesh, second surface, contour lines or base-plane projections, reference lines or planes, highlighted lines or regions, or markers and callouts on peaks.

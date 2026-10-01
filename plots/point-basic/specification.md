@@ -36,3 +36,12 @@ Group C  | 6.1      | 5.5   | 6.7
 - Confidence intervals typically at 95% level
 - Consider adding a reference line (e.g., at zero or null hypothesis)
 - Error bars should have caps at endpoints
+
+## What a good version looks like
+
+- A good version shows: one marker per category at its estimate, with an interval line through it from the lower to the upper bound, on a shared value axis that spans every interval in full, and no marker moved off its estimate.
+- A good version shows: distinct markers that stay clearly visible on top of their interval lines, as the Notes ask, in both themes.
+- A good version shows: caps at both ends of every interval, as the Notes ask, visible against the page in both themes.
+- A good version shows: every category named at its own row or position, in the horizontal layout the Notes call common or a vertical one, and in a meaningful order: by estimate, or the categories' natural order when they have one.
+- A good version shows: the basic variant's one estimate and interval per category, besides the single reference line the Notes allow, such as one at zero or the null value, and no second series, bars beneath the points, trend lines, highlighted rows or bands, or callouts.
+- Expected, not a defect: intervals of very different width, intervals of neighboring categories that overlap, an estimate that sits off-center in its interval, intervals that cross the reference line, and a value axis that does not start at zero.

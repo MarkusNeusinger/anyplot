@@ -33,3 +33,12 @@ A multi-track genome browser view that displays different types of genomic data 
 - Each track should have a clear label on the left side identifying the data type
 - Use consistent genomic coordinates across all tracks with position labels on the x-axis
 - Consider using subtle background shading to visually separate adjacent tracks
+
+## What a good version looks like
+
+- A good version shows: the tracks stacked vertically over one shared genomic position axis with position labels, each track labeled on its left with its data type, as the Notes ask, and every feature drawn from its start to its end coordinate, so features line up across tracks.
+- A good version shows: the gene track with each gene drawn from its start to its end, its exons as rectangles joined by thin intron lines where the data distinguishes them, as the Notes ask, and, where the data gives a strand, arrows or chevrons that show each gene's strand direction.
+- A good version shows: the coverage track as a filled area of read depth across the region, as the Notes ask, rising from the track's own zero baseline.
+- A good version shows: the variant track as tick marks or lollipop markers at the variant positions, as the Notes ask; marker height, if it encodes quality or effect size as the Notes allow, is measured from the track's baseline.
+- A good version shows: the regulatory track, if included, as colored rectangles spanning each element, with the colors telling enhancers, promoters and other element types apart and named in a legend or by labels.
+- Expected, not a defect: tracks of different height, long empty stretches between features, uneven coverage peaks, a separate value scale for each quantitative track, and overlapping genes on separate rows inside the gene track, where the row is layout and only the coordinates are data.
