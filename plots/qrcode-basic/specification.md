@@ -28,3 +28,12 @@ A QR (Quick Response) code visualization that encodes text or URL data into a sq
 - Output should be printable at 300 DPI for physical media
 - Error correction level M (15%) is a good default balance between capacity and reliability
 - The generated QR code MUST be scannable by standard QR code readers — use a proper QR encoding library (`qrcode` is the primary recommendation) instead of manually constructing the QR matrix
+
+## What a good version looks like
+
+- A good version shows: three finder patterns, as the Notes require, in the upper left, upper right and lower left corners, each an intact set of nested squares, with the fourth corner left without one.
+- A good version shows: a quiet zone of blank white around all sides of the code, as the Notes ask, free of text, frames and other marks.
+- A good version shows: square modules of one size on a regular grid, black on white as the Notes ask, in both themes, with sharp edges and no gradient or transparency.
+- A good version shows: a module pattern that is a real encoding of the content, so that a standard reader scans the code, as the Notes require; module positions follow from the encoding, never from a random or hand-drawn fill.
+- A good version shows: the basic variant's single code: besides the finder, timing and alignment patterns, the data modules and the quiet zone, no logo or picture inside the code, decorative module shapes or colors, highlighted modules or patterns, reference lines, callouts on the code, or second code.
+- Expected, not a defect: no data axes, ticks, grid or legend, a data area that looks like random noise, a sparse black and white picture, and a white tile behind the code in the dark theme.
