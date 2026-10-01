@@ -27,3 +27,12 @@ A basketball shot chart overlays shooting data on a half-court diagram, plotting
 - The court should fill the plot area with minimal padding; axis ticks and labels are optional since the court geometry provides spatial reference
 - Use a 1:1 aspect ratio so the court is not distorted
 - Optionally include a legend for made/missed and shot type
+
+## What a good version looks like
+
+- A good version shows: an NBA half-court outline in the standard dimensions the Notes give, with the three-point arc, closer to the basket in the corners than at the top, the free-throw line, the paint, the restricted area arc and the basket with its backboard, each in its true place and proportion.
+- A good version shows: a 1:1 aspect ratio, as the Notes ask, so the hoop and the arcs are circular and not stretched, with the court filling the plot area with minimal padding.
+- A good version shows: every shot attempt as a point at its court coordinates relative to the basket, never jittered, binned or moved to thin out a crowded area.
+- A good version shows: made shots in green and missed shots in red, as the Notes ask, over court lines in a neutral gray or black, so the shot markers stand out from the court and the two outcomes can be told apart in both themes.
+- A good version shows: a legend for made and missed shots and for shot type, if drawn, as the Notes allow, matching the markers on the court; shot type, if encoded by marker shape or size, is explained there.
+- Expected, not a defect: shots piling up and overlapping near the basket, thinner coverage in the mid-range, empty floor toward the half-court line, free throws stacked on one spot, and axis ticks and labels left out, since the court geometry gives the spatial reference.

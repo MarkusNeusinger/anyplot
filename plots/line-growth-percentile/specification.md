@@ -30,3 +30,12 @@ A WHO/CDC-style growth chart displaying smooth percentile curves (3rd, 10th, 25t
 - Individual patient data should be plotted as connected markers overlaid on the percentile bands with a contrasting color
 - X-axis should show age with appropriate units (months or years depending on range)
 - Use synthetic but realistic reference data that approximates WHO/CDC growth standards
+
+## What a good version looks like
+
+- A good version shows: the percentile curves from the 3rd to the 97th as smooth lines at their reference values over age, stacked in order and never crossing one another.
+- A good version shows: filled bands between adjacent percentile curves with graduated intensity, darker near the extremes and lighter near the median, as the Notes ask, in blue tones for boys or pink/rose tones for girls, the steps between bands distinguishable in both themes.
+- A good version shows: the 50th percentile line visually emphasized, thicker or in a distinct color, as the Notes ask, so the median reads first among the reference curves.
+- A good version shows: the percentile labels P3 to P97 on the right margin, as the Notes ask, each beside the end of its own curve and readable as belonging to that curve.
+- A good version shows: the patient's measurements as connected markers at their ages and values, overlaid on the bands in a contrasting color, as the Notes ask, on an age axis in months or years as fits the range.
+- Expected, not a defect: curves that lie close together at the youngest ages and fan out with age, bands of unequal width, steep early growth that flattens, irregularly spaced patient visits, and a patient line that crosses percentile curves or runs outside the outermost ones.

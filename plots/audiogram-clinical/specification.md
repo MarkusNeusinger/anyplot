@@ -29,3 +29,12 @@ A standardized clinical audiogram that displays hearing test results, plotting h
 - Include a legend mapping the O/red and X/blue symbols to right and left ear
 - Keep the plot square-ish with a clear grid; the standardized appearance (inverted axis, log frequency, O/X symbols) is the defining feature and must be preserved
 - Axis titles: x = "Frequency (Hz)", y = "Hearing Level (dB HL)"
+
+## What a good version looks like
+
+- A good version shows: hearing level in dB HL on an inverted y axis, 0 dB HL at the top and greater loss further down, against a logarithmic frequency axis from 125 Hz to 8 kHz with the octave frequencies as evenly spaced ticks, as the Notes ask.
+- A good version shows: every threshold at its test frequency and dB level, the right ear as red circles (O) and the left ear as blue crosses (X), as the Notes ask, with a legend mapping the two symbols to the ears.
+- A good version shows: one line per ear joining its thresholds in ascending frequency order, solid for both ears or dashed for the left as the Notes allow, and never a line running from one ear's symbols to the other's.
+- A good version shows: the severity bands from normal to profound shaded across the full width at their dB ranges and labeled, as the Notes ask, in light fills that can be told apart in both themes and leave the markers and lines clearly visible.
+- A good version shows: a square-ish plot area with a clear grid, as the Notes ask, so the slope of a hearing loss looks the same as on any other audiogram.
+- Expected, not a defect: only a handful of points per ear at the discrete test frequencies, the O and X overlapping where both ears share a threshold, a steep slope or notch toward the high frequencies, lines crossing several severity bands, and empty lower bands when the loss is mild.
