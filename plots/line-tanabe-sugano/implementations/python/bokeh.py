@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-tanabe-sugano: Tanabe-Sugano Diagram for Crystal Field Theory
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-10-01
+Library: bokeh 3.10.0 | Python 3.13.15
+Quality: 90/100 | Created: 2026-10-01
 """
 
 import os
