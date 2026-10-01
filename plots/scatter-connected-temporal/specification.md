@@ -27,3 +27,11 @@ A scatter plot where data points are connected by lines in temporal order, revea
 - An arrow or color gradient along the path can indicate the direction of time
 - Point markers should be visible at each data position to distinguish from a simple line plot
 - Consider using a subtle color gradient (e.g., light to dark) to encode temporal progression
+
+## What a good version looks like
+
+- A good version shows: a marker at every observation's exact (x, y) value, joined to the next one in time by a straight segment, as the Notes ask; the path is never sorted by x and never smoothed.
+- A good version shows: the direction of time readable from the picture: text labels on the key time points, such as the start and the end, as the Notes ask, and, if drawn, arrows or a light-to-dark gradient along the path.
+- A good version shows: time labels placed clear of the path, the markers and each other, on selected points when labeling every point would crowd the plot.
+- A good version shows: markers that remain visible on the line at every time point, as the Notes ask, and a gradient, if used, whose light end still shows against the page in both themes.
+- Expected, not a defect: a path that loops, doubles back and crosses itself, segments of very unequal length, and stretches where points bunch together; they are the story the plot tells.

@@ -25,3 +25,11 @@ A two-dimensional histogram that displays the joint distribution of two continuo
 - Bins parameter controls resolution (more bins = finer detail but noisier)
 - Consider log scale for color mapping when density varies widely
 - Optional: add marginal 1D histograms on top and right edges for univariate context
+
+## What a good version looks like
+
+- A good version shows: rectangular bins on a regular grid aligned with both axes, tiling the plot without gaps, each colored by the number of points that fall inside it.
+- A good version shows: a sequential, perceptually uniform colormap, as the Notes ask, with a color bar labeled as a count or density, or as a log count when the log scale the Notes suggest is applied, and low-count bins that remain distinguishable from the page in both themes.
+- A good version shows: a bin count that fits the sample: fine enough to show the shape and tilt of the joint distribution, coarse enough that the dense region reads as a gradient rather than salt-and-pepper noise.
+- A good version shows: marginal histograms, if drawn as the Notes allow, on the top and right edges, aligned with the main axes and visually quieter than the heatmap.
+- Expected, not a defect: empty bins at the fringes, drawn blank or in the lowest color, uneven counts between neighboring bins in the tails, and a few isolated low-count bins from outlying points.
