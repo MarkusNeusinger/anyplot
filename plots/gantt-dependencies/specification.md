@@ -35,8 +35,8 @@ A Gantt chart that visualizes project schedules with task dependencies and group
 ## What a good version looks like
 
 - A good version shows: one horizontal bar per task, each on its own named row, running from the task's start date to its end date on a shared time axis; bars sit at their dates and are never shifted to make room for arrows.
-- A good version shows: each dependency as an arrow from the right edge (end date) of the predecessor's bar to the left edge (start date) of the successor's bar, as the Notes ask, with every successor starting at or after its predecessor's end, so no arrow points backward in time.
+- A good version shows: each dependency as an arrow between the predecessor's and the successor's bars, a finish-to-start link running from the predecessor's right edge (end date) to the successor's left edge (start date) as the Notes ask, with no finish-to-start successor starting before its predecessor ends.
 - A good version shows: arrows that run through the gaps between rows and around task bars where possible, as the Notes ask, each one traceable from its predecessor to its arrowhead in both themes.
 - A good version shows: where the data has groups, a header row above each group's child tasks with an aggregate bar spanning from the group's earliest start to its latest end, as the Notes ask; indentation or color coding, if used, sets the group rows apart from the task rows.
-- A good version shows: where more than one dependency type is drawn, a different line style for each type and a legend that explains the styles, as the Notes ask.
+- A good version shows: where more than one dependency type is drawn, a different line style for each type and a legend that explains the styles, as the Notes ask, with links of other types attached to the bar ends their type names.
 - Expected, not a defect: arrows that cross each other, several arrows leaving or converging on one task, long arrows that span many rows, a gap between a predecessor's end and its successor's start, and tasks or group bars that overlap in time; they are the structure the chart exists to show.

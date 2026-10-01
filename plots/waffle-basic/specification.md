@@ -28,7 +28,7 @@ A waffle chart displays proportions using a grid of equal-sized squares where co
 ## What a good version looks like
 
 - A good version shows: a grid of equal squares with even gaps, the Notes' standard 10x10 grid unless the scenario calls for another, in which every square stands for the same share of the whole; a square's position is layout, not data, so there are no axes or grid lines.
-- A good version shows: each category as a count of whole squares equal to its rounded share, as the Notes ask, with no partly filled square and the categories together filling the grid.
+- A good version shows: each category as a count of whole squares in proportion to its share of the grid, rounded to whole squares as the Notes ask, with the rounding spread so that no square is partly filled and the categories together fill the grid.
 - A good version shows: each category's squares together as one contiguous block, filled in one direction, row by row or column by column, so a share can be counted.
 - A good version shows: one distinct, contrasting color per category and a legend that names each category with its percentage, as the Notes ask, with the squares visible against the page in both themes.
 - A good version shows: the basic variant's single grid of squares: no second grid or small multiples, icons in place of squares, reference lines, highlighted squares or bands, or callouts beyond the legend.
