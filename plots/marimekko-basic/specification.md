@@ -27,3 +27,12 @@ A Marimekko chart (also called mekko or mosaic plot) is a stacked bar chart wher
 - Color coding should distinguish y-categories clearly with a legend
 - Consider adding value labels on larger segments for readability
 - X-axis can show category names centered under each variable-width bar
+
+## What a good version looks like
+
+- A good version shows: one bar per x category whose width is proportional to that category's total value, as the Notes ask, so the bar widths together span the grand total.
+- A good version shows: every bar the same full height, divided into segments whose heights are each y category's share within that bar, so the area of a segment is its actual value.
+- A good version shows: one distinct color per y category, the same in every bar and stacked in the same order, named in a legend, as the Notes ask.
+- A good version shows: every bar identified by its x category name, for example centered under its variable-width bar as the Notes allow.
+- A good version shows: the basic variant's two categorical dimensions only, with the value labels the Notes allow on the larger segments, and no reference or average lines, highlighted segments or bands, callouts, third variable or color scale.
+- Expected, not a defect: bars of very different width, including a narrow one for a small category, thin segments that are left unlabeled, and segment boundaries at a different height in every bar.

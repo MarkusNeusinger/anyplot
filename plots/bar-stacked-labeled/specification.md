@@ -25,3 +25,12 @@ A stacked bar chart that displays multiple data series stacked on top of each ot
 - Ensure adequate vertical space above the tallest bar for label placement
 - Consider using a slightly larger or bold font for total labels to distinguish from segment labels
 - Segment labels within the bars are optional but can enhance readability for larger segments
+
+## What a good version looks like
+
+- A good version shows: one stack per category rising from a shared zero baseline, each segment starting where the one below it ends, so a segment's height is its value and the top of the stack is the category total, on a value axis that is never truncated.
+- A good version shows: a total label directly above every complete stack, as the Notes ask, equal to the sum of that stack's segments and readable in both themes.
+- A good version shows: a value axis with room above the tallest stack, as the Notes ask, so its total label sits inside the plot area and is not clipped.
+- A good version shows: every label in one number format, as the Notes ask, and segment labels, if drawn, inside segments large enough to hold them and readable against their own fill in both themes.
+- A good version shows: one distinct color per component, the same in every bar and named in a legend or by direct labels, with the components in the same order in every stack.
+- Expected, not a defect: stacks of unequal height, thin segments for small components whose segment label is left out, and upper segments that start at different heights from bar to bar because the segments beneath them differ.
