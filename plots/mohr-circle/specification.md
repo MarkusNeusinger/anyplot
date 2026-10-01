@@ -28,3 +28,12 @@ Mohr's Circle is a graphical method used to determine principal stresses, maximu
 - Use equal aspect ratio so the circle appears as a true circle
 - Label axes: horizontal as "Normal Stress σ (MPa)", vertical as "Shear Stress τ (MPa)"
 - Include a light grid and reference lines through the center for readability
+
+## What a good version looks like
+
+- A good version shows: a circle centered on the normal-stress axis at the mean of σx and σy with the radius the Notes give, on axes with an equal aspect ratio so it appears as a true circle, as the Notes ask.
+- A good version shows: the principal stresses σ1 and σ2 marked where the circle meets the horizontal axis and the maximum shear stress at the top and bottom of the circle, as the Notes ask, each labeled at its true position.
+- A good version shows: the stress points A at (σx, τxy) and B at (σy, −τxy) plotted on the circle, as the Notes ask, lying at opposite ends of a diameter through the center.
+- A good version shows: the principal-plane angle 2θp annotated at the center, as the Notes ask, between the line to the reference point and the principal stress axis, with an arc, if drawn, spanning exactly that angle.
+- A good version shows: the horizontal axis labeled as normal stress σ and the vertical as shear stress τ, both in MPa, with a light grid and reference lines through the center, as the Notes ask, all subordinate to the circle.
+- Expected, not a defect: markers and labels gathering where a stress point, a principal stress and the angle arc lie close together, a circle that reaches into negative normal stress, empty margins left by the equal aspect ratio, and a shear axis that increases downward, as one common sign convention draws it.

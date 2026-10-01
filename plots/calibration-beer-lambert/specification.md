@@ -26,3 +26,11 @@ A calibration curve plotting absorbance versus concentration following Beer-Lamb
 - X-axis label should include units (e.g., "Concentration (mg/L)")
 - Y-axis label should be "Absorbance" (dimensionless)
 - Data should follow a linear relationship consistent with Beer-Lambert law over the concentration range used
+
+## What a good version looks like
+
+- A good version shows: absorbance on the y axis against concentration on the x axis, the x label carrying its unit, as the Notes ask, with every calibration standard, the blank at zero concentration included, as a marker at its measured values.
+- A good version shows: a straight regression line through the standards, with the regression equation and the R² value as text on the plot, as the Notes ask, the drawn line matching the slope and intercept the equation states.
+- A good version shows: a prediction interval band around the regression line, as the Notes ask, drawn behind the line and the markers and visible as a band in both themes.
+- A good version shows: one unknown sample marked on the regression line so it can be told apart from the standards, with dashed horizontal and vertical lines running from it to both axes, as the Notes ask, so the concentration read from its absorbance can be traced.
+- Expected, not a defect: standards scattered slightly off the line, an intercept that is not exactly zero, a prediction band that is narrow because the fit is tight and widens toward the ends of the range, and an R² very close to its maximum.

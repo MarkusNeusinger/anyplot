@@ -26,3 +26,12 @@ A reaction coordinate diagram plots potential energy against reaction progress, 
 - Use a smooth curve with a clear maximum at the transition state
 - Horizontal dashed lines at reactant and product energy levels improve readability
 - Use a clean, minimal style appropriate for scientific and educational contexts
+
+## What a good version looks like
+
+- A good version shows: one smooth, continuous curve of potential energy against reaction progress, as the Notes ask, running from the reactant level over a clear maximum at each transition state, with any intermediate as a well between two maxima, to the product level.
+- A good version shows: reactants, products and the transition state labeled directly on the plot, as the Notes ask, each label next to the part of the curve it names.
+- A good version shows: the activation energy Ea as a double-headed arrow from the reactant level to the transition state peak and the enthalpy change ΔH as a double-headed arrow between the reactant and product levels, as the Notes ask, each labeled, with its ends on exactly those levels.
+- A good version shows: horizontal dashed lines at the reactant and product energy levels, if drawn as the Notes suggest, lighter than the curve and reaching the arrows they serve.
+- A good version shows: an energy axis that is to scale, with the reactant level, the peak and the product level at their energy values, while horizontal position along the reaction coordinate is schematic, laid out for clarity and not measured.
+- Expected, not a defect: a reaction coordinate axis without numeric ticks or units, a peak placed off-center, a freely chosen curve shape between the levels, and a product level above the reactant level for an endothermic reaction; only the energies are data.

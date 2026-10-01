@@ -27,3 +27,12 @@ A Campbell Diagram (also called an interference diagram) plots natural frequenci
 - Engine order lines should be labeled (e.g., "1x", "2x", "3x")
 - Use a clean legend distinguishing natural frequency curves from engine order lines
 - Optional: shade or highlight critical speed zones around intersection points
+
+## What a good version looks like
+
+- A good version shows: rotational speed on the x axis and frequency on the y axis, with each natural-frequency mode as one continuous curve across the speed range that varies only slightly with speed, some modes rising and some falling, as the Notes ask.
+- A good version shows: the engine order lines as straight lines fanning out from the origin, each steeper in proportion to its order, as the Notes give, in a line style distinct from the mode curves and labeled with their order, as the Notes ask.
+- A good version shows: the critical speeds marked with distinct markers, as the Notes ask, each sitting exactly where its engine order line crosses its mode curve and visible in both themes.
+- A good version shows: every mode identified by its mode shape name and a legend that tells the natural-frequency curves from the engine order lines, as the Notes ask.
+- A good version shows: the basic variant's standard Campbell diagram of one rotor: besides the engine order lines, critical speed markers and labels the Notes ask for and the shaded critical speed zones the Notes allow, no further reference lines, other highlighted bands, further callouts or damping panel.
+- Expected, not a defect: critical speed markers bunching where several lines and curves cross within a narrow speed range, mode curves crossing one another, nearly flat mode curves, and steep engine order lines that leave through the top of the plot before the highest speed.

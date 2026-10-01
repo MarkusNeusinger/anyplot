@@ -26,3 +26,12 @@ A parametric curve plot visualizes x(t) and y(t) as functions of a parameter t, 
 - Include at least two example curves: a Lissajous figure (x = sin(3t), y = sin(2t)) and a spiral (x = t*cos(t), y = t*sin(t))
 - Label start and end points or mark the direction of traversal
 - Use sufficient point density to ensure smooth rendering, especially near cusps or self-intersections
+
+## What a good version looks like
+
+- A good version shows: each curve traced through its x and y values in order of t as one continuous line, with a point density that renders it smooth, as the Notes ask, so cusps and self-intersections show no polygon corners.
+- A good version shows: an equal aspect ratio on every set of axes, as the Notes ask, so a spiral's turns look round and every curve keeps its true proportions.
+- A good version shows: a color gradient along each curve that runs in one direction with increasing t, as the Notes ask, with a color bar, if drawn, naming t.
+- A good version shows: at least two curves, the Lissajous figure and the spiral the Notes ask for, each identified by a label and each large enough on its axes that its lobes or turns can be counted.
+- A good version shows: start and end points labeled or the direction of traversal marked, as the Notes ask, with any such marker on the curve's true first or last point.
+- Expected, not a defect: curves that loop and cross themselves, a closed curve whose start and end markers coincide, spiral turns packed closely near the center, panels with different axis ranges, and empty margins left by the equal aspect ratio.

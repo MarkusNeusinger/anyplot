@@ -29,3 +29,12 @@ A Smith chart is a specialized circular diagram used in RF engineering to displa
 - Optional: Include VSWR circles (constant reflection coefficient magnitude)
 - Chart boundary represents |gamma| = 1 (total reflection)
 - Center of chart is matched condition (Z = Z0, gamma = 0)
+
+## What a good version looks like
+
+- A good version shows: the standard Smith chart grid in place of Cartesian axes, as the Notes ask: constant resistance circles that all touch the right-hand end of the horizontal axis and constant reactance arcs curving away from that point, inside a boundary that appears as a true circle.
+- A good version shows: the impedance locus as one connected curve through the points in frequency order, as the Notes ask, each point where its normalized impedance Z/Z0 falls on the grid, so a matched point sits at the chart center.
+- A good version shows: frequency labels at key points along the locus, as the Notes ask, each tied to its point so the direction of the sweep can be read.
+- A good version shows: a grid light enough to stay behind the locus yet traceable in both themes, with normalized resistance and reactance values, if printed, each sitting on its own circle or arc.
+- A good version shows: the basic variant's standard impedance chart with one locus: besides the grid, the frequency labels the Notes ask for, the VSWR circles the Notes allow and a mark at the matched center, no admittance grid, further reference lines, highlighted regions, other callouts or second locus.
+- Expected, not a defect: arcs crowding together toward the right-hand point where they all converge, grid lines passing behind the locus, a locus that loops or covers only a small part of the disc, and no Cartesian axes, ticks or axis titles.

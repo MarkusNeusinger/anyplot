@@ -31,3 +31,12 @@ A psychrometric chart plots dry-bulb temperature against humidity ratio, overlai
 - A comfort zone region (approximately 20-26 C, 30-60% RH) should be highlighted as a shaded rectangle or polygon
 - All property lines should be labeled directly on the chart, not just in a legend
 - Use standard sea-level atmospheric pressure (101.325 kPa) for calculations
+
+## What a good version looks like
+
+- A good version shows: dry-bulb temperature on the x axis and humidity ratio on the y axis, with the saturation curve as the visually prominent upper boundary and the relative humidity curves as smooth curves between it and the x-axis, as the Notes ask, none crossing another.
+- A good version shows: wet-bulb and enthalpy lines running diagonally from upper left to lower right and specific volume lines at their own, different diagonal angle, as the Notes ask, the line families told apart by style or color in both themes.
+- A good version shows: the property lines labeled directly on the chart with their values, as the Notes ask, not only in a legend, each label attached to the line it names.
+- A good version shows: an example HVAC process path as an arrow or highlighted segment between two state points at their true coordinates, and the comfort zone as a shaded rectangle or polygon over its temperature and humidity range, as the Notes ask, both standing out from the property lines.
+- A good version shows: the basic variant's standard chart at one pressure: besides the property-line families, their labels, the process path and the comfort zone the Notes ask for, no further reference lines, other highlighted regions, callouts beyond the state points and process, second chart or side panel.
+- Expected, not a defect: a dense web of line families crossing one another, labels close together where the families converge toward the saturation curve, wet-bulb and enthalpy lines so nearly parallel that only their style separates them, lines cut off at the saturation curve, and an empty area above it.

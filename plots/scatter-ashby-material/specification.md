@@ -27,3 +27,11 @@ A log-log scatter plot comparing two material properties (e.g., Young's modulus 
 - Include axis labels with property name and units
 - Use distinct colors for each material family
 - Optionally include guide lines showing constant performance indices (e.g., E/rho for lightweight stiffness)
+
+## What a good version looks like
+
+- A good version shows: both axes on logarithmic scales, each labeled with its property name and units, as the Notes ask, and every material's point at its two property values.
+- A good version shows: every material family as a colored bubble region or convex-hull envelope that encloses its points, as the Notes ask, in a color distinct from the other families, drawn so that its points and any overlapping neighbor region stay visible in both themes.
+- A good version shows: a text label naming each family on or beside its region, as the Notes ask, readable against the region fill and the points and attributable to one region only.
+- A good version shows: guide lines of constant performance index, if drawn as the Notes allow, as straight lines on the log-log axes, parallel for one index, labeled with the index they hold constant and lighter than the family regions.
+- Expected, not a defect: family regions that overlap or touch where property ranges truly coincide, elongated or tilted envelopes, families of very different extent, points bunched inside their envelope, and large empty areas of the chart.

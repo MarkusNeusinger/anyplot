@@ -27,3 +27,12 @@ A Bode plot displays a system's frequency response as two vertically aligned pan
 - Use logarithmic scale (log10) for the frequency axis in both panels
 - Phase axis typically ranges from 0 to -180 (or -360 for higher-order systems)
 - Consider using grid lines to aid reading of margin values
+
+## What a good version looks like
+
+- A good version shows: the magnitude panel on top and the phase panel below it, as the Notes ask, sharing one logarithmic frequency axis so every frequency lines up vertically across the two panels, with decade ticks that show the scale.
+- A good version shows: in each panel the response as one continuous curve through its values in frequency order, magnitude in dB on the upper y axis and phase in degrees on the lower one.
+- A good version shows: reference lines at 0 dB on the magnitude panel and at -180 on the phase panel, as the Notes ask, running across the whole frequency range, distinct from the response curves and visible in both themes.
+- A good version shows: the gain margin marked at the phase crossover frequency, from the magnitude curve to the 0 dB line, and the phase margin at the gain crossover frequency, from the phase curve to the -180 line, each annotated, as the Notes ask, where the response has that crossover.
+- A good version shows: the basic variant's standard Bode plot of one system: besides the 0 dB and -180 reference lines and the margin markings the Notes ask for and the grid lines the Notes suggest, no further reference lines, highlighted bands or callouts, no asymptote overlay and no second system.
+- Expected, not a defect: a resonance peak that rises above the low-frequency gain, a steep phase drop around it, phase that runs on toward -360 for higher-order systems, margins that are small gaps beside the full axis range, and no gain margin marking for a response whose phase does not reach -180.

@@ -29,3 +29,12 @@ A cross-sectional line plot showing ground elevation along a path or transect li
 - Use a vertical exaggeration factor (e.g., 10x) and note it on the plot to make terrain features visible
 - Optional: apply gradient coloring to the profile line or fill based on slope steepness (green for flat, red for steep)
 - The x-axis should show distance units, y-axis should show elevation units with appropriate tick spacing
+
+## What a good version looks like
+
+- A good version shows: one continuous profile line through the samples in distance order, each at its distance and elevation, with the area beneath it filled down to the bottom of the plot in a solid or gradient fill, as the Notes ask, so the terrain reads as a silhouette.
+- A good version shows: distance along the transect on the x-axis and elevation on the y-axis, each with its units, and the vertical exaggeration noted on the plot, as the Notes ask, with relief tall enough that the climbs and descents are visible.
+- A good version shows: the start and end points labeled with their elevations and, where the data names them, their location names, as the Notes ask, each label at its own end of the profile.
+- A good version shows: key landmarks, where the data has them, each with a vertical marker line at its distance that meets the profile at the landmark's elevation and a text label attributable to that landmark, as the Notes ask.
+- A good version shows: slope-based coloring of the line or fill, if used as the Notes allow, following the local steepness (for example green for flat and red for steep) and explained by a legend or a note.
+- Expected, not a defect: slopes that look far steeper than the real terrain because of the vertical exaggeration, a jagged line with many small rises and dips, an elevation axis that does not start at zero, and landmark labels at different heights where landmarks lie close together.

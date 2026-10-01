@@ -24,3 +24,12 @@ An NMR spectrum plots signal intensity versus chemical shift (in ppm) to reveal 
 - Label key peaks with their chemical shift values
 - Include a reference peak at 0 ppm (TMS internal standard)
 - Use a clean baseline with minimal noise to emphasize peak clarity
+
+## What a good version looks like
+
+- A good version shows: signal intensity against chemical shift in ppm as one continuous trace, with the x axis reversed so that higher ppm values are on the left, as the Notes require.
+- A good version shows: sharp, narrow peaks rising from a flat baseline with minimal noise, as the Notes ask, the neighboring lines of a multiplet resolved from each other.
+- A good version shows: realistic splitting patterns, as the Notes ask: the lines of a multiplet evenly spaced and symmetric about its center, with the inner lines of a triplet or quartet taller than the outer ones.
+- A good version shows: key peaks labeled with their chemical shift values, as the Notes ask, each label above or beside the peak or multiplet it belongs to.
+- A good version shows: a reference peak at 0 ppm for the TMS internal standard, as the Notes ask, as a single sharp line at the right end of the reversed axis.
+- Expected, not a defect: long stretches of empty baseline between signals, peaks of very different heights, multiplet lines that sit very close together at full-spectrum scale, an intensity axis in arbitrary units, and a reference peak far from the other signals.

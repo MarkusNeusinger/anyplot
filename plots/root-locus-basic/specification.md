@@ -27,3 +27,12 @@ A root locus plot traces how the closed-loop poles of a transfer function migrat
 - Mark imaginary axis crossings prominently as they represent the stability boundary
 - Use a dashed or light grid to indicate constant damping ratio and natural frequency lines
 - The plot should be centered on the origin with equal axis scaling to preserve geometric relationships
+
+## What a good version looks like
+
+- A good version shows: open-loop poles as x markers and open-loop zeros, where the system has any, as o markers, as the Notes ask, each at its real and imaginary part and visible against the branches in both themes.
+- A good version shows: every branch as a continuous curve through its pole positions in order of gain, complex branches mirrored across the real axis, with arrows pointing toward increasing gain and the real-axis segments of the locus drawn, as the Notes ask.
+- A good version shows: the imaginary-axis crossings, where the locus has any, marked prominently, as the Notes ask, exactly where a branch crosses the imaginary axis, the stability boundary the Notes name, in either direction.
+- A good version shows: a plane centered on the origin with equal axis scaling and a dashed or light grid of constant damping ratio and natural frequency lines, as the Notes ask: rays from the origin and circles around it that look circular and stay behind the locus.
+- A good version shows: the basic variant's standard root locus of one system: besides the pole and zero markers, direction arrows, imaginary-axis crossing marks and damping grid the Notes ask for, no asymptote or further reference lines, highlighted regions, callouts on other points or second locus.
+- Expected, not a defect: branches that run off the plot toward infinity, branches lying along the real axis, branches that meet and split at a breakaway point, a short branch ending at a nearby zero, and a right half-plane left nearly empty by a locus that lives in the left half.
