@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-tanabe-sugano: Tanabe-Sugano Diagram for Crystal Field Theory
 Library: altair 6.3.0 | Python 3.13.15
 Quality: 89/100 | Created: 2026-10-01
@@ -146,7 +146,7 @@ term_lines = (
 
 term_labels = (
     alt.Chart(labels)
-    .mark_text(align="left", baseline="middle", fontSize=11, dx=7)
+    .mark_text(align="left", baseline="middle", fontSize=13, fontWeight=600, dx=7)
     .encode(
         x=field_strength,
         y=alt.Y("label_y:Q", scale=alt.Scale(domain=[0, 80], nice=False)),
