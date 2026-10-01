@@ -25,3 +25,11 @@ A notched box plot extends the standard box plot by adding notches around the me
 - Show outliers as individual points beyond the whiskers
 - Use different colors for each category to aid comparison
 - Notch depth calculated as ±1.57 × IQR / √n
+
+## What a good version looks like
+
+- A good version shows: every box pinched inward on both sides around its median, the notch spanning the confidence interval around the median that the Notes define, with the median line at the narrowest point.
+- A good version shows: notches distinct enough from the rest of the box outline, in both themes, that a viewer can judge whether the notches of two boxes share any range on the value axis.
+- A good version shows: the standard box elements the Notes ask for: a box from the first to the third quartile, whiskers reaching to the most extreme values within 1.5 times the IQR, and outliers as individual points beyond the whiskers at their values.
+- A good version shows: a different color for each category, as the Notes ask, on one shared value axis that is not forced to zero.
+- Expected, not a defect: notches of very different length, longer for a small or widely spread group, including a notch that reaches past a quartile and folds the box corner outward, notches of neighboring boxes that overlap, and outlier points beyond the whiskers.

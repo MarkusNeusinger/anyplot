@@ -29,3 +29,12 @@ A diverging stacked bar chart designed for Likert scale survey responses (e.g., 
 - Sort questions by net agreement (agree + strongly agree minus disagree + strongly disagree) for easy comparison
 - Show percentage labels inside bar segments where space permits
 - Use horizontal orientation so question text is readable
+
+## What a good version looks like
+
+- A good version shows: one horizontal bar per question, as the Notes ask, its segments in scale order from strongly disagree at the left end to strongly agree at the right end, each segment's length equal to its percentage.
+- A good version shows: every bar centered on its neutral segment, split evenly across one shared midpoint as the Notes ask, so disagreement extends left of that line and agreement extends right of it in every row.
+- A good version shows: a diverging color scheme, as the Notes ask: one hue for the disagree side and a contrasting one for the agree side, stronger for the two strong responses, and a muted tone for neutral, the same in every bar and named in a legend.
+- A good version shows: the questions sorted by net agreement, as the Notes ask, so the rows run from the most agreed to the least agreed or the reverse.
+- A good version shows: percentage labels inside the segments that have room for them, as the Notes ask, readable against their own fill in both themes.
+- Expected, not a defect: bars whose left and right ends are ragged because they share a midpoint rather than an edge, most bars leaning to one side, and narrow segments that are left unlabeled.

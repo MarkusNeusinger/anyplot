@@ -28,3 +28,12 @@ A swimmer plot displays individual patient timelines as horizontal bars, commonl
 - X-axis should show time units (weeks or months) with a descriptive axis label
 - Patient IDs should appear on the y-axis
 - Color-code bars by treatment arm or response status if group data is provided
+
+## What a good version looks like
+
+- A good version shows: one horizontal bar per patient, each on its own row with the patient ID on the y axis, as the Notes ask, running from time zero to the patient's duration on a shared time axis, so bar length is time on study or treatment.
+- A good version shows: bars sorted by duration, with the longest at the top or at the bottom, consistently, as the Notes ask.
+- A good version shows: a distinct marker or symbol for each event type, as the Notes ask, placed at the event's time in its patient's row, distinguishable from the bar fill in both themes and never moved off its time to clear a neighbor.
+- A good version shows: patients still on treatment at data cutoff set apart by an arrow at the end of the bar or an open-ended bar, as the Notes ask, so an ongoing bar is not read as a completed one.
+- A good version shows: bars color-coded by treatment arm or response status where the data has groups, and a legend that explains every event symbol, the ongoing mark and the color coding, as the Notes ask.
+- Expected, not a defect: bars of very different length, patients with no event marker next to patients with several, markers that sit close together where a patient's events fall near the same time, and arms of unequal size; they are the patient-level outcomes the chart exists to show.

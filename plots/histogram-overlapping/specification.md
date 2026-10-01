@@ -24,3 +24,11 @@ Overlapping histograms display multiple distributions on the same axes using sem
 - Include a legend clearly identifying each group
 - Align bin edges across all groups for accurate comparison
 - Consider using matching bin widths and counts for all distributions
+
+## What a good version looks like
+
+- A good version shows: one histogram per group on the same axes, every group's bars rising from the same zero baseline rather than stacked or placed side by side, so each bar's height is that group's own value for the bin.
+- A good version shows: semi-transparent fills, as the Notes ask, so every group's bars stay visible where the distributions overlap, including the group drawn behind, in both themes.
+- A good version shows: one distinct, contrasting color per group, named in a legend, as the Notes ask.
+- A good version shows: bin edges aligned across all groups, as the Notes ask, so bars of different groups cover the same intervals.
+- Expected, not a defect: blended colors where groups overlap that match no legend entry, groups of different height and spread, distributions that overlap almost fully or hardly at all, and lumpy outlines.

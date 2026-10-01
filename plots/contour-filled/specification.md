@@ -26,3 +26,12 @@ A filled contour plot displays colored regions between level curves of a 2D scal
 - Consider overlaying contour lines for precise level identification
 - Adjust the number of levels (typically 10-20) for appropriate detail
 - Ensure grid resolution is sufficient to avoid jagged color boundaries
+
+## What a good version looks like
+
+- A good version shows: the whole grid covered by color bands, each band filling the region between two neighboring levels of the field, with no holes, gaps or unfilled corners inside the data's extent.
+- A good version shows: band boundaries that are smooth curves, as the Notes ask, never jagged, stair-stepped or pixelated from a coarse grid.
+- A good version shows: enough levels to show the field's detail while neighboring bands stay distinguishable, as the Notes ask, at levels evenly stepped unless the field's range calls for another spacing, so narrow bands read as steep change and broad ones as flat areas.
+- A good version shows: a sequential colormap for a single-signed field or a diverging one centered on its meaningful midpoint, with the color bar the Notes ask for showing the same levels and naming the quantity.
+- A good version shows: contour lines over the bands, if drawn as the Notes suggest, running along the band boundaries, visible in both themes and thin enough that the fill colors stay the main signal.
+- Expected, not a defect: narrow bands crowding on steep slopes and one broad band over a flat area, closed bands around peaks and basins, an hourglass shape at a saddle, and visible color steps between bands, which are the levels rather than banding to smooth away.

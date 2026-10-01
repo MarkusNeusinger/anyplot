@@ -28,3 +28,11 @@ A mosaic plot visualizes contingency tables by dividing a rectangular area into 
 - Color coding can indicate residuals or deviations from independence
 - Gap spacing between rectangles helps distinguish categories
 - Labels should identify both categorical variables clearly
+
+## What a good version looks like
+
+- A good version shows: one rectangle per cell of the contingency table, the column widths following the marginal proportions of the first variable and the heights within each column the conditional proportions of the second, so each rectangle's area is proportional to its cell frequency.
+- A good version shows: each category's block readable as a unit, set apart by the small gaps the Notes suggest or by clear borders, with the proportions of the tiles preserved.
+- A good version shows: labels that identify both variables and their levels, as the Notes ask: the first variable's levels along the columns and the second variable's levels along the other edge or in a legend.
+- A good version shows: color that encodes one stated thing: the levels of one of the two variables, applied the same way in every column, or the residuals from independence the Notes allow, with a legend, a key or the edge labels making plain which.
+- Expected, not a defect: columns of very different width, small or sliver tiles for rare cells that are left unlabeled, and tile boundaries that sit at a different height in every column, which is how the plot shows association.

@@ -30,3 +30,12 @@ A geographic map visualization showing connection lines (arcs or great circles) 
 - Apply transparency (alpha ~0.3-0.6) to handle overlapping routes
 - Show a base map with country borders or coastlines for geographic context
 - Consider using a global projection (Robinson, Natural Earth) for world maps
+
+## What a good version looks like
+
+- A good version shows: one line per connection running from its origin to its destination coordinates, with long-distance connections drawn as curved great-circle arcs, as the Notes ask, rather than as straight segments across the map.
+- A good version shows: line thickness or color intensity following the value when one is provided, as the Notes ask; a legend or key, if drawn, explains that encoding.
+- A good version shows: a location marker at every origin and destination, as the Notes ask, each at its true coordinates and distinct from the lines that meet there.
+- A good version shows: translucent lines, as the Notes ask, so overlapping routes build up into visibly busier corridors instead of merging into an opaque mass.
+- A good version shows: a base map with country borders or coastlines beneath the lines, as the Notes ask, quieter than the lines and, for a world map, in a global projection as the Notes suggest.
+- Expected, not a defect: lines crossing each other and bundling where many meet at a hub, arcs that bow toward the poles and look longer than a straight line would, and connections that look almost straight, whether short or running nearly north to south.
