@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-tanabe-sugano: Tanabe-Sugano Diagram for Crystal Field Theory
 Library: letsplot 4.11.0 | Python 3.13.15
 Quality: 87/100 | Created: 2026-10-01
@@ -48,8 +48,9 @@ SPIN_FORBIDDEN = "#C475FD"  # Imprint palette position 2
 # gets one matrix over the free-ion terms that produce it; d8 reuses the d2 matrices with
 # the sign of Dq reversed, the electron-hole relation between the two configurations.
 C_OVER_B = 4.5
-DELTA_MAX = 30.0
-ENERGY_MAX = 86.0
+DELTA_MAX = 40.0
+ENERGY_MAX = 100.0  # drops the runaway 1A1g(S) term, which leaves the frame above E/B = 120
+LABEL_GAP = 4.2  # minimum vertical spacing between two term labels in the gutter
 
 delta_over_b = np.linspace(0.0, DELTA_MAX, 301)
 dq = -delta_over_b / 10.0
@@ -108,15 +109,22 @@ spin_forbidden = curves[curves["term"].str.startswith("1")]
 tips = curves[curves["delta_over_b"] == DELTA_MAX].sort_values("energy_over_b").reset_index(drop=True)
 label_y = tips["energy_over_b"].to_numpy(copy=True)
 for position in range(1, len(label_y)):
-    label_y[position] = max(label_y[position], label_y[position - 1] + 3.6)
+    label_y[position] = max(label_y[position], label_y[position - 1] + LABEL_GAP)
 tips["label_y"] = label_y
-tips["label_x"] = DELTA_MAX + 0.9
+tips["label_x"] = DELTA_MAX + 1.2
 tips["symbol"] = tips["term"].str.replace(r"^(\d)([A-Z])(\d?)g", r"\\(^{\1}\2_{\3g}\\)", regex=True)
 classes = ["Spin-allowed (ΔS = 0)", "Spin-forbidden (ΔS ≠ 0)"]
+
+# Horizontal grid drawn as segments that stop at the last sample, so no rule reaches into
+# the label gutter; the vertical grid and the y axis line stay with the theme
+y_breaks = [0, 20, 40, 60, 80, 100]
+grid_y = pd.DataFrame({"y": y_breaks, "x": 0.0, "xend": DELTA_MAX})
+panel_top = label_y[-1] + 2.0
 
 # Plot
 plot = (
     ggplot(mapping=aes("delta_over_b", "energy_over_b"))
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="y"), data=grid_y, color=GRID, size=0.5)
     + geom_line(aes(color="multiplicity", linetype="multiplicity", group="term"), data=spin_forbidden, size=0.9)
     + geom_line(aes(color="multiplicity", linetype="multiplicity", group="term"), data=spin_allowed, size=1.9)
     + geom_segment(aes(xend="label_x", yend="label_y", color="multiplicity"), data=tips, size=0.4, show_legend=False)
@@ -125,13 +133,13 @@ plot = (
         data=tips,
         size=5.4,
         hjust=0,
-        nudge_x=0.3,
+        nudge_x=0.4,
         show_legend=False,
     )
     + scale_color_manual(values=[SPIN_ALLOWED, SPIN_FORBIDDEN], breaks=classes)
     + scale_linetype_manual(values=["solid", "dashed"], breaks=classes)
-    + scale_x_continuous(limits=(0.0, 36.5), breaks=[0, 5, 10, 15, 20, 25, 30], expand=[0, 0.4])
-    + scale_y_continuous(limits=(0.0, ENERGY_MAX), breaks=[0, 20, 40, 60, 80], expand=[0, 2.6])
+    + scale_x_continuous(limits=(0.0, 48.5), breaks=[0, 10, 20, 30, 40], expand=[0, 0.5])
+    + scale_y_continuous(limits=(0.0, panel_top), breaks=y_breaks, expand=[0, 2.6])
     + labs(
         title="line-tanabe-sugano · python · letsplot · anyplot.ai",
         subtitle=r"\(d^{8}\) ion (\(Ni^{2+}\)) in an octahedral ligand field · \(C/B\) = 4.5",
@@ -143,9 +151,11 @@ plot = (
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_grid_major=element_line(color=GRID, size=0.5),
+        panel_grid_major_x=element_line(color=GRID, size=0.5),
+        panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
-        axis_line=element_line(color=INK_SOFT, size=1.6),
+        axis_line_x=element_blank(),
+        axis_line_y=element_line(color=INK_SOFT, size=1.0),
         axis_ticks=element_blank(),
         axis_title=element_text(size=12, color=INK),
         axis_text=element_text(size=10, color=INK_SOFT),
