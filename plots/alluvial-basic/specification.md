@@ -26,3 +26,12 @@ An alluvial diagram visualizes how entities flow or transition between discrete 
 - Band width should be proportional to flow magnitude
 - Consider using transparency for overlapping flows to improve readability
 - Labels should clearly identify both time points (column headers) and categories (node labels)
+
+## What a good version looks like
+
+- A good version shows: one column per time point, in chronological or logical order from left to right, as the Notes ask, each column a stack of category blocks whose heights are the categories' values at that time point.
+- A good version shows: bands between neighboring columns only, each with a width proportional to its flow, as the Notes ask, and attached to the blocks of the categories it leaves and enters; the vertical order of blocks and bands is a layout choice, and only heights and widths carry values.
+- A good version shows: each category in the same color at every time point, as the Notes ask, with bands tied by color to a category they connect; the transparency the Notes suggest, if used, keeps overlapping bands distinguishable in both themes.
+- A good version shows: every time point named in a column header and the categories named by labels at their blocks, with or without the block's value, as the Notes ask.
+- A good version shows: the basic variant's single alluvial diagram: besides the blocks, bands, column headers and category labels, no highlighted bands or blocks, emphasis that separates stable from changed flows, reference lines, callouts or trend annotations, or second panel.
+- Expected, not a defect: bands that cross, blended color where translucent bands overlap, hair-thin bands for rare transitions, and blocks of unequal height that grow or shrink from one column to the next.

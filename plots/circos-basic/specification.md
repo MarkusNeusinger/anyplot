@@ -28,3 +28,12 @@ A Circos plot is a circular visualization that displays data on concentric track
 - Use distinct colors for each segment to aid identification
 - Consider adding 1-3 concentric tracks inside the outer ring for additional data layers
 - For genomic applications, segments typically represent chromosomes with consistent color coding
+
+## What a good version looks like
+
+- A good version shows: an outer ring of labeled segments around one circle, separated by gaps, as the Notes ask, with arc lengths that follow the segment sizes when the data gives them; the order of segments is a natural one, such as chromosome order, or a layout choice.
+- A good version shows: ribbons across the interior connecting related segments, each with a width proportional to its connection value, as the Notes ask, and anchored on the two segments it connects.
+- A good version shows: one distinct color per segment, as the Notes ask, used consistently for the segment and whatever is colored by it, with ribbons translucent enough that those crossing them stay distinguishable in both themes.
+- A good version shows: the concentric data tracks the Notes suggest, if drawn, as rings inside the outer ring, aligned with the angular span of the segments they describe, visually separate from the ribbons, and explained by a legend or caption.
+- A good version shows: the basic variant's segment ring, ribbons and the inner data tracks the Notes allow: no highlighted ribbons or segments, reference lines, callouts or annotations of the strongest connection, or second circle or panel.
+- Expected, not a defect: ribbons that cross and pile up in the middle of the circle, blended color where they overlap, hair-thin ribbons for weak connections, segments of very unequal length, and a diagram that carries its optional data tracks or leaves them out.

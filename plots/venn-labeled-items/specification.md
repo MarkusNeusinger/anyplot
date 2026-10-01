@@ -33,3 +33,12 @@ An editorial, WIRED "Chartgeist"-style three-circle Venn diagram where pop-cultu
 - Adopt a magazine-print look: generous whitespace, restrained palette, understated gridless background
 - When the `outside` zone is used, place those items in the surrounding whitespace clearly separated from the circles
 - Layout algorithm should attempt to distribute labels within each zone to minimize collisions; manual offsets may be supplied where the library allows
+
+## What a good version looks like
+
+- A good version shows: three equally sized circles in the standard symmetric layout, as the Notes ask, with the pairwise and triple overlaps large enough to hold their items, on a background without axes, ticks or grid.
+- A good version shows: semi-transparent circle fills, as the Notes ask, so the overlapping regions remain visible through each other and every zone can be told apart in both themes.
+- A good version shows: every item label inside its assigned zone, as text only or with a small point marker, as the Notes ask; the zone is the data, and the position within it is a layout choice that spreads labels out so they stay clear of their neighbors.
+- A good version shows: each category name outside its circle, on the circle's outer side and away from the diagram's center, as the Notes ask, so it cannot be taken for an item.
+- A good version shows: items of the outside zone, when the data has any, in the surrounding whitespace and clearly separated from the circles, as the Notes ask.
+- Expected, not a defect: zones holding very different numbers of items, including a zone with a single item or none, irregular label positions within a zone, and no counts, numeric scale or legend, because names and membership are the whole content.

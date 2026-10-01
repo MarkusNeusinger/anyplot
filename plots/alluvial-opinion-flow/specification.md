@@ -29,3 +29,12 @@ An alluvial/Sankey-style diagram showing how opinions or group memberships shift
 - Highlight net flows between categories to reveal polarization trends
 - Arrange waves left-to-right in chronological order with clear column headers
 - Consider using transparency for overlapping flows to improve readability
+
+## What a good version looks like
+
+- A good version shows: one column per wave, in chronological order from left to right under a clear column header, as the Notes ask, each column a stack of opinion-category blocks whose heights are the respondent counts in that wave.
+- A good version shows: flows between neighboring waves, each with a width proportional to the respondents making that transition, as the Notes ask; the vertical order of blocks and flows is a layout choice, preferably the same in every wave so stable flows run level, and only heights and widths carry counts.
+- A good version shows: each opinion category in one color across all waves, as the Notes ask; the transparency the Notes suggest, if used, keeps overlapping flows distinguishable in both themes.
+- A good version shows: the total respondent count of each category at each wave as a node label, as the Notes ask, readable against its block or beside it in both themes.
+- A good version shows: stable respondents, whose flow stays in the same category, visibly set apart from changers by opacity or color intensity, and the net flows between categories highlighted, as the Notes ask, so the direction in which opinion drifts can be read.
+- Expected, not a defect: flows that cross, hair-thin flows for rare transitions, broad level flows of stable respondents dominating the picture, and blocks that grow or shrink from wave to wave.
