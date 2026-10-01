@@ -6,9 +6,10 @@
   label now dispatches one fresh review on its own ref (sharing the existing
   `review-retry` budget), or labels the PR `ai-review-failed` for the watchdog.
   The budget marker is written before the dispatch and an unreadable budget
-  counts as spent, so an outage cannot buy a second re-review. The watchdog's never-reviewed case also counts a lone `quality:N` as a
-  marker. Before, an HTTP 502 on the label left PR #11984 without a verdict
-  for about seven hours. (#12004)
+  counts as spent, so an outage cannot buy a second re-review. The watchdog's
+  never-reviewed case also counts a lone `quality:N` as a marker. Before, an
+  HTTP 502 on the label left PR #11984 without a verdict for about seven
+  hours. (#12004)
 - **impl-generate's auto-retry runs on the ref that dispatched it.** A branch
   smoke's failed generation used to retry on main (#11969–#11971); the retry
   now passes `--ref` with the run's own ref, which is `main` for every

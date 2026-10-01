@@ -750,9 +750,25 @@ jobs:
           fi
 
           if [ "$RETRY_COUNT" -ge 1 ]; then
-            # Already auto-retried once → final fail, require manual rerun
-            gh pr edit "$PR_NUM" --add-label "ai-review-failed" 2>/dev/null || true
-            gh pr comment "$PR_NUM" --body "${MARKER}
+            # Already auto-retried once → final fail, require manual rerun.
+            # Both writes retried: an unreadable budget lands here in the
+            # middle of a brown-out, and `ai-review-failed` is the hand-off to
+            # the watchdog.
+            gh_retry() {
+              local what="$1"; shift
+              local attempt
+              for attempt in 1 2 3; do
+                if "$@" 2> /tmp/retry-count.err; then
+                  return 0
+                fi
+                echo "::warning::${what} failed (attempt ${attempt}/3): $(head -c 500 /tmp/retry-count.err | tr '\n' ' ')"
+                [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+              done
+              return 1
+            }
+            gh_retry "ai-review-failed label" gh pr edit "$PR_NUM" --add-label "ai-review-failed" \
+              || echo "::error::could not add ai-review-failed to PR #${PR_NUM} — left to the watchdog's scan of stalled PRs"
+            gh_retry "PR comment" gh pr comment "$PR_NUM" --body "${MARKER}
           ## :x: AI Review Failed (auto-retry exhausted)
 
           The AI review action completed but did not produce valid output files. ${EXHAUSTED}
@@ -767,7 +783,8 @@ jobs:
           \`\`\`
 
           ---
-          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"
+          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*" \
+              || echo "::error::failure comment not posted on PR #${PR_NUM}"
             exit 1
           fi
 

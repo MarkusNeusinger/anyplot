@@ -276,6 +276,14 @@ class TestNoScoreRetryBudget:
         assert result.returncode == 1
         assert not _calls(calls, "api", "repos/owner/repo/dispatches")
         assert ["pr", "edit", "7", "--add-label", "ai-review-failed"] in calls
+        (comment,) = _calls(calls, "pr", "comment")
+        assert comment[3:5] == ["--body", MARKER]  # the log holds one line per body line
+
+    def test_the_final_failure_comment_is_retried(self, tmp_path):
+        result, calls = self._validate(tmp_path, GH_FAIL_API="1", GH_COMMENT_RC="1")
+        assert result.returncode == 1
+        assert ["pr", "edit", "7", "--add-label", "ai-review-failed"] in calls
+        assert len(_calls(calls, "pr", "comment")) == 3
 
 
 class TestQualityLabelStep:
