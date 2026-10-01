@@ -23,3 +23,11 @@ A histogram displays the distribution of a single continuous variable by dividin
 - Readable axis labels showing frequency and value ranges
 - Consider appropriate bin count (too few hides patterns, too many creates noise)
 - Y-axis should start at zero for accurate visual comparison
+
+## What a good version looks like
+
+- A good version shows: contiguous bars over equal-width bins with no gaps between them, each rising from a zero baseline to the number of observations in its bin, on a frequency axis that is never truncated.
+- A good version shows: bin edges that stay distinguishable in both themes, for instance by the thin edges between bars the Notes suggest, without opening gaps between the bars.
+- A good version shows: a bin count that fits the sample: enough bins to show skew, clusters and tails, and not so many that the outline breaks into isolated spikes.
+- A good version shows: the basic variant's one distribution in one color: no density or fitted curve, rug, second group, cumulative line, mean, median or other reference lines, highlighted bars or bands, or callouts and statistic annotations.
+- Expected, not a defect: a lumpy, skewed or two-peaked outline, uneven neighboring bars and empty or near-empty bins in the tails; a perfectly bell-shaped histogram suggests fabricated data.

@@ -30,3 +30,12 @@ A dashboard layout displaying multiple metric tiles in a responsive grid, where 
 - Sparklines should be compact and positioned below or beside the main value
 - Consistent tile sizing and spacing for clean dashboard appearance
 - For static output, simulate a snapshot of the real-time state with varied metrics
+
+## What a good version looks like
+
+- A good version shows: every tile with the parts the Notes ask for: the current value as the most prominent element, the metric's label, a mini sparkline of its history, and a change indicator with an arrow and the percentage change.
+- A good version shows: tiles of one size, evenly spaced in a regular grid whose rows and columns suit the number of tiles, as the Notes ask, with the same arrangement of parts inside every tile.
+- A good version shows: each sparkline compact and below or beside the main value, as the Notes ask, joining the history values in order and scaled to its own range, so the shape of the trend reads at tile size.
+- A good version shows: change indicators as the Notes ask: the arrow points up for a positive change and down for a negative one, and its color follows whether the change is favorable, green, or unfavorable, red, so a rise in a metric where lower is better is red.
+- A good version shows: status color, where the data carries a status, as the Notes ask: green for good, yellow or orange for warning and red for critical, applied to the same part of every tile and distinguishable in both themes.
+- Expected, not a defect: tiles and sparklines without axes, tick labels, gridlines or a legend, sparkline values that cannot be read off, metrics in different units and magnitudes side by side, and an arrow color that differs from its tile's status color.

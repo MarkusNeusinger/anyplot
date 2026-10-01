@@ -25,3 +25,11 @@ An asymmetric error bar plot displays data points with separate upper and lower 
 - Consider using different colors or markers when comparing multiple series
 - Include a legend or annotation explaining what the asymmetric bounds represent (e.g., "10th-90th percentile", "95% CI")
 - Useful for log-scale axes where symmetric intervals would appear asymmetric after transformation
+
+## What a good version looks like
+
+- A good version shows: one marker per data point at its central value, with one arm reaching to the lower bound and one to the upper bound, each arm's length set by its own error value, on a value axis that spans every error bar, and no point re-centered within its interval.
+- A good version shows: visible caps at both ends of every error bar, as the Notes ask, and a marker distinct from the bar, so where the central value sits between the two arms is unmistakable in both themes.
+- A good version shows: a legend or annotation stating what the bounds represent, as the Notes ask, such as a percentile range or a confidence interval.
+- A good version shows: several series, if compared, told apart by color or marker as the Notes suggest, each keeping one color and marker throughout and named in a legend.
+- Expected, not a defect: arms of unequal length, in ratios that differ from point to point, a point sitting close to one end of its interval, some intervals that are nearly symmetric, and intervals of neighboring points that overlap.
