@@ -27,3 +27,11 @@ A rainflow counting matrix visualizes the results of rainflow cycle counting fro
 - Axis labels should indicate physical units (e.g., MPa, kN) where applicable
 - Consider adding axis tick labels corresponding to bin centers or edges
 - Zero-count bins should be visually distinct (e.g., white or transparent background)
+
+## What a good version looks like
+
+- A good version shows: cycle amplitude on the y axis and cycle mean on the x axis, as the Notes ask, every bin as a filled cell at its amplitude and mean, and physical units in the axis labels where the data has them.
+- A good version shows: a sequential colormap for the cycle count on a logarithmic or linear scale, as the Notes allow, chosen so that frequent and rare bins can be told apart, with the color bar the Notes ask for naming the count and matching that scale.
+- A good version shows: zero-count bins visually distinct from counted ones, as the Notes ask, so a bin with few cycles is never mistaken for an empty one in either theme.
+- A good version shows: axis ticks, if labeled by bin, sitting at the bin centers or edges they name.
+- Expected, not a defect: most of the matrix empty, counts piled into the low-amplitude bins, a few isolated high-amplitude bins with very low counts, and an occupied region that narrows toward large amplitudes.
