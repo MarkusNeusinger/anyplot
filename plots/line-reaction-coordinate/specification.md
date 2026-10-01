@@ -29,7 +29,7 @@ A reaction coordinate diagram plots potential energy against reaction progress, 
 
 ## What a good version looks like
 
-- A good version shows: one smooth, continuous curve of potential energy against reaction progress, as the Notes ask, running from the reactant level over a clear maximum at the transition state to the product level.
+- A good version shows: one smooth, continuous curve of potential energy against reaction progress, as the Notes ask, running from the reactant level over a clear maximum at each transition state, with any intermediate as a well between two maxima, to the product level.
 - A good version shows: reactants, products and the transition state labeled directly on the plot, as the Notes ask, each label next to the part of the curve it names.
 - A good version shows: the activation energy Ea as a double-headed arrow from the reactant level to the transition state peak and the enthalpy change ΔH as a double-headed arrow between the reactant and product levels, as the Notes ask, each labeled, with its ends on exactly those levels.
 - A good version shows: horizontal dashed lines at the reactant and product energy levels, if drawn as the Notes suggest, lighter than the curve and reaching the arrows they serve.

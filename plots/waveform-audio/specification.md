@@ -34,5 +34,5 @@ A time-domain visualization of audio amplitude that displays the raw waveform sh
 - A good version shows: a y axis that displays the normalized amplitude range from -1.0 to +1.0, as the Notes ask, so the signal's level and headroom can be read against full scale.
 - A good version shows: a horizontal zero line for reference, as the Notes ask, that can still be made out where the waveform is densest, in both themes.
 - A good version shows: a fill, where the waveform is filled, in a semi-transparent color, as the Notes ask, so overlapping regions remain visible.
-- A good version shows: for a dense waveform, a min/max envelope, as the Notes ask, that follows the true peaks of every stretch, free of the moiré bands and dropped peaks that plain subsampling produces.
+- A good version shows: for a dense waveform, an outline that follows the true peaks of every stretch, free of the moiré bands and dropped peaks that plain subsampling produces, which the min/max envelope the Notes ask for provides.
 - Expected, not a defect: individual cycles merging into a solid band where thousands of samples share the width, quiet stretches collapsing onto the zero line, sudden transients, an outline that is not exactly mirror-symmetric, and peaks well inside the range or touching its limits.
