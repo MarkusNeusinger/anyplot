@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-06-10
@@ -9,6 +9,7 @@ import os
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from statsmodels.tsa.stattools import acf, pacf
 
 
 # Theme tokens
@@ -36,27 +37,10 @@ noise = np.random.normal(0, 1, n_obs)
 for t in range(2, n_obs):
     series[t] = ar1_coeff * series[t - 1] + ar2_coeff * series[t - 2] + noise[t]
 
-# Compute ACF
+# Compute ACF and PACF
 n_lags = 35
-series_centered = series - np.mean(series)
-variance = np.sum(series_centered**2)
-acf_values = np.array(
-    [np.sum(series_centered[: n_obs - k] * series_centered[k:]) / variance for k in range(n_lags + 1)]
-)
-
-# Compute PACF via Durbin-Levinson recursion
-pacf_values = np.zeros(n_lags + 1)
-pacf_values[0] = 1.0
-pacf_values[1] = acf_values[1]
-phi = np.zeros((n_lags + 1, n_lags + 1))
-phi[1, 1] = acf_values[1]
-for k in range(2, n_lags + 1):
-    num = acf_values[k] - np.sum(phi[k - 1, 1:k] * acf_values[k - 1 : 0 : -1])
-    den = 1.0 - np.sum(phi[k - 1, 1:k] * acf_values[1:k])
-    phi[k, k] = num / den if abs(den) > 1e-12 else 0.0
-    for j in range(1, k):
-        phi[k, j] = phi[k - 1, j] - phi[k, k] * phi[k - 1, k - j]
-    pacf_values[k] = phi[k, k]
+acf_values = acf(series, nlags=n_lags)
+pacf_values = pacf(series, nlags=n_lags, method="ldb")
 
 conf_bound = 1.96 / np.sqrt(n_obs)
 lags_acf = np.arange(0, n_lags + 1)
