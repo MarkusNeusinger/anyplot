@@ -26,3 +26,12 @@ A win probability chart shows how each team's likelihood of winning evolves over
 - Annotate key scoring events (touchdowns, goals, runs) that caused significant probability swings
 - Display the final score in a corner annotation or subtitle
 - X-axis represents game progression (time or play number) with appropriate period/quarter markers
+
+## What a good version looks like
+
+- A good version shows: one win probability line joining the values in game order, on a y axis fixed to the full range from 0 to 100 percent, as the Notes ask, never cropped to the range the line happens to cover.
+- A good version shows: a prominent horizontal reference line at 50 percent, with the area between it and the line filled in the home team color where the line is above it and the away team color where it is below, the fill changing exactly where the line crosses.
+- A good version shows: the key scoring events annotated at their position on the line, as the Notes ask, each label tied to the swing it caused and readable in both themes.
+- A good version shows: an x axis of game progression with period or quarter markers, as the Notes ask, so each swing can be placed in the game.
+- A good version shows: the final score in a corner annotation or subtitle, as the Notes ask, kept clear of the line and the fills.
+- Expected, not a defect: abrupt jumps at scoring events, long flat stretches, a line that crosses the 50 percent line many times or not at all, unequal fill areas for the two teams, a start near but not exactly at 50 percent, and a line that ends pinned at the top or bottom of the axis.

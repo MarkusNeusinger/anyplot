@@ -27,3 +27,12 @@ A line chart showing the percentage of retained users over time since signup, wi
 - X-axis represents time since signup, not calendar dates
 - Consider using slightly decreasing opacity or thinner lines for older cohorts to emphasize recent ones
 - A horizontal dashed reference line at a key retention threshold (e.g., 20%) can highlight target benchmarks
+
+## What a good version looks like
+
+- A good version shows: one curve per cohort, every curve starting at 100 percent at time zero, as the Notes require, and joining its retention values in order of time since signup.
+- A good version shows: an x axis of time since signup in one consistent unit, not calendar dates, so the cohorts line up at equal age.
+- A good version shows: a y axis running from 0 to 100 percent with gridlines, as the Notes ask, never cropped to the range the curves happen to occupy.
+- A good version shows: a distinct color per cohort and a legend giving each cohort's label and size, as the Notes ask.
+- A good version shows: the optional layers the Notes allow kept subordinate: older cohorts, if drawn fainter or thinner, still distinguishable in both themes, and a dashed threshold reference line, if drawn, behind the curves.
+- Expected, not a defect: a steep early drop that flattens into a plateau, curves bunched together at the start and close to each other later, curves that cross, and newer cohorts whose curves end earlier than older ones.

@@ -26,3 +26,12 @@ A time series plot that displays raw data points alongside a smoothed rolling av
 - Consider showing the window size in the legend or title (e.g., "7-Day Rolling Average")
 - Grid lines on both axes improve readability of underlying values
 - The rolling average line will be shorter than raw data due to window requirements
+
+## What a good version looks like
+
+- A good version shows: the raw observations at their data values on a date axis, as a thin line or markers in a lighter, semi-transparent style, as the Notes ask, receding behind the rolling average yet still visible in both themes.
+- A good version shows: the rolling average as the most prominent mark, a smooth line in a color that contrasts with the raw data and tracks its level rather than drifting away from it.
+- A good version shows: the rolling average beginning only once its window is filled, so it covers a shorter span than the raw data instead of being padded back to the first date.
+- A good version shows: a legend distinguishing the raw data from the rolling average, as the Notes ask, with the window size named in the legend or title if it is shown.
+- A good version shows: grid lines on both axes, subordinate to both series, so the underlying values can be read off.
+- Expected, not a defect: raw data that is noisy and spiky around the average, a rolling average that lags turning points and flattens short peaks and troughs, and a rolling line that is shorter than the raw series.

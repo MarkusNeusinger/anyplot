@@ -37,3 +37,11 @@ Time | Category   | Value
 - Shows relative proportions, not absolute values
 - Good for composition changes over time
 - Each area width shows percentage contribution
+
+## What a good version looks like
+
+- A good version shows: each category as a filled layer that starts where the layer below ends, its thickness at every time point equal to its share of that time point's total.
+- A good version shows: a stack that fills the full height of the percentage axis at every time point, from zero to the whole, with a flat top edge and no gap, overshoot or empty stretch.
+- A good version shows: a value axis read as percentage of the total, running from zero to the whole and never truncated, so the chart shows relative proportions and not absolute values.
+- A good version shows: the layers in the same order at every time point, each in one color along the whole axis and identified by a legend or by labels at the layers, with neighboring layers distinguishable in both themes.
+- Expected, not a defect: thin layers for small shares, a layer that shrinks to almost nothing, inner boundaries that move because the layers beneath them changed, and no sign of growth or decline in the total, which this chart does not show.

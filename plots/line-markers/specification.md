@@ -34,3 +34,11 @@ x    | y
 - Use different marker shapes for multiple series
 - Marker size should be proportional to line thickness
 - Consider filled vs unfilled markers for distinction
+
+## What a good version looks like
+
+- A good version shows: a line joining the values in x order with a marker on every data point, each marker centered on its (x, y) value and never nudged aside to separate it from a neighbor.
+- A good version shows: markers that stand out against their line, as the Notes ask, sized in proportion to the line's thickness so that neither the line nor the markers dominate.
+- A good version shows: where there are several series, a different marker shape for each, as the Notes ask, so the series can be told apart by shape as well as by color; filled and unfilled markers, if used, add to that distinction.
+- A good version shows: markers that stay separate symbols along the line; where the points are dense, smaller markers keep them from merging into one thick band.
+- Expected, not a defect: markers that touch or cover each other where series cross or two values coincide, uneven spacing between points, and short-term noise in the series.

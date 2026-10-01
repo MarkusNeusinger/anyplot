@@ -24,3 +24,12 @@ A horizon chart displays many time series compactly by folding values into color
 - Color intensity increases with magnitude within each band
 - Baseline should be meaningful (often zero or mean value)
 - Works best with normalized or similarly-scaled data across series
+
+## What a good version looks like
+
+- A good version shows: one compact row per series, the rows stacked on a shared time axis and each labeled with its series name, so many series compare at a glance in little vertical space.
+- A good version shows: each row's values folded into bands of equal value range layered on the row's baseline, a higher band drawn over the lower ones in a more intense color, so a darker fill always means a larger magnitude.
+- A good version shows: values below the baseline folded into the same row in a second hue, typically mirrored as the Notes describe (such as blue for positive and red for negative), with both hues and every intensity step distinguishable in both themes.
+- A good version shows: the same baseline meaning, band ranges and color steps in every row, so a color stands for the same magnitude and sign across all series.
+- A good version shows: the basic variant's folded bands, one row per series: besides the bands and row labels, no line overlay of the unfolded series, reference or mean lines, highlighted rows or time spans, or callouts and event annotations.
+- Expected, not a defect: abrupt color steps where a series crosses into the next band, peaks cut flat at the top of a row and continued in a darker band, quiet rows that show only the palest band, and rows without their own value axis.

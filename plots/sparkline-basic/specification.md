@@ -25,3 +25,11 @@ A sparkline is a small, condensed line chart designed to be embedded inline with
 - Optional: highlight first/last points for reference
 - Optional: fill under line for area effect
 - Line should be thin and clean for clarity at small sizes
+
+## What a good version looks like
+
+- A good version shows: a single thin line joining the values in sequence, as the Notes ask, never smoothed past its points, in a plot area that is wide and short.
+- A good version shows: each sparkline scaled to its own range, so the line uses the full height of its small frame from lowest to highest value and the shape of the trend reads at a glance, unless several sparklines deliberately share one scale.
+- A good version shows: dots on the minimum and maximum and on the first and last points, if drawn as the Notes allow, sitting exactly on the line at those values and colored so they stand out from it.
+- A good version shows: the basic variant's single line, with the min, max, first and last point dots and the fill under the line the Notes allow, and no axes, tick labels or gridlines, reference lines or normal-range bands, highlighted segments, trend line, second line in the same sparkline, or callouts.
+- Expected, not a defect: no axes, ticks, gridlines, frame or legend, and exact values that cannot be read off; a sparkline shows the shape of the data, not its numbers.

@@ -27,3 +27,12 @@ A multi-line chart comparing multiple stock price series normalized to a common 
 - Consider adding a horizontal reference line at 100 to indicate the starting point
 - Optional: highlight specific events or time periods with vertical spans or annotations
 - Grid lines improve readability for tracking relative performance
+
+## What a good version looks like
+
+- A good version shows: every series rebased to a common starting point, so all lines begin together at 100 on the first date and then separate by relative performance, each joining its rebased values in date order.
+- A good version shows: a y axis in rebased values, as the Notes ask, named as an index or change from the start rather than as a price, covering the range of the series around 100 without being forced to zero.
+- A good version shows: one distinct color per stock and a legend identifying each symbol, as the Notes ask, with the lines distinguishable from one another in both themes.
+- A good version shows: a horizontal reference line at 100, if drawn, subordinate to the series and visible in both themes, so gains and losses since the start read as above and below it.
+- A good version shows: the event or period highlights the Notes allow, if drawn, as vertical spans or annotations that stay behind the lines.
+- Expected, not a defect: lines bunched and crossing near the start where they share the base, daily noise, a spread that widens over time, one series far above or below the rest, and series that end below 100.
