@@ -30,3 +30,12 @@ A sprint burndown chart tracks the amount of remaining work in an agile sprint o
 - An optional burnup variant plots completed work rising toward a (possibly changing) total-scope line instead of remaining work falling to zero; keep the static, single-snapshot framing
 - Include a legend distinguishing the actual series from the ideal guideline
 - Below the ideal line is ahead of schedule; above it is behind — keep that reading obvious through color or annotation
+
+## What a good version looks like
+
+- A good version shows: the actual remaining work as a step series that changes at its day values, or as the straight-segment line the Notes allow, starting from the total committed scope on a y axis that starts at zero.
+- A good version shows: the ideal burndown as one straight reference line from the total scope at the sprint start to zero on the final day, visually distinct from the actual series (dashed or muted) and named with it in a legend, as the Notes ask.
+- A good version shows: weekends or other non-working days shaded with a light background band, as the Notes ask, lining up with the flat segments of the actual series and visible in both themes.
+- A good version shows: every scope change marked with a vertical line, arrow or annotation on the day the total scope shifts, as the Notes ask, where the actual series jumps.
+- A good version shows: the ahead or behind reading made obvious through color or annotation, as the Notes ask: below the ideal line is ahead of schedule, above it is behind.
+- Expected, not a defect: flat segments over non-working or stalled days, upward jumps where scope is added, an actual series that crosses the ideal line or runs above it for most of the sprint, and a sprint that ends with work remaining.

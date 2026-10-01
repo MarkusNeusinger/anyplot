@@ -26,3 +26,12 @@ A time series decomposition plot displays a time series broken down into its con
 - Consider using statsmodels seasonal_decompose or similar for decomposition
 - Additive decomposition is typical; multiplicative may be needed for data with proportional seasonality
 - Include light grid lines to aid reading values across time
+
+## What a good version looks like
+
+- A good version shows: four vertically stacked panels in the order original, trend, seasonal and residual, as the Notes ask, each labeled with its component name.
+- A good version shows: one time axis common to all panels, covering the same range in each, so a given date lines up vertically from the original down to the residual.
+- A good version shows: each panel on its own y scale fitted to its component, so the seasonal and residual panels are not flattened by the range of the original series.
+- A good version shows: components that look like what they are: a trend that moves slowly without the seasonal oscillation, and a seasonal pattern that repeats with the same period across the whole span.
+- A good version shows: light grid lines in every panel, as the Notes ask, subordinate to the component lines.
+- Expected, not a defect: panels with very different value ranges, an irregular residual with occasional spikes, a residual drawn as points or stems rather than a line, and a trend or residual that stops short of both ends of the series where the method leaves the edges unestimated.

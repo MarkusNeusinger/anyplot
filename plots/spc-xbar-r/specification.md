@@ -33,3 +33,12 @@ A Statistical Process Control (SPC) chart displaying sample means (X-bar) and ra
 - Warning limits (±2 sigma) should be shown as lighter dashed lines if included
 - Generate realistic synthetic data with at least 2-3 out-of-control points to demonstrate detection capability
 - Use standard control chart constants (A2, D3, D4) for computing limits from sample data
+
+## What a good version looks like
+
+- A good version shows: the X-bar chart on top and the R chart below it, as the Notes ask, stacked on one shared sample axis so each sample lines up vertically across the two panels.
+- A good version shows: in each panel, the sample values as points joined in sample order, every point at its own sample number and value.
+- A good version shows: in each panel, a solid center line distinct from the data line, and dashed UCL and LCL lines running across all samples at their computed values, each labeled, as the Notes ask, and visible in both themes.
+- A good version shows: every point beyond the UCL or LCL highlighted with a different color or marker, as the Notes ask, so the signals stand out from the in-control points.
+- A good version shows: warning limits, if included, as lighter dashed lines between the center line and the control limits, subordinate to the control limits.
+- Expected, not a defect: out-of-control points, shifts and runs on one side of the center line, a signal in one panel with none in the other, an R chart whose lower limit sits at zero on the axis floor with limits uneven about its center line, and panels on different y scales.

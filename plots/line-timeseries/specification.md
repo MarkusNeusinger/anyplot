@@ -24,3 +24,12 @@ A time series line plot displays data points connected by lines over a datetime 
 - Include grid lines on both axes for improved readability
 - Consider using date locators (e.g., MonthLocator, DayLocator) for consistent tick spacing
 - The x-axis should clearly communicate the temporal nature of the data
+
+## What a good version looks like
+
+- A good version shows: one line joining the observations in time order on a true date axis, each point at its own timestamp, so uneven spacing in time shows as uneven spacing along the axis.
+- A good version shows: date tick labels in a format that fits the time span of the data (times of day for hours, days and months for weeks, years for long ranges), at regular calendar intervals, rotated or staggered only where they would otherwise collide.
+- A good version shows: grid lines on both axes, as the Notes ask, kept subordinate to the data line and visible in both themes.
+- A good version shows: gaps in the record, if the data has any, as breaks in the line rather than a straight bridge across them.
+- A good version shows: a y axis that spans the data and is never forced to zero when that would flatten the signal.
+- Expected, not a defect: seasonality, spikes, short-term noise and level shifts, a line that looks dense where many observations share little width, and no legend for a single series, because the axis label names the quantity.

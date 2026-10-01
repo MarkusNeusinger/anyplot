@@ -26,3 +26,12 @@ A cycle plot, also known as a seasonal subseries plot (introduced by William Cle
 - Order seasonal groups by their natural calendar/clock order, not by value
 - Optionally draw all group-mean lines at a consistent style/color to emphasize the seasonal-mean comparison versus the within-group trend lines
 - A single shared panel with grouped subseries is preferred over fully separate faceted subplots, so mean levels can be compared across the whole figure
+
+## What a good version looks like
+
+- A good version shows: the seasonal groups laid left to right in their natural calendar or clock order, not sorted by value, each holding its own subseries in chronological order as a thin connected line through the data values.
+- A good version shows: a horizontal reference line at every group's mean, spanning the width of that group, as the Notes ask, and prominent enough in both themes that the means compare across groups at a glance.
+- A good version shows: one y axis shared by all groups, preferably in a single panel rather than separate facets, so subseries heights and mean levels compare across the whole figure.
+- A good version shows: the groups set apart by subtle gaps or light vertical dividers, with no line joining the last point of one group to the first point of the next.
+- A good version shows: the group-mean lines, if given one consistent style and color as the Notes allow, clearly different from the subseries lines.
+- Expected, not a defect: subseries whose slopes and shapes differ from group to group, mean levels far apart, short and noisy subseries, and an x axis that names the seasons rather than every individual cycle.

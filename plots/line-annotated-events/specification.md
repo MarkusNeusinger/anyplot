@@ -27,3 +27,12 @@ A line plot with annotations at key points marking important events or milestone
 - Consider rotating labels or using alternating heights for dense event clusters
 - Event markers should be visually distinct from the data line (different color, dashed)
 - Include a subtle legend or key if multiple event types are shown
+
+## What a good version looks like
+
+- A good version shows: one data line joining the values in time order, with every event marked by a vertical line at its own event date, as the Notes ask.
+- A good version shows: event markers visually distinct from the data line, in a different color or a dashed style, visible in both themes without overpowering the line they annotate.
+- A good version shows: a text label for every event, placed beside its marker so it is unambiguous which line it names, readable in both themes, and not covering the data line or another label.
+- A good version shows: labels in a dense cluster of events kept apart, for example by the rotation or alternating heights the Notes suggest, rather than dropped or stacked on one another.
+- A good version shows: a subtle legend or key for the event types, where more than one type is drawn.
+- Expected, not a defect: unevenly spaced events, including several close together, labels at differing heights, and an event that coincides with no visible change in the series.
