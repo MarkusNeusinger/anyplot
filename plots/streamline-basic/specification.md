@@ -26,3 +26,12 @@ A streamline plot visualizes vector fields using smooth curves that are tangent 
 - Color can encode velocity magnitude or another scalar field along the streamlines
 - Line width can optionally vary with field strength for emphasis
 - Starting points for streamlines should be distributed to capture the full field structure
+
+## What a good version looks like
+
+- A good version shows: smooth curves that follow the field's direction at every point along their length, without kinks or zigzags, and that never cross one another.
+- A good version shows: streamlines started across the whole domain, as the Notes ask, so each structure of the field (a vortex, a source or sink, a saddle) is traced, at a density balanced as the Notes ask: enough lines to show the pattern, few enough that neighbors stay separate.
+- A good version shows: direction arrows along the lines, if drawn, pointing with the field and sparse enough that the curves stay the main mark.
+- A good version shows: color, if used as the Notes allow, encoding speed or another scalar along the lines with a color bar that names it, and line width, if varied, growing with field strength.
+- Expected, not a defect: lines that crowd where the flow converges and spread apart where it diverges, lines that end at the domain edge or at a source, a sink or an obstacle, closed loops around a vortex, and a small empty patch at a stagnation point.
+- A good version shows: the basic variant's single vector field: besides the color and width encodings the Notes allow, direction arrows and the sources or obstacles that shape the field, no quiver overlay, background scalar field, reference or mean lines, highlighted streamlines or regions, callouts, or second field.
