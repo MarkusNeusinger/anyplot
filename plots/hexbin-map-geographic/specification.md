@@ -27,3 +27,11 @@ A geographic map visualization that aggregates point data into hexagonal cells, 
 - Overlay hexagons on a base map showing geographic context (coastlines, country boundaries, or street map)
 - Apply transparency to hexagons to allow base map features to show through
 - For interactive libraries, enable hover tooltips showing cell statistics (count, sum, mean, coordinates)
+
+## What a good version looks like
+
+- A good version shows: the points aggregated into a regular grid of equal hexagons with shared edges, each cell lying over the locations of the points it aggregates and colored by its count or aggregated value.
+- A good version shows: a hexagon size that balances detail against aggregation, as the Notes ask: the spatial pattern is visible, with neither a handful of giant cells nor a scatter of tiny ones that mostly hold a single point.
+- A good version shows: a sequential colormap with a color legend showing the scale, as the Notes ask, that names the statistic drawn (count, sum or mean).
+- A good version shows: the hexagons overlaid on a base map of coastlines, country boundaries or streets and translucent enough for its features to show through, as the Notes ask.
+- Expected, not a defect: gaps in the grid where no points fall, cell edges that cut across coastlines and borders, a few very dark cells among many pale ones, and hexagons that look stretched or unequal under the map projection.

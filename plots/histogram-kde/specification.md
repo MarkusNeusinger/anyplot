@@ -22,3 +22,12 @@ A histogram with kernel density estimate (KDE) overlay combines discrete binning
 - Scale y-axis as density (not counts) so histogram and KDE are on comparable scales
 - Choose appropriate bin count and KDE bandwidth to balance detail and smoothness
 - Consider contrasting colors for histogram fill and KDE line for clear distinction
+
+## What a good version looks like
+
+- A good version shows: contiguous histogram bars on a y axis scaled as density, as the Notes ask, with a smooth KDE curve drawn over them on that same scale, so the curve runs at the level of the bar tops.
+- A good version shows: semi-transparent bars, as the Notes ask, so the KDE curve stays visible along its whole length in both themes.
+- A good version shows: a curve that reads as its own layer, in the contrasting color the Notes suggest or otherwise clearly set apart from the bar fill.
+- A good version shows: a bin count and a smoothing that agree: the curve follows the histogram's modes and skew without flattening real peaks or chasing single bars.
+- A good version shows: a curve whose tails end near the data range instead of trailing far beyond the outermost bars.
+- Expected, not a defect: a curve that misses individual bar tops, bridges empty bins and reaches slightly past the outermost bars, over a lumpy, skewed or two-peaked histogram.

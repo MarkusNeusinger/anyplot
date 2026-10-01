@@ -25,3 +25,11 @@ A heatmap with numeric values displayed inside each cell, combining color intens
 - Include a colorbar legend showing the value scale
 - Consider font size relative to cell size for readability
 - Diverging colormap recommended for data with positive/negative values
+
+## What a good version looks like
+
+- A good version shows: every cell as a filled rectangle at its row and column, colored by its value, with each row and column label at its cells.
+- A good version shows: the value printed inside every cell, in a number format that suits the data and is the same across the matrix, at a size that fits its cell.
+- A good version shows: cell text that contrasts with its cell, as the Notes require, switching between dark and light with the cell's darkness so every number stays legible at both ends of the colormap in both themes.
+- A good version shows: a colormap that fits the data (sequential for single-signed values; for values of both signs the diverging map the Notes recommend, centered on the midpoint) and the color bar the Notes ask for, showing the value scale.
+- Expected, not a defect: numbers that restate what the color already shows, a uniform diagonal and mirrored halves in a symmetric matrix, and a dominant diagonal in a confusion matrix.

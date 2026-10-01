@@ -31,3 +31,12 @@ A periodic table of the elements rendered in its canonical layout — 18 groups 
 - Elements with no value for the chosen property should be drawn as empty/greyed tiles rather than omitted, preserving the recognizable shape
 - Include a colorbar labeled with the property name and units
 - Equal-area tiles and the fixed canonical shape are the defining characteristics — do not rescale tiles by value
+
+## What a good version looks like
+
+- A good version shows: the canonical layout the Notes require, 18 groups across and 7 periods down, every element at its group and period, the lanthanides and actinides as two rows set visibly apart below the main body, leaving a gap at group 3 in those periods.
+- A good version shows: equal-sized square tiles with a small gap, as the Notes ask, whose position and size come from the fixed table layout, not from the data; only the tile color encodes the property.
+- A good version shows: on every tile the element symbol prominent and the atomic number smaller in a corner, as the Notes ask, in text that switches between dark and light with the tile's luminance; the property value, if added, is smaller and below the symbol.
+- A good version shows: a sequential colormap for a unipolar property, or a diverging one only when the property has a meaningful midpoint, as the Notes ask, with a color bar labeled with the property name and units.
+- A good version shows: elements that lack a value drawn as empty or greyed tiles at their place, as the Notes ask, clearly outside the colormap in both themes.
+- Expected, not a defect: the table's irregular outline, with empty space between the outer groups in the upper periods, the detached rows below, greyed tiles for elements that lack a value, and periodic trends broken by anomalies.

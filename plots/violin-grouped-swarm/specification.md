@@ -27,3 +27,12 @@ A grouped violin plot with individual data points overlaid as swarm points, show
 - Ensure adequate spacing between grouped violins to prevent overlap
 - Swarm points should match the hue of their corresponding violin
 - Consider dodging swarm points to align with their respective violin position
+
+## What a good version looks like
+
+- A good version shows: within each category, one mirrored violin per group placed side by side, with enough space that neighboring violins do not run into each other, as the Notes ask.
+- A good version shows: each group in its own distinct color, the same in every category, and a legend naming each group, as the Notes ask.
+- A good version shows: translucent violin fills, as the Notes ask, so the swarm points drawn over them stay visible in both themes.
+- A good version shows: swarm points in the hue of their own violin, as the Notes ask, of one size and small enough to fit the narrow grouped violins.
+- A good version shows: every swarm point at its value on the value axis, spread only across the category direction, and, where dodged as the Notes suggest, centered on its own group's violin.
+- Expected, not a defect: sideways swarm offsets, which are layout rather than data, points packed edge to edge in the densest value range, violins of different width and length, multimodal or skewed shapes, and groups whose value ranges overlap.

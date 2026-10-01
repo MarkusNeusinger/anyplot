@@ -30,3 +30,12 @@ A triangular matrix visualization showing cumulative insurance claim payments de
 - Color intensity should encode the magnitude of cumulative amounts
 - Include a clear legend distinguishing actual vs projected regions
 - Row labels show accident/origin years; column headers show development periods
+
+## What a good version looks like
+
+- A good version shows: a row per accident year and a column per development period, labeled as the Notes ask, with observed values in the upper-left triangle and projected values in the lower-right, every cell at its year and period.
+- A good version shows: actual and projected cells told apart by distinct styling such as a different background or hatching, as the Notes ask, with a legend naming the two regions and the boundary along the latest evaluation diagonal visible in both themes.
+- A good version shows: the cumulative amount in every cell with a thousands separator, as the Notes ask, legible over both the actual and the projected styling.
+- A good version shows: color intensity encoding the size of the cumulative amount, as the Notes ask, still readable under the projected styling.
+- A good version shows: the age-to-age development factors between the column headers or in a separate row below the triangle, as the Notes ask, each aligned with the periods it links.
+- Expected, not a defect: amounts that grow along each row and level off, so color deepens toward the later periods, factors that are largest for the earliest periods and flatten out, and a latest accident year with a single observed cell.

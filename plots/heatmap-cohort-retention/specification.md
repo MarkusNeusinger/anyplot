@@ -29,3 +29,12 @@ A triangular heatmap displaying user retention rates across signup cohorts and t
 - Show cohort size (number of users) next to each cohort label on the y-axis
 - X-axis labels should read "Week 0", "Week 1", etc. (or "Month 0", "Month 1" depending on the period granularity)
 - Consider adding a color bar legend to indicate the retention scale
+
+## What a good version looks like
+
+- A good version shows: a row per signup cohort and a column per period since signup, each cell at its cohort and period, with the period labels the Notes ask for (week or month numbers) on the x axis.
+- A good version shows: the triangular shape the Notes ask for, the first cohort with the most cells and each later cohort with fewer, the remaining positions left empty instead of filled with zeros or a color from the scale.
+- A good version shows: a sequential colormap running from light for low retention to dark for high, as the Notes ask; a color bar, if drawn, shows the retention scale.
+- A good version shows: the retention percentage as text inside every cell, as the Notes ask, legible against light and dark cells alike in both themes, with the signup period reading 100 percent for every cohort.
+- A good version shows: each cohort's size next to its cohort label on the y axis, as the Notes ask.
+- Expected, not a defect: the empty triangle beyond the staircase edge, a uniform dark signup column, a steep drop right after signup followed by a slow decline, and cohorts that differ in level.

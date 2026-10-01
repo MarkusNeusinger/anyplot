@@ -29,3 +29,12 @@ A geographic bubble map where markers are sized proportionally to quantitative d
 - Include geographic context with country boundaries or coastlines as basemap
 - Consider using a minimum bubble size to ensure small values remain visible
 - For interactive libraries, enable hover tooltips showing exact values and location names
+
+## What a good version looks like
+
+- A good version shows: every bubble centered on its latitude and longitude over a basemap of country boundaries or coastlines, as the Notes ask, with the basemap quieter than the bubbles and no bubble moved off its location to reduce overlap.
+- A good version shows: bubble area, not radius, proportional to the value, as the Notes ask, so a value twice as large has twice the area; a minimum bubble size, if used as the Notes suggest, keeps the smallest values visible.
+- A good version shows: a size legend, as the Notes ask, with a few reference bubbles drawn like the data marks and labeled in the value's units.
+- A good version shows: translucent fills where bubbles overlap, as the Notes ask, so that a small bubble is never hidden inside a large one; drawing smaller bubbles above larger ones or adding a thin outline helps where the overlap is dense.
+- A good version shows: bubble color, if the optional category is used, as one distinct color per category named in a legend separate from the size legend.
+- Expected, not a defect: bubbles overlapping where locations lie close together, such as neighboring cities, large bubbles covering part of the coastline or borders beneath them, and wide stretches of empty map.

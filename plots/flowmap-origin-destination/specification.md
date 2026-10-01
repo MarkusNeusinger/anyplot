@@ -32,3 +32,12 @@ An origin-destination flow map visualizes movement or transfer between geographi
 - Include a basemap with country boundaries or coastlines for geographic context
 - For interactive libraries, add hover tooltips showing exact flow values and location names
 - Optionally animate arcs to show flow direction using moving particles or progressive drawing
+
+## What a good version looks like
+
+- A good version shows: one curved arc per flow, as the Notes ask, a Bezier curve or a great-circle path, whose two ends sit exactly on the origin and destination coordinates.
+- A good version shows: arc width proportional to the flow magnitude, as the Notes ask, so the major corridors stand out from the minor ones; a width legend or key, if drawn, ties widths to flow values.
+- A good version shows: translucent arcs, as the Notes ask, so thin flows remain visible where they pass under or beside thick ones.
+- A good version shows: a color gradient, if used as the Notes suggest, that encodes flow direction or magnitude and is explained by a legend or caption saying which.
+- A good version shows: a basemap with country boundaries or coastlines beneath the arcs, as the Notes ask, quieter than the arcs so the flow pattern leads.
+- Expected, not a defect: arcs crossing and overlapping where many flows converge on a hub, a few dominant corridors beside many thin arcs, and arcs sweeping over land or sea that lies off the real route of the movement.

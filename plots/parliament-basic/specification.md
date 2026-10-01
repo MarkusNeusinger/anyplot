@@ -26,3 +26,12 @@ A semicircular parliament seat chart visualizes political party representation b
 - Legend should display party names with seat counts
 - Optional: highlight majority threshold line (e.g., 50%+1 seats)
 - Color ordering typically follows political spectrum (left to right)
+
+## What a good version looks like
+
+- A good version shows: one mark per seat, a dot or a small segment, all of one size, arranged in concentric semicircular arcs that together form a half circle; a seat's position is layout, not data, so there are no axes or grid.
+- A good version shows: each party's seats in that party's color and equal in number to its seat count, grouped as one contiguous block, with the blocks following one another from left to right across the arcs.
+- A good version shows: a legend that lists the party names with their seat counts, as the Notes ask, with every party's color distinguishable from its neighbors and from the page in both themes.
+- A good version shows: the majority threshold line the Notes allow, if drawn, at the seat count it marks and labeled, with its line and label clear of the seat marks.
+- A good version shows: the basic variant's single chamber: besides the majority threshold line the Notes allow, no other reference lines, highlighted seats, coalition bands or other highlights, callouts, or second chamber or period for comparison.
+- Expected, not a defect: blocks of very different size, including a party with a handful of seats, block boundaries that are stepped rather than straight because the arcs hold different numbers of seats, and small seat marks in a large chamber.

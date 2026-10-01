@@ -27,3 +27,11 @@ A heatmap-style visualization showing the energy distribution across the 12 pitc
 - Time axis should display seconds or beat positions
 - Frame-by-frame resolution should be fine enough to capture chord transitions
 - Synthetic data should simulate realistic harmonic patterns (e.g., alternating C major and G major chords)
+
+## What a good version looks like
+
+- A good version shows: all 12 pitch classes as rows on the y axis, each labeled, in chromatic order from C to B, as the Notes require, and time along the x axis in seconds or beat positions.
+- A good version shows: every time frame as a column of cells at its time, the frames tiling the time axis, at a resolution fine enough that chord changes appear as sharp boundaries, as the Notes ask.
+- A good version shows: a sequential colormap for energy and the color bar the Notes ask for, naming the energy or magnitude scale.
+- A good version shows: harmonic content that reads as chords: a few pitch classes bright together over a stretch of time, forming horizontal bands that give way to another set at a chord change.
+- Expected, not a defect: weaker energy in pitch classes outside the sounding chord from overtones and leakage, rows that are dark throughout, and bands broken at note onsets; a chromagram is striped by nature and is not to be smoothed.
