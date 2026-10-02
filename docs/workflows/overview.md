@@ -221,6 +221,12 @@ impl-review.yml
 
 The cascade applies to fresh generations only. A regeneration takes the regen gate below.
 
+**Nothing to repair.** A review below its threshold is still approved when it scores at least 80 and every technical criterion (the 19 VQ, SC, DQ, and CQ items) is at its maximum. A repair fixes defect lines, and a defect line costs a technical criterion points, so such a review leaves a repair nothing to do: the points it withheld are design and library judgments (DE, LM). `impl-review.yml` reads the condition from `review_checklist.json` (`regen_gate.py nothing-to-repair`), not from the absence of defect lines, so a review that deducts a technical point without naming a defect still gets its repair. The pull request gets a comment that says why it merged below the threshold.
+
+**The workflow owns the verdict.** The stored `review.verdict` is what the workflow decided: `APPROVED` when the score met the threshold, when the nothing-to-repair rule applied, or when the regen gate merged, and `REJECTED` otherwise. It isn't the reviewer's opinion; a kept regeneration's write-back stores `APPROVED`, because the kept implementation stays live.
+
+**A later review starts blind.** After a repair, the pull request branch carries the previous review: the `Quality: N/100` header and the metadata file with the score and the whole review. While the reviewer runs at attempt 2 or later, the header reads `Quality: pending` and the metadata file is out of the workspace; both come back before the workflow stores the new review. The run log's `later review:` notice shows the state the reviewer saw.
+
 ### Review recovery
 
 `impl-review.yml` re-runs a review at most once by itself, whatever the cause. A comment carrying the `<!-- review-retry:{spec}:{library} -->` marker records that retry:
