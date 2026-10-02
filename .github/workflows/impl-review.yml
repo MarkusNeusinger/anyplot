@@ -1169,16 +1169,18 @@ jobs:
           if [ "$THRESHOLD" -lt 50 ]; then THRESHOLD=50; fi
 
           # Nothing to repair: a review below the threshold, at 80 or more,
-          # whose every technical item (VQ, SC, DQ, CQ) is at its maximum. A
-          # repair fixes defect lines, and none can exist here; the points
-          # withheld are design and library judgments it is never asked to
-          # touch. The checklist decides, not the absence of defect lines: a
-          # deduction without a line still gets its repair. Any failure reads
-          # as "false", which is the plain threshold.
+          # with no defect line and every technical item (VQ, SC, DQ, CQ) at
+          # its maximum. A repair fixes defect lines; here the points withheld
+          # are design and library levels that no line asks it to change.
+          # Both conditions count: a defect line that names a DE or LM item
+          # is repairable, and a technical deduction without a line is a slip
+          # that still gets its repair. Any failure reads as "false", which
+          # is the plain threshold.
           NOTHING_TO_REPAIR=false
           if [ "$SCORE" -lt "$THRESHOLD" ]; then
             NOTHING_TO_REPAIR=$(python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" nothing-to-repair \
-              --score "$SCORE" --checklist review_checklist.json 2>/dev/null) || NOTHING_TO_REPAIR=false
+              --score "$SCORE" --checklist review_checklist.json --weaknesses review_weaknesses.json \
+              2>/dev/null) || NOTHING_TO_REPAIR=false
             [ "$NOTHING_TO_REPAIR" = "true" ] || NOTHING_TO_REPAIR=false
           fi
           echo "nothing_to_repair=${NOTHING_TO_REPAIR}" >> "$GITHUB_OUTPUT"
@@ -1186,7 +1188,7 @@ jobs:
           if [ "$SCORE" -ge "$THRESHOLD" ] || [ "$NOTHING_TO_REPAIR" = "true" ]; then
             echo "approved=true" >> "$GITHUB_OUTPUT"
             if [ "$NOTHING_TO_REPAIR" = "true" ]; then
-              echo "::notice::Adding ai-approved label (score $SCORE < $THRESHOLD, but every technical item is at its maximum: nothing to repair)"
+              echo "::notice::Adding ai-approved label (score $SCORE < $THRESHOLD, but no defect line and every technical item at its maximum: nothing to repair)"
             else
               echo "::notice::Adding ai-approved label (score $SCORE >= $THRESHOLD)"
             fi
@@ -2138,7 +2140,7 @@ jobs:
               echo "::notice::ai-approved label already set (Score $SCORE < $THRESHOLD, nothing to repair), triggering merge"
               # Say why on the PR (the run log expires). Warning only: this
               # comment must never hold up the merge.
-              NOTE="## :white_check_mark: Approved as it stands"$'\n\n'"Score ${SCORE} is below the threshold of ${THRESHOLD} for this review, but every technical criterion (VQ, SC, DQ, CQ) is at its maximum. A repair fixes defects, and the review found none; the points it withheld are design and library judgments. So the implementation merges without a repair."$'\n\n'"---"$'\n'":robot: *[impl-review](https://github.com/${REPOSITORY}/actions/runs/${RUN_ID})*"
+              NOTE="## :white_check_mark: Approved as it stands"$'\n\n'"Score ${SCORE} is below the threshold of ${THRESHOLD} for this review, but the review names no defect and every technical criterion (VQ, SC, DQ, CQ) is at its maximum. A repair fixes defects, and there is none to fix; the points withheld are design and library levels. So the implementation merges without a repair."$'\n\n'"---"$'\n'":robot: *[impl-review](https://github.com/${REPOSITORY}/actions/runs/${RUN_ID})*"
               GH_RETRY_LEVEL=warning gh_retry "nothing-to-repair PR comment" gh pr comment "$PR_NUM" --body "$NOTE" \
                 || echo "::warning::nothing-to-repair comment not posted — the merge goes ahead"
             else

@@ -88,7 +88,8 @@ Subcommands::
 
     regen_gate.py marker --record FILE
 
-    regen_gate.py nothing-to-repair --score N [--checklist review_checklist.json]
+    regen_gate.py nothing-to-repair --score N [--checklist review_checklist.json] \
+        [--weaknesses review_weaknesses.json]
 
     regen_gate.py check-feedback [--weaknesses review_weaknesses.json] --checklist review_checklist.json \
         [--regen review_regen.json --prev-weaknesses /tmp/anyplot-prev-weaknesses.json \
@@ -529,21 +530,25 @@ def technical_items_at_maximum(checklist: Mapping[str, int]) -> bool:
     return all(checklist.get(cid) == CRITERIA[cid] for cid in technical)
 
 
-def nothing_to_repair(score: int | None, checklist: Mapping[str, int]) -> bool:
+def nothing_to_repair(score: int | None, checklist: Mapping[str, int], weaknesses: Any) -> bool:
     """A first-generation review below its threshold that a repair cannot improve.
 
-    A repair fixes defect lines, and a defect line costs a technical item
-    points. With every technical item at its maximum, the points the review
-    withheld are design and library judgments (DE, LM), which a repair is
-    never asked to touch: the cycle would only buy a second, noisier score.
-    Such a review is approved as it stands when it scores at least
-    ``NOTHING_TO_REPAIR_MIN``. The checklist decides, not the absence of
-    defect lines: a deduction without a line is a reviewer slip, and it
-    still gets its repair. A missing or incomplete checklist never qualifies,
-    and neither does one that does not add up to the score: no score cap can
-    apply here (each needs a technical item at 0, or lands at 75), so a typed
-    score below the checklist's sum is a deduction the checklist does not
-    carry.
+    A repair fixes defect lines. A review qualifies when it has none and its
+    every technical item is at its maximum: the points it withheld are then
+    design and library levels (DE, LM) that no line asks a repair to change,
+    and the cycle would only buy a second, noisier score. Such a review is
+    approved as it stands when it scores at least ``NOTHING_TO_REPAIR_MIN``.
+
+    Both conditions are needed. The checklist alone would approve a review
+    whose defect line names a DE or LM item, which a repair can act on. The
+    absence of defect lines alone would approve a technical deduction that
+    was written without a line, a reviewer slip that still gets its repair.
+
+    A missing or incomplete checklist never qualifies, nor does one that does
+    not add up to the score: no score cap can apply here (each needs a
+    technical item at 0, or lands at 75), so a typed score off the sum is a
+    deduction the checklist does not carry. A weakness list that is not a
+    list of strings never qualifies either.
     """
     return (
         score is not None
@@ -551,6 +556,9 @@ def nothing_to_repair(score: int | None, checklist: Mapping[str, int]) -> bool:
         and technical_items_at_maximum(checklist)
         and set(checklist) == set(CRITERIA)
         and sum(checklist.values()) == score
+        and isinstance(weaknesses, list)
+        and all(isinstance(line, str) for line in weaknesses)
+        and not any(weakness_class(line) == DEFECT for line in weaknesses)
     )
 
 
@@ -2447,7 +2455,10 @@ def cmd_marker(args: argparse.Namespace) -> int:
 
 def cmd_nothing_to_repair(args: argparse.Namespace) -> int:
     """Print ``true`` or ``false``; any unreadable input is ``false`` (today's behavior)."""
-    qualifies = nothing_to_repair(parse_score(args.score), load_checklist_scores(Path(args.checklist)))
+    weaknesses, error = load_regen_json(Path(args.weaknesses))
+    qualifies = not error and nothing_to_repair(
+        parse_score(args.score), load_checklist_scores(Path(args.checklist)), weaknesses
+    )
     print("true" if qualifies else "false")
     return 0
 
@@ -2461,6 +2472,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     ntr.add_argument("--score", required=True)
     ntr.add_argument("--checklist", default="review_checklist.json")
+    ntr.add_argument("--weaknesses", default="review_weaknesses.json")
     ntr.set_defaults(func=cmd_nothing_to_repair)
 
     ctx = sub.add_parser("context", help="Extract the previous review with stable weakness ids")

@@ -204,9 +204,20 @@ class TestLaterReviewsStartBlind:
 class TestNothingToRepair:
     ENV = {"PR_NUM": "7", "SCORE": "88", "ATTEMPT_COUNT": "0", "IS_REGEN": "false", "GATE_VERDICT": ""}
 
-    def _early(self, tmp_path: Path, runner: Path, checklist: dict[str, int] | None, **env: str):
+    SUGGESTIONS = ("Suggestion: a marker at a real complex's field strength",)
+
+    def _early(
+        self,
+        tmp_path: Path,
+        runner: Path,
+        checklist: dict[str, int] | None,
+        weaknesses: tuple[str, ...] | None = SUGGESTIONS,
+        **env: str,
+    ):
         if checklist is not None:
             (tmp_path / "review_checklist.json").write_text(json.dumps(_checklist_json(checklist)), encoding="utf-8")
+        if weaknesses is not None:
+            (tmp_path / "review_weaknesses.json").write_text(json.dumps(list(weaknesses)), encoding="utf-8")
         out = tmp_path / "github_output"
         out.unlink(missing_ok=True)
         base = {**self.ENV, "GITHUB_OUTPUT": str(out), "RUNNER_TEMP": str(runner)}
@@ -240,8 +251,20 @@ class TestNothingToRepair:
         assert labels == ["ai-rejected"]
         assert outputs == {"nothing_to_repair": "false", "approved": "false"}
 
+    def test_a_defect_line_on_a_judgment_item_takes_the_repair(self, tmp_path, runner):
+        """A clean technical sheet, but the review names a DE defect a repair can fix."""
+        line = "DE-02 (both): the y = 80 grid line lands on the top edge of the axes → drop it. Likely cause: yticks."
+        _, labels, outputs = self._early(tmp_path, runner, {**CRITERIA, **JUDGMENT}, (line, *self.SUGGESTIONS))
+        assert labels == ["ai-rejected"]
+        assert outputs == {"nothing_to_repair": "false", "approved": "false"}
+
     def test_no_checklist_is_the_plain_threshold(self, tmp_path, runner):
         _, labels, outputs = self._early(tmp_path, runner, None)
+        assert labels == ["ai-rejected"]
+        assert outputs == {"nothing_to_repair": "false", "approved": "false"}
+
+    def test_no_weakness_file_is_the_plain_threshold(self, tmp_path, runner):
+        _, labels, outputs = self._early(tmp_path, runner, {**CRITERIA, **JUDGMENT}, None)
         assert labels == ["ai-rejected"]
         assert outputs == {"nothing_to_repair": "false", "approved": "false"}
 
@@ -261,9 +284,8 @@ class TestNothingToRepair:
         assert "THRESHOLD=$((90 - ATTEMPT_COUNT * 10))" in script
         assert 'if [ "$THRESHOLD" -lt 50 ]; then THRESHOLD=50; fi' in script
         # After one repair the threshold is 80: 82 passes on the score alone.
-        _, labels, outputs = self._early(
-            tmp_path, runner, {**CRITERIA, **JUDGMENT, "VQ-01": 5}, SCORE="82", ATTEMPT_COUNT="1"
-        )
+        checklist = {**CRITERIA, **JUDGMENT, "VQ-01": 5}
+        _, labels, outputs = self._early(tmp_path, runner, checklist, SCORE="82", ATTEMPT_COUNT="1")
         assert labels == ["ai-approved"] and outputs["nothing_to_repair"] == "false"
 
     @pytest.mark.parametrize(("gate", "approved"), [("merge", "true"), ("keep", "false")])
@@ -271,11 +293,10 @@ class TestNothingToRepair:
         _, _, outputs = self._early(tmp_path, runner, None, IS_REGEN="true", GATE_VERDICT=gate)
         assert outputs == {"approved": approved}
 
-    def test_the_rule_reads_the_checklist_not_the_defect_lines(self):
+    def test_the_rule_reads_the_checklist_and_the_defect_lines(self):
         script = _code_only(_step("impl-review.yml", EARLY)["run"])
         assert 'regen_gate.py" nothing-to-repair' in script
-        assert "--checklist review_checklist.json" in script
-        assert "review_weaknesses.json" not in script
+        assert "--checklist review_checklist.json --weaknesses review_weaknesses.json" in script
         # Before the format check, which only warns and comes later.
         names = [s.get("name") for s in _steps("impl-review.yml")]
         assert names.index(EARLY) < names.index("Check review feedback format (never gating)")
@@ -309,7 +330,7 @@ class TestVerdictStepSaysWhy:
         body = "\n".join(comment[comment.index("--body") + 1 :])
         assert "Approved as it stands" in body
         assert "Score 88 is below the threshold of 90" in body
-        assert "every technical criterion (VQ, SC, DQ, CQ) is at its maximum" in body
+        assert "the review names no defect and every technical criterion (VQ, SC, DQ, CQ) is at its maximum" in body
         assert ["workflow", "run", "impl-merge.yml", "-f", "pr_number=7"] in calls
         assert not _calls(calls, "workflow", "run", "impl-repair.yml")
 
