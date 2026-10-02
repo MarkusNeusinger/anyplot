@@ -383,7 +383,11 @@ class TestEarlyVerdictLabel:
     ENV = {"PR_NUM": "7", "SCORE": "86", "ATTEMPT_COUNT": "0", "IS_REGEN": "false", "GATE_VERDICT": ""}
 
     def _verdict(self, tmp_path: Path, **env: str) -> tuple[subprocess.CompletedProcess[str], list[list[str]]]:
-        return _run(_step("impl-review.yml", self.STEP)["run"], tmp_path, tmp_path, **{**self.ENV, **env})
+        # As on a runner: step outputs go to a file. No review_checklist.json
+        # and no gate script here, so the nothing-to-repair rule reads false.
+        defaults = {"GITHUB_OUTPUT": str(tmp_path / "github_output"), "RUNNER_TEMP": str(tmp_path / "runner")}
+        script = _step("impl-review.yml", self.STEP)["run"]
+        return _run(script, tmp_path, tmp_path, **{**self.ENV, **defaults, **env})
 
     @pytest.mark.parametrize(
         ("env", "label"),
