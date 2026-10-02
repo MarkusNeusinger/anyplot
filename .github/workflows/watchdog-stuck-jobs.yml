@@ -276,6 +276,15 @@ jobs:
                 echo "::warning::PR #$num: regeneration review failed twice (ai-review-failed) — not re-dispatched (one review per regeneration); needs manual attention: re-run impl-review.yml -f pr_number=$num by hand, or close the PR (the live implementation stays)"
               elif echo " $labels " | grep -q " ai-review-rescued "; then
                 echo "::warning::PR #$num: ai-review-failed persists after rescue — needs manual attention"
+              elif ! fresh=$(gh pr view "$num" --json labels --jq '[.labels[].name] | join(" ")' 2>/dev/null); then
+                # `labels` is the snapshot from the top of the scan. A review
+                # can have finished with its verdict since, so that no run is
+                # in flight any more and the snapshot still shows no verdict:
+                # the dispatch decision is made on labels read now.
+                echo "::warning::PR #$num: ai-review-failed, but the labels could not be re-read — skipped until the next scan"
+              elif ! echo " $fresh " | grep -q " ai-review-failed " \
+                   || echo " $fresh " | grep -qE " (ai-approved|ai-rejected|regen:kept|regen:improved) "; then
+                echo "::notice::PR #$num: a review finished during this scan (verdict present or ai-review-failed gone) — no re-review; judged again on the next scan"
               else
                 ensure_label "ai-review-rescued" "5319e7" "Review re-dispatched once after ai-review-failed"
                 if dispatch "PR #$num: review (failed)" impl-review.yml -f pr_number="$num" \

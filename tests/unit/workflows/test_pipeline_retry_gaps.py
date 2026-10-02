@@ -497,13 +497,17 @@ def test_no_workflow_reads_a_paginated_count_as_one_number(workflow):
 
 # Answers `pr list` with $GH_PRS_JSON, `issue list` with no issues, and the
 # impl-review run list with one run for the status in $GH_IN_FLIGHT_STATUS
-# (fails with GH_FAIL_RUNS=1). Every other `api` call fails, which the scan
+# (fails with GH_FAIL_RUNS=1), `pr view` with $GH_FRESH_LABELS (fails with
+# GH_FAIL_VIEW=1). Every other `api` call fails, which the scan
 # reads as "daily-regen state unknown". Logs every call.
 FAKE_GH_WATCHDOG = """\
 for arg in "$@"; do printf '%s\\n' "$arg"; done >> "$GH_LOG"
 echo "--END--" >> "$GH_LOG"
 case "$1 $2" in
   "pr list") printf '%s\\n' "$GH_PRS_JSON"; exit 0 ;;
+  "pr view")
+    [ "${GH_FAIL_VIEW:-0}" = "1" ] && { echo "HTTP 502" >&2; exit 1; }
+    printf '%s\\n' "$GH_FRESH_LABELS"; exit 0 ;;
   "issue list") echo "[]"; exit 0 ;;
   "api repos/owner/repo/actions/workflows/impl-review.yml/runs"*)
     [ "${GH_FAIL_RUNS:-0}" = "1" ] && { echo "HTTP 502" >&2; exit 1; }
@@ -541,8 +545,25 @@ class TestWatchdogCase1:
             STALE_HOURS="4",
             DRY_RUN="false",
             GH_PRS_JSON=json.dumps(prs),
-            **env,
+            **{"GH_FRESH_LABELS": labels, **env},
         )
+
+    @pytest.mark.parametrize(
+        "env",
+        [
+            {"GH_FRESH_LABELS": "quality:86 ai-approved ai-review-failed"},
+            {"GH_FRESH_LABELS": "quality:86 regen:kept ai-review-failed"},
+            {"GH_FRESH_LABELS": "quality:86"},
+            {"GH_FAIL_VIEW": "1"},
+        ],
+    )
+    def test_a_review_that_finished_during_the_scan_is_not_doubled(self, tmp_path, env):
+        # The scan's label snapshot predates the verdict, and the finished
+        # run is no longer in flight: only a fresh read can tell.
+        result, calls = self._scan(tmp_path, **env)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert self.DISPATCH not in calls
+        assert not _calls(calls, "pr", "edit")
 
     def test_a_failed_review_is_re_dispatched_once(self, tmp_path):
         result, calls = self._scan(tmp_path)

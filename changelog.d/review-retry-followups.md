@@ -2,7 +2,7 @@
 
 - **A stale `ai-review-failed` no longer buys a second review.** When GitHub
   accepted a re-review dispatch but `gh` reported an error, `impl-review.yml`
-  labelled the PR `ai-review-failed` beside the re-review that was already
+  labeled the PR `ai-review-failed` beside the re-review that was already
   queued, and the watchdog's next scan dispatched another one. Every review
   run now removes the label when it starts, and the watchdog leaves such a PR
   alone while a review of it is queued or running, or drops the label when
