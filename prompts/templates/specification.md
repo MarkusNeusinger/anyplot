@@ -20,6 +20,7 @@
 ## Notes
 
 - {Optional implementation hints, special requirements, or visual preferences}
+- {Optional, for domain diagrams whose values can be right or wrong — `Check values:` one to three numbers a correct implementation reproduces from its own computation, never hard-coded, each with its configuration and source}
 
 ## What a good version looks like
 

@@ -35,7 +35,7 @@ Before scoring, check for:
 
 **AR-09 exceptions (NOT auto-reject):** Tooltips or hover affordances, decorative gridlines or borders aligned with the canvas edge, text that overflows its axis but remains fully within the canvas, tight-but-readable margins.
 
-If AR-06, AR-08, or AR-09 triggers: Score = 0, recommendation = "reject", include `auto_reject` field in output identifying which AR fired and (for AR-09) which element on which edge.
+If AR-06, AR-08, or AR-09 triggers: Score = 0, include `auto_reject` field in output identifying which AR fired and (for AR-09) which element on which edge.
 
 ### Stage 2: Quality (your task)
 
@@ -49,27 +49,15 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 4. **Library Rules**: From `prompts/library/{library}.md`
 5. **Style Guide** (canonical palette + theme tokens): `prompts/default-style-guide.md` — consult its "Categorical Palette", "Continuous Data", "Background", and "Theme-adaptive Chrome" sections for VQ-07 scoring.
 
-## Scoring Philosophy: Cascading Thresholds
+## Scoring principles
 
-| Review Stage | Requirement | Outcome |
-|--------------|-------------|---------|
-| Review 1 (Initial) | ≥ 90 | **Approved** - Publication quality |
-| Review 2 (Repair 1) | ≥ 80 | **Approved** - High quality |
-| Review 3 (Repair 2) | ≥ 70 | **Approved** - Good quality |
-| Review 4 (Repair 3) | ≥ 60 | **Approved** - Acceptable quality |
-| Review 5 (Repair 4) | ≥ 50 | **Approved** - Minimum quality |
-| Final Status | < 50 | **Rejected** - Not in repo |
-
-**Workflow:**
-- **Meet Stage Threshold**: ai-approved, merged immediately
-- **Below Stage Threshold**: ai-rejected, repair loop (up to 4 repair attempts)
-- **After 4 repairs (Review 5)**: < 50 → close PR and regenerate
-
-**Principles:**
-- Full points only for **perfect** execution
-- Small flaws = immediate deduction
-- Cascading thresholds allow good plots to merge faster while preventing infinite loops
-- Be honest and critical
+- Full points only for **perfect** execution.
+- A flaw deducts in proportion to what a viewer loses by it.
+- The score describes the implementation and nothing else. What a caller does with it is not your concern; you return no pass mark and no recommendation.
+- The total is the sum of the 24 criteria after the score caps. You never pick it.
+- **Technical items** (VQ, SC, DQ, CQ) start at their maximum. Every point below the maximum is carried by a weakness that names that criterion, what is wrong and what would be right. A deduction you cannot name is no deduction.
+- **Judgment items** (DE, LM) start at their default. Every point above the default is carried by evidence named in the item's note.
+- Be honest and critical.
 
 ### Anti-Inflation Rules
 
@@ -77,7 +65,7 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 - **DE-01 > 6 is rare.** Most plots look like well-configured defaults (score 4), not publication masterpieces.
 - **DE-03 = 2 is the default.** Unless there is intentional visual hierarchy — through color contrast, size variation, strategic data choice, or clear focal points — score 2. Annotations are NOT required.
 - **LM-02 = 1 is the default.** Unless the implementation uses a feature distinctive to this specific library, score 1.
-- **When in doubt, deduct.** The repair loop exists to improve quality.
+- **When in doubt whether evidence raises a design or library item, keep the default.**
 - A plot scoring 90+ should genuinely impress a data visualization professional.
 
 ## Point Distribution
@@ -98,7 +86,6 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 {
   "score": 77,
   "tier": "Good",
-  "pass": false,
 
   "visual_quality": {
     "total": 24,
@@ -158,9 +145,7 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
     "Title at fontsize=18pt squeezes against the right edge — reduce to ~14pt for the long mandated anyplot title format",
     "No design refinement beyond library defaults",
     "No data storytelling - visual emphasis or hierarchy would improve the plot"
-  ],
-
-  "recommendation": "reject"
+  ]
 }
 ```
 
@@ -240,9 +225,9 @@ Not AR-09 (handle via VQ-05 instead): text overflowing its axis but staying on t
 
 | ID | Criterion | Max | Key Question |
 |----|-----------|-----|--------------|
-| DQ-01 | Feature Coverage | 6 | Shows ALL aspects of plot type? (A permission is not an aspect to exhibit: data with little or no overlap loses nothing, and a point count inside the spec's Data range is not a lever; neither is an optional feature the Notes only allow, such as percentage labels or asymmetric error bars: DQ-01 is about what the example data shows, and a missing optional feature deducts nothing.) |
+| DQ-01 | Feature Coverage | 6 | Shows ALL aspects of plot type? (A permission is not an aspect to exhibit: data with little or no overlap loses nothing, and a point count inside the spec's Data range is not a lever; neither is an optional feature the Notes only allow, such as percentage labels or asymmetric error bars: DQ-01 is about what the example data shows, and a missing optional feature deducts nothing. A conditional requirement whose condition the chosen data does not meet, such as a crossover line on a configuration without a crossover, deducts nothing either.) |
 | DQ-02 | Realistic Context | 5 | Real-world plausible **AND neutral** scenario? |
-| DQ-03 | Factual Correctness | 4 | Do values and proportions align with real-world facts? |
+| DQ-03 | Factual Correctness | 4 | Do values and proportions align with real-world facts? When the spec's Notes carry `Check values:`, verify each one that applies to the chosen configuration in the render and in the data code, where it must fall out of the computation and not be placed there; name what you checked in the note, and claim no correctness you did not check. |
 
 **CRITICAL - Content Policy for DQ-02:**
 Automatically give **0 points** if data uses controversial/sensitive topics:
@@ -288,12 +273,9 @@ Only award full points (5/5) for real, neutral contexts:
 | DE-01 ≤ 2 AND DE-02 ≤ 2 (generic + no visual refinement) | 75 |
 | CQ-04 = 0 (fake functionality / over-engineering) | 70 |
 
-### Step 8: Determine Recommendation
+### Step 8: Add up
 
-| Score | Recommendation |
-|-------|----------------|
-| >= 90 | `approve` |
-| < 90 | `reject` |
+The score is the sum of the 24 criteria after the caps. Which criterion a gap belongs to is decided in `prompts/quality-criteria.md` → "Which criterion a gap belongs to", so that the same gap costs the same criterion on every library.
 
 ## Rules
 

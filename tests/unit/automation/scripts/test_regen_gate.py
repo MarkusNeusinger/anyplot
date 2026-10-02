@@ -2370,7 +2370,55 @@ class TestCheckFeedback:
         code, out = _feedback(tmp_path, capsys, weaknesses=weak, checklist={**NEW_CHECKLIST, "VQ-03": 4}, warn=True)
         assert code == 0
         assert "::warning::weakness 3 is neither a defect line" in out
-        assert "::notice::weakness_format defect=1 suggestion=1 other=1" in out
+        assert "::notice::weakness_format defect=1 suggestion=1 other=1 silent=0" in out
+
+    def test_a_silent_technical_deduction_is_reported(self, tmp_path, capsys):
+        """P10: a technical item below its maximum needs a defect line that names it."""
+        checklist = {**NEW_CHECKLIST, "VQ-03": 4, "VQ-01": 7, "CQ-01": 2}
+        weak = [DEFECT_LINE, "Suggestion: slightly larger tick labels would help in the thumbnail"]
+        code, out = _feedback(tmp_path, capsys, weaknesses=weak, checklist=checklist)
+        assert code == 1
+        assert "VQ-01 is below its maximum (7/8), but no defect line names it" in out
+        assert "CQ-01 is below its maximum (2/3), but no defect line names it" in out
+        assert "write the defect line the deduction rests on" in out
+        assert "VQ-03 is below" not in out  # the defect line names it
+
+    def test_a_judgment_item_below_its_maximum_needs_no_line(self, tmp_path, capsys):
+        checklist = {**NEW_CHECKLIST, "DE-01": 4, "DE-02": 2, "DE-03": 2, "LM-01": 3, "LM-02": 1}
+        code, out = _feedback(tmp_path, capsys, weaknesses=[], checklist=checklist)
+        assert (code, out.strip()) == (0, "check-feedback: no problems")
+
+    def test_one_line_names_several_deducted_items(self, tmp_path, capsys):
+        line = "VQ-03, SC-04 (both): size legend circles invisible → fill them. Likely cause: guide."
+        checklist = {**NEW_CHECKLIST, "VQ-03": 4, "SC-04": 2}
+        assert _feedback(tmp_path, capsys, weaknesses=[line], checklist=checklist)[0] == 0
+
+    def test_an_auto_reject_review_is_not_checked_for_silent_deductions(self, tmp_path, capsys):
+        line = "AR-09 (light): title clipped → shrink the plot area. Likely cause: margin."
+        checklist = {**NEW_CHECKLIST, "VQ-05": 0, "VQ-01": 5}
+        assert _feedback(tmp_path, capsys, weaknesses=[line], checklist=checklist)[0] == 0
+
+    def test_warn_only_counts_silent_deductions(self, tmp_path, capsys):
+        checklist = {**NEW_CHECKLIST, "VQ-01": 7, "DQ-01": 5}
+        code, out = _feedback(tmp_path, capsys, weaknesses=["Suggestion: a"], checklist=checklist, warn=True)
+        assert code == 0
+        assert "::warning::VQ-01 is below its maximum (7/8)" in out
+        assert "::notice::weakness_format defect=0 suggestion=1 other=0 silent=2" in out
+
+    def test_a_silent_deduction_in_the_stored_rescore_is_reported(self, tmp_path, capsys):
+        regen = _regen(
+            prev_checklist={**PREV_CHECKLIST, "DQ-02": 4},
+            prev_weaknesses=[{"ref": "W1", "class": "suggestion"}, {"ref": "W2", "class": "defect", "rule": "VQ-03"}],
+        )
+        prev_review = _prev_review(
+            criteria_checklist=_checklist_json(regen["prev_checklist"]), weaknesses=[DEFECT_LINE]
+        )
+        code, out = _feedback(
+            tmp_path, capsys, checklist=NEW_CHECKLIST, regen=regen, prev=["a", "b"], prev_review=prev_review
+        )
+        assert code == 1
+        assert "review_prev.json: DQ-02 is below its maximum (4/5), but no defect line names it" in out
+        assert "review_prev.json: VQ-03 is below" not in out
 
     def test_legacy_artifacts_never_crash(self, tmp_path, capsys):
         """Round-1 pair artifacts: legacy weaknesses and a review_regen.json without the new keys."""
