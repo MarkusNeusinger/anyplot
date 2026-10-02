@@ -114,13 +114,19 @@ class TestCheck:
     def test_a_score_key_is_ignored(self, tmp_path, capsys):
         assert _check(tmp_path, capsys, _prev_review(score=91, quality_score=91))[0] == 0
 
-    @pytest.mark.parametrize("key", ["image_description", "criteria_checklist", "strengths", "weaknesses", "verdict"])
+    @pytest.mark.parametrize("key", ["image_description", "criteria_checklist", "strengths", "weaknesses"])
     def test_each_missing_key(self, tmp_path, capsys, key):
         review = _prev_review()
         del review[key]
         code, out = _check(tmp_path, capsys, review)
         assert code == 1
         assert key in out
+
+    def test_a_missing_verdict_is_fine(self, tmp_path, capsys):
+        """The reviewer writes no verdict; the write-back sets the stored one."""
+        review = _prev_review()
+        del review["verdict"]
+        assert _check(tmp_path, capsys, review)[0] == 0
 
     def test_empty_image_description(self, tmp_path, capsys):
         code, out = _check(tmp_path, capsys, _prev_review(image_description="  "))
@@ -260,7 +266,7 @@ class TestCheck:
     def test_a_bad_verdict(self, tmp_path, capsys, verdict):
         code, out = _check(tmp_path, capsys, _prev_review(verdict=verdict))
         assert code == 1
-        assert "verdict must be APPROVED or REJECTED" in out
+        assert "verdict, when present, must be APPROVED or REJECTED" in out
 
     def test_malformed_json(self, tmp_path, capsys):
         code, out = _check(tmp_path, capsys, None, raw="{not json")
@@ -339,7 +345,8 @@ class TestApply:
         assert review["image_description"] == DESCRIPTION
         assert review["criteria_checklist"] == _checklist_json(PREV_CHECKLIST)
         assert review["weaknesses"] == [DEFECT, "Suggestion: a slightly larger legend title"]
-        assert review["verdict"] == "REJECTED"
+        # The kept implementation stays live: APPROVED, whatever the file says (REJECTED here).
+        assert review["verdict"] == wb.KEPT_VERDICT == "APPROVED"
         assert review["model"] == "claude-opus-5"
         assert review["criteria_version"] == "qc-a.aqr-b.sg-c.lib-d"
         assert review["rendered_at"] == "2026-09-28T10:58:01Z"
@@ -355,13 +362,18 @@ class TestApply:
     def test_metadata_without_a_review(self):
         new = wb.apply_review({"library": "x", "quality_score": None}, _prev_review(), 80)
         assert new["quality_score"] == 80
-        assert set(new["review"]) == set(wb.REVIEW_FIELDS)
+        assert set(new["review"]) == {*wb.REVIEW_FIELDS, "verdict"}
 
     def test_refuses_an_incomplete_review(self):
         review = _prev_review()
-        del review["verdict"]
-        with pytest.raises(wb.WritebackError, match="lacks verdict"):
+        del review["strengths"]
+        with pytest.raises(wb.WritebackError, match="lacks strengths"):
             wb.apply_review({}, review, 80)
+
+    def test_a_review_without_a_verdict_is_stored_as_approved(self):
+        review = _prev_review()
+        del review["verdict"]
+        assert wb.apply_review({}, review, 80)["review"]["verdict"] == "APPROVED"
 
     def test_cli_writes_the_writer_format(self, tmp_path, capsys):
         meta, impl, prev = tmp_path / "meta.yaml", tmp_path / "impl.R", tmp_path / "review_prev.json"
