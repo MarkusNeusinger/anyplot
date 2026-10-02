@@ -28,6 +28,7 @@ from automation.scripts.regen_gate import (
     build_record,
     call_count,
     characteristic_kind,
+    check_prev_review,
     checklist_scores,
     classify_improvements,
     decide,
@@ -37,6 +38,7 @@ from automation.scripts.regen_gate import (
     load_weakness_classes,
     load_weakness_texts,
     main,
+    nothing_to_repair,
     parse_characteristics,
     parse_record_markers,
     permission_refs,
@@ -2514,7 +2516,70 @@ class TestCheckPrevReview:
             warn=True,
         )
         assert code == 0
-        assert "::warning::review_prev.json: verdict must be APPROVED or REJECTED" in out
+        assert "::warning::review_prev.json: verdict, when present, must be APPROVED or REJECTED" in out
+
+    def test_a_review_without_a_verdict_can_be_stored(self):
+        """P10: the reviewer writes no verdict; the write-back sets the stored one."""
+        review = _prev_review()
+        del review["verdict"]
+        assert check_prev_review(review, CLEAN_REGEN) == []
+        assert check_prev_review(_prev_review(verdict="APPROVED"), CLEAN_REGEN) == []
+        assert any("verdict, when present" in p for p in check_prev_review(_prev_review(verdict=None), CLEAN_REGEN))
+
+
+# ---------------------------------------------------------------------------
+# P10: a first-generation review with nothing to repair
+# ---------------------------------------------------------------------------
+
+# The modal judgment scores of a first review: DE 6/4/4, LM 4/3.
+JUDGMENT = {"DE-01": 6, "DE-02": 4, "DE-03": 4, "LM-01": 4, "LM-02": 3}
+
+
+class TestNothingToRepair:
+    """O4: a review below its threshold whose every technical item is at its
+    maximum is approved as it stands at 80 or more. The checklist decides,
+    never the absence of defect lines (#12028's first review deducted VQ-01
+    and CQ-01 without a line and must still get its repair)."""
+
+    def test_a_clean_technical_sheet_at_or_above_80_qualifies(self):
+        checklist = {**CRITERIA, **JUDGMENT}  # 70 + 21 = 91, but say the reviewer capped or typed 88
+        assert nothing_to_repair(88, checklist)
+        assert nothing_to_repair(80, checklist)
+
+    def test_below_80_never_qualifies(self):
+        assert not nothing_to_repair(79, {**CRITERIA, **JUDGMENT})
+
+    @pytest.mark.parametrize("criterion", ["VQ-01", "SC-02", "DQ-03", "CQ-01"])
+    def test_one_technical_deduction_disqualifies(self, criterion):
+        checklist = {**CRITERIA, **JUDGMENT, criterion: CRITERIA[criterion] - 1}
+        assert not nothing_to_repair(88, checklist)
+
+    def test_a_judgment_item_at_zero_does_not_matter(self):
+        assert nothing_to_repair(82, {**CRITERIA, "DE-01": 4, "DE-02": 2, "DE-03": 2, "LM-01": 3, "LM-02": 1})
+
+    def test_names_the_nineteen_technical_items(self):
+        technical = [cid for cid in CRITERIA if cid[:2] in ("VQ", "SC", "DQ", "CQ")]
+        assert len(technical) == 19 and sum(CRITERIA[c] for c in technical) == 70
+        for cid in technical:
+            assert not nothing_to_repair(88, {k: v for k, v in CRITERIA.items() if k != cid}), cid
+
+    def test_a_missing_score_or_checklist_never_qualifies(self):
+        assert not nothing_to_repair(None, dict(CRITERIA))
+        assert not nothing_to_repair(88, {})
+
+    def test_cli_prints_true_or_false(self, tmp_path, capsys):
+        path = tmp_path / "review_checklist.json"
+        path.write_text(json.dumps(_checklist_json({**CRITERIA, **JUDGMENT})), encoding="utf-8")
+        assert main(["nothing-to-repair", "--score", "88", "--checklist", str(path)]) == 0
+        assert capsys.readouterr().out.strip() == "true"
+        path.write_text(json.dumps(_checklist_json({**CRITERIA, **JUDGMENT, "VQ-01": 7})), encoding="utf-8")
+        assert main(["nothing-to-repair", "--score", "88", "--checklist", str(path)]) == 0
+        assert capsys.readouterr().out.strip() == "false"
+
+    @pytest.mark.parametrize("score", ["", "n/a", "101"])
+    def test_cli_is_false_on_unreadable_input(self, tmp_path, capsys, score):
+        assert main(["nothing-to-repair", "--score", score, "--checklist", str(tmp_path / "absent.json")]) == 0
+        assert capsys.readouterr().out.strip() == "false"
 
 
 # ---------------------------------------------------------------------------

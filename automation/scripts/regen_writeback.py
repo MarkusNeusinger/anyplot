@@ -80,11 +80,17 @@ BASE_BRANCH = "main"
 BOT_AUTHOR = "app/github-actions"
 BOT_LOGIN = "github-actions[bot]"
 
-# The review keys a write-back replaces (the five review files of step 10) and
-# the provenance keys it sets or removes; nothing else in the metadata moves.
-REVIEW_FIELDS = ("image_description", "criteria_checklist", "strengths", "weaknesses", "verdict")
+# The review keys a write-back takes from review_prev.json, the verdict it
+# sets itself and the provenance keys it sets or removes; nothing else in the
+# metadata moves.
+REVIEW_FIELDS = ("image_description", "criteria_checklist", "strengths", "weaknesses")
 PROVENANCE_FIELDS = ("model", "criteria_version")
-WRITABLE_REVIEW_KEYS = frozenset(REVIEW_FIELDS + PROVENANCE_FIELDS)
+WRITABLE_REVIEW_KEYS = frozenset(REVIEW_FIELDS + ("verdict",) + PROVENANCE_FIELDS)
+# A kept implementation stays live, which is what the stored verdict says (the
+# website's `review_verdict`). The reviewer writes no verdict: the bar it would
+# need is not in its prompts, and a kept review_prev.json that still carries
+# one is ignored.
+KEPT_VERDICT = "APPROVED"
 
 # Mirrors core/constants.py LIBRARIES_METADATA and the workflows' case
 # statements (tests/unit/automation/scripts/test_regen_writeback.py ties them).
@@ -164,10 +170,11 @@ def apply_review(
 ) -> dict[str, Any]:
     """The metadata with the re-score as its stored review.
 
-    Sets ``quality_score`` and the five review fields; sets ``review.model``
-    and ``review.criteria_version`` or, when the session could not resolve
-    one, removes it (as the metadata writer does). Every other key keeps its
-    value and its place.
+    Sets ``quality_score``, the four review fields of ``review_prev.json`` and
+    ``review.verdict`` (``KEPT_VERDICT``, whatever the file says); sets
+    ``review.model`` and ``review.criteria_version`` or, when the session
+    could not resolve one, removes it (as the metadata writer does). Every
+    other key keeps its value and its place.
     """
     missing = [key for key in REVIEW_FIELDS if key not in prev_review]
     if missing:
@@ -182,7 +189,7 @@ def apply_review(
     review["criteria_checklist"] = prev_review["criteria_checklist"]
     review["strengths"] = [str(s).strip() for s in prev_review["strengths"]]
     review["weaknesses"] = [str(w).strip() for w in prev_review["weaknesses"]]
-    review["verdict"] = prev_review["verdict"]
+    review["verdict"] = KEPT_VERDICT
     for key, value in (("model", model), ("criteria_version", criteria_version)):
         value = (value or "").strip()
         if value and value != "n/a":
