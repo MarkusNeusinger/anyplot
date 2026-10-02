@@ -1176,6 +1176,41 @@ class TestFirstReviewScoring:
         assert '"pass"' not in evaluator and '"recommendation"' not in evaluator
         assert "Determine Recommendation" not in evaluator
 
+    @pytest.mark.parametrize("prompt_path", [CRITERIA_PROMPT, REVIEW_PROMPT, EVALUATOR_PROMPT], ids=lambda p: p.name)
+    def test_compliance_is_not_excellence(self, prompt_path: Path) -> None:
+        """R4: what the spec or the style guide requires raises no DE or LM item."""
+        content = prompt_path.read_text()
+        assert "Compliance is not excellence" in content
+        assert (
+            "**beyond** what the spec's Notes and characteristic section require and beyond what the style guide "
+            "mandates (removed top and right spines, a subtle grid, theme tokens, the Imprint palette, explicit "
+            "font sizes)"
+        ) in content
+        assert "Meeting those is scored in SC and VQ" in content
+        assert "The complete style-guide baseline earns exactly the defaults" in content.replace("**", "")
+        # No ladder or check credits a mandated or a forbidden thing any more.
+        for phrase in ("custom palette", "Custom palette", "Spines removed?", "spines partially removed"):
+            assert phrase not in content, phrase
+        assert "Raise only if spines removed" not in content
+
+    def test_design_ladders_start_at_the_baseline(self) -> None:
+        criteria = CRITERIA_PROMPT.read_text()
+        de01 = self._section(criteria, "### DE-01", "### DE-02")
+        assert (
+            "| 8 | Publication-ready: typography, spacing and hierarchy decided beyond the baseline, within the" in de01
+        )
+        assert "| 4 | The complete style-guide baseline" in de01
+        de02 = self._section(criteria, "### DE-02", "### DE-03")
+        assert "| 6 | Perfect: every detail decided rather than inherited" in de02
+        assert "| 4 | Good: refinement beyond the style-guide baseline" in de02
+        assert "| 2 | The style-guide baseline" in de02
+        assert "subtle grid (or none), spines removed" not in criteria
+        # The 75 cap needs both items at 2 or below; the baseline keeps DE-01 at 4.
+        caps = self._section(criteria, "## Score Caps", "## Anti-Inflation")
+        assert "this cap never fires on a compliant implementation" in caps
+        assert "A hierarchy the spec's Notes prescribe" in self._section(criteria, "### DE-03", "## Spec Compliance")
+        assert "Compliance is not mastery" in self._section(criteria, "## Library Mastery", "## Plot-Type")
+
     def test_stale_distribution_is_gone_and_the_anchors_stay(self) -> None:
         criteria = CRITERIA_PROMPT.read_text()
         assert "Expected distribution" not in criteria

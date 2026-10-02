@@ -180,11 +180,13 @@ Score so that the reviews of the other libraries of this spec, written without s
 #### Design Excellence (20 pts)
 | ID | Criterion | Max | Check |
 |----|-----------|-----|-------|
-| DE-01 | Aesthetic Sophistication | 8 | Professional polish? Custom palette? Intentional hierarchy? |
-| DE-02 | Visual Refinement | 6 | Spines removed? Grid subtle? Whitespace generous? |
-| DE-03 | Data Storytelling | 6 | Visual hierarchy? Clear focal point? Guides the viewer? |
+| DE-01 | Aesthetic Sophistication | 8 | Typography, spacing and hierarchy decided beyond the style-guide baseline, within the Imprint palette? |
+| DE-02 | Visual Refinement | 6 | Refinement beyond the mandated spines and grid: whitespace, alignment, label placement, a grid density chosen for this chart? |
+| DE-03 | Data Storytelling | 6 | A hierarchy or focal point the implementation chose itself, beyond what the spec's Notes prescribe? Guides the viewer? |
 
 **Defaults:** DE-01=4, DE-02=2, DE-03=2. Raise only with evidence.
+
+**Compliance is not excellence.** Evidence that raises a DE item is something the implementation does **beyond** what the spec's Notes and characteristic section require and beyond what the style guide mandates (removed top and right spines, a subtle grid, theme tokens, the Imprint palette, explicit font sizes). Meeting those is scored in SC and VQ. The complete style-guide baseline earns exactly the defaults (DE-01 = 4, DE-02 = 2). Name the evidence in the item's comment; "spines removed, grid subtle" raises nothing.
 
 #### Spec Compliance (15 pts)
 | ID | Criterion | Max | Check |
@@ -216,7 +218,7 @@ Score so that the reviews of the other libraries of this spec, written without s
 | LM-01 | Idiomatic Usage | 5 | Library's recommended patterns? High-level API? |
 | LM-02 | Distinctive Features | 5 | Features unique to this library? |
 
-**Defaults:** LM-01=3, LM-02=1. Raise only with evidence.
+**Defaults:** LM-01=3, LM-02=1. Raise only with evidence: use of the library **beyond** what the spec's Notes require and what the library prompt and the style guide mandate. Name the feature or the idiom in the item's comment.
 
 ### 8. Apply Score Caps
 
@@ -579,5 +581,5 @@ The 5 dimensions:
 - Installed packages are not dependencies to avoid; never credit a hand-roll for avoiding one
 - Mark criteria as N/A when not applicable (e.g., legend for single-series)
 - **Score strictly**: median implementation should score 72-78, not 90+
-- **Design Excellence defaults are low**: DE-01=4, DE-02=2, DE-03=2 — raise only with evidence
+- **Design Excellence defaults are low**: DE-01=4, DE-02=2, DE-03=2 — raise only with evidence beyond what the spec and the style guide require; compliance is scored in SC and VQ
 - All review data (strengths, weaknesses, image_description, criteria_checklist) is saved to metadata for future regeneration, including `review_prev.json`, which is stored as the live implementation's review when it stays. Be specific!

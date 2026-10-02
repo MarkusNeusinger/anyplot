@@ -275,6 +275,10 @@ The implementation must use the **Imprint categorical palette** (defined in `pro
 
 This category evaluates aesthetic sophistication beyond mere correctness. A plot can be technically correct but visually generic — Design Excellence separates "works" from "beautiful."
 
+**Compliance is not excellence.** Evidence that raises a DE item above its default is something the implementation does **beyond** what the spec's Notes and characteristic section require and beyond what the style guide mandates (removed top and right spines, a subtle grid, theme tokens, the Imprint palette, explicit font sizes). Meeting those is scored in SC and VQ, once. Name the evidence in the item's comment; "spines removed, grid subtle" raises nothing, and neither does a hierarchy, a labelling scheme or a typesetting rule the spec's Notes prescribe.
+
+**The complete style-guide baseline earns exactly the defaults: DE-01 = 4 and DE-02 = 2.** An implementation that meets the baseline and adds nothing sits there; one that falls short of the baseline sits below.
+
 | ID | Criterion | Max | Description |
 |----|-----------|-----|-------------|
 | DE-01 | Aesthetic Sophistication | 8 | Color harmony, typography, professional polish |
@@ -285,22 +289,22 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 
 | Points | Criterion |
 |--------|-----------|
-| 8 | Publication-ready: custom palette, intentional hierarchy, FiveThirtyEight-level design |
-| 6 | Strong design: thoughtful colors, good typography, clearly above defaults |
-| 4 | Looks like a well-configured library default |
-| 2 | Generic/boring: default colors, no design thought |
+| 8 | Publication-ready: typography, spacing and hierarchy decided beyond the baseline, within the Imprint palette; FiveThirtyEight-level design |
+| 6 | Strong design: color assignment, typography and spacing visibly decided for this chart, clearly beyond the baseline |
+| 4 | The complete style-guide baseline (Imprint palette, theme tokens, explicit font sizes) and nothing decided beyond it |
+| 2 | Generic/boring: short of the baseline, no design thought |
 | 0 | Ugly: clashing colors, poor typography, looks broken |
 
-**Calibration:** DE-01 > 6 is rare on first attempt. Most implementations will score 2-4.
+**Calibration:** DE-01 > 6 is rare on first attempt. Most implementations will score 2-4. A palette outside Imprint is never design credit: it is VQ-07 = 0.
 
 ### DE-02: Visual Refinement (6 Points)
 
 | Points | Criterion |
 |--------|-----------|
-| 6 | Perfect: subtle grid (or none), spines removed, generous whitespace, every detail polished |
-| 4 | Good: some refinement visible (grid adjusted, spines partially removed) |
-| 2 | Default: library defaults with minimal customization |
-| 0 | Sloppy: bold grid, all spines, cramped layout |
+| 6 | Perfect: every detail decided rather than inherited — whitespace, alignment, label placement, grid density, line weights |
+| 4 | Good: refinement beyond the style-guide baseline: whitespace, alignment, label placement, a grid density chosen for this chart |
+| 2 | The style-guide baseline (top and right spines removed, a subtle grid) and nothing beyond it |
+| 0 | Sloppy: short of the baseline — bold grid, all spines, cramped layout |
 
 ### DE-03: Data Storytelling (6 Points)
 
@@ -311,7 +315,7 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 | 2 | Default: data is displayed but not interpreted — viewer must find their own story |
 | 0 | None: raw data dump with no context |
 
-**Calibration:** DE-03 = 2 is the default. Most implementations just display data without storytelling. Score of 4+ does NOT require annotations — visual hierarchy (color contrast, size variation, focal points) is sufficient. Annotations are only expected when the spec explicitly requests them (e.g., spec-id contains "annotated").
+**Calibration:** DE-03 = 2 is the default. Most implementations just display data without storytelling. Score of 4+ does NOT require annotations — visual hierarchy (color contrast, size variation, focal points) is sufficient. Annotations are only expected when the spec explicitly requests them (e.g., spec-id contains "annotated"). A hierarchy the spec's Notes prescribe (thick solid lines for one class, thin dashed for the other) is compliance, scored in SC-02: DE-03 rises for emphasis the implementation chose itself, through its data or its design.
 
 ---
 
@@ -519,6 +523,8 @@ How to score it:
 
 **Calibration:** LM-02 = 1 is the default. To score 3+, the implementation must use a feature distinctive to this specific library.
 
+**Compliance is not mastery.** Evidence that raises an LM item above its default is use of the library **beyond** what the spec's Notes require and what `prompts/library/{library}.md` and the style guide mandate (the theme and palette token blocks, the canvas contract, the save call). Name the feature or the idiom in the item's comment; a feature the Notes ask for by name, drawn with the call every implementation of that library would use, raises nothing.
+
 **Note:** Basic library usage is checked by AR-05. Library Mastery evaluates *quality* of usage.
 
 ---
@@ -570,7 +576,7 @@ Certain errors limit the maximum score:
 | **DE-01 ≤ 2 AND DE-02 ≤ 2** (generic + no visual refinement) | **75** |
 | **CQ-04 = 0** (fake functionality / gross over-engineering) | **70** |
 
-**The "correct but boring" cap:** A technically correct but visually generic plot (DE-01 ≤ 2) with no visual refinement (DE-02 ≤ 2) is capped at 75, even with perfect scores elsewhere.
+**The "correct but boring" cap:** A technically correct but visually generic plot (DE-01 ≤ 2) with no visual refinement (DE-02 ≤ 2) is capped at 75, even with perfect scores elsewhere. The complete style-guide baseline earns DE-01 = 4 and DE-02 = 2, so this cap never fires on a compliant implementation: it is for one that falls short of the baseline on both.
 
 ---
 
@@ -579,8 +585,9 @@ Certain errors limit the maximum score:
 Evaluators must use these anchors to prevent score inflation:
 
 - **Median implementation should score 72-78** — not 90+
-- **DE-01 > 6 is rare** on first attempt — most plots look like configured defaults (score 4)
-- **DE-02 = 2 is the default** — library defaults with minimal customization
+- **DE-01 > 6 is rare** on first attempt — most plots are the style-guide baseline and nothing more (score 4)
+- **DE-02 = 2 is the default** — the style-guide baseline with nothing beyond it
+- **Compliance is not excellence** — what the spec or the style guide requires is scored in SC and VQ and raises no DE or LM item
 - **DE-03 = 2 is the default** — most plots just display data without visual hierarchy or emphasis
 - **LM-01 = 3 is the default** — correct usage but doesn't leverage the library's best patterns
 - **LM-02 = 1 is the default** — most implementations use the library generically
@@ -604,8 +611,8 @@ VISUAL QUALITY (23/30)
   VQ-07: 1/2   (palette is anyplot but first series used #AE3030 instead of #009E73)
 
 DESIGN EXCELLENCE (8/20)
-  DE-01: 4/8   (well-configured default, not exceptional)
-  DE-02: 2/6   (library defaults, minimal refinement)
+  DE-01: 4/8   (the style-guide baseline, nothing beyond it)
+  DE-02: 2/6   (spines and grid as the style guide mandates, no further refinement)
   DE-03: 2/6   (data displayed but no storytelling)
 
 SPEC COMPLIANCE (13/15)

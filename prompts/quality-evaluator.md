@@ -62,7 +62,8 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 ### Anti-Inflation Rules
 
 - **Median implementation should score 72-78.** If you find yourself scoring most plots 90+, you are too lenient.
-- **DE-01 > 6 is rare.** Most plots look like well-configured defaults (score 4), not publication masterpieces.
+- **Compliance is not excellence.** Evidence that raises a DE or LM item is something the implementation does **beyond** what the spec's Notes and characteristic section require and beyond what the style guide mandates (removed top and right spines, a subtle grid, theme tokens, the Imprint palette, explicit font sizes). Meeting those is scored in SC and VQ. The complete style-guide baseline earns exactly the defaults (DE-01 = 4, DE-02 = 2).
+- **DE-01 > 6 is rare.** Most plots are the style-guide baseline and nothing more (score 4), not publication masterpieces.
 - **DE-03 = 2 is the default.** Unless there is intentional visual hierarchy — through color contrast, size variation, strategic data choice, or clear focal points — score 2. Annotations are NOT required.
 - **LM-02 = 1 is the default.** Unless the implementation uses a feature distinctive to this specific library, score 1.
 - **When in doubt whether evidence raises a design or library item, keep the default.**
@@ -203,14 +204,14 @@ Not AR-09 (handle via VQ-05 instead): text overflowing its axis but staying on t
 
 | ID | Criterion | Max | Key Question |
 |----|-----------|-----|--------------|
-| DE-01 | Aesthetic Sophistication | 8 | Does this look professional? Custom palette? Intentional hierarchy? |
-| DE-02 | Visual Refinement | 6 | Spines removed? Grid subtle? Whitespace generous? Details polished? |
-| DE-03 | Data Storytelling | 6 | Does the plot guide the viewer through visual hierarchy? Is there a clear focal point? |
+| DE-01 | Aesthetic Sophistication | 8 | Typography, spacing and hierarchy decided beyond the style-guide baseline, within the Imprint palette? |
+| DE-02 | Visual Refinement | 6 | Refinement beyond the mandated spines and grid: whitespace, alignment, label placement, a grid density chosen for this chart? |
+| DE-03 | Data Storytelling | 6 | Does the plot guide the viewer through a hierarchy or focal point the implementation chose itself, beyond what the spec's Notes prescribe? |
 
-**Scoring defaults (start here, adjust up only with evidence):**
-- DE-01 = 4 (configured default). Raise to 6+ only if clearly above-default design.
-- DE-02 = 2 (minimal refinement). Raise only if spines removed, grid tuned, etc.
-- DE-03 = 2 (no storytelling). Raise if visual hierarchy guides the viewer. Annotations not required.
+**Scoring defaults (start here, adjust up only with evidence beyond what the spec and the style guide require):**
+- DE-01 = 4 (the complete style-guide baseline). Raise to 6+ only if the design is clearly decided beyond the baseline.
+- DE-02 = 2 (the mandated spines and grid, nothing beyond). Raise only for refinement beyond the baseline: whitespace, alignment, label placement.
+- DE-03 = 2 (no storytelling). Raise if a hierarchy the implementation chose guides the viewer. Annotations not required.
 
 ### Step 3: Spec Compliance (15 pts)
 
@@ -258,7 +259,7 @@ Only award full points (5/5) for real, neutral contexts:
 | LM-01 | Idiomatic Usage | 5 | Uses library's recommended patterns and high-level API? |
 | LM-02 | Distinctive Features | 5 | Uses features unique to this library? |
 
-**Scoring defaults (start here, adjust up only with evidence):**
+**Scoring defaults (start here, adjust up only with evidence beyond what the spec's Notes require and the library prompt mandates):**
 - LM-01 = 3 (correct usage). Raise to 5 only if expertly using high-level API.
 - LM-02 = 1 (generic usage). Raise only if using distinctive features.
 
