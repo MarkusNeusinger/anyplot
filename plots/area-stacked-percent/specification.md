@@ -36,7 +36,7 @@ Time | Category   | Value
 - Total always equals 100%
 - Shows relative proportions, not absolute values
 - Good for composition changes over time
-- Each area width shows percentage contribution
+- Each area's vertical thickness shows its percentage contribution
 
 ## What a good version looks like
 

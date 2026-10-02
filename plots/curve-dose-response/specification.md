@@ -17,7 +17,7 @@ A sigmoidal dose-response curve that plots biological response against drug conc
 - `response` (float) - Measured biological response (e.g., % inhibition, % activation, cell viability)
 - `compound` (string) - Compound or treatment identifier for comparing multiple curves
 - `response_sem` (float) - Standard error of the mean for each data point (for error bars)
-- Size: 6-12 concentration points per compound, 1-3 compounds
+- Size: 6-12 concentration points per compound, 2-3 compounds
 - Example: Synthetic dose-response data for 2 compounds with concentrations from 1e-9 to 1e-4 M
 
 ## Notes

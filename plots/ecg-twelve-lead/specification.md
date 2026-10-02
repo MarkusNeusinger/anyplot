@@ -22,7 +22,7 @@ A multi-channel electrocardiogram display showing the 12 standard ECG leads arra
 
 ## Notes
 
-- Arrange leads in standard clinical 3x4 grid layout: columns (I, aVR, V1, V4), (II, aVL, V2, V5), (III, aVF, V3, V6)
+- Arrange leads in standard clinical 3x4 grid layout: rows (I, aVR, V1, V4), (II, aVL, V2, V5), (III, aVF, V3, V6)
 - Optionally include a full-length Lead II rhythm strip across the bottom
 - Grid background should use standard ECG paper styling: light lines at 1mm intervals, bold lines at 5mm intervals, with a distinct paper-like color (light red/pink or light orange)
 - Include a 1mV calibration pulse at the start or margin of the display

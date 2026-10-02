@@ -26,7 +26,7 @@ A professional candlestick chart combining OHLC (open, high, low, close) price d
 - Use a shared x-axis between the candlestick and volume panes with proper date formatting
 - Volume bars should use the same up/down color scheme as candlesticks for visual consistency
 - The price pane should occupy roughly 70-75% of the vertical space, volume pane 25-30%
-- Include a crosshair or cursor that spans both panes for precise price/volume reading
+- Where the library supports interaction, include a crosshair or cursor that spans both panes for precise price/volume reading
 - Grid lines should be subtle and aligned across both panes
 
 ## What a good version looks like

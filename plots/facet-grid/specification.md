@@ -17,7 +17,7 @@ A grid of subplots where each cell shows the same type of plot for a different s
 - `y` (numeric) - Second axis variable for the base plot
 - `row_facet` (categorical) - Variable to split rows
 - `col_facet` (categorical) - Variable to split columns
-- Size: 100–5000 points minimum (sufficient to show variation across facets)
+- Size: 100–5000 points (sufficient to show variation across facets)
 - Example: Palmer Penguins (split by species and island), or any dataset with 2+ categorical grouping variables
 
 ## Notes

@@ -17,8 +17,8 @@ A triangular heatmap displaying user retention rates across signup cohorts and t
 - `period` (integer) - Number of periods since signup (0, 1, 2, ...), where period 0 is the signup period
 - `retention_rate` (float) - Percentage of users retained, ranging from 0 to 100; period 0 is always 100%
 - `cohort_size` (integer) - Number of users in each cohort (displayed alongside cohort labels)
-- Size: 8-12 cohorts with 8-12 periods each
-- Example: Monthly signup cohorts from Jan 2024 to Oct 2024, with weekly retention percentages
+- Size: 8-12 cohorts; the first cohort has 8-12 periods and each later cohort fewer
+- Example: Monthly signup cohorts from Jan 2024 to Oct 2024, with monthly retention percentages
 
 ## Notes
 

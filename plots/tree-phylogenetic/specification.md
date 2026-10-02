@@ -23,7 +23,7 @@ A phylogenetic tree (evolutionary tree) visualization showing hierarchical relat
 
 - Use libraries like Biopython (Phylo module) or ete3 for parsing Newick format
 - Branch lengths should be drawn proportionally to show evolutionary distance accurately
-- Consider both rectangular (cladogram) and circular (radial) tree layouts
+- Consider both rectangular and circular (radial) tree layouts
 - Add scale bar to indicate branch length units (e.g., substitutions per site)
 - Color-code clades or highlight specific lineages for emphasis
 

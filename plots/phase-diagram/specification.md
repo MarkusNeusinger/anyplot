@@ -22,7 +22,7 @@ A phase diagram (or state space plot) displays the trajectory of a dynamical sys
 ## Notes
 
 - Multiple trajectories from different initial conditions can reveal basin of attraction structure
-- Fixed points (equilibria) occur where the trajectory crosses dx/dt = 0
+- Fixed points (equilibria) are the states on the dx/dt = 0 axis where the system stays at rest; a trajectory that merely crosses that axis is at a turning point, not at a fixed point
 - Closed loops indicate periodic oscillation (limit cycles or centers)
 - Consider adding direction arrows or color gradient to show time evolution
 - For damped systems, trajectories spiral inward; for driven systems, they may form limit cycles

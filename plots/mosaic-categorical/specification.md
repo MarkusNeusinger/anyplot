@@ -24,7 +24,6 @@ A mosaic plot visualizes contingency tables by dividing a rectangular area into 
 - Rectangle widths represent marginal proportions of the first variable
 - Rectangle heights within each column represent conditional proportions of the second variable
 - Area of each rectangle is proportional to the cell frequency in the contingency table
-- Use statsmodels.graphics.mosaicplot for the core visualization
 - Color coding can indicate residuals or deviations from independence
 - Gap spacing between rectangles helps distinguish categories
 - Labels should identify both categorical variables clearly
