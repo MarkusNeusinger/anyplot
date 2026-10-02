@@ -1,12 +1,12 @@
-"""impl-review owns the verdict, and a later review starts blind (P10, PR 1).
+"""impl-review owns the verdict, and every review starts blind (P10, PR 1).
 
 Three changes, each run for real where it can be:
 
-1. "Hide the previous review (attempt 2 and later)" and "Restore the stored
-   review": while the reviewer runs at attempt 2 or later, the implementation
-   header reads `Quality: pending` and the metadata file (score and the whole
-   previous review) is out of the workspace. Both come back before any later
-   step reads them, whatever the review step did.
+1. "Hide the previous review" and "Restore the stored review": while the
+   reviewer runs, the implementation header reads `Quality: pending` and the
+   metadata file (after a first review: its score and the whole review) is
+   out of the workspace. Both come back before any later step reads them,
+   whatever the review step did.
 2. "Add preliminary verdict label (early)": a review below its threshold, at
    80 or more, whose every technical item is at its maximum is approved as it
    stands (nothing to repair). The checklist decides, never the absence of
@@ -35,7 +35,7 @@ from tests.unit.workflows.test_pipeline_retry_gaps import _calls, _code_only, _r
 
 REPO_ROOT = Path(__file__).parent.parent.parent.parent
 GATE_SCRIPT = REPO_ROOT / "automation" / "scripts" / "regen_gate.py"
-HIDE = "Hide the previous review (attempt 2 and later)"
+HIDE = "Hide the previous review"
 RESTORE = "Restore the stored review"
 REVIEW = "Run AI Quality Review"
 EARLY = "Add preliminary verdict label (early)"
@@ -53,8 +53,9 @@ CATEGORY_KEYS = {
     "CQ": "code_quality",
     "LM": "library_mastery",
 }
-# The modal judgment scores of a first review (DE 6/4/4, LM 4/3): 70 + 21 = 91.
-JUDGMENT = {"DE-01": 6, "DE-02": 4, "DE-03": 4, "LM-01": 4, "LM-02": 3}
+# Judgment scores of a first review below the bar (DE 5/3/3, LM 4/3): a clean
+# technical sheet adds up to 70 + 18 = 88, the SCORE the steps run with.
+JUDGMENT = {"DE-01": 5, "DE-02": 3, "DE-03": 3, "LM-01": 4, "LM-02": 3}
 STEP_ENV = {"SPEC_ID": "spec-a", "LIBRARY": "plotly", "LANGUAGE": "python", "EXT": ".py"}
 
 
@@ -164,13 +165,34 @@ class TestLaterReviewsStartBlind:
         assert names.index(REVIEW) < names.index(RESTORE) < names.index("Extract quality score")
         assert names.index(RESTORE) < names.index(METADATA)
         hide, restore = _step("impl-review.yml", HIDE), _step("impl-review.yml", RESTORE)
-        # Attempt 2 and later only: a first review has nothing to hide.
-        assert hide["if"] == "steps.attempts.outputs.count != '0'"
-        assert restore["if"] == "always() && steps.attempts.outputs.count != '0'"
+        # Every review, not only attempt 2 and later: a manual re-review or a
+        # watchdog bootstrap of a scored PR runs at attempt 0.
+        assert "if" not in hide
+        assert restore["if"] == "always()"
         # Neither can fail the job.
         assert hide["continue-on-error"] is True and restore["continue-on-error"] is True
         assert "git commit" not in hide["run"] and "git add" not in hide["run"]
         assert "sanitize-source --pending" in hide["run"]
+
+    def test_a_first_review_has_nothing_to_hide_and_loses_nothing(self, tmp_path, runner):
+        """The state impl-generate leaves: `Quality: pending` and a null score."""
+        work = tmp_path / "work"
+        fresh_meta = "library: plotly\nquality_score: null\nreview:\n  strengths: []\n  weaknesses: []\n"
+        for rel, text in ((IMPL, HEADER.replace("88/100", "pending")), (META, fresh_meta)):
+            (work / rel).parent.mkdir(parents=True)
+            (work / rel).write_text(text, encoding="utf-8")
+        _git(work, "init", "-q")
+        _git(work, "add", "-A")
+        _git(work, "-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-q", "-m", "generate")
+        assert self._hide(work, tmp_path, runner)[0].returncode == 0
+        assert self._restore(work, tmp_path, runner)[0].returncode == 0
+        assert (work / META).read_text(encoding="utf-8") == fresh_meta
+        assert _git(work, "status", "--porcelain") == ""
+
+    def test_the_metadata_commit_subject_carries_no_score(self):
+        script = _step("impl-review.yml", METADATA)["run"]
+        assert 'git commit -m "chore(${LIBRARY}): store the review for ${SPEC_ID}"' in script
+        assert "update quality score ${SCORE}" not in script
 
     def test_the_metadata_step_has_a_last_net(self):
         script = _step("impl-review.yml", METADATA)["run"]
@@ -209,8 +231,14 @@ class TestNothingToRepair:
         assert outputs == {"nothing_to_repair": "false", "approved": "false"}
 
     def test_below_80_takes_the_repair(self, tmp_path, runner):
-        _, labels, outputs = self._early(tmp_path, runner, {**CRITERIA, **JUDGMENT}, SCORE="79")
+        at_79 = {**CRITERIA, "DE-01": 4, "DE-02": 2, "DE-03": 2, "LM-01": 1, "LM-02": 0}
+        _, labels, outputs = self._early(tmp_path, runner, at_79, SCORE="79")
         assert labels == ["ai-rejected"] and outputs["approved"] == "false"
+
+    def test_a_score_off_the_checklist_sum_takes_the_repair(self, tmp_path, runner):
+        _, labels, outputs = self._early(tmp_path, runner, {**CRITERIA, **JUDGMENT}, SCORE="86")
+        assert labels == ["ai-rejected"]
+        assert outputs == {"nothing_to_repair": "false", "approved": "false"}
 
     def test_no_checklist_is_the_plain_threshold(self, tmp_path, runner):
         _, labels, outputs = self._early(tmp_path, runner, None)

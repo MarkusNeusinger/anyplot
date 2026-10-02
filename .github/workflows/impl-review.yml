@@ -641,18 +641,20 @@ jobs:
         run: |
           python3 "$RUNNER_TEMP/regen-tools/review_provenance.py" criteria-version --root . --library "$LIBRARY"
 
-      # A review at attempt 2 or later starts blind, like the first one (and
-      # like a regeneration's re-score, whose predecessor review is rendered
-      # with --omit-scores). The PR branch carries the previous review in two
-      # places: the `Quality: N/100` header the last review committed, and the
-      # metadata file with the score and the whole review. While the reviewer
-      # runs, the header reads `pending` again and the metadata file waits in
-      # $RUNNER_TEMP. Nothing is committed here, and "Restore the stored
-      # review" puts both back before any later step reads them. Never fatal:
-      # a failure only leaves the previous score in view, as it was before.
-      - name: Hide the previous review (attempt 2 and later)
+      # Every review starts blind (as a regeneration's re-score does, whose
+      # predecessor review is rendered with --omit-scores). Once a review has
+      # run, the PR branch carries it in two places: the `Quality: N/100`
+      # header that review committed, and the metadata file with the score and
+      # the whole review. While the reviewer runs, the header reads `pending`
+      # and the metadata file waits in $RUNNER_TEMP. Unconditional, not keyed
+      # on the attempt label: a manual re-review or a watchdog bootstrap of an
+      # already scored PR runs at attempt 0. On a first review both files hold
+      # nothing to hide, and the reviewer never reads the metadata file.
+      # Nothing is committed here, and "Restore the stored review" puts both
+      # back before any later step reads them. Never fatal: a failure only
+      # leaves the previous score in view, as it was before.
+      - name: Hide the previous review
         id: blind
-        if: steps.attempts.outputs.count != '0'
         continue-on-error: true
         env:
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
@@ -673,7 +675,7 @@ jobs:
             mv "$META_FILE" "$STASH/metadata.yaml" \
               || echo "::warning::could not move ${META_FILE} out of the workspace for the review"
           fi
-          echo "::notice::later review: header $(grep -m1 -o 'Quality: [a-z0-9]*' "$IMPL_FILE" || echo 'Quality: n/a'), stored review hidden=$([ -f "$META_FILE" ] && echo false || echo true)"
+          echo "::notice::blind review: header $(grep -m1 -o 'Quality: [a-z0-9]*' "$IMPL_FILE" || echo 'Quality: n/a'), stored review hidden=$([ -f "$META_FILE" ] && echo false || echo true)"
 
       - name: Run AI Quality Review
         id: review
@@ -727,7 +729,7 @@ jobs:
       # and the metadata file comes back from $RUNNER_TEMP; if that move
       # fails, git restores the branch's copy, which is the same file.
       - name: Restore the stored review
-        if: always() && steps.attempts.outputs.count != '0'
+        if: always()
         continue-on-error: true
         env:
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
@@ -1554,7 +1556,9 @@ jobs:
           git add "$METADATA_FILE" "$IMPL_FILE"
 
           if ! git diff --cached --quiet; then
-            git commit -m "chore(${LIBRARY}): update quality score ${SCORE} and review feedback for ${SPEC_ID}"
+            # No score in the subject: `git log` on the PR branch is the first
+            # thing a later reviewer would see.
+            git commit -m "chore(${LIBRARY}): store the review for ${SPEC_ID}"
             git push origin "$BRANCH"
             echo "::notice::Changes committed to ${BRANCH}"
           fi

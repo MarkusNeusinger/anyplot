@@ -539,9 +539,19 @@ def nothing_to_repair(score: int | None, checklist: Mapping[str, int]) -> bool:
     Such a review is approved as it stands when it scores at least
     ``NOTHING_TO_REPAIR_MIN``. The checklist decides, not the absence of
     defect lines: a deduction without a line is a reviewer slip, and it
-    still gets its repair. A missing or incomplete checklist never qualifies.
+    still gets its repair. A missing or incomplete checklist never qualifies,
+    and neither does one that does not add up to the score: no score cap can
+    apply here (each needs a technical item at 0, or lands at 75), so a typed
+    score below the checklist's sum is a deduction the checklist does not
+    carry.
     """
-    return score is not None and score >= NOTHING_TO_REPAIR_MIN and technical_items_at_maximum(checklist)
+    return (
+        score is not None
+        and score >= NOTHING_TO_REPAIR_MIN
+        and technical_items_at_maximum(checklist)
+        and set(checklist) == set(CRITERIA)
+        and sum(checklist.values()) == score
+    )
 
 
 # ---------------------------------------------------------------------------

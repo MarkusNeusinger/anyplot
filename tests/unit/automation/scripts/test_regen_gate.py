@@ -2531,8 +2531,9 @@ class TestCheckPrevReview:
 # P10: a first-generation review with nothing to repair
 # ---------------------------------------------------------------------------
 
-# The modal judgment scores of a first review: DE 6/4/4, LM 4/3.
-JUDGMENT = {"DE-01": 6, "DE-02": 4, "DE-03": 4, "LM-01": 4, "LM-02": 3}
+# Judgment scores of a first review below the bar: DE 5/3/3, LM 4/3 = 18, so a
+# clean technical sheet (70) adds up to 88.
+JUDGMENT = {"DE-01": 5, "DE-02": 3, "DE-03": 3, "LM-01": 4, "LM-02": 3}
 
 
 class TestNothingToRepair:
@@ -2542,20 +2543,31 @@ class TestNothingToRepair:
     and CQ-01 without a line and must still get its repair)."""
 
     def test_a_clean_technical_sheet_at_or_above_80_qualifies(self):
-        checklist = {**CRITERIA, **JUDGMENT}  # 70 + 21 = 91, but say the reviewer capped or typed 88
-        assert nothing_to_repair(88, checklist)
-        assert nothing_to_repair(80, checklist)
+        assert nothing_to_repair(88, {**CRITERIA, **JUDGMENT})
+        at_80 = {**CRITERIA, "DE-01": 4, "DE-02": 2, "DE-03": 2, "LM-01": 1, "LM-02": 1}
+        assert sum(at_80.values()) == 80 and nothing_to_repair(80, at_80)
 
     def test_below_80_never_qualifies(self):
-        assert not nothing_to_repair(79, {**CRITERIA, **JUDGMENT})
+        at_79 = {**CRITERIA, "DE-01": 4, "DE-02": 2, "DE-03": 2, "LM-01": 1, "LM-02": 0}
+        assert sum(at_79.values()) == 79 and not nothing_to_repair(79, at_79)
 
     @pytest.mark.parametrize("criterion", ["VQ-01", "SC-02", "DQ-03", "CQ-01"])
     def test_one_technical_deduction_disqualifies(self, criterion):
         checklist = {**CRITERIA, **JUDGMENT, criterion: CRITERIA[criterion] - 1}
-        assert not nothing_to_repair(88, checklist)
+        assert not nothing_to_repair(87, checklist)
 
-    def test_a_judgment_item_at_zero_does_not_matter(self):
+    def test_judgment_items_at_their_defaults_qualify(self):
         assert nothing_to_repair(82, {**CRITERIA, "DE-01": 4, "DE-02": 2, "DE-03": 2, "LM-01": 3, "LM-02": 1})
+
+    @pytest.mark.parametrize("typed", [86, 89])
+    def test_a_score_the_checklist_does_not_add_up_to_never_qualifies(self, typed):
+        """No cap can apply to a clean technical sheet at 80 or more, so a typed
+        score off the sum is a deduction (or a bonus) the checklist does not carry."""
+        assert not nothing_to_repair(typed, {**CRITERIA, **JUDGMENT})
+
+    def test_a_missing_judgment_item_never_qualifies(self):
+        checklist = {k: v for k, v in {**CRITERIA, **JUDGMENT}.items() if k != "LM-02"}
+        assert not nothing_to_repair(sum(checklist.values()), checklist)
 
     def test_names_the_nineteen_technical_items(self):
         technical = [cid for cid in CRITERIA if cid[:2] in ("VQ", "SC", "DQ", "CQ")]
