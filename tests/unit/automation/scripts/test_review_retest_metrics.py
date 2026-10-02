@@ -150,6 +150,53 @@ class TestFreshMetrics:
         assert 0 < w["topic_jaccard"] <= 1
 
 
+class TestSilentDeductions:
+    DEFECT = "VQ-01 (both): legend text at 8 pt blurs in the thumbnail → about 10 pt (+2 pt). Likely cause: x."
+
+    def test_the_defect_line_format_is_the_gates(self):
+        from automation.scripts import regen_gate
+
+        assert m.DEFECT_LINE_RE.pattern == regen_gate.DEFECT_RE.pattern
+
+    def test_technical_and_judgment_items(self):
+        assert len(m.TECHNICAL_IDS) == 19 and len(m.JUDGMENT_IDS) == 5
+        assert set(m.TECHNICAL_IDS) | set(m.JUDGMENT_IDS) == set(m.CRITERIA_IDS)
+
+    def test_named_unnamed_judgment_and_suggestion(self):
+        checklist = _checklist(
+            VQ_01=(7, 8, "small legend"),  # named by the defect line
+            CQ_01=(2, 3, "two helpers"),  # deducted, no line: silent
+            DQ_01=(5, 6, "no crossover"),  # a suggestion names nothing: silent
+            DE_02=(4, 6, "refined"),  # a judgment item is never counted
+            LM_02=(3, 5, "generic"),
+            SC_01=(5, 5, "ok"),
+        )
+        weaknesses = [self.DEFECT, "Suggestion: DQ-01 would gain from a crossover configuration."]
+        assert m.silent_deductions(checklist, weaknesses) == (["DQ-01", "CQ-01"], 3)
+
+    def test_one_line_names_several_criteria(self):
+        checklist = _checklist(VQ_03=(4, 6, "x"), SC_04=(2, 3, "x"))
+        line = "VQ-03, SC-04 (light): size-legend circles vanish → darker stroke. Likely cause: x."
+        assert m.silent_deductions(checklist, [line]) == ([], 2)
+
+    def test_group_shares_and_auto_reject(self):
+        deducted = _checklist(VQ_01=(7, 8, "x"), CQ_01=(2, 3, "x"))
+        records = [
+            _rec("a", 1, 88, checklist=deducted, weaknesses=[self.DEFECT]),
+            _rec("a", 2, 90, checklist=_checklist(VQ_01=(7, 8, "x")), weaknesses=[self.DEFECT]),
+            # An auto-reject scores 0 whatever its items say, and is left out.
+            _rec("b", 1, 0, checklist=deducted, weaknesses=[]),
+        ]
+        w = m.group_metrics(records, {})["weaknesses"]
+        assert (w["silent_deductions_count"], w["silent_deductions_n"]) == (1, 3)
+        assert w["silent_deductions"] == pytest.approx(1 / 3)
+        assert w["silent_deduction_runs"] == 0.5
+
+    def test_no_deduction_has_no_share(self):
+        w = m.group_metrics([_rec("a", 1, 100, checklist=_checklist(VQ_01=(8, 8, "x")))], {})["weaknesses"]
+        assert w["silent_deductions"] is None and w["silent_deduction_runs"] == 0.0
+
+
 class TestLabels:
     LABELS = {
         "a": {

@@ -12,6 +12,19 @@ Three gaps observed 2026-09-28..30:
    main ruleset refuses; it could only ever target the live implementation of
    a forced regeneration, so it is gone.
 
+Follow-ups from the reviews of that fix:
+
+4. "Validate review output" posted its first-failure marker and dispatch
+   unretried, and a failure there left the PR without any label.
+5. A dispatch GitHub accepted but `gh` reported as failed left
+   `ai-review-failed` beside the running re-review, and watchdog Case 1 then
+   started a second one. A review now clears the label at its start, and
+   Case 1 leaves a PR alone while a review of it is queued or running.
+6. The early verdict step let a failed `regen:kept` add pass as a warning, so
+   the step succeeded without a verdict label and switched the rescue off.
+7. impl-repair's crash retry read `gh api --paginate --jq … | length` as one
+   number; on a PR with more than 100 comments the cap never held.
+
 The step scripts run under `bash -eo pipefail` like Actions runs them, with a
 fake `gh` that records its calls and a no-op `sleep` on PATH. The rest are
 content guards for wiring without a local execution loop.
@@ -19,6 +32,7 @@ content guards for wiring without a local execution loop.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -39,7 +53,10 @@ MARKER = "<!-- review-retry:spec-a:plotly -->"
 # with $GH_ISSUE_LABELS (fails with GH_FAIL_ISSUE_VIEW=1), `api` with one
 # $GH_MARKERS count per page (fails with GH_FAIL_API=1), `workflow run`,
 # `pr comment` and `label create` with exit $GH_*_RC; an `issue edit
-# --remove-label` fails with GH_FAIL_REMOVE=1. Logs every call.
+# --remove-label` fails with GH_FAIL_REMOVE=1. A `pr edit --add-label
+# $GH_FAIL_ADD_LABEL` fails, as does a `pr edit --remove-label` with
+# GH_FAIL_PR_REMOVE=1; the `repository_dispatch` POST exits
+# $GH_DISPATCH_API_RC. Logs every call.
 FAKE_GH = """\
 for arg in "$@"; do printf '%s\\n' "$arg"; done >> "$GH_LOG"
 echo "--END--" >> "$GH_LOG"
@@ -48,6 +65,11 @@ case "$1 $2" in
     [ "${GH_FAIL_VIEW:-0}" = "1" ] && { echo "HTTP 502" >&2; exit 1; }
     [ -n "$GH_LABELS" ] && printf '%s\\n' $GH_LABELS
     exit 0 ;;
+  "pr edit")
+    [ "$4" = "--add-label" ] && [ "$5" = "${GH_FAIL_ADD_LABEL:-}" ] && { echo "HTTP 502" >&2; exit 1; }
+    [ "$4" = "--remove-label" ] && [ "${GH_FAIL_PR_REMOVE:-0}" = "1" ] && { echo "HTTP 502" >&2; exit 1; }
+    exit 0 ;;
+  "api repos/"*"/dispatches") exit "${GH_DISPATCH_API_RC:-0}" ;;
   "issue view")
     [ "${GH_FAIL_ISSUE_VIEW:-0}" = "1" ] && { echo "HTTP 502" >&2; exit 1; }
     [ -n "$GH_ISSUE_LABELS" ] && printf '%s\\n' $GH_ISSUE_LABELS
@@ -82,10 +104,10 @@ def _code_only(script: str) -> str:
     return "\n".join(line for line in script.splitlines() if not line.lstrip().startswith("#"))
 
 
-def _bin(tmp_path: Path) -> str:
+def _bin(tmp_path: Path, fake_gh: str = FAKE_GH) -> str:
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir(exist_ok=True)
-    for name, body in (("gh", FAKE_GH), ("sleep", "exit 0\n")):
+    for name, body in (("gh", fake_gh), ("sleep", "exit 0\n")):
         path = bin_dir / name
         path.write_text("#!/bin/sh\n" + body, encoding="utf-8")
         path.chmod(0o755)
@@ -93,7 +115,7 @@ def _bin(tmp_path: Path) -> str:
 
 
 def _run(
-    script: str, cwd: Path, tmp_path: Path, **env: str
+    script: str, cwd: Path, tmp_path: Path, *, fake_gh: str = FAKE_GH, **env: str
 ) -> tuple[subprocess.CompletedProcess[str], list[list[str]]]:
     assert "${{" not in script
     log = tmp_path / "gh_log"
@@ -102,7 +124,7 @@ def _run(
     result = subprocess.run(
         ["bash", "-eo", "pipefail", "-c", script],
         cwd=cwd,
-        env={**base, "PATH": _bin(tmp_path), "GH_LOG": str(log), "GH_TOKEN": "unused", **env},
+        env={**base, "PATH": _bin(tmp_path, fake_gh), "GH_LOG": str(log), "GH_TOKEN": "unused", **env},
         capture_output=True,
         text=True,
     )
@@ -284,6 +306,306 @@ class TestNoScoreRetryBudget:
         assert result.returncode == 1
         assert ["pr", "edit", "7", "--add-label", "ai-review-failed"] in calls
         assert len(_calls(calls, "pr", "comment")) == 3
+
+    def test_the_marker_is_durable_before_the_dispatch(self, tmp_path):
+        _, calls = self._validate(tmp_path)
+        kinds = [" ".join(c[:2]) for c in calls]
+        assert kinds.index("pr comment") < kinds.index("api repos/owner/repo/dispatches")
+
+    def test_a_lost_marker_comment_never_dispatches(self, tmp_path):
+        result, calls = self._validate(tmp_path, GH_COMMENT_RC="1")
+        assert result.returncode == 1
+        assert not _calls(calls, "api", "repos/owner/repo/dispatches")
+        assert ["pr", "edit", "7", "--add-label", "ai-review-failed"] in calls
+        # Three tries for the marker, three for the give-up comment: bounded.
+        assert len(_calls(calls, "pr", "comment")) == 6
+
+    def test_a_failed_dispatch_is_retried_then_handed_to_the_watchdog(self, tmp_path):
+        result, calls = self._validate(tmp_path, GH_DISPATCH_API_RC="1")
+        assert result.returncode == 1
+        assert len(_calls(calls, "api", "repos/owner/repo/dispatches")) == 3
+        assert ["pr", "edit", "7", "--add-label", "ai-review-failed"] in calls
+        comments = _calls(calls, "pr", "comment")
+        assert len(comments) == 2  # the marker, then the give-up comment
+        assert "could not be dispatched" in "\n".join(comments[-1])
+
+
+class TestStaleReviewFailedLabel:
+    """A review that starts is the review `ai-review-failed` asked for."""
+
+    STEP = "Clear a stale ai-review-failed label"
+    REMOVE = ["pr", "edit", "7", "--remove-label", "ai-review-failed"]
+
+    def _clear(self, tmp_path: Path, **env: str) -> tuple[subprocess.CompletedProcess[str], list[list[str]]]:
+        return _run(_step("impl-review.yml", self.STEP)["run"], tmp_path, tmp_path, PR_NUM="7", **env)
+
+    def test_a_stale_label_is_removed(self, tmp_path):
+        result, calls = self._clear(tmp_path, GH_LABELS="quality:86 ai-review-failed")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert calls.count(self.REMOVE) == 1
+
+    @pytest.mark.parametrize("labels", ["", "quality:86 ai-review-rescued", "ai-review-failed-x"])
+    def test_an_absent_label_is_not_removed(self, tmp_path, labels):
+        result, calls = self._clear(tmp_path, GH_LABELS=labels)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert not _calls(calls, "pr", "edit")
+
+    def test_a_failed_removal_is_retried_and_never_fails_the_review(self, tmp_path):
+        result, calls = self._clear(tmp_path, GH_LABELS="ai-review-failed", GH_FAIL_PR_REMOVE="1")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert calls.count(self.REMOVE) == 3
+
+    def test_unreadable_labels_never_fail_the_review(self, tmp_path):
+        result, calls = self._clear(tmp_path, GH_FAIL_VIEW="1")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert len(_calls(calls, "pr", "view")) == 3
+        assert not _calls(calls, "pr", "edit")
+
+    def test_runs_unconditionally_before_the_review(self):
+        step = _step("impl-review.yml", self.STEP)
+        assert "if" not in step and "continue-on-error" not in step
+        names = [s.get("name") for s in _steps("impl-review.yml")]
+        assert names.index("Extract PR info") < names.index(self.STEP) < names.index("Run AI Quality Review")
+
+    def test_reviews_of_one_pr_never_overlap(self):
+        # The re-review a failing run dispatches waits in this group until
+        # that run — and its `ai-review-failed` — is done, so the label is
+        # always there to clear when the re-review starts.
+        workflow = yaml.safe_load((WORKFLOWS_DIR / "impl-review.yml").read_text(encoding="utf-8"))
+        assert workflow["concurrency"]["group"].startswith("impl-review-${{ inputs.pr_number ||")
+        assert workflow["concurrency"]["cancel-in-progress"] is False
+
+
+class TestEarlyVerdictLabel:
+    """A verdict label that cannot be added fails the step, so the rescue runs."""
+
+    STEP = "Add preliminary verdict label (early)"
+    ENV = {"PR_NUM": "7", "SCORE": "86", "ATTEMPT_COUNT": "0", "IS_REGEN": "false", "GATE_VERDICT": ""}
+
+    def _verdict(self, tmp_path: Path, **env: str) -> tuple[subprocess.CompletedProcess[str], list[list[str]]]:
+        return _run(_step("impl-review.yml", self.STEP)["run"], tmp_path, tmp_path, **{**self.ENV, **env})
+
+    @pytest.mark.parametrize(
+        ("env", "label"),
+        [
+            ({"IS_REGEN": "true", "GATE_VERDICT": "keep"}, "regen:kept"),
+            ({"IS_REGEN": "true", "GATE_VERDICT": "merge"}, "regen:improved"),
+            ({"IS_REGEN": "true", "GATE_VERDICT": "merge"}, "ai-approved"),
+            ({"SCORE": "93"}, "ai-approved"),
+            ({"SCORE": "86"}, "ai-rejected"),
+        ],
+    )
+    def test_a_lost_verdict_label_is_retried_and_fails_the_step(self, tmp_path, env, label):
+        result, calls = self._verdict(tmp_path, GH_FAIL_ADD_LABEL=label, **env)
+        assert result.returncode == 1, result.stdout + result.stderr
+        assert calls.count(["pr", "edit", "7", "--add-label", label]) == 3
+
+    def test_a_lost_regen_improved_never_adds_ai_approved(self, tmp_path):
+        _, calls = self._verdict(tmp_path, IS_REGEN="true", GATE_VERDICT="merge", GH_FAIL_ADD_LABEL="regen:improved")
+        assert ["pr", "edit", "7", "--add-label", "ai-approved"] not in calls
+
+    @pytest.mark.parametrize(
+        ("env", "labels"),
+        [
+            ({"IS_REGEN": "true", "GATE_VERDICT": "keep"}, ["regen:kept"]),
+            ({"IS_REGEN": "true", "GATE_VERDICT": "merge"}, ["regen:improved", "ai-approved"]),
+            ({"SCORE": "93"}, ["ai-approved"]),
+            ({"SCORE": "86"}, ["ai-rejected"]),
+            ({"SCORE": "41"}, ["ai-rejected", "quality-poor"]),
+        ],
+    )
+    def test_the_verdict_labels_land_in_order(self, tmp_path, env, labels):
+        result, calls = self._verdict(tmp_path, **env)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert [c[-1] for c in _calls(calls, "pr", "edit")] == labels
+
+    def test_a_failed_step_is_what_arms_the_rescue(self):
+        assert "steps.early_verdict.conclusion != 'success'" in _step("impl-review.yml", RESCUE_STEP)["if"]
+        assert "continue-on-error" not in _step("impl-review.yml", self.STEP)
+
+
+class TestRepairCrashRetryBudget:
+    """impl-repair's crash retry: the last per-page count that was read as one number."""
+
+    ENV = {
+        "PR_NUM": "7",
+        "SPEC_ID": "spec-a",
+        "LIBRARY": "plotly",
+        "ATTEMPT": "2",
+        "MODEL": "sonnet",
+        "REPOSITORY": "owner/repo",
+        "RUN_ID": "1",
+    }
+
+    def _crash(self, tmp_path: Path, **env: str) -> tuple[subprocess.CompletedProcess[str], list[list[str]]]:
+        script = _step("impl-repair.yml", "Handle repair failure")["run"]
+        return _run(script, tmp_path, tmp_path, **{**self.ENV, **env})
+
+    @pytest.mark.parametrize(("pages", "dispatches"), [("0", 1), ("0 0 0", 1), ("0 1", 0), ("1 0", 0), ("1", 0)])
+    def test_the_marker_is_counted_across_comment_pages(self, tmp_path, pages, dispatches):
+        result, calls = self._crash(tmp_path, GH_MARKERS=pages)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert len(_calls(calls, "workflow", "run")) == dispatches
+        (comment,) = _calls(calls, "pr", "comment")
+        assert comment[4] == "<!-- repair-retry:spec-a:plotly:attempt-2 -->"
+        assert ("retry exhausted" in comment[5]) == (dispatches == 0)
+
+    @pytest.mark.parametrize("env", [{"GH_FAIL_API": "1"}, {"GH_MARKERS": "oops"}])
+    def test_an_unreadable_budget_counts_as_spent(self, tmp_path, env):
+        result, calls = self._crash(tmp_path, **env)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert len(_calls(calls, "api", "--paginate")) == 3  # retried
+        assert not _calls(calls, "workflow", "run")
+        (comment,) = _calls(calls, "pr", "comment")
+        assert "could not be read" in "\n".join(comment)
+
+    def test_the_retry_keeps_its_attempt_and_model(self, tmp_path):
+        _, calls = self._crash(tmp_path)
+        (run,) = _calls(calls, "workflow", "run")
+        assert run[2:] == [
+            "impl-repair.yml",
+            "-f",
+            "pr_number=7",
+            "-f",
+            "specification_id=spec-a",
+            "-f",
+            "library=plotly",
+            "-f",
+            "attempt=2",
+            "-f",
+            "model=sonnet",
+        ]
+
+
+@pytest.mark.parametrize("workflow", sorted(p.name for p in WORKFLOWS_DIR.glob("*.yml")))
+def test_no_workflow_reads_a_paginated_count_as_one_number(workflow):
+    """`gh api --paginate --jq '… | length'` prints one count per page.
+
+    Every such read has to sum the pages (`jq -s 'add // 0'`, or awk for the
+    two-column form) before it compares the result.
+    """
+    for step in _steps(workflow):
+        lines = _code_only(step.get("run", "")).splitlines()
+        for i, line in enumerate(lines):
+            if "--paginate" not in line:
+                continue
+            command = "\n".join(lines[i : i + 4])
+            if "| length" not in command and "| length)" not in command:
+                continue
+            assert "jq -s 'add // 0'" in command or "| awk " in command, (workflow, step.get("name"))
+
+
+# Answers `pr list` with $GH_PRS_JSON, `issue list` with no issues, and the
+# impl-review run list with one run for the status in $GH_IN_FLIGHT_STATUS
+# (fails with GH_FAIL_RUNS=1), `pr view` with $GH_FRESH_LABELS (fails with
+# GH_FAIL_VIEW=1). Every other `api` call fails, which the scan
+# reads as "daily-regen state unknown". Logs every call.
+FAKE_GH_WATCHDOG = """\
+for arg in "$@"; do printf '%s\\n' "$arg"; done >> "$GH_LOG"
+echo "--END--" >> "$GH_LOG"
+case "$1 $2" in
+  "pr list") printf '%s\\n' "$GH_PRS_JSON"; exit 0 ;;
+  "pr view")
+    [ "${GH_FAIL_VIEW:-0}" = "1" ] && { echo "HTTP 502" >&2; exit 1; }
+    printf '%s\\n' "$GH_FRESH_LABELS"; exit 0 ;;
+  "issue list") echo "[]"; exit 0 ;;
+  "api repos/owner/repo/actions/workflows/impl-review.yml/runs"*)
+    [ "${GH_FAIL_RUNS:-0}" = "1" ] && { echo "HTTP 502" >&2; exit 1; }
+    case "$2" in
+      *"status=${GH_IN_FLIGHT_STATUS:-none}&"*) echo 1 ;;
+      *) echo 0 ;;
+    esac
+    exit 0 ;;
+  "api "*) exit 1 ;;
+esac
+exit 0
+"""
+
+
+class TestWatchdogCase1:
+    """`ai-review-failed` beside a review in flight is stale, not a rescue case."""
+
+    DISPATCH = ["workflow", "run", "impl-review.yml", "-f", "pr_number=7"]
+
+    def _scan(self, tmp_path: Path, labels: str = "ai-review-failed", **env: str):
+        prs = [
+            {
+                "number": 7,
+                "labels": [{"name": name} for name in labels.split()],
+                "headRefName": "implementation/spec-a/plotly",
+                "updatedAt": "2026-01-01T00:00:00Z",
+            }
+        ]
+        return _run(
+            _step("watchdog-stuck-jobs.yml", "Scan and dispatch")["run"],
+            tmp_path,
+            tmp_path,
+            fake_gh=FAKE_GH_WATCHDOG,
+            GH_REPO="owner/repo",
+            STALE_HOURS="4",
+            DRY_RUN="false",
+            GH_PRS_JSON=json.dumps(prs),
+            **{"GH_FRESH_LABELS": labels, **env},
+        )
+
+    @pytest.mark.parametrize(
+        "env",
+        [
+            {"GH_FRESH_LABELS": "quality:86 ai-approved ai-review-failed"},
+            {"GH_FRESH_LABELS": "quality:86 regen:kept ai-review-failed"},
+            {"GH_FRESH_LABELS": "quality:86"},
+            {"GH_FAIL_VIEW": "1"},
+        ],
+    )
+    def test_a_review_that_finished_during_the_scan_is_not_doubled(self, tmp_path, env):
+        # The scan's label snapshot predates the verdict, and the finished
+        # run is no longer in flight: only a fresh read can tell.
+        result, calls = self._scan(tmp_path, **env)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert self.DISPATCH not in calls
+        assert not _calls(calls, "pr", "edit")
+
+    def test_a_failed_review_is_re_dispatched_once(self, tmp_path):
+        result, calls = self._scan(tmp_path)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert calls.count(self.DISPATCH) == 1
+        assert ["pr", "edit", "7", "--add-label", "ai-review-rescued", "--remove-label", "ai-review-failed"] in calls
+
+    @pytest.mark.parametrize("status", ["queued", "in_progress", "pending", "waiting", "requested"])
+    def test_a_review_in_flight_is_never_doubled(self, tmp_path, status):
+        result, calls = self._scan(tmp_path, GH_IN_FLIGHT_STATUS=status)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert self.DISPATCH not in calls
+        assert not _calls(calls, "pr", "edit")
+        assert "a review is queued or running" in result.stdout
+
+    def test_an_unreadable_run_list_skips_the_pr_for_this_scan(self, tmp_path):
+        result, calls = self._scan(tmp_path, GH_FAIL_RUNS="1")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert self.DISPATCH not in calls
+        assert not _calls(calls, "pr", "edit")  # the label stays for the next scan
+
+    def test_a_rescued_pr_is_only_flagged(self, tmp_path):
+        result, calls = self._scan(tmp_path, labels="ai-review-failed ai-review-rescued")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert self.DISPATCH not in calls
+        assert "persists after rescue" in result.stdout
+
+    @pytest.mark.parametrize("verdict", ["ai-approved", "ai-rejected", "regen:improved"])
+    def test_a_verdict_makes_the_label_stale_instead_of_a_rescue(self, tmp_path, verdict):
+        # The clear step is best effort: a label that survived a finished
+        # review must not buy a second, possibly contradicting one.
+        result, calls = self._scan(tmp_path, labels=f"quality:86 {verdict} ai-review-failed")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert self.DISPATCH not in calls
+        assert ["pr", "edit", "7", "--remove-label", "ai-review-failed"] in calls
+        assert not any("ai-review-rescued" in c for c in calls)
+
+    def test_the_run_title_matches_the_review_run_name(self):
+        workflow = yaml.safe_load((WORKFLOWS_DIR / "impl-review.yml").read_text(encoding="utf-8"))
+        assert workflow["run-name"].startswith("Review: PR #${{ inputs.pr_number ||")
+        script = _step("watchdog-stuck-jobs.yml", "Scan and dispatch")["run"]
+        assert '.display_title == \\"Review: PR #$num\\"' in script
 
 
 class TestQualityLabelStep:

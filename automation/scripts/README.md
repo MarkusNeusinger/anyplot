@@ -165,8 +165,10 @@ for `freeze`'s pixel statistics), driven by `.github/workflows/review-retest.yml
 run from a copy outside the workspace), `report` (aggregate job), plus the
 local `validate` (the manifest; `--check-git` the pinned sources,
 `--check-renders` every render's canvas from its PNG header, no download),
-`gate-report` (production gate records from PR comments) and `freeze`
-(builds and, with `--execute`, uploads a frozen set). A cell records the
+`gate-report` (production gate records from PR comments), `first-reviews`
+(the live review comments of first-generation PRs: score pile at the approval
+line, spread between libraries, silent deductions, what each repair gained)
+and `freeze` (builds and, with `--execute`, uploads a frozen set). A cell records the
 resolved model id or `null`, with the alias apart as `model_alias`. On a
 resume, `plan` reuses a cell only when its record matches the arm (set,
 harness version, action pin, rules commit, spec source, the cell's model),

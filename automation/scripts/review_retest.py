@@ -32,6 +32,7 @@ Subcommands::
     collect    gather one cell's outputs into record.json (review job)
     report     aggregate the records into the report and the PR snippet (aggregate job)
     gate-report  local: aggregate production regen-gate records from PR comments
+    first-reviews  local: aggregate the live reviews of first-generation PRs
     freeze     local: build the frozen set; dry run unless --execute
 
 ``materialize`` and ``collect`` run from a copy of ``automation/`` outside
@@ -168,6 +169,7 @@ TIERS = ("core", "full")
 ORDERS = ("forward", "reversed")
 VERDICTS = ("keep", "merge")
 PAIR_CLASSES = ("identity", "near-identical", "different")
+SPEC_SOURCES = ("pinned", "rules_ref")
 CHARACTERISTICS_HEADING_RE = re.compile(r"^##\s+what a good version looks like\b", re.IGNORECASE | re.MULTILINE)
 
 
@@ -345,6 +347,8 @@ def _label_errors(where: str, labels: Any, criteria: Iterable[str], allowed: str
             errors.append(f"{at}.match does not compile: {exc}")
         if not label.get("match"):
             errors.append(f"{at}.match is missing")
+        if "spec_source" in label and label["spec_source"] not in SPEC_SOURCES:
+            errors.append(f"{at}.spec_source must be one of {', '.join(SPEC_SOURCES)}")
     return errors
 
 
@@ -1336,6 +1340,15 @@ def _uncarried(gate: dict[str, Any]) -> str:
     return f"{gate['merges_without_carrier_count']}/{gate['merges_without_carrier_n']}"
 
 
+def _silent(weaknesses: dict[str, Any]) -> str:
+    """Silent deductions as ``k/n (share)``: ``0/0`` when no technical item is
+    below its maximum, ``–`` for metrics built before the count existed."""
+    if "silent_deductions_n" not in weaknesses:
+        return "–"
+    counts = f"{weaknesses['silent_deductions_count']}/{weaknesses['silent_deductions_n']}"
+    return f"{counts} ({_pct(weaknesses['silent_deductions'])})" if weaknesses["silent_deductions_n"] else counts
+
+
 def _arm_rows(arm: dict[str, Any]) -> dict[str, str]:
     """The snippet's metric cells for one arm."""
     fresh = _kind_group(arm, "fresh")
@@ -1353,6 +1366,7 @@ def _arm_rows(arm: dict[str, Any]) -> dict[str, str]:
             " · ".join(f"{c['id']} {c['sd']:.1f}" for c in fresh["noisiest_criteria"]) or "–"
         )
         rows["Weakness-topic Jaccard"] = _fmt(fresh["weaknesses"]["topic_jaccard"], 2)
+        rows["Silent deductions (technical items, fresh)"] = _silent(fresh["weaknesses"])
     misses = sum(g["defects"]["defect_misses"] for g in arm["groups"].values())
     druns = sum(g["defects"]["defect_runs"] for g in arm["groups"].values())
     alarms = sum(g["defects"]["false_alarms"] for g in arm["groups"].values())
@@ -1485,6 +1499,8 @@ def render_report(
             f"| Criterion-id Jaccard | {_fmt(group['weaknesses']['id_jaccard'], 2)} |",
             f"| “Add X” weaknesses | {_pct(group['weaknesses']['add_share'])} |",
             f"| Below-max comments without a limiting word | {_pct(group['weaknesses']['below_max_without_limiting_word'])} |",
+            f"| Silent deductions (technical items below max no defect line names) / runs with one | "
+            f"{_silent(group['weaknesses'])} / {_pct(group['weaknesses'].get('silent_deduction_runs'))} |",
         ]
         if "verdicts" in group:
             for field in ("typed", "sum"):
@@ -1705,6 +1721,147 @@ def render_gate_report(result: dict[str, Any]) -> str:
         *([f"- {a}" for a in result["alarms"]] or ["- none"]),
         "",
     ]
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# first-reviews (local)
+# ---------------------------------------------------------------------------
+
+
+REVIEW_AUTHOR = "claude[bot]"
+FIRST_GENERATION_BRANCH_RE = re.compile(r"^implementation/(?P<spec_id>[a-z0-9][a-z0-9-]*)/(?P<library>[a-z0-9]+)$")
+
+
+def first_generation_pull(pull: dict[str, Any]) -> dict[str, Any] | None:
+    """``{number, spec_id, library}`` of a first-generation pull request, else None.
+
+    A first generation runs on ``implementation/<spec>/<library>`` and carries
+    no ``regen`` label (``regen``, ``regen:forced``, ``regen:kept``, …).
+    """
+    branch = FIRST_GENERATION_BRANCH_RE.match(str(pull.get("headRefName") or ""))
+    labels = [str((label or {}).get("name") or "") for label in pull.get("labels") or []]
+    if not branch or any(name.startswith("regen") for name in labels):
+        return None
+    return {"number": int(pull["number"]), "spec_id": branch.group("spec_id"), "library": branch.group("library")}
+
+
+def pull_reviews(comments: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The AI review comments of one pull request, parsed, in posting order.
+
+    Only the reviewer's own comments count (``REVIEW_AUTHOR``, the login
+    impl-review's score fallback reads too): anyone may post or quote a block
+    that looks like a review.
+    """
+    reviews = []
+    for comment in sorted(comments, key=lambda c: str(c.get("at") or "")):
+        if comment.get("login") != REVIEW_AUTHOR:
+            continue
+        review = metrics.parse_review_comment(str(comment.get("body") or ""))
+        if review is not None:
+            reviews.append({**review, "at": str(comment.get("at") or "")})
+    return reviews
+
+
+def _gh_json(args: Sequence[str]) -> Any:
+    out = subprocess.run(["gh", *args], check=True, capture_output=True, text=True).stdout
+    return json.loads(out or "null")
+
+
+def gh_first_generation_pulls(since: str, limit: int) -> list[dict[str, Any]]:
+    """First-generation pull requests created since a date, with their reviews and commits (read-only)."""
+    listed = _gh_json(
+        [
+            "pr",
+            "list",
+            "--state",
+            "all",
+            "--limit",
+            str(limit),
+            "--search",
+            f"created:>={since}",
+            "--json",
+            "number,headRefName,labels",
+        ]
+    )
+    if len(listed or []) >= limit:
+        print(
+            f"::warning::the listing stopped at --limit {limit}: older pull requests since {since} are missing",
+            file=sys.stderr,
+        )
+    pulls = []
+    for pull in sorted(filter(None, map(first_generation_pull, listed or [])), key=lambda p: p["number"]):
+        out = subprocess.run(
+            [
+                "gh",
+                "api",
+                "--paginate",
+                f"repos/{{owner}}/{{repo}}/issues/{pull['number']}/comments",
+                "--jq",
+                ".[] | {body, at: .created_at, login: .user.login} | @json",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+        comments = [json.loads(line) for line in out.splitlines() if line.strip()]
+        commits = (_gh_json(["pr", "view", str(pull["number"]), "--json", "commits"]) or {}).get("commits") or []
+        pull["reviews"] = pull_reviews(comments)
+        pull["commits"] = [{"at": c.get("committedDate"), "headline": c.get("messageHeadline")} for c in commits]
+        pulls.append(pull)
+    return pulls
+
+
+def render_first_reviews(result: dict[str, Any], since: str) -> str:
+    def signed(value: int | None) -> str:
+        return "–" if value is None else f"{value:+d}"
+
+    histogram = " · ".join(f"{score}: {n}" for score, n in result["histogram"].items()) or "–"
+    silent = (
+        f"{result['silent_deductions_count']}/{result['silent_deductions_n']} ({_pct(result['silent_deductions'])})"
+        if result["silent_deductions_n"]
+        else "– (no technical item below its maximum)"
+    )
+    repairs = result["repairs"]
+    lines = [
+        f"# First reviews since {since}",
+        "",
+        f"- First-generation pull requests: {result['pulls']}; with an attempt-1 review: {result['first_reviews']}",
+        f"- Attempt-1 scores: mean {_fmt(result['mean'])}, SD {_fmt(result['sd'])}; "
+        f"{result['approved_first']} at {metrics.APPROVAL_LINE} or above; "
+        f"at {metrics.NEAR_LINE[0]}–{metrics.NEAR_LINE[1]}: {_pct(result['near_line'])}",
+        f"- Histogram: {histogram}",
+        f"- Silent deductions (technical items below their maximum that no defect line names): {silent}, in "
+        f"{len(result['silent_pulls'])} review(s)"
+        + (
+            ": " + ", ".join(f"#{p['number']} {' '.join(p['items'])}" for p in result["silent_pulls"])
+            if result["silent_pulls"]
+            else ""
+        ),
+        f"- Repairs: {len(repairs)}; gain on technical items {signed(result['repair_gain_technical'])}, on "
+        f"judgment items {signed(result['repair_gain_judgment'])}; without a commit: "
+        + (", ".join(f"#{n}" for n in result["repairs_without_commit"]) or "none"),
+        "",
+        "| Spec | Reviews | Mean | Between-library SD | Items no library differs on |",
+        "|---|---|---|---|---|",
+        *(
+            f"| {spec_id} | {s['n']} | {_fmt(s['mean'])} | {_fmt(s['sd'])} | "
+            f"{len(s['zero_variance'])}: {', '.join(s['zero_variance']) or '–'} |"
+            for spec_id, s in result["specs"].items()
+        ),
+        "",
+    ]
+    if repairs:
+        lines += [
+            "| Pull request | Library | Score | Technical | Judgment | Repair committed |",
+            "|---|---|---|---|---|---|",
+            *(
+                f"| #{r['number']} | {r['library']} | {r['from']} → {r['to']} | {signed(r['technical'])} | "
+                f"{signed(r['judgment'])} | {'yes' if r['committed'] else 'no'} |"
+                for r in repairs
+            ),
+            "",
+        ]
     return "\n".join(lines)
 
 
@@ -2155,6 +2312,14 @@ def cmd_gate_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_first_reviews(args: argparse.Namespace) -> int:
+    result = metrics.first_reviews(gh_first_generation_pulls(args.since, int(args.limit)))
+    print(render_first_reviews(result, args.since))
+    if args.json:
+        Path(args.json).write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    return 0
+
+
 def cmd_freeze(args: argparse.Namespace) -> int:
     manifest = load_manifest(Path(args.manifest))
     repo = Path(args.repo)
@@ -2290,6 +2455,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--since", default="", help="ISO date, e.g. 2026-10-01")
     p.add_argument("--json", default="", help="also write the aggregate as JSON here")
     p.set_defaults(func=cmd_gate_report)
+
+    p = sub.add_parser("first-reviews", help="Aggregate the live reviews of first-generation PRs (needs gh)")
+    p.add_argument("--since", required=True, help="ISO date the pull requests were created on or after")
+    p.add_argument("--limit", default="500", help="how many pull requests to list at most")
+    p.add_argument("--json", default="", help="also write the aggregate as JSON here")
+    p.set_defaults(func=cmd_first_reviews)
 
     p = sub.add_parser("freeze", help="Build the frozen set (dry run unless --execute)")
     _manifest_arg(p)

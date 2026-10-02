@@ -10,6 +10,7 @@ run-name: "Retest: ${{ inputs.label || 'unlabelled' }} · set ${{ inputs.set || 
 #
 #   gh workflow run review-retest.yml -f rules_ref=<sha> -f label=baseline
 #   gh workflow run review-retest.yml -f set=v2 -f rules_ref=<sha> -f label=v2-baseline
+#   gh workflow run review-retest.yml -f set=v3 -f rules_ref=<sha> -f label=v3-baseline
 #
 # An arm = rules_ref (whose prompts/ and regen_gate.py the reviewer uses) ×
 # the harness at the dispatched commit, on one frozen set. Cells run in fresh
@@ -29,13 +30,14 @@ on:
         default: ''
         type: string
       set:
-        description: "Frozen set: automation/retest/set-<set>.yaml and its lock (v1 = 27 fresh items and 10 pairs, core 15 and 7; v2 = the 12 pairs of verification round 1)"
+        description: "Frozen set: automation/retest/set-<set>.yaml and its lock (v1 = 27 fresh items and 10 pairs, core 15 and 7; v2 = the 12 pairs of verification round 1; v3 = the 15 first generations of line-tanabe-sugano)"
         required: false
         default: 'v1'
         type: choice
         options:
           - v1
           - v2
+          - v3
       subset:
         description: "core, full, or a comma-separated list of item ids from the chosen set's manifest"
         required: false
