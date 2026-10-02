@@ -1,0 +1,220 @@
+{
+  "version": 1,
+  "set": "v3",
+  "frozen_at": "2026-10-02T17:58:43Z",
+  "objects": {
+    "retest/sets/v3/f-line-tanabe-sugano-altair/new-dark.png": {
+      "sha256": "7bb8e4fbfd1af3ea314bb3076c58df081a6d0d0c5906828bbd36c251609d2c15",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 203417
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-altair/new-light.png": {
+      "sha256": "4ac78ca8c4255a761829cde765c23320f5af68d23226be19ca40f1381c75ffae",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 199087
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-bokeh/new-dark.png": {
+      "sha256": "2c69d2bef37ba919029694754c36e7c546ee37375ce06656a386466b691041bf",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 121899
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-bokeh/new-light.png": {
+      "sha256": "9e6f29074fdd90a2ee9fb2131969001554a0f082034002ed9989802a0f00fabf",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 124346
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-chartjs/new-dark.png": {
+      "sha256": "f8539e11100b28b7f096478b6521427cd72534a21d61c6f0ad31eac1306d3668",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 100932
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-chartjs/new-light.png": {
+      "sha256": "ef58d75dcb47bdc24a79675fed01053060432c366072825eb7a5ec411ca84925",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 101622
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-d3/new-dark.png": {
+      "sha256": "6c3307744a289649bc62cff610cf0ca958663667ddc5a64e0f22c6d2e68ad090",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 123903
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-d3/new-light.png": {
+      "sha256": "2409a46bf4a13b726f7750b198f0827fc08b8833ba0a1bbe374a7e8371e90a6e",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 124437
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-echarts/new-dark.png": {
+      "sha256": "3992f540fc86c14c6ceac487d3be1abee487f86e4ae0656442f4ee15968b0cb1",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 93511
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-echarts/new-light.png": {
+      "sha256": "5db3864f4eddeed0d2b9a7219880e32067f319963de638bbdb6758458b1638e5",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 93976
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-ggplot2/new-dark.png": {
+      "sha256": "8a396acbb6aa4e06aac5c4485acc2b495a6a43a6f428045ae5742bc04eae738b",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 284294
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-ggplot2/new-light.png": {
+      "sha256": "93e20491c20cc2603509e5b303c14a12868b2e00b4b8d8ca95682440a1af0c9e",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 280858
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-highcharts/new-dark.png": {
+      "sha256": "c9facc173a31659a455868f75ad3b1ce0da0f807707d439887d9673f529c8b45",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 261152
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-highcharts/new-light.png": {
+      "sha256": "0f82ec991c6ccb900a65839c84288cea5b1b023c8aa5f39732a4fcfe24f40fe0",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 262214
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-letsplot/new-dark.png": {
+      "sha256": "a528090b460907c7d86ac974504443eeda3b12a95108ff298a51584b96b648fc",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 288876
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-letsplot/new-light.png": {
+      "sha256": "d91db9ebb54b293018ee477af63ed4700427dd16df8d741251a030d44fd84199",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 285754
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-makie/new-dark.png": {
+      "sha256": "987e9c20b1c02b226417572cb9a2ae3eecbc01200771ba23d71086240f57b1e4",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 260945
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-makie/new-light.png": {
+      "sha256": "bc763965a7749447a75961f9703b3ec0a0217e25943369b09b74f37e4f9d7c46",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 263008
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-matplotlib/new-dark.png": {
+      "sha256": "d7792ab5230d62dfe06fdebf26c6087183c885e47a980cb71dd7eee06877ecde",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 142201
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-matplotlib/new-light.png": {
+      "sha256": "bc30853bf4bb36e7ee85b9140bd46c4aa219196294fda4e0b2d06178892c6a89",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 142505
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-muix/new-dark.png": {
+      "sha256": "76cb89a68af29b5e6765655ffb2329269b21a73e80ceebdc36e16e420ad1ab35",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 91200
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-muix/new-light.png": {
+      "sha256": "dc4ff925850db735dfbc2498062dccd0838dbbfafbb30a3e994918aa4ae284a6",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 93041
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-plotly/new-dark.png": {
+      "sha256": "c634b79c6d81bc958212be2c4cd59e3f3f82c359a35935f00fa0b0be979a980a",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 315413
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-plotly/new-light.png": {
+      "sha256": "9705f8436e54e37a183055456ff05d8f6a95e9b1108202e0a8c7f1074dcae60c",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 315006
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-plotnine/new-dark.png": {
+      "sha256": "c74ca84d51eab5e2f06a30e444f76d2318d85cd34b1c5f1ca0dd66f205f1d306",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 396882
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-plotnine/new-light.png": {
+      "sha256": "8401e918d45c76bf6fb72f9c1a0cdf1f5829e1b01d593cef50e864b07508bb58",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 388624
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-pygal/new-dark.png": {
+      "sha256": "eaab63e3e36535b784629063f7ba42c1844c8a7a3e6389ab15dc1c9d49f90cb0",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 250167
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-pygal/new-light.png": {
+      "sha256": "dc22f9f70a2965393acfaa7e46e4aea094bf0db9c11cdcfc3b4747a1a08cb3c4",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 250821
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-seaborn/new-dark.png": {
+      "sha256": "8aeaf4d40298188deeec1d256843e494126801f7705ecf7649fcecb29bb8f6a6",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 144817
+    },
+    "retest/sets/v3/f-line-tanabe-sugano-seaborn/new-light.png": {
+      "sha256": "5a1caf6b4625ee1a93fb97ca8dfc2e3022986fa9d389dd0d3ed6fb9589507822",
+      "width": 2400,
+      "height": 2400,
+      "bytes": 146103
+    }
+  },
+  "sources": {
+    "retest/sets/v3/f-line-tanabe-sugano-altair/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/python/altair/plot-dark.png",
+    "retest/sets/v3/f-line-tanabe-sugano-altair/new-light.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/python/altair/plot-light.png",
+    "retest/sets/v3/f-line-tanabe-sugano-bokeh/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/python/bokeh/plot-dark.png",
+    "retest/sets/v3/f-line-tanabe-sugano-bokeh/new-light.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/python/bokeh/plot-light.png",
+    "retest/sets/v3/f-line-tanabe-sugano-chartjs/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/javascript/chartjs/plot-dark.png",
+    "retest/sets/v3/f-line-tanabe-sugano-chartjs/new-light.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/javascript/chartjs/plot-light.png",
+    "retest/sets/v3/f-line-tanabe-sugano-d3/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/javascript/d3/plot-dark.png",
+    "retest/sets/v3/f-line-tanabe-sugano-d3/new-light.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/javascript/d3/plot-light.png",
+    "retest/sets/v3/f-line-tanabe-sugano-echarts/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/javascript/echarts/plot-dark.png",
+    "retest/sets/v3/f-line-tanabe-sugano-echarts/new-light.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/javascript/echarts/plot-light.png",
+    "retest/sets/v3/f-line-tanabe-sugano-ggplot2/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/r/ggplot2/plot-dark.png",
+    "retest/sets/v3/f-line-tanabe-sugano-ggplot2/new-light.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/r/ggplot2/plot-light.png",
+    "retest/sets/v3/f-line-tanabe-sugano-highcharts/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/javascript/highcharts/plot-dark.png",
+    "retest/sets/v3/f-line-tanabe-sugano-highcharts/new-light.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/javascript/highcharts/plot-light.png",
+    "retest/sets/v3/f-line-tanabe-sugano-letsplot/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/python/letsplot/plot-dark.png",
+    "retest/sets/v3/f-line-tanabe-sugano-letsplot/new-light.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/python/letsplot/plot-light.png",
+    "retest/sets/v3/f-line-tanabe-sugano-makie/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/julia/makie/plot-dark.png",
+    "retest/sets/v3/f-line-tanabe-sugano-makie/new-light.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/julia/makie/plot-light.png",
+    "retest/sets/v3/f-line-tanabe-sugano-matplotlib/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/python/matplotlib/plot-dark.png",
+    "retest/sets/v3/f-line-tanabe-sugano-matplotlib/new-light.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/python/matplotlib/plot-light.png",
+    "retest/sets/v3/f-line-tanabe-sugano-muix/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/javascript/muix/plot-dark.png",
+    "retest/sets/v3/f-line-tanabe-sugano-muix/new-light.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/javascript/muix/plot-light.png",
+    "retest/sets/v3/f-line-tanabe-sugano-plotly/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/python/plotly/plot-dark.png",
+    "retest/sets/v3/f-line-tanabe-sugano-plotly/new-light.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/python/plotly/plot-light.png",
+    "retest/sets/v3/f-line-tanabe-sugano-plotnine/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/python/plotnine/plot-dark.png",
+    "retest/sets/v3/f-line-tanabe-sugano-plotnine/new-light.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/python/plotnine/plot-light.png",
+    "retest/sets/v3/f-line-tanabe-sugano-pygal/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/python/pygal/plot-dark.png",
+    "retest/sets/v3/f-line-tanabe-sugano-pygal/new-light.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/python/pygal/plot-light.png",
+    "retest/sets/v3/f-line-tanabe-sugano-seaborn/new-dark.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/python/seaborn/plot-dark.png",
+    "retest/sets/v3/f-line-tanabe-sugano-seaborn/new-light.png": "/home/meake/projects/anyplot/agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01/renders/python/seaborn/plot-light.png"
+  },
+  "pairs": {}
+}
