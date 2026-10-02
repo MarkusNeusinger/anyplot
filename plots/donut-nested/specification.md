@@ -15,7 +15,7 @@ A nested donut chart displays hierarchical data as multiple concentric rings, wh
 
 - `level_1` (string) - parent category labels (inner ring)
 - `level_2` (string) - child category labels (outer ring)
-- `value` (numeric) - values for the innermost level
+- `value` (numeric) - values for the outermost level (the child categories)
 - Size: 3-6 parent categories, 2-5 children each
 - Hierarchy: values aggregate from outer rings to inner rings
 

@@ -15,7 +15,7 @@ A three-dimensional scatter plot that displays the relationship between three nu
 - `x` (numeric) - First dimension values plotted on the x-axis
 - `y` (numeric) - Second dimension values plotted on the y-axis
 - `z` (numeric) - Third dimension values plotted on the z-axis
-- `color` (numeric, optional) - Fourth variable for color encoding
+- `color` (numeric or categorical, optional) - Fourth variable or group membership for color encoding
 - Size: 50-500 points recommended for clear visualization
 - Example: Random 3D clustered data demonstrating spatial relationships
 

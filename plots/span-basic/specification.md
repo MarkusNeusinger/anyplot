@@ -9,7 +9,6 @@ A span plot highlights a specific region of interest on a chart using a shaded r
 - Marking recession periods or economic events on financial time series charts
 - Highlighting acceptable/unacceptable value ranges or threshold zones on line plots
 - Indicating maintenance windows, downtime periods, or significant events in operational dashboards
-- Showing confidence intervals or uncertainty bands around data points
 
 ## Data
 

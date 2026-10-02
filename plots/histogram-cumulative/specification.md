@@ -33,7 +33,6 @@ Value
 - Y-axis shows cumulative count or proportion (0 to n, or 0 to 1)
 - The curve is always monotonically non-decreasing
 - Often displayed as steps (not smooth curves) to show discrete bins
-- Can use `density=True` or `cumulative=True` parameters
 - Useful for determining what proportion of data falls below any threshold
 
 ## What a good version looks like

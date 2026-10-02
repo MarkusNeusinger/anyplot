@@ -15,8 +15,8 @@ A wind barb plot displays wind speed and direction at specific locations using s
 
 - `x` (numeric) - X-coordinate or longitude for barb position
 - `y` (numeric) - Y-coordinate or latitude for barb position
-- `u` (numeric) - Zonal (east-west) wind component in knots or m/s
-- `v` (numeric) - Meridional (north-south) wind component in knots or m/s
+- `u` (numeric) - Zonal (east-west) wind component in knots, or in m/s converted to knots before the barbs are drawn
+- `v` (numeric) - Meridional (north-south) wind component in knots, or in m/s converted to knots before the barbs are drawn
 - Size: 20-200 barbs recommended for clear visualization without overlap
 - Example: Surface wind observations from a grid of weather stations
 

@@ -23,7 +23,7 @@ A cumulative gains chart visualizes the effectiveness of a classification model 
 - X-axis shows percentage of population targeted (0-100%), sorted by predicted probability descending
 - Y-axis shows cumulative percentage of positive cases captured (0-100%)
 - Always include a diagonal reference line representing random selection (baseline model)
-- A perfect model would show a vertical line to 100% at the positive class rate, then horizontal
+- A perfect model would show a steep straight line from the origin that reaches 100% at the positive class rate, then horizontal
 - Steeper initial slope indicates better model discrimination
 - Often displayed alongside lift curves for comprehensive model evaluation
 
