@@ -25,3 +25,11 @@ A three-dimensional scatter plot that displays the relationship between three nu
 - Clear axis labels with units help orient the viewer in 3D space
 - Consider point transparency for dense datasets to reveal internal structure
 - Color encoding can effectively add a fourth dimension to the visualization
+
+## What a good version looks like
+
+- A good version shows: one marker per observation at its exact x, y and z values inside a visible 3D frame, with all three axes labeled, and with units where the variables have them, as the Notes suggest, so the viewer can tell which direction is which.
+- A good version shows: a viewing angle oblique enough that all three axes have visible extent and the depth of the cloud is apparent, rather than a view down one axis that flattens the cloud to two dimensions.
+- A good version shows: depth cues that make near and far readable: pane grid lines or box edges, and, where the cloud is dense, translucent markers as the Notes suggest, so interior points show through.
+- A good version shows: the optional color variable, if used, on a continuous colormap with a color bar labeled with that variable, or, where color stands for group membership instead, as distinct colors with a legend that names the groups.
+- Expected, not a defect: near points hiding far ones, perspective foreshortening, tick labels at an angle to the page, and, in a static render, a single fixed viewpoint.

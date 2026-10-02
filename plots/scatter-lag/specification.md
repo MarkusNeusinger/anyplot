@@ -25,3 +25,11 @@ A lag plot is a scatter plot of a time series against a lagged version of itself
 - Optionally color points by their time index to reveal temporal structure within the scatter
 - Strong linear pattern along the diagonal indicates high positive autocorrelation at the given lag; perpendicular spread indicates negative autocorrelation
 - Consider adding a correlation coefficient annotation (r value) to quantify the visual pattern
+
+## What a good version looks like
+
+- A good version shows: one point per pair of observations a fixed lag apart, the earlier value on the x axis and the later one on the y axis, with axis labels or a title that state the lag order.
+- A good version shows: both axes covering about the same value range, because they show the same variable, so the y = x reference line the Notes ask for runs along the plot's diagonal, drawn lighter than the points.
+- A good version shows: points left unconnected and, for a long series, small or translucent enough that the dense center remains readable, with none jittered off its values.
+- A good version shows: the time-index coloring, if used as the Notes allow, on a sequential colormap with a color bar labeled as time or observation index, and the correlation coefficient, if annotated, placed clear of the points.
+- Expected, not a defect: a round, structureless cloud for an uncorrelated series, a tight band along the diagonal for a strongly autocorrelated one, and a few points far from the rest; the shape is the diagnosis.

@@ -25,3 +25,11 @@ A scatter plot with a LOWESS (Locally Weighted Scatterplot Smoothing) regression
 - Include axis labels and descriptive title mentioning LOWESS smoothing
 - Optional: Show confidence band around the LOWESS curve if library supports it
 - The curve should appear smooth without excessive oscillation or overfitting to noise
+
+## What a good version looks like
+
+- A good version shows: every observation as a translucent point at its exact (x, y) value, as the Notes ask, with one solid LOWESS curve on top in a color that contrasts with the points.
+- A good version shows: a curve that follows the local center of the cloud through its bends, smooth as the Notes ask: it neither wiggles from point to point nor flattens into a near-straight line that ignores visible curvature.
+- A good version shows: a curve that spans the data's x range and ends at the outermost points, with nothing extrapolated beyond them.
+- A good version shows: a title that mentions LOWESS smoothing, as the Notes ask, and the confidence band, if drawn as the Notes allow, semi-transparent around the curve with the points inside it still visible.
+- Expected, not a defect: a curve with neither equation nor R² beside it, because LOWESS has no single formula, a slope that changes or reverses along x, wider scatter in some x ranges than in others, and outliers the curve does not chase.
