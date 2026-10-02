@@ -14,7 +14,7 @@ A Tanabe-Sugano diagram plots the energies of the electronic term states of a tr
 ## Data
 
 - `delta_over_b` (numeric) — reduced ligand-field strength Δ_o/B, sampled across 0–40 (dense enough that avoided crossings stay smooth, typically 200–400 points)
-- `term` (categorical) — term symbol of the curve as a plain-text key, e.g. `⁴T₁g(F)`, `⁴T₂g`, `⁴A₂g`, `⁴T₁g(P)`, `²Eg`, `²T₁g`, `²T₂g`, `²A₁g`; the drawn label is typeset from it (see Notes)
+- `term` (categorical) — term symbol of the curve as a plain-text key, e.g. `⁴T₁g(F)`, `⁴T₂g`, `⁴A₂g`, `⁴T₁g(P)`, `²Eg`, `²T₁g`, `²T₂g`, `²A₁g`; a symbol that occurs more than once in the configuration carries its parent free-ion term in parentheses, or a root index, so that every curve has a unique key; the drawn label is typeset from it (see Notes)
 - `energy_over_b` (numeric) — reduced term energy E/B relative to the ground term, typically 0–80
 - `spin_allowed` (boolean, optional) — whether the term has the same spin multiplicity as the ground term; for d⁴–d⁷, where the ground term changes at the crossover, the flag refers to the high-spin ground term, so it stays one value per term
 - Size: the terms within the plotted E/B range × 200–400 field-strength samples for one dⁿ configuration, keeping every root of a symmetry and multiplicity block that falls in range, so that an avoided crossing keeps both of its curves
