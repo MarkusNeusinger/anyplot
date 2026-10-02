@@ -288,7 +288,7 @@ jobs:
         if: steps.cell.outcome == 'success'
         continue-on-error: true
         timeout-minutes: 25
-        uses: anthropics/claude-code-action@4036a180cf690f49529f5d8c79c998855287f590  # v1
+        uses: anthropics/claude-code-action@756cc22e19660d20e8cc9496b4f242475a7f7790  # v1
         env:
           LIBRARY: ${{ matrix.cell.library }}
           SPEC_ID: ${{ matrix.cell.spec_id }}
