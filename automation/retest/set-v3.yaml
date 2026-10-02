@@ -1,0 +1,238 @@
+# Review retest set v3 — the 15 first generations of line-tanabe-sugano.
+#
+# A probe near the approval line: the first spec whose first generations were
+# all reviewed on Opus (#12019 to #12038, 2026-10-01). Their live attempt-1
+# scores were 85 to 91 (mean 88.7), with a between-library spread smaller than
+# one reviewer's run-to-run spread. Sets v1 and v2 stay as they are; this set
+# measures what they cannot: how first reviews behave where a single point
+# decides the verdict, whether a deduction names a defect, and whether a
+# domain value is checked.
+#
+# What each item pins (the same contract as set v1, see set-v1.yaml):
+#   - implementation and metadata: `plots/line-tanabe-sugano/…` at cda962dc3,
+#     main after the last of the 15 merges. Eight of the 15 files are the
+#     state after one repair (the item's note says which); their first-review
+#     states are gone, because a repair overwrites the staging render;
+#   - spec text: `plots/line-tanabe-sugano/specification.md` at ec0619261
+#     (#12018), the text the 15 live reviews saw. Main has since changed it
+#     (#12042: the Data example is d⁷, the Notes prefer d⁴ to d⁷ and ask for
+#     every root of a block). An arm that runs with spec_source=rules_ref
+#     reads main's text instead;
+#   - renders: the local snapshot of 2026-10-02, whose manifest.yaml main_sha
+#     equals the commit; freeze copies them to
+#     `gs://anyplot-images/retest/sets/v3/<id>/new-<theme>.png`.
+#
+# Labels are `draft` until the owner confirms them (while draft, every report
+# ignores them). Besides the shapes set-v1.yaml documents, a label may carry:
+#
+#   spec_source: rules_ref
+#
+# The label then applies only to runs whose reviewer saw the spec text of that
+# source. D2 below needs it: drawing only the lowest root of a block is a
+# defect under main's spec text, which asks for every root, and an open
+# reading under the pinned text, where the live reviews split three ways.
+#
+# The permission probes ignore `Suggestion:` lines (the pattern's leading
+# lookahead): a suggestion costs no points, so only a defect line or a
+# deducted criterion that names the permitted feature is a false alarm.
+#
+# Configurations: d² chartjs, d3, altair, matplotlib, plotly, plotnine,
+# ggplot2; d³ echarts, highcharts, muix, pygal; d⁸ makie, letsplot; d⁷ bokeh,
+# seaborn. Only d⁴ to d⁷ have a high-spin/low-spin crossover.
+
+version: 1
+set: v3
+gcs_prefix: retest/sets/v3
+# Main when the set was curated; its prompts tree (5402dd9c5) is the one the
+# 15 live reviews ran on.
+baseline_rules_sha: 251b3efdbb1071c1d2d39364466839a2fc2a84e8
+spec_commit: ec0619261d5b26a361eb5ba6ac54ba6d7c1a61f3
+labels: draft
+
+# The snapshot of the 15 production renders (agentic/runs/regen-exp-bubble-basic/
+# snapshot.sh), relative to the repository root of the checkout that runs
+# freeze. Only freeze and `validate --check-renders` read the directory.
+snapshots:
+  firstgen: &new {commit: cda962dc3bc81d8ac3765ca7509d9980f92f3eb2, render: {snapshot: agentic/runs/regen-exp-bubble-basic/tanabe-firstgen-2026-10-01}}
+
+patterns:
+  # No crossover line on a configuration outside d⁴ to d⁷.
+  no-crossover: &no-crossover '(?s)^(?!\s*Suggestion:).*(cross-?over|high-spin ?/ ?low-spin|spin[- ]state (change|switch))'
+  # Only the lowest root of a symmetry and multiplicity block is drawn.
+  lowest-root: &lowest-root '(lowest|lower|single|one|first) (root|eigenvalue|branch)|(second|upper|higher|other|missing|both|every|all) (roots?|eigenvalues?|branch(es)?|partners?)|only (the |its )?(lowest|lower|one)\b'
+
+items:
+  # ---- python ----------------------------------------------------------------
+  - id: f-line-tanabe-sugano-matplotlib
+    kind: fresh
+    tier: core
+    spec_id: line-tanabe-sugano
+    library: matplotlib
+    new: *new
+    note: "#12019, live 90 at attempt 1, not repaired. d². The ¹A₁g block's diagonal is swapped (line 50): ¹A₁g(G) ends near 29 E/B at Δ_o/B = 40 where the correct matrix gives about 34.6. Correct at zero field, so only a stated strong-field value can catch it"
+    defects:
+      - {id: D1, criteria: [DQ-03], match: '¹A₁g|\b1A1g\b|A_?\{?1g\}?|singlet A|check values?|\b34\.\d|\b2[89](\.\d)?\b|(swap|transpos|exchang|interchang)\w*.{0,80}(diagonal|matri|block|entr)|diagonal.{0,60}(swap|transpos|exchang|interchang|wrong)', note: 'the ¹A₁g(G) strong-field value is wrong: about 29 instead of 34.6 E/B at Δ_o/B = 40'}
+    permitted:
+      - {id: A1, criteria: [SC-02, DQ-01], match: *no-crossover, note: 'no crossover line on d²'}
+
+  - id: f-line-tanabe-sugano-seaborn
+    kind: fresh
+    tier: core
+    spec_id: line-tanabe-sugano
+    library: seaborn
+    new: *new
+    note: "#12020, live 90 at attempt 1, not repaired. d⁷ with the crossover line"
+    defects: []
+    permitted: []
+
+  - id: f-line-tanabe-sugano-plotly
+    kind: fresh
+    tier: core
+    spec_id: line-tanabe-sugano
+    library: plotly
+    new: *new
+    note: "#12021, live 87 at attempt 1, 89 after one repair (the frozen state). d²"
+    defects: []
+    permitted:
+      - {id: A1, criteria: [SC-02, DQ-01], match: *no-crossover, note: 'no crossover line on d²'}
+
+  - id: f-line-tanabe-sugano-bokeh
+    kind: fresh
+    tier: core
+    spec_id: line-tanabe-sugano
+    library: bokeh
+    new: *new
+    note: "#12022, live 90 at attempt 1, not repaired. d⁷ with the crossover line; Δ_o/B is sampled to 30, where the Data section says 0–40. The spec does not pin the data, so the shorter range is permitted"
+    defects: []
+    permitted:
+      - {id: A2, criteria: [SC-02, DQ-03, VQ-05], match: '(?s)^(?!\s*Suggestion:).*(\b30\b.{0,80}\b40\b|\b40\b.{0,80}\b30\b|(stops?|ends?|sampled|runs?|truncat\w*|cut\w*)\W.{0,40}\b30\b|\b0 ?[–-] ?40\b)', note: 'the x range stops at 30 (Data says "sampled across 0–40")'}
+
+  - id: f-line-tanabe-sugano-altair
+    kind: fresh
+    tier: core
+    spec_id: line-tanabe-sugano
+    library: altair
+    new: *new
+    note: "#12023, live 89 at attempt 1, 88 after one repair (the frozen state). d²; the ¹Eg and ¹A₁g blocks are drawn with their lower root only"
+    defects:
+      - {id: D2, criteria: [SC-02, DQ-01], spec_source: rules_ref, match: *lowest-root, note: 'only the lowest root of the ¹Eg and ¹A₁g blocks is drawn'}
+    permitted:
+      - {id: A1, criteria: [SC-02, DQ-01], match: *no-crossover, note: 'no crossover line on d²'}
+
+  - id: f-line-tanabe-sugano-plotnine
+    kind: fresh
+    tier: core
+    spec_id: line-tanabe-sugano
+    library: plotnine
+    new: *new
+    note: "#12024, live 87 at attempt 1, 90 after one repair (the frozen state). d²"
+    defects: []
+    permitted:
+      - {id: A1, criteria: [SC-02, DQ-01], match: *no-crossover, note: 'no crossover line on d²'}
+
+  - id: f-line-tanabe-sugano-pygal
+    kind: fresh
+    tier: core
+    spec_id: line-tanabe-sugano
+    library: pygal
+    new: *new
+    note: "#12027, live 85 at attempt 1, 88 after one repair (the frozen state). d³; every doublet block is drawn with its lowest root only"
+    defects:
+      - {id: D2, criteria: [SC-02, DQ-01], spec_source: rules_ref, match: *lowest-root, note: 'only the lowest root of each doublet block is drawn'}
+    permitted:
+      - {id: A1, criteria: [SC-02, DQ-01], match: *no-crossover, note: 'no crossover line on d³'}
+
+  - id: f-line-tanabe-sugano-letsplot
+    kind: fresh
+    tier: core
+    spec_id: line-tanabe-sugano
+    library: letsplot
+    new: *new
+    note: "#12037, live 87 at attempt 1, 90 after one repair (the frozen state). d⁸; the repair extended the x range from 30 to 40, so the range probe of bokeh does not apply here"
+    defects: []
+    permitted:
+      - {id: A1, criteria: [SC-02, DQ-01], match: *no-crossover, note: 'no crossover line on d⁸'}
+
+  # ---- r ---------------------------------------------------------------------
+  - id: f-line-tanabe-sugano-ggplot2
+    kind: fresh
+    tier: core
+    spec_id: line-tanabe-sugano
+    library: ggplot2
+    new: *new
+    note: "#12029, live 88 at attempt 1, 91 after one repair (the frozen state). d²"
+    defects: []
+    permitted:
+      - {id: A1, criteria: [SC-02, DQ-01], match: *no-crossover, note: 'no crossover line on d²'}
+
+  # ---- julia -----------------------------------------------------------------
+  - id: f-line-tanabe-sugano-makie
+    kind: fresh
+    tier: core
+    spec_id: line-tanabe-sugano
+    library: makie
+    new: *new
+    note: "#12033, live 88 at attempt 1, 89 after one repair (the frozen state). d⁸; the ¹Eg, ¹T₂g and ¹A₁g blocks are drawn with their lowest root only"
+    defects:
+      - {id: D2, criteria: [SC-02, DQ-01], spec_source: rules_ref, match: *lowest-root, note: 'only the lowest root of the ¹Eg, ¹T₂g and ¹A₁g blocks is drawn'}
+    permitted:
+      - {id: A1, criteria: [SC-02, DQ-01], match: *no-crossover, note: 'no crossover line on d⁸'}
+
+  # ---- javascript ------------------------------------------------------------
+  - id: f-line-tanabe-sugano-chartjs
+    kind: fresh
+    tier: core
+    spec_id: line-tanabe-sugano
+    library: chartjs
+    new: *new
+    note: "#12032, live 90 at attempt 1, not repaired. d²; the ¹T₂g, ¹Eg and ¹A₁g blocks are drawn with their lowest root only"
+    defects:
+      - {id: D2, criteria: [SC-02, DQ-01], spec_source: rules_ref, match: *lowest-root, note: 'only the lowest root of the ¹T₂g, ¹Eg and ¹A₁g blocks is drawn'}
+    permitted:
+      - {id: A1, criteria: [SC-02, DQ-01], match: *no-crossover, note: 'no crossover line on d²'}
+
+  - id: f-line-tanabe-sugano-d3
+    kind: fresh
+    tier: core
+    spec_id: line-tanabe-sugano
+    library: d3
+    new: *new
+    note: "#12035, live 90 at attempt 1, not repaired. d²"
+    defects: []
+    permitted:
+      - {id: A1, criteria: [SC-02, DQ-01], match: *no-crossover, note: 'no crossover line on d²'}
+
+  - id: f-line-tanabe-sugano-echarts
+    kind: fresh
+    tier: core
+    spec_id: line-tanabe-sugano
+    library: echarts
+    new: *new
+    note: "#12034, live 91 at attempt 1, not repaired. d³"
+    defects: []
+    permitted:
+      - {id: A1, criteria: [SC-02, DQ-01], match: *no-crossover, note: 'no crossover line on d³'}
+
+  - id: f-line-tanabe-sugano-highcharts
+    kind: fresh
+    tier: core
+    spec_id: line-tanabe-sugano
+    library: highcharts
+    new: *new
+    note: "#12028, live 88 at attempt 1 and 92 at attempt 2 on the identical file (the repair committed nothing). d³; every doublet block is drawn with its lowest root only"
+    defects:
+      - {id: D2, criteria: [SC-02, DQ-01], spec_source: rules_ref, match: *lowest-root, note: 'only the lowest root of each doublet block is drawn'}
+    permitted:
+      - {id: A1, criteria: [SC-02, DQ-01], match: *no-crossover, note: 'no crossover line on d³'}
+
+  - id: f-line-tanabe-sugano-muix
+    kind: fresh
+    tier: core
+    spec_id: line-tanabe-sugano
+    library: muix
+    new: *new
+    note: "#12038, live 90 at attempt 1, not repaired. d³ with the optional example-complex marker; its two transition arrows are drawn 12 px beside the marker line but end at each term's energy on the line, so one head pokes above its curve and the other stops short"
+    defects:
+      - {id: D1, criteria: [SC-02], match: '\barrow(head)?s?\b.{0,240}(short|past|above|below|miss|overshoot|pok|land|off (the|its)|not (on|reach|touch|meet))', note: 'the transition arrowheads miss their curves'}
+    permitted:
+      - {id: A1, criteria: [SC-02, DQ-01], match: *no-crossover, note: 'no crossover line on d³'}

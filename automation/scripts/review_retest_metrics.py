@@ -23,7 +23,8 @@ has, and which of them are "Expected, not a defect" bullets).
 
 Labels (from the set manifest, applied at report time so a corrected label
 re-scores old records): ``defects`` and ``permitted`` per item
-(``[{"id", "criteria", "match"}]``), ``fixes`` per regen item (the same shape:
+(``[{"id", "criteria", "match"}]``, optionally with a ``spec_source`` that
+limits the label to runs whose reviewer saw that spec text), ``fixes`` per regen item (the same shape:
 predecessor defects the forward new version fixes; ``None`` when the item is
 not labeled for carriers), ``expected`` gate verdicts per order and the pair
 ``class`` (``identity``, ``near-identical`` or ``different``).
@@ -95,6 +96,13 @@ ADD_RE = re.compile(
     r"(?:add|consider adding|include|introduce)\b",
     re.I,
 )
+# A defect line's prefix, ``<ID>[, <ID>] (<light|dark|both|code>): <text>``:
+# the format of regen_gate.DEFECT_RE (a unit test keeps the two patterns equal).
+DEFECT_LINE_RE = re.compile(rf"^(?P<ids>{_ID}(?:, {_ID})*) \((?P<render>light|dark|both|code)\): \S")
+# The 19 criteria a defect line carries a deduction on (70 points), and the
+# five whose level is a judgment (30 points).
+TECHNICAL_IDS: tuple[str, ...] = tuple(c for c in CRITERIA_IDS if c[:2] in ("VQ", "SC", "DQ", "CQ"))
+JUDGMENT_IDS: tuple[str, ...] = tuple(c for c in CRITERIA_IDS if c[:2] in ("DE", "LM"))
 LIMITING_VERSION = "limiting-v1"
 LIMITING_RE = re.compile(
     r"\b(but|however|although|though|slight(ly)?|minor|could|should|lacks?|lacking|missing|too|not|no|only|"
@@ -212,6 +220,39 @@ def is_add_weakness(text: str) -> bool:
 
 def has_limiting_word(text: str) -> bool:
     return bool(LIMITING_RE.search(text or ""))
+
+
+def defect_line_ids(weaknesses: Iterable[Any]) -> set[str]:
+    """Every ID the defect lines of a weakness list name; a ``Suggestion:`` line names none."""
+    ids: set[str] = set()
+    for weakness in weaknesses:
+        match = DEFECT_LINE_RE.match(str(weakness or "").strip())
+        if match:
+            ids.update(match.group("ids").split(", "))
+    return ids
+
+
+def silent_deductions(checklist: Any, weaknesses: Iterable[Any]) -> tuple[list[str], int]:
+    """Technical items below their maximum that no defect line names, and how
+    many technical items are below their maximum at all.
+
+    A deduction without a defect line leaves a repair nothing to act on. DE
+    and LM items are judgments, never counted here, and a ``Suggestion:`` line
+    carries no deduction. A review in the format before defect lines names
+    nothing, so every deduction of such an arm reads as silent.
+    """
+    named = defect_line_ids(weaknesses)
+    below = []
+    for cid in TECHNICAL_IDS:
+        item = checklist.get(cid) if isinstance(checklist, dict) else None
+        if (
+            isinstance(item, dict)
+            and isinstance(item.get("score"), int | float)
+            and isinstance(item.get("max"), int | float)
+            and item["score"] < item["max"]
+        ):
+            below.append(cid)
+    return [cid for cid in below if cid not in named], len(below)
 
 
 # ---------------------------------------------------------------------------
@@ -342,12 +383,19 @@ def weakness_metrics(units: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
     id_j: list[float] = []
     adds: list[bool] = []
     unlimited: list[bool] = []
+    silent = below = 0
+    silent_runs: list[bool] = []
     for runs in units.values():
         per_run_topics = []
         per_run_ids = []
         for record in runs:
             weaknesses = [str(w) for w in record.get("weaknesses") or []]
             counts.append(float(len(weaknesses)))
+            if not is_auto_reject(record):  # an auto-reject scores 0 whatever the items say
+                unnamed, deducted = silent_deductions(record.get("checklist"), weaknesses)
+                silent += len(unnamed)
+                below += deducted
+                silent_runs.append(bool(unnamed))
             adds.extend(is_add_weakness(w) for w in weaknesses)
             per_run_topics.append(review_topics(weaknesses))
             per_run_ids.append(review_criterion_ids(weaknesses))
@@ -369,6 +417,12 @@ def weakness_metrics(units: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
         "id_jaccard": mean(id_j),
         "add_share": share(adds),
         "below_max_without_limiting_word": share(unlimited),
+        # Technical items below their maximum that no defect line names, over
+        # all such items, and the share of runs with at least one.
+        "silent_deductions": silent / below if below else None,
+        "silent_deductions_count": silent,
+        "silent_deductions_n": below,
+        "silent_deduction_runs": share(silent_runs),
         "taxonomy": TAXONOMY_VERSION,
         "limiting": LIMITING_VERSION,
     }
@@ -406,13 +460,23 @@ def probe_false_alarm(label: dict[str, Any], record: dict[str, Any]) -> bool:
     return in_weakness or deducted
 
 
+def _label_runs(label: dict[str, Any], runs: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The runs a label applies to: all of them, or, for a label with a
+    ``spec_source``, those whose reviewer saw the spec text from that source
+    (a defect that only a later spec clause makes one)."""
+    wanted = label.get("spec_source")
+    return [r for r in runs if not wanted or r.get("spec_source") == wanted]
+
+
 def defect_metrics(units: dict[str, list[dict[str, Any]]], labels: dict[str, dict[str, Any]]) -> dict[str, Any]:
     per_defect: dict[str, dict[str, Any]] = {}
     alarms: dict[str, dict[str, Any]] = {}
     for key, runs in units.items():
         item_labels = labels.get(str(runs[0]["item"])) or {}
         for label in item_labels.get("defects") or []:
-            hits = [defect_hit(label, r) for r in runs]
+            hits = [defect_hit(label, r) for r in _label_runs(label, runs)]
+            if not hits:
+                continue
             per_defect[f"{runs[0]['item']}/{label['id']}@{key}"] = {
                 "runs": len(hits),
                 "misses": hits.count(False),
@@ -420,7 +484,9 @@ def defect_metrics(units: dict[str, list[dict[str, Any]]], labels: dict[str, dic
                 "never": not any(hits),
             }
         for label in item_labels.get("permitted") or []:
-            flags = [probe_false_alarm(label, r) for r in runs]
+            flags = [probe_false_alarm(label, r) for r in _label_runs(label, runs)]
+            if not flags:
+                continue
             alarms[f"{runs[0]['item']}/{label['id']}@{key}"] = {"runs": len(flags), "alarms": sum(flags)}
     runs_total = sum(d["runs"] for d in per_defect.values())
     probe_runs = sum(a["runs"] for a in alarms.values())
@@ -1034,3 +1100,146 @@ def gate_monitor(
             f"{improvements['kind_n']} decisions — the 8b kind sentence or the self-check needs a look"
         )
     return report
+
+
+# ---------------------------------------------------------------------------
+# Live first reviews (production review comments of first-generation PRs)
+# ---------------------------------------------------------------------------
+
+
+REVIEW_HEADING_RE = re.compile(r"^## AI Review - Attempt (\d+)/\d+", re.MULTILINE)
+REVIEW_SCORE_RE = re.compile(r"^### Score: (\d{1,3})/100", re.MULTILINE)
+REVIEW_ITEM_RE = re.compile(r"^- \[[ xX]\] ((?:VQ|DE|SC|DQ|CQ|LM)-\d{2}):[^\n]*?\((\d+)/(\d+)\)", re.MULTILINE)
+REVIEW_WEAKNESSES_RE = re.compile(r"^### Weaknesses[ \t]*\n(.*?)(?=^#{2,3} |\Z)", re.MULTILINE | re.DOTALL)
+# impl-review's own commit on the PR branch, and the merge of main before the merge.
+BOOKKEEPING_COMMIT_RE = re.compile(r"^(chore\(|Merge )")
+NEAR_LINE = (APPROVAL_LINE, APPROVAL_LINE + 1)
+
+
+def parse_review_comment(body: str) -> dict[str, Any] | None:
+    """One ``## AI Review - Attempt N/3`` comment as impl-review posts it.
+
+    Returns the attempt, the typed score, the 24 item scores in the record's
+    ``checklist`` shape and the weakness lines; ``None`` for any other comment
+    or a review without a score line.
+    """
+    heading = REVIEW_HEADING_RE.search(body or "")
+    score = REVIEW_SCORE_RE.search(body or "")
+    if not heading or not score or int(score.group(1)) > 100:
+        return None
+    checklist: dict[str, dict[str, int]] = {}
+    for cid, value, top in REVIEW_ITEM_RE.findall(body):
+        checklist.setdefault(cid, {"score": int(value), "max": int(top)})
+    section = REVIEW_WEAKNESSES_RE.search(body)
+    weaknesses = [
+        line[2:].strip() for line in (section.group(1) if section else "").splitlines() if line.startswith("- ")
+    ]
+    return {
+        "attempt": int(heading.group(1)),
+        "score": int(score.group(1)),
+        "checklist": checklist,
+        "weaknesses": weaknesses,
+    }
+
+
+def _points(review: dict[str, Any], ids: Iterable[str]) -> int | None:
+    """Sum of the listed items; ``None`` when the review lacks one of them."""
+    total = 0
+    for cid in ids:
+        item = review["checklist"].get(cid)
+        if item is None:
+            return None
+        total += int(item["score"])
+    return total
+
+
+def _gain(before: dict[str, Any], after: dict[str, Any], ids: Iterable[str]) -> int | None:
+    ids = tuple(ids)
+    a, b = _points(before, ids), _points(after, ids)
+    return None if a is None or b is None else b - a
+
+
+def repair_committed(commits: Sequence[dict[str, Any]], after: str, before: str) -> bool:
+    """Whether a commit other than bookkeeping landed between two reviews.
+
+    ``commits`` hold ``at`` (an ISO timestamp, compared as text) and
+    ``headline``. impl-review's score commit and a merge of ``main`` are
+    bookkeeping; anything else in the window is the repair's change.
+    """
+    return any(
+        after < str(c.get("at") or "") < before and not BOOKKEEPING_COMMIT_RE.match(str(c.get("headline") or ""))
+        for c in commits
+    )
+
+
+def first_reviews(pulls: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    """Aggregate the live reviews of first-generation pull requests.
+
+    Each pull holds ``number``, ``spec_id``, ``library``, ``reviews`` (parsed
+    comments with their ``at`` timestamp, in posting order) and ``commits``.
+    A pull's first review is its attempt-1 review (a pull whose first comment
+    is a later attempt has none); every later one follows a repair. Reports the first-review histogram and the share at the approval
+    line or one above it, per spec the between-library SD and the items no
+    library differs on, silent deductions, and per repair the gain on the
+    technical against the judgment items and whether the repair committed.
+    """
+    firsts = [(p, p["reviews"][0]) for p in pulls if p.get("reviews") and p["reviews"][0]["attempt"] == 1]
+    scores = [r["score"] for _, r in firsts]
+    by_spec: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for pull, review in firsts:
+        by_spec[str(pull["spec_id"])].append(review)
+    specs = {}
+    for spec_id, reviews in sorted(by_spec.items()):
+        totals = [float(r["score"]) for r in reviews]
+        constant = []
+        for cid in CRITERIA_IDS:
+            values = {r["checklist"][cid]["score"] for r in reviews if cid in r["checklist"]}
+            if len(reviews) >= 2 and len(values) == 1:
+                constant.append(cid)
+        specs[spec_id] = {
+            "n": len(reviews),
+            "mean": mean(totals),
+            "sd": statistics.stdev(totals) if len(totals) >= 2 else None,
+            "zero_variance": constant,
+        }
+    silent = below = 0
+    silent_pulls = []
+    for pull, review in firsts:
+        unnamed, deducted = silent_deductions(review["checklist"], review["weaknesses"])
+        silent += len(unnamed)
+        below += deducted
+        if unnamed:
+            silent_pulls.append({"number": pull["number"], "items": unnamed})
+    repairs = []
+    for pull in pulls:
+        reviews = pull.get("reviews") or []
+        for before, after in zip(reviews, reviews[1:], strict=False):
+            repairs.append(
+                {
+                    "number": pull["number"],
+                    "library": pull["library"],
+                    "from": before["score"],
+                    "to": after["score"],
+                    "technical": _gain(before, after, TECHNICAL_IDS),
+                    "judgment": _gain(before, after, JUDGMENT_IDS),
+                    "committed": repair_committed(pull.get("commits") or [], str(before["at"]), str(after["at"])),
+                }
+            )
+    return {
+        "pulls": len(pulls),
+        "first_reviews": len(firsts),
+        "histogram": dict(sorted(Counter(scores).items())),
+        "mean": mean(float(s) for s in scores),
+        "sd": statistics.stdev(scores) if len(scores) >= 2 else None,
+        "approved_first": sum(1 for s in scores if s >= APPROVAL_LINE),
+        "near_line": share(s in NEAR_LINE for s in scores),
+        "specs": specs,
+        "silent_deductions": silent / below if below else None,
+        "silent_deductions_count": silent,
+        "silent_deductions_n": below,
+        "silent_pulls": silent_pulls,
+        "repairs": repairs,
+        "repair_gain_technical": sum(r["technical"] or 0 for r in repairs),
+        "repair_gain_judgment": sum(r["judgment"] or 0 for r in repairs),
+        "repairs_without_commit": [r["number"] for r in repairs if not r["committed"]],
+    }

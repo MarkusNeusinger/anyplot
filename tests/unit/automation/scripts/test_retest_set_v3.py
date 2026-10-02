@@ -1,0 +1,207 @@
+"""Set v3 of the review retest: the 15 first generations of line-tanabe-sugano.
+
+The label patterns are checked against what the live reviews of those pull
+requests wrote (#12019 to #12038, 2026-10-01): a defect pattern matches the
+lines that named its gap, and a permission probe ignores a ``Suggestion:``
+line, which costs no points.
+"""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+from typing import Any
+
+import pytest
+import yaml
+
+from automation.scripts import review_retest as rt
+from automation.scripts import review_retest_metrics as metrics
+
+
+REPO_ROOT = Path(__file__).resolve().parents[4]
+MANIFEST = REPO_ROOT / "automation" / "retest" / "set-v3.yaml"
+SNAPSHOT_COMMIT = "cda962dc3bc81d8ac3765ca7509d9980f92f3eb2"
+LIVE_SPEC = "ec0619261d5b26a361eb5ba6ac54ba6d7c1a61f3"
+# The two configurations with a high-spin/low-spin crossover.
+CROSSOVER = {"bokeh", "seaborn"}
+LOWEST_ROOT_ONLY = {"pygal", "altair", "makie", "chartjs", "highcharts"}
+
+
+def _manifest() -> dict[str, Any]:
+    return yaml.safe_load(MANIFEST.read_text(encoding="utf-8"))
+
+
+def _items() -> dict[str, dict[str, Any]]:
+    return {item["library"]: item for item in _manifest()["items"]}
+
+
+def _label(library: str, kind: str, label_id: str) -> dict[str, Any]:
+    return next(label for label in _items()[library][kind] if label["id"] == label_id)
+
+
+def _matches(label: dict[str, Any], text: str) -> bool:
+    return bool(re.compile(label["match"], re.IGNORECASE).search(text))
+
+
+def _rec(library: str, weaknesses: list[str], spec_source: str = "pinned", **scores: tuple[int, int]) -> dict:
+    return {
+        "item": f"f-line-tanabe-sugano-{library}",
+        "kind": "fresh",
+        "order": None,
+        "run": 1,
+        "ok": True,
+        "score_typed": 88,
+        "spec_source": spec_source,
+        "weaknesses": weaknesses,
+        "checklist": {c.replace("_", "-"): {"score": s, "max": top, "comment": ""} for c, (s, top) in scores.items()},
+    }
+
+
+class TestShippedSet:
+    def test_valid_and_draft(self):
+        manifest = _manifest()
+        assert rt.validate_manifest(manifest) == []
+        assert manifest["labels"] == "draft"
+        assert manifest["gcs_prefix"] == "retest/sets/v3"
+        assert manifest["spec_commit"] == LIVE_SPEC
+
+    def test_one_fresh_core_item_per_library(self):
+        items = _manifest()["items"]
+        assert sorted(item["library"] for item in items) == sorted(rt.LIBRARY_LANGUAGE)
+        for item in items:
+            assert item["id"] == f"f-line-tanabe-sugano-{item['library']}"
+            assert (item["kind"], item["tier"], item["spec_id"]) == ("fresh", "core", "line-tanabe-sugano")
+            assert item["new"]["commit"] == SNAPSHOT_COMMIT
+            assert item["new"]["render"]["snapshot"].endswith("tanabe-firstgen-2026-10-01")
+            assert "spec_commit" not in item
+
+    def test_a_core_arm_is_45_sessions(self):
+        manifest = _manifest()
+        cells = rt.build_cells(manifest, rt.resolve_subset(manifest, "core"), "production", 3, "both")
+        assert len(cells) == 45
+        assert {cell["model"] for cell in cells} == {"opus"}
+
+    def test_crossover_probe_on_every_configuration_without_one(self):
+        for library, item in _items().items():
+            probes = [label["id"] for label in item["permitted"]]
+            assert ("A1" in probes) == (library not in CROSSOVER), library
+
+    def test_range_probe_on_bokeh_only(self):
+        with_a2 = {library for library, item in _items().items() if any(p["id"] == "A2" for p in item["permitted"])}
+        assert with_a2 == {"bokeh"}  # the letsplot repair extended its range to 40
+
+    def test_lowest_root_defect_needs_the_every_root_spec(self):
+        with_d2 = {library for library, item in _items().items() if any(d["id"] == "D2" for d in item["defects"])}
+        assert with_d2 == LOWEST_ROOT_ONLY
+        for library in LOWEST_ROOT_ONLY:
+            assert _label(library, "defects", "D2")["spec_source"] == "rules_ref"
+
+    def test_draft_labels_never_reach_a_report(self):
+        labels = rt.item_labels(_manifest())
+        assert all(entry["defects"] == [] and entry["permitted"] == [] for entry in labels.values())
+
+    def test_confirmed_labels_reach_the_report(self):
+        labels = rt.item_labels({**_manifest(), "labels": "confirmed"})
+        assert [d["id"] for d in labels["f-line-tanabe-sugano-matplotlib"]["defects"]] == ["D1"]
+        assert sum(len(entry["permitted"]) for entry in labels.values()) == 14  # 13 × A1, 1 × A2
+
+
+class TestPatternsAgainstTheLiveReviews:
+    @pytest.mark.parametrize(
+        "library,line",
+        [
+            (
+                "pygal",
+                "DQ-01 (both): only the lowest eigenvalue of each doublet block is drawn (`doublet_e[:, 0]`), so no "
+                "pair of same-symmetry doublets is on the chart → add the second branch. Likely cause: x.",
+            ),
+            (
+                "highcharts",
+                "Suggestion: `termEnergies` currently returns only the lowest root of each doublet block; exposing "
+                "the second root of the ²T₁g or ²T₂g block would show an avoided crossing explicitly.",
+            ),
+            (
+                "altair",
+                "Suggestion: the ¹Eg block is a 2×2 but only its lower eigenvalue is drawn, while both ¹T₂g roots are.",
+            ),
+        ],
+    )
+    def test_lowest_root_lines_match(self, library, line):
+        assert _matches(_label(library, "defects", "D2"), line)
+
+    def test_lowest_root_ignores_other_lines(self):
+        label = _label("pygal", "defects", "D2")
+        assert not _matches(label, "VQ-01 (both): tick labels at size 10 are barely legible → about 12 (+2).")
+
+    @pytest.mark.parametrize(
+        "line",
+        [
+            "Suggestion: a d⁶ configuration would additionally exercise the high-spin/low-spin crossover line.",
+            "Suggestion: a d⁵–d⁷ configuration would additionally exhibit the crossover line and the kink.",
+        ],
+    )
+    def test_a_crossover_suggestion_is_no_false_alarm(self, line):
+        record = _rec("plotly", [line], DQ_01=(6, 6))
+        assert not metrics.probe_false_alarm(_label("plotly", "permitted", "A1"), record)
+
+    def test_a_crossover_defect_line_is_a_false_alarm(self):
+        line = "SC-02 (both): no vertical line marks the high-spin/low-spin crossover → draw it. Likely cause: x."
+        record = _rec("plotly", [line], SC_02=(3, 4))
+        assert metrics.probe_false_alarm(_label("plotly", "permitted", "A1"), record)
+
+    @pytest.mark.parametrize(
+        "line",
+        [
+            "DQ-03 (both): Δ_o/B is sampled only to 30 while the spec's Data bullet asks for 0–40 → extend the "
+            "sampling to 40 (+10 x-units). Likely cause: `DELTA_MAX = 30.0` on line 51.",
+            "VQ-05 (both): the panel runs to Δ_o/B = 36.5 while the curves stop at 30 → stop the axis line there.",
+        ],
+    )
+    def test_range_lines_match(self, line):
+        assert _matches(_label("bokeh", "permitted", "A2"), line)
+
+    def test_a_range_suggestion_is_no_false_alarm(self):
+        line = "Suggestion: extending the sampling from 30 to 40 would cover the spec's whole domain."
+        assert not metrics.probe_false_alarm(_label("bokeh", "permitted", "A2"), _rec("bokeh", [line]))
+
+    def test_the_arrowhead_line_matches(self):
+        line = (
+            "SC-02 (both): the ν₁ and ν₂ transition arrows are drawn at x ± 12 px from the example line but "
+            "terminate at each term's energy at the exact Δ_o/B = 24.9, so the ν₁ head pokes about 12 px (0.5 E/B) "
+            "above the ⁴T₂g curve and the ν₂ head stops about 12 px short of ⁴T₁g(F)."
+        )
+        label = _label("muix", "defects", "D1")
+        assert metrics.defect_hit(label, _rec("muix", [line], SC_02=(3, 4)))
+        suggestion = "Suggestion: the Notes allow a marker with arrows from the ground term up to the excited terms."
+        assert not _matches(label, suggestion)
+
+    def test_the_strong_field_value_needs_a_dq03_deduction(self):
+        label = _label("matplotlib", "defects", "D1")
+        line = "DQ-03 (both): ¹A₁g(G) reaches 29 E/B at Δ_o/B = 40, the check value is 34.6 (−5.6). Likely cause: x."
+        assert metrics.defect_hit(label, _rec("matplotlib", [line], DQ_03=(2, 4)))
+        # The live review praised the scale at 4/4: a miss.
+        assert not metrics.defect_hit(label, _rec("matplotlib", [line], DQ_03=(4, 4)))
+
+
+class TestSpecSourceLabels:
+    LINE = "DQ-01 (both): only the lowest root of each doublet block is drawn → add the upper root. Likely cause: x."
+
+    def _defects(self, records: list[dict]) -> dict[str, Any]:
+        labels = rt.item_labels({**_manifest(), "labels": "confirmed"})
+        return metrics.defect_metrics(metrics.by_unit(records), labels)
+
+    def test_a_pinned_arm_does_not_count_the_label(self):
+        result = self._defects([_rec("pygal", [], "pinned", DQ_01=(6, 6))])
+        assert result["defect_runs"] == 0 and result["never_detected"] == []
+
+    def test_a_rules_ref_arm_counts_it(self):
+        caught = _rec("pygal", [self.LINE], "rules_ref", DQ_01=(5, 6))
+        missed = {**_rec("pygal", [], "rules_ref", DQ_01=(6, 6)), "run": 2}
+        result = self._defects([caught, missed])
+        assert (result["defect_runs"], result["defect_misses"]) == (2, 1)
+
+    def test_validate_refuses_an_unknown_spec_source(self):
+        manifest = _manifest()
+        manifest["items"][0]["defects"][0]["spec_source"] = "main"
+        assert any("spec_source must be one of pinned, rules_ref" in e for e in rt.validate_manifest(manifest))

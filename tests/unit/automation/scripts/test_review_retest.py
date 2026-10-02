@@ -1290,8 +1290,11 @@ class TestReport:
         assert "| Items with split verdict at 90 | 1/1 |" in snippet
         assert "| Named-defect miss rate | 1/2 |" in snippet  # D1 on f-bubble-basic-matplotlib, missed in run 2
         assert "| Sessions / API-equivalent cost | 3/4 / $5 |" in snippet
+        # Two runs deduct VQ-03 with a weakness that is no defect line.
+        assert "| Silent deductions (technical items, fresh) | 2/2 (100%) |" in snippet
         assert "lock sha256 cccccccccccc" in snippet
         text = (tmp_path / "report" / "retest-report.md").read_text(encoding="utf-8")
+        assert "no defect line names) / runs with one | 2/2 (100%) / 67% |" in text
         assert 'errors: {"quota": 1}' in text
         assert "## Snippet for the PR body" in text
         lines = (tmp_path / "report" / "records.jsonl").read_text(encoding="utf-8").splitlines()
@@ -1611,6 +1614,125 @@ def _merge_regen() -> dict[str, Any]:
         "encodings_added": [],
         "change_request_applied": None,
     }
+
+
+FIRST_REVIEWS = Path(__file__).parent / "fixtures" / "first_reviews.json"
+
+
+class TestFirstReviews:
+    """The live report on three recorded pull requests of 2026-10-01: #12019
+    passed its first review, #12023 was repaired with a commit, #12028 was
+    "repaired" without one and scored four points higher on the same file."""
+
+    @staticmethod
+    def _recorded() -> list[dict[str, Any]]:
+        return json.loads(FIRST_REVIEWS.read_text(encoding="utf-8"))
+
+    def _pulls(self) -> list[dict[str, Any]]:
+        pulls = []
+        for recorded in self._recorded():
+            pull = rt.first_generation_pull(recorded)
+            assert pull is not None
+            pull["reviews"] = rt.pull_reviews(recorded["comments"])
+            pull["commits"] = [
+                {"at": c["committedDate"], "headline": c["messageHeadline"]} for c in recorded["commits"]
+            ]
+            pulls.append(pull)
+        return pulls
+
+    def test_first_generation_pull(self):
+        pull = {"number": 7, "headRefName": "implementation/bar-basic/d3", "labels": [{"name": "quality:90"}]}
+        assert rt.first_generation_pull(pull) == {"number": 7, "spec_id": "bar-basic", "library": "d3"}
+        assert rt.first_generation_pull({**pull, "labels": [{"name": "regen:kept"}]}) is None
+        assert rt.first_generation_pull({**pull, "headRefName": "spec/bar-basic"}) is None
+
+    def test_parses_a_recorded_comment(self):
+        review = self._pulls()[0]["reviews"][0]
+        assert (review["attempt"], review["score"]) == (1, 90)
+        assert set(review["checklist"]) == set(rt.metrics.CRITERIA_IDS)
+        assert review["checklist"]["VQ-01"] == {"score": 7, "max": 8}
+        assert sum(item["score"] for item in review["checklist"].values()) == 90
+        assert review["weaknesses"][0].startswith("VQ-01 (both): ")
+        assert len(review["weaknesses"]) == 4
+        assert rt.metrics.parse_review_comment("## :wrench: Repair Attempt 1/4\n\nApplied fixes.") is None
+
+    def test_a_pass_a_repair_with_a_commit_and_one_without(self):
+        result = rt.metrics.first_reviews(self._pulls())
+        assert (result["pulls"], result["first_reviews"]) == (3, 3)
+        assert result["histogram"] == {88: 1, 89: 1, 90: 1}
+        assert result["approved_first"] == 1
+        assert result["near_line"] == pytest.approx(1 / 3)
+        by_number = {r["number"]: r for r in result["repairs"]}
+        assert set(by_number) == {12023, 12028}
+        assert by_number[12023] == {
+            "number": 12023,
+            "library": "altair",
+            "from": 89,
+            "to": 88,
+            "technical": -1,
+            "judgment": 0,
+            "committed": True,
+        }
+        # No repair commit, and all four points came from DE and LM items.
+        assert (by_number[12028]["technical"], by_number[12028]["judgment"]) == (0, 4)
+        assert result["repairs_without_commit"] == [12028]
+        # #12028's first review deducted VQ-01 and CQ-01 and wrote only suggestions.
+        assert result["silent_pulls"] == [{"number": 12028, "items": ["VQ-01", "CQ-01"]}]
+        assert (result["silent_deductions_count"], result["silent_deductions_n"]) == (2, 4)
+
+    def test_spec_spread_and_zero_variance_items(self):
+        spec = rt.metrics.first_reviews(self._pulls())["specs"]["line-tanabe-sugano"]
+        assert spec["n"] == 3 and spec["sd"] == pytest.approx(1.0)
+        assert "SC-01" in spec["zero_variance"] and "VQ-01" in spec["zero_variance"]
+        assert "DE-03" not in spec["zero_variance"]
+
+    def test_a_pull_without_an_attempt_one_review_has_no_first_review(self):
+        pulls = self._pulls()
+        pulls[0]["reviews"] = []
+        pulls[1]["reviews"] = pulls[1]["reviews"][1:]
+        result = rt.metrics.first_reviews(pulls)
+        assert (result["pulls"], result["first_reviews"]) == (3, 1)
+
+    def test_render(self):
+        text = rt.render_first_reviews(rt.metrics.first_reviews(self._pulls()), "2026-10-01")
+        assert "# First reviews since 2026-10-01" in text
+        assert "Histogram: 88: 1 · 89: 1 · 90: 1" in text
+        assert "2/4 (50%), in 1 review(s): #12028 VQ-01 CQ-01" in text
+        assert "| #12028 | highcharts | 88 → 92 | +0 | +4 | no |" in text
+        assert "without a commit: #12028" in text
+
+    def test_render_without_reviews(self):
+        text = rt.render_first_reviews(rt.metrics.first_reviews([]), "2026-10-01")
+        assert "First-generation pull requests: 0" in text and "Repairs: 0" in text
+
+    def test_reads_github_read_only(self, monkeypatch, capsys):
+        recorded = {r["number"]: r for r in self._recorded()}
+        calls: list[list[str]] = []
+
+        def fake_run(args, **kwargs):
+            calls.append(args)
+            if args[:3] == ["gh", "pr", "list"]:
+                listed = [{k: r[k] for k in ("number", "headRefName", "labels")} for r in recorded.values()]
+                listed.append({"number": 9, "headRefName": "implementation/a/d3", "labels": [{"name": "regen"}]})
+                stdout = json.dumps(listed)
+            elif args[:2] == ["gh", "api"]:
+                number = int(args[3].split("/")[-2])
+                stdout = "\n".join(json.dumps(c) for c in recorded[number]["comments"]) + "\n"
+            else:
+                stdout = json.dumps({"commits": recorded[int(args[3])]["commits"]})
+            return subprocess.CompletedProcess(args, 0, stdout=stdout, stderr="")
+
+        monkeypatch.setattr(rt.subprocess, "run", fake_run)
+        assert rt.main(["first-reviews", "--since", "2026-10-01"]) == 0
+        assert "with an attempt-1 review: 3" in capsys.readouterr().out
+        assert "created:>=2026-10-01" in calls[0]
+        # Only reads: a listing, then comments and commits per first generation.
+        assert {tuple(c[:3]) for c in calls} <= {
+            ("gh", "pr", "list"),
+            ("gh", "api", "--paginate"),
+            ("gh", "pr", "view"),
+        }
+        assert len(calls) == 1 + 2 * 3
 
 
 class TestBaselineOverlay:
