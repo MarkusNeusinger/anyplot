@@ -43,8 +43,9 @@
   spec or the style guide already requires as design excellence: "spines
   removed, grid at 15%" raised DE-02 on 15 of 15 reviews. Evidence that
   raises a DE or LM item is now something beyond what the spec's Notes and
-  the style guide require, and the DE-01 and DE-02 ladders no longer name the
-  style-guide baseline or a forbidden custom palette. The complete baseline
+  the style guide require. In the DE-01 and DE-02 ladders the style-guide
+  baseline no longer earns more than the default, and a forbidden custom
+  palette earns nothing. The complete baseline
   earns exactly the defaults (DE-01 = 4, DE-02 = 2), so the 75 cap can't fire
   on a compliant implementation. Scores move down by this change; a score
   under these rules isn't comparable with one stored before them. (#12046)

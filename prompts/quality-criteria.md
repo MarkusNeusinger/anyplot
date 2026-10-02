@@ -130,7 +130,7 @@ The bar is strict: AR-09 requires evidence that pixels were *removed*, not merel
 - Full points only for a **perfect** implementation.
 - A flaw deducts in proportion to what a viewer loses by it.
 - The score describes the implementation in front of you and nothing else. What happens to an implementation after the review is not your concern and is not in this file.
-- The total is the sum of the 24 criteria after the score caps. You never pick it.
+- The total is the sum of the 24 criteria, lowered to the lowest score cap that applies ("Score Caps"). A cap lowers the total only; it never changes an item. You never pick it.
 
 **Two kinds of criteria, two starting points:**
 

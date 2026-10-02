@@ -54,7 +54,7 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 - Full points only for **perfect** execution.
 - A flaw deducts in proportion to what a viewer loses by it.
 - The score describes the implementation and nothing else. What a caller does with it is not your concern; you return no pass mark and no recommendation.
-- The total is the sum of the 24 criteria after the score caps. You never pick it.
+- The total is the sum of the 24 criteria, lowered to the lowest score cap that applies (Step 7). A cap lowers the total only; it never changes an item. You never pick it.
 - **Technical items** (VQ, SC, DQ, CQ) start at their maximum. Every point below the maximum is carried by a weakness that names that criterion, what is wrong and what would be right. A deduction you cannot name is no deduction.
 - **Judgment items** (DE, LM) start at their default. Every point above the default is carried by evidence named in the item's note.
 - Be honest and critical.
@@ -277,7 +277,7 @@ Only award full points (5/5) for real, neutral contexts:
 
 ### Step 8: Add up
 
-The score is the sum of the 24 criteria after the caps. Which criterion a gap belongs to is decided in `prompts/quality-criteria.md` → "Which criterion a gap belongs to", so that the same gap costs the same criterion on every library.
+The score is the sum of the 24 criteria, lowered to the lowest cap of Step 7 that applies. Which criterion a gap belongs to is decided in `prompts/quality-criteria.md` → "Which criterion a gap belongs to", so that the same gap costs the same criterion on every library.
 
 ## Rules
 
