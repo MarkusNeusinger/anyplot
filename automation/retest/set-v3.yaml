@@ -31,10 +31,15 @@
 # source. D2 below needs it: drawing only the lowest root of a block is a
 # defect under main's spec text, which asks for every root, and an open
 # reading under the pinned text, where the live reviews split three ways.
+# The gate reads the source, not the text: it assumes a `rules_ref` at or
+# after 251b3efdb (#12042), the first commit whose spec asks for every root.
+# On an older `rules_ref` with spec_source=rules_ref, leave D2 out by hand.
 #
-# The permission probes ignore `Suggestion:` lines (the pattern's leading
-# lookahead): a suggestion costs no points, so only a defect line or a
-# deducted criterion that names the permitted feature is a false alarm.
+# Every pattern here ignores `Suggestion:` lines (its leading lookahead): a
+# suggestion costs no points, so a permission probe fires only on a defect
+# line or on a deducted criterion whose comment names the permitted feature,
+# and a defect counts as caught only when a defect line or the deducted
+# criterion's comment names it.
 #
 # Configurations: d² chartjs, d3, altair, matplotlib, plotly, plotnine,
 # ggplot2; d³ echarts, highcharts, muix, pygal; d⁸ makie, letsplot; d⁷ bokeh,
@@ -57,9 +62,11 @@ snapshots:
 
 patterns:
   # No crossover line on a configuration outside d⁴ to d⁷.
-  no-crossover: &no-crossover '(?s)^(?!\s*Suggestion:).*(cross-?over|high-spin ?/ ?low-spin|spin[- ]state (change|switch))'
+  # A line that says the line is rightly absent ("correctly absent for d³",
+  # "not required", "which the section permits") is no alarm.
+  no-crossover: &no-crossover '(?s)^(?!\s*Suggestion:)(?!.*\b(correctly|rightly|properly) (absent|omitted|left out))(?!.*\bnot (required|needed|applicable|expected))(?!.*\b(permit\w*|permission|optional|is correct|are correct)\b).*(cross-?over|high-spin ?/ ?low-spin|spin[- ]state (change|switch))'
   # Only the lowest root of a symmetry and multiplicity block is drawn.
-  lowest-root: &lowest-root '(lowest|lower|single|one|first) (root|eigenvalue|branch)|(second|upper|higher|other|missing|both|every|all) (roots?|eigenvalues?|branch(es)?|partners?)|only (the |its )?(lowest|lower|one)\b'
+  lowest-root: &lowest-root '(?s)^(?!\s*Suggestion:).*((lowest|lower|single|one|first) (root|eigenvalue|branch)|(second|upper|higher|other|missing|both|every|all) (roots?|eigenvalues?|branch(es)?|partners?)|only (the |its )?(lowest|lower)\b)'
 
 items:
   # ---- python ----------------------------------------------------------------
@@ -69,9 +76,9 @@ items:
     spec_id: line-tanabe-sugano
     library: matplotlib
     new: *new
-    note: "#12019, live 90 at attempt 1, not repaired. d². The ¹A₁g block's diagonal is swapped (line 50): ¹A₁g(G) ends near 29 E/B at Δ_o/B = 40 where the correct matrix gives about 34.6. Correct at zero field, so only a stated strong-field value can catch it"
+    note: "#12019, live 90 at attempt 1, not repaired. d². The ¹A₁g block's diagonal is swapped (line 50): at its C/B = 4.5, ¹A₁g(G) ends near 28.9 E/B at Δ_o/B = 40 where the correct matrix gives 34.9 (34.6 at C/B = 4.42, the value the d² libraries at that ratio show). Correct at zero field, so only a stated strong-field value can catch it"
     defects:
-      - {id: D1, criteria: [DQ-03], match: '¹A₁g|\b1A1g\b|A_?\{?1g\}?|singlet A|check values?|\b34\.\d|\b2[89](\.\d)?\b|(swap|transpos|exchang|interchang)\w*.{0,80}(diagonal|matri|block|entr)|diagonal.{0,60}(swap|transpos|exchang|interchang|wrong)', note: 'the ¹A₁g(G) strong-field value is wrong: about 29 instead of 34.6 E/B at Δ_o/B = 40'}
+      - {id: D1, criteria: [DQ-03], match: '(?s)^(?!\s*Suggestion:).*((¹A₁g|\b1A1g\b|A_?\{?1g\}?|singlet A).{0,200}(\b2[89](\.\d)?\b|\b34\.\d|\b35\b|asymptot|strong.field|too (low|high)|wrong|should (be|reach|end)|instead of)|(swap|transpos|exchang|interchang)\w*.{0,80}(diagonal|matri|block|entr)|diagonal.{0,60}(swap|transpos|exchang|interchang|wrong))', note: 'the ¹A₁g(G) strong-field value is wrong: about 28.9 instead of 34.9 E/B at Δ_o/B = 40 and C/B = 4.5'}
     permitted:
       - {id: A1, criteria: [SC-02, DQ-01], match: *no-crossover, note: 'no crossover line on d²'}
 
@@ -105,7 +112,7 @@ items:
     note: "#12022, live 90 at attempt 1, not repaired. d⁷ with the crossover line; Δ_o/B is sampled to 30, where the Data section says 0–40. The spec does not pin the data, so the shorter range is permitted"
     defects: []
     permitted:
-      - {id: A2, criteria: [SC-02, DQ-03, VQ-05], match: '(?s)^(?!\s*Suggestion:).*(\b30\b.{0,80}\b40\b|\b40\b.{0,80}\b30\b|(stops?|ends?|sampled|runs?|truncat\w*|cut\w*)\W.{0,40}\b30\b|\b0 ?[–-] ?40\b)', note: 'the x range stops at 30 (Data says "sampled across 0–40")'}
+      - {id: A2, criteria: [SC-02, DQ-03, VQ-05], match: '(?s)^(?!\s*Suggestion:).*(Δ|delta|x[- ]?(axis|range|domain)|sampl|field).{0,80}(\b30\b.{0,80}\b40\b|\b40\b.{0,80}\b30\b|(stops?|ends?|only|runs?|truncat\w*|cut\w*)\W.{0,40}\b30\b)', note: 'the x range stops at 30 (Data says "sampled across 0–40")'}
 
   - id: f-line-tanabe-sugano-altair
     kind: fresh
@@ -233,6 +240,6 @@ items:
     new: *new
     note: "#12038, live 90 at attempt 1, not repaired. d³ with the optional example-complex marker; its two transition arrows are drawn 12 px beside the marker line but end at each term's energy on the line, so one head pokes above its curve and the other stops short"
     defects:
-      - {id: D1, criteria: [SC-02], match: '\barrow(head)?s?\b.{0,240}(short|past|above|below|miss|overshoot|pok|land|off (the|its)|not (on|reach|touch|meet))', note: 'the transition arrowheads miss their curves'}
+      - {id: D1, criteria: [SC-02], match: '(?s)^(?!\s*Suggestion:).*\barrow(head)?s?\b.{0,240}(short|past|above|below|miss|overshoot|pok|land|off (the|its)|not (on|reach|touch|meet))', note: 'the transition arrowheads miss their curves'}
     permitted:
       - {id: A1, criteria: [SC-02, DQ-01], match: *no-crossover, note: 'no crossover line on d³'}

@@ -1341,13 +1341,12 @@ def _uncarried(gate: dict[str, Any]) -> str:
 
 
 def _silent(weaknesses: dict[str, Any]) -> str:
-    """Silent deductions as ``k/n (share)``; a report built before the metric has none."""
-    if not weaknesses.get("silent_deductions_n"):
+    """Silent deductions as ``k/n (share)``: ``0/0`` when no technical item is
+    below its maximum, ``–`` for metrics built before the count existed."""
+    if "silent_deductions_n" not in weaknesses:
         return "–"
-    return (
-        f"{weaknesses['silent_deductions_count']}/{weaknesses['silent_deductions_n']} "
-        f"({_pct(weaknesses['silent_deductions'])})"
-    )
+    counts = f"{weaknesses['silent_deductions_count']}/{weaknesses['silent_deductions_n']}"
+    return f"{counts} ({_pct(weaknesses['silent_deductions'])})" if weaknesses["silent_deductions_n"] else counts
 
 
 def _arm_rows(arm: dict[str, Any]) -> dict[str, str]:
@@ -1777,6 +1776,11 @@ def gh_first_generation_pulls(since: str, limit: int) -> list[dict[str, Any]]:
             "number,headRefName,labels",
         ]
     )
+    if len(listed or []) >= limit:
+        print(
+            f"::warning::the listing stopped at --limit {limit}: older pull requests since {since} are missing",
+            file=sys.stderr,
+        )
     pulls = []
     for pull in sorted(filter(None, map(first_generation_pull, listed or [])), key=lambda p: p["number"]):
         out = subprocess.run(

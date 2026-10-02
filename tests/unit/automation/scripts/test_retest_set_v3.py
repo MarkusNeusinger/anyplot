@@ -117,22 +117,28 @@ class TestPatternsAgainstTheLiveReviews:
                 "pair of same-symmetry doublets is on the chart → add the second branch. Likely cause: x.",
             ),
             (
-                "highcharts",
-                "Suggestion: `termEnergies` currently returns only the lowest root of each doublet block; exposing "
-                "the second root of the ²T₁g or ²T₂g block would show an avoided crossing explicitly.",
-            ),
-            (
                 "altair",
-                "Suggestion: the ¹Eg block is a 2×2 but only its lower eigenvalue is drawn, while both ¹T₂g roots are.",
+                "SC-02 (both): the ¹Eg block is a 2×2 but only its lower eigenvalue is drawn → draw both. Likely cause: x.",
             ),
+            ("makie", "DQ-01 (both): one root per block is drawn for the singlets → keep every root. Likely cause: x."),
         ],
     )
     def test_lowest_root_lines_match(self, library, line):
         assert _matches(_label(library, "defects", "D2"), line)
 
-    def test_lowest_root_ignores_other_lines(self):
-        label = _label("pygal", "defects", "D2")
-        assert not _matches(label, "VQ-01 (both): tick labels at size 10 are barely legible → about 12 (+2).")
+    @pytest.mark.parametrize(
+        "line",
+        [
+            "VQ-01 (both): tick labels at size 10 are barely legible → about 12 (+2).",
+            # An LM-02 line of another review: "only one" of anything is not a root.
+            "LM-02 (code): only one distinctly matplotlib-native technique is used → add a second. Likely cause: x.",
+            # The live highcharts wording: a suggestion never catches a defect.
+            "Suggestion: `termEnergies` currently returns only the lowest root of each doublet block; exposing "
+            "the second root of the ²T₁g or ²T₂g block would show an avoided crossing explicitly.",
+        ],
+    )
+    def test_lowest_root_ignores_other_lines(self, line):
+        assert not _matches(_label("pygal", "defects", "D2"), line)
 
     @pytest.mark.parametrize(
         "line",
@@ -144,6 +150,21 @@ class TestPatternsAgainstTheLiveReviews:
     def test_a_crossover_suggestion_is_no_false_alarm(self, line):
         record = _rec("plotly", [line], DQ_01=(6, 6))
         assert not metrics.probe_false_alarm(_label("plotly", "permitted", "A1"), record)
+
+    @pytest.mark.parametrize(
+        "comment",
+        [
+            # SC-02 comments of the live reviews that name the permission itself.
+            "arrows miss their curves; crossover line correctly absent for d³",
+            "the crossover line is d⁴–d⁷ only, which the characteristic section permits",
+            "no crossover line is correct for d²",
+            "every Notes bullet met; crossover line and example marker are not required for d³",
+        ],
+    )
+    def test_naming_the_permission_on_a_deducted_criterion_is_no_false_alarm(self, comment):
+        record = _rec("muix", [], SC_02=(3, 4))
+        record["checklist"]["SC-02"]["comment"] = comment
+        assert not metrics.probe_false_alarm(_label("muix", "permitted", "A1"), record)
 
     def test_a_crossover_defect_line_is_a_false_alarm(self):
         line = "SC-02 (both): no vertical line marks the high-spin/low-spin crossover → draw it. Likely cause: x."
@@ -161,8 +182,17 @@ class TestPatternsAgainstTheLiveReviews:
     def test_range_lines_match(self, line):
         assert _matches(_label("bokeh", "permitted", "A2"), line)
 
-    def test_a_range_suggestion_is_no_false_alarm(self):
-        line = "Suggestion: extending the sampling from 30 to 40 would cover the spec's whole domain."
+    @pytest.mark.parametrize(
+        "line",
+        [
+            "Suggestion: extending the sampling from 30 to 40 would cover the spec's whole domain.",
+            # Numbers of other reviews that are not the x range.
+            "DQ-03 (both): conventional 0–40 / 0–80 ranges, but the y axis starts at 5 → start at 0.",
+            "VQ-05 (both): legend breaks (10, 30, 60, 100) crowd the corner → three breaks.",
+            "DQ-01 (both): 35 lags in the 30–40 range are too few to show the decay → 60 lags.",
+        ],
+    )
+    def test_other_range_text_is_no_false_alarm(self, line):
         assert not metrics.probe_false_alarm(_label("bokeh", "permitted", "A2"), _rec("bokeh", [line]))
 
     def test_the_arrowhead_line_matches(self):
@@ -182,6 +212,24 @@ class TestPatternsAgainstTheLiveReviews:
         assert metrics.defect_hit(label, _rec("matplotlib", [line], DQ_03=(2, 4)))
         # The live review praised the scale at 4/4: a miss.
         assert not metrics.defect_hit(label, _rec("matplotlib", [line], DQ_03=(4, 4)))
+        swapped = "DQ-03 (code): the two diagonal entries of the ¹A₁g block are swapped (line 50). Likely cause: x."
+        assert metrics.defect_hit(label, _rec("matplotlib", [swapped], DQ_03=(2, 4)))
+
+    @pytest.mark.parametrize(
+        "line",
+        [
+            # A DQ-03 deduction for another reason, next to lines that name a
+            # singlet, a bare 28 or 29, or another check value.
+            "DQ-01 (both): the ¹A₁g(S) term is dropped from the diagram entirely by the `ENERGY_MAX = 100` filter.",
+            "VQ-02 (both): the 28 px de-collision offset pushes two labels apart → 14 px. Likely cause: x.",
+            "VQ-05 (both): the plot fills ~28% of canvas width → widen. Likely cause: x.",
+            "DQ-03 (both): the crossover check value is missed: 19.0 where the Notes state 21.7 (−2.7).",
+            "Suggestion: ¹A₁g(G) should reach 34.9 at the right edge; worth checking the block.",
+        ],
+    )
+    def test_other_lines_do_not_catch_the_strong_field_value(self, line):
+        label = _label("matplotlib", "defects", "D1")
+        assert not metrics.defect_hit(label, _rec("matplotlib", [line], DQ_03=(2, 4)))
 
 
 class TestSpecSourceLabels:
@@ -200,6 +248,30 @@ class TestSpecSourceLabels:
         missed = {**_rec("pygal", [], "rules_ref", DQ_01=(6, 6)), "run": 2}
         result = self._defects([caught, missed])
         assert (result["defect_runs"], result["defect_misses"]) == (2, 1)
+
+    def test_a_probe_follows_the_same_gate(self):
+        labels = {
+            "f-line-tanabe-sugano-bokeh": {
+                "permitted": [{"id": "A9", "criteria": ["VQ-05"], "match": "tail", "spec_source": "rules_ref"}]
+            }
+        }
+        alarm = "VQ-05 (both): a bare axis tail under the labels → trim. Likely cause: x."
+        pinned = metrics.defect_metrics(metrics.by_unit([_rec("bokeh", [alarm], "pinned")]), labels)
+        assert (pinned["probe_runs"], pinned["per_probe"]) == (0, {})
+        gated = metrics.defect_metrics(metrics.by_unit([_rec("bokeh", [alarm], "rules_ref")]), labels)
+        assert (gated["probe_runs"], gated["false_alarms"]) == (1, 1)
+
+    def test_a_comparison_across_spec_sources_is_flagged(self):
+        labels = rt.item_labels({**_manifest(), "labels": "confirmed"})
+
+        def arm(spec_source: str) -> list[dict]:
+            return [
+                {**_rec("pygal", [], spec_source, DQ_01=(6, 6)), "cell": f"c{run}", "run": run, "model": "m"}
+                for run in (1, 2)
+            ]
+
+        assert "label set differs" in metrics.compare_arms(arm("pinned"), arm("rules_ref"), labels)["flags"]
+        assert "label set differs" not in metrics.compare_arms(arm("pinned"), arm("pinned"), labels)["flags"]
 
     def test_validate_refuses_an_unknown_spec_source(self):
         manifest = _manifest()

@@ -793,7 +793,8 @@ def compare_arms(
 
     Soft flags only (never blocking): ``noise_up`` when the CI of Δ pooled SD
     lies above 0; ``model_changed`` when the resolved models differ;
-    ``harness_changed`` when the harness version or action SHA differ.
+    ``harness_changed`` when the harness version or action SHA differ;
+    ``label set differs`` when the arms counted different defects or probes.
     """
     out: dict[str, Any] = {"kinds": {}, "flags": []}
     for kind in ("fresh", "regen"):
@@ -842,7 +843,22 @@ def compare_arms(
         out["flags"].append("harness changed")
     if facet(base, "set") != facet(cand, "set"):
         out["flags"].append("set changed")
+    # A label with a ``spec_source`` counts in one arm only, and an arm that
+    # lost a unit lacks its labels: the miss and false-alarm rates of the two
+    # arms then pool different labels.
+    if _label_keys(arm_metrics(base, labels)) != _label_keys(arm_metrics(cand, labels)):
+        out["flags"].append("label set differs")
     return out
+
+
+def _label_keys(arm: dict[str, Any]) -> set[str]:
+    """Every defect and probe an arm's groups counted."""
+    return {
+        key
+        for group in arm["groups"].values()
+        for part in ("per_defect", "per_probe")
+        for key in group["defects"][part]
+    }
 
 
 def _headline(arm: dict[str, Any]) -> dict[str, Any]:
@@ -1159,7 +1175,7 @@ def _gain(before: dict[str, Any], after: dict[str, Any], ids: Iterable[str]) -> 
     return None if a is None or b is None else b - a
 
 
-def repair_committed(commits: Sequence[dict[str, Any]], after: str, before: str) -> bool:
+def repair_committed(commits: Sequence[dict[str, Any]], review_at: str, next_review_at: str) -> bool:
     """Whether a commit other than bookkeeping landed between two reviews.
 
     ``commits`` hold ``at`` (an ISO timestamp, compared as text) and
@@ -1167,7 +1183,8 @@ def repair_committed(commits: Sequence[dict[str, Any]], after: str, before: str)
     bookkeeping; anything else in the window is the repair's change.
     """
     return any(
-        after < str(c.get("at") or "") < before and not BOOKKEEPING_COMMIT_RE.match(str(c.get("headline") or ""))
+        review_at < str(c.get("at") or "") < next_review_at
+        and not BOOKKEEPING_COMMIT_RE.match(str(c.get("headline") or ""))
         for c in commits
     )
 

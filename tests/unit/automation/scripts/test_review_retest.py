@@ -1734,6 +1734,34 @@ class TestFirstReviews:
         }
         assert len(calls) == 1 + 2 * 3
 
+    def test_a_full_listing_warns(self, monkeypatch, capsys):
+        listed = [{"number": n, "headRefName": "spec/x", "labels": []} for n in (1, 2)]
+        monkeypatch.setattr(
+            rt.subprocess, "run", lambda args, **kw: subprocess.CompletedProcess(args, 0, json.dumps(listed), "")
+        )
+        assert rt.gh_first_generation_pulls("2026-10-01", 2) == []
+        assert "the listing stopped at --limit 2" in capsys.readouterr().err
+        assert rt.gh_first_generation_pulls("2026-10-01", 3) == []
+        assert capsys.readouterr().err == ""
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            "## AI Review - Attempt 1/3\n\n### Weaknesses\n- Suggestion: x",  # no score line
+            "## AI Review - Attempt 1/3\n\n### Score: 101/100\n",
+            "### Score: 90/100\n",  # no review heading
+        ],
+    )
+    def test_a_comment_without_a_valid_review_parses_to_none(self, body):
+        assert rt.metrics.parse_review_comment(body) is None
+
+    def test_silent_cell(self):
+        assert rt._silent({}) == "–"  # metrics built before the count existed
+        empty = {"silent_deductions_n": 0, "silent_deductions_count": 0, "silent_deductions": None}
+        assert rt._silent(empty) == "0/0"
+        some = {"silent_deductions_n": 4, "silent_deductions_count": 1, "silent_deductions": 0.25}
+        assert rt._silent(some) == "1/4 (25%)"
+
 
 class TestBaselineOverlay:
     """The documented baseline arm (rules_ref = baseline_rules_sha, 0674ab6b5) runs
