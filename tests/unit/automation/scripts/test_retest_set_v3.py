@@ -87,9 +87,11 @@ class TestShippedSet:
             probes = [label["id"] for label in item["permitted"]]
             assert ("A1" in probes) == (library not in CROSSOVER), library
 
-    def test_range_probe_on_bokeh_only(self):
+    def test_range_probe_on_the_two_files_that_stop_at_30(self):
         with_a2 = {library for library, item in _items().items() if any(p["id"] == "A2" for p in item["permitted"])}
-        assert with_a2 == {"bokeh"}  # the letsplot repair extended its range to 40
+        # Both d⁷ files sample to 30; the letsplot repair extended its range to 40.
+        assert with_a2 == {"bokeh", "seaborn"}
+        assert _label("bokeh", "permitted", "A2")["match"] == _label("seaborn", "permitted", "A2")["match"]
 
     def test_lowest_root_defect_needs_the_every_root_spec(self):
         with_d2 = {library for library, item in _items().items() if any(d["id"] == "D2" for d in item["defects"])}
@@ -104,7 +106,7 @@ class TestShippedSet:
     def test_confirmed_labels_reach_the_report(self):
         labels = rt.item_labels({**_manifest(), "labels": "confirmed"})
         assert [d["id"] for d in labels["f-line-tanabe-sugano-matplotlib"]["defects"]] == ["D1"]
-        assert sum(len(entry["permitted"]) for entry in labels.values()) == 14  # 13 × A1, 1 × A2
+        assert sum(len(entry["permitted"]) for entry in labels.values()) == 15  # 13 × A1, 2 × A2
 
 
 class TestPatternsAgainstTheLiveReviews:

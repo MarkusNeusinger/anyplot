@@ -128,7 +128,7 @@ class TestPromptStructure:
     def test_quality_criteria_has_scoring_section(self, quality_criteria_content: str) -> None:
         """Quality criteria should have scoring information."""
         assert "## Stage 2: Quality Scoring" in quality_criteria_content
-        assert "90" in quality_criteria_content, "Pass threshold (90) not mentioned"
+        assert "### Scoring principles" in quality_criteria_content
 
     def test_quality_criteria_has_six_categories(self, quality_criteria_content: str) -> None:
         """Quality criteria should have all 6 scoring categories."""
@@ -356,14 +356,35 @@ class TestPromptConsistency:
             missing = common_sections - sections
             assert not missing, f"{lib_file} missing common sections: {missing}"
 
-    def test_quality_score_threshold_consistent(self) -> None:
-        """Quality threshold (90) should be consistent across scoring prompts."""
-        files_to_check = [PROMPTS_DIR / "quality-criteria.md", PROMPTS_DIR / "quality-evaluator.md"]
-
-        for filepath in files_to_check:
-            if filepath.exists():
-                content = filepath.read_text()
-                assert ">= 90" in content or "≥ 90" in content, f"Approval threshold (90) not found in {filepath.name}"
+    @pytest.mark.parametrize(
+        "prompt_path",
+        [
+            PROMPTS_DIR / "quality-criteria.md",
+            PROMPTS_DIR / "quality-evaluator.md",
+            PROMPTS_DIR / "workflow-prompts" / "ai-quality-review.md",
+        ],
+        ids=lambda p: p.name,
+    )
+    def test_the_reviewer_never_sees_the_approval_cascade(self, prompt_path: Path) -> None:
+        """P10: a review scores without the bar in view. The thresholds and
+        what follows from a score live in the workflow and in the docs."""
+        content = prompt_path.read_text()
+        for phrase in (
+            "≥ 90",
+            ">= 90",
+            "Review 1",
+            "ai-approved, merge",
+            "repair loop exists",
+            "Cascading",
+            "cascade",
+            "cannot pass on first review",
+            "To reach 90+",
+            "→ Repair loop",
+            "current ~95% scoring 90+",
+        ):
+            assert phrase not in content, phrase
+        overview = (PROMPTS_DIR.parent / "docs" / "workflows" / "overview.md").read_text()
+        assert "Score >= 90" in overview and "Score >= 50" in overview
 
     def test_scoring_categories_consistent(self) -> None:
         """Quality criteria and evaluator should have the same 6 categories."""
@@ -772,8 +793,10 @@ class TestDefectsAndSuggestions:
         live implementation's review; its checklist is prev_checklist."""
         step = self._section(REVIEW_PROMPT.read_text(), "### 8b.", "### 9.")
         assert step.index("4. **Write `review_regen.json`**") < step.index("5. **Write `review_prev.json`**")
-        for key in ("image_description", "criteria_checklist", "strengths", "weaknesses", "verdict"):
+        for key in ("image_description", "criteria_checklist", "strengths", "weaknesses"):
             assert f"`{key}`" in step, key
+        # P10: the reviewer writes no verdict; the write-back sets it.
+        assert "`verdict`" not in step
         assert "Every item score equals the same item in `prev_checklist`" in step
         assert "each category's `score` is the sum of its items" in step
         assert "skip steps 1–5, do not write `review_regen.json` or `review_prev.json`" in step
@@ -786,7 +809,7 @@ class TestDefectsAndSuggestions:
         assert "with kind `addition` or `polish` is one of those `Suggestion:` lines, not a defect line" in step
         assert "in that order" not in step
         assert "never mention the new render, the comparison, or the regeneration" in step
-        assert "No score key: the stored score is `prev_rescored`" in step
+        assert "No score key and no verdict: the stored score is `prev_rescored`" in step
         assert "changes nothing you decided above" in step
 
     def test_step_10_has_the_review_prev_example_and_checks_it(self) -> None:
@@ -794,9 +817,10 @@ class TestDefectsAndSuggestions:
         step = self._section(content, "### 10.", "### 11.")
         example = step.split("cat > review_prev.json << 'EOF'\n", 1)[1].split("\nEOF", 1)[0]
         assert "python3 -c \"import json; json.load(open('review_prev.json'))\"" in step
-        for key in ("image_description", "criteria_checklist", "strengths", "weaknesses", "verdict"):
+        for key in ("image_description", "criteria_checklist", "strengths", "weaknesses"):
             assert f'"{key}"' in example, key
         assert '"quality_score"' not in example and '"prev_rescored"' not in example
+        assert '"verdict"' not in example and "review_verdict.txt" not in step
         # The example agrees with the review_regen.json example: its items are
         # prev_checklist's, each category is the sum of its prev_checklist
         # items, and the categories add up to prev_rescored (no cap applies).
@@ -811,7 +835,7 @@ class TestDefectsAndSuggestions:
         ]
         assert sum(int(score) for score, _ in categories) == regen["prev_rescored"]
         assert [int(top) for _, top in categories] == [30, 20, 15, 15, 10, 10]
-        weaknesses = json.loads(re.search(r'"weaknesses": (\[.*\]),', example).group(1))
+        weaknesses = json.loads(re.search(r'"weaknesses": (\[.*\])\n', example).group(1))
         assert DEFECT_RE.match(weaknesses[0]) and SUGGESTION_RE.match(weaknesses[-1])
         # The self-check covers the file whenever review_regen.json exists.
         flags = [line for line in step.splitlines() if "--prev-review review_prev.json" in line]
@@ -1040,3 +1064,196 @@ class TestAvailablePackages:
         keys = set(re.findall(r"^\s{2}(\w+): \{", bundles, re.MULTILINE))
         listed = re.search(r"Only the snippet's own library is loaded: ([^.]*)\.", blocks["JavaScript"]).group(1)
         assert keys == set(re.findall(r"\b[a-z0-9]+\b", listed)) - {"or"}
+
+
+CRITERIA_PROMPT = PROMPTS_DIR / "quality-criteria.md"
+EVALUATOR_PROMPT = PROMPTS_DIR / "quality-evaluator.md"
+
+
+class TestFirstReviewScoring:
+    """P10: a deduction names its defect, the same gap costs the same
+    criterion on every library, a review is blind to earlier ones and writes
+    no verdict, and a spec's check values are verified (the 15 first reviews
+    of line-tanabe-sugano, 2026-10-01: 7 of 27 deducted technical items had no
+    defect line, and a wrong matrix scored DQ-03 at 4/4)."""
+
+    def _section(self, content: str, start: str, end: str) -> str:
+        return content[content.index(start) : content.index(end, content.index(start))]
+
+    def test_criteria_start_at_the_maximum_or_the_default(self) -> None:
+        principles = self._section(CRITERIA_PROMPT.read_text(), "### Scoring principles", "### Point Distribution")
+        assert "Each starts at its **maximum**" in principles
+        assert "is carried by a defect line that names that criterion" in principles
+        assert "A deduction you cannot write that line for is no deduction" in principles
+        assert "Each starts at its **default**" in principles
+        assert "You never pick it" in principles
+        assert "not your concern" in principles
+
+    def test_review_lists_defects_before_it_scores(self) -> None:
+        content = REVIEW_PROMPT.read_text()
+        step = self._section(content, "### 7.", "### 8.")
+        assert step.index("**List the defects first**") < step.index("**Score the 19 technical items**")
+        assert step.index("**Score the 19 technical items**") < step.index("**Score the five judgment items**")
+        assert "You never pick the total" in step
+        assert "would deduct the same criterion for the same gap" in step
+        rules = self._section(content, "### 8a.", "### 8b.")
+        assert "every technical item (VQ, SC, DQ, CQ) below its maximum is named by a defect line" in rules
+        assert "A suggestion costs no points, and a deducted technical item has a defect line" in rules
+        # The DQ-02 guard: a generic-scenario deduction renames; only an excluded
+        # scenario, or real names with invented numbers, is replaced.
+        assert "A DQ-02 line for a plausible but generic scenario names the labels or values" in rules
+        assert "and its fix renames them" in rules
+        assert "real names carrying invented numbers, is named as the scenario itself" in rules
+        assert "and add up again" in rules
+        # The check runs before 8b, so a regeneration's comparison starts from final scores.
+        assert "restore the point now, before step 8b and before you write any file" in rules
+        assert "From here on your checklist is final" in rules
+
+    def test_step_10_says_how_a_silent_deduction_is_fixed(self) -> None:
+        step = REVIEW_PROMPT.read_text().split("### 10.", 1)[1].split("### 11.", 1)[0]
+        assert "is fixed by writing the defect line the deduction rests on" in step
+        # The checklist example models the rule: its one deducted item names its defect.
+        example = step.split("cat > review_checklist.json << 'EOF'\n", 1)[1].split("\nEOF", 1)[0]
+        items = re.findall(r'"id": "([A-Z]{2}-\d{2})", "name": "[^"]*", "score": (\d+), "max": (\d+)', example)
+        assert items == [("VQ-01", "8", "8"), ("VQ-02", "5", "6")]
+
+    def test_routing_table(self) -> None:
+        criteria = CRITERIA_PROMPT.read_text()
+        table = self._section(criteria, "### Which criterion a gap belongs to", "## Score Caps")
+        rows = [line for line in table.splitlines() if line.startswith("| ") and not line.startswith("| Gap")]
+        assert len(rows) == 7
+        for gap, verdict in (
+            ("A Notes bullet or an `A good version shows:` property that the render misses or breaks", "SC-02 defect"),
+            ("A range, size or example of the Data section that the implementation departs from", "Nothing, unless"),
+            ("A conditional requirement", "Nothing: not SC-02, not DQ-01"),
+            ("names unconditionally", "DQ-01 defect"),
+            ("an aspect nothing in the spec names", "At most a `Suggestion:`"),
+            ("or a check value missed", "DQ-03 defect"),
+            ("A comment or label that contradicts the code or the data it describes", "else CQ-04 defect"),
+        ):
+            row = next(r for r in rows if gap in r)
+            assert verdict in row.split("|")[2], gap
+        # Routing, never a threshold.
+        assert "how many points it costs stays proportional" in table
+
+    @pytest.mark.parametrize("prompt_path", [REVIEW_PROMPT, EVALUATOR_PROMPT], ids=lambda p: p.name)
+    def test_scoring_prompts_name_check_values(self, prompt_path: Path) -> None:
+        row = next(line for line in prompt_path.read_text().splitlines() if line.startswith("| DQ-03 |"))
+        assert "`Check values:`" in row
+        assert "must fall out of the computation" in row
+        assert "claim no correctness you did not check" in row
+
+    def test_check_values_rule(self) -> None:
+        criteria = CRITERIA_PROMPT.read_text()
+        dq03 = self._section(criteria, "### DQ-03", "## Code Quality")
+        assert "bullet that starts with `Check values:`" in dq03
+        assert "must **fall out of the computation**" in dq03
+        assert "is a DQ-03 defect, not a pass" in dq03
+        assert "the expected value, the observed value and the signed delta" in dq03
+        assert "is skipped, and the comment says so" in dq03
+        assert "is a `Suggestion:` that states the doubt, not a deduction" in dq03
+        template = (PROMPTS_DIR / "templates" / "specification.md").read_text()
+        notes = self._section(template, "## Notes", "## What a good version looks like")
+        assert "`Check values:`" in notes and "never hard-coded" in notes
+
+    def test_cq04_examples_are_not_a_whitelist(self) -> None:
+        criteria = CRITERIA_PROMPT.read_text()
+        row = next(line for line in criteria.splitlines() if line.startswith("| 1 | A named block"))
+        assert "a fit," not in row
+        assert "a fit that takes an iteration or a matrix solve" in row
+        assert "The examples are not a list to match against" in row
+        assert "makes a closed-form slope and intercept a suggestion" in row
+
+    def test_the_review_is_blind_and_writes_no_verdict(self) -> None:
+        content = REVIEW_PROMPT.read_text()
+        assert "### Verdict" not in content and "review_verdict.txt" not in content
+        assert "verdict = REJECTED" not in content
+        assert "it does not change how you score" in content
+        assert "review 1 of up to 5" not in content
+        important = content.split("## Important", 1)[1]
+        assert "Do not open earlier review comments on the pull request" in important
+        assert "You write no verdict" in important
+        # 8b still needs to say that a regeneration has one review and no repair.
+        assert "and no repair loop" in content
+        assert "there is no repair: the regen gate reads the same file" in content
+        evaluator = EVALUATOR_PROMPT.read_text()
+        assert '"pass"' not in evaluator and '"recommendation"' not in evaluator
+        assert "Determine Recommendation" not in evaluator
+
+    @pytest.mark.parametrize("prompt_path", [CRITERIA_PROMPT, REVIEW_PROMPT, EVALUATOR_PROMPT], ids=lambda p: p.name)
+    def test_compliance_is_not_excellence(self, prompt_path: Path) -> None:
+        """R4: what the spec or the style guide requires raises no DE or LM item."""
+        content = prompt_path.read_text()
+        assert "Compliance is not excellence" in content
+        assert (
+            "**beyond** what the spec's Notes and characteristic section require and beyond what the style guide "
+            "mandates ("
+        ) in content
+        # The style guide lets a plot drop every spine and the grid: neither is short of the baseline.
+        assert "top and right spines removed or none at all, a subtle grid or none" in content
+        assert "Meeting those is scored in SC and VQ" in content
+        assert "The complete style-guide baseline earns exactly the defaults" in content.replace("**", "")
+        # No ladder or check credits a mandated or a forbidden thing any more.
+        for phrase in ("custom palette", "Custom palette", "Spines removed?", "spines partially removed"):
+            assert phrase not in content, phrase
+        assert "Raise only if spines removed" not in content
+
+    def test_design_ladders_start_at_the_baseline(self) -> None:
+        criteria = CRITERIA_PROMPT.read_text()
+        de01 = self._section(criteria, "### DE-01", "### DE-02")
+        assert (
+            "| 8 | Publication-ready: typography, spacing and hierarchy decided beyond the baseline, within the" in de01
+        )
+        assert "| 4 | The complete style-guide baseline" in de01
+        de02 = self._section(criteria, "### DE-02", "### DE-03")
+        assert "| 6 | Perfect: every detail decided rather than inherited" in de02
+        assert "| 4 | Good: refinement beyond the style-guide baseline" in de02
+        assert "| 2 | The style-guide baseline" in de02
+        assert "subtle grid (or none), spines removed" not in criteria
+        # The 75 cap needs both items at 2 or below; the baseline keeps DE-01 at 4.
+        caps = self._section(criteria, "## Score Caps", "## Anti-Inflation")
+        assert "this cap never fires on a compliant implementation" in caps
+        assert "A hierarchy the spec's Notes prescribe" in self._section(criteria, "### DE-03", "## Spec Compliance")
+        assert "Compliance is not mastery" in self._section(criteria, "## Library Mastery", "## Plot-Type")
+
+    def test_a_gap_that_fits_two_rows_follows_its_fix(self) -> None:
+        criteria = CRITERIA_PROMPT.read_text()
+        table = self._section(criteria, "### Which criterion a gap belongs to", "## Score Caps")
+        assert "When a gap fits two rows, the fix decides" in table
+        assert "a gap closed in the data generation or the computation is DQ-01" in table
+        assert "one closed in the plotting code is SC-02" in table
+        # A Notes preference ("prefer d⁴–d⁷") is no requirement.
+        assert 'or a Notes preference it does not follow ("prefer", "typically", "e.g.")' in table
+        assert "a preference is not a requirement" in table
+        dq01 = self._section(criteria, "### DQ-01", "### DQ-02")
+        assert "A conditional requirement whose condition the data does not meet is not an aspect to exhibit" in dq01
+
+    def test_the_median_describes_and_is_no_target(self) -> None:
+        """A compliant implementation without a defect lands above the old
+        median by construction; the number must not read as a total to reach."""
+        assert "it is never a total to steer toward" in CRITERIA_PROMPT.read_text()
+        review = REVIEW_PROMPT.read_text()
+        assert "the number describes, it is not a target" in review
+        assert "score the item at its maximum and say N/A in the comment" in review
+        evaluator = EVALUATOR_PROMPT.read_text()
+        assert "it is not a total to steer toward" in evaluator
+        assert "Start low, justify up" not in evaluator
+
+    def test_the_prompts_own_examples_have_no_silent_deduction(self) -> None:
+        """The reviewer copies the shape of the examples: every technical item
+        an example deducts is named by one of its defect lines."""
+        from automation.scripts.regen_gate import _silent_deduction_problems
+
+        step = REVIEW_PROMPT.read_text().split("### 10.", 1)[1].split("### 11.", 1)[0]
+        regen = json.loads(step.split("cat > review_regen.json << 'EOF'\n", 1)[1].split("\nEOF", 1)[0])
+        example = step.split("cat > review_prev.json << 'EOF'\n", 1)[1].split("\nEOF", 1)[0]
+        weaknesses = json.loads(re.search(r'"weaknesses": (\[.*\])\n', example).group(1))
+        assert _silent_deduction_problems(weaknesses, regen["prev_checklist"]) == []
+
+    def test_stale_distribution_is_gone_and_the_anchors_stay(self) -> None:
+        criteria = CRITERIA_PROMPT.read_text()
+        assert "Expected distribution" not in criteria
+        assert "When in doubt, deduct" not in criteria
+        assert "When in doubt whether evidence raises a design or library item, keep the default" in criteria
+        assert "Median implementation should score 72-78" in criteria
+        assert "median implementation should score 72-78" in REVIEW_PROMPT.read_text()

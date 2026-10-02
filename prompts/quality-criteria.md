@@ -2,6 +2,8 @@
 
 Two-stage evaluation: Auto-Reject + Quality Scoring.
 
+This file is the rubric: what a score is made of. What the pipeline does with a score is the workflow's business and is documented for people in `docs/workflows/overview.md` ("Quality workflow"); it is not part of the rubric and not something a review weighs.
+
 ## Overview
 
 ```text
@@ -10,22 +12,14 @@ Implementation
      ▼
 ┌─────────────────────┐
 │  Stage 1: Auto-Reject  │  ──► FAIL → Score = 0
-│  (9 checks)            │       AR-01..AR-05, AR-07: regenerate (workflow)
-│                        │       AR-06, AR-08, AR-09: repair via review cascade (AI)
+│  (9 checks)            │       AR-01..AR-05, AR-07: checked by the workflow
+│                        │       AR-06, AR-08, AR-09: decided in the review (AI)
 └─────────────────────┘
      │ PASS
      ▼
 ┌─────────────────────┐
-│  Stage 2: Quality      │  ──► Review 1: ≥ 90 → ai-approved, merge
-│  (0-100 points)        │  ──► Review 2: ≥ 80 → ai-approved, merge
-│                        │  ──► Review 3: ≥ 70 → ai-approved, merge
-│                        │  ──► Review 4: ≥ 60 → ai-approved, merge
-│                        │  ──► Review 5: ≥ 50 → ai-approved, merge
-└─────────────────────┘
-     │ After Review 5
-     ▼
-┌─────────────────────┐
-│  Final Decision        │  ──► < 50 → not in repo, regenerate
+│  Stage 2: Quality      │  ──► Score = the sum of 24 criteria, after the caps
+│  (0-100 points)        │
 └─────────────────────┘
 ```
 
@@ -33,7 +27,7 @@ Implementation
 
 ## Stage 1: Auto-Reject
 
-Checks that gate quality scoring. On fail: Score=0. Workflow-handled checks (AR-01..AR-05, AR-07) reject without retry — regenerate the whole impl. AI-handled checks (AR-06, AR-08, AR-09) set score=0 inside the review and enter the existing 5-review / 4-repair cascade.
+Checks that gate quality scoring. On fail: Score=0. The workflow runs AR-01..AR-05 and AR-07 before a review. The AI sets score 0 inside the review for AR-06, AR-08 and AR-09.
 
 | ID | Check | Description | Verification |
 |----|-------|-------------|--------------|
@@ -72,7 +66,7 @@ Implementation must use **plot functions** from the library, not just styling.
 
 ### AR-06: Not Feasible
 
-When a library cannot technically implement a spec (e.g., pygal cannot do 3D), this is an Auto-Reject. No retry, no file in repo.
+When a library cannot technically implement a spec (e.g., pygal cannot do 3D), this is an Auto-Reject.
 
 ### AR-08: Fake Functionality
 
@@ -131,27 +125,19 @@ The bar is strict: AR-09 requires evidence that pixels were *removed*, not merel
 
 **Only if Stage 1 passed.** Focus purely on quality.
 
-### Scoring Philosophy: Cascading Thresholds
+### Scoring principles
 
-| Review Stage | Requirement | Outcome |
-|--------------|-------------|---------|
-| Review 1 (Initial) | ≥ 90 | **Approved** - Publication quality |
-| Review 2 (Repair 1) | ≥ 80 | **Approved** - High quality |
-| Review 3 (Repair 2) | ≥ 70 | **Approved** - Good quality |
-| Review 4 (Repair 3) | ≥ 60 | **Approved** - Acceptable quality |
-| Review 5 (Repair 4) | ≥ 50 | **Approved** - Minimum quality |
-| Final Status | < 50 | **Rejected** - Not in repo |
+- Full points only for a **perfect** implementation.
+- A flaw deducts in proportion to what a viewer loses by it.
+- The score describes the implementation in front of you and nothing else. What happens to an implementation after the review is not your concern and is not in this file.
+- The total is the sum of the 24 criteria, lowered to the lowest score cap that applies ("Score Caps"). A cap lowers the total only; it never changes an item. You never pick it.
 
-**Workflow:**
-- **Meet Stage Threshold**: ai-approved, merged immediately
-- **Below Stage Threshold**: ai-rejected, repair loop (up to 4 repair attempts)
-- **After 4 repairs (Review 5)**: < 50 → close PR and regenerate
+**Two kinds of criteria, two starting points:**
 
-**Principles:**
-- Full points only for **perfect** implementation
-- Small flaws = immediate deduction
-- Cascading thresholds allow good plots to merge faster while preventing infinite loops
-- 90%+ = could appear in Nature/Science
+- **Technical items** — the 19 criteria of Visual Quality, Spec Compliance, Data Quality and Code Quality (70 points). Each starts at its **maximum**. Every point below the maximum is carried by a defect line that names that criterion (`workflow-prompts/ai-quality-review.md` step 8a): what is wrong, with the observed value, and what would be right. A deduction you cannot write that line for is no deduction, and the item keeps the point. The size of a deduction stays a proportional judgment, and one problem may cost points on several criteria (one line, several IDs).
+- **Judgment items** — the five criteria of Design Excellence and Library Mastery (30 points). Each starts at its **default** (DE-01 = 4, DE-02 = 2, DE-03 = 2, LM-01 = 3, LM-02 = 1). Every point above the default is carried by evidence named in the item's comment.
+
+So a remark such as "larger tick labels would help" is one of two things, never both: a defect line under VQ-01 with the observed size and a signed delta, which costs points, or a `Suggestion:` line, which costs none.
 
 ### Point Distribution
 
@@ -183,7 +169,7 @@ The bar is strict: AR-09 requires evidence that pixels were *removed*, not merel
 
 All text must be clearly readable at 3200×1800 / 2400×2400 px and remain legible when the PNG is scaled down to ~400 px (mobile viewport). See `prompts/default-style-guide.md` → "Visual Sizing Defaults" for per-library-family starting values and "Proportional Sizing" for the proportional checks.
 
-**Source-of-values is irrelevant** for VQ-01: defaults, AI-tuned, or repair-loop-tuned all score equally — what matters is the visual result. If the AI deviates from the style-guide defaults because the plot looks better that way (e.g. shrinking the title to fit a long mandated string, or growing tick labels for a sparse plot), that is **not** a deduction.
+**Source-of-values is irrelevant** for the visual checks of VQ-01: a size tuned by hand and a size left at the style-guide default score the same when the result is the same — what matters is the visual result. If the AI deviates from the style-guide defaults because the plot looks better that way (e.g. shrinking the title to fit a long mandated string, or growing tick labels for a sparse plot), that is **not** a deduction. Only sizes set nowhere in the code (the row for 5 below) are a defect, and that defect line names the elements and the size they inherit.
 
 | Points | Criterion |
 |--------|-----------|
@@ -289,6 +275,10 @@ The implementation must use the **Imprint categorical palette** (defined in `pro
 
 This category evaluates aesthetic sophistication beyond mere correctness. A plot can be technically correct but visually generic — Design Excellence separates "works" from "beautiful."
 
+**Compliance is not excellence.** Evidence that raises a DE item above its default is something the implementation does **beyond** what the spec's Notes and characteristic section require and beyond what the style guide mandates (top and right spines removed or none at all, a subtle grid or none, theme tokens, the Imprint palette, explicit font sizes). Meeting those is scored in SC and VQ, once. Name the evidence in the item's comment; "spines removed, grid subtle" raises nothing, and neither does a hierarchy, a labelling scheme or a typesetting rule the spec's Notes prescribe.
+
+**The complete style-guide baseline earns exactly the defaults: DE-01 = 4 and DE-02 = 2.** An implementation that meets the baseline and adds nothing sits there; one that falls short of the baseline sits below.
+
 | ID | Criterion | Max | Description |
 |----|-----------|-----|-------------|
 | DE-01 | Aesthetic Sophistication | 8 | Color harmony, typography, professional polish |
@@ -299,22 +289,22 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 
 | Points | Criterion |
 |--------|-----------|
-| 8 | Publication-ready: custom palette, intentional hierarchy, FiveThirtyEight-level design |
-| 6 | Strong design: thoughtful colors, good typography, clearly above defaults |
-| 4 | Looks like a well-configured library default |
-| 2 | Generic/boring: default colors, no design thought |
+| 8 | Publication-ready: typography, spacing and hierarchy decided beyond the baseline, within the Imprint palette; FiveThirtyEight-level design |
+| 6 | Strong design: color assignment, typography and spacing visibly decided for this chart, clearly beyond the baseline |
+| 4 | The complete style-guide baseline (Imprint palette, theme tokens, explicit font sizes) and nothing decided beyond it |
+| 2 | Generic/boring: short of the baseline, no design thought |
 | 0 | Ugly: clashing colors, poor typography, looks broken |
 
-**Calibration:** DE-01 > 6 is rare on first attempt. Most implementations will score 2-4.
+**Calibration:** DE-01 > 6 is rare on first attempt. Most implementations will score 2-4. A palette outside Imprint is never design credit: it is VQ-07 = 0.
 
 ### DE-02: Visual Refinement (6 Points)
 
 | Points | Criterion |
 |--------|-----------|
-| 6 | Perfect: subtle grid (or none), spines removed, generous whitespace, every detail polished |
-| 4 | Good: some refinement visible (grid adjusted, spines partially removed) |
-| 2 | Default: library defaults with minimal customization |
-| 0 | Sloppy: bold grid, all spines, cramped layout |
+| 6 | Perfect: every detail decided rather than inherited — whitespace, alignment, label placement, grid density, line weights |
+| 4 | Good: refinement beyond the style-guide baseline: whitespace, alignment, label placement, a grid density chosen for this chart |
+| 2 | The style-guide baseline (top and right spines removed or none at all, a subtle grid or none) and nothing beyond it |
+| 0 | Sloppy: short of the baseline — a bold or high-contrast grid, all four spines where nothing requires them, a cramped layout |
 
 ### DE-03: Data Storytelling (6 Points)
 
@@ -325,7 +315,7 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 | 2 | Default: data is displayed but not interpreted — viewer must find their own story |
 | 0 | None: raw data dump with no context |
 
-**Calibration:** DE-03 = 2 is the default. Most implementations just display data without storytelling. Score of 4+ does NOT require annotations — visual hierarchy (color contrast, size variation, focal points) is sufficient. Annotations are only expected when the spec explicitly requests them (e.g., spec-id contains "annotated").
+**Calibration:** DE-03 = 2 is the default. Most implementations just display data without storytelling. Score of 4+ does NOT require annotations — visual hierarchy (color contrast, size variation, focal points) is sufficient. Annotations are only expected when the spec explicitly requests them (e.g., spec-id contains "annotated"). A hierarchy the spec's Notes prescribe (thick solid lines for one class, thin dashed for the other) is compliance, scored in SC-02: DE-03 rises for emphasis the implementation chose itself, through its data or its design.
 
 ---
 
@@ -395,6 +385,8 @@ Example data must show ALL features of the plot type.
 
 **An optional feature is not an aspect to exhibit either.** A feature the Notes only allow, such as percentage labels or asymmetric error bars, is a display choice: a version without it loses nothing on DQ-01.
 
+**A conditional requirement whose condition the data does not meet is not an aspect to exhibit either.** A crossover line asked "for d⁴–d⁷" on a d² chart, labels asked "if drawn" on a version that draws none: nothing is missing, on DQ-01 or on SC-02.
+
 | Points | Criterion |
 |--------|-----------|
 | 6 | Shows all aspects (e.g., boxplot with outliers AND different distributions) |
@@ -430,6 +422,18 @@ Example data must show ALL features of the plot type.
 | 2 | Values are plausible but relationships or proportions may be slightly inaccurate. |
 | 0 | Violation of fundamental physical, geographical, or logical realities; data is factually impossible or nonsensical for the context. |
 
+**What a review can check.** With two renders and the source you can check: shapes the spec names (a flat ground term, a kink at a crossover, curves that never cross); values readable off the axes, such as intercepts at the left edge, limits at the right edge and the position of a marked line, to about one tick subdivision; the data code against a number the spec states; and internal consistency, such as a comment against the code under it, the title's parameter against the constant used, or a symmetric matrix that is not symmetric. You cannot check a formula or a matrix against the literature when the spec states no expected result.
+
+**Check values.** A spec's Notes may carry a bullet that starts with `Check values:`: one to three numbers a correct implementation reproduces, each for a stated configuration.
+
+- Verify each one that applies to the configuration the implementation chose, in the render (read it off the axis) and in the data code. In the code the value must **fall out of the computation**: a constant placed at the right spot, or a curve pinned to the number, is a DQ-03 defect, not a pass.
+- A value missed beyond reading precision is a DQ-03 defect line with the expected value, the observed value and the signed delta.
+- A check value for a configuration the implementation did not choose is skipped, and the comment says so.
+- A configuration matches when its parameters agree with the bullet to the precision the bullet states (a bullet's C/B = 4.63 is a file's 4.633). A check value at a position the plot does not reach is verified in the code alone, by evaluating the computation there; whether the range itself is a gap is routed by "Which criterion a gap belongs to", not here.
+- The DQ-03 comment names what was checked ("checked: ³P at 15 B (line 41), crossover at 21.7"). A strength that calls the data "physically correct" or "matching the literature" needs a checked value behind it.
+
+**Without check values**, check what the list above allows, name it in the comment, and claim no more. A formula you believe is wrong from memory alone is a `Suggestion:` that states the doubt, not a deduction: a confident wrong deduction costs a correct implementation its points.
+
 ---
 
 ## Code Quality (10 Points)
@@ -447,7 +451,7 @@ Example data must show ALL features of the plot type.
 | Points | Criterion |
 |--------|-----------|
 | 2 | Clean, appropriate complexity for the visualization, and no algorithm written out that an available call computes |
-| 1 | A named block could be much leaner with the same output and equal readability: an algorithm written out that an available call computes the same way (a KDE, binning, quantiles, ACF/PACF, a fit, a linkage), or a block that a named, clearly shorter form replaces (duplicated logic, dead code, a pass without a visible effect) |
+| 1 | A named block could be much leaner with the same output and equal readability: an algorithm written out that an available call computes the same way — for example a KDE, binning, quantiles, an ACF or PACF, a linkage, or a fit that takes an iteration or a matrix solve (LOWESS, a spline, a polynomial or multi-variable least squares) — or a block that a named, clearly shorter form replaces (duplicated logic, dead code, a pass without a visible effect). The examples are not a list to match against: the test is "an available call computes the same way" and "How to score it" below, which makes a closed-form slope and intercept a suggestion |
 | 0 | Over-engineered, draws fake UI elements, or contains fake-functionality code/comments |
 
 **CQ-04 = 0 if code draws fake interactive elements** (buttons, sliders, tooltip boxes) or contains comments like "simulating hover/click."
@@ -522,6 +526,8 @@ How to score it:
 
 **Calibration:** LM-02 = 1 is the default. To score 3+, the implementation must use a feature distinctive to this specific library.
 
+**Compliance is not mastery.** Evidence that raises an LM item above its default is use of the library **beyond** what the spec's Notes require and what `prompts/library/{library}.md` and the style guide mandate (the theme and palette token blocks, the canvas contract, the save call). Name the feature or the idiom in the item's comment; a feature the Notes ask for by name, drawn with the call every implementation of that library would use, raises nothing.
+
 **Note:** Basic library usage is checked by AR-05. Library Mastery evaluates *quality* of usage.
 
 ---
@@ -544,6 +550,20 @@ Score them as follows:
 - **No section?** Infer the characteristics from Description, Data and Notes, and from what the plot type inherently looks like, and sort what you infer into the same two kinds. Do not fall back to generic ideals ("no overlap", "perfectly smooth", "symmetric") that the plot type does not share.
 - **Soft and proportional.** The section describes properties, not thresholds; there are no pixel or count limits. A small departure costs a little in one criterion, a property that is gone entirely costs more — holistically, like the proportional checks in `workflow-prompts/ai-quality-review.md` step 5d.
 
+### Which criterion a gap belongs to
+
+Every library of a spec is reviewed on its own, without seeing the others. The same gap must cost the same criterion on each of them, so the question is decided here and not review by review. The table routes a gap to a criterion; how many points it costs stays proportional. When a gap fits two rows, the fix decides: a gap closed in the data generation or the computation is DQ-01, one closed in the plotting code is SC-02, and one that needs both names both IDs on one line.
+
+| Gap | Scored as |
+|-----|-----------|
+| A Notes bullet or an `A good version shows:` property that the render misses or breaks, and the fix is in the plotting code (a line not drawn, a label not typeset, an arrowhead off its curve) | SC-02 defect (plus the criterion the property belongs to, as above; an unasked element the section excludes stays SC-01 alone, 8a) |
+| A range, size or example of the Data section that the implementation departs from (the x range stops at 30 where Data says "sampled across 0–40"; another configuration than the Data example's), or a Notes preference it does not follow ("prefer", "typically", "e.g.") | Nothing, unless a Notes bullet or an `A good version shows:` property requires it: the spec does not pin the data (SC-03), a count inside the Data range is not a lever (DQ-01), and a preference is not a requirement. At most a `Suggestion:` |
+| A conditional requirement ("for d⁴–d⁷", "if drawn", "where marks overlap") whose condition the chosen data does not meet | Nothing: not SC-02, not DQ-01. At most a `Suggestion:` |
+| The example data does not exhibit an aspect that a Notes bullet or an `A good version shows:` bullet names unconditionally, and the fix is in the data generation or the computation (a candlestick spec that asks for bullish and bearish candles, drawn with rising days only; a matrix block of which only the lowest root becomes a curve) | DQ-01 defect |
+| The example data does not exhibit an aspect nothing in the spec names | At most a `Suggestion:` |
+| A value, limit, intercept or relation that is wrong for the domain, or a check value missed (DQ-03) | DQ-03 defect |
+| A comment or label that contradicts the code or the data it describes | DQ-03 defect when it misstates the data (a wrong comment above correct data costs a point, not the ladder's whole step), else CQ-04 defect |
+
 ---
 
 ## Score Caps
@@ -559,7 +579,7 @@ Certain errors limit the maximum score:
 | **DE-01 ≤ 2 AND DE-02 ≤ 2** (generic + no visual refinement) | **75** |
 | **CQ-04 = 0** (fake functionality / gross over-engineering) | **70** |
 
-**The "correct but boring" cap:** A technically correct but visually generic plot (DE-01 ≤ 2) with no visual refinement (DE-02 ≤ 2) is capped at 75. This means it cannot pass on first review, even with perfect scores elsewhere. The repair loop will push it to improve aesthetic design and visual polish.
+**The "correct but boring" cap:** A technically correct but visually generic plot (DE-01 ≤ 2) with no visual refinement (DE-02 ≤ 2) is capped at 75, even with perfect scores elsewhere. The complete style-guide baseline earns DE-01 = 4 and DE-02 = 2, so this cap never fires on a compliant implementation: it is for one that falls short of the baseline on both.
 
 ---
 
@@ -567,19 +587,15 @@ Certain errors limit the maximum score:
 
 Evaluators must use these anchors to prevent score inflation:
 
-- **Median implementation should score 72-78** — not 90+
-- **DE-01 > 6 is rare** on first attempt — most plots look like configured defaults (score 4)
-- **DE-02 = 2 is the default** — library defaults with minimal customization
+- **Median implementation should score 72-78** once every defect is written down — the number describes where honest defect lines land a typical first generation; it is never a total to steer toward, and a review with no defect line to write is not made to reach it
+- **DE-01 > 6 is rare** on first attempt — most plots are the style-guide baseline and nothing more (score 4)
+- **DE-02 = 2 is the default** — the style-guide baseline with nothing beyond it
+- **Compliance is not excellence** — what the spec or the style guide requires is scored in SC and VQ and raises no DE or LM item
 - **DE-03 = 2 is the default** — most plots just display data without visual hierarchy or emphasis
 - **LM-01 = 3 is the default** — correct usage but doesn't leverage the library's best patterns
 - **LM-02 = 1 is the default** — most implementations use the library generically
-- **When in doubt, deduct** — the repair loop exists to improve quality
+- **When in doubt whether evidence raises a design or library item, keep the default.** On a technical item there is no doubt to resolve: a defect line carries the deduction, or the item keeps its points
 - A plot scoring 90+ should genuinely impress a data visualization professional
-
-**Expected distribution:**
-- ~25-30% score 85+ on first attempt (vs. current ~95% scoring 90+)
-- ~50-60% score 72-84 (good but need design/storytelling improvements)
-- ~10-15% score below 72 (significant issues)
 
 ---
 
@@ -589,28 +605,28 @@ A "good" plot (~76%):
 
 ```text
 VISUAL QUALITY (23/30)
-  VQ-01: 5/8   (readable, but relying on defaults not explicit sizes)
+  VQ-01: 5/8   (no font size set, ticks inherit the library's 10 pt; defect line)
   VQ-02: 6/6   (no overlap)
-  VQ-03: 5/6   (visible, markers could be better)
+  VQ-03: 5/6   (32 sparse points at 4 px; defect line)
   VQ-04: 2/2   (good contrast, CVD-safe)
-  VQ-05: 2/4   (ok layout, some wasted space)
+  VQ-05: 2/4   (plot fills about 40% of the canvas, margin all on the right; defect line)
   VQ-06: 2/2   (labels with units)
-  VQ-07: 1/2   (palette is anyplot but first series used #AE3030 instead of #009E73)
+  VQ-07: 1/2   (Imprint palette, but the first series is #AE3030 instead of #009E73; defect line)
 
 DESIGN EXCELLENCE (8/20)
-  DE-01: 4/8   (well-configured default, not exceptional)
-  DE-02: 2/6   (library defaults, minimal refinement)
+  DE-01: 4/8   (the style-guide baseline, nothing beyond it)
+  DE-02: 2/6   (the style guide's spine and grid rules met, nothing beyond)
   DE-03: 2/6   (data displayed but no storytelling)
 
 SPEC COMPLIANCE (13/15)
   SC-01: 5/5   (correct type)
-  SC-02: 3/4   (one minor feature missing)
+  SC-02: 3/4   (the Notes' reference band is not drawn; defect line)
   SC-03: 3/3   (mapping ok)
-  SC-04: 2/3   (title ok, legend not perfect)
+  SC-04: 2/3   (legend labels "s1", "s2"; defect line)
 
 DATA QUALITY (13/15)
-  DQ-01: 5/6   (shows most features)
-  DQ-02: 4/5   (plausible scenario, not abstract)
+  DQ-01: 5/6   (no outlier in any group; defect line)
+  DQ-02: 4/5   (plausible scenario, but the groups are labelled "Region A"–"Region D"; defect line)
   DQ-03: 4/4   (good values)
 
 CODE QUALITY (9/10)
@@ -624,7 +640,7 @@ LIBRARY MASTERY (9/10)
   LM-01: 5/5   (idiomatic usage)
   LM-02: 4/5   (uses some distinctive features)
 
-TOTAL: 75/100 = "Good" Tier → Repair loop
+TOTAL: 75/100
 ```
 
-Note: This plot scored well on technical criteria but only 8/20 on Design Excellence. To reach 90+, it needs better aesthetic sophistication (DE-01), visual refinement (DE-02), and data storytelling through visual emphasis and hierarchy (DE-03).
+Note: This plot scored well on technical criteria but only 8/20 on Design Excellence, which holds it back: aesthetic sophistication (DE-01), visual refinement (DE-02), and data storytelling through visual emphasis and hierarchy (DE-03) all sit at their defaults. Each of its nine deducted technical items has a defect line in the review.

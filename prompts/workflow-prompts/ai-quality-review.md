@@ -7,7 +7,7 @@ Evaluate if the **${LIBRARY}** implementation matches the specification for `${S
 - **Spec ID:** ${SPEC_ID}
 - **Library:** ${LIBRARY}
 - **PR Number:** #${PR_NUMBER}
-- **Attempt:** ${ATTEMPT} (review 1 of up to 5 — 4 repairs; a regeneration gets exactly one review)
+- **Attempt:** ${ATTEMPT} (used in the comment heading only; it does not change how you score: every review scores the files in front of it as if no review had happened before)
 - **Regeneration:** ${IS_REGENERATION} (when `true`, steps 5f and 8b apply: one review, no repair)
 
 ## Your Task
@@ -63,9 +63,9 @@ For `plot-dark.png` (background should be `#1A1A17`):
 **If any checkbox fails for either render, score aggressively:**
 - **VQ-01 (Text Legibility): drop to 0 if any title/label/tick is unreadable in either render** — the implementation failed to thread theme tokens through to that element.
 - **VQ-07 (Palette Compliance): drop to 0 if chrome is wrong-theme** (dark-on-dark, light-on-light, pure-white, or pure-black background).
-- **Flag the specific elements in `weaknesses`** as defect lines (8a) so the repair loop knows exactly what to fix. Example: "VQ-01 (dark): tick labels render near-black on the #1A1A17 background and cannot be read → light text from the INK_SOFT token. Likely cause: ax.tick_params colors not set from INK_SOFT."
+- **Flag the specific elements in `weaknesses`** as defect lines (8a) so the next generation knows exactly what to fix. Example: "VQ-01 (dark): tick labels render near-black on the #1A1A17 background and cannot be read → light text from the INK_SOFT token. Likely cause: ax.tick_params colors not set from INK_SOFT."
 
-A plot that's perfect in one theme but unreadable in the other still **fails** — both renders must pass. Be strict: a plot that ships to the website broken on dark mode is worse than one that fails review and gets repaired.
+A plot that's perfect in one theme but unreadable in the other still **fails** — both renders must pass. Be strict: a plot that ships to the website broken on dark mode is the failure this check exists to catch.
 
 ### 5c2. MANDATORY: Canvas dimension gate (if present)
 
@@ -80,7 +80,7 @@ ls -la /tmp/anyplot-canvas-gate.txt 2>/dev/null && cat /tmp/anyplot-canvas-gate.
 If it **does** exist:
 - The file contains a single paragraph, already a defect line (8a): `VQ-05 (both): Canvas dimensions drifted from required target. Actual: WxH. Closest valid target: TWxTH (±16 px tolerance). Signed delta: ±dx × ±dy — direction. Most likely cause: …`
 - **Copy that paragraph verbatim into your `weaknesses` array as the FIRST item.** Do not paraphrase; the repair model needs the literal "actual=WxH" and signed delta numbers to know which knob to turn and which direction.
-- **Set VQ-05 (Layout & Canvas) to 0/4 regardless of other observations.** Canvas drift is a hard rule; the quality_score must drop low enough to route the PR into impl-repair through the existing 5-review/4-repair cascade.
+- **Set VQ-05 (Layout & Canvas) to 0/4 regardless of other observations.** Canvas drift is a hard rule.
 - Keep scoring the other categories honestly — useful signal for repair is good signal — but do **not** lift VQ-05 just because the visual proportions look fine inside the wrong-sized canvas.
 - On a regeneration (`IS_REGENERATION` is `true`) there is no repair: the regen gate reads the same file and keeps the live implementation. Still do step 8b — the comparison is recorded for the next attempt.
 
@@ -100,7 +100,7 @@ Visually estimate from each PNG — no pixel measurement needed. These are soft 
 - **Legend glyphs visible:** Look at every legend in **both** renders. Size circles, color swatches and line samples must be visible against the page and match the marks they explain (fill, outline, alpha, shape). A glyph drawn in the background color or without the marks' fill → deduct VQ-03 (+ SC-04 when the encoding becomes unreadable), and name the likely fix in the weakness (e.g. ggplot2 `guide_legend(override.aes = list(fill = ...))`).
 - **Marks at their data values:** Check the code for force/collision simulations, nudge or declutter passes, or offsets applied to data marks after the data was generated. Displacement deducts SC-03 in proportion to how far marks move relative to the axis range — never list it as a strength. Changing the generated data, the marker size or the alpha is the endorsed answer to overlap. Exempt: categorical strip/swarm jitter, layout-positioned types (networks, treemaps, word clouds), and any jitter, dodge or offset the spec's Data or Notes ask for (then it is a required feature, not displacement).
 
-**Required:** Note specific violations in `weaknesses` as defect lines (8a), with enough context for the repair loop to fix them. Examples:
+**Required:** Note specific violations in `weaknesses` as defect lines (8a), with enough context for the next generation to fix them. Examples:
 - "VQ-05 (both): x-axis label 'Date' at 18 pt dominates the axis for its short content → about 10 pt (−8 pt). Likely cause: xlabel fontsize=18."
 - "VQ-01, VQ-05 (both): title overflows past the plot edge at about 95 % of the width → under 90 % (about −6 pt). Likely cause: title fontsize=18."
 - "VQ-03 (both): 32 sparse points drawn at 4 px are barely visible → 10–14 px (+6 to +10 px). Likely cause: scatter s=4."
@@ -132,7 +132,7 @@ Before scoring, check if the implementation fakes interactive features:
 - Drawn UI controls (buttons, sliders)
 - Code comments mentioning "simulating hover/click/interactivity"
 
-If found: Score = 0, verdict = REJECTED, note AR-08 violation.
+If found: Score = 0, note the AR-08 violation.
 
 **AR-09 — Edge clipping (all libraries):**
 
@@ -147,7 +147,7 @@ Trigger AR-09 if you see ANY of:
 - **Legend entries hidden behind / merged into the canvas edge** with letters chopped off.
 - **Any annotation, label, or category text whose bounding box is partially outside the saved PNG** so part of the text is gone.
 
-If found: **Score = 0, verdict = REJECTED, note AR-09 violation** and identify which element(s) were clipped and on which edge (e.g. "title clipped at top edge of light render — top ~10 px of letters missing"). Repair will receive this and shrink the inner-chart dims so vl-convert / matplotlib / etc. don't push content off the canvas.
+If found: **Score = 0, note the AR-09 violation** and identify which element(s) were clipped and on which edge (e.g. "title clipped at top edge of light render — top ~10 px of letters missing"), so the next generation can shrink the inner-chart dims and vl-convert / matplotlib / etc. don't push content off the canvas.
 
 **False-positive guard — do NOT trigger AR-09 for:**
 - Text that extends past the plot/axis bounds but stays *within* the canvas (VQ-05 deduction at most).
@@ -157,7 +157,14 @@ If found: **Score = 0, verdict = REJECTED, note AR-09 violation** and identify w
 
 ### 7. Evaluate Using 6-Category Criteria
 
-Read `prompts/quality-criteria.md` and evaluate:
+Read `prompts/quality-criteria.md` and evaluate, in this order:
+
+1. **List the defects first**, in the format of 8a: everything in the renders or the code that visibly violates a named rule.
+2. **Score the 19 technical items** (VQ, SC, DQ, CQ) from that list. Each starts at its maximum and loses points only for a defect line that names it; the size of the deduction is your proportional judgment.
+3. **Score the five judgment items** (DE, LM). Each starts at its default and rises only on evidence you name in the item's comment.
+4. **Add up.** The total is the sum of the 24 items, lowered to the lowest cap of step 8 that applies; a cap lowers the total only and never changes an item. You never pick the total, and you never adjust an item to reach one.
+
+Score so that the reviews of the other libraries of this spec, written without seeing yours, would deduct the same criterion for the same gap: `prompts/quality-criteria.md` → "Which criterion a gap belongs to" decides it.
 
 #### Visual Quality (30 pts)
 | ID | Criterion | Max | Check |
@@ -173,11 +180,13 @@ Read `prompts/quality-criteria.md` and evaluate:
 #### Design Excellence (20 pts)
 | ID | Criterion | Max | Check |
 |----|-----------|-----|-------|
-| DE-01 | Aesthetic Sophistication | 8 | Professional polish? Custom palette? Intentional hierarchy? |
-| DE-02 | Visual Refinement | 6 | Spines removed? Grid subtle? Whitespace generous? |
-| DE-03 | Data Storytelling | 6 | Visual hierarchy? Clear focal point? Guides the viewer? |
+| DE-01 | Aesthetic Sophistication | 8 | Typography, spacing and hierarchy decided beyond the style-guide baseline, within the Imprint palette? |
+| DE-02 | Visual Refinement | 6 | Refinement beyond the style guide's spine and grid rules: whitespace, alignment, label placement, a grid density chosen for this chart? |
+| DE-03 | Data Storytelling | 6 | A hierarchy or focal point the implementation chose itself, beyond what the spec's Notes prescribe? Guides the viewer? |
 
 **Defaults:** DE-01=4, DE-02=2, DE-03=2. Raise only with evidence.
+
+**Compliance is not excellence.** Evidence that raises a DE item is something the implementation does **beyond** what the spec's Notes and characteristic section require and beyond what the style guide mandates (top and right spines removed or none at all, a subtle grid or none, theme tokens, the Imprint palette, explicit font sizes). Meeting those is scored in SC and VQ. The complete style-guide baseline earns exactly the defaults (DE-01 = 4, DE-02 = 2). Name the evidence in the item's comment; "spines removed, grid subtle" raises nothing.
 
 #### Spec Compliance (15 pts)
 | ID | Criterion | Max | Check |
@@ -190,9 +199,9 @@ Read `prompts/quality-criteria.md` and evaluate:
 #### Data Quality (15 pts)
 | ID | Criterion | Max | Check |
 |----|-----------|-----|-------|
-| DQ-01 | Feature Coverage | 6 | Shows ALL aspects of plot type? (A permission is not an aspect to exhibit: data with little or no overlap loses nothing, and a point count inside the spec's Data range is not a lever; neither is an optional feature the Notes only allow, such as percentage labels or asymmetric error bars: DQ-01 is about what the example data shows, and a missing optional feature deducts nothing.) |
+| DQ-01 | Feature Coverage | 6 | Shows ALL aspects of plot type? (A permission is not an aspect to exhibit: data with little or no overlap loses nothing, and a point count inside the spec's Data range is not a lever; neither is an optional feature the Notes only allow, such as percentage labels or asymmetric error bars: DQ-01 is about what the example data shows, and a missing optional feature deducts nothing. A conditional requirement whose condition the chosen data does not meet, such as a crossover line on a configuration without a crossover, deducts nothing either.) |
 | DQ-02 | Realistic Context | 5 | Real-world plausible AND neutral? |
-| DQ-03 | Appropriate Scale | 4 | Sensible values for domain? |
+| DQ-03 | Appropriate Scale | 4 | Sensible values for domain? When the spec's Notes carry `Check values:`, verify each one that applies to the chosen configuration in the render (read it off the axis) and in the data code, where it must fall out of the computation and not be placed there; a missed value is a defect line with the expected value, the observed value and the signed delta. Name what you checked in the comment, and claim no correctness you did not check. |
 
 #### Code Quality (10 pts)
 | ID | Criterion | Max | Check |
@@ -209,7 +218,7 @@ Read `prompts/quality-criteria.md` and evaluate:
 | LM-01 | Idiomatic Usage | 5 | Library's recommended patterns? High-level API? |
 | LM-02 | Distinctive Features | 5 | Features unique to this library? |
 
-**Defaults:** LM-01=3, LM-02=1. Raise only with evidence.
+**Defaults:** LM-01=3, LM-02=1. Raise only with evidence: use of the library **beyond** what the spec's Notes require and what the library prompt and the style guide mandate. Name the feature or the idiom in the item's comment.
 
 ### 8. Apply Score Caps
 
@@ -226,8 +235,8 @@ Read `prompts/quality-criteria.md` and evaluate:
 
 Every weakness is one of two kinds of line. The next generation fixes the defects and never acts on a suggestion.
 
-- **Defect** — the render (or the code, for CQ) visibly violates a named rule: a rubric criterion, a style-guide rule, or an `A good version shows:` bullet of the spec. Write it as `<ID>[, <ID>] (<light|dark|both|code>): <what is wrong, with the observed value> → <target or direction, signed delta when numeric>. Likely cause: <code element>.` The ID is the criterion the defect costs points on (`VQ-01` … `LM-02`), or `AR-06` … `AR-09`. Every criterion you name is below its maximum in your checklist. Any criterion may name a defect, DE and LM included.
-- **Suggestion** — everything that names no violated rule: a storytelling layer or a focal highlight, a library showcase ("could use X"), "larger", "more presence" or "more distinctive", an optional feature the spec only allows (asymmetric error bars, percentage labels), or polishing an element the spec's scope excludes (on a `-basic` spec, the layers SC-01 lists; on any spec, an annotation or callout the spec does not request), including moving another element clear of it. Write it as `Suggestion: <idea>`. At most three; none is fine. A suggestion costs no points.
+- **Defect** — the render (or the code, for CQ) visibly violates a named rule: a rubric criterion, a style-guide rule, or an `A good version shows:` bullet of the spec. Write it as `<ID>[, <ID>] (<light|dark|both|code>): <what is wrong, with the observed value> → <target or direction, signed delta when numeric>. Likely cause: <code element>.` The ID is the criterion the defect costs points on (`VQ-01` … `LM-02`), or `AR-06` … `AR-09`. Every criterion you name is below its maximum in your checklist, and every technical item (VQ, SC, DQ, CQ) below its maximum is named by a defect line: a deduction without a line leaves the next generation nothing to fix. Any criterion may name a defect, DE and LM included. A DQ-02 line for a plausible but generic scenario names the labels or values that read as generic or abstract, and its fix renames them; only a scenario the content policy excludes, or real names carrying invented numbers, is named as the scenario itself, and there the fix replaces it.
+- **Suggestion** — everything that names no violated rule: a storytelling layer or a focal highlight, a library showcase ("could use X"), "larger", "more presence" or "more distinctive", an optional feature the spec only allows (asymmetric error bars, percentage labels), or polishing an element the spec's scope excludes (on a `-basic` spec, the layers SC-01 lists; on any spec, an annotation or callout the spec does not request), including moving another element clear of it. Write it as `Suggestion: <idea>`. At most three; none is fine. A suggestion costs no points, and a deducted technical item has a defect line: the same remark is never both.
 
 List the defects first, then the suggestions. Rules:
 
@@ -245,6 +254,9 @@ Counter-examples:
 - An amber mean-reference line on a `-basic` bar chart is variant creep (SC-01): the line itself is the defect, and removing it is the fix. Recoloring it is a suggestion.
 - A count label that collides with a mean-reference line on a `-basic` bar chart: the line is the defect (SC-01), and moving the label clear of it, like recoloring the line, is a suggestion. The same holds for a callout the spec does not request that sits on data marks.
 - A count plot without percentage labels has no DQ-01 defect: the Notes allow them, and a missing optional feature deducts nothing. Adding them is a suggestion. An `A good version shows:` bullet that describes them "if drawn" or as the labels "the Notes allow" is not missed by a version that draws none, so adding them does not fix that bullet either.
+- "Slightly larger tick labels would help in the thumbnail" next to VQ-01 at 7/8 is a silent deduction. Either it is a defect, and the line says so (`VQ-01 (both): tick labels at 10 px blur in the 400 px thumbnail → about 12 px (+2 px). Likely cause: …`), or it is a suggestion, and VQ-01 keeps its 8.
+
+**Check before you go on.** For every technical item you scored below its maximum, point to the defect line that names it. Where there is none, write the line the deduction rests on. If you cannot name what is wrong, there is no deduction: restore the point now, before step 8b and before you write any file, and add up again. From here on your checklist is final.
 
 ### 8b. Regeneration: before/after (only when `IS_REGENERATION` is `true`)
 
@@ -260,7 +272,7 @@ A regeneration replaces an implementation that is already live on main. It gets 
 
 Your job is an honest comparison; the gate does the arithmetic. Workflow variables for this step: `PREV_RENDERS` (`available` / `missing`), `PREV_RENDER_LIGHT` and `PREV_RENDER_DARK` (paths of the predecessor's renders), `PREV_LINES` and `NEW_LINES` (line counts of the previous and the new source).
 
-1. **Re-score the predecessor.** If `PREV_RENDERS` is `missing`, skip steps 1–5, do not write `review_regen.json` or `review_prev.json`, and say so in the comment (the gate keeps the live implementation). Otherwise open `PREV_RENDER_LIGHT` and `PREV_RENDER_DARK` (the production renders currently on the website) and `/tmp/anyplot-prev-impl${EXT}` (their source — its header reads `Quality: hidden/100` on purpose; do not look the stored score up elsewhere, for example in main's metadata or git history), and score them against the **same** criteria — steps 5c–8, same score caps, same calibration. The result is `prev_rescored`, and its 24 item scores are `prev_checklist` (`{"VQ-01": 7, "VQ-02": 4, …}`: every criterion, each an integer from 0 to its maximum). Number the predecessor's *defects* you find (8a) `P1`, `P2`, … and name the rule each one violates: the criterion, or the `C` id of an `A good version shows:` bullet. They become the defect lines of `review_prev.json` (step 5), except the ones step 3 lists as an `addition` or `polish`.
+1. **Re-score the predecessor.** If `PREV_RENDERS` is `missing`, skip steps 1–5, do not write `review_regen.json` or `review_prev.json`, and say so in the comment (the gate keeps the live implementation). Otherwise open `PREV_RENDER_LIGHT` and `PREV_RENDER_DARK` (the production renders currently on the website) and `/tmp/anyplot-prev-impl${EXT}` (their source — its header reads `Quality: hidden/100` on purpose; do not look the stored score up elsewhere, for example in main's metadata or git history), and score them against the **same** criteria — steps 5c–8, same score caps, same calibration. The result is `prev_rescored`, and its 24 item scores are `prev_checklist` (`{"VQ-01": 7, "VQ-02": 4, …}`: every criterion, each an integer from 0 to its maximum). Number the predecessor's *defects* you find (8a) `P1`, `P2`, … and name the rule each one violates: the criterion, or the `C` id of an `A good version shows:` bullet. They become the defect lines of `review_prev.json` (step 5), except the ones step 3 lists as an `addition` or `polish`. The rule of 8a holds here too: every technical item `prev_checklist` scores below its maximum is carried by a `P` defect that names it.
 2. **Read the previous review** `/tmp/anyplot-prev-review.md`. Its weaknesses carry stable ids `W1`..`Wn`, each tagged `(defect)`, `(suggestion)` or `(older review)`. When it has a "Characteristic bullets" list (`C1`..`Cn`, taken from the spec's "What a good version looks like" section), its `A good version shows:` bullets are properties a good version must show; its `Expected, not a defect:` bullets are permissions and can never be an improvement `ref`. When the list is absent, there are no `C` ids — never invent one.
 
    Then **classify every `W`**, looking at the predecessor's renders only (or its source, `/tmp/anyplot-prev-impl${EXT}`, for CQ items; not the new ones), as one of:
@@ -322,12 +334,11 @@ Your job is an honest comparison; the gate does the arithmetic. Workflow variabl
    - `image_description` — step 10's template, for the predecessor's production renders (`PREV_RENDER_LIGHT` is its light render, `PREV_RENDER_DARK` its dark one).
    - `criteria_checklist` — the shape of `review_checklist.json`: the six keys, their maxima, every criterion as an item. Every item score equals the same item in `prev_checklist`, and each category's `score` is the sum of its items.
    - `strengths` and `weaknesses` — as in 8a. The weaknesses are your `P` defects as defect lines, without the `P` id, then at most three `Suggestion:` lines. A `P` item that step 3 lists with kind `addition` or `polish` is one of those `Suggestion:` lines, not a defect line.
-   - `verdict` — `APPROVED` or `REJECTED`, your verdict on the predecessor.
-   - No score key: the stored score is `prev_rescored`.
+   - No score key and no verdict: the stored score is `prev_rescored`, and you write no verdict on anything.
 
    Step 10 has the example; its self-check compares the file with `prev_checklist`.
 
-### 9. Post Verdict as PR Comment on PR #${PR_NUMBER}
+### 9. Post the Review as PR Comment on PR #${PR_NUMBER}
 
 Use this EXACT format:
 
@@ -369,9 +380,9 @@ Use this EXACT format:
 - [x] VQ-07: Palette Compliance (X/2)
 
 ### Design Excellence (XX/20)
-- [ ] DE-01: Aesthetic Sophistication (X/8) - Generic defaults
-- [ ] DE-02: Visual Refinement (X/6) - Minimal customization
-- [ ] DE-03: Data Storytelling (X/6) - No visual hierarchy or emphasis
+- [ ] DE-01: Aesthetic Sophistication (X/8) - the style-guide baseline, nothing beyond it
+- [ ] DE-02: Visual Refinement (X/6) - the spine and grid rules met, nothing beyond
+- [ ] DE-03: Data Storytelling (X/6) - data displayed, no hierarchy chosen beyond the Notes
 
 ### Spec Compliance (XX/15)
 - [x] SC-01: Plot Type (X/5)
@@ -393,7 +404,7 @@ Use this EXACT format:
 
 ### Library Mastery (XX/10)
 - [x] LM-01: Idiomatic Usage (X/5)
-- [ ] LM-02: Distinctive Features (X/5) - Generic usage
+- [ ] LM-02: Distinctive Features (X/5) - nothing beyond what the library prompt mandates
 
 ### Score Caps Applied
 - [ ] None / [describe cap if applied]
@@ -416,18 +427,16 @@ Use this EXACT format:
 |---|---|
 | XX | XX |
 
-**Predecessor defects:** P1 (VQ-02) the size legend's "500" label overlaps its reference bubble, …
+**Predecessor defects:** P1 (VQ-02) the size legend's "500" label overlaps its reference bubble, P2 (VQ-07) Sporting Goods on the red loss anchor, P3 (VQ-01) tick labels blur in the thumbnail, P4 (DQ-02) groups labelled Region A–D
 **Previous weaknesses:** W1 obsolete (C2) · W2 suggestion · W3 defect (VQ-07)
 **Improvements:** `W3` Sporting Goods moved off the red loss anchor — legend and bubbles, both renders
 **Code improvements:** none
 **Regressions:** none
 **Scenario changed:** no · **Encodings added:** none · **Change request applied:** n/a
 **Code size:** ${PREV_LINES} → ${NEW_LINES} lines
-
-### Verdict: APPROVED / REJECTED
 ```
 
-On a regeneration the `Verdict` line is your assessment of the new render only; the regen gate decides merge versus keep.
+The comment ends there. You write no verdict: the review is the score, its items and its lines.
 
 ### 10. Save Review Data to Files
 
@@ -441,9 +450,6 @@ echo "XX" > quality_score.txt
 # then at most three "Suggestion: …" lines (8a)
 echo '["Strength 1", "Strength 2"]' > review_strengths.json
 echo '["VQ-02 (light): … → …. Likely cause: ….", "Suggestion: …"]' > review_weaknesses.json
-
-# Verdict (APPROVED or REJECTED)
-echo "APPROVED" > review_verdict.txt
 
 # Image description (multi-line text proving you viewed BOTH renders and checked legibility)
 cat > review_image_description.txt << 'EOF'
@@ -471,8 +477,8 @@ cat > review_checklist.json << 'EOF'
     "score": 24,
     "max": 30,
     "items": [
-      {"id": "VQ-01", "name": "Text Legibility", "score": 7, "max": 8, "passed": true, "comment": "All text readable in both themes"},
-      {"id": "VQ-02", "name": "No Overlap", "score": 5, "max": 6, "passed": true, "comment": "No collisions"}
+      {"id": "VQ-01", "name": "Text Legibility", "score": 8, "max": 8, "passed": true, "comment": "All text readable in both themes"},
+      {"id": "VQ-02", "name": "No Overlap", "score": 5, "max": 6, "passed": true, "comment": "The size legend's \"500\" label overlaps its reference bubble (defect line)"}
     ]
   },
   "design_excellence": {"score": 12, "max": 20, "items": [...]},
@@ -495,7 +501,7 @@ python3 -c "import json; json.load(open('review_regen.json'))"
 # Regeneration only, with review_regen.json (step 8b step 5): your re-score of
 # the predecessor as a full review, stored as its review when the gate keeps
 # it. The shapes of the files above, every criteria_checklist item score equal
-# to prev_checklist, the P defect lines first, and no score key.
+# to prev_checklist, the P defect lines first, and no score or verdict key.
 cat > review_prev.json << 'EOF'
 {
   "image_description": "Light render (plot-light.png):\n  Background: ...\n  Chrome: ...\n  Data: ...\n  Legibility verdict: PASS\n\nDark render (plot-dark.png):\n  Background: ...\n  Chrome: ...\n  Data: ...\n  Legibility verdict: PASS",
@@ -515,8 +521,7 @@ cat > review_prev.json << 'EOF'
     "library_mastery": {"score": 7, "max": 10, "items": [...]}
   },
   "strengths": ["Strength 1", "Strength 2"],
-  "weaknesses": ["VQ-02 (light): the size legend's \"500\" label overlaps its reference bubble … → …. Likely cause: ….", "Suggestion: …"],
-  "verdict": "REJECTED"
+  "weaknesses": ["VQ-02 (light): the size legend's \"500\" label overlaps its reference bubble by about 6 px → clear it by at least 4 px (+10 px). Likely cause: the legend label's offset.", "VQ-07 (both): Sporting Goods is drawn in #AE3030, the red loss anchor, as the fourth series → the fourth Imprint position #BD8233. Likely cause: the palette index.", "VQ-01 (both): tick labels at 9 px blur in the 400 px thumbnail → about 12 px (+3 px). Likely cause: the tick font size.", "DQ-02 (both): the groups are labelled Region A–D → real region names. Likely cause: the label list.", "Suggestion: …"]
 }
 EOF
 python3 -c "import json; json.load(open('review_prev.json'))"
@@ -537,7 +542,7 @@ fi
 
 All scores and review files above (`quality_score.txt`, `review_checklist.json`, …) describe the **new** implementation, except `review_regen.json` and `review_prev.json`, which describe your re-score of the predecessor.
 
-Fix what `check-feedback` lists by changing the claim — a weakness line, a class or `rule` in `prev_weaknesses`, a `rule` or `kind` on an improvement, or an entry in `improvements` — never `prev_checklist` or `review_checklist.json`, which are final. A `review_prev.json` problem is fixed in `review_prev.json`: its checklist copies `prev_checklist`, never the other way round. Then run the check once more.
+Fix what `check-feedback` lists by changing the claim — a weakness line, a class or `rule` in `prev_weaknesses`, a `rule` or `kind` on an improvement, or an entry in `improvements` — never `prev_checklist` or `review_checklist.json`, which are final. A `review_prev.json` problem is fixed in `review_prev.json`: its checklist copies `prev_checklist`, never the other way round. A technical item below its maximum that no defect line names is fixed by writing the defect line the deduction rests on (8a); it is the one problem you settle at the end of 8a, so it should not appear here. Then run the check once more.
 
 ### 11. Generate impl_tags
 
@@ -564,15 +569,18 @@ The 5 dimensions:
 
 ## Important
 
-- **DO NOT add ai-approved or ai-rejected labels** — the workflow adds them after updating metadata
+- **Do not add, remove or read labels on the pull request** — the workflow owns them
 - This is a **${LIBRARY}-only** review — focus only on this library
 - Post feedback to **PR #${PR_NUMBER}**
 - Be specific about what failed and how to fix it
+- **Review blind.** Do not open earlier review comments on the pull request, the stored score or review of this implementation anywhere else (metadata, git history, labels), or another library's implementation or review of this spec. You score the files in front of you
+- **You write no verdict.** The review is the score, its 24 items and its lines; what follows from them is not your decision
+- Every technical item below its maximum has a defect line that names it; a remark that names no violated rule is a `Suggestion:` and costs no points (8a)
 - Every weakness line is a defect (`<ID> (<light|dark|both|code>): …`, a violated rule the next generation fixes) or a `Suggestion: …` line (at most three, never acted on) — see 8a. A behavior is never both a strength and a weakness
 - Never write a defect that asks to add something the spec does not ask for, and never list something an `Expected, not a defect:` bullet of the spec's "What a good version looks like" section names. Phrase an overlap defect so that its fix is data generation, marker size or alpha — never moving marks off their values
 - On a `-basic` spec, never suggest a layer the spec does not ask for, such as a reference line, a highlight or a callout; removing one is the fix
 - Installed packages are not dependencies to avoid; never credit a hand-roll for avoiding one
-- Mark criteria as N/A when not applicable (e.g., legend for single-series)
-- **Score strictly**: median implementation should score 72-78, not 90+
-- **Design Excellence defaults are low**: DE-01=4, DE-02=2, DE-03=2 — raise only with evidence
+- Mark criteria as N/A when not applicable (e.g., legend for single-series): score the item at its maximum and say N/A in the comment — a criterion that does not apply has no defect and no deduction
+- **Score strictly**: a median implementation should score 72-78 once every defect has its line; the number describes, it is not a target — you never pick a total (step 7)
+- **Design Excellence defaults are low**: DE-01=4, DE-02=2, DE-03=2 — raise only with evidence beyond what the spec and the style guide require; compliance is scored in SC and VQ
 - All review data (strengths, weaknesses, image_description, criteria_checklist) is saved to metadata for future regeneration, including `review_prev.json`, which is stored as the live implementation's review when it stays. Be specific!
