@@ -1755,6 +1755,18 @@ class TestFirstReviews:
     def test_a_comment_without_a_valid_review_parses_to_none(self, body):
         assert rt.metrics.parse_review_comment(body) is None
 
+    def test_a_review_with_a_partial_checklist_parses_to_none(self):
+        body = self._recorded()[0]["comments"][0]["body"]
+        assert rt.metrics.parse_review_comment(body) is not None
+        partial = "\n".join(line for line in body.splitlines() if "LM-02" not in line)
+        assert rt.metrics.parse_review_comment(partial) is None
+
+    def test_only_the_reviewers_comments_count(self):
+        comments = self._recorded()[0]["comments"]
+        assert len(rt.pull_reviews(comments)) == 1
+        quoted = [{**c, "login": "someone"} for c in comments]
+        assert rt.pull_reviews(quoted) == []
+
     def test_silent_cell(self):
         assert rt._silent({}) == "–"  # metrics built before the count existed
         empty = {"silent_deductions_n": 0, "silent_deductions_count": 0, "silent_deductions": None}

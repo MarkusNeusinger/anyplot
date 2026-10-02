@@ -1137,7 +1137,7 @@ def parse_review_comment(body: str) -> dict[str, Any] | None:
 
     Returns the attempt, the typed score, the 24 item scores in the record's
     ``checklist`` shape and the weakness lines; ``None`` for any other comment
-    or a review without a score line.
+    and for a review without a score line or without all 24 items.
     """
     heading = REVIEW_HEADING_RE.search(body or "")
     score = REVIEW_SCORE_RE.search(body or "")
@@ -1146,6 +1146,8 @@ def parse_review_comment(body: str) -> dict[str, Any] | None:
     checklist: dict[str, dict[str, int]] = {}
     for cid, value, top in REVIEW_ITEM_RE.findall(body):
         checklist.setdefault(cid, {"score": int(value), "max": int(top)})
+    if set(checklist) != set(CRITERIA_IDS):
+        return None  # a partial checklist would pass for a criterion without variance
     section = REVIEW_WEAKNESSES_RE.search(body)
     weaknesses = [
         line[2:].strip() for line in (section.group(1) if section else "").splitlines() if line.startswith("- ")

@@ -1729,6 +1729,7 @@ def render_gate_report(result: dict[str, Any]) -> str:
 # ---------------------------------------------------------------------------
 
 
+REVIEW_AUTHOR = "claude[bot]"
 FIRST_GENERATION_BRANCH_RE = re.compile(r"^implementation/(?P<spec_id>[a-z0-9][a-z0-9-]*)/(?P<library>[a-z0-9]+)$")
 
 
@@ -1746,9 +1747,16 @@ def first_generation_pull(pull: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def pull_reviews(comments: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
-    """The AI review comments of one pull request, parsed, in posting order."""
+    """The AI review comments of one pull request, parsed, in posting order.
+
+    Only the reviewer's own comments count (``REVIEW_AUTHOR``, the login
+    impl-review's score fallback reads too): anyone may post or quote a block
+    that looks like a review.
+    """
     reviews = []
     for comment in sorted(comments, key=lambda c: str(c.get("at") or "")):
+        if comment.get("login") != REVIEW_AUTHOR:
+            continue
         review = metrics.parse_review_comment(str(comment.get("body") or ""))
         if review is not None:
             reviews.append({**review, "at": str(comment.get("at") or "")})
@@ -1790,7 +1798,7 @@ def gh_first_generation_pulls(since: str, limit: int) -> list[dict[str, Any]]:
                 "--paginate",
                 f"repos/{{owner}}/{{repo}}/issues/{pull['number']}/comments",
                 "--jq",
-                ".[] | {body, at: .created_at} | @json",
+                ".[] | {body, at: .created_at, login: .user.login} | @json",
             ],
             check=True,
             capture_output=True,
