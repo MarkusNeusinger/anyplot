@@ -376,6 +376,8 @@ jobs:
           # The resolved model when "Resolve model" ran; a crash before it
           # forwards the raw input and lets the retry resolve again.
           MODEL: ${{ steps.model.outputs.model || inputs.model || 'auto' }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           # Restore ai-rejected label that was removed at start of repair so the
           # PR state stays consistent (otherwise it looks "stuck approved").
@@ -383,15 +385,37 @@ jobs:
 
           MARKER="<!-- repair-retry:${SPEC_ID}:${LIBRARY}:attempt-${ATTEMPT} -->"
           # Paginate so the marker is found even on PRs with >30 comments.
-          RETRY_COUNT=$(gh api --paginate "repos/${{ github.repository }}/issues/${PR_NUM}/comments?per_page=100" \
-            --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2>/dev/null || echo "0")
+          # `--paginate --jq` prints one count per page, so the pages are
+          # summed: read as one value, a PR with more than 100 comments gave
+          # "0\n1", the `-ge` test below errored into its else branch, and
+          # every crash bought another retry. A read that fails three times
+          # counts as a spent budget (fail closed), like impl-review's; the
+          # watchdog's crashed-repair case picks the PR up from there.
+          RETRY_COUNT=""
+          for attempt in 1 2 3; do
+            if PAGES=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
+                 --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2> /tmp/retry-count.err) \
+               && RETRY_COUNT=$(printf '%s\n' "$PAGES" | jq -s 'add // 0' 2>> /tmp/retry-count.err) \
+               && [[ "$RETRY_COUNT" =~ ^[0-9]+$ ]]; then
+              break
+            fi
+            RETRY_COUNT=""
+            echo "::warning::retry-marker read failed (attempt ${attempt}/3): $(head -c 500 /tmp/retry-count.err | tr '\n' ' ')"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+          done
+          EXHAUSTED="The repair workflow itself failed twice for this attempt — likely a persistent Claude Code Action issue."
+          if [ -z "$RETRY_COUNT" ]; then
+            echo "::error::Could not read the retry marker for PR #${PR_NUM} after 3 attempts — not auto-retrying"
+            EXHAUSTED="The repair workflow failed, and whether its one auto-retry was already used could not be read, so none was started."
+            RETRY_COUNT=1
+          fi
 
           if [ "$RETRY_COUNT" -ge 1 ]; then
-            echo "::error::Repair attempt ${ATTEMPT} crashed twice — giving up"
+            echo "::error::Repair attempt ${ATTEMPT} crashed and gets no (further) auto-retry — giving up"
             gh pr comment "$PR_NUM" --body "${MARKER}
           ## :x: Repair Workflow Crashed (Attempt ${ATTEMPT}/4, retry exhausted)
 
-          The repair workflow itself failed twice for this attempt — likely a persistent Claude Code Action issue.
+          ${EXHAUSTED}
 
           **Manual restart:**
           \`\`\`
@@ -399,7 +423,7 @@ jobs:
           \`\`\`
 
           ---
-          :robot: *[impl-repair](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-repair](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"
           else
             echo "::warning::Repair attempt ${ATTEMPT} crashed — auto-retrying once"
             gh pr comment "$PR_NUM" --body "${MARKER}
@@ -408,7 +432,7 @@ jobs:
           The repair workflow failed (probably a transient Claude Code Action issue). Automatically re-triggering this attempt...
 
           ---
-          :robot: *[impl-repair](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-repair](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"
 
             gh workflow run impl-repair.yml \
               -f pr_number="$PR_NUM" \

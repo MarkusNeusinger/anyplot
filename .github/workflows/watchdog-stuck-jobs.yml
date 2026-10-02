@@ -123,6 +123,29 @@ jobs:
             return 1
           }
 
+          # Is an impl-review run for this PR queued or running? 0 = yes,
+          # 1 = no, 2 = could not be read. Asked per status instead of
+          # filtering the newest N runs: a bulk campaign starts more reviews
+          # in ten minutes than one page holds. `pending` is a run waiting in
+          # impl-review's per-PR concurrency group; the REST API takes it as a
+          # filter on every gh version. One page per status, so one count —
+          # and with more than 100 runs in one status an older one is missed:
+          # the dispatch that follows then waits in that concurrency group
+          # instead of running beside the review.
+          # The title is impl-review's `run-name`.
+          review_in_flight() {
+            local num="$1" status n
+            for status in queued in_progress pending waiting requested; do
+              n=$(gh api "repos/${GH_REPO}/actions/workflows/impl-review.yml/runs?status=${status}&per_page=100" \
+                --jq "[.workflow_runs[] | select(.display_title == \"Review: PR #$num\")] | length" 2>/dev/null) || return 2
+              [[ "$n" =~ ^[0-9]+$ ]] || return 2
+              if (( n > 0 )); then
+                return 0
+              fi
+            done
+            return 1
+          }
+
           ensure_label() {
             if [[ "$DRY_RUN" == "true" ]]; then
               echo "::notice::[dry-run] would ensure label: $1"
@@ -218,12 +241,38 @@ jobs:
               fi
             fi
 
+            # `ai-review-failed` beside a verdict label is stale: a review has
+            # run to its verdict since (its start could not clear the label),
+            # or impl-review gave up without being able to read the labels.
+            # Another review could only contradict that verdict, so the label
+            # is dropped and the merge/repair cases below judge the PR.
+            if echo " $labels " | grep -q " ai-review-failed " \
+               && echo " $labels " | grep -qE " (ai-approved|ai-rejected|regen:improved) "; then
+              echo "::notice::PR #$num: ai-review-failed beside a verdict label — stale, removed; no re-review"
+              if [[ "$DRY_RUN" != "true" ]]; then
+                gh pr edit "$num" --remove-label "ai-review-failed" 2>/dev/null || true
+              fi
+              labels=$(echo " $labels " | sed 's/ ai-review-failed / /')
+            fi
+
             # Case 1: review failed, not yet rescued → re-dispatch review.
             #   Not for regenerations: impl-review already auto-retried the
             #   crashed review once, and a regeneration gets one review — a
             #   watchdog re-dispatch would be its third. Flag it instead.
+            #   Not while a review of this PR is queued or running either: the
+            #   label is then stale (impl-review's dispatch was accepted but
+            #   reported as failed, and the review has not yet cleared the
+            #   label at its start), and a dispatch here would be a second
+            #   review of the same PR. A run list that cannot be read skips the
+            #   PR for this scan — the label keeps it in the next one.
             if echo " $labels " | grep -q " ai-review-failed "; then
-              if [[ "$is_regen" == "true" ]]; then
+              in_flight=0
+              review_in_flight "$num" || in_flight=$?
+              if (( in_flight == 0 )); then
+                echo "::notice::PR #$num: ai-review-failed, but a review is queued or running — left alone"
+              elif (( in_flight == 2 )); then
+                echo "::warning::PR #$num: ai-review-failed, but the review runs could not be listed — skipped until the next scan"
+              elif [[ "$is_regen" == "true" ]]; then
                 echo "::warning::PR #$num: regeneration review failed twice (ai-review-failed) — not re-dispatched (one review per regeneration); needs manual attention: re-run impl-review.yml -f pr_number=$num by hand, or close the PR (the live implementation stays)"
               elif echo " $labels " | grep -q " ai-review-rescued "; then
                 echo "::warning::PR #$num: ai-review-failed persists after rescue — needs manual attention"
