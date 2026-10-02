@@ -165,6 +165,48 @@ jobs:
 
           echo "::notice::Reviewing PR #$PR_NUMBER for $LIBRARY implementation of $SPEC_ID (branch: $HEAD_REF, review model: $REVIEW_MODEL_ALIAS, generation model: $MODEL from $MODEL_FROM)"
 
+      # `ai-review-failed` means "no review is on its way"; a review that
+      # starts makes it stale. Without this, a dispatch that GitHub accepted
+      # but `gh` reported as failed left the label beside the very re-review
+      # it was meant to ask for, and watchdog Case 1 dispatched a second one
+      # on its next scan. The concurrency group queues that re-review behind
+      # the run that gave up, so it always starts after the label landed.
+      # Best effort: a label that survives is still caught by Case 1's own
+      # check for a review in flight. Removed only when present — a
+      # `--remove-label` for a label the repo never created is an error.
+      - name: Clear a stale ai-review-failed label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ steps.pr.outputs.pr_number }}
+        run: |
+          LABELS=""
+          READ_OK=0
+          for attempt in 1 2 3; do
+            if LABELS=$(gh pr view "$PR_NUM" --json labels -q '.labels[].name' 2> /tmp/clear-label.err); then
+              READ_OK=1
+              break
+            fi
+            echo "::warning::gh pr view (labels) failed (attempt ${attempt}/3): $(head -c 500 /tmp/clear-label.err | tr '\n' ' ')"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+          done
+          if [ "$READ_OK" -ne 1 ]; then
+            echo "::warning::Could not read labels for PR #${PR_NUM} — a stale ai-review-failed, if any, stays"
+            exit 0
+          fi
+          if ! grep -qxF "ai-review-failed" <<< "$LABELS"; then
+            exit 0
+          fi
+          for attempt in 1 2 3; do
+            if gh pr edit "$PR_NUM" --remove-label "ai-review-failed" 2> /tmp/clear-label.err; then
+              echo "::notice::Removed stale ai-review-failed from PR #${PR_NUM}: this run is the review it asked for"
+              exit 0
+            fi
+            echo "::warning::removing ai-review-failed failed (attempt ${attempt}/3): $(head -c 500 /tmp/clear-label.err | tr '\n' ' ')"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+          done
+          echo "::warning::ai-review-failed could not be removed from PR #${PR_NUM} — the watchdog skips it while this review runs"
+          exit 0
+
       - name: Derive language + extension from library
         id: lang
         env:
@@ -749,29 +791,31 @@ jobs:
             RETRY_COUNT=1
           fi
 
-          if [ "$RETRY_COUNT" -ge 1 ]; then
-            # Already auto-retried once → final fail, require manual rerun.
-            # Both writes retried: an unreadable budget lands here in the
-            # middle of a brown-out, and `ai-review-failed` is the hand-off to
-            # the watchdog.
-            gh_retry() {
-              local what="$1"; shift
-              local attempt
-              for attempt in 1 2 3; do
-                if "$@" 2> /tmp/retry-count.err; then
-                  return 0
-                fi
-                echo "::warning::${what} failed (attempt ${attempt}/3): $(head -c 500 /tmp/retry-count.err | tr '\n' ' ')"
-                [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
-              done
-              return 1
-            }
+          # Every write retried: an unreadable budget lands here in the middle
+          # of a brown-out, and `ai-review-failed` is the hand-off to the
+          # watchdog.
+          gh_retry() {
+            local what="$1"; shift
+            local attempt
+            for attempt in 1 2 3; do
+              if "$@" 2> /tmp/retry-count.err; then
+                return 0
+              fi
+              echo "::warning::${what} failed (attempt ${attempt}/3): $(head -c 500 /tmp/retry-count.err | tr '\n' ' ')"
+              [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+            done
+            return 1
+          }
+          # Final fail: no (further) auto-retry, the watchdog takes over. Its
+          # comment carries the marker, so the budget reads as spent afterwards
+          # whichever path gave up.
+          give_up() {
             gh_retry "ai-review-failed label" gh pr edit "$PR_NUM" --add-label "ai-review-failed" \
               || echo "::error::could not add ai-review-failed to PR #${PR_NUM} — left to the watchdog's scan of stalled PRs"
             gh_retry "PR comment" gh pr comment "$PR_NUM" --body "${MARKER}
           ## :x: AI Review Failed (auto-retry exhausted)
 
-          The AI review action completed but did not produce valid output files. ${EXHAUSTED}
+          The AI review action completed but did not produce valid output files. $1
 
           **What happened:**
           - The Claude Code Action ran
@@ -786,22 +830,35 @@ jobs:
           :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*" \
               || echo "::error::failure comment not posted on PR #${PR_NUM}"
             exit 1
+          }
+
+          if [ "$RETRY_COUNT" -ge 1 ]; then
+            # Already auto-retried once → final fail, require manual rerun.
+            give_up "$EXHAUSTED"
           fi
 
-          # First failure — post marker and auto-retry via repository_dispatch
-          gh pr comment "$PR_NUM" --body "${MARKER}
+          # First failure — post marker and auto-retry via repository_dispatch.
+          # Same order and hand-off as the post-score rescue below: the marker
+          # is the budget, so the dispatch only happens once it is durable, and
+          # a marker or a dispatch that fails three times ends in
+          # `ai-review-failed` instead of a PR without any label.
+          if ! gh_retry "retry marker comment" gh pr comment "$PR_NUM" --body "${MARKER}
           ## :wrench: AI Review Produced No Score — Auto-Retrying
 
           The Claude Code Action ran but didn't write \`quality_score.txt\`. Auto-retrying review once...
 
           ---
-          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"
+          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"; then
+            give_up "The retry marker could not be recorded, so no auto-retry was started."
+          fi
 
-          gh api repos/$REPOSITORY/dispatches \
-            -f event_type=review-pr \
-            -f "client_payload[pr_number]=$PR_NUM" \
-            -f "client_payload[model]=$MODEL" \
-            -f "client_payload[review_model]=$REVIEW_MODEL_ALIAS"
+          if ! gh_retry "impl-review dispatch" gh api "repos/$REPOSITORY/dispatches" \
+               -f event_type=review-pr \
+               -f "client_payload[pr_number]=$PR_NUM" \
+               -f "client_payload[model]=$MODEL" \
+               -f "client_payload[review_model]=$REVIEW_MODEL_ALIAS"; then
+            give_up "The auto-retry could not be dispatched."
+          fi
           echo "::notice::Auto-re-triggered impl-review.yml for PR #$PR_NUM (review model=$REVIEW_MODEL_ALIAS, generation model=$MODEL)"
           # Mark this run as failed so the run status reflects that no verdict
           # was produced. The auto-retry runs in a separate workflow run.
@@ -999,6 +1056,24 @@ jobs:
           # Add verdict label early to ensure it's set even if later steps fail
           # This is idempotent - re-running won't cause issues
 
+          # A verdict label that cannot be added fails this step, on every
+          # path: "Re-dispatch review after a post-score failure" keys on this
+          # step's conclusion, so a step that "succeeds" without its label
+          # would switch that rescue off and leave a later failure to the
+          # watchdog alone.
+          add_label() {
+            local label="$1" attempt
+            for attempt in 1 2 3; do
+              if gh pr edit "$PR_NUM" --add-label "$label" 2> /tmp/label.err; then
+                return 0
+              fi
+              echo "::warning::adding ${label} failed (attempt ${attempt}/3): $(head -c 300 /tmp/label.err | tr '\n' ' ')"
+              [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+            done
+            echo "::error::${label} could not be added to PR #${PR_NUM} after 3 attempts"
+            return 1
+          }
+
           # Regeneration: the gate's verdict, never the cascading threshold.
           # merge → `regen:improved` FIRST, then `ai-approved` (impl-merge
           # listens for the latter, so the marker must already be there).
@@ -1006,25 +1081,14 @@ jobs:
           # the repair loop, which a regeneration never enters (one review,
           # then the gate).
           if [ "$IS_REGEN" = "true" ]; then
-            add_label() {
-              local label="$1" attempt
-              for attempt in 1 2 3; do
-                if gh pr edit "$PR_NUM" --add-label "$label" 2> /tmp/label.err; then
-                  return 0
-                fi
-                echo "::warning::adding ${label} failed (attempt ${attempt}/3): $(head -c 300 /tmp/label.err | tr '\n' ' ')"
-                [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
-              done
-              return 1
-            }
             gh label create "regen:improved" --color "0e8a16" --description "Regeneration replaced the live implementation (regen gate)" 2>/dev/null || true
             gh label create "regen:kept" --color "bfdadc" --description "Regeneration closed, live implementation kept (regen gate)" 2>/dev/null || true
             if [ "$GATE_VERDICT" = "merge" ]; then
               add_label "regen:improved" || { echo "::error::regen:improved could not be added — not adding ai-approved"; exit 1; }
-              add_label "ai-approved" || { echo "::error::ai-approved could not be added"; exit 1; }
+              add_label "ai-approved" || exit 1
               echo "::notice::Regen gate: merge (regen:improved + ai-approved)"
             else
-              add_label "regen:kept" || echo "::warning::regen:kept could not be added — the verdict step still closes the PR"
+              add_label "regen:kept" || exit 1
               echo "::notice::Regen gate: keep (regen:kept)"
             fi
             exit 0
@@ -1041,18 +1105,10 @@ jobs:
 
           if [ "$SCORE" -ge "$THRESHOLD" ]; then
             echo "::notice::Adding ai-approved label (score $SCORE >= $THRESHOLD)"
-            gh pr edit "$PR_NUM" --add-label "ai-approved" 2>/dev/null || {
-              echo "::warning::Failed to add ai-approved label, retrying..."
-              sleep 2
-              gh pr edit "$PR_NUM" --add-label "ai-approved"
-            }
+            add_label "ai-approved" || exit 1
           else
             echo "::notice::Adding ai-rejected label (score $SCORE < $THRESHOLD)"
-            gh pr edit "$PR_NUM" --add-label "ai-rejected" 2>/dev/null || {
-              echo "::warning::Failed to add ai-rejected label, retrying..."
-              sleep 2
-              gh pr edit "$PR_NUM" --add-label "ai-rejected"
-            }
+            add_label "ai-rejected" || exit 1
 
             if [ "$SCORE" -lt 50 ]; then
               gh pr edit "$PR_NUM" --add-label "quality-poor" 2>/dev/null || true
