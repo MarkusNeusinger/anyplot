@@ -162,7 +162,7 @@ Read `prompts/quality-criteria.md` and evaluate, in this order:
 1. **List the defects first**, in the format of 8a: everything in the renders or the code that visibly violates a named rule.
 2. **Score the 19 technical items** (VQ, SC, DQ, CQ) from that list. Each starts at its maximum and loses points only for a defect line that names it; the size of the deduction is your proportional judgment.
 3. **Score the five judgment items** (DE, LM). Each starts at its default and rises only on evidence you name in the item's comment.
-4. **Add up.** The total is the sum of the 24 items after the caps of step 8. You never pick the total, and you never adjust an item to reach one.
+4. **Add up.** The total is the sum of the 24 items, lowered to the lowest cap of step 8 that applies; a cap lowers the total only and never changes an item. You never pick the total, and you never adjust an item to reach one.
 
 Score so that the reviews of the other libraries of this spec, written without seeing yours, would deduct the same criterion for the same gap: `prompts/quality-criteria.md` → "Which criterion a gap belongs to" decides it.
 
