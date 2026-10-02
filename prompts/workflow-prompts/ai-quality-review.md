@@ -181,12 +181,12 @@ Score so that the reviews of the other libraries of this spec, written without s
 | ID | Criterion | Max | Check |
 |----|-----------|-----|-------|
 | DE-01 | Aesthetic Sophistication | 8 | Typography, spacing and hierarchy decided beyond the style-guide baseline, within the Imprint palette? |
-| DE-02 | Visual Refinement | 6 | Refinement beyond the mandated spines and grid: whitespace, alignment, label placement, a grid density chosen for this chart? |
+| DE-02 | Visual Refinement | 6 | Refinement beyond the style guide's spine and grid rules: whitespace, alignment, label placement, a grid density chosen for this chart? |
 | DE-03 | Data Storytelling | 6 | A hierarchy or focal point the implementation chose itself, beyond what the spec's Notes prescribe? Guides the viewer? |
 
 **Defaults:** DE-01=4, DE-02=2, DE-03=2. Raise only with evidence.
 
-**Compliance is not excellence.** Evidence that raises a DE item is something the implementation does **beyond** what the spec's Notes and characteristic section require and beyond what the style guide mandates (removed top and right spines, a subtle grid, theme tokens, the Imprint palette, explicit font sizes). Meeting those is scored in SC and VQ. The complete style-guide baseline earns exactly the defaults (DE-01 = 4, DE-02 = 2). Name the evidence in the item's comment; "spines removed, grid subtle" raises nothing.
+**Compliance is not excellence.** Evidence that raises a DE item is something the implementation does **beyond** what the spec's Notes and characteristic section require and beyond what the style guide mandates (top and right spines removed or none at all, a subtle grid or none, theme tokens, the Imprint palette, explicit font sizes). Meeting those is scored in SC and VQ. The complete style-guide baseline earns exactly the defaults (DE-01 = 4, DE-02 = 2). Name the evidence in the item's comment; "spines removed, grid subtle" raises nothing.
 
 #### Spec Compliance (15 pts)
 | ID | Criterion | Max | Check |
@@ -235,7 +235,7 @@ Score so that the reviews of the other libraries of this spec, written without s
 
 Every weakness is one of two kinds of line. The next generation fixes the defects and never acts on a suggestion.
 
-- **Defect** — the render (or the code, for CQ) visibly violates a named rule: a rubric criterion, a style-guide rule, or an `A good version shows:` bullet of the spec. Write it as `<ID>[, <ID>] (<light|dark|both|code>): <what is wrong, with the observed value> → <target or direction, signed delta when numeric>. Likely cause: <code element>.` The ID is the criterion the defect costs points on (`VQ-01` … `LM-02`), or `AR-06` … `AR-09`. Every criterion you name is below its maximum in your checklist, and every technical item (VQ, SC, DQ, CQ) below its maximum is named by a defect line: a deduction without a line leaves the next generation nothing to fix. Any criterion may name a defect, DE and LM included. A DQ-02 line names the labels or values that read as generic or abstract, never the domain: its fix renames, it does not replace the scenario.
+- **Defect** — the render (or the code, for CQ) visibly violates a named rule: a rubric criterion, a style-guide rule, or an `A good version shows:` bullet of the spec. Write it as `<ID>[, <ID>] (<light|dark|both|code>): <what is wrong, with the observed value> → <target or direction, signed delta when numeric>. Likely cause: <code element>.` The ID is the criterion the defect costs points on (`VQ-01` … `LM-02`), or `AR-06` … `AR-09`. Every criterion you name is below its maximum in your checklist, and every technical item (VQ, SC, DQ, CQ) below its maximum is named by a defect line: a deduction without a line leaves the next generation nothing to fix. Any criterion may name a defect, DE and LM included. A DQ-02 line for a plausible but generic scenario names the labels or values that read as generic or abstract, and its fix renames them; only a scenario the content policy excludes, or real names carrying invented numbers, is named as the scenario itself, and there the fix replaces it.
 - **Suggestion** — everything that names no violated rule: a storytelling layer or a focal highlight, a library showcase ("could use X"), "larger", "more presence" or "more distinctive", an optional feature the spec only allows (asymmetric error bars, percentage labels), or polishing an element the spec's scope excludes (on a `-basic` spec, the layers SC-01 lists; on any spec, an annotation or callout the spec does not request), including moving another element clear of it. Write it as `Suggestion: <idea>`. At most three; none is fine. A suggestion costs no points, and a deducted technical item has a defect line: the same remark is never both.
 
 List the defects first, then the suggestions. Rules:
@@ -256,7 +256,8 @@ Counter-examples:
 - A count plot without percentage labels has no DQ-01 defect: the Notes allow them, and a missing optional feature deducts nothing. Adding them is a suggestion. An `A good version shows:` bullet that describes them "if drawn" or as the labels "the Notes allow" is not missed by a version that draws none, so adding them does not fix that bullet either.
 - "Slightly larger tick labels would help in the thumbnail" next to VQ-01 at 7/8 is a silent deduction. Either it is a defect, and the line says so (`VQ-01 (both): tick labels at 10 px blur in the 400 px thumbnail → about 12 px (+2 px). Likely cause: …`), or it is a suggestion, and VQ-01 keeps its 8.
 
-**Check before you go on.** For every technical item you scored below its maximum, point to the defect line that names it. Where there is none, write the line the deduction rests on. If you cannot name what is wrong, there is no deduction: restore the point now, before step 8b and before you write any file. From here on your checklist is final.
+**Check before you go on.** For every technical item you scored below its maximum, point to the defect line that names it. Where there is none, write the line the deduction rests on. If you cannot name what is wrong, there is no deduction: restore the point now, before step 8b and before you write any file, and add up again. From here on your checklist is final.
+
 ### 8b. Regeneration: before/after (only when `IS_REGENERATION` is `true`)
 
 Skip this section entirely when `IS_REGENERATION` is `false`.
@@ -379,9 +380,9 @@ Use this EXACT format:
 - [x] VQ-07: Palette Compliance (X/2)
 
 ### Design Excellence (XX/20)
-- [ ] DE-01: Aesthetic Sophistication (X/8) - Generic defaults
-- [ ] DE-02: Visual Refinement (X/6) - Minimal customization
-- [ ] DE-03: Data Storytelling (X/6) - No visual hierarchy or emphasis
+- [ ] DE-01: Aesthetic Sophistication (X/8) - the style-guide baseline, nothing beyond it
+- [ ] DE-02: Visual Refinement (X/6) - the spine and grid rules met, nothing beyond
+- [ ] DE-03: Data Storytelling (X/6) - data displayed, no hierarchy chosen beyond the Notes
 
 ### Spec Compliance (XX/15)
 - [x] SC-01: Plot Type (X/5)
@@ -403,7 +404,7 @@ Use this EXACT format:
 
 ### Library Mastery (XX/10)
 - [x] LM-01: Idiomatic Usage (X/5)
-- [ ] LM-02: Distinctive Features (X/5) - Generic usage
+- [ ] LM-02: Distinctive Features (X/5) - nothing beyond what the library prompt mandates
 
 ### Score Caps Applied
 - [ ] None / [describe cap if applied]
@@ -426,7 +427,7 @@ Use this EXACT format:
 |---|---|
 | XX | XX |
 
-**Predecessor defects:** P1 (VQ-02) the size legend's "500" label overlaps its reference bubble, …
+**Predecessor defects:** P1 (VQ-02) the size legend's "500" label overlaps its reference bubble, P2 (VQ-07) Sporting Goods on the red loss anchor, P3 (VQ-01) tick labels blur in the thumbnail, P4 (DQ-02) groups labelled Region A–D
 **Previous weaknesses:** W1 obsolete (C2) · W2 suggestion · W3 defect (VQ-07)
 **Improvements:** `W3` Sporting Goods moved off the red loss anchor — legend and bubbles, both renders
 **Code improvements:** none
@@ -520,7 +521,7 @@ cat > review_prev.json << 'EOF'
     "library_mastery": {"score": 7, "max": 10, "items": [...]}
   },
   "strengths": ["Strength 1", "Strength 2"],
-  "weaknesses": ["VQ-02 (light): the size legend's \"500\" label overlaps its reference bubble … → …. Likely cause: ….", "Suggestion: …"]
+  "weaknesses": ["VQ-02 (light): the size legend's \"500\" label overlaps its reference bubble by about 6 px → clear it by at least 4 px (+10 px). Likely cause: the legend label's offset.", "VQ-07 (both): Sporting Goods is drawn in #AE3030, the red loss anchor, as the fourth series → the fourth Imprint position #BD8233. Likely cause: the palette index.", "VQ-01 (both): tick labels at 9 px blur in the 400 px thumbnail → about 12 px (+3 px). Likely cause: the tick font size.", "DQ-02 (both): the groups are labelled Region A–D → real region names. Likely cause: the label list.", "Suggestion: …"]
 }
 EOF
 python3 -c "import json; json.load(open('review_prev.json'))"
@@ -579,7 +580,7 @@ The 5 dimensions:
 - Never write a defect that asks to add something the spec does not ask for, and never list something an `Expected, not a defect:` bullet of the spec's "What a good version looks like" section names. Phrase an overlap defect so that its fix is data generation, marker size or alpha — never moving marks off their values
 - On a `-basic` spec, never suggest a layer the spec does not ask for, such as a reference line, a highlight or a callout; removing one is the fix
 - Installed packages are not dependencies to avoid; never credit a hand-roll for avoiding one
-- Mark criteria as N/A when not applicable (e.g., legend for single-series)
-- **Score strictly**: median implementation should score 72-78, not 90+
+- Mark criteria as N/A when not applicable (e.g., legend for single-series): score the item at its maximum and say N/A in the comment — a criterion that does not apply has no defect and no deduction
+- **Score strictly**: a median implementation should score 72-78 once every defect has its line; the number describes, it is not a target — you never pick a total (step 7)
 - **Design Excellence defaults are low**: DE-01=4, DE-02=2, DE-03=2 — raise only with evidence beyond what the spec and the style guide require; compliance is scored in SC and VQ
 - All review data (strengths, weaknesses, image_description, criteria_checklist) is saved to metadata for future regeneration, including `review_prev.json`, which is stored as the live implementation's review when it stays. Be specific!

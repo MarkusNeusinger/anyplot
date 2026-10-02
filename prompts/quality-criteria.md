@@ -66,7 +66,7 @@ Implementation must use **plot functions** from the library, not just styling.
 
 ### AR-06: Not Feasible
 
-When a library cannot technically implement a spec (e.g., pygal cannot do 3D), this is an Auto-Reject. No retry, no file in repo.
+When a library cannot technically implement a spec (e.g., pygal cannot do 3D), this is an Auto-Reject.
 
 ### AR-08: Fake Functionality
 
@@ -169,7 +169,7 @@ So a remark such as "larger tick labels would help" is one of two things, never 
 
 All text must be clearly readable at 3200×1800 / 2400×2400 px and remain legible when the PNG is scaled down to ~400 px (mobile viewport). See `prompts/default-style-guide.md` → "Visual Sizing Defaults" for per-library-family starting values and "Proportional Sizing" for the proportional checks.
 
-**Source-of-values is irrelevant** for VQ-01: defaults, AI-tuned, or repair-loop-tuned all score equally — what matters is the visual result. If the AI deviates from the style-guide defaults because the plot looks better that way (e.g. shrinking the title to fit a long mandated string, or growing tick labels for a sparse plot), that is **not** a deduction.
+**Source-of-values is irrelevant** for the visual checks of VQ-01: a size tuned by hand and a size left at the style-guide default score the same when the result is the same — what matters is the visual result. If the AI deviates from the style-guide defaults because the plot looks better that way (e.g. shrinking the title to fit a long mandated string, or growing tick labels for a sparse plot), that is **not** a deduction. Only sizes set nowhere in the code (the row for 5 below) are a defect, and that defect line names the elements and the size they inherit.
 
 | Points | Criterion |
 |--------|-----------|
@@ -275,7 +275,7 @@ The implementation must use the **Imprint categorical palette** (defined in `pro
 
 This category evaluates aesthetic sophistication beyond mere correctness. A plot can be technically correct but visually generic — Design Excellence separates "works" from "beautiful."
 
-**Compliance is not excellence.** Evidence that raises a DE item above its default is something the implementation does **beyond** what the spec's Notes and characteristic section require and beyond what the style guide mandates (removed top and right spines, a subtle grid, theme tokens, the Imprint palette, explicit font sizes). Meeting those is scored in SC and VQ, once. Name the evidence in the item's comment; "spines removed, grid subtle" raises nothing, and neither does a hierarchy, a labelling scheme or a typesetting rule the spec's Notes prescribe.
+**Compliance is not excellence.** Evidence that raises a DE item above its default is something the implementation does **beyond** what the spec's Notes and characteristic section require and beyond what the style guide mandates (top and right spines removed or none at all, a subtle grid or none, theme tokens, the Imprint palette, explicit font sizes). Meeting those is scored in SC and VQ, once. Name the evidence in the item's comment; "spines removed, grid subtle" raises nothing, and neither does a hierarchy, a labelling scheme or a typesetting rule the spec's Notes prescribe.
 
 **The complete style-guide baseline earns exactly the defaults: DE-01 = 4 and DE-02 = 2.** An implementation that meets the baseline and adds nothing sits there; one that falls short of the baseline sits below.
 
@@ -303,8 +303,8 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 |--------|-----------|
 | 6 | Perfect: every detail decided rather than inherited — whitespace, alignment, label placement, grid density, line weights |
 | 4 | Good: refinement beyond the style-guide baseline: whitespace, alignment, label placement, a grid density chosen for this chart |
-| 2 | The style-guide baseline (top and right spines removed, a subtle grid) and nothing beyond it |
-| 0 | Sloppy: short of the baseline — bold grid, all spines, cramped layout |
+| 2 | The style-guide baseline (top and right spines removed or none at all, a subtle grid or none) and nothing beyond it |
+| 0 | Sloppy: short of the baseline — a bold or high-contrast grid, all four spines where nothing requires them, a cramped layout |
 
 ### DE-03: Data Storytelling (6 Points)
 
@@ -385,6 +385,8 @@ Example data must show ALL features of the plot type.
 
 **An optional feature is not an aspect to exhibit either.** A feature the Notes only allow, such as percentage labels or asymmetric error bars, is a display choice: a version without it loses nothing on DQ-01.
 
+**A conditional requirement whose condition the data does not meet is not an aspect to exhibit either.** A crossover line asked "for d⁴–d⁷" on a d² chart, labels asked "if drawn" on a version that draws none: nothing is missing, on DQ-01 or on SC-02.
+
 | Points | Criterion |
 |--------|-----------|
 | 6 | Shows all aspects (e.g., boxplot with outliers AND different distributions) |
@@ -427,6 +429,7 @@ Example data must show ALL features of the plot type.
 - Verify each one that applies to the configuration the implementation chose, in the render (read it off the axis) and in the data code. In the code the value must **fall out of the computation**: a constant placed at the right spot, or a curve pinned to the number, is a DQ-03 defect, not a pass.
 - A value missed beyond reading precision is a DQ-03 defect line with the expected value, the observed value and the signed delta.
 - A check value for a configuration the implementation did not choose is skipped, and the comment says so.
+- A configuration matches when its parameters agree with the bullet to the precision the bullet states (a bullet's C/B = 4.63 is a file's 4.633). A check value at a position the plot does not reach is verified in the code alone, by evaluating the computation there; whether the range itself is a gap is routed by "Which criterion a gap belongs to", not here.
 - The DQ-03 comment names what was checked ("checked: ³P at 15 B (line 41), crossover at 21.7"). A strength that calls the data "physically correct" or "matching the literature" needs a checked value behind it.
 
 **Without check values**, check what the list above allows, name it in the comment, and claim no more. A formula you believe is wrong from memory alone is a `Suggestion:` that states the doubt, not a deduction: a confident wrong deduction costs a correct implementation its points.
@@ -549,17 +552,17 @@ Score them as follows:
 
 ### Which criterion a gap belongs to
 
-Every library of a spec is reviewed on its own, without seeing the others. The same gap must cost the same criterion on each of them, so the question is decided here and not review by review. The table routes a gap to a criterion; how many points it costs stays proportional.
+Every library of a spec is reviewed on its own, without seeing the others. The same gap must cost the same criterion on each of them, so the question is decided here and not review by review. The table routes a gap to a criterion; how many points it costs stays proportional. When a gap fits two rows, the fix decides: a gap closed in the data generation or the computation is DQ-01, one closed in the plotting code is SC-02, and one that needs both names both IDs on one line.
 
 | Gap | Scored as |
 |-----|-----------|
-| A Notes bullet or an `A good version shows:` property that the render misses or breaks | SC-02 defect (plus the criterion the property belongs to, as above) |
-| A range, size or example of the Data section that the implementation departs from (the x range stops at 30 where Data says "sampled across 0–40"; another configuration than the Data example's) | Nothing, unless a Notes bullet or an `A good version shows:` property requires it: the spec does not pin the data (SC-03), and a count inside the Data range is not a lever (DQ-01). At most a `Suggestion:` |
+| A Notes bullet or an `A good version shows:` property that the render misses or breaks, and the fix is in the plotting code (a line not drawn, a label not typeset, an arrowhead off its curve) | SC-02 defect (plus the criterion the property belongs to, as above; an unasked element the section excludes stays SC-01 alone, 8a) |
+| A range, size or example of the Data section that the implementation departs from (the x range stops at 30 where Data says "sampled across 0–40"; another configuration than the Data example's), or a Notes preference it does not follow ("prefer", "typically", "e.g.") | Nothing, unless a Notes bullet or an `A good version shows:` property requires it: the spec does not pin the data (SC-03), a count inside the Data range is not a lever (DQ-01), and a preference is not a requirement. At most a `Suggestion:` |
 | A conditional requirement ("for d⁴–d⁷", "if drawn", "where marks overlap") whose condition the chosen data does not meet | Nothing: not SC-02, not DQ-01. At most a `Suggestion:` |
-| The example data does not exhibit an aspect that a Notes bullet or an `A good version shows:` bullet names unconditionally (a candlestick spec that asks for bullish and bearish candles, drawn with rising days only) | DQ-01 defect |
+| The example data does not exhibit an aspect that a Notes bullet or an `A good version shows:` bullet names unconditionally, and the fix is in the data generation or the computation (a candlestick spec that asks for bullish and bearish candles, drawn with rising days only; a matrix block of which only the lowest root becomes a curve) | DQ-01 defect |
 | The example data does not exhibit an aspect nothing in the spec names | At most a `Suggestion:` |
 | A value, limit, intercept or relation that is wrong for the domain, or a check value missed (DQ-03) | DQ-03 defect |
-| A comment or label that contradicts the code or the data it describes | DQ-03 defect when it misstates the data, else CQ-04 defect |
+| A comment or label that contradicts the code or the data it describes | DQ-03 defect when it misstates the data (a wrong comment above correct data costs a point, not the ladder's whole step), else CQ-04 defect |
 
 ---
 
@@ -584,7 +587,7 @@ Certain errors limit the maximum score:
 
 Evaluators must use these anchors to prevent score inflation:
 
-- **Median implementation should score 72-78** — not 90+
+- **Median implementation should score 72-78** once every defect is written down — the number describes where honest defect lines land a typical first generation; it is never a total to steer toward, and a review with no defect line to write is not made to reach it
 - **DE-01 > 6 is rare** on first attempt — most plots are the style-guide baseline and nothing more (score 4)
 - **DE-02 = 2 is the default** — the style-guide baseline with nothing beyond it
 - **Compliance is not excellence** — what the spec or the style guide requires is scored in SC and VQ and raises no DE or LM item
@@ -602,28 +605,28 @@ A "good" plot (~76%):
 
 ```text
 VISUAL QUALITY (23/30)
-  VQ-01: 5/8   (readable, but relying on defaults not explicit sizes)
+  VQ-01: 5/8   (no font size set, ticks inherit the library's 10 pt; defect line)
   VQ-02: 6/6   (no overlap)
-  VQ-03: 5/6   (visible, markers could be better)
+  VQ-03: 5/6   (32 sparse points at 4 px; defect line)
   VQ-04: 2/2   (good contrast, CVD-safe)
-  VQ-05: 2/4   (ok layout, some wasted space)
+  VQ-05: 2/4   (plot fills about 40% of the canvas, margin all on the right; defect line)
   VQ-06: 2/2   (labels with units)
-  VQ-07: 1/2   (palette is anyplot but first series used #AE3030 instead of #009E73)
+  VQ-07: 1/2   (Imprint palette, but the first series is #AE3030 instead of #009E73; defect line)
 
 DESIGN EXCELLENCE (8/20)
   DE-01: 4/8   (the style-guide baseline, nothing beyond it)
-  DE-02: 2/6   (spines and grid as the style guide mandates, no further refinement)
+  DE-02: 2/6   (the style guide's spine and grid rules met, nothing beyond)
   DE-03: 2/6   (data displayed but no storytelling)
 
 SPEC COMPLIANCE (13/15)
   SC-01: 5/5   (correct type)
-  SC-02: 3/4   (one minor feature missing)
+  SC-02: 3/4   (the Notes' reference band is not drawn; defect line)
   SC-03: 3/3   (mapping ok)
-  SC-04: 2/3   (title ok, legend not perfect)
+  SC-04: 2/3   (legend labels "s1", "s2"; defect line)
 
 DATA QUALITY (13/15)
-  DQ-01: 5/6   (shows most features)
-  DQ-02: 4/5   (plausible scenario, not abstract)
+  DQ-01: 5/6   (no outlier in any group; defect line)
+  DQ-02: 4/5   (plausible scenario, but the groups are labelled "Region A"–"Region D"; defect line)
   DQ-03: 4/4   (good values)
 
 CODE QUALITY (9/10)

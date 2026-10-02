@@ -1099,8 +1099,12 @@ class TestFirstReviewScoring:
         rules = self._section(content, "### 8a.", "### 8b.")
         assert "every technical item (VQ, SC, DQ, CQ) below its maximum is named by a defect line" in rules
         assert "A suggestion costs no points, and a deducted technical item has a defect line" in rules
-        # The DQ-02 guard: a generic-scenario deduction renames, it never replaces the scenario.
-        assert "A DQ-02 line names the labels or values that read as generic or abstract, never the domain" in rules
+        # The DQ-02 guard: a generic-scenario deduction renames; only an excluded
+        # scenario, or real names with invented numbers, is replaced.
+        assert "A DQ-02 line for a plausible but generic scenario names the labels or values" in rules
+        assert "and its fix renames them" in rules
+        assert "real names carrying invented numbers, is named as the scenario itself" in rules
+        assert "and add up again" in rules
         # The check runs before 8b, so a regeneration's comparison starts from final scores.
         assert "restore the point now, before step 8b and before you write any file" in rules
         assert "From here on your checklist is final" in rules
@@ -1183,9 +1187,10 @@ class TestFirstReviewScoring:
         assert "Compliance is not excellence" in content
         assert (
             "**beyond** what the spec's Notes and characteristic section require and beyond what the style guide "
-            "mandates (removed top and right spines, a subtle grid, theme tokens, the Imprint palette, explicit "
-            "font sizes)"
+            "mandates ("
         ) in content
+        # The style guide lets a plot drop every spine and the grid: neither is short of the baseline.
+        assert "top and right spines removed or none at all, a subtle grid or none" in content
         assert "Meeting those is scored in SC and VQ" in content
         assert "The complete style-guide baseline earns exactly the defaults" in content.replace("**", "")
         # No ladder or check credits a mandated or a forbidden thing any more.
@@ -1210,6 +1215,40 @@ class TestFirstReviewScoring:
         assert "this cap never fires on a compliant implementation" in caps
         assert "A hierarchy the spec's Notes prescribe" in self._section(criteria, "### DE-03", "## Spec Compliance")
         assert "Compliance is not mastery" in self._section(criteria, "## Library Mastery", "## Plot-Type")
+
+    def test_a_gap_that_fits_two_rows_follows_its_fix(self) -> None:
+        criteria = CRITERIA_PROMPT.read_text()
+        table = self._section(criteria, "### Which criterion a gap belongs to", "## Score Caps")
+        assert "When a gap fits two rows, the fix decides" in table
+        assert "a gap closed in the data generation or the computation is DQ-01" in table
+        assert "one closed in the plotting code is SC-02" in table
+        # A Notes preference ("prefer d⁴–d⁷") is no requirement.
+        assert 'or a Notes preference it does not follow ("prefer", "typically", "e.g.")' in table
+        assert "a preference is not a requirement" in table
+        dq01 = self._section(criteria, "### DQ-01", "### DQ-02")
+        assert "A conditional requirement whose condition the data does not meet is not an aspect to exhibit" in dq01
+
+    def test_the_median_describes_and_is_no_target(self) -> None:
+        """A compliant implementation without a defect lands above the old
+        median by construction; the number must not read as a total to reach."""
+        assert "it is never a total to steer toward" in CRITERIA_PROMPT.read_text()
+        review = REVIEW_PROMPT.read_text()
+        assert "the number describes, it is not a target" in review
+        assert "score the item at its maximum and say N/A in the comment" in review
+        evaluator = EVALUATOR_PROMPT.read_text()
+        assert "it is not a total to steer toward" in evaluator
+        assert "Start low, justify up" not in evaluator
+
+    def test_the_prompts_own_examples_have_no_silent_deduction(self) -> None:
+        """The reviewer copies the shape of the examples: every technical item
+        an example deducts is named by one of its defect lines."""
+        from automation.scripts.regen_gate import _silent_deduction_problems
+
+        step = REVIEW_PROMPT.read_text().split("### 10.", 1)[1].split("### 11.", 1)[0]
+        regen = json.loads(step.split("cat > review_regen.json << 'EOF'\n", 1)[1].split("\nEOF", 1)[0])
+        example = step.split("cat > review_prev.json << 'EOF'\n", 1)[1].split("\nEOF", 1)[0]
+        weaknesses = json.loads(re.search(r'"weaknesses": (\[.*\])\n', example).group(1))
+        assert _silent_deduction_problems(weaknesses, regen["prev_checklist"]) == []
 
     def test_stale_distribution_is_gone_and_the_anchors_stay(self) -> None:
         criteria = CRITERIA_PROMPT.read_text()
