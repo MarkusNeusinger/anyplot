@@ -600,6 +600,24 @@ class TestPlotTypeCharacteristics:
         assert "spline overshoot" in content
         assert "Check each Notes bullet and each `A good version shows:` bullet" in content
 
+    @pytest.mark.parametrize(
+        "prompt_path",
+        [
+            PROMPTS_DIR / "quality-criteria.md",
+            PROMPTS_DIR / "quality-evaluator.md",
+            WORKFLOW_PROMPTS_DIR / "ai-quality-review.md",
+        ],
+        ids=lambda p: p.name,
+    )
+    def test_dq02_excludes_real_politics_not_fictional_parliaments(self, prompt_path: Path) -> None:
+        """DQ-02's content policy targets real political content; a clearly
+        fictional parliament (parliament-basic asks for one) is not zeroed."""
+        content = prompt_path.read_text()
+        assert "Real politics" in content
+        assert "fictional parliament" in content
+        assert "is not political content" in content
+        assert "❌ Politics (" not in content
+
     def test_regen_step_8b_rules(self) -> None:
         """Step 8b: a permission is never an improvement ref, an unasked layer
         is never an improvement, and the regression wording carries the SC-03

@@ -413,14 +413,16 @@ Example data must show ALL features of the plot type.
 | 5 | Real, comprehensible, **neutral** scenario (science, business, nature) |
 | 3 | Plausible, but generic |
 | 1 | Abstract labels only ("Category A", "Group 1", "Series X") |
-| 0 | Nonsensical data OR controversial/sensitive topic (politics, race, religion, gender stereotypes) |
+| 0 | Nonsensical data OR controversial/sensitive topic (real politics, race, religion, gender stereotypes) |
 
 **Content Policy:** Data must avoid controversial, divisive, or sensitive topics:
-- ❌ Politics (elections, parties, voting)
+- ❌ Real politics (real parties, politicians, elections, a real legislature — national, regional, or supranational — partisan messaging)
 - ❌ Religion, race/ethnicity comparisons
 - ❌ Gender/sexuality stereotypes
 - ❌ Violence, war, weapons
 - ✅ Science, business, nature, technology, food, education (generic)
+
+A clearly fictional parliament (invented party names that carry no real-world ideology, invented seat counts, no real country, election, or politician) is not political content: it never scores 0 or triggers the cap. When the spec asks for invented data, being fictional is not a deduction: it scores on comprehensibility like any other scenario, and the fix for flat invented names is better invented names, never real ones.
 
 ### DQ-03: Appropriate Scale & Factual Correctness (4 Points)
 
