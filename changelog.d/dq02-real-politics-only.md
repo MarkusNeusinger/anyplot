@@ -9,4 +9,4 @@
   for is not a deduction, and the fix for flat invented names is better
   invented names, never real ones. The old
   blanket "Politics (elections, parties, voting)" read as zeroing
-  `parliament-basic` itself, whose spec now requires invented parties.
+  `parliament-basic` itself, whose spec now requires invented parties. (#12050)
