@@ -25,7 +25,7 @@ A Data Matrix 2D barcode visualization that encodes data into a compact square o
 - L-shaped finder pattern (solid black on left and bottom edges) is mandatory for orientation
 - Alternating (clock) pattern on top and right edges provides timing reference
 - ECC 200 error correction is the modern standard (supports up to 30% data recovery)
-- Recommended libraries: `pylibdmtx`, `treepoem`, or `segno` (which supports Data Matrix)
+- Recommended libraries: `pylibdmtx` or `treepoem` (Python), or `bwip-js` (JavaScript)
 - Output should be scalable; vector format or high-resolution PNG (300+ DPI) recommended for printing
 
 ## What a good version looks like

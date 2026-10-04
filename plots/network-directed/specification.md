@@ -15,7 +15,7 @@ A directed network graph visualizes relationships between entities using nodes c
 
 - `nodes` (list of dicts) - entities with unique IDs and optional attributes like label or group
 - `edges` (list of tuples/dicts) - directed connections as (source_id, target_id) pairs where arrows point from source to target
-- `weight` (numeric, optional) - edge weight that can affect arrow thickness or style
+- `weight` (numeric, optional) - edge weight that can affect edge and arrow thickness
 - Size: 10-50 nodes for clear static visualization (larger networks require interactive exploration)
 - Example: Software package dependencies where arrows show import direction
 
@@ -29,7 +29,7 @@ A directed network graph visualizes relationships between entities using nodes c
 ## What a good version looks like
 
 - A good version shows: every edge ending in an arrowhead that points from source to target, visible at the border of the target node instead of hidden beneath it and sized in proportion to the nodes, as the Notes ask.
-- A good version shows: a consistent arrow style throughout the graph, as the Notes ask; where edges differ in thickness or style, the difference encodes the optional weight by one rule, as the Data allows.
+- A good version shows: a consistent arrow style throughout the graph, as the Notes ask; where edges differ in thickness, the difference encodes the optional weight by one rule, as the Data allows.
 - A good version shows: two nodes linked in both directions, if the data has such a pair, drawn so that both arrowheads can be told apart, for example as two curved edges, as the Notes suggest.
 - A good version shows: node positions from a force-directed, hierarchical or circular layout, as the Notes allow, not from data: no axes or grid, and edges thinner and lighter than the nodes they join.
 - A good version shows: node labels, where drawn, readable and attached to their nodes, with edges and arrowheads kept out of the text.

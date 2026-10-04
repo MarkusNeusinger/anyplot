@@ -2,7 +2,7 @@
 
 ## Description
 
-A calendar heatmap visualizes time-series data on a calendar grid, where each day is represented as a cell and color intensity indicates the value magnitude. The layout follows a calendar structure with days as cells, weeks as rows, and months as columns or sections. This visualization excels at revealing daily patterns, seasonal trends, and temporal anomalies over extended time periods.
+A calendar heatmap visualizes time-series data on a calendar grid, where each day is represented as a cell and color intensity indicates the value magnitude. The layout follows a calendar structure with days as cells, weekdays as rows, weeks as columns, and months as labeled sections along the top. This visualization excels at revealing daily patterns, seasonal trends, and temporal anomalies over extended time periods.
 
 ## Applications
 

@@ -2,7 +2,7 @@
 
 ## Description
 
-A time-series plot showing the brightness of an astronomical object over time, designed to reveal exoplanet transit events as characteristic dips in flux. The plot displays photometric measurements with error bars against time or orbital phase, with an optional fitted transit model overlay. This visualization is fundamental in observational astronomy for detecting and characterizing planetary transits, variable stars, and other periodic brightness variations.
+A time-series plot showing the brightness of an astronomical object over time, designed to reveal exoplanet transit events as characteristic dips in flux. The plot displays photometric measurements with error bars against orbital phase, with a fitted transit model overlay. This visualization is fundamental in observational astronomy for detecting and characterizing planetary transits, variable stars, and other periodic brightness variations.
 
 ## Applications
 
@@ -13,6 +13,7 @@ A time-series plot showing the brightness of an astronomical object over time, d
 ## Data
 
 - `time` (float) - Observation time in days (e.g., BJD - 2457000 or phase 0.0-1.0)
+- `period` (float) - Orbital period in days, used to fold `time` to orbital phase; not needed when `time` is already a phase 0.0-1.0
 - `flux` (float) - Normalized brightness/flux relative to baseline (e.g., 0.99-1.01)
 - `flux_err` (float) - Measurement uncertainty for each flux value
 - `model_flux` (float) - Best-fit transit model prediction at each time point
@@ -30,7 +31,7 @@ A time-series plot showing the brightness of an astronomical object over time, d
 ## What a good version looks like
 
 - A good version shows: relative flux on the y axis, not magnitude, as the Notes ask, with a flat out-of-transit baseline at the normalized level and the transit as a dip going downward.
-- A good version shows: the transits stacked by phase folding into one dip on an orbital phase axis, as the Notes ask, or, on the time axis in days the Data also allows, each transit as its own dip at its own time; every measurement sits at its own x value and flux.
+- A good version shows: the transits stacked by phase folding into one dip on an orbital phase axis, as the Notes ask; every measurement sits at its own x value and flux.
 - A good version shows: an error bar on each data point, as the Notes ask, light enough that the points and the dip stay visible through them.
 - A good version shows: a smooth model curve drawn over the scatter, as the Notes ask, distinct from the points in both themes, flat outside the transit and following the dip from ingress through its bottom to egress.
 - Expected, not a defect: a dip that is tiny against the flux level, scatter that is a good fraction of the transit depth, a dense band of overlapping points and error bars along the baseline, a transit that fills only a narrow slice of the phase axis, and a flux axis that does not start at zero.

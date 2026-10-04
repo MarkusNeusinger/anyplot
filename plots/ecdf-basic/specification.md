@@ -6,7 +6,7 @@ An ECDF (Empirical Cumulative Distribution Function) plot displays a step functi
 
 ## Applications
 
-- Comparing distributions between groups to identify differences in spread, location, or shape
+- Reading where a sample's spread, location and shape lie, as a base for comparing groups
 - Identifying distribution characteristics such as median, quartiles, and percentiles at a glance
 - Statistical analysis and hypothesis testing where the full distribution shape matters
 - Visualizing sample distributions without making parametric assumptions about the underlying data

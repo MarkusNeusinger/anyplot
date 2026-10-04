@@ -2,7 +2,7 @@
 
 ## Description
 
-A heatmap with hierarchical clustering dendrograms on rows and/or columns, showing both data values and their hierarchical relationships. Rows and columns are automatically reordered based on clustering results to reveal natural groupings in the data. Essential for discovering patterns in high-dimensional data where similar observations or variables should be visually grouped together.
+A heatmap with hierarchical clustering dendrograms on both rows and columns, showing both data values and their hierarchical relationships. Rows and columns are automatically reordered based on clustering results to reveal natural groupings in the data. Essential for discovering patterns in high-dimensional data where similar observations or variables should be visually grouped together.
 
 ## Applications
 

@@ -25,7 +25,7 @@ A nested donut chart displays hierarchical data as multiple concentric rings, wh
 - Align child segments with parent segment boundaries for clarity
 - Include labels on larger segments, use legend for smaller ones
 - Consider adding spacing between rings for visual separation
-- Limit to 2-3 hierarchy levels to maintain readability
+- Use two hierarchy levels (parent and child rings)
 
 ## What a good version looks like
 

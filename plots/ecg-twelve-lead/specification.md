@@ -24,7 +24,7 @@ A multi-channel electrocardiogram display showing the 12 standard ECG leads arra
 
 - Arrange leads in standard clinical 3x4 grid layout: rows (I, aVR, V1, V4), (II, aVL, V2, V5), (III, aVF, V3, V6)
 - Optionally include a full-length Lead II rhythm strip across the bottom
-- Grid background should use standard ECG paper styling: light lines at 1mm intervals, bold lines at 5mm intervals, with a distinct paper-like color (light red/pink or light orange)
+- Grid background should use standard ECG paper styling: light lines at 1mm intervals, bold lines at 5mm intervals, with a distinct paper-like color (light red/pink or light orange); on a dark background keep the ruling red or pink, muted or deepened to stay visible yet subordinate, over the theme background or a faintly red-tinted panel
 - Include a 1mV calibration pulse at the start or margin of the display
 - Standard scale: 25mm/s horizontal (time), 10mm/mV vertical (voltage)
 - Each lead must be clearly labeled with its standard name
@@ -34,7 +34,7 @@ A multi-channel electrocardiogram display showing the 12 standard ECG leads arra
 ## What a good version looks like
 
 - A good version shows: the 12 leads in the standard clinical 3x4 layout, grouped as the Notes give (I, aVR, V1, V4), (II, aVL, V2, V5), (III, aVF, V3, V6), every strip clearly labeled with its standard lead name, as the Notes ask.
-- A good version shows: ECG paper behind every strip, as the Notes ask: light lines at 1mm intervals and bold lines at 5mm intervals in a paper-like light red, pink or light orange, with square grid cells and traces that stand out from the ruling in both themes.
+- A good version shows: ECG paper behind every strip, as the Notes ask: light lines at 1mm intervals and bold lines at 5mm intervals in a paper-like light red, pink or light orange, or on dark a muted or deepened red or pink, with square grid cells and traces that stand out from the ruling in both themes.
 - A good version shows: a 1mV calibration pulse at the start or in the margin, as the Notes ask, drawn as a rectangular step on the same grid, with every strip sharing the standard scale of 25mm/s and 10mm/mV so the pulse and the traces can be measured against the ruling.
 - A good version shows: in every lead a baseline with repeating P-QRS-T complexes at their sampled voltages, the QRS the largest deflection and the P and T waves smaller, in the typical normal amplitude ranges the Notes give.
 - A good version shows: the Lead II rhythm strip the Notes allow, if drawn, running the full width across the bottom on the same grid and scale, labeled as Lead II.

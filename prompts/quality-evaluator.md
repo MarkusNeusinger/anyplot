@@ -233,12 +233,14 @@ Not AR-09 (handle via VQ-05 instead): text overflowing its axis but staying on t
 
 **CRITICAL - Content Policy for DQ-02:**
 Automatically give **0 points** if data uses controversial/sensitive topics:
-- ❌ Politics (elections, parties, voting, politicians)
+- ❌ Real politics (real parties, politicians, elections, a real legislature — national, regional, or supranational — partisan messaging)
 - ❌ Religion, race/ethnicity comparisons, gender stereotypes
 - ❌ Violence, war, weapons, sensitive health topics
 
+A clearly fictional parliament (invented party names that carry no real-world ideology, invented seat counts, no real country, election, or politician) is not political content: it never scores 0 or triggers the cap. When the spec asks for invented data, being fictional is not a deduction: it scores on comprehensibility like any other scenario, and the fix for flat invented names is better invented names, never real ones.
+
 Score **1 point** for abstract labels ("Category A", "Group 1").
-Only award full points (5/5) for real, neutral contexts:
+Only award full points (5/5) for real, neutral contexts, or a comprehensible fictional one the spec asks for:
 - ✅ Science, business, nature, technology, food, education
 
 ### Step 5: Code Quality (10 pts)

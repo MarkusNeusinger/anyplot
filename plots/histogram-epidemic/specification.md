@@ -16,6 +16,7 @@ An epidemic curve (epi curve) is a histogram showing the number of new disease c
 - `onset_date` (date) - Date of symptom onset for each case or aggregated group
 - `case_count` (integer) - Number of new cases reported on that date
 - `case_type` (categorical, optional) - Classification of cases: confirmed, probable, or suspect
+- `events` (`event_date`, `event_label`) - 1 to 4 key interventions, e.g. lockdown start, vaccination campaign
 - Size: 30-365 days of daily observations
 - Example: Daily COVID-19 case counts by symptom onset date with confirmed/probable classification
 

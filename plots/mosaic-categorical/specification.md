@@ -2,7 +2,7 @@
 
 ## Description
 
-A mosaic plot visualizes contingency tables by dividing a rectangular area into smaller rectangles whose areas are proportional to cell frequencies. This statistical visualization technique effectively shows relationships and associations between two or more categorical variables, making it easy to identify patterns, dependencies, and deviations from expected frequencies in cross-tabulated data.
+A mosaic plot visualizes contingency tables by dividing a rectangular area into smaller rectangles whose areas are proportional to cell frequencies. This statistical visualization technique effectively shows relationships and associations between two categorical variables, making it easy to identify patterns, dependencies, and deviations from expected frequencies in cross-tabulated data.
 
 ## Applications
 

@@ -2,7 +2,7 @@
 
 ## Description
 
-A logistic regression visualization showing the characteristic S-shaped (sigmoid) probability curve for binary classification. The plot displays data points colored by their binary class, the fitted logistic curve representing predicted probabilities, confidence intervals around the curve, and an optional decision threshold line. This visualization is essential for understanding how a logistic model maps continuous input features to class probabilities.
+A logistic regression visualization showing the characteristic S-shaped (sigmoid) probability curve for binary classification. The plot displays data points colored by their binary class, the fitted logistic curve representing predicted probabilities, confidence intervals around the curve, and a dashed decision threshold line at probability 0.5. This visualization is essential for understanding how a logistic model maps continuous input features to class probabilities.
 
 ## Applications
 
@@ -16,6 +16,7 @@ A logistic regression visualization showing the characteristic S-shaped (sigmoid
 - `x` (numeric) - Continuous independent variable (predictor/feature) plotted on the horizontal axis
 - `y` (binary) - Binary outcome variable (0 or 1) plotted as data points
 - `probability` (numeric) - Predicted probability from the logistic model (0 to 1) for the fitted curve
+- `ci_lower`, `ci_upper` (numeric) - Lower and upper bounds of the 95% confidence interval of the predicted probability, for the band around the curve
 - Size: 50-500 data points recommended for clear visualization of both the curve and underlying data
 - Example: Binary classification data where the outcome probability follows a sigmoidal relationship with the predictor
 

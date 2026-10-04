@@ -17,19 +17,20 @@ A Gantt chart that visualizes project schedules with task dependencies and group
 - `start` (datetime) - Start date/time of the task
 - `end` (datetime) - End date/time of the task
 - `group` (str, optional) - Parent group or phase for hierarchical organization
-- `depends_on` (list[str], optional) - List of task names that must complete before this task starts
+- `depends_on` (list[str], optional) - List of task names that must complete before this task starts (finish-to-start unless `dependency_types` says otherwise)
+- `dependency_types` (list[str], optional) - One per `depends_on` entry: FS, SS, FF or SF; default FS
 - Size: 10-50 tasks for optimal readability with dependencies
 - Example: Software project with phases like "Requirements", "Design", "Development", "Testing" where each phase contains multiple dependent tasks
 
 ## Notes
 
-- Draw dependency arrows from the right edge (end date) of each predecessor bar to the left edge (start date) of the successor bar
+- For finish-to-start links, draw dependency arrows from the right edge (end date) of each predecessor bar to the left edge (start date) of the successor bar
 - Use different visual styles for dependency types (finish-to-start is most common)
 - Group headers should show aggregate timeline spanning from earliest to latest task in the group
 - Consider indentation or color coding to distinguish groups from individual tasks
 - Arrows should avoid overlapping task bars where possible
 - Include a legend explaining dependency line styles if multiple types are used
-- Dependent tasks must be scheduled to start at or after the end of their predecessor — never before
+- Finish-to-start successors must start at or after their predecessor's end — never before
 - Vertical alignment should clearly show task hierarchy (groups above their child tasks)
 
 ## What a good version looks like

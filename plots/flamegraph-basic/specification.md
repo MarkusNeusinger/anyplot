@@ -8,7 +8,7 @@ A flame graph visualizes hierarchical call stack data from performance profiling
 
 - Analyzing CPU profiling data to identify performance bottlenecks in application code
 - Visualizing memory allocation call stacks to find sources of excessive allocation
-- Comparing before/after profiling snapshots during performance optimization work
+- Locating the hot code paths an optimization should target in a single profiling snapshot
 
 ## Data
 

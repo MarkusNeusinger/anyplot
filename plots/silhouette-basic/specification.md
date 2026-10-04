@@ -7,7 +7,7 @@ A silhouette plot visualizes the quality of clustering results by showing the si
 ## Applications
 
 - Evaluating K-means, hierarchical, or other clustering algorithm results
-- Comparing different numbers of clusters to find optimal k value
+- Judging one choice of k, as one step in finding the optimal k
 - Identifying poorly clustered or potentially misclassified samples
 - Validating cluster assignments before downstream analysis
 
