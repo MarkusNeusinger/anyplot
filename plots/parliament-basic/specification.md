@@ -13,11 +13,11 @@ A semicircular parliament seat chart visualizes political party representation b
 
 ## Data
 
-- `party` (str) - Name of the political party or group
-- `seats` (int) - Number of seats held by each party
-- `color` (str) - Hex color code representing the party
+- `party` (str) - Invented name of a fictional party or group
+- `seats` (int) - Invented number of seats held by each party
+- `color` (str) - Hex color code assigned to the party
 - Size: 3-15 parties, total seats typically 50-700
-- Example: Election results with party names, seat counts, and official party colors
+- Example: A fictional chamber with made-up party names, made-up seat counts, and colors taken from the chart palette
 
 ## Notes
 
@@ -25,7 +25,9 @@ A semicircular parliament seat chart visualizes political party representation b
 - Individual seats rendered as dots or small segments
 - Legend should display party names with seat counts
 - Optional: highlight majority threshold line (e.g., 50%+1 seats)
-- Color ordering typically follows political spectrum (left to right)
+- Party names are made up and resemble no real party (no ideological family labels such as Green, Labour, Liberal, Conservative, Socialist, Social Democratic, Democratic, Republican, National, People's, or Christian)
+- Seat counts are made up, and no real country, parliament, election, or politician is named anywhere in the chart
+- Party colors come from the chart palette in its order, never picked to imitate a real party's color, and the blocks follow the data order rather than a left-right political spectrum
 
 ## What a good version looks like
 
