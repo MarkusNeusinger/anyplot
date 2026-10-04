@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-tanabe-sugano: Tanabe-Sugano Diagram for Crystal Field Theory
 Library: matplotlib 3.11.2 | Python 3.13.15
-Quality: 90/100 | Created: 2026-10-01
+Quality: 88/100 | Updated: 2026-10-04
 """
 
 import os
@@ -93,7 +93,7 @@ for label, spin_allowed, root in terms:
         xytext=text_at,
         ha=ha,
         va=va,
-        fontsize=9,
+        fontsize=11,
         color=INK,
         arrowprops={"arrowstyle": "-", "linewidth": 0.7, "color": INK_SOFT, "shrinkA": 2},
     )
@@ -130,7 +130,7 @@ handles = [
     Line2D([], [], color=SPIN_ALLOWED, linewidth=2.8, label="Spin-allowed (triplet)"),
     Line2D([], [], color=SPIN_FORBIDDEN, linewidth=1.4, linestyle=(0, (5, 3)), label="Spin-forbidden (singlet)"),
 ]
-legend = ax.legend(handles=handles, loc="lower right", bbox_to_anchor=(0.865, 0.02), fontsize=8)
+legend = ax.legend(handles=handles, loc="lower right", bbox_to_anchor=(0.865, 0.02), fontsize=10)
 legend.get_frame().set_facecolor(ELEVATED_BG)
 legend.get_frame().set_edgecolor(INK_SOFT)
 plt.setp(legend.get_texts(), color=INK_SOFT)
