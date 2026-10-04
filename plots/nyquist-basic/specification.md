@@ -22,7 +22,7 @@ A Nyquist plot maps a system's open-loop frequency response onto the complex pla
 
 - Mark the critical point (-1, 0) with a distinct marker (e.g., red "x" or filled circle)
 - Draw a unit circle centered at the origin for reference
-- Annotate selected frequency values along the curve at key points (e.g., gain crossover, phase crossover)
+- Annotate selected frequency values along the curve at key points (e.g., gain crossover, phase crossover), optionally with the phase margin and gain margin read there
 - Include arrows on the curve showing the direction of increasing frequency
 - Use a 1:1 aspect ratio so the unit circle appears circular
 - Label axes as "Real" and "Imaginary"
@@ -33,5 +33,5 @@ A Nyquist plot maps a system's open-loop frequency response onto the complex pla
 - A good version shows: the critical point (-1, 0) marked with a distinct marker, as the Notes ask, at its true position, told apart from the curve and the frequency markers in both themes, inside a plot window that shows how the curve passes it.
 - A good version shows: a unit circle centered at the origin, as the Notes ask, that appears circular, stays subordinate to the response curve and is visible in both themes.
 - A good version shows: arrows on the curve pointing toward increasing frequency, and frequency values annotated at selected key points such as the gain and phase crossovers, as the Notes ask, each label at the point it names.
-- A good version shows: the basic variant's Nyquist plot of one system: besides the critical point, unit circle, arrows and frequency labels the Notes ask for, axes through the origin and a fainter mirrored branch for negative frequencies, no further reference lines, highlighted regions, other callouts or second system.
+- A good version shows: the basic variant's single plot: besides the critical point, unit circle, arrows and frequency labels (margins allowed there) the Notes ask for, axes through the origin and a faint negative-frequency mirror, no margin arcs, other reference lines, highlighted regions, callouts or second system.
 - Expected, not a defect: a curve that passes close to the critical point, bunches toward the origin at high frequency, leaves the plot window at low frequency when the gain grows without bound, and fills only part of the plane, with the unit circle small beside a high-gain curve.

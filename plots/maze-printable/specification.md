@@ -23,9 +23,9 @@ A rectangular maze puzzle visualization with clearly marked start and goal posit
 
 - Use maze generation algorithms (DFS, Prim's, Kruskal's) that guarantee a single solution
 - Start position typically marked with "S" or arrow, goal with "G" or star
-- Wall thickness should be consistent and print-friendly (not too thin)
+- Interior wall thickness should be consistent and print-friendly (not too thin); the outer boundary may be drawn heavier
 - Include adequate margins for printing
-- Black walls on white background for maximum contrast and ink efficiency
+- Walls in strong contrast with the passages in both themes; black on white in the light theme for maximum contrast and ink efficiency
 - Passage width should accommodate pen/pencil marking
 
 ## What a good version looks like
@@ -33,6 +33,6 @@ A rectangular maze puzzle visualization with clearly marked start and goal posit
 - A good version shows: a rectangular grid of equal cells whose walls run straight along the cell edges, horizontally and vertically, inside an outer boundary that is closed apart from an entrance and an exit opening, if the maze has them; position is construction here, with no data axes.
 - A good version shows: the start and the goal each clearly marked, with a letter, an arrow, a star or a similar mark as the Notes suggest, readable in both themes and told apart at a glance.
 - A good version shows: a maze that can be solved from start to goal along exactly one route, as the Notes ask, with no wall sealing off either end and no second way through.
-- A good version shows: walls of one consistent thickness that are not hairline thin, as the Notes ask, in strong contrast with the passages in both themes, and passages wide enough to mark with a pen or pencil.
+- A good version shows: interior walls of one consistent thickness that are not hairline thin, with the outer boundary optionally heavier, as the Notes ask, in strong contrast with the passages in both themes and black on white in the light theme, and passages wide enough to mark with a pen or pencil.
 - A good version shows: a margin of empty space around the whole maze, as the Notes ask, so that no wall or marker touches the edge of the image.
 - Expected, not a defect: no data axes, ticks, grid or legend, many dead ends, a texture of long winding corridors or of many short branches depending on the generation algorithm, and no solution path drawn.

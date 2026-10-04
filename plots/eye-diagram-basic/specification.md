@@ -21,7 +21,7 @@ An eye diagram visualizes signal integrity by overlaying many periods of a digit
 
 ## Notes
 
-- Use color intensity (density heatmap coloring) to show where traces overlap most frequently, with hot colors indicating high trace density
+- Use color intensity (density heatmap coloring) to show where traces overlap most frequently, with the dense end of the sequential colormap marking high trace density
 - Time axis should be labeled in unit intervals (UI), not absolute time
 - Voltage axis should show signal levels (e.g., 0 and 1 for NRZ)
 - Generate synthetic data by simulating a random bit stream with controlled noise (sigma ~5% of amplitude) and jitter (sigma ~3% of UI)

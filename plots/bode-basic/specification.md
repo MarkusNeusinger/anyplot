@@ -17,7 +17,7 @@ A Bode plot displays a system's frequency response as two vertically aligned pan
 - `magnitude_db` (numeric) - gain magnitude in decibels at each frequency point
 - `phase_deg` (numeric) - phase shift in degrees at each frequency point
 - Size: 100-1000 points (log-spaced for uniform coverage on logarithmic axis)
-- Example: Second-order transfer function frequency response showing resonance peak and phase rolloff
+- Example: Third-order open-loop transfer function (e.g., an underdamped pole pair plus one real pole) with a resonance peak, phase crossing -180°, and finite gain and phase margins
 
 ## Notes
 

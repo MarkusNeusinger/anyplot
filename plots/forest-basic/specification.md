@@ -23,7 +23,7 @@ A forest plot displays effect sizes with confidence intervals from multiple stud
 
 ## Notes
 
-- Diamond shape for the pooled/overall estimate at the bottom
+- Diamond shape for the pooled/overall estimate at the bottom, computed from the studies (e.g., inverse-variance weights)
 - Vertical reference line at null effect (0 for mean difference, 1 for ratios)
 - Marker size proportional to study weight when provided
 - Studies typically ordered by effect size or chronologically

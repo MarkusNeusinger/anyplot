@@ -13,7 +13,7 @@ A cartogram distorts geographic regions so that their area becomes proportional 
 ## Data
 
 - `region` (string) - Name or identifier of the geographic region (e.g., country, state, province)
-- `geometry` (geometry) - Polygon or MultiPolygon boundary of each region (GeoJSON or shapefile format)
+- `geometry` (geometry) - Polygon or MultiPolygon boundary of each region (GeoJSON or shapefile format); where boundaries aren't available for the non-contiguous form, a representative Point (centroid) per region
 - `value` (numeric) - The data variable used to scale region area (e.g., population, GDP, votes)
 - `label` (string, optional) - Display label or abbreviation for each region
 - Size: 10-250 regions
@@ -21,7 +21,7 @@ A cartogram distorts geographic regions so that their area becomes proportional 
 
 ## Notes
 
-- Regions should remain contiguous (sharing borders) after distortion to preserve geographic context
+- Prefer a contiguous cartogram (regions keep sharing borders after distortion) to preserve geographic context; where boundary geometry or a contiguous cartogram algorithm isn't available, a non-contiguous form (Dorling circles or Demers squares) is accepted, each region near its true position, shapes not overlapping, neighbors kept close
 - Include original region outlines or a reference map inset for comparison
 - Use a color scale to encode a secondary variable or to reinforce the size variable
 - Label major regions with abbreviations for readability
@@ -30,7 +30,7 @@ A cartogram distorts geographic regions so that their area becomes proportional 
 ## What a good version looks like
 
 - A good version shows: each region's drawn area proportional to its value rather than to its land area, so a region with twice the value covers twice the area.
-- A good version shows: regions that still share borders with their real neighbors after the distortion, as the Notes ask, each near its true relative position and with a rough shape that keeps the map recognizable.
+- A good version shows: preferably regions that still share borders with their real neighbors, in a rough shape that keeps the map recognizable, or else the Dorling circles or Demers squares the Notes accept, not overlapping; either way each region near its true position and close to its neighbors, as the Notes ask.
 - A good version shows: the undistorted geography for comparison, as the Notes ask, either as the original region outlines or as a reference map inset.
 - A good version shows: a color scale that encodes a secondary variable or reinforces the size variable, and a legend that says what the area represents and what the colors mean, as the Notes ask.
 - A good version shows: abbreviations on the major regions, as the Notes ask, legible against their fill in both themes, while the smallest regions may stay unlabeled.

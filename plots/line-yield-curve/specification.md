@@ -16,7 +16,7 @@ A yield curve plots interest rates (yields) of bonds against their maturities, f
 - `maturity_years` (float) - Numeric maturity in years for proper x-axis spacing (e.g., 0.083, 0.25, 0.5, 1, 2, 3, 5, 7, 10, 20, 30)
 - `yield_pct` (float) - Annualized yield in percent (e.g., 4.25, 3.80)
 - `date` (string) - Date of the yield curve snapshot for multi-curve comparison (e.g., "2024-01-15")
-- Size: 11 maturities per curve, 2-3 curves for comparison
+- Size: 11 maturities per curve, 2-3 curves for comparison, at least one of them inverted
 - Example: U.S. Treasury yield curve data showing a normal curve, a flat curve, and an inverted curve on different dates
 
 ## Notes

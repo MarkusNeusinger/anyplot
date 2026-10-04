@@ -23,7 +23,7 @@ Climate warming stripes (also known as "warming stripes") display temperature an
 - No axes, no labels, no tick marks, no gridlines — this is a pure data visualization
 - Use a blue-to-red diverging colormap centered at 0 (e.g., blues like #08306b for cold anomalies, reds like #67000d for warm anomalies)
 - Each bar should fill equal width with no gaps between bars
-- Target aspect ratio approximately 3:1 (wide and short) to emphasize the horizontal time progression
+- Stripes fill a band clearly wider than it is tall (about 3:1 where the canvas allows; a 16:9 canvas filled edge to edge is fine) to emphasize the horizontal time progression
 - Color scale should be symmetric around zero so that equal positive and negative anomalies have equal visual intensity
 
 ## What a good version looks like
