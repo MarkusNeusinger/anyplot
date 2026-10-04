@@ -24,13 +24,13 @@ A chord diagram displays relationships or flows between entities arranged around
 - Each entity should have a distinct color for easy identification
 - Chord width should be proportional to flow value
 - Consider adding hover tooltips showing exact flow values for interactive libraries
-- For bidirectional flows, both directions should be visible as separate chords
+- For bidirectional flows, both directions should be visible, as separate chords or as one ribbon whose width at each end equals that direction's flow
 
 ## What a good version looks like
 
 - A good version shows: every entity as an arc on the perimeter of one circle, labeled at its arc, with an arc length that grows with the entity's total flow; the order of entities around the circle is a layout choice, not data.
 - A good version shows: chords through the interior joining the arcs of related entities, each with a width proportional to its flow value, as the Notes ask, and anchored on the arcs of the two entities it connects.
 - A good version shows: one distinct color per entity, as the Notes ask, with each chord taking the color of an entity it connects and translucent enough that chords crossing it stay distinguishable in both themes.
-- A good version shows: for a pair with flows in both directions, the two directions visible as separate chords, as the Notes ask.
+- A good version shows: for a pair with flows in both directions, the two directions visible, as the Notes ask, either as separate chords or as one ribbon whose width at each end equals that direction's flow.
 - A good version shows: the basic variant's ring of entity arcs, their labels and the chords, with the hover tooltips the Notes suggest in interactive output: no extra data tracks or rings, highlighted chords or arcs, reference lines, callouts or annotations of the strongest flow.
 - Expected, not a defect: chords that cross and pile up in the middle of the circle, blended color where they overlap, hair-thin chords for small flows, and arcs of very unequal length.

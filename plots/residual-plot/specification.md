@@ -2,7 +2,7 @@
 
 ## Description
 
-A residual plot displays the difference between observed and predicted values (residuals) against fitted values or an independent variable in regression analysis. This diagnostic visualization helps identify violations of regression assumptions including non-linearity, heteroscedasticity (non-constant variance), and outliers. A well-fitting model shows residuals randomly scattered around zero with no discernible pattern.
+A residual plot displays the difference between observed and predicted values (residuals) against fitted values in regression analysis. This diagnostic visualization helps identify violations of regression assumptions including non-linearity, heteroscedasticity (non-constant variance), and outliers. A well-fitting model shows residuals randomly scattered around zero with no discernible pattern.
 
 ## Applications
 

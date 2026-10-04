@@ -24,6 +24,7 @@ A Bland-Altman plot (also known as a difference plot or Tukey mean-difference pl
 - Include a horizontal line at the mean difference (bias)
 - Include dashed horizontal lines at ±1.96 SD (95% limits of agreement)
 - Annotate the mean and limits of agreement values on the plot
+- Optional: a zero-difference line and confidence intervals of the bias and of the limits of agreement
 - Points should have moderate transparency to reveal overlapping observations
 
 ## What a good version looks like
@@ -32,5 +33,5 @@ A Bland-Altman plot (also known as a difference plot or Tukey mean-difference pl
 - A good version shows: a horizontal line at the mean difference and dashed horizontal lines at the two limits of agreement, as the Notes ask, each at its computed value, the limits equally far above and below the bias line, all three visible in both themes.
 - A good version shows: the values of the mean difference and of both limits of agreement annotated on the plot, as the Notes ask, each matching its line and attributable to it.
 - A good version shows: moderate transparency on the points, as the Notes ask, so that overlapping observations read darker.
-- A good version shows: the basic variant's one pair of methods: besides the bias line, the limits of agreement and their value annotations the Notes ask for, no other reference lines, confidence bands around the lines, trend line, highlighted points or regions, further callouts or marginal distributions.
+- A good version shows: the basic variant's one method pair: besides the bias, limit lines and value labels the Notes ask for, only the zero line and the confidence intervals of bias and limits they allow; no other reference lines, trend line, tinted zones, highlighted points, further callouts or marginal distributions.
 - Expected, not a defect: a few points outside the limits of agreement, a bias line that sits away from zero, and a scatter that widens or drifts as the mean grows; these are what the plot is meant to reveal.

@@ -15,6 +15,7 @@ A partial dependence plot (PDP) showing the marginal effect of one feature on th
 - `feature_values` (numeric) - The range of values for the feature being analyzed on the x-axis
 - `partial_dependence` (numeric) - The average predicted outcome for each feature value on the y-axis
 - `confidence_interval` (numeric, optional) - Upper and lower bounds showing prediction variability across samples
+- `ice_curves` (numeric, optional) - Individual conditional expectation curves on the same grid, one per observation in a sample of the training data; at least one of `confidence_interval` or `ice_curves` is provided
 - Size: 50-100 grid points along feature range recommended for smooth curves
 - Example: PDP from sklearn's `PartialDependenceDisplay` for a feature in a GradientBoostingRegressor
 

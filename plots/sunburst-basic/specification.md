@@ -17,7 +17,7 @@ A sunburst chart displays hierarchical data as concentric rings, where each ring
 - `level_2` (string) - child category (second ring)
 - `level_3` (string) - optional grandchild category (outer ring)
 - `value` (numeric) - size/magnitude determining segment angle
-- Size: 10-50 leaf nodes across 2-4 hierarchy levels
+- Size: 10-50 leaf nodes across 2-3 hierarchy levels
 
 ## Notes
 
