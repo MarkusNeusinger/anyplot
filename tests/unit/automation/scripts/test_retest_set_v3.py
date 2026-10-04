@@ -161,6 +161,14 @@ class TestPatternsAgainstTheLiveReviews:
             "the crossover line is d⁴–d⁷ only, which the characteristic section permits",
             "no crossover line is correct for d²",
             "every Notes bullet met; crossover line and example marker are not required for d³",
+            # Comments of arm C3a, deducted for something else.
+            "The crossover line is conditional on d⁴–d⁷ and does not apply to d³. Deducted for the label (defect line).",
+            "all present; the crossover line is N/A for d8. Deducted for the dropped root (defect line).",
+            "The absent high-spin/low-spin crossover is conditional on d⁴–d⁷ and costs nothing.",
+            "The absent crossover line is not counted: d8 has no crossover.",
+            "correctly no crossover line for d2. One point off: the labels are pushed off their pair.",
+            "no crossover line (correct for d3), axes from 0, light grid",
+            "labels per curve, avoided crossings preserved, no crossover line needed for d³.",
         ],
     )
     def test_naming_the_permission_on_a_deducted_criterion_is_no_false_alarm(self, comment):
@@ -168,8 +176,16 @@ class TestPatternsAgainstTheLiveReviews:
         record["checklist"]["SC-02"]["comment"] = comment
         assert not metrics.probe_false_alarm(_label("muix", "permitted", "A1"), record)
 
-    def test_a_crossover_defect_line_is_a_false_alarm(self):
-        line = "SC-02 (both): no vertical line marks the high-spin/low-spin crossover → draw it. Likely cause: x."
+    @pytest.mark.parametrize(
+        "line",
+        [
+            "SC-02 (both): no vertical line marks the high-spin/low-spin crossover → draw it. Likely cause: x.",
+            # Arm B3: a deduction for choosing d² over a configuration with a crossover.
+            "DQ-01 (both): d² is the one configuration in which neither signature phenomenon appears — it has "
+            "no high-spin/low-spin crossover → a d⁶ configuration shows the crossover line with its kinks.",
+        ],
+    )
+    def test_a_crossover_defect_line_is_a_false_alarm(self, line):
         record = _rec("plotly", [line], SC_02=(3, 4))
         assert metrics.probe_false_alarm(_label("plotly", "permitted", "A1"), record)
 

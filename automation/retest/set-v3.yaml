@@ -63,8 +63,11 @@ snapshots:
 patterns:
   # No crossover line on a configuration outside d⁴ to d⁷.
   # A line that says the line is rightly absent ("correctly absent for d³",
-  # "not required", "which the section permits") is no alarm.
-  no-crossover: &no-crossover '(?s)^(?!\s*Suggestion:)(?!.*\b(correctly|rightly|properly) (absent|omitted|left out))(?!.*\bnot (required|needed|applicable|expected))(?!.*\b(permit\w*|permission|optional|is correct|are correct)\b).*(cross-?over|high-spin ?/ ?low-spin|spin[- ]state (change|switch))'
+  # "not required", "which the section permits") is no alarm, and neither is
+  # one that calls it conditional or free ("conditional on d⁴–d⁷ and costs
+  # nothing", "N/A for d⁸", "not counted"): arm C3a's deducted criteria said
+  # so in 12 of 39 runs, for a deduction about something else.
+  no-crossover: &no-crossover '(?s)^(?!\s*Suggestion:)(?!.*\b(correctly|rightly|properly) (absent|omitted|left out))(?!.*\bnot (required|needed|applicable|expected))(?!.*\b(permit\w*|permission|optional|is correct|are correct)\b)(?!.*(\b(conditional\w*|does not apply|n/a|costs? nothing|deducts? nothing|not counted|correctly no)\b|\(correct\b|\bno crossover line (is )?(needed|required)\b)).*(cross-?over|high-spin ?/ ?low-spin|spin[- ]state (change|switch))'
   # Only the lowest root of a symmetry and multiplicity block is drawn.
   lowest-root: &lowest-root '(?s)^(?!\s*Suggestion:).*((lowest|lower|single|one|first) (root|eigenvalue|branch)|(second|upper|higher|other|missing|both|every|all) (roots?|eigenvalues?|branch(es)?|partners?)|only (the |its )?(lowest|lower)\b)'
   # The x range stops at 30, where the Data section says "sampled across 0–40".
