@@ -203,6 +203,8 @@ DEFECT = "defect"
 SUGGESTION = "suggestion"
 LEGACY = "legacy"
 OBSOLETE = "obsolete"
+# Not a line class: a technical item below its maximum that no defect line names.
+SILENT = "silent"
 # The criteria whose every deduction a defect line carries (70 of 100 points);
 # DE and LM are judgments that start at a default.
 TECHNICAL_PREFIXES = ("VQ", "SC", "DQ", "CQ")
@@ -1487,10 +1489,11 @@ def check_weaknesses(weaknesses: Any, checklist: Mapping[str, int]) -> tuple[lis
 
     Every line is a defect or a ``Suggestion:`` line, every defect ID is known,
     every criterion a defect names is below its maximum in the review's own
-    checklist (skipped when the item is missing), and there are at most
-    ``MAX_SUGGESTIONS`` suggestions.
+    checklist (skipped when the item is missing), every technical item below
+    its maximum is named by a defect line (``silent`` counts the ones that are
+    not), and there are at most ``MAX_SUGGESTIONS`` suggestions.
     """
-    counts = {DEFECT: 0, SUGGESTION: 0, LEGACY: 0}
+    counts = {DEFECT: 0, SUGGESTION: 0, LEGACY: 0, SILENT: 0}
     if not isinstance(weaknesses, list):
         return ["review_weaknesses.json is not a JSON list of strings"], counts
     problems: list[str] = []
@@ -1511,7 +1514,29 @@ def check_weaknesses(weaknesses: Any, checklist: Mapping[str, int]) -> tuple[lis
         problems += _defect_id_problems(i, text, checklist)
     if counts[SUGGESTION] > MAX_SUGGESTIONS:
         problems.append(f"{counts[SUGGESTION]} 'Suggestion:' lines; keep at most {MAX_SUGGESTIONS}")
-    return problems, counts
+    silent = _silent_deduction_problems(weaknesses, checklist)
+    counts[SILENT] = len(silent)
+    return problems + silent, counts
+
+
+def _silent_deduction_problems(weaknesses: list[Any], checklist: Mapping[str, int]) -> list[str]:
+    """Technical items below their maximum that no defect line names.
+
+    A deduction on a VQ, SC, DQ or CQ item is carried by a defect line (8a):
+    without one the next generation has nothing to fix. DE and LM items are
+    judgments and need none. A review that names an auto-reject (``AR-06`` …
+    ``AR-09``) scores 0 whatever its items say, and is left alone.
+    """
+    named = {cid for raw in weaknesses if isinstance(raw, str) for cid in defect_ids(raw.strip())}
+    if named & set(AR_IDS):
+        return []
+    return [
+        f"{cid} is below its maximum ({checklist[cid]}/{top}), but no defect line names it: write the defect "
+        f"line the deduction rests on ('{cid} (<light|dark|both|code>): <what is wrong> → <target>. Likely "
+        f"cause: …'), or the item keeps its maximum — a 'Suggestion:' line costs no points"
+        for cid, top in CRITERIA.items()
+        if cid[:2] in TECHNICAL_PREFIXES and cid in checklist and checklist[cid] < top and cid not in named
+    ]
 
 
 def _defect_id_problems(i: int, text: str, checklist: Mapping[str, int]) -> list[str]:
@@ -2397,7 +2422,7 @@ def cmd_check_feedback(args: argparse.Namespace) -> int:
         checklist = load_checklist_scores(Path(args.checklist))
         if not checklist:
             problems.append(f"{args.checklist} is missing, unreadable or holds no item scores")
-    counts = {DEFECT: 0, SUGGESTION: 0, LEGACY: 0}
+    counts = {DEFECT: 0, SUGGESTION: 0, LEGACY: 0, SILENT: 0}
     if args.weaknesses:
         weaknesses, error = load_regen_json(Path(args.weaknesses))
         if error:
@@ -2431,11 +2456,14 @@ def cmd_check_feedback(args: argparse.Namespace) -> int:
             for i, line in enumerate(lines if isinstance(lines, list) else [], start=1):
                 if isinstance(line, str) and weakness_class(line) == DEFECT:
                     problems += [f"review_prev.json: {p}" for p in _defect_id_problems(i, line.strip(), prev_checklist)]
+            if isinstance(lines, list):
+                problems += [f"review_prev.json: {p}" for p in _silent_deduction_problems(lines, prev_checklist)]
     for problem in problems:
         print(f"::warning::{_one_line(problem)}" if args.warn_only else _one_line(problem))
     if args.warn_only:
         print(
-            f"::notice::weakness_format defect={counts[DEFECT]} suggestion={counts[SUGGESTION]} other={counts[LEGACY]}"
+            f"::notice::weakness_format defect={counts[DEFECT]} suggestion={counts[SUGGESTION]} "
+            f"other={counts[LEGACY]} silent={counts[SILENT]}"
         )
         return 0
     if not problems:

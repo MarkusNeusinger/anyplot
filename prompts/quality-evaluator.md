@@ -35,7 +35,7 @@ Before scoring, check for:
 
 **AR-09 exceptions (NOT auto-reject):** Tooltips or hover affordances, decorative gridlines or borders aligned with the canvas edge, text that overflows its axis but remains fully within the canvas, tight-but-readable margins.
 
-If AR-06, AR-08, or AR-09 triggers: Score = 0, recommendation = "reject", include `auto_reject` field in output identifying which AR fired and (for AR-09) which element on which edge.
+If AR-06, AR-08, or AR-09 triggers: Score = 0, include `auto_reject` field in output identifying which AR fired and (for AR-09) which element on which edge.
 
 ### Stage 2: Quality (your task)
 
@@ -49,35 +49,24 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 4. **Library Rules**: From `prompts/library/{library}.md`
 5. **Style Guide** (canonical palette + theme tokens): `prompts/default-style-guide.md` — consult its "Categorical Palette", "Continuous Data", "Background", and "Theme-adaptive Chrome" sections for VQ-07 scoring.
 
-## Scoring Philosophy: Cascading Thresholds
+## Scoring principles
 
-| Review Stage | Requirement | Outcome |
-|--------------|-------------|---------|
-| Review 1 (Initial) | ≥ 90 | **Approved** - Publication quality |
-| Review 2 (Repair 1) | ≥ 80 | **Approved** - High quality |
-| Review 3 (Repair 2) | ≥ 70 | **Approved** - Good quality |
-| Review 4 (Repair 3) | ≥ 60 | **Approved** - Acceptable quality |
-| Review 5 (Repair 4) | ≥ 50 | **Approved** - Minimum quality |
-| Final Status | < 50 | **Rejected** - Not in repo |
-
-**Workflow:**
-- **Meet Stage Threshold**: ai-approved, merged immediately
-- **Below Stage Threshold**: ai-rejected, repair loop (up to 4 repair attempts)
-- **After 4 repairs (Review 5)**: < 50 → close PR and regenerate
-
-**Principles:**
-- Full points only for **perfect** execution
-- Small flaws = immediate deduction
-- Cascading thresholds allow good plots to merge faster while preventing infinite loops
-- Be honest and critical
+- Full points only for **perfect** execution.
+- A flaw deducts in proportion to what a viewer loses by it.
+- The score describes the implementation and nothing else. What a caller does with it is not your concern; you return no pass mark and no recommendation.
+- The total is the sum of the 24 criteria, lowered to the lowest score cap that applies (Step 7). A cap lowers the total only; it never changes an item. You never pick it.
+- **Technical items** (VQ, SC, DQ, CQ) start at their maximum. Every point below the maximum is carried by a weakness that names that criterion, what is wrong and what would be right. A deduction you cannot name is no deduction.
+- **Judgment items** (DE, LM) start at their default. Every point above the default is carried by evidence named in the item's note.
+- Be honest and critical.
 
 ### Anti-Inflation Rules
 
-- **Median implementation should score 72-78.** If you find yourself scoring most plots 90+, you are too lenient.
-- **DE-01 > 6 is rare.** Most plots look like well-configured defaults (score 4), not publication masterpieces.
+- **Median implementation should score 72-78.** If you find yourself scoring most plots 90+, you are too lenient; if you find yourself deducting without a weakness you can name, you are inventing. The number describes where written-down defects land a typical plot; it is not a total to steer toward.
+- **Compliance is not excellence.** Evidence that raises a DE or LM item is something the implementation does **beyond** what the spec's Notes and characteristic section require and beyond what the style guide mandates (top and right spines removed or none at all, a subtle grid or none, theme tokens, the Imprint palette, explicit font sizes). Meeting those is scored in SC and VQ. The complete style-guide baseline earns exactly the defaults (DE-01 = 4, DE-02 = 2).
+- **DE-01 > 6 is rare.** Most plots are the style-guide baseline and nothing more (score 4), not publication masterpieces.
 - **DE-03 = 2 is the default.** Unless there is intentional visual hierarchy — through color contrast, size variation, strategic data choice, or clear focal points — score 2. Annotations are NOT required.
 - **LM-02 = 1 is the default.** Unless the implementation uses a feature distinctive to this specific library, score 1.
-- **When in doubt, deduct.** The repair loop exists to improve quality.
+- **When in doubt whether evidence raises a design or library item, keep the default.**
 - A plot scoring 90+ should genuinely impress a data visualization professional.
 
 ## Point Distribution
@@ -96,40 +85,39 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 
 ```json
 {
-  "score": 77,
+  "score": 83,
   "tier": "Good",
-  "pass": false,
 
   "visual_quality": {
-    "total": 24,
-    "vq01_text_legibility": {"score": 6, "max": 8, "note": "Title slightly oversized for content — fontsize=18pt squeezes against the right edge; reduce to ~14pt"},
+    "total": 27,
+    "vq01_text_legibility": {"score": 6, "max": 8, "note": "Title at 18 pt squeezes against the right edge (weakness 1)"},
     "vq02_no_overlap": {"score": 6, "max": 6, "note": "No overlap"},
-    "vq03_element_visibility": {"score": 5, "max": 6, "note": "Visible but markers could be better adapted"},
+    "vq03_element_visibility": {"score": 5, "max": 6, "note": "32 sparse points at 4 px are barely visible (weakness 2)"},
     "vq04_color_accessibility": {"score": 2, "max": 2, "note": "CVD-safe contrast beyond palette choice"},
-    "vq05_layout_canvas": {"score": 2, "max": 4, "note": "Balanced but some wasted space"},
+    "vq05_layout_canvas": {"score": 4, "max": 4, "note": "Balanced margins, plot fills the canvas"},
     "vq06_axis_labels_title": {"score": 2, "max": 2, "note": "Descriptive labels with units"},
-    "vq07_palette_compliance": {"score": 1, "max": 2, "note": "Imprint palette used but first series used #AE3030 instead of brand #009E73"}
+    "vq07_palette_compliance": {"score": 2, "max": 2, "note": "Imprint palette, first series #009E73, theme-correct chrome"}
   },
 
   "design_excellence": {
     "total": 8,
-    "de01_aesthetic_sophistication": {"score": 4, "max": 8, "note": "Well-configured default, not exceptional"},
-    "de02_visual_refinement": {"score": 2, "max": 6, "note": "Library defaults, minimal refinement"},
+    "de01_aesthetic_sophistication": {"score": 4, "max": 8, "note": "The style-guide baseline, nothing beyond it"},
+    "de02_visual_refinement": {"score": 2, "max": 6, "note": "The style guide's spine and grid rules met, nothing beyond"},
     "de03_data_storytelling": {"score": 2, "max": 6, "note": "Data displayed but no visual hierarchy or storytelling"}
   },
 
   "spec_compliance": {
-    "total": 13,
+    "total": 15,
     "sc01_plot_type": {"score": 5, "max": 5, "note": "Correct chart type"},
-    "sc02_required_features": {"score": 3, "max": 4, "note": "Minor feature missing"},
+    "sc02_required_features": {"score": 4, "max": 4, "note": "Every Notes bullet met"},
     "sc03_data_mapping": {"score": 3, "max": 3, "note": "X/Y correctly mapped"},
-    "sc04_title_legend": {"score": 2, "max": 3, "note": "Title format correct but legend issues"}
+    "sc04_title_legend": {"score": 3, "max": 3, "note": "Title format and legend labels correct"}
   },
 
   "data_quality": {
-    "total": 13,
-    "dq01_feature_coverage": {"score": 5, "max": 6, "note": "Shows main patterns but no outliers"},
-    "dq02_realistic_context": {"score": 4, "max": 5, "note": "Plausible scenario"},
+    "total": 15,
+    "dq01_feature_coverage": {"score": 6, "max": 6, "note": "Outliers and different spreads shown"},
+    "dq02_realistic_context": {"score": 5, "max": 5, "note": "Real, neutral scenario"},
     "dq03_appropriate_scale": {"score": 4, "max": 4, "note": "Values and relational proportions are factually correct"}
   },
 
@@ -138,7 +126,7 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
     "cq01_kiss_structure": {"score": 3, "max": 3, "note": "Simple sequential structure"},
     "cq02_reproducibility": {"score": 2, "max": 2, "note": "Uses np.random.seed(42)"},
     "cq03_clean_imports": {"score": 2, "max": 2, "note": "Only used imports"},
-    "cq04_code_elegance": {"score": 1, "max": 2, "note": "Appropriate complexity but slightly verbose"},
+    "cq04_code_elegance": {"score": 1, "max": 2, "note": "Lines 39–60 write out the ACF and PACF that statsmodels computes (weakness 3)"},
     "cq05_output_api": {"score": 1, "max": 1, "note": "Correct output, current API"}
   },
 
@@ -155,12 +143,11 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
   ],
 
   "weaknesses": [
-    "Title at fontsize=18pt squeezes against the right edge — reduce to ~14pt for the long mandated anyplot title format",
-    "No design refinement beyond library defaults",
-    "No data storytelling - visual emphasis or hierarchy would improve the plot"
-  ],
-
-  "recommendation": "reject"
+    "VQ-01 (both): title at 18 pt squeezes against the right edge → about 14 pt (−4 pt). Likely cause: title fontsize=18.",
+    "VQ-03 (both): 32 sparse points drawn at 4 px are barely visible → 10–14 px (+6 to +10 px). Likely cause: the marker size.",
+    "CQ-04 (code): lines 39–60 write out the ACF and PACF → statsmodels.tsa.stattools.acf / pacf. Likely cause: a hand-rolled recursion.",
+    "Suggestion: a focal highlight on the largest group would give the chart a reading order."
+  ]
 }
 ```
 
@@ -218,14 +205,14 @@ Not AR-09 (handle via VQ-05 instead): text overflowing its axis but staying on t
 
 | ID | Criterion | Max | Key Question |
 |----|-----------|-----|--------------|
-| DE-01 | Aesthetic Sophistication | 8 | Does this look professional? Custom palette? Intentional hierarchy? |
-| DE-02 | Visual Refinement | 6 | Spines removed? Grid subtle? Whitespace generous? Details polished? |
-| DE-03 | Data Storytelling | 6 | Does the plot guide the viewer through visual hierarchy? Is there a clear focal point? |
+| DE-01 | Aesthetic Sophistication | 8 | Typography, spacing and hierarchy decided beyond the style-guide baseline, within the Imprint palette? |
+| DE-02 | Visual Refinement | 6 | Refinement beyond the style guide's spine and grid rules: whitespace, alignment, label placement, a grid density chosen for this chart? |
+| DE-03 | Data Storytelling | 6 | Does the plot guide the viewer through a hierarchy or focal point the implementation chose itself, beyond what the spec's Notes prescribe? |
 
-**Scoring defaults (start here, adjust up only with evidence):**
-- DE-01 = 4 (configured default). Raise to 6+ only if clearly above-default design.
-- DE-02 = 2 (minimal refinement). Raise only if spines removed, grid tuned, etc.
-- DE-03 = 2 (no storytelling). Raise if visual hierarchy guides the viewer. Annotations not required.
+**Scoring defaults (start here, adjust up only with evidence beyond what the spec and the style guide require):**
+- DE-01 = 4 (the complete style-guide baseline). Raise to 6+ only if the design is clearly decided beyond the baseline.
+- DE-02 = 2 (the style guide's spine and grid rules met, nothing beyond). Raise only for refinement beyond the baseline: whitespace, alignment, label placement.
+- DE-03 = 2 (no storytelling). Raise if a hierarchy the implementation chose guides the viewer. Annotations not required.
 
 ### Step 3: Spec Compliance (15 pts)
 
@@ -240,9 +227,9 @@ Not AR-09 (handle via VQ-05 instead): text overflowing its axis but staying on t
 
 | ID | Criterion | Max | Key Question |
 |----|-----------|-----|--------------|
-| DQ-01 | Feature Coverage | 6 | Shows ALL aspects of plot type? (A permission is not an aspect to exhibit: data with little or no overlap loses nothing, and a point count inside the spec's Data range is not a lever; neither is an optional feature the Notes only allow, such as percentage labels or asymmetric error bars: DQ-01 is about what the example data shows, and a missing optional feature deducts nothing.) |
+| DQ-01 | Feature Coverage | 6 | Shows ALL aspects of plot type? (A permission is not an aspect to exhibit: data with little or no overlap loses nothing, and a point count inside the spec's Data range is not a lever; neither is an optional feature the Notes only allow, such as percentage labels or asymmetric error bars: DQ-01 is about what the example data shows, and a missing optional feature deducts nothing. A conditional requirement whose condition the chosen data does not meet, such as a crossover line on a configuration without a crossover, deducts nothing either.) |
 | DQ-02 | Realistic Context | 5 | Real-world plausible **AND neutral** scenario? |
-| DQ-03 | Factual Correctness | 4 | Do values and proportions align with real-world facts? |
+| DQ-03 | Factual Correctness | 4 | Do values and proportions align with real-world facts? When the spec's Notes carry `Check values:`, verify each one that applies to the chosen configuration in the render and in the data code, where it must fall out of the computation and not be placed there; name what you checked in the note, and claim no correctness you did not check. |
 
 **CRITICAL - Content Policy for DQ-02:**
 Automatically give **0 points** if data uses controversial/sensitive topics:
@@ -275,7 +262,7 @@ Only award full points (5/5) for real, neutral contexts, or a comprehensible fic
 | LM-01 | Idiomatic Usage | 5 | Uses library's recommended patterns and high-level API? |
 | LM-02 | Distinctive Features | 5 | Uses features unique to this library? |
 
-**Scoring defaults (start here, adjust up only with evidence):**
+**Scoring defaults (start here, adjust up only with evidence beyond what the spec's Notes require and the library prompt mandates):**
 - LM-01 = 3 (correct usage). Raise to 5 only if expertly using high-level API.
 - LM-02 = 1 (generic usage). Raise only if using distinctive features.
 
@@ -290,21 +277,18 @@ Only award full points (5/5) for real, neutral contexts, or a comprehensible fic
 | DE-01 ≤ 2 AND DE-02 ≤ 2 (generic + no visual refinement) | 75 |
 | CQ-04 = 0 (fake functionality / over-engineering) | 70 |
 
-### Step 8: Determine Recommendation
+### Step 8: Add up
 
-| Score | Recommendation |
-|-------|----------------|
-| >= 90 | `approve` |
-| < 90 | `reject` |
+The score is the sum of the 24 criteria, lowered to the lowest cap of Step 7 that applies. Which criterion a gap belongs to is decided in `prompts/quality-criteria.md` → "Which criterion a gap belongs to", so that the same gap costs the same criterion on every library.
 
 ## Rules
 
 - **Objective**: Base evaluation on facts, not opinions
-- **Strict**: A "normal good" plot = 70-80, not 95
+- **Strict**: a normal good plot lands at 70-80 once its defects are written down; you never pick a total
 - **Specific**: Cite exact issues
 - **Referenced**: Include criterion IDs (VQ-01, DE-02, etc.)
 - **No improvements field**: Only output `strengths` and `weaknesses`
-- **Start low, justify up**: Begin with default scores and raise only with evidence
+- **Two starting points**: technical items start at their maximum and come down only for a weakness that names them; judgment items start at their default and go up only on named evidence
 
 ## Image Formats
 
