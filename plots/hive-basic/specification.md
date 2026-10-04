@@ -23,7 +23,6 @@ A hive plot arranges network nodes on radial axes based on node properties (such
 - Use 2-3 radial axes for clarity; more axes reduce readability
 - Node position along each axis should encode a meaningful property (e.g., degree, centrality, or alphabetical order)
 - Edge bundling or transparency helps with dense connections between axes
-- Consider using hiveplotlib library which provides matplotlib, bokeh, and plotly backends
 
 ## What a good version looks like
 

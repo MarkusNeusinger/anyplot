@@ -15,21 +15,21 @@ A dendrogram visualizes hierarchical clustering by showing how data points or cl
 
 - `features` (numeric matrix) - measurement values for each item (e.g., petal length, sepal width), used to compute distances
 - `labels` (string) - names or identifiers for each item being clustered
-- `linkage_matrix` (numeric) - output from scipy's linkage function containing merge distances, computed from features
+- `linkage_matrix` (numeric) - hierarchical-clustering merge sequence (merged pair, merge distance, cluster size per step), computed from features
 - Size: 10-50 items recommended for readable dendrograms
 - Example: hierarchical clustering of iris flower species by measurements
 
 ## Notes
 
-- Use scipy.cluster.hierarchy for computing linkage and plotting dendrograms
 - Vertical orientation is most common, but horizontal works well for long labels
 - Branch heights should be proportional to merge distances for accurate interpretation
 - Consider using truncation for very large datasets to improve readability
+- Branches may be colored by cluster below a cut height, as common dendrogram tools do by default; no cut line is drawn
 
 ## What a good version looks like
 
 - A good version shows: every merge as a link whose crossbar sits at its merge distance on the height axis, as the Notes ask, so branch heights are the data and are never equalized by tree level or rescaled.
 - A good version shows: a height axis with ticks, labeled with the distance or linkage measure, from which the merge distances can be read.
 - A good version shows: one labeled leaf per item, or per condensed cluster where the truncation the Notes allow is used, on a common baseline in a vertical or horizontal tree, as the Notes allow; the leaf order comes from the tree, arranged so that branches do not cross, and is not a measured quantity.
-- A good version shows: the basic variant's single tree: besides the height axis and the leaf labels, no cut or threshold lines, other reference lines, highlighted clusters or bands, callouts, attached heatmap or second tree.
+- A good version shows: the basic variant's single tree, with the cluster-colored branches the Notes allow: besides the height axis and the leaf labels, no cut or threshold lines, other reference lines, highlighted leaves or bands, callouts, attached heatmap or second tree.
 - Expected, not a defect: merges at very uneven heights, one late merge far above the rest, low merges crowded near the leaves, and a lopsided tree in which single items join one after another.

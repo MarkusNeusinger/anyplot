@@ -24,7 +24,7 @@ An elbow curve visualizes the relationship between the number of clusters (k) an
 - The elbow point is where the rate of decrease sharply changes
 - Consider annotating or highlighting the optimal k value
 - Use markers at each data point to show discrete k values tested
-- A smooth connecting line helps visualize the curve shape
+- A line joins the markers in k order, passing through every computed value (straight or monotone-interpolated segments; no fitted smoothing)
 
 ## What a good version looks like
 

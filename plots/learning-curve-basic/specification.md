@@ -9,7 +9,7 @@ A learning curve visualizes model performance (training and validation scores) a
 - Diagnosing underfitting (high bias) when both training and validation scores are low
 - Diagnosing overfitting (high variance) when training score is high but validation score is low with a large gap
 - Determining if collecting more training data would improve model performance
-- Comparing learning characteristics across different model architectures
+- Judging one model's learning behavior, as a base for comparing architectures
 
 ## Data
 
