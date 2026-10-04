@@ -14,9 +14,9 @@ A choropleth map visualizes data by shading geographic regions (countries, state
 ## Data
 
 - `region_id` (string) - Geographic identifier (country ISO code, state FIPS code, or region name)
-- `value` (numeric) - The data variable to visualize (e.g., population, rate, percentage)
+- `value` (numeric) - A rate, density or share per region (e.g., population density, unemployment rate, percentage); not a raw total
 - Size: 10-200 regions (works best with moderate number of distinct areas)
-- Example: Country-level data like population by country, or US state-level statistics
+- Example: Country-level population density, or a US state-level rate
 
 ## Notes
 

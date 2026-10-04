@@ -17,9 +17,9 @@ A multi-track genome browser view that displays different types of genomic data 
 - `start` (integer) - Start position of the genomic feature in base pairs
 - `end` (integer) - End position of the genomic feature in base pairs
 - `track` (categorical) - Data track the feature belongs to (e.g., "genes", "coverage", "variants", "regulatory")
-- `feature_type` (categorical, optional) - Sub-type within a track (e.g., "exon", "intron", "UTR" for gene track; "SNP", "indel" for variant track)
+- `feature_type` (categorical, required for gene-track rows, optional elsewhere) - Sub-type within a track (e.g., "exon", "intron", "UTR" for gene track; "SNP", "indel" for variant track)
 - `value` (numeric, optional) - Quantitative value such as coverage depth, variant quality score, or regulatory activity score
-- `strand` (categorical, optional) - Strand direction ("+" or "-") for gene annotations
+- `strand` (categorical) - Strand direction ("+" or "-"), required for gene-track features
 - `label` (string, optional) - Feature name or identifier (e.g., gene name, variant ID)
 - Size: 10-100 features across 3-5 tracks spanning a single genomic region
 
@@ -37,7 +37,7 @@ A multi-track genome browser view that displays different types of genomic data 
 ## What a good version looks like
 
 - A good version shows: the tracks stacked vertically over one shared genomic position axis with position labels, each track labeled on its left with its data type, as the Notes ask, and every feature drawn from its start to its end coordinate, so features line up across tracks.
-- A good version shows: the gene track with each gene drawn from its start to its end, its exons as rectangles joined by thin intron lines where the data distinguishes them, as the Notes ask, and, where the data gives a strand, arrows or chevrons that show each gene's strand direction.
+- A good version shows: the gene track with each gene drawn from its start to its end, its exons as rectangles joined by thin intron lines, as the Notes ask, and arrows or chevrons that show each gene's strand direction.
 - A good version shows: the coverage track as a filled area of read depth across the region, as the Notes ask, rising from the track's own zero baseline.
 - A good version shows: the variant track as tick marks or lollipop markers at the variant positions, as the Notes ask; marker height, if it encodes quality or effect size as the Notes allow, is measured from the track's baseline.
 - A good version shows: the regulatory track, if included, as colored rectangles spanning each element, with the colors telling enhancers, promoters and other element types apart and named in a legend or by labels.

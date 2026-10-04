@@ -16,8 +16,8 @@ A Statistical Process Control (SPC) chart displaying sample means (X-bar) and ra
 - `sample_id` (integer) - Sequential sample number or time period identifier
 - `sample_mean` (float) - Mean of measurements within each sample (X-bar values)
 - `sample_range` (float) - Range of measurements within each sample (R values)
-- `ucl` (float) - Upper Control Limit (process mean + 3 sigma)
-- `lcl` (float) - Lower Control Limit (process mean - 3 sigma)
+- `ucl` (float) - Upper Control Limit: X̄̄ + A2·R̄ on the X-bar chart, D4·R̄ on the R chart (3-sigma limits)
+- `lcl` (float) - Lower Control Limit: X̄̄ − A2·R̄ on the X-bar chart, D3·R̄ on the R chart (0 for subgroups of 6 or fewer)
 - `center_line` (float) - Process mean (X-bar-bar or R-bar)
 - `upper_warning` (float) - Optional upper warning limit (+2 sigma)
 - `lower_warning` (float) - Optional lower warning limit (-2 sigma)

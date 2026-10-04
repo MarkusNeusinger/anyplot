@@ -15,6 +15,7 @@ A cross-sectional line plot showing ground elevation along a path or transect li
 
 - `distance` (numeric) - cumulative horizontal distance along the transect in km or miles
 - `elevation` (numeric) - ground elevation at each sample point in meters or feet
+- `start_name`, `end_name` (string) - location names of the start and end points of the transect
 - `landmark_name` (string, optional) - name of notable feature at that point (e.g., summit, pass, town)
 - `landmark_distance` (numeric, optional) - distance value where the landmark is located
 - `landmark_elevation` (numeric, optional) - elevation value where the landmark is located
@@ -34,7 +35,7 @@ A cross-sectional line plot showing ground elevation along a path or transect li
 
 - A good version shows: one continuous profile line through the samples in distance order, each at its distance and elevation, with the area beneath it filled down to the bottom of the plot in a solid or gradient fill, as the Notes ask, so the terrain reads as a silhouette.
 - A good version shows: distance along the transect on the x-axis and elevation on the y-axis, each with its units, and the vertical exaggeration noted on the plot, as the Notes ask, with relief tall enough that the climbs and descents are visible.
-- A good version shows: the start and end points labeled with their elevations and, where the data names them, their location names, as the Notes ask, each label at its own end of the profile.
+- A good version shows: the start and end points labeled with their location names and elevations, as the Notes ask, each label at its own end of the profile.
 - A good version shows: key landmarks, where the data has them, each with a vertical marker line at its distance that meets the profile at the landmark's elevation and a text label attributable to that landmark, as the Notes ask.
 - A good version shows: slope-based coloring of the line or fill, if used as the Notes allow, following the local steepness (for example green for flat and red for steep) and explained by a legend or a note.
 - Expected, not a defect: slopes that look far steeper than the real terrain because of the vertical exaggeration, a jagged line with many small rises and dips, an elevation axis that does not start at zero, and landmark labels at different heights where landmarks lie close together.

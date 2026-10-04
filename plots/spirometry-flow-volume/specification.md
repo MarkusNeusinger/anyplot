@@ -24,7 +24,7 @@ A pulmonary function test visualization that plots airflow rate (L/s) against lu
 
 ## Notes
 
-- The expiratory limb (upper portion) should show a sharp rise to PEF followed by a roughly linear decline
+- The expiratory limb (upper portion) should show a sharp rise to PEF followed by a decline that is roughly linear in a normal loop and scooped (bowed toward the volume axis) in obstruction
 - The inspiratory limb (lower portion) should appear as a more symmetric, U-shaped curve below the zero flow line
 - Mark Peak Expiratory Flow (PEF) with a labeled point or annotation
 - Annotate key clinical values: FEV1, FVC, and PEF with their numeric values (use a text box or legend)
@@ -36,7 +36,7 @@ A pulmonary function test visualization that plots airflow rate (L/s) against lu
 ## What a good version looks like
 
 - A good version shows: flow in L/s against volume in L, with the expiratory limb above the zero flow line and the inspiratory limb below it, the two joined into one closed loop, as the Notes ask.
-- A good version shows: an expiratory limb that rises sharply to PEF and then declines roughly linearly, and an inspiratory limb that is a more symmetric, U-shaped curve, as the Notes ask, both drawn through their data values.
+- A good version shows: an expiratory limb that rises sharply to PEF and then declines, roughly linearly in a normal loop or scooped toward the volume axis in obstruction, and an inspiratory limb that is a more symmetric, U-shaped curve, as the Notes ask, both drawn through their data values.
 - A good version shows: Peak Expiratory Flow marked with a labeled point or annotation, as the Notes ask, sitting on the highest point of the measured expiratory limb.
 - A good version shows: FEV1, FVC and PEF with their numeric values in a text box or legend, as the Notes ask, placed clear of the loop and agreeing with it where the loop shows them (PEF with the peak, FVC with the loop's width).
 - A good version shows: the predicted normal loop as a dashed overlay, as the Notes ask, styled so that the measured and the predicted loop are told apart at once and the measured one stays the more prominent.
