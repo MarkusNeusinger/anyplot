@@ -191,7 +191,7 @@ Read `prompts/quality-criteria.md` and evaluate:
 | ID | Criterion | Max | Check |
 |----|-----------|-----|-------|
 | DQ-01 | Feature Coverage | 6 | Shows ALL aspects of plot type? (A permission is not an aspect to exhibit: data with little or no overlap loses nothing, and a point count inside the spec's Data range is not a lever; neither is an optional feature the Notes only allow, such as percentage labels or asymmetric error bars: DQ-01 is about what the example data shows, and a missing optional feature deducts nothing.) |
-| DQ-02 | Realistic Context | 5 | Real-world plausible AND neutral? |
+| DQ-02 | Realistic Context | 5 | Real-world plausible AND neutral? Real politics scores 0; a clearly fictional parliament is not political content. |
 | DQ-03 | Appropriate Scale | 4 | Sensible values for domain? |
 
 #### Code Quality (10 pts)
