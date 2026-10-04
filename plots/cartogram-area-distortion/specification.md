@@ -13,7 +13,7 @@ A cartogram distorts geographic regions so that their area becomes proportional 
 ## Data
 
 - `region` (string) - Name or identifier of the geographic region (e.g., country, state, province)
-- `geometry` (geometry) - Polygon or MultiPolygon boundary of each region (GeoJSON or shapefile format)
+- `geometry` (geometry) - Polygon or MultiPolygon boundary of each region (GeoJSON or shapefile format); where boundaries aren't available for the non-contiguous form, a representative Point (centroid) per region
 - `value` (numeric) - The data variable used to scale region area (e.g., population, GDP, votes)
 - `label` (string, optional) - Display label or abbreviation for each region
 - Size: 10-250 regions

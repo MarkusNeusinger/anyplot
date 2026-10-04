@@ -13,6 +13,7 @@ A time-series plot showing the brightness of an astronomical object over time, d
 ## Data
 
 - `time` (float) - Observation time in days (e.g., BJD - 2457000 or phase 0.0-1.0)
+- `period` (float) - Orbital period in days, used to fold `time` to orbital phase; not needed when `time` is already a phase 0.0-1.0
 - `flux` (float) - Normalized brightness/flux relative to baseline (e.g., 0.99-1.01)
 - `flux_err` (float) - Measurement uncertainty for each flux value
 - `model_flux` (float) - Best-fit transit model prediction at each time point
