@@ -253,7 +253,7 @@ Automatically give **0 points** if data uses controversial/sensitive topics:
 A clearly fictional parliament (invented party names that carry no real-world ideology, invented seat counts, no real country, election, or politician) is not political content: it never scores 0 or triggers the cap. When the spec asks for invented data, being fictional is not a deduction: it scores on comprehensibility like any other scenario, and the fix for flat invented names is better invented names, never real ones.
 
 Score **1 point** for abstract labels ("Category A", "Group 1").
-Only award full points (5/5) for real, neutral contexts:
+Only award full points (5/5) for real, neutral contexts, or a comprehensible fictional one the spec asks for:
 - ✅ Science, business, nature, technology, food, education
 
 ### Step 5: Code Quality (10 pts)

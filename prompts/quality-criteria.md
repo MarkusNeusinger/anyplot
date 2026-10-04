@@ -384,7 +384,7 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 | ID | Criterion | Max | Scoring |
 |----|-----------|-----|---------|
 | DQ-01 | Feature Coverage | 6 | 6=shows ALL aspects, 3=most, 0=one-sided |
-| DQ-02 | Realistic Context | 5 | 5=real scenario, 3=plausible, 1=abstract labels, 0=nonsense |
+| DQ-02 | Realistic Context | 5 | 5=real scenario (or the fictional one the spec asks for), 3=plausible, 1=abstract labels, 0=nonsense |
 | DQ-03 | Appropriate Scale & Factual Correctness | 4 | 4=factually correct proportions, 2=plausible, 0=nonsense/impossible |
 
 ### DQ-01: Feature Coverage (6 Points)
@@ -410,7 +410,7 @@ Example data must show ALL features of the plot type.
 
 | Points | Criterion |
 |--------|-----------|
-| 5 | Real, comprehensible, **neutral** scenario (science, business, nature) |
+| 5 | Real, comprehensible, **neutral** scenario (science, business, nature), or a comprehensible fictional one the spec asks for |
 | 3 | Plausible, but generic |
 | 1 | Abstract labels only ("Category A", "Group 1", "Series X") |
 | 0 | Nonsensical data OR controversial/sensitive topic (real politics, race, religion, gender stereotypes) |
