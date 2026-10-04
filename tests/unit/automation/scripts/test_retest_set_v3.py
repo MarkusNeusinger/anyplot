@@ -169,6 +169,8 @@ class TestPatternsAgainstTheLiveReviews:
             "correctly no crossover line for d2. One point off: the labels are pushed off their pair.",
             "no crossover line (correct for d3), axes from 0, light grid",
             "labels per curve, avoided crossings preserved, no crossover line needed for d³.",
+            # Arm C3b.
+            "The crossover line is asked only for d4-d7 and the configuration is d2, so it is not missing.",
         ],
     )
     def test_naming_the_permission_on_a_deducted_criterion_is_no_false_alarm(self, comment):
