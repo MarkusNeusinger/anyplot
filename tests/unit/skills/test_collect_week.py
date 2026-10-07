@@ -213,15 +213,15 @@ class TestAggregate:
         assert 201 in first[0] and first[1] == []
 
     @staticmethod
-    def _decided(pr: int, flags: list[str]) -> dict[str, Any]:
-        return {"pr": pr, "verdict": "merge", "flags": flags}
+    def _decided(pr: int, flags: list[str], artifact: bool = True) -> dict[str, Any]:
+        return {"pr": pr, "verdict": "merge", "flags": flags, "pair_artifacts": [f"regen-pair-{pr}-1"] * artifact}
 
     def test_suspicious_rows_come_first_then_random_fill_to_the_cap(self, cw):
         rows = [self._decided(1, ["big_drop"]), self._decided(2, ["merge_pn_only"])]
         rows += [self._decided(pr, []) for pr in range(10, 40)]
         sample, not_opened = cw.render_sample(rows, "2026-10-07")
-        assert len(sample) == cw.SAMPLE_CAP and {1, 2} <= set(sample)
-        assert not_opened == []
+        assert len(sample) == cw.SAMPLE_CAP and sample[:2] == [2, 1]  # tier order, not PR order
+        assert sample[2:] == sorted(sample[2:]) and not_opened == []
 
     def test_over_the_cap_the_highest_tiers_win_and_the_rest_is_listed(self, cw):
         rows = [self._decided(pr, ["high_score"]) for pr in range(100, 110)]  # lowest tier
@@ -230,10 +230,13 @@ class TestAggregate:
         rows += [self._decided(pr, ["merge_pn_only"]) for pr in range(400, 402)]
         rows += [self._decided(pr, []) for pr in range(500, 510)]  # never reached
         sample, not_opened = cw.render_sample(rows, "2026-10-07")
-        assert len(sample) == cw.SAMPLE_CAP
-        assert set(range(400, 402)) | set(range(300, 303)) | set(range(200, 205)) <= set(sample)
-        assert set(sample) - set(range(100, 110)) == set(range(400, 402)) | set(range(300, 303)) | set(range(200, 205))
+        assert sample == [400, 401, 300, 301, 302, 200, 201, 202, 203, 204, 100, 101, 102, 103, 104]
         assert not_opened == [105, 106, 107, 108, 109]  # ties break by PR number
+
+    def test_rows_without_a_pair_artifact_are_never_sampled(self, cw):
+        rows = [self._decided(1, ["merge_pn_only"], artifact=False), self._decided(2, [], artifact=False)]
+        rows.append(self._decided(3, []))
+        assert cw.render_sample(rows, "2026-10-07") == ([3], [])
 
     def test_not_opened_is_listed_in_the_digest(self, cw):
         rows = self._rows(cw)

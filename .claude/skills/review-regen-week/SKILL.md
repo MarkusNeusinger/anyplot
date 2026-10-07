@@ -115,12 +115,15 @@ got better. `collect_week.py` picks at most 15 PRs (owner decision,
 
 1. Merges carried only by `P` or `new` items (`merge_pn_only`).
 2. Keeps whose re-score dropped past the family threshold (`big_drop`).
-3. Gate oddities: a merge without a carrier, an unverified claim,
-   `regen_json_invalid`, or a decided PR without a record.
+3. Gate oddities: a merge without a carrier, an unverified claim, or
+   `regen_json_invalid`.
 4. Scores of 90 or more (`high_score`).
 
 Ties break by PR number. A seeded random fill from the other decided
-rows tops the sample up to 15. When more than 15 rows are suspicious,
+rows tops the sample up to 15. The JSON's `sample` lists the PRs in
+that opening order. A row without a pair artifact (`no_record`,
+`no_pair_artifact`) has no renders to open and is never sampled;
+read its flags instead. When more than 15 rows are suspicious,
 the lowest-priority ones are printed as "Suspicious but not opened";
 list them by PR number in the report. A regression recorded as a
 defect has no flag: you find it while reading the sampled renders

@@ -81,7 +81,7 @@ SAMPLE_CAP = 15
 SUSPICION_TIERS: tuple[frozenset[str], ...] = (
     frozenset({"merge_pn_only"}),
     frozenset({"big_drop"}),
-    frozenset({"merge_without_carrier", "unverified", "regen_json_invalid", "no_record"}),
+    frozenset({"merge_without_carrier", "unverified", "regen_json_invalid"}),
     frozenset({"high_score"}),
 )
 
@@ -269,10 +269,13 @@ def suspicion_rank(row: dict[str, Any]) -> int | None:
 
     The owner's order (2026-10-07): merges carried only by P or new defects,
     keeps whose re-score dropped past the family threshold, then gate oddities
-    (no carrier, an unverified claim, an invalid regen JSON, a decided PR
-    without a record). A score of 90 or more comes last: rare by design, so
-    worth a look, but not a sign that something went wrong.
+    (no carrier, an unverified claim, an invalid regen JSON). A score of 90 or
+    more comes last: rare by design, so worth a look, but not a sign that
+    something went wrong. A row without a pair artifact has no renders to open
+    and never ranks; its ``no_pair_artifact`` or ``no_record`` flag reports it.
     """
+    if not row.get("pair_artifacts"):
+        return None
     flags = set(row["flags"])
     for rank, tier in enumerate(SUSPICION_TIERS):
         if flags & tier:
@@ -281,19 +284,20 @@ def suspicion_rank(row: dict[str, Any]) -> int | None:
 
 
 def render_sample(rows: Sequence[dict[str, Any]], seed: str) -> tuple[list[int], list[int]]:
-    """The pull requests whose renders get opened, and the suspicious ones left over.
+    """The pull requests whose renders get opened, in opening order, and the suspicious ones left over.
 
     At most ``SAMPLE_CAP``: every suspicious row in ``suspicion_rank`` order
-    (ties by PR number), then a seeded random fill from the other decided rows.
-    When more than ``SAMPLE_CAP`` rows are suspicious, the rest come back as the
-    second list, for the report's "not opened" line.
+    (ties by PR number), then a seeded random fill, by PR number, from the other
+    decided rows that have a pair artifact. When more than ``SAMPLE_CAP`` rows
+    are suspicious, the rest come back as the second list, for the report's
+    "not opened" line.
     """
-    ranked = sorted(((rank, r["pr"]) for r in rows if (rank := suspicion_rank(r)) is not None))
+    ranked = sorted((rank, r["pr"]) for r in rows if (rank := suspicion_rank(r)) is not None)
     suspicious = [pr for _, pr in ranked]
     sample, not_opened = suspicious[:SAMPLE_CAP], suspicious[SAMPLE_CAP:]
-    rest = sorted(r["pr"] for r in rows if r["verdict"] and r["pr"] not in set(suspicious))
+    rest = sorted(r["pr"] for r in rows if r["verdict"] and r.get("pair_artifacts") and r["pr"] not in set(suspicious))
     fill = random.Random(seed).sample(rest, min(SAMPLE_CAP - len(sample), len(rest)))
-    return sorted(sample + fill), sorted(not_opened)
+    return sample + sorted(fill), sorted(not_opened)
 
 
 def previously_reported(rows: Sequence[dict[str, Any]]) -> set[int]:
