@@ -59,10 +59,10 @@ def _rec(library: str, weaknesses: list[str], spec_source: str = "pinned", **sco
 
 
 class TestShippedSet:
-    def test_valid_and_draft(self):
+    def test_valid_and_confirmed(self):
         manifest = _manifest()
         assert rt.validate_manifest(manifest) == []
-        assert manifest["labels"] == "draft"
+        assert manifest["labels"] == "confirmed"
         assert manifest["gcs_prefix"] == "retest/sets/v3"
         assert manifest["spec_commit"] == LIVE_SPEC
 
@@ -100,11 +100,11 @@ class TestShippedSet:
             assert _label(library, "defects", "D2")["spec_source"] == "rules_ref"
 
     def test_draft_labels_never_reach_a_report(self):
-        labels = rt.item_labels(_manifest())
+        labels = rt.item_labels({**_manifest(), "labels": "draft"})
         assert all(entry["defects"] == [] and entry["permitted"] == [] for entry in labels.values())
 
     def test_confirmed_labels_reach_the_report(self):
-        labels = rt.item_labels({**_manifest(), "labels": "confirmed"})
+        labels = rt.item_labels(_manifest())
         assert [d["id"] for d in labels["f-line-tanabe-sugano-matplotlib"]["defects"]] == ["D1"]
         assert sum(len(entry["permitted"]) for entry in labels.values()) == 15  # 13 × A1, 2 × A2
 
