@@ -236,6 +236,8 @@ It reports the following:
 
 It raises soft alarms for possible contrast bias (at least 20 comparable decisions averaging −1.5 or lower), for `regen_json_invalid` in more than 10% of decisions, for a merge rate above 50% or below 5% over at least 30 decisions, for reviews that cite an `Expected, not a defect:` bullet or an obsolete weakness as an improvement in more than 10% of at least 10 decisions (the 8b prompt or the specs' characteristic kinds need a look), for unverified claims in more than 20% of at least 10 decisions (the review's self-check or the defect definitions need work), for a would-be carrier without a kind in more than 5% of at least 10 decisions (the 8b kind sentence or the self-check needs a look), and for `writeback: invalid` in more than 10% of at least 10 keep records (the prompt's `review_prev.json` step needs work). Design and library-mastery points raise no alarm: DE deductions are normal on specs that are not `-basic`.
 
+The weekly review of the nightly regenerations combines this report with per-PR detail and a look at the renders; the procedure is the `review-regen-week` project skill (`.claude/skills/review-regen-week/SKILL.md`).
+
 For months most predecessors will carry stored reviews from other models and rules, so "all" measures rules, model, and render-age drift; the clean contrast-bias number is the retest's order bias on the frozen pairs.
 
 ---

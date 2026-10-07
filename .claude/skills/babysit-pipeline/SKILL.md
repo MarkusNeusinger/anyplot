@@ -97,6 +97,8 @@ with evidence — never let the user ask "still running?".
   `-f regen_gate=false`. A regen PR stuck at `ai-review-failed` is
   NOT rescued by the watchdog (it only warns): re-run the review by
   hand once, or close the PR — the live implementation stays either way.
+  Judging what a week of `daily-regen` regenerations did to the
+  catalogue is the `review-regen-week` skill.
 - **Review/merge runs are titled `Review: PR #N` / `Merge: PR #N`** —
   no spec name, so you cannot filter them by spec. Because specs run
   sequentially, ANY in_progress/queued `bulk-generate`/`impl-*` run
