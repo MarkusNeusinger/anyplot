@@ -22,8 +22,9 @@
 #     equals the commit; freeze copies them to
 #     `gs://anyplot-images/retest/sets/v3/<id>/new-<theme>.png`.
 #
-# Labels are `draft` until the owner confirms them (while draft, every report
-# ignores them). Besides the shapes set-v1.yaml documents, a label may carry:
+# Labels were `draft` until the owner confirmed them on 2026-10-07 (while
+# draft, every report ignores them). Besides the shapes set-v1.yaml
+# documents, a label may carry:
 #
 #   spec_source: rules_ref
 #
@@ -52,7 +53,7 @@ gcs_prefix: retest/sets/v3
 # 15 live reviews ran on.
 baseline_rules_sha: 251b3efdbb1071c1d2d39364466839a2fc2a84e8
 spec_commit: ec0619261d5b26a361eb5ba6ac54ba6d7c1a61f3
-labels: draft
+labels: confirmed
 
 # The snapshot of the 15 production renders (agentic/runs/regen-exp-bubble-basic/
 # snapshot.sh), relative to the repository root of the checkout that runs
