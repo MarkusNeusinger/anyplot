@@ -12,6 +12,9 @@ write-back of the re-score). Once a week you look at what that did to
 the catalogue: what improved, what slipped through, and what needs a
 fix in a spec, the rubric, the generator, the gate or a workflow.
 
+There is no schedule: run the review only when the owner asks for it
+(owner decision, 2026-10-07).
+
 The review is **read-only**. It never merges, closes, labels or
 dispatches anything, and it writes nothing to production. Everything
 it proposes goes to the owner as a finding or a Todoist task.
@@ -107,10 +110,21 @@ cleanup wave after the backfill, falling afterwards).
 ## 4 · Look at the renders
 
 Numbers say where to look; only the renders say whether the catalogue
-got better. `collect_week.py` picks the sample: every merge carried by
-a `P` or `new` item, every keep flagged `big_drop`, every merge
-without a carrier, every row with an unverified claim or a score of 90
-or more, and a seeded random three of the rest.
+got better. `collect_week.py` picks at most 15 PRs (owner decision,
+2026-10-07). Suspicious rows come first, in this order:
+
+1. Merges carried only by `P` or `new` items (`merge_pn_only`).
+2. Keeps whose re-score dropped past the family threshold (`big_drop`).
+3. Gate oddities: a merge without a carrier, an unverified claim,
+   `regen_json_invalid`, or a decided PR without a record.
+4. Scores of 90 or more (`high_score`).
+
+Ties break by PR number. A seeded random fill from the other decided
+rows tops the sample up to 15. When more than 15 rows are suspicious,
+the lowest-priority ones are printed as "Suspicious but not opened";
+list them by PR number in the report. A regression recorded as a
+defect has no flag: you find it while reading the sampled renders
+(question 2 below).
 
 Download each sampled pair (60-day retention):
 

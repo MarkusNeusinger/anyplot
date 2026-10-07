@@ -75,7 +75,15 @@ BIG_DROP_OTHER_JUDGE = 13
 PENDING_HOURS = 3
 # Scores at or above the approval line should stay rare (owner, 2026-09-28).
 HIGH_SCORE = 90
-RANDOM_SAMPLE = 3
+# At most this many renders get opened per week (owner, 2026-10-07): the
+# suspicious rows first, by tier, then a random fill.
+SAMPLE_CAP = 15
+SUSPICION_TIERS: tuple[frozenset[str], ...] = (
+    frozenset({"merge_pn_only"}),
+    frozenset({"big_drop"}),
+    frozenset({"merge_without_carrier", "unverified", "regen_json_invalid", "no_record"}),
+    frozenset({"high_score"}),
+)
 
 
 # ---------------------------------------------------------------------------
@@ -256,19 +264,36 @@ def identical_vectors(rows: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
     return [{"spec": spec, "libs": sorted(libs)} for (spec, _), libs in sorted(groups.items()) if len(libs) > 1]
 
 
-def render_sample(rows: Sequence[dict[str, Any]], seed: str) -> list[int]:
-    """The pull requests whose renders get opened: every merge carried by a P or new
-    item, every big-drop keep, every flagged merge, every score at or above 90, and a
-    seeded random three of the rest."""
-    must = {
-        r["pr"]
-        for r in rows
-        if (r["verdict"] == "merge" and (r["carriers_pn"] or 0) > 0)
-        or {"big_drop", "merge_without_carrier", "unverified", "high_score"} & set(r["flags"])
-    }
-    rest = sorted(r["pr"] for r in rows if r["verdict"] and r["pr"] not in must)
-    extra = random.Random(seed).sample(rest, min(RANDOM_SAMPLE, len(rest)))
-    return sorted(must | set(extra))
+def suspicion_rank(row: dict[str, Any]) -> int | None:
+    """Where a row stands in the render queue (0 first); ``None`` when nothing is suspicious.
+
+    The owner's order (2026-10-07): merges carried only by P or new defects,
+    keeps whose re-score dropped past the family threshold, then gate oddities
+    (no carrier, an unverified claim, an invalid regen JSON, a decided PR
+    without a record). A score of 90 or more comes last: rare by design, so
+    worth a look, but not a sign that something went wrong.
+    """
+    flags = set(row["flags"])
+    for rank, tier in enumerate(SUSPICION_TIERS):
+        if flags & tier:
+            return rank
+    return None
+
+
+def render_sample(rows: Sequence[dict[str, Any]], seed: str) -> tuple[list[int], list[int]]:
+    """The pull requests whose renders get opened, and the suspicious ones left over.
+
+    At most ``SAMPLE_CAP``: every suspicious row in ``suspicion_rank`` order
+    (ties by PR number), then a seeded random fill from the other decided rows.
+    When more than ``SAMPLE_CAP`` rows are suspicious, the rest come back as the
+    second list, for the report's "not opened" line.
+    """
+    ranked = sorted(((rank, r["pr"]) for r in rows if (rank := suspicion_rank(r)) is not None))
+    suspicious = [pr for _, pr in ranked]
+    sample, not_opened = suspicious[:SAMPLE_CAP], suspicious[SAMPLE_CAP:]
+    rest = sorted(r["pr"] for r in rows if r["verdict"] and r["pr"] not in set(suspicious))
+    fill = random.Random(seed).sample(rest, min(SAMPLE_CAP - len(sample), len(rest)))
+    return sorted(sample + fill), sorted(not_opened)
 
 
 def previously_reported(rows: Sequence[dict[str, Any]]) -> set[int]:
@@ -354,6 +379,7 @@ def render_markdown(
     sample: Sequence[int],
     previous: dict[str, Any] | None,
     failed_runs: dict[str, list[dict[str, Any]]] | None = None,
+    not_opened: Sequence[int] = (),
 ) -> str:
     head = "| Metric | Target | This week |" + (" Last week |" if previous else "")
     rule = "|---|---|---|" + ("---|" if previous else "")
@@ -391,7 +417,9 @@ def render_markdown(
         mark = " ◆" if r["pr"] in sample else ""
         flags = ", ".join(r["flags"]) or "–"
         lines.append(f"| #{r['pr']}{mark} | {r['spec']} / {r['lib']} | {verdict} | {scores} | {carriers} | {flags} |")
-    lines += ["", "◆ = in the render sample (open both renders from the pair artifact).", ""]
+    lines += ["", f"◆ = in the render sample (at most {SAMPLE_CAP}; open both renders from the pair artifact).", ""]
+    if not_opened:
+        lines += [f"Suspicious but not opened (over the cap): {', '.join(f'#{pr}' for pr in not_opened)}", ""]
     return "\n".join(lines)
 
 
@@ -571,19 +599,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         for wf, listed in runs.items()
     }
     summary = summarize(rows, run_counts, session_cost(runs) if args.costs else None)
-    sample = render_sample(rows, seed=args.since)
+    sample, not_opened = render_sample(rows, seed=args.since)
     previous = previous_payload.get("summary")
     payload = {
         "since": args.since,
         "collected_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "summary": summary,
         "sample": sample,
+        "not_opened": not_opened,
         "failed_runs": failures,
         "rows": rows,
     }
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(render_markdown(summary, rows, sample, previous, failures))
+    print(render_markdown(summary, rows, sample, previous, failures, not_opened))
     return 0
 
 

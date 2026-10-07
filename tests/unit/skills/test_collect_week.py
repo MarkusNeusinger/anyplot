@@ -205,11 +205,40 @@ class TestAggregate:
         assert summary["at_or_above_90"] == 1 and summary["flags"]["high_score"] == 1
         assert summary["rescore_drift_mean"] == -3.0
 
-    def test_sample_is_seeded_and_includes_every_must(self, cw):
+    def test_sample_is_seeded_and_includes_every_suspicious_row(self, cw):
         rows = self._rows(cw)
-        rows[1]["carriers_pn"] = 1  # a merge carried by a P item is always in the sample
+        rows[1]["flags"].append("merge_pn_only")  # a merge carried only by P items is always opened
         first, second = cw.render_sample(rows, "2026-10-01"), cw.render_sample(rows, "2026-10-01")
-        assert first == second and 201 in first
+        assert first == second
+        assert 201 in first[0] and first[1] == []
+
+    @staticmethod
+    def _decided(pr: int, flags: list[str]) -> dict[str, Any]:
+        return {"pr": pr, "verdict": "merge", "flags": flags}
+
+    def test_suspicious_rows_come_first_then_random_fill_to_the_cap(self, cw):
+        rows = [self._decided(1, ["big_drop"]), self._decided(2, ["merge_pn_only"])]
+        rows += [self._decided(pr, []) for pr in range(10, 40)]
+        sample, not_opened = cw.render_sample(rows, "2026-10-07")
+        assert len(sample) == cw.SAMPLE_CAP and {1, 2} <= set(sample)
+        assert not_opened == []
+
+    def test_over_the_cap_the_highest_tiers_win_and_the_rest_is_listed(self, cw):
+        rows = [self._decided(pr, ["high_score"]) for pr in range(100, 110)]  # lowest tier
+        rows += [self._decided(pr, ["merge_without_carrier"]) for pr in range(200, 205)]  # gate oddities
+        rows += [self._decided(pr, ["big_drop"]) for pr in range(300, 303)]
+        rows += [self._decided(pr, ["merge_pn_only"]) for pr in range(400, 402)]
+        rows += [self._decided(pr, []) for pr in range(500, 510)]  # never reached
+        sample, not_opened = cw.render_sample(rows, "2026-10-07")
+        assert len(sample) == cw.SAMPLE_CAP
+        assert set(range(400, 402)) | set(range(300, 303)) | set(range(200, 205)) <= set(sample)
+        assert set(sample) - set(range(100, 110)) == set(range(400, 402)) | set(range(300, 303)) | set(range(200, 205))
+        assert not_opened == [105, 106, 107, 108, 109]  # ties break by PR number
+
+    def test_not_opened_is_listed_in_the_digest(self, cw):
+        rows = self._rows(cw)
+        text = cw.render_markdown(cw.summarize(rows, {}, None), rows, [200], None, not_opened=[201, 202])
+        assert "Suspicious but not opened (over the cap): #201, #202" in text
 
     def test_markdown_digest_with_last_week(self, cw):
         rows = self._rows(cw)
