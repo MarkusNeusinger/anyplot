@@ -226,6 +226,20 @@ class TestAggregate:
         assert "1 (–, –)" in text and "None" not in text
 
 
+def test_only_open_prs_come_back_from_last_week(cw):
+    rows = [
+        {"pr": 1, "state": "MERGED", "verdict": "merge"},
+        {"pr": 2, "state": "CLOSED", "verdict": None, "forced": True},  # a finished forced regen
+        {"pr": 3, "state": "OPEN", "verdict": None},
+    ]
+    assert cw.previously_reported(rows) == {1, 2}
+
+
+def test_a_missing_previous_file_fails_fast(cw, tmp_path):
+    with pytest.raises(SystemExit):
+        cw.main(["--since", "2026-10-01", "--out", str(tmp_path / "w.json"), "--previous", str(tmp_path / "nope.json")])
+
+
 def test_previous_summary_with_missing_keys_still_renders(cw, tmp_path):
     rows = []
     summary = cw.summarize(rows, {}, None)

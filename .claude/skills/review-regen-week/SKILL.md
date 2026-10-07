@@ -209,7 +209,8 @@ Then:
 
 - **The window is by creation date, at day granularity.** Starting on
   the previous report's date and passing `--previous` covers every PR
-  exactly once; a PR that was still pending last week comes back.
+  exactly once; a PR that was still open last week comes back. A
+  `--previous` path that doesn't exist stops the collector.
 - **Older records lack newer keys.** Reviews before #12046
   (2026-10-04) were allowed silent deductions; pre-P3.1 records lack
   `carriers_pn` and the kinds; pre-P8 records lack `improvements.code`,

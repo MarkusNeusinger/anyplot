@@ -271,6 +271,15 @@ def render_sample(rows: Sequence[dict[str, Any]], seed: str) -> list[int]:
     return sorted(must | set(extra))
 
 
+def previously_reported(rows: Sequence[dict[str, Any]]) -> set[int]:
+    """PRs last week's report already settled: everything but the ones still open.
+
+    A forced regeneration never has a gate verdict, so the PR state, not the
+    verdict, says whether it is done.
+    """
+    return {int(r["pr"]) for r in rows if r.get("state") != "OPEN"}
+
+
 def summarize(rows: Sequence[dict[str, Any]], runs: dict[str, Counter], cost: float | None) -> dict[str, Any]:
     decided = [r for r in rows if r["verdict"]]
     merges = [r for r in decided if r["verdict"] == "merge"]
@@ -529,11 +538,13 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # The window starts on the previous report's date, so the day it was written
     # is covered twice: PRs that report already decided, and runs created before
-    # it was collected, are left out here. A PR that was still pending comes back.
+    # it was collected, are left out here. A PR that was still open comes back.
     previous_payload: dict[str, Any] = {}
-    if args.previous and Path(args.previous).is_file():
+    if args.previous:
+        if not Path(args.previous).is_file():
+            parser.error(f"--previous {args.previous} does not exist")
         previous_payload = json.loads(Path(args.previous).read_text(encoding="utf-8"))
-    reported = {r["pr"] for r in previous_payload.get("rows", []) if r.get("verdict")}
+    reported = previously_reported(previous_payload.get("rows", []))
     cutoff = str(previous_payload.get("collected_at") or "")
 
     writebacks = writeback_pulls(args.since)
