@@ -1,13 +1,13 @@
 """ anyplot.ai
 parliament-basic: Parliament Seat Chart
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 82/100 | Created: 2026-05-17
+Library: pygal 3.1.3 | Python 3.13.15
+Quality: 79/100 | Updated: 2026-10-07
 """
 
 import math
 import os
 
-# Import pygal using absolute path to avoid shadowing
+# Import pygal using absolute path to avoid shadowing by this file's own name
 import sys
 
 
@@ -25,47 +25,71 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette (first series ALWAYS #009E73)
+# Imprint palette, canonical order (first series ALWAYS #009E73)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
-# Parliament data: European Parliament 2024
+# Invented chamber: made-up party names (a neutral noun + a group word), made-up
+# seat counts, colors assigned in Imprint canonical order (data order, not a
+# left-right political spectrum). No real country, parliament, election, or
+# politician is represented.
 parties_data = [
-    {"name": "European People's Party", "seats": 188},
-    {"name": "Progressive Alliance", "seats": 136},
-    {"name": "Renew Europe", "seats": 77},
-    {"name": "Greens/EFA", "seats": 53},
-    {"name": "European Conservatives", "seats": 78},
-    {"name": "Left Group", "seats": 37},
+    {"name": "Harborview Assembly", "seats": 158, "color": IMPRINT[0]},
+    {"name": "Rivermouth Coalition", "seats": 122, "color": IMPRINT[1]},
+    {"name": "Timberwright Union", "seats": 95, "color": IMPRINT[2]},
+    {"name": "Stonebridge Front", "seats": 70, "color": IMPRINT[3]},
+    {"name": "Lowland Alliance", "seats": 54, "color": IMPRINT[4]},
+    {"name": "Millbrook Guild", "seats": 38, "color": IMPRINT[5]},
+    {"name": "Ashford Collective", "seats": 12, "color": IMPRINT[6]},
 ]
 
+NUM_ROWS = 10
+RADIUS_START = 27
+RADIUS_STEP = 7
 
-def parliament_layout(parties, num_rows=10):
-    """Generate semicircular parliament seat positions in concentric arcs"""
-    seats_list = []
+
+def parliament_layout(parties, num_rows=NUM_ROWS):
+    """Generate semicircular parliament seat positions in concentric arcs.
+
+    Each row's seat capacity is proportional to its radius (longer arcs hold
+    more seats), and every seat slot across all rows is sorted by angle
+    before parties claim their share in order — so each party forms one
+    contiguous wedge running from the inner arc to the outer arc, rather
+    than being confined to a single row.
+    """
     total_seats = sum(p["seats"] for p in parties)
+    radii = [RADIUS_START + row * RADIUS_STEP for row in range(num_rows)]
+    total_radius = sum(radii)
 
-    current_seat = 0
+    raw_capacities = [total_seats * radius / total_radius for radius in radii]
+    capacities = [int(c) for c in raw_capacities]
+    remainder = total_seats - sum(capacities)
+    by_fraction = sorted(range(num_rows), key=lambda i: raw_capacities[i] - capacities[i], reverse=True)
+    for row in by_fraction[:remainder]:
+        capacities[row] += 1
+
+    slots = []
+    for radius, capacity in zip(radii, capacities, strict=True):
+        for j in range(capacity):
+            angle = (j + 0.5) / capacity * math.pi
+            slots.append((angle, radius))
+    slots.sort(key=lambda slot: slot[0])
+
+    seats_list = []
+    slot_idx = 0
     for party_idx, party in enumerate(parties):
         for _ in range(party["seats"]):
-            # Angle within semicircle (0 to π)
-            angle = (current_seat / max(total_seats - 1, 1)) * math.pi
-
-            # Row/arc number based on seat position
-            row = min(current_seat // (total_seats // num_rows), num_rows - 1)
-            radius = 40 + row * 11
-
-            # Convert to Cartesian coordinates
+            angle, radius = slots[slot_idx]
             x = radius * math.cos(angle)
             y = radius * math.sin(angle)
-
-            seats_list.append({"x": x, "y": y, "party_idx": party_idx, "party": party["name"]})
-
-            current_seat += 1
+            seats_list.append({"x": x, "y": y, "party_idx": party_idx})
+            slot_idx += 1
 
     return seats_list
 
 
-# Create custom style
+seats = parliament_layout(parties_data)
+max_radius = RADIUS_START + (NUM_ROWS - 1) * RADIUS_STEP
+
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
@@ -73,33 +97,34 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=tuple(IMPRINT),
-    title_font_size=28,
-    label_font_size=18,
-    major_label_font_size=16,
-    legend_font_size=16,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
 )
 
-# Create XY scatter chart for parliament layout
-# Use range=custom to fit all data, and show_dots to enable dot rendering
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="parliament-basic · pygal · anyplot.ai",
+    title="parliament-basic · python · pygal · anyplot.ai",
     show_legend=True,
-    dots_size=7,
+    legend_at_bottom=True,
     show_dots=True,
-    implicit_units=False,
-    range=(0, 100),
+    dots_size=5,
+    stroke=False,
+    show_x_guides=False,
+    show_y_guides=False,
+    show_x_labels=False,
+    show_y_labels=False,
+    xrange=(-max_radius * 1.1, max_radius * 1.1),
+    range=(-max_radius * 0.08, max_radius * 1.1),
 )
 
-# Disable stroke (lines) between points
-chart.stroke = False
-
-# Generate seat positions
-seats = parliament_layout(parties_data)
-
-# Add data by party (each party is a separate series with individual points)
+# Add data by party (each party is a separate series with individual points,
+# so the legend lists every party name with its seat count)
 for party_idx, party in enumerate(parties_data):
     party_seats = [s for s in seats if s["party_idx"] == party_idx]
     data = [(s["x"], s["y"]) for s in party_seats]
