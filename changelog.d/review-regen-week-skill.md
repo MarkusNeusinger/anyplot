@@ -6,4 +6,4 @@
   carrier, silent deductions, stranded write-backs, big re-score drops, identical review vectors), and
   picks a render sample. The skill sets targets for each metric, classifies findings by where the fix
   belongs (spec, rubric, generator, gate, workflow, one-off regen), and ships a lessons file that
-  distills the scoring and gate work so a reviewer can tell expected behavior from real problems.
+  distills the scoring and gate work so a reviewer can tell expected behavior from real problems (#12055).
