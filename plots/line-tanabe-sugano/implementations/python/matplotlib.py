@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-tanabe-sugano: Tanabe-Sugano Diagram for Crystal Field Theory
 Library: matplotlib 3.11.2 | Python 3.13.15
-Quality: 88/100 | Updated: 2026-10-04
+Quality: 89/100 | Updated: 2026-10-07
 """
 
 import os
@@ -47,7 +47,7 @@ blocks = [
     (
         ["$^{1}A_{1g}(G)$", "$^{1}A_{1g}(S)$"],
         False,
-        [[(8 + 4 * c_over_b) * flat, off_a1], [off_a1, 10 + 5 * c_over_b + 2 * field_strength]],
+        [[(8 + 4 * c_over_b) * flat + 2 * field_strength, off_a1], [off_a1, (10 + 5 * c_over_b) * flat]],
     ),
 ]
 
