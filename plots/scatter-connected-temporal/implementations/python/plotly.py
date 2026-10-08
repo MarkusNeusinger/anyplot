@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-Library: plotly 6.8.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-06-09
+Library: plotly 7.1.0 | Python 3.13.15
+Quality: 83/100 | Updated: 2026-10-08
 """
 
 import os
@@ -205,7 +205,7 @@ for start_idx, end_idx in [(10, 13), (27, 30)]:
     )
 
 # Decade labels for context
-for x_pos, y_pos, decade in [(6.8, 5.0, "1990s"), (7.8, -0.1, "2000s"), (4.0, 0.3, "2010s"), (5.8, 7.5, "2020s")]:
+for x_pos, y_pos, decade in [(6.8, 5.0, "1990s"), (6.4, -0.1, "2000s"), (4.0, 0.3, "2010s"), (5.8, 7.5, "2020s")]:
     fig.add_annotation(
         x=x_pos, y=y_pos, text=f"<i>{decade}</i>", showarrow=False, font={"size": 12, "color": INK_MUTED}
     )
@@ -245,7 +245,6 @@ fig.update_layout(
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
-    template="plotly_white",
     margin={"l": 80, "r": 100, "t": 80, "b": 60},
 )
 

@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-Library: bokeh 3.9.1 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-06-09
+Library: bokeh 3.10.0 | Python 3.13.16
+Quality: 83/100 | Updated: 2026-10-08
 """
 
 import os
@@ -122,11 +122,11 @@ source = ColumnDataSource(data={"unemployment": unemployment, "inflation": infla
 # Color mapper from Imprint seq palette so ColorBar shows year → color
 color_mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=1990, high=2023)
 
-# Title is ~90 chars; scale from default 50pt: round(50 * 67 / 90) = 37pt
+# Title is ~97 chars; scale from default 50pt: round(50 * 67 / 97) = 35pt
 p = figure(
     width=3200,
     height=1800,
-    title="US Phillips Curve Dynamics (1990–2023) · scatter-connected-temporal · bokeh · anyplot.ai",
+    title="US Phillips Curve Dynamics (1990–2023) · scatter-connected-temporal · python · bokeh · anyplot.ai",
     x_axis_label="Unemployment Rate (%)",
     y_axis_label="Inflation Rate (%)",
     toolbar_location=None,
@@ -207,8 +207,8 @@ for idx, (label_text, x_offset, y_offset) in annotations.items():
     )
     p.add_layout(label)
 
-# Title styling — scaled down for ~90-char title
-p.title.text_font_size = "37pt"
+# Title styling — scaled down for ~97-char title
+p.title.text_font_size = "35pt"
 p.title.text_color = INK
 
 # Axis styling
