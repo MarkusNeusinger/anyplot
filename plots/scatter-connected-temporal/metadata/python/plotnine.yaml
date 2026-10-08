@@ -12,117 +12,122 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 79
 review:
   strengths:
-  - Correct use of geom_path (not geom_line) to preserve temporal row-order rather
-    than x-sorted order — demonstrates genuine plotnine knowledge
-  - 'Full spec compliance: color gradient + directional arrows + key year annotations
-    + recession highlight all present'
-  - 'Proper imprint_seq gradient (#009E73 → #4467A3) for continuous temporal data'
-  - Both theme renders pass readability checks with no dark-on-dark failures
-  - Real-world Phillips curve dataset is historically accurate and editorially appropriate
+  - geom_path keeps time order instead of geom_line's x-sorting, so the Phillips loop
+    is drawn correctly
+  - imprint_seq green→blue gradient on path and markers encodes time, identical in
+    both themes
+  - Page-colored marker outlines keep every marker distinct where segments cross
+  - Real, neutral US unemployment/inflation data 1990–2020 with a clear regime break
+    in 2009
   weaknesses:
-  - Year annotation labels (geom_text size=3.5 mm ≈ 10pt) and "2009 Recession" annotation
-    text are on the small side; increasing to size=4.0–4.5 would improve mobile-scale
-    readability without cluttering the plot
-  - Some visual complexity in the central path crossing area; consider slightly higher
-    line alpha or a different visual weight to make the directional flow clearer amid
-    crossings
+  - 'VQ-01 (both): the year labels 1990/2000/2010/2020 and the ''2009 Recession''
+    label render at about 3.5 pt, unreadable in the 400 px thumbnail → about 9 pt
+    bold (+5.5 pt), between tick and axis-title size. Likely cause: geom_text/annotate
+    size=3.5 treated as mm while plotnine renders it as points.'
+  - 'VQ-02 (both): the last letter of ''2009 Recession'' touches the 2008→2009 path
+    segment → label clear of the segment by a few px. Likely cause: annotate offset
+    (−0.9, +0.75) from the 2009 point.'
+  - 'VQ-03 (both): the four direction arrowheads end at the next marker''s centre
+    and are hidden under it, leaving only fragments → arrowheads visible in full beside
+    the marker. Likely cause: geom_segment xend/yend equal to the next point.'
+  - 'SC-02 (both): the ''2020'' label sits about equally far from the 2011 marker
+    (8.1, 2.1) and the 2020 marker (8.1, 1.2), so the end of the path is ambiguous
+    (C3) → place it unambiguously next to the 2020 marker. Likely cause: label_config
+    offset (0.42, 0.55) for 2020.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light surface, not pure white.
-      Chrome: Title "scatter-connected-temporal · python · plotnine · anyplot.ai" in bold dark #1A1A17 at 12pt — fully readable. X-axis label "Unemployment Rate (%)" and Y-axis label "Inflation Rate (%)" in dark ink at 10pt, clearly legible. Tick labels in INK_SOFT #4A4A44 at 8pt — readable. Year anchor annotations (1990, 2000, 2010, 2020) at geom_text size=3.5 mm (~10pt) — small but legible at full resolution. "2009 Recession" annotation in red at size=3.5 mm — readable.
-      Data: Temporal gradient path from brand green #009E73 (1990) → blue #4467A3 (2020). Data points size=4.0 with PAGE_BG stroke. Recession point highlighted with red open circle size=7.5. Directional arrows at inflection points (1992, 1997, 2011, 2017). Legend colorbar on right shows Year 1990–2020.
-      Legibility verdict: PASS
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold dark title in the mandated format (~70% width), axis titles 'Unemployment Rate (%)' / 'Inflation Rate (%)', soft-ink ticks, subtle grid, no spines, framed Year colorbar 1990–2020. Axis and legend text readable; the year labels 1990/2000/2010/2020 and the '2009 Recession' label are only ~3.5 pt and barely readable at full size, illegible in the thumbnail.
+      Data: 31 markers joined in time order with a #009E73→#4467A3 gradient, page-colored marker outlines, small arrowhead fragments next to four markers, red ring around the 2009 point (9.3, −0.4).
+      Legibility verdict: FAIL for the annotation labels (too small), PASS for all other chrome
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
-      Chrome: Title in #F0EFE8 (INK for dark theme) — clearly visible against dark background. Axis labels and tick labels in adaptive light INK_SOFT #B8B7B0 — readable with no dark-on-dark failures. Year labels and recession annotation visible. Legend background ELEVATED_BG #242420 with light legend text — correct dark-theme elevated surface.
-      Data: Gradient colors identical to light render — brand green #009E73 through blue #4467A3. Recession circle red #AE3030 unchanged. Only chrome (background, text, grid, legend frame) flips between themes, data colors are theme-invariant as required.
-      Legibility verdict: PASS
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, axis titles and ticks in light ink, legend on #242420 with light text; no dark-on-dark. Year and recession labels equally tiny.
+      Data: gradient, markers and red ring identical to the light render; only chrome flips.
+      Legibility verdict: FAIL for the annotation labels (too small), PASS for all other chrome
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 4
         max: 8
-        passed: true
-        comment: All text readable in both themes. Year annotation labels (size=3.5
-          mm ~10pt) small but legible at full resolution; minor concern for mobile-scale
-          readability.
+        passed: false
+        comment: Year labels and the recession label render at ~3.5 pt, unreadable
+          in the 400 px thumbnail (defect line); all other text fine in both themes.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
-        passed: true
-        comment: Labels well-offset. Some proximity in central path crossing area
-          but no hard overlaps.
+        passed: false
+        comment: The final 'n' of '2009 Recession' touches the 2008→2009 path segment
+          (defect line).
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Data points size=4.0 appropriate for 31 points. Path lines clear.
-          Recession circle prominent. Arrows visible.
+        passed: false
+        comment: Markers prominent; direction arrowheads hidden under the next marker
+          (defect line).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint gradient (green→blue) CVD-safe. Recession uses semantic
-          matte red #AE3030.'
+        comment: CVD-safe sequential gradient; red ring is an accent, not the sole
+          signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 confirmed. No clipping. Title proportion acceptable
-          for long mandated title.
+        comment: 3200×1800, balanced margins, no overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with % units. Title matches required format.
+        comment: Descriptive axis titles with % units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (#009E73→#4467A3) for temporal data. Backgrounds #FAF8F1
-          light / #1A1A17 dark. Both renders theme-correct.'
+        comment: imprint_seq gradient; correct backgrounds; data colors identical
+          across themes.
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Custom Imprint temporal gradient, intentional layer hierarchy, recession
-          focal point, directional arrows. Above default.
+        passed: false
+        comment: Style-guide baseline; the intended bold label tier is too small to
+          register.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: panel_border and axis_line removed. Minor grid only. panel_grid_minor
-          removed. Clean chrome.
+        comment: Page-colored marker outlines separate markers from crossing segments;
+          integer breaks and tuned expand.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Color gradient narrates temporal flow. Arrows reinforce direction.
-          Recession highlight creates clear focal point. Year anchors guide viewer
-          through Phillips curve dynamics.
+        comment: Red recession ring gives a focal point, weakened by its near-illegible
+          label.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -130,29 +135,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Connected scatter with geom_path (correct choice over geom_line for
-          temporal ordering) plus geom_point.
+        comment: Connected scatter via geom_path + geom_point.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Points connected chronologically, key time points annotated, directional
-          arrows, color gradient, visible markers — all present.
+        passed: false
+        comment: 'All Notes features present; C3 partly missed: the ''2020'' label
+          is as close to the 2011 marker as to the 2020 marker (defect line).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Unemployment Rate, Y=Inflation Rate, temporal ordering by Year.
-          All 31 data points plotted.
+        comment: All 31 points at their values, row order preserved.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend shows Year colorbar with 1990/2000/2010/2020
-          labels.
+        comment: Mandated title; Year colorbar.
     data_quality:
       score: 15
       max: 15
@@ -162,22 +164,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Temporal path, gradient encoding, directional arrows, recession annotation,
-          year label anchors — all aspects demonstrated.
+        comment: Loops, crossings and a regime jump shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US unemployment vs. inflation (Phillips curve) 1990–2020. Neutral,
-          historically plausible economic dataset.
+        comment: US unemployment vs inflation 1990–2020, neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Unemployment 3.7–9.6%, inflation −0.4–5.4%, 31 annual points. Within
-          spec range and domain-appropriate.
+        comment: Checked 2009 (9.3, −0.4) and 2020 (8.1, 1.2) on the axes.
     code_quality:
       score: 10
       max: 10
@@ -187,34 +186,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: Flat script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: Deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used. sys/os justified by path fix and env
-          var.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake UI elements.
+        comment: Appropriate complexity, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi/width/height/units.
+        comment: Saves plot-{THEME}.png.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -222,16 +220,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar of graphics composition clean. Correct geom_path vs geom_line
-          choice. Proper aes() vs non-aes separation.
+        comment: geom_path for temporal order; per-layer data with inherit_aes=False.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses plotnine arrow() in geom_segment. inherit_aes=False for label
-          layer. show_legend=False on specific layers. stroke= for outlined markers.
+        comment: arrow() on geom_segment; one continuous scale driving color and fill.
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-336b5823b3
 impl_tags:
   dependencies: []
   techniques:
