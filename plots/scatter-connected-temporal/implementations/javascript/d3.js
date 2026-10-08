@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-// Library: d3 7.9.0 | JavaScript 22.22.3
-// Quality: pending | Updated: 2026-06-10
+// Library: d3 7.9.0 | JavaScript 22.23.3
+// Quality: 84/100 | Updated: 2026-10-08
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
