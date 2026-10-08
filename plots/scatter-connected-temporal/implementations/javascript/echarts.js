@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-// Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: pending | Updated: 2026-06-10
+// Library: echarts 6.1.0 | JavaScript 22.23.3
+// Quality: 85/100 | Updated: 2026-10-08
 
 const t = window.ANYPLOT_TOKENS;
 
