@@ -2,56 +2,58 @@ library: altair
 language: python
 specification_id: scatter-connected-temporal
 created: '2026-03-13T15:26:15Z'
-updated: '2026-06-09T23:37:11Z'
+updated: '2026-10-08T03:06:39Z'
 generated_by: claude-sonnet
-workflow_run: 27241876474
+workflow_run: 37720667687
 issue: 4675
-language_version: 3.13.13
-library_version: 6.2.1
+language_version: 3.13.16
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 83
 review:
   strengths:
-  - 'Temporal color gradient uses correct imprint_seq range (#009E73 → #4467A3), encoding
-    time direction visually in the most appropriate Altair-idiomatic way'
-  - Layer composition (path + points + annotations) is textbook Altair — order:Q encoding
-    for the connecting line is a library-specific feature that non-Altair users would
-    not discover easily
-  - 'Theme-adaptive chrome is thorough: PAGE_BG, ELEVATED_BG, INK, INK_SOFT all thread
-    through configure_axis, configure_legend, configure_title, and mark_text color
-    — both renders pass the legibility check'
-  - Year annotations with explicit nudge offsets avoid naive label-point collisions;
-    the 2008 recession spike and the 2023 low-inflation cluster are correctly identified
-    and labelled
-  - Canvas handling follows the PAD-only pattern exactly — raises SystemExit if vl-convert
-    overshoots, pads with PAGE_BG if undershoots — no crop risk
+  - order:Q encoding drives the path in chronological order with straight segments,
+    so loops and crossings read as time, not as an x-sorted line
+  - 'imprint_seq gradient (#009E73 -> #4467A3) on the markers encodes time direction,
+    with an identical gradient in both renders'
+  - Theme tokens thread through axis, legend, title and mark_text colors; both renders
+    pass the legibility check
+  - Formatted Vega-Lite tooltips (year, unemployment, inflation) and .interactive()
+    pan/zoom add inspection in the HTML output
   weaknesses:
-  - 'Mild annotation crowding: ''1994'' (nudged to y≈3.3) and ''2010'' (nudged to
-    y≈2.95) are vertically close in the right-centre cluster; consider increasing
-    the y-nudge for 1994 from 0.30 to 0.55 so the two bold labels have a full text-line
-    of separation'
-  - 'DQ-03: Data is plausibly realistic but synthetically generated; the 2008 unemployment
-    spike is hand-tuned rather than sourced from actual Bureau of Labor Statistics
-    figures — values are reasonable but not fact-checked against historical records'
-  - DE-01 is above generic defaults (temporal gradient is intentional) but the connecting
-    path uses a plain gray (INK_SOFT) with no arrowheads or directional marker — an
-    arrow at the final point or a slightly tapered path would lift the storytelling
-    from good to excellent
+  - 'VQ-02 (both): the "2015" label is drawn over the path segments between about
+    (3.3, 0.4) and (3.8, 0.3) → place it clear of the path and markers. Likely cause:
+    nudge 2015 (0.30, -0.38) combined with mark_text dy=-15.'
+  - 'SC-02 (both): the "2010" label floats about 0.65 inflation points above its marker
+    at (6.9, 1.8), directly under the 1990s markers at (6.8, 2.8) and (6.3, 2.6),
+    so it reads as labelling a 1990s point (C2, C3) → put it within about 0.2 units
+    of its own marker. Likely cause: nudge 2010 (-0.22, +0.35) stacked with dy=-15.'
+  - 'VQ-05 (both): the y domain runs to 6.2 while inflation peaks at 3.9 and the x
+    domain to 8.5 while unemployment peaks at 7.8, leaving about 30 % of the plot
+    height and a right strip empty → about [-0.8, 4.4] and [2.5, 8.1]. Likely cause:
+    the hard-coded x_scale / y_scale domains.'
+  - 'DQ-03 (both): np.clip floors unemployment at 3.0, so 7 of the 2011–2023 years
+    sit at exactly 3.0 % on one vertical line, which no real labour market shows →
+    generate a path that stays inside a plausible 3.5–10 % range without pinning to
+    the floor. Likely cause: the random walk with negative drift plus np.clip(…, 3.0,
+    10.5).'
+  - 'Suggestion: a small arrowhead at the 2023 end would make direction readable inside
+    the dense late cluster.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "scatter-connected-temporal · python · altair · anyplot.ai" in dark ink (~16px, readable); subtitle "Unemployment vs. Inflation — tracing the Phillips curve path (1994–2023)" in INK_SOFT; x-axis label "Unemployment Rate (%)" and y-axis label "Inflation Rate (%)" both readable with units; tick labels legible; Year gradient legend on the right with labels "1994" and "2023"
-      Data: Scatter markers sized ~160 (Altair area units) with white stroke, colored on a green (#009E73) to blue (#4467A3) gradient encoding temporal progression 1994→2023; connecting path in gray (INK_SOFT, opacity=0.60) traces chronological order; bold year annotations at 1994, 2000, 2008, 2010, 2015, 2023 with nudged positions; 2008 recession spike visible as rightward excursion to ~7.9% unemployment; 2015–2023 cluster compressed in lower-left
-      Legibility verdict: PASS — all text readable against the warm off-white background; minor annotation crowding between "1994" and "2010" labels (close vertically in right cluster) but no pixel-level overlap
+      Background: warm off-white #FAF8F1, legend box on #FFFDF6 with an INK_SOFT stroke
+      Chrome: bold dark title 'scatter-connected-temporal · python · altair · anyplot.ai' (~52 % width), grey subtitle about the Phillips curve path, bold axis titles 'Unemployment Rate (%)' / 'Inflation Rate (%)', grey tick labels, solid grid at 0.15 opacity; all readable
+      Data: 30 markers with white rims coloured on a green #009E73 (1994) to blue #4467A3 (2023) gradient, joined by a grey path; bold year labels 1994, 2000, 2008, 2010, 2015, 2023; '2015' crosses path segments, '2010' floats away from its marker; late years cluster at x=3.0
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title and all text rendered in light ink (INK=#F0EFE8 / INK_SOFT=#B8B7B0); axis labels, tick labels, legend title "Year", and legend tick labels "1994"/"2023" all clearly visible against the dark surface; year annotations in INK (light) — no dark-on-dark failures detected
-      Data: Scatter marker colors identical to light render — green (#009E73) at 1994 end of gradient through blue (#4467A3) at 2023 end; connecting path visible in INK_SOFT (muted light gray); grid lines subtle dashed in light tone at 0.15 opacity; legend gradient bar and elevated background (#242420) correctly themed
-      Legibility verdict: PASS — all chrome correctly flipped; data colors are identical to light render as required; no dark-on-dark failures
+      Background: warm near-black #1A1A17, legend box on #242420
+      Chrome: title, axis titles and year labels in light INK, ticks and subtitle in INK_SOFT; no dark-on-dark text
+      Data: marker gradient identical to the light render; path in light grey; same label positions
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -59,61 +61,54 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, subtitle=10, axis labels=12,
-          ticks=10, annotations=11); proportions well-balanced; minor crowding of
-          '1994' and '2010' labels in the right cluster (vertically close, ~0.35 unit
-          gap)
+        comment: Title 16, subtitle 10, axis titles 12, ticks 10, annotations 11 bold
+          at scale_factor 4; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
-        passed: true
-        comment: Nudge offsets prevent most label-point collisions; '1994' and '2010'
-          annotations are close vertically but do not pixel-overlap; mild crowding
-          in left 2015-2023 cluster is tolerable
+        passed: false
+        comment: '"2015" label is drawn over the path segments around (3.3–3.8, 0.3–0.4)
+          (defect line)'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 30 data points with size=160 and opacity=0.85 is well-calibrated
-          for the density; white stroke (strokeWidth=1.2) adds clear definition; connecting
-          path at opacity=0.60 is appropriately subdued
+        comment: 30 markers at size 160 with a white rim stay visible on the path
+          in both themes; gradient legend swatch visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue gradient is CVD-safe (differs in both hue and lightness
-          under deuteranopia/protanopia); white marker strokes provide luminance separation
-          from background
+        comment: Green-to-blue gradient is CVD-safe; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt); plot fills
-          canvas well with balanced margins; legend well-positioned on right side;
-          no overflow or clipping
+        passed: false
+        comment: 'y domain runs to 6.2 while inflation tops out at 3.9 and x to 8.5
+          while unemployment tops out at 7.8: empty top band and right strip (defect
+          line)'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Unemployment Rate (%)'' and ''Inflation Rate (%)'' — both descriptive
-          with units'
+        comment: Unemployment Rate (%) / Inflation Rate (%) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq gradient #009E73→#4467A3 for continuous temporal data;
-          backgrounds #FAF8F1/#1A1A17 correct; all chrome theme-adaptive in both renders'
+        comment: 'imprint_seq two-stop range #009E73 -> #4467A3; backgrounds #FAF8F1
+          / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -121,28 +116,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above a configured default: temporal gradient encoding, white-stroked
-          markers, INK_SOFT path color intentionally subdued to let data colors dominate,
-          subtitle with softer color; not yet publication-ready because path has no
-          directional cue (arrow/taper)'
+        comment: 'Beyond baseline: two-level title hierarchy with a narrative subtitle
+          in INK_SOFT, bold INK year annotations as a third typographic tier'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Dashed grid (gridDash=[3,3]) at 0.15 opacity is subtle; view box
-          removed (strokeWidth=0); legend styled with ELEVATED_BG fill and INK_SOFT
-          stroke; axis domain lines visible but not heavy
+        comment: White marker rims separate markers from the path; legend on ELEVATED_BG;
+          view stroke removed
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Temporal color gradient + year annotations + subtitle 'Phillips curve
-          path' create a coherent narrative; 2008 recession spike visible as rightward
-          excursion; visual hierarchy works — viewer can follow the path chronologically
+        comment: Subtitle frames the chart as a Phillips curve path, giving the viewer
+          a reading beyond what the Notes prescribe
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -150,30 +141,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct connected scatter plot: mark_point for data markers + mark_line
-          with order:Q encoding for temporal path'
+        comment: 'Connected scatter: mark_point + mark_line ordered by order:Q, straight
+          segments, not sorted by x'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All spec features: chronological connection, year annotations at
-          key points (1994, 2000, 2008, 2010, 2015, 2023), temporal color gradient,
-          visible point markers'
+        passed: false
+        comment: 'C3/C2: the "2010" label sits ~0.65 points above its marker next
+          to 1990s markers, so it reads as labelling a 1990s point (defect line);
+          other Notes bullets met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Unemployment Rate, Y=Inflation Rate; all 30 years (1994-2023) visible
-          within domain
+        comment: Markers at their exact data values; all 30 years inside the domain;
+          only labels are offset
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'scatter-connected-temporal · python · altair · anyplot.ai';
-          Year legend correctly labeled with gradient scale
+        comment: Mandated title exact; Year gradient legend labelled 1994/2023
     data_quality:
       score: 14
       max: 15
@@ -183,24 +173,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all plot-type features: temporal path through 2D space, direction
-          via color gradient, key period annotations, recession spike as dramatic
-          deviation from steady trend'
+        comment: 'Path shows a drift, a recession excursion, a crossing and a tight
+          late cluster: co-evolution through 2D space'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US unemployment vs. inflation (Phillips curve) is a canonical real-world
-          economic scenario; neutral, non-controversial, comprehensible
+        comment: Unemployment vs. inflation (Phillips curve) is a canonical neutral
+          economic scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 3
         max: 4
-        passed: true
-        comment: Unemployment 3-10.5% and inflation -0.5 to 6% are realistic US ranges;
-          2008 spike deliberately added; values plausible but data is synthetic, not
-          actual BLS/CPI figures
+        passed: false
+        comment: Ranges are plausible, but the np.clip floor pins 7 late years at
+          exactly 3.0% unemployment (defect line); no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -210,68 +198,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → data → encodings → layers → compose →
-          save; importlib workaround is necessary (file named altair.py)'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: altair (via importlib), numpy, pandas, PIL — all used; sys/os/importlib
-          required for the filename workaround
+        comment: All imports used; importlib/sys needed for the altair.py filename
+          shadowing
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Nudge dict, layer composition, configure chain — clean and appropriate;
-          PAD-only canvas handling correctly implemented
+        comment: Appropriate complexity; mandated PAD-only block
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair 6.x
-          API
+        comment: plot-{THEME}.png + plot-{THEME}.html, current Altair 6 API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert Altair: order:Q encoding for temporal line ordering, + operator
-          for layer composition, configure_* chain for global theming, alt.Title with
-          subtitle, alt.Scale/Legend with explicit params'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: order:Q encoding is a distinctive Altair pattern not available in
-          matplotlib/seaborn; layer composition and interactive tooltips are Altair-native;
-          alt.Title subtitle separation is a VL-specific feature
+        comment: order:Q channel for path order, + layer composition with shared encodings,
+          configure_* chain, alt.Title subtitle
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Vega-Lite tooltips with formatted fields plus .interactive() pan/zoom
+          in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-c26969a0f8
+  rendered_at: '2026-10-08T03:02:54Z'
 impl_tags:
   dependencies:
   - pillow
   techniques:
   - annotations
+  - layer-composition
+  - colorbar
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - alpha-blending
   - custom-colormap
+  - alpha-blending
   - edge-highlighting
