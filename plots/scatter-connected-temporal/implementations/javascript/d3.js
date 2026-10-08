@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-// Library: d3 7.9.0 | JavaScript 22.22.3
-// Quality: 93/100 | Updated: 2026-06-10
+// Library: d3 7.9.0 | JavaScript 22.23.3
+// Quality: 84/100 | Updated: 2026-10-08
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
@@ -133,7 +133,7 @@ g.append("line")
 g.append("text")
   .attr("x", fc2009x).attr("y", fc2009y)
   .attr("text-anchor", "middle")
-  .attr("fill", t.inkSoft).style("font-size", "11px").style("font-style", "italic")
+  .attr("fill", t.inkSoft).style("font-size", "13px").style("font-style", "italic")
   .text("Financial Crisis");
 
 // COVID-19 (2020) — leader line going straight down, away from year label
@@ -146,7 +146,7 @@ g.append("line")
 g.append("text")
   .attr("x", cv2020x).attr("y", cv2020y)
   .attr("text-anchor", "middle")
-  .attr("fill", t.inkSoft).style("font-size", "11px").style("font-style", "italic")
+  .attr("fill", t.inkSoft).style("font-size", "13px").style("font-style", "italic")
   .text("COVID-19");
 
 // Axes
@@ -181,7 +181,7 @@ const lgX = iw + 16, lgY = ih / 2 - lgH / 2;
 g.append("text")
   .attr("x", lgX + lgW / 2).attr("y", lgY - 14)
   .attr("text-anchor", "middle")
-  .attr("fill", t.inkSoft).style("font-size", "11px")
+  .attr("fill", t.inkSoft).style("font-size", "13px")
   .text("Temporal direction  →");
 g.append("rect")
   .attr("x", lgX).attr("y", lgY)
@@ -190,12 +190,12 @@ g.append("rect")
   .attr("fill", "url(#temporal-legend-grad)");
 g.append("text")
   .attr("x", lgX).attr("y", lgY + lgH + 14)
-  .attr("fill", t.inkSoft).style("font-size", "11px")
+  .attr("fill", t.inkSoft).style("font-size", "13px")
   .text("1992");
 g.append("text")
   .attr("x", lgX + lgW).attr("y", lgY + lgH + 14)
   .attr("text-anchor", "end")
-  .attr("fill", t.inkSoft).style("font-size", "11px")
+  .attr("fill", t.inkSoft).style("font-size", "13px")
   .text("2021");
 
 // Title
