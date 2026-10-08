@@ -40,7 +40,7 @@ const seriesData = years.map((year, i) => {
   return {
     value: [co2[i], tempAnomaly[i], i],
     name: String(year),
-    symbolSize: isKey ? 16 : 8,
+    symbolSize: isKey ? 18 : 11,
     itemStyle: { borderColor: t.pageBg, borderWidth: 1.5 },
     label: {
       show: isKey,
