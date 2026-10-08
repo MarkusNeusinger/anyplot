@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-09
+// Quality: 84/100 | Created: 2026-06-09
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
