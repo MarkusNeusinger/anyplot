@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 Library: plotnine 0.15.5 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-09
@@ -184,14 +184,14 @@ plot = (
         x=recession_point["Unemployment"].values[0] - 0.9,
         y=recession_point["Inflation"].values[0] + 0.75,
         label="2009 Recession",
-        size=3.5,
+        size=9,
         fontweight="bold",
         color=RECESSION_COLOR,
     )
     + geom_text(
         aes(x="x_label", y="y_label", label="Label"),
         data=df_labels,
-        size=3.5,
+        size=9,
         fontweight="bold",
         color=INK_SOFT,
         inherit_aes=False,
