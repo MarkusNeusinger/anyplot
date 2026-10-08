@@ -107,7 +107,7 @@ function TemporalOverlay() {
             key={label}
             x={x + dx}
             y={y + dy}
-            fontSize={12}
+            fontSize={14}
             fill={t.inkSoft}
             fontFamily="system-ui, sans-serif"
           >
@@ -143,7 +143,7 @@ export default function Chart() {
       <Typography
         sx={{
           color: t.ink,
-          fontSize: 19,
+          fontSize: 22,
           fontWeight: 500,
           textAlign: "center",
           height: TITLE_H,
