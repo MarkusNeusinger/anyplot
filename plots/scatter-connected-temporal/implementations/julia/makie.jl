@@ -1,7 +1,7 @@
 # anyplot.ai
 # scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 91/100 | Created: 2026-06-09
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 82/100 | Updated: 2026-10-08
 
 using CairoMakie
 using Colors
@@ -20,21 +20,21 @@ const INK_MUTED   = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
 # Imprint sequential colormap — early (green) → late (blue) encodes temporal direction
 const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])
 
-# Data — synthetic annual CO₂ concentration vs global temperature anomaly (1980–2022)
-years = collect(1980:2022)
-n     = length(years)
+# Data — synthetic daily closing price vs trading volume over 40 sessions
+n    = 40
+days = collect(1:n)
 
-co2  = 338.0 .+ (years .- 1980) .* 1.9  .+ randn(n) .* 0.6
-temp = 0.10  .+ (years .- 1980) .* 0.018 .+ randn(n) .* 0.06
+ret    = 0.004 .+ randn(n) .* 0.012
+price  = 82.0 .* cumprod(1 .+ ret)
+volume = 11.0 .+ 90.0 .* abs.(ret) .+ randn(n) .* 0.8
 
 # Temporal position [0, 1] for colormap
-t_norm = (years .- years[1]) ./ (years[end] - years[1])
+t_norm = (days .- days[1]) ./ (days[end] - days[1])
 
-# Key year annotations (1-based: 1980, 1990, 2000, 2010, 2022)
-key_idx = [1, 11, 21, 31, 43]
+# Key session annotations (first, every ~10th, last)
+key_idx = [1, 10, 20, 30, 40]
 
-# Title — descriptive prefix added; scale fontsize to avoid overflow
-title_str = "CO₂ vs Temperature · scatter-connected-temporal · julia · makie · anyplot.ai"
+title_str = "Price vs Volume · scatter-connected-temporal · julia · makie · anyplot.ai"
 title_n   = length(title_str)
 title_sz  = max(14, round(Int, 20 * 67 / title_n))
 
@@ -50,8 +50,8 @@ ax = Axis(
     title              = title_str,
     titlesize          = title_sz,
     titlecolor         = INK,
-    xlabel             = "Atmospheric CO₂ (ppm)",
-    ylabel             = "Temperature Anomaly (°C)",
+    xlabel             = "Trading Volume (million shares)",
+    ylabel             = "Closing Price (USD)",
     xlabelsize         = 14,
     ylabelsize         = 14,
     xlabelcolor        = INK,
@@ -73,17 +73,17 @@ ax = Axis(
     yminorgridvisible  = false,
 )
 
-# Temporal path — one segment per year pair, colored by midpoint time position
+# Temporal path — one segment per session pair, colored by midpoint time position
 for i in 1:(n - 1)
     mid_t = (t_norm[i] + t_norm[i + 1]) / 2
-    lines!(ax, [co2[i], co2[i + 1]], [temp[i], temp[i + 1]];
+    lines!(ax, [volume[i], volume[i + 1]], [price[i], price[i + 1]];
         color     = ANYPLOT_SEQ[mid_t],
         linewidth = 2.5,
     )
 end
 
 # Scatter points — colored by temporal position via Imprint sequential colormap
-sc = scatter!(ax, co2, temp;
+sc = scatter!(ax, volume, price;
     color       = t_norm,
     colormap    = ANYPLOT_SEQ,
     markersize  = 14,
@@ -91,39 +91,39 @@ sc = scatter!(ax, co2, temp;
     strokecolor = PAGE_BG,
 )
 
-# Directional arrow at temporal start (1980) — scaled to 6% of each axis span for visibility
+# Directional arrow at temporal start — scaled to 6% of each axis span for visibility
 let
-    co2_span  = maximum(co2) - minimum(co2)
-    temp_span = maximum(temp) - minimum(temp)
-    dx = co2[2] - co2[1]
-    dy = temp[2] - temp[1]
-    nx = dx / co2_span
-    ny = dy / temp_span
+    volume_span  = maximum(volume) - minimum(volume)
+    price_span = maximum(price) - minimum(price)
+    dx = volume[2] - volume[1]
+    dy = price[2] - price[1]
+    nx = dx / volume_span
+    ny = dy / price_span
     len = sqrt(nx^2 + ny^2)
     scale = 0.06
-    arrows!(ax, [co2[1]], [temp[1]], [nx / len * scale * co2_span], [ny / len * scale * temp_span];
+    arrows!(ax, [volume[1]], [price[1]], [nx / len * scale * volume_span], [ny / len * scale * price_span];
         arrowsize = 16,
         color     = ANYPLOT_SEQ[0.0],
         linewidth = 2.0,
     )
 end
 
-# Key year labels at notable positions
+# Key session labels at notable positions
 for ki in key_idx
-    text!(ax, co2[ki], temp[ki];
-        text     = string(years[ki]),
-        fontsize = 13,
+    text!(ax, volume[ki], price[ki];
+        text     = "Day " * string(days[ki]),
+        fontsize = 14,
         color    = INK,
         align    = (:center, :bottom),
         offset   = (0, 8),
     )
 end
 
-# Colorbar — shows year range encoded by the temporal gradient
+# Colorbar — shows trading-day range encoded by the temporal gradient
 Colorbar(fig[1, 2];
     colormap       = ANYPLOT_SEQ,
-    limits         = (Float64(years[1]), Float64(years[end])),
-    label          = "Year",
+    limits         = (Float64(days[1]), Float64(days[end])),
+    label          = "Trading day",
     labelcolor     = INK,
     ticklabelcolor = INK_SOFT,
     tickcolor      = INK_SOFT,

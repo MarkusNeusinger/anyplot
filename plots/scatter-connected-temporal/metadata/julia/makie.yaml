@@ -2,45 +2,52 @@ library: makie
 language: julia
 specification_id: scatter-connected-temporal
 created: '2026-06-09T23:32:02Z'
-updated: '2026-06-09T23:49:08Z'
+updated: '2026-10-08T03:42:02Z'
 generated_by: claude-sonnet
-workflow_run: 27242377591
+workflow_run: 37722930441
 issue: 4675
 language_version: 1.11.9
-library_version: 0.22.10
+library_version: 0.21.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/julia/makie/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 82
 review:
   strengths:
-  - 'Temporal gradient (Imprint seq: green → blue) elegantly encodes time direction
-    as the primary visual encoding, matching the spec intent perfectly'
-  - Directional arrow at the 1980 path origin guides the viewer through the temporal
-    journey without cluttering the chart
-  - 'Full theme-adaptive chrome: all color tokens (INK, INK_SOFT, PAGE_BG) correctly
-    threaded to every axis element in both light and dark renders'
-  - Realistic CO₂ / temperature data with scientifically accurate baselines and growth
-    rates
-  - Modern Makie API (size= parameter) and idiomatic Julia patterns (let block, cgrad,
-    RGBAf)
+  - 'Two-stop imprint_seq gradient (cgrad #009E73 → #4467A3) on both the segments
+    and the markers, with a Trading day colorbar, makes the direction of time readable
+    across the whole path'
+  - Markers carry a page-colored stroke, so every observation stays distinguishable
+    where the path crosses itself
+  - Theme tokens (INK, INK_SOFT, PAGE_BG) reach every chrome element; both renders
+    read cleanly
+  - Colorbar placed as a Makie GridLayout cell (fig[1, 2]) with colgap! instead of
+    an inset legend
   weaknesses:
-  - Year annotation fontsize (13pt, effective 26 source px) is slightly small; bumping
-    to 14-15pt would improve mobile readability without risk of overlap
-  - Title titlesize (19pt) is formula-correct but just below the 20pt default; with
-    the 72-char title and current layout, increasing to 20pt would not overflow
+  - 'VQ-02 (both): the ''Day 40'' label at (12.0 M, 101 USD) is crossed by a segment
+    of the late-session cluster that runs through the text, and ''Day 10'' sits on
+    the segment just beneath it → each key label clear of the path by at least 4 px.
+    Likely cause: every text! uses the same align=(:center, :bottom), offset=(0, 8),
+    regardless of where the neighbouring segments run.'
+  - 'CQ-04 (code): lines 77–83 draw the path as 39 separate lines! calls in a loop
+    to color it per segment → one `lines!(ax, volume, price; color = t_norm, colormap
+    = ANYPLOT_SEQ, linewidth = 2.5)`, which Makie colors per vertex. Likely cause:
+    per-segment loop instead of the per-vertex color attribute.'
+  - 'Suggestion: the start arrow (arrowsize 16) sits among the crossing early segments
+    next to the day-2 marker and is easy to miss; a larger arrowhead would make the
+    direction cue read faster.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "CO₂ vs Temperature · scatter-connected-temporal · julia · makie · anyplot.ai" readable in dark ink; axis labels "Atmospheric CO₂ (ppm)" and "Temperature Anomaly (°C)" clear; tick labels readable; year annotations (1980, 1990, 2000, 2010, 2022) visible
-      Data: Connected scatter path with Imprint sequential colormap (green #009E73 at 1980 → blue #4467A3 at 2022); 43 data points with markersize=14 and white stroke; directional arrow at 1980 start; compact colorbar on right with Year label
+      Background: warm off-white #FAF8F1, not pure white
+      Chrome: bold title 'Price vs Volume · scatter-connected-temporal · julia · makie · anyplot.ai' in dark ink; axis labels 'Trading Volume (million shares)' and 'Closing Price (USD)'; soft-ink tick labels; subtle grid; top/right spines removed; colorbar 'Trading day' 1–40 on the right; labels Day 1, 10, 20, 30, 40 in dark ink
+      Data: 40 markers joined by straight segments in time order, colored green #009E73 (day 1) to blue #4467A3 (day 40); tangled low-price band for days 1–20, run-up to ~100 USD, plateau at the top; small green arrow at the start; 'Day 40' label crossed by a segment
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: All text renders in light warm tones (#F0EFE8 / #B8B7B0); title, axis labels, tick labels, and year annotations all clearly readable against dark surface; no dark-on-dark failures detected
-      Data: Identical green-to-blue temporal gradient as light render; data colors unchanged across themes as required
+      Background: warm near-black #1A1A17, not pure black
+      Chrome: title, axis labels, Day labels in light ink, tick labels in soft light grey; grid subtle; no dark-on-dark text
+      Data: identical green→blue gradient and positions as the light render; only chrome flipped
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -49,77 +56,80 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; year annotations at 13pt are slightly
-          small for mobile scaling
+        comment: Font sizes set per the Makie prompt (title 19, labels 14, ticks 12,
+          Day labels 14); all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Year annotations offset cleanly above points; no text-data collisions
+        passed: false
+        comment: The 'Day 40' label is crossed by a segment of the late-session cluster
+          and 'Day 10' grazes the segment under it (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 43 points with markersize=14 prominent and well-sized; strokewidth=1
-          adds definition
+        comment: 40 points at markersize 14 with page-colored stroke stay visible
+          on the crossing segments; the green start end shows on both pages
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint seq gradient is CVD-safe; no red-green sole distinction
+        comment: Imprint sequential green→blue gradient is CVD-safe; time is also
+          carried by the Day/year labels, so color is not the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); colorbar in layout grid provides
-          excellent balance
+        comment: Canvas gate passed (3200x1800); axis fills the canvas, colorbar sits
+          in the layout grid, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Atmospheric CO2 (ppm) and Temperature Anomaly (°C) are descriptive
-          with units
+        comment: '''Trading Volume (million shares)'' and ''Closing Price (USD)''
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint seq cgrad(#009E73 → #4467A3) for continuous temporal data;
-          correct backgrounds; data colors identical across themes'
+        comment: 'Two-stop imprint_seq cgrad(#009E73 → #4467A3) for the continuous
+          time variable; backgrounds #FAF8F1 / #1A1A17; data colors identical across
+          themes'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Intentional sequential colormap for temporal encoding; directional
-          arrow; colorbar with year axis are deliberate design choices above generic
-          default
+        comment: The style-guide baseline (theme tokens, explicit sizes, Imprint gradient),
+          nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed; 12% opacity grid; strokewidth on markers;
-          compact 18px colorbar
+        comment: 'Raised from default: markers carry a page-colored stroke that separates
+          them from crossing segments, and the colorbar is slimmed to 18 px with a
+          20 px gap'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Temporal gradient + arrow + key-year milestones create clear narrative
-          arc; climate co-evolution trend immediately readable
+        passed: false
+        comment: Gradient, start arrow and labels follow the spec's Notes; no hierarchy
+          chosen beyond them
     spec_compliance:
       score: 15
       max: 15
@@ -129,28 +139,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct connected scatter temporal plot
+        comment: Connected scatter with temporal path
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Points connected in temporal order, key time-point annotations, directional
-          arrow, color gradient for temporal progression
+        comment: Chronological straight segments (C1), start/end and decade/10-day
+          labels plus gradient and arrow (C2), markers visible at every point with
+          a green light end that shows on both pages (C4); C3 label clearance is scored
+          under VQ-02
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: CO2 on x, temperature anomaly on y, years 1980-2022 as temporal ordering
-          variable
+        comment: Markers at exact (x, y); straight unsorted, unsmoothed segments;
+          axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows {Descriptive} · {spec-id} · julia · makie · anyplot.ai
-          format; colorbar with Year label serves as temporal legend
+        comment: '''Price vs Volume · scatter-connected-temporal · julia · makie ·
+          anyplot.ai''; colorbar labelled ''Trading day'''
     data_quality:
       score: 15
       max: 15
@@ -160,24 +172,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All spec features shown: scatter + line path + gradient + arrow
-          + annotations + colorbar'
+        comment: Shows looping and doubling back in a low-price band (days 1–20),
+          a directional run-up (days 20–33) and a high plateau (days 33–40)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CO2 vs temperature anomaly is a real-world, politically neutral,
-          scientifically valid topic
+        comment: Daily closing price vs trading volume of a stock — plausible and
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: CO2 starting at 338 ppm rising ~1.9 ppm/year and temperature anomaly
-          starting at 0.10°C rising ~0.018°C/year accurate to real observations
+        comment: 'Price 81–102 USD, volume 9.8–14.3 M shares over 40 sessions: sensible
+          for a mid-cap stock'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -185,7 +197,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions or classes
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -197,50 +209,57 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie, Colors, Random — all used
+        comment: CairoMakie, Colors, Random — all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean idiom; let block for arrow calculation is good Julia style;
-          no fake UI
+        passed: false
+        comment: Lines 77–83 loop 39 lines! calls to color the path per segment; one
+          lines! with per-vertex color replaces it (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save(plot-$(THEME).png, fig; px_per_unit=2); modern Makie size= API
-          (v0.22.10)
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) with Figure(size=…)
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Axis theme tokens threaded correctly; RGBAf for grid colors; cgrad
-          for sequential colormap; colgap! for layout; Colorbar in figure grid
+        comment: 'Default: Axis attributes and theme tokens as the library prompt
+          mandates; the per-segment lines! loop bypasses Makie''s per-vertex color
+          attribute'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Per-segment lines! loop for smooth gradient coloring; arrows! primitive
-          for directional marker; Colorbar in layout grid; cgrad two-stop gradient
+        passed: false
+        comment: 'Raised by one: Colorbar placed as a GridLayout cell (fig[1, 2])
+          with colgap!, and the arrows! primitive'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-d4a232663e
+  rendered_at: '2026-10-08T03:38:22Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
+  - gradient-encoding
+  - custom-colormap
+  - arrows
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - normalization
+  - cumulative-sum
   styling:
-  - custom-colormap
-  - edge-highlighting
+  - publication-ready
+  - minimal-chrome
