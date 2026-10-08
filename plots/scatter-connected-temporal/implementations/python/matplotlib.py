@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-06-09
+Library: matplotlib 3.11.2 | Python 3.13.15
+Quality: 85/100 | Updated: 2026-10-08
 """
 
 import os
@@ -87,7 +87,7 @@ ax.scatter(
 
 # Annotate key time points
 label_indices = [0, 9, 19, n - 1]
-offsets = [(10, -14), (-14, 12), (10, 12), (-14, -14)]
+offsets = [(-22, -24), (16, 2), (10, 12), (-14, -14)]
 for idx, (dx, dy) in zip(label_indices, offsets, strict=True):
     ax.annotate(
         str(years[idx]),
@@ -96,7 +96,7 @@ for idx, (dx, dy) in zip(label_indices, offsets, strict=True):
         xytext=(dx, dy),
         fontsize=9,
         fontweight="bold",
-        color=imprint_seq(norm(idx)),
+        color=INK,
         arrowprops={"arrowstyle": "-", "color": imprint_seq(norm(idx)), "alpha": 0.5, "linewidth": 0.6},
     )
 
