@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: pending | Updated: 2026-06-09
+Library: matplotlib 3.11.2 | Python 3.13.15
+Quality: 85/100 | Updated: 2026-10-08
 """
 
 import os
