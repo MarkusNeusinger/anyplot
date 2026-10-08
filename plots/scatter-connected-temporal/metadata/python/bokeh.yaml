@@ -2,142 +2,142 @@ library: bokeh
 language: python
 specification_id: scatter-connected-temporal
 created: '2026-03-13T15:25:59Z'
-updated: '2026-06-09T23:24:08Z'
+updated: '2026-10-08T03:02:31Z'
 generated_by: claude-sonnet
-workflow_run: 27241786733
+workflow_run: 37720417219
 issue: 4675
-language_version: 3.13.13
-library_version: 3.9.1
+language_version: 3.13.16
+library_version: 3.10.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/bokeh/plot-dark.html
-quality_score: 91
+quality_score: 83
 review:
   strengths:
-  - Excellent temporal encoding using Imprint sequential palette (brand green → blue)
-    with LinearColorMapper — intuitively shows the passage of time
-  - 'Sophisticated design: variable line widths (2–5px) and alphas (0.45–0.95) fade
-    older segments, creating natural visual recency emphasis'
-  - Compelling real-world data (US Phillips Curve 1990–2023) with annotated economic
-    turning points (GFC 2009, COVID 2020, inflation spike 2022)
-  - 'Both light and dark themes render correctly: backgrounds are #FAF8F1 / #1A1A17,
-    all chrome tokens (INK, INK_SOFT) correctly adapted'
-  - 'Idiomatic Bokeh usage: ColumnDataSource, multi_line with per-segment properties,
-    transform() + LinearColorMapper for ColorBar — all distinctly Bokeh patterns'
-  - CDP-based viewport override (Emulation.setDeviceMetricsOverride) ensures exact
-    3200×1800 dimensions — more reliable than --window-size alone
+  - Real US unemployment vs CPI inflation 1990–2023, values match published annual
+    figures; the path shows the 2009 jump, the flat 2010s and the 2020→2022 excursion
+  - 'Time encoded three ways: imprint_seq colour ramp (LinearColorMapper + transform)
+    with a Year ColorBar, plus segment width and alpha growing with time'
+  - Start and end labelled with direction glyphs ('1990 ▸', '◂ 2023') so the direction
+    of time reads without the colour bar
+  - 'Idiomatic Bokeh: ColumnDataSource throughout, vectorised multi_line with per-segment
+    colour/width/alpha columns, ColorBar via add_layout'
+  - 'Both themes correct: #FAF8F1 / #1A1A17 surfaces, INK/INK_SOFT chrome, identical
+    data colours'
   weaknesses:
-  - Title is missing the 'python' language component — should be 'US Phillips Curve
-    Dynamics (1990–2023) · scatter-connected-temporal · python · bokeh · anyplot.ai'
-    (SC-04 deduction)
-  - Dense central cluster (3–5% unemployment, 1.5–3.5% inflation) where many data
-    segments overlap creates visual noise — earlier data from the 1990s through 2010s
-    converges in this zone, making it hard to trace the individual year-to-year path
-    without the colorbar reference
-  - Year annotation labels (font_size='26pt') are well-placed but 'annotations' (1999,
-    2009) label text is fairly close to adjacent data points; a slightly larger y_offset
-    would reduce ambiguity about which point each label refers to
+  - 'VQ-02, SC-02 (both): path segments cross three year labels — ''2015'' sits on
+    the 2015→2016 segment, ''2020'' on the 2008→2009 segment, and the 1999→2000 segment
+    cuts through the ''1'' of ''1999'' → each label clear of every segment by at least
+    ~8 px (C3). Likely cause: the fixed x_offset/y_offset pairs in the annotations
+    dict (e.g. 2015 at (15, 12), 2020 at (15, −18), 1999 at (−20, 18)) were not chosen
+    against the outgoing segment directions; place 2015 below-left, 2020 below-right
+    further down, 1999 above-left.'
+  - 'VQ-03 (dark): the 1990–1993 segments (2 px, alpha 0.45, #009E73 end of the ramp)
+    almost disappear on #1A1A17, so the start of the path is hard to follow → raise
+    the minimum to about 3 px / alpha 0.65 (+1 px, +0.2). Likely cause: line_widths
+    = 2.0 + … and line_alphas = 0.45 + … floors.'
+  - 'Suggestion: a HoverTool on the scatter (year, unemployment, inflation) would
+    make the unlabelled years inspectable in the HTML artifact.'
+  - 'Suggestion: small arrowheads (bokeh.models.Arrow with VeeHead) on a few long
+    segments would reinforce direction where the gradient is subtle.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 — correct light surface, not pure white.
-      Chrome: Title "US Phillips Curve Dynamics (1990–2023) · scatter-connected-temporal · bokeh · anyplot.ai" is dark (#1A1A17), fully visible, spans ~73% of plot width at 37pt — appropriate scaling for this ~87-char title. Axis labels "Unemployment Rate (%)" and "Inflation Rate (%)" are dark, readable, with units. Tick labels in INK_SOFT (#4A4A44) are clearly visible. ColorBar on the right side shows "Year" label (rotated) and year tick labels (1990–2020) — all readable. Seven year annotations (1990▸, 1999, 2009, 2015, 2020, 2022, ◂2023) in bold INK_SOFT at 26pt are legible.
-      Data: 34 data points with marker size=20, ink outline, colored via Imprint sequential gradient from #009E73 (brand green, 1990) to #4467A3 (blue, 2023). Connecting multi-line segments vary in width (2–5px) and alpha (0.45–0.95) — older segments thinner/more transparent. The temporal path is clearly readable. The 2022 data point (8% inflation, low unemployment) stands out prominently in the upper-left. The connected path reveals the Phillips curve dynamics and regime changes.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+      Background: warm off-white #FAF8F1 across plot and border; no pure white.
+      Chrome: title 'US Phillips Curve Dynamics (1990–2023) · scatter-connected-temporal · python · bokeh · anyplot.ai' in bold dark ink, ~68% of the width; axis titles 'Unemployment Rate (%)' / 'Inflation Rate (%)' and tick labels in dark ink-soft, all readable; subtle grid; vertical Year colour bar 1990–2020 on the right with readable labels; bold year labels 1990 ▸, 1999, 2009, 2015, 2020, 2022, ◂ 2023.
+      Data: 34 markers (size 20, dark outline) coloured by year from #009E73 (1990) to #4467A3 (2023), joined chronologically by straight segments that get wider and more opaque over time; the 2015, 2020 and 1999 labels are crossed by path segments.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black matching #1A1A17 — correct dark surface, not pure black.
-      Chrome: Title and axis labels render in light text (#F0EFE8 / INK token for dark), clearly visible against the dark background. Tick labels in #B8B7B0 (INK_SOFT dark) are readable. ColorBar background matches dark surface (#1A1A17). Year annotations in INK_SOFT dark are visible. No dark-on-dark failures detected — all text uses the correct light token variants.
-      Data: Data colors are identical to the light render — same Imprint sequential gradient from #009E73 (1990) to #4467A3 (2023). Only chrome (background, text, grid) flipped. Grid lines are slightly more visible on dark but still subtle.
-      Legibility verdict: PASS — all text readable against warm near-black background, no dark-on-dark failures.
+      Background: warm near-black #1A1A17; no pure black.
+      Chrome: title, axis titles, ticks, colour bar labels and year labels all in light ink tokens and readable; no dark-on-dark text; grid subtle.
+      Data: marker and segment colours identical to the light render; marker outlines flip to light ink. The early 1990–1993 green segments are very faint against the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 37pt scaled for long title,
-          axis labels 42pt, tick labels 34pt, annotations 26pt, colorbar 34pt). Both
-          themes readable. Minor: annotation labels (1999, 2009) are positioned somewhat
-          close to their data points.'
+        comment: All sizes explicit (title 35pt bold, axis titles 42pt, ticks 34pt,
+          year labels 26pt bold, color bar 28/34pt); everything readable in both themes
+          and at thumbnail size
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Year annotation text labels are well-offset and non-overlapping.
-          Dense central cluster (3-5% unemployment, 1.5-3.5% inflation) has many overlapping
-          line segments creating visual noise, though the text itself does not overlap.
+        passed: false
+        comment: 'Path segments run through three year labels: ''2015'' sits on the
+          2015→2016 segment, ''2020'' on the 2008→2009 segment, the ''1'' of ''1999''
+          on the 1999→2000 segment (defect line)'
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Markers at size=20 with ink outline are clearly visible. Variable
-          line widths (2-5px) with alpha (0.45-0.95) provide good density-appropriate
-          encoding for 34 data points.
+        passed: false
+        comment: Markers (size 20, ink outline) prominent at all 34 points; but the
+          1990–1993 segments (2 px, alpha 0.45, green) almost vanish on the dark background
+          (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential palette is CVD-safe. Ink outline on markers improves
-          definition. No red-green sole-signal issues.
+        comment: Green→blue sequential ramp plus position; no red-green sole signal;
+          ink/light outlines separate markers from lines
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well. min_border_* reservations provide balanced
-          margins. ColorBar on right side is well-proportioned. No overflow or clipping.
+        comment: 3200×1800 canvas, balanced borders, colour bar well proportioned;
+          title ~68% of width; nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Unemployment Rate (%)'' and Y: ''Inflation Rate (%)'' — both
-          descriptive with units. Descriptive title prefix adds context.'
+        comment: '''Unemployment Rate (%)'' and ''Inflation Rate (%)'' — descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint sequential colormap (#009E73 → #4467A3) correctly used for
-          continuous temporal data. Background #FAF8F1 (light) / #1A1A17 (dark). All
-          chrome tokens theme-adaptive in both renders.'
+        comment: 'Continuous time mapped through imprint_seq (#009E73 → #4467A3);
+          backgrounds #FAF8F1 / #1A1A17; chrome theme-adaptive; data colours identical
+          across themes'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with thoughtful use of multiple visual variables (color
-          gradient, variable line width, variable alpha). Above well-configured defaults;
-          temporal encoding approach is genuinely sophisticated.
+        comment: 'Beyond baseline: line width (2→5 px) and alpha (0.45→0.95) grow
+          with time alongside the colour ramp, giving the path a deliberate recency
+          hierarchy; bold year labels set a typographic tier below the title'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: No frame box (outline_line_color=None), minor ticks removed, subtle
-          grid (alpha=0.12), axis lines in INK_SOFT, ColorBar styled cleanly. Good
-          refinement for Bokeh.
+        comment: 'Beyond baseline: older segments thinned to de-clutter the 1990s–2000s
+          knot; colour bar has no outline/ticks and sits on the page colour'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Plot tells the Phillips Curve story effectively. The 2022 inflation
-          spike stands out prominently by position and color. Temporal path reveals
-          regime changes. Annotations at key events (GFC 2009, COVID 2020, 2022 inflation)
-          guide the viewer through the economic narrative.
+        comment: 'Chosen focal structure: recency weighting makes the 2020→2022 excursion
+          the visual focal point; labelled years mark the GFC, COVID and inflation
+          spike'
     spec_compliance:
       score: 14
       max: 15
@@ -147,31 +147,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct connected scatter plot with temporal path encoding. Points
-          connected in chronological order with multi_line segments.
+        comment: 'Correct connected scatter: markers joined chronologically by straight
+          segments'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Points connected in temporal order, key time points annotated (1990,
-          1999, 2009, 2015, 2020, 2022, 2023), color gradient encodes time direction,
-          point markers visible at each position.
+        passed: false
+        comment: Chronological connection, start/end labels with direction glyphs,
+          gradient for time and visible markers all present; C3 missed — three time
+          labels sit on path segments (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = Unemployment Rate, Y = Inflation Rate, time encoded as color
-          gradient. All data visible within axis ranges.
+        comment: x = unemployment, y = inflation, all 34 points inside the ranges;
+          marks at their exact values, path unsorted and unsmoothed
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title is missing the 'python' language component. Should be 'US Phillips
-          Curve Dynamics (1990–2023) · scatter-connected-temporal · python · bokeh
-          · anyplot.ai'. ColorBar 'Year' label is correct.
+        passed: true
+        comment: Title reads 'US Phillips Curve Dynamics (1990–2023) · scatter-connected-temporal
+          · python · bokeh · anyplot.ai' — required format with descriptive prefix;
+          Year color bar labelled correctly
     data_quality:
       score: 15
       max: 15
@@ -181,23 +181,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of connected scatter: temporal path, diverse patterns
-          (cyclical Phillips curve in 1990s, flat 2010s, extreme 2022 spike), both
-          high/low unemployment and inflation periods.'
+        comment: Path loops, doubles back and has long jumps (2008→2009, 2019→2020→2022),
+          showing every aspect of a connected temporal scatter
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US unemployment vs inflation 1990–2023 — real macroeconomic data,
-          neutral scientific/economic context.
+        comment: US unemployment vs CPI inflation 1990–2023 — real, neutral macroeconomic
+          data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Unemployment 3.6–9.6%, inflation -0.4–8.0% — consistent with actual
-          US economic data for this period. Factually accurate.
+        comment: 'Checked against published annual US figures: unemployment 9.6% (2010),
+          8.1% (2020), 3.6% (2022/23); CPI −0.4% (2009), 0.1% (2015), 8.0% (2022)
+          — all match'
     code_quality:
       score: 10
       max: 10
@@ -207,73 +207,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flow: imports → theme constants → _lerp_hex helper (expected
-          pattern per bokeh.md) → data → figure setup → glyphs → annotations → styling
-          → save. No classes.'
+        comment: Linear script; the only helper is the _lerp_hex palette builder the
+          bokeh library prompt prescribes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — hardcoded data arrays, no random elements.
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports are used: os, time, Path, numpy, bokeh models (BasicTicker,
-          ColorBar, ColumnDataSource, Label, LinearColorMapper, NumeralTickFormatter,
-          figure, transform), selenium.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. CDP-based viewport override is an elegant improvement
-          over window-size argument. list comprehensions for segment colors/widths/alphas
-          are idiomatic.
+        comment: Appropriate complexity; per-segment lists built with comprehensions
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Uses current Bokeh
-          API.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via the prescribed Selenium
+          path; toolbar_location=None; current API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert Bokeh usage: ColumnDataSource for all data sources, multi_line
-          with per-segment ColumnDataSource properties, transform() with LinearColorMapper
-          for scatter coloring, ColorBar with add_layout, Label annotations.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Uses distinctly Bokeh features: LinearColorMapper + transform()
-          for continuous per-point coloring, multi_line with per-segment visual properties
-          (color/width/alpha arrays via ColumnDataSource), ColorBar as layout element.
-          These patterns are hard to replicate with the same elegance in other libraries.'
+        comment: 'Idiomatic: ColumnDataSource, vectorised multi_line with per-segment
+          colour/width/alpha columns, transform() + LinearColorMapper, ColorBar via
+          add_layout, Label annotations'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: LinearColorMapper + transform() driving both marker colour and a
+          ColorBar is a Bokeh-specific mapping idiom; no HoverTool in the HTML artifact
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-2bd3b4f3e3
+  rendered_at: '2026-10-08T02:59:23Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - colorbar
   - annotations
+  - colorbar
+  - layer-composition
   - html-export
   patterns:
   - columndatasource
-  - iteration-over-groups
-  - data-generation
   dataprep: []
   styling:
-  - alpha-blending
   - custom-colormap
+  - alpha-blending
   - edge-highlighting
+  - grid-styling
