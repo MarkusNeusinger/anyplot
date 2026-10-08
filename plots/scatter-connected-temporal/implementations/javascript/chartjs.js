@@ -151,6 +151,7 @@ new Chart(canvas, {
         },
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
+        border: { display: false },
       },
       y: {
         title: {
@@ -161,6 +162,7 @@ new Chart(canvas, {
         },
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
+        border: { display: false },
       },
     },
     layout: {
