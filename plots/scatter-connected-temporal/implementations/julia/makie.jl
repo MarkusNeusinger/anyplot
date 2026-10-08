@@ -1,7 +1,7 @@
 # anyplot.ai
 # scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: pending | Created: 2026-06-09
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 82/100 | Updated: 2026-10-08
 
 using CairoMakie
 using Colors
