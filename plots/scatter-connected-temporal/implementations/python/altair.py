@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-Library: altair 6.2.1 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-06-09
+Library: altair 6.3.0 | Python 3.13.16
+Quality: 83/100 | Updated: 2026-10-08
 """
 
 import importlib
@@ -56,7 +56,7 @@ df = pd.DataFrame(
 label_years = [1994, 2000, 2008, 2010, 2015, 2023]
 df_labels = df[df["year"].isin(label_years)].copy()
 nudge = {
-    1994: (0.28, 0.30),
+    1994: (-0.1, -0.75),
     2000: (0.28, 0.30),
     2008: (0.25, -0.32),
     2010: (-0.22, 0.35),
@@ -137,7 +137,6 @@ chart = (
         grid=True,
         gridOpacity=0.15,
         gridColor=INK,
-        gridDash=[3, 3],
     )
     .configure_title(color=INK)
     .configure_legend(
