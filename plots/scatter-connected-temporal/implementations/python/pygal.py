@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-06-09
+Library: pygal 3.1.3 | Python 3.13.15
+Quality: 78/100 | Updated: 2026-10-08
 """
 
 import os
@@ -29,40 +29,35 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint palette — amber semantic anchor for key events
 ANYPLOT_AMBER = "#DDCC77"
 
-# Data — Life expectancy vs GDP per capita for a developing country (1990–2023)
+# Data — fertility rate vs urbanization for an emerging economy (1980–2023)
 np.random.seed(42)
-years = list(range(1990, 2024))
+years = list(range(1980, 2024))
 n_years = len(years)
 
-gdp_base = 8000
-gdp_growth = np.cumsum(np.random.normal(450, 300, n_years))
-gdp_growth[8:10] -= 1500  # 1998–1999 recession
-gdp_growth[18:20] -= 2000  # 2008–2009 financial crisis
-gdp_growth[30:32] -= 800  # 2020–2021 pandemic
-gdp_per_capita = gdp_base + gdp_growth
-gdp_per_capita = np.maximum(gdp_per_capita, 5000)
+urban_step = np.random.normal(0.95, 0.3, n_years)
+urban_step[20:24] = np.random.normal(-0.1, 0.2, 4)  # 2000–2003 stalled migration
+urbanization = 28 + np.cumsum(urban_step)
 
-le_base = 68.0
-le_growth = np.cumsum(np.random.normal(0.25, 0.12, n_years))
-le_growth[18:20] -= 0.4
-le_growth[30:32] -= 1.2
-life_expectancy = le_base + le_growth
-life_expectancy = np.clip(life_expectancy, 64, 82)
+fert_step = np.random.normal(-0.075, 0.03, n_years)
+fert_step[35:38] += 0.17  # 2015–2017 pronatalist rebound
+fertility = np.clip(5.6 + np.cumsum(fert_step), 1.2, 7.0)
 
-# Imprint imprint_seq gradient (#009E73 → #4467A3) for temporal progression
-eras = [
-    ("1990–1997", 0, 8, "#009E73"),
-    ("1998–2003", 8, 14, "#0E937D"),
-    ("2004–2009", 14, 20, "#1B8886"),
-    ("2010–2015", 20, 26, "#297D90"),
-    ("2016–2019", 26, 30, "#367299"),
-    ("2020–2023", 30, 34, "#4467A3"),
-]
 
-annotate_years = {1998, 2005, 2008, 2015, 2020}
+def _lerp_hex(c0, c1, t):
+    r0, g0, b0 = (int(c0[i : i + 2], 16) for i in (1, 3, 5))
+    r1, g1, b1 = (int(c1[i : i + 2], 16) for i in (1, 3, 5))
+    return "#{:02X}{:02X}{:02X}".format(*(round(a + (b - a) * t) for a, b in ((r0, r1), (g0, g1), (b0, b1))))
+
+
+# Imprint imprint_seq gradient (#009E73 -> #4467A3) for temporal progression
+era_bounds = [(0, 10), (10, 20), (20, 30), (30, 37), (37, 43)]
+era_colors = [_lerp_hex("#009E73", "#4467A3", i / (len(era_bounds) - 1)) for i in range(len(era_bounds))]
+eras = [(f"{years[s]}–{years[e]}", s, e, c) for (s, e), c in zip(era_bounds, era_colors, strict=True)]
+
+annotate_years = {1990, 2000, 2010, 2020}
 
 # Title scaled for 81-char length: round(66 × 67/81) = 55
-title = "Life Expectancy vs GDP · scatter-connected-temporal · python · pygal · anyplot.ai"
+title = "Fertility vs Urbanization · scatter-connected-temporal · python · pygal · anyplot.ai"
 title_font_size = max(44, round(66 * 67 / len(title)))
 
 font = "DejaVu Sans, Helvetica, Arial, sans-serif"
@@ -74,7 +69,7 @@ custom_style = Style(
     foreground_subtle=INK_MUTED,
     guide_stroke_color=INK_MUTED,
     guide_stroke_dasharray="3,5",
-    colors=("#009E73", "#0E937D", "#1B8886", "#297D90", "#367299", "#4467A3", ANYPLOT_AMBER, "#AE3030", "#4467A3"),
+    colors=(*era_colors, ANYPLOT_AMBER, "#AE3030", "#4467A3"),
     font_family=font,
     title_font_family=font,
     title_font_size=title_font_size,
@@ -87,22 +82,23 @@ custom_style = Style(
     tooltip_font_family=font,
     opacity=0.92,
     opacity_hover=1.0,
+    stroke_width=5,
     stroke_opacity=0.9,
     stroke_opacity_hover=1.0,
 )
 
-x_min = float(np.floor(gdp_per_capita.min() / 1000) * 1000)
-x_max = float(np.ceil(gdp_per_capita.max() / 1000) * 1000)
-y_min = float(np.floor(life_expectancy.min()))
-y_max = float(np.ceil(life_expectancy.max()) + 1)
+x_min = float(np.floor(urbanization.min() / 5) * 5)
+x_max = float(np.ceil(urbanization.max() / 5) * 5)
+y_min = float(np.floor(fertility.min() * 2) / 2)
+y_max = float(np.ceil(fertility.max() * 2) / 2)
 
 chart = pygal.XY(
     width=3200,
     height=1800,
     style=custom_style,
     title=title,
-    x_title="GDP per Capita (USD)",
-    y_title="Life Expectancy (years)",
+    x_title="Urban Population (% of total)",
+    y_title="Fertility Rate (births per woman)",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=3,
@@ -111,17 +107,17 @@ chart = pygal.XY(
     dots_size=12,
     show_x_guides=True,
     show_y_guides=True,
-    x_value_formatter=lambda x: f"${x / 1000:.0f}k",
-    value_formatter=lambda y: f"{y:.1f} yrs",
+    x_value_formatter=lambda x: f"{x:.0f}%",
+    value_formatter=lambda y: f"{y:.1f}",
     print_labels=True,
     print_values=False,
     margin_bottom=130,
     margin_left=80,
-    margin_right=80,
-    margin_top=60,
+    margin_right=140,
+    margin_top=90,
     range=(y_min, y_max),
     xrange=(x_min, x_max),
-    x_labels_major_count=7,
+    x_labels_major_count=8,
     y_labels_major_count=8,
     js=[],
     show_x_labels=True,
@@ -132,7 +128,7 @@ chart = pygal.XY(
 for era_name, start, end, color in eras:
     end_idx = min(end + 1, n_years)
     segment_points = [
-        {"value": (float(gdp_per_capita[i]), float(life_expectancy[i])), "color": color} for i in range(start, end_idx)
+        {"value": (float(urbanization[i]), float(fertility[i])), "color": color} for i in range(start, end_idx)
     ]
     chart.add(
         era_name,
@@ -146,41 +142,38 @@ for era_name, start, end, color in eras:
 # Key years highlighted with amber dots and year labels
 annotated_points = []
 for yr in sorted(annotate_years):
-    i = yr - 1990
+    i = yr - years[0]
     annotated_points.append(
-        {"value": (float(gdp_per_capita[i]), float(life_expectancy[i])), "label": str(yr), "color": ANYPLOT_AMBER}
+        {"value": (float(urbanization[i]), float(fertility[i])), "label": str(yr), "color": ANYPLOT_AMBER}
     )
 chart.add("Key years", annotated_points, stroke=False, dots_size=20)
 
 # Start and end markers
 chart.add(
     f"Start ({years[0]})",
-    [{"value": (float(gdp_per_capita[0]), float(life_expectancy[0])), "label": "▶ 1990", "color": "#AE3030"}],
+    [{"value": (float(urbanization[0]), float(fertility[0])), "label": "▶ 1980", "color": "#AE3030"}],
     stroke=False,
     dots_size=26,
 )
 chart.add(
     f"End ({years[-1]})",
-    [{"value": (float(gdp_per_capita[-1]), float(life_expectancy[-1])), "label": "● 2023", "color": "#4467A3"}],
+    [{"value": (float(urbanization[-1]), float(fertility[-1])), "label": "● 2023", "color": "#4467A3"}],
     stroke=False,
     dots_size=26,
 )
 
 # Patch label text colors for dark-theme legibility before PNG conversion
 # pygal's print_labels text color does not adapt to the dark background via the foreground Style token
-_label_texts = {str(yr) for yr in sorted(annotate_years)} | {"▶ 1990", "● 2023"}
+_label_texts = {str(yr) for yr in sorted(annotate_years)} | {"▶ 1980", "● 2023"}
 
 
 def _patch_label_colors(svg_str, labels, fill_color):
     def _fix(m):
         tag_attrs, content = m.group(1), m.group(2)
-        if not any(lbl in content for lbl in labels):
+        if content.strip() not in labels:
             return m.group(0)
-        if "fill=" in tag_attrs:
-            tag_attrs = re.sub(r'\bfill="[^"]*"', f'fill="{fill_color}"', tag_attrs)
-        else:
-            tag_attrs += f' fill="{fill_color}"'
-        return f"<text{tag_attrs}>{content}</text>"
+        # inline style outranks pygal's `.label` CSS class fill
+        return f'<text{tag_attrs} style="fill:{fill_color}">{content}</text>'
 
     return re.sub(r"<text([^>]*)>(.*?)</text>", _fix, svg_str, flags=re.DOTALL)
 
