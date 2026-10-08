@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-06-09
+Library: pygal 3.1.3 | Python 3.13.15
+Quality: 78/100 | Updated: 2026-10-08
 """
 
 import os
