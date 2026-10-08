@@ -2,131 +2,128 @@ library: seaborn
 language: python
 specification_id: scatter-connected-temporal
 created: '2026-03-13T15:25:33Z'
-updated: '2026-06-09T23:36:14Z'
+updated: '2026-10-08T02:57:46Z'
 generated_by: claude-sonnet
-workflow_run: 27241621391
+workflow_run: 37719928502
 issue: 4675
-language_version: 3.13.13
+language_version: 3.13.16
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 86
 review:
   strengths:
-  - 'Perfect spec compliance: all required connected-scatter features implemented
-    (temporal path, gradient encoding, directional arrow, chronological annotations,
-    visible markers)'
-  - 'Outstanding data quality: realistic U.S. Phillips curve data with historically
-    significant turning points correctly placed'
-  - KDE density contour background (sns.kdeplot) adds genuine analytical value showing
-    where the Phillips curve regime historically clustered
-  - imprint_seq colormap correctly applied for temporal continuous encoding
-  - 'Theme adaptation is thorough: all chrome elements use INK/INK_SOFT tokens and
-    both renders pass readability checks'
-  - Clean code structure with hardcoded arrays for full reproducibility
+  - Every month is a marker at its exact (volume, price) value, joined in time order
+    by straight LineCollection segments carrying the imprint_seq gradient
+  - sns.scatterplot with continuous hue, hue_norm and the imprint_seq palette keeps
+    marker colors in lockstep with the path gradient and the colorbar
+  - Colorbar ticks relabelled as 'Mon YYYY' so the legend speaks the same language
+    as the in-plot labels
+  - Key-point labels pick the story's turning points (start, Aug 2023 volume spike,
+    Dec 2023, Aug 2024 peak, end) and sit beside their points with curved leaders
+  - Theme tokens threaded through every chrome element; both renders read cleanly
   weaknesses:
-  - Year annotations (fontsize=8 bold) are readable at full resolution but approach
-    the lower threshold for mobile-scaled display; bumping to fontsize=9 would add
-    robustness
-  - 'Annotation cluster in the upper-left (2000, 2023, 2019): both 2000 and 2023 share
-    nearly identical xytext offsets (+14,+12) and (+16,+12) despite adjacent data
-    points (~4.0,4.2) and (~3.6,4.1) causing crowding — adjust 2023 offset to (-20,20)
-    or (16,28) to separate labels'
-  - Core temporal path relies on matplotlib LineCollection rather than a seaborn primitive,
-    limiting seaborn-distinctive character of the implementation
+  - 'VQ-02 (both): the final ''3'' of the ''Dec 2023'' label touches the May→Jun 2024
+    path segment that passes just below-right of it → clear the segment by a few pixels
+    (e.g. offset (-40, 16) or place the label left of the point). Likely cause: key_points
+    offset (-34, 14) for index 11.'
+  - 'Suggestion: the faint KDE contours are not asked for by the spec and run off
+    the axes as open curves at the top and right; dropping them would quiet the background.'
+  - 'Suggestion: segments could be built as np.stack([points[:-1], points[1:]], axis=1)
+    instead of the list comprehension.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
-      Chrome: Title "scatter-connected-temporal · python · seaborn · anyplot.ai" at 12pt clearly readable. Italic subtitle "U.S. Phillips Curve Dynamics: Tracing Unemployment vs. Inflation (1990-2023)" at 8pt readable. Axis labels "Unemployment Rate (%)" and "Inflation Rate (%)" at 10pt readable. Tick labels at 8pt readable. Year annotations (1990, 2000, 2009, 2012, 2019, 2023) at 8pt bold readable; minor crowding in upper-left cluster but no overlap. Colorbar label "Year" and tick labels 1990-2020 readable.
-      Data: imprint_seq gradient (green #009E73 early years → blue #4467A3 recent years) applied to both line segments and scatter markers. 34 data points with s=120 clearly visible. KDE density contours in subtle gray (alpha=0.2) as background. Directional arrow visible.
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: title 'scatter-connected-temporal · python · seaborn · anyplot.ai' (~61% of width) and italic INK_SOFT subtitle 'Fictional stock: how price and trading volume moved together, Jan 2023 – Dec 2024'; axis labels 'Average Daily Volume (million shares)' and 'Closing Price (USD)', ticks 4–11 and 90–160, colorbar 'Month' with ticks Jan 2023 … Dec 2024 — all dark text, readable. Faint grey KDE contours in the background; subtle y-grid.
+      Data: 24 monthly markers (s=120, page-colored edge) joined by straight segments, imprint_seq gradient from #009E73 (Jan 2023) to #4467A3 (Dec 2024); first color is brand green. Black arrow on the Jun→Jul 2023 segment. Bold labels Jan 2023, Aug 2023, Dec 2023, Aug 2024, Dec 2024 with curved leaders; the 'Dec 2023' label's last digit touches the May→Jun 2024 segment.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct Imprint dark surface
-      Chrome: Title, axis labels, tick labels, subtitle, and year annotations all render in light ink (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark failure detected. Colorbar label and ticks in INK_SOFT correctly styled.
-      Data: Data colors (imprint_seq gradient) are identical to the light render — only chrome flips. Brand green #009E73 is visible on the dark background as expected. All 34 markers and connecting lines clearly distinguishable from the background.
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title, subtitle, axis labels, ticks, colorbar label and ticks, and month labels all in light ink (#F0EFE8 / #B8B7B0); no dark-on-dark text. Contours and grid faint grey.
+      Data: marker and path colors identical to the light render; the direction arrow flips to light ink; brand green early end clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title 12pt, axis labels 10pt, tick labels 8pt all set and readable
-          in both themes. Annotations at 8pt bold fine at full resolution; marginally
-          small for mobile scaling.
+        comment: Title 12 pt, axis labels 10 pt, ticks 8 pt, bold month labels 9 pt,
+          all explicitly set and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No true text overlap. Minor crowding in upper-left cluster (2000,
-          2023, 2019 adjacent data points with similar xytext offsets); arrows disambiguate.
+        comment: The final '3' of the 'Dec 2023' label touches the May→Jun 2024 path
+          segment (defect line); all other labels clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 34 data points with s=120 appropriately prominent. Line segments
-          and directional arrow clearly visible.
+        comment: 24 points at s=120 with page-colored edge, 1.8 pt path, all visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green to blue) is CVD-safe. No red-green sole signal.
+        comment: Green-to-blue imprint_seq is CVD-safe; time also carried by labels
+          and arrow
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. 3200x1800 px confirmed. Generous margins via
-          subplots_adjust. Nothing cut off.
+        comment: 3200x1800 (gate passed), title ~61% of width, balanced axis labels,
+          nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units. Title in exact mandated format.
+        comment: '''Average Daily Volume (million shares)'' and ''Closing Price (USD)''
+          carry units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq correctly built from #009E73 to #4467A3. PAGE_BG theme-adaptive.
-          Data colors identical across renders.'
+        comment: 'imprint_seq #009E73→#4467A3 for time; #FAF8F1 / #1A1A17 surfaces;
+          data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Above 4-default: KDE background adds analytical depth; LineCollection
-          gradient is sophisticated; intentional annotation of economic turning points
-          shows design intent.'
+        comment: 'Clear three-level type hierarchy: title, italic INK_SOFT subtitle,
+          bold 9 pt month labels with curved leaders'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Above 2-default: sns.despine, y-only grid at alpha=0.15, KDE at
-          alpha=0.2, colorbar styled with theme tokens, careful subplots_adjust.'
+        comment: Colorbar ticks relabelled as 'Mon YYYY' to match the in-plot labels;
+          page-colored marker edges separate markers from the path
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Above 2-default: narrative subtitle, temporal path encodes the insight,
-          directional arrow, annotations at economic inflection points guide the reader.'
+        comment: Labels pick the narrative turning points (volume spike Aug 2023,
+          rally peak Aug 2024) and a subtitle frames the story
     spec_compliance:
       score: 15
       max: 15
@@ -136,26 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct connected scatter with temporal path.
+        comment: Connected scatter with chronological straight segments
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: chronological connections, key annotations, directional
-          arrow, color gradient, visible markers.'
+        comment: C1 markers at exact values joined in time order; C2 start/end labels,
+          gradient and arrow; C3 selected labels; C4 green light end visible in both
+          themes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=unemployment, Y=inflation, all 34 points visible.
+        comment: x=volume, y=price, all 24 points in range, no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in exact format. Colorbar as temporal scale legend is appropriate.
+        comment: Exact mandated title; colorbar labelled 'Month' explains the gradient
     data_quality:
       score: 15
       max: 15
@@ -165,19 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All spec aspects demonstrated including density background.
+        comment: 'Path loops, doubles back and trends upward: shows what a connected
+          scatter is for'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: U.S. Phillips curve 1990-2023, realistic values, politically neutral.
+        comment: 'Fictional stock, monthly price vs volume 2023-2024: plausible and
+          neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Unemployment 3.6-9.6%, inflation -0.4-8.0%, 34 annual points.
+        comment: 'Prices 92-158 USD, volume 4.1-10.4 M shares/day: sensible; no Check
+          values in spec'
     code_quality:
       score: 10
       max: 10
@@ -187,33 +188,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded data arrays, fully deterministic.
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 7 imports used.
+        comment: All seven imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI, no AR-08.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, dpi=400, no bbox_inches='tight'.
+        comment: plot-{THEME}.png, no bbox_inches='tight'
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -221,27 +222,33 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.set_theme, sns.scatterplot with hue_norm, sns.kdeplot, sns.despine
-          all idiomatic. Core path via matplotlib LineCollection limits pure seaborn
-          score.
+        comment: sns.scatterplot with continuous hue + hue_norm + cmap palette, sns.despine;
+          path via matplotlib LineCollection
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: sns.kdeplot as background density and sns.scatterplot with continuous
-          hue_norm are genuine seaborn-distinctive capabilities.
+        comment: Continuous hue mapping with hue_norm; the kdeplot contours are an
+          unrequested layer and earn no credit
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-cc2f0f595b
+  rendered_at: '2026-10-08T02:53:37Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
+  - manual-ticks
+  - layer-composition
   patterns:
   - explicit-figure
   dataprep:
   - kde
+  - time-series
   styling:
   - custom-colormap
   - alpha-blending
   - edge-highlighting
+  - grid-styling
