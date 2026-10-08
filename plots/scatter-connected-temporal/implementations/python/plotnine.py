@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 Library: plotnine 0.15.5 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-06-09
+Quality: 79/100 | Updated: 2026-06-09
 """
 
 import os
