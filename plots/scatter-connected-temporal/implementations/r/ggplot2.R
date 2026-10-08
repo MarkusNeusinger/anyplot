@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 89/100 | Created: 2026-06-09
+#' Quality: 82/100 | Updated: 2026-10-08
 
 library(ggplot2)
 library(scales)
@@ -45,9 +45,9 @@ df <- data.frame(
 key_years <- c(1980, 1990, 2000, 2010, 2019)
 df_labels <- df[df$year %in% key_years, ]
 
-# Per-label positions to avoid crowding (2000 nudged left, 2019 nudged higher)
-df_labels$lbl_x <- df_labels$unemployment + c( 0.2,  0.2, -0.3,  0.2,  0.2)
-df_labels$lbl_y <- df_labels$inflation    + c( 0.6,  0.5,  0.5,  0.5,  0.7)
+# Per-label positions to avoid crowding (2000 nudged left, 2019 placed below its marker)
+df_labels$lbl_x <- df_labels$unemployment + c( 0.2,  0.2, -0.3,  0.2,  0.0)
+df_labels$lbl_y <- df_labels$inflation    + c( 0.6,  0.5,  0.5,  0.5, -0.6)
 
 # Arrow segment: from start point toward first step for temporal direction cue
 arrow_start <- df[df$year == 1980, ]
@@ -95,6 +95,7 @@ p <- ggplot(df, aes(x = unemployment, y = inflation)) +
     low   = IMPRINT_PALETTE[1],
     high  = IMPRINT_PALETTE[3],
     name  = "Year",
+    breaks = c(1980, 1990, 2000, 2010, 2019),
     guide = guide_colorbar(
       barwidth       = 8,
       barheight      = 0.5,
