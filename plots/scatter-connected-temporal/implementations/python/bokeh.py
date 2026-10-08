@@ -1,7 +1,7 @@
 """anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 Library: bokeh 3.9.1 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-06-09
+Quality: pending | Updated: 2026-06-09
 """
 
 import os
