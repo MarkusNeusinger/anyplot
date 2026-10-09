@@ -10,3 +10,4 @@
   notifications lag the spend by hours, so it bounds the damage rather than
   making the cap exact. Code only, not deployed: the runbook in its README and
   `docs/reference/gcp-budget-guard.md` carry the deploy, test and recovery steps.
+  (#12109)
