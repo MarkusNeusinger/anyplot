@@ -30,7 +30,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from dotenv import load_dotenv
 
 
-load_dotenv()
+# Explicit path: a bare load_dotenv() walks up past a git worktree into the
+# main checkout's .env.
+load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
 
 from itertools import islice  # noqa: E402
 

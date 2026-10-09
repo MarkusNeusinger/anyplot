@@ -52,6 +52,8 @@ dependencies = [
     "cachetools>=7.1.7",
     # Auth — Cloudflare Access JWT verification on /debug/*
     "pyjwt[crypto]>=2.13.0",
+    # Auth — Cloud Run ID tokens for the agent BFF's upstream calls (api/routers/agent.py)
+    "google-auth[requests]>=2.48.0",
 ]
 
 [project.optional-dependencies]

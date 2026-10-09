@@ -32,6 +32,16 @@ substitutions:
   # email not in this list get 403. Required for the JWT path to authorize
   # anyone.
   _ADMIN_ALLOWED_EMAILS: ""
+  # Agent chat BFF (/debug/agent/*, api/routers/agent.py) — ships dark. Every
+  # route answers 404 until AGENT_ENABLED is true AND AGENT_SERVICE_URL and the
+  # AGENT_USER_ID_KEY secret are both set. Flip it HERE (the trigger's
+  # substitutions), not with `gcloud run services update`: this pipeline writes
+  # both variables on every deploy, so an out-of-band change lasts only until
+  # the next build. AGENT_USER_ID_KEY joins `--update-secrets` below only once
+  # the owner has created that secret — Cloud Run refuses a deploy that names a
+  # secret which does not exist.
+  _AGENT_ENABLED: "false"
+  _AGENT_SERVICE_URL: ""
 
 steps:
   # Build the container image
@@ -99,7 +109,7 @@ steps:
       # both flags means one deploy cannot undo an out-of-band change; the cost
       # is that a variable dropped from this line is no longer removed by the
       # next deploy, which is the trade already accepted for the secrets.
-      - "--update-env-vars=^|^ENVIRONMENT=production|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GCS_BUCKET=anyplot-images|CF_ACCESS_TEAM_DOMAIN=${_CF_ACCESS_TEAM_DOMAIN}|CF_ACCESS_AUD=${_CF_ACCESS_AUD}|ADMIN_ALLOWED_EMAILS=${_ADMIN_ALLOWED_EMAILS}"
+      - "--update-env-vars=^|^ENVIRONMENT=production|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GCS_BUCKET=anyplot-images|CF_ACCESS_TEAM_DOMAIN=${_CF_ACCESS_TEAM_DOMAIN}|CF_ACCESS_AUD=${_CF_ACCESS_AUD}|ADMIN_ALLOWED_EMAILS=${_ADMIN_ALLOWED_EMAILS}|AGENT_ENABLED=${_AGENT_ENABLED}|AGENT_SERVICE_URL=${_AGENT_SERVICE_URL}"
       - "--cpu-throttling"
       # 40, not 15: with _MAX_INSTANCES=1 this limit is the only capacity the
       # service has, and 15 was a default nobody had measured against. On this
@@ -216,6 +226,11 @@ steps:
         # says "admin gate" about something that never reached it.
         code=$$(curl -s $$RETRY "$${HDR[@]}" -o /dev/null -w '%{http_code}' "$$URL/debug/status")
         test "$$code" = "401" || { echo "admin gate expected 401, got $$code"; exit 1; }
+        # The agent BFF sits behind the same gate, ahead of its own kill switch,
+        # so this reads 401 whether the feature is on or off. A 404 would mean
+        # the router lost the gate; a 200 would mean it answers anyone.
+        code=$$(curl -s $$RETRY "$${HDR[@]}" -o /dev/null -w '%{http_code}' "$$URL/debug/agent/status")
+        test "$$code" = "401" || { echo "agent BFF gate expected 401, got $$code"; exit 1; }
         # Re-assert the tag AFTER the probes. `candidate` is a shared tag, so a
         # concurrent build could move it between the check above and the last
         # probe, and this build would then have smoked someone else's revision

@@ -14,6 +14,7 @@ Connection modes:
 import asyncio
 import os
 import uuid
+from pathlib import Path
 
 import pytest
 import pytest_asyncio
@@ -33,7 +34,9 @@ def _get_database_url():
     """Get test database URL, defaulting to 'test' database on same instance."""
     from dotenv import load_dotenv
 
-    load_dotenv()
+    # This checkout's .env only: a bare load_dotenv() walks up past a git
+    # worktree into the main checkout's .env.
+    load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
     # Prefer explicit TEST_DATABASE_URL
     database_url = os.environ.get("TEST_DATABASE_URL")
