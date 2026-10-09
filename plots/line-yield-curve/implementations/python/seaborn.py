@@ -94,7 +94,7 @@ idx_10y = maturity_years.index(10)
 yield_2y = inv_yields[idx_2y]
 yield_10y = inv_yields[idx_10y]
 if yield_2y > yield_10y:
-    ax.fill_between([2, 10], yield_10y, yield_2y, alpha=0.10, color=SEMANTIC_RED, zorder=0)
+    ax.fill_between([2, 10], yield_10y, yield_2y, alpha=0.18, color=SEMANTIC_RED, zorder=0)
     ax.text(6, (yield_2y + yield_10y) / 2, "2Y–10Y Inversion", fontsize=9, color=SEMANTIC_RED, ha="center", va="center")
 
 # Style
