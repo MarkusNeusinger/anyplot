@@ -26,7 +26,6 @@ from google.adk.utils._schema_utils import validate_schema
 from google.genai import types
 from pydantic import BaseModel, ValidationError
 
-from ..code.normalise import SUPPORTED_LIBRARIES as NORMALISED_LIBRARIES
 from ..models import ADAPTER_FULL_MAX_OUTPUT_TOKENS, make_content_config, make_model
 from ..plugins.ledger import ledger_for
 from ..policy import adapter_instruction
@@ -97,6 +96,5 @@ def make_adapter(library: str) -> Agent:
     )
 
 
-ADAPTERS: dict[str, Agent] = {
-    library: make_adapter(library) for library in get_settings().libraries if library in NORMALISED_LIBRARIES
-}
+# The settings refuse a library without a runtime, so every enabled library gets its adapter.
+ADAPTERS: dict[str, Agent] = {library: make_adapter(library) for library in get_settings().libraries}

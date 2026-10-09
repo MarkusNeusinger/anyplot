@@ -47,8 +47,8 @@ Three rules hold for everything here:
 | `AGENT_JUDGE_MODEL` | `claude-haiku-5-5` | Model of the scope and dataset judge; same rule |
 | `AGENT_LOCATION` | `eu` | Vertex AI location: `eu`, `us` or `global` |
 | `AGENT_PROJECT`, else `GOOGLE_CLOUD_PROJECT` | `anyplot` | Project that serves and bills the model calls |
-| `AGENT_LIBRARIES` | `matplotlib,seaborn` | Libraries with an enabled runtime |
-| `AGENT_RENDERER` | `sandbox` | `sandbox`, `local` (Docker, development only), `fake` or `remote` |
+| `AGENT_LIBRARIES` | `matplotlib,seaborn` | Enabled libraries; each needs a phase-1 runtime (`matplotlib`, `seaborn`), others are refused at startup |
+| `AGENT_RENDERER` | `sandbox` | `sandbox`, `local` (Docker, development only), `fake` (fixture PNGs, development and test only) or `remote` |
 | `AGENT_RENDER_IMAGE` | `anyplot-agents:dev` | Image the `local` renderer runs |
 | `AGENT_RENDER_CONCURRENCY` | `2` | Theme renders at the same time |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request |

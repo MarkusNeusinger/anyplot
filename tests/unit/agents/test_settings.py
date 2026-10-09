@@ -70,6 +70,7 @@ class TestEnvironmentOverrides:
         monkeypatch.setenv("AGENT_MODEL", "gemini-3.9-flash")
         monkeypatch.setenv("AGENT_JUDGE_MODEL", "gemini-3.6-flash-lite")
         monkeypatch.setenv("AGENT_LOCATION", "global")
+        monkeypatch.setenv("ENVIRONMENT", "development")  # the fake renderer is refused in production
         monkeypatch.setenv("AGENT_RENDERER", "fake")
         monkeypatch.setenv("AGENT_MAX_LLM_CALLS", "7")
         monkeypatch.setenv("AGENT_SOFT_DEADLINE_S", "120")
@@ -84,12 +85,12 @@ class TestEnvironmentOverrides:
         assert settings.soft_deadline_s == 120
 
     def test_list_settings_accept_comma_separated_values(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("AGENT_LIBRARIES", "matplotlib, seaborn,plotly")
+        monkeypatch.setenv("AGENT_LIBRARIES", "seaborn, matplotlib")
         monkeypatch.setenv("AGENT_ALLOWED_CALLERS", "api@anyplot.iam.gserviceaccount.com")
 
         settings = AgentSettings()
 
-        assert settings.libraries == ["matplotlib", "seaborn", "plotly"]
+        assert settings.libraries == ["seaborn", "matplotlib"]
         assert settings.allowed_callers == ["api@anyplot.iam.gserviceaccount.com"]
 
     def test_list_settings_accept_a_json_array(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -235,6 +236,16 @@ class TestRendererValidator:
     def test_production_renderers_are_allowed_in_production(self, renderer: str) -> None:
         assert AgentSettings(renderer=renderer, environment="production").renderer == renderer
 
+    @pytest.mark.parametrize("environment", ["development", "test"])
+    def test_fake_renderer_is_allowed_in_development_and_test(self, environment: str) -> None:
+        assert AgentSettings(renderer="fake", environment=environment).renderer == "fake"
+
+    @pytest.mark.parametrize("environment", ["production", "staging"])
+    def test_fake_renderer_is_refused_elsewhere(self, environment: str) -> None:
+        """The fake backend runs no code, so a production misconfiguration would ship fixture plots."""
+        with pytest.raises(ValidationError, match="AGENT_RENDERER=fake"):
+            AgentSettings(renderer="fake", environment=environment)
+
     def test_unknown_renderer_is_refused(self) -> None:
         with pytest.raises(ValidationError):
             AgentSettings(renderer="subprocess")
@@ -244,6 +255,11 @@ class TestOtherValidators:
     def test_unknown_library_is_refused(self) -> None:
         with pytest.raises(ValidationError, match="unknown libraries"):
             AgentSettings(libraries=["matplotlib", "excel"])
+
+    def test_library_without_a_runtime_is_refused(self) -> None:
+        """A catalogue library without a phase-1 runtime must not be reported as enabled."""
+        with pytest.raises(ValidationError, match="no runtime"):
+            AgentSettings(libraries=["matplotlib", "plotly"])
 
     def test_empty_library_list_is_refused(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("AGENT_LIBRARIES", "")

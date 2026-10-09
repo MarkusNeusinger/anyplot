@@ -13,8 +13,8 @@ another provider, model or location.
 | `AGENT_JUDGE_MODEL` | `claude-haiku-5-5` | Model of the scope and dataset judge; same rule |
 | `AGENT_LOCATION` | `eu` | Vertex AI location of every model call: `eu`, `us` or `global` |
 | `AGENT_PROJECT`, else `GOOGLE_CLOUD_PROJECT` | `anyplot` | Google Cloud project that serves (and bills) the model calls |
-| `AGENT_LIBRARIES` | `matplotlib,seaborn` | Libraries with an enabled runtime |
-| `AGENT_RENDERER` | `sandbox` | Render backend: `sandbox`, `local` (development only), `fake` or `remote` |
+| `AGENT_LIBRARIES` | `matplotlib,seaborn` | Enabled libraries; each needs a phase-1 runtime (`matplotlib`, `seaborn`) |
+| `AGENT_RENDERER` | `sandbox` | Render backend: `sandbox`, `local` (development only), `fake` (development and test only) or `remote` |
 | `AGENT_RENDER_IMAGE` | `anyplot-agents:dev` | Image the `local` renderer runs with Docker |
 | `AGENT_RENDER_CONCURRENCY` | `2` | Renders (one theme each) that may run at the same time |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request (the `RunConfig` cap) |
@@ -47,6 +47,12 @@ from pydantic import AliasChoices, Field, PositiveFloat, PositiveInt, field_vali
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 from core.constants import SUPPORTED_LIBRARIES
+
+from .code.normalise import SUPPORTED_LIBRARIES as RUNTIME_LIBRARIES
+
+
+FAKE_RENDERER_ENVIRONMENTS = frozenset({"development", "test"})
+"""Where `AGENT_RENDERER=fake` (fixture PNGs, no code runs) is allowed."""
 
 
 Location = Literal["eu", "us", "global"]
@@ -110,7 +116,7 @@ class AgentSettings(BaseSettings):
     """Libraries with an enabled runtime (`AGENT_LIBRARIES`, comma-separated)."""
 
     renderer: Renderer = "sandbox"
-    """Render backend (`AGENT_RENDERER`); `local` only in development."""
+    """Render backend (`AGENT_RENDERER`); `local` only in development, `fake` only in development and test."""
 
     render_image: str = Field(default="anyplot-agents:dev", pattern=r"^[A-Za-z0-9][A-Za-z0-9._/:@-]{0,199}$")
     """Image the local renderer runs (`AGENT_RENDER_IMAGE`)."""
@@ -217,9 +223,21 @@ class AgentSettings(BaseSettings):
     @field_validator("libraries")
     @classmethod
     def _known_libraries(cls, value: list[str]) -> list[str]:
+        """Every enabled library is a catalogue library with a runtime (normaliser and adapter).
+
+        One registry for the settings, `/v1/status`, eligibility and the adapter
+        construction: a library the runtime cannot serve is refused here instead of
+        being reported as enabled and failing at session creation.
+        """
         unknown = sorted(set(value) - SUPPORTED_LIBRARIES)
         if unknown:
             raise ValueError(f"unknown libraries in AGENT_LIBRARIES: {', '.join(unknown)}")
+        without_runtime = sorted(set(value) - RUNTIME_LIBRARIES)
+        if without_runtime:
+            raise ValueError(
+                f"libraries with no runtime in AGENT_LIBRARIES: {', '.join(without_runtime)} "
+                f"(the phase-1 runtime serves {', '.join(sorted(RUNTIME_LIBRARIES))})"
+            )
         return list(dict.fromkeys(value))
 
     @field_validator("environment")
@@ -250,6 +268,11 @@ class AgentSettings(BaseSettings):
         if self.renderer == "local" and self.environment != "development":
             raise ValueError(
                 f"AGENT_RENDERER=local is allowed only when ENVIRONMENT=development, not {self.environment!r}"
+            )
+        if self.renderer == "fake" and self.environment not in FAKE_RENDERER_ENVIRONMENTS:
+            raise ValueError(
+                "AGENT_RENDERER=fake runs no code and returns fixture PNGs; it is allowed only when "
+                f"ENVIRONMENT is development or test, not {self.environment!r}"
             )
         if self.dev_fixture is not None and self.environment != "development":
             raise ValueError(
