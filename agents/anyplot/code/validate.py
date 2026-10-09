@@ -12,6 +12,16 @@ adapter's output boring: a fixed import surface, no reflection, no I/O, one data
 
 Decisions this module takes where the design leaves room:
 
+* **Import surface.** COMMON plus the science stack (`scipy.{stats, interpolate, signal,
+  cluster.hierarchy, spatial, optimize, special, integrate, ndimage}`, `sklearn` without
+  `datasets`, `statsmodels.{api, nonparametric, tsa, graphics}`) plus, for matplotlib
+  and seaborn, `matplotlib`, `seaborn` and the bundled `mpl_toolkits.{mplot3d,
+  axes_grid1, axisartist}`. The four extra scipy modules, `statsmodels.graphics` and
+  the toolkits were admitted after the readiness sweep showed them behind most of the
+  catalogue's benign import blocks; each was walked for file or network helpers and
+  has none. Third-party plotting helpers (cartopy, qrcode, wordcloud, matplotlib_venn,
+  squarify, adjustText) stay banned: they are not in the agents image, and admitting
+  one is an owner decision, not a validator default.
 * **Attribute names are banned outright, on any object.** `.format`, `.eval`, `.query`,
   `.show`, `.use`, `.load`, `.read_*`, `.to_csv` and the rest are findings wherever they
   appear, called or not, because the receiver's type is not knowable without executing
@@ -114,6 +124,9 @@ COMMON_IMPORTS: frozenset[str] = frozenset(
     }
 )
 # Shared by every Python plotting library: the science stack minus its data loaders.
+# Every package here was walked for public names that read, load, save, open or fetch
+# (2026-10-09, scipy 1.18, statsmodels 0.14): none exist; `scipy.ndimage.imread` is
+# long gone. `scipy.io` and `scipy.datasets` stay out.
 SHARED_SCIENCE_IMPORTS: frozenset[str] = frozenset(
     {
         "scipy.stats",
@@ -121,19 +134,30 @@ SHARED_SCIENCE_IMPORTS: frozenset[str] = frozenset(
         "scipy.signal",
         "scipy.cluster.hierarchy",
         "scipy.spatial",
+        "scipy.optimize",
+        "scipy.special",
+        "scipy.integrate",
+        "scipy.ndimage",
         "sklearn",
         "statsmodels.api",
         "statsmodels.nonparametric",
         "statsmodels.tsa",
+        "statsmodels.graphics",
     }
 )
-DENIED_IMPORTS: frozenset[str] = frozenset({"sklearn.datasets", "statsmodels.formula"})
+DENIED_IMPORTS: frozenset[str] = frozenset({"sklearn.datasets", "statsmodels.formula", "scipy.io", "scipy.datasets"})
+# The three toolkits ship with matplotlib and do no I/O. Third-party plotting helpers
+# (cartopy, qrcode, wordcloud, matplotlib_venn, squarify, adjustText) stay banned: they
+# are not installed in the agents image, and admitting one is an owner decision.
+_MATPLOTLIB_STACK: frozenset[str] = frozenset(
+    {"matplotlib", "mpl_toolkits.mplot3d", "mpl_toolkits.axes_grid1", "mpl_toolkits.axisartist"}
+)
 # Phase 1 enables matplotlib and seaborn. The other Python libraries save through
 # different calls (`write_image`, `ggsave`, `render_to_png`), so their profile needs
 # more than an import allowlist; until then they raise `ValueError`.
 LIBRARY_IMPORTS: dict[str, frozenset[str]] = {
-    "matplotlib": frozenset({"matplotlib"}),
-    "seaborn": frozenset({"seaborn", "matplotlib"}),
+    "matplotlib": _MATPLOTLIB_STACK,
+    "seaborn": _MATPLOTLIB_STACK | {"seaborn"},
 }
 
 BANNED_NAMES: frozenset[str] = frozenset(
