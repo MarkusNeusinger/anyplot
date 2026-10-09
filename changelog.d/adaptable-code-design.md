@@ -8,4 +8,4 @@
   in impl-generate, the regen gate's adapt route and adapt regression, and a
   rollout through the normal daily regeneration. It records the owner's
   decisions of 2026-10-09 (score-neutral first, all 15 libraries, no targeted
-  pass) so the rules PR is reviewable before anything is built.
+  pass) so the rules PR is reviewable before anything is built. (#12108)
