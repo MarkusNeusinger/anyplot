@@ -14,6 +14,7 @@
   one-color rule flags none of 48. A parity test runs the workflow's own
   script on the same PNGs and requires identical output, so the workflow can
   switch to the module later without changing a byte of the repair feedback.
+  (#12102)
 - **Review feedback grammar in `core/defects.py`.** The defect-line and
   suggestion-line grammar, the criterion IDs, `nothing_to_repair` and the spec
   characteristics parser now have a canonical, stdlib-only home that the
@@ -21,4 +22,4 @@
   lines read back through the same parser. `regen_gate.py` keeps its own copy
   for now, because the workflows run it as a single-file copy where `core` is
   not importable; a parity test checks both copies against the catalogue's
-  stored weaknesses and every spec.
+  stored weaknesses and every spec. (#12102)
