@@ -17,6 +17,7 @@ from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.models import JudgeVerdict
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
 from agents.anyplot.render.contract import RenderJob, Theme
+from agents.anyplot.render.png import size_of
 from agents.anyplot.schemas import AdaptPlan, Verdict
 from agents.anyplot.services import Services, get_services
 from agents.main import Runtime, app, get_runtime
@@ -310,9 +311,25 @@ async def test_canvas_miss_is_repaired_then_padded(
     assert plot["residual_defects"][0] == "canvas padded after render"
     assert plot["residual_defects"][1].startswith("VQ-05 (both): Canvas dimensions drifted")
     png = await client.get(f"/v1/sessions/{sid}/artifacts/plot-dark.png", headers=HEADERS)
-    from agents.anyplot.render.png import size_of
-
     assert size_of(png.content) == (3200, 1800)
+
+
+async def test_one_theme_off_canvas_keeps_the_other_themes_png(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """Padding only the dark theme still ships the light theme's valid PNG, so both artifacts exist."""
+    backend.script = lambda job, theme: FakeOutcome(size=(3100, 1800) if theme == "dark" else (3200, 1800))
+    swap_models("gemini", default_script(plans=[SCATTER_PLAN, {"edits": [], "changes": []}]))
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    assert plot["status"] == "needs_attention"
+    assert plot["residual_defects"][0] == "canvas padded after render"
+    for theme in ("light", "dark"):
+        png = await client.get(f"/v1/sessions/{sid}/artifacts/plot-{theme}.png", headers=HEADERS)
+        assert png.status_code == 200, theme
+        assert size_of(png.content) == (3200, 1800)
 
 
 async def test_create_plot_without_dataset_is_not_ready(client: httpx.AsyncClient, swap_models) -> None:

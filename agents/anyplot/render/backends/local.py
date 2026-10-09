@@ -11,7 +11,9 @@ started with `asyncio.create_subprocess_exec` (never a shell) in its own process
 group. The image is `AGENT_RENDER_IMAGE`, the production agents image. The harness
 is mounted read-only from this checkout, so a render uses the harness of the code
 under development. On timeout the container is killed by name. The run directory is
-a fresh temporary directory that is removed afterwards.
+a fresh temporary directory that is removed afterwards. stdout is discarded and stderr
+is read while the container runs, keeping only its last `STDERR_LIMIT` bytes: the
+code under test writes it, so it can be arbitrarily large.
 
 The backend refuses `ENVIRONMENT=production` and fails when Docker is missing:
 there is no bare-subprocess fallback, because that would run model-written code on
@@ -33,6 +35,29 @@ from ..runtimes.python import HARNESS_SOURCE, IMAGE_HARNESS
 MEMORY_LIMIT = "2g"
 PIDS_LIMIT = "256"
 STDERR_LIMIT = 64 * 1024
+READ_CHUNK = 64 * 1024
+
+
+async def read_tail(stream: asyncio.StreamReader | None, limit: int = STDERR_LIMIT) -> bytes:
+    """Read `stream` to its end and keep only its last `limit` bytes.
+
+    At most `limit` plus one chunk is held at any time, however much the process writes.
+    """
+    if stream is None:
+        return b""
+    tail = bytearray()
+    while chunk := await stream.read(READ_CHUNK):
+        tail += chunk
+        if len(tail) > limit:
+            del tail[:-limit]
+    return bytes(tail)
+
+
+async def _drain_and_wait(process: asyncio.subprocess.Process) -> bytes:
+    """The stderr tail of `process` once it has exited."""
+    tail = await read_tail(process.stderr)
+    await process.wait()
+    return tail
 
 
 class LocalDockerBackend:
@@ -102,7 +127,7 @@ class LocalDockerBackend:
             )
             timed_out = False
             try:
-                _, stderr = await asyncio.wait_for(process.communicate(), timeout=job.timeout_s)
+                stderr = await asyncio.wait_for(_drain_and_wait(process), timeout=job.timeout_s)
             except TimeoutError:
                 timed_out = True
                 await self._kill(f"r-{job.job_id}-{theme}", process)
@@ -117,7 +142,7 @@ class LocalDockerBackend:
             png, probe = self.runtime.collect(run_dir, theme)
         except PngRejected as exc:
             return ThemeOutput(theme, process.returncode, timed_out, None, None, str(exc), wall)
-        tail = (stderr or b"")[-STDERR_LIMIT:].decode("utf-8", errors="replace")
+        tail = stderr.decode("utf-8", errors="replace")
         return ThemeOutput(theme, None if timed_out else process.returncode, timed_out, png, probe, tail, wall)
 
     async def _kill(self, name: str, process: asyncio.subprocess.Process) -> None:

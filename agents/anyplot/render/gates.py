@@ -2,9 +2,9 @@
 
 | Gate | Checks | Effect |
 |---|---|---|
-| R1 | exit code 0, no timeout, a PNG per theme | blocking: the render is discarded, the error becomes repair feedback |
+| R1 | an output for each of `THEMES`, exit code 0, no timeout, a PNG per theme | blocking: the render is discarded, the error becomes repair feedback |
 | R2 | PNG hardening (`png.harden`): signature, decode, size and pixel caps, not blank, re-encoded | blocking, like R1 |
-| R3 | canvas within 16 px of 3200x1800 or 2400x2400 (`core.canvas.check_canvas`) | repair-triggering: the VQ-05 defect line goes to the repair; a padded copy is kept as the fallback |
+| R3 | canvas within 16 px of 3200x1800 or 2400x2400 (`core.canvas.check_canvas`) | repair-triggering: the VQ-05 defect line goes to the repair; a padded copy of each missed theme is kept as the fallback |
 | G3 | probe: text boxes beyond the canvas edge | advisory: an AR-09 line |
 | G5 | probe: annotations outside their axes | advisory: a DQ-03 line |
 | G7 | probe: overlapping tick labels | advisory: a VQ-02 line |
@@ -12,11 +12,13 @@
 
 The probe is written inside the sandbox by code under test, so G-gates only ever add
 feedback lines; they never fail a render. Feedback lines use the defect grammar of
-`core/defects.py` where they name a criterion. A render error is summarised from the
-last line of stderr with every quoted string elided, so no cell of the user's data
-reaches a prompt through a traceback.
+`core/defects.py` where they name a criterion. A render error is summarised as the
+exception class and the line of the code file that raised it, never the message: code
+under test can raise `ValueError(df["secret"].iloc[0])`, so the message may be a cell
+of the user's data.
 """
 
+import builtins
 import math
 import re
 from dataclasses import dataclass, field
@@ -30,12 +32,19 @@ from .png import PngRejected, harden, pad_to
 
 
 CLIP_TOLERANCE_PX = 2
-MAX_ERROR_CHARS = 200
+MAX_CLASS_CHARS = 120
 G8_SLACK = 10
 G8_FACTOR = 1.5
+CODE_FILE = "plot.py"
+"""The file the Python runtime writes the code to; its frames give the error line."""
+ERROR_PACKAGES = frozenset(
+    {"numpy", "pandas", "matplotlib", "mpl_toolkits", "seaborn", "scipy", "sklearn", "statsmodels", "PIL", "dateutil"}
+)
+"""Packages whose qualified exception classes (`pandas.errors.ParserError`) may name a render error."""
+NO_EXCEPTION_LINE = "an error that printed no exception line"
 
-_QUOTED = re.compile(r"'[^'\n]*'|\"[^\"\n]*\"")
-_ERROR_LINE = re.compile(r"^[A-Za-z_][\w.]*(Error|Exception|Warning)\b.*")
+_ERROR_CLASS = re.compile(r"^((?:[A-Za-z_]\w*\.)*[A-Za-z_]\w*)(?::|$)")
+_CODE_FRAME = re.compile(r'^[ \t]*File "(?:[^"\n]*/)?' + re.escape(CODE_FILE) + r'", line (\d{1,6})\b', re.MULTILINE)
 
 
 @dataclass
@@ -55,18 +64,54 @@ class GateReport:
         """Every line the single repair should act on: canvas first, then the advisory gates."""
         return [*self.canvas_defects, *self.advisory]
 
+    @property
+    def shipped_pngs(self) -> dict[Theme, bytes]:
+        """The PNGs a passing render ships: every hardened PNG, replaced by its padded copy where the canvas missed.
+
+        Padding covers only the themes that missed the canvas, so the padded copies
+        go over the complete hardened set rather than replacing it.
+        """
+        return {**self.pngs, **self.padded_pngs}
+
 
 def _line(text: str) -> str:
     text = " ".join(text.split())
     return text if len(text) <= MAX_LINE_CHARS else text[: MAX_LINE_CHARS - 1] + "…"
 
 
+def _exception_class(line: str) -> str | None:
+    """The exception class an exception line starts with, if it names a known one.
+
+    A builtin exception, or a qualified class of a package in `ERROR_PACKAGES` whose
+    name ends in Error, Exception or Warning. Anything else, the message included,
+    is never returned.
+    """
+    match = _ERROR_CLASS.match(line)
+    if match is None or len(match.group(1)) > MAX_CLASS_CHARS:
+        return None
+    name = match.group(1)
+    if "." in name:
+        package, last = name.split(".", 1)[0], name.rsplit(".", 1)[1]
+        return name if package in ERROR_PACKAGES and last.endswith(("Error", "Exception", "Warning")) else None
+    value = getattr(builtins, name, None)
+    return name if isinstance(value, type) and issubclass(value, BaseException) else None
+
+
 def error_summary(stderr_tail: str) -> str:
-    """The exception line of a traceback with quoted text elided, or a generic note."""
+    """The exception class of a traceback and the code line that raised it; never the message.
+
+    The class comes from the last line that starts with a known exception class (the
+    final exception of a chain), the line number from the innermost frame in
+    `CODE_FILE`. Without such a line the summary is a fixed text.
+    """
     lines = [line.strip() for line in stderr_tail.splitlines() if line.strip()]
-    candidates = [line for line in lines if _ERROR_LINE.match(line)]
-    chosen = candidates[-1] if candidates else (lines[-1] if lines else "no error output")
-    return _QUOTED.sub("'…'", chosen)[:MAX_ERROR_CHARS]
+    if not lines:
+        return "no error output"
+    names = [name for name in map(_exception_class, lines) if name]
+    if not names:
+        return NO_EXCEPTION_LINE
+    frames = _CODE_FRAME.findall(stderr_tail)
+    return f"{names[-1]} at line {int(frames[-1])}" if frames else names[-1]
 
 
 def data_rows(data_csv: str) -> int:
@@ -75,12 +120,14 @@ def data_rows(data_csv: str) -> int:
 
 
 def evaluate(result: RenderResult, *, library: str, rows: int) -> GateReport:
-    """Run R1-R3 and the advisory gates over every theme of `result`."""
+    """Run R1-R3 and the advisory gates over every theme in `THEMES`; a theme without an output fails R1."""
     report = GateReport(passed_host_gates=True, canvas_ok=True)
     advisory: dict[str, list[Theme]] = {}
     for theme in THEMES:
         output = result.outputs.get(theme)
         if output is None:
+            report.blocking.append(_line(f"render ({theme}): the renderer returned no output for this theme"))
+            report.passed_host_gates = False
             continue
         if output.timed_out:
             report.blocking.append(_line(f"render ({theme}): the code did not finish within the time limit"))
@@ -112,7 +159,8 @@ def evaluate(result: RenderResult, *, library: str, rows: int) -> GateReport:
     for line, themes in advisory.items():
         theme_label = "both" if len(themes) > 1 else themes[0]
         report.advisory.append(_line(line.replace("(THEME)", f"({theme_label})")))
-    if not report.pngs or len(report.pngs) != len(result.outputs):
+    # Every pipeline job needs both themes: compare with THEMES, not with what came back.
+    if set(report.pngs) != set(THEMES):
         report.passed_host_gates = False
     return report
 

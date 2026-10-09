@@ -498,7 +498,7 @@ async def _attempts(
         candidate = Candidate(
             working=working,
             run_form=run_form,
-            pngs=report.pngs if report.canvas_ok else report.padded_pngs,
+            pngs=report.shipped_pngs,
             plan=plan,
             attempt=attempt,
             padded=not report.canvas_ok,

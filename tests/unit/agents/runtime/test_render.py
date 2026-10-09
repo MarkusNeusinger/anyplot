@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+import tracemalloc
 from pathlib import Path
 
 import pytest
@@ -18,7 +19,7 @@ from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.render import make_backend
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome, fixture_png
-from agents.anyplot.render.backends.local import LocalDockerBackend
+from agents.anyplot.render.backends.local import LocalDockerBackend, read_tail
 from agents.anyplot.render.backends.sandbox import SandboxBackend
 from agents.anyplot.render.contract import RendererUnavailable, RenderJob, RenderResult, ThemeOutput
 from agents.anyplot.render.gates import data_rows, error_summary, evaluate
@@ -112,14 +113,65 @@ class TestGates:
         assert report.passed_host_gates and report.canvas_ok
         assert report.defects == [] and set(report.pngs) == {"light", "dark"}
 
-    def test_crash_is_blocking_with_quoted_text_elided(self) -> None:
-        crashed = ThemeOutput("dark", 1, stderr_tail="Traceback\n  File \"plot.py\"\nKeyError: 'Secret Column'\n")
+    def test_crash_is_blocking_with_only_the_exception_class(self) -> None:
+        crashed = ThemeOutput(
+            "dark",
+            1,
+            stderr_tail=(
+                "Traceback (most recent call last):\n"
+                '  File "/opt/anyplot/harness.py", line 80, in main\n'
+                '  File "/work/plot.py", line 12, in <module>\n'
+                "KeyError: 'Secret Column'\n"
+            ),
+        )
         report = evaluate(self.result(light=self.ok("light"), dark=crashed), library="matplotlib", rows=10)
 
         assert not report.passed_host_gates
         assert report.blocking == [
-            "render (dark): the code failed with KeyError: '…'; fix the code so it runs on the user's data"
+            "render (dark): the code failed with KeyError at line 12; fix the code so it runs on the user's data"
         ]
+
+    @pytest.mark.parametrize(
+        ("stderr", "expected"),
+        [
+            # An unquoted message is a cell of the user's data as much as a quoted one.
+            ('  File "plot.py", line 7, in <module>\nValueError: CANARY-CELL-3f9a\n', "ValueError at line 7"),
+            ("ValueError\n", "ValueError"),
+            ("pandas.errors.ParserError: Error tokenizing CANARY-CELL-3f9a\n", "pandas.errors.ParserError"),
+            # Not a builtin exception and not from a known package: never echoed.
+            ("CANARYCELLError: x\nSecretTable.LeakError: y\n", "an error that printed no exception line"),
+            ("CANARY-CELL-3f9a\n", "an error that printed no exception line"),
+            (
+                '  File "plot.py", line 3\nTypeError: a\n\nDuring handling ...\nRuntimeError: CANARY\n',
+                "RuntimeError at line 3",
+            ),
+        ],
+    )
+    def test_error_summary_never_carries_the_message(self, stderr: str, expected: str) -> None:
+        summary = error_summary(stderr)
+
+        assert summary == expected
+        assert "CANARY" not in summary
+
+    def test_missing_theme_fails_r1(self) -> None:
+        """A result with only one theme is incomplete although every output it has passed."""
+        report = evaluate(self.result(light=self.ok("light")), library="matplotlib", rows=10)
+
+        assert not report.passed_host_gates
+        assert report.blocking == ["render (dark): the renderer returned no output for this theme"]
+        assert set(report.pngs) == {"light"}
+
+    def test_one_theme_off_canvas_ships_both_themes(self) -> None:
+        report = evaluate(
+            self.result(light=self.ok("light"), dark=self.ok("dark", (3100, 1800))), library="seaborn", rows=10
+        )
+
+        assert report.passed_host_gates and not report.canvas_ok
+        assert set(report.padded_pngs) == {"dark"}
+        assert set(report.shipped_pngs) == {"light", "dark"}
+        assert report.shipped_pngs["light"] == report.pngs["light"]
+        assert report.shipped_pngs["dark"] == report.padded_pngs["dark"]
+        assert size_of(report.shipped_pngs["dark"]) == (3200, 1800)
 
     def test_timeout_and_missing_png(self) -> None:
         report = evaluate(
@@ -260,6 +312,48 @@ class TestBackends:
             await task
 
         assert sorted(killed.read_text().split()) == ["r-cancelme-dark", "r-cancelme-light"]
+
+    async def test_local_backend_keeps_only_a_bounded_stderr_tail(self, tmp_path: Path) -> None:
+        """Code under test that floods stderr never makes the host hold the whole stream."""
+        flood = 16 * 1024 * 1024
+        docker = tmp_path / "docker"
+        docker.write_text(
+            "#!/bin/sh\n"
+            f"head -c {flood} /dev/zero | tr '\\000' x >&2\n"
+            "printf '\\nValueError: TAIL-MARKER\\n' >&2\n"
+            "exit 1\n"
+        )
+        docker.chmod(0o755)
+        backend = LocalDockerBackend(
+            image="anyplot-agents:dev",
+            runtime=PythonRuntime(),
+            environment="development",
+            concurrency=2,
+            docker=str(docker),
+        )
+
+        tracemalloc.start()
+        try:
+            result = await backend.render(job(job_id="flood"))
+            _, peak = tracemalloc.get_traced_memory()
+        finally:
+            tracemalloc.stop()
+
+        assert peak < 4 * 1024 * 1024, f"peak {peak} bytes for {2 * flood} bytes of stderr"
+        for theme in ("light", "dark"):
+            output = result.outputs[theme]
+            assert output.exit_code == 1
+            assert output.stderr_tail.endswith("ValueError: TAIL-MARKER\n")
+
+    async def test_read_tail_keeps_the_last_bytes(self) -> None:
+        stream = asyncio.StreamReader()
+        stream.feed_data(b"a" * 300_000)
+        stream.feed_data(b"END")
+        stream.feed_eof()
+
+        tail = await read_tail(stream, limit=1000)
+
+        assert len(tail) == 1000 and tail.endswith(b"aEND")
 
     def test_local_backend_command_keeps_the_network_off(self) -> None:
         backend = LocalDockerBackend(
