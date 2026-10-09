@@ -36,7 +36,7 @@ A notification looks like this; `alertThresholdExceeded` is present only once a 
 | Not decodable: no data, invalid base64, invalid JSON, or not a JSON object | No action | `event_without_data`, `event_without_message`, `message_without_data`, `invalid_base64`, `invalid_json`, `payload_not_object` |
 | `budgetDisplayName` missing or not a string | No action | `missing_budget_name` |
 | `budgetDisplayName` names another budget | No action | `other_budget` |
-| `costAmount` missing, not a number, or not finite | No action | `invalid_cost_amount` |
+| `costAmount` missing, not a number, or not finite (including an integer too large for a float) | No action | `invalid_cost_amount` |
 | `budgetAmount` missing, not a number, not finite, or not positive | No action | `invalid_budget_amount` |
 | `costAmount` below `budgetAmount` | No action | `below_budget` |
 | `costAmount` at or above `budgetAmount` | Disable, or only log in dry run | `budget_reached` |
@@ -71,9 +71,9 @@ Every message produces exactly one JSON line on stdout, which Cloud Logging read
 | `none` | `INFO`, or `WARNING` for a message that isn't decodable | No action; `reason` says why |
 | `dry_run` | `WARNING` | The guard would have disabled the services |
 | `disable` | `CRITICAL` if a service was disabled now, `NOTICE` if all were already disabled | `results` holds the outcome per service |
-| `failed` | `ERROR` | At least one service failed; `error` holds the API's status and message |
+| `failed` | `ERROR` | At least one service isn't confirmed disabled, or an unexpected error occurred; `error` says which and why |
 
-`results` maps each service to `disabled`, `already_disabled`, `disable_pending`, or `failed`. `disable_pending` means that the API accepted the disable but the operation hadn't finished after 60 seconds; the next notification reads the state again.
+`results` maps each service to `disabled`, `already_disabled`, `disable_pending`, or `failed`. `disable_pending` means that the API accepted the disable but the operation hadn't finished after 60 seconds. An operation can still fail after that, so the guard counts it as unconfirmed and raises; the redelivered message reads the state again.
 
 To read the log lines:
 
@@ -85,9 +85,9 @@ gcloud logging read \
 
 ## Failures and retries
 
-- **A failed disable is retried.** The function raises, Functions Framework answers HTTP 500, and Pub/Sub delivers the message again with exponential backoff (Eventarc's default is 10 to 600 seconds) until the subscription's retention runs out (24 hours by Eventarc's default). The guard tries every configured service before it raises.
+- **An unconfirmed disable is retried.** When a disable fails, or its operation is still running after 60 seconds, the function raises, Functions Framework answers HTTP 500, and Pub/Sub delivers the message again with exponential backoff (Eventarc's default is 10 to 600 seconds) until the subscription's retention runs out (24 hours by Eventarc's default). The message is acknowledged only once every service is confirmed disabled. The guard tries every configured service before it raises.
 - **A no-op is acknowledged.** Undecodable messages and no-op decisions return normally, because a retry can't change them.
-- **Only expected errors count as failures.** Credential, transport, and Service Usage API errors are failures. Any other exception is a bug and propagates unchanged.
+- **Unexpected errors are logged, then re-raised unchanged.** Credential, transport, and Service Usage API errors are expected failures, collected per service. Any other exception is a bug: the guard writes its one `failed` line with the exception type and re-raises it, so Pub/Sub retries it too.
 - **Bad configuration fails the deploy.** The environment variables are validated at import, so an invalid value stops the container from starting instead of surfacing at the first real alert.
 - **A dead-letter topic is optional.** The budget repeats its status every 20 to 30 minutes, so a message that expires after its retries loses nothing. The runbook shows how to attach one if you want to keep the evidence.
 
@@ -118,7 +118,7 @@ gcloud logging read \
 - **Lag.** Notifications follow the spend by hours, and the spend in that window is billed. Choose a budget amount where the amount plus a few hours of worst-case spend is acceptable.
 - **Calls stop, resources stay.** With the API disabled, requests to Vertex AI fail with `SERVICE_DISABLED`. Disabling deletes no resources, and a resource that bills while idle keeps billing. The agent network design uses Vertex AI for per-request Gemini calls, which stop.
 - **The brake stays on until you release it.** The guard never re-enables anything, and a new month resets the cost but not the API. While the month's cost is at or above the amount, a re-enabled API lasts only until the next notification, so raise the amount or turn dry run on first, as described in the runbook's recovery steps.
-- **The topic is the trigger.** Anyone who can publish to `vertex-budget-alerts` can disable Vertex AI; the synthetic test in the runbook works exactly that way. Keep the topic's publishers to the budget's service account and the owner.
+- **The topic is the trigger.** Budget notifications carry no signature, so anyone who can publish to `vertex-budget-alerts` can disable Vertex AI; the synthetic test in the runbook works exactly that way. The damage is availability, not spend: the guard can only switch Vertex AI off. Publish rights come from the topic's own policy and from project-level roles that include `pubsub.topics.publish`, such as Owner, Editor, and the Pub/Sub Admin, Editor, and Publisher roles. On 2026-10-09 the default Compute Engine service account holds Editor (agent network owner task 13), so anything that runs as it can publish. The runbook's deploy procedure audits these principals before the trigger exists; narrowing them is an owner decision.
 - **Pinned dependencies.** `requirements.txt` pins exact versions, and Dependabot doesn't watch it; bump and redeploy by hand.
 
 ## Tests

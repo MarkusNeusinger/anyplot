@@ -12,11 +12,13 @@ The core is pure and unit-tested: ``decode_pubsub_message`` turns the CloudEvent
 data into the notification dict, ``decide`` returns a ``Decision``, and
 ``disable_service`` talks to the Service Usage API through an injected session.
 
-Retries: a failed disable raises, Functions Framework answers 500, and Pub/Sub
+Retries: a disable that failed or is not confirmed (its operation still running
+after 60 seconds) raises, Functions Framework answers 500, and Pub/Sub
 redelivers with exponential backoff (Eventarc default: 10 to 600 seconds) until
 the trigger subscription's retention runs out; a dead-letter topic on that
 subscription keeps what never succeeded. Malformed messages and no-op decisions
-return normally, so Pub/Sub acknowledges them: a retry cannot change them.
+return normally, so Pub/Sub acknowledges them: a retry cannot change them. Every
+message writes exactly one log line, an unexpected exception included.
 
 Configuration (environment variables, validated at import so a typo fails the
 deploy instead of the first real alert):
@@ -181,7 +183,11 @@ def _finite_number(value: Any) -> float | None:
     """The value as a finite float, or None. JSON booleans are not amounts."""
     if isinstance(value, bool) or not isinstance(value, int | float):
         return None
-    number = float(value)
+    try:
+        number = float(value)
+    except OverflowError:
+        # A JSON integer beyond the float range (such as 10**400) parses as int.
+        return None
     return number if math.isfinite(number) else None
 
 
@@ -287,9 +293,10 @@ def disable_service(
     """Disable one service, idempotently. Never enables anything.
 
     Returns ``already_disabled``, ``disabled``, or ``disable_pending`` (the
-    operation was accepted but had not finished within ``timeout_s``; the next
-    notification checks the state again). Raises ``ServiceUsageError`` or a
-    ``requests`` error on failure.
+    operation was accepted but had not finished within ``timeout_s``; the
+    handler treats that as unconfirmed and raises, so the redelivered message
+    reads the state again). Raises ``ServiceUsageError`` or a ``requests`` error
+    on failure.
     """
     name = f"projects/{project}/services/{service}"
     if _service_state(session, name) == "DISABLED":
@@ -305,6 +312,37 @@ def disable_service(
     operation = _json_object(response, f"disable {service}")
     finished = _wait_for_operation(session, operation, sleep=sleep, clock=clock, timeout_s=timeout_s)
     return "disabled" if finished else "disable_pending"
+
+
+def _disable_services(
+    config: Config,
+    session_factory: Callable[[], HttpSession],
+    results: dict[str, str],
+    *,
+    sleep: Callable[[float], None],
+    clock: Callable[[], float],
+) -> list[str]:
+    """Disable every configured service, filling ``results``; return what is not confirmed.
+
+    Expected failures (``GUARD_ERRORS``) and an operation still running at the
+    deadline are collected, so every service gets its attempt. Anything else is
+    a bug and propagates.
+    """
+    try:
+        session = session_factory()
+    except GUARD_ERRORS as exc:
+        return [f"credentials: {exc}"[:_ERROR_TEXT_LIMIT]]
+    errors: list[str] = []
+    for service in config.services:
+        try:
+            results[service] = disable_service(session, config.project, service, sleep=sleep, clock=clock)
+        except GUARD_ERRORS as exc:
+            results[service] = "failed"
+            errors.append(f"{service}: {exc}"[:_ERROR_TEXT_LIMIT])
+        else:
+            if results[service] == "disable_pending":
+                errors.append(f"{service}: disable operation still running after {OPERATION_TIMEOUT_S:.0f} s")
+    return errors
 
 
 def _log(record: Mapping[str, Any]) -> None:
@@ -361,26 +399,24 @@ def handle(
         return record
 
     results: dict[str, str] = {}
-    errors: list[str] = []
-    try:
-        session = session_factory()
-    except GUARD_ERRORS as exc:
-        errors.append(f"credentials: {exc}"[:_ERROR_TEXT_LIMIT])
-    else:
-        for service in config.services:
-            try:
-                results[service] = disable_service(session, config.project, service, sleep=sleep, clock=clock)
-            except GUARD_ERRORS as exc:
-                results[service] = "failed"
-                errors.append(f"{service}: {exc}"[:_ERROR_TEXT_LIMIT])
     record["results"] = results
+    try:
+        errors = _disable_services(config, session_factory, results, sleep=sleep, clock=clock)
+    except Exception as exc:
+        # A bug, not an expected failure: write the one line anyway, then re-raise unchanged.
+        record.update(
+            action="failed", severity="ERROR", error=f"unexpected {type(exc).__name__}: {exc}"[:_ERROR_TEXT_LIMIT]
+        )
+        record["message"] = "budget guard: unexpected error, Pub/Sub will retry"
+        _log(record)
+        raise
 
     if errors:
         record.update(action="failed", severity="ERROR", error="; ".join(errors))
-        record["message"] = "budget guard: disabling failed, Pub/Sub will retry"
+        record["message"] = "budget guard: disable not confirmed, Pub/Sub will retry"
         _log(record)
         raise ServiceUsageError(record["error"])
-    newly_disabled = any(result != "already_disabled" for result in results.values())
+    newly_disabled = any(result == "disabled" for result in results.values())
     record.update(action="disable", severity="CRITICAL" if newly_disabled else "NOTICE")
     record["message"] = "budget guard: " + ", ".join(f"{service} {result}" for service, result in results.items())
     _log(record)

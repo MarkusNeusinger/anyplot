@@ -209,13 +209,13 @@ class TestDecide:
         decision = guard.decide(notification(budgetDisplayName=value), budget_name=BUDGET)
         assert (decision.disable, decision.reason) == (False, "missing_budget_name")
 
-    @pytest.mark.parametrize("value", [..., None, "5.12", True, float("nan"), float("inf")])
+    @pytest.mark.parametrize("value", [..., None, "5.12", True, float("nan"), float("inf"), 10**400])
     def test_missing_or_invalid_cost(self, value: Any) -> None:
         decision = guard.decide(notification(costAmount=value), budget_name=BUDGET)
         assert (decision.disable, decision.reason) == (False, "invalid_cost_amount")
         assert decision.amount == 5.0
 
-    @pytest.mark.parametrize("value", [..., None, "5", False, 0, -5.0, float("nan"), float("inf")])
+    @pytest.mark.parametrize("value", [..., None, "5", False, 0, -5.0, float("nan"), float("inf"), 10**400])
     def test_missing_invalid_or_non_positive_budget_amount(self, value: Any) -> None:
         decision = guard.decide(notification(budgetAmount=value), budget_name=BUDGET)
         assert (decision.disable, decision.reason) == (False, "invalid_budget_amount")
@@ -455,6 +455,13 @@ class TestHandle:
         assert (line["action"], line["reason"], line["severity"]) == ("none", "invalid_json", "WARNING")
         assert "budget" not in line
 
+    def test_oversized_json_integer_is_an_invalid_amount_not_a_retry(self, capsys: pytest.CaptureFixture[str]) -> None:
+        # json.loads turns a 401-digit integer into an int that float() cannot hold.
+        raw = b'{"budgetDisplayName": "anyplot Vertex AI cap", "costAmount": 1' + b"0" * 400 + b', "budgetAmount": 5}'
+        record = guard.handle(event_data(raw), config=config(), session_factory=never_called)
+        assert (record["action"], record["reason"]) == ("none", "invalid_cost_amount")
+        assert len(log_lines(capsys)) == 1
+
     def test_dry_run_logs_the_decision_and_calls_nothing(self, capsys: pytest.CaptureFixture[str]) -> None:
         record = guard.handle(event_data(notification()), config=config(dry_run=True), session_factory=never_called)
         [line] = log_lines(capsys)
@@ -479,17 +486,26 @@ class TestHandle:
         assert [method for method, _, _ in session.calls] == ["GET"]
         assert len(log_lines(capsys)) == 1
 
-    def test_pending_operation_is_logged_as_a_disable(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_pending_operation_is_retried_until_confirmed(self, capsys: pytest.CaptureFixture[str]) -> None:
+        # An operation still running at the deadline can still fail, so the
+        # message is not acknowledged: Pub/Sub redelivers it within minutes and
+        # the retry reads the service state again.
         running = {"name": "operations/op-1", "done": False}
         session = session_for_disable(post=FakeResponse(200, running))
         session.gets[f"{API}/operations/op-1"] = [FakeResponse(200, running) for _ in range(40)]
         clock = FakeClock()
-        record = guard.handle(
-            event_data(notification()), config=config(), session_factory=lambda: session, sleep=clock.sleep, clock=clock
-        )
-        assert record["results"] == {SERVICE: "disable_pending"}
-        assert record["severity"] == "CRITICAL"
-        assert len(log_lines(capsys)) == 1
+        with pytest.raises(guard.ServiceUsageError, match="still running after 60 s"):
+            guard.handle(
+                event_data(notification()),
+                config=config(),
+                session_factory=lambda: session,
+                sleep=clock.sleep,
+                clock=clock,
+            )
+        [line] = log_lines(capsys)
+        assert (line["action"], line["severity"]) == ("failed", "ERROR")
+        assert line["results"] == {SERVICE: "disable_pending"}
+        assert line["message"] == "budget guard: disable not confirmed, Pub/Sub will retry"
 
     def test_failure_raises_after_trying_every_service(self, capsys: pytest.CaptureFixture[str]) -> None:
         other = "generativelanguage.googleapis.com"
@@ -533,11 +549,40 @@ class TestHandle:
         [line] = log_lines(capsys)
         assert (line["action"], line["results"]) == ("failed", {})
 
-    def test_unexpected_errors_propagate_unchanged(self) -> None:
+    def test_unexpected_error_in_a_call_is_logged_then_propagates_unchanged(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         session = mock.Mock(spec=FakeSession)
         session.get.side_effect = KeyError("bug")
         with pytest.raises(KeyError):
             guard.handle(event_data(notification()), config=config(), session_factory=lambda: session)
+        [line] = log_lines(capsys)
+        assert (line["action"], line["severity"], line["results"]) == ("failed", "ERROR", {})
+        assert line["error"] == "unexpected KeyError: 'bug'"
+
+    def test_unexpected_error_in_the_session_factory_is_logged_then_propagates(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        def broken() -> Any:
+            raise RuntimeError("factory bug")
+
+        with pytest.raises(RuntimeError, match="factory bug"):
+            guard.handle(event_data(notification()), config=config(), session_factory=broken)
+        [line] = log_lines(capsys)
+        assert line["action"] == "failed"
+        assert line["error"] == "unexpected RuntimeError: factory bug"
+
+    def test_partial_results_survive_an_unexpected_error(self, capsys: pytest.CaptureFixture[str]) -> None:
+        other = "generativelanguage.googleapis.com"
+        session = session_for_disable()
+        session.gets[f"{API}/projects/anyplot/services/{other}"] = []  # IndexError on pop: a bug, not an API error
+        with pytest.raises(IndexError):
+            guard.handle(
+                event_data(notification()), config=config(services=(SERVICE, other)), session_factory=lambda: session
+            )
+        [line] = log_lines(capsys)
+        assert line["results"] == {SERVICE: "disabled"}
+        assert line["error"].startswith("unexpected IndexError")
 
 
 # ===== entry point =====

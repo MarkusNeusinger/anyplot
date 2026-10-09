@@ -90,7 +90,27 @@ the spend, so the guard bounds the damage; it doesn't make the cap exact.
      --role roles/eventarc.eventReceiver --condition None
    ```
 
-6. Create the trigger on the budget topic:
+6. Audit who can publish to the budget topic. Budget notifications carry no
+   signature, so once the trigger exists, every principal that can publish to
+   `vertex-budget-alerts` can disable Vertex AI. List the topic's own grants
+   and the project-level roles that include `pubsub.topics.publish`:
+
+   ```bash
+   gcloud pubsub topics get-iam-policy vertex-budget-alerts --project anyplot
+   gcloud projects get-iam-policy anyplot \
+     --flatten 'bindings[].members' \
+     --filter 'bindings.role=(roles/owner roles/editor roles/pubsub.admin roles/pubsub.editor roles/pubsub.publisher)' \
+     --format 'table(bindings.role,bindings.members)'
+   ```
+
+   Expect Cloud Billing's publisher grant on the topic, made when the budget
+   was connected to it, plus the owner. Any other principal can switch Vertex
+   AI off: remove its grant, or accept it knowingly. On 2026-10-09 the default
+   Compute Engine service account holds `roles/editor`, so every service that
+   runs as it can publish. Custom roles with `pubsub.topics.publish` don't
+   appear in this filter; check them separately if the project has any.
+
+7. Create the trigger on the budget topic:
 
    ```bash
    gcloud eventarc triggers create vertex-budget-guard \
@@ -104,8 +124,9 @@ the spend, so the guard bounds the damage; it doesn't make the cap exact.
    ```
 
    The trigger can take up to two minutes to start delivering. Keep retries on
-   (the gcloud default): a failed disable answers HTTP 500 and Pub/Sub delivers
-   the message again with backoff.
+   (the gcloud default): a disable that failed or isn't confirmed after 60
+   seconds answers HTTP 500, and Pub/Sub delivers the message again with
+   backoff until the service is confirmed disabled.
 
 ### Optional: keep failed messages in a dead-letter topic
 
