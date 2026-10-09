@@ -234,8 +234,9 @@ def get_safe_subprocess_env() -> Dict[str, str]:
     return {k: v for k, v in safe_env_vars.items() if v is not None}
 
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from this checkout's .env only: a bare
+# load_dotenv() walks up past a git worktree into the main checkout's .env.
+load_dotenv(os.path.join(_project_root, ".env"))
 
 # Get Claude Code CLI path from environment
 CLAUDE_PATH = os.getenv("CLAUDE_CODE_PATH", "claude")
