@@ -1,6 +1,6 @@
 # Agent network design
 
-> **Status (2026-10-09):** design only. Nothing in this document is built yet. The research behind it was verified against ADK v2.11.0 and the Vertex AI documentation on 2026-10-08; re-check version-sensitive facts (model ids, prices, ADK APIs) before you implement a section.
+> **Status (2026-10-09):** design only, apart from two shared building blocks: `core/canvas.py` (the canvas gate and the PNG auto-reject checks) and `core/defects.py` (the review feedback grammar) exist; everything else in this document is planned. The research behind it was verified against ADK v2.11.0 and the Vertex AI documentation on 2026-10-08; re-check version-sensitive facts (model ids, prices, ADK APIs) before you implement a section.
 
 This document describes the agent network that lets a visitor paste their own data on a plot page and get that plot adapted, rendered and reviewed ("Use with my data"), and later helps them find the right plot type. It is built with [Google ADK](https://adk.dev) (Python) on Gemini through Vertex AI (now branded Gemini Enterprise Agent Platform) inside the `anyplot` GCP project.
 

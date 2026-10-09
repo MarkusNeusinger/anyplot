@@ -245,8 +245,9 @@ def check_blank(
 ) -> AutoRejectResult:
     """AR-04 (EMPTY_PLOT): the PNG has at least ``min_bytes`` and at most ``max_blank_ratio`` of one color.
 
-    The defaults are the rubric's (10 KB, 95 %); a stricter gate, such as the
-    agents' R2 check at 98 %, passes its own.
+    The defaults are the rubric's (10 KB, 95 %). A gate with another cutoff
+    passes its own: the agents' R2 check uses 98 %, which is more permissive,
+    because only an image above ``max_blank_ratio`` fails.
     """
     if not path.is_file():
         return AutoRejectResult("AR-04", False, f"No PNG to check: {path.name}")
