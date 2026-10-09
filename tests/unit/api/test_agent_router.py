@@ -128,6 +128,7 @@ ALL_ROUTES = [
     ("PUT", "/debug/agent/sessions/s1/bindings", [{"role": "x", "column": "a"}]),
     ("POST", "/debug/agent/sessions/s1/messages", {"action": "create_plot"}),
     ("POST", "/debug/agent/sessions/s1/cancel", None),
+    ("POST", "/debug/agent/sessions/s1/versions/1/render", {"theme": "dark"}),
     ("GET", "/debug/agent/sessions/s1/artifacts/plot-light.png", None),
     ("DELETE", "/debug/agent/sessions/s1", None),
 ]
@@ -571,6 +572,110 @@ class TestMessagesStream:
         response = self._post(client)
         assert response.status_code == 409
         assert response.json() == {"detail": "run_active", "ref": response.headers["X-Request-Id"]}
+
+    def test_full_queue_503_is_an_http_status(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(503, json={"detail": "capacity"})
+        response = self._post(client)
+        assert response.status_code == 503
+        assert response.json() == {"detail": "capacity", "ref": response.headers["X-Request-Id"]}
+
+    def test_queued_status_keeps_its_position_fields(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(
+            200,
+            content=(
+                b'event: status\ndata: {"step": "queued", "position": 2, "waiting": 3, "user": "adm_x"}\n\n'
+                b"event: done\ndata: {}\n\n"
+            ),
+        )
+        events = _sse_events(self._post(client).text)
+        assert events[0] == ("status", {"step": "queued", "position": 2, "waiting": 3})
+
+    def test_queued_time_does_not_spend_the_turn_budget(self, client, upstream, monkeypatch) -> None:
+        """Each queued status restarts the budget, and so does the first event once the run started."""
+        monkeypatch.setattr(settings, "agent_request_timeout_s", 0.5)
+
+        async def queued_then_run():
+            for position in (3, 2, 1):
+                event = f'event: status\ndata: {{"step": "queued", "position": {position}, "waiting": {position}}}\n\n'
+                yield event.encode()
+                await asyncio.sleep(0.3)  # 0.9 s of queueing in all: almost twice the budget
+            yield b'event: status\ndata: {"step": "adapting", "attempt": 1}\n\n'
+            await asyncio.sleep(0.3)  # 0.6 s after the last queued status: the run's first event restarted it
+            yield b"event: done\ndata: {}\n\n"
+
+        upstream.handler = lambda request: httpx.Response(200, content=queued_then_run())
+        events = _sse_events(self._post(client).text)
+        assert [data.get("step", event) for event, data in events] == ["queued", "queued", "queued", "adapting", "done"]
+
+    def test_the_budget_still_ends_a_silent_queue(self, client, upstream, monkeypatch) -> None:
+        monkeypatch.setattr(settings, "agent_request_timeout_s", 0.2)
+
+        async def stalled_queue():
+            yield b'event: status\ndata: {"step": "queued", "position": 1, "waiting": 1}\n\n'
+            await asyncio.sleep(5)
+            yield b"event: done\ndata: {}\n\n"
+
+        upstream.handler = lambda request: httpx.Response(200, content=stalled_queue())
+        events = _sse_events(self._post(client).text)
+        assert [event for event, _ in events] == ["status", "error", "done"]
+        assert events[1][1]["code"] == "upstream"
+
+
+class TestThemeToggle:
+    PATH = "/debug/agent/sessions/s1/versions/2/render"
+
+    def test_forwards_the_theme_and_returns_the_answer(self, client, upstream) -> None:
+        answer = {"status": "ok", "artifacts": ["plot-light.png", "plot-dark.png", "plot.py", "data.csv"]}
+        upstream.handler = lambda request: httpx.Response(200, json=answer)
+
+        response = client.post(self.PATH, json={"theme": "dark"}, headers=CLIENT_HEADERS)
+
+        assert response.status_code == 200 and response.json() == answer
+        sent = upstream.requests[0]
+        assert (sent.method, str(sent.url)) == ("POST", f"{SERVICE_URL}/v1/sessions/s1/versions/2/render")
+        assert upstream.last_json == {"theme": "dark"}
+        assert sent.headers["X-Anyplot-User"] == derive_user_id(KEY.encode(), ADMIN)
+
+    def test_401_without_auth(self, agent_on, upstream) -> None:
+        with patch.object(settings, "admin_token", "supersecret"):
+            response = TestClient(app).post(self.PATH, json={"theme": "dark"}, headers=CLIENT_HEADERS)
+        assert response.status_code == 401
+        assert upstream.requests == []
+
+    def test_404_when_disabled(self, client, upstream, monkeypatch) -> None:
+        monkeypatch.setattr(settings, "agent_enabled", False)
+        response = client.post(self.PATH, json={"theme": "dark"}, headers=CLIENT_HEADERS)
+        assert response.status_code == 404 and response.json() == {"detail": NOT_ENABLED}
+        assert upstream.requests == []
+
+    @pytest.mark.parametrize(
+        ("status", "code"), [(404, "not_found"), (404, "session_expired"), (409, "run_active"), (503, "capacity")]
+    )
+    def test_upstream_errors_keep_the_agent_error_shape(self, client, upstream, status, code) -> None:
+        upstream.handler = lambda request: httpx.Response(status, json={"detail": code})
+        response = client.post(self.PATH, json={"theme": "dark"}, headers=CLIENT_HEADERS)
+        assert response.status_code == status
+        assert response.json() == {"detail": code, "ref": response.headers["X-Request-Id"]}
+
+    @pytest.mark.parametrize(
+        ("path", "body"),
+        [
+            (PATH, {"theme": "sepia"}),
+            (PATH, {}),
+            (PATH, {"theme": "dark", "version": 3}),
+            ("/debug/agent/sessions/s1/versions/1000/render", {"theme": "dark"}),
+            ("/debug/agent/sessions/s1/versions/-1/render", {"theme": "dark"}),
+            ("/debug/agent/sessions/s.1/versions/1/render", {"theme": "dark"}),
+        ],
+    )
+    def test_422_for_an_invalid_request(self, client, upstream, path, body) -> None:
+        response = client.post(path, json=body, headers=CLIENT_HEADERS)
+        assert response.status_code == 422
+        assert upstream.requests == []
+
+    def test_needs_the_client_header(self, client, upstream) -> None:
+        response = client.post(self.PATH, json={"theme": "dark"})
+        assert response.status_code == 403 and response.json() == {"detail": "client_header_required"}
 
 
 class TestArtifacts:
