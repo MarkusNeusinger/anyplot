@@ -146,7 +146,7 @@ new Chart(canvas, {
           axis.ticks = maturityYears.map((v) => ({ value: v }));
         },
         grid: {
-          color: t.grid,
+          display: false,
         },
       },
       y: {
