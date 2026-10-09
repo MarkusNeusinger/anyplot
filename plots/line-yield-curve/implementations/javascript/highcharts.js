@@ -68,7 +68,7 @@ Highcharts.chart("container", {
         color: theme === "light" ? "rgba(174,48,48,0.07)" : "rgba(174,48,48,0.15)",
         label: {
           text: "Inversion zone",
-          style: { color: t.inkSoft, fontSize: "11px", fontStyle: "italic" },
+          style: { color: t.inkSoft, fontSize: "13px", fontStyle: "italic" },
           align: "center",
           verticalAlign: "top",
           y: 18
