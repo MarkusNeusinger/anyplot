@@ -23,6 +23,7 @@ from ..png import MAX_PNG_BYTES, MAX_PROBE_BYTES, read_output
 
 IMAGE_PYTHON = "/app/.venv/bin/python"
 IMAGE_HARNESS = "/opt/anyplot/harness.py"
+MPL_SEED = "/opt/mplconfig"
 HARNESS_SOURCE = Path(__file__).resolve().parents[1] / "harness.py"
 
 
@@ -53,6 +54,9 @@ class PythonRuntime:
             "ANYPLOT_THEME": theme,
             "MPLBACKEND": "Agg",
             "MPLCONFIGDIR": self.mplconfig,
+            # The renderer image's baked font cache; the harness copies it into
+            # MPLCONFIGDIR and skips the copy where the directory does not exist.
+            "ANYPLOT_MPL_SEED": MPL_SEED,
             "HOME": "/tmp",
             "PYTHONDONTWRITEBYTECODE": "1",
             "ANYPLOT_RLIMIT_CPU_S": str(self.cpu_seconds),

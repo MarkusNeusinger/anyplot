@@ -8,7 +8,8 @@ Every theme runs as
         -e ANYPLOT_THEME=<theme> -e MPLBACKEND=Agg ... <image> /app/.venv/bin/python -I /opt/anyplot/harness.py plot.py
 
 started with `asyncio.create_subprocess_exec` (never a shell) in its own process
-group. The image is `AGENT_RENDER_IMAGE`, the production agents image. The harness
+group. The image is `AGENT_RENDER_IMAGE`, the production renderer image built from
+`agents/renderer/Dockerfile` (it has the plotting venv at `/app/.venv`). The harness
 is mounted read-only from this checkout, so a render uses the harness of the code
 under development. On timeout the container is killed by name. The run directory is
 a fresh temporary directory that is removed afterwards. stdout is discarded and stderr

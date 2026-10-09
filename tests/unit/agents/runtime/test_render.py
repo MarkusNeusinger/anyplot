@@ -20,6 +20,7 @@ from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.render import make_backend
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome, fixture_png
 from agents.anyplot.render.backends.local import LocalDockerBackend, read_tail
+from agents.anyplot.render.backends.remote import IdTokenSource, RemoteBackend
 from agents.anyplot.render.backends.sandbox import SandboxBackend
 from agents.anyplot.render.contract import THEMES, RendererUnavailable, RenderJob, RenderResult, Theme, ThemeOutput
 from agents.anyplot.render.gates import data_rows, error_summary, evaluate
@@ -427,8 +428,8 @@ class TestBackends:
         with pytest.raises(RendererUnavailable, match="Docker"):
             LocalDockerBackend(image="x", runtime=PythonRuntime(), environment="development")
 
-    async def test_sandbox_backend_waits_for_spike_s(self) -> None:
-        with pytest.raises(NotImplementedError, match="spike S"):
+    async def test_in_process_sandbox_backend_is_not_used_in_phase_1(self) -> None:
+        with pytest.raises(NotImplementedError, match="not used in phase 1"):
             await SandboxBackend(runtime=PythonRuntime()).render(job())
 
     async def test_fake_backend_scripts(self) -> None:
@@ -441,8 +442,11 @@ class TestBackends:
     def test_factory(self) -> None:
         assert isinstance(make_backend(AgentSettings(renderer="fake")), FakeBackend)
         assert isinstance(make_backend(AgentSettings(renderer="sandbox")), SandboxBackend)
-        with pytest.raises(RendererUnavailable):
+        with pytest.raises(RendererUnavailable, match="AGENT_RENDER_URL"):
             make_backend(AgentSettings(renderer="remote"))
+        remote = make_backend(AgentSettings(renderer="remote", render_url="https://anyplot-renderer.example.run.app/"))
+        assert isinstance(remote, RemoteBackend) and remote.url == "https://anyplot-renderer.example.run.app"
+        assert isinstance(remote.tokens, IdTokenSource) and remote.tokens.audience == remote.url
 
     def test_job_validation(self) -> None:
         with pytest.raises(ValueError):

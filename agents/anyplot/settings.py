@@ -14,8 +14,10 @@ another provider, model or location.
 | `AGENT_LOCATION` | `eu` | Vertex AI location of every model call: `eu`, `us` or `global` |
 | `AGENT_PROJECT`, else `GOOGLE_CLOUD_PROJECT` | `anyplot` | Google Cloud project that serves (and bills) the model calls |
 | `AGENT_LIBRARIES` | `matplotlib,seaborn` | Enabled libraries; each needs a phase-1 runtime (`matplotlib`, `seaborn`) |
-| `AGENT_RENDERER` | `sandbox` | Render backend: `sandbox`, `local` (development only), `fake` (development and test only) or `remote` |
-| `AGENT_RENDER_IMAGE` | `anyplot-agents:dev` | Image the `local` renderer runs with Docker |
+| `AGENT_RENDERER` | `remote` | Render backend: `remote` (the anyplot-renderer service, phase 1), `sandbox` (in-process sandboxes, not used in phase 1), `local` (development only) or `fake` (development and test only) |
+| `AGENT_RENDER_URL` | unset | The anyplot-renderer service URL the `remote` backend calls; `https://` outside development and test |
+| `AGENT_RENDER_TOKEN` | unset | Development only: an ID token for the renderer (`gcloud auth print-identity-token`); without it the backend mints one from Application Default Credentials |
+| `AGENT_RENDER_IMAGE` | `anyplot-renderer:dev` | Image the `local` renderer runs with Docker (build it from `agents/renderer/Dockerfile`) |
 | `AGENT_RENDER_CONCURRENCY` | `1` | Renders (one theme each) that may run at the same time; serial, because one 4 GiB instance holds one sandbox safely (spikes S and S2) |
 | `AGENT_RUN_CONCURRENCY` | `1` | Pipeline runs (whole `/messages` turns) in flight per instance; the run queue holds the rest |
 | `AGENT_RUNS_PER_MINUTE` | `1` | Runs that may start within any 60 seconds (a sliding window) |
@@ -46,7 +48,7 @@ import json
 from functools import lru_cache
 from typing import Annotated, Any, Literal, Self
 
-from pydantic import AliasChoices, Field, PositiveFloat, PositiveInt, field_validator, model_validator
+from pydantic import AliasChoices, Field, PositiveFloat, PositiveInt, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 from core.constants import SUPPORTED_LIBRARIES
@@ -66,8 +68,12 @@ Provider = Literal["anthropic-vertex", "gemini"]
 """Model families: Claude through Vertex AI's Anthropic endpoint, or Gemini through Vertex AI."""
 
 Renderer = Literal["sandbox", "local", "fake", "remote"]
-"""Render backends: `sandbox` (Cloud Run sandboxes, phase 1), `local` (Docker,
-development only), `fake` (unit tests) and `remote` (the phase-2 renderer split)."""
+"""Render backends: `remote` (the anyplot-renderer service, phase 1), `sandbox` (Cloud
+Run sandboxes inside this service, a stub that phase 1 does not use), `local` (Docker,
+development only) and `fake` (unit tests)."""
+
+RENDER_URL_PATTERN = r"^https?://[A-Za-z0-9.-]{1,253}(:[0-9]{1,5})?/?$"
+"""A service origin: scheme, host and optional port, no path, query or credentials."""
 
 LOCATIONS: tuple[str, ...] = ("eu", "us", "global")
 MODEL_PREFIXES: dict[str, str] = {"anthropic-vertex": "claude-", "gemini": "gemini-"}
@@ -118,11 +124,19 @@ class AgentSettings(BaseSettings):
     libraries: Annotated[list[str], NoDecode] = Field(default=["matplotlib", "seaborn"], min_length=1)
     """Libraries with an enabled runtime (`AGENT_LIBRARIES`, comma-separated)."""
 
-    renderer: Renderer = "sandbox"
+    renderer: Renderer = "remote"
     """Render backend (`AGENT_RENDERER`); `local` only in development, `fake` only in development and test."""
 
-    render_image: str = Field(default="anyplot-agents:dev", pattern=r"^[A-Za-z0-9][A-Za-z0-9._/:@-]{0,199}$")
-    """Image the local renderer runs (`AGENT_RENDER_IMAGE`)."""
+    render_url: str | None = Field(default=None, pattern=RENDER_URL_PATTERN)
+    """The anyplot-renderer service URL (`AGENT_RENDER_URL`), also the audience of its ID token.
+    The `remote` backend refuses to start without it; plain `http://` only in development and test."""
+
+    render_token: SecretStr | None = None
+    """Development only (`AGENT_RENDER_TOKEN`): an ID token for the renderer, typically from
+    `gcloud auth print-identity-token`. Without it the `remote` backend mints one itself."""
+
+    render_image: str = Field(default="anyplot-renderer:dev", pattern=r"^[A-Za-z0-9][A-Za-z0-9._/:@-]{0,199}$")
+    """Image the local renderer runs (`AGENT_RENDER_IMAGE`), built from `agents/renderer/Dockerfile`."""
 
     render_concurrency: PositiveInt = 1
     """Theme renders that may run at the same time (`AGENT_RENDER_CONCURRENCY`), enforced for
@@ -230,12 +244,17 @@ class AgentSettings(BaseSettings):
     def _parse_list(cls, value: Any) -> Any:
         return _split_list(value)
 
-    @field_validator("dev_fixture", mode="before")
+    @field_validator("dev_fixture", "render_url", "render_token", mode="before")
     @classmethod
-    def _blank_fixture_is_none(cls, value: Any) -> Any:
+    def _blank_is_none(cls, value: Any) -> Any:
         if isinstance(value, str) and not value.strip():
             return None
         return value.strip() if isinstance(value, str) else value
+
+    @field_validator("render_url")
+    @classmethod
+    def _origin_without_slash(cls, value: str | None) -> str | None:
+        return value.rstrip("/") if value else value
 
     @field_validator("libraries")
     @classmethod
@@ -294,6 +313,19 @@ class AgentSettings(BaseSettings):
         if self.dev_fixture is not None and self.environment != "development":
             raise ValueError(
                 f"AGENT_DEV_FIXTURE is allowed only when ENVIRONMENT=development, not {self.environment!r}"
+            )
+        if (
+            self.render_url
+            and self.render_url.startswith("http://")
+            and self.environment not in FAKE_RENDERER_ENVIRONMENTS
+        ):
+            raise ValueError(
+                "AGENT_RENDER_URL must be https:// outside development and test: the request carries an ID token"
+            )
+        if self.render_token is not None and not self.is_development:
+            raise ValueError(
+                f"AGENT_RENDER_TOKEN is allowed only when ENVIRONMENT=development, not {self.environment!r}: "
+                "a deployed service mints its own token from the metadata server"
             )
         if self.soft_deadline_s >= self.request_deadline_s:
             raise ValueError(
