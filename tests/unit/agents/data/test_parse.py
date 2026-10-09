@@ -88,6 +88,13 @@ class TestDecimalCommaAndDateGuard:
         assert parsed.csv.splitlines()[1:] == ["3.5,1200", "2.1,800"]
         assert warned(parsed, "column 'Menge': dots read as thousands separators")
 
+    def test_a_zero_leading_group_keeps_dot_decimals_in_a_decimal_comma_file(self) -> None:
+        parsed = parse_dataset("rate;amount\n0.125;1,5\n1.250;2,5\n")
+
+        assert column(parsed, "rate").dtype == "number"
+        assert parsed.csv.splitlines()[1:] == ["0.125,1.5", "1.25,2.5"]
+        assert not warned(parsed, "column 'rate': dots read as thousands separators")
+
     def test_dot_decimals_stay_dot_decimals_without_a_comma_column(self) -> None:
         parsed = parse_dataset("a,b\n1.200,x\n0.800,y\n")
 
@@ -356,6 +363,11 @@ class TestFormats:
         assert parsed.column_dtypes == {"x": "number", "label": "text", "flag": "boolean"}
         assert parsed.csv == "x,label,flag\n1.0,a,\n2.5,,True\n,c,\n"
         assert warned(parsed, "3 records lack some keys")
+
+    def test_one_incomplete_json_record_takes_a_singular_verb(self) -> None:
+        parsed = parse_dataset('[{"x": 1, "y": 2}, {"x": 3}]')
+
+        assert warned(parsed, "1 record lacks some keys")
 
     def test_json_columns(self) -> None:
         parsed = parse_dataset('{"day": ["2024-01-01", "2024-01-02"], "n": [3, NaN]}')

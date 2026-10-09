@@ -79,7 +79,7 @@ class DatasetStore:
             dataset_id=dataset_id,
             session_id=session_id,
             csv=parsed.csv,
-            profile=parsed.profile,
+            profile=parsed.profile.model_copy(deep=True),
             column_dtypes=dict(parsed.column_dtypes),
             parse_dates=list(parsed.parse_dates),
             preview=[list(row) for row in parsed.preview],

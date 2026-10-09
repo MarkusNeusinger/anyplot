@@ -1,6 +1,6 @@
 # Agent network design
 
-> **Status (2026-10-09):** design, with the first piece built: the `agents/` package skeleton (ADK pin, `AgentSettings` and the Pydantic contracts in `agents/anyplot/schemas.py`). Nothing else in this document is built yet. The research behind it was verified against ADK v2.11.0 and the Vertex AI documentation on 2026-10-08; re-check version-sensitive facts (model ids, prices, ADK APIs) before you implement a section.
+> **Status (2026-10-09):** design, with the first pieces built: the `agents/` package skeleton (ADK pin, `AgentSettings` and the Pydantic contracts in `agents/anyplot/schemas.py`) and the deterministic data layer in `agents/anyplot/data/` (the parser, data roles, default bindings and the dataset store described under [Parse](#parse); `bindings.apply` and the routes that call it are not built). Nothing else in this document is built yet. The research behind it was verified against ADK v2.11.0 and the Vertex AI documentation on 2026-10-08; re-check version-sensitive facts (model ids, prices, ADK APIs) before you implement a section.
 
 This document describes the agent network that lets a visitor paste their own data on a plot page and get that plot adapted, rendered and reviewed ("Use with my data"), and later helps them find the right plot type. It is built with [Google ADK](https://adk.dev) (Python) on Gemini through Vertex AI (now branded Gemini Enterprise Agent Platform) inside the `anyplot` GCP project.
 

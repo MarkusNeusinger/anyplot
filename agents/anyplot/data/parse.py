@@ -123,8 +123,9 @@ _WHITESPACE_RUN = re.compile(r"\s+")
 _INTEGER = re.compile(r"[+-]?[0-9]+")
 _LEADING_ZERO = re.compile(r"[+-]?0[0-9]+")
 _FLOAT = re.compile(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?")
-_DECIMAL_COMMA = re.compile(r"[+-]?(?:[0-9]{1,3}(?:\.[0-9]{3})+|[0-9]+)(?:,[0-9]+)?")
-_THOUSANDS_DOT = re.compile(r"[+-]?(?:[0-9]{1,3}(?:\.[0-9]{3})+|[0-9]+)")
+# A thousands-grouped number never starts with a zero group: `0.125` is a dot decimal.
+_DECIMAL_COMMA = re.compile(r"[+-]?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3})+|[0-9]+)(?:,[0-9]+)?")
+_THOUSANDS_DOT = re.compile(r"[+-]?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3})+|[0-9]+)")
 _AMBIGUOUS_COMMA = re.compile(r"[+-]?[0-9]{1,3},[0-9]{3}")
 
 _ISO_TIME = r"(?:[T ]([0-9]{2}):([0-9]{2})(?::([0-9]{2}))?)?"
@@ -320,7 +321,8 @@ def _read_json(text: str, warnings: list[str]) -> tuple[list[str], list[list[str
                 incomplete += 1
             rows.append([_json_cell(record[key], position) if key in record else "" for key, position in keys.items()])
         if incomplete:
-            warnings.append(f"{_count(incomplete, 'record')} lack some keys; those cells are empty")
+            verb = "lacks" if incomplete == 1 else "lack"
+            warnings.append(f"{_count(incomplete, 'record')} {verb} some keys; those cells are empty")
         return headers, rows, "json_records"
 
     if isinstance(data, dict):

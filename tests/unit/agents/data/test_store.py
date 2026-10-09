@@ -62,13 +62,17 @@ class TestOwnership:
         self, store: DatasetStore, parsed: ParsedDataset
     ) -> None:
         dataset_id = store.put("s1", parsed)
+        profile_before = parsed.profile.model_copy(deep=True)
         parsed.parse_dates.append("value")
         parsed.preview[0][0] = "changed"
+        parsed.profile.warnings.append("changed")
+        parsed.profile.columns[0].missing = 99
 
         stored = store.get(dataset_id, "s1")
         assert stored is not None
         assert stored.parse_dates == ["when"]
         assert stored.preview[0][0] == "2024-01-01"
+        assert stored.profile == profile_before
 
     def test_delete_checks_ownership(self, store: DatasetStore, parsed: ParsedDataset) -> None:
         dataset_id = store.put("s1", parsed)
