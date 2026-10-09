@@ -2,139 +2,142 @@ library: pygal
 language: python
 specification_id: line-yield-curve
 created: '2026-03-14T22:16:35Z'
-updated: '2026-06-10T01:24:07Z'
+updated: '2026-10-09T03:15:04Z'
 generated_by: claude-sonnet
-workflow_run: 27245053093
+workflow_run: 37877904473
 issue: 4664
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.16
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 81
 review:
   strengths:
-  - 'Sophisticated SVG post-processing: border frame removed via CSS injection and
-    inversion zone shading rectangle injected into the SVG — demonstrates real design
-    engineering beyond standard pygal API'
-  - 'Excellent data storytelling: three archetypal yield curve shapes (normal/flat/inverted)
-    with the 2Y–10Y spread explicitly labeled in basis points and the inversion region
-    highlighted with a semi-transparent shading box'
-  - 'Realistic and accurate financial data: U.S. Treasury dates (Jan 2021, Dec 2018,
-    Mar 2023) with yield values that correctly reflect post-COVID near-zero rates,
-    the Fed hiking cycle flat curve, and the 2023 inversion'
-  - 'Full Imprint palette compliance: canonical order positions 1–4 used for the four
-    series, correct #FAF8F1/#1A1A17 backgrounds, and theme-adaptive chrome tokens
-    applied throughout'
-  - Cubic interpolation produces publication-quality smooth yield curves consistent
-    with financial chart conventions
+  - pygal.XY places every yield at its maturity in years, so maturity spacing reflects
+    time; x_labels with x_labels_major and show_minor_x_labels=False label the maturities
+    without crowding the bunched short end
+  - 'Theme tokens threaded through pygal''s Style object: #FAF8F1 / #1A1A17 backgrounds,
+    ink text and muted guides, with identical Imprint data colors in both renders'
+  - 2Y–10Y inversion shaded with a translucent ochre box behind the curves, anchored
+    by oversized ochre dots and a legend entry quantifying the spread (−102 bps)
+  - x_value_formatter / y_value_formatter turn the HTML output's native tooltips into
+    readable maturity and percent values
   weaknesses:
-  - 'Title missing ''python'' language token — current: ''U.S. Treasury Yield Curves
-    · line-yield-curve · pygal · anyplot.ai''; required: ''U.S. Treasury Yield Curves
-    · line-yield-curve · python · pygal · anyplot.ai'''
-  - 'Hardcoded SVG pixel coordinates for the inversion zone rect (x=234.3, y=223.9,
-    width=745.1, height=226.1) are fragile: any change to margins, font sizes, or
-    data range would silently misplace the shading box without error'
+  - 'SC-02, SC-03 (both): interpolate="cubic" swings the curves past the yields they
+    connect — the Mar 2023 curve peaks at about 5.12 % between 6M and 1Y (highest
+    yield 5.09 %), dips to about 3.54 % just after 10Y (point 3.58 %) and humps to
+    about 3.93 % between 20Y and 30Y (points 3.89 % / 3.70 %); the Dec 2018 curve
+    overshoots its 2.63 % 1Y point → straight segments through each yield (overshoot
+    0, about −0.04 pp). Likely cause: interpolate="cubic" on pygal.XY (line 86).'
+  - 'VQ-03 (both): dots at r=7 px and strokes about 4 px wide read thin for 11-point
+    sparse curves on the 3200×1800 canvas and almost vanish in the 400 px thumbnail
+    → dots about r=12 px (+5 px) and strokes about 6 px (+2 px). Likely cause: dots_size=7
+    in chart.add() and stroke_style={"width": 4}.'
+  - 'CQ-04 (code): line 104 stroke_dasharray="15,10" is not a pygal series option
+    and has no effect — the ochre 2Y–10Y connector renders solid in both renders →
+    remove (or use stroke_style={"dasharray": "15, 10"} if a dash is wanted). Likely
+    cause: a misremembered keyword.'
+  - 'Suggestion: a logarithmic maturity axis (pygal.XY(logarithmic=True) on x) would
+    spread the bunched 1M–2Y maturities and leave room to label 3M, 6M, 3Y and 7Y.'
+  - 'Suggestion: listing the curves chronologically (Dec 2018, Jan 2021, Mar 2023)
+    in the legend would make the time evolution easier to follow.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light surface.
-      Chrome: Title "U.S. Treasury Yield Curves · line-yield-curve · pygal · anyplot.ai" in dark ink, clearly readable (~65% canvas width). Axis labels "Maturity (Years)" and "Yield (%)" dark and well-proportioned. Tick labels (1M, 1Y, 2Y, 5Y, 10Y, 20Y, 30Y on x-axis; 0–5% on y-axis) are dark and legible. Bottom legend with 4 entries clearly readable. Subtle y-axis-only grid lines visible.
-      Data: Jan 2021 (Normal) in #009E73 brand green — upward-sloping curve near zero for short maturities, rising to ~1.9% at 30Y. Dec 2018 (Flat) in #C475FD lavender — relatively flat ~2.3–3.0% range. Mar 2023 (Inverted) in #4467A3 blue — peaks near 5.1% at 6M then slopes down to ~3.7% at 30Y. 2Y–10Y Inversion in #BD8233 ochre — dashed line with oversized anchor dots at 2Y and 10Y. Semi-transparent ochre shading box highlights the inversion region (2Y–10Y). Cubic interpolation produces smooth curves.
-      Legibility verdict: PASS — all text, ticks, labels, and legend fully readable against the warm off-white background.
+      Background: warm off-white #FAF8F1, no chart frame.
+      Chrome: title 'U.S. Treasury Yield Curves · line-yield-curve · python · pygal · anyplot.ai' in dark ink at the top (~63 % width); y-axis 'Yield (%)' with ticks 0–5, x-axis 'Maturity (Years)' with ticks 1M, 1Y, 2Y, 5Y, 10Y, 20Y, 30Y; dotted horizontal guides only; legend of four entries along the bottom. All text readable.
+      Data: Jan 2021 normal curve in #009E73 rising 0.04→1.87 %, Dec 2018 flat curve in #C475FD around 2.4–3.0 %, Mar 2023 inverted curve in #4467A3 from 5.09 % at 6M down to 3.58 % at 10Y; cubic interpolation with slight overshoot between points; translucent ochre (#BD8233) box from 2Y to 10Y with large ochre anchor dots joined by a solid ochre line; legend entry '2Y–10Y Inversion (−102 bps)'.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface.
-      Chrome: Title in light cream text clearly readable. Axis labels and tick labels light-colored, fully visible against dark background. Legend text light and readable. No dark-on-dark failures observed.
-      Data: Data colors identical to light render — #009E73 green, #C475FD lavender, #4467A3 blue, #BD8233 ochre. Only the background and text chrome flip; all four yield curves retain their identities. The inversion shading box (ochre rgba fill) reads as a darker rectangle against the near-black background, still visible and meaningful.
-      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures detected.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick labels and legend text in light ink; guides subtle dark dotted lines. No dark-on-dark text.
+      Data: identical colors to the light render (green, lavender, blue curves; ochre inversion box, darker translucent fill on the dark page).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=66, label=56, major_label=44,
-          legend=44). All text readable in both themes. Minor: tick labels at short
-          maturities (1M, 1Y, 2Y) are slightly crowded but still legible.'
+        comment: All font sizes set explicitly in the Style object; title, axis titles,
+          ticks and legend readable in both themes; title spans about 63 % of the
+          width
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: No actual text overlaps. Mild crowding at short-maturity ticks; show_minor_x_labels=False
-          helps. Legend at bottom is clean.
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All four series clearly visible. dots_size=7 for main curves, oversized
-          dots (18px) for inversion annotation. Cubic interpolation produces smooth,
-          professional curves.
+        comment: No text collisions; the ochre 2Y–10Y connector crosses the blue curve
+          but hides no information
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: false
+        comment: Dots at r=7 px and ~4 px strokes read thin for 11-point sparse curves
+          on the 3200×1800 canvas (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. Four distinct hue families (green, lavender,
-          blue, ochre). Sufficient luminance contrast between all series.
+        comment: Green, lavender and blue are well separated in luminance and hue;
+          ochre highlight distinct
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 (gate passed). Good margins (80 general, 120 top,
-          140 bottom). Layout fills canvas well. Legend at bottom with 4 columns.
+        comment: Plot fills most of the canvas, legend directly under the axis title,
+          balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Maturity (Years)'' — descriptive with context. Y-axis:
-          ''Yield (%)'' — descriptive with units. Both informative.'
+        comment: '''Maturity (Years)'' and ''Yield (%)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓. Imprint positions 1-4 in canonical order
-          ✓. Backgrounds #FAF8F1 light / #1A1A17 dark ✓. Data colors identical across
-          themes ✓. Chrome adapts correctly ✓.'
+        comment: 'Imprint positions 1–4 in canonical order (#009E73 first); #FAF8F1
+          / #1A1A17 backgrounds; chrome theme-correct in both renders'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Above default (4). SVG post-processing to remove border frame, inversion
-          zone shading via SVG rect injection, cubic interpolation, and Imprint palette
-          all demonstrate clear design intent beyond library defaults.
+        passed: false
+        comment: The style-guide baseline (Imprint, theme tokens, explicit sizes);
+          nothing typographic decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Above default (2). Border removed via CSS injection. Y-axis guides
-          only (no x guides). foreground_subtle token controls grid subtlety. Clean
-          bottom legend.
+        passed: false
+        comment: 'Beyond baseline: pygal chart frame removed via CSS, a major-only
+          x-label set chosen so the bunched short maturities stay legible, y-guides
+          only'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Above default (2). Three archetypal yield curve shapes chosen deliberately.
-          2Y–10Y inversion highlighted with dedicated shading box + oversized anchor
-          dots + basis-point label. Clear visual focal point on the inversion region.
+        passed: false
+        comment: 'Beyond the Notes'' shading: the spread is quantified (−102 bps)
+          in the legend and anchored by oversized ochre dots at 2Y and 10Y, giving
+          a focal point'
     spec_compliance:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -142,31 +145,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY line chart using pygal.XY with maturity_years for proper
-          x-axis spacing.
+        comment: Multi-curve yield-curve line chart on a numeric maturity axis (pygal.XY)
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Multiple curves (3) ✓. Show curve shape evolution over time ✓. Inversion
-          region highlighted with shading + annotation ✓. Legend with dates ✓.
+        passed: false
+        comment: Three curves, date legend, inversion shading, maturity tick labels
+          present; C1 'never smoothed away from its points' is broken by cubic interpolation
+          (defect line)
       - id: SC-03
         name: Data Mapping
-        score: 3
-        max: 3
-        passed: true
-        comment: maturity_years on x-axis for correct time spacing ✓. maturity labels
-          as x_labels for readable ticks ✓. yield_pct on y-axis ✓.
-      - id: SC-04
-        name: Title & Legend
         score: 2
         max: 3
         passed: false
-        comment: 'Title missing ''python'' language token. Current: ''U.S. Treasury
-          Yield Curves · line-yield-curve · pygal · anyplot.ai''. Required: ''U.S.
-          Treasury Yield Curves · line-yield-curve · python · pygal · anyplot.ai''.
-          Legend labels correctly show dates and curve type.'
+        comment: Points at their maturity in years; cubic spline overshoots between
+          points by up to ~0.04 pp (defect line)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'U.S. Treasury Yield Curves · line-yield-curve · python · pygal
+          · anyplot.ai' is correct; legend gives each curve's date
     data_quality:
       score: 15
       max: 15
@@ -176,26 +177,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All three canonical yield curve shapes present: normal upward-sloping,
-          flat, and inverted. Inversion region explicitly highlighted. 11 maturity
-          points covering full term structure.'
+        comment: Normal, flat and inverted shapes all present, the inverted one with
+          a short-end hump
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real U.S. Treasury market dates. Jan 2021 near-zero short rates match
-          post-COVID Fed policy. Dec 2018 flat curve matches Fed hiking cycle peak.
-          Mar 2023 inverted curve matches aggressive rate hike period. Neutral financial
-          context.
+        comment: Real U.S. Treasury curves for Jan 2021, Dec 2018 and Mar 2023; neutral
+          financial context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y range 0-5.5% appropriate for the three time periods shown. X range
-          0-31 covers full 1M-30Y term structure. Yield values factually accurate
-          for each date.
+        comment: 'Checked: 2Y 4.60 % − 10Y 3.58 % = 102 bps matches the legend label;
+          Jan 2021 10Y 1.09 %, Dec 2018 10Y 2.69 % and the y range 0–5.5 % read correctly
+          off the axis'
     code_quality:
       score: 9
       max: 10
@@ -205,65 +203,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: constants → data → style → chart → add series → SVG
-          post-processing → save. No functions or classes.'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded static arrays. No random elements. Fully deterministic.
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 5 imports (os, re, cairosvg, pygal, pygal.style.Style) are used
-          in the code.
+        comment: os, re, cairosvg, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: true
-        comment: SVG coordinate hardcoding (lines 117-129) is brittle — pixel coordinates
-          for the inversion zone rect are derived from specific rendering output and
-          would silently break if margins, font sizes, or data range changes. Rest
-          of code is clean.
+        passed: false
+        comment: Line 104 stroke_dasharray='15,10' is not a pygal series option and
+          has no effect (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via cairosvg and plot-{THEME}.html. Current
-          pygal API. Correct output naming.
+        comment: Writes plot-{THEME}.png and plot-{THEME}.html; current pygal API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good idiomatic pygal usage: Style object for theming, XY chart type,
-          x_labels + x_labels_major + show_minor_x_labels for axis control, interpolate=''cubic'',
-          custom x_value_formatter and y_value_formatter lambdas.'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses pygal's SVG-native rendering for post-processing (distinctively
-          possible because pygal outputs SVG). Cubic interpolation is a pygal feature.
-          HTML interactive output leverages pygal's built-in JS interactivity.
+        passed: false
+        comment: Correct pygal.XY + Style usage, but the inversion box is injected
+          by regex into the SVG string
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: x_labels_major with show_minor_x_labels=False, and x/y_value_formatter
+          driving the interactive SVG tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-54d55755be
+  rendered_at: '2026-10-09T03:10:41Z'
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - manual-ticks
+  - layer-composition
   - html-export
+  - hover-tooltips
   patterns: []
   dataprep: []
   styling:
+  - minimal-chrome
   - alpha-blending
+  - grid-styling
