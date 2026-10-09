@@ -91,7 +91,8 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs):
     if not s.ready:
         yield Event(output=PlotResult.not_ready(s.reason)); return
     deadline = SoftDeadline(140)                       # abort_signal at 180 s is the hard backstop
-    best, best_defects, reviewed, feedback, reason = None, [], False, [], None
+    best, best_defects, best_reviewed = None, [], False  # the best render that passed R1+R2 and whether the reviewer saw it
+    review_defects, reviewer_used, feedback, reason = [], False, [], None
     try:
         for attempt in (1, 2):
             if not budget.check(ctx): reason = "budget"; break
@@ -99,25 +100,29 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs):
             yield Event(message="adapting" if attempt == 1 else "repairing")
             req = s.adapt_request(node_input, feedback, allow_full=(attempt == 2))   # code = latest validated working form
             plan = await ctx.run_node(adapter_for(s.library), req)
+            yield Event(message="checking")
             working, feedback = apply_and_validate(s, plan)   # edits → ADAPTED-profile validator (placeholder allowed)
             if feedback: continue
             yield Event(message="rendering")
             run_form = substitute_loader(normalise(working))  # the run form is the exported code
             result = await renderer.render(s.render_job(run_form), timeout=deadline.clamp(render_timeout))
-            if result.passed_host_gates: best, best_defects = result, result.defects
-            feedback = result.defects
-            if feedback or reviewed: continue
+            if result.passed_host_gates:                     # R1 and R2 passed; R3 passed or was padded
+                best, best_defects, best_reviewed = result, result.defects, False
+            feedback = result.defects                        # R3 miss and advisory probe gates feed the single repair
+            if feedback or reviewer_used: continue
             yield Event(message="reviewing")
-            verdict = await ctx.run_node(reviewer, s.review_request(run_form, result)); reviewed = True
-            feedback = [d.as_line() for d in verdict.defects]
+            verdict = await ctx.run_node(reviewer, s.review_request(run_form, result))
+            reviewer_used, best_reviewed = True, True
+            review_defects = [d.as_line() for d in verdict.defects]
+            feedback = review_defects
             if verdict.ok: break
     except Exception:
         reason = "error"
     finally:
-        yield Event(output=s.finish(ctx, best, best_defects, feedback, reviewed, reason))  # every path
+        yield Event(output=s.finish(ctx, best, best_defects, best_reviewed, review_defects, reason))  # every path
 ```
 
-`finish` returns `ok` only when the last render passed the host gates and the reviewer passed it; `needs_attention` when a passing render exists but was not reviewed after reviewer feedback (the reviewer's lines become residual defects) or when the canvas had to be padded; `failed` otherwise, with `reason` in `validation`, `render`, `deadline`, `budget` or `error`. The translator maps an abort without a `PlotResult` to `error{code:"deadline"}`.
+`finish` returns `ok` only when `best` exists, the reviewer saw exactly that render (`best_reviewed`) and passed it, and the canvas was not padded; `needs_attention` when `best` exists but either the reviewer never saw it after giving defects (a repair that was not re-reviewed; the first review's lines become residual defects), or the canvas had to be padded, or advisory probe gates still report defects; `failed` when no render passed R1 and R2, with `reason` in `validation`, `render`, `deadline`, `budget` or `error`. The translator maps an abort without a `PlotResult` to `error{code:"deadline"}`.
 
 Bounds: at most 2 adapter calls, 1 reviewer call and 2 render rounds of 2 themes per run; `ToolSafety` allows at most one `plot_pipeline` call per invocation; `RunConfig(max_llm_calls=12, streaming_mode=StreamingMode.NONE)` (`ADK_MAX_LLM_CALLS=20` only sets the default for runs without a `RunConfig`, such as `adk web` and evals, so the budget plugin enforces the request cap too); 60 s per render, host-enforced and clamped to the remaining soft deadline; a 180 s request deadline through `abort_signal` plus task cancellation on disconnect; one active run per user (409); two concurrent renders per instance. A typical "Create plot" costs 4 LLM calls (root twice, adapter, reviewer); a repair adds one; each free-text turn adds one judge call.
 
@@ -178,7 +183,7 @@ The sandbox command per theme, started with `asyncio.create_subprocess_exec` and
 
 Both themes render in parallel under the semaphore. The process has its own group and is killed on timeout, followed by `sandbox delete r-<job_id>-<theme>`; the run directory is wiped; a code assertion forbids `--allow-egress`. `harness.py` sets resource limits (CPU and file size; the address-space limit is tuned in the spike), registers a `Figure.savefig` probe that writes `probe-<theme>.json`, then calls `runpy.run_path`.
 
-Host gates (blocking): R1 exit code and outputs present; R2 PNG hardening (`lstat` with no symlinks, at most 10 MB, magic bytes, Pillow under `MAX_IMAGE_PIXELS`, non-blank with less than 98 % background, re-encode); R3 canvas within 16 px through `core/canvas.py`, lifted from `.github/workflows/impl-review.yml`. An R3 miss after normalisation is a defect for the single repair; if it persists, the result ships as `needs_attention` with the residual line "canvas padded after render", never silently. The probe gates (G3 clipping, G5 annotation out of view, G7 tick-label overlap, G8 row fidelity) are advisory because in-sandbox data can be tampered with: they can only trigger the single repair or add notes. The defect-line helpers (`DEFECT_RE`, `weakness_class`, `defect_ids`) and the auto-reject checks move into `core/defects.py` (re-exported by `automation/scripts/regen_gate.py`), so the agents image needs no `automation/` or `scripts/` files.
+Host gates: R1 (exit code and outputs present) and R2 (PNG hardening: `lstat` with no symlinks, at most 10 MB, magic bytes, Pillow under `MAX_IMAGE_PIXELS`, non-blank with less than 98 % background, re-encode) are blocking; a render that fails either is discarded and never becomes `best`. R3 (canvas within 16 px through `core/canvas.py`, lifted from `.github/workflows/impl-review.yml`) is repair-triggering with a fallback: an R3 miss after normalisation is a defect line for the single repair; if it persists after the repair, the host pads the PNG to the target canvas (never crops), the padded artifact counts as having passed the host gates, and the result ships as `needs_attention` with the residual line "canvas padded after render", never silently. The probe gates (G3 clipping, G5 annotation out of view, G7 tick-label overlap, G8 row fidelity) are advisory because in-sandbox data can be tampered with: they can only trigger the single repair or add notes, never fail a render. The defect-line helpers (`DEFECT_RE`, `weakness_class`, `defect_ids`) and the auto-reject checks move into `core/defects.py` (re-exported by `automation/scripts/regen_gate.py`), so the agents image needs no `automation/` or `scripts/` files.
 
 Later languages reuse the CI commands: `Rscript plot.R`; `julia --project=/opt/julia plot.jl` with a stacked `JULIA_DEPOT_PATH` and a pinned `JULIA_CPU_TARGET`; `node /opt/anyplot/js-render/render.mjs plot.js` with `window.ANYPLOT_DATA` injected; bokeh with `BOKEH_RESOURCES=inline`, `SE_OFFLINE=true` and a shipped chromedriver; plotly with local or disabled MathJax.
 
@@ -200,7 +205,7 @@ Plugin order on `App`, where the first non-None result wins and a plugin never r
 | Threat | Controls |
 |---|---|
 | Off-topic use, jailbreak, multi-turn drift | A judge on every free-text turn that fails closed, the 2,000-character limit, rejected text never stored, a closed tool set, policy in an untemplated `static_instruction`, the root "never" list, adversarial evals including general-programming requests framed as plot-code questions |
-| Injection through pasted data | Rows never reach prompts or tool arguments; the dataset judge at parse time; a profile of at most 5 sanitised, fenced rows; canonical headers; bindings validated on the server; adapter output bound to a schema and linted |
+| Injection through pasted data | The raw dataset never reaches a prompt or a tool argument; only bounded, sanitised, fenced samples do: at most 3 KB of headers, top values and sample cells for the dataset judge at parse time, and the profile's at most 5 sample rows (cells at most 40 characters) for the root and the adapter; canonical headers; bindings validated on the server; adapter output bound to a schema and linted |
 | Injection through catalogue code, comments or image labels | Own fencing; validated adapter output; a tool-less reviewer with a fixed-id schema that can trigger at most one bounded repair |
 | Code escape | The two-profile AST validator; loader substitution; no executors anywhere; the sandbox (no egress, environment or metadata server, read-only root filesystem); resource limits; a host timeout plus `sandbox delete`; per-job directory wipe; a service account with no data access; the phase-0 probe suite and the sibling-directory spike |
 | Resource abuse (denial of wallet) | Ledger budgets including the judge; one run per user and one `plot_pipeline` per invocation; `max-instances=1`; a CSRF header and Origin check on the cookie-authenticated BFF; a spend cap on `aiplatform.googleapis.com` only (never on `run.googleapis.com`, which would pause `anyplot-api`); the `AGENT_ENABLED` kill switch |
@@ -215,7 +220,7 @@ Every agent result can be reported with one click and a short text, and the repo
 - **UI.** On the result card and in the chat page's floating-action slot: thumbs up, thumbs down, bug and idea (the existing reaction set), an optional text of at most 500 characters, and a checkbox "include my data file" (on by default for admins in phase 1; off by default and behind an explicit consent notice for real users later). Sending is optional and never blocks the flow. One submission per result version; a later edit replaces it.
 - **Route.** `POST /debug/agent/sessions/{sid}/feedback {reaction, message?, include_data, result_version}` on the BFF, behind `require_admin` in phase 1; the public phase reuses the feedback router's per-IP-hash rate limit and honeypot. The BFF calls `GET /v1/sessions/{sid}/bundle` on anyplot-agents, which assembles the case on the server so that anyplot-agents stays credential-free: the transcript of user and root messages (never tool outputs or thoughts), the catalogue snapshot id, the working and run code of every version, the adapt plans and defect lines, the plot results, the dataset profile and bindings, both PNGs, and a config stamp (`AGENT_MODEL`, `model_version` from `usage_metadata`, the judge model, prompt file hashes, validator and normaliser version, ADK version, token and cost totals, latency per step). `data.csv` is included only when `include_data` is set.
 - **Storage**, written by the API, which already has database and GCS access: a row in a new table `agent_feedback` (Alembic migration) with `id, created_at, user_hash, session_hash, spec_id, library_id, language, reaction, message, include_data, status (new|in_progress|done|wont_solve), case_uri, model, model_version, prompt_hash, pipeline_status, attempts, tokens, cost_estimate`; the bundle as `cases/<id>/{manifest.json, plot-light.png, plot-dark.png, plot.py[, data.csv]}` in a new private EU bucket `anyplot-agent-cases` (public-access prevention, uniform access, lifecycle delete after 180 days by default; never `anyplot-images`). The attribution log stays content-free; the case bundle is the only place content is stored, and only on explicit submission.
-- **Triage.** A new "Agent cases" section in `DebugPage` lists cases with filters by reaction, status, spec, library and model version, opens a case (transcript, code diff against the catalogue original, light and dark images, defect lines, config stamp), updates the status, and offers **Promote to eval case**, which copies the case (dataset, bindings, spec and library, expected outcome = the owner's reaction) to the `evals/cases/<id>/` prefix of the same private bucket. The harness syncs that prefix into a gitignored `agents/evals/.cases/` directory at run time. Promoted cases are never committed: they contain users' data, and anything under `agents/evals/fixtures/` ships under the repository's MIT licence. Only synthetic fixtures (the spike-X perturbation datasets) are committed. This is the bridge from real sessions to the regression harness.
+- **Triage.** A new "Agent cases" section in `DebugPage` lists cases with filters by reaction, status, spec, library and model version, opens a case (transcript, code diff against the catalogue original, light and dark images, defect lines, config stamp), updates the status, and offers **Promote to eval case**, which asks for an explicit expected outcome (`accepted` or `rejected`; the form preselects `accepted` for thumbs up and `rejected` for thumbs down, and makes the owner choose for bug and idea reactions, because those do not map to a fixture outcome) and copies the case (dataset, bindings, spec and library, the chosen outcome) to the `evals/cases/<id>/` prefix of the same private bucket. The harness syncs that prefix into a gitignored `agents/evals/.cases/` directory at run time. Promoted cases are never committed: they contain users' data, and anything under `agents/evals/fixtures/` ships under the repository's MIT licence. Only synthetic fixtures (the spike-X perturbation datasets) are committed. This is the bridge from real sessions to the regression harness.
 - **Analytics.** `agent_result_feedback{reaction, include_data}` with enum properties only.
 - **Privacy.** Phase 1 holds owner data only. Before real users can submit: consent text on the control, a legal-page entry for the case store (purpose, retention of 180 days, EU bucket), `include_data` off by default, and a delete-my-case route keyed by the case id shown to the user.
 
