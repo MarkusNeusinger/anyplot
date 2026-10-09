@@ -13,4 +13,4 @@
   sources the adapter reads. No agent runtime ships yet, and the API image
   does not grow; its only change is `google-auth` 2.48.0 → 2.61.0 in the
   shared lock, because `google-genai` 2.29 (pulled in by ADK) needs 2.56 or
-  later.
+  later. (#12101)
