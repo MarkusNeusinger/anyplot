@@ -15,3 +15,4 @@
   encoding and syntax problems are findings too. The tests cover every rule with a
   failing snippet and its nearest allowed sibling, every bypass the design names,
   and the whole catalogue corpus, which prints a per-rule summary under `-s`.
+  (#12107)
