@@ -97,6 +97,9 @@ _ERROR_CODES = frozenset({"capacity", "deadline", "guard_unavailable", "upstream
 _MAX_EVENT_CHARS = 64 * 1024
 _QUEUED_STEP = "queued"
 """The status step of a run that waits in the agents service's run queue."""
+_QUEUED_HEARTBEAT_S = 15.0
+"""The agents run queue's `HEARTBEAT_S`: a waiting run's status repeats at least this
+often, so its run may have started up to this long before the BFF sees its first event."""
 
 # Error codes the agents service documents for its /v1 routes; an upstream error
 # body is never forwarded, only one of these codes when it names one.
@@ -523,13 +526,37 @@ def _no_content(ctx: AgentContext) -> Response:
 
 @dataclass
 class TurnDeadline:
-    """Loop time by which a chat turn has to be over; a run that waits in the upstream queue moves it."""
+    """Loop times that bound one chat turn.
+
+    `at` is when the turn has to be over unless an event moves it: `AGENT_REQUEST_TIMEOUT_S`
+    after it opened, restarted while the run waits in the upstream queue. `end` never
+    moves: `AGENT_TURN_MAX_S` after the turn opened, below anyplot-api's own request
+    timeout, so the stream always ends with `error` and `done` instead of being cut.
+    """
 
     at: float
+    end: float
 
-    def restart(self) -> None:
-        """A fresh `AGENT_REQUEST_TIMEOUT_S` from now."""
-        self.at = asyncio.get_running_loop().time() + settings.agent_request_timeout_s
+    @classmethod
+    def open(cls) -> TurnDeadline:
+        now = asyncio.get_running_loop().time()
+        end = now + settings.agent_turn_max_s
+        return cls(at=min(now + settings.agent_request_timeout_s, end), end=end)
+
+    def restart(self, *, queued: bool) -> bool:
+        """A fresh `AGENT_REQUEST_TIMEOUT_S` from now, capped at `end`.
+
+        A queued status adds `_QUEUED_HEARTBEAT_S`, because the run may start up to that
+        long before its first event arrives, and the budget must not end before the
+        agents service's own deadline. False when a queued run could no longer finish
+        before `end`: the caller ends the turn before the run spends a token.
+        """
+        now = asyncio.get_running_loop().time()
+        budget = settings.agent_request_timeout_s + (_QUEUED_HEARTBEAT_S if queued else 0.0)
+        if queued and now + budget > self.end:
+            return False
+        self.at = min(now + budget, self.end)
+        return True
 
 
 async def _read_events(
@@ -589,11 +616,8 @@ def _translate(event_type: str | None, data: str, ref: str) -> ServerSentEvent |
     return ServerSentEvent(event=event_type, data={key: value for key, value in payload.items() if key in fields})
 
 
-def _upstream_failed(ref: str) -> list[ServerSentEvent]:
-    return [
-        ServerSentEvent(event="error", data={"code": "upstream", "ref": ref}),
-        ServerSentEvent(event="done", data={}),
-    ]
+def _turn_failed(ref: str, code: str = "upstream") -> list[ServerSentEvent]:
+    return [ServerSentEvent(event="error", data={"code": code, "ref": ref}), ServerSentEvent(event="done", data={})]
 
 
 @dataclass(frozen=True)
@@ -603,7 +627,7 @@ class UpstreamStream:
     request_id: str
     response: httpx.Response | None
     deadline: TurnDeadline
-    """Loop time by which the whole turn, opening included, has to be over; queueing restarts it."""
+    """Loop times by which the whole turn, opening included, has to be over; queueing restarts `at`."""
 
 
 async def open_message_stream(
@@ -621,7 +645,7 @@ async def open_message_stream(
     path = f"/sessions/{sid}/messages"
     # One wall-clock budget for the whole turn: the ID token, the connection
     # and the upstream's response headers spend from it too.
-    deadline = TurnDeadline(asyncio.get_running_loop().time() + settings.agent_request_timeout_s)
+    deadline = TurnDeadline.open()
     response: httpx.Response | None
     try:
         async with asyncio.timeout_at(deadline.at):
@@ -643,7 +667,11 @@ async def open_message_stream(
 
 @router.get("/status")
 async def agent_status(ctx: Ctx, client: Client) -> dict[str, Any]:
-    """The agents service's status (`libraries`, `model`, `location`, `version`) plus `enabled`."""
+    """The agents service's status plus `enabled`.
+
+    Upstream fields: `libraries`, `model`, `location`, `version`, `provider`, and the
+    run queue's `waiting` entries and `in_flight` runs.
+    """
     upstream = await _call_upstream(client, ctx, "GET", "/status")
     return {**(upstream if isinstance(upstream, dict) else {}), "enabled": True}
 
@@ -708,8 +736,11 @@ async def post_message(upstream: UpstreamStream = Depends(open_message_stream)) 
 
     Queued time does not count toward the turn's budget, as it does not count
     toward the agents service's own deadline: every `status{step:"queued"}`
-    restarts the budget, and so does the first event after the wait, when the
-    run has started.
+    restarts the budget with the queue's heartbeat on top, and so does the first
+    event after the wait, when the run has started. Nothing moves the turn past
+    `AGENT_TURN_MAX_S`: a queued turn whose run could no longer finish before it
+    ends with `error{code:"capacity"}` there, and closing the upstream stream takes
+    it out of the queue before it spends a token.
     """
     finished = False
     queued = False
@@ -722,8 +753,14 @@ async def post_message(upstream: UpstreamStream = Depends(open_message_stream)) 
                     if relayed is None:
                         continue
                     is_queued = relayed.event == "status" and relayed.data.get("step") == _QUEUED_STEP
-                    if is_queued or queued:
-                        upstream.deadline.restart()
+                    if is_queued and not upstream.deadline.restart(queued=True):
+                        logger.info("agent turn left the queue at AGENT_TURN_MAX_S (ref %s)", upstream.request_id)
+                        for failure in _turn_failed(upstream.request_id, "capacity"):
+                            yield failure
+                        finished = True
+                        break
+                    if queued and not is_queued:
+                        upstream.deadline.restart(queued=False)
                     queued = is_queued
                     yield relayed
                     if relayed.event == "done":
@@ -734,7 +771,7 @@ async def post_message(upstream: UpstreamStream = Depends(open_message_stream)) 
     if not finished:
         # Unreachable, cut off, out of time, or ended without `done`: the
         # browser always learns that the turn is over.
-        for failure in _upstream_failed(upstream.request_id):
+        for failure in _turn_failed(upstream.request_id):
             yield failure
 
 

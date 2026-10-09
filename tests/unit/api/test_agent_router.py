@@ -593,6 +593,7 @@ class TestMessagesStream:
     def test_queued_time_does_not_spend_the_turn_budget(self, client, upstream, monkeypatch) -> None:
         """Each queued status restarts the budget, and so does the first event once the run started."""
         monkeypatch.setattr(settings, "agent_request_timeout_s", 0.5)
+        monkeypatch.setattr("api.routers.agent._QUEUED_HEARTBEAT_S", 0.0)
 
         async def queued_then_run():
             for position in (3, 2, 1):
@@ -609,6 +610,7 @@ class TestMessagesStream:
 
     def test_the_budget_still_ends_a_silent_queue(self, client, upstream, monkeypatch) -> None:
         monkeypatch.setattr(settings, "agent_request_timeout_s", 0.2)
+        monkeypatch.setattr("api.routers.agent._QUEUED_HEARTBEAT_S", 0.1)
 
         async def stalled_queue():
             yield b'event: status\ndata: {"step": "queued", "position": 1, "waiting": 1}\n\n'
@@ -619,6 +621,49 @@ class TestMessagesStream:
         events = _sse_events(self._post(client).text)
         assert [event for event, _ in events] == ["status", "error", "done"]
         assert events[1][1]["code"] == "upstream"
+
+    def test_a_run_that_started_between_queued_statuses_keeps_its_full_budget(
+        self, client, upstream, monkeypatch
+    ) -> None:
+        """The run may start up to one queue heartbeat before its first event: that time is not its budget."""
+        monkeypatch.setattr(settings, "agent_request_timeout_s", 0.3)
+        monkeypatch.setattr("api.routers.agent._QUEUED_HEARTBEAT_S", 0.3)
+
+        async def started_silently():
+            yield b'event: status\ndata: {"step": "queued", "position": 1, "waiting": 1}\n\n'
+            await asyncio.sleep(0.45)  # past the plain budget, inside budget plus heartbeat
+            yield b'event: status\ndata: {"step": "adapting", "attempt": 1}\n\n'
+            yield b"event: done\ndata: {}\n\n"
+
+        upstream.handler = lambda request: httpx.Response(200, content=started_silently())
+        events = _sse_events(self._post(client).text)
+        assert [data.get("step", event) for event, data in events] == ["queued", "adapting", "done"]
+
+    def test_a_queue_that_outlasts_the_turn_cap_ends_with_capacity(self, client, upstream, monkeypatch) -> None:
+        """Queued statuses never move the turn past AGENT_TURN_MAX_S, so Cloud Run never cuts it silently."""
+        monkeypatch.setattr(settings, "agent_request_timeout_s", 0.2)
+        monkeypatch.setattr(settings, "agent_turn_max_s", 0.6)
+        monkeypatch.setattr("api.routers.agent._QUEUED_HEARTBEAT_S", 0.1)
+        closed = asyncio.Event()
+
+        async def endless_queue():
+            try:
+                for position in range(50, 0, -1):
+                    event = f'event: status\ndata: {{"step": "queued", "position": {position}, "waiting": 50}}\n\n'
+                    yield event.encode()
+                    await asyncio.sleep(0.1)
+                yield b"event: done\ndata: {}\n\n"
+            finally:
+                closed.set()
+
+        upstream.handler = lambda request: httpx.Response(200, content=endless_queue())
+        response = self._post(client)
+        events = _sse_events(response.text)
+
+        assert [event for event, _ in events][-2:] == ["error", "done"]
+        assert events[-2][1] == {"code": "capacity", "ref": response.headers["X-Request-Id"]}
+        assert 2 <= len(events) - 2 <= 4  # about 0.3 s of statuses: the cap less the budget and the heartbeat
+        assert closed.is_set()  # the upstream stream was closed, which takes the turn out of the queue
 
 
 class TestThemeToggle:
