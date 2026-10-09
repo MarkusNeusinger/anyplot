@@ -2,10 +2,15 @@
 
 `normalise(code, library=...)` makes four rewrites, each only when it applies:
 
-1. **Catalogue header.** The four-line module docstring that opens every catalogue file
-   (lines `anyplot.ai`, `<spec-id>: <title>`, `Library: ...`, `Quality: ...`) and the
-   blank lines after it. The catalogue title string inside the code
-   (`"<spec-id> · python · <library> · anyplot.ai"`) is code, not a comment, and stays.
+1. **Catalogue header and title.** The four-line module docstring that opens every
+   catalogue file (lines `anyplot.ai`, `<spec-id>: <title>`, `Library: ...`,
+   `Quality: ...`) and the blank lines after it go. Every string literal in the
+   catalogue title form, `[<descriptive> · ]<spec-id> · [<language> · ]<library> ·
+   anyplot.ai` (also with the legacy `pyplots.ai`, or with the descriptive part ended by
+   a newline), becomes `""`: it names the catalogue's spec and demo data, and the
+   catalogue title rule does not apply to user plots. The call that shows it stays, so
+   code that positions the title keeps working. A title the adapter wrote in its own
+   words does not have that form and stays, and so does a title built by an f-string.
 2. **Savefig target.** A target that is a path whose file name is the theme f-string,
    such as `os.path.join(script_dir, f"plot-{THEME}.png")`, `OUT / f"plot-{THEME}.png"`,
    or a module-level name assigned one of those (`output_path`), becomes the literal
@@ -34,7 +39,11 @@
    every literal `dpi=` of a figure creation call and `set_dpi(...)`, so code that
    measures in pixels before saving sees the same dpi. An integer dpi is used when one
    hits the target exactly; otherwise the shortest decimal that does (matplotlib
-   truncates `figsize * dpi` to whole pixels, so `(7, 7)` gets dpi 342.9). The figure
+   truncates `figsize * dpi` to whole pixels, so `(7, 7)` gets dpi 342.9). When no dpi
+   hits it exactly, because the aspect is a hair off (`(16, 9.05)`), the dpi renders one
+   side exactly and the other within the 16 px of the canvas gate (3200x1810); the
+   change line names the pixels and the offset, and `measure_canvas` and the readiness
+   scan report it as a `canvas:` note. The figure
    size comes from the last literal `set_size_inches(w, h)` (seaborn grids), else from
    the single literal `figsize=`. The canvas rewrite is all or nothing: when the figure
    size is missing or not a literal, when its aspect reaches neither target within 16 px,
@@ -83,6 +92,12 @@ _MODULE_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*"
 _COMMA_GAP = re.compile(r"\s*,\s*")
 _LINE_TAIL = re.compile(r"\s*,?\s*(?:#.*)?")
 _WHITESPACE = re.compile(r"\s+")
+# `[<descriptive> · ]<spec-id> · [<language> · ]<library> · anyplot.ai`, also with the
+# legacy `pyplots.ai`, or with the descriptive part ended by a newline instead of ` · `.
+_CATALOGUE_TITLE = re.compile(
+    r"(?s)\s*(?:.*?[·\n]\s*)?"
+    r"[a-z0-9]+(?:-[a-z0-9]+)*\s*·\s*(?:[A-Za-z]+\s*·\s*)?[a-z][a-z0-9]*\s*·\s*(?:anyplot|pyplots)\.ai\s*"
+)
 
 TextEdit = tuple[int, int, str]  # replace code[start:end] with the text
 
@@ -136,6 +151,7 @@ def normalise_report(code: str, *, library: str) -> Normalised:
         ("header", _strip_header),
         ("savefig target", _rewrite_savefig_targets),
         ("sys.path guard", _strip_path_guard),
+        ("title", _strip_title),
         ("canvas", _normalise_canvas),
     )
     for name, step in steps:
@@ -351,7 +367,11 @@ def _normalise_canvas(code: str) -> tuple[str, list[str], list[str]]:
         new_code = _apply(code, edits)
     except ValueError:
         return code, [], ["canvas: the savefig rewrites overlap; bbox_inches and dpi left unchanged"]
-    changes.append(f"canvas: figsize {_fmt_size(size)} at dpi {literal} renders {target[0]}x{target[1]}")
+    pixels = _pixels(size, float(literal))
+    rendered = f"{pixels[0]}x{pixels[1]}"
+    if pixels != target:
+        rendered += f", within {TOLERANCE} px of {target[0]}x{target[1]}"
+    changes.append(f"canvas: figsize {_fmt_size(size)} at dpi {literal} renders {rendered}")
     return new_code, changes, []
 
 
@@ -414,6 +434,27 @@ def _strip_header(code: str) -> tuple[str, list[str], list[str]]:
     span = SourceIndex(code).lines_span(first)
     new_code = _rewrite_lines(code, set(range(span.first_line, span.last_line + 1)), {})
     return new_code, [f"removed the catalogue header at {span.lines()}"], []
+
+
+def _strip_title(code: str) -> tuple[str, list[str], list[str]]:
+    tree = ast.parse(code)
+    in_fstrings = {id(part) for node in ast.walk(tree) if isinstance(node, ast.JoinedStr) for part in node.values}
+    index = SourceIndex(code)
+    spans = sorted(
+        (
+            index.node_span(node)
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Constant)
+            and isinstance(node.value, str)
+            and id(node) not in in_fstrings
+            and _CATALOGUE_TITLE.fullmatch(node.value)
+        ),
+        key=lambda span: span.start,
+    )
+    if not spans:
+        return code, [], []
+    changes = [f"emptied the catalogue title at {span.lines()}" for span in spans]
+    return _apply(code, [(span.start, span.end, '""') for span in spans]), changes, []
 
 
 def _loads(node: ast.AST) -> set[str]:

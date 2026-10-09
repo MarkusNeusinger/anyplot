@@ -37,6 +37,7 @@ def test_catalogue_file_in_miniature() -> None:
     assert report.code == CATALOGUE_NORMALISED
     assert report.notes == ()
     assert any("header" in change for change in report.changes)
+    assert "emptied the catalogue title at line 21" in report.changes
     assert any("sys.path guard" in change for change in report.changes)
     assert any("bbox_inches" in change for change in report.changes)
     assert measure_canvas(report.code).pixels == LANDSCAPE
@@ -61,6 +62,44 @@ def test_syntax_error_is_left_alone_with_a_note() -> None:
 def test_only_the_catalogue_docstring_goes() -> None:
     other = '"""My own module docstring."""\n\n' + THEME_BLOCK
     assert norm(other) == other
+
+
+# --- title ---------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        'ax.set_title("scatter-basic · python · matplotlib · anyplot.ai", fontsize=24)',
+        'ax.set_title("Website Traffic · area-basic · python · matplotlib · anyplot.ai")',
+        'ax.set_title("density-rug · Python · seaborn · anyplot.ai")',
+        'ax.set_title("candlestick-volume · matplotlib · anyplot.ai", pad=15)',
+        'ax.set_title("line-markers · matplotlib · pyplots.ai")',
+        'ax.set_title("Remote Work Survey  ·  dot-matrix-proportional  ·  matplotlib  ·  anyplot.ai")',
+        'ax.set_title("Sediment Composition\\nternary-density · python · matplotlib · anyplot.ai")',
+        'title = "bar-basic · python · matplotlib · anyplot.ai"',
+        'fig.suptitle(\n    "donut-nested · python · matplotlib · anyplot.ai",\n    y=0.965,\n)',
+    ],
+)
+def test_catalogue_title_becomes_empty(line: str) -> None:
+    result = norm(THEME_BLOCK + line + "\n")
+
+    assert "anyplot.ai" not in result and "pyplots.ai" not in result
+    assert '""' in result
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        'ax.set_title("Monthly revenue by region")',
+        'ax.set_title(f"{SPEC} · python · matplotlib · anyplot.ai")',
+        'ax.set_title("Survey results\\nsource: anyplot.ai")',
+        'headers = {"User-Agent": "anyplot.ai/1.0"}',
+    ],
+)
+def test_other_titles_and_strings_stay(line: str) -> None:
+    code = THEME_BLOCK + line + "\n"
+    assert norm(code) == code
 
 
 # --- sys.path guard and file paths -------------------------------------------------------
@@ -274,6 +313,15 @@ def test_dpi_rescale_hits_the_target(figure: str, save: str, expected: str) -> N
     canvas = measure_canvas(result)
     assert canvas.on_target, canvas.note
     assert canvas.pixels in (LANDSCAPE, SQUARE)
+
+
+def test_near_aspect_change_names_the_offset() -> None:
+    code = canvas_code("fig, ax = plt.subplots(figsize=(16, 9.05))", 'plt.savefig(f"plot-{THEME}.png", dpi=300)')
+    report = normalise_report(code, library="matplotlib")
+
+    assert "canvas: figsize (16, 9.05) at dpi 200 renders 3200x1810, within 16 px of 3200x1800" in report.changes
+    canvas = measure_canvas(report.code)
+    assert canvas.pixels == (3200, 1810) and not canvas.on_target
 
 
 def test_figure_dpi_follows_the_savefig_dpi() -> None:

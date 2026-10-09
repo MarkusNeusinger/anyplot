@@ -5,7 +5,8 @@
   code the agent network can adapt and run: `regions.py` finds the THEME
   block, the Imprint palette, the `df = load_user_data()` placeholder, the
   savefig calls and the canvas keywords by AST; `normalise.py` removes the
-  catalogue header, the `sys.path` guard family (`sys`, `__file__`,
+  catalogue header, empties the catalogue title string (648 of 650 files),
+  removes the `sys.path` guard family (`sys`, `__file__`,
   `importlib`, `pathlib`, `os.chdir`) and path-wrapped savefig targets, drops
   `bbox_inches` and rescales the dpi so that `figsize * dpi` renders exactly
   3200x1800 or 2400x2400 (638 of 650 matplotlib and seaborn files; 10 of 10

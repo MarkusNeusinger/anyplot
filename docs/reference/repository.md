@@ -109,7 +109,7 @@ anyplot/
 │       └── code/                      # Deterministic code handling, no ADK import
 │           ├── validate.py            # Two-profile AST validator: SECURITY and ADAPTATION
 │           ├── regions.py             # AST spans: THEME block, palette, placeholder, savefig, canvas
-│           ├── normalise.py           # Header, sys.path guard, savefig target, exact canvas
+│           ├── normalise.py           # Header, title, sys.path guard, savefig target, exact canvas
 │           ├── readiness.py           # blocked / coupled / clean scan with adapter hints
 │           ├── edits.py               # Applies an AdaptPlan; protected regions
 │           ├── loader.py              # load_user_data() placeholder -> pd.read_csv("data.csv")

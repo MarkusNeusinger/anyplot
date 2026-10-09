@@ -53,7 +53,7 @@ CATALOGUE = source('''
     plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
 ''')
 
-# The same file after normalisation: header and guard gone, dpi 200, no bbox_inches.
+# The same file after normalisation: header, guard and title gone, dpi 200, no bbox_inches.
 CATALOGUE_NORMALISED = source("""
     import os
 
@@ -75,6 +75,6 @@ CATALOGUE_NORMALISED = source("""
     fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
     ax.scatter(x, y, color=IMPRINT[0])
     ax.set_ylim(0, 25)
-    ax.set_title("scatter-demo · python · matplotlib · anyplot.ai", color=INK)
+    ax.set_title("", color=INK)
     plt.savefig(f"plot-{THEME}.png", dpi=200, facecolor=PAGE_BG)
 """)
