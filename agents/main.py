@@ -47,6 +47,7 @@ from typing import Annotated, Any, Literal
 
 from fastapi import Body, Depends, FastAPI, Header, Path, Query, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
+from starlette.background import BackgroundTask
 from google.adk import Runner
 from google.adk.agents.run_config import RunConfig, StreamingMode
 from google.adk.artifacts import InMemoryArtifactService
@@ -131,10 +132,22 @@ def _version() -> str:
 # --- Runtime -----------------------------------------------------------------------------
 
 
+STALE_RUN_MARGIN_S = 30
+"""Seconds past the request deadline after which an active-run entry counts as abandoned."""
+
+
 @dataclass
 class ActiveRun:
+    """A running `/messages` request: its abort signal, its user and when it started (monotonic)."""
+
     abort: asyncio.Event
+    user: str = ""
+    started: float = field(default_factory=time.monotonic)
     deadline_hit: bool = False
+
+    def stale(self, deadline_s: float) -> bool:
+        """A run older than the hard deadline plus a margin was abandoned (its stream never started)."""
+        return time.monotonic() - self.started > deadline_s + STALE_RUN_MARGIN_S
 
 
 @dataclass
@@ -174,8 +187,21 @@ class Runtime:
         await self.session_service.delete_session(app_name=APP_NAME, user_id=user, session_id=sid)
         services.purge_session(sid)
 
+    def drop_stale(self, deadline_s: float) -> None:
+        """Forget active runs whose stream never ran its cleanup (a client gone before the first byte)."""
+        for sid, run in list(self.active.items()):
+            if run.stale(deadline_s):
+                run.abort.set()
+                del self.active[sid]
+
+    def finish(self, sid: str, run: ActiveRun) -> None:
+        """Forget `run` if it is still the session's active run."""
+        if self.active.get(sid) is run:
+            del self.active[sid]
+
     async def sweep(self, idle_s: float, services: Services) -> int:
         """Drop sessions idle for longer than `idle_s`, with their stores."""
+        self.drop_stale(get_settings().request_deadline_s)
         listing = await self.session_service.list_sessions(app_name=APP_NAME)
         now = time.time()
         removed = 0
@@ -404,8 +430,12 @@ def _fixture_seed(
     return delta
 
 
-def _active(runtime: Runtime, sid: str) -> None:
+def _active(runtime: Runtime, sid: str, user: str | None = None) -> None:
+    """409 while the session has a run, or, with `user`, while that user has a run in any session."""
+    runtime.drop_stale(get_settings().request_deadline_s)
     if sid in runtime.active:
+        raise AgentsError(409, "run_active")
+    if user is not None and any(run.user == user for run in runtime.active.values()):
         raise AgentsError(409, "run_active")
 
 
@@ -461,7 +491,7 @@ async def upload_dataset(
         raise AgentsError(503, "guard_unavailable") from None
     services.usage.add_tokens(user, verdict.tokens)
     attribution("data_judge", ledger, verdict=verdict.verdict, judge_tokens=verdict.tokens)
-    if verdict.verdict == "attack":
+    if verdict.verdict != "in_scope":  # fail closed, like the scope guard
         raise AgentsError(403, "data_refused")
     try:
         ingested = store_dataset(services.datasets, sid, parsed, view.snapshot, previous_id=view.dataset_id)
@@ -527,10 +557,13 @@ async def post_message(
     if body.text is not None and len(body.text) > MAX_MESSAGE_CHARS:
         raise AgentsError(413, "too_long")
     session = await runtime.session(user, sid)
-    _active(runtime, sid)
+    _active(runtime, sid, user)
     settings = get_settings()
     view = read_session(session.state)
-    run = ActiveRun(abort=asyncio.Event())
+    run = ActiveRun(abort=asyncio.Event(), user=user)
+    # Registered here so a second request cannot slip in before the stream starts; the
+    # stream's finally and the background task both clear it, and an entry neither
+    # reached (a client gone before the first byte) goes stale after the deadline.
     runtime.active[sid] = run
     ledger = RequestLedger(
         request_id=rid,
@@ -571,7 +604,7 @@ async def post_message(
             failure = _error_code(exc)
         finally:
             timer.cancel()
-            runtime.active.pop(sid, None)
+            runtime.finish(sid, run)
             CURRENT_LEDGER.reset(token)
         if ledger.error is not None:
             failure = ledger.error
@@ -583,7 +616,12 @@ async def post_message(
         attribution("run", ledger, model_versions=sorted(ledger.model_versions), kind=ledger.kind)
         yield translator.done()
 
-    return StreamingResponse(stream(), media_type="text/event-stream", headers={**_NO_STORE, "X-Accel-Buffering": "no"})
+    return StreamingResponse(
+        stream(),
+        media_type="text/event-stream",
+        headers={**_NO_STORE, "X-Accel-Buffering": "no"},
+        background=BackgroundTask(runtime.finish, sid, run),
+    )
 
 
 @app.post("/v1/sessions/{sid}/cancel", status_code=204, dependencies=v1_dependencies)
