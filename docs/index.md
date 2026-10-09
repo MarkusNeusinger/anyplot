@@ -9,6 +9,7 @@ Welcome to the anyplot documentation. Start here to find what you're looking for
 | I want to... | Go to |
 |--------------|-------|
 | Understand the project | [Vision](concepts/vision.md) |
+| Read the "Use with my data" agent design | [Agent network](concepts/agent-network.md) |
 | Contribute plot ideas | [Contributing](contributing.md) |
 | Set up local development | [Development Guide](development.md) |
 | See how automation works | [Workflows](workflows/overview.md) |
@@ -32,7 +33,8 @@ docs/
 ├── development.md        # Local development setup
 ├── concepts/             # Philosophy and design
 │   ├── vision.md         # Product vision and mission
-│   └── library-expansion.md  # Roadmap for multi-language gallery expansion
+│   ├── library-expansion.md  # Roadmap for multi-language gallery expansion
+│   └── agent-network.md  # Design of the "Use with my data" agent network (ADK + Gemini)
 ├── workflows/            # Process documentation
 │   ├── overview.md       # GitHub Actions automation
 │   ├── report-issue.md   # Reporting issues with specs or implementations
@@ -57,6 +59,7 @@ High-level understanding of why things work the way they do.
 
 - **[Vision](concepts/vision.md)** - Product mission, the problem we solve, and how we're different
 - **[Library Expansion Roadmap](concepts/library-expansion.md)** - Multi-language gallery expansion plan and licensing policy
+- **[Agent Network](concepts/agent-network.md)** - Design of the "Use with my data" agent network on Google ADK and Gemini: agents, pipeline, guardrails, serving, roadmap (design only as of 2026-10-09)
 
 ---
 
