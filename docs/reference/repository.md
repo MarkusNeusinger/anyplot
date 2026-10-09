@@ -101,14 +101,19 @@ anyplot/
 │   └── anyplot/
 │       ├── schemas.py                 # Pydantic contracts of the plot pipeline
 │       ├── settings.py                # AgentSettings (AGENT_* variables)
+│       ├── data/                      # Deterministic data handling, no ADK import
+│       │   ├── parse.py               # Pasted text -> canonical data.csv + DatasetProfile
+│       │   ├── roles.py               # Data roles from a spec's ## Data bullets
+│       │   ├── bindings.py            # Default role-to-column bindings and their checks
+│       │   └── store.py               # Session-scoped in-memory dataset store
 │       └── code/                      # Deterministic code handling, no ADK import
+│           ├── validate.py            # Two-profile AST validator: SECURITY and ADAPTATION
 │           ├── regions.py             # AST spans: THEME block, palette, placeholder, savefig, canvas
 │           ├── normalise.py           # Header, sys.path guard, savefig target, exact canvas
 │           ├── readiness.py           # blocked / coupled / clean scan with adapter hints
 │           ├── edits.py               # Applies an AdaptPlan; protected regions
 │           ├── loader.py              # load_user_data() placeholder -> pd.read_csv("data.csv")
-│           ├── export.py              # Attribution header for the downloaded plot.py
-│           └── validate.py            # SECURITY and ADAPTATION profiles (sibling branch)
+│           └── export.py              # Attribution header for the downloaded plot.py
 │
 ├── app/                               # React frontend
 │   ├── src/

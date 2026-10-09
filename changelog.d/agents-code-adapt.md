@@ -14,7 +14,8 @@
   findings, no THEME block, single-theme or other non-standard savefig
   target), coupled (literal limits, data-coordinate annotations, literal
   statistics, short palettes, fixed date locators, synthetic data, each a
-  line-naming hint for the adapter) or clean; `edits.py` applies an
+  line-naming hint for the adapter) or clean (78, 535 and 37 of the 650
+  matplotlib and seaborn files); `edits.py` applies an
   `AdaptPlan` with exact-once matching and protected regions; `loader.py`
   swaps the placeholder for a relative `pd.read_csv("data.csv", ...)` with
   dtypes from the dataset profile; `export.py` adds the attribution header to

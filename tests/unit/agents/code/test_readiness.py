@@ -1,17 +1,16 @@
-"""Tests for agents/anyplot/code/readiness.py: blocked, coupled and clean, with a stubbed validator."""
+"""Tests for agents/anyplot/code/readiness.py: blocked, coupled and clean, against the real validator."""
 
-import sys
-import types
-from collections.abc import Callable
 from pathlib import Path
 
 import pytest
 
+from agents.anyplot.code import readiness
 from agents.anyplot.code.normalise import normalise
 from agents.anyplot.code.readiness import MAP_SPECS, Readiness, scan
+from agents.anyplot.code.validate import Finding, validate_security
 from agents.anyplot.schemas import MAX_NOTE_CHARS
 
-from .conftest import CATALOGUE_FILES, CATALOGUE_NORMALISED, VALIDATE_MODULE, StubFinding, source
+from .conftest import CATALOGUE_FILES, CATALOGUE_NORMALISED, source
 
 
 ENABLED = ("matplotlib", "seaborn")
@@ -30,7 +29,18 @@ HEAD = source("""
 """)
 SAVE = 'plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)\n'
 
-StubSetter = Callable[..., list[tuple[str, str]]]
+
+@pytest.fixture
+def validator_calls(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Wrap the real `validate_security` and record the library of every call."""
+    calls: list[str] = []
+
+    def spy(code: str, *, library: str) -> list[Finding]:
+        calls.append(library)
+        return validate_security(code, library=library)
+
+    monkeypatch.setattr(readiness, "validate_security", spy)
+    return calls
 
 
 def check(body: str, *, spec_id: str = "scatter-basic", library: str = "matplotlib") -> Readiness:
@@ -45,16 +55,14 @@ def categories(result: Readiness) -> list[str]:
     return [reason.split(":")[0] for reason in result.reasons]
 
 
-def test_clean(stub_validator: StubSetter) -> None:
-    calls = stub_validator()
+def test_clean(validator_calls: list[str]) -> None:
     result = check('ax.plot(df["x"], df["y"], color=PAGE_BG)\nax.set_ylim(bottom=0)\nax.axhline(0)\n')
 
     assert result == Readiness("clean", [], [])
-    assert calls and calls[0][1] == "matplotlib"
+    assert validator_calls == ["matplotlib"]
 
 
-def test_normalised_catalogue_file_is_coupled(stub_validator: StubSetter) -> None:
-    stub_validator()
+def test_normalised_catalogue_file_is_coupled() -> None:
     result = scan(CATALOGUE_NORMALISED, spec_id="scatter-demo", library="matplotlib", enabled_libraries=ENABLED)
 
     assert result.status == "coupled"
@@ -88,12 +96,10 @@ def test_normalised_catalogue_file_is_coupled(stub_validator: StubSetter) -> Non
         ('ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))', "date-locators"),
         ("x = np.random.default_rng(1).normal(size=10)", "synthetic-data"),
         ("rng = np.random.default_rng(1)\ny = rng.normal(size=10)", "synthetic-data"),
-        ("import random\nvalue = random.uniform(0, 1)", "synthetic-data"),
         ("from scipy import stats\nsample = stats.norm.rvs(size=50)", "synthetic-data"),
     ],
 )
-def test_each_coupling_rule(stub_validator: StubSetter, body: str, category: str) -> None:
-    stub_validator()
+def test_each_coupling_rule(body: str, category: str) -> None:
     result = check(body)
 
     assert result.status == "coupled"
@@ -116,13 +122,11 @@ def test_each_coupling_rule(stub_validator: StubSetter, body: str, category: str
         'GRAYS = ["#111111", "#222222"]',
     ],
 )
-def test_not_coupled(stub_validator: StubSetter, body: str) -> None:
-    stub_validator()
+def test_not_coupled(body: str) -> None:
     assert check(body).status == "clean"
 
 
-def test_one_hint_per_category_names_lines_and_counts(stub_validator: StubSetter) -> None:
-    stub_validator()
+def test_one_hint_per_category_names_lines_and_counts() -> None:
     body = "\n".join(
         f"ax.axvline({year}, color=PAGE_BG, linestyle='--', linewidth=0.8, alpha=0.5)" for year in range(1990, 2020)
     )
@@ -135,8 +139,7 @@ def test_one_hint_per_category_names_lines_and_counts(stub_validator: StubSetter
     assert len(hint) <= MAX_NOTE_CHARS
 
 
-def test_canvas_note_does_not_change_status(stub_validator: StubSetter) -> None:
-    stub_validator()
+def test_canvas_note_does_not_change_status() -> None:
     code = HEAD.replace("figsize=(8, 4.5), dpi=400", "figsize=(16, 12)") + SAVE.replace("dpi=400", "dpi=200")
     result = scan(normalise(code, library="matplotlib"), spec_id="x", library="matplotlib", enabled_libraries=ENABLED)
 
@@ -148,8 +151,7 @@ def test_canvas_note_does_not_change_status(stub_validator: StubSetter) -> None:
 
 
 @pytest.mark.parametrize("spec_id", sorted(MAP_SPECS))
-def test_map_specs_are_blocked(stub_validator: StubSetter, spec_id: str) -> None:
-    stub_validator()
+def test_map_specs_are_blocked(spec_id: str) -> None:
     result = check("", spec_id=spec_id)
 
     assert result.status == "blocked" and categories(result) == ["map-spec"] and result.hints == []
@@ -160,43 +162,61 @@ def test_thirteen_map_specs() -> None:
     assert "scatter-pitch-events" not in MAP_SPECS and "hexbin-map-geographic" not in MAP_SPECS
 
 
-def test_library_not_enabled_or_unsupported(stub_validator: StubSetter) -> None:
-    stub_validator()
+def test_library_not_enabled_or_unsupported(validator_calls: list[str]) -> None:
     code = HEAD + SAVE
 
     disabled = scan(code, spec_id="scatter-basic", library="seaborn", enabled_libraries=["matplotlib"])
     assert disabled.status == "blocked" and categories(disabled) == ["library-disabled"]
+    assert validator_calls == ["seaborn"]
+    # No normaliser means no validator profile either: the validator is not asked.
     unsupported = scan(code, spec_id="scatter-basic", library="plotly", enabled_libraries=["plotly"])
     assert categories(unsupported) == ["unsupported-library"]
+    assert validator_calls == ["seaborn"]
 
 
-def test_security_findings_block(stub_validator: StubSetter) -> None:
-    stub_validator(
-        StubFinding("banned-import", "import of 'subprocess' is not allowed", 3),
-        StubFinding("size", "the code exceeds 48 KB", None),
-        *(StubFinding("dunder", f"dunder {i}", i) for i in range(5)),
-    )
+def test_security_findings_block() -> None:
+    result = check('import subprocess\nsubprocess.run(["ls"])\nax.set_title(df.__class__.__name__)\n')
+
+    assert result.status == "blocked" and result.hints == []
+    assert result.reasons[0].startswith("security: banned-import at line 12: ")
+    assert {reason.split(" ")[1] for reason in result.reasons} == {"banned-import", "dunder"}
+
+
+def test_stdlib_random_is_blocked_not_coupled() -> None:
+    result = check("import random\nvalue = random.uniform(0, 1)\n")
+
+    assert result.status == "blocked" and result.hints == []
+    assert result.reasons[0].startswith("security: banned-import at line 12")
+
+
+def test_security_reasons_are_capped(monkeypatch: pytest.MonkeyPatch) -> None:
+    findings = [
+        Finding("banned-import", "import of 'subprocess' is not allowed", 3),
+        Finding("size", "code is 70,000 characters; the limit is 65,536", None),
+        *(Finding("dunder", f"dunder {i}", i) for i in range(5)),
+    ]
+    monkeypatch.setattr(readiness, "validate_security", lambda code, *, library: findings)
     result = check("")
 
     assert result.status == "blocked"
     assert result.reasons[0] == "security: banned-import at line 3: import of 'subprocess' is not allowed"
-    assert result.reasons[1] == "security: size: the code exceeds 48 KB"
+    assert result.reasons[1] == "security: size: code is 70,000 characters; the limit is 65,536"
     assert result.reasons[-1] == "security: 2 more findings"
 
 
-def test_unavailable_validator_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setitem(sys.modules, VALIDATE_MODULE, None)  # makes the import raise ImportError
-    result = check("")
+def test_compile_only_syntax_error_blocks() -> None:
+    """`ast.parse` accepts a module-level `return`; the validator compiles and reports it."""
+    result = check("return\n")
 
     assert result.status == "blocked"
-    assert result.reasons == ["security: the validator failed (ModuleNotFoundError)"]
+    assert any(reason.startswith("security: syntax at line 12") for reason in result.reasons), result.reasons
 
 
 def test_crashing_validator_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
-    def explode(code: str, *, library: str) -> list[StubFinding]:
+    def explode(code: str, *, library: str) -> list[Finding]:
         raise RuntimeError("boom")
 
-    monkeypatch.setitem(sys.modules, VALIDATE_MODULE, types.SimpleNamespace(validate_security=explode))
+    monkeypatch.setattr(readiness, "validate_security", explode)
     assert check("").reasons == ["security: the validator failed (RuntimeError)"]
 
 
@@ -211,20 +231,18 @@ def test_crashing_validator_fails_closed(monkeypatch: pytest.MonkeyPatch) -> Non
         (HEAD + 'fig.savefig("draft.png")\n' + SAVE, "savefig-target: single-theme savefig target 'draft.png'"),
     ],
 )
-def test_structure_blocks(stub_validator: StubSetter, code: str, reason: str) -> None:
-    stub_validator()
+def test_structure_blocks(code: str, reason: str) -> None:
     result = scan(code, spec_id="scatter-basic", library="matplotlib", enabled_libraries=ENABLED)
 
     assert result.status == "blocked"
     assert any(r.startswith(reason) for r in result.reasons), result.reasons
 
 
-def test_syntax_error_blocks_without_calling_the_validator(stub_validator: StubSetter) -> None:
-    calls = stub_validator()
+def test_syntax_error_blocks_without_calling_the_validator(validator_calls: list[str]) -> None:
     result = scan("def broken(:\n", spec_id="x", library="matplotlib", enabled_libraries=ENABLED)
 
     assert result == Readiness("blocked", ["syntax: line 1 does not parse"], [])
-    assert calls == []
+    assert validator_calls == []
 
 
 # --- catalogue sweep ------------------------------------------------------------------------
@@ -232,8 +250,7 @@ def test_syntax_error_blocks_without_calling_the_validator(stub_validator: StubS
 
 @pytest.mark.skipif(not CATALOGUE_FILES, reason="plots/ is not checked out")
 @pytest.mark.parametrize("path", CATALOGUE_FILES, ids=lambda p: f"{p.parts[-4]}-{p.stem}")
-def test_catalogue_scan_never_raises(stub_validator: StubSetter, path: Path) -> None:
-    stub_validator()
+def test_catalogue_scan_never_raises(path: Path) -> None:
     code = normalise(path.read_text(encoding="utf-8"), library=path.stem)
     result = scan(code, spec_id=path.parts[-4], library=path.stem, enabled_libraries=ENABLED)
 

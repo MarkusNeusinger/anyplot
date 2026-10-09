@@ -5,8 +5,8 @@
 * `blocked`: the pair is not eligible. The spec is one of the 13 map specs
   (`map-spec`); the library is not enabled (`library-disabled`) or has no normaliser
   yet (`unsupported-library`); the code does not parse (`syntax`); the SECURITY
-  validator reports findings (`security: <rule> ...`, quoting the validator's rule
-  ids); there is no module-level `THEME = os.getenv("ANYPLOT_THEME", ...)`
+  validator reports findings or fails (`security: <rule> ...`, quoting the validator's
+  rule ids; it is asked only for a library with a normaliser); there is no module-level `THEME = os.getenv("ANYPLOT_THEME", ...)`
   (`no-theme`); or a savefig saves anywhere but `f"plot-{THEME}.png"`, or the last one
   is missing or not a module-level statement (`savefig-target`; a plain string such
   as `"plot.png"` is reported as a single-theme savefig target). Every blocking reason
@@ -35,9 +35,10 @@ The coupling heuristics, all static and deliberately simple:
   entries.
 * `date-locators`: a `matplotlib.dates` locator other than `AutoDateLocator`, or
   `DateFormatter`.
-* `synthetic-data`: `numpy.random.*` (including `default_rng` and `seed`), the stdlib
-  `random` module, methods of a generator made by `default_rng` or `RandomState`,
-  `scipy.stats` `.rvs(...)` draws and `sklearn.datasets` generators.
+* `synthetic-data`: `numpy.random.*` (including `default_rng` and `seed`), methods of a
+  generator made by `default_rng` or `RandomState`, `scipy.stats` `.rvs(...)` draws and
+  `sklearn.datasets` generators. The stdlib `random` module needs no rule: the SECURITY
+  profile bans importing it, so such code is already blocked.
 
 `reasons` can also carry one `canvas:` entry for any status that is not blocked: the
 normaliser could not put the canvas on 3200x1800 or 2400x2400 (the figure size is
@@ -60,7 +61,6 @@ import ast
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
-from importlib import import_module
 from typing import Literal
 
 from core.palette import IMPRINT
@@ -68,6 +68,7 @@ from core.palette import IMPRINT
 from ..schemas import MAX_NOTE_CHARS
 from .normalise import SUPPORTED_LIBRARIES, measure_canvas
 from .regions import IMPRINT_NAMES, dotted_name, find_regions
+from .validate import validate_security
 
 
 ReadinessStatus = Literal["blocked", "coupled", "clean"]
@@ -175,7 +176,8 @@ def scan(normalised_code: str, *, spec_id: str, library: str, enabled_libraries:
         tree = ast.parse(normalised_code)
     except SyntaxError as exc:
         return Readiness("blocked", [*blocked, f"syntax: line {exc.lineno} does not parse"])
-    blocked.extend(_security(normalised_code, library))
+    if library in SUPPORTED_LIBRARIES:
+        blocked.extend(_security(normalised_code, library))
     regions = find_regions(normalised_code, tree)
     if regions.theme is None:
         blocked.append('no-theme: no module-level THEME = os.getenv("ANYPLOT_THEME", ...)')
@@ -215,14 +217,14 @@ def scan(normalised_code: str, *, spec_id: str, library: str, enabled_libraries:
 def _security(code: str, library: str) -> list[str]:
     """SECURITY validator findings as blocking reasons; a validator that fails blocks too.
 
-    The validator (`validate.py`, `validate_security(code, *, library) -> list[Finding]`
-    with `Finding(rule, message, line)`) is imported when the scan runs, so this module
-    imports without it.
+    `scan` calls this only for a library with a normaliser, which is a library the
+    validator profiles too; for any other library `validate_security` raises
+    `ValueError` (a caller bug, not a property of the code), and the scan has already
+    blocked it as `unsupported-library`.
     """
     try:
-        validator = import_module(".validate", __package__)
-        findings = list(validator.validate_security(code, library=library))
-    except Exception as exc:  # fail closed: an unavailable or crashing validator never passes code
+        findings = validate_security(code, library=library)
+    except Exception as exc:  # fail closed: a crashing validator never passes code
         return [f"security: the validator failed ({type(exc).__name__})"]
     reasons = [
         _clip(f"security: {finding.rule} at line {finding.line}: {finding.message}")
@@ -312,7 +314,7 @@ def _generator_names(tree: ast.Module, aliases: dict[str, str]) -> set[str]:
 
 
 def _is_synthetic(node: ast.Call, resolved: str, generators: set[str]) -> bool:
-    if resolved.startswith(("numpy.random.", "random.", "sklearn.datasets.")):
+    if resolved.startswith(("numpy.random.", "sklearn.datasets.")):
         return True
     if resolved.startswith("scipy.stats.") and resolved.endswith(".rvs"):
         return True

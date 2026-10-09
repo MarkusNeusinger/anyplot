@@ -1,20 +1,13 @@
-"""Shared fixtures for the code-handling tests: a catalogue-style source, the catalogue files, a validator stub."""
+"""Shared fixtures for the code-handling tests: a catalogue-style source and the catalogue files."""
 
-import sys
 import textwrap
-import types
-from collections.abc import Callable
-from dataclasses import dataclass
 from pathlib import Path
-
-import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 CATALOGUE_FILES = sorted(REPO_ROOT.glob("plots/*/implementations/python/matplotlib.py")) + sorted(
     REPO_ROOT.glob("plots/*/implementations/python/seaborn.py")
 )
-VALIDATE_MODULE = "agents.anyplot.code.validate"
 
 
 def source(text: str) -> str:
@@ -85,35 +78,3 @@ CATALOGUE_NORMALISED = source("""
     ax.set_title("scatter-demo · python · matplotlib · anyplot.ai", color=INK)
     plt.savefig(f"plot-{THEME}.png", dpi=200, facecolor=PAGE_BG)
 """)
-
-
-@dataclass(frozen=True, slots=True)
-class StubFinding:
-    """The validator's `Finding` shape."""
-
-    rule: str
-    message: str
-    line: int | None
-
-
-@pytest.fixture
-def stub_validator(monkeypatch: pytest.MonkeyPatch) -> Callable[..., list[tuple[str, str]]]:
-    """Install a stand-in `validate` module; returns a setter for the findings it reports.
-
-    The real `validate.py` is written on a sibling branch; the readiness scan imports
-    it at call time, so the stub in `sys.modules` takes its place either way.
-    """
-    calls: list[tuple[str, str]] = []
-    findings: list[StubFinding] = []
-
-    def validate_security(code: str, *, library: str) -> list[StubFinding]:
-        calls.append((code, library))
-        return list(findings)
-
-    monkeypatch.setitem(sys.modules, VALIDATE_MODULE, types.SimpleNamespace(validate_security=validate_security))
-
-    def set_findings(*items: StubFinding) -> list[tuple[str, str]]:
-        findings[:] = items
-        return calls
-
-    return set_findings
