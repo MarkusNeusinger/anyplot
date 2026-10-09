@@ -70,6 +70,15 @@ The script is stdlib-only except for the ``context`` subcommand, which needs
 PyYAML to read the previous metadata. ``impl-review.yml`` runs it from a copy
 taken at the workflow's own ref, so the parser always matches the workflow.
 
+The feedback grammar (``CRITERIA``, ``AR_IDS``, ``DEFECT_RE``,
+``SUGGESTION_RE``, ``weakness_class``, ``defect_ids``, ``defect_target``,
+``is_cq04_code_defect``, ``nothing_to_repair``, ``parse_characteristics``,
+``characteristic_kind`` and their constants) is also in ``core/defects.py``,
+the canonical copy for code that imports ``core``. This file keeps its own
+because that single-file copy runs with the runner's system Python, where
+``core`` is not importable; ``tests/unit/core/test_defects.py`` keeps the two
+identical, so a grammar change edits both.
+
 Subcommands::
 
     regen_gate.py context --metadata META.yaml --spec-id S --language L --library B \

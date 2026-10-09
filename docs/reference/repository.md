@@ -79,8 +79,10 @@ anyplot/
 │
 ├── core/                              # Shared business logic
 │   ├── __init__.py
+│   ├── canvas.py                      # Canvas gate + PNG auto-reject checks
 │   ├── config.py                      # Configuration (.env-based)
 │   ├── constants.py                   # Library metadata, constants
+│   ├── defects.py                     # Review feedback grammar (defect lines)
 │   ├── images.py                      # Image processing utilities
 │   ├── utils.py                       # General utilities
 │   ├── database/                      # Database layer
@@ -444,6 +446,8 @@ plt.savefig('plot.png', dpi=300)
 - `database/connection.py` - Async database connection
 - `database/models.py` - SQLAlchemy ORM models
 - `database/repositories.py` - Repository pattern for data access
+- `canvas.py` - Canvas gate (3200×1800 or 2400×2400 within ±16 px, the VQ-05 defect line) and the PNG auto-reject checks AR-04 and AR-07; `python -m core.canvas <png>` runs the gate
+- `defects.py` - Review feedback grammar: defect and suggestion lines, the criterion IDs, spec characteristics, and `format_defect`; `automation/scripts/regen_gate.py` keeps a parity-tested copy
 
 ---
 
