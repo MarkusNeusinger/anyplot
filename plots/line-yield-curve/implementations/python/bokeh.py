@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
-Library: bokeh 3.9.1 | Python 3.13.13
-Quality: pending | Updated: 2026-06-10
+Library: bokeh 3.10.0 | Python 3.13.16
+Quality: 82/100 | Updated: 2026-10-09
 """
 
 import base64
