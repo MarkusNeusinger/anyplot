@@ -42,6 +42,7 @@ from dataclasses import dataclass, field
 from google.adk import Context, Event
 from google.adk.agents.llm.task._finish_task_tool import FINISH_TASK_SUCCESS_RESULT, FINISH_TASK_TOOL_NAME
 from google.adk.workflow import node
+from google.adk.workflow._errors import DynamicNodeFailError
 from google.genai import types
 from pydantic import ValidationError
 
@@ -86,6 +87,8 @@ logger = logging.getLogger(__name__)
 STATUS_KEY = "anyplot_status"
 ADAPTER_P95_S = 45.0
 """Seconds the second attempt's adapter call is budgeted at when checking the soft deadline."""
+REVIEWER_P95_S = 30.0
+"""Seconds the review is budgeted at; with less left of the soft deadline the render ships unreviewed."""
 ARTIFACTS: list[ArtifactName] = ["plot-light.png", "plot-dark.png", "plot.py", "data.csv"]
 PADDED_LINE = "canvas padded after render"
 NOT_REVIEWED_LINE = "the plot was not reviewed ({why})"
@@ -311,19 +314,28 @@ async def _adapt(ctx: Context, scope: str, request_text: str, library: str) -> A
     agent = ADAPTERS.get(library)
     if agent is None:
         raise RendererUnavailable(f"no adapter for {library}")
-    raw = await ctx.run_node(agent, node_input=request_text, override_isolation_scope=scope)
     try:
+        raw = await ctx.run_node(agent, node_input=request_text, override_isolation_scope=scope)
         return AdaptPlan.model_validate(raw)
-    except ValidationError:
+    except (ValidationError, DynamicNodeFailError) as exc:
+        _reraise_unless_schema(exc)
         return "the previous answer did not match the plan schema; answer with edits, title and changes"
 
 
 async def _review(ctx: Context, scope: str, request: ReviewRequest) -> Verdict | None:
-    raw = await ctx.run_node(reviewer, node_input=render_review_request(request), override_isolation_scope=scope)
     try:
+        raw = await ctx.run_node(reviewer, node_input=render_review_request(request), override_isolation_scope=scope)
         return Verdict.model_validate(raw)
-    except ValidationError:
+    except (ValidationError, DynamicNodeFailError) as exc:
+        _reraise_unless_schema(exc)
         return None
+
+
+def _reraise_unless_schema(exc: Exception) -> None:
+    """Backstop of `schema_guard`: a sub-agent answer that failed its schema inside ADK is not an error."""
+    if isinstance(exc, DynamicNodeFailError) and not isinstance(exc.error, ValidationError | ValueError):
+        raise exc
+    logger.warning("sub-agent answer failed its schema: %s", type(exc).__name__)
 
 
 @node(name="run_pipeline", rerun_on_resume=True)
@@ -347,6 +359,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     except Exception as exc:  # every failure ends in a PlotResult; the type is logged, never the message
         logger.warning("pipeline failed: %s", type(exc).__name__)
         run.reason = "error"
+        run.unreviewed_why = run.unreviewed_why or "an internal error stopped the run"
     finally:
         ledger.pipeline_active = False
         ledger.adapter_allow_full = False
@@ -482,6 +495,9 @@ async def _attempts(
         if not budget_allows(ledger, services.usage, settings):
             run.unreviewed_why = "the usage limit was reached"
             return
+        if not deadline.allows(REVIEWER_P95_S):
+            run.unreviewed_why = "the time limit was reached"
+            return
         yield _status("reviewing", attempt)
         candidate.render_id = services.renders.put(ctx.session.id, candidate.pngs)
         ledger.review_render_id = candidate.render_id
@@ -498,10 +514,10 @@ async def _attempts(
                 gate_notes=[_note(line) for line in report.advisory][:MAX_NOTES],
             ),
         )
-        run.reviewed = True
         if verdict is None:
-            run.review_lines = ["the review answer could not be read"]
+            run.unreviewed_why = "the review answer could not be read"
             return
+        run.reviewed = True
         candidate.reviewed_ok = verdict.ok
         if verdict.ok:
             return

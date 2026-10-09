@@ -6,7 +6,8 @@ pipeline passes a fenced `ReviewRequest` as node input; the `before_model_callba
 keeps only that content and appends the light and the dark PNG as ordinary image
 parts, loaded by `render_id` (from the request ledger) out of the session's
 `RenderStore`. No image ever travels through session state or a tool. The answer is
-bound to `Verdict`.
+bound to `Verdict`; `schema_guard` blanks an answer that fails it, which the
+pipeline reports as an unread review.
 """
 
 from google.adk import Agent
@@ -20,7 +21,7 @@ from ..plugins.ledger import ledger_for
 from ..policy import reviewer_instruction
 from ..schemas import Verdict
 from ..services import get_services
-from .adapter import keep_last_content
+from .adapter import keep_last_content, schema_guard
 
 
 REVIEWER_NAME = "reviewer"
@@ -60,4 +61,5 @@ reviewer = Agent(
     include_contents="none",
     output_schema=Verdict,
     before_model_callback=reviewer_before_model,
+    after_model_callback=schema_guard(Verdict),
 )

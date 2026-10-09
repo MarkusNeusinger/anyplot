@@ -180,6 +180,36 @@ async def test_second_turn_reaches_the_root_and_runs_the_pipeline_again(
     assert any(CHANGE_REQUEST in text for text in texts)
 
 
+SCHEMA_CANARY = "CANARY-PLAN-7c1e"
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+async def test_plan_that_fails_its_schema_is_repaired_without_content_in_logs(
+    client: httpx.AsyncClient, swap_models, provider: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    too_many_changes = {**SCATTER_PLAN, "changes": [f"{SCHEMA_CANARY} {number}" for number in range(6)]}
+    swap_models(provider, default_script(plans=[too_many_changes, SCATTER_PLAN]))
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    steps = [data["step"] for name, data in events if name == "status"]
+    assert steps == ["adapting", "repairing", "checking", "rendering", "reviewing"]
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["attempts"]) == ("ok", 2)
+    assert not any(SCHEMA_CANARY in record.getMessage() for record in caplog.records)
+
+
+async def test_contradictory_verdict_is_an_unread_review(client: httpx.AsyncClient, swap_models) -> None:
+    swap_models("gemini", default_script(verdict={"ok": False, "defects": []}))
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    assert plot["status"] == "needs_attention"
+    assert plot["residual_defects"] == ["the plot was not reviewed (the review answer could not be read)"]
+
+
 async def test_artifacts_and_bundle_after_a_plot(client: httpx.AsyncClient, swap_models) -> None:
     swap_models("gemini", default_script())
     sid = await open_session(client)
