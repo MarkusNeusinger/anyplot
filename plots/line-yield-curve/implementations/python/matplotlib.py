@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-10
@@ -65,7 +65,7 @@ ax.fill_between(
     maturity_years[: trough_idx + 1],
     yields_inverted[: trough_idx + 1],
     yields_inverted[1],  # 3M peak = 5.55%
-    alpha=0.10,
+    alpha=0.18,
     color=INVERTED_COLOR,
 )
 
@@ -74,8 +74,8 @@ ax.annotate(
     "Yield curve inversion",
     xy=(3, 4.80),
     xytext=(8, 5.50),
-    fontsize=8,
-    color=INVERTED_COLOR,
+    fontsize=9,
+    color=INK,
     fontweight="medium",
     arrowprops={"arrowstyle": "->", "color": INVERTED_COLOR, "lw": 1.2},
 )
