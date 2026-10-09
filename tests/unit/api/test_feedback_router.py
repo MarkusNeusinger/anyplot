@@ -248,6 +248,94 @@ class TestFeedbackRouter:
         instance.create.assert_not_awaited()
 
 
+# The six-character JSON escape `"\ud800"`, which the server parses into a lone surrogate.
+# Clients emit it themselves (`JSON.stringify` and Python's default `json.dumps` both escape
+# a lone surrogate), but the test client's `json=` argument encodes with `ensure_ascii=False`
+# and would fail on the raw character, so these tests send the body as raw bytes.
+LONE_SURROGATE_JSON = b'"\\ud800"'
+
+
+def _json_body(fragment: bytes) -> bytes:
+    """Wrap a JSON object fragment, e.g. b'"message": "x"', as a request body."""
+    return b"{" + fragment + b"}"
+
+
+class TestLoneSurrogate:
+    """A lone surrogate must answer 422, never reach the database, never become a 500."""
+
+    @pytest.mark.parametrize(
+        "field",
+        ["message", "reaction", "contact", "path", "spec_id", "library_id", "language", "viewport", "session_id"],
+    )
+    def test_lone_surrogate_in_any_text_field_returns_422_without_touching_the_database(self, client, field):
+        """The text fields reach the driver, which cannot encode a surrogate; the schema refuses it first."""
+        body = _json_body(b'"' + field.encode() + b'": ' + LONE_SURROGATE_JSON)
+        with patch("api.routers.feedback.FeedbackRepository") as repo_cls:
+            response = client.post("/feedback", content=body, headers={"content-type": "application/json"})
+
+        assert response.status_code == 422
+        repo_cls.assert_not_called()
+        # The 422 body itself stays encodable: the offending input is escaped, not dropped.
+        assert response.content.isascii()
+        detail = response.json()["detail"]
+        assert [error["loc"] for error in detail] == [["body", field]]
+        assert detail[0]["type"] == "value_error"
+        assert "UTF-8" in detail[0]["msg"]
+        assert detail[0]["input"] == "\ud800"
+
+    def test_lone_surrogate_in_honeypot_is_refused_before_the_guard(self, client):
+        """Every field is checked, `website` included — the 422 comes before the silent honeypot 200."""
+        body = _json_body(b'"message": "spam", "website": ' + LONE_SURROGATE_JSON)
+        with patch("api.routers.feedback.FeedbackRepository") as repo_cls:
+            response = client.post("/feedback", content=body, headers={"content-type": "application/json"})
+
+        assert response.status_code == 422
+        repo_cls.assert_not_called()
+
+    def test_lone_surrogate_in_a_body_that_violates_the_schema_returns_422_not_500(self, client):
+        """FastAPI echoes the offending `input` into the 422; encoding it as UTF-8 used to raise."""
+        body = _json_body(b'"message": [' + LONE_SURROGATE_JSON + b"]")
+        with patch("api.routers.feedback.FeedbackRepository") as repo_cls:
+            response = client.post("/feedback", content=body, headers={"content-type": "application/json"})
+
+        assert response.status_code == 422
+        repo_cls.assert_not_called()
+        assert response.content.isascii()
+        detail = response.json()["detail"]
+        assert detail[0]["loc"] == ["body", "message"]
+        assert detail[0]["type"] == "string_type"
+        assert detail[0]["input"] == ["\ud800"]
+
+    def test_schema_violation_keeps_fastapis_422_shape(self, client):
+        """The handler changes how the body is encoded, not what it says."""
+        with patch("api.routers.feedback.FeedbackRepository") as repo_cls:
+            response = client.post("/feedback", json={"message": 123})
+
+        assert response.status_code == 422
+        repo_cls.assert_not_called()
+        detail = response.json()["detail"]
+        assert detail == [
+            {"type": "string_type", "loc": ["body", "message"], "msg": "Input should be a valid string", "input": 123}
+        ]
+
+    def test_non_ascii_text_that_is_valid_utf8_is_still_accepted(self, client):
+        """Umlauts, CJK and emoji (including an astral pair written as two escapes) are fine."""
+        instance = AsyncMock()
+        instance.count_recent_by_ip = AsyncMock(return_value=0)
+        instance.has_recent_duplicate = AsyncMock(return_value=False)
+        instance.create = AsyncMock(return_value=None)
+
+        # The last two escapes are a valid surrogate PAIR: json.loads joins them into U+1F600.
+        body = '{"message": "Schön \\u4e2d\\u6587 \\ud83d\\ude00", "contact": "jörg"}'.encode("utf-8")
+        with patch("api.routers.feedback.FeedbackRepository", return_value=instance):
+            response = client.post("/feedback", content=body, headers={"content-type": "application/json"})
+
+        assert response.status_code == 200
+        kwargs = instance.create.await_args.args[0]
+        assert kwargs["message"] == "Schön 中文 \U0001f600"
+        assert kwargs["contact"] == "jörg"
+
+
 class TestClientIpResolution:
     """_client_ip must never key rate limiting on client-controlled header entries."""
 

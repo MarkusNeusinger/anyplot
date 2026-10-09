@@ -14,6 +14,7 @@ import logging  # noqa: E402
 from contextlib import asynccontextmanager, suppress  # noqa: E402
 
 from fastapi import FastAPI, HTTPException, Request, Response  # noqa: E402
+from fastapi.exceptions import RequestValidationError  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from starlette.middleware.gzip import GZipMiddleware  # noqa: E402
 
@@ -24,6 +25,7 @@ from api.exceptions import (  # noqa: E402
     anyplot_exception_handler,
     generic_exception_handler,
     http_exception_handler,
+    request_validation_exception_handler,
 )
 from api.mcp.server import mcp_server  # noqa: E402
 from api.origin_gate import OriginSecretMiddleware  # noqa: E402
@@ -199,6 +201,7 @@ app = FastAPI(
 # Register exception handlers
 app.add_exception_handler(AnyplotException, anyplot_exception_handler)
 app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(RequestValidationError, request_validation_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
 # The middleware stack, written innermost-first because `add_middleware` and
