@@ -255,8 +255,8 @@ agents/anyplot/sub_agents/{adapter.py, reviewer.py}            # relative import
 agents/anyplot/tools/{session.py, catalogue.py}
 agents/anyplot/plugins/{ledger.py, scope_guard.py, budget.py, tool_safety.py}
 agents/anyplot/prompts/{root,adapter,reviewer,scope_judge,data_judge}.md  refusals.yaml
-agents/anyplot/data/{parse.py, bindings.py, store.py}                     # no ADK import
-agents/anyplot/code/{regions.py, normalise.py, readiness.py, edits.py, validate.py, loader.py, export.py}   # no ADK import; built except validate.py (in review)
+agents/anyplot/data/{parse.py, roles.py, bindings.py, store.py}           # no ADK import; built
+agents/anyplot/code/{regions.py, normalise.py, readiness.py, edits.py, validate.py, loader.py, export.py}   # no ADK import; built
 agents/anyplot/render/{contract.py, gates.py, png.py, harness.py, runtimes/python.py, backends/{local.py, sandbox.py, fake.py}}
 agents/evals/{scope.evalset.json, test_config.json, harness/test_flows.py, matrix.py, sync_cases.py,
               baselines/gemini-3.8-flash.json, fixtures/cases/<id>/{case.json, data.csv} (synthetic only), .cases/ (gitignored, synced from the bucket)}
