@@ -47,8 +47,9 @@ Every step also writes one content-free attribution line (`plugins/ledger.attrib
 `pipeline_adapt` (the answer's outcome and edit count), `pipeline_check` (edit-apply
 failure count, blocking validator rule ids, ADAPTATION rule ids), `pipeline_render`
 (render and wall time, the gate ids that failed or reported), `pipeline_review` (the
-verdict and its defect ids) and `pipeline_result` (status, reason, attempts, and
-whether the shipped render was padded or carries ADAPTATION or probe findings). The
+verdict and its defect ids) and `pipeline_result` (status, reason, attempts, whether
+the shipped render was padded or carries ADAPTATION or probe findings, and the
+exception class behind reason `error`). The
 eval harness (`agents/evals/matrix.py`) reads them per case; they never carry code,
 data, column names or model text.
 """
@@ -175,6 +176,8 @@ class Run:
     reason: FailureReason | None = None
     rendered: bool = False
     unreviewed_why: str | None = None
+    error_type: str | None = None
+    """The exception class that ended the run with reason `error` (content-free, for the attribution log)."""
 
 
 def _line(text: str) -> str:
@@ -444,6 +447,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     except Exception as exc:  # every failure ends in a PlotResult; the type is logged, never the message
         logger.warning("pipeline failed: %s", type(exc).__name__)
         run.reason = "error"
+        run.error_type = type(exc).__name__
         run.unreviewed_why = run.unreviewed_why or "an internal error stopped the run"
     finally:
         ledger.pipeline_active = False
@@ -455,6 +459,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     except Exception as exc:  # a result whose artifacts cannot be stored is not shippable
         logger.warning("storing the version failed: %s", type(exc).__name__)
         result = PlotResult(status="failed", reason="error", attempts=run.attempts)
+        run.error_type = run.error_type or type(exc).__name__
     _attribute_result(ledger, run, result)
     yield close_scope(scope)
     yield _result_event(result)
@@ -464,7 +469,9 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
     """The content-free outcome line of one pipeline run: what the eval harness's pass and gate counts read.
 
     `padded`, `adaptation` (ADAPTATION rule ids) and `advisory` (probe gate ids) describe
-    the shipped render; a failed run has none.
+    the shipped render; a failed run has none. `error` is the exception class behind
+    reason `error` (for example `RendererUnavailable`, which the harness treats as an
+    outage rather than a model failure), never its message.
     """
     shipped = (run.best or run.padded) if result.status in ("ok", "needs_attention") else None
     attribution(
@@ -479,6 +486,7 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
         adaptation=list(shipped.adaptation_rules) if shipped else [],
         advisory=list(shipped.advisory_gates) if shipped else [],
         residual=len(result.residual_defects),
+        error=run.error_type if result.reason == "error" else None,
     )
 
 

@@ -100,8 +100,9 @@ class GateReport:
     canvas_defects: list[str] = field(default_factory=list)
     advisory: list[str] = field(default_factory=list)
     failed_gates: list[str] = field(default_factory=list)
-    """The ids of the gates that failed or reported, one entry per theme and finding, in gate order:
-    `R1`, `R1-timeout`, `R2`, `R3`, `G3`, `G5`, `G7`, `G8`. Content-free, for the attribution log."""
+    """The ids of the gates that failed or reported, one entry per theme and finding: `R1`,
+    `R1-timeout`, `R2`, `R3`, then the probe gates `G3`, `G5`, `G7`, `G8` in the order the
+    probe checks run (not sorted). Content-free, for the attribution log."""
 
     @property
     def defects(self) -> list[str]:

@@ -105,7 +105,8 @@ anyplot/
 │   │   ├── make_fixtures.py           # Generates the 120 synthetic spike-X cases (seeded, rerunnable)
 │   │   ├── cases.py                   # Case loading and --cases selection
 │   │   ├── pricing.py                 # List prices and the cost of one model call
-│   │   ├── report.py                  # Summary, baseline diff, Markdown, review galleries
+│   │   ├── report.py                  # Summary, baseline diff, Markdown, galleries; blind two-run gallery
+│   │   ├── eligibility.py             # Model-free sweep: which catalogue files can be adapted, and why not
 │   │   ├── baselines/                 # Committed baseline reports, one per model
 │   │   ├── fixtures/cases/            # Eval cases (case.json + data.csv), also the adk web seed
 │   │   └── reports/                   # Run reports, renders and galleries (git-ignored)

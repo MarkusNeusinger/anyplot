@@ -6,8 +6,10 @@ the same attribution lines a real run writes. Nothing here calls a model or a re
 """
 
 import asyncio
+import base64
 import json
 import os
+import subprocess
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -15,21 +17,25 @@ from unittest.mock import patch
 import pytest
 
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
+from agents.anyplot.render.contract import RendererUnavailable, RenderJob, RenderResult
 from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.services import Services
 from agents.evals import matrix
-from agents.evals.cases import load_cases, select_cases
+from agents.evals.cases import EvalCase, load_cases, select_cases
 from agents.evals.matrix import (
     EXIT_OK,
+    EXIT_OUTAGE,
     EXIT_REGRESSION,
     EXIT_SETUP,
     EXIT_STOPPED,
     MatrixConfig,
+    RenderToken,
     configure,
     parse_args,
     parse_events,
     run_matrix,
 )
+from agents.evals.report import Flip
 from agents.main import Runtime
 
 from ..runtime.fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK
@@ -110,7 +116,10 @@ async def test_two_fixtures_through_the_real_flow(
     assert (summary["pass_rate"], summary["accept_match_rate"]) == (0.5, 0.5)
     assert summary["cost_total_usd"] == pytest.approx(8 * CALL_COST)
     assert summary["cost_per_success_usd"] == pytest.approx(8 * CALL_COST)
-    assert [job.library for job in backend.jobs] == ["matplotlib"]  # bar-grouped never reached the renderer
+    # The preflight renders each library's catalogue file once; then bar-grouped never reached the renderer.
+    assert [job.library for job in backend.jobs] == ["seaborn", "matplotlib", "matplotlib"]
+    assert [(job.themes, job.data_csv) for job in backend.jobs[:2]] == [(("light",), matrix.PREFLIGHT_DATA)] * 2
+    assert "THEME" in backend.jobs[0].source and "load_user_data" not in backend.jobs[0].source
 
     stamp = result.report["stamp"]
     assert (stamp["provider"], stamp["model"], stamp["location"], stamp["case_count"]) == (
@@ -187,7 +196,7 @@ async def test_a_regression_against_the_baseline_exits_non_zero(
     )
 
     assert second.exit_code == EXIT_REGRESSION
-    assert second.diff is not None and second.diff.flipped == [("bar-grouped-seaborn#1", True, False)]
+    assert second.diff is not None and second.diff.flipped == [Flip("bar-grouped-seaborn", 1, 1, 0, 1)]
     assert "Against the baseline" in second.summary_path.read_text()
 
     swap_models("anthropic-vertex", script())
@@ -263,16 +272,27 @@ def test_configure_picks_the_provider_defaults_and_keeps_the_rest() -> None:
     claude: dict[str, str] = {"ENVIRONMENT": "test"}
     configure(parse_args(["--model", "claude-haiku-5-5", "--renderer", "remote", "--render-url", "https://r"]), claude)
     assert (claude["AGENT_PROVIDER"], claude["AGENT_JUDGE_MODEL"]) == ("anthropic-vertex", "claude-haiku-5-5")
+    # A developer's renderer token is accepted only in development, whatever the shell exported.
     assert (claude["AGENT_RENDERER"], claude["AGENT_RENDER_URL"], claude["ENVIRONMENT"]) == (
         "remote",
         "https://r",
-        "test",
+        "development",
     )
+
+    fake: dict[str, str] = {"ENVIRONMENT": "test"}
+    configure(parse_args(["--renderer", "fake"]), fake)
+    assert fake["ENVIRONMENT"] == "test"  # the fake renderer runs in test as well
+
+    on_cloud_run: dict[str, str] = {"ENVIRONMENT": "production", "K_SERVICE": "anyplot-agents"}
+    configure(parse_args(["--renderer", "remote"]), on_cloud_run)
+    assert on_cloud_run["ENVIRONMENT"] == "production"
 
 
 def test_configure_refuses_contradictions() -> None:
     with pytest.raises(matrix.SetupError, match="needs --renderer remote"):
         configure(parse_args(["--renderer", "fake", "--render-url", "https://r"]), {})
+    with pytest.raises(matrix.SetupError, match="--gcloud-token needs --renderer remote"):
+        configure(parse_args(["--renderer", "fake", "--gcloud-token"]), {})
     with pytest.raises(matrix.SetupError, match="cannot tell the provider"):
         configure(parse_args(["--model", "llama-9"]), {})
     with pytest.raises(SystemExit):
@@ -303,3 +323,201 @@ def test_interrupt_writes_the_partial_report(tmp_path: Path, services: Services,
 
     (report_path,) = tmp_path.glob("*.json")
     assert json.loads(report_path.read_text())["stopped"] == "interrupted"
+
+
+# --- Preflight, outages, harness errors, the budget and the renderer token ---------------------
+
+
+class DownBackend:
+    """A renderer that refuses every job, as the remote backend does with an expired token."""
+
+    name = "remote"
+
+    def __init__(self) -> None:
+        self.jobs: list[RenderJob] = []
+
+    async def render(self, job: RenderJob) -> RenderResult:
+        self.jobs.append(job)
+        raise RendererUnavailable("the renderer refused this caller (HTTP 401)")
+
+
+def jwt(expiry: float) -> str:
+    """An unsigned token shape with an `exp` claim, as `gcloud auth print-identity-token` prints one."""
+    payload = base64.urlsafe_b64encode(json.dumps({"exp": expiry}).encode()).decode().rstrip("=")
+    return f"e30.{payload}.c2ln"
+
+
+def scripted_records(outcome: dict[str, dict[str, Any]]) -> Any:
+    """A `CaseRunner.run` replacement: each case's record takes the fields `outcome` gives its case id."""
+
+    async def run(self: matrix.CaseRunner, case: EvalCase, repeat: int) -> dict[str, Any]:
+        record = matrix.base_record(case, repeat)
+        record.update(outcome[case.case_id])
+        matrix.finish_record(record)
+        return record
+
+    return run
+
+
+async def test_a_preflight_that_cannot_render_stops_before_the_first_case(
+    tmp_path: Path, services: Services, swap_models, backend: FakeBackend
+) -> None:
+    backend.script = lambda job, theme: FakeOutcome(
+        exit_code=1, stderr_tail="Traceback (most recent call last):\nModuleNotFoundError: No module named 'seaborn'"
+    )
+    swap_models("anthropic-vertex", script())
+
+    with pytest.raises(matrix.SetupError, match=r"preflight render of bar-grouped \(seaborn\) failed: exit code 1"):
+        await run_matrix(two_fixtures(), config(tmp_path), services=services, runtime=runtime(), echo=lambda _: None)
+
+    assert len(backend.jobs) == 1 and not any(tmp_path.iterdir())  # no case ran, nothing was written
+
+    down = DownBackend()
+    with pytest.raises(matrix.SetupError, match="HTTP 401"):
+        await run_matrix(
+            two_fixtures(),
+            config(tmp_path),
+            services=Services(backend_factory=lambda: down, judge_factory=services.judge_factory),
+            runtime=runtime(),
+            echo=lambda _: None,
+        )
+
+
+async def test_a_renderer_outage_stops_the_run_and_saves_no_baseline(
+    tmp_path: Path, services: Services, swap_models
+) -> None:
+    swap_models("anthropic-vertex", script())
+    lines: list[str] = []
+
+    result = await run_matrix(
+        two_fixtures(),
+        config(tmp_path, preflight=False, save_baseline=True, baselines_dir=tmp_path / "baselines"),
+        services=Services(backend_factory=DownBackend, judge_factory=services.judge_factory),
+        runtime=runtime(),
+        echo=lines.append,
+    )
+
+    assert result.exit_code == EXIT_OUTAGE and result.report["stopped"] == "outage"
+    scatter = result.report["runs"][1]
+    assert (scatter["status"], scatter["reason"], scatter["pipeline_error"]) == (
+        "failed",
+        "error",
+        "RendererUnavailable",
+    )
+    assert scatter["render_s"] == [] and scatter["gate_failures"] == {}
+    assert any("renderer became unavailable during scatter-basic-matplotlib" in line for line in lines)
+    assert result.baseline_written is None and not (tmp_path / "baselines").exists()
+    assert "(RendererUnavailable)" in result.summary_path.read_text()
+
+
+async def test_three_errors_in_a_row_stop_the_run(
+    tmp_path: Path, services: Services, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    failed = {"status": "failed", "reason": "error", "attempts": 1, "pipeline_error": "InternalServerError"}
+    monkeypatch.setattr(
+        matrix.CaseRunner, "run", scripted_records({"bar-grouped-seaborn": failed, "scatter-basic-matplotlib": failed})
+    )
+
+    result = await run_matrix(
+        two_fixtures(), config(tmp_path, repeats=2), services=services, runtime=runtime(), echo=lambda _: None
+    )
+
+    assert result.exit_code == EXIT_OUTAGE and len(result.report["runs"]) == matrix.MAX_ERRORS_IN_A_ROW
+
+
+async def test_harness_errors_count_as_failures_and_exit_1(
+    tmp_path: Path, services: Services, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        matrix.CaseRunner,
+        "run",
+        scripted_records(
+            {
+                "bar-grouped-seaborn": {"error": "KeyError"},  # the base record's status is harness_error
+                "scatter-basic-matplotlib": {"status": "ok", "attempts": 1},
+            }
+        ),
+    )
+
+    result = await run_matrix(
+        two_fixtures(),
+        config(tmp_path, save_baseline=True, baselines_dir=tmp_path / "baselines"),
+        services=services,
+        runtime=runtime(),
+        echo=lambda _: None,
+    )
+
+    summary = result.report["summary"]
+    assert (summary["harness_errors"], summary["passed"], summary["pass_rate"]) == (1, 1, 0.5)
+    assert result.exit_code == EXIT_REGRESSION
+    assert any("crashed in the harness" in note for note in result.notes)
+    assert result.baseline_written is None and any("ended in an error" in note for note in result.notes)
+
+
+async def test_the_budget_stops_before_a_case_that_could_pass_it(
+    tmp_path: Path, services: Services, swap_models
+) -> None:
+    swap_models("anthropic-vertex", script())
+    lines: list[str] = []
+
+    result = await run_matrix(
+        two_fixtures(),
+        config(tmp_path, budget_usd=6 * CALL_COST),  # the first case costs 4 calls; another like it would pass 6
+        services=services,
+        runtime=runtime(),
+        echo=lines.append,
+    )
+
+    assert result.exit_code == EXIT_STOPPED and len(result.report["runs"]) == 1
+    assert any("costliest case so far" in line for line in lines)
+
+
+async def test_the_render_token_is_renewed_before_it_expires(services: Services) -> None:
+    built: list[FakeBackend] = []
+
+    def factory() -> FakeBackend:
+        built.append(FakeBackend())
+        return built[-1]
+
+    environ = {"AGENT_RENDER_TOKEN": jwt(1_300)}
+    minted: list[str] = []
+
+    def mint() -> str:
+        minted.append(jwt(4_600))
+        return minted[-1]
+
+    current = Services(backend_factory=factory, judge_factory=services.judge_factory)
+    serial = current.backend
+    token = RenderToken(environ, mint=mint, clock=lambda: 1_000.0)
+
+    assert token.due()  # 300 s left, inside the 600 s margin
+    assert await token.renew(current) is True
+    assert current.backend is serial and serial.backend is built[1]  # same semaphore, a backend with the new token
+    assert environ["AGENT_RENDER_TOKEN"] == minted[0] and matrix.token_expiry(minted[0]) == 4_600
+    assert await token.renew(current) is False and len(minted) == 1
+
+
+def test_token_helpers_never_print_the_token(monkeypatch: pytest.MonkeyPatch) -> None:
+    assert matrix.token_expiry("not-a-jwt") is None and matrix.token_expiry("a.%%%.c") is None
+    note = matrix.token_note({"AGENT_RENDER_TOKEN": jwt(1_000 + 1_800)}, clock=lambda: 1_000.0)
+    assert note is not None and "expires in 30 min" in note and "e30." not in note
+    assert matrix.token_note({}) is None
+
+    def failing(*args: Any, **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(args[0], 1, stdout="", stderr="ERROR: not logged in")
+
+    monkeypatch.setattr(matrix.subprocess, "run", failing)
+    with pytest.raises(matrix.SetupError, match="exit 1"):
+        matrix.gcloud_token()
+
+
+def test_a_baseline_is_refused_for_runs_that_ended_in_an_error(tmp_path: Path) -> None:
+    good = {"case_id": "a-matplotlib-x", "origin": "fixtures", "status": "ok", "reason": None}
+    report = {"stamp": {"model": "claude-haiku-5-5"}, "stopped": None, "runs": [good]}
+
+    path, note = matrix.write_baseline(report, tmp_path)
+    assert path == tmp_path / "claude-haiku-5-5.json" and note is None
+
+    report["runs"] = [good, {**good, "case_id": "b-seaborn-x", "status": "failed", "reason": "error"}]
+    path, note = matrix.write_baseline(report, tmp_path / "other")
+    assert path is None and note is not None and "b-seaborn-x" in note

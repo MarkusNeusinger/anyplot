@@ -26,31 +26,51 @@ Outputs, under `--out` (default `agents/evals/reports/`, git-ignored):
   `<date>-<model>.md`, its Markdown summary;
 * `renders/<case-id>-r<repeat>.png`, the shipped PNG of every run that shipped one;
 * `gallery.html`, a blind review page with a random sample of `--gallery-size` (30)
-  shipped renders and an accept and reject pair each, exported as JSON with one button;
-  `gallery-all.html` lists every run. Both are rewritten by the next run in the same
-  directory, so give each run its own `--out` when you keep its gallery.
+  renders that passed the gates and an accept and reject pair each, exported as JSON
+  with one button; `gallery-all.html` lists every run. Both are rewritten by the next
+  run in the same directory, so give each run its own `--out` when you keep its
+  gallery. `python -m agents.evals.report blind` merges two runs into one gallery that
+  hides which arm made a render.
+
+**Before the first case** the harness renders the catalogue file of the first case of
+each library in the selection through the configured backend (no model call). A
+backend that cannot render (unreachable, the caller refused, a library missing in the
+image) ends the run with exit code 2 before any token is spent. **During the run** a
+case whose pipeline ended in `RendererUnavailable` (the `error` field of its
+`pipeline_result` line), or three runs in a row that ended in an error, stop the run
+with exit code 4, so an outage never turns the rest of the matrix into `failed (error)`
+runs. `--gcloud-token` mints the renderer's ID token with `gcloud auth
+print-identity-token` and mints a new one whenever it is within 10 minutes of its
+one-hour expiry, so a full run outlasts a token.
 
 With a baseline (`--baseline FILE`, by default `agents/evals/baselines/<pinned model>.json`
-when it exists) the run prints the diff table: pass rate, accept-match rate, cost per
-successful plot, latency percentiles and every run that flipped. `--save-baseline`
-writes the report to `agents/evals/baselines/<model>.json` (synthetic cases only).
+when it exists) the run prints the diff table over the cases both reports hold: pass
+rate, accept-match rate, cost per successful plot, latency percentiles and every case
+that flipped. `--save-baseline` writes the report to
+`agents/evals/baselines/<model>.json`; it refuses a run that stopped early, holds
+promoted cases, or has any run that ended in an error.
 
-Exit codes: 0 done; 1 the pass rate fell below the baseline's minus `--tolerance`
-(5 percentage points by default); 2 a setup error (settings, renderer, price, cases);
-3 stopped early by `--budget-usd` (the estimated list-price cost passed it). Ctrl-C
-writes the partial report before it stops.
+Exit codes: 0 done; 1 the run did not hold: its pass rate on the shared cases fell
+below the baseline's minus `--tolerance` (5 percentage points by default), or a run
+crashed in the harness; 2 a setup error (settings, renderer, preflight, price, cases);
+3 stopped early by `--budget-usd`; 4 stopped by an outage (see above). Ctrl-C writes
+the partial report before it stops.
 
 For its own process the harness lifts the run queue's start rate
 (`AGENT_RUNS_PER_MINUTE`, `--runs-per-minute`, 60) and the service-wide daily token
 budget, and gives every case and repeat its own user id, so the per-user daily
 budgets never trip; the per-request limits (12 LLM calls, 80k tokens, the deadlines)
-stay at their production values. It defaults `ENVIRONMENT` to `development`, never
-loads a `.env` file, and leaves the caller check out, because the requests never
-leave the process.
+stay at their production values. It sets `ENVIRONMENT=development` for the `remote`
+and `local` renderers unless it runs on Cloud Run (`K_SERVICE`), because a developer's
+renderer token is accepted only in development, and defaults it to `development`
+otherwise; it never loads a `.env` file, and leaves the caller check out, because the
+requests never leave the process.
 """
 
 import argparse
 import asyncio
+import base64
+import binascii
 import codecs
 import hashlib
 import importlib.metadata
@@ -109,7 +129,17 @@ EVAL_RUNS_PER_MINUTE = 60
 EVAL_GLOBAL_DAILY_TOKENS = 1_000_000_000
 ATTRIBUTION_LOGGER = "anyplot.agents.attribution"
 MODEL_TOKEN_KINDS: tuple[str, ...] = ("prompt", "candidates", "thoughts", "cached", "cache_write", "tool_use_prompt")
-EXIT_OK, EXIT_REGRESSION, EXIT_SETUP, EXIT_STOPPED = 0, 1, 2, 3
+EXIT_OK, EXIT_REGRESSION, EXIT_SETUP, EXIT_STOPPED, EXIT_OUTAGE = 0, 1, 2, 3, 4
+RENDERER_OUTAGE = "RendererUnavailable"
+"""The pipeline's `error` class that means the renderer is down, not that the model failed."""
+MAX_ERRORS_IN_A_ROW = 3
+"""Runs in a row that ended in an error (pipeline or harness) before the matrix stops as an outage."""
+DEVELOPER_RENDERERS: tuple[str, ...] = ("remote", "local")
+GCLOUD_TOKEN_COMMAND: tuple[str, ...] = ("gcloud", "auth", "print-identity-token")
+TOKEN_REFRESH_MARGIN_S = 600.0
+"""`--gcloud-token` mints a new token when the current one expires within this many seconds."""
+PREFLIGHT_DATA = "x\n1\n"
+"""The preflight renders the normalised catalogue file, which makes its own data; this only fills the slot."""
 
 logger = logging.getLogger("anyplot.evals")
 
@@ -136,9 +166,19 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         help="render backend (default: AGENT_RENDERER when it is one of these, else remote)",
     )
     parser.add_argument("--render-url", help="the deployed renderer's URL for --renderer remote (AGENT_RENDER_URL)")
+    parser.add_argument(
+        "--gcloud-token",
+        action="store_true",
+        help="mint AGENT_RENDER_TOKEN with `gcloud auth print-identity-token` and renew it before it expires",
+    )
+    parser.add_argument("--no-preflight", action="store_true", help="skip the model-free preflight render")
     parser.add_argument("--cases", default="smoke", help="smoke, full, or comma-separated globs over case ids")
     parser.add_argument("--repeats", type=int, default=1, help="runs per case (default 1)")
-    parser.add_argument("--budget-usd", type=float, help="stop once the estimated list-price cost passes this")
+    parser.add_argument(
+        "--budget-usd",
+        type=float,
+        help="stop before a case that could take the estimated list-price cost past this (spent + costliest case)",
+    )
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT, help="output directory (default agents/evals/reports)")
     parser.add_argument("--baseline", type=Path, help="baseline report (default: baselines/<pinned model>.json)")
     parser.add_argument("--no-baseline", action="store_true", help="do not compare with any baseline")
@@ -166,11 +206,12 @@ def configure(args: argparse.Namespace, environ: MutableMapping[str, str]) -> No
 
     `--provider` alone selects that provider's default model and judge; `--model` alone
     implies its provider. The environment's own `AGENT_*` values stay for everything
-    no flag names.
+    no flag names. With the `remote` or `local` renderer the process runs as
+    `ENVIRONMENT=development` (outside Cloud Run), whatever the shell exported: only
+    development accepts a developer's renderer token and the `local` backend.
     """
     environ["PYTHON_DOTENV_DISABLED"] = "1"
     environ["ADK_DISABLE_LOAD_DOTENV"] = "1"
-    environ.setdefault("ENVIRONMENT", "development")
     environ.pop("AGENT_DEV_FIXTURE", None)
     provider = args.provider
     if provider is None and args.model:
@@ -189,10 +230,16 @@ def configure(args: argparse.Namespace, environ: MutableMapping[str, str]) -> No
     configured = environ.get("AGENT_RENDERER")
     renderer = args.renderer or (configured if configured in RENDERERS else "remote")
     environ["AGENT_RENDERER"] = renderer
+    if renderer in DEVELOPER_RENDERERS and "K_SERVICE" not in environ:
+        environ["ENVIRONMENT"] = "development"
+    else:
+        environ.setdefault("ENVIRONMENT", "development")
     if args.render_url:
         if renderer != "remote":
             raise SetupError("--render-url needs --renderer remote")
         environ["AGENT_RENDER_URL"] = args.render_url
+    if args.gcloud_token and renderer != "remote":
+        raise SetupError("--gcloud-token needs --renderer remote")
     environ["AGENT_RUNS_PER_MINUTE"] = str(args.runs_per_minute)
     environ["AGENT_GLOBAL_DAILY_TOKEN_BUDGET"] = str(EVAL_GLOBAL_DAILY_TOKENS)
 
@@ -212,7 +259,134 @@ class MatrixConfig:
     gallery_size: int = GALLERY_SIZE
     save_baseline: bool = False
     baselines_dir: Path = BASELINES_DIR
+    preflight: bool = True
+    render_token: "RenderToken | None" = None
     argv: list[str] = field(default_factory=list)
+
+
+# --- The renderer: token and preflight -------------------------------------------------------
+
+
+def token_expiry(token: str) -> float | None:
+    """The `exp` claim of a JWT, read without verifying it; None when it has none."""
+    parts = token.split(".")
+    if len(parts) != 3:
+        return None
+    try:
+        claims = json.loads(base64.urlsafe_b64decode(parts[1] + "=" * (-len(parts[1]) % 4)))
+    except (ValueError, binascii.Error):
+        return None
+    expiry = claims.get("exp") if isinstance(claims, dict) else None
+    return float(expiry) if isinstance(expiry, int | float) and not isinstance(expiry, bool) else None
+
+
+def gcloud_token() -> str:
+    """A fresh ID token of your gcloud account (`gcloud auth print-identity-token`); never printed or logged."""
+    try:
+        done = subprocess.run(list(GCLOUD_TOKEN_COMMAND), capture_output=True, text=True, timeout=60, check=False)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise SetupError(f"`gcloud auth print-identity-token` did not run ({type(exc).__name__})") from None
+    token = done.stdout.strip()
+    if done.returncode != 0 or token.count(".") != 2:
+        raise SetupError(
+            f"`gcloud auth print-identity-token` failed (exit {done.returncode}); run `gcloud auth login` first"
+        )
+    return token
+
+
+def token_note(environ: MutableMapping[str, str], clock: Callable[[], float] = time.time) -> str | None:
+    """A warning when a static `AGENT_RENDER_TOKEN` will expire during a long run."""
+    token = environ.get("AGENT_RENDER_TOKEN")
+    expiry = token_expiry(token) if token else None
+    if expiry is None:
+        return None
+    minutes = max(0, int((expiry - clock()) // 60))
+    return (
+        f"AGENT_RENDER_TOKEN expires in {minutes} min; a run that outlasts it stops with exit code 4. "
+        "Pass --gcloud-token to renew it during the run."
+    )
+
+
+@dataclass
+class RenderToken:
+    """Keeps `AGENT_RENDER_TOKEN` fresh for a run that outlasts the token's hour (`--gcloud-token`).
+
+    Before each case `renew` checks the token's `exp`; within `margin_s` of it, it mints
+    a new one, rebuilds the settings and swaps the backend inside the one
+    `SerialRenderer`, so the render semaphore stays the same object.
+    """
+
+    environ: MutableMapping[str, str]
+    mint: Callable[[], str] = gcloud_token
+    clock: Callable[[], float] = time.time
+    margin_s: float = TOKEN_REFRESH_MARGIN_S
+    renewed: int = 0
+
+    def due(self) -> bool:
+        token = self.environ.get("AGENT_RENDER_TOKEN")
+        expiry = token_expiry(token) if token else None
+        return expiry is None or expiry - self.clock() < self.margin_s
+
+    async def renew(self, services: "Services") -> bool:
+        """Mint and install a new token when the current one is due; True when it did."""
+        if not self.due():
+            return False
+        from agents.anyplot.settings import get_settings
+
+        self.environ["AGENT_RENDER_TOKEN"] = await asyncio.to_thread(self.mint)
+        get_settings.cache_clear()
+        serial = services.backend
+        old, serial.backend = serial.backend, services.backend_factory()
+        close = getattr(old, "aclose", None)
+        if old is not serial.backend and close is not None:
+            await close()
+        self.renewed += 1
+        return True
+
+
+async def preflight(cases: list["EvalCase"], services: "Services", echo: Callable[[str], None]) -> None:
+    """Render the catalogue file of each library's first case once, before any model call; SetupError if it fails.
+
+    The job is the normalised original (it makes its own data) in the light theme,
+    through `services.backend`, the same path as the pipeline's renders. It proves the
+    backend renders at all: reachable, the caller accepted, the library in the image.
+    """
+    from agents.anyplot.code.normalise import normalise
+    from agents.anyplot.render import PythonRuntime
+    from agents.anyplot.render.contract import RendererUnavailable, RenderJob
+    from agents.anyplot.render.gates import error_summary
+    from agents.anyplot.settings import get_settings
+
+    firsts: dict[str, EvalCase] = {}
+    for case in cases:
+        firsts.setdefault(case.library, case)
+    timeout = float(get_settings().render_timeout_s)
+    for library, case in firsts.items():
+        job = RenderJob(
+            job_id=secrets.token_hex(8),
+            language=PythonRuntime.language,
+            library=library,
+            source=normalise(case.snapshot().code, library=library),
+            data_csv=PREFLIGHT_DATA,
+            themes=("light",),
+            timeout_s=timeout,
+        )
+        started = time.monotonic()
+        try:
+            result = await services.backend.render(job)
+        except RendererUnavailable as exc:
+            raise SetupError(f"preflight render of {case.spec_id} ({library}): {exc}") from None
+        except Exception as exc:
+            raise SetupError(f"preflight render of {case.spec_id} ({library}) failed: {type(exc).__name__}") from None
+        output = result.outputs.get("light")
+        if output is None or output.exit_code != 0 or not output.png:
+            why = "no output" if output is None else f"exit code {output.exit_code}"
+            if output is not None and output.timed_out:
+                why += ", timed out"
+            if output is not None and output.stderr_tail:
+                why += f", {error_summary(output.stderr_tail)}"
+            raise SetupError(f"preflight render of {case.spec_id} ({library}) failed: {why}")
+        echo(f"preflight: {case.spec_id} ({library}) rendered in {time.monotonic() - started:.1f} s")
 
 
 # --- Observation -----------------------------------------------------------------------------
@@ -328,6 +502,7 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
         "turns": 0,
         "png": None,
         "error": None,
+        "pipeline_error": None,
     }
 
 
@@ -383,6 +558,8 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
             record["padded"] = bool(line.get("padded"))
             record["adaptation"] = [str(rule) for rule in line.get("adaptation") or []]
             record["advisory"] = [str(gate) for gate in line.get("advisory") or []]
+            if line.get("error"):
+                record["pipeline_error"] = str(line["error"])
         elif hook == "queue":
             record["queue_s"] = (record["queue_s"] or 0.0) + _number(line.get("waited_s"))
     record["gate_failures"] = dict(sorted(gates.items()))
@@ -684,12 +861,25 @@ def _unique(path: Path) -> Path:
     raise SetupError(f"too many reports named {path.stem} in {path.parent}")
 
 
+def is_error(run: dict[str, Any]) -> bool:
+    """A run that ended in an error (the harness's or the pipeline's), which measures an outage or a bug."""
+    return run.get("status") == "harness_error" or run.get("reason") == "error"
+
+
 def write_baseline(report: dict[str, Any], baselines_dir: Path) -> tuple[Path | None, str | None]:
-    """Write the report as `<baselines_dir>/<model>.json`; refused for a partial run or users' cases."""
+    """Write the report as `<baselines_dir>/<model>.json`; refused for a partial run, errors or users' cases."""
+    runs = report.get("runs") or []
     if report.get("stopped"):
         return None, f"not saved as a baseline: the run stopped early ({report['stopped']})"
-    if any(run.get("origin") != "fixtures" for run in report.get("runs") or []):
+    if any(run.get("origin") != "fixtures" for run in runs):
         return None, "not saved as a baseline: the run includes promoted cases, which hold users' data"
+    errors = sorted({str(run.get("case_id")) for run in runs if is_error(run)})
+    if errors:
+        return None, (
+            f"not saved as a baseline: {len(errors)} cases ended in an error ({', '.join(errors[:5])}"
+            + (", ..." if len(errors) > 5 else "")
+            + "); rerun once the cause is fixed"
+        )
     baselines_dir.mkdir(parents=True, exist_ok=True)
     path = baselines_dir / f"{report['stamp']['model']}.json"
     path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -712,6 +902,10 @@ async def run_matrix(
     settings = get_settings()
     services = services or Services()
     set_services(services)
+    if config.render_token is not None:
+        await config.render_token.renew(services)
+    if config.preflight:
+        await preflight(cases, services, echo)
     runtime = runtime or service.Runtime()
     saved_overrides = dict(service.app.dependency_overrides)
     service.app.dependency_overrides[service.get_runtime] = lambda: runtime
@@ -727,22 +921,55 @@ async def run_matrix(
     timed = TimedApp(service.app)
     runs: list[dict[str, Any]] = []
     stopped: str | None = None
-    total = 0.0
+    total = costliest = 0.0
+    errors_in_a_row = 0
     plan = [(case, repeat) for repeat in range(1, config.repeats + 1) for case in cases]
     try:
         transport = httpx.ASGITransport(app=timed)
         async with httpx.AsyncClient(transport=transport, base_url="http://agents", timeout=None) as client:
             runner = CaseRunner(client, timed, collector, settings, config.out / "renders")
             for index, (case, repeat) in enumerate(plan, start=1):
+                if config.budget_usd is not None and runs and total + costliest > config.budget_usd:
+                    stopped = "budget"
+                    echo(
+                        f"stopped: ${total:.4f} spent, and the costliest case so far (${costliest:.4f}) "
+                        f"could pass --budget-usd {config.budget_usd}"
+                    )
+                    break
+                if config.render_token is not None:
+                    try:
+                        if await config.render_token.renew(services):
+                            echo("renewed the renderer token")
+                    except SetupError as exc:
+                        stopped = "outage"
+                        echo(f"stopped: the renderer token could not be renewed: {exc}")
+                        break
                 record = await runner.run(case, repeat)
                 runs.append(record)
                 total += record["cost_usd"]
+                costliest = max(costliest, record["cost_usd"])
                 echo(
                     f"[{index}/{len(plan)}] {case.case_id} r{repeat}: {record['status']}"
                     + (f" ({record['reason']})" if record["reason"] else "")
                     + f", {'pass' if record['passed'] else 'fail'}, attempts {record['attempts']}, "
                     f"${record['cost_usd']:.4f}, {record['e2e_s'] or 0:.1f} s (total ${total:.4f})"
                 )
+                errors_in_a_row = errors_in_a_row + 1 if is_error(record) else 0
+                if record.get("pipeline_error") == RENDERER_OUTAGE:
+                    stopped = "outage"
+                    echo(
+                        f"stopped: the renderer became unavailable during {case.case_id} ({RENDERER_OUTAGE}); "
+                        "check its URL and your token (AGENT_RENDER_TOKEN lasts one hour; --gcloud-token renews it)"
+                    )
+                    break
+                if errors_in_a_row >= MAX_ERRORS_IN_A_ROW:
+                    stopped = "outage"
+                    echo(
+                        f"stopped: {errors_in_a_row} runs in a row ended in an error "
+                        f"(last: {record.get('pipeline_error') or record.get('error') or record.get('reason')}); "
+                        "check the models' quota and the renderer before you rerun"
+                    )
+                    break
                 if config.budget_usd is not None and total > config.budget_usd and index < len(plan):
                     stopped = "budget"
                     echo(f"stopped: the estimated cost ${total:.4f} passed --budget-usd {config.budget_usd}")
@@ -755,7 +982,8 @@ async def run_matrix(
         attribution_logger.removeHandler(collector)
         attribution_logger.setLevel(saved_level)
     stamp["finished_at"] = datetime.now(UTC).isoformat(timespec="seconds")
-    report = {"schema": REPORT_SCHEMA, "stamp": stamp, "summary": summarize(runs), "runs": runs, "stopped": stopped}
+    summary = summarize(runs)
+    report = {"schema": REPORT_SCHEMA, "stamp": stamp, "summary": summary, "runs": runs, "stopped": stopped}
     diff = compare(config.baseline, report, tolerance=config.tolerance) if config.baseline is not None else None
     result = write_outputs(report, config, diff)
     if stopped == "interrupted":
@@ -765,9 +993,17 @@ async def run_matrix(
         result.baseline_written, note = write_baseline(report, config.baselines_dir)
         if note:
             result.notes.append(note)
-    if stopped:
+    harness_errors = summary["harness_errors"]
+    if harness_errors:
+        result.notes.append(
+            f"{harness_errors} runs crashed in the harness (the `error` field of each run names the class); "
+            "they count as failures"
+        )
+    if stopped == "outage":
+        result.exit_code = EXIT_OUTAGE
+    elif stopped:
         result.exit_code = EXIT_STOPPED
-    elif diff is not None and diff.regression:
+    elif (diff is not None and diff.regression) or harness_errors:
         result.exit_code = EXIT_REGRESSION
     return result
 
@@ -802,6 +1038,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     try:
         configure(args, os.environ)
+        if args.gcloud_token:
+            os.environ["AGENT_RENDER_TOKEN"] = gcloud_token()
     except SetupError as exc:
         _echo(f"setup: {exc}")
         return EXIT_SETUP
@@ -833,7 +1071,7 @@ def main(argv: list[str] | None = None) -> int:
         print(note)
     rate = summary.get("pass_rate")
     print(
-        f"{stamp_model}: {summary['passed']} of {summary['counted']} runs passed"
+        f"{stamp_model}: {summary['passed']} of {summary['runs']} runs passed"
         + (f" ({rate * 100:.1f} %)" if rate is not None else "")
         + f", ${summary['cost_total_usd']:.4f} at list price"
     )
@@ -841,6 +1079,8 @@ def main(argv: list[str] | None = None) -> int:
         print(diff_markdown(result.diff))
     if result.exit_code == EXIT_STOPPED:
         print("Stopped early by --budget-usd: the report covers the runs that finished.")
+    if result.exit_code == EXIT_OUTAGE:
+        print("Stopped by an outage: the report covers the runs that finished; fix the cause and rerun.")
     return result.exit_code
 
 
@@ -872,6 +1112,8 @@ def _prepare_and_run(args: argparse.Namespace, settings: "AgentSettings", argv: 
     if not args.no_baseline:
         pinned = BASELINES_DIR / f"{AgentSettings.model_fields['model'].default}.json"
         baseline_path = args.baseline or (pinned if pinned.is_file() else None)
+    if settings.renderer == "remote" and not args.gcloud_token and (note := token_note(os.environ)):
+        _echo(note)
     config = MatrixConfig(
         cases=args.cases,
         repeats=args.repeats,
@@ -883,6 +1125,8 @@ def _prepare_and_run(args: argparse.Namespace, settings: "AgentSettings", argv: 
         seed=args.seed,
         gallery_size=args.gallery_size,
         save_baseline=args.save_baseline,
+        preflight=not args.no_preflight,
+        render_token=RenderToken(os.environ) if args.gcloud_token else None,
         argv=list(sys.argv[1:] if argv is None else argv),
     )
     return asyncio.run(run_matrix(cases, config))

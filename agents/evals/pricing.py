@@ -16,8 +16,11 @@ A call is priced from the attribution line's token counts (`plugins/ledger.usage
 * output: `candidates` plus `thoughts`, at the output price.
 
 The cache factors are Anthropic's published multipliers; Gemini's implicit cache is
-billed at the same 10 %. Re-check every number here before a spend decision: prices
-change on a monthly cadence.
+billed at the same 10 %. Not modelled: Claude Haiku 5.5's long-prompt tier ($0.50 input
+and $2.50 output above 100,000 prompt tokens), which no call reaches while the request
+budget is 80,000 tokens (`AGENT_REQUEST_TOKEN_BUDGET`); raise that budget and this
+module must price the tier. Re-check every number here, including Vertex AI's partner
+pricing for Claude, before a spend decision: prices change on a monthly cadence.
 """
 
 from dataclasses import dataclass

@@ -10,12 +10,17 @@ import pytest
 from agents.anyplot.render.backends.fake import fixture_png
 from agents.evals import pricing
 from agents.evals.report import (
+    Flip,
+    blind_gallery,
     compare,
     diff_markdown,
     gallery_all_html,
     gallery_html,
+    main,
+    passed_runs,
     percentile,
     sample_runs,
+    score,
     summarize,
     summary_markdown,
 )
@@ -114,10 +119,10 @@ def test_summary_counts_rates_and_cost() -> None:
     summary = summarize(runs)
 
     assert (summary["runs"], summary["counted"], summary["harness_errors"]) == (4, 3, 1)
-    assert summary["pass_rate"] == pytest.approx(2 / 3)
+    assert summary["pass_rate"] == pytest.approx(2 / 4)  # the harness error counts as a run that did not pass
     assert summary["repaired_passes"] == 1
-    assert summary["ok_rate"] == pytest.approx(1 / 3)
-    assert summary["accept_match_rate"] == pytest.approx(2 / 3)
+    assert summary["ok_rate"] == pytest.approx(1 / 4)
+    assert summary["accept_match_rate"] == pytest.approx(2 / 3)  # a harness error has no outcome to match
     assert summary["cost_total_usd"] == pytest.approx(0.004)
     assert summary["cost_per_success_usd"] == pytest.approx(0.002)
     assert summary["median_cost_per_success_usd"] == pytest.approx(0.0015)
@@ -132,22 +137,68 @@ def test_diff_flags_a_regression_beyond_the_tolerance_and_lists_flips() -> None:
     diff = compare(baseline, candidate, tolerance=0.05)
 
     assert diff.regression
-    assert diff.flipped == [("b-matplotlib-x#1", True, False)]
+    assert diff.flipped == [Flip("b-matplotlib-x", 1, 1, 0, 1)]
     rows = {label: (base, cand, change) for label, base, cand, change in diff.rows}
     assert rows["Pass rate"] == ("100.0 %", "66.7 %", "-33.3 pp")
+    assert rows["Runs compared"] == ("3", "3", "")
     markdown = diff_markdown(diff)
     assert "| Metric | Baseline | This run | Change |" in markdown
-    assert "- `b-matplotlib-x#1`: pass → fail" in markdown and "**Regression**" in markdown
+    assert "- `b-matplotlib-x`: pass → fail" in markdown and "**Regression**" in markdown
+    assert "One run is 33.3 pp of the 3 compared runs" in markdown
 
     assert not compare(baseline, candidate, tolerance=0.5).regression
     assert not compare(baseline, baseline, tolerance=0.0).regression
 
 
-def test_diff_notes_runs_that_exist_on_one_side_only() -> None:
+def test_diff_without_a_shared_case_compares_nothing() -> None:
     diff = compare(report_of([run("a-matplotlib-x")]), report_of([run("b-matplotlib-x")]), tolerance=0.05)
 
-    assert (diff.only_in_baseline, diff.only_in_candidate) == (1, 1)
-    assert diff.flipped == [] and "differ" in diff.notes[0]
+    assert (diff.shared_cases, diff.only_in_baseline, diff.only_in_candidate) == (0, 1, 1)
+    assert diff.flipped == [] and not diff.regression and "No case is in both" in diff.notes[0]
+
+
+def test_a_smoke_run_is_compared_on_the_baselines_same_cases() -> None:
+    full = [run(f"case-{index:02d}-matplotlib-x") for index in range(20)]
+    for index in (0, 5, 9):
+        full[index] = run(f"case-{index:02d}-matplotlib-x", passed=False, status="failed")
+    baseline = report_of(full)  # 17 of 20 passed: 85 %
+    smoke = report_of([dict(full[index]) for index in (0, 1, 2, 3)])  # the same outcomes: 3 of 4 passed
+
+    diff = compare(baseline, smoke, tolerance=0.05)
+
+    assert diff.shared_cases == 4 and diff.flipped == [] and not diff.regression
+    rows = {label: (base, cand) for label, base, cand, _ in diff.rows}
+    assert rows["Pass rate"] == ("75.0 %", "75.0 %")
+    assert rows["Pass rate, all runs of each report"] == ("85.0 %", "75.0 %")
+    assert "16 cases are only in the baseline" in " ".join(diff.notes)
+
+    worse = report_of([dict(full[index]) for index in (0, 1, 2)] + [run("case-03-matplotlib-x", passed=False)])
+    assert compare(baseline, worse, tolerance=0.05).flipped == [Flip("case-03-matplotlib-x", 1, 1, 0, 1)]
+    assert compare(baseline, worse, tolerance=0.05).regression
+
+
+def test_harness_errors_cannot_hide_a_regression() -> None:
+    baseline = report_of([run(f"case-{index:02d}-matplotlib-x") for index in range(20)])
+    crashed = [run(f"case-{index:02d}-matplotlib-x") for index in range(4)]
+    crashed += [
+        run(f"case-{index:02d}-matplotlib-x", status="harness_error", passed=False, accept_match=None)
+        for index in range(4, 20)
+    ]
+
+    diff = compare(baseline, report_of(crashed), tolerance=0.05)
+
+    assert diff.regression and len(diff.flipped) == 16
+
+
+def test_flips_with_repeats_compare_the_share_of_passed_runs() -> None:
+    baseline = report_of([run("a-matplotlib-x", repeat=1), run("a-matplotlib-x", repeat=2, passed=False)])
+    same_share = report_of([run("a-matplotlib-x", repeat=1, passed=False), run("a-matplotlib-x", repeat=2)])
+    worse = report_of([run("a-matplotlib-x", repeat=1, passed=False), run("a-matplotlib-x", repeat=2, passed=False)])
+
+    assert compare(baseline, same_share, tolerance=0.05).flipped == []
+    (flip,) = compare(baseline, worse, tolerance=0.05).flipped
+    assert flip == Flip("a-matplotlib-x", 1, 2, 0, 2)
+    assert "1 of 2 passed → 0 of 2" in diff_markdown(compare(baseline, worse, tolerance=0.05))
 
 
 def test_summary_markdown_has_every_section() -> None:
@@ -175,6 +226,16 @@ def rendered(tmp_path: Path) -> dict[str, Any]:
         (tmp_path / "renders" / f"{name}-r1.png").write_bytes(png)
         runs.append(run(name, png=f"renders/{name}-r1.png", residual_defects=["VQ-03 (light): <small> markers"]))
     runs.append(run("failed-matplotlib-x10", status="failed", passed=False))
+    (tmp_path / "renders" / "padded-matplotlib-x10-r1.png").write_bytes(png)
+    runs.append(
+        run(
+            "padded-matplotlib-x10",
+            status="needs_attention",
+            passed=False,
+            padded=True,
+            png="renders/padded-matplotlib-x10-r1.png",
+        )
+    )
     return report_of(runs, provider="anthropic-vertex")
 
 
@@ -194,11 +255,12 @@ def test_gallery_is_valid_blind_html_with_thirty_judgeable_renders(rendered: dic
     assert 'id="export"' in text and "acceptance_rate" in text
 
 
-def test_gallery_sample_is_seeded(rendered: dict[str, Any]) -> None:
+def test_gallery_sample_is_seeded_and_holds_passed_renders_only(rendered: dict[str, Any]) -> None:
     first = [item["case_id"] for item in sample_runs(rendered, seed=3)]
     assert first == [item["case_id"] for item in sample_runs(rendered, seed=3)]
     assert first != [item["case_id"] for item in sample_runs(rendered, seed=4)]
-    assert len(sample_runs(rendered, size=50)) == 40  # never more than the shipped renders
+    assert len(sample_runs(rendered, size=50)) == 40  # never more than the passed renders
+    assert "padded-matplotlib-x10" not in {run["case_id"] for run in passed_runs(rendered)}  # shipped, not passed
 
 
 def test_gallery_all_lists_every_run(rendered: dict[str, Any]) -> None:
@@ -206,7 +268,7 @@ def test_gallery_all_lists_every_run(rendered: dict[str, Any]) -> None:
 
     checker = check_html(text)
     assert checker.doctype and checker.errors == [] and checker.stack == []
-    assert text.count("<tr>") == 42  # the header row and 41 runs
+    assert text.count("<tr>") == 43  # the header row and 42 runs
     assert 'src="renders/case-00-matplotlib-x10-r1.png"' in text
 
 
@@ -214,4 +276,84 @@ def test_an_empty_report_still_renders(tmp_path: Path) -> None:
     empty = report_of([])
 
     assert check_html(gallery_html(empty, tmp_path)).errors == []
-    assert "No shipped render" in gallery_html(empty, tmp_path)
+    assert "No passed render" in gallery_html(empty, tmp_path)
+
+
+# --- The blind gallery over two runs ---------------------------------------------------------
+
+
+def two_arms(tmp_path: Path) -> list[tuple[dict[str, Any], Path]]:
+    """Two runs in their own folders: 12 cases pass in both, 3 only in the first, 2 only in the second."""
+    png = fixture_png("light", (320, 180))
+    arms = []
+    for arm, model, provider, cases in (
+        ("claude", "claude-haiku-5-5", "anthropic-vertex", [*range(12), 12, 13, 14]),
+        ("gemini", "gemini-3.8-flash", "gemini", [*range(12), 15, 16]),
+    ):
+        folder = tmp_path / arm
+        (folder / "renders").mkdir(parents=True)
+        runs = []
+        for index in cases:
+            name = f"case-{index:02d}-seaborn-n12"
+            (folder / "renders" / f"{name}-r1.png").write_bytes(png)
+            runs.append(run(name, library="seaborn", png=f"renders/{name}-r1.png"))
+        arms.append((report_of(runs, model=model, provider=provider, run_id=f"run-{arm}"), folder))
+    return arms
+
+
+def test_blind_gallery_shows_both_runs_of_the_same_cases_without_naming_them(tmp_path: Path) -> None:
+    page, key = blind_gallery(two_arms(tmp_path), size=5, seed=1)
+
+    checker = check_html(page)
+    assert checker.doctype and checker.errors == [] and checker.stack == []
+    assert len([attrs for tag, attrs in checker.tags if tag == "img"]) == 10
+    for word in ("claude", "anthropic", "gemini", "run-claude", "run-gemini"):
+        assert word not in page.lower()
+    assert (key["cases"], key["common_cases"], len(key["items"])) == (5, 12, 10)
+    by_case: dict[str, set[str]] = {}
+    for item in key["items"].values():
+        by_case.setdefault(item["case_id"], set()).add(item["arm"])
+    assert len(by_case) == 5 and all(arms == {"a", "b"} for arms in by_case.values())
+    assert all(int(case[5:7]) < 12 for case in by_case)  # only cases both runs passed
+    assert key["arms"]["a"]["model"] == "claude-haiku-5-5" and key["arms"]["b"]["model"] == "gemini-3.8-flash"
+    assert f'data-run="{key["blind_id"]}"' in page
+
+
+def test_score_joins_the_export_to_the_key(tmp_path: Path) -> None:
+    _, key = blind_gallery(two_arms(tmp_path), size=4, seed=2)
+    judgements = {
+        "run_id": key["blind_id"],
+        "judgements": [
+            {"key": card, "choice": "accept" if item["arm"] == "a" else ("reject" if index % 2 else None)}
+            for index, (card, item) in enumerate(sorted(key["items"].items()))
+        ],
+    }
+
+    result = score(key, judgements)
+
+    assert (result["a"]["renders"], result["a"]["accepted"], result["a"]["acceptance_rate"]) == (4, 4, 1.0)
+    assert result["b"]["accepted"] == 0 and result["b"]["rejected"] + result["b"]["open"] == 4
+    with pytest.raises(ValueError, match="another gallery"):
+        score(key, {**judgements, "run_id": "other"})
+
+
+def test_blind_and_score_commands(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    arms = two_arms(tmp_path)
+    paths = []
+    for report, folder in arms:
+        paths.append(folder / "report.json")
+        paths[-1].write_text(json.dumps(report))
+
+    code = main(["blind", "--report", str(paths[0]), "--report", str(paths[1]), "--out", str(tmp_path / "blind")])
+
+    assert code == 0
+    key = json.loads((tmp_path / "blind" / "blind-key.json").read_text())
+    assert check_html((tmp_path / "blind" / "blind.html").read_text()).errors == []
+    export = {"run_id": key["blind_id"], "judgements": [{"key": card, "choice": "accept"} for card in key["items"]]}
+    (tmp_path / "judgements.json").write_text(json.dumps(export))
+    capsys.readouterr()
+
+    assert main(["score", "--key", str(tmp_path / "blind" / "blind-key.json"), str(tmp_path / "judgements.json")]) == 0
+    table = capsys.readouterr().out
+    assert "| a | anthropic-vertex | claude-haiku-5-5 | 12 | 12 | 0 | 0 | 100.0 % |" in table  # 12 common cases
+    assert main(["score", "--key", str(tmp_path / "missing.json"), str(tmp_path / "judgements.json")]) == 2

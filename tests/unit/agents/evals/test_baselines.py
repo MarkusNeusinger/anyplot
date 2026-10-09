@@ -8,7 +8,7 @@ exists this test skips; from then on a model bump must add the new model's basel
 import pytest
 
 from agents.anyplot.settings import AgentSettings
-from agents.evals.matrix import BASELINES_DIR, load_baseline
+from agents.evals.matrix import BASELINES_DIR, is_error, load_baseline
 
 
 def test_the_pinned_model_has_a_baseline() -> None:
@@ -22,3 +22,4 @@ def test_the_pinned_model_has_a_baseline() -> None:
         assert baseline["stamp"]["model"] == path.stem
         assert not baseline.get("stopped"), f"{path.name} is a partial run"
         assert {run["origin"] for run in baseline["runs"]} == {"fixtures"}, f"{path.name} holds promoted cases"
+        assert not any(is_error(run) for run in baseline["runs"]), f"{path.name} has runs that ended in an error"
