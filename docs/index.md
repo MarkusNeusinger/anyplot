@@ -10,6 +10,7 @@ Welcome to the anyplot documentation. Start here to find what you're looking for
 |--------------|-------|
 | Understand the project | [Vision](concepts/vision.md) |
 | Read the "Use with my data" agent design | [Agent network](concepts/agent-network.md) |
+| Read how catalogue code adapts to other data | [Adaptable code](concepts/adaptable-code.md) |
 | Contribute plot ideas | [Contributing](contributing.md) |
 | Set up local development | [Development Guide](development.md) |
 | See how automation works | [Workflows](workflows/overview.md) |
@@ -20,6 +21,7 @@ Welcome to the anyplot documentation. Start here to find what you're looking for
 | Understand the database | [Database Schema](reference/database.md) |
 | Explore repository structure | [Repository Structure](reference/repository.md) |
 | Style frontend or plots | [Style Guide](reference/style-guide.md) |
+| Cap Vertex AI spend | [GCP Budget Guard](reference/gcp-budget-guard.md) |
 | Investigate API latency | [Performance Reference](reference/performance.md) |
 
 ---
@@ -34,7 +36,8 @@ docs/
 ├── concepts/             # Philosophy and design
 │   ├── vision.md         # Product vision and mission
 │   ├── library-expansion.md  # Roadmap for multi-language gallery expansion
-│   └── agent-network.md  # Design of the "Use with my data" agent network (ADK + Gemini)
+│   ├── agent-network.md  # Design of the "Use with my data" agent network (ADK + Gemini)
+│   └── adaptable-code.md # Design for catalogue code that adapts to other data
 ├── workflows/            # Process documentation
 │   ├── overview.md       # GitHub Actions automation
 │   ├── report-issue.md   # Reporting issues with specs or implementations
@@ -48,6 +51,7 @@ docs/
     ├── plausible.md      # Analytics integration
     ├── seo.md            # SEO configuration
     ├── style-guide.md    # Brand, frontend, plot design system
+    ├── gcp-budget-guard.md  # Function that disables Vertex AI when its budget is reached
     └── performance.md    # API latency measurements
 ```
 
@@ -60,6 +64,7 @@ High-level understanding of why things work the way they do.
 - **[Vision](concepts/vision.md)** - Product mission, the problem we solve, and how we're different
 - **[Library Expansion Roadmap](concepts/library-expansion.md)** - Multi-language gallery expansion plan and licensing policy
 - **[Agent Network](concepts/agent-network.md)** - Design of the "Use with my data" agent network on Google ADK and Gemini: agents, pipeline, guardrails, serving, roadmap (as of 2026-10-09, only the `agents/` package skeleton with settings and contracts is built)
+- **[Adaptable Code](concepts/adaptable-code.md)** - Design for catalogue implementations that adapt to other data: one `# Data` block ending in a tidy `df`, column constants with role comments, a static checker and a perturbation smoke run, the regen gate's adapt route, and a rollout through the daily regeneration (as of 2026-10-09, design only)
 
 ---
 
@@ -85,6 +90,7 @@ Technical details for development and integration.
 - **[Plausible](reference/plausible.md)** - Analytics integration
 - **[SEO](reference/seo.md)** - Search engine optimization setup
 - **[Style Guide](reference/style-guide.md)** - Brand, frontend, and plot design system
+- **[GCP Budget Guard](reference/gcp-budget-guard.md)** - Cloud Run function that disables the Vertex AI API when its Cloud Billing budget is reached: decision rules, logging, retries, permissions, limits (as of 2026-10-09, in the repository and not yet deployed)
 - **[Performance](reference/performance.md)** - Backend API response-time measurements
 
 ---
