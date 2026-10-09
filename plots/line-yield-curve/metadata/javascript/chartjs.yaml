@@ -12,52 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-yiel
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/chartjs/plot-dark.html
-quality_score: 92
+quality_score: 86
 review:
   strengths:
-  - Custom Chart.js plugin (inversionZone) draws a theme-adaptive filled rectangle
-    using beforeDraw + getPixelForValue — impressive use of the plugin API
-  - Logarithmic x-axis with afterBuildTicks override correctly spaces maturities proportionally
-    (0.083 to 30 years) and applies nearest-neighbour matLabel matching for robust
-    tick labels
-  - 'Semantic color assignment: matte red (palette[4]) for the Nov-2022 inverted curve
-    is an intentional semantic exception — the category''s recessionary role calls
-    for it'
-  - Three historically accurate U.S. Treasury yield snapshots (ZIRP 2021, flattening
-    2022, deeply inverted Nov 2022) cover the full spectrum of yield curve shapes
-  - Subtitle, legend labels ('Jan 2021 — Normal', 'Jan 2022 — Flattening', 'Nov 2022
-    — Inverted'), and shaded band together produce a strong data-storytelling narrative
-  - All chrome tokens (t.ink, t.inkSoft, t.grid, t.pageBg) correctly threaded through
-    title, labels, ticks, grid, and point borders — both themes render cleanly with
-    identical data colors
-  - pointBorderColor set to t.pageBg creates a subtle halo around each marker that
-    separates overlapping points from the background without adding visual noise
+  - Logarithmic x-axis with afterBuildTicks pins one tick at each maturity_years value,
+    so spacing reflects time and every tick carries its maturity label
+  - Inline Chart.js plugin (beforeDraw + scales.x.getPixelForValue) paints the 3M-10Y
+    inversion band beneath the datasets, with a theme-specific alpha so it stays subtle
+    on both surfaces
+  - Semantic matte red for the inverted Nov 2022 curve, with legend labels naming
+    each curve's date and shape
+  - Built-in subtitle plugin explains the shaded band in inkSoft italic under the
+    title
+  - Page-colored point halos (pointBorderColor = t.pageBg) separate markers from the
+    band and the grid in both themes
+  - Real U.S. Treasury snapshots covering normal, flattening and inverted shapes
   weaknesses:
-  - 'DE-01: Design is strong (6/8) but not yet publication-ready — the chart area
-    still has the default Chart.js border box (all four sides visible), removing or
-    softening it would lift the financial-publication feel'
-  - 'LM-02: The custom plugin and afterBuildTicks are distinctive but the logarithmic
-    scale leaves the left portion of the chart (before 3M) with very compressed curves
-    — a domain clip starting at exactly 0.083 (1M) with tighter min padding would
-    improve x-axis utilisation'
-  - 'DE-02: Grid is functionally subtle via t.grid token but both axes show grid lines;
-    a y-axis-only grid (removing x-axis vertical gridlines) would better match the
-    financial chart convention requested in the spec (''minimal gridlines'')'
+  - 'DE-02 (both): vertical gridlines at all 11 maturities on a line chart, drawn
+    across the inversion band → y-axis grid only, as the style guide asks for line
+    charts (remove the 11 vertical lines). Likely cause: scales.x.grid.color: t.grid
+    instead of grid.display: false.'
+  - 'SC-03 (both): tension 0.3 Bezier splines swing past the data between neighbouring
+    points (lavender dips below 1.88% between 7Y and 10Y, red bulges just above 4.59%
+    around 1Y, green rises above 1.83% between 20Y and 30Y) → curves that never leave
+    the range of the two points they connect (0 overshoot). Likely cause: tension:
+    0.3 without cubicInterpolationMode: ''monotone''.'
+  - 'CQ-04 (code): matLabel (lines 25-32) runs a nearest-neighbour search over maturityYears
+    for every tick, although afterBuildTicks already sets the ticks in maturity order
+    → ticks.callback: (v, i) => maturities[i] (about −8 lines). Likely cause: a guard
+    against floating-point drift that the fixed tick list makes unnecessary.'
+  - 'Suggestion: a direct label at the 1Y peak of the Nov 2022 curve could name the
+    2Y–10Y spread.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light surface.
-      Chrome: Title "line-yield-curve · javascript · chartjs · anyplot.ai" at font-size 22 in dark ink — fully readable. Italic subtitle "U.S. Treasury yields — shaded band marks the 3M–10Y inversion zone (Nov 2022)" in secondary ink, clearly legible. Legend at top with three oval markers (green, lavender, matte red) in dark ink at font-size 16 — readable. Y-axis title "Yield (%)" and X-axis title "Maturity" in dark ink at font-size 16. Tick labels at font-size 14 in inkSoft — all 11 maturity labels (1M–30Y) and percentage labels (0.00%–5.00%) fully visible without overlap.
-      Data: Three lines — brand green (#009E73, Jan 2021 Normal), lavender (#C475FD, Jan 2022 Flattening), matte red (#AE3030, Nov 2022 Inverted). Inversion zone shaded in very subtle pink (rgba 174,48,48,0.07) from 3M to 10Y. Each point has a white halo border. Lines have smooth tension=0.3 curves.
-      Legibility verdict: PASS — all text readable against the warm off-white background; no light-on-light issues.
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: title 'line-yield-curve · javascript · chartjs · anyplot.ai' in dark ink, italic inkSoft subtitle explaining the 3M–10Y shaded band, centered legend with three point-style ovals, y-axis 'Yield (%)' with 0.00%–5.00% ticks, x-axis 'Maturity' with 11 log-spaced ticks 1M–30Y. Subtle gridlines on both axes: horizontal at every 0.5% and vertical at each of the 11 maturities, crossing the shaded band. All text readable.
+      Data: brand green #009E73 (Jan 2021 — Normal), lavender #C475FD (Jan 2022 — Flattening), matte red #AE3030 (Nov 2022 — Inverted); 11 haloed points each on smoothed lines; faint red band from 3M to 10Y behind the curves.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface.
-      Chrome: Title in light cream text — clearly readable against the dark background. Subtitle in secondary light ink — readable. Legend labels in light ink — readable. Axis titles and tick labels in appropriate light tones via inkSoft — all fully legible. No dark-on-dark failures observed.
-      Data: Data colors are identical to the light render — brand green (#009E73), lavender (#C475FD), matte red (#AE3030) all present and unchanged. Inversion zone shaded in slightly more prominent rgba(174,48,48,0.16) — appropriate for the darker surface. Point halos now use the dark pageBg, providing the same visual separation.
-      Legibility verdict: PASS — all text is light-on-dark and readable; no dark-on-dark issues; brand green #009E73 is clearly visible on the dark background.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, legend, axis titles and ticks all light ink on dark; grid subtle on both axes, vertical lines at every maturity crossing the maroon band; no dark-on-dark text.
+      Data: identical colors to the light render; point halos switch to the dark page color; the inversion band uses a stronger alpha and reads as a dark maroon panel, curves stay clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -65,84 +65,81 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22, subtitle 14, legend 16,
-          axis titles 16, ticks 14). Well-proportioned, readable in both themes, no
-          overflow.
+        comment: All font sizes set explicitly (title 22, subtitle 14 italic, legend
+          16, axis titles 16, ticks 14 CSS px at 2x); every label readable in both
+          themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements. Legend, subtitle, and curves
-          occupy distinct regions.
+        comment: No text collisions; the 1M-3M near-coincidence of the green and lavender
+          curves is data, and both stay visible
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 11 data points per curve — sparse; pointRadius 6 and borderWidth
-          3/3.5 are well-adapted. All markers clearly visible in both themes.
+        comment: 11 points per curve drawn at radius 6 with a page-colored halo and
+          3-3.5 px lines; legend point-style ovals match the line colors in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green, lavender, and matte red are CVD-safe Imprint palette members
-          with sufficient luminance contrast. Halo borders add extra separation.
+        comment: Green, lavender and matte red differ in hue and lightness; legend
+          labels name each curve, so color is not the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Good margins, balanced legend at top, plot area
-          well-utilised. No cut-off content in either render.
+        comment: Landscape 3200x1800; title about 29% of width, nothing overflows,
+          plot area fills the canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Yield (%)'' with units. X-axis: ''Maturity'' with maturity
-          tick labels as units. Both descriptive.'
+        comment: '''Yield (%)'' carries its unit; ''Maturity'' is labeled by the maturity
+          ticks themselves'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series palette[0]=#009E73. Second palette[1]=#C475FD. Third
-          palette[4]=#AE3030 — valid semantic exception (inverted/recessionary curve).
-          Backgrounds correct (#FAF8F1 light / #1A1A17 dark). Data colors identical
-          between themes. Chrome theme-adaptive.'
+        comment: 'First series #009E73, second #C475FD; Nov 2022 ''Inverted'' uses
+          matte red #AE3030 as the semantic recession/bad anchor; backgrounds #FAF8F1
+          / #1A1A17, chrome theme-correct'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: semantic color assignment, subtitle annotation, custom
-          inversion zone plugin, halo markers. Clearly above defaults. Not publication-ready
-          due to visible chart border box on all four sides.'
+        comment: 'Beyond baseline: a medium-weight title over an italic inkSoft subtitle
+          that explains the shaded band, a deliberate three-level type hierarchy'
       - id: DE-02
         name: Visual Refinement
+        score: 2
+        max: 6
+        passed: true
+        comment: Page-colored point halos are a refinement, but vertical gridlines
+          at all 11 maturities on a line chart break the style guide's y-only grid
+          rule and cross the inversion band (defect line)
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Some refinement: grid via t.grid token is subtle, legend uses oval
-          point styles not boxes, tension=0.3 smooth curves. Both x and y grid lines
-          present — financial convention prefers y-axis only.'
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: 'Clear narrative: normal→flattening→inverted progression. Red shading
-          on inversion zone, matte red for inverted curve, subtitle explaining the
-          band. Viewer immediately sees the inversion. Missing a direct annotation
-          at the inversion peak for full marks.'
+        comment: 'Chose its own focal hierarchy beyond the Notes: semantic red for
+          the inverted curve, legend labels that name each shape (Normal / Flattening
+          / Inverted), and a subtitle that ties the band to the Nov 2022 curve'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -150,30 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-line yield curve with logarithmic x-axis for proper
-          maturity spacing.
+        comment: Multi-curve yield curve line chart on a log maturity axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple curves (3), maturity tick labels, legend with dates, inversion
-          zone highlighted via shading — all spec features present.
+        comment: 'All Notes and ''A good version shows'' bullets met: points at maturity_years
+          on a log axis (C1), maturity tick labels at their positions (C2), three
+          dated curves with legend (C3), shaded 3M-10Y inversion band behind the curves
+          (C4), percent yield axis spanning all curves (C5)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Maturity on x-axis (log scale, maturity_years values with maturity
-          label ticks), yield% on y-axis. All 11 maturities × 3 curves visible.
+        passed: false
+        comment: Points at their maturity_years and yields, but tension 0.3 splines
+          swing slightly past the data between neighbours (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-yield-curve · javascript · chartjs · anyplot.ai' is exact
-          format. Legend labels 'Jan 2021 — Normal', 'Jan 2022 — Flattening', 'Nov
-          2022 — Inverted' are descriptive and accurate.
+        comment: Title 'line-yield-curve · javascript · chartjs · anyplot.ai' exact;
+          legend labels give each curve's date
     data_quality:
       score: 15
       max: 15
@@ -183,27 +180,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All three canonical yield curve shapes shown: normal upward-sloping
-          (Jan 2021), flattening (Jan 2022), deeply inverted (Nov 2022). Full maturity
-          spectrum from 1M to 30Y.'
+        comment: Normal, flattening and inverted curves all present, 11 maturities
+          each
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: U.S. Treasury yields with historically accurate dates. ZIRP-era 2021,
-          rate-hike signal 2022, aggressive tightening Nov 2022. Neutral financial
-          context, no controversy.
+        comment: Real U.S. Treasury yield snapshots (Jan 2021, Jan 2022, Nov 2022)
+          - neutral financial context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'All values historically accurate: 2021 near-zero (0.08–1.83%), 2022
-          flattening (0.06–2.27%), Nov 2022 inversion (3.84–4.59%) match actual Treasury
-          data for those dates.'
+        comment: 'Checked: Jan 2021 near-zero front end with 30Y about 1.8%, Nov 2022
+          3M 4.38% > 10Y 3.86% inversion - plausible for the dates; no Check values
+          in the spec'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -211,58 +206,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Constants → data → plugin → canvas → chart. Small helpers (toPoints,
-          matLabel) are necessary for Chart.js callback pattern, not over-engineering.
+        comment: 'Linear script: data, two small callbacks Chart.js needs, plugin,
+          chart'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded — fully deterministic, no RNG.
+        comment: Hard-coded data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports — Chart is a provided global. All token destructuring
-          used. No dead code.
+        comment: No imports; Chart is a global
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, idiomatic JS. Custom plugin is appropriately scoped. Comments
-          explain semantic color choices. No fake interactivity.
+        passed: false
+        comment: matLabel nearest-neighbour search (lines 25-32) replaced by the tick
+          callback's index argument (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No filesystem save — harness handles PNG/HTML output per Chart.js
-          contract. Correct API usage throughout.
+        comment: 'Mount-node contract followed, animation: false, harness writes PNG+HTML'
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert Chart.js usage: logarithmic scale type, afterBuildTicks hook,
-          scatter-mode data objects {x, y}, inline plugins array, animation: false,
-          responsive/maintainAspectRatio pattern.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Custom beforeDraw plugin using getPixelForValue() for pixel-accurate
-          zone shading is distinctive to Chart.js plugin API. afterBuildTicks for
-          custom tick injection is advanced API usage. Nearest-neighbour matLabel
-          handles Chart.js logarithmic tick floating-point drift robustly. Missing
-          only: could have used the fill plugin for area between curves.'
+        comment: 'Idiomatic Chart.js: logarithmic scale with afterBuildTicks, {x,y}
+          point data, built-in subtitle plugin, legend usePointStyle, inline plugins
+          array'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Inline beforeDraw plugin using scales.x.getPixelForValue to paint
+          a theme-aware band under the datasets - Chart.js plugin API
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-8c87d59eab
 impl_tags:
   dependencies: []
   techniques:
