@@ -23,7 +23,7 @@ CASES = REPO_ROOT / "agents" / "evals" / "fixtures" / "cases"
 def development_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """ENVIRONMENT=development and no AGENT_* overrides (CI sets ENVIRONMENT=test for the whole job)."""
     for name in list(os.environ):
-        if name.upper().startswith("AGENT_") or name.upper() == "GOOGLE_CLOUD_PROJECT":
+        if name.upper().startswith("AGENT_") or name.upper() in ("GOOGLE_CLOUD_PROJECT", "K_SERVICE"):
             monkeypatch.delenv(name)
     monkeypatch.setenv("ENVIRONMENT", "development")
     get_settings.cache_clear()

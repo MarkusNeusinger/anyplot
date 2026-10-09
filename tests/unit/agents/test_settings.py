@@ -16,7 +16,7 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
     AGENT_* values; neither may leak into the default assertions.
     """
     for name in list(os.environ):
-        if name.upper().startswith("AGENT_") or name.upper() in ("ENVIRONMENT", "GOOGLE_CLOUD_PROJECT"):
+        if name.upper().startswith("AGENT_") or name.upper() in ("ENVIRONMENT", "GOOGLE_CLOUD_PROJECT", "K_SERVICE"):
             monkeypatch.delenv(name)
     get_settings.cache_clear()
 
@@ -45,7 +45,20 @@ class TestDefaults:
         assert settings.request_deadline_s == 180
         assert settings.soft_deadline_s == 140
         assert settings.allowed_callers == []
-        assert settings.environment == "development"
+        assert settings.environment == "production"  # unset never skips the caller check
+        assert settings.is_development is False
+
+    def test_development_is_refused_on_cloud_run(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("ENVIRONMENT", "development")
+        monkeypatch.setenv("K_SERVICE", "anyplot-agents")
+
+        with pytest.raises(ValidationError, match="refused on Cloud Run"):
+            AgentSettings()
+
+    @pytest.mark.parametrize("model", ["claude-opus-5-5", "claude-sonnet-5-5", "claude-fable-5-1"])
+    def test_claude_models_without_forced_tool_use_are_refused(self, model: str) -> None:
+        with pytest.raises(ValidationError, match="not a supported Claude model"):
+            AgentSettings(model=model)
 
     def test_get_settings_is_cached(self) -> None:
         assert get_settings() is get_settings()
@@ -177,7 +190,12 @@ class TestProviderValidator:
 
 class TestDevFixture:
     def test_fixture_is_allowed_in_development(self) -> None:
-        assert AgentSettings(dev_fixture="scatter-basic-matplotlib").dev_fixture == "scatter-basic-matplotlib"
+        settings = AgentSettings(dev_fixture="scatter-basic-matplotlib", environment="development")
+        assert settings.dev_fixture == "scatter-basic-matplotlib"
+
+    def test_fixture_is_refused_when_environment_is_unset(self) -> None:
+        with pytest.raises(ValidationError, match="AGENT_DEV_FIXTURE"):
+            AgentSettings(dev_fixture="scatter-basic-matplotlib")
 
     def test_blank_fixture_is_unset(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("AGENT_DEV_FIXTURE", " ")

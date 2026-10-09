@@ -14,14 +14,24 @@ from the settings (ADK's own builds one from `GOOGLE_CLOUD_PROJECT` and
 Reasoning depth is the Claude `effort` of `AnthropicGenerateContentConfig`; ADK 2.11
 ignores `thinking_config.thinking_level` for Claude and raises when both are set.
 
+Thinking is disabled explicitly (`thinking_budget=0`, which ADK maps to
+`thinking: {type: "disabled"}`). Left unset, Claude Haiku 5.5 thinks adaptively by
+default with the display omitted, and ADK 2.11 sends such a signature-only block
+back as `redacted_thinking`, which breaks the root's call after a tool result.
+Without thinking blocks, the history-editing check of preserved thinking has
+nothing to check either, so ADK moving the session-context block between calls
+and the context filter trimming history stay harmless. Haiku 5.5 accepts disabled
+thinking at effort `high` or below, so every kind stays at `low` or `medium`.
+
 ADK 2.11 sends no response schema to Claude: `basic.py` sets
 `config.response_schema` for a tool-less agent with an `output_schema`, and
 `anthropic_llm.py` never reads it, so the adapter and reviewer would get free text.
 `VertexClaude` closes that gap with a forced tool call: when a request carries a
 response schema and no tools, it adds one tool whose input schema is the response
 schema, forces `tool_choice` to it, and turns the returned `tool_use` input back
-into the JSON text ADK's `validate_schema` parses. Forced tool use excludes extended
-thinking, which this module never enables for Claude.
+into the JSON text ADK's `validate_schema` parses. Claude Opus 5.5, Sonnet 5.5 and
+Fable 5.1 answer a forced `tool_choice` (and disabled thinking) with a 400, so the
+settings accept only the Claude models in `settings.CLAUDE_MODELS`.
 
 **Gemini** (`gemini`). `google.adk.models.google_llm.Gemini` with
 `client_kwargs={"enterprise": True, "project": ..., "location": ...}`, HTTP retries
@@ -234,7 +244,11 @@ def make_content_config(kind: ModelKind, settings: AgentSettings | None = None) 
         raise ValueError(f"unknown model kind {kind!r}")
     if settings.provider == "anthropic-vertex":
         return AnthropicGenerateContentConfig(
-            max_output_tokens=MAX_OUTPUT_TOKENS[kind], effort=CLAUDE_EFFORT[kind], labels=_labels(kind)
+            max_output_tokens=MAX_OUTPUT_TOKENS[kind],
+            effort=CLAUDE_EFFORT[kind],
+            # thinking_budget 0 is ADK's `thinking: {type: "disabled"}`; unset, Haiku 5.5 thinks.
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
+            labels=_labels(kind),
         )
     return types.GenerateContentConfig(
         max_output_tokens=MAX_OUTPUT_TOKENS[kind],
@@ -323,6 +337,7 @@ class AnthropicJudge:
         message = await self._client.messages.create(
             model=self.model,
             max_tokens=JUDGE_MAX_OUTPUT_TOKENS,
+            thinking={"type": "disabled"},
             system=rubric,
             messages=[{"role": "user", "content": text}],
             tools=[

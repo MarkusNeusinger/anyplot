@@ -43,7 +43,7 @@ Three rules hold for everything here:
 | Variable | Default | Meaning |
 |---|---|---|
 | `AGENT_PROVIDER` | `anthropic-vertex` | `anthropic-vertex` (Claude on Vertex AI) or `gemini` |
-| `AGENT_MODEL` | `claude-haiku-5-5` | Model of every agent; must start with `claude-` or `gemini-` to match the provider |
+| `AGENT_MODEL` | `claude-haiku-5-5` | Model of every agent; a `gemini-` id, or for `anthropic-vertex` a model in `CLAUDE_MODELS` (forced tool use with thinking disabled) |
 | `AGENT_JUDGE_MODEL` | `claude-haiku-5-5` | Model of the scope and dataset judge; same rule |
 | `AGENT_LOCATION` | `eu` | Vertex AI location: `eu`, `us` or `global` |
 | `AGENT_PROJECT`, else `GOOGLE_CLOUD_PROJECT` | `anyplot` | Project that serves and bills the model calls |
@@ -64,7 +64,7 @@ Three rules hold for everything here:
 | `AGENT_ALLOWED_CALLERS` | empty | Service-account emails allowed to call `/v1` outside development |
 | `AGENT_SERVICE_URLS` | empty | ID-token audiences accepted on `/v1` outside development |
 | `AGENT_DEV_FIXTURE` | unset | Development only: a fixture case id that seeds every new session |
-| `ENVIRONMENT` | `development` | Shared with the API; `local` rendering and the fixture seed need `development` |
+| `ENVIRONMENT` | `production` | Shared with the API; `local` rendering, the fixture seed and skipping the caller check need `development`, which is refused on Cloud Run |
 
 ## Run it locally
 

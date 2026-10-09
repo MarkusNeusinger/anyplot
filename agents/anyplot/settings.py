@@ -9,7 +9,7 @@ another provider, model or location.
 | Variable | Default | Meaning |
 |---|---|---|
 | `AGENT_PROVIDER` | `anthropic-vertex` | Model family of every agent and the scope judge: `anthropic-vertex` (Claude on Vertex AI) or `gemini` |
-| `AGENT_MODEL` | `claude-haiku-5-5` | Model of every agent; an exact id that matches the provider (`claude-...` or `gemini-...`) |
+| `AGENT_MODEL` | `claude-haiku-5-5` | Model of every agent; an exact id that matches the provider (`gemini-...`, or a model in `CLAUDE_MODELS`) |
 | `AGENT_JUDGE_MODEL` | `claude-haiku-5-5` | Model of the scope and dataset judge; same rule |
 | `AGENT_LOCATION` | `eu` | Vertex AI location of every model call: `eu`, `us` or `global` |
 | `AGENT_PROJECT`, else `GOOGLE_CLOUD_PROJECT` | `anyplot` | Google Cloud project that serves (and bills) the model calls |
@@ -30,7 +30,7 @@ another provider, model or location.
 | `AGENT_ALLOWED_CALLERS` | empty | Service-account emails allowed to call `/v1` (comma-separated) |
 | `AGENT_SERVICE_URLS` | empty | ID-token audiences accepted on `/v1`: the service URL and the candidate-tag URL (comma-separated) |
 | `AGENT_DEV_FIXTURE` | unset | Development only: an eval fixture case id that seeds every new session |
-| `ENVIRONMENT` | `development` | Deployment environment, shared with the API |
+| `ENVIRONMENT` | `production` | Deployment environment, shared with the API; `development` (the caller check off) is refused on Cloud Run |
 
 No `.env` file is read here: the service runs on Cloud Run environment variables only,
 and the tests stay hermetic. `adk web` is different: it walks up from the agent
@@ -62,6 +62,9 @@ development only), `fake` (unit tests) and `remote` (the phase-2 renderer split)
 
 LOCATIONS: tuple[str, ...] = ("eu", "us", "global")
 MODEL_PREFIXES: dict[str, str] = {"anthropic-vertex": "claude-", "gemini": "gemini-"}
+CLAUDE_MODELS: tuple[str, ...] = ("claude-haiku-5-5",)
+"""Claude models that accept a forced `tool_choice` with thinking disabled at effort low and
+medium (`models.VertexClaude`); Claude Opus 5.5, Sonnet 5.5 and Fable 5.1 answer both with a 400."""
 FIXTURE_PATTERN = r"^[a-z0-9][a-z0-9-]{0,79}$"
 
 
@@ -156,8 +159,12 @@ class AgentSettings(BaseSettings):
     dev_fixture: str | None = Field(default=None, pattern=FIXTURE_PATTERN)
     """Eval fixture case that seeds every new session (`AGENT_DEV_FIXTURE`); development only."""
 
-    environment: str = Field(default="development", validation_alias="ENVIRONMENT")
-    """Deployment environment (`ENVIRONMENT`, shared with the API, no prefix)."""
+    environment: str = Field(default="production", validation_alias="ENVIRONMENT")
+    """Deployment environment (`ENVIRONMENT`, shared with the API, no prefix). Unset is
+    `production`, so a missing variable never skips the caller check."""
+
+    cloud_run_service: str | None = Field(default=None, validation_alias="K_SERVICE")
+    """The Cloud Run service name (`K_SERVICE`, set by Cloud Run itself); development is refused when set."""
 
     @field_validator("model", "judge_model")
     @classmethod
@@ -230,6 +237,16 @@ class AgentSettings(BaseSettings):
                     f"{name}={value!r} does not match AGENT_PROVIDER={self.provider}: "
                     f"that provider serves model ids starting with {prefix!r}"
                 )
+            if self.provider == "anthropic-vertex" and value not in CLAUDE_MODELS:
+                raise ValueError(
+                    f"{name}={value!r} is not a supported Claude model ({', '.join(CLAUDE_MODELS)}): "
+                    "structured answers use a forced tool call with thinking disabled, which newer "
+                    "Claude models refuse with a 400"
+                )
+        if self.is_development and self.cloud_run_service:
+            raise ValueError(
+                "ENVIRONMENT=development is refused on Cloud Run (K_SERVICE is set): it would skip the caller check"
+            )
         if self.renderer == "local" and self.environment != "development":
             raise ValueError(
                 f"AGENT_RENDERER=local is allowed only when ENVIRONMENT=development, not {self.environment!r}"

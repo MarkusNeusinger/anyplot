@@ -67,7 +67,13 @@ class TestFactories:
             "adapter": "medium",
             "reviewer": "low",
         }
-        assert all(config.thinking_config is None for config in configs.values())
+        # Disabled explicitly: unset, Haiku 5.5 thinks and ADK round-trips the block malformed.
+        assert all(
+            config.thinking_config is not None
+            and config.thinking_config.thinking_budget == 0
+            and config.thinking_config.thinking_level is None
+            for config in configs.values()
+        )
 
     def test_gemini_config_thinking_safety_and_media(self) -> None:
         root = make_content_config("root", GEMINI)
