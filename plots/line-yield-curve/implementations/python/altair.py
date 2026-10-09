@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
-Library: altair 6.2.1 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-06-10
+Library: altair 6.3.0 | Python 3.13.16
+Quality: 86/100 | Updated: 2026-10-09
 """
 
 import os
@@ -78,7 +78,7 @@ inversion_shade = (
 
 inversion_label = (
     alt.Chart(pd.DataFrame({"x": [0.12], "y": [3.0], "text": ["Inversion Region"]}))
-    .mark_text(fontSize=16, align="left", fontStyle="italic", color=ANYPLOT_AMBER, fontWeight="bold")
+    .mark_text(fontSize=12, align="left", fontStyle="italic", color=ANYPLOT_AMBER, fontWeight="bold")
     .encode(x="x:Q", y="y:Q", text="text:N")
 )
 
@@ -89,7 +89,7 @@ colors = [IMPRINT_PALETTE[0], IMPRINT_PALETTE[4], IMPRINT_PALETTE[2]]  # #009E73
 # Peak annotation for the inverted curve
 peak_annotation = (
     alt.Chart(pd.DataFrame({"x": [0.5], "y": [5.52], "text": ["Peak: 5.52%"]}))
-    .mark_text(fontSize=16, align="left", dx=10, dy=-10, color=IMPRINT_PALETTE[4], fontWeight="bold")
+    .mark_text(fontSize=12, align="left", dx=10, dy=-10, color=IMPRINT_PALETTE[4], fontWeight="bold")
     .encode(x="x:Q", y="y:Q", text="text:N")
 )
 
@@ -103,6 +103,7 @@ x_axis = alt.X(
     title="Maturity (Years)",
     scale=alt.Scale(type="log", domain=[0.08, 35]),
     axis=alt.Axis(
+        grid=False,
         values=[1 / 12, 0.25, 0.5, 1, 2, 3, 5, 7, 10, 20, 30],
         labelExpr=(
             "datum.value < 0.09 ? '1M' : datum.value < 0.3 ? '3M' : datum.value < 0.6 ? '6M' : datum.value + 'Y'"
@@ -120,7 +121,7 @@ color_enc = alt.Color(
     "date:N",
     scale=alt.Scale(domain=date_order, range=colors),
     legend=alt.Legend(
-        title=None, labelFontSize=10, labelLimit=300, orient="top-right", symbolStrokeWidth=3, symbolSize=100
+        title=None, labelFontSize=10, labelLimit=300, orient="bottom-right", symbolStrokeWidth=3, symbolSize=100
     ),
     sort=date_order,
 )
@@ -160,7 +161,6 @@ chart = (
         tickColor=INK_SOFT,
         gridColor=INK,
         gridOpacity=0.12,
-        gridDash=[4, 4],
         labelColor=INK_SOFT,
         titleColor=INK,
         labelFontSize=10,
