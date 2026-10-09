@@ -1,0 +1,12 @@
+{
+  "spec_id": "bar-grouped",
+  "library": "seaborn",
+  "locale": "de",
+  "bindings": [
+    {"role": "category", "column": "Quarter"},
+    {"role": "group", "column": "Region"},
+    {"role": "value", "column": "Revenue (kEUR)"}
+  ],
+  "expected": "accepted",
+  "tags": ["categorical", "four-groups", "palette-extension", "german-locale"]
+}
