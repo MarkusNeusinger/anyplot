@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-10
@@ -87,13 +87,13 @@ plot = (
         data=inversion_df,
         mapping=aes(x="maturity_years", ymin="y_lower", ymax="y_upper"),  # noqa: F405
         fill="#AE3030",
-        alpha=0.18,
+        alpha=0.25,
     )
     # Yield curve lines with interactive tooltips
     + geom_line(  # noqa: F405
         data=df,
         mapping=aes(x="maturity_years", y="yield_pct", color="date"),  # noqa: F405
-        size=1.0,
+        size=1.4,
         tooltips=layer_tooltips()  # noqa: F405
         .line("@date")
         .line("Maturity: @maturity")
