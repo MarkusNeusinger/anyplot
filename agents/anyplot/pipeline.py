@@ -16,7 +16,8 @@ two attempts:
    theme the call asks for (`PipelineArgs.theme`, light by default) through the
    render backend, and the host gates (`render/gates.py`) on exactly that theme;
 4. **review**: at most once, on the first render that passes the host gates on the
-   exact canvas; the reviewer agent sees the rendered theme's PNG;
+   exact canvas; the reviewer agent sees the rendered theme's PNG, so each of its
+   image defects is filed under that theme, whatever theme the reviewer named;
 5. **repair**: when attempt 1 left feedback (failed edits, validator findings, a
    failed render, gate defects, reviewer defects), attempt 2 gets it, with a full
    file allowed.
@@ -27,7 +28,10 @@ The other theme of a finished version is rendered later by the theme toggle
 Bounds: two adapter calls, one reviewer call, two renders of one theme. The budget
 is checked before every model call, the soft deadline (`AGENT_SOFT_DEADLINE_S`)
 before the second attempt and for every render timeout; the request deadline is
-`abort_signal` on the run.
+`abort_signal` on the run. A render waits in the `run` lane of the render slot
+(`render/serial.py`), ahead of every waiting theme toggle, so it waits for at most
+the render in progress; its clamped timeout starts when it runs. The exported
+`plot.py` names the rendered theme in its run line.
 
 Every path that is not cancelled yields exactly one `Event(output=PlotResult)` as a
 JSON dict. `ok` means the shipped render passed the host gates on the exact canvas
@@ -77,6 +81,7 @@ from .schemas import (
     AdaptPlan,
     AdaptRequest,
     Binding,
+    Defect,
     FailureReason,
     PipelineArgs,
     PlotResult,
@@ -336,6 +341,7 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
                 spec_id=snapshot.spec_id,
                 library=run.view.library,
                 library_version=snapshot.library_version,
+                theme=run.theme,
             ),
             data_csv=run.dataset.csv,
             render_id=render_id,
@@ -568,8 +574,13 @@ async def _attempts(
         candidate.reviewed_ok = verdict.ok
         if verdict.ok:
             return
-        run.review_lines = [defect.as_line() for defect in verdict.defects]
+        run.review_lines = [_on_theme(defect, run.theme).as_line() for defect in verdict.defects]
         feedback = list(run.review_lines)
+
+
+def _on_theme(defect: Defect, theme: Theme) -> Defect:
+    """The reviewer saw one theme: an image defect names it, even when the reviewer wrote `both` or the other one."""
+    return defect if defect.theme in ("code", theme) else defect.model_copy(update={"theme": theme})
 
 
 def _note(line: str) -> str:

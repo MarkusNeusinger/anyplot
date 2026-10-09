@@ -21,6 +21,7 @@ from .models import JudgeClient, make_judge_client
 from .plugins.ledger import UsageBook
 from .render import make_backend
 from .render.contract import RenderBackend
+from .render.serial import SerialRenderer
 from .render.store import RenderStore
 from .schemas import AdaptPlan, ArtifactName, PlotResult, Theme, artifact_names
 from .settings import get_settings
@@ -32,10 +33,21 @@ PADDED_REASON = "canvas_padded"
 
 @dataclass(frozen=True)
 class ThemeRender:
-    """The host-gate outcome of one rendered theme of a version: `needs_attention` when its PNG was padded."""
+    """The host-gate outcome of one theme of a version.
 
-    status: Literal["ok", "needs_attention"]
+    `ok`, or `needs_attention` when its PNG was padded; `failed` (reason `render`) is
+    a theme toggle whose render failed the host gates `tries` times: the same code
+    and data fail the same way, so the toggle retries it only while `tries` is below
+    `MAX_THEME_TRIES`. A failed theme holds no PNG and is not an artifact.
+    """
+
+    status: Literal["ok", "needs_attention", "failed"]
     reason: str | None = None
+    tries: int = 1
+
+    @property
+    def rendered(self) -> bool:
+        return self.status != "failed"
 
 
 @dataclass
@@ -57,11 +69,11 @@ class CodeVersion:
     theme: Theme = "light"
     """The theme the run rendered and the reviewer saw."""
     themes: dict[Theme, ThemeRender] = field(default_factory=dict)
-    """Every theme whose PNG the version's render holds, with its gate outcome."""
+    """Every theme rendered for the version, with its gate outcome; a rendered one has its PNG in the render."""
 
     def artifacts(self) -> list[ArtifactName]:
         """The version's artifacts: the PNG of every rendered theme, `plot.py` and `data.csv`."""
-        return artifact_names(self.themes or [self.theme])
+        return artifact_names([theme for theme, record in self.themes.items() if record.rendered] or [self.theme])
 
 
 class VersionStore:
@@ -112,14 +124,15 @@ class Services:
     usage: UsageBook = field(default_factory=UsageBook)
     backend_factory: Callable[[], RenderBackend] = field(default=lambda: make_backend(get_settings()))
     judge_factory: Callable[[], JudgeClient] = field(default=lambda: make_judge_client(get_settings()))
-    _backend: RenderBackend | None = None
+    _backend: SerialRenderer | None = None
     _judge: JudgeClient | None = None
     extras: dict[str, Any] = field(default_factory=dict)
 
     @property
-    def backend(self) -> RenderBackend:
+    def backend(self) -> SerialRenderer:
+        """The factory's backend behind the instance's one render semaphore, so every render is serial."""
         if self._backend is None:
-            self._backend = self.backend_factory()
+            self._backend = SerialRenderer(self.backend_factory(), concurrency=get_settings().render_concurrency)
         return self._backend
 
     @property

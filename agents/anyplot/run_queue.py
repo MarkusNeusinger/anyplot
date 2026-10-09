@@ -13,7 +13,14 @@ waiting entries (10 at the defaults): a new entry that would stand at a position
 it would wait longer than the maximum, so `submit` refuses it with `QueueFull`, which
 the route answers as `503 capacity`. An entry that can start at once never waits and
 is accepted even when `capacity` is 0. An entry that waited `AGENT_QUEUE_MAX_WAIT_S`
-leaves with `QueueTimeout`, which the stream ends as `error{code:"capacity"}`.
+leaves with `QueueTimeout`, which the stream ends as `error{code:"capacity"}`; an
+entry whose turn comes at that very moment starts instead.
+
+The capacity is the owner's formula (2026-10-09) and assumes that runs end within the
+60-second rate window. A run that takes longer holds the only slot past the window,
+so every later start slips by the difference: at one run in flight, ten accepted
+entries and 90-second runs, the last four wait the full maximum and leave with
+`capacity`. Admission therefore promises a place, not a start.
 
 **Lanes.** An entry carries a lane: `premium` entries go before every `normal` entry,
 first come first served within a lane. Nothing sets `premium` yet; it is the lane for
@@ -175,7 +182,7 @@ class RunQueue:
         return QueuePosition(position=self._waiting.index(ticket) + 1, waiting=len(self._waiting))
 
     def pump(self) -> None:
-        """Expire entries past the maximum wait and start every entry the limits allow."""
+        """Start every entry the limits allow, then expire the waiting ones past the maximum wait."""
         self._pump(self._clock())
 
     def withdraw(self, ticket: Ticket) -> bool:
@@ -253,10 +260,10 @@ class RunQueue:
         return len(self._running) < self.concurrency and len(self._starts) < self.per_minute
 
     def _pump(self, now: float) -> None:
-        expired = [entry for entry in self._waiting if now - entry.enqueued_at >= self.max_wait_s]
-        for entry in expired:
-            self._waiting.remove(entry)
-            entry.state = "expired"
+        # An entry past its maximum wait never starts, however late the pump that finds
+        # it; one whose turn comes at the very moment its wait runs out starts rather
+        # than leaving with `capacity`. So: expire the overdue, start, expire the due.
+        expired = self._expire(lambda waited: waited > self.max_wait_s, now)
         started: list[Ticket] = []
         while self._waiting and self._can_start(now):
             entry = self._waiting.pop(0)
@@ -264,8 +271,16 @@ class RunQueue:
             self._running.append(entry)
             self._starts.append(now)
             started.append(entry)
+        expired += self._expire(lambda waited: waited >= self.max_wait_s, now)
         if expired or started:
             self._wake([*expired, *started, *self._waiting])
+
+    def _expire(self, past: Callable[[float], bool], now: float) -> list[Ticket]:
+        expired = [entry for entry in self._waiting if past(now - entry.enqueued_at)]
+        for entry in expired:
+            self._waiting.remove(entry)
+            entry.state = "expired"
+        return expired
 
     @staticmethod
     def _wake(tickets: Iterable[Ticket]) -> None:

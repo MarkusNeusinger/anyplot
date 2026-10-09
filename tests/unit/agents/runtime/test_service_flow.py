@@ -299,7 +299,8 @@ async def test_reviewer_rejection_gets_one_repair_and_ships_needs_attention(
     plot = next(data for name, data in events if name == "plot")
     assert plot["status"] == "needs_attention"
     assert plot["attempts"] == 2
-    assert plot["residual_defects"][0].startswith("VQ-03 (both): 24 sparse markers")  # the reviewer's own line
+    # The reviewer's own line, filed under the one theme it saw although it wrote "both".
+    assert plot["residual_defects"][0].startswith("VQ-03 (light): 24 sparse markers")
 
 
 async def test_failed_render_twice_is_a_failed_result(
@@ -364,6 +365,23 @@ async def test_a_dark_plot_renders_and_reviews_the_dark_theme_only(
     assert "Dark render (plot-dark.png):" in texts and "Light render (plot-light.png):" not in texts
     light = await client.get(f"/v1/sessions/{sid}/artifacts/plot-light.png", headers=HEADERS)
     assert light.status_code == 404
+    code = await client.get(f"/v1/sessions/{sid}/artifacts/plot.py", headers=HEADERS)
+    assert code.text.splitlines()[1] == "# run: ANYPLOT_THEME=dark python plot.py"
+
+
+async def test_reviewer_defects_name_the_rendered_theme(client: httpx.AsyncClient, swap_models) -> None:
+    """The reviewer saw the dark render only: a line it filed under light or both names dark; code stays code."""
+    defect = VERDICT_REJECT["defects"][0]
+    verdict = {"ok": False, "defects": [{**defect, "theme": "light"}, {**defect, "id": "DQ-03", "theme": "code"}]}
+    script = default_script(verdict=verdict, plans=[SCATTER_PLAN, {"edits": [], "changes": []}])
+    swap_models("gemini", {**script, "root": list(DARK_SCRIPT_ROOT)})
+    sid = await open_session(client)
+
+    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "a dark plot"})
+
+    plot = next(data for name, data in parse_sse(response.text) if name == "plot")
+    assert plot["artifacts"] == ["plot-dark.png", "plot.py", "data.csv"]
+    assert [line.split(":")[0] for line in plot["residual_defects"]] == ["VQ-03 (dark)", "DQ-03 (code)"]
 
 
 async def test_the_session_block_names_the_latest_theme(client: httpx.AsyncClient, swap_models) -> None:
@@ -437,7 +455,7 @@ async def test_theme_toggle_pads_an_off_canvas_theme(
         assert png.status_code == 200 and size_of(png.content) == (3200, 1800), theme
 
 
-async def test_theme_toggle_reports_a_failed_render_and_stores_nothing(
+async def test_theme_toggle_reports_a_failed_render_and_retries_it_once(
     client: httpx.AsyncClient, swap_models, backend: FakeBackend
 ) -> None:
     swap_models("gemini", default_script())
@@ -455,8 +473,30 @@ async def test_theme_toggle_reports_a_failed_render_and_stores_nothing(
     }
     assert (await client.get(f"/v1/sessions/{sid}/artifacts/plot-dark.png", headers=HEADERS)).status_code == 404
     backend.script = None
-    retried = await render_theme(client, sid, "dark")  # a failure is not recorded, so it is retried
+    retried = await render_theme(client, sid, "dark")  # one retry: a timeout can pass the second time
     assert retried.json()["status"] == "ok" and len(backend.jobs) == 3
+
+
+async def test_theme_toggle_stops_rendering_a_theme_that_failed_twice(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+    await create_plot(client, sid)
+    backend.script = lambda job, theme: FakeOutcome(exit_code=1, stderr_tail="KeyError: 'Exam Score'\n")
+
+    answers = [(await render_theme(client, sid, "dark")).json() for _ in range(5)]
+
+    assert len(backend.jobs) == 3  # the run's render plus two toggle renders; the rest come from the record
+    assert all(answer == answers[0] for answer in answers)
+    assert answers[0] == {
+        "status": "failed",
+        "reason": "render",
+        "artifacts": ["plot-light.png", "plot.py", "data.csv"],
+    }
+    bundle = (await client.get(f"/v1/sessions/{sid}/bundle", headers=HEADERS)).json()
+    assert bundle["versions"][0]["themes"]["dark"] == {"status": "failed", "reason": "render"}
+    assert set(bundle["versions"][0]["images"]) == {"light"}
 
 
 async def test_theme_toggle_reports_a_backend_that_cannot_run(
@@ -471,13 +511,10 @@ async def test_theme_toggle_reports_a_backend_that_cannot_run(
 
     backend.script = unavailable
 
-    response = await render_theme(client, sid, "dark")
+    answers = [(await render_theme(client, sid, "dark")).json() for _ in range(3)]
 
-    assert response.json() == {
-        "status": "failed",
-        "reason": "error",
-        "artifacts": ["plot-light.png", "plot.py", "data.csv"],
-    }
+    assert answers[0] == {"status": "failed", "reason": "error", "artifacts": ["plot-light.png", "plot.py", "data.csv"]}
+    assert len(backend.jobs) == 4  # an `error` is not recorded: every ask tries the renderer again
 
 
 async def test_theme_toggle_is_refused_while_the_session_has_a_run(

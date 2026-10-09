@@ -10,7 +10,7 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 | `status` | `step`, `attempt` | the pipeline's content-free `custom_metadata` progress events |
 | `message` | `text` | a final, non-partial text response authored by the root (`anyplot`) |
 | `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects` | the pipeline's `PlotResult` output event |
-| `refusal` | `code`, `text` | the request ledger's refusal (scope guard or budget), in place of the message |
+| `refusal` | `code`, `text` | the request ledger's refusal (scope guard or budget), in place of the message; a user already over the daily budget gets it right after `ready`, without waiting in the queue |
 | `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when the run waited the queue's maximum), `deadline` or `internal` |
 | `done` | `llm_calls`, `tokens` | the end of every run, always last |
 
@@ -159,13 +159,17 @@ class Translator:
                 data[key] = [line for line in lines if line]
         return data
 
+    def refusal(self) -> list[str]:
+        """The ledger's refusal as the closing event, once; nothing without a refusal."""
+        if self.ledger.refusal is None or self.closing_sent:
+            return []
+        self.closing_sent = True
+        code, refusal_text = self.ledger.refusal
+        return [sse("refusal", {"code": code, "text": refusal_text})]
+
     def _reply(self, text: str) -> list[str]:
         if self.ledger.refusal is not None:
-            if self.closing_sent:
-                return []
-            self.closing_sent = True
-            code, refusal_text = self.ledger.refusal
-            return [sse("refusal", {"code": code, "text": refusal_text})]
+            return self.refusal()
         if self.ledger.error is not None:
             return self.error(self.ledger.error)
         clean = sanitize(text, spec_id=self.spec_id)

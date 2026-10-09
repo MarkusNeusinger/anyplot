@@ -172,6 +172,41 @@ class TestMaxWait:
         queue.pump()
         assert b.state == "expired" and queue.waiting_count == 0
 
+    def test_an_entry_whose_turn_comes_as_its_wait_runs_out_starts(self, clock: Clock) -> None:
+        """The last of a full queue at instant runs: its start and its expiry fall on the same pump."""
+        queue = make(clock, per_minute=1, max_wait_s=600)
+        running = queue.submit("r", "s-r")
+        entries = [queue.submit(f"u{index}", f"s-u{index}") for index in range(1, 11)]
+
+        queue.release(running)
+        for entry in entries[:-1]:
+            clock.advance(60)
+            queue.pump()
+            assert entry.running
+            queue.release(entry)
+        clock.advance(60)  # t = 600: the window opens just as the last entry waited the maximum
+        queue.pump()
+
+        assert entries[-1].running and queue.waiting_count == 0
+
+    def test_runs_longer_than_the_window_push_accepted_entries_past_the_maximum(self, clock: Clock) -> None:
+        """The owner's capacity formula assumes runs within 60 s: admission promises a place, not a start."""
+        queue = make(clock, per_minute=1, max_wait_s=600)
+        running = queue.submit("r", "s-r")
+        entries = [queue.submit(f"u{index}", f"s-u{index}") for index in range(1, 11)]
+
+        current = running
+        while True:
+            clock.advance(90)  # every run takes 90 s
+            queue.release(current)
+            started = [entry for entry in entries if entry.running]
+            if not started:
+                break
+            current = started[0]
+
+        assert [entry.state for entry in entries].count("done") == 6
+        assert [entry.state for entry in entries].count("expired") == 4
+
     async def test_the_waiter_ends_with_queue_timeout(self, clock: Clock) -> None:
         queue = make(clock, max_wait_s=600)
         queue.submit("a", "s-a")

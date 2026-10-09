@@ -2,7 +2,10 @@
 
 The runtime's queue runs at the production defaults (one run in flight, one start a
 minute, a 600-second maximum wait) on a fake clock, so the tests advance time instead
-of sleeping. A gated fake renderer holds a run in flight until the test opens the gate.
+of sleeping. A gated fake renderer holds a run or a theme toggle in flight until the
+test opens the gate. The theme toggle's place next to the queue (the registry, the
+render slot) and the checks before a turn enters the queue (budget, dataset) are here
+too.
 """
 
 import asyncio
@@ -17,11 +20,13 @@ from agents.anyplot.render.backends.fake import FakeBackend
 from agents.anyplot.render.contract import RenderJob, RenderResult
 from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.services import Services
+from agents.anyplot.session_state import read_session
+from agents.anyplot.settings import get_settings
 from agents.main import Runtime, app, get_runtime
 
 from .fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK
 from .test_run_queue import Clock
-from .test_service_flow import HEADERS, USER, create_plot, headers_for, open_session
+from .test_service_flow import HEADERS, USER, create_plot, headers_for, open_session, render_theme
 
 
 OTHER = "adm_fedcba9876543210"
@@ -200,27 +205,135 @@ async def test_a_client_gone_while_queued_leaves_the_queue(client: httpx.AsyncCl
 
 
 async def test_queued_time_does_not_count_toward_the_deadline(
-    client: httpx.AsyncClient, runtime: Runtime, clock: Clock, backend: GatedBackend, swap_models
+    client: httpx.AsyncClient,
+    runtime: Runtime,
+    clock: Clock,
+    backend: GatedBackend,
+    swap_models,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """An entry that waited far longer than the request deadline still runs to a plot."""
+    """The deadline timer is armed when the run leaves the queue, never while it waits.
+
+    The timer runs on the loop's real clock, so the test watches `call_later` for a
+    delay of `AGENT_REQUEST_DEADLINE_S` and notes the queue clock when it is armed.
+    """
     backend.gate.set()
     swap_models("gemini", two_runs())
     sid = await open_session(client)
     queue = runtime.run_queue()
     blocker = queue.submit("adm_running", "s-running")
+    loop = asyncio.get_running_loop()
+    call_later = loop.call_later
+    deadline_s = get_settings().request_deadline_s
+    armed: list[float] = []
+
+    def watch(delay: float, callback: Callable[..., object], *args: Any, **kwargs: Any) -> asyncio.TimerHandle:
+        if delay == deadline_s:
+            armed.append(clock())
+        return call_later(delay, callback, *args, **kwargs)
+
+    monkeypatch.setattr(loop, "call_later", watch)
     waiting = asyncio.create_task(create_plot(client, sid))
     await until(lambda: queue.waiting_count == 1, "the run to queue")
+    assert armed == []  # the stream is open and waiting, and no deadline runs yet
 
     clock.advance(500)  # past the 180-second request deadline, inside the 600-second wait
     queue.release(blocker)
     events = await asyncio.wait_for(waiting, 10)
 
+    assert armed == [clock()]  # armed once, when the run started after the wait
     assert next(data for name, data in events if name == "plot")["status"] == "ok"
     assert "error" not in [name for name, _ in events]
 
 
+async def test_a_toggle_in_flight_and_a_turn_refuse_each_other(
+    client: httpx.AsyncClient, runtime: Runtime, backend: GatedBackend, swap_models
+) -> None:
+    backend.gate.set()
+    swap_models("gemini", two_runs())
+    sid = await open_session(client)
+    other = await open_session(client)
+    await create_plot(client, sid)
+    backend.gate.clear()
+    backend.entered.clear()
+    toggle = asyncio.create_task(render_theme(client, sid, "dark"))
+    await asyncio.wait_for(backend.entered.wait(), 5)
+
+    same_session = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "hi"})
+    other_session = await client.post(f"/v1/sessions/{other}/messages", headers=HEADERS, json={"action": "create_plot"})
+    second_toggle = await render_theme(client, sid, "dark")
+    for refused in (same_session, other_session, second_toggle):
+        assert (refused.status_code, refused.json()) == (409, {"detail": "run_active"})
+
+    backend.gate.set()
+    response = await asyncio.wait_for(toggle, 5)
+
+    assert response.json()["status"] == "ok" and runtime.active == {}
+    assert [job.themes for job in backend.jobs] == [("light",), ("dark",)]  # the duplicate never rendered
+
+
+async def test_a_toggle_gives_up_on_a_busy_render_slot(
+    client: httpx.AsyncClient,
+    runtime: Runtime,
+    services: Services,
+    backend: GatedBackend,
+    swap_models,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    backend.gate.set()
+    swap_models("gemini", two_runs())
+    sid = await open_session(client)
+    await create_plot(client, sid)
+    monkeypatch.setattr("agents.anyplot.theme_render.slot_wait_s", lambda settings: 0.05)
+    slots = services.backend.slots
+    await slots.acquire("run")  # a pipeline render holds the only slot
+
+    busy = await render_theme(client, sid, "dark")
+
+    assert (busy.status_code, busy.json()) == (503, {"detail": "capacity"})
+    assert runtime.active == {} and slots.waiting == 0
+    slots.release()
+    assert (await render_theme(client, sid, "dark")).json()["status"] == "ok"
+
+
+async def test_a_user_over_the_daily_budget_is_refused_without_a_queue_place(
+    client: httpx.AsyncClient, runtime: Runtime, services: Services, swap_models
+) -> None:
+    fake = swap_models("gemini", two_runs())
+    sid = await open_session(client)
+    services.usage.add_tokens(USER, get_settings().daily_token_budget)
+    queue = runtime.run_queue()
+
+    events = await create_plot(client, sid)
+
+    assert [name for name, _ in events] == ["ready", "refusal", "done"]
+    assert events[1][1]["code"] == "budget" and events[2][1] == {"llm_calls": 0, "tokens": 0}
+    assert fake.requests == [] and runtime.active == {}
+    assert queue.submit("adm_other", "s-other").running  # the minute's one start was not spent
+
+
+async def test_queueing_counts_as_use_of_the_dataset(
+    client: httpx.AsyncClient, runtime: Runtime, services: Services
+) -> None:
+    sid = await open_session(client)
+    view = read_session((await runtime.session(USER, sid)).state)
+    assert view is not None and view.dataset_id
+    stored = services.datasets.get(view.dataset_id, sid)
+    assert stored is not None
+    stored.last_used_at -= 10 * 3600  # idle for hours before the turn
+    queue = runtime.run_queue()
+    queue.submit("adm_running", "s-running")
+    waiting = asyncio.create_task(create_plot(client, sid))
+    await until(lambda: queue.waiting_count == 1, "the run to queue")
+
+    services.datasets.sweep(3600)
+
+    assert services.datasets.get(view.dataset_id, sid) is not None
+    await client.post(f"/v1/sessions/{sid}/cancel", headers=HEADERS)
+    await asyncio.wait_for(waiting, 5)
+
+
 async def test_a_queued_entry_is_stale_only_after_the_maximum_wait(runtime: Runtime, clock: Clock) -> None:
-    from agents.anyplot.settings import get_settings
     from agents.main import STALE_RUN_MARGIN_S, ActiveRun
 
     queue = runtime.run_queue()

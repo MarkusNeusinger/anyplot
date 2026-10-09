@@ -16,6 +16,8 @@ def make_backend(settings: AgentSettings) -> RenderBackend:
 
     The settings already refuse `fake` and `local` outside their environments; the
     checks here are the second line for a settings object built without validation.
+    The backend holds no semaphore: `Services.backend` wraps it in `SerialRenderer`
+    (`serial.py`), the one place `AGENT_RENDER_CONCURRENCY` is enforced.
     """
     runtime = PythonRuntime(cpu_seconds=settings.render_timeout_s)
     if settings.renderer == "fake":
@@ -25,12 +27,7 @@ def make_backend(settings: AgentSettings) -> RenderBackend:
             )
         return FakeBackend()
     if settings.renderer == "local":
-        return LocalDockerBackend(
-            image=settings.render_image,
-            runtime=runtime,
-            environment=settings.environment,
-            concurrency=settings.render_concurrency,
-        )
+        return LocalDockerBackend(image=settings.render_image, runtime=runtime, environment=settings.environment)
     if settings.renderer == "sandbox":
-        return SandboxBackend(runtime=runtime, concurrency=settings.render_concurrency)
+        return SandboxBackend(runtime=runtime)
     raise RendererUnavailable("AGENT_RENDERER=remote is the phase-2 renderer split and is not built yet")

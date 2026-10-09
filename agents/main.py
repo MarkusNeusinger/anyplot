@@ -16,7 +16,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles}` | `409 run_active`, `422 invalid` |
 | `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` | SSE `anyplot/1` | `413 too_long`, `409 run_active`, `503 capacity` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
-| `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` |
+| `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
 | `GET /v1/sessions/{sid}/artifacts/{name}?v=` | | the file | `404` |
 | `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle | `404` |
 | `DELETE /v1/sessions/{sid}` | | `204` | |
@@ -32,10 +32,14 @@ answers `503 capacity` when the queue is full, otherwise the stream sends `ready
 then `status{step:"queued", position, waiting}` while the run waits, then the run.
 The request deadline and its abort start only when the run leaves the queue; a run
 that waited `AGENT_QUEUE_MAX_WAIT_S` ends with `error{code:"capacity"}`. A user with
-a queued or running run gets `409 run_active` on a second turn in any session. The
-theme toggle (`/versions/{version}/render`) renders the other theme of a finished
-version under the render semaphore but outside the queue, because it costs no
-tokens. `adk web` runs the agents without this service, so its runs bypass the queue.
+a queued or running run gets `409 run_active` on a second turn in any session. A
+user over the daily token budget gets the `budget` refusal at once, without taking
+a place in the queue. The theme toggle (`/versions/{version}/render`) renders the
+other theme of a finished version outside the queue, because it costs no tokens,
+but behind waiting pipeline renders in the render slot (`render/serial.py`); while
+it renders it holds the session's registry entry, so a user has one run or toggle
+in flight at a time. `adk web` runs the agents without this service, so its runs
+bypass the queue; its renders still go through the one render slot.
 
 Run locally with `uv run uvicorn agents.main:app --port 8001`.
 """
@@ -75,8 +79,9 @@ from agents.anyplot.data.store import StoreFull
 from agents.anyplot.dev_fixture import FixtureError, load_case
 from agents.anyplot.models import JudgeUnavailable
 from agents.anyplot.opening import Eligibility, assess, dataset_judge_input, opening_state, store_dataset
-from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution
-from agents.anyplot.policy import data_rubric, fence
+from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution, budget_allows
+from agents.anyplot.policy import data_rubric, fence, refusal
+from agents.anyplot.render.serial import RenderBusy
 from agents.anyplot.render.store import RenderStoreFull
 from agents.anyplot.run_queue import HEARTBEAT_S, QueueFull, QueueTimeout, QueueWithdrawn, RunQueue, Ticket
 from agents.anyplot.schemas import MAX_COLUMNS, Binding, Theme
@@ -152,11 +157,13 @@ STALE_RUN_MARGIN_S = 30
 
 @dataclass
 class ActiveRun:
-    """A `/messages` request from its queue entry to the end of its stream: abort signal, user, ticket.
+    """A `/messages` request from its queue entry to the end of its stream, or a theme toggle while it renders.
 
     `started` is the registration time on the queue's clock, and the start of the run
     once it left the queue; the ticket's own times decide the stale check when there
-    is one, so a run that just left a long wait is not mistaken for an old run.
+    is one, so a run that just left a long wait is not mistaken for an old run. A
+    toggle has no ticket, and its abort signal is never read: it ends within the
+    request deadline on its own (a bounded slot wait plus one render).
     """
 
     abort: asyncio.Event
@@ -180,8 +187,9 @@ class Runtime:
     """The runner, the run queue and the run registry for this process.
 
     `active` is the run registry: one entry per session with a queued or running
-    `/messages` turn, which is what `409 run_active` checks. The queue is built from the
-    settings on first use; its clock is the registry's clock too.
+    `/messages` turn or a theme toggle in flight, which is what `409 run_active`
+    checks. The queue is built from the settings on first use; its clock is the
+    registry's clock too.
     """
 
     session_service: InMemorySessionService = field(default_factory=InMemorySessionService)
@@ -599,6 +607,15 @@ async def put_bindings(
     )
 
 
+async def _refused(translator: Translator, ledger: RequestLedger) -> AsyncIterator[str]:
+    """A turn the ledger refused before it entered the queue: `ready`, the refusal, `done`."""
+    yield translator.ready()
+    for chunk in translator.refusal():
+        yield chunk
+    attribution("run", ledger, model_versions=[], kind=ledger.kind)
+    yield translator.done()
+
+
 def _error_code(exc: BaseException) -> str:
     name = type(exc).__name__
     if "RateLimit" in name or "ResourceExhausted" in name or getattr(exc, "code", None) == 429:
@@ -617,7 +634,26 @@ async def post_message(
     session = await runtime.session(user, sid)
     _active(runtime, sid, user)
     settings = get_settings()
+    services = get_services()
     view = read_session(session.state)
+    ledger = RequestLedger(
+        request_id=rid,
+        user_id=user,
+        session_id=sid,
+        kind="action" if body.action else "text",
+        lang=view.lang if view else "en",
+    )
+    translator = Translator(ledger, run_id=secrets.token_hex(8), spec_id=view.spec_id if view else None)
+    if not budget_allows(ledger, services.usage, settings):
+        # The refusal the root would send after the wait, sent now: a user over the daily
+        # budget neither takes a place in the queue nor spends the minute's start.
+        ledger.refuse("budget", refusal("budget", ledger.lang))
+        attribution("budget_halt", ledger, agent="run_queue")
+        return StreamingResponse(
+            _refused(translator, ledger),
+            media_type="text/event-stream",
+            headers={**_NO_STORE, "X-Accel-Buffering": "no"},
+        )
     queue = runtime.run_queue()
     try:
         ticket = queue.submit(user, sid)
@@ -630,16 +666,11 @@ async def post_message(
     # and an entry neither reached (a client gone before the first byte) goes stale
     # after the queue's maximum wait or the deadline.
     runtime.active[sid] = run
-    ledger = RequestLedger(
-        request_id=rid,
-        user_id=user,
-        session_id=sid,
-        kind="action" if body.action else "text",
-        lang=view.lang if view else "en",
-    )
+    if view is not None and view.dataset_id:
+        # A hit counts as use: the idle sweep must not take the dataset while the run waits.
+        services.datasets.get(view.dataset_id, sid)
     text = ACTION_MESSAGE if body.action else (body.text or "")
     message = types.Content(role="user", parts=[types.Part(text=text)])
-    translator = Translator(ledger, run_id=secrets.token_hex(8), spec_id=view.spec_id if view else None)
 
     async def stream() -> AsyncIterator[str]:
         token = CURRENT_LEDGER.set(ledger)
@@ -706,7 +737,7 @@ async def post_message(
 
 @app.post("/v1/sessions/{sid}/cancel", status_code=204, dependencies=v1_dependencies)
 async def cancel(sid: SessionId, user: User, runtime: RuntimeDep) -> Response:
-    """Abort the session's run; a run that still waits leaves the queue at once."""
+    """Abort the session's run; a run that still waits leaves the queue at once. A theme toggle runs to its end."""
     await runtime.session(user, sid)
     run = runtime.active.get(sid)
     if run is not None:
@@ -724,21 +755,29 @@ async def render_version_theme(
 ) -> JSONResponse:
     """The theme toggle: render `theme` of a finished version from its stored run form, with no model call.
 
-    Version 0 is the latest. Synchronous (a render takes seconds): it takes the render
-    semaphore but not the run queue, and it is refused while the session has a run.
+    Version 0 is the latest. Synchronous (a render takes seconds): it renders in the
+    render slot's `toggle` lane, behind waiting pipeline renders, but not through the
+    run queue. It is registered in the run registry while it renders, so it and a turn
+    refuse each other with `409 run_active` in both directions, and a user has one run
+    or toggle in flight at a time. `503 capacity` when no render slot came free in time
+    or the render store is full.
     """
     await runtime.session(user, sid)
-    _active(runtime, sid)
+    _active(runtime, sid, user)
     services = get_services()
     stored = services.versions.get(sid, version or None)
     if stored is None:
         raise AgentsError(404, "not_found")
+    toggle = ActiveRun(abort=asyncio.Event(), user=user, started=runtime.now())
+    runtime.active[sid] = toggle  # no await since the check above, so nothing slipped in between
     try:
         result = await render_theme(services, get_settings(), sid, stored, body.theme)
     except RenderGone:
         raise AgentsError(404, "not_found") from None
-    except RenderStoreFull:
+    except (RenderBusy, RenderStoreFull):
         raise AgentsError(503, "capacity") from None
+    finally:
+        runtime.finish(sid, toggle)
     return JSONResponse(result.public(), headers=_NO_STORE)
 
 

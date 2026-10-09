@@ -358,11 +358,7 @@ class TestBackends:
         docker.write_text(f'#!/bin/sh\nif [ "$1" = kill ]; then echo "$2" >> {killed}; exit 0; fi\nexec sleep 30\n')
         docker.chmod(0o755)
         backend = LocalDockerBackend(
-            image="anyplot-agents:dev",
-            runtime=PythonRuntime(),
-            environment="development",
-            concurrency=2,
-            docker=str(docker),
+            image="anyplot-agents:dev", runtime=PythonRuntime(), environment="development", docker=str(docker)
         )
 
         task = asyncio.create_task(backend.render(job(job_id="cancelme")))
@@ -385,11 +381,7 @@ class TestBackends:
         )
         docker.chmod(0o755)
         backend = LocalDockerBackend(
-            image="anyplot-agents:dev",
-            runtime=PythonRuntime(),
-            environment="development",
-            concurrency=2,
-            docker=str(docker),
+            image="anyplot-agents:dev", runtime=PythonRuntime(), environment="development", docker=str(docker)
         )
 
         tracemalloc.start()
@@ -417,11 +409,7 @@ class TestBackends:
 
     def test_local_backend_command_keeps_the_network_off(self) -> None:
         backend = LocalDockerBackend(
-            image="anyplot-agents:dev",
-            runtime=PythonRuntime(),
-            environment="development",
-            concurrency=2,
-            docker="/usr/bin/docker",
+            image="anyplot-agents:dev", runtime=PythonRuntime(), environment="development", docker="/usr/bin/docker"
         )
         argv = backend.argv(job(), "light", Path("/tmp/run"))
 
@@ -434,16 +422,14 @@ class TestBackends:
 
     def test_local_backend_refuses_production_and_missing_docker(self, monkeypatch: pytest.MonkeyPatch) -> None:
         with pytest.raises(RendererUnavailable, match="production"):
-            LocalDockerBackend(
-                image="x", runtime=PythonRuntime(), environment="production", concurrency=1, docker="/usr/bin/docker"
-            )
+            LocalDockerBackend(image="x", runtime=PythonRuntime(), environment="production", docker="/usr/bin/docker")
         monkeypatch.setattr("shutil.which", lambda name: None)
         with pytest.raises(RendererUnavailable, match="Docker"):
-            LocalDockerBackend(image="x", runtime=PythonRuntime(), environment="development", concurrency=1)
+            LocalDockerBackend(image="x", runtime=PythonRuntime(), environment="development")
 
     async def test_sandbox_backend_waits_for_spike_s(self) -> None:
         with pytest.raises(NotImplementedError, match="spike S"):
-            await SandboxBackend(runtime=PythonRuntime(), concurrency=2).render(job())
+            await SandboxBackend(runtime=PythonRuntime()).render(job())
 
     async def test_fake_backend_scripts(self) -> None:
         backend = FakeBackend(script=lambda job, theme: FakeOutcome(exit_code=1 if theme == "dark" else 0))

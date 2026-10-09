@@ -18,6 +18,16 @@ def test_header_then_the_run_form_byte_for_byte() -> None:
     )
 
 
+def test_the_run_line_names_the_rendered_theme() -> None:
+    exported = export_code(
+        RUN_FORM, spec_id="scatter-basic", library="matplotlib", library_version="3.11.2", theme="dark"
+    )
+
+    assert exported.splitlines()[1] == "# run: ANYPLOT_THEME=dark python plot.py"
+    relight = export_code(exported, spec_id="scatter-basic", library="matplotlib", library_version="3.11.2")
+    assert relight.count("# run: ") == 1 and "ANYPLOT_THEME=light" in relight
+
+
 def test_version_is_optional() -> None:
     exported = export_code(RUN_FORM, spec_id="area-basic", library="seaborn", library_version=None)
     assert exported.startswith("# Adapted by anyplot.ai from area-basic (seaborn) for your data.csv;\n")
@@ -41,15 +51,17 @@ def test_re_export_replaces_the_header() -> None:
 
 
 @pytest.mark.parametrize(
-    ("spec_id", "library", "version"),
+    ("spec_id", "library", "version", "theme"),
     [
-        ("scatter-basic\nimport os", "matplotlib", None),
-        ("Scatter", "matplotlib", None),
-        ("scatter-basic", "mat plot", None),
-        ("scatter-basic", "matplotlib", "3.11\n"),
-        ("scatter-basic", "matplotlib", ""),
+        ("scatter-basic\nimport os", "matplotlib", None, "light"),
+        ("Scatter", "matplotlib", None, "light"),
+        ("scatter-basic", "mat plot", None, "light"),
+        ("scatter-basic", "matplotlib", "3.11\n", "light"),
+        ("scatter-basic", "matplotlib", "", "light"),
+        ("scatter-basic", "matplotlib", None, "dark\nimport os"),
+        ("scatter-basic", "matplotlib", None, "sepia"),
     ],
 )
-def test_values_that_become_source_are_checked(spec_id: str, library: str, version: str | None) -> None:
+def test_values_that_become_source_are_checked(spec_id: str, library: str, version: str | None, theme: str) -> None:
     with pytest.raises(ValueError):
-        export_code(RUN_FORM, spec_id=spec_id, library=library, library_version=version)
+        export_code(RUN_FORM, spec_id=spec_id, library=library, library_version=version, theme=theme)

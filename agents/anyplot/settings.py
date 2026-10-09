@@ -125,8 +125,9 @@ class AgentSettings(BaseSettings):
     """Image the local renderer runs (`AGENT_RENDER_IMAGE`)."""
 
     render_concurrency: PositiveInt = 1
-    """Theme renders that may run at the same time (`AGENT_RENDER_CONCURRENCY`). Serial by default:
-    spikes S and S2 showed one 4 GiB instance serves one sandbox at a time safely."""
+    """Theme renders that may run at the same time (`AGENT_RENDER_CONCURRENCY`), enforced for
+    every backend by `render/serial.py`. Serial by default: spikes S and S2 showed one 4 GiB
+    instance serves one sandbox at a time safely."""
 
     run_concurrency: PositiveInt = 1
     """Pipeline runs in flight per instance (`AGENT_RUN_CONCURRENCY`); the run queue holds the rest."""
@@ -137,7 +138,8 @@ class AgentSettings(BaseSettings):
     queue_max_wait_s: PositiveInt = 600
     """Longest wait in the run queue in seconds (`AGENT_QUEUE_MAX_WAIT_S`). Queued time does not
     count toward the request deadline; the queue holds `runs_per_minute * queue_max_wait_s / 60`
-    entries and refuses more with `capacity`."""
+    entries and refuses more with `capacity`. That length assumes runs shorter than the 60 s
+    rate window: longer runs delay later starts, so admission does not guarantee a start."""
 
     max_llm_calls: PositiveInt = 12
     """LLM calls per request (`AGENT_MAX_LLM_CALLS`), the `RunConfig` cap."""
