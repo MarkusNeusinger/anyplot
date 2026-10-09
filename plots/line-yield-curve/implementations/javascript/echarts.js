@@ -126,7 +126,7 @@ chart.setOption({
       },
     },
     axisLine: { lineStyle: { color: t.inkSoft } },
-    splitLine: { lineStyle: { color: t.grid } },
+    splitLine: { show: false },
     axisTick: { lineStyle: { color: t.inkSoft } },
   },
 
@@ -195,7 +195,7 @@ chart.setOption({
           show: true,
           position: "insideBottom",
           color: t.inkSoft,
-          fontSize: 13,
+          fontSize: 14,
           fontStyle: "italic",
           formatter: "Inversion Zone",
         },
