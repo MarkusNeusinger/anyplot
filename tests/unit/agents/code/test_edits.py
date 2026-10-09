@@ -51,8 +51,51 @@ def test_no_edits_returns_the_working_form() -> None:
 
 
 def test_full_code_replaces_everything() -> None:
-    result = apply_plan(WORKING, AdaptPlan(full_code="print('x')\n"))
-    assert result == AppliedPlan("print('x')\n", [])
+    full = WORKING.replace("ax.set_ylim(0, 100)\n", "")
+    result = apply_plan(WORKING, AdaptPlan(full_code=full))
+    assert result == AppliedPlan(full, [])
+
+
+@pytest.mark.parametrize(
+    ("full", "what"),
+    [
+        (WORKING.replace('"#FAF8F1" if', '"#FF00FF" if'), "theme token PAGE_BG"),
+        (WORKING.replace('getenv("ANYPLOT_THEME", "light")', 'getenv("ANYPLOT_THEME", "dark")'), "THEME assignment"),
+        (WORKING.replace("dpi=400, facecolor=PAGE_BG", "dpi=100, facecolor=PAGE_BG"), "final savefig"),
+        ("print('x')\n", "THEME assignment"),
+    ],
+)
+def test_full_code_keeps_the_protected_regions(full: str, what: str) -> None:
+    result = apply_plan(WORKING, AdaptPlan(full_code=full))
+
+    assert result.code is None and any(what in failure for failure in result.failures)
+
+
+@pytest.mark.parametrize(
+    "rebinding",
+    [
+        'PAGE_BG = "#FF00FF"\n',
+        'PAGE_BG += "00"\n',
+        'THEME = "dark"\n',
+        "for INK in IMPRINT:\n    pass\n",
+        "def recolour(PAGE_BG=None):\n    global INK\n",
+        "from colours import magenta as PAGE_BG\n",
+        "del INK\n",
+    ],
+)
+def test_a_theme_name_bound_again_further_down_is_refused(rebinding: str) -> None:
+    result = apply(("ax.set_ylim(0, 100)\n", rebinding))
+
+    assert result.code is None
+    assert any("a second time" in failure for failure in result.failures)
+
+
+def test_full_code_rebinding_a_token_is_refused() -> None:
+    full = WORKING.replace("df = load_user_data()\n", 'df = load_user_data()\nPAGE_BG = "#FF00FF"\n')
+
+    result = apply_plan(WORKING, AdaptPlan(full_code=full))
+
+    assert result.code is None and "binds PAGE_BG a second time" in result.failures[0]
 
 
 @pytest.mark.parametrize(
