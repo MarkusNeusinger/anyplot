@@ -11,8 +11,9 @@
   the call and the `model_version`, and writes one content-free attribution line.
 * `before_tool_callback` on `plot_pipeline` counts the user's daily pipeline runs
   and refuses the call with `{"status": "error", "code": "budget"}` past
-  `AGENT_DAILY_PIPELINE_RUNS`. A second call in the same invocation is left to
-  ToolSafety, which refuses it, so it is never counted.
+  `AGENT_DAILY_PIPELINE_RUNS`. A second call in the same invocation, and a call
+  ToolSafety's own check refuses (invalid arguments, a URL), are left to ToolSafety
+  and never counted.
 
 The plugin never raises; an internal failure halts the root like an exhausted budget.
 """
@@ -32,6 +33,7 @@ from ..policy import refusal
 from ..services import get_services
 from ..settings import get_settings
 from .ledger import attribution, budget_allows, ledger_for, usage_tokens
+from .tool_safety import ToolSafetyPlugin
 
 
 logger = logging.getLogger(__name__)
@@ -106,6 +108,8 @@ class BudgetPlugin(BasePlugin):
             ledger = ledger_for(tool_context.invocation_id)
             if ledger.pipeline_calls:
                 return None  # ToolSafety refuses the second call; it is not a run
+            if ToolSafetyPlugin.check(tool.name, tool_args, tool_context.agent_name) is not None:
+                return None  # ToolSafety refuses an invalid call; it is not a run either
             usage = get_services().usage
             user = ledger.user_id or tool_context.session.user_id
             if not usage.runs_ok(user, get_settings()):

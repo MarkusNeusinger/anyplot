@@ -117,6 +117,52 @@ class TestSanitize:
         assert sanitize(short) == short
         assert sanitize("Here:\n" + long) == "Here:\n" + CODE_OMITTED
 
+    @pytest.mark.parametrize(
+        ("opening", "closing"), [("~~~python", "~~~"), ("````", "````"), ("  ```py", "```"), ("~~~~", "~~~~")]
+    )
+    def test_every_fence_style_is_omitted_when_long(self, opening: str, closing: str) -> None:
+        body = "\n".join(f"v{i} = {i}" for i in range(20))
+
+        assert sanitize(f"Here is the code:\n{opening}\n{body}\n{closing}\nand more") == (
+            f"Here is the code:\n{CODE_OMITTED}\nand more"
+        )
+
+    def test_a_block_of_exactly_ten_lines_is_kept(self) -> None:
+        block = "```\n" + "\n".join(f"v{i} = {i}" for i in range(10)) + "\n```"
+
+        assert sanitize(block) == block
+
+    def test_long_indented_code_is_omitted(self) -> None:
+        indented = "\n".join(f"    v{i} = {i}" for i in range(12))
+        tabbed = "\n".join(f"\tv{i} = {i}" for i in range(12))
+
+        assert sanitize(f"Code:\n{indented}\nend") == f"Code:\n{CODE_OMITTED}\nend"
+        assert sanitize(f"Code:\n{tabbed}") == f"Code:\n{CODE_OMITTED}"
+        assert sanitize("    short = 1\n    two = 2") == "short = 1\n    two = 2"
+
+    def test_more_link_and_tag_forms(self) -> None:
+        assert sanitize("see //evil.example/x now") == "see  now"
+        assert sanitize("write mailto:a@b.c today") == "write  today"
+        assert sanitize("hi <img src=x onerror=alert(1) ") == "hi"
+        assert sanitize("keep a // b and x < 5") == "keep a // b and x < 5"
+
+    def test_plot_changes_and_defects_are_plain_lines(self, translator: Translator) -> None:
+        output = {
+            "status": "needs_attention",
+            "attempts": 1,
+            "artifacts": [],
+            "changes": [
+                "Get the fixed file at https://evil.example/x <img src=x onerror=alert(1)> ![p](http://e/p.png)",
+                "```\n" + "\n".join("x" for _ in range(12)) + "\n```",
+            ],
+            "residual_defects": ["VQ-03 (both): small markers → s=250 (+120). Likely cause: [size](//e/x)."],
+        }
+
+        _, plot = parse(translator.translate(Event(author="plot_pipeline", output=output))[0])
+
+        assert plot["changes"] == ["Get the fixed file at"]
+        assert plot["residual_defects"] == ["VQ-03 (both): small markers → s=250 (+120). Likely cause: size."]
+
     def test_spec_tokens_only_for_the_session_spec(self) -> None:
         assert sanitize("[[spec:scatter-basic]] [[spec:other]]", spec_id="scatter-basic") == "[[spec:scatter-basic]]"
 

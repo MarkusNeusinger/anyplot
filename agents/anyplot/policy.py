@@ -19,8 +19,9 @@ breaks the build instead of silently shrinking a prompt.
 The root's refusals come from `prompts/refusals.yaml` (English and German, English as
 the fallback); the scope guard sends the same texts without any model call.
 
-`fence(tag, text)` wraps untrusted text (catalogue code, dataset profiles, user
-messages) in an XML-like block. The opening and closing tags of every fence name are
+`fence(tag, text)` wraps untrusted text (catalogue code, dataset profiles and column
+names, user messages, spec text that started as a public issue, and model-written
+notes passed on to another model) in an XML-like block. The opening and closing tags of every fence name are
 neutralised inside the text, so a cell or a code comment cannot close a fence early.
 """
 
@@ -45,7 +46,16 @@ SIZING_MARKER = "**Visual-sizing fixes"
 VQ03_MARKER = "**Guidelines for Scatter:**"
 THEME_CHECK_HEADING = "### 5c. MANDATORY: Theme-Readability Check (both renders)"
 
-FENCE_TAGS = ("catalogue_code", "plot_code", "user_data", "user_message", "last_assistant_turn", "dataset")
+FENCE_TAGS = (
+    "catalogue_code",
+    "plot_code",
+    "user_data",
+    "user_message",
+    "last_assistant_turn",
+    "dataset",
+    "spec_text",
+    "tool_notes",
+)
 _FENCE_TAG = re.compile(r"<(/?)\s*(" + "|".join(FENCE_TAGS) + r")\b", re.IGNORECASE)
 _HEADING = re.compile(r"^(#{1,6})\s")
 

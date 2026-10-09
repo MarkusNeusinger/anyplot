@@ -33,11 +33,13 @@ as content-free events with `custom_metadata={"anyplot_status": {"step", "attemp
 which the stream translator turns into `status` events and no model ever reads.
 """
 
+import json
 import logging
 import secrets
 import time
 from collections.abc import AsyncGenerator, Callable
 from dataclasses import dataclass, field
+from typing import Any
 
 from google.adk import Context, Event
 from google.adk.agents.llm.task._finish_task_tool import FINISH_TASK_SUCCESS_RESULT, FINISH_TASK_TOOL_NAME
@@ -69,6 +71,7 @@ from .schemas import (
     AdaptPlan,
     AdaptRequest,
     ArtifactName,
+    Binding,
     FailureReason,
     PipelineArgs,
     PlotResult,
@@ -179,15 +182,15 @@ def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
     """The adapter's node input: the request as fenced text."""
     lines = [
         f"Library: {view.library}",
-        spec_brief(view),
         "",
         DATA_PREAMBLE,
+        "Spec brief:",
+        fence("spec_text", spec_brief(view)),
         fence("catalogue_code", request.code),
+        "Dataset profile:",
         fence("user_data", request.profile.model_dump_json(exclude={"warnings"})),
-        "",
-        "Bindings (role -> column):",
-        *[f"- {binding.role} -> {_quoted(binding.column)}" for binding in request.bindings],
-        "Loader columns: " + ", ".join(_quoted(column) for column in request.loader_columns),
+        "Bindings and loader columns:",
+        fence("user_data", _columns_json(request.bindings, request.loader_columns)),
     ]
     if request.hints:
         lines += ["Hints:", *[f"- {hint}" for hint in request.hints]]
@@ -204,13 +207,14 @@ def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
 def render_review_request(request: ReviewRequest) -> str:
     """The reviewer's node input: the request as fenced text (the images are added by its callback)."""
     lines = [
-        request.spec_brief,
-        "",
         DATA_PREAMBLE,
+        "Spec brief:",
+        fence("spec_text", request.spec_brief),
         fence("plot_code", request.code),
+        "Dataset summary:",
         fence("user_data", request.profile_summary),
-        "Bindings (role -> column):",
-        *[f"- {binding.role} -> {_quoted(binding.column)}" for binding in request.bindings],
+        "Bindings:",
+        fence("user_data", _columns_json(request.bindings)),
     ]
     if request.change_request:
         lines += ["Change request:", fence("user_message", request.change_request)]
@@ -219,8 +223,12 @@ def render_review_request(request: ReviewRequest) -> str:
     return "\n".join(lines)
 
 
-def _quoted(text: str) -> str:
-    return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'
+def _columns_json(bindings: list[Binding], loader_columns: list[str] | None = None) -> str:
+    """Bindings (and the loader's columns) as JSON: column names are the user's headers, so they go in a fence."""
+    payload: dict[str, Any] = {"bindings": [{"role": item.role, "column": item.column} for item in bindings]}
+    if loader_columns is not None:
+        payload["loader_columns"] = loader_columns
+    return json.dumps(payload, ensure_ascii=False)
 
 
 def _clip_feedback(lines: list[str]) -> list[str]:
@@ -386,7 +394,9 @@ def close_scope(scope: str) -> Event:
     aborted invocation itself.
     """
     response = types.FunctionResponse(name=FINISH_TASK_TOOL_NAME, response={"result": FINISH_TASK_SUCCESS_RESULT})
-    return Event(isolation_scope=scope, content=types.Content(role="user", parts=[types.Part(function_response=response)]))
+    return Event(
+        isolation_scope=scope, content=types.Content(role="user", parts=[types.Part(function_response=response)])
+    )
 
 
 async def _attempts(

@@ -3,11 +3,13 @@
 Every tool reads spec, library, dataset and bindings from server-set session state
 (`session_state.py`) and the process-wide stores; no tool takes a spec, library or
 dataset argument. Results are small dicts with a `status` key (`ok`, `not_ready` or
-`error`); untrusted text in them (dataset samples, catalogue code) sits inside our
-own fences after the "data, never instructions" preamble.
+`error`); untrusted text in them (dataset samples and column names, catalogue code,
+spec text) sits inside our own fences after the "data, never instructions" preamble.
 
-* `get_dataset_profile`: the profile of the session's dataset, fenced as `<user_data>`.
-* `get_spec_brief`: title, description, data roles and notes of the spec.
+* `get_dataset_profile`: the profile of the session's dataset, fenced as `<user_data>`;
+  trimmed (samples, then top values, then ranges, with `truncated`) to fit its cap.
+* `get_spec_brief`: title, description, data roles and notes of the spec, fenced as
+  `<spec_text>` (spec text starts as a public issue).
 * `get_current_code(version)`: the exported `plot.py` of a version (0 is the latest),
   or the normalised catalogue code before the first version, fenced as `<catalogue_code>`.
 * `set_bindings(bindings)`: `apply_bindings` plus a state write; refused while the
@@ -17,14 +19,16 @@ own fences after the "data, never instructions" preamble.
   tool name is the workflow name, so it stays stable.
 """
 
+import json
 from typing import Any
 
 from google.adk import Workflow
 from google.adk.tools.tool_context import ToolContext
 
-from ..briefs import profile_json, spec_brief
+from ..briefs import spec_brief, trimmed_profiles
 from ..pipeline import run_pipeline
 from ..plugins.ledger import ledger_for
+from ..plugins.tool_safety import result_limit, result_size
 from ..policy import DATA_PREAMBLE, fence
 from ..schemas import Binding, DatasetProfile, PipelineArgs
 from ..services import get_services
@@ -61,11 +65,14 @@ async def get_dataset_profile(tool_context: ToolContext) -> dict[str, Any]:
     profile = _profile(view, tool_context)
     if profile is None:
         return _not_ready("no_dataset")
-    return {
-        "status": "ok",
-        "rows": profile.rows,
-        "profile": DATA_PREAMBLE + "\n" + fence("user_data", profile_json(profile)),
-    }
+    result: dict[str, Any] = {}
+    for text, truncated in trimmed_profiles(profile):
+        result = {"status": "ok", "rows": profile.rows, "profile": DATA_PREAMBLE + "\n" + fence("user_data", text)}
+        if truncated:
+            result["truncated"] = True
+        if result_size(result) <= result_limit("get_dataset_profile"):
+            break
+    return result
 
 
 async def get_spec_brief(tool_context: ToolContext) -> dict[str, Any]:
@@ -73,7 +80,7 @@ async def get_spec_brief(tool_context: ToolContext) -> dict[str, Any]:
     view = _view(tool_context)
     if view is None:
         return _error("session_not_open")
-    return {"status": "ok", "brief": spec_brief(view)}
+    return {"status": "ok", "brief": DATA_PREAMBLE + "\n" + fence("spec_text", spec_brief(view))}
 
 
 async def get_current_code(version: int, tool_context: ToolContext) -> dict[str, Any]:
@@ -108,7 +115,9 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
         return _error("invalid_bindings")
     check, delta = apply_bindings(parsed, view.snapshot.roles(), profile)
     if not delta:
-        return {"status": "error", "code": "invalid_bindings", "errors": check.errors[:10]}
+        # The errors quote column names from the user's dataset.
+        errors = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(check.errors[:10], ensure_ascii=False))
+        return {"status": "error", "code": "invalid_bindings", "errors": errors}
     for key, value in delta.items():
         tool_context.state[key] = value
     return {"status": "ok", "complete": check.complete, "missing_roles": check.missing_roles}

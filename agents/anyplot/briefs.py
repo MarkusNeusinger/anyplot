@@ -7,6 +7,7 @@ at most five fenced sample rows) for the root and the adapter. No ADK import.
 """
 
 import json
+from collections.abc import Iterator
 
 from .data.roles import DataRole
 from .schemas import DatasetProfile
@@ -48,3 +49,20 @@ def profile_summary(profile: DatasetProfile) -> str:
 def profile_json(profile: DatasetProfile) -> str:
     """The profile as JSON, warnings left out (they name parse details, not data)."""
     return profile.model_dump_json(exclude={"warnings"})
+
+
+def trimmed_profiles(profile: DatasetProfile) -> Iterator[tuple[str, bool]]:
+    """The profile JSON, then ever smaller versions of it, each with whether it was trimmed.
+
+    The order of what goes: the sample rows one by one, then every column's top values,
+    then the min and max. Every version keeps every column name, its type and counts,
+    so a caller with a size cap takes the first version that fits.
+    """
+    yield profile_json(profile), False
+    for keep in range(len(profile.sample) - 1, -1, -1):
+        yield profile.model_copy(update={"sample": profile.sample[:keep]}).model_dump_json(exclude={"warnings"}), True
+    bare = profile.model_copy(
+        update={"sample": [], "columns": [column.model_copy(update={"top": []}) for column in profile.columns]}
+    )
+    yield bare.model_dump_json(exclude={"warnings"}), True
+    yield bare.model_dump_json(exclude={"warnings": True, "columns": {"__all__": {"min", "max", "top"}}}), True

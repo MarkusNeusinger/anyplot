@@ -101,11 +101,17 @@ def ingest_dataset(
     return store_dataset(store, session_id, parse_dataset(text), snapshot, previous_id)
 
 
-MAX_JUDGE_SAMPLE_CHARS = 3_000
+MAX_JUDGE_SAMPLE_CHARS = 4_000
 
 
 def dataset_judge_input(parsed: ParsedDataset) -> str:
-    """What the dataset judge sees: headers, top values and sample cells, at most 3 KB, as JSON."""
+    """What the dataset judge sees, as JSON: every header, then top values and sample cells up to about 4 KB.
+
+    Every column name is always included: a header the judge never saw would reach
+    the adapter unjudged. Sample rows go first, then top values, until the text fits
+    `MAX_JUDGE_SAMPLE_CHARS`; the headers alone (50 of at most 64 characters) can
+    exceed it, and are never cut.
+    """
     profile = parsed.profile
     payload: dict[str, Any] = {
         "columns": [column.name for column in profile.columns],
@@ -119,4 +125,4 @@ def dataset_judge_input(parsed: ParsedDataset) -> str:
         else:
             payload["top_values"] = dict(list(payload["top_values"].items())[:-1])
         text = json.dumps(payload, ensure_ascii=False)
-    return text[:MAX_JUDGE_SAMPLE_CHARS]
+    return text

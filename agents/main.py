@@ -47,7 +47,6 @@ from typing import Annotated, Any, Literal
 
 from fastapi import Body, Depends, FastAPI, Header, Path, Query, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
-from starlette.background import BackgroundTask
 from google.adk import Runner
 from google.adk.agents.run_config import RunConfig, StreamingMode
 from google.adk.artifacts import InMemoryArtifactService
@@ -56,6 +55,7 @@ from google.adk.events.event_actions import EventActions
 from google.adk.sessions import InMemorySessionService, Session
 from google.genai import types
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from starlette.background import BackgroundTask
 
 from agents.anyplot import agent as agent_module
 from agents.anyplot.code.readiness import MAP_SPECS

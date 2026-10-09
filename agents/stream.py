@@ -14,11 +14,17 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 | `done` | `llm_calls`, `tokens` | the end of every run, always last |
 
 Function calls and responses, tool outputs, thoughts, partial chunks, adapter and
-reviewer answers, and `error_details` are dropped. A message is sanitised: URLs,
-`data:` and `javascript:` links, HTML tags and markdown images are removed, links keep
-their text, fenced code blocks longer than 10 lines become `[code omitted]`,
-`[[spec:id]]` tokens stay only for the session's own spec, and the text is capped at
-3,000 characters.
+reviewer answers, and `error_details` are dropped. A message is sanitised: URLs
+(with protocol-relative `//host` links), `data:`, `javascript:` and `mailto:` links,
+HTML tags (an unclosed one too) and markdown images are removed, links keep their
+text, fenced (backtick or tilde) and indented code blocks longer than 10 lines become
+`[code omitted]`, `[[spec:id]]` tokens stay only for the session's own spec, and the
+text is capped at 3,000 characters. The plot event's `changes` and
+`residual_defects` are model-written too, so each goes through the same sanitiser
+and becomes one plain line.
+
+The sanitiser is a backstop, not an HTML filter: the UI must render message and
+plot text as plain text, never as HTML or unescaped markdown.
 """
 
 import json
@@ -37,15 +43,22 @@ PIPELINE_AUTHOR = "plot_pipeline"
 HALT_AUTHOR = "model"  # ADK's author of the event a before_run halt emits
 STEPS = frozenset({"adapting", "checking", "rendering", "reviewing", "repairing"})
 PLOT_FIELDS = ("status", "reason", "attempts", "artifacts", "changes", "residual_defects")
+MODEL_WRITTEN_FIELDS = ("changes", "residual_defects")
 MAX_MESSAGE_CHARS = 3_000
 MAX_CODE_LINES = 10
 CODE_OMITTED = "[code omitted]"
 
-_FENCE = re.compile(r"```[^\n]*\n(.*?)(?:```|\Z)", re.DOTALL)
+# A fenced block (backticks or tildes, three or more, closed by the same run or the end).
+_FENCE = re.compile(r"(?ms)^[ \t]{0,3}(`{3,}|~{3,})[^\n]*\n(.*?)(?:^[ \t]{0,3}\1[ \t]*$|\Z)")
+# A run of indented lines (four spaces or a tab), the other markdown code block.
+_INDENTED = re.compile(r"(?m)(?:^(?: {4}|\t)[^\n]*(?:\n|\Z))+")
 _IMAGE = re.compile(r"!\[[^\]]*\]\([^)]*\)")
 _LINK = re.compile(r"\[([^\]]+)\]\((?:[^)]*)\)")
 _HTML = re.compile(r"</?[A-Za-z][^>]*>")
-_URL = re.compile(r"(?i)\b(?:https?|ftp)://\S+|\bwww\.\S+|\b(?:data|javascript|file):\S+")
+_HTML_UNCLOSED = re.compile(r"(?m)</?[A-Za-z][^>\n]*$")
+_URL = re.compile(
+    r"(?i)\b(?:https?|ftp)://\S+|\bwww\.\S+|\b(?:data|javascript|file|mailto):\S+|(?<![\w:/])//[^\s/]+\S*"
+)
 _SPEC_TOKEN = re.compile(r"\[\[spec:([a-z0-9-]{1,100})\]\]")
 _BLANK_LINES = re.compile(r"\n{3,}")
 
@@ -59,22 +72,34 @@ def sanitize(text: str, *, spec_id: str | None = None) -> str:
     """The deterministic output sanitiser for root messages."""
 
     def code_block(match: re.Match[str]) -> str:
-        body = match.group(1)
-        return match.group(0) if body.count("\n") < MAX_CODE_LINES else CODE_OMITTED
+        return match.group(0) if len(match.group(2).splitlines()) <= MAX_CODE_LINES else CODE_OMITTED
+
+    def indented_block(match: re.Match[str]) -> str:
+        block = match.group(0)
+        if len(block.splitlines()) <= MAX_CODE_LINES:
+            return block
+        return CODE_OMITTED + ("\n" if block.endswith("\n") else "")
 
     def spec_token(match: re.Match[str]) -> str:
         return match.group(0) if spec_id is not None and match.group(1) == spec_id else ""
 
     text = _FENCE.sub(code_block, text)
+    text = _INDENTED.sub(indented_block, text)
     text = _IMAGE.sub("", text)
     text = _LINK.sub(r"\1", text)
     text = _HTML.sub("", text)
+    text = _HTML_UNCLOSED.sub("", text)
     text = _URL.sub("", text)
     text = _SPEC_TOKEN.sub(spec_token, text)
     text = _BLANK_LINES.sub("\n\n", text).strip()
     if len(text) > MAX_MESSAGE_CHARS:
         text = text[: MAX_MESSAGE_CHARS - 1].rstrip() + "…"
     return text
+
+
+def plain_line(text: str, *, spec_id: str | None = None) -> str:
+    """A model-written note as one sanitised line: no code block, link target, URL, HTML or image."""
+    return " ".join(sanitize(text, spec_id=spec_id).replace(CODE_OMITTED, " ").split())
 
 
 def _final_text(event: Event) -> str:
@@ -108,7 +133,7 @@ class Translator:
         if event.author == PIPELINE_AUTHOR and isinstance(event.output, dict) and "status" in event.output:
             if not self.plot_sent:
                 self.plot_sent = True
-                out.append(sse("plot", {key: event.output[key] for key in PLOT_FIELDS if key in event.output}))
+                out.append(sse("plot", self._plot(event.output)))
             return out
         if event.author in (ROOT_AUTHOR, HALT_AUTHOR):
             text = _final_text(event)
@@ -116,6 +141,15 @@ class Translator:
                 return out
             out.extend(self._reply(text))
         return out
+
+    def _plot(self, output: dict[str, Any]) -> dict[str, Any]:
+        """The plot event: the allowlisted fields, the model-written lines sanitised to one plain line each."""
+        data = {key: output[key] for key in PLOT_FIELDS if key in output}
+        for key in MODEL_WRITTEN_FIELDS:
+            if isinstance(data.get(key), list):
+                lines = (plain_line(item, spec_id=self.spec_id) for item in data[key] if isinstance(item, str))
+                data[key] = [line for line in lines if line]
+        return data
 
     def _reply(self, text: str) -> list[str]:
         if self.ledger.refusal is not None:

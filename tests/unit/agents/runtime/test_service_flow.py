@@ -22,15 +22,7 @@ from agents.anyplot.services import Services, get_services
 from agents.main import Runtime, app, get_runtime
 
 from .conftest import CASES
-from .fakes import (
-    ROOT_REPLY,
-    SCATTER_PLAN,
-    VERDICT_OK,
-    VERDICT_REJECT,
-    FakeAnthropic,
-    ScriptedLlm,
-    default_script,
-)
+from .fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK, VERDICT_REJECT, FakeAnthropic, ScriptedLlm, default_script
 
 
 USER = "adm_0123456789abcdef"
