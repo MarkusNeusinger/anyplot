@@ -39,6 +39,8 @@ class CodeVersion:
     plan: AdaptPlan | None = None
     title: str = ""
     feedback: list[str] = field(default_factory=list)
+    library: str = ""
+    """The library the version was adapted for; a session can switch library."""
 
 
 class VersionStore:
@@ -57,19 +59,21 @@ class VersionStore:
     def all(self, session_id: str) -> list[CodeVersion]:
         return list(self._versions.get(session_id, []))
 
-    def get(self, session_id: str, number: int | None = None) -> CodeVersion | None:
-        """Version `number`, or the latest one when `number` is None or 0."""
-        versions = self._versions.get(session_id, [])
+    def get(self, session_id: str, number: int | None = None, *, library: str | None = None) -> CodeVersion | None:
+        """Version `number`, or the latest one when `number` is None or 0; `library` limits both to that library."""
+        versions = [
+            version for version in self._versions.get(session_id, []) if library is None or version.library == library
+        ]
         if not versions:
             return None
         if not number:
             return versions[-1]
         return next((version for version in versions if version.number == number), None)
 
-    def latest_rendered(self, session_id: str) -> CodeVersion | None:
-        """The newest version that shipped a render (`ok` or `needs_attention`)."""
+    def latest_rendered(self, session_id: str, *, library: str | None = None) -> CodeVersion | None:
+        """The newest version that shipped a render (`ok` or `needs_attention`), of `library` when given."""
         for version in reversed(self._versions.get(session_id, [])):
-            if version.render_id is not None:
+            if version.render_id is not None and (library is None or version.library == library):
                 return version
         return None
 

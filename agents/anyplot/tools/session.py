@@ -88,7 +88,8 @@ async def get_current_code(version: int, tool_context: ToolContext) -> dict[str,
     view = _view(tool_context)
     if view is None:
         return _error("session_not_open")
-    stored = get_services().versions.get(tool_context.session.id, version or None)
+    # Versions of another library (before a library switch) are not this plot's code.
+    stored = get_services().versions.get(tool_context.session.id, version or None, library=view.library)
     if stored is None and version:
         return _error("unknown_version")
     code = stored.export if stored is not None else view.normalised

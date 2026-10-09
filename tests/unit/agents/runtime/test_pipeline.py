@@ -18,7 +18,8 @@ from agents.anyplot.pipeline import (
     render_review_request,
 )
 from agents.anyplot.policy import DATA_PREAMBLE
-from agents.anyplot.schemas import AdaptPlan, AdaptRequest, Binding, ReviewRequest
+from agents.anyplot.schemas import AdaptPlan, AdaptRequest, Binding, PlotResult, ReviewRequest
+from agents.anyplot.services import CodeVersion, VersionStore
 from agents.anyplot.session_state import SessionView
 
 
@@ -107,6 +108,33 @@ def test_adapt_request_is_fenced() -> None:
     )
     assert text.index(DATA_PREAMBLE) < text.index("<spec_text>") < text.index("Scatter")
     assert text.endswith("allow_full: false")
+
+
+def test_versions_of_another_library_are_not_the_base() -> None:
+    store = VersionStore()
+    result = PlotResult(status="ok", attempts=1, artifacts=["plot.py"])
+    for library in ("matplotlib", "seaborn"):
+        store.add(
+            "s",
+            CodeVersion(
+                number=store.next_number("s"),
+                working=library,
+                run_form="r",
+                export="e",
+                data_csv="a\n1\n",
+                render_id="r1",
+                result=result,
+                library=library,
+            ),
+        )
+
+    base = store.latest_rendered("s", library="matplotlib")
+    latest_here = store.get("s", library="matplotlib")
+    latest_any = store.get("s")
+    assert base is not None and base.working == "matplotlib"
+    assert latest_here is not None and latest_here.number == 1
+    assert store.get("s", 2, library="matplotlib") is None
+    assert latest_any is not None and latest_any.number == 2
 
 
 def test_dataset_judge_sees_every_header() -> None:

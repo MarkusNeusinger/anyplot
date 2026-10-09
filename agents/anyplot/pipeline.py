@@ -322,6 +322,7 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
             result=result,
             plan=shipped.plan,
             title=shipped.plan.title,
+            library=run.view.library,
         ),
     )
 
@@ -415,7 +416,9 @@ async def _attempts(
     ledger = ledger_for(ctx.invocation_id)
     runtime = PythonRuntime(cpu_seconds=settings.render_timeout_s)
     deadline = SoftDeadline(settings.soft_deadline_s)
-    previous = services.versions.latest_rendered(ctx.session.id) if args.base == "previous" else None
+    previous = (
+        services.versions.latest_rendered(ctx.session.id, library=view.library) if args.base == "previous" else None
+    )
     working = previous.working if previous is not None else view.normalised
     regions = find_regions(view.normalised)
     palette = list(regions.imprint.entries) if regions.imprint else []

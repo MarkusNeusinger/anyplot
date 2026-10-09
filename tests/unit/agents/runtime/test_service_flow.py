@@ -122,6 +122,8 @@ async def test_create_plot_streams_to_an_ok_plot_result(client: httpx.AsyncClien
         forced = [call["tool_choice"] for call in fake.calls if call.get("tool_choice", {}).get("type") == "tool"]
         assert len(forced) == 2  # the adapter and the reviewer answered through the forced tool
         assert all(call.get("thinking") == {"type": "disabled"} for call in fake.calls)
+        adapter = next(call for call in fake.calls if FakeAnthropic.kind(call) == "adapter")
+        assert adapter["system"][0]["cache_control"] == {"type": "ephemeral"}  # the static prefix is cached
 
 
 CHANGE_REQUEST = "make the markers bigger"

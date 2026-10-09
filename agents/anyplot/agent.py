@@ -11,12 +11,14 @@
   `ALL_AGENTS` lists every agent for the registry test.
 * `app` carries the plugins in their fixed order, `ScopeGuard → Budget → ToolSafety →
   ContextFilter(6)`, behind the development-only fixture seed when
-  `AGENT_DEV_FIXTURE` is set. `adk web agents` finds `app` in this module.
+  `AGENT_DEV_FIXTURE` is set, and, on Claude only, a context-cache config so ADK
+  marks Claude prompt-cache breakpoints. `adk web agents` finds `app` in this module.
 """
 
 from typing import Any
 
 from google.adk import Agent
+from google.adk.agents.context_cache_config import ContextCacheConfig
 from google.adk.agents.readonly_context import ReadonlyContext
 from google.adk.apps import App
 from google.adk.plugins.base_plugin import BasePlugin
@@ -40,11 +42,12 @@ from .tools.session import SESSION_TOOLS, plot_pipeline
 APP_NAME = "anyplot"
 ROOT_NAME = "anyplot"
 
-# ADK wraps a BaseNode in `tools` into its NodeTool at run time
-# (`llm_agent._convert_tool_union_to_tools`); its `ToolUnion` alias does not list
-# BaseNode, so the list is typed loosely here.
+# ADK wraps a BaseNode in `tools` into its NodeTool when the agent is constructed
+# (`LlmAgent._pre_validate_tools`, a model validator); its `ToolUnion` alias does not
+# list BaseNode, so the list is typed loosely here.
 ROOT_TOOLS: list[Any] = [*SESSION_TOOLS, plot_pipeline]
 CONTEXT_INVOCATIONS = 6
+CLAUDE_CACHE_TTL_S = 300
 
 
 async def session_context(context: ReadonlyContext) -> str:
@@ -74,7 +77,7 @@ async def session_context(context: ReadonlyContext) -> str:
         else:
             missing = ", ".join(check.missing_roles) or "none"
             lines.append(f"- Bindings: incomplete; missing roles: {missing}; {len(check.errors)} invalid")
-    versions = services.versions.all(session_id)
+    versions = [version for version in services.versions.all(session_id) if version.library == view.library]
     if versions:
         lines.append(f"- Plot versions: {len(versions)}; latest result: {versions[-1].result.status}")
     else:
@@ -109,4 +112,20 @@ def build_plugins() -> list[BasePlugin]:
     return plugins
 
 
-app = App(name=APP_NAME, root_agent=root_agent, plugins=build_plugins())
+def build_context_cache() -> ContextCacheConfig | None:
+    """Prompt-cache breakpoints for Claude; none for Gemini.
+
+    Without an App-level config ADK sends Claude no `cache_control`
+    (`models/_prompt_cache.py`), so every adapter call would pay the full ~42K
+    characters of its static instruction. With one, ADK marks the tools, the system
+    instruction and the end of the conversation. Gemini keeps its implicit cache:
+    there the same config would make ADK create explicit caches, a billed resource.
+    The 5-minute lifetime is Claude's cheaper write; it covers the repair attempt and
+    the next turn.
+    """
+    if get_settings().provider != "anthropic-vertex":
+        return None
+    return ContextCacheConfig(ttl_seconds=CLAUDE_CACHE_TTL_S)
+
+
+app = App(name=APP_NAME, root_agent=root_agent, plugins=build_plugins(), context_cache_config=build_context_cache())
