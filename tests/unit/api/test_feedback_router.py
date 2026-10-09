@@ -248,8 +248,10 @@ class TestFeedbackRouter:
         instance.create.assert_not_awaited()
 
 
-# JSON escapes (not the raw character): `"\ud800"` parses to a lone surrogate, which a
-# Python `json.dumps(...).encode()` on the client side could never send.
+# The six-character JSON escape `"\ud800"`, which the server parses into a lone surrogate.
+# Clients emit it themselves (`JSON.stringify` and Python's default `json.dumps` both escape
+# a lone surrogate), but the test client's `json=` argument encodes with `ensure_ascii=False`
+# and would fail on the raw character, so these tests send the body as raw bytes.
 LONE_SURROGATE_JSON = b'"\\ud800"'
 
 

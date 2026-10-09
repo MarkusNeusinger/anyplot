@@ -423,7 +423,7 @@ Used to load interactive plots (plotly, bokeh, altair) in iframes with dynamic s
 }
 ```
 
-Every error the API raises itself uses this shape, except request validation errors (next section).
+Errors that pass through the API's exception handlers (for example 400, 404 and 503) use this shape. Two responses use a `detail` body instead: request validation errors (next section) and the 403 that the origin gate returns to a caller that bypasses `https://api.anyplot.ai`.
 
 ### Request validation errors
 
