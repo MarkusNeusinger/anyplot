@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-yield-curve: Yield Curve (Interest Rate Term Structure)
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 91/100 | Created: 2026-06-10
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 86/100 | Updated: 2026-10-09
 
 using CairoMakie
 using Colors
@@ -87,7 +87,7 @@ band!(ax, inv_x, inv_lower, inv_upper; color = (ANYPLOT_AMBER, 0.30))
 # Inversion zone label (inside the amber band, between inv_lower and inv_upper at 7Y)
 text!(ax, [7.0], [4.55];
     text      = ["Inverted zone"],
-    color     = ANYPLOT_AMBER,
+    color     = INK_SOFT,
     fontsize  = 11,
     align     = (:center, :center))
 
