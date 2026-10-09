@@ -102,6 +102,8 @@ def probe(figure, dpi):
             except Exception:
                 continue
         for collection in axes.collections:
+            if type(collection).__name__ != "PathCollection":  # scatter marks; fills and meshes are not rows
+                continue
             try:
                 points += len(collection.get_offsets())
             except Exception:

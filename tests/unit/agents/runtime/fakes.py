@@ -7,7 +7,7 @@ the Claude arm exercises the forced-tool structured output end to end.
 """
 
 import json
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator
 from typing import Any
 
 from anthropic.types import Message
@@ -90,10 +90,6 @@ def gemini_response(item: dict[str, Any]) -> LlmResponse:
     )
 
 
-def root_script(*replies: dict[str, Any]) -> list[dict[str, Any]]:
-    return list(replies)
-
-
 def default_script(
     verdict: dict[str, Any] | None = None, plans: list[dict[str, Any]] | None = None
 ) -> dict[str, list[Any]]:
@@ -168,6 +164,3 @@ class FakeAnthropic:
                 "usage": {"input_tokens": 100, "output_tokens": 20},
             }
         )
-
-
-Responder = Callable[[LlmRequest], LlmResponse]

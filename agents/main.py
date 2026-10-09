@@ -92,14 +92,24 @@ ARTIFACT_TYPES: dict[str, str] = {
 _USER = re.compile(USER_PATTERN)
 _NO_STORE = {"Cache-Control": "private, no-store"}
 
-# No content in logs or spans. Debug logging of ADK and the model SDKs prints request
-# and response content, ADK puts message content into its spans unless told otherwise
-# (telemetry/context.py reads the variable on every span), and the OpenTelemetry GenAI
-# instrumentation does the same when its capture variable is set.
-for _name in ("google_adk", "google.adk", "google_genai", "anthropic", "httpx"):
-    logging.getLogger(_name).setLevel(logging.WARNING)
-os.environ["ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS"] = "false"
-os.environ.pop("OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", None)
+CONTENT_LOGGERS = ("google_adk", "google.adk", "google_genai", "anthropic", "httpx")
+
+
+def disable_content_capture() -> None:
+    """No content in logs or spans.
+
+    Debug logging of ADK and the model SDKs prints request and response content, ADK
+    puts message content into its spans unless told otherwise (`telemetry/context.py`
+    reads the variable on every span), and the OpenTelemetry GenAI instrumentation
+    does the same when its capture variable is set.
+    """
+    for name in CONTENT_LOGGERS:
+        logging.getLogger(name).setLevel(logging.WARNING)
+    os.environ["ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS"] = "false"
+    os.environ.pop("OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", None)
+
+
+disable_content_capture()
 
 
 class AgentsError(Exception):
