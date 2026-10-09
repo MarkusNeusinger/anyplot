@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-yield-curve: Yield Curve (Interest Rate Term Structure)
-// Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 91/100 | Created: 2026-06-10
+// Library: highcharts 12.6.0 | JavaScript 22.23.3
+// Quality: 83/100 | Updated: 2026-10-09
 
 //# anyplot-orientation: landscape
 
@@ -68,7 +68,7 @@ Highcharts.chart("container", {
         color: theme === "light" ? "rgba(174,48,48,0.07)" : "rgba(174,48,48,0.15)",
         label: {
           text: "Inversion zone",
-          style: { color: t.inkSoft, fontSize: "11px", fontStyle: "italic" },
+          style: { color: t.inkSoft, fontSize: "13px", fontStyle: "italic" },
           align: "center",
           verticalAlign: "top",
           y: 18
