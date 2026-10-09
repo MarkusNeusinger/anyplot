@@ -349,7 +349,11 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         ledger.adapter_allow_full = False
         ledger.review_render_id = None
     result = finish(run)
-    _store_version(ctx, services, run, result)
+    try:
+        _store_version(ctx, services, run, result)
+    except Exception as exc:  # a result whose artifacts cannot be stored is not shippable
+        logger.warning("storing the version failed: %s", type(exc).__name__)
+        result = PlotResult(status="failed", reason="error", attempts=run.attempts)
     yield _result_event(result)
 
 
