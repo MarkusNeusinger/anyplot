@@ -12,10 +12,11 @@
   specs for spec-level and implementations with code for impl-level
   categories. Breaking for clients that read the old shapes; the MCP server is
   not versioned and the old shapes were never what the reference described.
+  (#12100)
 - **Agent network design records the licensing decision.** The open question
   of where the agent code lives is settled in the decisions table: everything
   stays MIT in this repository, paid AI credits remain a later option, and the
-  Highcharts licence must be settled before the first paid credit.
+  Highcharts licence must be settled before the first paid credit. (#12100)
 
 ### Fixed
 
@@ -27,15 +28,16 @@
   keeps each value in the category it was passed in (JSONB containment on
   PostgreSQL, `json_extract` on SQLite), ORs the values within a category and
   ANDs the categories, which is what the MCP reference promised all along.
+  (#12100)
 - **MCP reference and page describe what the tools return.**
   `docs/reference/mcp.md` and the MCP page carried wrapper objects, limits and
   library lists the server never produced: `list_specs` defaults to 100 and
   returns a bare array with `website_url`, `search_specs_by_tags` also takes
   `patterns`, `dataprep` and `styling`, `get_spec_detail` takes a `libraries`
-  filter, and `get_implementation` covers all 15 libraries.
+  filter, and `get_implementation` covers all 15 libraries. (#12100)
 
 ### Removed
 
 - **`SpecRepository.search_by_tags` and its any-category filter builder.**
   Nothing outside the MCP search used them, and matching a value in any
-  category is exactly the bug the new filter fixes.
+  category is exactly the bug the new filter fixes. (#12100)
