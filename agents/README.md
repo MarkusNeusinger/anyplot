@@ -2,7 +2,7 @@
 
 This directory holds the anyplot agent network: the service that lets an admin paste their own data on a plot page and get that plot adapted, rendered and reviewed ("Use with my data"). It is built with [Google ADK](https://adk.dev) 2.11 on Gemini through Vertex AI. The design, including every contract and guardrail, is in [Agent network design](../docs/concepts/agent-network.md).
 
-Nothing here runs yet. This package currently contains the settings and the Pydantic contracts of the plot pipeline; the agents, tools, plugins, renderer and service arrive in later pull requests, as listed in the design's roadmap.
+Nothing here runs yet. This package currently contains the settings, the Pydantic contracts of the plot pipeline, and its deterministic data and code layers; the agents, tools, plugins, renderer and service arrive in later pull requests, as listed in the design's roadmap.
 
 ## What lives here
 
@@ -10,6 +10,8 @@ Nothing here runs yet. This package currently contains the settings and the Pyda
 |---|---|
 | `anyplot/settings.py` | `AgentSettings`, read from `AGENT_*` environment variables (plus `ENVIRONMENT`), with the pinned model, judge model and location as defaults |
 | `anyplot/schemas.py` | The pipeline contracts with their size limits: `ColumnProfile`, `DatasetProfile`, `Binding`, `PipelineArgs`, `AdaptRequest`, `Edit`, `AdaptPlan`, `ReviewRequest`, `Defect`, `Verdict` and `PlotResult` |
+| `anyplot/data/` | The deterministic data layer, without ADK: `parse.py` (pasted text to a canonical `data.csv` and a `DatasetProfile`), `roles.py` (data roles from a spec's `## Data` bullets), `bindings.py` (default role-to-column bindings and their checks) and `store.py` (the session-scoped dataset store) |
+| `anyplot/code/` | The deterministic code layer, without ADK: `validate.py` (the two-profile AST validator), `regions.py` (the protected AST regions), `normalise.py` (the canvas normaliser), `readiness.py` (the blocked, coupled or clean scan with adapter hints), `edits.py` (applies an `AdaptPlan`), `loader.py` (the data placeholder in its run form) and `export.py` (the downloaded `plot.py`) |
 
 The unit tests are in `tests/unit/agents/`.
 
