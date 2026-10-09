@@ -562,8 +562,9 @@ starts it again. No turn runs past `AGENT_TURN_MAX_S` (890 seconds), which
 stays below anyplot-api's own request timeout of 900 seconds: a turn that is
 still queued when its run could no longer finish inside that cap ends with
 `error {"code": "capacity"}` and `done {}`, and leaves the queue before it
-spends a token. At the defaults, a turn waits at most about 385 seconds
-through the BFF. Errors that happen before the stream starts, such as
+spends a token. At the defaults, the agents service's full 600-second queue
+maximum plus the 180-second run fit inside the cap, so the BFF never cuts a
+wait short. Errors that happen before the stream starts, such as
 `413 too_long`, an upstream `409 run_active`, or `503 capacity` from a full
 run queue, arrive as HTTP statuses instead.
 

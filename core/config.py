@@ -292,8 +292,8 @@ class Settings(BaseSettings):
     `api/cloudbuild.yaml`), so Cloud Run never cuts a stream without `error`
     and `done`. A turn still queued when less than `agent_request_timeout_s`
     plus the queue's 15 s heartbeat is left ends with `capacity` and leaves the
-    queue before it spends a token, so at the defaults a turn waits at most
-    about 385 s through the BFF, not the agents service's 600 s maximum."""
+    queue before it spends a token; at the defaults the agents service's full
+    600 s queue maximum plus its 180 s run fit inside the cap."""
 
     # =============================================================================
     # CORS
