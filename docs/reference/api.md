@@ -453,8 +453,11 @@ The agents service never sees an email address. The BFF sends
 HMAC-SHA256 over the admin's email with `AGENT_USER_ID_KEY`; every caller on
 the `X-Admin-Token` path shares the id derived from the string `token`.
 
-Each response carries an `X-Request-Id` that the BFF also sends upstream. Quote
-it when you report a problem. Upstream calls carry a Cloud Run ID token whose
+A request that gets past the three checks and the body validation is given an
+`X-Request-Id`, which the BFF sends upstream and returns on the response, also
+as `ref` in an error body or an SSE `error` event. Quote it when you report a
+problem. The earlier answers (`401`, `403`, `404` from the kill switch, `422`)
+carry no request id. Upstream calls carry a Cloud Run ID token whose
 audience is `AGENT_SERVICE_URL`; for a `localhost` or `127.0.0.1` URL no token
 is fetched.
 
@@ -480,7 +483,8 @@ Validation: `spec_id` matches `^[a-z0-9-]{1,100}$`; `library` is one of the 15
 supported library ids; `locale` is a language tag of at most 16 characters such
 as `de` or `de-CH`; the session id matches `^[A-Za-z0-9_-]{1,128}$`; a binding
 `role` matches `^[a-z_]{1,32}$` and its `column` has at most 64 characters. An
-unknown field in a body is a `422`.
+unknown field in a body is a `422`, and so is a body with a lone surrogate
+escape such as `"\ud800"`, which UTF-8 cannot carry (`422 invalid_text`).
 
 `POST /sessions` and `POST /sessions/{sid}/library` add the user id and a
 catalogue snapshot before they forward the body, because the agents service
@@ -515,7 +519,9 @@ arrive as HTTP statuses instead.
 ### Agent error responses
 
 The agent routes answer errors as `{"detail": "<code>", "ref": "<request id>"}`;
-the kill switch and the CSRF guard leave out `ref`. An upstream `4xx` or `5xx`
+the kill switch, the CSRF guard, and the `invalid_text` check leave out `ref`,
+and the admin gate and FastAPI's own `422` keep the API-wide shapes. An
+upstream `4xx` or `5xx`
 keeps its status. Its code is one the agents service documents (`not_eligible`,
 `run_active`, `too_long`, `unparseable`, `data_refused`, `session_expired`) or
 a generic one for the status (`bad_request`, `not_found`, `conflict`,

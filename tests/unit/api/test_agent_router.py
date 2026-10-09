@@ -391,16 +391,18 @@ class TestBodies:
             ("POST", "/debug/agent/sessions/s1/dataset", '{"text": "a\\ud800b"}'),
             ("POST", "/debug/agent/sessions/s1/messages", '{"text": "a\\ud800b"}'),
             ("PUT", "/debug/agent/sessions/s1/bindings", '[{"role": "x", "column": "a\\ud800b"}]'),
+            # Also when another field is invalid too, which would otherwise reach
+            # FastAPI's default 422 body with the surrogate echoed in it.
+            ("POST", "/debug/agent/sessions/s1/messages", '{"text": "a\\ud800b", "action": "create_plot"}'),
         ],
     )
-    def test_lone_surrogate_never_reaches_upstream(self, client, upstream, method, path, raw_body) -> None:
-        """JSON allows `"\\ud800"`, UTF-8 cannot carry it; Pydantic refuses it on every
-        free-text field. (FastAPI's default 422 body echoes the input and cannot render
-        a lone surrogate, so today's answer is a 500 — app-wide, not this router's.)"""
-        response = TestClient(app, raise_server_exceptions=False).request(
+    def test_lone_surrogate_is_a_clean_422(self, client, upstream, method, path, raw_body) -> None:
+        """JSON allows `"\\ud800"`, UTF-8 cannot carry it."""
+        response = client.request(
             method, path, content=raw_body, headers={**CLIENT_HEADERS, "Content-Type": "application/json"}
         )
-        assert response.status_code in (422, 500)
+        assert response.status_code == 422
+        assert response.json() == {"detail": "invalid_text"}
         assert upstream.requests == []
 
     def test_message_over_limit_is_413(self, client, upstream) -> None:
@@ -534,6 +536,24 @@ class TestMessagesStream:
         events = _sse_events(self._post(client).text)
         assert [event for event, _ in events] == ["status", "error", "done"]
 
+    def test_deadline_covers_opening_the_stream(self, client, upstream, monkeypatch) -> None:
+        """Time spent before the upstream answers counts against the same budget."""
+        monkeypatch.setattr(settings, "agent_request_timeout_s", 0.3)
+
+        async def slow_token(ctx):
+            await asyncio.sleep(0.25)
+            return {}
+
+        async def slow_stream():
+            await asyncio.sleep(0.15)  # within a fresh 0.3 s budget, past the shared one
+            yield b"event: done\ndata: {}\n\n"
+
+        upstream.handler = lambda request: httpx.Response(200, content=slow_stream())
+        with patch("api.routers.agent._upstream_headers", slow_token):
+            events = _sse_events(self._post(client).text)
+        assert events[0] == ("error", {"code": "upstream", "ref": events[0][1]["ref"]})
+        assert events[-1] == ("done", {})
+
     def test_upstream_409_is_an_http_status(self, client, upstream) -> None:
         upstream.handler = lambda request: httpx.Response(409, json={"detail": "run_active"})
         response = self._post(client)
@@ -587,6 +607,7 @@ class TestUpstreamMapping:
             (409, {"detail": ["run_active"]}, 409, "conflict"),
             (418, None, 418, "rejected"),
             (401, None, 502, "upstream_auth"),
+            (401, {"detail": "run_active"}, 502, "upstream_auth"),
             (403, None, 502, "upstream_auth"),
             (500, {"detail": "boom"}, 500, "upstream"),
             (302, None, 502, "upstream"),

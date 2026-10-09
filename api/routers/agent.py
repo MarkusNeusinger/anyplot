@@ -198,6 +198,27 @@ def require_same_site_client(request: Request) -> None:
         raise AgentHTTPError(403, "json_required")
 
 
+async def require_utf8_body(request: Request) -> None:
+    """Refuse a JSON body that carries a lone surrogate (`"\\ud800"`) with a clean 422.
+
+    JSON allows the escape, UTF-8 cannot carry it, and Pydantic refuses it —
+    but FastAPI's default 422 body echoes the input, and rendering a lone
+    surrogate there fails with a 500. A router dependency runs before that
+    body is built: FastAPI has already parsed the JSON, and raises the
+    validation errors only after every dependency has run.
+    """
+    if request.method in _SAFE_METHODS or not _has_body(request):
+        return
+    try:
+        payload = json.loads(await request.body())
+    except ValueError:
+        return  # malformed JSON was already answered by FastAPI, or the route takes no body
+    try:
+        json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    except UnicodeEncodeError:
+        raise AgentHTTPError(422, "invalid_text") from None
+
+
 def derive_user_id(key: bytes, identity: AdminIdentity) -> str:
     """The opaque, stable user id the agents service sees instead of an email.
 
@@ -243,8 +264,14 @@ router = APIRouter(
     prefix="/debug/agent",
     tags=["agent"],
     # Order matters: the admin gate answers first (so the deploy smoke reads a
-    # 401 whatever the switch says), then the kill switch, then the CSRF guard.
-    dependencies=[Depends(require_admin), Depends(require_agent_enabled), Depends(require_same_site_client)],
+    # 401 whatever the switch says), then the kill switch, then the CSRF guard,
+    # then the body check.
+    dependencies=[
+        Depends(require_admin),
+        Depends(require_agent_enabled),
+        Depends(require_same_site_client),
+        Depends(require_utf8_body),
+    ],
 )
 
 Ctx = Annotated[AgentContext, Depends(agent_context)]
@@ -388,6 +415,11 @@ def _upstream_error(response: httpx.Response, ref: str) -> AgentHTTPError:
     status = response.status_code
     if status < 400 or status > 599:
         return AgentHTTPError(502, "upstream", ref)
+    if status == 401:
+        # Only Cloud Run IAM answers 401 here: it refused the BFF's own ID
+        # token. Passed through, it would read in the browser as the admin's
+        # session failing.
+        return AgentHTTPError(502, "upstream_auth", ref)
     code: str | None = None
     try:
         body = response.json()
@@ -396,9 +428,8 @@ def _upstream_error(response: httpx.Response, ref: str) -> AgentHTTPError:
     detail = body.get("detail") if isinstance(body, dict) else None
     if isinstance(detail, str) and detail in _UPSTREAM_CODES:
         code = detail
-    if code is None and status in (401, 403):
-        # Cloud Run IAM refused the BFF's own ID token. Passing a 401 or 403
-        # through would read in the browser as the admin's session failing.
+    if code is None and status == 403:
+        # A 403 without a documented code (`data_refused` is one) is IAM too.
         return AgentHTTPError(502, "upstream_auth", ref)
     if code is None:
         code = "upstream" if status >= 500 else _GENERIC_CODES.get(status, "rejected")
@@ -468,14 +499,13 @@ def _no_content(ctx: AgentContext) -> Response:
 # ============================================================================
 
 
-async def _read_events(lines: AsyncIterator[str], timeout_s: float) -> AsyncGenerator[tuple[str | None, str], None]:
-    """Assemble complete SSE events from upstream lines, within one wall-clock budget.
+async def _read_events(lines: AsyncIterator[str], deadline: float) -> AsyncGenerator[tuple[str | None, str], None]:
+    """Assemble complete SSE events from upstream lines until the loop-time `deadline`.
 
     Comments (the upstream's own keep-alive pings) and the `id` and `retry`
     fields are dropped; the browser gets FastAPI's pings from this route.
-    Raises TimeoutError when the budget runs out.
+    Raises TimeoutError when the deadline passes.
     """
-    deadline = asyncio.get_running_loop().time() + timeout_s
     event_type: str | None = None
     data: list[str] = []
     size = 0
@@ -536,6 +566,8 @@ class UpstreamStream:
 
     request_id: str
     response: httpx.Response | None
+    deadline: float
+    """Loop time by which the whole turn, opening included, has to be over."""
 
 
 async def open_message_stream(
@@ -551,14 +583,18 @@ async def open_message_stream(
         raise AgentHTTPError(413, "too_long", ctx.request_id)
     payload = {"text": body.text} if body.text is not None else {"action": body.action}
     path = f"/sessions/{sid}/messages"
+    # One wall-clock budget for the whole turn: the ID token, the connection
+    # and the upstream's response headers spend from it too.
+    deadline = asyncio.get_running_loop().time() + settings.agent_request_timeout_s
     response: httpx.Response | None
     try:
-        response = await _open_stream(client, ctx, "POST", path, json_body=payload, accept="text/event-stream")
-    except _UNREACHABLE as exc:
+        async with asyncio.timeout_at(deadline):
+            response = await _open_stream(client, ctx, "POST", path, json_body=payload, accept="text/event-stream")
+    except (*_UNREACHABLE, TimeoutError) as exc:
         _log_unreachable(ctx, "POST", path, exc)
         response = None
     try:
-        yield UpstreamStream(request_id=ctx.request_id, response=response)
+        yield UpstreamStream(request_id=ctx.request_id, response=response, deadline=deadline)
     finally:
         if response is not None:
             await response.aclose()
@@ -637,7 +673,7 @@ async def post_message(upstream: UpstreamStream = Depends(open_message_stream)) 
     if upstream.response is not None:
         lines = upstream.response.aiter_lines()
         try:
-            async with aclosing(_read_events(lines, settings.agent_request_timeout_s)) as events:
+            async with aclosing(_read_events(lines, upstream.deadline)) as events:
                 async for event_type, data in events:
                     relayed = _translate(event_type, data, upstream.request_id)
                     if relayed is None:
