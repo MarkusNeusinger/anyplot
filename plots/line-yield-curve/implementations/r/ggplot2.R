@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' line-yield-curve: Yield Curve (Interest Rate Term Structure)
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: pending | Created: 2026-06-10
+#' Quality: 87/100 | Updated: 2026-10-09
 
 library(ggplot2)
 library(scales)
