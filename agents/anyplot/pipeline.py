@@ -40,7 +40,9 @@ from collections.abc import AsyncGenerator, Callable
 from dataclasses import dataclass, field
 
 from google.adk import Context, Event
+from google.adk.agents.llm.task._finish_task_tool import FINISH_TASK_SUCCESS_RESULT, FINISH_TASK_TOOL_NAME
 from google.adk.workflow import node
+from google.genai import types
 from pydantic import ValidationError
 
 from .briefs import profile_summary, spec_brief
@@ -338,8 +340,9 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         return
     ledger.pipeline_active = True
     run = Run(view=view, dataset=dataset)
+    scope = f"pipeline-{secrets.token_hex(6)}"
     try:
-        async for event in _attempts(ctx, services, settings, run, node_input):
+        async for event in _attempts(ctx, services, settings, run, node_input, scope):
             yield event
     except Exception as exc:  # every failure ends in a PlotResult; the type is logged, never the message
         logger.warning("pipeline failed: %s", type(exc).__name__)
@@ -354,17 +357,32 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     except Exception as exc:  # a result whose artifacts cannot be stored is not shippable
         logger.warning("storing the version failed: %s", type(exc).__name__)
         result = PlotResult(status="failed", reason="error", attempts=run.attempts)
+    yield close_scope(scope)
     yield _result_event(result)
 
 
+def close_scope(scope: str) -> Event:
+    """The event that ends the sub-agents' isolation scope.
+
+    ADK treats a scope that no `finish_task` response closed as a paused task
+    (`runners._find_active_task_scope`): it would stamp the user's next message with
+    the scope, hide it from the unscoped root and reuse this invocation id, so the
+    next `plot_pipeline` call would replay this run's result. The event is scoped,
+    so the root never reads it, and it is not authored by the root, so the stream
+    translator drops it. An aborted run needs none: ADK closes the scopes of an
+    aborted invocation itself.
+    """
+    response = types.FunctionResponse(name=FINISH_TASK_TOOL_NAME, response={"result": FINISH_TASK_SUCCESS_RESULT})
+    return Event(isolation_scope=scope, content=types.Content(role="user", parts=[types.Part(function_response=response)]))
+
+
 async def _attempts(
-    ctx: Context, services: Services, settings: AgentSettings, run: Run, args: PipelineArgs
+    ctx: Context, services: Services, settings: AgentSettings, run: Run, args: PipelineArgs, scope: str
 ) -> AsyncGenerator[Event, None]:
     view, dataset = run.view, run.dataset
     ledger = ledger_for(ctx.invocation_id)
     runtime = PythonRuntime(cpu_seconds=settings.render_timeout_s)
     deadline = SoftDeadline(settings.soft_deadline_s)
-    scope = f"pipeline-{secrets.token_hex(6)}"
     previous = services.versions.latest_rendered(ctx.session.id) if args.base == "previous" else None
     working = previous.working if previous is not None else view.normalised
     regions = find_regions(view.normalised)

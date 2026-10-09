@@ -22,7 +22,15 @@ from agents.anyplot.services import Services
 from agents.main import Runtime, app, get_runtime
 
 from .conftest import CASES
-from .fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_REJECT, FakeAnthropic, ScriptedLlm, default_script
+from .fakes import (
+    ROOT_REPLY,
+    SCATTER_PLAN,
+    VERDICT_OK,
+    VERDICT_REJECT,
+    FakeAnthropic,
+    ScriptedLlm,
+    default_script,
+)
 
 
 USER = "adm_0123456789abcdef"
@@ -121,6 +129,55 @@ async def test_create_plot_streams_to_an_ok_plot_result(client: httpx.AsyncClien
         assert isinstance(fake, FakeAnthropic)
         forced = [call["tool_choice"] for call in fake.calls if call.get("tool_choice", {}).get("type") == "tool"]
         assert len(forced) == 2  # the adapter and the reviewer answered through the forced tool
+
+
+CHANGE_REQUEST = "make the markers bigger"
+SECOND_PLAN: dict[str, Any] = {"edits": [], "title": "Exam Score by Study Hours", "changes": ["Kept the plot"]}
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+async def test_second_turn_reaches_the_root_and_runs_the_pipeline_again(
+    client: httpx.AsyncClient, runtime: Runtime, swap_models, provider: str
+) -> None:
+    """The pipeline's isolation scope closes, so turn 2 is a fresh, unscoped invocation."""
+    script = {
+        "root": [
+            {"call": "plot_pipeline", "args": {}},
+            {"text": ROOT_REPLY},
+            {"call": "plot_pipeline", "args": {"change_request": CHANGE_REQUEST, "base": "previous"}},
+            {"text": "Done: bigger markers."},
+        ],
+        "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
+        "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+    }
+    fake = swap_models(provider, script)
+    sid = await open_session(client)
+    await create_plot(client, sid)
+
+    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": CHANGE_REQUEST})
+    events = parse_sse(response.text)
+
+    steps = [data["step"] for name, data in events if name == "status"]
+    assert steps == ["adapting", "checking", "rendering", "reviewing"]
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["changes"]) == ("ok", ["Kept the plot"])
+    assert [data["text"] for name, data in events if name == "message"] == ["Done: bigger markers."]
+    queues = fake.script if isinstance(fake, ScriptedLlm | FakeAnthropic) else script
+    assert queues["adapter"] == [] and queues["reviewer"] == []  # turn 2 called both again
+
+    session = await runtime.session_service.get_session(app_name="anyplot", user_id=USER, session_id=sid)
+    assert session is not None
+    user_events = [event for event in session.events if event.author == "user" and event.content]
+    assert len({event.invocation_id for event in user_events}) == 2
+    assert user_events[-1].isolation_scope is None
+    if isinstance(fake, ScriptedLlm):
+        root_requests = [request for request in fake.requests if (request.config.labels or {})["agent_kind"] == "root"]
+        texts = [part.text or "" for content in root_requests[2].contents for part in content.parts or []]
+    else:
+        assert isinstance(fake, FakeAnthropic)
+        root_calls = [call for call in fake.calls if FakeAnthropic.kind(call) == "root"]
+        texts = [json.dumps(root_calls[2]["messages"], default=str)]
+    assert any(CHANGE_REQUEST in text for text in texts)
 
 
 async def test_artifacts_and_bundle_after_a_plot(client: httpx.AsyncClient, swap_models) -> None:
