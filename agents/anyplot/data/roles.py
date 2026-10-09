@@ -114,15 +114,18 @@ QUALIFIER_WORDS: frozenset[str] = frozenset(
     }
 )
 
+# Possessive quantifiers (`*+`, `++`) and the run-start lookbehinds keep every
+# pattern linear in the bullet length: nothing after a whitespace or digit run
+# can match inside that run, so there is never anything to backtrack into.
 _HEAD_TOKEN = re.compile(
-    r"\s*(?:`(?P<code>[^`]+)`|(?P<more>\.\.\.|…)|(?P<range>through|to)\b|(?P<alt>or)\b|(?P<sep>,|/|and\b))",
+    r"\s*+(?:`(?P<code>[^`]++)`|(?P<more>\.\.\.|…)|(?P<range>through|to)\b|(?P<alt>or)\b|(?P<sep>,|/|and\b))",
     re.IGNORECASE,
 )
-_TAIL = re.compile(r"\s*(?:\((?P<type>[^)]*)\))?\s*(?:[-–—:]+\s*)?(?P<desc>.*)", re.DOTALL)
-_BOLD = re.compile(r"\*\*(?P<label>[^*]+)\*\*\s*[-–—:]?\s*(?P<desc>.*)", re.DOTALL)
-_BOLD_LABEL_END = re.compile(r"\s+(?:variable|variables|column|columns)$", re.IGNORECASE)
+_TAIL = re.compile(r"\s*+(?:\((?P<type>[^)]*+)\))?\s*+(?:[-–—:]++\s*+)?(?P<desc>.*)", re.DOTALL)
+_BOLD = re.compile(r"\*\*(?P<label>[^*]++)\*\*\s*+[-–—:]?\s*+(?P<desc>.*)", re.DOTALL)
+_BOLD_LABEL_END = re.compile(r"(?<!\s)\s++(?:variable|variables|column|columns)$", re.IGNORECASE)
 _LAST_DIGITS = re.compile(r"[0-9]+(?=[^0-9]*$)")
-_RANGE_END = re.compile(r"(?P<family>.*?)(?:[0-9]+|n)")
+_RANGE_END = re.compile(r"(?P<family>.*?)(?:(?<![0-9])[0-9]++|n)")
 _OPTIONAL = re.compile(r"\boptional\b", re.IGNORECASE)
 _WORD = re.compile(r"[a-z]+")
 _BACKTICKED = re.compile(r"`[^`]*`")
