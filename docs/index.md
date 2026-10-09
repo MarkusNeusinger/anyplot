@@ -20,6 +20,7 @@ Welcome to the anyplot documentation. Start here to find what you're looking for
 | Understand the database | [Database Schema](reference/database.md) |
 | Explore repository structure | [Repository Structure](reference/repository.md) |
 | Style frontend or plots | [Style Guide](reference/style-guide.md) |
+| Cap Vertex AI spend | [GCP Budget Guard](reference/gcp-budget-guard.md) |
 | Investigate API latency | [Performance Reference](reference/performance.md) |
 
 ---
@@ -48,6 +49,7 @@ docs/
     ├── plausible.md      # Analytics integration
     ├── seo.md            # SEO configuration
     ├── style-guide.md    # Brand, frontend, plot design system
+    ├── gcp-budget-guard.md  # Function that disables Vertex AI when its budget is reached
     └── performance.md    # API latency measurements
 ```
 
@@ -85,6 +87,7 @@ Technical details for development and integration.
 - **[Plausible](reference/plausible.md)** - Analytics integration
 - **[SEO](reference/seo.md)** - Search engine optimization setup
 - **[Style Guide](reference/style-guide.md)** - Brand, frontend, and plot design system
+- **[GCP Budget Guard](reference/gcp-budget-guard.md)** - Cloud Run function that disables the Vertex AI API when its Cloud Billing budget is reached: decision rules, logging, retries, permissions, limits (as of 2026-10-09, in the repository and not yet deployed)
 - **[Performance](reference/performance.md)** - Backend API response-time measurements
 
 ---

@@ -108,6 +108,7 @@ anyplot/
 │   └── Dockerfile
 │
 ├── automation/                        # Workflow automation
+│   ├── gcp/budget-guard/              # Cloud Run function: disables Vertex AI at its budget
 │   └── scripts/                       # Workflow-specific utilities
 │       ├── sync_to_postgres.py        # Sync plots/ to database
 │       ├── workflow_utils.py          # Utilities for GitHub Actions
@@ -464,8 +465,9 @@ plt.savefig('plot.png', dpi=300)
 - `scripts/workflow_cli.py` - CLI interface for workflow steps
 - `scripts/regen_gate.py` - Regen gate: keeps or replaces a regeneration (used by impl-review.yml)
 - `scripts/regen_writeback.py` - Stores a kept regeneration's re-score as the live implementation's review (used by impl-review.yml and impl-merge.yml)
+- `gcp/budget-guard/` - Cloud Run function that disables the Vertex AI API when its Cloud Billing budget is reached; a deploy unit, not a Python package (see [GCP budget guard](gcp-budget-guard.md))
 
-**Principle**: Only contains components actively used by workflows. One-time or manual scripts belong in `scripts/`.
+**Principle**: Only contains components actively used by workflows or deployed as GCP automation. One-time or manual scripts belong in `scripts/`.
 
 ---
 
