@@ -145,7 +145,7 @@ Get complete specification including its implementations.
     {
       "spec_id": "scatter-basic",
       "library_id": "matplotlib",
-      "library_name": "matplotlib",
+      "library_name": "Matplotlib",
       "language": "python",
       "code": "import matplotlib.pyplot as plt\n...",
       "quality_score": 95,
@@ -193,7 +193,7 @@ Get implementation code for a specific specification and library.
 {
   "spec_id": "scatter-basic",
   "library_id": "matplotlib",
-  "library_name": "matplotlib",
+  "library_name": "Matplotlib",
   "language": "python",
   "code": "\"\"\"...\"\"\"\nimport matplotlib.pyplot as plt\n...",
   "quality_score": 95,
@@ -228,7 +228,7 @@ List all supported plotting libraries.
 [
   {
     "id": "matplotlib",
-    "name": "matplotlib",
+    "name": "Matplotlib",
     "language": "python",
     "framework": "none",
     "version": "3.10.0",
