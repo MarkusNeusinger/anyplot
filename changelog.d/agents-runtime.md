@@ -20,7 +20,7 @@
   two fixture cases in development only. Untrusted text (pasted headers, spec
   text, model-written notes) reaches every model only inside fences, the
   protected theme lines survive any plan, and `ENVIRONMENT` defaults to
-  `production` so a missing variable never skips the caller check.
+  `production` so a missing variable never skips the caller check. (#12111)
 
 ### Fixed
 
@@ -29,4 +29,4 @@
   `temperature_K` or `X1`, which 12 catalogue specs use; the BFF now applies
   the agents contract's role pattern. `guard_unavailable`, `capacity`,
   `no_dataset` and `rate_limited` reach the browser by name instead of as
-  `upstream` or `invalid`.
+  `upstream` or `invalid`. (#12111)
