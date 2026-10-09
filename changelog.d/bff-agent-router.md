@@ -15,3 +15,4 @@
   gate, and `require_admin` wraps it unchanged. The deploy writes
   `AGENT_ENABLED=false` and its smoke test expects 401 on
   `/debug/agent/status`; the routes are documented in `docs/reference/api.md`.
+  (#12103)
