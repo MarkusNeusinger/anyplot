@@ -9,6 +9,7 @@ Supports two connection modes:
 import asyncio
 import os
 from logging.config import fileConfig
+from pathlib import Path
 
 from dotenv import load_dotenv
 from sqlalchemy import pool
@@ -18,8 +19,10 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from this checkout's .env only. A bare
+# load_dotenv() walks up past a git worktree into the main checkout's .env, and
+# Alembic would then run migrations against that DATABASE_URL.
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 # Import models to register them with Base.metadata (required for autogenerate)
 # These imports ARE used - SQLAlchemy needs them loaded to detect schema changes

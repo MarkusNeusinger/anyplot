@@ -4,10 +4,15 @@ FastAPI backend for anyplot platform.
 AI-powered plotting examples that work with YOUR data.
 """
 
-# Load .env file FIRST, before any other imports that might read env vars
-from dotenv import load_dotenv  # noqa: E402, I001
+# Load .env file FIRST, before any other imports that might read env vars.
+# The path is explicit: a bare load_dotenv() walks up from this file and, in a
+# git worktree under .claude/worktrees/, reaches the main checkout's .env with
+# the production credentials.
+from pathlib import Path  # noqa: E402, I001
 
-load_dotenv()
+from dotenv import load_dotenv  # noqa: E402
+
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 import asyncio  # noqa: E402
 import logging  # noqa: E402
