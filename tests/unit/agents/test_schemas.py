@@ -6,7 +6,9 @@ import pytest
 from pydantic import ValidationError
 
 from agents.anyplot.schemas import (
+    MAX_DEFECT_TEXT_CHARS,
     MAX_FULL_CODE_CHARS,
+    MAX_LINE_CHARS,
     AdaptPlan,
     AdaptRequest,
     Binding,
@@ -273,14 +275,45 @@ class TestDefect:
     @pytest.mark.parametrize("field", ["observed", "target", "likely_cause"])
     def test_text_fields_are_bounded(self, field: str) -> None:
         with pytest.raises(ValidationError):
-            Defect.model_validate(defect(**{field: "w" * 301}))
+            Defect.model_validate(defect(**{field: "w" * (MAX_DEFECT_TEXT_CHARS + 1)}))
         with pytest.raises(ValidationError):
             Defect.model_validate(defect(**{field: "   "}))
 
-    def test_verdict_holds_at_most_five_defects(self) -> None:
+    def test_replaced_arrows_count_toward_the_limit(self) -> None:
+        with pytest.raises(ValidationError):
+            Defect.model_validate(defect(observed="→" * MAX_DEFECT_TEXT_CHARS))
+
+    def test_the_longest_defect_line_is_a_valid_feedback_and_residual_line(self) -> None:
+        text = "w" * MAX_DEFECT_TEXT_CHARS
+        longest = Defect.model_validate(
+            defect(id="AR-09", theme="light", observed=text, target=text, likely_cause=text)
+        ).as_line()
+
+        assert len(longest) <= MAX_LINE_CHARS
+        request = AdaptRequest.model_validate(
+            {"code": "x", "profile": profile(), "bindings": [], "loader_columns": [], "feedback": [longest]}
+        )
+        assert request.feedback == [longest]
+        result = PlotResult(status="needs_attention", attempts=2, residual_defects=[longest])
+        assert result.residual_defects == [longest]
+
+
+class TestVerdict:
+    def test_pass_without_defects(self) -> None:
+        assert Verdict(ok=True).defects == []
+
+    def test_rejection_holds_one_to_five_defects(self) -> None:
         assert len(Verdict(ok=False, defects=[Defect.model_validate(defect())] * 5).defects) == 5
         with pytest.raises(ValidationError):
             Verdict(ok=False, defects=[Defect.model_validate(defect())] * 6)
+
+    def test_pass_with_defects_is_refused(self) -> None:
+        with pytest.raises(ValidationError, match="ok verdict names no defects"):
+            Verdict(ok=True, defects=[Defect.model_validate(defect())])
+
+    def test_rejection_without_defects_is_refused(self) -> None:
+        with pytest.raises(ValidationError, match="at least one defect"):
+            Verdict(ok=False)
 
 
 class TestPlotResult:

@@ -20,7 +20,7 @@ holds that context (the edit applier and the pipeline), not to these schemas.
 import re
 from typing import Annotated, Any, Literal, Self, get_args
 
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, ValidationInfo, field_validator, model_validator
 
 
 # Limits from the design doc, named once so the parser, the tools and the tests share them.
@@ -44,9 +44,11 @@ MAX_NOTES = 20  # readiness hints, gate notes
 MAX_FEEDBACK = 16  # defect and validator lines handed to the single repair
 MAX_RESIDUAL_DEFECTS = 16  # 5 reviewer lines, 4 advisory probe gates, canvas padding, adaptation findings
 MAX_NOTE_CHARS = 300
-MAX_LINE_CHARS = 500
 MAX_CHANGE_CHARS = 200
-MAX_DEFECT_TEXT_CHARS = 300
+MAX_DEFECT_TEXT_CHARS = 200
+# Every rendered defect line is also a feedback or residual `Line`, so a `Line` must hold
+# the longest `Defect.as_line()`: three texts of 200 characters plus 35 of grammar.
+MAX_LINE_CHARS = 640
 
 ColumnName = Annotated[str, Field(min_length=1, max_length=MAX_COLUMN_NAME_CHARS)]
 Cell = Annotated[str, Field(max_length=MAX_CELL_CHARS)]
@@ -214,17 +216,18 @@ class Defect(_ModelOutput):
 
     @field_validator("observed", "target", "likely_cause", mode="before")
     @classmethod
-    def _one_line(cls, value: Any) -> Any:
-        """A defect line is one line: collapse every whitespace run to a single space."""
-        if isinstance(value, str):
-            return _WHITESPACE.sub(" ", value).strip()
-        return value
+    def _one_line(cls, value: Any, info: ValidationInfo) -> Any:
+        """A defect line is one line: collapse every whitespace run to a single space.
 
-    @field_validator("observed")
-    @classmethod
-    def _no_arrow_in_observed(cls, value: str) -> str:
-        """The first `→` separates observed from target, so `observed` must not contain one."""
-        return value.replace("→", "->")
+        The first `→` separates observed from target, so an arrow inside `observed`
+        becomes `->`. Both happen before the length check, so the limit bounds the
+        stored text and therefore the rendered line.
+        """
+        if isinstance(value, str):
+            value = _WHITESPACE.sub(" ", value).strip()
+            if info.field_name == "observed":
+                value = value.replace("→", "->")
+        return value
 
     def as_line(self) -> str:
         """`<ID> (<theme>): <observed> → <target>. Likely cause: <likely_cause>.`
@@ -238,10 +241,23 @@ class Defect(_ModelOutput):
 
 
 class Verdict(_ModelOutput):
-    """The reviewer's answer: pass or at most five defects."""
+    """The reviewer's answer: a pass with no defects, or a rejection with one to five.
+
+    A contradictory verdict (`ok` with defects, or a rejection without any) is a
+    validation error rather than a guess: a pass with defects could ship a defective
+    render as `ok`, and a rejection without defects gives the repair nothing to fix.
+    """
 
     ok: bool
     defects: list[Defect] = Field(default_factory=list, max_length=MAX_DEFECTS)
+
+    @model_validator(mode="after")
+    def _ok_matches_defects(self) -> Self:
+        if self.ok and self.defects:
+            raise ValueError("an ok verdict names no defects")
+        if not self.ok and not self.defects:
+            raise ValueError("a rejecting verdict names at least one defect")
+        return self
 
 
 # --- Result ----------------------------------------------------------------------------
