@@ -4,9 +4,13 @@ Standardized exception handling for anyplot API.
 Provides consistent error responses and HTTP status codes.
 """
 
+import json
 import logging
+from typing import Any
 
 from fastapi import HTTPException, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -134,6 +138,31 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
         status_code=exc.status_code,
         content={"status": exc.status_code, "message": exc.detail, "path": _public_path(request)},
     )
+
+
+class AsciiJSONResponse(JSONResponse):
+    """JSONResponse that escapes every non-ASCII character as ``\\uXXXX``.
+
+    Starlette renders with ``ensure_ascii=False`` and then ``.encode("utf-8")``,
+    which raises on a lone surrogate (a JSON body of ``"\\ud800"`` parses to one).
+    Escaping keeps the response encodable whatever the client sent, and the body
+    stays valid JSON that decodes back to the same string.
+    """
+
+    def render(self, content: Any) -> bytes:
+        return json.dumps(content, ensure_ascii=True, allow_nan=False, indent=None, separators=(",", ":")).encode(
+            "utf-8"
+        )
+
+
+async def request_validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    """Answer a request that fails validation with FastAPI's usual 422 body.
+
+    Same ``{"detail": [{loc, msg, type, input, ...}]}`` shape as FastAPI's default
+    handler, but rendered ASCII-safe: that default echoes the offending ``input``,
+    and a lone surrogate in it made the encode fail, turning a 422 into a 500.
+    """
+    return AsciiJSONResponse(status_code=422, content={"detail": jsonable_encoder(exc.errors())})
 
 
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:

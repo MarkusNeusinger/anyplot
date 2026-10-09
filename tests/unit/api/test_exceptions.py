@@ -4,10 +4,12 @@ Tests for api/exceptions.py.
 Tests custom exception classes, handlers, and helper functions.
 """
 
+import json
 from unittest.mock import MagicMock
 
 import pytest
 from fastapi import Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from api.exceptions import (
@@ -25,6 +27,7 @@ from api.exceptions import (
     raise_external_service_error,
     raise_not_found,
     raise_validation_error,
+    request_validation_exception_handler,
 )
 
 
@@ -185,6 +188,50 @@ class TestExceptionHandlers:
         content = response.body.decode()
         assert "Not found" in content
         assert "/test/path" in content
+
+    @pytest.mark.asyncio
+    async def test_request_validation_exception_handler_keeps_fastapis_422_shape(self) -> None:
+        """Should answer 422 with the `{"detail": [...]}` list FastAPI's own handler builds."""
+        request = MagicMock(spec=Request)
+        request.url.path = "/test/path"
+        errors = [
+            {"type": "string_type", "loc": ("body", "message"), "msg": "Input should be a valid string", "input": 1}
+        ]
+
+        response = await request_validation_exception_handler(request, RequestValidationError(errors))
+
+        assert isinstance(response, JSONResponse)
+        assert response.status_code == 422
+        assert response.headers["content-type"] == "application/json"
+        assert json.loads(response.body) == {
+            "detail": [
+                {"type": "string_type", "loc": ["body", "message"], "msg": "Input should be a valid string", "input": 1}
+            ]
+        }
+
+    @pytest.mark.asyncio
+    async def test_request_validation_exception_handler_survives_a_lone_surrogate(self) -> None:
+        """A lone surrogate in the echoed `input` used to raise inside JSONResponse (UTF-8 encode) -> 500."""
+        request = MagicMock(spec=Request)
+        request.url.path = "/test/path"
+        errors = [
+            {
+                "type": "string_type",
+                "loc": ("body", "message"),
+                "msg": "Input should be a valid string",
+                "input": ["\ud800"],
+            }
+        ]
+
+        response = await request_validation_exception_handler(request, RequestValidationError(errors))
+
+        assert response.status_code == 422
+        assert response.body.isascii()
+        detail = json.loads(response.body)["detail"]
+        assert detail[0]["loc"] == ["body", "message"]
+        assert detail[0]["msg"] == "Input should be a valid string"
+        assert detail[0]["type"] == "string_type"
+        assert detail[0]["input"] == ["\ud800"]  # escaped on the wire, identical after decoding
 
     @pytest.mark.asyncio
     async def test_generic_exception_handler(self) -> None:

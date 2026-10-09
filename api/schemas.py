@@ -6,7 +6,7 @@ Centralized schema definitions for request/response models.
 
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class ImplementationResponse(BaseModel):
@@ -171,6 +171,22 @@ class FeedbackRequest(BaseModel):
     # Honeypot field — real users never fill this in. Bots auto-fill all
     # text inputs and trip the guard server-side.
     website: str | None = None
+
+    @field_validator("*")
+    @classmethod
+    def _reject_unencodable_text(cls, value: str | None) -> str | None:
+        """Refuse text that is not valid UTF-8 — a JSON body of ``"\\ud800"`` parses to a lone surrogate.
+
+        Python accepts such a string, but the database driver cannot encode it and the
+        request would end as a 500 once the insert runs; the schema is the cheapest place
+        to turn it into a 422, before anything touches the database.
+        """
+        if value is not None:
+            try:
+                value.encode("utf-8")
+            except UnicodeEncodeError:
+                raise ValueError("must be valid UTF-8 text (lone surrogates are not allowed)") from None
+        return value
 
 
 class FeedbackResponse(BaseModel):

@@ -556,14 +556,31 @@ Change them there: the deploy rewrites both variables on every build.
 ```json
 {
   "status": 404,
-  "message": "Spec 'scatter-x' not found",
-  "path": "/specs/scatter-x"
+  "message": "Spec 'unknown' not found",
+  "path": "/specs/unknown"
 }
 ```
 
-Request validation errors (`422`) keep FastAPI's own shape, `{"detail": [...]}`.
-The agent chat routes use their own shape; see
-[Agent error responses](#agent-error-responses).
+Errors that pass through the API's exception handlers (for example 400, 404 and 503) use this shape. Two responses use a `detail` body instead: request validation errors (next section) and the 403 that the origin gate returns to a caller that bypasses `https://api.anyplot.ai`. The agent chat routes use their own `detail` shape; see [Agent error responses](#agent-error-responses).
+
+### Request validation errors
+
+A request whose body or parameters fail schema validation returns status 422 with FastAPI's standard `detail` list instead, one entry per problem:
+
+```json
+{
+  "detail": [
+    {
+      "type": "string_type",
+      "loc": ["body", "message"],
+      "msg": "Input should be a valid string",
+      "input": 123
+    }
+  ]
+}
+```
+
+The body is always ASCII: any non-ASCII character in the echoed `input` is JSON-escaped, so text that cannot be encoded as UTF-8, such as a lone surrogate (the JSON string `"\ud800"`), still gets a 422 rather than a 500. `POST /feedback` rejects such text in any field this way.
 
 ### HTTP status codes
 
@@ -572,7 +589,7 @@ The agent chat routes use their own shape; see
 | 200 | Success |
 | 400 | Bad request (invalid parameters) |
 | 404 | Resource not found |
-| 422 | Request validation failed |
+| 422 | Request body or parameters failed schema validation |
 | 502 | External service error (GCS) |
 | 503 | Database not available |
 
