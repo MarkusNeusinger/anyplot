@@ -482,7 +482,8 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 Validation: `spec_id` matches `^[a-z0-9-]{1,100}$`; `library` is one of the 15
 supported library ids; `locale` is a language tag of at most 16 characters such
 as `de` or `de-CH`; the session id matches `^[A-Za-z0-9_-]{1,128}$`; a binding
-`role` matches `^[a-z_]{1,32}$` and its `column` has at most 64 characters. An
+`role` matches `^[A-Za-z_][A-Za-z0-9_]{0,31}$` (the agents contract, so roles
+such as `temperature_K` or `X1` pass) and its `column` has at most 64 characters. An
 unknown field in a body is a `422`, and so is a body with a lone surrogate
 escape such as `"\ud800"`, which UTF-8 cannot carry (`422 invalid_text`).
 
@@ -523,7 +524,9 @@ the kill switch, the CSRF guard, and the `invalid_text` check leave out `ref`,
 and the admin gate and FastAPI's own `422` keep the API-wide shapes. An
 upstream `4xx` or `5xx`
 keeps its status. Its code is one the agents service documents (`not_eligible`,
-`run_active`, `too_long`, `unparseable`, `data_refused`, `session_expired`) or
+`run_active`, `too_long`, `unparseable`, `data_refused`, `session_expired`,
+`guard_unavailable` and `capacity` (both `503`, worth a retry), `no_dataset`,
+`rate_limited`) or
 a generic one for the status (`bad_request`, `not_found`, `conflict`,
 `too_long`, `invalid`, `rate_limited`, `rejected`, `upstream`); the upstream
 body is never echoed. Two cases answer `502` instead:

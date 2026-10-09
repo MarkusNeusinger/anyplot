@@ -98,8 +98,23 @@ _MAX_EVENT_CHARS = 64 * 1024
 # Error codes the agents service documents for its /v1 routes; an upstream error
 # body is never forwarded, only one of these codes when it names one.
 _UPSTREAM_CODES = frozenset(
-    {"not_eligible", "run_active", "too_long", "unparseable", "data_refused", "session_expired"}
+    {
+        "not_eligible",
+        "run_active",
+        "too_long",
+        "unparseable",
+        "data_refused",
+        "session_expired",
+        "guard_unavailable",
+        "capacity",
+        "no_dataset",
+        "rate_limited",
+    }
 )
+# A spec data role, as the agents contract defines it (`agents/anyplot/schemas.py`,
+# `ROLE_PATTERN`; copied, because the API image does not ship the agents package).
+# Specs name roles such as `temperature_K`, `X1` or `lead_aVR`.
+ROLE_PATTERN = r"^[A-Za-z_][A-Za-z0-9_]{0,31}$"
 _GENERIC_CODES: dict[int, str] = {
     400: "bad_request",
     404: "not_found",
@@ -318,7 +333,7 @@ class DatasetBody(_StrictBody):
 
 
 class Binding(_StrictBody):
-    role: Annotated[str, Field(pattern=r"^[a-z_]{1,32}$")]
+    role: Annotated[str, Field(pattern=ROLE_PATTERN)]
     column: Annotated[str, Field(min_length=1, max_length=64)] | None = None
 
 

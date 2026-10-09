@@ -420,14 +420,26 @@ class TestBodies:
         assert upstream.requests == []
 
     def test_bindings_forwarded_as_list(self, client, upstream) -> None:
-        bindings = [{"role": "x", "column": "Datum"}, {"role": "hue_group", "column": None}]
+        bindings = [
+            {"role": "x", "column": "Datum"},
+            {"role": "hue_group", "column": None},
+            {"role": "temperature_K", "column": "T"},
+            {"role": "X1", "column": "a"},
+        ]
         response = client.put("/debug/agent/sessions/s1/bindings", json=bindings, headers=CLIENT_HEADERS)
         assert response.status_code == 200
         assert upstream.requests[0].method == "PUT"
         assert upstream.last_json == bindings
 
     @pytest.mark.parametrize(
-        "bindings", [[{"role": "X", "column": "a"}], [{"role": "x", "column": "c" * 65}], [{"role": "x"}] * 51]
+        "bindings",
+        [
+            [{"role": "1x", "column": "a"}],
+            [{"role": "x-y", "column": "a"}],
+            [{"role": "x" * 33, "column": "a"}],
+            [{"role": "x", "column": "c" * 65}],
+            [{"role": "x"}] * 51,
+        ],
     )
     def test_bindings_validation(self, client, upstream, bindings) -> None:
         response = client.put("/debug/agent/sessions/s1/bindings", json=bindings, headers=CLIENT_HEADERS)
@@ -603,6 +615,10 @@ class TestUpstreamMapping:
             (404, {"detail": "session_expired"}, 404, "session_expired"),
             (422, {"detail": "not_eligible"}, 422, "not_eligible"),
             (403, {"detail": "data_refused"}, 403, "data_refused"),
+            (503, {"detail": "guard_unavailable"}, 503, "guard_unavailable"),
+            (503, {"detail": "capacity"}, 503, "capacity"),
+            (422, {"detail": "no_dataset"}, 422, "no_dataset"),
+            (429, {"detail": "rate_limited"}, 429, "rate_limited"),
             (422, {"detail": "Traceback: KeyError in /app/agents/x.py"}, 422, "invalid"),
             (409, {"detail": ["run_active"]}, 409, "conflict"),
             (418, None, 418, "rejected"),
