@@ -57,7 +57,7 @@ for ydata, name, color, marker in [
 # Inversion shading — band where short-term yields exceed long-term yields
 short_term_max = max(yields_inverted[:4])
 long_term_min = min(yields_inverted[6:])
-fig.add_hrect(y0=long_term_min, y1=short_term_max, fillcolor="rgba(68,103,163,0.08)", line_width=0)
+fig.add_hrect(y0=long_term_min, y1=short_term_max, fillcolor="rgba(68,103,163,0.14)", line_width=0)
 
 # Annotation: inversion zone callout (on-chart at 6M maturity)
 # Note: with xaxis.type='log', annotation x values use log10(data_value)
@@ -91,7 +91,7 @@ fig.add_annotation(
     yref="y",
     text=f"<b>+{spread_10y_bps} bps</b><br>at 10Y",
     showarrow=False,
-    font={"size": 10, "color": C1},
+    font={"size": 10, "color": INK_SOFT},
     bgcolor=ELEVATED_BG,
     borderpad=4,
 )
