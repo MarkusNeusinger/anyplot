@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-yield-curve: Yield Curve (Interest Rate Term Structure)
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: pending | Created: 2026-06-10
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 86/100 | Updated: 2026-10-09
 
 using CairoMakie
 using Colors
