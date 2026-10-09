@@ -85,7 +85,7 @@ export function McpPage() {
             <Box component="ul" sx={{ m: 0, pl: 3, mb: 2 }}>
               {[
                 'search and discover plot types by tags, features, or keywords',
-                'fetch ready-to-use Python code for any supported library',
+                'fetch ready-to-use code for any of the 15 supported libraries across Python, R, Julia, and JavaScript',
                 'get AI-assisted help adapting code to your specific data',
               ].map((item, i) => (
                 <Typography key={i} component="li" sx={textStyle}>
