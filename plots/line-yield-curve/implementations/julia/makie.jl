@@ -87,7 +87,7 @@ band!(ax, inv_x, inv_lower, inv_upper; color = (ANYPLOT_AMBER, 0.30))
 # Inversion zone label (inside the amber band, between inv_lower and inv_upper at 7Y)
 text!(ax, [7.0], [4.55];
     text      = ["Inverted zone"],
-    color     = ANYPLOT_AMBER,
+    color     = INK_SOFT,
     fontsize  = 11,
     align     = (:center, :center))
 
