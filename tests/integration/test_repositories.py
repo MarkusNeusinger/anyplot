@@ -86,19 +86,19 @@ class TestSpecRepository:
         repo = SpecRepository(test_session)
         assert await repo.count_with_impls() == 0
 
-    async def test_search_by_tags(self, test_db_with_data):
-        """Should search specs by tags."""
+    async def test_search_by_tag_filters(self, test_db_with_data):
+        """AND across categories, OR within one, each value scoped to its category."""
         repo = SpecRepository(test_db_with_data)
 
-        # Search for scatter plots
-        scatter_specs = await repo.search_by_tags(["scatter"])
-        assert len(scatter_specs) == 1
-        assert scatter_specs[0].id == "scatter-basic"
+        both = await repo.search_by_tag_filters({"plot_type": ["scatter"], "domain": ["statistics"]})
+        assert [s.id for s in both] == ["scatter-basic"]
 
-        # Search for bar plots
-        bar_specs = await repo.search_by_tags(["bar"])
-        assert len(bar_specs) == 1
-        assert bar_specs[0].id == "bar-grouped"
+        # Both fixtures share domain=statistics; plot_type narrows, it does not widen
+        either = await repo.search_by_tag_filters({"plot_type": ["scatter", "bar"], "domain": ["statistics"]})
+        assert sorted(s.id for s in either) == ["bar-grouped", "scatter-basic"]
+
+        # "statistics" is a domain, not a plot type
+        assert await repo.search_by_tag_filters({"plot_type": ["statistics"]}) == []
 
     async def test_create(self, test_session):
         """Should create new spec."""
