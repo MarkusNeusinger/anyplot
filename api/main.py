@@ -35,6 +35,7 @@ from api.exceptions import (  # noqa: E402
 from api.mcp.server import mcp_server  # noqa: E402
 from api.origin_gate import OriginSecretMiddleware  # noqa: E402
 from api.routers import (  # noqa: E402
+    agent_router,
     debug_router,
     download_router,
     feedback_router,
@@ -49,6 +50,7 @@ from api.routers import (  # noqa: E402
     specs_router,
     stats_router,
 )
+from api.routers.agent import LOCAL_ORIGIN_REGEX, AgentHTTPError, agent_http_error_handler  # noqa: E402
 from api.routers.languages import _refresh_languages  # noqa: E402
 from api.routers.libraries import _refresh_libraries  # noqa: E402
 from api.routers.plots import _refresh_filter_all  # noqa: E402
@@ -207,6 +209,9 @@ app = FastAPI(
 app.add_exception_handler(AnyplotException, anyplot_exception_handler)
 app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(RequestValidationError, request_validation_exception_handler)
+# The agent BFF's own error shape, `{"detail": code, "ref": request id}`
+# (api/routers/agent.py, docs/reference/api.md § Agent chat).
+app.add_exception_handler(AgentHTTPError, agent_http_error_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
 # The middleware stack, written innermost-first because `add_middleware` and
@@ -283,11 +288,14 @@ app.add_middleware(OriginSecretMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
-    allow_origin_regex=r"http://localhost:\d+",
+    # Shared with the agent BFF's Origin check, so the two cannot drift.
+    allow_origin_regex=LOCAL_ORIGIN_REGEX,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["Mcp-Session-Id"],  # MCP session tracking
+    # Mcp-Session-Id: MCP session tracking. X-Request-Id: the agent BFF's
+    # reference id, readable by the chat page when it runs cross-origin (dev).
+    expose_headers=["Mcp-Session-Id", "X-Request-Id"],
 )
 
 
@@ -367,6 +375,7 @@ app.include_router(seo_router)
 app.include_router(og_images_router)
 app.include_router(proxy_router)
 app.include_router(debug_router)
+app.include_router(agent_router)
 app.include_router(feedback_router)
 
 

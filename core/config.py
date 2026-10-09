@@ -190,6 +190,8 @@ class Settings(BaseSettings):
         "cf_access_team_domain",
         "cf_access_aud",
         "origin_secret",
+        "agent_service_url",
+        "agent_user_id_key",
         mode="after",
     )
     @classmethod
@@ -209,7 +211,9 @@ class Settings(BaseSettings):
         meaningless in all of these values. An all-whitespace value becomes
         None, which is the same as unset — for `origin_secret` that means the
         gate stays off rather than locking everyone out with a secret nobody
-        can present."""
+        can present. `agent_service_url` is no secret, but the deploy sets it
+        to an empty string until the agents service exists, and empty has to
+        read as unset there too."""
         if value is None:
             return None
         return value.strip() or None
@@ -254,6 +258,33 @@ class Settings(BaseSettings):
 
     plausible_api_url: str = "https://plausible.io/api/v2/query"
     """Plausible Stats API v2 query endpoint."""
+
+    # =============================================================================
+    # AGENT CHAT (BFF for the anyplot-agents service, docs/concepts/agent-network.md)
+    # =============================================================================
+
+    agent_enabled: bool = False
+    """Kill switch for the admin-only agent chat under /debug/agent/*. Off by
+    default, and every route answers 404 while it is off — or while
+    `agent_service_url` or `agent_user_id_key` is unset — so a deploy that
+    carries the router but not its configuration never breaks."""
+
+    agent_service_url: str | None = None
+    """Base URL of the private anyplot-agents Cloud Run service, without the
+    `/v1` suffix (`http://localhost:8001` locally). Also the audience of the ID
+    token the BFF presents; for a localhost URL no token is fetched."""
+
+    agent_user_id_key: str | None = None
+    """HMAC key that turns an admin identity into the opaque user id sent to
+    the agents service as `X-Anyplot-User`, so the service never sees an email
+    address. Set via Secret Manager in Cloud Run; rotating it orphans every
+    open agent session, which is harmless because sessions live in memory."""
+
+    agent_request_timeout_s: int = 190
+    """Upstream timeout in seconds for BFF calls to the agents service, and the
+    wall-clock cap on one relayed chat stream. Slightly above the agents
+    service's own 180 s request deadline, so its `deadline` error arrives
+    before the BFF gives up on the stream."""
 
     # =============================================================================
     # CORS
