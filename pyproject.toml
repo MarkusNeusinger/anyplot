@@ -113,9 +113,13 @@ lib-letsplot = ["lets-plot>=4.11.0", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-l
 # it ships weekly and its feature flags drift between releases, so an upgrade is
 # a deliberate PR that re-checks them (tests/unit/agents/test_adk_pin.py fails
 # otherwise). Never add `openai-agents` to this environment: it installs a
-# top-level `agents` module that would shadow this package.
-agents = ["google-adk==2.11.0"]
-agents-eval = ["google-adk[eval]==2.11.0"]
+# top-level `agents` module that would shadow this package. `anthropic[vertex]`
+# is the Claude backend: google/adk/models/anthropic_llm.py imports
+# `AsyncAnthropicVertex`, whose credentials come from google-auth (the `vertex`
+# extra); the floor is the version this was built and smoke-tested against,
+# whose `output_config` carries the `effort` that module sends.
+agents = ["google-adk==2.11.0", "anthropic[vertex]>=1.8.0"]
+agents-eval = ["google-adk[eval]==2.11.0", "anthropic[vertex]>=1.8.0"]
 all = [
     "anyplot[test,dev,plotting,typecheck]",
 ]

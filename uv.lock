@@ -220,6 +220,11 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/5b/18/5d25a703b66ba34e9277f875f692a3bea3b0ff4d47ee5d188521a01cdd2a/anthropic-1.8.0-py3-none-any.whl", hash = "sha256:79a4516a21e64fd7b15be1a49ebf544bd6376c96a971a77365358823a2717bc6", size = 1348276, upload-time = "2026-09-22T16:25:36.515Z" },
 ]
 
+[package.optional-dependencies]
+vertex = [
+    { name = "google-auth", extra = ["requests"] },
+]
+
 [[package]]
 name = "anyio"
 version = "4.14.2"
@@ -268,9 +273,11 @@ dependencies = [
 
 [package.optional-dependencies]
 agents = [
+    { name = "anthropic", extra = ["vertex"] },
     { name = "google-adk" },
 ]
 agents-eval = [
+    { name = "anthropic", extra = ["vertex"] },
     { name = "google-adk", extra = ["eval"] },
 ]
 all = [
@@ -431,6 +438,8 @@ requires-dist = [
     { name = "altair", marker = "extra == 'lib-altair'", specifier = ">=6.2.2" },
     { name = "altair", marker = "extra == 'plotting'", specifier = ">=6.2.2" },
     { name = "anthropic", specifier = ">=0.122.0" },
+    { name = "anthropic", extras = ["vertex"], marker = "extra == 'agents'", specifier = ">=1.8.0" },
+    { name = "anthropic", extras = ["vertex"], marker = "extra == 'agents-eval'", specifier = ">=1.8.0" },
     { name = "anyplot", extras = ["test", "dev", "plotting", "typecheck"], marker = "extra == 'all'" },
     { name = "asyncpg", specifier = ">=0.30.0" },
     { name = "bokeh", marker = "extra == 'lib-bokeh'", specifier = ">=3.9.2" },
