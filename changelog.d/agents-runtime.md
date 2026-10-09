@@ -18,9 +18,11 @@
   files plus the catalogue's style guide, library rules and repair and review
   excerpts, read verbatim. `AGENT_DEV_FIXTURE` seeds `adk web` sessions from
   two fixture cases in development only. Untrusted text (pasted headers, spec
-  text, model-written notes) reaches every model only inside fences, the
-  protected theme lines survive any plan, and `ENVIRONMENT` defaults to
-  `production` so a missing variable never skips the caller check. (#12111)
+  text, model-written notes) reaches every model only inside fences, a render
+  error reaches the repair as its exception class and line but never its
+  message, a render ships only with both themes, the protected theme lines
+  survive any plan, and `ENVIRONMENT` defaults to `production` so a missing
+  variable never skips the caller check. (#12111)
 
 ### Fixed
 

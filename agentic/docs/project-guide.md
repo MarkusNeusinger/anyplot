@@ -198,7 +198,7 @@ Example: `plots/scatter-basic/` contains everything for the basic scatter plot.
   - **`core/database/repositories.py`**: Data access layer
 - **`api/`**: FastAPI backend (routers, schemas, dependencies, cache, analytics, MCP server)
 - **`app/`**: React frontend (Vite 8 + TypeScript 6 + MUI 9)
-- **`agents/`**: Agent network on Google ADK 2.11 and Gemini ("Use with my data"); settings and pipeline contracts so far, design in `docs/concepts/agent-network.md`
+- **`agents/`**: Agent network on Google ADK 2.11 and Vertex AI ("Use with my data"; Claude Haiku 5.5 by default, Gemini 3.8 Flash behind `AGENT_PROVIDER`); the runtime core (agents, plot pipeline, plugins, render layer, private `/v1` service) runs locally, see `agents/README.md`; design in `docs/concepts/agent-network.md`
 - **`agentic/`**: AI workflow layer (composable phases, prompt templates, runtime state)
   - **`agentic/workflows/`**: Click CLI scripts (plan, build, test, review + orchestrators)
   - **`agentic/commands/`**: Markdown prompt templates
