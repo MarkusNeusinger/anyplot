@@ -308,6 +308,7 @@ all = [
     { name = "selenium" },
     { name = "squarify" },
     { name = "statsmodels" },
+    { name = "types-pyyaml" },
     { name = "vl-convert-python" },
     { name = "webdriver-manager" },
     { name = "wordcloud" },
@@ -429,6 +430,7 @@ test = [
 ]
 typecheck = [
     { name = "mypy" },
+    { name = "types-pyyaml" },
 ]
 
 [package.metadata]
@@ -546,6 +548,7 @@ requires-dist = [
     { name = "statsmodels", marker = "extra == 'lib-pygal'", specifier = ">=0.14.6" },
     { name = "statsmodels", marker = "extra == 'lib-seaborn'", specifier = ">=0.14.6" },
     { name = "statsmodels", marker = "extra == 'plotting'", specifier = ">=0.14.6" },
+    { name = "types-pyyaml", marker = "extra == 'typecheck'", specifier = ">=6.0.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.51.0" },
     { name = "vl-convert-python", marker = "extra == 'lib-altair'", specifier = ">=1.7.0" },
     { name = "vl-convert-python", marker = "extra == 'plotting'", specifier = ">=1.7.0" },
@@ -4797,6 +4800,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/03/51/d33db42cc72ffd8c30777547b42d01f0cbf9d95a770457698d0174b3ed71/typer-0.27.3.tar.gz", hash = "sha256:d0396f770a560ab1b0a8504e13b5f254b728cedb05c61cf0359e944e50ce8901", size = 205303, upload-time = "2026-10-06T17:24:16.61Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/07/ea/2e31b67051e91a133189e9c000c222502ddc6969856416de0d095de4c0b0/typer-0.27.3-py3-none-any.whl", hash = "sha256:e50022f28b82a86313e54501317a1db64bf8f8d036ff8cfe5ca7e47675454aff", size = 123312, upload-time = "2026-10-06T17:24:15.054Z" },
+]
+
+[[package]]
+name = "types-pyyaml"
+version = "6.0.12.20260906"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/90/6e/abec85b9013db5b934b0280a6dd104904d84f7bcbaab2e2f3def87ac7463/types_pyyaml-6.0.12.20260906.tar.gz", hash = "sha256:f59c1cc05010b833d2d72287bbaa72610106b28d42d89a907313117faba85212", size = 18649, upload-time = "2026-09-06T06:35:35.362Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/15/c0/fc0644b7ddcfb969e95845837143cb5173ddd6e06ee4ba5fc493cd9329b7/types_pyyaml-6.0.12.20260906-py3-none-any.whl", hash = "sha256:bca893ff0d51df5c9053137d5d0e6ccd36e939a196356f1d5c16372422f5137b", size = 21282, upload-time = "2026-09-06T06:35:34.372Z" },
 ]
 
 [[package]]

@@ -70,6 +70,7 @@ dev = [
 ]
 typecheck = [
     "mypy>=2.3.0",
+    "types-PyYAML>=6.0.0",  # agents/anyplot/policy.py reads prompts/refusals.yaml
 ]
 plotting = [
     # Additional plotting libraries (matplotlib already in main dependencies)
