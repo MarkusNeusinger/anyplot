@@ -7,8 +7,8 @@
   `RequestValidationError` handler in `api/exceptions.py` now renders the same
   `{"detail": [...]}` body ASCII-escaped, which can always be encoded. The
   "Standard error format" section of `docs/reference/api.md` now matches what the
-  API returns, including the 422 shape.
+  API returns, including the 422 shape. (#12104)
 - **`POST /feedback` answers 422 for text that is not valid UTF-8.** A lone
   surrogate in any field passed the schema, then made the database driver raise on
   encoding, so the request ended as a 500. `FeedbackRequest` now refuses such
-  text up front, before the router or the database sees it.
+  text up front, before the router or the database sees it. (#12104)
