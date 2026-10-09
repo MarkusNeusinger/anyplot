@@ -12,43 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-yiel
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/plotly/plot-dark.html
-quality_score: 95
+quality_score: 84
 review:
   strengths:
-  - 'Perfectly theme-adaptive implementation: all chrome tokens (PAGE_BG, ELEVATED_BG,
-    INK, INK_SOFT, INK_MUTED, GRID) correctly derived and applied to every non-data
-    element in both renders'
-  - 'Excellent spec compliance: log-scale x-axis with maturity string labels, three
-    curve shapes (normal/flat/inverted), inversion zone shading with annotation, and
-    bps spread annotation all present'
-  - 'Sophisticated storytelling: annotation box with directional arrow + floating
-    quantitative annotation create a professional financial-publication-style chart'
-  - Redundant marker shapes (circle/diamond/square) enhance CVD accessibility beyond
-    palette alone
-  - 'Full Plotly interactivity leveraged: unified hover, spike lines, HTML export
-    — all distinctively Plotly features'
+  - 'Log-scaled maturity axis with tickvals at maturity_years and ticktext from the
+    maturity labels: true time spacing with readable 1M-30Y ticks'
+  - Theme tokens threaded through every chrome element; both renders fully legible
+    with identical Imprint data colors
+  - Redundant marker shapes (circle/diamond/square) keep the three curves distinguishable
+    without color
+  - 'Plotly-native interactivity in the HTML: unified x hover with dotted across-spikes
+    and per-point maturity labels in the hovertemplate'
+  - Inversion region shown with add_hrect shading plus a bordered, arrowed 'Inversion
+    Zone' callout
   weaknesses:
-  - 'The ''+264 bps at 10Y'' annotation uses C1 (brand green #009E73) as its font
-    color, which visually echoes the Normal curve and could mislead readers — fix
-    by using INK_SOFT or INK_MUTED for annotation font color, or add ''Inverted vs.
-    Normal spread'' context'
-  - Inversion zone fill at 8% opacity (rgba(68,103,163,0.08)) is almost imperceptible
-    in the light render — increase to 0.12-0.15 for clearer visual differentiation
+  - 'VQ-05 (both): an empty band of about 12 % of the canvas height (≈210 px) separates
+    the subtitle from the top of the plot area → close it to about 4 % (−130 px).
+    Likely cause: margin t=90 combined with the title anchored at y=0.97; reduce margin
+    t to about 65.'
+  - 'SC-02, SC-03 (both): curves drawn with spline interpolation swing past their
+    points (Oct 2023 dips below its 4.62 % 10Y yield before rising to 20Y, Jan 2022
+    bulges above 2.32 % between 20Y and 30Y), breaking the spec''s ''never smoothed
+    away from its points'' → straight segments through the points. Likely cause: line
+    shape=''spline''; use shape=''linear''.'
+  - 'DQ-02 (both): the Jun 2023 curve is labelled ''Flat'' yet falls 143 bps from
+    1M (5.27 %) to 10Y (3.84 %), a deeper inversion than the ''Inverted'' Oct 2023
+    curve (−92 bps) → label it by its real shape, or use a genuinely flat snapshot
+    (1M-10Y within about ±25 bps). Likely cause: the series name list / yields_flat
+    values.'
+  - 'Suggestion: tie the ''+264 bps at 10Y'' label to the two curves it measures;
+    drawn in brand green it currently reads as part of the Jan 2022 curve.'
+  - 'Suggestion: a slightly stronger inversion band fill would separate it more clearly
+    from the light background.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "U.S. Treasury Yield Curves" bold in dark ink (#1A1A17), subtitle "line-yield-curve · python · plotly · anyplot.ai" in smaller muted text (#6B6A63); axis labels "Maturity" and "Yield (%)" in dark ink at 12px; tick labels in INK_SOFT (#4A4A44) at 10px — all clearly readable; annotation box "Inversion Zone" with ELEVATED_BG (#FFFDF6) background, blue border, dark ink text — readable; "+264 bps at 10Y" annotation in brand green — readable
-      Data: Three lines: Jan 2022 Normal in #009E73 (circle markers), Jun 2023 Flat in #C475FD (diamond markers), Oct 2023 Inverted in #4467A3 (square markers); subtle blue-tinted inversion zone shading; all lines and markers clearly visible
-      Legibility verdict: PASS — all text readable, theme tokens correctly applied
+      Background: warm off-white #FAF8F1, correct
+      Chrome: bold 'U.S. Treasury Yield Curves' in dark ink with the muted subtitle 'line-yield-curve · python · plotly · anyplot.ai'; axis titles 'Maturity' and 'Yield (%)', ticks 1M-30Y on a log axis and 0%-7% — all readable; y-grid only, subtle; L-frame axis lines. Bordered 'Inversion Zone' callout box with an arrow to the Oct 2023 6M point; brand-green '+264 bps at 10Y' label below the Jun 2023 curve; legend box lower right
+      Data: Jan 2022 (Normal) #009E73 circles rising 0.08%->2.3%; Jun 2023 (Flat) #C475FD diamonds falling 5.3%->3.9%; Oct 2023 (Inverted) #4467A3 squares 5.5%->4.8%; very faint grey band (8 % blue fill) 4.62-5.56% marks the inversion zone; lines spline-smoothed
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in #F0EFE8 (light ink), subtitle in #A8A79F (muted); axis labels in #F0EFE8; tick labels in #B8B7B0 (INK_SOFT dark); annotation box uses ELEVATED_BG (#242420) with INK_SOFT (#B8B7B0) text — legible dark-on-slightly-lighter-dark; "+264 bps at 10Y" in #009E73 green — readable on dark; NO dark-on-dark failures found
-      Data: Identical data colors to light render — #009E73 green, #C475FD lavender, #4467A3 blue all preserved; inversion zone shading slightly more visible on dark surface; all lines and markers clearly distinguishable
-      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark issues
+      Background: warm near-black #1A1A17, correct
+      Chrome: title, subtitle, axis titles and ticks in light inks, callout and legend boxes on the #242420 elevated surface — all readable, no dark-on-dark text
+      Data: identical green/lavender/blue curves and markers; inversion band reads as a slightly bluish dark strip; marker halos in the dark elevated color
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -56,78 +66,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (title 16px, axis labels 12px, ticks 10px);
-          fully readable in both themes; no overflow
+        comment: Title 16 px, axis titles 12 px, ticks/legend 10 px at scale 4; all
+          text readable in both themes, also at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Annotation box above data; bps annotation between curves; legend
-          in corner; no collisions
+        comment: No text collides with text or data; the purple and blue markers touch
+          at 3M-1Y where the curves nearly meet, which the spec permits
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 11 sparse points per series; marker size=10 prominent; distinct shapes
-          for redundant encoding; lines 2.5pt
+        comment: 11 points per curve with 10 px markers, distinct circle/diamond/square
+          symbols and 2.5 px lines; legend samples match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette positions 1-3; marker shapes added for CVD safety
+        comment: Green/lavender/blue plus redundant marker shapes; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Canvas gate passed 3200x1800; generous margins; title ~55-60% width;
-          no overflow or clipping
+        passed: false
+        comment: Empty band of about 12 % of the canvas height between the subtitle
+          and the plot top (defect line); otherwise balanced, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Maturity, Y: Yield (%) with percent suffix on ticks; descriptive
-          with units'
+        comment: '''Maturity'' with maturity-label ticks and ''Yield (%)'' with %
+          tick suffix'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; second #C475FD; third #4467A3; light bg #FAF8F1;
-          dark bg #1A1A17; full theme-adaptive chrome'
+        comment: '#009E73, #C475FD, #4467A3 in canonical order; backgrounds #FAF8F1
+          / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Imprint palette + custom title hierarchy + annotation box + bps annotation
-          + inversion shading + marker shapes + spike lines; professional financial
-          aesthetic
+        passed: false
+        comment: Two-level title (bold headline, muted mandated subtitle), elevated-surface
+          annotation and legend boxes, marker halos in the elevated color
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: L-frame only; Y-axis-only grid at 15% opacity; spline curves; elevated-bg
-          annotation boxes; consistent typography hierarchy
+        passed: false
+        comment: x-grid dropped in favour of the labelled maturity ticks, legend parked
+          in the empty lower-right quadrant
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Three curve shapes narrate yield curve evolution; inversion shading
-          + callout creates focal point; bps annotation adds quantitative depth; descriptive
-          legend labels
+        passed: false
+        comment: Legend labels name each curve's shape (Normal/Flat/Inverted), guiding
+          the reading beyond the Notes' date legend
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -135,30 +143,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with markers; log scale x-axis per spec recommendation
+        comment: Multi-curve yield-curve line chart with markers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 3 curves; normal/flat/inverted shapes; inversion zone highlighted;
-          maturity_years for positioning with string labels
+        passed: false
+        comment: Curves, maturity ticks, inversion shading + callout and date legend
+          present; C1 'never smoothed away from its points' broken by spline shape
+          (defect line)
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'x: maturity_years log scale with string labels; y: yield_pct with
-          percent suffix; all 11 maturities present'
+        passed: false
+        comment: x = maturity_years on a log axis, y = yield_pct; spline interpolation
+          overshoots between points, e.g. Oct 2023 dips below 4.62 % after 10Y (defect
+          line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Descriptive prefix 'U.S. Treasury Yield Curves' + mandated subtitle;
-          legend labels match dates and curve types
+        comment: Descriptive title plus 'line-yield-curve · python · plotly · anyplot.ai';
+          legend gives each date
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -166,22 +176,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full term structure (11 maturities) + three curve shape archetypes
-          + temporal evolution
+        comment: Normal, near-flat-labelled and inverted shapes across 11 maturities;
+          inversion shown
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: U.S. Treasury yields; Jan 2022 (0-2%) and 2023 (4-5.5%) historically
-          accurate; neutral topic
+        passed: false
+        comment: Plausible U.S. Treasury snapshots, but the Jun 2023 curve labelled
+          'Flat' is inverted by 143 bps 1M-10Y, deeper than the 'Inverted' Oct 2023
+          curve (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis 0-7% sensible; log maturity axis correctly spaces short/long-term;
-          inversion band at correct levels
+        comment: 'Yields 0.08-5.56 % fit the dates; checked 10Y spread label: 4.62
+          - 1.98 = 264 bps, matches the annotation; label drawn in brand green #009E73'
     code_quality:
       score: 10
       max: 10
@@ -191,52 +202,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat linear code with single clean for-loop
+        comment: Flat script, one loop over series tuples
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed numpy arrays; fully deterministic
+        comment: Hard-coded deterministic arrays
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects; all used
+        comment: os, numpy, plotly.graph_objects - all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; tuple-based iteration for series data is
-          clean; no fake UI
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and plot-{THEME}.html saved correctly; autosize=False
-          with explicit dimensions
+        comment: plot-{THEME}.png at 800x450 scale 4 plus plot-{THEME}.html; current
+          API
     library_mastery:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: go.Scatter with mode=lines+markers; add_hrect; add_annotation with
-          log-scale xref; hovertemplate; update_layout pattern
+        passed: false
+        comment: go.Scatter lines+markers, add_hrect, add_annotation with log-axis
+          xref, hovertemplate with text per point
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: hovermode=x unified; spikedistance=-1 spike lines; write_html interactive
-          output; line.shape=spline; add_hrect declarative shape
+        passed: false
+        comment: hovermode='x unified' with across-spikes and spikedistance=-1 for
+          cross-curve comparison in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-212804a6a0
 impl_tags:
   dependencies: []
   techniques:
