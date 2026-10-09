@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import time
 from collections import Counter
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
+from typing import Literal
 
 import jwt as pyjwt
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
@@ -62,10 +64,23 @@ def _verify_cf_access_jwt(token: str) -> str | None:
     return email if isinstance(email, str) else None
 
 
-def require_admin(
+@dataclass(frozen=True)
+class AdminIdentity:
+    """Who passed the admin gate, and through which door.
+
+    `email` is the Cloudflare Access identity on the browser path and None on
+    the token path, which proves possession of a shared secret, not a person.
+    The agent BFF (`api/routers/agent.py`) keys its per-user id on it.
+    """
+
+    email: str | None
+    via: Literal["cf_access", "token"]
+
+
+def require_admin_identity(
     x_admin_token: str | None = Header(default=None),
     cf_access_jwt: str | None = Header(default=None, alias="Cf-Access-Jwt-Assertion"),
-) -> None:
+) -> AdminIdentity:
     """Gate sensitive /debug/* endpoints behind Cloudflare Access OR a shared secret.
 
     Two paths:
@@ -86,11 +101,14 @@ def require_admin(
 
     Without `settings.admin_token` configured the token path is disabled (503),
     so a misconfigured prod deploy without Cloudflare Access still fails closed.
+
+    Returns the identity that passed; `require_admin` is the same gate for
+    routes that only need the yes/no.
     """
     if cf_access_jwt:
         email = _verify_cf_access_jwt(cf_access_jwt)
         if email and email in settings.admin_allowed_emails:
-            return
+            return AdminIdentity(email=email, via="cf_access")
         if email:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"User {email} not authorized")
         # Invalid JWT (signature/aud/iss/expiry) — fall through to token path so
@@ -103,6 +121,18 @@ def require_admin(
     # `secrets.compare_digest` raise on two `str` (api/secret_compare.py).
     if not secret_matches(x_admin_token, expected):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin token")
+    return AdminIdentity(email=None, via="token")
+
+
+def require_admin(identity: AdminIdentity = Depends(require_admin_identity)) -> None:
+    """The admin gate for routes that need no identity: `require_admin_identity`, answer dropped.
+
+    A dependency on the identity rather than a second copy of the checks, so
+    a route or router that depends on both runs the gate once (FastAPI caches
+    a dependency per request) and a test override of `require_admin_identity`
+    reaches this wrapper too.
+    """
+    return None
 
 
 # Threshold for identifying specs that weren't auto-approved (matches workflow ai-approved threshold)

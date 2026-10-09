@@ -411,15 +411,153 @@ Used to load interactive plots (plotly, bokeh, altair) in iframes with dynamic s
 
 ---
 
+## Agent chat (admin only, dark by default)
+
+> **Status (2026-10-09):** the routes exist and ship switched off. The
+> anyplot-agents service they call is not built yet, so with the switch on
+> every route that calls it answers `502 upstream` until that service is
+> deployed. Design: [Agent network design](../concepts/agent-network.md).
+
+The `/debug/agent/*` routes (`api/routers/agent.py`) are a backend for the
+frontend (BFF) in front of the private anyplot-agents Cloud Run service. The
+browser never calls that service directly: the BFF authenticates the admin,
+derives an opaque user id, accepts only allowlisted fields, and re-frames the
+chat stream.
+
+### Access, kill switch, and CSRF guard
+
+Every request passes three checks, in this order:
+
+1. **Admin gate.** The same gate as the other `/debug` routes: a Cloudflare
+   Access JWT for an allow-listed email, or `X-Admin-Token`. Without either
+   you get `401`; a valid JWT for an unlisted email gets `403`, and an
+   unconfigured gate gets `503`.
+2. **Kill switch.** Every route answers `404 {"detail": "agent chat is not enabled"}`
+   unless `AGENT_ENABLED` is true and both `AGENT_SERVICE_URL` and
+   `AGENT_USER_ID_KEY` are set. Production deploys with `AGENT_ENABLED=false`,
+   so a deploy never breaks while the configuration is incomplete.
+3. **CSRF guard** on `POST`, `PUT`, and `DELETE`. The request needs the header
+   `X-Anyplot-Client: agent-chat/1`; an `Origin` header, when the browser sends
+   one, must be in the CORS allow-list or match `http://localhost:<port>`; and a
+   request with a body must send it as `Content-Type: application/json`. A
+   failed check answers `403` with `client_header_required`,
+   `origin_not_allowed`, or `json_required`.
+
+The deploy smoke test expects `401` on `/debug/agent/status`, whatever the
+switch says.
+
+### Identity and request ids
+
+The agents service never sees an email address. The BFF sends
+`X-Anyplot-User: adm_<16 hex digits>`, the first 16 hex digits of an
+HMAC-SHA256 over the admin's email with `AGENT_USER_ID_KEY`; every caller on
+the `X-Admin-Token` path shares the id derived from the string `token`.
+
+Each response carries an `X-Request-Id` that the BFF also sends upstream. Quote
+it when you report a problem. Upstream calls carry a Cloud Run ID token whose
+audience is `AGENT_SERVICE_URL`; for a `localhost` or `127.0.0.1` URL no token
+is fetched.
+
+### Routes
+
+The routes mirror the agents service's `/v1` API. All paths below start with
+`/debug/agent`.
+
+| Route | Request | Response |
+|---|---|---|
+| `GET /status` | None | The service's `{libraries, model, location, version}` plus `"enabled": true` |
+| `GET /eligibility?spec=&library=` | Spec id and library id | The agents service's answer, passed through |
+| `POST /sessions` | `{spec_id, library, locale}` | `{session_id, eligibility}`; `404 not_found` when the spec has no implementation for the library |
+| `POST /sessions/{sid}/library` | `{spec_id, library}` | Switches the library; the dataset and bindings stay |
+| `POST /sessions/{sid}/dataset` | `{text}`, at most 200 KB (204,800 bytes) of UTF-8 | `{preview, profile, bindings, warnings}`; `413 too_long` above the limit |
+| `PUT /sessions/{sid}/bindings` | `[{role, column}]`, at most 50 | The agents service's answer |
+| `POST /sessions/{sid}/messages` | `{text}` (at most 2,000 characters) or `{"action": "create_plot"}` | An SSE stream in protocol `anyplot/1`; `413 too_long` above the limit |
+| `POST /sessions/{sid}/cancel` | None | `204` |
+| `GET /sessions/{sid}/artifacts/{name}?v=` | `name` is one of `plot-light.png`, `plot-dark.png`, `plot.py`, `data.csv` | The file, with `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`; any other name is `404` |
+| `DELETE /sessions/{sid}` | None | `204` |
+
+Validation: `spec_id` matches `^[a-z0-9-]{1,100}$`; `library` is one of the 15
+supported library ids; `locale` is a language tag of at most 16 characters such
+as `de` or `de-CH`; the session id matches `^[A-Za-z0-9_-]{1,128}$`; a binding
+`role` matches `^[a-z_]{1,32}$` and its `column` has at most 64 characters. An
+unknown field in a body is a `422`.
+
+`POST /sessions` and `POST /sessions/{sid}/library` add the user id and a
+catalogue snapshot before they forward the body, because the agents service
+has no database access: `{spec_id, title, description, data_roles, notes,
+code, library_version}`, with `# noqa` comments stripped from the code.
+
+### SSE protocol `anyplot/1`
+
+| Event | Data |
+|---|---|
+| `ready` | `{v, run_id}` |
+| `status` | `{step, attempt}` |
+| `message` | `{text}` |
+| `plot` | `{status, reason, attempts, artifacts, changes, residual_defects}` |
+| `refusal` | `{code, text}` |
+| `error` | `{code, ref}`; `code` is `capacity`, `deadline`, `guard_unavailable`, `upstream`, or `internal`; `ref` is the request id |
+| `done` | `{llm_calls, tokens}` |
+
+The BFF re-frames the upstream stream instead of forwarding it. It assembles
+each complete event and drops events of any other type, events without a type,
+data that is not a JSON object, and every field the table does not list, so
+`error_details` and stack traces never reach the browser. An error code outside
+the list becomes `internal`. The BFF stops reading after `done`.
+
+While the stream is idle, a `: ping` comment arrives every 15 seconds. Every
+stream ends with `done`: when the agents service is unreachable, cuts the
+stream, runs past `AGENT_REQUEST_TIMEOUT_S`, or ends without `done`, the BFF
+sends `error {"code": "upstream"}` and then `done {}`. Errors that happen before
+the stream starts, such as `413 too_long` or an upstream `409 run_active`,
+arrive as HTTP statuses instead.
+
+### Agent error responses
+
+The agent routes answer errors as `{"detail": "<code>", "ref": "<request id>"}`;
+the kill switch and the CSRF guard leave out `ref`. An upstream `4xx` or `5xx`
+keeps its status. Its code is one the agents service documents (`not_eligible`,
+`run_active`, `too_long`, `unparseable`, `data_refused`, `session_expired`) or
+a generic one for the status (`bad_request`, `not_found`, `conflict`,
+`too_long`, `invalid`, `rate_limited`, `rejected`, `upstream`); the upstream
+body is never echoed. Two cases answer `502` instead:
+
+- `upstream_auth`: an upstream `401`, or a `403` without a documented code.
+  Cloud Run IAM refused the BFF's own ID token, which is not the admin's
+  session failing.
+- `upstream`: the agents service is unreachable, an ID token could not be
+  fetched, or a success response is not JSON.
+
+### Configuration
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `AGENT_ENABLED` | `false` | The kill switch |
+| `AGENT_SERVICE_URL` | Unset | Base URL of anyplot-agents, without `/v1`; also the ID-token audience |
+| `AGENT_USER_ID_KEY` | Unset | HMAC key for the user id; from Secret Manager in production |
+| `AGENT_REQUEST_TIMEOUT_S` | `190` | Upstream timeout, and the cap on one chat stream; above the agents service's 180-second deadline |
+
+In production, `AGENT_ENABLED` and `AGENT_SERVICE_URL` come from the
+`_AGENT_ENABLED` and `_AGENT_SERVICE_URL` substitutions in `api/cloudbuild.yaml`.
+Change them there: the deploy rewrites both variables on every build.
+
+---
+
 ## Error responses
 
 ### Standard error format
 
 ```json
 {
-  "detail": "Spec not found"
+  "status": 404,
+  "message": "Spec 'scatter-x' not found",
+  "path": "/specs/scatter-x"
 }
 ```
+
+Request validation errors (`422`) keep FastAPI's own shape, `{"detail": [...]}`.
+The agent chat routes use their own shape; see
+[Agent error responses](#agent-error-responses).
 
 ### HTTP status codes
 
@@ -428,6 +566,7 @@ Used to load interactive plots (plotly, bokeh, altair) in iframes with dynamic s
 | 200 | Success |
 | 400 | Bad request (invalid parameters) |
 | 404 | Resource not found |
+| 422 | Request validation failed |
 | 502 | External service error (GCS) |
 | 503 | Database not available |
 
@@ -670,6 +809,9 @@ Transform Rules. Its source and the measuring procedure live in
 - `http://localhost:*` (development)
 
 **Allowed Methods**: All
+
+**Exposed headers**: `Mcp-Session-Id` (MCP sessions) and `X-Request-Id` (the
+agent chat's reference id).
 
 The origin gate sits directly inside `CORSMiddleware`, so a `403` from it still
 carries the CORS headers a browser needs to read it as a 403 rather than as an
