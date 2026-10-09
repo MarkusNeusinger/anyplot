@@ -7,4 +7,4 @@
   loads the production database credentials into a test run or a local server
   that never asked for them. Each call now names its own checkout's `.env`; a
   missing file is still silently skipped, so Cloud Run and GitHub Actions, which
-  set their variables directly, are unchanged.
+  set their variables directly, are unchanged. (#12105)
