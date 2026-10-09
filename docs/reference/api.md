@@ -411,12 +411,13 @@ Used to load interactive plots (plotly, bokeh, altair) in iframes with dynamic s
 
 ---
 
-## Agent chat (admin only, dark by default)
+## Agent chat (admin only, switched off by default)
 
 > **Status (2026-10-09):** the routes exist and ship switched off. The
-> anyplot-agents service they call is not built yet, so with the switch on
-> every route that calls it answers `502 upstream` until that service is
-> deployed. Design: [Agent network design](../concepts/agent-network.md).
+> anyplot-agents service they call runs locally but is not deployed yet, so
+> with the switch on in production every route that calls it answers
+> `502 upstream` until that service is deployed. Design:
+> [Agent network design](../concepts/agent-network.md).
 
 The `/debug/agent/*` routes (`api/routers/agent.py`) are a backend for the
 frontend (BFF) in front of the private anyplot-agents Cloud Run service. The
@@ -468,15 +469,16 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 
 | Route | Request | Response |
 |---|---|---|
-| `GET /status` | None | The service's `{libraries, model, location, version}` plus `"enabled": true` |
+| `GET /status` | None | The service's `{libraries, model, location, version, provider, waiting, in_flight}` plus `"enabled": true`; `waiting` counts the turns in the agents service's run queue and `in_flight` the runs it is running |
 | `GET /eligibility?spec=&library=` | Spec id and library id | The agents service's answer, passed through |
 | `POST /sessions` | `{spec_id, library, locale}` | `{session_id, eligibility}`; `404 not_found` when the spec has no implementation for the library |
 | `POST /sessions/{sid}/library` | `{spec_id, library}` | Switches the library; the dataset and bindings stay |
 | `POST /sessions/{sid}/dataset` | `{text}`, at most 200 KB (204,800 bytes) of UTF-8 | `{preview, profile, bindings, warnings}`; `413 too_long` above the limit |
 | `PUT /sessions/{sid}/bindings` | `[{role, column}]`, at most 50 | The agents service's answer |
-| `POST /sessions/{sid}/messages` | `{text}` (at most 2,000 characters) or `{"action": "create_plot"}` | An SSE stream in protocol `anyplot/1`; `413 too_long` above the limit |
-| `POST /sessions/{sid}/cancel` | None | `204` |
-| `GET /sessions/{sid}/artifacts/{name}?v=` | `name` is one of `plot-light.png`, `plot-dark.png`, `plot.py`, `data.csv` | The file, with `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`; any other name is `404` |
+| `POST /sessions/{sid}/messages` | `{text}` (at most 2,000 characters) or `{"action": "create_plot"}` | An SSE stream in protocol `anyplot/1`; `413 too_long` above the limit, `409 run_active` while you have a queued or running turn or a theme render in any session, `503 capacity` when the run queue is full |
+| `POST /sessions/{sid}/cancel` | None | `204`; a turn that still waits leaves the run queue |
+| `POST /sessions/{sid}/versions/{version}/render` | `{"theme": "light"}` or `{"theme": "dark"}`; `version` is 0 to 999, where 0 is the latest version | `{status, reason?, artifacts}` once the render is done (see [Theme toggle](#theme-toggle)) |
+| `GET /sessions/{sid}/artifacts/{name}?v=` | `name` is one of `plot-light.png`, `plot-dark.png`, `plot.py`, `data.csv` | The file, with `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`; any other name is `404`, and so is the PNG of a theme the version has not rendered |
 | `DELETE /sessions/{sid}` | None | `204` |
 
 Validation: `spec_id` matches `^[a-z0-9-]{1,100}$`; `library` is one of the 15
@@ -492,16 +494,46 @@ catalogue snapshot before they forward the body, because the agents service
 has no database access: `{spec_id, title, description, data_roles, notes,
 code, library_version}`, with `# noqa` comments stripped from the code.
 
+### Theme toggle
+
+A chat turn renders the plot in one theme: light, unless you ask for a dark
+plot. `POST /sessions/{sid}/versions/{version}/render` renders another theme
+of a finished version from its stored code and data. It calls no model and
+does not wait in the run queue, but it shares the one render slot with
+running turns, which get a freed slot first, so it can wait for a render in
+progress. The response arrives when the render is done:
+
+| `status` | Meaning | `reason` |
+|---|---|---|
+| `ok` | The theme rendered on the exact canvas | None |
+| `needs_attention` | The canvas missed, so the PNG was padded onto it, never cropped | `canvas_padded` |
+| `failed` | The render failed the host gates (`render`), or the renderer could not run (`error`); no PNG was stored | `render` or `error` |
+
+`artifacts` lists the version's files after the call, for example
+`["plot-light.png", "plot-dark.png", "plot.py", "data.csv"]`. Asking again for
+a theme the version already has answers from its record without a new render.
+A `render` failure is recorded too: the same code and data fail the same way,
+so asking again renders it once more and then answers from the record. An
+`error` is not recorded, so you can try again.
+
+The route answers `409 run_active` while the session has a queued or running
+turn or another theme render, or while you have one in another session (a
+turn in the session also gets `409 run_active` while the theme renders),
+`404 not_found` for an unknown version or one whose render was swept, and
+`503 capacity` when no render slot came free within 120 seconds or the
+agents service's render store is full.
+
 ### SSE protocol `anyplot/1`
 
 | Event | Data |
 |---|---|
 | `ready` | `{v, run_id}` |
-| `status` | `{step, attempt}` |
+| `status` | `{step: "queued", position, waiting}` while the turn waits in the run queue: `position` 1 runs next, and `waiting` counts every queued turn, this one included |
+| `status` | `{step, attempt}` for a pipeline step: `adapting`, `checking`, `rendering`, `reviewing`, or `repairing` |
 | `message` | `{text}` |
 | `plot` | `{status, reason, attempts, artifacts, changes, residual_defects}` |
 | `refusal` | `{code, text}` |
-| `error` | `{code, ref}`; `code` is `capacity`, `deadline`, `guard_unavailable`, `upstream`, or `internal`; `ref` is the request id |
+| `error` | `{code, ref}`; `code` is `capacity` (also when the turn waited the run queue's maximum of 600 seconds, or the BFF's turn cap ran out while it waited), `deadline`, `guard_unavailable`, `upstream`, or `internal`; `ref` is the request id |
 | `done` | `{llm_calls, tokens}` |
 
 The BFF re-frames the upstream stream instead of forwarding it. It assembles
@@ -510,12 +542,30 @@ data that is not a JSON object, and every field the table does not list, so
 `error_details` and stack traces never reach the browser. An error code outside
 the list becomes `internal`. The BFF stops reading after `done`.
 
+Every turn waits in the agents service's run queue, which runs one turn at a
+time and starts at most one a minute. A turn that can start at once sends no
+`queued` status. Otherwise the stream sends `ready`, then a `queued` status at
+once, on every change of the position or the queue length, and every 15
+seconds while nothing changes, and then the turn's own events. If you are
+already over the daily token budget, the stream sends `ready`,
+`refusal {"code": "budget"}` and `done` at once, and the turn never enters the
+queue.
+
 While the stream is idle, a `: ping` comment arrives every 15 seconds. Every
 stream ends with `done`: when the agents service is unreachable, cuts the
 stream, runs past `AGENT_REQUEST_TIMEOUT_S`, or ends without `done`, the BFF
-sends `error {"code": "upstream"}` and then `done {}`. Errors that happen before
-the stream starts, such as `413 too_long` or an upstream `409 run_active`,
-arrive as HTTP statuses instead.
+sends `error {"code": "upstream"}` and then `done {}`. Time in the run queue
+does not count toward `AGENT_REQUEST_TIMEOUT_S`: every `queued` status starts
+the budget again with 15 seconds on top, because the run can start up to one
+`queued` status before its first event, and the first event after the wait
+starts it again. No turn runs past `AGENT_TURN_MAX_S` (590 seconds), which
+stays below anyplot-api's own request timeout of 600 seconds: a turn that is
+still queued when its run could no longer finish inside that cap ends with
+`error {"code": "capacity"}` and `done {}`, and leaves the queue before it
+spends a token. At the defaults, a turn waits at most about 385 seconds
+through the BFF. Errors that happen before the stream starts, such as
+`413 too_long`, an upstream `409 run_active`, or `503 capacity` from a full
+run queue, arrive as HTTP statuses instead.
 
 ### Agent error responses
 
@@ -544,7 +594,8 @@ body is never echoed. Two cases answer `502` instead:
 | `AGENT_ENABLED` | `false` | The kill switch |
 | `AGENT_SERVICE_URL` | Unset | Base URL of anyplot-agents, without `/v1`; also the ID-token audience |
 | `AGENT_USER_ID_KEY` | Unset | HMAC key for the user id; from Secret Manager in production |
-| `AGENT_REQUEST_TIMEOUT_S` | `190` | Upstream timeout, and the cap on one chat stream; above the agents service's 180-second deadline |
+| `AGENT_REQUEST_TIMEOUT_S` | `190` | Upstream timeout, and the cap on one chat stream outside the run queue; above the agents service's 180-second deadline |
+| `AGENT_TURN_MAX_S` | `590` | Hard cap on one chat turn, queue wait included; keep it below anyplot-api's Cloud Run `--timeout` (600 seconds in `api/cloudbuild.yaml`) |
 
 In production, `AGENT_ENABLED` and `AGENT_SERVICE_URL` come from the
 `_AGENT_ENABLED` and `_AGENT_SERVICE_URL` substitutions in `api/cloudbuild.yaml`.

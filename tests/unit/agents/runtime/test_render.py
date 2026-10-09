@@ -21,7 +21,7 @@ from agents.anyplot.render import make_backend
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome, fixture_png
 from agents.anyplot.render.backends.local import LocalDockerBackend, read_tail
 from agents.anyplot.render.backends.sandbox import SandboxBackend
-from agents.anyplot.render.contract import RendererUnavailable, RenderJob, RenderResult, ThemeOutput
+from agents.anyplot.render.contract import THEMES, RendererUnavailable, RenderJob, RenderResult, Theme, ThemeOutput
 from agents.anyplot.render.gates import data_rows, error_summary, evaluate
 from agents.anyplot.render.png import PngRejected, harden, pad_to, read_output, size_of
 from agents.anyplot.render.runtimes.python import HARNESS_SOURCE, PythonRuntime
@@ -31,6 +31,9 @@ from agents.anyplot.settings import AgentSettings
 
 from .conftest import CASES
 from .fakes import SCATTER_PLAN
+
+
+BOTH: tuple[Theme, ...] = THEMES
 
 
 def png_bytes(size: tuple[int, int], colour: str = "#FAF8F1", draw: bool = True, text: str | None = None) -> bytes:
@@ -108,10 +111,56 @@ class TestGates:
         return ThemeOutput(theme, 0, png=fixture_png(theme, size), probe=probe or {})
 
     def test_clean_render_passes(self) -> None:
-        report = evaluate(self.result(light=self.ok("light"), dark=self.ok("dark")), library="matplotlib", rows=10)
+        report = evaluate(
+            self.result(light=self.ok("light"), dark=self.ok("dark")), themes=BOTH, library="matplotlib", rows=10
+        )
 
         assert report.passed_host_gates and report.canvas_ok
         assert report.defects == [] and set(report.pngs) == {"light", "dark"}
+
+    @pytest.mark.parametrize("theme", ["light", "dark"])
+    def test_a_one_theme_job_needs_only_its_theme(self, theme: Theme) -> None:
+        report = evaluate(self.result(**{theme: self.ok(theme)}), themes=(theme,), library="matplotlib", rows=10)
+
+        assert report.passed_host_gates and report.canvas_ok
+        assert set(report.pngs) == {theme} and report.blocking == []
+
+    @pytest.mark.parametrize(("theme", "other"), [("light", "dark"), ("dark", "light")])
+    def test_a_one_theme_job_ignores_the_other_theme(self, theme: Theme, other: Theme) -> None:
+        """The gates judge the job's themes only: an extra output neither passes nor fails the render."""
+        crashed = ThemeOutput(other, 1, stderr_tail="KeyError: 'x'\n")
+        report = evaluate(
+            self.result(**{theme: self.ok(theme), other: crashed}), themes=(theme,), library="matplotlib", rows=10
+        )
+
+        assert report.passed_host_gates and set(report.shipped_pngs) == {theme}
+
+    @pytest.mark.parametrize(("theme", "other"), [("light", "dark"), ("dark", "light")])
+    def test_a_one_theme_job_without_its_theme_fails_r1(self, theme: Theme, other: Theme) -> None:
+        report = evaluate(self.result(**{other: self.ok(other)}), themes=(theme,), library="matplotlib", rows=10)
+
+        assert not report.passed_host_gates
+        assert report.blocking == [f"render ({theme}): the renderer returned no output for this theme"]
+        assert report.pngs == {}
+
+    @pytest.mark.parametrize("theme", ["light", "dark"])
+    def test_a_one_theme_canvas_miss_names_that_theme(self, theme: Theme) -> None:
+        probe = {"tick_overlaps": 3}
+        report = evaluate(
+            self.result(**{theme: self.ok(theme, (3100, 1800), probe=probe)}),
+            themes=(theme,),
+            library="seaborn",
+            rows=10,
+        )
+
+        assert report.passed_host_gates and not report.canvas_ok
+        assert report.canvas_defects[0].startswith(f"VQ-05 ({theme}): ")
+        assert report.advisory[0].startswith(f"VQ-02 ({theme}): ")
+        assert set(report.shipped_pngs) == {theme} and size_of(report.shipped_pngs[theme]) == (3200, 1800)
+
+    def test_a_job_without_themes_is_refused(self) -> None:
+        with pytest.raises(ValueError, match="at least one theme"):
+            evaluate(self.result(light=self.ok("light")), themes=(), library="matplotlib", rows=10)
 
     def test_crash_is_blocking_with_only_the_exception_class(self) -> None:
         crashed = ThemeOutput(
@@ -124,7 +173,7 @@ class TestGates:
                 "KeyError: 'Secret Column'\n"
             ),
         )
-        report = evaluate(self.result(light=self.ok("light"), dark=crashed), library="matplotlib", rows=10)
+        report = evaluate(self.result(light=self.ok("light"), dark=crashed), themes=BOTH, library="matplotlib", rows=10)
 
         assert not report.passed_host_gates
         assert report.blocking == [
@@ -157,8 +206,8 @@ class TestGates:
         assert "CANARY" not in summary and "Alice" not in summary and "SECRET" not in summary
 
     def test_missing_theme_fails_r1(self) -> None:
-        """A result with only one theme is incomplete although every output it has passed."""
-        report = evaluate(self.result(light=self.ok("light")), library="matplotlib", rows=10)
+        """A two-theme job with only one theme back is incomplete although every output it has passed."""
+        report = evaluate(self.result(light=self.ok("light")), themes=BOTH, library="matplotlib", rows=10)
 
         assert not report.passed_host_gates
         assert report.blocking == ["render (dark): the renderer returned no output for this theme"]
@@ -166,7 +215,10 @@ class TestGates:
 
     def test_one_theme_off_canvas_ships_both_themes(self) -> None:
         report = evaluate(
-            self.result(light=self.ok("light"), dark=self.ok("dark", (3100, 1800))), library="seaborn", rows=10
+            self.result(light=self.ok("light"), dark=self.ok("dark", (3100, 1800))),
+            themes=BOTH,
+            library="seaborn",
+            rows=10,
         )
 
         assert report.passed_host_gates and not report.canvas_ok
@@ -180,6 +232,7 @@ class TestGates:
     def test_timeout_and_missing_png(self) -> None:
         report = evaluate(
             self.result(light=ThemeOutput("light", None, timed_out=True), dark=ThemeOutput("dark", 0)),
+            themes=BOTH,
             library="matplotlib",
             rows=10,
         )
@@ -190,6 +243,7 @@ class TestGates:
     def test_canvas_miss_is_a_defect_with_a_padded_copy(self) -> None:
         report = evaluate(
             self.result(light=self.ok("light", (3100, 1800)), dark=self.ok("dark", (3100, 1800))),
+            themes=BOTH,
             library="seaborn",
             rows=10,
         )
@@ -208,6 +262,7 @@ class TestGates:
         }
         report = evaluate(
             self.result(light=self.ok("light", probe=probe), dark=self.ok("dark", probe=probe)),
+            themes=BOTH,
             library="matplotlib",
             rows=24,
         )
@@ -233,6 +288,7 @@ class TestGates:
     def test_malformed_probe_adds_no_line_and_never_raises(self, probe: dict) -> None:
         report = evaluate(
             self.result(light=self.ok("light", probe=probe), dark=self.ok("dark", probe=probe)),
+            themes=BOTH,
             library="matplotlib",
             rows=24,
         )
@@ -274,7 +330,7 @@ class TestHarness:
             png, probe = runtime.collect(tmp_path, theme)
             outputs[theme] = ThemeOutput(theme, 0, png=png, probe=probe)
 
-        report = evaluate(RenderResult("real", outputs), library="matplotlib", rows=parsed.profile.rows)
+        report = evaluate(RenderResult("real", outputs), themes=BOTH, library="matplotlib", rows=parsed.profile.rows)
 
         assert report.passed_host_gates, report.blocking
         assert report.canvas_ok, report.canvas_defects
@@ -302,11 +358,7 @@ class TestBackends:
         docker.write_text(f'#!/bin/sh\nif [ "$1" = kill ]; then echo "$2" >> {killed}; exit 0; fi\nexec sleep 30\n')
         docker.chmod(0o755)
         backend = LocalDockerBackend(
-            image="anyplot-agents:dev",
-            runtime=PythonRuntime(),
-            environment="development",
-            concurrency=2,
-            docker=str(docker),
+            image="anyplot-agents:dev", runtime=PythonRuntime(), environment="development", docker=str(docker)
         )
 
         task = asyncio.create_task(backend.render(job(job_id="cancelme")))
@@ -329,11 +381,7 @@ class TestBackends:
         )
         docker.chmod(0o755)
         backend = LocalDockerBackend(
-            image="anyplot-agents:dev",
-            runtime=PythonRuntime(),
-            environment="development",
-            concurrency=2,
-            docker=str(docker),
+            image="anyplot-agents:dev", runtime=PythonRuntime(), environment="development", docker=str(docker)
         )
 
         tracemalloc.start()
@@ -361,11 +409,7 @@ class TestBackends:
 
     def test_local_backend_command_keeps_the_network_off(self) -> None:
         backend = LocalDockerBackend(
-            image="anyplot-agents:dev",
-            runtime=PythonRuntime(),
-            environment="development",
-            concurrency=2,
-            docker="/usr/bin/docker",
+            image="anyplot-agents:dev", runtime=PythonRuntime(), environment="development", docker="/usr/bin/docker"
         )
         argv = backend.argv(job(), "light", Path("/tmp/run"))
 
@@ -378,16 +422,14 @@ class TestBackends:
 
     def test_local_backend_refuses_production_and_missing_docker(self, monkeypatch: pytest.MonkeyPatch) -> None:
         with pytest.raises(RendererUnavailable, match="production"):
-            LocalDockerBackend(
-                image="x", runtime=PythonRuntime(), environment="production", concurrency=1, docker="/usr/bin/docker"
-            )
+            LocalDockerBackend(image="x", runtime=PythonRuntime(), environment="production", docker="/usr/bin/docker")
         monkeypatch.setattr("shutil.which", lambda name: None)
         with pytest.raises(RendererUnavailable, match="Docker"):
-            LocalDockerBackend(image="x", runtime=PythonRuntime(), environment="development", concurrency=1)
+            LocalDockerBackend(image="x", runtime=PythonRuntime(), environment="development")
 
     async def test_sandbox_backend_waits_for_spike_s(self) -> None:
         with pytest.raises(NotImplementedError, match="spike S"):
-            await SandboxBackend(runtime=PythonRuntime(), concurrency=2).render(job())
+            await SandboxBackend(runtime=PythonRuntime()).render(job())
 
     async def test_fake_backend_scripts(self) -> None:
         backend = FakeBackend(script=lambda job, theme: FakeOutcome(exit_code=1 if theme == "dark" else 0))
@@ -417,6 +459,21 @@ class TestRenderStore:
         assert store.get(render_id, "s1") is not None
         assert store.get(render_id, "s2") is None
         assert store.delete_session("s1") == [render_id] and len(store) == 0
+
+    def test_add_theme_joins_the_render_under_the_cap(self) -> None:
+        store = RenderStore(max_bytes=6)
+        render_id = store.put("s1", {"light": b"ab"})
+
+        store.add_theme(render_id, "s1", "dark", b"cd")
+        stored = store.get(render_id, "s1")
+        assert stored is not None and stored.pngs == {"light": b"ab", "dark": b"cd"}
+        assert store.used_bytes == 4
+        store.add_theme(render_id, "s1", "dark", b"cdef")  # a replacement counts only the difference
+        assert store.used_bytes == 6
+        with pytest.raises(RenderStoreFull):
+            store.add_theme(render_id, "s1", "dark", b"cdefg")
+        with pytest.raises(KeyError):
+            store.add_theme(render_id, "s2", "dark", b"x")  # another session's render is not there
 
     def test_cap_and_sweep(self) -> None:
         clock = iter([0.0, 0.0, 100.0]).__next__

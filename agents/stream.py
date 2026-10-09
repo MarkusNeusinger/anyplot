@@ -5,12 +5,13 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 
 | Event | Fields | Comes from |
 |---|---|---|
-| `ready` | `v`, `run_id` | the start of a run |
+| `ready` | `v`, `run_id` | the start of the request, before it waits in the run queue |
+| `status` | `step: "queued"`, `position`, `waiting` | the run queue, while the run waits: at once, on every change, and every 15 s unchanged (`position` 1 runs next; `waiting` counts every queued entry, this one included) |
 | `status` | `step`, `attempt` | the pipeline's content-free `custom_metadata` progress events |
 | `message` | `text` | a final, non-partial text response authored by the root (`anyplot`) |
 | `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects` | the pipeline's `PlotResult` output event |
-| `refusal` | `code`, `text` | the request ledger's refusal (scope guard or budget), in place of the message |
-| `error` | `code`, `ref` | `guard_unavailable`, `capacity`, `deadline` or `internal` |
+| `refusal` | `code`, `text` | the request ledger's refusal (scope guard or budget), in place of the message; a user already over the daily budget gets it right after `ready`, without waiting in the queue |
+| `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when the run waited the queue's maximum), `deadline` or `internal` |
 | `done` | `llm_calls`, `tokens` | the end of every run, always last |
 
 Function calls and responses, tool outputs, thoughts, partial chunks, adapter and
@@ -42,6 +43,8 @@ ROOT_AUTHOR = "anyplot"
 PIPELINE_AUTHOR = "plot_pipeline"
 HALT_AUTHOR = "model"  # ADK's author of the event a before_run halt emits
 STEPS = frozenset({"adapting", "checking", "rendering", "reviewing", "repairing"})
+QUEUED_STEP = "queued"
+"""The status step the route sends while the run waits in the run queue; no pipeline event carries it."""
 PLOT_FIELDS = ("status", "reason", "attempts", "artifacts", "changes", "residual_defects")
 MODEL_WRITTEN_FIELDS = ("changes", "residual_defects")
 MAX_MESSAGE_CHARS = 3_000
@@ -123,6 +126,11 @@ class Translator:
     def ready(self) -> str:
         return sse("ready", {"v": PROTOCOL, "run_id": self.run_id})
 
+    @staticmethod
+    def queued(position: int, waiting: int) -> str:
+        """Where the run waits: `position` 1 runs next, `waiting` counts every queued entry, this one included."""
+        return sse("status", {"step": QUEUED_STEP, "position": position, "waiting": waiting})
+
     def translate(self, event: Event) -> list[str]:
         out: list[str] = []
         status = (event.custom_metadata or {}).get(STATUS_KEY)
@@ -151,13 +159,17 @@ class Translator:
                 data[key] = [line for line in lines if line]
         return data
 
+    def refusal(self) -> list[str]:
+        """The ledger's refusal as the closing event, once; nothing without a refusal."""
+        if self.ledger.refusal is None or self.closing_sent:
+            return []
+        self.closing_sent = True
+        code, refusal_text = self.ledger.refusal
+        return [sse("refusal", {"code": code, "text": refusal_text})]
+
     def _reply(self, text: str) -> list[str]:
         if self.ledger.refusal is not None:
-            if self.closing_sent:
-                return []
-            self.closing_sent = True
-            code, refusal_text = self.ledger.refusal
-            return [sse("refusal", {"code": code, "text": refusal_text})]
+            return self.refusal()
         if self.ledger.error is not None:
             return self.error(self.ledger.error)
         clean = sanitize(text, spec_id=self.spec_id)

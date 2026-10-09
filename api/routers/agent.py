@@ -85,7 +85,8 @@ _NO_STORE = "private, no-store"
 # the agents service's stream translator.
 _EVENT_FIELDS: dict[str, frozenset[str]] = {
     "ready": frozenset({"v", "run_id"}),
-    "status": frozenset({"step", "attempt"}),
+    # `attempt` on a pipeline step; `position` and `waiting` on `step: "queued"`.
+    "status": frozenset({"step", "attempt", "position", "waiting"}),
     "message": frozenset({"text"}),
     "plot": frozenset({"status", "reason", "attempts", "artifacts", "changes", "residual_defects"}),
     "refusal": frozenset({"code", "text"}),
@@ -94,6 +95,11 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
 }
 _ERROR_CODES = frozenset({"capacity", "deadline", "guard_unavailable", "upstream", "internal"})
 _MAX_EVENT_CHARS = 64 * 1024
+_QUEUED_STEP = "queued"
+"""The status step of a run that waits in the agents service's run queue."""
+_QUEUED_HEARTBEAT_S = 15.0
+"""The agents run queue's `HEARTBEAT_S`: a waiting run's status repeats at least this
+often, so its run may have started up to this long before the BFF sees its first event."""
 
 # Error codes the agents service documents for its /v1 routes; an upstream error
 # body is never forwarded, only one of these codes when it names one.
@@ -348,6 +354,10 @@ class MessageBody(_StrictBody):
         return self
 
 
+class RenderThemeBody(_StrictBody):
+    theme: Literal["light", "dark"]
+
+
 # ============================================================================
 # Catalogue snapshot
 # ============================================================================
@@ -514,19 +524,57 @@ def _no_content(ctx: AgentContext) -> Response:
 # ============================================================================
 
 
-async def _read_events(lines: AsyncIterator[str], deadline: float) -> AsyncGenerator[tuple[str | None, str], None]:
-    """Assemble complete SSE events from upstream lines until the loop-time `deadline`.
+@dataclass
+class TurnDeadline:
+    """Loop times that bound one chat turn.
+
+    `at` is when the turn has to be over unless an event moves it: `AGENT_REQUEST_TIMEOUT_S`
+    after it opened, restarted while the run waits in the upstream queue. `end` never
+    moves: `AGENT_TURN_MAX_S` after the turn opened, below anyplot-api's own request
+    timeout, so the stream always ends with `error` and `done` instead of being cut.
+    """
+
+    at: float
+    end: float
+
+    @classmethod
+    def open(cls) -> TurnDeadline:
+        now = asyncio.get_running_loop().time()
+        end = now + settings.agent_turn_max_s
+        return cls(at=min(now + settings.agent_request_timeout_s, end), end=end)
+
+    def restart(self, *, queued: bool) -> bool:
+        """A fresh `AGENT_REQUEST_TIMEOUT_S` from now, capped at `end`.
+
+        A queued status adds `_QUEUED_HEARTBEAT_S`, because the run may start up to that
+        long before its first event arrives, and the budget must not end before the
+        agents service's own deadline. False when a queued run could no longer finish
+        before `end`: the caller ends the turn before the run spends a token.
+        """
+        now = asyncio.get_running_loop().time()
+        budget = settings.agent_request_timeout_s + (_QUEUED_HEARTBEAT_S if queued else 0.0)
+        if queued and now + budget > self.end:
+            return False
+        self.at = min(now + budget, self.end)
+        return True
+
+
+async def _read_events(
+    lines: AsyncIterator[str], deadline: TurnDeadline
+) -> AsyncGenerator[tuple[str | None, str], None]:
+    """Assemble complete SSE events from upstream lines until the loop-time `deadline.at`.
 
     Comments (the upstream's own keep-alive pings) and the `id` and `retry`
     fields are dropped; the browser gets FastAPI's pings from this route.
-    Raises TimeoutError when the deadline passes.
+    Raises TimeoutError when the deadline passes. The deadline is read before
+    every line, so the caller may move it between events.
     """
     event_type: str | None = None
     data: list[str] = []
     size = 0
     while True:
         # The timeout wraps the read only, never a yield (PEP 789).
-        async with asyncio.timeout_at(deadline):
+        async with asyncio.timeout_at(deadline.at):
             try:
                 line = await anext(lines)
             except StopAsyncIteration:
@@ -568,11 +616,8 @@ def _translate(event_type: str | None, data: str, ref: str) -> ServerSentEvent |
     return ServerSentEvent(event=event_type, data={key: value for key, value in payload.items() if key in fields})
 
 
-def _upstream_failed(ref: str) -> list[ServerSentEvent]:
-    return [
-        ServerSentEvent(event="error", data={"code": "upstream", "ref": ref}),
-        ServerSentEvent(event="done", data={}),
-    ]
+def _turn_failed(ref: str, code: str = "upstream") -> list[ServerSentEvent]:
+    return [ServerSentEvent(event="error", data={"code": code, "ref": ref}), ServerSentEvent(event="done", data={})]
 
 
 @dataclass(frozen=True)
@@ -581,8 +626,8 @@ class UpstreamStream:
 
     request_id: str
     response: httpx.Response | None
-    deadline: float
-    """Loop time by which the whole turn, opening included, has to be over."""
+    deadline: TurnDeadline
+    """Loop times by which the whole turn, opening included, has to be over; queueing restarts `at`."""
 
 
 async def open_message_stream(
@@ -600,10 +645,10 @@ async def open_message_stream(
     path = f"/sessions/{sid}/messages"
     # One wall-clock budget for the whole turn: the ID token, the connection
     # and the upstream's response headers spend from it too.
-    deadline = asyncio.get_running_loop().time() + settings.agent_request_timeout_s
+    deadline = TurnDeadline.open()
     response: httpx.Response | None
     try:
-        async with asyncio.timeout_at(deadline):
+        async with asyncio.timeout_at(deadline.at):
             response = await _open_stream(client, ctx, "POST", path, json_body=payload, accept="text/event-stream")
     except (*_UNREACHABLE, TimeoutError) as exc:
         _log_unreachable(ctx, "POST", path, exc)
@@ -622,7 +667,11 @@ async def open_message_stream(
 
 @router.get("/status")
 async def agent_status(ctx: Ctx, client: Client) -> dict[str, Any]:
-    """The agents service's status (`libraries`, `model`, `location`, `version`) plus `enabled`."""
+    """The agents service's status plus `enabled`.
+
+    Upstream fields: `libraries`, `model`, `location`, `version`, `provider`, and the
+    run queue's `waiting` entries and `in_flight` runs.
+    """
     upstream = await _call_upstream(client, ctx, "GET", "/status")
     return {**(upstream if isinstance(upstream, dict) else {}), "enabled": True}
 
@@ -683,8 +732,18 @@ async def put_bindings(
 
 @router.post("/sessions/{sid}/messages", response_class=EventSourceResponse)
 async def post_message(upstream: UpstreamStream = Depends(open_message_stream)) -> AsyncIterator[ServerSentEvent]:
-    """Relay one chat turn as SSE `anyplot/1`; always ends with a `done` event."""
+    """Relay one chat turn as SSE `anyplot/1`; always ends with a `done` event.
+
+    Queued time does not count toward the turn's budget, as it does not count
+    toward the agents service's own deadline: every `status{step:"queued"}`
+    restarts the budget with the queue's heartbeat on top, and so does the first
+    event after the wait, when the run has started. Nothing moves the turn past
+    `AGENT_TURN_MAX_S`: a queued turn whose run could no longer finish before it
+    ends with `error{code:"capacity"}` there, and closing the upstream stream takes
+    it out of the queue before it spends a token.
+    """
     finished = False
+    queued = False
     if upstream.response is not None:
         lines = upstream.response.aiter_lines()
         try:
@@ -693,6 +752,16 @@ async def post_message(upstream: UpstreamStream = Depends(open_message_stream)) 
                     relayed = _translate(event_type, data, upstream.request_id)
                     if relayed is None:
                         continue
+                    is_queued = relayed.event == "status" and relayed.data.get("step") == _QUEUED_STEP
+                    if is_queued and not upstream.deadline.restart(queued=True):
+                        logger.info("agent turn left the queue at AGENT_TURN_MAX_S (ref %s)", upstream.request_id)
+                        for failure in _turn_failed(upstream.request_id, "capacity"):
+                            yield failure
+                        finished = True
+                        break
+                    if queued and not is_queued:
+                        upstream.deadline.restart(queued=False)
+                    queued = is_queued
                     yield relayed
                     if relayed.event == "done":
                         finished = True
@@ -702,7 +771,7 @@ async def post_message(upstream: UpstreamStream = Depends(open_message_stream)) 
     if not finished:
         # Unreachable, cut off, out of time, or ended without `done`: the
         # browser always learns that the turn is over.
-        for failure in _upstream_failed(upstream.request_id):
+        for failure in _turn_failed(upstream.request_id):
             yield failure
 
 
@@ -711,6 +780,18 @@ async def cancel_run(sid: SessionId, ctx: Ctx, client: Client) -> Response:
     """Stop the session's active run."""
     await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/cancel")
     return _no_content(ctx)
+
+
+@router.post("/sessions/{sid}/versions/{version}/render")
+async def render_version_theme(
+    sid: SessionId, version: Annotated[int, Path(ge=0, le=999)], body: RenderThemeBody, ctx: Ctx, client: Client
+) -> Any:
+    """The theme toggle: render the other theme of a finished version (0 is the latest), with no model call.
+
+    Synchronous: `{status, reason?, artifacts}` once the render is done.
+    """
+    path = f"/sessions/{sid}/versions/{version}/render"
+    return await _call_upstream(client, ctx, "POST", path, json_body={"theme": body.theme})
 
 
 @router.get("/sessions/{sid}/artifacts/{name}")

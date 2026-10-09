@@ -1,6 +1,7 @@
 """The render contract: what a render job is, what comes back, and the two protocols around it.
 
-A `RenderJob` carries the run form of one code version and the canonical `data.csv`;
+A `RenderJob` carries the run form of one code version, the canonical `data.csv` and
+the themes to render (a pipeline run asks for one, the theme toggle for the other);
 a `RenderBackend` runs it once per theme in isolation and returns raw outputs (exit
 status, the PNG bytes as written, the savefig probe, a stderr tail). The host gates
 (`gates.py`) judge those outputs; the backend never does.
@@ -18,13 +19,13 @@ No ADK import: the render layer is plain code.
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal, Protocol
+from typing import Any, Protocol
 
-from ..schemas import RENDER_ID_PATTERN
+from ..schemas import RENDER_ID_PATTERN, Theme
 
 
-Theme = Literal["light", "dark"]
 THEMES: tuple[Theme, Theme] = ("light", "dark")
+"""Every theme, in the order artifacts and reviewer images are listed."""
 MAX_STDERR_CHARS = 2_000
 _RENDER_ID = re.compile(RENDER_ID_PATTERN)
 

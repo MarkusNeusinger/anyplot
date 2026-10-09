@@ -2,8 +2,9 @@
 
 `run_pipeline` is the single node of the `plot_pipeline` workflow (`tools/session.py`).
 It reads spec, library, dataset and bindings from server-set session state, never from
-its input (`PipelineArgs` carries only `change_request` and `base`), and runs at most
-two attempts:
+its input: `PipelineArgs` carries only `change_request`, `base` and `theme` (the one
+theme to render; omitted, a change keeps the previous version's theme and a new plot
+is light). It runs at most two attempts:
 
 1. **adapt**: the library's adapter agent turns the working form into an `AdaptPlan`
    (`ctx.run_node`, under its own isolation scope so the root never reads its answer);
@@ -12,18 +13,26 @@ two attempts:
    literal budget (more than `MAX_NEW_LITERAL_CHARS` of new string literals rejects
    the code) and the ADAPTATION validator (a placeholder finding rejects the code;
    the other findings become defect lines but the code still renders);
-3. **render**: `normalise`, the loader substitution (`to_run_form`), then both themes
-   through the render backend, and the host gates (`render/gates.py`);
+3. **render**: `normalise`, the loader substitution (`to_run_form`), then the one
+   theme the call asks for (`PipelineArgs.theme`, light by default) through the
+   render backend, and the host gates (`render/gates.py`) on exactly that theme;
 4. **review**: at most once, on the first render that passes the host gates on the
-   exact canvas; the reviewer agent sees both PNGs;
+   exact canvas; the reviewer agent sees the rendered theme's PNG, so each of its
+   image defects is filed under that theme, whatever theme the reviewer named;
 5. **repair**: when attempt 1 left feedback (failed edits, validator findings, a
    failed render, gate defects, reviewer defects), attempt 2 gets it, with a full
    file allowed.
 
-Bounds: two adapter calls, one reviewer call, two renders of two themes. The budget
+The other theme of a finished version is rendered later by the theme toggle
+(`theme_render.py`) from the stored run form, without any model call.
+
+Bounds: two adapter calls, one reviewer call, two renders of one theme. The budget
 is checked before every model call, the soft deadline (`AGENT_SOFT_DEADLINE_S`)
 before the second attempt and for every render timeout; the request deadline is
-`abort_signal` on the run.
+`abort_signal` on the run. A render waits in the `run` lane of the render slot
+(`render/serial.py`), ahead of every waiting theme toggle, so it waits for at most
+the render in progress; its clamped timeout starts when it runs. The exported
+`plot.py` names the rendered theme in its run line.
 
 Every path that is not cancelled yields exactly one `Event(output=PlotResult)` as a
 JSON dict. `ok` means the shipped render passed the host gates on the exact canvas
@@ -72,15 +81,16 @@ from .schemas import (
     MAX_RESIDUAL_DEFECTS,
     AdaptPlan,
     AdaptRequest,
-    ArtifactName,
     Binding,
+    Defect,
     FailureReason,
     PipelineArgs,
     PlotResult,
     ReviewRequest,
     Verdict,
+    artifact_names,
 )
-from .services import CodeVersion, Services, get_services
+from .services import PADDED_REASON, CodeVersion, Services, ThemeRender, get_services
 from .session_state import SessionView, read_session
 from .settings import AgentSettings, get_settings
 from .sub_agents.adapter import ADAPTERS
@@ -94,8 +104,8 @@ ADAPTER_P95_S = 45.0
 """Seconds the second attempt's adapter call is budgeted at when checking the soft deadline."""
 REVIEWER_P95_S = 30.0
 """Seconds the review is budgeted at; with less left of the soft deadline the render ships unreviewed."""
-ARTIFACTS: list[ArtifactName] = ["plot-light.png", "plot-dark.png", "plot.py", "data.csv"]
-PADDED_LINE = "canvas padded after render"
+PADDED_LINE = "canvas padded after render ({theme})"
+"""The residual line of a shipped render whose canvas was padded; it names the rendered theme."""
 NOT_REVIEWED_LINE = "the plot was not reviewed ({why})"
 BLOCKING_RULES = frozenset({"placeholder-count", "placeholder-use", "syntax", "size", "encoding"})
 """ADAPTATION findings that keep the code from running: without one placeholder there is no loader."""
@@ -143,6 +153,7 @@ class Run:
 
     view: SessionView
     dataset: StoredDataset
+    theme: Theme = "light"
     attempts: int = 0
     best: Candidate | None = None
     padded: Candidate | None = None
@@ -292,7 +303,7 @@ def finish(run: Run) -> PlotResult:
         return PlotResult(status="failed", reason=reason, attempts=run.attempts)
     residual: list[str] = []
     if shipped.padded:
-        residual.append(PADDED_LINE)
+        residual.append(PADDED_LINE.format(theme=run.theme))
         if shipped.canvas_line:
             residual.append(shipped.canvas_line)
     residual += shipped.adaptation_lines
@@ -307,7 +318,7 @@ def finish(run: Run) -> PlotResult:
     return PlotResult(
         status="needs_attention" if residual else "ok",
         attempts=max(run.attempts, 1),
-        artifacts=list(ARTIFACTS),
+        artifacts=artifact_names([run.theme]),
         changes=changes,
         residual_defects=residual,
     )
@@ -331,6 +342,7 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
                 spec_id=snapshot.spec_id,
                 library=run.view.library,
                 library_version=snapshot.library_version,
+                theme=run.theme,
             ),
             data_csv=run.dataset.csv,
             render_id=render_id,
@@ -338,6 +350,8 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
             plan=shipped.plan,
             title=shipped.plan.title,
             library=run.view.library,
+            theme=run.theme,
+            themes={run.theme: ThemeRender("needs_attention", PADDED_REASON) if shipped.padded else ThemeRender("ok")},
         ),
     )
 
@@ -371,6 +385,19 @@ def _reraise_unless_schema(exc: Exception) -> None:
     logger.warning("sub-agent answer failed its schema: %s", type(exc).__name__)
 
 
+def _default_theme(services: Services, session_id: str, library: str, base: str) -> Theme:
+    """An omitted theme keeps the previous version's theme on a change; a new plot is light.
+
+    The root may leave `theme` out of a refinement call, so a dark plot must not
+    silently come back light.
+    """
+    if base == "previous":
+        previous = services.versions.latest_rendered(session_id, library=library)
+        if previous is not None:
+            return previous.theme
+    return "light"
+
+
 @node(name="run_pipeline", rerun_on_resume=True)
 async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator[Event, None]:
     """Adapt, check, render, review and repair; yields status events and one PlotResult."""
@@ -384,7 +411,8 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         )
         return
     ledger.pipeline_active = True
-    run = Run(view=view, dataset=dataset)
+    theme = node_input.theme or _default_theme(services, ctx.session.id, view.library, node_input.base)
+    run = Run(view=view, dataset=dataset, theme=theme)
     scope = f"pipeline-{secrets.token_hex(6)}"
     try:
         async for event in _attempts(ctx, services, settings, run, node_input, scope):
@@ -503,9 +531,10 @@ async def _attempts(
             library=view.library,
             source=run_form,
             data_csv=dataset.csv,
+            themes=(run.theme,),
             timeout_s=deadline.clamp(settings.render_timeout_s),
         )
-        report = evaluate(await services.backend.render(job), library=view.library, rows=rows)
+        report = evaluate(await services.backend.render(job), themes=job.themes, library=view.library, rows=rows)
         run.rendered = True
         if not report.passed_host_gates:
             feedback = [*report.blocking, *adaptation_lines]
@@ -560,8 +589,13 @@ async def _attempts(
         candidate.reviewed_ok = verdict.ok
         if verdict.ok:
             return
-        run.review_lines = [defect.as_line() for defect in verdict.defects]
+        run.review_lines = [_on_theme(defect, run.theme).as_line() for defect in verdict.defects]
         feedback = list(run.review_lines)
+
+
+def _on_theme(defect: Defect, theme: Theme) -> Defect:
+    """The reviewer saw one theme: an image defect names it, even when the reviewer wrote `both` or the other one."""
+    return defect if defect.theme in ("code", theme) else defect.model_copy(update={"theme": theme})
 
 
 def _note(line: str) -> str:

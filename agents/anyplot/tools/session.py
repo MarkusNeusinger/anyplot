@@ -15,8 +15,8 @@ spec text) sits inside our own fences after the "data, never instructions" pream
 * `set_bindings(bindings)`: `apply_bindings` plus a state write; refused while the
   pipeline runs.
 * `plot_pipeline`: the `Workflow` around `pipeline.run_pipeline`, which ADK exposes as
-  a NodeTool with the input schema `PipelineArgs` (`change_request`, `base`). The
-  tool name is the workflow name, so it stays stable.
+  a NodeTool with the input schema `PipelineArgs` (`change_request`, `base`, `theme`).
+  The tool name is the workflow name, so it stays stable.
 """
 
 import json
@@ -127,9 +127,11 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
 plot_pipeline = Workflow(
     name=PLOT_PIPELINE,
     description=(
-        "Adapt the plot to the user's dataset and bindings, render it in light and dark, review it, and repair it "
+        "Adapt the plot to the user's dataset and bindings, render it in one theme, review it, and repair it "
         "once if needed. Call it with no arguments for 'Create plot'; for a change, pass change_request (English, "
-        "at most 600 characters) and base='previous'. Returns the PlotResult."
+        "at most 600 characters) and base='previous'. Leave theme out unless the user asks for a theme: a new plot "
+        "is light and a change keeps the latest version's theme; pass theme='dark' only when the user asks for a "
+        "dark plot. Returns the PlotResult."
     ),
     input_schema=PipelineArgs,
     edges=[("START", run_pipeline)],

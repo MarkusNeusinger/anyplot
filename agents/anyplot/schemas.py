@@ -18,6 +18,7 @@ holds that context (the edit applier and the pipeline), not to these schemas.
 """
 
 import re
+from collections.abc import Iterable
 from typing import Annotated, Any, Literal, Self, get_args
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, ValidationInfo, field_validator, model_validator
@@ -63,6 +64,8 @@ SourceFormat = Literal["csv", "tsv", "semicolon", "pipe", "json_records", "json_
 # The reviewer's reduced checklist: the rubric criteria it scores plus AR-09 for clipping.
 DefectId = Literal["VQ-01", "VQ-02", "VQ-03", "VQ-06", "VQ-07", "SC-01", "SC-03", "DQ-03", "AR-09"]
 DefectTheme = Literal["light", "dark", "both", "code"]
+Theme = Literal["light", "dark"]
+"""A render theme; `render/contract.py` re-exports it with the `THEMES` order."""
 
 PlotStatus = Literal["ok", "needs_attention", "failed", "not_ready"]
 FailureReason = Literal["validation", "render", "deadline", "budget", "error"]
@@ -71,6 +74,17 @@ ArtifactName = Literal["plot-light.png", "plot-dark.png", "plot.py", "data.csv"]
 
 FAILURE_REASONS: frozenset[str] = frozenset(get_args(FailureReason))
 NOT_READY_REASONS: frozenset[str] = frozenset(get_args(NotReadyReason))
+PNG_ARTIFACTS: dict[str, ArtifactName] = {"light": "plot-light.png", "dark": "plot-dark.png"}
+"""The PNG artifact of each theme, in the order artifacts are listed."""
+
+
+def artifact_names(themes: Iterable[str]) -> list[ArtifactName]:
+    """A version's artifacts: the PNG of every rendered theme (light first), then `plot.py` and `data.csv`."""
+    rendered = set(themes)
+    names: list[ArtifactName] = [name for theme, name in PNG_ARTIFACTS.items() if theme in rendered]
+    code_and_data: list[ArtifactName] = ["plot.py", "data.csv"]
+    return names + code_and_data
+
 
 # A role is matched against the spec's `## Data` bullets later; the pattern only keeps
 # arbitrary text out. Digits and capitals are allowed because 21 of 325 specs name
@@ -148,10 +162,18 @@ class Binding(_ServerContract):
 
 
 class PipelineArgs(_ServerContract):
-    """The `plot_pipeline` tool input. Spec, library and dataset come from server state."""
+    """The `plot_pipeline` tool input. Spec, library and dataset come from server state.
+
+    `theme` is the one theme the run renders and the reviewer sees. Omitted (None), a
+    change on `base="previous"` keeps the previous version's theme and a new plot is
+    light; the root passes `dark` only when the user asks for a dark plot. The other
+    theme of a finished version is rendered on demand by the theme toggle route,
+    without any model call.
+    """
 
     change_request: str = Field(default="", max_length=MAX_CHANGE_REQUEST_CHARS)
     base: Literal["catalogue", "previous"] = "catalogue"
+    theme: Theme | None = None
 
 
 class Edit(_ModelOutput):

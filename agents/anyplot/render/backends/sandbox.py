@@ -14,7 +14,10 @@ guessing a command line. Use `local` (Docker) or `fake` in development.
 
 Like the local backend, the implementation must stop its sandboxes when the render
 is cancelled (an abort or the request deadline): catch `asyncio.CancelledError`,
-run `sandbox delete` for each theme under `asyncio.shield`, then re-raise.
+run `sandbox delete` for each theme under `asyncio.shield`, then re-raise. It needs
+no semaphore of its own: `SerialRenderer` (`render/serial.py`), which
+`Services.backend` puts in front of every backend, already hands it one theme at a
+time under `AGENT_RENDER_CONCURRENCY` slots.
 """
 
 from ..contract import RenderJob, RenderResult, RuntimeAdapter
@@ -29,9 +32,8 @@ class SandboxBackend:
 
     name = "sandbox"
 
-    def __init__(self, *, runtime: RuntimeAdapter, concurrency: int) -> None:
+    def __init__(self, *, runtime: RuntimeAdapter) -> None:
         self.runtime = runtime
-        self.concurrency = concurrency
 
     async def render(self, job: RenderJob) -> RenderResult:
         raise NotImplementedError(

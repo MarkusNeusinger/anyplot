@@ -15,6 +15,9 @@ a fresh temporary directory that is removed afterwards. stdout is discarded and 
 is read while the container runs, keeping only its last `STDERR_LIMIT` bytes: the
 code under test writes it, so it can be arbitrarily large.
 
+The backend holds no semaphore: `SerialRenderer` (`render/serial.py`), which
+`Services.backend` puts in front of every backend, hands it one theme at a time.
+
 The backend refuses `ENVIRONMENT=production` and fails when Docker is missing:
 there is no bare-subprocess fallback, because that would run model-written code on
 the host with the host's network and files.
@@ -65,9 +68,7 @@ class LocalDockerBackend:
 
     name = "local"
 
-    def __init__(
-        self, *, image: str, runtime: RuntimeAdapter, environment: str, concurrency: int, docker: str | None = None
-    ) -> None:
+    def __init__(self, *, image: str, runtime: RuntimeAdapter, environment: str, docker: str | None = None) -> None:
         if environment == "production":
             raise RendererUnavailable("the local renderer refuses ENVIRONMENT=production")
         found = docker or shutil.which("docker")
@@ -76,7 +77,6 @@ class LocalDockerBackend:
         self.docker = found
         self.image = image
         self.runtime = runtime
-        self._semaphore = asyncio.Semaphore(concurrency)
 
     def argv(self, job: RenderJob, theme: Theme, run_dir: Path) -> list[str]:
         """The docker command of one theme; asserted to keep the network off."""
@@ -116,28 +116,27 @@ class LocalDockerBackend:
         return argv
 
     async def _run_theme(self, job: RenderJob, theme: Theme, run_dir: Path) -> ThemeOutput:
-        async with self._semaphore:
-            started = time.monotonic()
-            process = await asyncio.create_subprocess_exec(
-                *self.argv(job, theme, run_dir),
-                stdin=asyncio.subprocess.DEVNULL,
-                stdout=asyncio.subprocess.DEVNULL,
-                stderr=asyncio.subprocess.PIPE,
-                start_new_session=True,
-            )
-            timed_out = False
-            try:
-                stderr = await asyncio.wait_for(_drain_and_wait(process), timeout=job.timeout_s)
-            except TimeoutError:
-                timed_out = True
-                await self._kill(f"r-{job.job_id}-{theme}", process)
-                stderr = b""
-            except asyncio.CancelledError:
-                # An abort or the request deadline: stop the container before render()
-                # removes the run directory under it, then let the cancellation through.
-                await asyncio.shield(self._kill(f"r-{job.job_id}-{theme}", process))
-                raise
-            wall = time.monotonic() - started
+        started = time.monotonic()
+        process = await asyncio.create_subprocess_exec(
+            *self.argv(job, theme, run_dir),
+            stdin=asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.PIPE,
+            start_new_session=True,
+        )
+        timed_out = False
+        try:
+            stderr = await asyncio.wait_for(_drain_and_wait(process), timeout=job.timeout_s)
+        except TimeoutError:
+            timed_out = True
+            await self._kill(f"r-{job.job_id}-{theme}", process)
+            stderr = b""
+        except asyncio.CancelledError:
+            # An abort or the request deadline: stop the container before render()
+            # removes the run directory under it, then let the cancellation through.
+            await asyncio.shield(self._kill(f"r-{job.job_id}-{theme}", process))
+            raise
+        wall = time.monotonic() - started
         try:
             png, probe = self.runtime.collect(run_dir, theme)
         except PngRejected as exc:

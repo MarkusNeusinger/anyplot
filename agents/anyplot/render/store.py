@@ -1,10 +1,13 @@
 """The session-scoped, in-memory render store.
 
 Hardened PNGs live here under a random `render_id`, readable only by the session
-that produced them. The reviewer's callback loads its two images from here by
-`render_id`, so no image ever passes through session state, an artifact listing or
-a tool argument. Like the dataset store, it is synchronous, unlocked (one asyncio
-loop), byte-capped, and emptied by `delete_session` and the idle sweep.
+that produced them, one PNG per rendered theme. A pipeline run stores the one theme
+it rendered; the theme toggle adds the other theme to the same render with
+`add_theme`, so a version's artifacts are always the PNGs its render holds. The
+reviewer's callback loads its image from here by `render_id`, so no image ever passes
+through session state, an artifact listing or a tool argument. Like the dataset
+store, it is synchronous, unlocked (one asyncio loop), byte-capped, and emptied by
+`delete_session` and the idle sweep.
 """
 
 import secrets
@@ -24,7 +27,7 @@ class RenderStoreFull(Exception):
 
 @dataclass
 class StoredRender:
-    """The light and dark PNG of one render, owned by one session."""
+    """The PNG of every theme rendered for one code version, owned by one session."""
 
     render_id: str
     session_id: str
@@ -68,6 +71,18 @@ class RenderStore:
             return None
         stored.last_used_at = self._clock()
         return stored
+
+    def add_theme(self, render_id: str, session_id: str, theme: Theme, png: bytes) -> None:
+        """Store (or replace) one theme's PNG in an existing render; raises `KeyError` or `RenderStoreFull`."""
+        stored = self.get(render_id, session_id)
+        if stored is None:
+            raise KeyError("no such render in this session")
+        delta = len(png) - len(stored.pngs.get(theme, b""))
+        if self._used_bytes + delta > self.max_bytes:
+            raise RenderStoreFull(f"the render store is full ({self._used_bytes} of {self.max_bytes} bytes used)")
+        stored.pngs[theme] = png
+        stored.size_bytes += delta
+        self._used_bytes += delta
 
     def delete_session(self, session_id: str) -> list[str]:
         removed = [render_id for render_id, stored in self._renders.items() if stored.session_id == session_id]

@@ -33,6 +33,15 @@ class TestTranslator:
         assert parse(translator.ready()) == ("ready", {"v": "anyplot/1", "run_id": "run-1"})
         assert parse(translator.done()) == ("done", {"llm_calls": 3, "tokens": 900})
 
+    def test_queued_status(self, translator: Translator) -> None:
+        assert parse(translator.queued(2, 5)) == ("status", {"step": "queued", "position": 2, "waiting": 5})
+
+    def test_a_pipeline_event_cannot_claim_the_queued_step(self, translator: Translator) -> None:
+        """`queued` comes only from the route; a pipeline status with that step is dropped."""
+        forged = Event(author="plot_pipeline", custom_metadata={"anyplot_status": {"step": "queued", "attempt": 1}})
+
+        assert translator.translate(forged) == []
+
     def test_status_from_custom_metadata_only(self, translator: Translator) -> None:
         status = Event(author="plot_pipeline", custom_metadata={"anyplot_status": {"step": "rendering", "attempt": 2}})
         unknown = Event(author="plot_pipeline", custom_metadata={"anyplot_status": {"step": "exfiltrating"}})

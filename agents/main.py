@@ -8,14 +8,15 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 
 | Route | Body | Result | Errors |
 |---|---|---|---|
-| `GET /v1/status` | | `{libraries, model, location, version, provider}` | |
+| `GET /v1/status` | | `{libraries, model, location, version, provider, waiting, in_flight}` | |
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
 | `POST /v1/sessions/{sid}/dataset` | `{text}` | `{preview, profile, bindings, warnings}` | `413 too_long`, `422 unparseable`, `403 data_refused`, `503 guard_unavailable` |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles}` | `409 run_active`, `422 invalid` |
-| `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` | SSE `anyplot/1` | `413 too_long`, `409 run_active` |
+| `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` | SSE `anyplot/1` | `413 too_long`, `409 run_active`, `503 capacity` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
+| `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
 | `GET /v1/sessions/{sid}/artifacts/{name}?v=` | | the file | `404` |
 | `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle | `404` |
 | `DELETE /v1/sessions/{sid}` | | `204` | |
@@ -25,6 +26,20 @@ owned by that id, so another user's session id is `404 session_expired`. Outside
 development the caller check decodes the IAM-forwarded ID token (Cloud Run has
 already verified it and replaced the signature) and requires its `aud` in
 `AGENT_SERVICE_URLS` and its `email` in `AGENT_ALLOWED_CALLERS`.
+
+Every `/messages` turn goes through the run queue (`anyplot/run_queue.py`): the route
+answers `503 capacity` when the queue is full, otherwise the stream sends `ready`,
+then `status{step:"queued", position, waiting}` while the run waits, then the run.
+The request deadline and its abort start only when the run leaves the queue; a run
+that waited `AGENT_QUEUE_MAX_WAIT_S` ends with `error{code:"capacity"}`. A user with
+a queued or running run gets `409 run_active` on a second turn in any session. A
+user over the daily token budget gets the `budget` refusal at once, without taking
+a place in the queue. The theme toggle (`/versions/{version}/render`) renders the
+other theme of a finished version outside the queue, because it costs no tokens,
+but behind waiting pipeline renders in the render slot (`render/serial.py`); while
+it renders it holds the session's registry entry, so a user has one run or toggle
+in flight at a time. `adk web` runs the agents without this service, so its runs
+bypass the queue; its renders still go through the one render slot.
 
 Run locally with `uv run uvicorn agents.main:app --port 8001`.
 """
@@ -41,7 +56,7 @@ import os
 import re
 import secrets
 import time
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass, field
 from typing import Annotated, Any, Literal
 
@@ -64,12 +79,16 @@ from agents.anyplot.data.store import StoreFull
 from agents.anyplot.dev_fixture import FixtureError, load_case
 from agents.anyplot.models import JudgeUnavailable
 from agents.anyplot.opening import Eligibility, assess, dataset_judge_input, opening_state, store_dataset
-from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution
-from agents.anyplot.policy import data_rubric, fence
-from agents.anyplot.schemas import MAX_COLUMNS, Binding
+from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution, budget_allows
+from agents.anyplot.policy import data_rubric, fence, refusal
+from agents.anyplot.render.serial import RenderBusy
+from agents.anyplot.render.store import RenderStoreFull
+from agents.anyplot.run_queue import HEARTBEAT_S, QueueFull, QueueTimeout, QueueWithdrawn, RunQueue, Ticket
+from agents.anyplot.schemas import MAX_COLUMNS, Binding, Theme
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import BINDINGS, CatalogueSnapshot, apply_bindings, read_session
 from agents.anyplot.settings import AgentSettings, get_settings
+from agents.anyplot.theme_render import RenderGone, render_theme
 from agents.stream import Translator
 from core.constants import SUPPORTED_LIBRARIES
 
@@ -133,32 +152,61 @@ def _version() -> str:
 
 
 STALE_RUN_MARGIN_S = 30
-"""Seconds past the request deadline after which an active-run entry counts as abandoned."""
+"""Seconds past the request deadline (or the queue's maximum wait) after which an entry counts as abandoned."""
 
 
 @dataclass
 class ActiveRun:
-    """A running `/messages` request: its abort signal, its user and when it started (monotonic)."""
+    """A `/messages` request from its queue entry to the end of its stream, or a theme toggle while it renders.
+
+    `started` is the registration time on the queue's clock, and the start of the run
+    once it left the queue; the ticket's own times decide the stale check when there
+    is one, so a run that just left a long wait is not mistaken for an old run. A
+    toggle has no ticket, and its abort signal is never read: it ends within the
+    request deadline on its own (a bounded slot wait plus one render).
+    """
 
     abort: asyncio.Event
     user: str = ""
     started: float = field(default_factory=time.monotonic)
     deadline_hit: bool = False
+    ticket: Ticket | None = None
 
-    def stale(self, deadline_s: float) -> bool:
-        """A run older than the hard deadline plus a margin was abandoned (its stream never started)."""
-        return time.monotonic() - self.started > deadline_s + STALE_RUN_MARGIN_S
+    def stale(self, now: float, deadline_s: float, max_wait_s: float) -> bool:
+        """An entry past the queue's maximum wait, or a run past the hard deadline, plus a margin, was abandoned."""
+        if self.ticket is not None and self.ticket.waiting:
+            return now - self.ticket.enqueued_at > max_wait_s + STALE_RUN_MARGIN_S
+        began = self.started
+        if self.ticket is not None and self.ticket.started_at is not None:
+            began = max(began, self.ticket.started_at)
+        return now - began > deadline_s + STALE_RUN_MARGIN_S
 
 
 @dataclass
 class Runtime:
-    """The runner and its services for this process."""
+    """The runner, the run queue and the run registry for this process.
+
+    `active` is the run registry: one entry per session with a queued or running
+    `/messages` turn or a theme toggle in flight, which is what `409 run_active`
+    checks. The queue is built from the settings on first use; its clock is the
+    registry's clock too.
+    """
 
     session_service: InMemorySessionService = field(default_factory=InMemorySessionService)
     artifact_service: InMemoryArtifactService = field(default_factory=InMemoryArtifactService)
     active: dict[str, ActiveRun] = field(default_factory=dict)
     eligibility_cache: dict[tuple[str, str], Eligibility] = field(default_factory=dict)
     runner: Runner | None = None
+    queue: RunQueue | None = None
+    clock: Callable[[], float] = time.monotonic
+
+    def run_queue(self) -> RunQueue:
+        if self.queue is None:
+            self.queue = RunQueue.from_settings(get_settings(), clock=self.clock)
+        return self.queue
+
+    def now(self) -> float:
+        return self.run_queue().now()
 
     def get_runner(self) -> Runner:
         if self.runner is None:
@@ -183,25 +231,38 @@ class Runtime:
     async def purge(self, user: str, sid: str, services: Services) -> None:
         run = self.active.pop(sid, None)
         if run is not None:
-            run.abort.set()
+            self.stop(run)
         await self.session_service.delete_session(app_name=APP_NAME, user_id=user, session_id=sid)
         services.purge_session(sid)
 
-    def drop_stale(self, deadline_s: float) -> None:
-        """Forget active runs whose stream never ran its cleanup (a client gone before the first byte)."""
+    def stop(self, run: ActiveRun) -> None:
+        """Abort a run and take it out of the queue if it still waits; a running one keeps its slot until it ends."""
+        run.abort.set()
+        if run.ticket is not None:
+            self.run_queue().withdraw(run.ticket)
+
+    def drop_stale(self, settings: AgentSettings) -> None:
+        """Forget entries whose stream never ran its cleanup (a client gone before the first byte), and free their slot."""
+        now = self.now()
+        max_wait_s = self.run_queue().max_wait_s
         for sid, run in list(self.active.items()):
-            if run.stale(deadline_s):
+            if run.stale(now, settings.request_deadline_s, max_wait_s):
                 run.abort.set()
+                if run.ticket is not None:
+                    self.run_queue().release(run.ticket)
                 del self.active[sid]
 
     def finish(self, sid: str, run: ActiveRun) -> None:
-        """Forget `run` if it is still the session's active run."""
+        """The stream ended: free the run's queue slot, and forget `run` if it is still the session's entry."""
+        if run.ticket is not None:
+            self.run_queue().release(run.ticket)
         if self.active.get(sid) is run:
             del self.active[sid]
 
     async def sweep(self, idle_s: float, services: Services) -> int:
         """Drop sessions idle for longer than `idle_s`, with their stores."""
-        self.drop_stale(get_settings().request_deadline_s)
+        self.drop_stale(get_settings())
+        self.run_queue().pump()
         listing = await self.session_service.list_sessions(app_name=APP_NAME)
         now = time.time()
         removed = 0
@@ -350,14 +411,19 @@ def _library(library: str, settings: AgentSettings) -> str:
 
 
 @app.get("/v1/status", dependencies=v1_dependencies)
-async def status() -> dict[str, Any]:
+async def status(runtime: RuntimeDep) -> dict[str, Any]:
+    """The service's configuration, plus the run queue: `waiting` entries and runs `in_flight`."""
     settings = get_settings()
+    queue = runtime.run_queue()
+    queue.pump()
     return {
         "libraries": list(settings.libraries),
         "model": settings.model,
         "location": settings.location,
         "provider": settings.provider,
         "version": _version(),
+        "waiting": queue.waiting_count,
+        "in_flight": queue.in_flight,
     }
 
 
@@ -431,8 +497,8 @@ def _fixture_seed(
 
 
 def _active(runtime: Runtime, sid: str, user: str | None = None) -> None:
-    """409 while the session has a run, or, with `user`, while that user has a run in any session."""
-    runtime.drop_stale(get_settings().request_deadline_s)
+    """409 while the session has a queued or running run, or, with `user`, while that user has one in any session."""
+    runtime.drop_stale(get_settings())
     if sid in runtime.active:
         raise AgentsError(409, "run_active")
     if user is not None and any(run.user == user for run in runtime.active.values()):
@@ -541,6 +607,15 @@ async def put_bindings(
     )
 
 
+async def _refused(translator: Translator, ledger: RequestLedger) -> AsyncIterator[str]:
+    """A turn the ledger refused before it entered the queue: `ready`, the refusal, `done`."""
+    yield translator.ready()
+    for chunk in translator.refusal():
+        yield chunk
+    attribution("run", ledger, model_versions=[], kind=ledger.kind)
+    yield translator.done()
+
+
 def _error_code(exc: BaseException) -> str:
     name = type(exc).__name__
     if "RateLimit" in name or "ResourceExhausted" in name or getattr(exc, "code", None) == 429:
@@ -559,12 +634,8 @@ async def post_message(
     session = await runtime.session(user, sid)
     _active(runtime, sid, user)
     settings = get_settings()
+    services = get_services()
     view = read_session(session.state)
-    run = ActiveRun(abort=asyncio.Event(), user=user)
-    # Registered here so a second request cannot slip in before the stream starts; the
-    # stream's finally and the background task both clear it, and an entry neither
-    # reached (a client gone before the first byte) goes stale after the deadline.
-    runtime.active[sid] = run
     ledger = RequestLedger(
         request_id=rid,
         user_id=user,
@@ -572,9 +643,34 @@ async def post_message(
         kind="action" if body.action else "text",
         lang=view.lang if view else "en",
     )
+    translator = Translator(ledger, run_id=secrets.token_hex(8), spec_id=view.spec_id if view else None)
+    if not budget_allows(ledger, services.usage, settings):
+        # The refusal the root would send after the wait, sent now: a user over the daily
+        # budget neither takes a place in the queue nor spends the minute's start.
+        ledger.refuse("budget", refusal("budget", ledger.lang))
+        attribution("budget_halt", ledger, agent="run_queue")
+        return StreamingResponse(
+            _refused(translator, ledger),
+            media_type="text/event-stream",
+            headers={**_NO_STORE, "X-Accel-Buffering": "no"},
+        )
+    queue = runtime.run_queue()
+    try:
+        ticket = queue.submit(user, sid)
+    except QueueFull:
+        logger.info("run queue full (ref %s): %d waiting", rid, queue.waiting_count)
+        raise AgentsError(503, "capacity") from None
+    run = ActiveRun(abort=asyncio.Event(), user=user, started=runtime.now(), ticket=ticket)
+    # Registered here so a second request cannot slip in before the stream starts; the
+    # stream's finally and the background task both clear it and free its queue slot,
+    # and an entry neither reached (a client gone before the first byte) goes stale
+    # after the queue's maximum wait or the deadline.
+    runtime.active[sid] = run
+    if view is not None and view.dataset_id:
+        # A hit counts as use: the idle sweep must not take the dataset while the run waits.
+        services.datasets.get(view.dataset_id, sid)
     text = ACTION_MESSAGE if body.action else (body.text or "")
     message = types.Content(role="user", parts=[types.Part(text=text)])
-    translator = Translator(ledger, run_id=secrets.token_hex(8), spec_id=view.spec_id if view else None)
 
     async def stream() -> AsyncIterator[str]:
         token = CURRENT_LEDGER.set(ledger)
@@ -584,26 +680,41 @@ async def post_message(
             run.deadline_hit = True
             run.abort.set()
 
-        timer = loop.call_later(settings.request_deadline_s, deadline)
+        timer: asyncio.TimerHandle | None = None
         failure: str | None = None
         try:
             yield translator.ready()
-            events = runtime.get_runner().run_async(
-                user_id=user,
-                session_id=sid,
-                new_message=message,
-                run_config=RunConfig(max_llm_calls=settings.max_llm_calls, streaming_mode=StreamingMode.NONE),
-                abort_signal=run.abort,
-            )
-            async with contextlib.aclosing(events) as iterator:
-                async for event in iterator:
-                    for chunk in translator.translate(event):
-                        yield chunk
+            outcome = "started"
+            async with contextlib.aclosing(queue.wait(ticket, heartbeat_s=HEARTBEAT_S)) as positions:
+                try:
+                    async for position in positions:
+                        yield translator.queued(position.position, position.waiting)
+                except QueueTimeout:  # waited the maximum: the same answer as a full queue
+                    outcome, failure = "expired", "capacity"
+                except QueueWithdrawn:  # cancelled or purged while it waited: nothing to report
+                    outcome = "withdrawn"
+            attribution("queue", ledger, verdict=outcome, waited_s=round(runtime.now() - ticket.enqueued_at, 1))
+            if outcome == "started":
+                # Queued time never counts: the deadline and its abort start with the run.
+                run.started = runtime.now()
+                timer = loop.call_later(settings.request_deadline_s, deadline)
+                events = runtime.get_runner().run_async(
+                    user_id=user,
+                    session_id=sid,
+                    new_message=message,
+                    run_config=RunConfig(max_llm_calls=settings.max_llm_calls, streaming_mode=StreamingMode.NONE),
+                    abort_signal=run.abort,
+                )
+                async with contextlib.aclosing(events) as iterator:
+                    async for event in iterator:
+                        for chunk in translator.translate(event):
+                            yield chunk
         except Exception as exc:  # the stream always ends with error + done, never a traceback
             logger.warning("run failed (ref %s): %s", rid, type(exc).__name__)
             failure = _error_code(exc)
         finally:
-            timer.cancel()
+            if timer is not None:
+                timer.cancel()
             runtime.finish(sid, run)
             CURRENT_LEDGER.reset(token)
         if ledger.error is not None:
@@ -626,11 +737,48 @@ async def post_message(
 
 @app.post("/v1/sessions/{sid}/cancel", status_code=204, dependencies=v1_dependencies)
 async def cancel(sid: SessionId, user: User, runtime: RuntimeDep) -> Response:
+    """Abort the session's run; a run that still waits leaves the queue at once. A theme toggle runs to its end."""
     await runtime.session(user, sid)
     run = runtime.active.get(sid)
     if run is not None:
-        run.abort.set()
+        runtime.stop(run)
     return Response(status_code=204, headers=_NO_STORE)
+
+
+class RenderThemeBody(_Body):
+    theme: Theme
+
+
+@app.post("/v1/sessions/{sid}/versions/{version}/render", dependencies=v1_dependencies)
+async def render_version_theme(
+    sid: SessionId, version: Annotated[int, Path(ge=0, le=999)], body: RenderThemeBody, user: User, runtime: RuntimeDep
+) -> JSONResponse:
+    """The theme toggle: render `theme` of a finished version from its stored run form, with no model call.
+
+    Version 0 is the latest. Synchronous (a render takes seconds): it renders in the
+    render slot's `toggle` lane, behind waiting pipeline renders, but not through the
+    run queue. It is registered in the run registry while it renders, so it and a turn
+    refuse each other with `409 run_active` in both directions, and a user has one run
+    or toggle in flight at a time. `503 capacity` when no render slot came free in time
+    or the render store is full.
+    """
+    await runtime.session(user, sid)
+    _active(runtime, sid, user)
+    services = get_services()
+    stored = services.versions.get(sid, version or None)
+    if stored is None:
+        raise AgentsError(404, "not_found")
+    toggle = ActiveRun(abort=asyncio.Event(), user=user, started=runtime.now())
+    runtime.active[sid] = toggle  # no await since the check above, so nothing slipped in between
+    try:
+        result = await render_theme(services, get_settings(), sid, stored, body.theme)
+    except RenderGone:
+        raise AgentsError(404, "not_found") from None
+    except (RenderBusy, RenderStoreFull):
+        raise AgentsError(503, "capacity") from None
+    finally:
+        runtime.finish(sid, toggle)
+    return JSONResponse(result.public(), headers=_NO_STORE)
 
 
 @app.get("/v1/sessions/{sid}/artifacts/{name}", dependencies=v1_dependencies)
@@ -711,6 +859,10 @@ async def bundle(
                 "plot_py": item.export,
                 "plan": item.plan.model_dump(mode="json") if item.plan else None,
                 "result": item.result.model_dump(mode="json"),
+                "theme": item.theme,
+                "themes": {
+                    theme: {"status": record.status, "reason": record.reason} for theme, record in item.themes.items()
+                },
                 "images": {
                     theme: base64.b64encode(data).decode() for theme, data in (stored.pngs.items() if stored else [])
                 },

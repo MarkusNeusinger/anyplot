@@ -3,7 +3,8 @@
 * `root_agent` ("anyplot") is the only agent that talks to the user. Its policy is the
   constant `static_instruction` (`policy.root_instruction`), never templated; the
   `InstructionProvider` `session_context` adds only server-validated values (spec id,
-  library, reply language, dataset and binding status, plot versions), which ADK sends
+  library, reply language, dataset and binding status, plot versions and the latest
+  version's theme, so a change keeps it), which ADK sends
   as a marked instruction block after the static prefix. Catalogue text such as the
   spec title started as a public issue, so it never enters that block: the root reads
   it fenced as `<spec_text>` through `get_spec_brief`. Its tools are the four session
@@ -86,7 +87,8 @@ async def session_context(context: ReadonlyContext) -> str:
             lines.append(f"- Bindings: incomplete; missing roles: {missing}; {len(check.errors)} invalid")
     versions = [version for version in services.versions.all(session_id) if version.library == view.library]
     if versions:
-        lines.append(f"- Plot versions: {len(versions)}; latest result: {versions[-1].result.status}")
+        latest = versions[-1]
+        lines.append(f"- Plot versions: {len(versions)}; latest result: {latest.result.status}, theme {latest.theme}")
     else:
         lines.append("- Plot versions: none yet")
     return "\n".join(lines)
