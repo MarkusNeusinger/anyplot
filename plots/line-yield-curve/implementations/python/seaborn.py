@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: pending | Updated: 2026-06-10
+Library: seaborn 0.13.2 | Python 3.13.16
+Quality: 84/100 | Updated: 2026-10-09
 """
 
 import os
