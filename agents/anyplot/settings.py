@@ -32,9 +32,11 @@ another provider, model or location.
 | `AGENT_DEV_FIXTURE` | unset | Development only: an eval fixture case id that seeds every new session |
 | `ENVIRONMENT` | `development` | Deployment environment, shared with the API |
 
-No `.env` file is read: the service runs on Cloud Run environment variables only,
-`adk web` loads its own `.env` from the agent directory into the environment, and
-the tests stay hermetic.
+No `.env` file is read here: the service runs on Cloud Run environment variables only,
+and the tests stay hermetic. `adk web` is different: it walks up from the agent
+directory to the first `.env` it finds and loads it (`google/adk/cli/utils/envs.py`),
+which in this repository is the root `.env` with production values, so run it with
+`ADK_DISABLE_LOAD_DOTENV=1` (agents/README.md).
 """
 
 import json
