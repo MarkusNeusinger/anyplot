@@ -11,6 +11,10 @@ The design runs each theme as
 the timing, the memory per sandbox and the probe suite in europe-west4; until then
 this backend refuses to run, so `AGENT_RENDERER=sandbox` fails loudly instead of
 guessing a command line. Use `local` (Docker) or `fake` in development.
+
+Like the local backend, the implementation must stop its sandboxes when the render
+is cancelled (an abort or the request deadline): catch `asyncio.CancelledError`,
+run `sandbox delete` for each theme under `asyncio.shield`, then re-raise.
 """
 
 from ..contract import RenderJob, RenderResult, RuntimeAdapter

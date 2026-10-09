@@ -1,5 +1,6 @@
 """Tests for agents/anyplot/render/: PNG hardening, gates, the harness and the backends."""
 
+import asyncio
 import io
 import json
 import os
@@ -239,6 +240,27 @@ class TestHarness:
 
 
 class TestBackends:
+    async def test_local_backend_kills_the_container_on_cancellation(self, tmp_path: Path) -> None:
+        killed = tmp_path / "killed.txt"
+        docker = tmp_path / "docker"
+        docker.write_text(f'#!/bin/sh\nif [ "$1" = kill ]; then echo "$2" >> {killed}; exit 0; fi\nexec sleep 30\n')
+        docker.chmod(0o755)
+        backend = LocalDockerBackend(
+            image="anyplot-agents:dev",
+            runtime=PythonRuntime(),
+            environment="development",
+            concurrency=2,
+            docker=str(docker),
+        )
+
+        task = asyncio.create_task(backend.render(job(job_id="cancelme")))
+        await asyncio.sleep(0.5)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+        assert sorted(killed.read_text().split()) == ["r-cancelme-dark", "r-cancelme-light"]
+
     def test_local_backend_command_keeps_the_network_off(self) -> None:
         backend = LocalDockerBackend(
             image="anyplot-agents:dev",

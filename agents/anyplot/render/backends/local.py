@@ -107,6 +107,11 @@ class LocalDockerBackend:
                 timed_out = True
                 await self._kill(f"r-{job.job_id}-{theme}", process)
                 stderr = b""
+            except asyncio.CancelledError:
+                # An abort or the request deadline: stop the container before render()
+                # removes the run directory under it, then let the cancellation through.
+                await asyncio.shield(self._kill(f"r-{job.job_id}-{theme}", process))
+                raise
             wall = time.monotonic() - started
         try:
             png, probe = self.runtime.collect(run_dir, theme)
