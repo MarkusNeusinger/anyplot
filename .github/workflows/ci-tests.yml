@@ -118,7 +118,7 @@ jobs:
 
     - name: Install dependencies
       if: steps.check.outputs.should_test == 'true'
-      run: uv sync --extra test
+      run: uv sync --extra test --extra agents
 
     # Dependabot PRs run from forks and cannot access repository secrets,
     # so skip GCP auth + Cloud SQL Proxy + Codecov upload. Only unit and

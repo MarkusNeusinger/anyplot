@@ -59,7 +59,7 @@ High-level understanding of why things work the way they do.
 
 - **[Vision](concepts/vision.md)** - Product mission, the problem we solve, and how we're different
 - **[Library Expansion Roadmap](concepts/library-expansion.md)** - Multi-language gallery expansion plan and licensing policy
-- **[Agent Network](concepts/agent-network.md)** - Design of the "Use with my data" agent network on Google ADK and Gemini: agents, pipeline, guardrails, serving, roadmap (design only as of 2026-10-09)
+- **[Agent Network](concepts/agent-network.md)** - Design of the "Use with my data" agent network on Google ADK and Gemini: agents, pipeline, guardrails, serving, roadmap (as of 2026-10-09, only the `agents/` package skeleton with settings and contracts is built)
 
 ---
 
