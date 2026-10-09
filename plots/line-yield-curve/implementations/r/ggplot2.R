@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' line-yield-curve: Yield Curve (Interest Rate Term Structure)
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 87/100 | Created: 2026-06-10
+#' Quality: 87/100 | Updated: 2026-10-09
 
 library(ggplot2)
 library(scales)
@@ -44,20 +44,20 @@ y_top   <- max(df$yield_pct)
 y_annot <- y_top + 0.30
 plot_title <- "line-yield-curve · r · ggplot2 · anyplot.ai"
 
-# Data-driven ribbon: front-end region (1M–2Y) between Jan 2021 baseline and
-# Jul 2023 peak — shows the full magnitude of the hiking cycle at the short end
-front_end_mask <- maturity_years <= 2.0
+# Inversion region of the Jul 2023 curve: where its short-term yields sit
+# above its own 30Y yield (1M–10Y)
+inv_mask <- maturity_years <= 10.0 & yields_jul2023 > yields_jul2023[length(yields_jul2023)]
 inversion_df <- data.frame(
-  maturity_years = maturity_years[front_end_mask],
-  ymin           = yields_jan2021[front_end_mask],
-  ymax           = yields_jul2023[front_end_mask]
+  maturity_years = maturity_years[inv_mask],
+  ymin           = yields_jul2023[length(yields_jul2023)],
+  ymax           = yields_jul2023[inv_mask]
 )
 
 p <- ggplot(df, aes(x = maturity_years, y = yield_pct, color = curve_date)) +
   geom_ribbon(
     data = inversion_df,
     aes(x = maturity_years, ymin = ymin, ymax = ymax),
-    fill = INK_MUTED, alpha = 0.10, inherit.aes = FALSE
+    fill = INK_MUTED, alpha = 0.20, inherit.aes = FALSE
   ) +
   geom_line(linewidth = 1.2, lineend = "round") +
   geom_point(size = 3.5) +
@@ -91,8 +91,8 @@ p <- ggplot(df, aes(x = maturity_years, y = yield_pct, color = curve_date)) +
     axis.text         = element_text(color = INK_SOFT, size = 8),
     axis.line         = element_line(color = INK_SOFT, linewidth = 0.5),
     axis.ticks        = element_blank(),
-    plot.title        = element_text(color = INK,      size = 12, margin = margin(b = 12)),
-    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
+    plot.title        = element_text(color = INK,      size = 13, margin = margin(b = 12)),
+    legend.background = element_rect(fill = ELEVATED_BG, color = NA),
     legend.text       = element_text(color = INK_SOFT, size = 9),
     legend.title      = element_blank(),
     legend.key.width  = unit(1.5, "cm"),

@@ -2,9 +2,9 @@ library: ggplot2
 language: r
 specification_id: line-yield-curve
 created: '2026-06-10T00:50:31Z'
-updated: '2026-06-10T01:07:11Z'
+updated: '2026-10-09T03:24:24Z'
 generated_by: claude-sonnet
-workflow_run: 27245270969
+workflow_run: 37878614138
 issue: 4664
 language_version: 4.4.1
 library_version: 3.5.1
@@ -15,97 +15,90 @@ preview_html_dark: null
 quality_score: 87
 review:
   strengths:
-  - Correct Imprint palette in canonical order with first series as brand green (#009E73)
-  - 'Full theme-adaptive chrome: all text, grid, legend, and background tokens correctly
-    flip between light and dark renders'
-  - Historically accurate and narratively meaningful data (QE era → hiking cycle peak
-    → normalization)
-  - Idiomatic ggplot2 grammar with appropriate geom layering (ribbon + line + point)
-  - 'Clean flat procedural script: all imports used, deterministic data, correct output
-    filenames'
-  - Correct log-scale x-axis with maturity string labels positioned at numeric maturity_years
-    values
-  - 'Good visual refinement: panel border removed, minor grid removed, ticks removed,
-    subtle major grid'
+  - 'Inversion shading is computed from the data: a geom_ribbon from the Jul 2023
+    curve''s own 30Y yield (3.96 %) up to its 1M-10Y yields, so the shaded area is
+    exactly where that curve''s short end exceeds its long end'
+  - scale_x_log10 with breaks = maturity_years and labels = maturities puts every
+    maturity label at its true time position
+  - Historically grounded Treasury curves (Jan 2021 normal, Jul 2023 deeply inverted,
+    Jan 2024 normalizing) tell a coherent term-structure story
+  - 'Full theme-token chrome: every text, axis line, grid and the shading flip correctly
+    between #FAF8F1 and #1A1A17 while the Imprint data colors stay identical'
+  - Three-level ink hierarchy keeps the 'Inversion zone' label in INK_MUTED, secondary
+    to the curves
   weaknesses:
-  - Ribbon alpha=0.10 is too subtle — nearly invisible in the dark render; raise to
-    alpha=0.18–0.22 so the inversion-zone highlight reads in both themes
-  - 'Ribbon semantics imprecise: currently spans from Jan 2021 baseline to Jul 2023
-    at 1M–2Y, but the spec asks to highlight where short-term yields exceed long-term
-    yields within a single curve — consider shading the area below the inverted curve''s
-    long-end yield level in the front-end region'
-  - Legend border box adds visual noise; style guide recommends removing legend box
-    frames — set legend.background color=NA
-  - Title at size=12pt spans ~50% of plot width at the lower bound of the 50–70% guideline;
-    slightly larger (13pt) would give more visual authority
+  - 'Suggestion: name the curve in the annotation (for example ''Jul 2023 inversion'')
+    so the shading is not read as belonging to the Jan 2024 curve that runs through
+    it'
+  - 'Suggestion: drop the vertical major grid lines at every maturity and keep the
+    horizontal ones, for the minimal gridlines the Notes ask for'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "line-yield-curve · r · ggplot2 · anyplot.ai" in dark ink, clearly visible. X-axis label "Maturity" and Y-axis label "Yield (%)" readable. Tick labels (1M–30Y, 0.0%–6.0%) all readable in INK_SOFT. "Inversion zone" annotation visible in muted ink.
-      Data: Three curves — Jan 2021 in brand green (#009E73, first series correct), Jul 2023 in lavender (#C475FD), Jan 2024 in blue (#4467A3). Subtle gray ribbon fill in 1M–2Y region (alpha=0.10, barely visible). Lines at linewidth=1.2, points at size=3.5.
+      Background: Warm off-white #FAF8F1, not pure white.
+      Chrome: Title 'line-yield-curve · r · ggplot2 · anyplot.ai' in dark ink top-left (about 64 % of the panel width); 'Yield (%)' and 'Maturity' axis titles in dark ink; tick labels 0.0%-6.0% and 1M-30Y in soft grey; left and bottom axis lines; subtle 15 % grid; 'Inversion zone' label in muted grey above the 6M-1Y points. All readable.
+      Data: Three lines with dot markers on a log maturity axis: Jan 2021 brand green #009E73 rising from 0.05 % to 1.83 %; Jul 2023 lavender #C475FD and Jan 2024 blue #4467A3 both falling from about 5.5 % to about 4 % and crossing at 3M and 10Y. A grey ribbon (alpha 0.20) shades 1M-10Y from 3.96 % up to the Jul 2023 curve. Legend on the right on an elevated off-white fill, no frame, with line+point glyphs.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light ink (#F0EFE8), axis labels and tick labels in secondary light ink (#B8B7B0) — all readable against dark surface. No dark-on-dark failures. Grid lines subtle on dark background. Legend box uses elevated dark background (#242420).
-      Data: Data colors identical to light render — green, lavender, blue confirmed unchanged. Ribbon is nearly invisible at alpha=0.10 on dark surface (very weak contrast). "Inversion zone" annotation still legible.
+      Background: Warm near-black #1A1A17, not pure black.
+      Chrome: Title and axis titles in light ink, tick labels and legend text in light grey, axis lines light grey, grid subtle. No dark-on-dark text. The 'Inversion zone' label is light muted grey and readable. Legend on a #242420 elevated fill.
+      Data: Green, lavender and blue identical to the light render; only the chrome flips. The inversion ribbon reads as a lighter warm-grey band and stays clearly visible; the blue Jan 2024 curve has lower contrast than the others but is distinct.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=12, axis=10, tick=8); all text readable
-          in both themes. Title spans ~50% of plot width, at lower bound of 50-70%
-          guideline.
+        comment: Explicit sizes (title 13 pt, axis titles 10 pt, ticks 8 pt, legend
+          9 pt, annotation 3.5 mm); all text readable in both themes, no dark-on-dark
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; Jan 2021 curve visually well-separated from
-          2023/2024 inverted curves.
+        comment: No text collisions; the Jul 2023 and Jan 2024 curves crossing at
+          3M and 10Y is data crossing that the spec permits (C6)
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines and points clearly visible. Ribbon fill at alpha=0.10 is very
-          subtle and nearly invisible in dark render.
+        comment: 11 points per curve at size 3.5 with 1.2 lines, prominent for sparse
+          data; legend line+point glyphs match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette positions 1-3 are CVD-safe; no red-green sole-signal
-          issue.
+        comment: Imprint positions 1-3 are CVD-safe; curves also separate by level
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas passes dimension gate (3200x1800). Good margins, proportions
-          balanced, no overflow.
+        comment: 3200x1800 canvas (gate passed); balanced margins, title well inside
+          the width, legend on the right with room, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Maturity, Y: Yield (%) with unit. Both descriptive.'
+        comment: '''Maturity'' with maturity-label ticks and ''Yield (%)'' with the
+          unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; positions 1-3 canonical order; backgrounds
-          #FAF8F1/#1A1A17; chrome correctly adapts.'
+        comment: 'First series #009E73, then #C475FD and #4467A3 in canonical order;
+          #FAF8F1 / #1A1A17 backgrounds; chrome and shading use theme tokens'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -113,26 +106,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above-default: Imprint palette, ribbon+annotation add narrative
-          intent, intentional hierarchy. Not exceptional — no emphasis distinguishes
-          key curve, legend border noisy.'
+        comment: 'Above baseline: a three-level ink hierarchy (INK title, INK_SOFT
+          ticks and legend, INK_MUTED annotation) keeps the label secondary to the
+          data'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Above-default: panel border removed, minor grid removed, ticks removed,
-          subtle major grid 15% opacity. Legend border slightly noisy.'
+        comment: 'Above baseline: asymmetric y expansion leaves headroom for the annotation,
+          and the legend sits on an elevated fill with no frame'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Above-default: historically significant dates tell coherent macro
-          narrative. Ribbon+annotation guide viewer. Could be stronger with explicit
-          callout for most important curve.'
+        comment: 'Above default: the shading is anchored to the Jul 2023 curve''s
+          own 30Y level, so its depth shows how far the short end sits above the long
+          end'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -140,30 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-line yield curve on log-scale x-axis with all 11 maturity
-          tenors.
+        comment: Multi-curve yield-curve line chart on a numeric maturity axis
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Three curves, legend, log-scale x-axis, maturity labels all present.
-          Minor: ribbon positioned between 2021 baseline and 2023 short-end, not directly
-          showing where short-end > long-end within a single curve.'
+        comment: 'All Notes met: log maturity axis with maturity labels, three curves,
+          inversion region shaded (Jul 2023 short end above its 30Y), clean style,
+          date legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: maturity_years drives x-axis; maturity strings as tick labels; yield_pct
-          on y-axis; all points shown.
+        comment: x = maturity_years on a log10 axis, y = yield_pct; every point at
+          its value, straight segments, no smoothing
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend labels Jan 2021/Jul 2023/Jan
-          2024 correct.
+        comment: Title matches 'line-yield-curve · r · ggplot2 · anyplot.ai'; legend
+          gives each curve's date
     data_quality:
       score: 15
       max: 15
@@ -173,22 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Normal upward-sloping, deeply inverted, and partially normalizing
-          curves all represented.
+        comment: Normal (Jan 2021), deeply inverted (Jul 2023) and partly inverted,
+          normalizing (Jan 2024) curves
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real US Treasury yield data; accurate yield levels for each Fed policy
-          regime; neutral framing.
+        comment: U.S. Treasury curves at plausible historical levels for the QE era,
+          the hiking peak and early 2024; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All yield values consistent with historical reality for the given
-          dates.
+        comment: 'No check values in the spec; checked the levels against the regime:
+          Jan 2021 10Y 1.08 %, Jul 2023 2Y 4.87 % vs 10Y 3.97 %, Jan 2024 10Y 3.97
+          %, all plausible'
     code_quality:
       score: 10
       max: 10
@@ -198,33 +191,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat procedural script; no unnecessary functions or classes.
+        comment: 'Flat script: tokens, data, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; deterministic output.
+        comment: Hard-coded data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, scales, ragg — all imported and used.
+        comment: ggplot2, scales and ragg are all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean readable code; no fake UI; appropriate complexity.
+        comment: Inversion mask computed from the data in one line; nothing redundant
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png; current ggplot2 API (linewidth= not size=).
+        comment: ggsave to plot-{THEME}.png with ragg; current linewidth API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -232,25 +225,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good ggplot2 grammar: geom_ribbon+geom_line+geom_point, scale_color_manual,
-          scale_x_log10, expansion(), theme_minimal+theme layering.'
+        comment: 'Above default: scale_x_log10 with explicit breaks and labels from
+          the data vectors, expansion(mult=) for headroom, and a labeller function
+          for percent ticks'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: scale_x_log10 with explicit breaks/labels, geom_ribbon, factor()
-          with explicit levels, expansion(mult=), scales::alpha() for grid color.
+        passed: false
+        comment: 'Above default: geom_ribbon with its own layer data and inherit.aes
+          = FALSE layered under the mapped lines, which is a grammar-of-graphics idiom'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-2476dd0292
+  rendered_at: '2026-10-09T03:20:47Z'
 impl_tags:
-  dependencies:
-  - scales
-  - ragg
+  dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - publication-ready
   - alpha-blending
+  - grid-styling
