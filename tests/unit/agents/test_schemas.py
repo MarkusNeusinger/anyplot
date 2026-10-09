@@ -129,6 +129,13 @@ class TestBinding:
         with pytest.raises(ValidationError):
             Binding(role="x", column="c" * 65)
 
+    def test_the_bff_accepts_the_same_roles(self) -> None:
+        """The BFF copies the pattern (the API image has no agents package); the copies must agree."""
+        from agents.anyplot.schemas import ROLE_PATTERN
+        from api.routers.agent import ROLE_PATTERN as BFF_ROLE_PATTERN
+
+        assert BFF_ROLE_PATTERN == ROLE_PATTERN
+
 
 class TestPipelineArgs:
     def test_empty_call_uses_the_defaults(self) -> None:

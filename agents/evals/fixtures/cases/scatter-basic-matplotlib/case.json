@@ -1,0 +1,11 @@
+{
+  "spec_id": "scatter-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {"role": "x", "column": "Study Hours"},
+    {"role": "y", "column": "Exam Score"}
+  ],
+  "expected": "accepted",
+  "tags": ["numeric", "renamed-columns", "small"]
+}

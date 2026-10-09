@@ -18,21 +18,28 @@ extend it, and the ADAPTATION validator checks that the existing entries keep th
 order. A failing edit is skipped and the rest still run, so one round reports every
 problem; the plan as a whole then yields no code. `full_code` replaces everything; the
 caller decides whether a full file is allowed (attempt 2 only), the applier only
-applies it.
+applies it. After either kind of plan, `protected_drift` compares the result with the
+base: the protected statements must keep their exact text, and THEME and the theme
+tokens may not be bound again anywhere (a later `PAGE_BG = ...` passes the overlap
+check above but would recolour the plot).
 
 Failure lines are repair feedback (`Line`): one line each, at most `MAX_LINE_CHARS`
 characters, quoting at most `MAX_QUOTE_CHARS` characters of code.
 """
 
+import ast
 import re
+from collections import Counter
 from dataclasses import dataclass, field
 
 from ..schemas import MAX_FEEDBACK, MAX_LINE_CHARS, AdaptPlan
-from .regions import PLACEHOLDER_FUNC, Region, SourceIndex, Span, find_regions
+from .regions import PLACEHOLDER_FUNC, THEME_NAME, Region, SourceIndex, Span, find_regions
 
 
 MAX_QUOTE_CHARS = 80
 MAX_COUNTED_MATCHES = 1000
+MAX_NEW_LITERAL_CHARS = 2_000
+"""New string-literal text one plan may add (design doc, "Adapt and validate")."""
 
 # The placeholder statement as a line of text, so one that an earlier edit of the same
 # plan introduced is protected before the code parses again.
@@ -58,6 +65,106 @@ class AppliedPlan:
 
 def apply_plan(working: str, plan: AdaptPlan) -> AppliedPlan:
     """Apply `plan` to the working form `working`; see the module docstring."""
+    applied = _apply(working, plan)
+    if applied.code is None:
+        return applied
+    drift = protected_drift(working, applied.code)
+    return AppliedPlan(None, drift[:MAX_FEEDBACK]) if drift else applied
+
+
+def protected_drift(base: str, code: str) -> list[str]:
+    """Failure lines when `code` changed a protected region of `base` or binds a theme name again.
+
+    The text checks per edit cannot see a `full_code` plan, nor an edit that adds
+    `PAGE_BG = "#FF00FF"` further down. So after every plan the THEME assignment, each
+    theme token assignment and the final savefig statement must keep their exact
+    source text, and THEME and the token names may be bound no more often than in
+    `base` (assignment, augmented assignment, `del`, `global`, import alias, function,
+    class, parameter, loop or `with` target, walrus, `except ... as`, match capture).
+    A `code` that does not parse is left to the validator.
+    """
+    try:
+        before_tree = ast.parse(base)
+        after_tree = ast.parse(code)
+    except SyntaxError:
+        return []
+    before, after = find_regions(base, before_tree), find_regions(code, after_tree)
+    failures: list[str] = []
+
+    def text(source: str, span: Span) -> str:
+        return source[span.start : span.end].strip()
+
+    if before.theme is not None and (
+        after.theme is None or text(base, before.theme.span) != text(code, after.theme.span)
+    ):
+        failures.append("the plan changes or removes the protected THEME assignment")
+    after_tokens = {region.name: text(code, region.span) for region in after.theme_tokens}
+    for region in before.theme_tokens:
+        if after_tokens.get(region.name) != text(base, region.span):
+            failures.append(f"the plan changes or removes the protected theme token {region.name}")
+    if before.savefig is not None and before.savefig.statement is not None:
+        after_savefig = after.savefig.statement if after.savefig is not None else None
+        if after_savefig is None or text(base, before.savefig.statement) != text(code, after_savefig):
+            failures.append("the plan changes or removes the protected final savefig statement")
+
+    names = {THEME_NAME, *(name for region in before.theme_tokens for name in region.name.split(", "))}
+    counts_before, counts_after = _bindings(before_tree, names), _bindings(after_tree, names)
+    for name in sorted(names):
+        if counts_after.get(name, 0) > counts_before.get(name, 0):
+            failures.append(
+                f"the plan binds {name} a second time; the theme names are set once, on their protected line"
+            )
+    if failures:
+        failures.append(
+            "keep the THEME assignment, the theme tokens and the final savefig exactly as in the current code"
+        )
+    return [_line(failure) for failure in failures]
+
+
+def _bindings(tree: ast.Module, names: set[str]) -> Counter[str]:
+    """How often each of `names` is bound or deleted anywhere in `tree`."""
+    counts: Counter[str] = Counter()
+    for node in ast.walk(tree):
+        bound: list[str] = []
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store | ast.Del):
+            bound = [node.id]
+        elif isinstance(node, ast.Global | ast.Nonlocal):
+            bound = list(node.names)
+        elif isinstance(node, ast.alias):
+            bound = [node.asname or node.name.split(".")[0]]
+        elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            bound = [node.name]
+        elif isinstance(node, ast.arg):
+            bound = [node.arg]
+        elif isinstance(node, ast.ExceptHandler | ast.MatchAs | ast.MatchStar) and node.name:
+            bound = [node.name]
+        elif isinstance(node, ast.MatchMapping) and node.rest:
+            bound = [node.rest]
+        counts.update(name for name in bound if name in names)
+    return counts
+
+
+def new_literal_chars(base: str, code: str) -> int:
+    """Characters of string literals in `code` that `base` does not already hold (as a multiset).
+
+    The plan's literal budget (`MAX_NEW_LITERAL_CHARS`): an adaptation renames titles
+    and labels, it does not write out data or long text. A `code` or `base` that does
+    not parse counts as 0; the validator reports the syntax error.
+    """
+    try:
+        before, after = _string_literals(ast.parse(base)), _string_literals(ast.parse(code))
+    except SyntaxError:
+        return 0
+    return sum(len(text) * count for text, count in (after - before).items())
+
+
+def _string_literals(tree: ast.Module) -> Counter[str]:
+    return Counter(
+        node.value for node in ast.walk(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)
+    )
+
+
+def _apply(working: str, plan: AdaptPlan) -> AppliedPlan:
     if plan.full_code is not None:
         return AppliedPlan(plan.full_code)
     try:

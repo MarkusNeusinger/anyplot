@@ -1,0 +1,17 @@
+# Fixed replies of the anyplot agents service, by reason and language.
+#
+# The service sends these texts verbatim; no model writes them. `policy.refusal()`
+# picks the user's language and falls back to English. Keep every entry free of
+# URLs and markdown: the stream translator would strip them.
+
+out_of_scope:
+  en: "I can only help with this plot and your data for it: choosing columns, adapting, styling and exporting the plot, and questions about its code."
+  de: "Ich kann nur bei diesem Plot und deinen Daten dafür helfen: Spalten wählen, den Plot anpassen, gestalten und exportieren sowie Fragen zu seinem Code."
+
+budget:
+  en: "The usage limit for now is reached. Please try again later."
+  de: "Das Nutzungslimit ist für den Moment erreicht. Bitte versuche es später noch einmal."
+
+unsupported_content:
+  en: "Please send your request as text. To use your data, paste it into the data panel."
+  de: "Bitte sende deine Anfrage als Text. Deine Daten fügst du im Datenbereich ein."

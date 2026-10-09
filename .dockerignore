@@ -26,11 +26,15 @@
 !README.md
 
 # The agent network's image (agents/, docs/concepts/agent-network.md) builds from
-# the same root context. It also needs the two prompt sources its adapter reads
-# verbatim. The API image does not grow: api/Dockerfile COPYs only api/ and core/.
+# the same root context. It also needs the catalogue prompt sources its adapter
+# and reviewer read verbatim (agents/anyplot/policy.py). The API image does not
+# grow: api/Dockerfile COPYs only api/ and core/.
 !agents
 !prompts/default-style-guide.md
 !prompts/library
+!prompts/quality-criteria.md
+!prompts/workflow-prompts/impl-repair-claude.md
+!prompts/workflow-prompts/ai-quality-review.md
 # Promoted feedback cases hold users' data; they are synced here for eval runs
 # and are never committed, so they must never reach an image either.
 agents/evals/.cases
