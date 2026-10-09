@@ -129,8 +129,9 @@ plot_pipeline = Workflow(
     description=(
         "Adapt the plot to the user's dataset and bindings, render it in one theme, review it, and repair it "
         "once if needed. Call it with no arguments for 'Create plot'; for a change, pass change_request (English, "
-        "at most 600 characters) and base='previous'. theme is 'light' by default; pass theme='dark' only when the "
-        "user asks for a dark plot, and for a change keep the latest version's theme. Returns the PlotResult."
+        "at most 600 characters) and base='previous'. Leave theme out unless the user asks for a theme: a new plot "
+        "is light and a change keeps the latest version's theme; pass theme='dark' only when the user asks for a "
+        "dark plot. Returns the PlotResult."
     ),
     input_schema=PipelineArgs,
     edges=[("START", run_pipeline)],

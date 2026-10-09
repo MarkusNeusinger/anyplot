@@ -369,6 +369,31 @@ async def test_a_dark_plot_renders_and_reviews_the_dark_theme_only(
     assert code.text.splitlines()[1] == "# run: ANYPLOT_THEME=dark python plot.py"
 
 
+async def test_a_change_without_a_theme_keeps_the_dark_theme(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """The root may omit `theme` on a refinement; a dark plot must not come back light."""
+    script = {
+        "root": [
+            {"call": "plot_pipeline", "args": {"theme": "dark"}},
+            {"text": "Your dark plot is ready."},
+            {"call": "plot_pipeline", "args": {"change_request": CHANGE_REQUEST, "base": "previous"}},
+            {"text": "Done: bigger markers."},
+        ],
+        "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
+        "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+    }
+    swap_models("gemini", script)
+    sid = await open_session(client)
+    await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "a dark plot"})
+
+    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": CHANGE_REQUEST})
+
+    plot = next(data for name, data in parse_sse(response.text) if name == "plot")
+    assert (plot["status"], plot["artifacts"]) == ("ok", ["plot-dark.png", "plot.py", "data.csv"])
+    assert [job.themes for job in backend.jobs] == [("dark",), ("dark",)]
+
+
 async def test_reviewer_defects_name_the_rendered_theme(client: httpx.AsyncClient, swap_models) -> None:
     """The reviewer saw the dark render only: a line it filed under light or both names dark; code stays code."""
     defect = VERDICT_REJECT["defects"][0]

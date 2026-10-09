@@ -411,7 +411,7 @@ Used to load interactive plots (plotly, bokeh, altair) in iframes with dynamic s
 
 ---
 
-## Agent chat (admin only, dark by default)
+## Agent chat (admin only, switched off by default)
 
 > **Status (2026-10-09):** the routes exist and ship switched off. The
 > anyplot-agents service they call runs locally but is not deployed yet, so

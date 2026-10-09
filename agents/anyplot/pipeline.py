@@ -2,8 +2,9 @@
 
 `run_pipeline` is the single node of the `plot_pipeline` workflow (`tools/session.py`).
 It reads spec, library, dataset and bindings from server-set session state, never from
-its input (`PipelineArgs` carries only `change_request` and `base`), and runs at most
-two attempts:
+its input: `PipelineArgs` carries only `change_request`, `base` and `theme` (the one
+theme to render; omitted, a change keeps the previous version's theme and a new plot
+is light). It runs at most two attempts:
 
 1. **adapt**: the library's adapter agent turns the working form into an `AdaptPlan`
    (`ctx.run_node`, under its own isolation scope so the root never reads its answer);
@@ -384,6 +385,19 @@ def _reraise_unless_schema(exc: Exception) -> None:
     logger.warning("sub-agent answer failed its schema: %s", type(exc).__name__)
 
 
+def _default_theme(services: Services, session_id: str, library: str, base: str) -> Theme:
+    """An omitted theme keeps the previous version's theme on a change; a new plot is light.
+
+    The root may leave `theme` out of a refinement call, so a dark plot must not
+    silently come back light.
+    """
+    if base == "previous":
+        previous = services.versions.latest_rendered(session_id, library=library)
+        if previous is not None:
+            return previous.theme
+    return "light"
+
+
 @node(name="run_pipeline", rerun_on_resume=True)
 async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator[Event, None]:
     """Adapt, check, render, review and repair; yields status events and one PlotResult."""
@@ -397,7 +411,8 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         )
         return
     ledger.pipeline_active = True
-    run = Run(view=view, dataset=dataset, theme=node_input.theme)
+    theme = node_input.theme or _default_theme(services, ctx.session.id, view.library, node_input.base)
+    run = Run(view=view, dataset=dataset, theme=theme)
     scope = f"pipeline-{secrets.token_hex(6)}"
     try:
         async for event in _attempts(ctx, services, settings, run, node_input, scope):
