@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-10
@@ -41,7 +41,7 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=IMPRINT_PALETTE,
-    title_font_size=66,
+    title_font_size=56,
     label_font_size=56,
     major_label_font_size=44,
     legend_font_size=44,
@@ -60,7 +60,7 @@ custom_style = Style(
 chart = pygal.XY(
     width=3200,
     height=1800,
-    title="U.S. Treasury Yield Curves · line-yield-curve · pygal · anyplot.ai",
+    title="U.S. Treasury Yield Curves · line-yield-curve · python · pygal · anyplot.ai",
     x_title="Maturity (Years)",
     y_title="Yield (%)",
     style=custom_style,
@@ -114,18 +114,22 @@ border_css = "  rect.background { stroke: none !important; } .chart-background {
 svg_str = svg_str.replace("</style>", border_css + "  </style>")
 
 # 2. Inject inversion zone shading rectangle (DE-01 / data storytelling enhancement)
-#    Coordinates derived from SVG circle positions (plot group translate: 222,196):
-#      x-scale = 93.14 px/year, x-origin = 48px; y-scale = 221.7 px/%, y-origin = 1243.62px
-#      2Y @ 4.60%: plot-local (234.3, 223.9)  |  10Y @ 3.58%: plot-local (979.4, 450.0)
-#    Semi-transparent ochre box frames the annotated 2Y–10Y spread region
+#    The box spans the two oversized anchor dots (r="18"), read back from the rendered SVG so it
+#    follows the layout instead of relying on hardcoded pixel coordinates.
+(x_2y, y_2y), (x_10y, y_10y) = (
+    (float(cx), float(cy)) for cx, cy in re.findall(r'<circle cx="([\d.]+)" cy="([\d.]+)" r="18"', svg_str)
+)
 inversion_zone = (
-    '<rect x="234.3" y="223.9" width="745.1" height="226.1" '
+    f'<rect x="{x_2y:.1f}" y="{y_2y:.1f}" width="{x_10y - x_2y:.1f}" height="{y_10y - y_2y:.1f}" '
     'fill="rgba(189,130,51,0.13)" stroke="rgba(189,130,51,0.45)" '
     'stroke-width="3" stroke-dasharray="12,8" />'
 )
 # Insert after the plot-area background rect (placed inside the plot group → behind data series)
 svg_str = re.sub(
-    r'(<rect x="0" y="0" width="2898" height="1268(?:\.\d+)?" class="background" />)', r"\1\n" + inversion_zone, svg_str
+    r'(<rect x="0" y="0" width="\d+" height="\d+(?:\.\d+)?" class="background" />)(?!.*class="background")',
+    r"\1\n" + inversion_zone,
+    svg_str,
+    flags=re.DOTALL,
 )
 
 # Save PNG using cairosvg directly (preserves SVG post-processing)
