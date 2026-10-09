@@ -5,7 +5,7 @@
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 80, right: 60, bottom: 85, left: 90 };
+const margin = { top: 80, right: 90, bottom: 85, left: 90 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -113,10 +113,10 @@ g.append("line")
 // Label the 10Y reference line at its right endpoint so viewers understand the baseline
 g.append("text").attr("x", iw + 6).attr("y", y(tenYrYield) - 4)
   .attr("text-anchor", "start").attr("fill", t.palette[4]).attr("opacity", 0.65)
-  .style("font-size", "11px").text("10Y");
+  .style("font-size", "14px").text("10Y");
 g.append("text").attr("x", iw + 6).attr("y", y(tenYrYield) + 10)
   .attr("text-anchor", "start").attr("fill", t.palette[4]).attr("opacity", 0.65)
-  .style("font-size", "11px").text("3.96%");
+  .style("font-size", "14px").text("3.96%");
 
 // d3.bisectLeft: find the 2Y maturity index to anchor the inversion annotation
 const matYears = maturities.map(m => m.years);
@@ -128,7 +128,7 @@ g.append("text")
   .attr("text-anchor", "middle")
   .attr("fill", t.palette[4])
   .attr("opacity", 0.75)
-  .style("font-size", "11px")
+  .style("font-size", "14px")
   .style("font-style", "italic")
   .text("Inverted");
 
