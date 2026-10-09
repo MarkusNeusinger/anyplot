@@ -136,8 +136,12 @@ def install_probe(theme):
             report = {"error": type(exc).__name__}
         result = original(self, *args, **kwargs)
         try:
+            text = json.dumps(report, allow_nan=False)  # NaN or Infinity (a text at an infinite coordinate)
+        except (TypeError, ValueError) as exc:
+            text = json.dumps({"error": type(exc).__name__})
+        try:
             with open(f"probe-{theme}.json", "w", encoding="utf-8") as handle:
-                json.dump(report, handle)
+                handle.write(text)
         except OSError:
             pass
         return result

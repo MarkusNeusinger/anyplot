@@ -17,6 +17,7 @@ last line of stderr with every quoted string elided, so no cell of the user's da
 reaches a prompt through a traceback.
 """
 
+import math
 import re
 from dataclasses import dataclass, field
 from typing import Any
@@ -116,20 +117,39 @@ def evaluate(result: RenderResult, *, library: str, rows: int) -> GateReport:
     return report
 
 
+def _finite(values: Any, count: int) -> list[float] | None:
+    """`values` as `count` finite floats, or None (the probe is written by the code under test)."""
+    if not isinstance(values, list) or len(values) != count:
+        return None
+    if not all(isinstance(value, int | float) and not isinstance(value, bool) for value in values):
+        return None
+    numbers = [float(value) for value in values]
+    return numbers if all(math.isfinite(number) for number in numbers) else None
+
+
 def _probe_lines(probe: dict[str, Any] | None, rows: int) -> list[str]:
+    """Advisory defect lines from one theme's probe; a malformed probe yields none, never an exception."""
+    try:
+        return _probe_lines_unchecked(probe, rows)
+    except (ValueError, TypeError, OverflowError, AttributeError):
+        return []
+
+
+def _probe_lines_unchecked(probe: dict[str, Any] | None, rows: int) -> list[str]:
     """Advisory defect lines from one theme's probe; `(THEME)` is filled in by the caller."""
     if not isinstance(probe, dict):
         return []
     lines: list[str] = []
-    canvas = probe.get("canvas")
-    if isinstance(canvas, list) and len(canvas) == 2 and all(isinstance(value, int | float) for value in canvas):
+    canvas = _finite(probe.get("canvas"), 2)
+    texts = probe.get("texts")
+    if canvas is not None and isinstance(texts, list):
         width, height = canvas
         worst = 0.0
-        for text in probe.get("texts") or []:
-            box = text.get("box") if isinstance(text, dict) else None
-            if not (isinstance(box, list) and len(box) == 4):
+        for text in texts:
+            box = _finite(text.get("box") if isinstance(text, dict) else None, 4)
+            if box is None:
                 continue
-            x0, y0, x1, y1 = (float(value) for value in box)
+            x0, y0, x1, y1 = box
             worst = max(worst, -x0, -y0, x1 - width, y1 - height)
         if worst > CLIP_TOLERANCE_PX:
             lines.append(

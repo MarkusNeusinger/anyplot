@@ -163,6 +163,26 @@ class TestGates:
             "DQ-03 (code)",
         ]
 
+    @pytest.mark.parametrize(
+        "probe",
+        [
+            {"canvas": [3200, 1800], "texts": [{"box": [0, 0, float("inf"), 0]}]},
+            {"canvas": [3200, 1800], "texts": [{"box": ["a", 0, 1, 1]}]},
+            {"canvas": [float("nan"), 1800], "texts": [{"box": [-50, 0, 1, 1]}]},
+            {"canvas": [3200, 1800], "texts": "not a list", "points": "many"},
+            {"canvas": [3200, 1800], "texts": [{"box": [-1e308, 0, 1, 1]}, None, {"box": [True, 0, 1, 1]}]},
+        ],
+    )
+    def test_malformed_probe_adds_no_line_and_never_raises(self, probe: dict) -> None:
+        report = evaluate(
+            self.result(light=self.ok("light", probe=probe), dark=self.ok("dark", probe=probe)),
+            library="matplotlib",
+            rows=24,
+        )
+
+        assert report.passed_host_gates
+        assert all(not line.startswith("AR-09") or "px" in line for line in report.advisory)
+
     def test_helpers(self) -> None:
         assert data_rows("a,b\n1,2\n3,4\n") == 2
         assert error_summary("") == "no error output"
