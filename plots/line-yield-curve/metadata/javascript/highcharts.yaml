@@ -2,123 +2,134 @@ library: highcharts
 language: javascript
 specification_id: line-yield-curve
 created: '2026-06-10T00:48:32Z'
-updated: '2026-06-10T00:54:26Z'
+updated: '2026-10-09T03:17:54Z'
 generated_by: claude-sonnet
-workflow_run: 27245126495
+workflow_run: 37878141655
 issue: 4664
-language_version: 22.22.3
+language_version: 22.23.3
 library_version: 12.6.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/highcharts/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/highcharts/plot-dark.html
-quality_score: 91
+quality_score: 83
 review:
   strengths:
-  - Accurate historical U.S. Treasury data covering three distinct rate environments
-    (COVID near-zero, rate-hike inversion, higher-for-longer flat)
-  - Clever log10 x-axis transform with custom maturity tick formatter — correctly
-    reflects the non-linear time spacing of bond maturities
-  - Theme-adaptive inversion zone plot band with correct alpha for light and dark
-    surfaces
-  - 'Perfect Imprint palette compliance: brand green first, canonical order, t.palette
-    for all series'
-  - 'All spec-required features implemented: log-spaced axis, custom tick labels,
-    multi-curve comparison, inversion highlighting, dated legend'
+  - Real U.S. Treasury snapshots covering three rate regimes (near-zero 2021, the
+    2022 inversion, 2024 higher-for-longer) on one axis
+  - Log10-spaced maturity positions with explicit tickPositions and a label formatter,
+    so 1M–30Y read at true relative spacing with their maturity labels
+  - Native xAxis.plotBands with built-in label shades the short-end inversion region
+    behind the curves, with a theme-adapted alpha
+  - Imprint palette via t.palette and all chrome from ANYPLOT_TOKENS — both themes
+    read cleanly
+  - Tooltip formatter gives maturity label and yield per point in the HTML output
   weaknesses:
-  - Inversion zone band label at fontSize 11px CSS is below the recommended minimum
-    (~13px) — appears slightly small in both renders; increase to 13px for consistency
-    with tick labels
+  - 'DQ-03 (both): the Jun 2024 curve is labelled ''Flat'' but its data is inverted
+    by about 1.1 pp (6M 5.38 % vs 10Y 4.28 %), more than the curve labelled ''Inverted''
+    (1Y 4.75 % vs 10Y 3.96 %, 0.79 pp) → label it as inverted or use a genuinely flat
+    snapshot (short–long spread within about ±0.3 pp). Likely cause: the series name
+    ''Jun 2024 — Flat'' and the jun2024 array.'
+  - 'CQ-04 (code): the nearest-index search `logX.reduce(...)` is written out twice
+    (lines 48–51 tick formatter, 128–130 tooltip) → `matLabels[logX.indexOf(this.value)]`
+    for the ticks and a per-point `name` read as `this.point.name` in the tooltip.
+    Likely cause: float-tolerant lookup kept where exact tickPositions values are
+    passed back.'
+  - 'Suggestion: Highcharts'' native `xAxis.type: "logarithmic"` with explicit tickPositions
+    could replace the manual log10 transform.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "U.S. Treasury Yield Curves · line-yield-curve · javascript · highcharts · anyplot.ai" in dark text, clearly readable. Axis labels "Maturity" (x) and "Yield (%)" (y) in muted dark text. Tick labels 1M–30Y on x-axis and 0.0%–6.0% on y-axis all readable. Legend top-right with colored markers and descriptive series names.
-      Data: First series (Jan 2021 Normal) is brand green #009E73 — upward-sloping near-zero rates. Second (Nov 2022 Inverted) is lavender #C475FD — high rates with inversion. Third (Jun 2024 Flat) is blue #4467A3 — flat high-rate curve. Plot band (1M–2Y) shaded light pink/red highlights inversion zone with italic label "Inversion zone".
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: warm off-white #FAF8F1 (transparent chart over the page), not pure white.
+      Chrome: bold dark title 'U.S. Treasury Yield Curves · line-yield-curve · javascript · highcharts · anyplot.ai' centred at the top; 'Maturity' x title and rotated 'Yield (%)' y title in soft dark ink; x ticks 1M 3M 6M 1Y 2Y 3Y 5Y 7Y 10Y 20Y 30Y at log spacing, y ticks 0.0%–6.0%; subtle horizontal grid only; legend card top-right. Italic 'Inversion zone' label (13px) at the top of the band. All readable.
+      Data: Jan 2021 — Normal in #009E73 (near zero, rising to 1.83 % at 30Y), Nov 2022 — Inverted in lavender #C475FD (humped at 1Y 4.75 %), Jun 2024 — Flat in blue #4467A3 (5.3–5.4 % short end falling to ~4.3 %); light red-tinted band shades 1M–2Y behind the curves.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title and all axis labels/ticks rendered in light colors against dark background — no dark-on-dark failures. Legend text is light-colored with dark elevated background box. Grid lines are subtle and visible. "Inversion zone" label remains visible.
-      Data: All three series colors identical to light render — green, lavender, blue (Imprint palette unchanged). Plot band uses darker reddish alpha (rgba(174,48,48,0.15)) visible against dark surface.
-      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark failures detected
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title in light ink, axis titles and ticks in light soft ink, grid faint but visible, legend card on the elevated dark surface with light text; 'Inversion zone' label light grey italic. No dark-on-dark text.
+      Data: identical series colors (green, lavender, blue) to the light render; the band is a deeper maroon tint that stays behind the curves; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly set and readable in both themes; minor deduction
-          for Inversion zone band label at 11px CSS (below recommended ~13px minimum)
+        comment: All text explicitly sized (title 18px, axis titles 16px, ticks 13–14px,
+          band label 13px) and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render
+        comment: No text collisions in either render; band label, legend and curves
+          all clear of each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines and markers well-proportioned for 11 data points; lineWidth
-          2.5 and marker radius 5 appropriate
+        comment: 11 points per curve with radius-5 markers and 2.5 px lines; legend
+          glyphs match the series in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette provides good CVD-safe hue separation across green/lavender/blue
+        comment: Green / lavender / blue Imprint hues separate well under CVD; no
+          red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, legend top-right, no content
-          clipped
+        comment: Plot fills the landscape canvas, balanced margins, legend top-right
+          above the plot, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Yield (%) with units, Maturity descriptive, custom tick formatter
-          shows meaningful labels
+        comment: '''Yield (%)'' with unit and ''Maturity'' axis titles, maturity tick
+          labels'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD, third #4467A3 — Imprint canonical
-          order; transparent background; text and grid via t.ink/t.inkSoft/t.grid
-          tokens; correct in both renders'
+        comment: 'Series #009E73, #C475FD, #4467A3 in Imprint order via t.palette;
+          transparent chart over #FAF8F1 / #1A1A17 page; chrome from t.ink/t.inkSoft/t.grid;
+          correct in both renders'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above well-configured default: plot band and descriptive curve labels
-          add narrative sophistication. Doesn''t reach clearly-above-defaults territory'
+        comment: Style-guide baseline typography and palette; nothing decided beyond
+          it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: X-axis gridlines suppressed, Y-axis grid subtle, legend has rounded
-          corners and border, italic Inversion zone label
+        comment: Vertical gridlines dropped while the horizontal yield grid stays,
+          and the legend sits in a bordered elevated-bg card right-aligned with the
+          plot edge
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Three curves labeled Normal/Inverted/Flat with dates; plot band creates
-          focal point at inversion; clear economic narrative
+        comment: Legend names each curve's shape (Normal / Inverted / Flat) next to
+          its date, guiding the reading beyond the Notes' date-only legend
     spec_compliance:
       score: 15
       max: 15
@@ -128,30 +139,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-series line chart for yield curves
+        comment: Multi-series line chart of yield vs. maturity — correct type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log-spaced x-axis, maturity tick labels, 3 curves, inversion band
-          with label, dated legend
+        comment: C1 log-spaced positions, C2 maturity tick labels at their positions,
+          C3 three dated curves, C4 shaded and labelled inversion band behind the
+          curves, C5 percent yield axis from 0 with minimal grid — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: maturity_years log-transformed for x, yield % on y, all 11 points
-          per curve shown
+        comment: x = log10(maturity_years), y = yield %; all 33 points at their values,
+          straight segments (no smoothing)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows Descriptive · spec-id · javascript · highcharts · anyplot.ai
-          format; legend labels describe date and curve shape
+        comment: Title 'U.S. Treasury Yield Curves · line-yield-curve · javascript
+          · highcharts · anyplot.ai' follows the format; legend labels give each date
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -159,24 +171,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All three canonical yield curve shapes: normal upward-sloping, inverted,
-          flat'
+        comment: Normal upward curve and inverted curves on the same axes, inversion
+          region shaded — all aspects of the plot type shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real U.S. Treasury data from three distinct macroeconomic regimes;
-          neutral financial topic
+        comment: Real U.S. Treasury snapshots from three distinct rate regimes; neutral
+          financial topic
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Jan 2021 near-zero (0.04-1.83%), Nov 2022 inversion peak (3.42-4.75%),
-          Jun 2024 flat (4.28-5.38%) — factually accurate
+        comment: 'Checked the yields against the U.S. Treasury regimes: Jan 2021 0.04–1.83
+          %, Nov 2022 3.42–4.75 %, Jun 2024 4.28–5.38 % are plausible; but the Jun
+          2024 curve labelled ''Flat'' is inverted by about 1.1 pp (6M 5.38 % vs 10Y
+          4.28 %) (defect line)'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -184,61 +198,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Data arrays → log transform → Highcharts.chart() call; toPoints is
-          a one-liner expression
+        comment: 'Flat script: data arrays, one helper expression, one chart call'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; fully deterministic
+        comment: All data hard-coded; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; all globals used
+        comment: No imports; only the provided globals
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean, no over-engineering; appropriate comment on log transform
+        comment: Nearest-index reduce search written out twice (tick formatter and
+          tooltip) where an indexOf / point name lookup suffices (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Highcharts.chart(container) with animation:false on chart and series;
-          credits disabled; no explicit dimensions
+        comment: Highcharts.chart('container') with chart and series animation off,
+          credits off, no explicit size
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Expert use of ANYPLOT_TOKENS for chrome; plotBands with label; custom
-          formatter for ticks and tooltip; legend styling with backgroundColor/borderColor/borderRadius
+        comment: 'Token-driven chrome, plotBands with label, axis/tooltip formatters
+          — library-prompt baseline; the log axis is hand-transformed instead of the
+          native type: ''logarithmic'''
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: plotBands with theme-adaptive alpha; custom tickPositions with formatter;
-          tooltip formatter with maturity resolution — strong Highcharts-specific
-          feature use
+        passed: false
+        comment: Native xAxis.plotBands with its built-in label used for the inversion
+          shading
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-b432d94054
+  rendered_at: '2026-10-09T03:14:53Z'
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
+  - annotations
+  - hover-tooltips
   - html-export
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
-  styling:
-  - alpha-blending
-  - grid-styling
+  styling: []
