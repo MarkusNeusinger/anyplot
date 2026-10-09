@@ -99,6 +99,7 @@ counts as a boundary because OR-filtered gallery views record
 | `/stats` | Platform statistics (library scores, coverage, tags, top implementations) |
 | `/map` | Network map of specs clustered by visual similarity |
 | `/debug` | Pipeline status dashboard (spec coverage, feedback, ping) |
+| `/debug/agent` | Admin-only "Use with my data" agent chat; recorded without its query string, and only in builds with `VITE_ENABLE_AGENT_CHAT=true` |
 | `/{spec_id}` | Cross-language spec hub (all implementations across all languages) |
 | `/{spec_id}/{language}` | Language overview (all libraries for that language) |
 | `/{spec_id}/{language}/{library}` | Implementation detail (preview ↔ interactive toggle) |
@@ -111,18 +112,41 @@ counts as a boundary because OR-filtered gallery views record
 
 | Event Name | Properties | Where | Description |
 |------------|-----------|-------|-------------|
-| `copy_code` | `spec`, `library`, `method`, `page` | ImageCard.tsx, SpecPage.tsx, SpecTabs.tsx | User copies code to clipboard |
+| `copy_code` | `spec`, `library`, `method`, `page` | ImageCard.tsx, SpecPage.tsx, SpecTabs.tsx, agent-chat/ResultCard.tsx | User copies code to clipboard |
 | `download_image` | `spec`, `library`, `page` | SpecPage.tsx | User downloads PNG image |
 
 **Copy methods**:
 - `card`: Quick copy button on image card (home grid)
 - `image`: Copy button on main image (spec page)
 - `tab`: Copy button in Code tab
+- `agent`: Copy button on an agent chat result card (the adapted code)
 
 **Page values** (for user journey tracking):
 - `home`: HomePage grid view
 - `spec_overview`: SpecPage showing all library implementations
 - `spec_detail`: SpecPage showing single library implementation
+- `agent_chat`: the admin-only agent chat (`/debug/agent`)
+
+### Agent chat (admin only)
+
+The "Use with my data" chat (`app/src/pages/AgentChatPage.tsx`, design in
+[Agent network design](../concepts/agent-network.md)) records enum properties
+only. No event carries message text, pasted data, column names, code or a
+dataset size: the size travels as a bucket. The events exist only in builds
+with `VITE_ENABLE_AGENT_CHAT=true`, and like every event they fire only on
+`anyplot.ai`.
+
+| Event Name | Properties | Where | Description |
+|------------|-----------|-------|-------------|
+| `agent_open` | `library`, `source`, `spec` | AgentChatPage.tsx | The chat page opened for an admin. `source` is `plot_page` when the plot page's `.adapt()` button led there, `direct` otherwise (a typed URL, a bookmark, a reload) |
+| `agent_data_parsed` | `status`, `size_bucket` | useAgentSession.ts | The pasted data came back from the parse. `status` ∈ `ok`, `too_long`, `unparseable`, `data_refused`, `error`; `size_bucket` ∈ `lt_1kb`, `1_10kb`, `10_50kb`, `50_200kb`, `over_200kb` (the last one is refused in the browser before anything is sent) |
+| `agent_plot_rendered` | `library`, `status`, `repaired`, `spec` | useAgentSession.ts | A turn's `plot` event arrived. `status` ∈ `ok`, `needs_attention`, `failed`, `not_ready`; `repaired` is `yes` when the run needed its repair round (two attempts), else `no` |
+| `agent_guardrail_block` | `reason` | useAgentSession.ts | A guardrail stopped a request. `reason` ∈ `out_of_scope`, `budget`, `unsupported_content` (the stream's fixed refusals), `data_refused` (the dataset judge refused the pasted data), `guard_unavailable` (the scope check could not answer and failed closed), `other` (a refusal code the page does not know yet) |
+
+`copy_code` on a result card carries `method: agent` and `page: agent_chat`
+plus the `spec` and `library` of the version. The quick-feedback control on the
+result card adds `agent_result_feedback{reaction, include_data}` in a later
+change.
 
 ### Discovery
 
@@ -467,11 +491,15 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 
 | Property | Description | Used By Events |
 |----------|-------------|----------------|
-| `spec` | Plot specification ID | `copy_code`, `download_image`, `plot_rotate`, `external_link`, `internal_link`, `open_interactive`, `report_issue`, `tag_click`, `og_image_view` |
+| `spec` | Plot specification ID | `copy_code`, `download_image`, `plot_rotate`, `external_link`, `internal_link`, `open_interactive`, `report_issue`, `tag_click`, `og_image_view`, `agent_open`, `agent_plot_rendered` |
 | `language` | Language slug (`python`, `r`, `julia`, `javascript`) | `og_image_view` |
-| `library` | Library name (matplotlib, seaborn, etc.) | `copy_code`, `download_image`, `external_link`, `internal_link`, `open_interactive`, `tab_toggle`, `og_image_view`, `feedback_submitted` (plot-overlay votes only) |
-| `method` | Action method (card, image, tab, click, space, doubletap) | `copy_code`, `random_filter` |
-| `page` | Page context (home, plots, spec_overview, spec_detail) | `copy_code`, `download_image`, `og_image_view` |
+| `library` | Library name (matplotlib, seaborn, etc.) | `copy_code`, `download_image`, `external_link`, `internal_link`, `open_interactive`, `tab_toggle`, `og_image_view`, `feedback_submitted` (plot-overlay votes only), `agent_open`, `agent_plot_rendered` |
+| `method` | Action method (card, image, tab, agent, click, space, doubletap) | `copy_code`, `random_filter` |
+| `page` | Page context (home, plots, spec_overview, spec_detail, agent_chat) | `copy_code`, `download_image`, `og_image_view` |
+| `status` | Outcome of an agent chat step (`ok`, `needs_attention`, `failed`, `not_ready`; for a parse also `too_long`, `unparseable`, `data_refused`, `error`) | `agent_data_parsed`, `agent_plot_rendered` |
+| `size_bucket` | Size class of pasted data (`lt_1kb` … `over_200kb`), never the size | `agent_data_parsed` |
+| `repaired` | Whether an agent run needed its repair round (`yes` / `no`) | `agent_plot_rendered` |
+| `reason` | Why a guardrail stopped an agent chat request (`out_of_scope`, `budget`, `unsupported_content`, `data_refused`, `guard_unavailable`, `other`) | `agent_guardrail_block` |
 | `platform` | Bot/platform name (twitter, whatsapp, teams, etc.) | `og_image_view` |
 | `category` | Filter category (lib, spec, plot, data, dom, feat, dep, tech, pat, prep, style) | `search`, `random_filter`, `filter_remove` |
 | `value` | Filter value | `random_filter`, `filter_remove`, `tag_click` |
@@ -481,7 +509,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `action` | Toggle action (open, close) | `tab_toggle` |
 | `size` | Grid size (normal, compact) | `grid_resize` |
 | `param` | URL parameter name for tag | `tag_click` |
-| `source` | Source UI element / page context | `tag_click`, `nav_click` |
+| `source` | Source UI element / page context | `tag_click`, `nav_click`, `agent_open` (`plot_page` / `direct`) |
 | `framework` | Library id clicked in the libraries-page filter (needs dashboard registration to appear in breakdowns) | `library_filter` |
 | `target` | Click destination (route or external label) | `nav_click` |
 | `to` | New mode after toggle (`system` / `light` / `dark`) | `theme_toggle` |
@@ -533,6 +561,10 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `map_node_pin` | Custom Event | Track touch users opening the preview panel on `/map` (first tap) |
 | `map_search_select` | Custom Event | Track use of the `/map` search-and-fly-to feature |
 | `og_image_view` | Custom Event | Track og:image requests from social media bots |
+| `agent_open` | Custom Event | Track admin opens of the agent chat and where they came from |
+| `agent_data_parsed` | Custom Event | Track parse outcomes of pasted data in the agent chat |
+| `agent_plot_rendered` | Custom Event | Track agent chat plot outcomes and repair rounds |
+| `agent_guardrail_block` | Custom Event | Track agent chat refusals and failed-closed guard checks |
 | `LCP` | Custom Event | Largest Contentful Paint (Core Web Vital) |
 | `CLS` | Custom Event | Cumulative Layout Shift (Core Web Vital) |
 | `INP` | Custom Event | Interaction to Next Paint (Core Web Vital) |
@@ -604,8 +636,12 @@ User lands on anyplot.ai
 
 | Event | Properties | Code Location |
 |-------|------------|---------------|
-| `copy_code` | `spec`, `library`, `method`, `page` | ImageCard.tsx, SpecPage.tsx, SpecTabs.tsx |
+| `copy_code` | `spec`, `library`, `method`, `page` | ImageCard.tsx, SpecPage.tsx, SpecTabs.tsx, agent-chat/ResultCard.tsx |
 | `download_image` | `spec`, `library`, `page` | SpecPage.tsx |
+| `agent_open` | `library`, `source`, `spec` | AgentChatPage.tsx |
+| `agent_data_parsed` | `status`, `size_bucket` | useAgentSession.ts |
+| `agent_plot_rendered` | `library`, `status`, `repaired`, `spec` | useAgentSession.ts |
+| `agent_guardrail_block` | `reason` | useAgentSession.ts |
 | `search` | `query`, `category` | FilterBar.tsx |
 | `search_no_results` | `query` | FilterBar.tsx |
 | `random_filter` | `category`, `value`, `method` | useFilterState.ts |
@@ -635,7 +671,8 @@ User lands on anyplot.ai
 | `TTFB` | `value`, `rating` | reportWebVitals.ts |
 | `og_image_view` | `page`, `platform`, `spec`?, `language`?, `library`?, `filter_*`? | api/analytics.py (server-side) |
 
-**Total: 30 client-side + 1 server-side = 31 events**
+**Total: 34 client-side + 1 server-side = 35 events** (the four `agent_*`
+events exist only in builds with `VITE_ENABLE_AGENT_CHAT=true`)
 
 > Removed events: `potd_dismiss` (and the `nav_click` sources `potd_image` /
 > `potd_title` / `potd_source_link`) died with the dismissible
@@ -668,6 +705,7 @@ ggplot2 | makie | chartjs | d3 | echarts | highcharts | muix
 card      # ImageCard copy button (home grid)
 image     # SpecPage image copy button
 tab       # SpecTabs code tab copy button
+agent     # Agent chat result card copy button
 click     # Random icon clicked
 space     # Spacebar pressed
 doubletap # Mobile double-tap
@@ -679,6 +717,7 @@ home          # HomePage grid view (client) or og:image home endpoint (server)
 plots         # PlotsPage (server og:image only)
 spec_overview # SpecPage showing all libraries
 spec_detail   # SpecPage showing single library
+agent_chat    # Admin-only agent chat result card (copy_code only)
 ```
 
 ### `platform` values (server-side og:image tracking only)
@@ -785,6 +824,7 @@ public stats page.
 - **Pageview building**: `buildPlausibleUrl()` in useAnalytics.ts
 - **Core Web Vitals**: `app/src/analytics/reportWebVitals.ts`
 - **Event tracking**: Passed via `onTrackEvent` prop throughout component tree
+- **Agent chat events**: `app/src/hooks/useAgentSession.ts` (parse, plot, guardrail), `app/src/pages/AgentChatPage.tsx` (pageview, open), `app/src/sections/agent-chat/ResultCard.tsx` (`copy_code`)
 - **Stats API consumer**: `_fetch_plausible_visitors()` in `api/routers/insights.py`
 
 ## Testing
@@ -826,10 +866,12 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 - [x] Server-side og:image tracking (`og_image_view`) with platform detection
 - [x] Landing-page navigation tracking (`nav_click`)
 - [x] Theme tracking (`theme_toggle` event + `theme` ambient pageview prop)
+- [x] Agent chat events (`agent_open`, `agent_data_parsed`, `agent_plot_rendered`, `agent_guardrail_block`), enum properties only
+- [ ] Agent chat quick feedback (`agent_result_feedback`), with the feedback control
 
 ### Plausible dashboard checklist
 
-- [ ] Register all custom properties (see table above, including `rating`, `action`, `param`, `source`, `platform`, `filter_*`)
+- [ ] Register all custom properties (see table above, including `rating`, `action`, `param`, `source`, `platform`, `filter_*`, and for the agent chat `status`, `size_bucket`, `repaired`, `reason`)
 - [ ] Create goals for key events (including `LCP`, `CLS`, `INP`)
 - [ ] Set up funnels (optional)
 - [ ] Create custom dashboard widgets (optional)

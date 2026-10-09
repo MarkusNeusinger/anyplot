@@ -413,10 +413,12 @@ Used to load interactive plots (plotly, bokeh, altair) in iframes with dynamic s
 
 ## Agent chat (admin only, switched off by default)
 
-> **Status (2026-10-09):** the routes exist and ship switched off. The
+> **Status (2026-10-10):** the routes exist and ship switched off. The
 > anyplot-agents service they call runs locally but is not deployed yet, so
 > with the switch on in production every route that calls it answers
-> `502 upstream` until that service is deployed. Design:
+> `502 upstream` until that service is deployed. The chat page that calls
+> these routes, `/debug/agent` in the app, is built only with
+> `VITE_ENABLE_AGENT_CHAT=true`. Design:
 > [Agent network design](../concepts/agent-network.md).
 
 The `/debug/agent/*` routes (`api/routers/agent.py`) are a backend for the
@@ -474,7 +476,7 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 | `POST /sessions` | `{spec_id, library, locale}` | `{session_id, eligibility}`; `404 not_found` when the spec has no implementation for the library |
 | `POST /sessions/{sid}/library` | `{spec_id, library}` | Switches the library; the dataset and bindings stay |
 | `POST /sessions/{sid}/dataset` | `{text}`, at most 200 KB (204,800 bytes) of UTF-8 | `{preview, profile, bindings, warnings}`; `413 too_long` above the limit |
-| `PUT /sessions/{sid}/bindings` | `[{role, column}]`, at most 50 | The agents service's answer |
+| `PUT /sessions/{sid}/bindings` | `[{role, column}]`, at most 50 | The agents service's `{bindings, complete, missing_roles}`; `422 no_dataset` before a parse, `422 invalid` for a binding the spec roles or the columns refuse |
 | `POST /sessions/{sid}/messages` | `{text}` (at most 2,000 characters) or `{"action": "create_plot"}` | An SSE stream in protocol `anyplot/1`; `413 too_long` above the limit, `409 run_active` while you have a queued or running turn or a theme render in any session, `503 capacity` when the run queue is full |
 | `POST /sessions/{sid}/cancel` | None | `204`; a turn that still waits leaves the run queue |
 | `POST /sessions/{sid}/versions/{version}/render` | `{"theme": "light"}` or `{"theme": "dark"}`; `version` is 0 to 999, where 0 is the latest version | `{status, reason?, artifacts}` once the render is done (see [Theme toggle](#theme-toggle)) |
@@ -493,6 +495,20 @@ escape such as `"\ud800"`, which UTF-8 cannot carry (`422 invalid_text`).
 catalogue snapshot before they forward the body, because the agents service
 has no database access: `{spec_id, title, description, data_roles, notes,
 code, library_version}`, with `# noqa` comments stripped from the code.
+
+Version numbers: `{version}` in the theme toggle route and `v` on the artifact
+route are the agents service's version numbers. A session's versions are
+numbered from 1 in the order the service stores them, and it stores exactly
+the turns whose `plot` event has the status `ok` or `needs_attention`. The
+`plot` event carries no number, so a client counts those events, as the chat
+page does (`app/src/hooks/useAgentSession.ts`); `0`, or no `v`, means the
+latest version.
+
+`PUT /sessions/{sid}/bindings` answers `{bindings, complete, missing_roles}`:
+the stored bindings, whether every required role has a column, and the
+required roles that still have none. The dataset response names only the roles
+the server could bind by default, so the chat page sends those defaults back
+once after a parse to learn the missing roles and show a dropdown for them.
 
 ### Theme toggle
 

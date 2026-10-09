@@ -1,12 +1,27 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  agentChatPath,
   langFromPath,
   paths,
   RESERVED_TOP_LEVEL,
   specIdFromPath,
   specPath,
 } from 'src/routes/paths';
+
+describe('agentChatPath', () => {
+  it('builds the admin chat URL for one catalogue pair', () => {
+    expect(agentChatPath('scatter-basic', 'matplotlib', 'python')).toBe(
+      '/debug/agent?spec=scatter-basic&library=matplotlib&language=python'
+    );
+  });
+
+  it('adds the source for agent_open and is exposed as paths.agentChat', () => {
+    expect(paths.agentChat('bar-grouped', 'seaborn', 'python', 'plot_page')).toBe(
+      '/debug/agent?spec=bar-grouped&library=seaborn&language=python&source=plot_page'
+    );
+  });
+});
 
 describe('specPath', () => {
   it('builds the cross-language hub path', () => {

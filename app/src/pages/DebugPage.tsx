@@ -16,6 +16,12 @@ import { useAnalytics, useCopyCode } from 'src/hooks';
 import { fetchWithAuth } from 'src/lib/api';
 import { specPath } from 'src/routes/paths';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
+import {
+  clearAdminToken,
+  readAdminToken,
+  setAdminHint,
+  writeAdminToken,
+} from 'src/utils/adminAuth';
 import { buildClaudePrompt } from 'src/utils/claudePrompt';
 
 // ============================================================================
@@ -211,31 +217,11 @@ function pingColor(ms: number): string {
 //     travel cross-origin to the API.
 //   - X-Admin-Token header as a fallback (CI, break-glass, local dev). Stored
 //     in sessionStorage so it survives reloads of the same tab without
-//     persisting across browser sessions.
-const ADMIN_TOKEN_KEY = 'anyplot.adminToken';
+//     persisting across browser sessions (src/utils/adminAuth.ts).
+// A 200 from /debug/status also sets the admin hint that lets the plot page
+// show the agent chat's `.adapt()` button; a refusal clears it.
 // One-shot guard for the SPA-routed → CF Access page-gate bootstrap.
 const RELOAD_GUARD_KEY = 'anyplot.debugAuthReloaded';
-const readAdminToken = (): string => {
-  try {
-    return sessionStorage.getItem(ADMIN_TOKEN_KEY) ?? '';
-  } catch {
-    return '';
-  }
-};
-const writeAdminToken = (value: string): void => {
-  try {
-    sessionStorage.setItem(ADMIN_TOKEN_KEY, value);
-  } catch {
-    /* sessionStorage may be unavailable */
-  }
-};
-const clearAdminToken = (): void => {
-  try {
-    sessionStorage.removeItem(ADMIN_TOKEN_KEY);
-  } catch {
-    /* noop */
-  }
-};
 
 export function DebugPage() {
   const { trackPageview } = useAnalytics();
@@ -291,6 +277,7 @@ export function DebugPage() {
         // it on the auth-required screen with the server's message so the
         // user knows to sign in with a different account or ask for access.
         if (r.status === 401 || r.status === 403 || r.status === 503) {
+          setAdminHint(false);
           setAuthRequired(true);
           if (r.status === 403) {
             const body = await r.json().catch(() => ({}));
@@ -301,6 +288,7 @@ export function DebugPage() {
           );
         }
         if (!r.ok) throw new Error(`${r.status}`);
+        setAdminHint(true);
         setAuthRequired(false);
         return r.json();
       })

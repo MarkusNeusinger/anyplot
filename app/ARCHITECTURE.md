@@ -22,12 +22,14 @@ src/
     plots-gallery/     FilterBar/ (feature folder), ImagesGrid, ImageCard…
     spec-detail/       SpecTabs/ (feature folder), SpecDetailView, SpecOverview…
     libraries/         LibraryCard
+    agent-chat/        Admin-only agent chat: DataPanel, ChatThread, ResultCard…
   components/        Shared primitives only (LoaderSpinner, SectionHeader,
                      ErrorBoundary, CodeHighlighter, ThemeToggle, …)
   hooks/             Reusable state/data hooks (useFilterState, useCodeFetch,
                      useForceGraphSimulation, …) — barrel in index.ts
   lib/               Third-party/client isolation: api.ts (apiGet/apiPost,
-                     ApiError, endpoints registry, fetchWithAuth)
+                     ApiError, endpoints registry, fetchWithAuth); agent.ts
+                     (the agent chat BFF client) and sse.ts (SSE over fetch)
   theme/             tokens.ts (design tokens), floating-actions.ts (bottom-right
                      FAB corner geometry), palette/typography/components
                      option modules, create-theme.ts; index.ts re-exports all
@@ -53,6 +55,13 @@ src/
   only inside that module. External third-party APIs (e.g. the GitHub releases
   call in `useLatestRelease`) may fetch directly. Callers own caching/abort/dedup.
 - **Config**: read `CONFIG` from `src/global-config` instead of `import.meta.env`.
+  One exception: the agent chat route in `routes/index.tsx` reads
+  `import.meta.env.VITE_ENABLE_AGENT_CHAT` inline, because only a literal in
+  that module keeps the page's chunk out of a build without the flag.
+- **Feature-flagged code** (the agent chat) stays out of the shared barrels:
+  `useAgentSession` and `useAgentEligibility` are imported from their own
+  modules, not `hooks/index.ts`, so pages that use the barrel never pull in the
+  agent client.
 - **Theme**: design tokens (colors, font stacks, style constants) come from
   `src/theme` (tokens); MUI theme composition lives in `theme/create-theme.ts`.
   Dark mode works via CSS custom properties (`styles/tokens.css`, `[data-theme]`).

@@ -4,7 +4,7 @@ This directory holds the anyplot agent network: the service that lets an admin p
 
 ## What is built
 
-The runtime core runs locally: the agents, the plot pipeline, the guardrail plugins, the render layer, the private `/v1` service with its run queue, and the theme toggle. Not built yet: the Cloud Run sandbox render backend (it waits for spike S), the container image, the deploy, the regression harness and the evals.
+The runtime core runs locally: the agents, the plot pipeline, the guardrail plugins, the render layer, the private `/v1` service with its run queue, and the theme toggle. The chat page that uses it through the API's `/debug/agent` routes is in the app (`app/src/pages/AgentChatPage.tsx`, built with `VITE_ENABLE_AGENT_CHAT=true`). Not built yet: the Cloud Run sandbox render backend (it waits for spike S), the container image, the deploy, the regression harness and the evals.
 
 The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. **Gemini 3.8 Flash** is the second arm: set `AGENT_PROVIDER=gemini` together with Gemini model ids, so the two can be compared on price and quality later. Every agent and the scope judge run on the configured provider.
 
@@ -130,6 +130,30 @@ uv run uvicorn agents.main:app --port 8001
 The service needs the header `X-Anyplot-User` on every `/v1` route; outside `ENVIRONMENT=development` it also requires the IAM-forwarded ID token (`AGENT_SERVICE_URLS`, `AGENT_ALLOWED_CALLERS`). To drive it from the plot page, run the API with `AGENT_ENABLED=true AGENT_SERVICE_URL=http://localhost:8001` (see `api/routers/agent.py`).
 
 At the defaults only one run may start a minute, so a second "Create plot" within a minute waits in the run queue and the stream shows `status` events with `step: "queued"`. To iterate faster on your own machine, export `AGENT_RUNS_PER_MINUTE=60`. The theme toggle (`POST /v1/sessions/{sid}/versions/{version}/render {"theme": "dark"}`) never waits in the queue.
+
+### Drive the chat page
+
+The chat page is the app's `/debug/agent?spec=&library=&language=`. Build or serve the app with `VITE_ENABLE_AGENT_CHAT=true`; local development shows it without an admin sign-in, and the plot page then shows the `.adapt()` button for eligible pairs.
+
+- **Against this service:** run the service as above and the API with `AGENT_ENABLED=true AGENT_SERVICE_URL=http://localhost:8001`, then start the app with `cd app && VITE_ENABLE_AGENT_CHAT=true yarn dev`.
+- **Without any backend:** the mock BFF serves the documented `/debug/agent/*` routes, a scripted stream (two queue positions, the pipeline steps, a plot and a reply) and PNGs drawn from the pasted data, plus the catalogue routes the plot page needs for `scatter-basic`. It touches no database and calls no model:
+
+  1. Start the mock:
+
+     ```bash
+     node app/scripts/agent-bff-mock.mjs
+     ```
+
+  2. In a second terminal, start the app against it:
+
+     ```bash
+     cd app && VITE_ENABLE_AGENT_CHAT=true VITE_API_URL=http://localhost:8010 \
+       VITE_DEBUG_API_URL=http://localhost:8010 yarn dev
+     ```
+
+  3. Open `http://localhost:3000/scatter-basic/python/matplotlib` and select the `.adapt()` button, or open `http://localhost:3000/debug/agent?spec=scatter-basic&library=matplotlib&language=python` directly. Paste `agents/evals/fixtures/cases/scatter-basic-matplotlib/data.csv` as your data.
+
+  The header of `app/scripts/agent-bff-mock.mjs` lists the scripted replies (a refusal, a capacity error, a question, a refinement with a repair round) and the timing variables.
 
 ### Test
 

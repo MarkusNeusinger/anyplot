@@ -24,6 +24,11 @@ substitutions:
   # using VITE_API_URL directly because their endpoints are public and
   # don't need the CF Access cookie.
   _VITE_DEBUG_API_URL: '/api'
+  # The admin-only agent chat ("Use with my data", /debug/agent). Off: the
+  # page and the plot page's `.adapt()` button are not even in the bundle.
+  # Turn it on only together with AGENT_ENABLED on the API
+  # (docs/concepts/agent-network.md).
+  _VITE_ENABLE_AGENT_CHAT: 'false'
 
 steps:
   # Build the container image
@@ -39,6 +44,8 @@ steps:
         'VITE_API_URL=${_VITE_API_URL}',
         '--build-arg',
         'VITE_DEBUG_API_URL=${_VITE_DEBUG_API_URL}',
+        '--build-arg',
+        'VITE_ENABLE_AGENT_CHAT=${_VITE_ENABLE_AGENT_CHAT}',
         '-f',
         'app/Dockerfile',
         'app',

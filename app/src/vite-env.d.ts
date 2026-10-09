@@ -3,6 +3,8 @@
 interface ImportMetaEnv {
   readonly VITE_API_URL?: string;
   readonly VITE_DEBUG_API_URL?: string;
+  /** `true` builds the admin-only agent chat page and the `.adapt()` button. */
+  readonly VITE_ENABLE_AGENT_CHAT?: string;
 }
 
 interface ImportMeta {

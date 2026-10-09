@@ -12,9 +12,10 @@ import Typography from '@mui/material/Typography';
 import { GITHUB_URL, LANG_DISPLAY } from 'src/constants';
 import { useAnalytics, useCodeFetch } from 'src/hooks';
 import { useAppData } from 'src/hooks';
+import { useAgentEligibility } from 'src/hooks/useAgentEligibility';
 import { ApiError, apiGet, apiUrl, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
-import { paths, specPath } from 'src/routes/paths';
+import { agentChatPath, paths, specPath } from 'src/routes/paths';
 import { LibraryPills } from 'src/sections/spec-detail/LibraryPills';
 import { RelatedSpecs } from 'src/sections/spec-detail/RelatedSpecs';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
@@ -297,6 +298,20 @@ export function SpecPage() {
     },
     [specId, trackEvent, mode, fetchCode]
   );
+
+  // "Use with my data" (`.adapt()`): only for admins with the agent chat built
+  // and an eligible pair. A full navigation, so Cloudflare Access can intercept
+  // the /debug path; the chat page records `agent_open{source: plot_page}`.
+  const agentEligible = useAgentEligibility(
+    mode === 'detail' ? specId : null,
+    currentImpl?.library_id
+  );
+  const handleUseWithMyData = useCallback(() => {
+    if (!specId || !currentImpl) return;
+    window.location.assign(
+      agentChatPath(specId, currentImpl.library_id, currentImpl.language, 'plot_page')
+    );
+  }, [specId, currentImpl]);
 
   const buildReportUrl = useCallback(() => {
     const params = new URLSearchParams({
@@ -609,6 +624,7 @@ export function SpecPage() {
                 onCopyCode={handleCopyCode}
                 onDownload={handleDownload}
                 onTrackEvent={trackEvent}
+                onUseWithMyData={agentEligible ? handleUseWithMyData : undefined}
               />
 
               <SpecTabs
