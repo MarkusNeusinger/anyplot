@@ -38,6 +38,8 @@ from .regions import PLACEHOLDER_FUNC, THEME_NAME, Region, SourceIndex, Span, fi
 
 MAX_QUOTE_CHARS = 80
 MAX_COUNTED_MATCHES = 1000
+MAX_NEW_LITERAL_CHARS = 2_000
+"""New string-literal text one plan may add (design doc, "Adapt and validate")."""
 
 # The placeholder statement as a line of text, so one that an earlier edit of the same
 # plan introduced is protected before the code parses again.
@@ -140,6 +142,26 @@ def _bindings(tree: ast.Module, names: set[str]) -> Counter[str]:
             bound = [node.rest]
         counts.update(name for name in bound if name in names)
     return counts
+
+
+def new_literal_chars(base: str, code: str) -> int:
+    """Characters of string literals in `code` that `base` does not already hold (as a multiset).
+
+    The plan's literal budget (`MAX_NEW_LITERAL_CHARS`): an adaptation renames titles
+    and labels, it does not write out data or long text. A `code` or `base` that does
+    not parse counts as 0; the validator reports the syntax error.
+    """
+    try:
+        before, after = _string_literals(ast.parse(base)), _string_literals(ast.parse(code))
+    except SyntaxError:
+        return 0
+    return sum(len(text) * count for text, count in (after - before).items())
+
+
+def _string_literals(tree: ast.Module) -> Counter[str]:
+    return Counter(
+        node.value for node in ast.walk(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)
+    )
 
 
 def _apply(working: str, plan: AdaptPlan) -> AppliedPlan:

@@ -193,6 +193,26 @@ async def test_plan_that_fails_its_schema_is_repaired_without_content_in_logs(
     assert not any(SCHEMA_CANARY in record.getMessage() for record in caplog.records)
 
 
+async def test_plan_over_the_literal_budget_is_repaired(client: httpx.AsyncClient, swap_models) -> None:
+    padded = {
+        **SCATTER_PLAN,
+        # Twelve literals of 190 characters: each under the 200-character cap, together over the plan budget.
+        "edits": [
+            *SCATTER_PLAN["edits"],
+            {"find": 'title = "', "replace": "notes = [" + ", ".join(['"' + "x" * 190 + '"'] * 12) + ']\ntitle = "'},
+        ],
+    }
+    fake = swap_models("gemini", default_script(plans=[padded, SCATTER_PLAN]))
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    assert (plot["status"], plot["attempts"]) == ("ok", 2)
+    adapter_inputs = [request for request in fake.requests if (request.config.labels or {})["agent_kind"] == "adapter"]
+    second = "".join(part.text or "" for part in adapter_inputs[1].contents[-1].parts or [])
+    assert "validator literal-budget: the plan adds" in second and "string-length" not in second
+
+
 async def test_contradictory_verdict_is_an_unread_review(client: httpx.AsyncClient, swap_models) -> None:
     swap_models("gemini", default_script(verdict={"ok": False, "defects": []}))
     sid = await open_session(client)

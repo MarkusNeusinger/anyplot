@@ -2,7 +2,7 @@
 
 import pytest
 
-from agents.anyplot.code.edits import MAX_QUOTE_CHARS, AppliedPlan, apply_plan
+from agents.anyplot.code.edits import MAX_NEW_LITERAL_CHARS, MAX_QUOTE_CHARS, AppliedPlan, apply_plan, new_literal_chars
 from agents.anyplot.schemas import MAX_EDITS, MAX_FEEDBACK, MAX_LINE_CHARS, AdaptPlan, Edit
 
 from .conftest import source
@@ -88,6 +88,16 @@ def test_a_theme_name_bound_again_further_down_is_refused(rebinding: str) -> Non
 
     assert result.code is None
     assert any("a second time" in failure for failure in result.failures)
+
+
+def test_new_literal_chars_counts_only_added_text() -> None:
+    renamed = WORKING.replace("ax.set_ylim(0, 100)\n", 'ax.set_title("Sales by Month")\n')
+    padded = WORKING.replace("ax.set_ylim(0, 100)\n", 'notes = ["' + "x" * 2100 + '"]\n')
+
+    assert new_literal_chars(WORKING, WORKING) == 0
+    assert new_literal_chars(WORKING, renamed) == len("Sales by Month")
+    assert new_literal_chars(WORKING, padded) == 2100 > MAX_NEW_LITERAL_CHARS
+    assert new_literal_chars(WORKING, "def broken(:\n") == 0
 
 
 def test_full_code_rebinding_a_token_is_refused() -> None:

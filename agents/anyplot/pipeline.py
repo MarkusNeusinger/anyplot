@@ -7,9 +7,11 @@ two attempts:
 
 1. **adapt**: the library's adapter agent turns the working form into an `AdaptPlan`
    (`ctx.run_node`, under its own isolation scope so the root never reads its answer);
-2. **check**: `edits.apply_plan`, then the SECURITY validator (a finding rejects the
-   code) and the ADAPTATION validator (a placeholder finding rejects the code; the
-   other findings become defect lines but the code still renders);
+2. **check**: `edits.apply_plan` (which also keeps the protected theme statements
+   intact), then the SECURITY validator (a finding rejects the code), the plan's
+   literal budget (more than `MAX_NEW_LITERAL_CHARS` of new string literals rejects
+   the code) and the ADAPTATION validator (a placeholder finding rejects the code;
+   the other findings become defect lines but the code still renders);
 3. **render**: `normalise`, the loader substitution (`to_run_form`), then both themes
    through the render backend, and the host gates (`render/gates.py`);
 4. **review**: at most once, on the first render that passes the host gates on the
@@ -49,7 +51,7 @@ from google.genai import types
 from pydantic import ValidationError
 
 from .briefs import profile_summary, spec_brief
-from .code.edits import apply_plan
+from .code.edits import MAX_NEW_LITERAL_CHARS, apply_plan, new_literal_chars
 from .code.export import export_code
 from .code.regions import find_regions
 from .code.validate import validate_adaptation, validate_security
@@ -236,8 +238,8 @@ def _clip_feedback(lines: list[str]) -> list[str]:
     return unique[:MAX_FEEDBACK]
 
 
-def _check(working: str, *, library: str, palette: list[str]) -> tuple[bool, list[str], list[str]]:
-    """Validate a working form: (may render, blocking lines, adaptation defect lines)."""
+def _check(working: str, *, library: str, palette: list[str], base: str) -> tuple[bool, list[str], list[str]]:
+    """Validate a working form against its base: (may render, blocking lines, adaptation defect lines)."""
     security = validate_security(working, library=library)
     adaptation = validate_adaptation(working, original_palette=palette)
     blocking = [f"validator {f.rule}" + (f" (line {f.line})" if f.line else "") + f": {f.message}" for f in security]
@@ -246,6 +248,13 @@ def _check(working: str, *, library: str, palette: list[str]) -> tuple[bool, lis
         for f in adaptation
         if f.rule in BLOCKING_RULES
     ]
+    added = new_literal_chars(base, working)
+    if added > MAX_NEW_LITERAL_CHARS:
+        blocking.append(
+            f"validator literal-budget: the plan adds {added} characters of new string literals, "
+            f"{added - MAX_NEW_LITERAL_CHARS} over the limit of {MAX_NEW_LITERAL_CHARS} → derive text and values "
+            "from df instead of writing them out. Likely cause: data or long text written into the code."
+        )
     defects = [
         f"{ADAPTATION_IDS.get(f.rule, 'SC-03')} (code): {f.message}"
         + (f" at line {f.line}" if f.line else "")
@@ -451,7 +460,9 @@ async def _attempts(
         if applied.code is None:
             feedback, previous_plan = applied.failures, plan
             continue
-        may_render, blocking, adaptation_lines = _check(applied.code, library=view.library, palette=palette)
+        may_render, blocking, adaptation_lines = _check(
+            applied.code, library=view.library, palette=palette, base=working
+        )
         if not may_render:
             feedback, previous_plan = blocking, plan
             continue
