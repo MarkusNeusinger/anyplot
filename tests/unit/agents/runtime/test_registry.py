@@ -63,7 +63,7 @@ class TestRegistry:
         pipeline = next(tool for tool in root.tools if tool_name(tool) == "plot_pipeline")
         assert isinstance(pipeline.node, Workflow)
         assert pipeline.node.input_schema is PipelineArgs
-        assert set(PipelineArgs.model_fields) == {"change_request", "base"}
+        assert set(PipelineArgs.model_fields) == {"change_request", "base", "theme"}
 
     def test_sub_agents_are_single_turn_and_tool_less(self) -> None:
         for agent in [*agent_module.ADAPTERS.values(), agent_module.reviewer]:

@@ -16,7 +16,10 @@ another provider, model or location.
 | `AGENT_LIBRARIES` | `matplotlib,seaborn` | Enabled libraries; each needs a phase-1 runtime (`matplotlib`, `seaborn`) |
 | `AGENT_RENDERER` | `sandbox` | Render backend: `sandbox`, `local` (development only), `fake` (development and test only) or `remote` |
 | `AGENT_RENDER_IMAGE` | `anyplot-agents:dev` | Image the `local` renderer runs with Docker |
-| `AGENT_RENDER_CONCURRENCY` | `2` | Renders (one theme each) that may run at the same time |
+| `AGENT_RENDER_CONCURRENCY` | `1` | Renders (one theme each) that may run at the same time; serial, because one 4 GiB instance holds one sandbox safely (spikes S and S2) |
+| `AGENT_RUN_CONCURRENCY` | `1` | Pipeline runs (whole `/messages` turns) in flight per instance; the run queue holds the rest |
+| `AGENT_RUNS_PER_MINUTE` | `1` | Runs that may start within any 60 seconds (a sliding window) |
+| `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue; it also sizes the queue (`AGENT_RUNS_PER_MINUTE` x this / 60 entries) |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request (the `RunConfig` cap) |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `80000` | Tokens per request |
 | `AGENT_DAILY_TOKEN_BUDGET` | `1000000` | Tokens per user and day |
@@ -121,8 +124,20 @@ class AgentSettings(BaseSettings):
     render_image: str = Field(default="anyplot-agents:dev", pattern=r"^[A-Za-z0-9][A-Za-z0-9._/:@-]{0,199}$")
     """Image the local renderer runs (`AGENT_RENDER_IMAGE`)."""
 
-    render_concurrency: PositiveInt = 2
-    """Theme renders that may run at the same time (`AGENT_RENDER_CONCURRENCY`)."""
+    render_concurrency: PositiveInt = 1
+    """Theme renders that may run at the same time (`AGENT_RENDER_CONCURRENCY`). Serial by default:
+    spikes S and S2 showed one 4 GiB instance serves one sandbox at a time safely."""
+
+    run_concurrency: PositiveInt = 1
+    """Pipeline runs in flight per instance (`AGENT_RUN_CONCURRENCY`); the run queue holds the rest."""
+
+    runs_per_minute: PositiveInt = 1
+    """Runs that may start within any 60 seconds (`AGENT_RUNS_PER_MINUTE`), a sliding window."""
+
+    queue_max_wait_s: PositiveInt = 600
+    """Longest wait in the run queue in seconds (`AGENT_QUEUE_MAX_WAIT_S`). Queued time does not
+    count toward the request deadline; the queue holds `runs_per_minute * queue_max_wait_s / 60`
+    entries and refuses more with `capacity`."""
 
     max_llm_calls: PositiveInt = 12
     """LLM calls per request (`AGENT_MAX_LLM_CALLS`), the `RunConfig` cap."""

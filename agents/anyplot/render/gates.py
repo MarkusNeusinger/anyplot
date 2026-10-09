@@ -2,13 +2,19 @@
 
 | Gate | Checks | Effect |
 |---|---|---|
-| R1 | an output for each of `THEMES`, exit code 0, no timeout, a PNG per theme | blocking: the render is discarded, the error becomes repair feedback |
+| R1 | an output for each of the job's themes, exit code 0, no timeout, a PNG per theme | blocking: the render is discarded, the error becomes repair feedback |
 | R2 | PNG hardening (`png.harden`): signature, decode, size and pixel caps, not blank, re-encoded | blocking, like R1 |
 | R3 | canvas within 16 px of 3200x1800 or 2400x2400 (`core.canvas.check_canvas`) | repair-triggering: the VQ-05 defect line goes to the repair; a padded copy of each missed theme is kept as the fallback |
 | G3 | probe: text boxes beyond the canvas edge | advisory: an AR-09 line |
 | G5 | probe: annotations outside their axes | advisory: a DQ-03 line |
 | G7 | probe: overlapping tick labels | advisory: a VQ-02 line |
 | G8 | probe: more point marks than data rows (fabricated data) | advisory: a DQ-03 line |
+
+A pipeline run renders one theme (`PipelineArgs.theme`) and the theme toggle renders
+the other one later, so `evaluate` judges exactly the themes of the job it is given:
+an output for a theme the job did not ask for is ignored, a missing one fails R1.
+Lines that name a theme name the job's single theme, or `both` when a job had two
+themes and both share the finding.
 
 The probe is written inside the sandbox by code under test, so G-gates only ever add
 feedback lines; they never fail a render. Feedback lines use the defect grammar of
@@ -21,6 +27,7 @@ of the user's data.
 import builtins
 import math
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -152,12 +159,15 @@ def data_rows(data_csv: str) -> int:
     return max(0, len([line for line in data_csv.split("\n") if line]) - 1)
 
 
-def evaluate(result: RenderResult, *, library: str, rows: int) -> GateReport:
-    """Run R1-R3 and the advisory gates over every theme in `THEMES`; a theme without an output fails R1."""
+def evaluate(result: RenderResult, *, themes: Sequence[Theme], library: str, rows: int) -> GateReport:
+    """Run R1-R3 and the advisory gates over every theme of the job; a theme without an output fails R1."""
+    wanted = [theme for theme in THEMES if theme in themes]
+    if not wanted:
+        raise ValueError("a render job names at least one theme")
     report = GateReport(passed_host_gates=True, canvas_ok=True)
     advisory: dict[str, list[Theme]] = {}
     missed: list[Theme] = []
-    for theme in THEMES:
+    for theme in wanted:
         output = result.outputs.get(theme)
         if output is None:
             report.blocking.append(_line(f"render ({theme}): the renderer returned no output for this theme"))
@@ -192,13 +202,13 @@ def evaluate(result: RenderResult, *, library: str, rows: int) -> GateReport:
         for line in _probe_lines(output.probe, rows):
             advisory.setdefault(line, []).append(theme)
     if len(missed) == 1:
-        # `core.canvas` writes the line for the pipeline's two-theme renders; name the one theme that missed.
+        # `core.canvas` writes the line as `(both)`; name the one theme that missed.
         report.canvas_defects = [line.replace("(both):", f"({missed[0]}):", 1) for line in report.canvas_defects]
-    for line, themes in advisory.items():
-        theme_label = "both" if len(themes) > 1 else themes[0]
+    for line, found_in in advisory.items():
+        theme_label = "both" if len(found_in) > 1 else found_in[0]
         report.advisory.append(_line(line.replace("(THEME)", f"({theme_label})")))
-    # Every pipeline job needs both themes: compare with THEMES, not with what came back.
-    if set(report.pngs) != set(THEMES):
+    # Compare with the job's themes, not with what came back: a missing PNG fails the render.
+    if set(report.pngs) != set(wanted):
         report.passed_host_gates = False
     return report
 

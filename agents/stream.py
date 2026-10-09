@@ -5,12 +5,13 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 
 | Event | Fields | Comes from |
 |---|---|---|
-| `ready` | `v`, `run_id` | the start of a run |
+| `ready` | `v`, `run_id` | the start of the request, before it waits in the run queue |
+| `status` | `step: "queued"`, `position`, `waiting` | the run queue, while the run waits: at once, on every change, and every 15 s unchanged (`position` 1 runs next; `waiting` counts every queued entry, this one included) |
 | `status` | `step`, `attempt` | the pipeline's content-free `custom_metadata` progress events |
 | `message` | `text` | a final, non-partial text response authored by the root (`anyplot`) |
 | `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects` | the pipeline's `PlotResult` output event |
 | `refusal` | `code`, `text` | the request ledger's refusal (scope guard or budget), in place of the message |
-| `error` | `code`, `ref` | `guard_unavailable`, `capacity`, `deadline` or `internal` |
+| `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when the run waited the queue's maximum), `deadline` or `internal` |
 | `done` | `llm_calls`, `tokens` | the end of every run, always last |
 
 Function calls and responses, tool outputs, thoughts, partial chunks, adapter and
@@ -42,6 +43,8 @@ ROOT_AUTHOR = "anyplot"
 PIPELINE_AUTHOR = "plot_pipeline"
 HALT_AUTHOR = "model"  # ADK's author of the event a before_run halt emits
 STEPS = frozenset({"adapting", "checking", "rendering", "reviewing", "repairing"})
+QUEUED_STEP = "queued"
+"""The status step the route sends while the run waits in the run queue; no pipeline event carries it."""
 PLOT_FIELDS = ("status", "reason", "attempts", "artifacts", "changes", "residual_defects")
 MODEL_WRITTEN_FIELDS = ("changes", "residual_defects")
 MAX_MESSAGE_CHARS = 3_000
@@ -122,6 +125,11 @@ class Translator:
 
     def ready(self) -> str:
         return sse("ready", {"v": PROTOCOL, "run_id": self.run_id})
+
+    @staticmethod
+    def queued(position: int, waiting: int) -> str:
+        """Where the run waits: `position` 1 runs next, `waiting` counts every queued entry, this one included."""
+        return sse("status", {"step": QUEUED_STEP, "position": position, "waiting": waiting})
 
     def translate(self, event: Event) -> list[str]:
         out: list[str] = []

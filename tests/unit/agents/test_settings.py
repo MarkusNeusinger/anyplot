@@ -31,7 +31,10 @@ class TestDefaults:
         assert settings.location == "eu"
         assert settings.project == "anyplot"
         assert settings.judge_timeout_s == 4.0
-        assert settings.render_concurrency == 2
+        assert settings.render_concurrency == 1  # serial renders: one sandbox per 4 GiB instance
+        assert settings.run_concurrency == 1
+        assert settings.runs_per_minute == 1
+        assert settings.queue_max_wait_s == 600
         assert settings.service_urls == []
         assert settings.dev_fixture is None
         assert settings.libraries == ["matplotlib", "seaborn"]
@@ -83,6 +86,22 @@ class TestEnvironmentOverrides:
         assert settings.renderer == "fake"
         assert settings.max_llm_calls == 7
         assert settings.soft_deadline_s == 120
+
+    def test_queue_settings_come_from_the_environment(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("AGENT_RUN_CONCURRENCY", "2")
+        monkeypatch.setenv("AGENT_RUNS_PER_MINUTE", "3")
+        monkeypatch.setenv("AGENT_QUEUE_MAX_WAIT_S", "300")
+
+        settings = AgentSettings()
+
+        assert (settings.run_concurrency, settings.runs_per_minute, settings.queue_max_wait_s) == (2, 3, 300)
+
+    @pytest.mark.parametrize("name", ["AGENT_RUN_CONCURRENCY", "AGENT_RUNS_PER_MINUTE", "AGENT_QUEUE_MAX_WAIT_S"])
+    def test_queue_settings_must_be_positive(self, monkeypatch: pytest.MonkeyPatch, name: str) -> None:
+        monkeypatch.setenv(name, "0")
+
+        with pytest.raises(ValidationError):
+            AgentSettings()
 
     def test_list_settings_accept_comma_separated_values(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("AGENT_LIBRARIES", "seaborn, matplotlib")

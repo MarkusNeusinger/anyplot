@@ -4,6 +4,10 @@ The renderer is the fake backend, the judge is scripted, and every agent's model
 replaced: `ScriptedLlm` for the Gemini arm (ADK sends the response schema natively),
 the real `VertexClaude` over a fake Anthropic client for the Claude arm (the
 structured answer is a forced tool call). Both arms must produce the same stream.
+
+The runtime's run queue here allows 1,000 starts a minute, so back-to-back turns in
+one test never wait for the rate window; `test_run_queue_flow.py` drives the queue
+at its production defaults with a fake clock.
 """
 
 import json
@@ -18,6 +22,7 @@ from agents.anyplot.models import JudgeVerdict
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
 from agents.anyplot.render.contract import RenderJob, Theme
 from agents.anyplot.render.png import size_of
+from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.schemas import AdaptPlan, Verdict
 from agents.anyplot.services import Services, get_services
 from agents.main import Runtime, app, get_runtime
@@ -31,9 +36,14 @@ HEADERS = {"X-Anyplot-User": USER, "X-Request-Id": "req-1"}
 PROVIDERS = ["gemini", "anthropic-vertex"]
 
 
+def permissive_queue() -> RunQueue:
+    """One run at a time, but no rate wait between a test's back-to-back turns."""
+    return RunQueue(concurrency=1, per_minute=1_000, max_wait_s=600)
+
+
 @pytest.fixture
 def runtime() -> Iterator[Runtime]:
-    fresh = Runtime()
+    fresh = Runtime(queue=permissive_queue())
     app.dependency_overrides[get_runtime] = lambda: fresh
     yield fresh
     app.dependency_overrides.clear()
@@ -50,12 +60,17 @@ def snapshot_body(spec_id: str = "scatter-basic", library: str = "matplotlib") -
     return snapshot_from_repo(spec_id, library).model_dump()
 
 
-async def open_session(client: httpx.AsyncClient, *, with_data: bool = True) -> str:
+def headers_for(user: str) -> dict[str, str]:
+    return {"X-Anyplot-User": user, "X-Request-Id": f"req-{user[-4:]}"}
+
+
+async def open_session(client: httpx.AsyncClient, *, with_data: bool = True, user: str = USER) -> str:
+    headers = HEADERS if user == USER else headers_for(user)
     response = await client.post(
         "/v1/sessions",
-        headers=HEADERS,
+        headers=headers,
         json={
-            "user": USER,
+            "user": user,
             "spec_id": "scatter-basic",
             "library": "matplotlib",
             "locale": "en",
@@ -68,7 +83,7 @@ async def open_session(client: httpx.AsyncClient, *, with_data: bool = True) -> 
     sid: str = body["session_id"]
     if with_data:
         data = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text()
-        response = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": data})
+        response = await client.post(f"/v1/sessions/{sid}/dataset", headers=headers, json={"text": data})
         assert response.status_code == 200, response.text
         bindings = {item["role"]: item["column"] for item in response.json()["bindings"]}
         assert bindings == {"x": "Study Hours", "y": "Exam Score"}
@@ -83,15 +98,19 @@ def parse_sse(text: str) -> list[tuple[str, dict[str, Any]]]:
     return events
 
 
-async def create_plot(client: httpx.AsyncClient, sid: str) -> list[tuple[str, dict[str, Any]]]:
-    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "create_plot"})
+async def create_plot(
+    client: httpx.AsyncClient, sid: str, headers: dict[str, str] = HEADERS
+) -> list[tuple[str, dict[str, Any]]]:
+    response = await client.post(f"/v1/sessions/{sid}/messages", headers=headers, json={"action": "create_plot"})
     assert response.status_code == 200, response.text
     assert response.headers["content-type"].startswith("text/event-stream")
     return parse_sse(response.text)
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
-async def test_create_plot_streams_to_an_ok_plot_result(client: httpx.AsyncClient, swap_models, provider: str) -> None:
+async def test_create_plot_streams_to_an_ok_plot_result(
+    client: httpx.AsyncClient, swap_models, provider: str, backend: FakeBackend
+) -> None:
     fake = swap_models(provider, default_script())
     sid = await open_session(client)
 
@@ -101,11 +120,12 @@ async def test_create_plot_streams_to_an_ok_plot_result(client: httpx.AsyncClien
     assert names[0] == "ready" and events[0][1]["v"] == "anyplot/1"
     assert names[-1] == "done"
     steps = [data["step"] for name, data in events if name == "status"]
-    assert steps == ["adapting", "checking", "rendering", "reviewing"]
+    assert steps == ["adapting", "checking", "rendering", "reviewing"]  # an idle queue sends no queued status
     plot = next(data for name, data in events if name == "plot")
     assert plot["status"] == "ok", plot
     assert plot["attempts"] == 1
-    assert plot["artifacts"] == ["plot-light.png", "plot-dark.png", "plot.py", "data.csv"]
+    assert plot["artifacts"] == ["plot-light.png", "plot.py", "data.csv"]  # one theme per run, light by default
+    assert [job.themes for job in backend.jobs] == [("light",)]
     assert plot["changes"] == SCATTER_PLAN["changes"]
     assert plot["residual_defects"] == []
     assert [data["text"] for name, data in events if name == "message"] == [ROOT_REPLY]
@@ -118,6 +138,11 @@ async def test_create_plot_streams_to_an_ok_plot_result(client: httpx.AsyncClien
         assert isinstance(fake, ScriptedLlm)
         schemas = [request.config.response_schema for request in fake.requests]
         assert AdaptPlan in schemas and Verdict in schemas  # ADK sends the schema natively to Gemini
+        review = next(request for request in fake.requests if (request.config.labels or {})["agent_kind"] == "reviewer")
+        parts = [part for content in review.contents for part in content.parts or []]
+        labels = [part.text for part in parts if part.text and part.text.endswith(".png):")]
+        assert labels == ["Light render (plot-light.png):"]  # the reviewer sees the rendered theme only
+        assert sum(1 for part in parts if part.inline_data is not None) == 1
     else:
         assert isinstance(fake, FakeAnthropic)
         forced = [call["tool_choice"] for call in fake.calls if call.get("tool_choice", {}).get("type") == "tool"]
@@ -241,6 +266,8 @@ async def test_artifacts_and_bundle_after_a_plot(client: httpx.AsyncClient, swap
 
     light = await client.get(f"/v1/sessions/{sid}/artifacts/plot-light.png", headers=HEADERS)
     assert light.status_code == 200 and light.content.startswith(b"\x89PNG")
+    dark = await client.get(f"/v1/sessions/{sid}/artifacts/plot-dark.png", headers=HEADERS)
+    assert dark.status_code == 404  # not rendered: the run rendered light only
     data = await client.get(f"/v1/sessions/{sid}/artifacts/data.csv?v=1", headers=HEADERS)
     assert data.text.startswith("Student,Study Hours,Exam Score")
     missing = await client.get(f"/v1/sessions/{sid}/artifacts/secrets.txt", headers=HEADERS)
@@ -249,7 +276,9 @@ async def test_artifacts_and_bundle_after_a_plot(client: httpx.AsyncClient, swap
     bundle = (await client.get(f"/v1/sessions/{sid}/bundle", headers=HEADERS)).json()
     assert bundle["session"]["spec_id"] == "scatter-basic"
     assert bundle["versions"][0]["result"]["status"] == "ok"
-    assert set(bundle["versions"][0]["images"]) == {"light", "dark"}
+    assert set(bundle["versions"][0]["images"]) == {"light"}
+    assert bundle["versions"][0]["theme"] == "light"
+    assert bundle["versions"][0]["themes"] == {"light": {"status": "ok", "reason": None}}
     assert bundle["versions"][0]["data_csv"] is None
     assert bundle["config"]["provider"] == "anthropic-vertex"
     assert {item["role"] for item in bundle["transcript"]} == {"user", "assistant"}
@@ -270,7 +299,7 @@ async def test_reviewer_rejection_gets_one_repair_and_ships_needs_attention(
     plot = next(data for name, data in events if name == "plot")
     assert plot["status"] == "needs_attention"
     assert plot["attempts"] == 2
-    assert plot["residual_defects"][0].startswith("VQ-03 (both): 24 sparse markers")
+    assert plot["residual_defects"][0].startswith("VQ-03 (both): 24 sparse markers")  # the reviewer's own line
 
 
 async def test_failed_render_twice_is_a_failed_result(
@@ -308,28 +337,200 @@ async def test_canvas_miss_is_repaired_then_padded(
     plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
 
     assert plot["status"] == "needs_attention"
-    assert plot["residual_defects"][0] == "canvas padded after render"
-    assert plot["residual_defects"][1].startswith("VQ-05 (both): Canvas dimensions drifted")
-    png = await client.get(f"/v1/sessions/{sid}/artifacts/plot-dark.png", headers=HEADERS)
+    assert plot["residual_defects"][0] == "canvas padded after render (light)"
+    assert plot["residual_defects"][1].startswith("VQ-05 (light): Canvas dimensions drifted")
+    png = await client.get(f"/v1/sessions/{sid}/artifacts/plot-light.png", headers=HEADERS)
     assert size_of(png.content) == (3200, 1800)
 
 
-async def test_one_theme_off_canvas_keeps_the_other_themes_png(
+DARK_SCRIPT_ROOT = [{"call": "plot_pipeline", "args": {"theme": "dark"}}, {"text": "Your dark plot is ready."}]
+
+
+async def test_a_dark_plot_renders_and_reviews_the_dark_theme_only(
     client: httpx.AsyncClient, swap_models, backend: FakeBackend
 ) -> None:
-    """Padding only the dark theme still ships the light theme's valid PNG, so both artifacts exist."""
-    backend.script = lambda job, theme: FakeOutcome(size=(3100, 1800) if theme == "dark" else (3200, 1800))
-    swap_models("gemini", default_script(plans=[SCATTER_PLAN, {"edits": [], "changes": []}]))
+    fake = swap_models("gemini", {**default_script(), "root": list(DARK_SCRIPT_ROOT)})
     sid = await open_session(client)
 
-    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+    response = await client.post(
+        f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "Create the plot with a dark background"}
+    )
 
-    assert plot["status"] == "needs_attention"
-    assert plot["residual_defects"][0] == "canvas padded after render"
+    plot = next(data for name, data in parse_sse(response.text) if name == "plot")
+    assert (plot["status"], plot["artifacts"]) == ("ok", ["plot-dark.png", "plot.py", "data.csv"])
+    assert [job.themes for job in backend.jobs] == [("dark",)]
+    review = next(request for request in fake.requests if (request.config.labels or {})["agent_kind"] == "reviewer")
+    texts = [part.text or "" for content in review.contents for part in content.parts or []]
+    assert "Dark render (plot-dark.png):" in texts and "Light render (plot-light.png):" not in texts
+    light = await client.get(f"/v1/sessions/{sid}/artifacts/plot-light.png", headers=HEADERS)
+    assert light.status_code == 404
+
+
+async def test_the_session_block_names_the_latest_theme(client: httpx.AsyncClient, swap_models) -> None:
+    """A change keeps the theme: the root reads the latest version's theme in its session block."""
+    script = {**default_script(), "root": [*DARK_SCRIPT_ROOT, {"text": "Which theme?"}]}
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+    await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "Create a dark plot"})
+
+    await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "make the title shorter"})
+
+    root_requests = [request for request in fake.requests if (request.config.labels or {})["agent_kind"] == "root"]
+    last = root_requests[-1]
+    texts = [str(last.config.system_instruction)]
+    texts += [part.text or "" for content in last.contents for part in content.parts or []]
+    assert any("latest result: ok, theme dark" in text for text in texts)
+
+
+# --- The theme toggle -------------------------------------------------------------------
+
+
+async def render_theme(
+    client: httpx.AsyncClient, sid: str, theme: str, version: int = 1, headers: dict[str, str] = HEADERS
+) -> httpx.Response:
+    return await client.post(f"/v1/sessions/{sid}/versions/{version}/render", headers=headers, json={"theme": theme})
+
+
+async def test_theme_toggle_renders_the_other_theme_without_a_model_call(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    fake = swap_models("gemini", default_script())
+    sid = await open_session(client)
+    await create_plot(client, sid)
+    model_calls = len(fake.requests)
+
+    response = await render_theme(client, sid, "dark")
+
+    assert response.status_code == 200, response.text
+    assert response.json() == {"status": "ok", "artifacts": ["plot-light.png", "plot-dark.png", "plot.py", "data.csv"]}
+    assert len(fake.requests) == model_calls  # no adapter, no reviewer, no root
+    assert [job.themes for job in backend.jobs] == [("light",), ("dark",)]
+    assert backend.jobs[1].source == backend.jobs[0].source  # the same run form, the same data
+    assert backend.jobs[1].data_csv == backend.jobs[0].data_csv
+    dark = await client.get(f"/v1/sessions/{sid}/artifacts/plot-dark.png?v=1", headers=HEADERS)
+    assert dark.status_code == 200 and size_of(dark.content) == (3200, 1800)
+
+    again = await render_theme(client, sid, "dark", version=0)  # 0 is the latest version
+    assert again.json()["status"] == "ok"
+    assert len(backend.jobs) == 2  # a rendered theme is answered from its record
+    bundle = (await client.get(f"/v1/sessions/{sid}/bundle", headers=HEADERS)).json()
+    assert set(bundle["versions"][0]["images"]) == {"light", "dark"}
+
+
+async def test_theme_toggle_pads_an_off_canvas_theme(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+    await create_plot(client, sid)
+    backend.script = lambda job, theme: FakeOutcome(size=(3100, 1800))
+
+    response = await render_theme(client, sid, "dark")
+
+    assert response.json() == {
+        "status": "needs_attention",
+        "reason": "canvas_padded",
+        "artifacts": ["plot-light.png", "plot-dark.png", "plot.py", "data.csv"],
+    }
     for theme in ("light", "dark"):
         png = await client.get(f"/v1/sessions/{sid}/artifacts/plot-{theme}.png", headers=HEADERS)
-        assert png.status_code == 200, theme
-        assert size_of(png.content) == (3200, 1800)
+        assert png.status_code == 200 and size_of(png.content) == (3200, 1800), theme
+
+
+async def test_theme_toggle_reports_a_failed_render_and_stores_nothing(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+    await create_plot(client, sid)
+    backend.script = lambda job, theme: FakeOutcome(exit_code=1, stderr_tail="KeyError: 'Exam Score'\n")
+
+    response = await render_theme(client, sid, "dark")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "failed",
+        "reason": "render",
+        "artifacts": ["plot-light.png", "plot.py", "data.csv"],
+    }
+    assert (await client.get(f"/v1/sessions/{sid}/artifacts/plot-dark.png", headers=HEADERS)).status_code == 404
+    backend.script = None
+    retried = await render_theme(client, sid, "dark")  # a failure is not recorded, so it is retried
+    assert retried.json()["status"] == "ok" and len(backend.jobs) == 3
+
+
+async def test_theme_toggle_reports_a_backend_that_cannot_run(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+    await create_plot(client, sid)
+
+    def unavailable(job: RenderJob, theme: Theme) -> FakeOutcome:
+        raise NotImplementedError("the sandbox renderer waits for spike S")
+
+    backend.script = unavailable
+
+    response = await render_theme(client, sid, "dark")
+
+    assert response.json() == {
+        "status": "failed",
+        "reason": "error",
+        "artifacts": ["plot-light.png", "plot.py", "data.csv"],
+    }
+
+
+async def test_theme_toggle_is_refused_while_the_session_has_a_run(
+    client: httpx.AsyncClient, runtime: Runtime, swap_models
+) -> None:
+    import asyncio
+
+    from agents.main import ActiveRun
+
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+    await create_plot(client, sid)
+    runtime.active[sid] = ActiveRun(abort=asyncio.Event(), user=USER)
+
+    response = await render_theme(client, sid, "dark")
+
+    assert (response.status_code, response.json()) == (409, {"detail": "run_active"})
+
+
+async def test_theme_toggle_errors(client: httpx.AsyncClient, swap_models) -> None:
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+
+    no_version = await render_theme(client, sid, "dark")
+    assert (no_version.status_code, no_version.json()) == (404, {"detail": "not_found"})
+    await create_plot(client, sid)
+    unknown = await render_theme(client, sid, "dark", version=7)
+    assert (unknown.status_code, unknown.json()) == (404, {"detail": "not_found"})
+    bad_theme = await render_theme(client, sid, "sepia")
+    assert bad_theme.status_code == 422
+    other_user = await render_theme(client, sid, "dark", headers=headers_for("adm_ffffffffffffffff"))
+    assert (other_user.status_code, other_user.json()) == (404, {"detail": "session_expired"})
+    get_services().renders.delete_session(sid)  # swept: the version's render is gone
+    gone = await render_theme(client, sid, "dark")
+    assert (gone.status_code, gone.json()) == (404, {"detail": "not_found"})
+
+
+async def test_theme_toggle_for_a_render_swept_while_it_rendered(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+    await create_plot(client, sid)
+
+    def swept_midway(job: RenderJob, theme: Theme) -> FakeOutcome:
+        get_services().renders.delete_session(sid)
+        return FakeOutcome()
+
+    backend.script = swept_midway
+
+    response = await render_theme(client, sid, "dark")
+
+    assert (response.status_code, response.json()) == (404, {"detail": "not_found"})
 
 
 async def test_create_plot_without_dataset_is_not_ready(client: httpx.AsyncClient, swap_models) -> None:

@@ -6,14 +6,15 @@ The `/v1` routes, the tools, the plugins and the pipeline all reach the same obj
 through `get_services()`. Tests replace them with `set_services(Services(...))`.
 
 `VersionStore` keeps every code version a session produced: the working form, the
-run form, the exported `plot.py`, the `data.csv` it ran on, the render id of its two
-PNGs, the adapter plan and the `PlotResult`. The artifact and bundle routes read
-from it.
+run form, the exported `plot.py`, the `data.csv` it ran on, the render id of its
+PNGs (the run's theme, plus the other theme once the toggle rendered it), the gate
+outcome per rendered theme, the adapter plan and the `PlotResult`. The artifact,
+bundle and theme-toggle routes read from it.
 """
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Literal
 
 from .data.store import DatasetStore
 from .models import JudgeClient, make_judge_client
@@ -21,8 +22,20 @@ from .plugins.ledger import UsageBook
 from .render import make_backend
 from .render.contract import RenderBackend
 from .render.store import RenderStore
-from .schemas import AdaptPlan, PlotResult
+from .schemas import AdaptPlan, ArtifactName, PlotResult, Theme, artifact_names
 from .settings import get_settings
+
+
+PADDED_REASON = "canvas_padded"
+"""The reason of a rendered theme whose PNG missed the canvas and was padded (never cropped)."""
+
+
+@dataclass(frozen=True)
+class ThemeRender:
+    """The host-gate outcome of one rendered theme of a version: `needs_attention` when its PNG was padded."""
+
+    status: Literal["ok", "needs_attention"]
+    reason: str | None = None
 
 
 @dataclass
@@ -41,6 +54,14 @@ class CodeVersion:
     feedback: list[str] = field(default_factory=list)
     library: str = ""
     """The library the version was adapted for; a session can switch library."""
+    theme: Theme = "light"
+    """The theme the run rendered and the reviewer saw."""
+    themes: dict[Theme, ThemeRender] = field(default_factory=dict)
+    """Every theme whose PNG the version's render holds, with its gate outcome."""
+
+    def artifacts(self) -> list[ArtifactName]:
+        """The version's artifacts: the PNG of every rendered theme, `plot.py` and `data.csv`."""
+        return artifact_names(self.themes or [self.theme])
 
 
 class VersionStore:

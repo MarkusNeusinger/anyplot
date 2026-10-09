@@ -59,13 +59,22 @@ class TestFinish:
         assert result.residual_defects == [NOT_REVIEWED_LINE.format(why="the time limit was reached")]
 
     def test_padded_canvas_is_never_ok(self) -> None:
-        run = run_with(padded=True, canvas_line="VQ-05 (both): drift", reviewed_ok=True)
-        run.best, run.padded = None, run.best
+        run = run_with(padded=True, canvas_line="VQ-05 (dark): drift", reviewed_ok=True)
+        run.best, run.padded, run.theme = None, run.best, "dark"
 
         result = finish(run)
 
         assert result.status == "needs_attention"
-        assert result.residual_defects[:2] == [PADDED_LINE, "VQ-05 (both): drift"]
+        assert result.residual_defects[:2] == ["canvas padded after render (dark)", "VQ-05 (dark): drift"]
+        assert PADDED_LINE.format(theme="dark") == result.residual_defects[0]
+
+    def test_artifacts_list_only_the_rendered_theme(self) -> None:
+        light = finish(run_with(reviewed_ok=True))
+        dark_run = run_with(reviewed_ok=True)
+        dark_run.theme = "dark"
+
+        assert light.artifacts == ["plot-light.png", "plot.py", "data.csv"]
+        assert finish(dark_run).artifacts == ["plot-dark.png", "plot.py", "data.csv"]
 
     def test_failed_reasons(self) -> None:
         nothing = run_with(shipped=False)
