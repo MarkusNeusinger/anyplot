@@ -139,6 +139,26 @@ class TestParse:
         code = "x = " + "(" * 500 + "1" + ")" * 500 + "\n"
         assert validate_security(code, library="matplotlib")[0].rule == "syntax"
 
+    @pytest.mark.parametrize(
+        "body",
+        [
+            pytest.param("return 1\n", id="module-level return"),
+            pytest.param("break\n", id="break outside a loop"),
+            pytest.param("continue\n", id="continue outside a loop"),
+            pytest.param("plt.plot(x=1, x=2)\n", id="repeated keyword"),
+            pytest.param("def f(a, a):\n    return a\n", id="repeated parameter"),
+        ],
+    )
+    def test_compiler_level_syntax_error(self, body: str) -> None:
+        assert [f.rule for f in validate_security(plot(body), library="matplotlib")] == ["syntax"]
+        assert [f.rule for f in validate_adaptation(ADAPTED + body, original_palette=ORIGINAL)] == ["syntax"]
+
+    def test_deep_attribute_chain_never_raises(self) -> None:
+        chain = "a" + ".b" * 600 + ".read_x"
+        findings = validate_security(plot(f"x = {chain}\n"), library="matplotlib")
+        assert [f.rule for f in findings] == ["banned-call"]
+        assert ".read_x" in findings[0].message and len(findings[0].message) <= 300
+
     def test_empty_code_is_a_finding_not_an_error(self) -> None:
         assert [f.rule for f in validate_security("", library="matplotlib")] == ["savefig-target"]
         assert [f.rule for f in validate_adaptation("", original_palette=[])] == ["placeholder-count"]
@@ -184,6 +204,8 @@ ALLOWED_IMPORTS = [
     "from mpl_toolkits.axes_grid1 import make_axes_locatable\n",
     "import mpl_toolkits.axisartist as axisartist\n",
     "from numpy import random\n",
+    "from numpy.lib.stride_tricks import sliding_window_view\n",
+    "from pandas.plotting import parallel_coordinates\n",
 ]
 BANNED_IMPORTS = [
     "import sys\n",
@@ -264,6 +286,27 @@ class TestImports:
         assert security_rules("from numpy import memmap\n") == {"banned-attribute"}
         assert security_rules("from numpy import linspace\n") == set()
 
+    @pytest.mark.parametrize(
+        ("body", "expected"),
+        [
+            ("import pandas.io\n", {"banned-import"}),
+            ("import pandas.io.common as common\n", {"banned-import"}),
+            ("from pandas.io import common\n", {"banned-import"}),
+            ("from pandas.io.formats.style import Styler\n", {"banned-import"}),
+            ("import numpy.lib.format as fmt\n", {"banned-import"}),
+            ("from numpy.lib.format import open_memmap\n", {"banned-import", "banned-call"}),
+            ("from pandas import io\n", {"banned-attribute"}),
+        ],
+    )
+    def test_import_path_with_a_banned_component(self, body: str, expected: set[str]) -> None:
+        assert security_rules(body) == expected
+
+    def test_banned_component_message_names_the_component(self) -> None:
+        findings = validate_security(plot("import numpy.lib.format as fmt\n"), library="matplotlib")
+        assert [(f.rule, f.message) for f in findings] == [
+            ("banned-import", "import of 'numpy.lib.format' reaches the banned name 'format'")
+        ]
+
 
 # --- os ---------------------------------------------------------------------------------
 
@@ -291,6 +334,8 @@ class TestOsUse:
             "KEY = 'ANYPLOT_THEME'\nT = os.getenv(KEY, 'light')\n",
             "T = os.getenv('ANYPLOT_THEME', 'light', 'extra')\n",
             "T = os.getenv('ANYPLOT_THEME', key='light')\n",
+            "T = os.getenv('ANYPLOT_THEME', 'light', default='dark')\n",
+            "T = os.environ.get('ANYPLOT_THEME', 'light', default='dark')\n",
             "p = os.path.join('a', 'b')\n",
             "os.system('ls')\n",
             "o = os\n",
@@ -408,6 +453,12 @@ BANNED_IO_BODIES = [
     "x = pd.HDFStore('x.h5')\n",
     *[f"df.{writer}('out')\n" for writer in ("to_csv", "to_pickle", "to_parquet", "to_excel", "to_sql", "to_hdf")],
     *[f"df.{writer}()\n" for writer in ("to_feather", "to_json", "to_html", "to_clipboard")],
+    *[f"df.{writer}('out')\n" for writer in ("to_latex", "to_markdown", "to_xml", "to_stata", "to_orc")],
+    "m = fmt.open_memmap('x.npy', mode='r')\n",
+    "plt.imsave('x.png', np.zeros((2, 2)))\n",
+    "import matplotlib.cbook as cbook\nf = cbook.to_filehandle('x')\n",
+    "import matplotlib.cbook as cbook\nf = cbook.open_file_cm('x')\n",
+    "import matplotlib as mpl\nr = mpl.rc_params_from_file('x')\n",
     "a = np.load('x.npy')\n",
     "a = np.loadtxt('x.txt')\n",
     "a = np.genfromtxt('x.txt')\n",
@@ -475,6 +526,11 @@ class TestAttributesAndCalls:
         assert "subscripted" in on_frame[0].message
         on_module = validate_security(plot("r = pd.read_csv('x')\n"), library="matplotlib")
         assert "subscripted" not in on_module[0].message
+
+    def test_snippet_never_echoes_a_receiver_literal(self) -> None:
+        findings = validate_security(plot("r = df['secret_col'].read_count\n"), library="matplotlib")
+        assert [f.rule for f in findings] == ["banned-call"]
+        assert "secret" not in findings[0].message and "(...).read_count" in findings[0].message
 
 
 # --- statements, strings ----------------------------------------------------------------------
@@ -631,6 +687,16 @@ BYPASSES = [
     pytest.param("x = df\nv = x.eval('a')\n", {"banned-attribute"}, id="frame.eval via a variable"),
     pytest.param("s = df.__class__.__subclasses__()\n", {"dunder"}, id="subclasses walk"),
     pytest.param("import os.path\n", {"banned-import"}, id="os.path import"),
+    pytest.param(
+        "import pandas.io.common as common\nh = common.get_handle('/etc/passwd', 'r')\n",
+        {"banned-import"},
+        id="pandas.io behind an alias",
+    ),
+    pytest.param(
+        "import numpy.lib.format as fmt\nm = fmt.open_memmap('x.npy')\n",
+        {"banned-import", "banned-call"},
+        id="open_memmap behind an alias",
+    ),
 ]
 
 
@@ -816,6 +882,59 @@ class TestPalette:
             ADAPTED + 'IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#AE3030"]\n', original_palette=ORIGINAL
         )
         assert "#BD8233" in findings[0].message
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            pytest.param("IMPRINT.reverse()\n", id="reverse"),
+            pytest.param("IMPRINT.sort()\n", id="sort"),
+            pytest.param("IMPRINT.clear()\n", id="clear"),
+            pytest.param("IMPRINT.pop()\n", id="pop"),
+            pytest.param("IMPRINT.remove('#009E73')\n", id="remove"),
+            pytest.param("IMPRINT.append('#BD8233')\n", id="append"),
+            pytest.param("IMPRINT.extend(['#BD8233'])\n", id="extend"),
+            pytest.param("IMPRINT.insert(0, '#BD8233')\n", id="insert"),
+            pytest.param("flip = IMPRINT.reverse\nflip()\n", id="mutator bound to a name"),
+            pytest.param("IMPRINT[0] = '#000000'\n", id="item assignment"),
+            pytest.param("IMPRINT[:] = []\n", id="slice assignment"),
+            pytest.param("IMPRINT[0] += 'x'\n", id="augmented item"),
+            pytest.param("del IMPRINT[0]\n", id="item deletion"),
+            pytest.param("IMPRINT += ['#BD8233']\n", id="augmented assignment"),
+            pytest.param("del IMPRINT\n", id="deletion"),
+            pytest.param("for IMPRINT in [[]]:\n    pass\n", id="loop target"),
+            pytest.param("IMPRINT, extra = ['#009E73'], 1\n", id="unpacking target"),
+            pytest.param("alias = IMPRINT = ['#009E73']\n", id="chained assignment"),
+            pytest.param("colors = IMPRINT\ncolors.reverse()\n", id="mutator through an alias"),
+            pytest.param("colors = IMPRINT\ncolors[0] = '#000000'\n", id="item write through an alias"),
+            pytest.param("IMPRINT_PALETTE = IMPRINT\nIMPRINT_PALETTE.pop()\n", id="IMPRINT_PALETTE"),
+        ],
+    )
+    def test_palette_changed_after_its_assignment(self, body: str) -> None:
+        palette = 'IMPRINT = ["#009E73", "#C475FD", "#4467A3"]\n'
+        assert adaptation_rules(palette + body) == {"palette-prefix"}
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            "colors = IMPRINT[:2]\n",
+            "colors = list(IMPRINT)\ncolors.reverse()\n",
+            "colors = IMPRINT\nfirst = colors[0]\n",
+            "ordered = sorted(IMPRINT)\n",
+            "position = IMPRINT.index('#009E73')\n",
+            "for colour in IMPRINT:\n    pass\n",
+            "extended = IMPRINT + ['#BD8233']\n",
+        ],
+    )
+    def test_reading_or_copying_the_palette_passes(self, body: str) -> None:
+        palette = 'IMPRINT = ["#009E73", "#C475FD", "#4467A3"]\n'
+        assert adaptation_rules(palette + body) == set()
+
+    def test_mutation_message_names_the_mutator(self) -> None:
+        code = ADAPTED + 'IMPRINT = ["#009E73", "#C475FD", "#4467A3"]\nIMPRINT.reverse()\n'
+        findings = validate_adaptation(code, original_palette=ORIGINAL)
+        assert [(f.rule, f.message, f.line) for f in findings] == [
+            ("palette-prefix", "'IMPRINT.reverse' would change the palette", 5)
+        ]
 
 
 # --- the catalogue corpus ----------------------------------------------------------------------

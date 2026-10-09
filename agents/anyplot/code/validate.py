@@ -2,9 +2,12 @@
 
 The SECURITY profile runs on the normalised catalogue original (eligibility) and on every
 adapted working form; the ADAPTATION profile runs on adapted code only. Both functions
-return an empty list for valid code and never raise on invalid code: a syntax error, an
-oversize file or a string that is not UTF-8 text is itself a `Finding`. Only an unknown
-`library` raises, because that is a caller bug, not a property of the code.
+return an empty list for valid code and never raise on invalid code: a syntax error (also
+one only the compiler reports, such as a module-level `return`), an oversize file or a
+string that is not UTF-8 text is itself a `Finding`. Only `library` makes
+`validate_security` raise `ValueError`: an id outside the catalogue, or a catalogue
+library without a profile yet (phase 1 profiles matplotlib and seaborn), because that is
+a caller bug, not a property of the code.
 
 The validator is one guardrail layer, not the boundary: the sandbox (no egress, read-only
 root, no environment) and the loader substitution are the others. Its job is to make the
@@ -30,7 +33,13 @@ Decisions this module takes where the design leaves room:
   the message says to subscript instead, and the single repair does. `.use` is wider
   than the design's `matplotlib.use` because `matplotlib.style.use` accepts paths and
   URLs; `.io` and `ExcelWriter` are added for `pandas.io.common.get_handle` and the
-  Excel writer, which the design's list does not name.
+  Excel writer, and `open_memmap`, `imsave`, `to_filehandle`, `open_file_cm`,
+  `rc_params_from_file` and the rarer pandas writers for the remaining file paths of
+  numpy, matplotlib and pandas; the design's list names none of them.
+* **Import paths are checked component by component** against the same name sets, so
+  an alias cannot drop a banned component: `import pandas.io.common as common` and
+  `import numpy.lib.format as fmt` are findings although `common.get_handle` and
+  `fmt.open_memmap` no longer spell `.io` or `.format`.
 * **Module paths are resolved through import aliases** (`import numpy as np`,
   `import matplotlib.pyplot as plt`, `from numpy import random`, plus one level of
   `name = <module chain>` assignment). The resolver drives the RNG rule and the
@@ -73,6 +82,12 @@ Decisions this module takes where the design leaves room:
   prefix in order (hex compared case-insensitively); the entries after the prefix must be
   the canonical `core.palette.IMPRINT` positions not already in the original, in
   canonical order, which for a canonical original is exactly "the next positions".
+  The list is not changed afterwards either: a palette name, or a name bound to one by
+  a plain `colors = IMPRINT`, may not be the target of anything but a plain assignment
+  (no `+=`, unpacking, loop or `del` target), may not have items assigned or deleted,
+  and may not reach a list mutator (`.append`, `.extend`, `.insert`, `.remove`, `.pop`,
+  `.clear`, `.reverse`, `.sort`). A palette passed into a function is not followed; the
+  reviewer sees the render.
 * **Placeholder (ADAPTATION).** Exactly one `df = load_user_data()` statement, anywhere;
   any other use of the name `load_user_data` is a separate finding.
 
@@ -198,6 +213,11 @@ BANNED_IO: frozenset[str] = frozenset(
         "to_json",
         "to_html",
         "to_clipboard",
+        "to_latex",
+        "to_markdown",
+        "to_xml",
+        "to_stata",
+        "to_orc",
         "save",
         "savez",
         "savez_compressed",
@@ -207,9 +227,14 @@ BANNED_IO: frozenset[str] = frozenset(
         "fromregex",
         "DataSource",
         "tofile",
+        "open_memmap",
         "imread",
+        "imsave",
         "get_sample_data",
+        "to_filehandle",
+        "open_file_cm",
         "rc_file",
+        "rc_params_from_file",
         "urlopen",
     }
 )
@@ -238,6 +263,7 @@ _RNG_FACTORY = "numpy.random.default_rng"
 _RNG_ALLOWED_METHODS = frozenset({"choice", "permutation", "uniform"})
 _RNG_ALLOWED_TEXT = "/".join(f".{method}" for method in sorted(_RNG_ALLOWED_METHODS))
 _PALETTE_NAMES = frozenset({"IMPRINT", "IMPRINT_PALETTE"})
+_LIST_MUTATORS = frozenset({"append", "extend", "insert", "remove", "pop", "clear", "reverse", "sort"})
 
 _Node = TypeVar("_Node", bound=ast.AST)
 
@@ -281,7 +307,11 @@ def validate_adaptation(code: str, *, original_palette: list[str]) -> list[Findi
 
 
 def _parse(code: str) -> tuple[ast.Module | None, list[Finding]]:
-    """Size, encoding and syntax: the checks that run before any rule can."""
+    """Size, encoding and syntax: the checks that run before any rule can.
+
+    `ast.parse` alone accepts what only the compiler rejects (a module-level `return` or
+    `break`, a repeated keyword argument), so the tree is also compiled, never executed.
+    """
     if len(code) > MAX_CODE_CHARS:
         return None, [Finding("size", f"code is {len(code):,} characters; the limit is {MAX_CODE_CHARS:,}", None)]
     try:
@@ -290,6 +320,7 @@ def _parse(code: str) -> tuple[ast.Module | None, list[Finding]]:
         return None, [Finding("encoding", "code is not valid UTF-8 text", None)]
     try:
         tree = ast.parse(code, feature_version=(3, 13))
+        compile(tree, "<plot>", "exec", dont_inherit=True)
     except SyntaxError as exc:
         return None, [Finding("syntax", f"syntax error: {exc.msg}", exc.lineno)]
     except (ValueError, RecursionError) as exc:  # null bytes, expression nesting
@@ -324,9 +355,20 @@ def _text(node: ast.Constant) -> str | None:
 
 
 def _snippet(node: ast.AST) -> str:
-    text = ast.unparse(node)
+    """The dotted name a message shows, built without recursion and without echoing literals.
+
+    `np.random.normal` stays as written; any other receiver (a call, a subscript, a literal)
+    becomes `(...)`, so `df["secret"].read_count` reads `(...).read_count`. A long chain
+    keeps its tail, which is where the offending attribute sits.
+    """
+    parts: list[str] = []
+    while isinstance(node, ast.Attribute):
+        parts.append(node.attr)
+        node = node.value
+    parts.append(node.id if isinstance(node, ast.Name) else "(...)")
+    text = ".".join(reversed(parts))
     if len(text) > MAX_SNIPPET_CHARS:
-        text = text[: MAX_SNIPPET_CHARS - 3] + "..."
+        text = "..." + text[-(MAX_SNIPPET_CHARS - 3) :]
     return text
 
 
@@ -481,18 +523,33 @@ class _Scan:
                     self.os_names.add(alias.asname or "os")
                 elif not permitted(alias.name):
                     self.add("banned-import", f"import of '{alias.name}' is not allowed with {library}", alias)
+                else:
+                    self._check_module_path(alias.name, alias)
         for from_node in self.of(ast.ImportFrom):
             if from_node.level or not from_node.module:
                 self.add("relative-import", "relative imports are not allowed", from_node)
                 continue
+            module_banned = self._check_module_path(from_node.module, from_node)
             for alias in from_node.names:
                 if alias.name == "*":
                     self.add("star-import", f"star import from '{from_node.module}' is not allowed", alias)
                     continue
                 path = f"{from_node.module}.{alias.name}"
-                if denied(path) or not (permitted(from_node.module) or permitted(path)):
+                if not module_banned and (denied(path) or not (permitted(from_node.module) or permitted(path))):
                     self.add("banned-import", f"import of '{path}' is not allowed with {library}", alias)
                 self._check_function_name(alias.name, alias)
+
+    def _check_module_path(self, path: str, node: ast.AST) -> bool:
+        """An import path whose component is a banned name (`pandas.io`, `numpy.lib.format`).
+
+        The alias would hide the component from the attribute check: `common.get_handle`
+        after `import pandas.io.common as common` spells no `.io`.
+        """
+        for part in path.split("."):
+            if part in BANNED_ATTRIBUTES or part in BANNED_IO or _BANNED_IO_PATTERN.match(part):
+                self.add("banned-import", f"import of '{path}' reaches the banned name '{part}'", node)
+                return True
+        return False
 
     def _check_function_name(self, name: str, node: ast.AST) -> None:
         """A function reached by a `from` import: the attribute set and the I/O set apply."""
@@ -520,7 +577,10 @@ class _Scan:
         call = self.parents.get(attribute)
         if not isinstance(call, ast.Call) or call.func is not attribute:
             return False
-        if not 1 <= len(call.args) <= 2 or any(keyword.arg != "default" for keyword in call.keywords):
+        # At most one default, positional or keyword: `getenv(KEY, "light", default="dark")` is a TypeError.
+        if not 1 <= len(call.args) <= 2 or len(call.args) + len(call.keywords) > 2:
+            return False
+        if any(keyword.arg != "default" for keyword in call.keywords):
             return False
         key = call.args[0]
         return isinstance(key, ast.Constant) and key.value == THEME_VARIABLE
@@ -620,6 +680,7 @@ class _Scan:
         self._check_rng()
         self._check_literal_data()
         self._check_palette(original_palette)
+        self._check_palette_writes()
 
     def _check_placeholder(self) -> None:
         count = sum(1 for assign in self.of(ast.Assign) if _is_placeholder(assign))
@@ -709,3 +770,23 @@ class _Scan:
                 next_positions = ", ".join(extension[:3]) or "none left"
                 message = f"{target.id} may only be extended with the next Imprint positions ({next_positions})"
                 self.add("palette-prefix", message, statement)
+
+    def _check_palette_writes(self) -> None:
+        """The checked literal stays the palette: no later rebinding, item write or list mutator."""
+        names = set(_PALETTE_NAMES)
+        for assign in self.of(ast.Assign):
+            target = _single_name_target(assign)
+            if target is not None and isinstance(assign.value, ast.Name) and assign.value.id in _PALETTE_NAMES:
+                names.add(target.id)  # `colors = IMPRINT` shares the list
+        for name in self.of(ast.Name):
+            if name.id not in names:
+                continue
+            parent = self.parents.get(name)
+            if isinstance(name.ctx, ast.Store | ast.Del):
+                if isinstance(name.ctx, ast.Store) and parent is not None and _single_name_target(parent) is name:
+                    continue  # a plain assignment: `_check_palette` checks its value, or it binds an alias
+                self.add("palette-prefix", f"'{name.id}' holds the palette and may only be assigned plainly", name)
+            elif isinstance(parent, ast.Subscript) and parent.value is name and not isinstance(parent.ctx, ast.Load):
+                self.add("palette-prefix", f"items of '{name.id}' may not be assigned or deleted", name)
+            elif isinstance(parent, ast.Attribute) and parent.value is name and parent.attr in _LIST_MUTATORS:
+                self.add("palette-prefix", f"'{name.id}.{parent.attr}' would change the palette", name)
