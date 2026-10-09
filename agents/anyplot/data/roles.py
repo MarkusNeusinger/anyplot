@@ -125,7 +125,6 @@ _TAIL = re.compile(r"\s*+(?:\((?P<type>[^)]*+)\))?\s*+(?:[-–—:]++\s*+)?(?P<d
 _BOLD = re.compile(r"\*\*(?P<label>[^*]++)\*\*\s*+[-–—:]?\s*+(?P<desc>.*)", re.DOTALL)
 _BOLD_LABEL_END = re.compile(r"(?<!\s)\s++(?:variable|variables|column|columns)$", re.IGNORECASE)
 _LAST_DIGITS = re.compile(r"[0-9]+(?=[^0-9]*$)")
-_RANGE_END = re.compile(r"(?P<family>.*?)(?:(?<![0-9])[0-9]++|n)")
 _OPTIONAL = re.compile(r"\boptional\b", re.IGNORECASE)
 _WORD = re.compile(r"[a-z]+")
 _BACKTICKED = re.compile(r"`[^`]*`")
@@ -217,8 +216,8 @@ def _parse_bullet(bullet: str) -> list[DataRole]:
         return DataRole(name=clean, kinds=kinds, required=required, variadic=variadic, description=description)
 
     candidates: list[DataRole | None] = []
-    if through and len(names) >= 2 and (first := _RANGE_END.fullmatch(names[0])) and first.group("family"):
-        candidates.append(role(first.group("family"), variadic=True))
+    if through and len(names) >= 2 and (family := _range_family(names[0])):
+        candidates.append(role(family, variadic=True))
     elif more:
         families: list[str] = []
         for name in names:
@@ -233,6 +232,18 @@ def _parse_bullet(bullet: str) -> list[DataRole]:
     else:
         candidates.extend(role(name) for name in names)
     return [candidate for candidate in candidates if candidate is not None]
+
+
+def _range_family(name: str) -> str | None:
+    """The family a range start such as `y1` or `yn` belongs to (`y`); None when the name has no index.
+
+    A trailing digit run is the index, else a trailing `n`; an empty family (`1`, `n`)
+    is no family. Plain string operations keep this linear in the name length.
+    """
+    family = name.rstrip("0123456789")
+    if family == name:
+        family = name[:-1] if name.endswith("n") else ""
+    return family or None
 
 
 def _parse_bold(bullet: str) -> list[DataRole]:

@@ -32,16 +32,50 @@ from .png import PngRejected, harden, pad_to
 
 
 CLIP_TOLERANCE_PX = 2
-MAX_CLASS_CHARS = 120
 G8_SLACK = 10
 G8_FACTOR = 1.5
 CODE_FILE = "plot.py"
 """The file the Python runtime writes the code to; its frames give the error line."""
-ERROR_PACKAGES = frozenset(
-    {"numpy", "pandas", "matplotlib", "mpl_toolkits", "seaborn", "scipy", "sklearn", "statsmodels", "PIL", "dateutil"}
+ERROR_CLASSES = frozenset(
+    {
+        "pandas.errors.ParserError",
+        "pandas.errors.EmptyDataError",
+        "pandas.errors.MergeError",
+        "pandas.errors.IndexingError",
+        "pandas.errors.InvalidIndexError",
+        "pandas.errors.OutOfBoundsDatetime",
+        "pandas.errors.IntCastingNaNError",
+        "pandas.errors.SettingWithCopyError",
+        "pandas.errors.SpecificationError",
+        "pandas.errors.DataError",
+        "pandas.errors.UndefinedVariableError",
+        "numpy.exceptions.AxisError",
+        "numpy.exceptions.DTypePromotionError",
+        "numpy.exceptions.TooHardError",
+        "numpy.linalg.LinAlgError",
+        "numpy._core._exceptions.UFuncTypeError",
+        "numpy._core._exceptions._UFuncNoLoopError",
+        "numpy._core._exceptions._ArrayMemoryError",
+        "matplotlib.units.ConversionError",
+        "matplotlib._api.deprecation.MatplotlibDeprecationWarning",
+        "PIL.UnidentifiedImageError",
+        "PIL.Image.DecompressionBombError",
+        "dateutil.parser._parser.ParserError",
+        "dateutil.parser.ParserError",
+        "scipy.linalg.LinAlgError",
+        "scipy.linalg._misc.LinAlgError",
+        "sklearn.exceptions.NotFittedError",
+        "statsmodels.tools.sm_exceptions.PerfectSeparationError",
+        "statsmodels.tools.sm_exceptions.MissingDataError",
+    }
 )
-"""Packages whose qualified exception classes (`pandas.errors.ParserError`) may name a render error."""
+"""The qualified exception classes of the plotting libraries that a render error may name.
+
+An exact allowlist: a dotted name the code under test made up (`pandas.Alice_Error`)
+would otherwise carry data into the repair feedback.
+"""
 NO_EXCEPTION_LINE = "an error that printed no exception line"
+UNLISTED_CLASS = "an error of an unlisted exception class"
 
 _ERROR_CLASS = re.compile(r"^((?:[A-Za-z_]\w*\.)*[A-Za-z_]\w*)(?::|$)")
 _CODE_FRAME = re.compile(r'^[ \t]*File "(?:[^"\n]*/)?' + re.escape(CODE_FILE) + r'", line (\d{1,6})\b', re.MULTILINE)
@@ -82,17 +116,16 @@ def _line(text: str) -> str:
 def _exception_class(line: str) -> str | None:
     """The exception class an exception line starts with, if it names a known one.
 
-    A builtin exception, or a qualified class of a package in `ERROR_PACKAGES` whose
-    name ends in Error, Exception or Warning. Anything else, the message included,
-    is never returned.
+    A builtin exception, or a qualified class in `ERROR_CLASSES`. A qualified name that
+    is not listed counts as an exception line but is reported as `UNLISTED_CLASS`, so
+    neither the message nor a made-up class name is ever returned.
     """
     match = _ERROR_CLASS.match(line)
-    if match is None or len(match.group(1)) > MAX_CLASS_CHARS:
+    if match is None:
         return None
     name = match.group(1)
     if "." in name:
-        package, last = name.split(".", 1)[0], name.rsplit(".", 1)[1]
-        return name if package in ERROR_PACKAGES and last.endswith(("Error", "Exception", "Warning")) else None
+        return name if name in ERROR_CLASSES else UNLISTED_CLASS
     value = getattr(builtins, name, None)
     return name if isinstance(value, type) and issubclass(value, BaseException) else None
 
@@ -123,6 +156,7 @@ def evaluate(result: RenderResult, *, library: str, rows: int) -> GateReport:
     """Run R1-R3 and the advisory gates over every theme in `THEMES`; a theme without an output fails R1."""
     report = GateReport(passed_host_gates=True, canvas_ok=True)
     advisory: dict[str, list[Theme]] = {}
+    missed: list[Theme] = []
     for theme in THEMES:
         output = result.outputs.get(theme)
         if output is None:
@@ -151,11 +185,15 @@ def evaluate(result: RenderResult, *, library: str, rows: int) -> GateReport:
         verdict = check_canvas(hardened.width, hardened.height, library)
         if not verdict.ok:
             report.canvas_ok = False
+            missed.append(theme)
             if verdict.defect_line and verdict.defect_line not in report.canvas_defects:
                 report.canvas_defects.append(_line(verdict.defect_line))
             report.padded_pngs[theme] = pad_to(hardened.data, verdict.target)
         for line in _probe_lines(output.probe, rows):
             advisory.setdefault(line, []).append(theme)
+    if len(missed) == 1:
+        # `core.canvas` writes the line for the pipeline's two-theme renders; name the one theme that missed.
+        report.canvas_defects = [line.replace("(both):", f"({missed[0]}):", 1) for line in report.canvas_defects]
     for line, themes in advisory.items():
         theme_label = "both" if len(themes) > 1 else themes[0]
         report.advisory.append(_line(line.replace("(THEME)", f"({theme_label})")))

@@ -138,8 +138,11 @@ class TestGates:
             ('  File "plot.py", line 7, in <module>\nValueError: CANARY-CELL-3f9a\n', "ValueError at line 7"),
             ("ValueError\n", "ValueError"),
             ("pandas.errors.ParserError: Error tokenizing CANARY-CELL-3f9a\n", "pandas.errors.ParserError"),
-            # Not a builtin exception and not from a known package: never echoed.
-            ("CANARYCELLError: x\nSecretTable.LeakError: y\n", "an error that printed no exception line"),
+            # Not a builtin exception: never echoed. A made-up qualified class is not echoed either.
+            ("CANARYCELLError: x\n", "an error that printed no exception line"),
+            ("SecretTable.LeakError: y\n", "an error of an unlisted exception class"),
+            ("pandas.Alice_Smith_4111Error: y\n", "an error of an unlisted exception class"),
+            ("pandas.SECRET.Error\n", "an error of an unlisted exception class"),
             ("CANARY-CELL-3f9a\n", "an error that printed no exception line"),
             (
                 '  File "plot.py", line 3\nTypeError: a\n\nDuring handling ...\nRuntimeError: CANARY\n',
@@ -151,7 +154,7 @@ class TestGates:
         summary = error_summary(stderr)
 
         assert summary == expected
-        assert "CANARY" not in summary
+        assert "CANARY" not in summary and "Alice" not in summary and "SECRET" not in summary
 
     def test_missing_theme_fails_r1(self) -> None:
         """A result with only one theme is incomplete although every output it has passed."""
@@ -168,6 +171,7 @@ class TestGates:
 
         assert report.passed_host_gates and not report.canvas_ok
         assert set(report.padded_pngs) == {"dark"}
+        assert len(report.canvas_defects) == 1 and report.canvas_defects[0].startswith("VQ-05 (dark): ")
         assert set(report.shipped_pngs) == {"light", "dark"}
         assert report.shipped_pngs["light"] == report.pngs["light"]
         assert report.shipped_pngs["dark"] == report.padded_pngs["dark"]
