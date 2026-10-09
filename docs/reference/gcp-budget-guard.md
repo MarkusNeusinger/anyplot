@@ -1,6 +1,6 @@
 # GCP budget guard
 
-> **Status (2026-10-09):** code in the repository, not yet deployed.
+> **Status (2026-10-09):** deployed in project `anyplot` as the Cloud Run service `vertex-budget-guard` (europe-west4) with its Eventarc trigger on `vertex-budget-alerts`; the synthetic end-to-end test disabled and re-enabled the Vertex AI API on 2026-10-09. The live test through real spend is still open.
 
 The Vertex AI budget guard is a Cloud Run function that disables the Vertex AI API (`aiplatform.googleapis.com`) in project `anyplot` when the Cloud Billing budget `anyplot Vertex AI cap` is reached. It's the emergency brake behind the `aiplatform` spend cap that the [agent network design](../concepts/agent-network.md) treats as the real backstop for Vertex AI spend. The code lives in `automation/gcp/budget-guard/`. To deploy, test, or recover, follow its [runbook](../../automation/gcp/budget-guard/README.md).
 
@@ -116,7 +116,7 @@ gcloud logging read \
 ## Limits
 
 - **Lag.** Notifications follow the spend by hours, and the spend in that window is billed. Choose a budget amount where the amount plus a few hours of worst-case spend is acceptable.
-- **Calls stop, resources stay.** With the API disabled, requests to Vertex AI fail with `SERVICE_DISABLED`. Disabling deletes no resources, and a resource that bills while idle keeps billing. The agent network design uses Vertex AI for per-request Gemini calls, which stop.
+- **Calls stop, resources stay.** With the API disabled, requests to Vertex AI fail with `SERVICE_DISABLED`. Disabling deletes no resources, and a resource that bills while idle keeps billing. The agent network uses Vertex AI for per-request model calls (Claude Haiku 5.5 by default, Gemini 3.8 Flash as the second arm), which stop.
 - **The brake stays on until you release it.** The guard never re-enables anything, and a new month resets the cost but not the API. While the month's cost is at or above the amount, a re-enabled API lasts only until the next notification, so raise the amount or turn dry run on first, as described in the runbook's recovery steps.
 - **The topic is the trigger.** Budget notifications carry no signature, so anyone who can publish to `vertex-budget-alerts` can disable Vertex AI; the synthetic test in the runbook works exactly that way. The damage is availability, not spend: the guard can only switch Vertex AI off. Publish rights come from the topic's own policy and from project-level roles that include `pubsub.topics.publish`, such as Owner, Editor, and the Pub/Sub Admin, Editor, and Publisher roles. On 2026-10-09 the default Compute Engine service account holds Editor (agent network owner task 13), so anything that runs as it can publish. The runbook's deploy procedure audits these principals before the trigger exists; narrowing them is an owner decision.
 - **Pinned dependencies.** `requirements.txt` pins exact versions, and Dependabot doesn't watch it; bump and redeploy by hand.
