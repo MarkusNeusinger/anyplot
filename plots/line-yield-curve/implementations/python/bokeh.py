@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
-Library: bokeh 3.9.1 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-06-10
+Library: bokeh 3.10.0 | Python 3.13.16
+Quality: 82/100 | Updated: 2026-10-09
 """
 
 import base64
@@ -128,9 +128,8 @@ inversion_label = Label(
     y=3.87,
     text="Inversion zone: short-term yields exceed long-term",
     text_font_size="28pt",
-    text_color=color_inverted,
+    text_color=INK_SOFT,
     text_font_style="italic",
-    text_alpha=0.9,
 )
 p.add_layout(inversion_label)
 

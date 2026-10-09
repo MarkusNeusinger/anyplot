@@ -2,62 +2,61 @@ library: bokeh
 language: python
 specification_id: line-yield-curve
 created: '2026-03-14T22:16:54Z'
-updated: '2026-06-10T00:45:48Z'
+updated: '2026-10-09T03:04:28Z'
 generated_by: claude-sonnet
-workflow_run: 27244825542
+workflow_run: 37877178012
 issue: 4664
-language_version: 3.13.13
-library_version: 3.9.1
+language_version: 3.13.16
+library_version: 3.10.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/bokeh/plot-dark.html
-quality_score: 91
+quality_score: 82
 review:
   strengths:
-  - 'Correct Imprint palette applied in canonical order (green→lavender→blue) with
-    brand green #009E73 as first series'
-  - Log-scale x-axis correctly spaces maturities by time rather than label position
-    — domain-appropriate choice
-  - 'All font sizes explicitly set following style guide: title 50pt, axis labels
-    42pt, tick labels 34pt, legend 34pt'
-  - Inversion zone shading + annotation together communicate the key macroeconomic
-    insight clearly
-  - Dashed line style for the inverted curve provides redundant encoding beyond color,
-    aiding CVD accessibility
-  - White-bordered scatter markers improve definition against both light and dark
-    backgrounds
-  - 'Theme-adaptive chrome is complete: background, text, legend, grid, axis lines
-    all flip correctly between themes'
-  - CDP-based screenshot captures exact 3200×1800 canvas dimensions correctly
+  - Log-scale x-axis with major_label_overrides puts each maturity string label at
+    its true time position
+  - Imprint palette in canonical order with a dashed stroke on the inverted curve
+    as a redundant, CVD-safe cue
+  - Page-coloured marker outlines keep overlapping short-end points distinguishable
+    in both themes
+  - Theme tokens threaded through every chrome element, including the elevated legend
+    surface
+  - varea shading plus an italic annotation mark the inversion region without hiding
+    the curves
   weaknesses:
-  - Inversion zone shading spans a very large portion of the left half of the plot
-    (1M through 10Y maturities all shade because yields_inverted > 30Y yield of 4.03%).
-    A more targeted shading — e.g., only where 2Y exceeds 10Y, or a narrower region
-    around the peak inversion — would reduce visual heaviness and make the annotation
-    more precise.
-  - Inversion annotation text at y=3.87 uses the blue data color (#4467A3) which has
-    marginal contrast on the dark background. Consider using INK_MUTED or INK_SOFT
-    token instead so the annotation stays readable across both themes without relying
-    on hue alone.
-  - 'DE-01: No strong typography hierarchy beyond the mandated title/subtitle distinction.
-    The subtitle (28pt) and inversion annotation (28pt) are the same size despite
-    carrying different information weights — differentiate by color contrast or weight.'
+  - 'VQ-02 (both): the legend box at bottom_right sits on the Jul 2023 inverted curve''s
+    20Y-30Y segment and hides its 30Y point (4.03 %) → place the legend in free space,
+    e.g. top_right above the long-end curves (y 4.6-5.6 is empty there). Likely cause:
+    Legend(location="bottom_right").'
+  - 'DQ-01 (both): all three curves are inverted (1M above 30Y by 1.07-1.26 pp), so
+    no normal upward-sloping curve appears for the inverted one to contrast with →
+    make one curve upward-sloping (e.g. a 2021/2022 date with 30Y well above 1M).
+    Likely cause: yields_normal / yields_flat arrays copied from inverted 2023-24
+    dates.'
+  - 'DQ-02 (both): the legend labels ''Jan 2024 — Normal'' and ''Jun 2024 — Flat''
+    misdescribe curves that fall from 5.53 to 4.27 % and 5.47 to 4.40 % → labels that
+    match the plotted shapes (or data that matches the labels). Likely cause: shape
+    names in the LegendItem labels not checked against the arrays.'
+  - 'Suggestion: shade the inversion as the band between each curve and its own 10Y
+    yield instead of a single polygon down to the inverted curve''s 30Y level, which
+    also spans 10Y where the curve dips below it.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — not pure white.
-      Chrome: Title "line-yield-curve · python · bokeh · anyplot.ai" in bold black text at top left, fully readable. Subtitle "U.S. Treasury Yield Curves — normal, flat, and inverted term structures" in muted gray just below the title, readable. X-axis label "Maturity" (italic) and Y-axis label "Yield (%)" (italic) in dark ink, both clearly legible. Tick labels (1M 3M 6M 1Y 2Y 3Y 5Y 7Y 10Y 20Y 30Y on x, 4.0–5.5 on y) in mid-gray, readable. Legend in bottom right with elevated-bg (#FFFDF6) shows three entries with correct line styles (solid for Normal/Flat, dashed for Inverted) and circle markers. Inversion zone annotation at bottom center in blue italic, readable.
-      Data: Three curves — (1) brand green #009E73 solid line+markers for Jan 2024 Normal curve, showing normal upward slope from ~5.5% at short end down to ~4.3% at long end; (2) lavender #C475FD solid line+markers for Jun 2024 Flat curve, nearly flat around 4.3–5.5% range; (3) blue #4467A3 dashed line+markers for Jul 2023 Inverted curve, humped at 6M (5.56%) declining to 4.03% at 30Y. Light blue-gray varea shading covers the inversion zone from 1M to 10Y maturities.
-      Legibility verdict: PASS — all text readable, no light-on-light issues.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold near-black title 'line-yield-curve · python · bokeh · anyplot.ai' top-left (~50% width); muted grey in-plot subtitle 'U.S. Treasury Yield Curves — normal, flat, and inverted term structures'; italic axis titles 'Maturity' and 'Yield (%)'; x ticks 1M…30Y on a log axis, y ticks 4.0-5.5; faint horizontal grid only; italic INK_SOFT annotation 'Inversion zone: short-term yields exceed long-term' under the shading; elevated legend bottom-right with three dated entries. All readable.
+      Data: green #009E73 solid (Jan 2024 — Normal), lavender #C475FD solid (Jun 2024 — Flat), blue #4467A3 dashed (Jul 2023 — Inverted), all with page-outlined markers. All three slope down from ~5.5 % at 1M to ~4.0-4.5 % at the long end. Grey-blue varea shading from the inverted curve down to 4.03 % spans 1M-20Y. The legend box covers the blue curve's 20Y-30Y segment and its 30Y point.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — not pure black.
-      Chrome: Title in light off-white (#F0EFE8), clearly readable against dark background. Subtitle in muted gray (#A8A79F), readable. Axis labels in light ink, readable. Tick labels in secondary gray (#B8B7B0), readable — no dark-on-dark failures. Legend has dark elevated background (#242420), label text in #B8B7B0 clearly readable. Inversion annotation in #4467A3 blue — marginally lower contrast on dark bg but still readable.
-      Data: All three data series are identical colors to light render (#009E73, #C475FD, #4467A3) — palette is theme-invariant as required. Inversion shading visible as subtle dark-teal fill. Brand green #009E73 clearly visible against dark surface.
-      Legibility verdict: PASS — all text readable, chrome correctly adapts to dark theme. Minor: inversion annotation blue (#4467A3) has reduced contrast on dark background compared to light render.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, axis titles, ticks and legend labels in light ink tokens, all readable; annotation in light grey INK_SOFT, readable; no dark-on-dark text. Legend on #242420.
+      Data: identical colours to the light render; brand green clearly visible; shading reads as a subtle dark slate fill. Same legend overlap on the blue curve's long end.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -65,54 +64,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 50pt, axis labels 42pt, tick
-          labels 34pt, legend/subtitle 28-34pt). Proportions well-balanced in both
-          themes.
+        comment: All text explicitly sized (50/42/34/28 pt) and readable in both themes;
+          annotation uses INK_SOFT so it holds contrast on dark
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: No text overlap. Inversion annotation, subtitle, and data elements
-          are all spatially separated.
+        passed: false
+        comment: Legend box (bottom_right) covers the Jul 2023 curve's 20Y-30Y segment
+          and its 30Y point (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 11 points per series (sparse) with size=16 markers and line_width=4.5
-          — appropriate for the data density. White-bordered markers provide definition.
+        comment: 11 points per curve at size 16 with page-coloured outlines, line_width
+          4.5 — clearly visible in both themes; legend glyphs match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. Redundant encoding via dashed line for
-          inverted curve aids accessibility.
+        comment: Imprint green/lavender/blue plus a dashed line for the inverted curve
+          as a redundant cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good margins via min_border_*. Plot
-          utilizes canvas well with balanced whitespace.
+        comment: Canvas gate passed (3200x1800); balanced margins, title ~50% width,
+          nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Yield (%)' includes units. X-axis 'Maturity' is descriptive.
-          Title matches spec format exactly.
+        comment: '''Maturity'' and ''Yield (%)'' with unit; mandated title'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73 (brand green). Second = #C475FD (lavender).
-          Third = #4467A3 (blue). Canonical Imprint order. Backgrounds #FAF8F1/#1A1A17.
-          Chrome fully theme-adaptive.'
+        comment: '#009E73 first, then #C475FD, #4467A3 in canonical order; #FAF8F1
+          / #1A1A17 backgrounds, chrome flips correctly'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -120,26 +116,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured-default level: dashed line for anomalous inverted
-          curve, white-bordered markers, elevated legend, inversion zone shading.
-          Not yet FiveThirtyEight-level — heavy shading area and uniform annotation
-          sizes limit top score.'
+        comment: 'Above baseline: muted in-plot subtitle as a secondary typographic
+          tier, dashed stroke singling out the inverted curve, elevated legend surface'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Clearly refined: y-axis-only grid at alpha=0.15, tick marks hidden,
-          outer box removed (outline_line_color=None), clean axis lines in INK_SOFT.
-          Good whitespace from min_border_*.'
+        comment: Page-coloured marker halos separate overlapping points; ticks removed,
+          y-grid only at 0.15 alpha (the baseline rules)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Three representative yield curve shapes (normal/flat/inverted) tell
-          a clear story about term structure evolution. Inversion zone shading + annotation
-          + dashed line create visual hierarchy that guides viewer to the key insight.
+        comment: Dashed inverted curve as a focal series beyond what the Notes prescribe;
+          shading itself is required by the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -149,55 +141,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct yield curve line chart with multiple series. Log-scale x-axis
-          per spec requirement.
+        comment: Multi-curve yield-curve line chart, no unrequested encodings
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple curves on same axes, inversion zone highlighted with shading,
-          annotation explaining inversion, legend with dates for each curve — all
-          spec features present.
+        comment: Two-plus curves, log maturity axis with maturity tick labels, inversion
+          shading + annotation, dated legend, minimal grid — all Notes and C1-C5 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: maturity_years used for x-axis positioning (log scale), maturity
-          string labels used for tick marks, yield_pct on y-axis. Correct per spec.
+        comment: x = maturity_years on a log axis, labels via major_label_overrides
+          at each maturity; no smoothing or displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'line-yield-curve · python · bokeh · anyplot.ai'.
-          Legend shows date labels for each curve.
+        comment: Title 'line-yield-curve · python · bokeh · anyplot.ai'; legend gives
+          each curve's date
     data_quality:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: 'Shows all three archetypal yield curve shapes: normal (upward-sloping),
-          flat, and inverted. Complete range of maturities from 1M to 30Y.'
+        passed: false
+        comment: Three curves with a 6M hump and long-end kinks, but all three are
+          inverted (1M above 30Y); the normal upward-sloping shape the comparison
+          is about never appears (defect line)
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Real U.S. Treasury yield curve data with plausible dates representing
-          different monetary policy periods. Neutral financial topic.
+        passed: false
+        comment: Realistic U.S. Treasury levels, but the legend calls the Jan 2024
+          curve 'Normal' and the Jun 2024 curve 'Flat' while both slope down by >1
+          pp (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Yield values in 4.0–5.6% range accurately reflect 2023-2024 Fed tightening
-          cycle. Maturity spacing from 1M to 30Y is standard for Treasury curves.
+        comment: Yields 3.96-5.56 % match the 2023-24 Treasury range; maturities 1M-30Y
+          standard; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -207,69 +199,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → tokens → data → figure → layers → styling
-          → save. No functions or classes.'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is deterministic (hardcoded arrays). No random elements.
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used. sys.path.pop(0) pattern handles the file-shadowing
-          issue cleanly.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable code appropriate to the visualization complexity.
-          No over-engineering, no fake UI.
+        comment: Appropriate complexity; inversion mask computed with numpy, no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current bokeh API.
-          CDP screenshot pattern per library guide.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current bokeh API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert bokeh usage: ColumnDataSource for all series, log axis type,
-          NumeralTickFormatter, LegendItem construction, varea for shading, custom
-          ticker with label overrides, CDP-based screenshot. Idiomatic top-level approach
-          throughout.'
+        comment: ColumnDataSource per series, explicit Legend/LegendItem grouping
+          line+scatter, log axis with FixedTicker list
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses varea (bokeh-native shading), custom x-axis ticker with major_label_overrides
-          for log-scale maturity labels, CDP captureBeyondViewport for exact canvas
-          capture. Solid use of distinctive features.
+        comment: varea for band shading and major_label_overrides for string labels
+          on a log axis
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-2bd3b4f3e3
+  rendered_at: '2026-10-09T03:01:16Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - annotations
   - custom-legend
+  - area-fill
   - html-export
-  - manual-ticks
   patterns:
-  - columndatasource
+  - data-generation
   dataprep: []
   styling:
-  - alpha-blending
-  - edge-highlighting
-  - grid-styling
+  - minimal-chrome
+  - publication-ready
