@@ -16,4 +16,4 @@
   `check_bindings` validates roles, columns and dtype compatibility, and an
   in-memory, session-owned dataset store with an idle sweep and a 64 MB cap
   keeps parsed data out of ADK state. None of it imports ADK or ships in a
-  service yet.
+  service yet. (#12106)
