@@ -4,7 +4,7 @@ This directory holds the anyplot agent network: the service that lets an admin p
 
 ## What is built
 
-The runtime core runs locally: the agents, the plot pipeline, the guardrail plugins, the render layer and the private `/v1` service. Not built yet: the Cloud Run sandbox render backend (it waits for spike S), the container image, the deploy, the regression harness and the evals.
+The runtime core runs locally: the agents, the plot pipeline, the guardrail plugins, the render layer, the private `/v1` service with its run queue, and the theme toggle. Not built yet: the Cloud Run sandbox render backend (it waits for spike S), the container image, the deploy, the regression harness and the evals.
 
 The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. **Gemini 3.8 Flash** is the second arm: set `AGENT_PROVIDER=gemini` together with Gemini model ids, so the two can be compared on price and quality later. Every agent and the scope judge run on the configured provider.
 
@@ -12,8 +12,10 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 
 | Path | Contents |
 |---|---|
-| `main.py` | The `anyplot-agents` FastAPI service: the `/v1` routes the BFF (`api/routers/agent.py`) calls, the caller check, in-memory session and artifact services, and the idle sweeper |
-| `stream.py` | The `anyplot/1` stream translator: ADK events in, sanitised `ready`, `status`, `message`, `plot`, `refusal`, `error` and `done` events out |
+| `main.py` | The `anyplot-agents` FastAPI service: the `/v1` routes the BFF (`api/routers/agent.py`) calls, the caller check, the run registry behind `409 run_active`, in-memory session and artifact services, and the idle sweeper |
+| `stream.py` | The `anyplot/1` stream translator: ADK events in, sanitised `ready`, `status` (including `queued`), `message`, `plot`, `refusal`, `error` and `done` events out |
+| `anyplot/run_queue.py` | The run queue in front of every `/messages` turn: one run in flight, one start a minute, a 600-second maximum wait, a `premium` lane that nothing sets yet |
+| `anyplot/theme_render.py` | The theme toggle: renders another theme of a finished version from its stored run form, under the render semaphore, with no model call |
 | `anyplot/agent.py` | The root agent `anyplot`, the `ALL_AGENTS` registry and `app` (the ADK `App` with its plugins), which `adk web` loads |
 | `anyplot/models.py` | The only place that builds a model or a model client: `make_model`, `make_content_config` and `make_judge_client`, for Claude on Vertex AI and for Gemini |
 | `anyplot/policy.py` | Composes each agent's static instruction from `anyplot/prompts/` and the catalogue's prompt sources, read verbatim; the fixed refusals; the data fences |
@@ -50,7 +52,10 @@ Three rules hold for everything here:
 | `AGENT_LIBRARIES` | `matplotlib,seaborn` | Enabled libraries; each needs a phase-1 runtime (`matplotlib`, `seaborn`), others are refused at startup |
 | `AGENT_RENDERER` | `sandbox` | `sandbox`, `local` (Docker, development only), `fake` (fixture PNGs, development and test only) or `remote` |
 | `AGENT_RENDER_IMAGE` | `anyplot-agents:dev` | Image the `local` renderer runs |
-| `AGENT_RENDER_CONCURRENCY` | `2` | Theme renders at the same time |
+| `AGENT_RENDER_CONCURRENCY` | `1` | Theme renders at the same time; serial, because one 4 GiB instance holds one sandbox safely (spikes S and S2) |
+| `AGENT_RUN_CONCURRENCY` | `1` | Pipeline runs (whole `/messages` turns) in flight; the run queue holds the rest |
+| `AGENT_RUNS_PER_MINUTE` | `1` | Runs that may start within any 60 seconds (a sliding window) |
+| `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue, after which the run ends with `capacity`; the queue holds rate x wait / 60 entries (10) and answers `503 capacity` beyond that |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `80000` | Tokens per request |
 | `AGENT_DAILY_TOKEN_BUDGET` | `1000000` | Tokens per user and day |
@@ -114,7 +119,7 @@ Three rules hold for everything here:
 
 3. Open `http://localhost:8002`, choose `anyplot`, and send "Create the plot".
 
-`adk web` and `adk api_server` are unauthenticated and let the client choose the user id, so run them only on your own machine. Every message costs model calls: a "Create plot" is about four (root twice, the adapter, the reviewer) plus one judge call for free text.
+`adk web` and `adk api_server` are unauthenticated and let the client choose the user id, so run them only on your own machine. Every message costs model calls: a "Create plot" is about four (root twice, the adapter, the reviewer) plus one judge call for free text. Runs that `adk web` starts bypass the run queue, which sits in the `/v1` service: the rate and concurrency limits apply only to the service. The render semaphore still applies, because it belongs to the render backend.
 
 ### Run the service
 
@@ -123,6 +128,8 @@ uv run uvicorn agents.main:app --port 8001
 ```
 
 The service needs the header `X-Anyplot-User` on every `/v1` route; outside `ENVIRONMENT=development` it also requires the IAM-forwarded ID token (`AGENT_SERVICE_URLS`, `AGENT_ALLOWED_CALLERS`). To drive it from the plot page, run the API with `AGENT_ENABLED=true AGENT_SERVICE_URL=http://localhost:8001` (see `api/routers/agent.py`).
+
+At the defaults only one run may start a minute, so a second "Create plot" within a minute waits in the run queue and the stream shows `status` events with `step: "queued"`. To iterate faster on your own machine, export `AGENT_RUNS_PER_MINUTE=60`. The theme toggle (`POST /v1/sessions/{sid}/versions/{version}/render {"theme": "dark"}`) never waits in the queue.
 
 ### Test
 
