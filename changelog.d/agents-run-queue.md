@@ -13,12 +13,12 @@
   `in_flight`, and a user with a queued turn gets `409 run_active` like one
   with a running turn. A user already over the daily token budget gets the
   `budget` refusal at once instead of a place in the queue. A `premium` lane
-  goes before the normal one but nothing sets it yet.
+  goes before the normal one but nothing sets it yet. (#12112)
 - **Serial renders for every backend.** `AGENT_RENDER_CONCURRENCY` now
   defaults to 1 and is enforced in one place, `SerialRenderer` in front of
   whichever backend renders, one theme per slot, so the sandbox, local and
   fake backends cannot run two renders at once. A freed slot goes to a
-  waiting pipeline render before a waiting theme toggle.
+  waiting pipeline render before a waiting theme toggle. (#12112)
 - **One theme per run, and a theme toggle that costs no tokens.** A run
   renders and reviews only the theme the user asked for (light unless they
   ask for a dark plot), so the host gates, the reviewer's defect lines, the
@@ -30,9 +30,9 @@
   `needs_attention` (a padded canvas) or `failed` with the version's
   artifacts. A toggle and a turn refuse each other in a session, a user has
   one run or toggle in flight, a toggle waits at most 120 s for the render
-  slot, and a theme that failed the host gates is rendered at most twice.
+  slot, and a theme that failed the host gates is rendered at most twice. (#12112)
 - **A hard cap on one relayed chat turn.** The BFF ends a turn by
   `AGENT_TURN_MAX_S` (590 s), below anyplot-api's 600-second request
   timeout, so every stream still ends with `error` and `done`: a turn still
   queued when its run could no longer finish inside the cap ends with
-  `capacity` and leaves the queue before it spends a token.
+  `capacity` and leaves the queue before it spends a token. (#12112)
