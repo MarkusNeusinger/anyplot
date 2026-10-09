@@ -2,118 +2,107 @@ library: matplotlib
 language: python
 specification_id: line-yield-curve
 created: '2026-03-14T22:18:06Z'
-updated: '2026-06-10T00:46:51Z'
+updated: '2026-10-09T02:55:45Z'
 generated_by: claude-sonnet
-workflow_run: 27244602147
+workflow_run: 37876456286
 issue: 4664
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.16
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 86
 review:
   strengths:
-  - 'Semantic color assignment is finance-appropriate: brand green (#009E73) for the
-    normal healthy curve and matte red (#AE3030) for the inverted recession curve
-    creates immediate visual storytelling with no ambiguity'
-  - Log scale x-axis correctly represents non-linear maturity spacing — short-term
-    rates (1M–1Y) spread out, long-term rates (10Y–30Y) compressed — matching how
-    financial practitioners read yield curves
-  - fill_between inversion shading plus ax.annotate with arrowprops effectively highlights
-    the key macro signal (recession indicator) matching spec requirement
-  - 'Theme-adaptive chrome implemented correctly and completely: PAGE_BG, ELEVATED_BG,
-    INK, INK_SOFT tokens threaded through title, axis labels, tick params, spines,
-    grid, legend frame, and annotation color'
-  - Realistic U.S. Treasury yield data with historically accurate values across three
-    distinct monetary policy regimes (pre-hike Jan 2022, peak-rate Oct 2023, pivoting
-    Jan 2025)
+  - Log-scaled maturity axis with set_xticks/set_xticklabels and minorticks_off places
+    every point at its true maturity while labeling ticks 1M..30Y
+  - 'Semantic color choice: brand green for the normal curve and matte red for the
+    inverted recession-signal curve'
+  - Inversion highlighted with fill_between shading plus an arrowed annotation whose
+    text uses the INK token, readable in both themes
+  - Theme tokens threaded through every chrome element; page-colored marker edges
+    give theme-adaptive halos
+  - Plausible U.S. Treasury data for three monetary-policy regimes (Jan 2022, Oct
+    2023, Jan 2025)
   weaknesses:
-  - Annotation text 'Yield curve inversion' at fontsize=8 in matte red (#AE3030) on
-    the dark render (#1A1A17 background) has relatively low contrast — matte red is
-    a darker hue that can struggle against near-black; consider using color=INK with
-    a small colored marker or raising fontsize to 9
-  - Inversion fill_between shading at alpha=0.10 is very subtle — on the dark render
-    the reddish fill is barely perceptible; raising alpha to 0.15–0.18 would make
-    the inversion region more intentional without overwhelming the data lines
-  - Legend placed at 'lower right' covers the Jan 2022 (Normal) curve tail — the green
-    line near 2.2–2.3% at 20Y–30Y is partially obscured by the legend box; consider
-    loc='center right' or bbox_to_anchor to give it more room
+  - 'Suggestion: legend labels could carry the exact snapshot dates (e.g. 2023-10-19)
+    to match the spec''s date field more precisely.'
+  - 'Suggestion: shading the inverted span as the band between the inverted curve
+    and its 10Y level would tie the highlight more directly to ''short-term yields
+    above long-term yields''.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "line-yield-curve · python · matplotlib · anyplot.ai" at 12pt in dark ink — clearly readable. Y-axis label "Yield (%)" and X-axis label "Maturity" at 10pt dark ink — readable. Tick labels at 8pt in INK_SOFT (#4A4A44) — visible. Log-scale x-axis tick labels (1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 7Y, 10Y, 20Y, 30Y) properly spaced. Legend in elevated frame (#FFFDF6) with INK_SOFT text — readable. Annotation "Yield curve inversion" in matte red with arrow — visible.
-      Data: Three lines: brand green (#009E73) for Jan 2022 Normal (0.08%–2.28%), matte red (#AE3030) for Oct 2023 Inverted (4.62%–5.55%), lavender (#C475FD) for Jan 2025 Normalizing (4.20%–4.85%). Circular markers with page_bg edge give clean donut appearance. Subtle reddish fill_between highlights inversion region (alpha=0.10 — quite faint). Subtle y-axis grid at alpha=0.15.
-      Legibility verdict: PASS — all text is readable against the light background; no light-on-light issues.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: title 'line-yield-curve · python · matplotlib · anyplot.ai' in dark ink at about 50% of the width; axis labels 'Maturity' and 'Yield (%)' in dark ink; tick labels 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 7Y, 10Y, 20Y, 30Y and 0-5 in INK_SOFT; legend lower right on an elevated cream frame with INK_SOFT edge. The annotation 'Yield curve inversion' is in dark INK at 9 pt with a red arrow to the 3Y point. All text clearly readable.
+      Data: three lines with page-edged circle markers on a log maturity axis: Jan 2022 (Normal) in #009E73 rising 0.08% to 2.28%, Oct 2023 (Inverted) in #AE3030 falling from 5.55% to 4.62% at 5Y and rising to 5.07% at 20Y, Jan 2025 (Normalizing) in #C475FD from 4.20% to 4.85%. A light red fill (alpha 0.18) marks the inversion from 1M to 5Y without covering any curve. Subtle y-only grid behind the data. First series is #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title in near-white (#F0EFE8) — clearly readable. Axis labels in INK (#F0EFE8) — readable. Tick labels in INK_SOFT (#B8B7B0) — visible as mid-gray against dark background. Legend frame uses ELEVATED_BG (#242420) with INK_SOFT text — readable. Annotation "Yield curve inversion" in matte red (#AE3030) — marginally visible; red-on-near-black has lower contrast than ideal.
-      Data: Data colors are identical to light render — brand green, matte red, lavender unchanged (only chrome flipped). Lines and markers clearly distinguishable. Inversion fill_between shading is barely perceptible at alpha=0.10 on dark background.
-      Legibility verdict: PASS with minor concern — annotation text contrast (#AE3030 on #1A1A17) is borderline; all other chrome elements are readable; no dark-on-dark failures for title/axis/tick labels.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, axis labels and the annotation text in near-white INK; tick labels and legend text in light gray INK_SOFT; legend frame #242420; spines and grid flip to light tones. No dark-on-dark text anywhere.
+      Data: colors identical to the light render (green, matte red, lavender); marker edges switch to the dark page color. The inversion fill reads as a dark red wedge, visible behind the red curve.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All text readable in both themes. Minor deduction: annotation text
-          (#AE3030 on #1A1A17) has borderline contrast in dark render; 8pt tick/legend
-          text is small at mobile scale.'
+        comment: 'Font sizes set explicitly (title 12, axis labels 10, ticks/legend
+          8, annotation 9). All text readable in both themes. The annotation uses
+          the INK token and reads clearly on both #FAF8F1 and #1A1A17.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data element overlaps. Three well-separated yield curves
-          on distinct y-ranges. Annotation positioned away from data lines.
+        comment: No text collisions. The legend sits in the empty lower-right area
+          below the Jan 2022 tail, and the annotation text is clear of all curves.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 11 data points per curve with markersize=7 — appropriate for moderate
-          density. Lines at linewidth=2.5 are prominent. Markers with PAGE_BG edge
-          create clean definition.
+        comment: 11 points per curve with 7 pt markers and 2.5 pt lines, so the sparse
+          data is prominent. Legend line-and-marker glyphs match the series in both
+          themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception valid: green/red for normal/inverted is universal
-          finance convention. Three series (green, red, lavender) are CVD-distinguishable
-          — different hue families across the Imprint palette.'
+        comment: Green, red and lavender differ in lightness and vertical position,
+          and the legend labels name each regime, so color is not the only signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). subplots_adjust provides clean margins.
-          No element clipped. Title at ~55% canvas width is appropriate.
+        comment: 3200x1800 canvas (no gate file). Balanced margins via subplots_adjust.
+          The mandated title spans about 50% of the width. No overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format. Y-axis 'Yield (%)' includes units.
-          X-axis 'Maturity' is descriptive. Log-scale x-tick labels show maturity
-          strings.
+        comment: '''Yield (%)'' carries the unit. ''Maturity'' with maturity tick
+          labels is descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception documented in code comments: brand green (pos
-          1) = normal, matte red (pos 5) = inverted/recession, lavender (pos 2) =
-          normalizing. Backgrounds: #FAF8F1 light / #1A1A17 dark correct. Both renders
-          theme-correct.'
+        comment: 'First series #009E73. Semantic exception: matte red #AE3030 for
+          the inverted (recession-signal) curve, lavender #C475FD for the third. Backgrounds
+          #FAF8F1 / #1A1A17. Every chrome element, including the annotation text,
+          uses theme tokens. Data colors are identical across renders.'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -121,27 +110,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Finance-appropriate semantic color mapping creates immediate narrative
-          impact. Log-scale x-axis is a purposeful and correct domain choice. Donut-style
-          markers (markeredgecolor=PAGE_BG) add polish. Styled legend frame. Above
-          default but not exceptional.
+        comment: 'Raised from 4: page-colored marker edges give each point a theme-adaptive
+          halo that separates it from the line, and the legend labels add the regime
+          name (Normal / Inverted / Normalizing) to each date.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed. Tick marks hidden (length=0). Subtle y-axis-only
-          grid (alpha=0.15). Legend frame with elevated background and INK_SOFT edge.
-          Markers with page-bg edge highlight. Genuine refinement beyond defaults.
+        comment: 'Raised from 2: tick marks are removed (length=0) and minor log ticks
+          are turned off, so only the maturity labels remain on the x-axis.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Three curves tell clear monetary policy story. Inversion shading
-          creates focal point. Annotation with arrow directs viewer attention. Green/red
-          semantic mapping = instant normal/dangerous read. Clear visual hierarchy
-          across y-ranges.
+        comment: 'Raised from 2: the semantic red for the inverted curve, against
+          the green normal curve, makes the inversion the focal point beyond the Notes''
+          shading requirement.'
     spec_compliance:
       score: 15
       max: 15
@@ -151,32 +137,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart for yield curve. Multiple curves on same axes
-          as required.
+        comment: Multi-curve line chart of yield vs maturity, which is the requested
+          form.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple curves (3) shown. Normal, inverted, normalizing curves.
-          Inversion highlighted with shading AND annotation. Legend with dates. Log
-          scale x-axis with maturity labels.
+        comment: 'All Notes met. C1: points at maturity_years on a log axis, straight
+          segments. C2: ticks labeled 1M..30Y at their positions. C3: three curves
+          with a dated legend. C4: inversion shaded (1M-5Y) and annotated without
+          hiding curves. C5: percent axis 0-5.5+ with y-only subtle grid behind the
+          data.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: maturity_years used for x-axis positioning (log scale). maturity
-          strings used for tick labels. yield_pct on y-axis in percent. All 11 maturities
-          represented.
+        comment: x = maturity_years (log), y = yield_pct. All 33 points sit at their
+          data values, and no smoothing is applied.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-yield-curve · python · matplotlib · anyplot.ai'' —
-          correct format. Legend labels match: ''Jan 2022 (Normal)'', ''Oct 2023 (Inverted)'',
-          ''Jan 2025 (Normalizing)''.'
+        comment: Title 'line-yield-curve · python · matplotlib · anyplot.ai' is correct.
+          Legend labels match the three curves.
     data_quality:
       score: 15
       max: 15
@@ -186,26 +172,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all key yield curve shapes: normal upward-slope, full inversion,
-          and re-steepening. Log scale, inversion shading, annotation, and multi-curve
-          comparison all present.'
+        comment: 'Normal upward-sloping, inverted, and near-flat re-steepening curves:
+          11 maturities each, three curves, one inverted, as the Data section asks.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: U.S. Treasury yield data with historically accurate values. Jan 2022
-          (pre-hiking cycle), Oct 2023 (peak-rate, peak inversion), Jan 2025 (Fed
-          pivoting) are real regime shifts. Values match documented market conditions.
-          Neutral financial data.
+        comment: U.S. Treasury curves for Jan 2022, Oct 2023, Jan 2025. Neutral financial
+          data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis range 0–6% covers all three curves with appropriate spacing.
-          Yield values are historically accurate for each date. 11 maturities from
-          1M to 30Y matches standard Treasury curve convention.
+        comment: 'No Check values in the spec. Checked plausibility: Jan 2022 1M 0.08%
+          to 30Y 2.25%; Oct 2023 1M 5.54% > 10Y 4.73% (inverted); Jan 2025 4.2-4.85%
+          with a 2Y trough. All in the documented ranges for those dates.'
     code_quality:
       score: 10
       max: 10
@@ -215,36 +198,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat sequential script. No functions or classes. Loop over curves
-          tuple is clean.
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — hardcoded numpy arrays, no random elements.
+        comment: Deterministic hard-coded arrays.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only three imports: os, matplotlib.pyplot, numpy — all used.'
+        comment: os, matplotlib.pyplot, numpy, all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Tuple-based curve iteration is clean. No
-          fake interactivity. Well-commented semantic choices.
+        comment: Tuple loop over curves, native fill_between and annotate. No fake
+          UI and no hand-rolled computation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No bare plot.png. Uses current matplotlib
-          3.x API. No deprecated calls.
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'. Current
+          API.
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -252,26 +234,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correctly uses ax methods (not plt). ax.set_xscale('log') + ax.set_xticks
-          + ax.set_xticklabels for custom log-scale labels. ax.minorticks_off() appropriate
-          for log scale. ax.fill_between for shading. ax.annotate with arrowprops.
+        comment: 'Raised from 3: Axes API throughout, with set_xscale(''log'') + set_xticks/set_xticklabels
+          + minorticks_off as the idiomatic way to label a log axis with categorical
+          maturities.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Log-scale axis with custom tick labels. fill_between for inversion
-          region shading. markeredgecolor=PAGE_BG for donut marker effect. Comprehensive
-          subplots_adjust for precise margin control. arrowprops annotation.
+        passed: false
+        comment: 'Default: fill_between and annotate with arrowprops are standard;
+          nothing beyond what the library prompt mandates.'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-e97ebfa5c3
+  rendered_at: '2026-10-09T02:52:00Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - manual-ticks
+  - annotations
+  - layer-composition
   patterns:
-  - explicit-figure
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
