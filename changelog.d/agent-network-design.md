@@ -8,6 +8,7 @@
   serving on a separate Cloud Run service behind the `/debug` gate, the phased
   roadmap with spikes and exit criteria, and the owner tasks. Design only; no
   code ships with it, so the decisions are reviewable before anything is built.
+  (#12099)
 
 ### Fixed
 
@@ -16,4 +17,4 @@
   and `review-retest.yml` but not the workflow-level `ACTION_SHA` that the
   retest records write into every record, so the unit test that keeps the two
   aligned failed on `main` without CI noticing (the Dependabot PR ran no
-  tests). `ACTION_SHA` now matches the pinned action again.
+  tests). `ACTION_SHA` now matches the pinned action again. (#12099)
