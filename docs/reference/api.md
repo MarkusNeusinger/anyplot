@@ -417,9 +417,32 @@ Used to load interactive plots (plotly, bokeh, altair) in iframes with dynamic s
 
 ```json
 {
-  "detail": "Spec not found"
+  "status": 404,
+  "message": "Spec 'unknown' not found",
+  "path": "/specs/unknown"
 }
 ```
+
+Every error the API raises itself uses this shape, except request validation errors (next section).
+
+### Request validation errors
+
+A request whose body or parameters fail schema validation returns status 422 with FastAPI's standard `detail` list instead, one entry per problem:
+
+```json
+{
+  "detail": [
+    {
+      "type": "string_type",
+      "loc": ["body", "message"],
+      "msg": "Input should be a valid string",
+      "input": 123
+    }
+  ]
+}
+```
+
+The body is always ASCII: any non-ASCII character in the echoed `input` is JSON-escaped, so text that cannot be encoded as UTF-8, such as a lone surrogate (the JSON string `"\ud800"`), still gets a 422 rather than a 500. `POST /feedback` rejects such text in any field this way.
 
 ### HTTP status codes
 
@@ -428,6 +451,7 @@ Used to load interactive plots (plotly, bokeh, altair) in iframes with dynamic s
 | 200 | Success |
 | 400 | Bad request (invalid parameters) |
 | 404 | Resource not found |
+| 422 | Request body or parameters failed schema validation |
 | 502 | External service error (GCS) |
 | 503 | Database not available |
 
