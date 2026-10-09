@@ -133,7 +133,7 @@ jobs:
           # and is no longer in the image either — nothing under api/ or core/
           # reads it at runtime, the implementations being served from Postgres —
           # so the plot pipeline's PRs must not each pay for a container build.
-          IMAGE_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(api/|core/|pyproject\.toml$|uv\.lock$|README\.md$|\.dockerignore$|app/Dockerfile$|\.github/workflows/ci-image\.yml$)' || true)
+          IMAGE_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(api/|core/|agents/|pyproject\.toml$|uv\.lock$|README\.md$|\.dockerignore$|app/Dockerfile$|\.github/workflows/ci-image\.yml$)' || true)
 
           if [[ "$EVENT_NAME" == "workflow_dispatch" && "$FORCE_RUN" == "true" ]]; then
             echo "Manual trigger with force_run=true, will build the image"

@@ -107,6 +107,13 @@ lib-plotnine = ["plotnine>=0.15.7", "numpy>=2.5.2", "pandas>=3.0.5", "scipy>=1.1
 lib-pygal = ["pygal>=3.1.3", "cairosvg>=2.7.0", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6"]
 lib-highcharts = ["highcharts-core>=1.11.0", "numpy>=2.5.2", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6", "selenium>=4.47.0", "webdriver-manager>=4.1.2"]
 lib-letsplot = ["lets-plot>=4.11.0", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6"]
+# Agent network (agents/, docs/concepts/agent-network.md). ADK is pinned EXACTLY:
+# it ships weekly and its feature flags drift between releases, so an upgrade is
+# a deliberate PR that re-checks them (tests/unit/agents/test_adk_pin.py fails
+# otherwise). Never add `openai-agents` to this environment: it installs a
+# top-level `agents` module that would shadow this package.
+agents = ["google-adk==2.11.0"]
+agents-eval = ["google-adk[eval]==2.11.0"]
 all = [
     "anyplot[test,dev,plotting,typecheck]",
 ]
@@ -176,7 +183,7 @@ skip-magic-trailing-comma = true
 [tool.ruff.lint.isort]
 force-single-line = false
 lines-after-imports = 2
-known-first-party = ["api", "core", "automation", "agentic"]
+known-first-party = ["api", "core", "automation", "agentic", "agents"]
 split-on-trailing-comma = false
 
 # ===== Mypy Configuration =====
@@ -244,7 +251,7 @@ markers = [
 # ===== Coverage Configuration =====
 
 [tool.coverage.run]
-source = ["core", "api", "automation", "agentic/workflows/modules"]
+source = ["core", "api", "automation", "agentic/workflows/modules", "agents"]
 omit = ["*/tests/*", "*/migrations/*"]
 
 [tool.coverage.report]
@@ -263,5 +270,5 @@ build-backend = "setuptools.build_meta"
 # ===== Setuptools Configuration =====
 
 [tool.setuptools.packages.find]
-include = ["api*", "core*", "automation*"]
+include = ["api*", "core*", "automation*", "agents*"]
 exclude = ["tests*", "docs*", "app*", "specs*", "rules*", "plots*"]

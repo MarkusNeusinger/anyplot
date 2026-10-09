@@ -25,6 +25,16 @@
 !uv.lock
 !README.md
 
+# The agent network's image (agents/, docs/concepts/agent-network.md) builds from
+# the same root context. It also needs the two prompt sources its adapter reads
+# verbatim. The API image does not grow: api/Dockerfile COPYs only api/ and core/.
+!agents
+!prompts/default-style-guide.md
+!prompts/library
+# Promoted feedback cases hold users' data; they are synced here for eval runs
+# and are never committed, so they must never reach an image either.
+agents/evals/.cases
+
 # …and the noise that lives inside the trees above. `__pycache__` matters twice
 # over now that the image compiles its own bytecode: a stale host `.pyc` copied
 # into a layer would shadow the source it no longer matches.
