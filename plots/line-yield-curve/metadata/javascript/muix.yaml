@@ -2,133 +2,128 @@ library: muix
 language: javascript
 specification_id: line-yield-curve
 created: '2026-06-10T00:59:59Z'
-updated: '2026-06-10T01:20:04Z'
+updated: '2026-10-09T03:39:58Z'
 generated_by: claude-sonnet
-workflow_run: 27245638594
+workflow_run: 37879785326
 issue: 4664
-language_version: 22.22.3
+language_version: 22.23.3
 library_version: 7.29.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Three yield curve shapes (normal, flat, inverted) with accurate U.S. Treasury
-    data provide excellent educational and financial coverage
-  - Semantic color assignment — matte red (#AE3030) for the inverted/recession curve
-    — reinforces the story with minimal annotation
-  - ChartsReferenceLine at 1Y maturity with directional label effectively marks the
-    inversion point, a distinctive MUI X feature
-  - Log-scale x-axis with custom valueFormatter correctly represents non-linear maturity
-    spacing per spec requirement
-  - CatmullRom curve interpolation gives smooth, professional financial-publication
-    appearance
+  - Log-scale maturity axis with tickInterval pinned to all 11 maturities and a valueFormatter
+    that labels each tick 1M…30Y at its true position
+  - Inversion band drawn as a custom SVG layer via useXScale / useDrawingArea, so
+    the shading sits in data coordinates behind the curves
+  - Linear segments through every point keep each curve on its yields
+  - Legend labels name both the date and the curve shape (Normal / Humped / Inverted),
+    with matte red reserved for the inverted curve
+  - Horizontal-only grid at 0.25 opacity stays behind the data in both themes
+  - Interactive HTML keeps MUI X's native hover tooltips for reading individual yields
   weaknesses:
-  - 'DE-02: Grid lines are MUI X defaults (visible horizontal lines) — reduce grid
-    opacity via sx (e.g., `& .MuiChartsGrid-line: { opacity: 0.15 }`) or remove for
-    the clean minimal-gridline look the spec calls for in a financial context'
-  - 'DE-01: Good financial styling but short of publication-quality — consider adding
-    semi-transparent area fill (areaSeriesType or area chart mode) under each yield
-    curve to add visual weight and better separate the three curve profiles'
-  - 'VQ-01: Slight asymmetry between x-axis label (16px) and y-axis label (13px) font
-    sizes — aligning both to ~14-15px would improve axis label balance'
-  - The 3M maturity tick label is auto-hidden by MUI X log scale rendering; explicitly
-    specify tick positions via tickMinStep or a custom ticks array to ensure all 11
-    maturity labels appear as the spec intends
+  - 'Suggestion: the full-height band also shades the Jun 1993 normal curve; limiting
+    the shading to the area between the Jan 2007 curve and its 5Y level would tie
+    the highlight to the inverted curve alone.'
+  - 'Suggestion: the 1M bill and 20Y bond were not issued in mid-1993; a comment noting
+    that those two points are interpolated would keep the ''approximate'' data honest.'
+  - 'Suggestion: the y axis from 0% leaves the band below 3% empty; a 2–7.5% range
+    would give the curve shapes more vertical room.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — passes theme check.
-      Chrome: Title "U.S. Treasury Yield Curves · line-yield-curve · javascript · muix · anyplot.ai" in dark ink (~65-70% canvas width, expected for long mandated title). Y-axis label "Yield (%)" and X-axis label "Maturity" both clearly readable. Tick labels for 0%–6% (Y) and 1M/6M/1Y/2Y/3Y/5Y/7Y/10Y/20Y/30Y (X, note 3M auto-hidden by log scale) in dark secondary text.
-      Data: Three smooth CatmullRom curves — brand green (#009E73) for Jan 2021 (Normal, upward sloping 0.05%–1.82%), lavender (#C475FD) for Oct 2022 (Flat/humped, 3.3%–4.6%), matte red (#AE3030) for Jul 2023 (Inverted, 5.5% short end descending to 4.1% at 30Y). Dashed vertical reference line at 1Y maturity in matte red with label "Inverted beyond 1Y →". Horizontal legend at bottom with swatch + label per series. Subtle horizontal grid lines visible.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: title 'U.S. Treasury Yield Curves · line-yield-curve · javascript · muix · anyplot.ai' centred in dark ink (~45% width); x-axis 'Maturity' with ticks 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 7Y, 10Y, 20Y, 30Y at log positions; y-axis 'Yield (%)' with 0%–7% ticks; faint horizontal grid; horizontal legend at the bottom. All readable.
+      Data: Jun 1993 (Normal) in brand green #009E73 rising 3.0%→6.8%; Mar 2000 (Humped) in lavender #C475FD 5.7%→6.5%→5.9%; Jan 2007 (Inverted) in matte red #AE3030 falling 5.2%→4.7% at 5Y then 4.9%; hollow markers on every point, straight segments. Light-red translucent band from 1M to 5Y labelled 'Inversion: short-term yields above long-term' near the top, behind the curves.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — passes theme check.
-      Chrome: Title, axis labels, tick labels all rendered in light ink (cream/off-white) — no dark-on-dark failures observed. Grid lines subtle against dark surface.
-      Data: Data colors are identical to light render — green, lavender, matte red remain unchanged between themes. Reference line and label same matte red. Legend visible at bottom in light text.
-      Legibility verdict: PASS — all text clearly readable against dark background. No dark-on-dark issues.
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title, axis titles, tick labels, legend text and band label all in light ink; grid faint but present; no dark-on-dark text.
+      Data: green, lavender and matte red identical to the light render; the band renders as a dark reddish-brown tint, still visible without hiding the curves.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 19px, axis labels 16px/13px, ticks
-          14px, legend 15px); slight x/y axis label size asymmetry (16px vs 13px)
+        comment: Explicit sizes (title 22px, axis labels 16px, ticks 14px, legend
+          15px, band label 15px); every text element readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements in either render
+        comment: No text collisions; band label sits above all curves; y-axis title
+          shifted clear of the tick labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at strokeWidth 3px with visible markers; all three curves clearly
-          distinguishable
+        comment: 3px lines with hollow markers at all 11 maturities; legend swatches
+          match the series colors in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette, CVD-safe, good contrast between series
+        comment: Green / lavender / matte red differ in hue and lightness; no red-green-only
+          signal (curves also labelled by shape in the legend)
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Good margins (top:60, right:60, bottom:80, left:110); layout well-utilized;
-          minor: MUI X default grid visible'
+        comment: Log x domain padded tightly (0.06–40 y) so the curves fill the width;
+          axis labels balanced at 16px; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Yield (%)'' with units; X-axis: ''Maturity'' descriptive;
-          title with descriptive prefix'
+        comment: '''Maturity'' and ''Yield (%)'' with unit; descriptive title prefix'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green); palette[1] lavender for flat;
-          palette[4] matte red for inverted (semantic exception: red = recession/bad);
-          backgrounds theme-correct; data colors identical across renders'
+        comment: 'First series #009E73, second #C475FD; matte red for the inverted
+          curve as a semantic choice; backgrounds #FAF8F1 / #1A1A17; data colors identical
+          across themes'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above defaults: semantic color choices, reference line, smooth curves,
-          financial-publication feel; not fully publication-ready (no area fills,
-          default grid)'
+        comment: Clean style-guide typography and palette; nothing beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Custom font sizes and line width; MUI X default horizontal grid lines
-          remain; no explicit grid reduction
+        comment: 'Grid density chosen for the chart: horizontal lines only at 0.25
+          opacity; x domain trimmed to the data; y-axis title offset for breathing
+          room'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: 'Clear narrative: green=normal era, red=inverted/recession; ''(Normal)/(Flat)/(Inverted)''
-          labels in legend; reference line at 1Y marks inversion threshold; viewer
-          immediately grasps the rate cycle story'
+        comment: Legend tags each date with its curve shape (Normal / Humped / Inverted)
+          and the inverted curve carries the warning red, guiding the reading beyond
+          what the Notes prescribe
     spec_compliance:
       score: 15
       max: 15
@@ -138,28 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart type showing yield curves
+        comment: Multi-curve line chart of yield vs maturity — correct type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple curves (3) ✓; maturity_years log-scale x-axis ✓; maturity
-          labels for ticks ✓; inversion annotation/reference line ✓
+        comment: Log maturity axis (C1), maturity tick labels at their positions (C2),
+          three curves with dated legend (C3), shaded inversion band with label (C4),
+          percent yield axis with minimal grid (C5) — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=maturity years (log scale), Y=yield percentage; all data visible
+        comment: x = maturity_years on a log axis, y = yield; linear segments through
+          each point, no smoothing overshoot; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''U.S. Treasury Yield Curves · line-yield-curve · javascript
-          · muix · anyplot.ai'' — correct format with descriptive prefix; legend labels
-          descriptive with context tags'
+        comment: Title 'U.S. Treasury Yield Curves · line-yield-curve · javascript
+          · muix · anyplot.ai'; legend gives each date
     data_quality:
       score: 15
       max: 15
@@ -169,22 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all three canonical yield curve shapes: normal (upward), flat/humped,
-          and inverted'
+        comment: Normal, humped and inverted shapes; one curve inverted as required
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real U.S. Treasury yield snapshots; neutral financial topic; specific
-          dates tied to real market events
+        comment: Real U.S. Treasury eras (1993 recovery, 2000 dot-com peak, 2007 pre-crisis);
+          neutral financial content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Jan 2021 COVID-era low rates (0.05–1.82%) ✓; Oct 2022 Fed hiking
-          cycle (3.3–4.6%) ✓; Jul 2023 inversion (3.97–5.54%) ✓; factually accurate
+        comment: 'Checked against memory of the era levels: Jun 1993 ~3.1% 3M to ~6.7%
+          30Y, Mar 2000 ~5.9–6.6% humped, Jan 2007 ~5.1% short end above ~4.7% at
+          5Y — plausible; no check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -194,34 +190,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean: data constants → default export component; no unnecessary
-          abstraction'
+        comment: Data constants → small hook-based layer component (required to use
+          MUI X hooks) → default export
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hard-coded; fully deterministic
+        comment: Hard-coded data; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart and ChartsReferenceLine imported, both used
+        comment: LineChart, useDrawingArea, useXScale — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic React/MUI X; no over-engineering; duplicate header
-          is a workflow artifact, not author code
+        comment: Compact; tickInterval pins ticks instead of hand-placed labels
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness generates plot-light.png + plot-dark.png + interactive HTML;
-          current MUI X API used
+        comment: Default-exported component sized to window.ANYPLOT_SIZE with skipAnimation;
+          harness writes PNG + HTML
     library_mastery:
       score: 7
       max: 10
@@ -231,24 +226,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct import paths, skipAnimation, window.ANYPLOT_SIZE/TOKENS,
-          slotProps.legend, log scale axis — solid idiomatic usage
+        comment: scaleType 'log' with tickInterval and valueFormatter, composition
+          via chart children, slotProps legend, sx class targeting
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: ChartsReferenceLine (MUI X-specific component); catmullRom curve
-          interpolation; slotProps pattern for legend positioning
+        comment: Custom SVG layer built with the useXScale / useDrawingArea hooks
+          of the MUI X composition API to place the inversion band in data coordinates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-a9ea82c7d3
+  rendered_at: '2026-10-09T03:35:59Z'
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
   - annotations
+  - layer-composition
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - minimal-chrome
   - alpha-blending

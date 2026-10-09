@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-yield-curve: Yield Curve (Interest Rate Term Structure)
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-10
+// Library: muix 7.29.1 | JavaScript 22.23.3
+// Quality: 87/100 | Updated: 2026-10-09
 //# anyplot-orientation: landscape
 // anyplot.ai
 // line-yield-curve: Yield Curve (Interest Rate Term Structure)
@@ -10,7 +10,7 @@
 // Quality: pending | Created: 2026-06-10
 
 import { LineChart } from "@mui/x-charts/LineChart";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { useDrawingArea, useXScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -18,15 +18,30 @@ const t = window.ANYPLOT_TOKENS;
 const maturityYears = [0.083, 0.25, 0.5, 1, 2, 3, 5, 7, 10, 20, 30];
 const maturityLabels = ["1M", "3M", "6M", "1Y", "2Y", "3Y", "5Y", "7Y", "10Y", "20Y", "30Y"];
 
-// U.S. Treasury par yields (%) — three snapshots showing term structure evolution
-const jan2021 = [0.05, 0.04, 0.06, 0.09, 0.12, 0.22, 0.59, 0.96, 1.08, 1.6, 1.82]; // Normal: COVID-era low rates
-const oct2022 = [3.28, 3.82, 4.25, 4.55, 4.63, 4.58, 4.35, 4.25, 4.05, 4.18, 4.1]; // Near-flat: Fed hiking cycle
-const jul2023 = [5.51, 5.54, 5.54, 5.36, 4.87, 4.57, 4.28, 4.22, 3.97, 4.27, 4.05]; // Inverted: recession signal
+// Approximate U.S. Treasury par yields (%) — three eras of the term structure
+const jun1993 = [3.0, 3.1, 3.2, 3.4, 3.9, 4.4, 5.2, 5.8, 5.9, 6.6, 6.8]; // Normal: early-1990s recovery
+const mar2000 = [5.7, 5.9, 6.1, 6.3, 6.5, 6.4, 6.3, 6.3, 6.2, 6.3, 5.9]; // Humped: dot-com peak
+const jan2007 = [5.2, 5.2, 5.1, 5.0, 4.8, 4.7, 4.7, 4.8, 4.8, 5.0, 4.9]; // Inverted: pre-crisis
+
+// Shaded band over the maturities where the Jan 2007 short end sits above its 5Y yield
+function InversionBand() {
+  const xScale = useXScale();
+  const { top, height } = useDrawingArea();
+  const x0 = xScale(maturityYears[0]);
+  const x1 = xScale(5);
+  return (
+    <g pointerEvents="none">
+      <rect x={x0} y={top} width={x1 - x0} height={height} fill={t.palette[4]} fillOpacity={0.1} />
+      <text x={(x0 + x1) / 2} y={top + 24} textAnchor="middle" fontSize={15} fontWeight={500} fill={t.ink}>
+        Inversion: short-term yields above long-term
+      </text>
+    </g>
+  );
+}
 
 export default function Chart() {
   return (
     <div style={{ width: "100%", height: "100%", position: "relative" }}>
-      {/* Title rendered in the chart's top margin space */}
       <div
         style={{
           position: "absolute",
@@ -35,7 +50,7 @@ export default function Chart() {
           right: 0,
           textAlign: "center",
           zIndex: 1,
-          fontSize: 19,
+          fontSize: 22,
           fontWeight: 500,
           color: t.ink,
           pointerEvents: "none",
@@ -49,11 +64,15 @@ export default function Chart() {
         width={window.ANYPLOT_SIZE.width}
         height={window.ANYPLOT_SIZE.height}
         skipAnimation
+        grid={{ horizontal: true }}
         colors={[t.palette[0], t.palette[1], t.palette[4]]}
         xAxis={[
           {
             scaleType: "log",
             data: maturityYears,
+            tickInterval: maturityYears,
+            min: 0.06,
+            max: 40,
             valueFormatter: (v) => {
               const idx = maturityYears.findIndex((y) => Math.abs(y - v) < 0.005);
               return idx >= 0 ? maturityLabels[idx] : "";
@@ -65,47 +84,23 @@ export default function Chart() {
           {
             label: "Yield (%)",
             min: 0,
-            max: 6.5,
+            max: 7.5,
             tickMinStep: 1,
             valueFormatter: (v) => `${v}%`,
           },
         ]}
         series={[
-          {
-            data: jan2021,
-            label: "Jan 2021 (Normal)",
-            showMark: true,
-            curve: "catmullRom",
-          },
-          {
-            data: oct2022,
-            label: "Oct 2022 (Flat)",
-            showMark: true,
-            curve: "catmullRom",
-          },
-          {
-            data: jul2023,
-            label: "Jul 2023 (Inverted)",
-            showMark: true,
-            curve: "catmullRom",
-          },
+          { data: jun1993, label: "Jun 1993 (Normal)", showMark: true, curve: "linear" },
+          { data: mar2000, label: "Mar 2000 (Humped)", showMark: true, curve: "linear" },
+          { data: jan2007, label: "Jan 2007 (Inverted)", showMark: true, curve: "linear" },
         ]}
         sx={{
-          "& .MuiChartsAxis-label": {
-            fontSize: "16px !important",
-          },
-          "& .MuiChartsAxis-left .MuiChartsAxis-label": {
-            fontSize: "13px !important",
-          },
-          "& .MuiChartsAxis-tickLabel": {
-            fontSize: "14px !important",
-          },
-          "& .MuiChartsLegend-label": {
-            fontSize: "15px !important",
-          },
-          "& .MuiLineElement-root": {
-            strokeWidth: "3px",
-          },
+          "& .MuiChartsAxis-label": { fontSize: "16px !important" },
+          "& .MuiChartsAxis-left .MuiChartsAxis-label": { transform: "translateX(-24px)" },
+          "& .MuiChartsAxis-tickLabel": { fontSize: "14px !important" },
+          "& .MuiChartsLegend-label": { fontSize: "15px !important" },
+          "& .MuiChartsGrid-line": { strokeOpacity: 0.25 },
+          "& .MuiLineElement-root": { strokeWidth: "3px" },
         }}
         slotProps={{
           legend: {
@@ -115,21 +110,7 @@ export default function Chart() {
         }}
         margin={{ top: 60, right: 60, bottom: 80, left: 110 }}
       >
-        <ChartsReferenceLine
-          x={1}
-          label="Inverted beyond 1Y →"
-          labelAlign="start"
-          lineStyle={{
-            stroke: t.palette[4],
-            strokeDasharray: "6 4",
-            strokeWidth: 1.5,
-            strokeOpacity: 0.55,
-          }}
-          labelStyle={{
-            fill: t.palette[4],
-            fontSize: 13,
-          }}
-        />
+        <InversionBand />
       </LineChart>
     </div>
   );
