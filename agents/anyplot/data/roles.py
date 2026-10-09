@@ -124,7 +124,7 @@ _HEAD_TOKEN = re.compile(
 _TAIL = re.compile(r"\s*+(?:\((?P<type>[^)]*+)\))?\s*+(?:[-–—:]++\s*+)?(?P<desc>.*)", re.DOTALL)
 _BOLD = re.compile(r"\*\*(?P<label>[^*]++)\*\*\s*+[-–—:]?\s*+(?P<desc>.*)", re.DOTALL)
 _BOLD_LABEL_END = re.compile(r"(?<!\s)\s++(?:variable|variables|column|columns)$", re.IGNORECASE)
-_LAST_DIGITS = re.compile(r"[0-9]+(?=[^0-9]*$)")
+_DIGITS = frozenset("0123456789")
 _OPTIONAL = re.compile(r"\boptional\b", re.IGNORECASE)
 _WORD = re.compile(r"[a-z]+")
 _BACKTICKED = re.compile(r"`[^`]*`")
@@ -221,7 +221,7 @@ def _parse_bullet(bullet: str) -> list[DataRole]:
     elif more:
         families: list[str] = []
         for name in names:
-            family = _LAST_DIGITS.sub("", name, count=1)
+            family = _without_last_digits(name)
             if family == name:
                 candidates.append(role(name))
             elif family and family not in families:
@@ -244,6 +244,17 @@ def _range_family(name: str) -> str | None:
     if family == name:
         family = name[:-1] if name.endswith("n") else ""
     return family or None
+
+
+def _without_last_digits(name: str) -> str:
+    """`name` without its last ASCII digit run (`y12` is `y`, `a1b2c` is `a1bc`); unchanged without digits."""
+    end = max((index for index, char in enumerate(name) if char in _DIGITS), default=-1) + 1
+    if end == 0:
+        return name
+    start = end
+    while start and name[start - 1] in _DIGITS:
+        start -= 1
+    return name[:start] + name[end:]
 
 
 def _parse_bold(bullet: str) -> list[DataRole]:
