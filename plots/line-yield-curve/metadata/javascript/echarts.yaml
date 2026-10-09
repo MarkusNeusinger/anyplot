@@ -12,94 +12,91 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-yiel
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/javascript/echarts/plot-dark.html
-quality_score: 88
+quality_score: 84
 review:
   strengths:
-  - 'Full spec compliance: all three yield-curve shapes (normal/flattening/inverted),
-    log-scale maturity axis, and inversion zone shading with annotation'
-  - 'Correct Imprint palette usage: brand green as first series, canonical order,
-    theme-adaptive chrome via tokens — both renders pass the legibility check'
-  - ECharts-native endLabel and markArea used idiomatically, demonstrating genuine
-    library mastery
-  - Compelling macro narrative with U.S. Treasury data from real economic turning
-    points (COVID → hiking cycle → peak inversion)
-  - Title font-size scaling formula handles the long mandated string correctly without
-    clipping
+  - Log maturity axis with [maturity_years, yield] pairs keeps true time spacing
+  - ECharts-native endLabel puts each curve's date at its 30Y point
+  - markArea shades the 1Y–10Y inversion region behind the curves with a label
+  - Theme-adaptive chrome legible in both renders; Imprint palette in canonical order
+  - Realistic U.S. Treasury snapshots tell the zero-rate → hiking → inversion story
   weaknesses:
-  - 'DE-01: Mar 2023 inverted curve has identical line width (3.5px) to the other
-    two — give it a bolder lineStyle.width (4.5-5px) to create focal-point hierarchy;
-    keep others at 3.0-3.5px'
-  - 'DE-02: Grid lines appear on both X and Y axes; financial publication style prefers
-    Y-axis-only grid — set xAxis.splitLine.show: false to remove vertical grid lines'
-  - 'VQ-03: Jan 2021 short-end markers (1M-6M at 0.07-0.08%) hug the 0% baseline very
-    closely; set yAxis.min: -0.1 to give those low-yield points breathing room'
-  - 'VQ-01: Inversion Zone italic label (13px) reads smaller than rest of chart text;
-    bump to 14-15px for consistency'
+  - 'SC-02, SC-03 (both): the x-axis labels only 4 of the 11 maturities, and ''1M''
+    is drawn at 0.1 yr and ''30Y'' at the 35-yr axis end instead of at their maturities
+    → one labeled tick per maturity exactly at its maturity_years. Likely cause: xAxis.axisLabel.formatter
+    mapping decade ticks (0.1, 1, 10, ≥25) to maturity names; use axisLabel/axisTick
+    customValues set to the maturity years.'
+  - 'VQ-05 (both): the x-axis title ''Maturity'' sits only ~10 px above the legend
+    row → at least ~25 px between them (+15 px). Likely cause: xAxis.nameGap 42 with
+    legend.bottom 32 and grid.bottom 110.'
+  - 'DE-02 (both): vertical gridlines run at the x ticks, against the style guide''s
+    Y-only grid for line charts → remove them. Likely cause: xAxis.splitLine with
+    a t.grid lineStyle.'
+  - 'Suggestion: give the inverted Mar 2023 curve a slightly heavier line to make
+    it the focal curve.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "U.S. Treasury Yield Curves · line-yield-curve · javascript · echarts · anyplot.ai" in bold dark ink, centred, scaled to ~18px — fully readable. Axis labels "Maturity" and "Yield (%)" at 16px in inkSoft. X-axis tick labels (1M, 1Y, 10Y, 30Y) and Y-axis tick labels (0%–6%) at 14px. End labels per series (Jan 2021, Jul 2022, Mar 2023) at 13px in their series colours. Bottom legend at 16px. All elements readable against light background.
-      Data: Three lines — Jan 2021 brand green (#009E73), Jul 2022 lavender (#C475FD), Mar 2023 blue (#4467A3). Circle markers size 10 at each of 11 maturities. Blue inversion zone shading (palette[2] at 14% opacity) from 1Y to 10Y with italic "Inversion Zone" label.
+      Background: Warm off-white #FAF8F1 — correct.
+      Chrome: Bold dark title "U.S. Treasury Yield Curves · line-yield-curve · javascript · echarts · anyplot.ai" centred; "Yield (%)" and "Maturity" axis names, the latter directly above the legend row; y ticks 0%–6%, x ticks 1M, 1Y, 10Y, 30Y on a log axis; subtle gridlines on both axes, including vertical lines at the four x ticks. All text readable dark-on-light.
+      Data: Jan 2021 brand green #009E73 rising from ~0.07% to 1.86%; Jul 2022 lavender flat ~3.1–3.3%; Mar 2023 blue humped at 5% and inverted to ~3.96%. Circle markers at 11 maturities, bold series-colored end labels, grey-blue 1Y–10Y band labelled "Inversion Zone". Bottom legend with rounded swatches.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title, axis labels, tick labels, end labels, and legend all render in light ink (t.ink / t.inkSoft tokens) — clearly visible against dark background. No dark-on-dark failures observed. Grid lines shift to light-on-dark subtle tone using t.grid token.
-      Data: Colors identical to light render — Jan 2021 brand green, Jul 2022 lavender, Mar 2023 blue. Inversion zone shading visible as darker-blue region against near-black background.
+      Background: Warm near-black #1A1A17 — correct.
+      Chrome: Title, axis names, ticks and legend in light ink; light subtle gridlines on both axes; no dark-on-dark text.
+      Data: Colors identical to the light render; inversion band reads as a slightly lighter slate band behind the curves.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; title scaled with 67/len formula
-          to 18px; minor: Inversion Zone italic label at 13px slightly small'
+        comment: All font sizes explicit; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps in either render; end labels well-spaced
+        comment: No text collisions; Inversion Zone label clears the Jan 2021 markers
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines 3.5px and markers size 10 appropriate for 11 data points; Jan
-          2021 short-end points very close to 0% baseline
+        comment: 3.5 px lines and size-10 markers suit 11 points; legend swatches
+          match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-safe; three distinct hues (green/lavender/blue)
+        comment: CVD-distinguishable hues plus direct end labels
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed; generous margins; content fills canvas well;
-          no clipping
+        comment: Axis title 'Maturity' crammed against the legend row (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Maturity and Yield (%) are descriptive with units
+        comment: '''Maturity'' and ''Yield (%)'' with percent ticks'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 brand green; canonical Imprint order; correct
-          theme backgrounds; data colours identical across renders'
+        comment: 'First series #009E73, Imprint order, correct backgrounds, identical
+          data colors'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -107,26 +104,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: descriptive title prefix, endLabel, markArea inversion
-          shading, log-scale; reads as well-configured ECharts not fully publication-ready;
-          all three lines identical weight'
+        comment: Bold series-colored end labels and descriptive title prefix give
+          a typographic hierarchy beyond baseline
       - id: DE-02
         name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Direct end labels are a refinement, offset by vertical x gridlines
+          that break the style guide's Y-only grid rule for line charts (defect line)
+      - id: DE-03
+        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Subtle grid via t.grid token, borderWidth:0, roundRect legend icons;
-          but both axes show grid lines — financial publication style prefers Y-only
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: Strong macro narrative (COVID near-zero → hiking cycle → peak inversion);
-          inversion zone explicitly labelled; end labels self-explanatory; no focal-point
-          hierarchy for the Mar 2023 inverted curve
+        comment: Data chosen to tell the zero-rate → hiking → inversion story; no
+          focal emphasis beyond the required shading
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -134,28 +129,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line chart on log-scale x-axis correctly implements yield curve
+        comment: Multi-curve line chart on a log maturity axis
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Three curves, log scale, maturity labels, inversion zone highlighted,
-          legend with dates
+        comment: 'C2 missed: only 4 of 11 maturities carry tick labels (defect line)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: maturity_years on log x-axis, yield_pct on y-axis, all 11 maturities
-          per curve
+        comment: '''1M'' tick at 0.1 yr and ''30Y'' tick at the 35-yr axis end, not
+          at their maturities (defect line)'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches {Descriptive Title} · {spec-id} · javascript · echarts
-          · anyplot.ai format; legend labels match date field
+        comment: Correct title format with descriptive prefix; legend gives dates
     data_quality:
       score: 15
       max: 15
@@ -165,22 +158,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All three canonical curve shapes (normal/flattening/inverted); all
-          11 standard Treasury maturities
+        comment: Normal, flat and inverted curves, 11 maturities each
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: U.S. Treasury data from real economic turning points; neutral financial
-          context
+        comment: U.S. Treasury snapshots at real turning points
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Yields historically accurate for chosen periods; 0-6% range appropriate;
-          log scale 0.083-35 years covers standard term structure
+        comment: 'Checked: Jan 2021 10Y 1.10%, Mar 2023 6M 5.02% vs 10Y 3.96% plausible;
+          0–6% axis spans all curves'
     code_quality:
       score: 10
       max: 10
@@ -190,35 +181,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: data → init → setOption; no functions or classes'
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only global echarts and window.ANYPLOT_TOKENS
+        comment: Only echarts global and tokens
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic code; seriesData via .map(); title scaling formula
-          concise
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness writes plot-light/dark.png and .html; animation:false set;
-          no deprecated APIs
+        comment: Mount-node contract, animation:false
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -226,16 +215,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: echarts.init(el) with no explicit size, animation:false, color:t.palette,
-          scatter-format [x,y] data for log-axis line series
+        comment: 'Log value axis with [x,y] pairs, color: t.palette, series-level
+          markArea'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses ECharts-specific endLabel, markArea for inversion zone shading
-          with label, type:log x-axis with custom formatter
+        comment: endLabel, labelled markArea, axis-trigger tooltip formatter
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-d5377e7dbd
 impl_tags:
   dependencies: []
   techniques:

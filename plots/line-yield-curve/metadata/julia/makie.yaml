@@ -2,45 +2,51 @@ library: makie
 language: julia
 specification_id: line-yield-curve
 created: '2026-06-10T00:55:02Z'
-updated: '2026-06-10T01:12:35Z'
+updated: '2026-10-09T03:33:17Z'
 generated_by: claude-sonnet
-workflow_run: 27245349640
+workflow_run: 37878847299
 issue: 4664
 language_version: 1.11.9
-library_version: 0.22.10
+library_version: 0.21.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/julia/makie/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 86
 review:
   strengths:
-  - Historically accurate U.S. Treasury yield data (Jan 2021/Oct 2022/Jul 2023) covers
-    all three canonical curve shapes — normal, flat, inverted
-  - Amber band! inversion zone is semantically correct (warning/caution anchor) and
-    immediately draws the eye
-  - Log-scale x-axis with custom maturity string tick labels is the correct financial-chart
-    choice
-  - All theme chrome tokens correctly propagated — both renders pass legibility checks
-    with no dark-on-dark failures
-  - 'Clean Makie idioms: scatterlines!, band!, axislegend, xscale = log10'
+  - Historically accurate U.S. Treasury snapshots (Jan 2021, Oct 2022, Jul 2023) show
+    the normal, flat and inverted shapes in one frame
+  - Log10 maturity axis with the maturity labels as an xticks (values, labels) tuple
+    keeps true time spacing and readable 1M-30Y ticks
+  - Inversion highlighted with the amber warning anchor via native band!, with an
+    INK_SOFT label that reads on the band in both themes
+  - Theme tokens threaded through every chrome element; both renders pass the legibility
+    check
+  - 'Idiomatic Makie: scatterlines!, band!, axislegend on an elevated background'
   weaknesses:
-  - Inverted zone amber text (#DDCC77) on amber 30%-alpha band in light render has
-    borderline contrast — change label color to INK_SOFT or position the label just
-    above/below the band rather than inside it
-  - DE-01 held back by limited typographic hierarchy — legend labels are visually
-    equal weight; a bolder annotation on the inverted curve would elevate storytelling
+  - 'VQ-01 (both): the in-plot annotations are set at fontsize 10 ("COVID-era near-zero
+    rates", about 20 px tall) and 11 ("Inverted zone"), smaller than the 12 pt tick
+    labels, and blur to about 2-3 px in the 400 px thumbnail → about 13-14 pt (+3
+    pt), at least the tick-label size. Likely cause: text! fontsize = 11 (line 91)
+    and fontsize = 10 (line 97).'
+  - 'Suggestion: the "COVID-era near-zero rates" label floats at 2.2 %, about two
+    points above the Jan 2021 curve it describes; placing it just above the green
+    curve''s flat short end would tie it to its series.'
+  - 'Suggestion: anchoring the inversion band at the short-end peak (3M/6M, 5.49 %)
+    instead of the 2Y yield would shade the full 3M-10Y inversion of the Jul 2023
+    curve.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct
-      Chrome: title "U.S. Treasury Yields · line-yield-curve · julia · makie · anyplot.ai" in dark ink, readable; axis labels "Maturity" and "Yield (%)" in dark ink, readable; tick labels in INK_SOFT (#4A4A44), readable
-      Data: three yield curves — Jan 2021 in #009E73 (brand green, near-zero COVID era), Oct 2022 in #C475FD (lavender, flat post-hike), Jul 2023 in #4467A3 (blue, inverted). Amber band (#DDCC77 at 30% alpha) shades inversion zone from ~2Y to 30Y. "Inverted zone" label inside band in amber — slightly low contrast against amber-tinted band. "COVID-era near-zero rates" annotation in INK_SOFT — clearly readable. Legend at top-right with elevated background.
-      Legibility verdict: PASS (minor: amber-on-amber band text contrast marginally low)
+      Background: warm off-white, matches #FAF8F1; 3200x1800 landscape.
+      Chrome: title "U.S. Treasury Yields · line-yield-curve · julia · makie · anyplot.ai" bold dark ink, about 75 % of the width; axis labels "Maturity" and "Yield (%)" in dark ink; tick labels 1M-30Y on a log axis and 0-6 on y in INK_SOFT, all readable; y-only grid, subtle; top/right spines removed; legend top-right on an elevated cream box with a thin frame.
+      Data: Jan 2021 in #009E73 (near-zero short end rising to 1.84 % at 30Y), Oct 2022 in #C475FD (humped around 4.5 %), Jul 2023 in #4467A3 (5.3-5.5 % at the short end, falling to about 4 % past 10Y). Amber #DDCC77 band at 30 % alpha from 2Y to 30Y between the 2Y yield and the Jul 2023 curve, labelled "Inverted zone" in INK_SOFT, readable on the band. "COVID-era near-zero rates" annotation in INK_SOFT floats at about 2.2 % between 2Y and 7Y. Annotations are small.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct
-      Chrome: title and axis labels in #F0EFE8 (near-white), clearly readable; tick labels in #B8B7B0 (light grey), clearly readable; no dark-on-dark failures detected
-      Data: colors identical to light render — green, lavender, blue curves unchanged (data colors are theme-independent as required). Amber band appears as darker olive/khaki on dark surface. Legend background uses #242420 elevated color.
+      Background: warm near-black, matches #1A1A17.
+      Chrome: title and axis labels in near-white, tick labels in light grey, all readable; no dark-on-dark text; grid subtle; legend on #242420 with light labels.
+      Data: green, lavender and blue curves identical to the light render; the amber band reads as olive-khaki on the dark surface; the "Inverted zone" label in light grey is readable on it.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -52,50 +58,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; adaptive title sizing used. Minor:
-          amber text on amber band has slightly reduced contrast in light render.'
+        comment: All sizes explicitly set; title, axis labels, ticks and legend readable
+          in both themes, and the Inverted zone label is now readable on the amber
+          band in INK_SOFT. The in-plot annotations at fontsize 10/11 are smaller
+          than the tick labels and blur in the 400 px thumbnail (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No text collisions; the Oct 2022/Jul 2023 crossing at 10Y-30Y is
+          curves crossing, which the spec permits (C6)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Three curves with scatterlines markersize=10, linewidth=2.5 clearly
-          visible at sparse density.
+        comment: '33 sparse points: scatterlines markersize 10, linewidth 2.5, clearly
+          visible; legend line+marker samples match the curves in both themes'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint positions 1-3 (green/lavender/blue) are CVD-safe and perceptually
-          distinct.
+        comment: Green/lavender/blue separate well in luminance and hue; the green
+          curve also sits far apart in level
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 correct. Good margins, legend well-placed, log scale
-          correct.
+        comment: 3200x1800, plot fills most of the canvas with balanced margins, legend
+          inside the top-right corner in empty space, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Maturity, Y: Yield (%). Title has descriptive prefix.'
+        comment: Yield (%) with unit; Maturity with unit-bearing tick labels (1M...30Y)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Imprint order 1-3, amber for inversion band
-          (semantic anchor), correct backgrounds, chrome correct in both themes.'
+        comment: 'Imprint positions 1-3 in canonical order, first series #009E73;
+          amber anchor #DDCC77 used for its warning role on the inversion band; #FAF8F1
+          / #1A1A17 backgrounds; chrome theme-correct in both renders'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -103,22 +113,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: log scale, amber band, adaptive title. Not quite
-          at strong-design level — limited typographic hierarchy.'
+        comment: 'Beyond baseline: the semantic amber anchor chosen for the inversion
+          zone, legend entries qualified with the curve shape (normal/flat/inverted),
+          descriptive title prefix'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed, y-only grid at 12% alpha, legend with elevated
-          background and 0.5pt frame.
+        comment: 'Grid density chosen for this chart: x-grid off on the log maturity
+          axis, y-grid only at 12% alpha; legend on elevated background with a 0.5
+          frame; padded ylims. The COVID label floating well above its curve holds
+          it back'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Three-period narrative clear, amber focal band draws eye to inversion,
-          contextual annotations add meaning.
+        comment: The three dates are chosen to show a monetary-policy arc (zero-rate
+          normal -> flat -> inverted), and the legend names each regime; the inversion
+          highlight itself is required by the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -128,28 +142,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Yield curve (line+scatter) on log-scale maturity axis.
+        comment: Multi-curve yield curve, lines with markers on a log maturity axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multi-curve, log x-scale, maturity string tick labels, inversion
-          shading, dated legend all present.
+        comment: C1 log axis by maturity_years, unsmoothed; C2 maturity tick labels
+          at their positions; C3 three curves with a dated legend; C4 amber inversion
+          shading plus label, curves visible; C5 percent axis spanning all curves
+          with y-only subtle grid
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: maturity_years (log), tick labels = maturity strings. Y: yield_pct.
-          All 11 maturities x 3 curves.'
+        comment: x = maturity_years (log10), y = yield_pct; all 33 points at their
+          values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: U.S. Treasury Yields · line-yield-curve · julia · makie ·
-          anyplot.ai. Legend: Jan 2021 (normal), Oct 2022 (flat), Jul 2023 (inverted).'
+        comment: U.S. Treasury Yields · line-yield-curve · julia · makie · anyplot.ai;
+          legend gives month and year of each curve
     data_quality:
       score: 15
       max: 15
@@ -159,22 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All yield curve shapes covered: normal, flat, inverted. Full 1M-30Y
-          spectrum.'
+        comment: Normal, flat/humped and inverted curves, 11 maturities each, including
+          a crossing
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real U.S. Treasury yield snapshots on actual dates, historically
-          accurate, neutral financial topic.
+        comment: Real U.S. Treasury snapshots, neutral finance topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Yield range 0-6.4% correct for post-COVID rate cycle. Maturity range
-          1M-30Y standard. Values match historical levels.
+        comment: 'Checked against the historical record: Jan 2021 10Y 1.07 / 30Y 1.84
+          with near-zero bills; Jul 2023 3M 5.49 vs 10Y 3.97 (about -150 bp 3M-10Y
+          inversion); Oct 2022 2Y 4.47 vs 10Y 4.00; all read correctly off the axis'
     code_quality:
       score: 10
       max: 10
@@ -184,59 +200,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: tokens → data → plot → save. No functions or classes.'
+        comment: Linear tokens -> data -> plot -> save, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) present.
+        comment: Deterministic data, Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all used, none superfluous.
+        comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality, clear purposeful comments.
+        comment: Appropriate complexity, native band! for the shading, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png. Uses size = (1600, 900) — correct Makie
-          0.22 API.
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2), current size = API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: scatterlines!, band!, axislegend, xticks tuple syntax, xscale=log10,
-          RGBAf() — all idiomatic Makie patterns.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: band! is genuinely Makie-specific. scatterlines! and axislegend also
-          distinctive. No layout-level Makie primitives (Label, custom Legend handles).
+        comment: scatterlines! recipe, band!, axislegend with position/patchsize,
+          xscale = log10 with (values, labels) xticks tuple
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: The scatterlines! combined recipe and axis-scale function xscale
+          = log10 are Makie-flavored; nothing beyond that
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-d4a232663e
+  rendered_at: '2026-10-09T03:29:40Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - manual-ticks
   - layer-composition
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
