@@ -84,7 +84,7 @@ jobs:
 
     - name: Run type checking
       if: steps.check.outputs.should_lint == 'true'
-      run: uv run --extra typecheck mypy api core --pretty
+      run: uv run --extra typecheck --extra agents mypy api core agents --pretty
 
     - name: Skip notice
       if: steps.check.outputs.should_lint == 'false'

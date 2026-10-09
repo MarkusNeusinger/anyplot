@@ -50,34 +50,34 @@ Add to `.claude/config.json`:
 List all plot specifications with summary information.
 
 **Parameters**:
-- `limit` (optional, default: 50, max: 100) - Number of specs to return
+- `limit` (optional, default: 100) - Number of specs to return. The catalogue holds more than 100 specs, so pass a larger value or page with `offset`
 - `offset` (optional, default: 0) - Pagination offset
 
-**Returns**:
+**Returns** a JSON array of spec summaries (no wrapper object):
 ```json
-{
-  "total": 253,
-  "specs": [
-    {
-      "id": "scatter-basic",
-      "title": "Basic Scatter Plot",
-      "description": "Simple scatter plot showing relationship between two variables",
-      "tags": {
-        "plot_type": ["scatter", "point"],
-        "data_type": ["numeric", "continuous"],
-        "domain": ["statistics", "general"],
-        "features": ["basic", "2d"]
-      },
-      "library_count": 9
-    }
-  ]
-}
+[
+  {
+    "id": "scatter-basic",
+    "title": "Basic Scatter Plot",
+    "description": "Simple scatter plot showing relationship between two variables",
+    "tags": {
+      "plot_type": ["scatter", "point"],
+      "data_type": ["numeric", "continuous"],
+      "domain": ["statistics", "general"],
+      "features": ["basic", "2d"]
+    },
+    "library_count": 15,
+    "website_url": "https://anyplot.ai/scatter-basic"
+  }
+]
 ```
+
+`library_count` counts the implementations whose code is available.
 
 **Example Usage**:
 ```
 User: "List available plot types"
-Claude: [calls list_specs(limit=20)]
+Claude: [calls list_specs(limit=400)]
 ```
 
 ---
@@ -86,30 +86,21 @@ Claude: [calls list_specs(limit=20)]
 
 Search specifications using tag filters.
 
-**Parameters**:
-- `plot_type` (optional) - Filter by plot types (scatter, bar, line, heatmap, etc.)
-- `data_type` (optional) - Filter by data types (numeric, categorical, temporal, etc.)
-- `domain` (optional) - Filter by domain (statistics, finance, science, etc.)
-- `features` (optional) - Filter by features (basic, 3d, interactive, animated, etc.)
-- `library` (optional) - Filter by library (matplotlib, seaborn, plotly, etc.)
-- `techniques` (optional) - Filter by implementation techniques (colorbar, annotations, etc.)
-- `dependencies` (optional) - Filter by dependencies (scipy, sklearn, etc.)
-- `limit` (optional, default: 50) - Maximum results
+**Parameters** (every filter is a list of values):
+- Spec-level: `plot_type` (scatter, bar, line, heatmap, ...), `data_type` (numeric, categorical, timeseries, ...), `domain` (statistics, finance, science, ...), `features` (basic, 3d, interactive, animated, ...)
+- Impl-level: `library` (one of the 15 library ids), `dependencies` (scipy, sklearn, ...), `techniques` (colorbar, annotations, ...), `patterns` (data-generation, explicit-figure, ...), `dataprep` (normalization, aggregation, ...), `styling` (publication-ready, minimal, ...)
+- `limit` (optional, default: 100) - Maximum results
 
 **Filter Logic**:
 - Multiple values within a category: **OR** (any match)
 - Multiple categories: **AND** (all must match)
+- A spec-level value only matches the category it is passed in: `plot_type=["finance"]` does not match a spec whose *domain* is finance
+- Impl-level filters require at least one implementation that satisfies all of them
 
 **Example**: `plot_type=["scatter"] AND library=["matplotlib", "seaborn"]`
 Returns: Scatter plots that have implementations in matplotlib OR seaborn
 
-**Returns**:
-```json
-{
-  "total": 15,
-  "specs": [...]
-}
-```
+**Returns** the same JSON array of spec summaries as `list_specs`.
 
 **Example Usage**:
 ```
@@ -124,10 +115,11 @@ Claude: [calls search_specs_by_tags(plot_type=["scatter"], library=["matplotlib"
 
 ### get_spec_detail
 
-Get complete specification including all implementations.
+Get complete specification including its implementations.
 
 **Parameters**:
 - `spec_id` (required) - The specification ID (e.g., 'scatter-basic')
+- `libraries` (optional) - Library ids to include. Without it the response carries every implementation with its code, about 0.5 MB for a spec with 15 implementations, so pass the libraries you need
 
 **Returns**:
 ```json
@@ -144,17 +136,39 @@ Get complete specification including all implementations.
     "domain": ["statistics"],
     "features": ["basic", "2d"]
   },
+  "issue": 42,
+  "suggested": "contributor",
+  "created": "2025-01-10T08:00:00Z",
+  "updated": "2025-01-15T10:30:00Z",
+  "website_url": "https://anyplot.ai/scatter-basic",
   "implementations": [
     {
-      "library": "matplotlib",
+      "spec_id": "scatter-basic",
+      "library_id": "matplotlib",
+      "library_name": "Matplotlib",
+      "language": "python",
       "code": "import matplotlib.pyplot as plt\n...",
       "quality_score": 95,
-      "preview_url": "https://storage.googleapis.com/...",
-      "library_version": "3.10.0"
+      "preview_url_light": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-light.png",
+      "preview_url_dark": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-dark.png",
+      "preview_html_light": null,
+      "preview_html_dark": null,
+      "library_version": "3.10.0",
+      "python_version": "3.13",
+      "language_version": "3.13",
+      "generated_at": "2026-06-25T10:30:00Z",
+      "generated_by": "claude-opus-4-7",
+      "review_strengths": ["..."],
+      "review_weaknesses": ["..."],
+      "review_verdict": "APPROVED",
+      "impl_tags": {"patterns": ["data-generation"]},
+      "website_url": "https://anyplot.ai/scatter-basic/python/matplotlib"
     }
   ]
 }
 ```
+
+`code` has its `# noqa` comments stripped. The review checklist and image description are pipeline internals and are not returned.
 
 **Raises**: `ValueError` if spec_id doesn't exist
 
@@ -172,23 +186,26 @@ Get implementation code for a specific specification and library.
 
 **Parameters**:
 - `spec_id` (required) - The specification ID
-- `library` (required) - One of: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, letsplot
+- `library` (required) - One of the 15 library ids: altair, bokeh, chartjs, d3, echarts, ggplot2, highcharts, letsplot, makie, matplotlib, muix, plotly, plotnine, pygal, seaborn. The language is resolved from the library
 
-**Returns**:
+**Returns** one implementation object with the same fields as the entries of `get_spec_detail`:
 ```json
 {
   "spec_id": "scatter-basic",
-  "library": "matplotlib",
+  "library_id": "matplotlib",
+  "library_name": "Matplotlib",
+  "language": "python",
   "code": "\"\"\"...\"\"\"\nimport matplotlib.pyplot as plt\n...",
   "quality_score": 95,
-  "preview_url": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/matplotlib/plot.png",
-  "preview_html": null,
+  "preview_url_light": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-light.png",
+  "preview_url_dark": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-dark.png",
   "library_version": "3.10.0",
-  "python_version": "3.13"
+  "python_version": "3.13",
+  "website_url": "https://anyplot.ai/scatter-basic/python/matplotlib"
 }
 ```
 
-**Raises**: `ValueError` if spec_id or implementation doesn't exist
+**Raises**: `ValueError` if spec_id, library or implementation doesn't exist
 
 **Example Usage**:
 ```
@@ -206,20 +223,22 @@ List all supported plotting libraries.
 
 **Parameters**: None
 
-**Returns**:
+**Returns** a JSON array with the same fields as the REST endpoint `GET /libraries`:
 ```json
-{
-  "libraries": [
-    {
-      "id": "matplotlib",
-      "name": "Matplotlib",
-      "version": "3.10.0",
-      "description": "The classic standard, maximum flexibility",
-      "documentation_url": "https://matplotlib.org/"
-    }
-  ]
-}
+[
+  {
+    "id": "matplotlib",
+    "name": "Matplotlib",
+    "language": "python",
+    "framework": "none",
+    "version": "3.10.0",
+    "documentation_url": "https://matplotlib.org/",
+    "description": "The classic standard, maximum flexibility"
+  }
+]
 ```
+
+`language` is one of python, r, julia and javascript; `framework` is `react` for MUI X Charts and `none` otherwise.
 
 **Example Usage**:
 ```
@@ -231,7 +250,7 @@ Claude: [calls list_libraries()]
 
 ### get_tag_values
 
-Get all available values for a specific tag category with counts.
+Get all available values for a specific tag category, with how often each occurs.
 
 **Parameters**:
 - `category` (required) - One of:
@@ -239,20 +258,22 @@ Get all available values for a specific tag category with counts.
   - `data_type` - Data types (numeric, categorical, etc.)
   - `domain` - Application domains (statistics, finance, etc.)
   - `features` - Plot features (basic, 3d, interactive, etc.)
-  - `techniques` - Implementation techniques
   - `dependencies` - External dependencies
+  - `techniques` - Implementation techniques
+  - `patterns` - Code patterns
+  - `dataprep` - Data preparation techniques
+  - `styling` - Styling approaches
 
-**Returns**:
+**Returns** a JSON array of `{value, count}`, most frequent first and ties alphabetical. For spec-level categories the count is the number of specs carrying the value; for impl-level categories it is the number of implementations with code that carry it:
 ```json
-{
-  "category": "plot_type",
-  "values": [
-    {"value": "scatter", "count": 45},
-    {"value": "bar", "count": 38},
-    {"value": "line", "count": 32}
-  ]
-}
+[
+  {"value": "bar", "count": 45},
+  {"value": "scatter", "count": 38},
+  {"value": "line", "count": 32}
+]
 ```
+
+**Raises**: `ValueError` for an unknown category
 
 **Example Usage**:
 ```
@@ -291,7 +312,7 @@ Describe **HOW** code implements it (per-library):
 
 | Filter | Examples |
 |--------|----------|
-| `library` | matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, letsplot |
+| `library` | altair, bokeh, chartjs, d3, echarts, ggplot2, highcharts, letsplot, makie, matplotlib, muix, plotly, plotnine, pygal, seaborn |
 | `spec` | Specific spec ID (e.g., "scatter-basic") |
 
 ---

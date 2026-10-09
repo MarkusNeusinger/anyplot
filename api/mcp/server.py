@@ -5,6 +5,7 @@ Provides tools for AI assistants to search plot specifications and fetch impleme
 """
 
 import os
+from collections import Counter
 from typing import Any
 
 from fastmcp import FastMCP
@@ -14,6 +15,8 @@ from sqlalchemy.pool import NullPool
 from api.schemas import ImplementationResponse, SpecDetailResponse, SpecListItem
 from api.version import APP_VERSION
 from core.database import ImplRepository, LibraryRepository, SpecRepository, is_db_configured
+from core.database.models import Impl
+from core.utils import strip_noqa_comments
 
 
 # Website URL for linking to anyplot.ai
@@ -150,6 +153,13 @@ async def search_specs_by_tags(
         - dataprep: Data preparation techniques (normalization, aggregation, etc.)
         - styling: Visual styling approaches (publication-ready, minimal, etc.)
 
+    Filter logic (both levels): several values in one category match if ANY
+    of them is present (OR); several categories must ALL match (AND). A
+    spec-level value only matches the category it is passed in, so
+    plot_type=["finance"] does not match a spec whose domain is finance.
+    Impl-level filters require at least one implementation that satisfies
+    all of them.
+
     Args:
         plot_type: Filter by plot type tags
         data_type: Filter by data type tags
@@ -173,7 +183,12 @@ async def search_specs_by_tags(
     try:
         repo = SpecRepository(session)
 
-        # Build filter dict (spec-level tags)
+        # Spec-level filters, passed per category: OR within one, AND across
+        # them. The previous flatten-and-OR matched any value in any category,
+        # so plot_type=["scatter"] + domain=["finance"] returned the union of
+        # both and plot_type=["finance"] matched finance *domains* (AI-access
+        # research, 2026-10-08). `code` stays deferred on both paths — the
+        # loops below only need code *presence*, probed via non-NULL ids.
         filters: dict[str, list[str]] = {}
         if plot_type:
             filters["plot_type"] = plot_type
@@ -184,12 +199,7 @@ async def search_specs_by_tags(
         if features:
             filters["features"] = features
 
-        # Flatten filter values into a single tag list for repository search
-        tag_values: list[str] = [tag for tags in filters.values() for tag in tags]
-
-        # Search by spec-level tags. `code` stays deferred on both paths —
-        # the loops below only need code *presence*, probed via non-NULL ids.
-        specs = await repo.search_by_tags(tag_values) if tag_values else await repo.get_all()
+        specs = await repo.search_by_tag_filters(filters) if filters else await repo.get_all()
         ids_with_code = await ImplRepository(session).get_ids_with_code()
 
         # Apply impl-level filtering if needed
@@ -247,6 +257,47 @@ async def search_specs_by_tags(
         await session.close()
 
 
+# Fields of ImplementationResponse the MCP tools leave out: the legacy
+# single-theme preview fields duplicate the light variants, `updated` is never
+# set here, and the review checklist and image description are pipeline
+# internals (~10 KB per implementation) that an assistant adapting code never
+# needs — they alone made an unfiltered get_spec_detail about 0.5 MB.
+_MCP_IMPL_EXCLUDE = {"preview_url", "preview_html", "updated", "review_image_description", "review_criteria_checklist"}
+
+
+def _implementation_payload(spec_id: str, impl: Impl) -> dict[str, Any]:
+    """One implementation as the MCP tools return it.
+
+    `# noqa` comments are stripped as the REST code endpoint does, and
+    `spec_id` plus `website_url` are added so a result stands on its own.
+    """
+    response = ImplementationResponse(
+        library_id=impl.library.id,
+        library_name=impl.library.name,
+        language=impl.library.language,
+        preview_url_light=impl.preview_url_light,
+        preview_url_dark=impl.preview_url_dark,
+        preview_html_light=impl.preview_html_light,
+        preview_html_dark=impl.preview_html_dark,
+        quality_score=impl.quality_score,
+        code=strip_noqa_comments(impl.code),
+        generated_at=impl.generated_at.isoformat() if impl.generated_at else None,
+        generated_by=impl.generated_by,
+        python_version=impl.python_version,
+        language_version=impl.language_version or impl.python_version,
+        library_version=impl.library_version,
+        review_strengths=impl.review_strengths or [],
+        review_weaknesses=impl.review_weaknesses or [],
+        review_verdict=impl.review_verdict,
+        impl_tags=impl.impl_tags,
+    )
+    return {
+        "spec_id": spec_id,
+        **response.model_dump(exclude=_MCP_IMPL_EXCLUDE),
+        "website_url": f"{ANYPLOT_WEBSITE_URL}/{spec_id}/{impl.library.language}/{impl.library.id}",
+    }
+
+
 @mcp_server.tool()
 async def get_spec_detail(spec_id: str, libraries: list[str] | None = None) -> dict[str, Any]:
     """
@@ -285,48 +336,15 @@ async def get_spec_detail(spec_id: str, libraries: list[str] | None = None) -> d
         if spec is None:
             raise ValueError(f"Specification '{spec_id}' not found")
 
-        # Build implementations list. Per-impl website URLs are collected
-        # separately and attached AFTER model_dump below: SpecDetailResponse
+        # The implementation dicts are attached AFTER model_dump: SpecDetailResponse
         # coerces its `implementations` into ImplementationResponse, which has
-        # no website_url field — merging the key into the dicts before that
-        # coercion silently discarded it, so the tool returned one broken spec
-        # URL and no per-implementation URLs at all (AI-access audit 2026-08-19).
-        implementations = []
-        impl_urls: list[str] = []
-        for impl in spec.impls:
-            if impl.code is None:
-                continue
-            if libraries and impl.library.id not in libraries:
-                continue
-
-            impl_response = ImplementationResponse(
-                library_id=impl.library.id,
-                library_name=impl.library.name,
-                language=impl.library.language,
-                preview_url_light=impl.preview_url_light,
-                preview_url_dark=impl.preview_url_dark,
-                preview_html_light=impl.preview_html_light,
-                preview_html_dark=impl.preview_html_dark,
-                preview_url=impl.preview_url,
-                preview_html=impl.preview_html,
-                quality_score=impl.quality_score,
-                code=impl.code,
-                generated_at=impl.generated_at.isoformat() if impl.generated_at else None,
-                generated_by=impl.generated_by,
-                python_version=impl.python_version,
-                language_version=impl.language_version or impl.python_version,
-                library_version=impl.library_version,
-                review_strengths=impl.review_strengths or [],
-                review_weaknesses=impl.review_weaknesses or [],
-                review_image_description=impl.review_image_description,
-                review_criteria_checklist=impl.review_criteria_checklist,
-                review_verdict=impl.review_verdict,
-                impl_tags=impl.impl_tags,
-            )
-            implementations.append(impl_response)
-            impl_urls.append(f"{ANYPLOT_WEBSITE_URL}/{spec_id}/{impl.library.language}/{impl.library.id}")
-
-        # Build full spec response
+        # neither spec_id nor website_url, and that coercion silently dropped
+        # the per-implementation URLs once (AI-access audit 2026-08-19).
+        implementations = [
+            _implementation_payload(spec_id, impl)
+            for impl in spec.impls
+            if impl.code is not None and (not libraries or impl.library.id in libraries)
+        ]
         response = SpecDetailResponse(
             id=spec.id,
             title=spec.title,
@@ -339,13 +357,12 @@ async def get_spec_detail(spec_id: str, libraries: list[str] | None = None) -> d
             suggested=spec.suggested,
             created=spec.created.isoformat() if spec.created else None,
             updated=spec.updated.isoformat() if spec.updated else None,
-            implementations=implementations,
         )
-
-        payload = response.model_dump()
-        for impl_dict, url in zip(payload["implementations"], impl_urls, strict=True):
-            impl_dict["website_url"] = url
-        return {**payload, "website_url": f"{ANYPLOT_WEBSITE_URL}/{spec_id}"}
+        return {
+            **response.model_dump(),
+            "implementations": implementations,
+            "website_url": f"{ANYPLOT_WEBSITE_URL}/{spec_id}",
+        }
     finally:
         await session.close()
 
@@ -402,36 +419,7 @@ async def get_implementation(spec_id: str, library: str) -> dict[str, Any]:
         if impl is None or impl.code is None:
             raise ValueError(f"Implementation for '{spec_id}' in library '{library}' not found")
 
-        # Build response
-        response = ImplementationResponse(
-            library_id=impl.library.id,
-            library_name=impl.library.name,
-            language=impl.library.language,
-            preview_url_light=impl.preview_url_light,
-            preview_url_dark=impl.preview_url_dark,
-            preview_html_light=impl.preview_html_light,
-            preview_html_dark=impl.preview_html_dark,
-            preview_url=impl.preview_url,
-            preview_html=impl.preview_html,
-            quality_score=impl.quality_score,
-            code=impl.code,
-            generated_at=impl.generated_at.isoformat() if impl.generated_at else None,
-            generated_by=impl.generated_by,
-            python_version=impl.python_version,
-            language_version=impl.language_version or impl.python_version,
-            library_version=impl.library_version,
-            review_strengths=impl.review_strengths or [],
-            review_weaknesses=impl.review_weaknesses or [],
-            review_image_description=impl.review_image_description,
-            review_criteria_checklist=impl.review_criteria_checklist,
-            review_verdict=impl.review_verdict,
-            impl_tags=impl.impl_tags,
-        )
-
-        return {
-            **response.model_dump(),
-            "website_url": f"{ANYPLOT_WEBSITE_URL}/{spec_id}/{impl.library.language}/{library}",
-        }
+        return _implementation_payload(spec_id, impl)
     finally:
         await session.close()
 
@@ -442,7 +430,10 @@ async def list_libraries() -> list[dict[str, Any]]:
     List all supported plotting libraries.
 
     Returns:
-        List of libraries with id, name, and description
+        List of libraries with id, name, language (python, r, julia,
+        javascript), framework (none or react), version, documentation_url and
+        description — the same fields as the REST /libraries endpoint, so an
+        assistant can pick a library by language without a second call.
     """
     if not is_db_configured():
         raise ValueError("Database not configured. Check DATABASE_URL or INSTANCE_CONNECTION_NAME.")
@@ -451,20 +442,26 @@ async def list_libraries() -> list[dict[str, Any]]:
     try:
         repo = LibraryRepository(session)
         libraries = await repo.get_all()
-
-        result = []
-        for lib in libraries:
-            result.append({"id": lib.id, "name": lib.name, "description": lib.description})
-
-        return result
+        return [
+            {
+                "id": lib.id,
+                "name": lib.name,
+                "language": lib.language,
+                "framework": lib.framework,
+                "version": lib.version,
+                "documentation_url": lib.documentation_url,
+                "description": lib.description,
+            }
+            for lib in libraries
+        ]
     finally:
         await session.close()
 
 
 @mcp_server.tool()
-async def get_tag_values(category: str) -> list[str]:
+async def get_tag_values(category: str) -> list[dict[str, Any]]:
     """
-    Get all available values for a specific tag category.
+    Get all available values for a specific tag category, with how often each occurs.
 
     Tag Categories:
         Spec-level (describe WHAT is visualized):
@@ -485,7 +482,10 @@ async def get_tag_values(category: str) -> list[str]:
                   dependencies, techniques, patterns, dataprep, styling)
 
     Returns:
-        List of unique tag values in that category
+        List of {value, count}, most frequent first (ties alphabetical). For
+        spec-level categories the count is the number of specs carrying the
+        value; for impl-level categories it is the number of implementations
+        with code that carry it.
 
     Raises:
         ValueError: If category not recognized
@@ -506,25 +506,25 @@ async def get_tag_values(category: str) -> list[str]:
         repo = SpecRepository(session)
         specs = await repo.get_all()
 
-        # Collect unique tag values
-        values = set()
-
+        counts: Counter[str] = Counter()
         if category in spec_categories:
-            # Spec-level tags
             for spec in specs:
-                if spec.tags and category in spec.tags:
-                    tag_list = spec.tags[category]
-                    if isinstance(tag_list, list):
-                        values.update(tag_list)
+                tag_list = (spec.tags or {}).get(category)
+                if isinstance(tag_list, list):
+                    counts.update(set(tag_list))
         else:
-            # Impl-level tags
+            # Only implementations with code count, like library_count elsewhere.
+            ids_with_code = await ImplRepository(session).get_ids_with_code()
             for spec in specs:
                 for impl in spec.impls:
-                    if impl.impl_tags and category in impl.impl_tags:
-                        tag_list = impl.impl_tags[category]
-                        if isinstance(tag_list, list):
-                            values.update(tag_list)
+                    if impl.id not in ids_with_code:
+                        continue
+                    tag_list = (impl.impl_tags or {}).get(category)
+                    if isinstance(tag_list, list):
+                        counts.update(set(tag_list))
 
-        return sorted(values)
+        return [
+            {"value": value, "count": count} for value, count in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+        ]
     finally:
         await session.close()
