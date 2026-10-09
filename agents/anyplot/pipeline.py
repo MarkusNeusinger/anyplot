@@ -181,7 +181,15 @@ def load_inputs(ctx: Context, services: Services) -> tuple[SessionView | None, S
 
 
 def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
-    """The adapter's node input: the request as fenced text."""
+    """The adapter's node input: the request as fenced text.
+
+    Outside a fence stand only fixed headings, the validated library id and
+    `allow_full`. The notes on the attempt go into one `<tool_notes>` block as JSON,
+    the way the `plot_pipeline` result reaches the root: the readiness hints quote
+    catalogue lines, the feedback quotes model-written code (failed edits, validator
+    findings) or is model-written (reviewer lines), and the previous plan is
+    model-written and can copy catalogue or dataset text.
+    """
     lines = [
         f"Library: {view.library}",
         "",
@@ -194,20 +202,27 @@ def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
         "Bindings and loader columns:",
         fence("user_data", _columns_json(request.bindings, request.loader_columns)),
     ]
-    if request.hints:
-        lines += ["Hints:", *[f"- {hint}" for hint in request.hints]]
     if request.change_request:
         lines += ["Change request:", fence("user_message", request.change_request)]
+    notes: dict[str, Any] = {}
+    if request.hints:
+        notes["hints"] = request.hints
     if request.feedback:
-        lines += ["Feedback on the previous attempt:", *[f"- {item}" for item in request.feedback]]
+        notes["feedback"] = request.feedback
     if request.previous_plan is not None:
-        lines += ["Previous plan (failed validation):", request.previous_plan.model_dump_json()]
+        notes["previous_plan"] = request.previous_plan.model_dump(mode="json")
+    if notes:
+        lines += ["Notes on this attempt:", fence("tool_notes", json.dumps(notes, ensure_ascii=False))]
     lines.append(f"allow_full: {'true' if request.allow_full else 'false'}")
     return "\n".join(lines)
 
 
 def render_review_request(request: ReviewRequest) -> str:
-    """The reviewer's node input: the request as fenced text (the images are added by its callback)."""
+    """The reviewer's node input: the request as fenced text (the images are added by its callback).
+
+    The gate notes are host-written, but they go into a `<tool_notes>` block too, so
+    nothing but fixed headings stands outside a fence.
+    """
     lines = [
         DATA_PREAMBLE,
         "Spec brief:",
@@ -221,7 +236,7 @@ def render_review_request(request: ReviewRequest) -> str:
     if request.change_request:
         lines += ["Change request:", fence("user_message", request.change_request)]
     if request.gate_notes:
-        lines += ["Gate notes:", *[f"- {note}" for note in request.gate_notes]]
+        lines += ["Gate notes:", fence("tool_notes", json.dumps(request.gate_notes, ensure_ascii=False))]
     return "\n".join(lines)
 
 

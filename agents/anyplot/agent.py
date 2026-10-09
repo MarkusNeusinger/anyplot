@@ -2,10 +2,12 @@
 
 * `root_agent` ("anyplot") is the only agent that talks to the user. Its policy is the
   constant `static_instruction` (`policy.root_instruction`), never templated; the
-  `InstructionProvider` `session_context` adds only server-validated values (spec,
+  `InstructionProvider` `session_context` adds only server-validated values (spec id,
   library, reply language, dataset and binding status, plot versions), which ADK sends
-  as a marked instruction block after the static prefix. Its tools are the four
-  session tools and the `plot_pipeline` NodeTool.
+  as a marked instruction block after the static prefix. Catalogue text such as the
+  spec title started as a public issue, so it never enters that block: the root reads
+  it fenced as `<spec_text>` through `get_spec_brief`. Its tools are the four session
+  tools and the `plot_pipeline` NodeTool.
 * The adapters (one per enabled library) and the reviewer run only inside the
   pipeline through `ctx.run_node`, so a walk from the root would miss them;
   `ALL_AGENTS` lists every agent for the registry test.
@@ -51,7 +53,12 @@ CLAUDE_CACHE_TTL_S = 300
 
 
 async def session_context(context: ReadonlyContext) -> str:
-    """The server-validated session facts the root needs each turn; no user-written text."""
+    """The server-validated session facts the root needs each turn.
+
+    Only validated identifiers, enums and counts: no user-written text and no catalogue
+    text. The spec title stays out because catalogue text started as a public issue and
+    this block has instruction priority; `get_spec_brief` returns it inside a fence.
+    """
     view = read_session(context.state)
     if view is None:
         return (
@@ -62,7 +69,7 @@ async def session_context(context: ReadonlyContext) -> str:
     session_id = context.session.id
     lines = [
         "Session (set by the server):",
-        f"- Plot: {view.snapshot.title} (spec {view.spec_id}), library {view.library}",
+        f"- Plot: spec {view.spec_id}, library {view.library}",
         f"- Reply language: {view.locale}",
     ]
     dataset = services.datasets.get(view.dataset_id, session_id) if view.dataset_id else None
