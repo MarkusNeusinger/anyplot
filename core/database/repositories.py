@@ -7,7 +7,7 @@ Provides abstraction layer between API and database models.
 from datetime import datetime, timezone
 from typing import Generic, TypeVar
 
-from sqlalchemy import ColumnElement, String, cast, func, or_, select, type_coerce
+from sqlalchemy import ColumnElement, String, and_, cast, func, or_, select, type_coerce
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, undefer
@@ -22,29 +22,26 @@ T = TypeVar("T")
 SPEC_TAG_CATEGORIES = ("plot_type", "data_type", "domain", "features")
 
 
-def _spec_tag_filters(tags: list[str], dialect_name: str) -> list[ColumnElement[bool]]:
-    """Build WHERE filters matching specs whose tags contain any of *tags*.
+def _spec_category_filter(category: str, tags: list[str], dialect_name: str) -> ColumnElement[bool]:
+    """Build one WHERE predicate: the spec's *category* list contains any of *tags*.
 
-    On PostgreSQL each (category, tag) pair becomes a JSONB containment
-    predicate (``tags @> '{"<category>": ["<tag>"]}'``) — the operator shape
-    the ``ix_specs_tags`` GIN index can serve. The previous cast-to-text +
-    LIKE forced a sequential scan and treated LIKE metacharacters in tag
-    values as wildcards.
-
-    Other dialects (SQLite in tests) keep the text fallback, with LIKE
-    metacharacters escaped via ``autoescape``.
+    On PostgreSQL each tag is a JSONB containment test
+    (``tags @> '{"<category>": ["<tag>"]}'``) with `type_coerce`, not `cast`,
+    so the left side stays the bare ``tags`` column and the ``ix_specs_tags``
+    GIN index applies. Other dialects (SQLite in tests) extract the category's
+    array as text with ``json_extract`` and LIKE-match the quoted tag, with
+    LIKE metacharacters escaped (an unescaped LIKE once treated ``%`` and
+    ``_`` in tag values as wildcards).
     """
-    filters: list[ColumnElement[bool]] = []
-    for tag in tags:
-        if dialect_name == "postgresql":
-            # type_coerce (not cast) keeps the left side a bare `tags` column
-            # in SQL, so the GIN index on `tags` stays applicable.
-            filters.extend(
-                type_coerce(Spec.tags, JSONB).contains({category: [tag]}) for category in SPEC_TAG_CATEGORIES
-            )
-        else:
-            filters.append(cast(Spec.tags, String).contains(f'"{tag}"', autoescape=True))
-    return filters
+    if category not in SPEC_TAG_CATEGORIES:
+        raise ValueError(f"Unknown spec tag category '{category}'; expected one of {SPEC_TAG_CATEGORIES}")
+    predicates: list[ColumnElement[bool]] = []
+    if dialect_name == "postgresql":
+        predicates.extend(type_coerce(Spec.tags, JSONB).contains({category: [tag]}) for tag in tags)
+    else:
+        category_json = cast(func.json_extract(Spec.tags, f"$.{category}"), String)
+        predicates.extend(category_json.contains(f'"{tag}"', autoescape=True) for tag in tags)
+    return or_(*predicates)
 
 
 # =============================================================================
@@ -212,20 +209,32 @@ class SpecRepository(BaseRepository[Spec]):
         result = await self.session.execute(select(func.count(func.distinct(Impl.spec_id))).select_from(Impl))
         return result.scalar_one() or 0
 
-    async def search_by_tags(self, tags: list[str]) -> list[Spec]:
-        """Search specs by tags (matched in any tag category). Eager-loads impls + library.
+    async def search_by_tag_filters(self, filters: dict[str, list[str]]) -> list[Spec]:
+        """Search specs by spec-level tag filters: OR within a category, AND across categories.
 
-        impl.library is required by MCP search_specs_by_tags (server.py reads
-        `impl.library.id` while filtering); not eager-loading it on an async
-        session raises MissingGreenlet. `Impl.code` stays deferred — the MCP
-        caller only needs code *presence*, resolved separately via
-        `ImplRepository.get_ids_with_code()`.
+        *filters* maps a category (``plot_type``, ``data_type``, ``domain``,
+        ``features``) to its accepted values. A spec matches when EVERY listed
+        category contains at least one of its values, and a value only counts
+        in the category it was passed in — ``{"plot_type": ["finance"]}`` does
+        not match a spec whose *domain* is finance. Categories with an empty
+        list are ignored, and no filters at all returns every spec.
+
+        This is what MCP `search_specs_by_tags` documents; it replaced a
+        flatten-and-OR search that matched any value in any category and so
+        returned the union instead of the intersection. Eager-loads impls +
+        library (server.py reads `impl.library.id` while filtering, and an
+        async session raises MissingGreenlet on a lazy load) and keeps
+        `Impl.code` deferred — callers only need code *presence*, resolved
+        separately via `ImplRepository.get_ids_with_code()`.
         """
-        filters = _spec_tag_filters(tags, self.session.get_bind().dialect.name)
-        impls_loader = selectinload(Spec.impls)
-        result = await self.session.execute(
-            select(Spec).where(or_(*filters)).options(impls_loader.selectinload(Impl.library))
-        )
+        dialect_name = self.session.get_bind().dialect.name
+        predicates = [
+            _spec_category_filter(category, values, dialect_name) for category, values in filters.items() if values
+        ]
+        query = select(Spec).options(selectinload(Spec.impls).selectinload(Impl.library))
+        if predicates:
+            query = query.where(and_(*predicates))
+        result = await self.session.execute(query)
         return list(result.scalars().all())
 
     async def upsert(self, spec_data: dict) -> Spec:

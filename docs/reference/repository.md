@@ -95,6 +95,8 @@ anyplot/
 │   ├── main.py                        # Application entry point
 │   └── Dockerfile                     # Cloud Run deployment
 │
+├── agents/                            # Agent network on Google ADK (see concepts/agent-network.md)
+│
 ├── app/                               # React frontend
 │   ├── src/
 │   │   ├── components/

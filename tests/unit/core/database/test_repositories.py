@@ -13,13 +13,12 @@ from core.database.repositories import (
     IMPL_UPDATABLE_FIELDS,
     LANGUAGE_UPDATABLE_FIELDS,
     LIBRARY_UPDATABLE_FIELDS,
-    SPEC_TAG_CATEGORIES,
     SPEC_UPDATABLE_FIELDS,
     ImplRepository,
     LanguageRepository,
     LibraryRepository,
     SpecRepository,
-    _spec_tag_filters,
+    _spec_category_filter,
 )
 
 
@@ -152,23 +151,54 @@ class TestSpecRepository:
         assert await repo.get_by_id("s1") is None
 
     @pytest.mark.asyncio
-    async def test_search_by_tags_sqlite_fallback(self, test_session: AsyncSession) -> None:
+    async def test_search_by_tag_filters_scopes_values_to_their_category(self, test_session: AsyncSession) -> None:
+        """A value only matches the category it is passed in (the SQLite json_extract path)."""
         repo = SpecRepository(test_session)
-        await repo.create({"id": "scatter-basic", "title": "Basic Scatter", "tags": {"plot_type": ["scatter"]}})
-        await repo.create({"id": "bar-basic", "title": "Basic Bar", "tags": {"plot_type": ["bar"]}})
+        await repo.create(
+            {"id": "scatter-basic", "title": "Scatter", "tags": {"plot_type": ["scatter"], "domain": ["finance"]}}
+        )
+        await repo.create(
+            {"id": "finance-dashboard", "title": "Dash", "tags": {"plot_type": ["finance"], "domain": ["general"]}}
+        )
 
-        specs = await repo.search_by_tags(["scatter"])
-        assert [s.id for s in specs] == ["scatter-basic"]
+        assert [s.id for s in await repo.search_by_tag_filters({"domain": ["finance"]})] == ["scatter-basic"]
+        assert [s.id for s in await repo.search_by_tag_filters({"plot_type": ["finance"]})] == ["finance-dashboard"]
 
     @pytest.mark.asyncio
-    async def test_search_by_tags_escapes_like_metachars(self, test_session: AsyncSession) -> None:
+    async def test_search_by_tag_filters_and_across_or_within(self, test_session: AsyncSession) -> None:
+        repo = SpecRepository(test_session)
+        await repo.create(
+            {"id": "scatter-finance", "title": "A", "tags": {"plot_type": ["scatter"], "domain": ["finance"]}}
+        )
+        await repo.create({"id": "bar-finance", "title": "B", "tags": {"plot_type": ["bar"], "domain": ["finance"]}})
+        await repo.create(
+            {"id": "scatter-science", "title": "C", "tags": {"plot_type": ["scatter"], "domain": ["science"]}}
+        )
+
+        # AND across categories: the intersection, not the union of three
+        both = await repo.search_by_tag_filters({"plot_type": ["scatter"], "domain": ["finance"]})
+        assert [s.id for s in both] == ["scatter-finance"]
+        # OR within a category
+        either = await repo.search_by_tag_filters({"plot_type": ["scatter", "bar"], "domain": ["finance"]})
+        assert sorted(s.id for s in either) == ["bar-finance", "scatter-finance"]
+        # Empty lists are ignored; no filters means every spec
+        assert len(await repo.search_by_tag_filters({"plot_type": []})) == 3
+        assert len(await repo.search_by_tag_filters({})) == 3
+
+    @pytest.mark.asyncio
+    async def test_search_by_tag_filters_escapes_like_metachars(self, test_session: AsyncSession) -> None:
         """LIKE metacharacters in a tag value must match literally, not as wildcards."""
         repo = SpecRepository(test_session)
-        await repo.create({"id": "pct-basic", "title": "Percent", "tags": {"features": ["100%_stacked"]}})
+        await repo.create({"id": "pct", "title": "Percent", "tags": {"features": ["100%_stacked"]}})
         await repo.create({"id": "other", "title": "Other", "tags": {"features": ["100x_stacked"]}})
 
-        specs = await repo.search_by_tags(["100%_stacked"])
-        assert [s.id for s in specs] == ["pct-basic"]
+        assert [s.id for s in await repo.search_by_tag_filters({"features": ["100%_stacked"]})] == ["pct"]
+
+    @pytest.mark.asyncio
+    async def test_search_by_tag_filters_rejects_unknown_category(self, test_session: AsyncSession) -> None:
+        repo = SpecRepository(test_session)
+        with pytest.raises(ValueError, match="Unknown spec tag category"):
+            await repo.search_by_tag_filters({"library": ["matplotlib"]})
 
     @pytest.mark.asyncio
     async def test_delete_nonexistent(self, test_session: AsyncSession) -> None:
@@ -375,21 +405,27 @@ class TestImplRepository:
         assert codeless.id not in ids
 
 
-class TestSpecTagFilters:
-    """SQL shape of the tag-search filters per dialect."""
+class TestSpecCategoryFilter:
+    """SQL shape of the category-scoped filter behind `search_by_tag_filters`."""
 
-    def test_postgresql_uses_jsonb_containment(self) -> None:
-        filters = _spec_tag_filters(["scatter"], "postgresql")
-        assert len(filters) == len(SPEC_TAG_CATEGORIES)
-        sql = str(filters[0].compile(dialect=postgresql.dialect()))
-        # `tags @> <bind>` with a bare left-hand column — the only shape the
-        # ix_specs_tags GIN index can serve. A CAST on the column would work
-        # too (jsonb→jsonb is a no-op) but this asserts the intent exactly.
-        assert "@>" in sql
-        assert sql.startswith("specs.tags")
+    def test_postgresql_containment_names_the_category(self) -> None:
+        predicate = _spec_category_filter("domain", ["finance", "science"], "postgresql")
+        compiled = predicate.compile(dialect=postgresql.dialect())
+        sql = str(compiled)
+        # One containment per value, ORed within the category. `specs.tags @>`
+        # with a bare left-hand column is the only shape the ix_specs_tags GIN
+        # index can serve; a CAST on the column would defeat it.
+        assert sql.count("(specs.tags @> ") == 2
+        assert "CAST(specs.tags" not in sql
+        assert " OR " in sql
+        # Every containment names the category: that is the scoping
+        assert all(set(value) == {"domain"} for value in compiled.params.values())
 
-    def test_sqlite_falls_back_to_text_like(self) -> None:
-        filters = _spec_tag_filters(["scatter"], "sqlite")
-        assert len(filters) == 1
-        sql = str(filters[0].compile())
+    def test_sqlite_extracts_the_category_array(self) -> None:
+        sql = str(_spec_category_filter("plot_type", ["scatter"], "sqlite").compile())
+        assert "json_extract" in sql
         assert "LIKE" in sql
+
+    def test_rejects_unknown_category(self) -> None:
+        with pytest.raises(ValueError, match="Unknown spec tag category"):
+            _spec_category_filter("library", ["matplotlib"], "postgresql")

@@ -152,14 +152,15 @@ async def test_list_specs_excludes_codeless_impls(mock_db_context, mock_spec):
 async def test_search_specs_by_tags_spec_level(mock_db_context, mock_spec):
     """Test search_specs_by_tags with spec-level filters."""
     mock_repo = MagicMock()
-    mock_repo.search_by_tags = AsyncMock(return_value=[mock_spec])
+    mock_repo.search_by_tag_filters = AsyncMock(return_value=[mock_spec])
 
     with _repo_patches(mock_repo, mock_spec):
         result = await search_specs_by_tags(plot_type=["scatter"], domain=["statistics"])
 
-    # Verify repository called with flattened list (order may vary)
-    call_args = mock_repo.search_by_tags.call_args[0][0]
-    assert sorted(call_args) == ["scatter", "statistics"]
+    # The categories reach the repository as a dict — AND across keys, OR
+    # within — never flattened into one list, which is what ORed everything
+    # and let a plot_type value match a domain.
+    mock_repo.search_by_tag_filters.assert_awaited_once_with({"plot_type": ["scatter"], "domain": ["statistics"]})
     assert len(result) == 1
     assert result[0]["id"] == "scatter-basic"
 
@@ -241,13 +242,20 @@ async def test_get_spec_detail(mock_db_context, mock_spec):
     assert result["id"] == "scatter-basic"
     assert result["title"] == "Basic Scatter Plot"
     assert len(result["implementations"]) == 1
-    assert result["implementations"][0]["library_id"] == "matplotlib"
-    assert result["implementations"][0]["code"] == "import matplotlib.pyplot as plt"
+    impl = result["implementations"][0]
+    assert impl["library_id"] == "matplotlib"
+    assert impl["spec_id"] == "scatter-basic"
+    assert impl["code"] == "import matplotlib.pyplot as plt"
     # Both URL tiers must survive the Pydantic roundtrip: the spec-level URL is
     # the hub (the /python/{spec} form 301'd into a 404), and the per-impl URL
     # used to be silently dropped by SpecDetailResponse coercion.
     assert result["website_url"] == "https://anyplot.ai/scatter-basic"
-    assert result["implementations"][0]["website_url"] == "https://anyplot.ai/scatter-basic/python/matplotlib"
+    assert impl["website_url"] == "https://anyplot.ai/scatter-basic/python/matplotlib"
+    # Pipeline internals and the legacy single-theme preview fields stay out
+    for internal in ("review_criteria_checklist", "review_image_description", "preview_url", "preview_html", "updated"):
+        assert internal not in impl
+    assert impl["preview_url_light"] == "https://example.com/plot-light.png"
+    assert impl["review_strengths"] == ["Clean code"]
 
 
 def _second_impl(library_id: str, language: str) -> MagicMock:
@@ -312,6 +320,7 @@ async def test_get_implementation(mock_db_context, mock_spec):
     mock_lib.language = "python"
 
     mock_impl = mock_spec.impls[0]
+    mock_impl.code = "import matplotlib.pyplot as plt  # noqa: E402\nplt.plot([1, 2])"
 
     mock_spec_repo = MagicMock()
     mock_spec_repo.get_by_id = AsyncMock(return_value=mock_spec)
@@ -329,9 +338,13 @@ async def test_get_implementation(mock_db_context, mock_spec):
     ):
         result = await get_implementation("scatter-basic", "matplotlib")
 
+    assert result["spec_id"] == "scatter-basic"
     assert result["library_id"] == "matplotlib"
-    assert result["code"] == "import matplotlib.pyplot as plt"
+    # Lint-suppression comments are plumbing, stripped as the REST code endpoint does
+    assert result["code"] == "import matplotlib.pyplot as plt\nplt.plot([1, 2])"
     assert result["quality_score"] == 92
+    assert result["website_url"] == "https://anyplot.ai/scatter-basic/python/matplotlib"
+    assert "review_criteria_checklist" not in result
     # The language must come from the library's own row, not a python default
     mock_impl_repo.get_by_spec_and_library.assert_awaited_once_with("scatter-basic", "matplotlib", "python")
 
@@ -429,12 +442,20 @@ async def test_list_libraries(mock_db_context):
     mock_lib1 = MagicMock()
     mock_lib1.id = "matplotlib"
     mock_lib1.name = "Matplotlib"
+    mock_lib1.language = "python"
+    mock_lib1.framework = "none"
+    mock_lib1.version = "3.10.0"
+    mock_lib1.documentation_url = "https://matplotlib.org/"
     mock_lib1.description = "The classic plotting library"
 
     mock_lib2 = MagicMock()
-    mock_lib2.id = "seaborn"
-    mock_lib2.name = "Seaborn"
-    mock_lib2.description = "Statistical visualization"
+    mock_lib2.id = "muix"
+    mock_lib2.name = "MUI X Charts"
+    mock_lib2.language = "javascript"
+    mock_lib2.framework = "react"
+    mock_lib2.version = "7.29.1"
+    mock_lib2.documentation_url = "https://mui.com/x/react-charts/"
+    mock_lib2.description = "Charts for the MUI React ecosystem"
 
     mock_libs = [mock_lib1, mock_lib2]
 
@@ -445,9 +466,20 @@ async def test_list_libraries(mock_db_context):
         result = await list_libraries()
 
     assert len(result) == 2
-    assert result[0]["id"] == "matplotlib"
-    assert result[0]["name"] == "Matplotlib"
-    assert result[1]["id"] == "seaborn"
+    # The same fields as REST /libraries: language and framework let an
+    # assistant pick a library without a second call
+    assert result[0] == {
+        "id": "matplotlib",
+        "name": "Matplotlib",
+        "language": "python",
+        "framework": "none",
+        "version": "3.10.0",
+        "documentation_url": "https://matplotlib.org/",
+        "description": "The classic plotting library",
+    }
+    assert result[1]["id"] == "muix"
+    assert result[1]["language"] == "javascript"
+    assert result[1]["framework"] == "react"
 
 
 @pytest.mark.asyncio
@@ -456,26 +488,39 @@ async def test_get_tag_values_spec_level(mock_db_context, mock_spec):
     mock_spec2 = MagicMock()
     mock_spec2.tags = {"plot_type": ["bar", "histogram"]}
     mock_spec2.impls = []
+    mock_spec3 = MagicMock()
+    mock_spec3.tags = {"plot_type": ["bar"], "domain": ["finance"]}
+    mock_spec3.impls = []
 
     mock_repo = MagicMock()
-    mock_repo.get_all = AsyncMock(return_value=[mock_spec, mock_spec2])
+    mock_repo.get_all = AsyncMock(return_value=[mock_spec, mock_spec2, mock_spec3])
 
-    with patch("api.mcp.server.SpecRepository", return_value=mock_repo):
+    with _repo_patches(mock_repo, mock_spec, mock_spec2, mock_spec3):
         result = await get_tag_values("plot_type")
 
-    assert sorted(result) == ["bar", "histogram", "scatter"]
+    # Most frequent first, ties alphabetical; the count is specs per value
+    assert result == [
+        {"value": "bar", "count": 2},
+        {"value": "histogram", "count": 1},
+        {"value": "scatter", "count": 1},
+    ]
 
 
 @pytest.mark.asyncio
 async def test_get_tag_values_impl_level(mock_db_context, mock_spec):
-    """Test get_tag_values for impl-level category."""
+    """Impl-level counts cover implementations with code only."""
+    codeless = MagicMock()
+    codeless.code = None
+    codeless.impl_tags = {"patterns": ["data-generation", "explicit-figure"]}
+    mock_spec.impls = [mock_spec.impls[0], codeless]
+
     mock_repo = MagicMock()
     mock_repo.get_all = AsyncMock(return_value=[mock_spec])
 
-    with patch("api.mcp.server.SpecRepository", return_value=mock_repo):
+    with _repo_patches(mock_repo, mock_spec):
         result = await get_tag_values("patterns")
 
-    assert sorted(result) == ["data-generation"]
+    assert result == [{"value": "data-generation", "count": 1}]
 
 
 @pytest.mark.asyncio
