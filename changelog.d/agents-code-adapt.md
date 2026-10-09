@@ -21,3 +21,4 @@
   dtypes from the dataset profile; `export.py` adds the attribution header to
   the downloadable `plot.py`. A catalogue sweep in the unit tests keeps the
   normaliser idempotent and on the canvas for every reachable figure size.
+  (#12110)
