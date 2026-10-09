@@ -2,62 +2,56 @@ library: plotnine
 language: python
 specification_id: line-yield-curve
 created: '2026-03-14T22:16:35Z'
-updated: '2026-06-10T00:49:32Z'
+updated: '2026-10-09T03:10:55Z'
 generated_by: claude-sonnet
-workflow_run: 27244976595
+workflow_run: 37877664937
 issue: 4664
-language_version: 3.13.13
-library_version: 0.15.5
+language_version: 3.13.16
+library_version: 0.15.8
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-yield-curve/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 85
 review:
   strengths:
-  - 'Semantic color assignment is excellent: brand green for normal upward-sloping
-    curve, matte red for inverted/recession-signal curve — a valid and well-reasoned
-    Imprint palette semantic exception'
-  - Inversion zone shading (annotate rect + italic text annotation in matte red) clearly
-    highlights the key insight the spec requests
-  - 'Both themes render correctly: warm off-white (#FAF8F1) light background, warm
-    near-black (#1A1A17) dark background with fully theme-adaptive chrome — no dark-on-dark
-    failure'
-  - 'plotnine-idiomatic patterns used throughout: coord_cartesian() for view clipping,
-    pd.Categorical for legend ordering, guide_legend(override_aes=...) for legend
-    refinement'
-  - Title length-scaling formula (fontsize = max(8, round(12 * 67 / n))) correctly
-    shrinks the long descriptive title to avoid overflow
-  - All font sizes explicitly set across the full hierarchy — title, axis labels,
-    tick labels, legend title, legend text, annotation
-  - Deterministic hardcoded data with plausible U.S. Treasury yield values for historical
-    dates (2021 low-rate normal, 2023 flat, 2024 inverted) — factually accurate and
-    neutral
+  - Log maturity axis (scale_x_log10) with every tenor 1M–30Y labelled at its true
+    position, so the short end is legible while spacing still reflects time
+  - Inversion region shaded in translucent matte red behind the curves with a matching
+    italic label — highlighted without hiding any line
+  - 'Semantic colouring: brand green for the normal curve, matte red for the inverted
+    recession-signal curve, lavender for the flat one'
+  - Legend placed in the empty lower-right quadrant on an elevated surface, clear
+    of all data, with date and curve shape in each label
+  - 'Theme-adaptive chrome in both renders: all text, grid and axis line threaded
+    through INK / INK_SOFT tokens'
+  - 'Idiomatic plotnine: coord_cartesian view clipping, pd.Categorical ordering, guide_legend(override_aes=...)'
   weaknesses:
-  - Legend positioned at (0.25, 0.30) in normalized coords places it inside the plot
-    area and causes the legend box to overlap the green Normal curve line in the 3.0–3.4%
-    yield range — move legend to a margin or reposition to avoid data overlap (e.g.,
-    legend_position='right' or adjust to (0.75, 0.15) where the Normal curve has moved
-    away from)
-  - Short-maturity tick labels (1M, 3M, 6M) are omitted from the x-axis; the spec
-    states 'use maturity labels for tick marks' and the data model explicitly includes
-    those maturities — the unlabeled data points near the left edge leave viewers
-    without context for those observations
-  - 'DE-01 could be pushed higher: top/right/left spines could be fully eliminated
-    and the x-axis baseline line removed for an even cleaner look; the legend border
-    could be softened further'
+  - 'VQ-01 (dark): the italic ''Inversion zone (short-term > long-term)'' label is
+    drawn in #AE3030 at alpha 0.85 on #1A1A17 and reads dim, about 3:1 contrast →
+    full-opacity text, or the label in INK_SOFT next to the red shading. Likely cause:
+    annotate(''text'', color=PALETTE_INVERTED, alpha=0.85).'
+  - 'DQ-02 (both): the curves are labelled with real dates but carry invented values
+    — 2021-06-15 shows the 1M at 1.55 % and the 10Y at 3.35 %, where the actual Treasury
+    curve stood near 0.03 % and 1.5 %; 2023-01-10 is drawn flat at about 4.1 % although
+    that curve was already inverted (1M ≈ 4.4 %, 10Y ≈ 3.5 %) → use values that match
+    the dated Treasury curves (or rates consistent with them). Likely cause: the hand-typed
+    yields_normal / yields_flat lists.'
+  - 'Suggestion: the shading box spans the flat curve''s band too; tightening its
+    lower edge toward the inverted curve''s 10Y trough would tie it more clearly to
+    the inverted curve.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "U.S. Treasury Yield Curves · line-yield-curve · python · plotnine · anyplot.ai" bold and dark (#1A1A17), spans ~75% of canvas width at 11pt scaled size. X-axis label "Maturity" and Y-axis label "Yield (%)" in dark ink at 10pt. Tick labels in muted dark (#4A4A44) at 8pt. All readable. Inversion zone annotation italic text in matte red visible near top-left. Legend box has elevated cream background (#FFFDF6) with soft border.
-      Data: Three lines — green (#009E73) Normal/upward-sloping, lavender (#C475FD) Flat/horizontal, matte red (#AE3030) Inverted/downward-sloping. All lines size=2.0 with round data points size=3.5. Subtle red rectangular shading over the inversion zone y-range at alpha=0.10. Y-axis horizontal grid lines at 15% opacity. Only x-axis baseline line shown (no other spines).
-      Legibility verdict: PASS — all text readable; minor issue: legend box overlaps the green Normal curve line in the 3.0–3.4% yield range.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold dark title 'U.S. Treasury Yield Curves · line-yield-curve · python · plotnine · anyplot.ai' (~74 % width); 'Yield (%)' and 'Maturity' axis titles; y ticks 1.5 %–5.5 %, x ticks 1M 3M 6M 1Y 2Y 3Y 5Y 7Y 10Y 20Y 30Y on a log axis; subtle horizontal grid only, x baseline. All readable.
+      Data: green #009E73 normal curve rising 1.55 %→3.80 %, lavender #C475FD flat curve ~4.0–4.2 %, matte red #AE3030 inverted curve 5.5 %→4.1 % trough at 10Y then up to 4.4 %. Thick lines with round markers. Translucent red rectangle from 1M to 10Y between ~4.0 % and 5.6 % with italic red 'Inversion zone (short-term > long-term)' above. Legend 'Curve Date' lower right, clear of data.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface.
-      Chrome: Title text is light (#F0EFE8) and clearly readable against the dark background. Axis labels and tick labels are light-colored, fully visible. Legend background uses elevated dark (#242420) with appropriate border. Grid lines are subtle light lines at low opacity. No dark-on-dark failures detected — all chrome elements correctly use the INK/INK_SOFT dark-theme tokens.
-      Data: All three data colors are identical to the light render (green, lavender, matte red — theme-independent Imprint palette). Lines and points equally visible on the dark surface. Inversion zone annotation text in matte red is readable against the dark background. Inversion zone shading is subtly visible.
-      Legibility verdict: PASS — complete theme adaptation, all text and data visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, grid faint, legend on a #242420 surface with light border. No dark-on-dark text; the red italic inversion label is the dimmest text (≈3:1) but still legible.
+      Data: identical green / lavender / red colours to the light render; inversion shading shows as a dark red tint.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -65,87 +59,81 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: 'All font sizes explicitly set: title 11pt (scaled), axis labels
-          10pt, tick labels 8pt, legend text 8pt, legend title 9pt, annotation size=9mm.
-          Both themes fully readable.'
+        passed: false
+        comment: All sizes set explicitly (title 11 pt, axis titles 10, ticks 8, legend
+          8/9); all chrome readable in both themes, but the red inversion label is
+          dim on the dark background (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Legend positioned at (0.25, 0.30) overlaps the green Normal curve
-          line in the 3.0-3.4% yield region — minor data/legend overlap.
+        comment: No text collisions; legend sits in the empty lower-right quadrant
+          clear of all curves
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line size=2.0 and point size=3.5 appropriate for 33 data points (3
-          curves × 11 maturities). All curves clearly distinguishable.
+        comment: '33 points: line size 2.0 and points 3.5 are prominent; legend glyphs
+          match the marks in both themes'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-optimized; green/lavender/red trio offers strong
-          perceptual separation for all CVD types.
+        comment: Green / lavender / red trio separates for common CVD types and the
+          curves are also separated by level and shape
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). Plot fills
-          canvas well with balanced margins. No overflow or clipping.
+        comment: Canvas gate passed (3200x1800); title ~74 % of width, balanced margins,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Yield (%)' includes units. X-axis 'Maturity' is descriptive.
-          Title includes descriptive prefix.
+        comment: '''Yield (%)'' with unit and ''Maturity'' with tenor tick labels'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green) for Normal curve. Lavender #C475FD
-          for Flat. Matte red #AE3030 for Inverted — valid semantic exception (inverted
-          curve = recession indicator, red = bad/loss role). Backgrounds #FAF8F1 light
-          / #1A1A17 dark. Theme chrome fully adaptive in both renders.'
+        comment: 'First series #009E73, lavender second, matte red #AE3030 for the
+          inverted curve (semantic: recession signal); backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: semantic color assignment (green=growth, red=recession),
-          professional financial chart styling, inversion zone shading, clean typography
-          hierarchy — clearly above library defaults.'
+        comment: Semantic colour mapping (green normal, red inverted) and a typographic
+          hierarchy with an italic annotation tied to the shading colour; beyond the
+          baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: X-axis vertical gridlines removed, Y-axis horizontal grid at alpha=0.15
-          (very subtle), top/right/left spines removed, x-axis baseline retained.
-          Legend with elevated background. Good refinement level.
+        comment: Legend placed in the one empty quadrant with an elevated surface;
+          x grid dropped because the tenor ticks carry the position
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Semantic colors guide viewer: green for growth, red for recession
-          warning. Inversion zone annotation explicitly labels key insight. Legend
-          labels include curve type (Normal/Flat/Inverted). Clear narrative arc from
-          2021→2024.'
+        comment: Legend labels name the curve shape (Normal / Flat / Inverted) next
+          to the date, guiding the reading beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -153,33 +141,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-curve line chart with yield on Y, maturity on X.
+        comment: Multi-curve line chart of yield vs maturity
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: '3 curves (normal/flat/inverted), inversion zone shading+annotation,
-          legend with dates, professional style — all present. Minor: short-maturity
-          labels (1M, 3M, 6M) omitted from tick marks; spec says ''use maturity labels
-          for tick marks'' but only 7 of 11 maturities are labeled.'
+        comment: C1 log maturity axis, C2 all 11 tenor labels at their positions,
+          C3 three curves with dated legend, C4 inversion shading + label, C5 percent
+          axis with y-only grid — all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: maturity_years used for x-axis positioning (correct spacing), yield_pct
-          on y-axis, all 3 × 11 data points visible.
+        comment: maturity_years on a log x axis, yield_pct on y; all points at their
+          values, straight segments without smoothing
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''U.S. Treasury Yield Curves · line-yield-curve · python
-          · plotnine · anyplot.ai'' — correct format with descriptive prefix. Legend
-          shows all 3 curves with date + shape labels.'
+        comment: Title 'U.S. Treasury Yield Curves · line-yield-curve · python · plotnine
+          · anyplot.ai'; legend labels match the curves
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -187,24 +173,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all three canonical yield curve shapes: normal (upward), flat,
-          and inverted. Full maturity range 1M to 30Y. Complete feature demonstration.'
+        comment: Normal, flat and inverted curves across the full 1M–30Y tenor range,
+          including the inverted curve's 10Y trough and long-end rise
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: U.S. Treasury yield curves on specific historical dates — real, comprehensible,
-          neutral financial topic. No controversial content.
+        passed: false
+        comment: Neutral U.S. Treasury context, but real dates are paired with values
+          that do not match those dates' curves (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 2021 normal curve at 1.5-3.8% consistent with near-zero Fed rate
-          era. 2023 flat at ~4% consistent with Jan 2023 rate environment. 2024 inverted
-          at 5.5% short-term, 4.1% long-term consistent with 2024 Fed policy. Factually
-          accurate.
+        comment: Yields 1.5–5.5 % are plausible magnitudes for Treasuries; no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -214,63 +198,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → theme tokens → data → plot construction → save. No functions
-          or classes.
+        comment: 'Flat script: tokens → data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data arrays — no random seed needed.
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All plotnine imports used. os and pandas used. No unused imports.
+        comment: Every import used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Title length-scaling formula is appropriate. No
-          over-engineering, no fake functionality.
+        comment: Appropriate complexity, inversion bounds computed from the data
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Current plotnine API. No deprecated functions.
+        comment: Saves plot-{THEME}.png at 8x4.5 in, dpi 400; current API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert plotnine/ggplot2 patterns: coord_cartesian() for view clipping
-          without data removal, pd.Categorical for factor ordering, guide_legend(override_aes=...)
-          for legend customization, annotate() for geometric shapes and text — all
-          idiomatic.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Uses several plotnine-distinctive features: coord_cartesian (ggplot2-specific
-          axis-limiting that preserves data), pd.Categorical for ggplot2 factor ordering,
-          annotate(''rect'') + annotate(''text'') using ggplot2 grammar annotations.
-          Could push to 5 with facet or stat layer.'
+        comment: coord_cartesian for view clipping, scale_x_log10 with breaks/labels,
+          pd.Categorical factor ordering, guide_legend(override_aes)
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: ggplot-grammar annotate('rect'/'text') layers and override_aes legend
+          tuning; nothing beyond that
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-336b5823b3
+  rendered_at: '2026-10-09T03:07:28Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
   - layer-composition
-  patterns: []
+  - manual-ticks
+  patterns:
+  - data-generation
   dataprep: []
   styling:
+  - publication-ready
   - alpha-blending

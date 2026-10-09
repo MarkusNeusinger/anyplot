@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
-Library: plotnine 0.15.5 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-06-10
+Library: plotnine 0.15.8 | Python 3.13.16
+Quality: 85/100 | Updated: 2026-10-09
 """
 
 import os
@@ -22,7 +22,7 @@ from plotnine import (
     guides,
     labs,
     scale_color_manual,
-    scale_x_continuous,
+    scale_x_log10,
     scale_y_continuous,
     theme,
     theme_minimal,
@@ -65,9 +65,9 @@ df["curve"] = pd.Categorical(df["curve"], categories=curve_labels, ordered=True)
 inv_short_max = max(yields_inverted[:4])  # 5.50
 inv_long_min = min(yields_inverted[4:])  # 4.10
 
-# Tick positions — well-spaced to avoid label cramping
-tick_positions = [1, 2, 5, 7, 10, 20, 30]
-tick_labels = ["1Y", "2Y", "5Y", "7Y", "10Y", "20Y", "30Y"]
+# Tick positions — every maturity labeled; a log axis keeps the short end legible
+tick_positions = maturity_years
+tick_labels = ["1M", "3M", "6M", "1Y", "2Y", "3Y", "5Y", "7Y", "10Y", "20Y", "30Y"]
 
 # Title with length-scaled fontsize (see prompts/plot-generator.md)
 title = "U.S. Treasury Yield Curves · line-yield-curve · python · plotnine · anyplot.ai"
@@ -80,7 +80,7 @@ plot = (
     # Inversion zone shading — more prominent than previous (alpha=0.10 vs 0.06)
     + annotate(
         "rect",
-        xmin=-0.5,
+        xmin=0.07,
         xmax=10.5,
         ymin=inv_long_min - 0.08,
         ymax=inv_short_max + 0.08,
@@ -89,7 +89,7 @@ plot = (
     )
     + annotate(
         "text",
-        x=0.5,
+        x=0.085,
         y=inv_short_max + 0.22,
         label="Inversion zone (short-term > long-term)",
         size=9,
@@ -101,7 +101,7 @@ plot = (
     # geom layers sized for 3200×1800 canvas
     + geom_line(size=2.0, alpha=0.85)
     + geom_point(size=3.5, alpha=0.9)
-    + scale_x_continuous(breaks=tick_positions, labels=tick_labels, limits=(0, 31), expand=(0.02, 0))
+    + scale_x_log10(breaks=tick_positions, labels=tick_labels, limits=(0.07, 35), expand=(0.02, 0))
     + scale_y_continuous(
         breaks=[1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5], labels=lambda b: [f"{v:.1f}%" for v in b]
     )
@@ -120,7 +120,7 @@ plot = (
         plot_title=element_text(size=title_fontsize, weight="bold", color=INK, margin={"b": 10}),
         legend_title=element_text(size=9, weight="bold", color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
-        legend_position=(0.25, 0.30),
+        legend_position=(0.91, 0.12),
         legend_background=element_rect(fill=ELEVATED_BG, alpha=0.9, color=INK_SOFT),
         legend_key=element_rect(fill="none", color="none"),
         panel_grid_major_x=element_blank(),
