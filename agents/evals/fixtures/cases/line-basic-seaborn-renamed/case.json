@@ -1,0 +1,25 @@
+{
+  "spec_id": "line-basic",
+  "library": "seaborn",
+  "locale": "de",
+  "perturbation": "renamed",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "t [min]"
+    },
+    {
+      "role": "y",
+      "column": "T_tank [°C]"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "line",
+    "renamed",
+    "synthetic",
+    "renamed-headers",
+    "non-ascii-headers"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 202, renamed)"
+}

@@ -1,0 +1,28 @@
+{
+  "spec_id": "bar-grouped",
+  "library": "seaborn",
+  "locale": "en",
+  "perturbation": "n12",
+  "bindings": [
+    {
+      "role": "category",
+      "column": "Subject"
+    },
+    {
+      "role": "group",
+      "column": "Grade Level"
+    },
+    {
+      "role": "value",
+      "column": "Test Score"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "bar",
+    "n12",
+    "synthetic",
+    "small"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 303, n12)"
+}

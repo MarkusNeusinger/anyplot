@@ -1,0 +1,24 @@
+{
+  "spec_id": "line-basic",
+  "library": "seaborn",
+  "locale": "en",
+  "perturbation": "n12",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Elapsed Time (min)"
+    },
+    {
+      "role": "y",
+      "column": "Tank Temperature (°C)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "line",
+    "n12",
+    "synthetic",
+    "small"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 202, n12)"
+}

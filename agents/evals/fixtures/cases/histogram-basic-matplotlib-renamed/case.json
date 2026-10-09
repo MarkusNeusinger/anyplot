@@ -1,0 +1,20 @@
+{
+  "spec_id": "histogram-basic",
+  "library": "matplotlib",
+  "locale": "de",
+  "perturbation": "renamed",
+  "bindings": [
+    {
+      "role": "values",
+      "column": "Lieferzeit / Minuten"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "histogram",
+    "renamed",
+    "synthetic",
+    "renamed-headers"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 404, renamed)"
+}

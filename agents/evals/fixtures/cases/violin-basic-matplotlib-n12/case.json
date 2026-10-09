@@ -1,0 +1,24 @@
+{
+  "spec_id": "violin-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "perturbation": "n12",
+  "bindings": [
+    {
+      "role": "category",
+      "column": "Customer Segment"
+    },
+    {
+      "role": "value",
+      "column": "Basket Value (EUR)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "violin",
+    "n12",
+    "synthetic",
+    "small"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 808, n12)"
+}

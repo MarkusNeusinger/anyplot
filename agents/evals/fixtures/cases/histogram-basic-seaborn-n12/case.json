@@ -1,0 +1,20 @@
+{
+  "spec_id": "histogram-basic",
+  "library": "seaborn",
+  "locale": "en",
+  "perturbation": "n12",
+  "bindings": [
+    {
+      "role": "values",
+      "column": "Delivery Time (min)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "histogram",
+    "n12",
+    "synthetic",
+    "small"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 404, n12)"
+}

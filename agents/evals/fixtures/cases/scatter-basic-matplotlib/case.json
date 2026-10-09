@@ -7,5 +7,6 @@
     {"role": "y", "column": "Exam Score"}
   ],
   "expected": "accepted",
-  "tags": ["numeric", "renamed-columns", "small"]
+  "tags": ["numeric", "renamed-columns", "small", "smoke"],
+  "source": "hand-written synthetic data"
 }

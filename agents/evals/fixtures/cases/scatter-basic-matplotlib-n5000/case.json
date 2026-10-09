@@ -1,0 +1,24 @@
+{
+  "spec_id": "scatter-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "perturbation": "n5000",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Ad Spend (kCHF)"
+    },
+    {
+      "role": "y",
+      "column": "Revenue (kCHF)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "scatter",
+    "n5000",
+    "synthetic",
+    "large"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 101, n5000)"
+}

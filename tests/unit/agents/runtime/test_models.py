@@ -196,6 +196,7 @@ class TestJudge:
 
         assert verdict.verdict == "out_of_scope"
         assert verdict.tokens == 120
+        assert (verdict.input_tokens, verdict.output_tokens) == (100, 20)  # the split the eval harness prices
         assert client.calls[0]["tool_choice"]["type"] == "tool"
 
     def test_adapter_full_cap(self) -> None:

@@ -556,7 +556,14 @@ async def upload_dataset(
         attribution("data_judge", ledger, verdict="guard_unavailable")
         raise AgentsError(503, "guard_unavailable") from None
     services.usage.add_tokens(user, verdict.tokens)
-    attribution("data_judge", ledger, verdict=verdict.verdict, judge_tokens=verdict.tokens)
+    attribution(
+        "data_judge",
+        ledger,
+        verdict=verdict.verdict,
+        judge_tokens=verdict.tokens,
+        judge_input=verdict.input_tokens,
+        judge_output=verdict.output_tokens,
+    )
     if verdict.verdict != "in_scope":  # fail closed, like the scope guard
         raise AgentsError(403, "data_refused")
     try:

@@ -100,7 +100,15 @@ anyplot/
 ├── agents/                            # Agent network on Google ADK (see concepts/agent-network.md)
 │   ├── main.py                        # anyplot-agents service: the private /v1 API around the ADK runner
 │   ├── stream.py                      # anyplot/1 SSE translator and output sanitiser
-│   ├── evals/fixtures/cases/          # Eval fixture cases (case.json + data.csv), also the adk web seed
+│   ├── evals/                         # Model-regression harness (see agents/README.md)
+│   │   ├── matrix.py                  # Runs eval cases through /v1 in process; report, diff, gallery
+│   │   ├── make_fixtures.py           # Generates the 120 synthetic spike-X cases (seeded, rerunnable)
+│   │   ├── cases.py                   # Case loading and --cases selection
+│   │   ├── pricing.py                 # List prices and the cost of one model call
+│   │   ├── report.py                  # Summary, baseline diff, Markdown, review galleries
+│   │   ├── baselines/                 # Committed baseline reports, one per model
+│   │   ├── fixtures/cases/            # Eval cases (case.json + data.csv), also the adk web seed
+│   │   └── reports/                   # Run reports, renders and galleries (git-ignored)
 │   └── anyplot/
 │       ├── agent.py                   # Root agent "anyplot", ALL_AGENTS registry, App with plugins
 │       ├── models.py                  # The only model and client factory (Claude on Vertex AI, Gemini)

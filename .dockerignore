@@ -38,6 +38,8 @@
 # Promoted feedback cases hold users' data; they are synced here for eval runs
 # and are never committed, so they must never reach an image either.
 agents/evals/.cases
+# The eval harness's local run reports (renders, galleries) are not service code.
+agents/evals/reports
 
 # …and the noise that lives inside the trees above. `__pycache__` matters twice
 # over now that the image compiles its own bytecode: a stale host `.pyc` copied

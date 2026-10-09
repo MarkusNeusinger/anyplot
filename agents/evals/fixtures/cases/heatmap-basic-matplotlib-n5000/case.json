@@ -1,0 +1,29 @@
+{
+  "spec_id": "heatmap-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "perturbation": "n5000",
+  "bindings": [
+    {
+      "role": "y",
+      "column": "Weekday"
+    },
+    {
+      "role": "x",
+      "column": "Hour"
+    },
+    {
+      "role": "value",
+      "column": "Response Time (min)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "heatmap",
+    "n5000",
+    "synthetic",
+    "large",
+    "aggregation"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 606, n5000)"
+}

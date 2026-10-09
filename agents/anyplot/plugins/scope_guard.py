@@ -111,7 +111,15 @@ class ScopeGuardPlugin(BasePlugin):
         ledger.judge_tokens += verdict.tokens
         services.usage.add_tokens(user, verdict.tokens)
         ledger.lang = verdict.lang
-        attribution("scope_guard", ledger, verdict=verdict.verdict, lang=verdict.lang, judge_tokens=verdict.tokens)
+        attribution(
+            "scope_guard",
+            ledger,
+            verdict=verdict.verdict,
+            lang=verdict.lang,
+            judge_tokens=verdict.tokens,
+            judge_input=verdict.input_tokens,
+            judge_output=verdict.output_tokens,
+        )
         if verdict.verdict != "in_scope":
             ledger.refuse("out_of_scope", refusal("out_of_scope", verdict.lang))
             return _withheld()

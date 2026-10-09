@@ -1,0 +1,30 @@
+{
+  "spec_id": "heatmap-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "perturbation": "date",
+  "bindings": [
+    {
+      "role": "y",
+      "column": "Weekday"
+    },
+    {
+      "role": "x",
+      "column": "Hour"
+    },
+    {
+      "role": "value",
+      "column": "Response Time (min)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "heatmap",
+    "date",
+    "synthetic",
+    "dd.mm.yyyy",
+    "iso-date",
+    "unbound-dates"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 606, date)"
+}
