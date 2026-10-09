@@ -1,0 +1,5 @@
+# Upload only what the function needs (gcloud run deploy --source).
+.gcloudignore
+README.md
+__pycache__/
+*.pyc

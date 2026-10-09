@@ -1,0 +1,7 @@
+# Vertex AI budget guard (Cloud Run function, base image python313).
+# Latest PyPI releases on 2026-10-09; google-auth matches the repository's uv.lock,
+# which the unit tests in tests/unit/automation/gcp/ run against.
+# Dependabot does not watch this file: bump it by hand and redeploy.
+functions-framework==3.10.2
+google-auth==2.61.0
+requests==2.34.2
