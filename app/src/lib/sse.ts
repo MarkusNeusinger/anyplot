@@ -62,6 +62,11 @@ export class SseParser {
         end = lf;
         next = lf + 1;
       }
+      // The limit holds for a line that ends inside this chunk as well as for the
+      // unfinished remainder below; an oversized line is refused before it is parsed.
+      if (end - start > MAX_SSE_LINE_CHARS) {
+        throw new SseStreamError('event stream line too long');
+      }
       const event = this.line(this.buffer.slice(start, end));
       if (event) events.push(event);
       start = next;

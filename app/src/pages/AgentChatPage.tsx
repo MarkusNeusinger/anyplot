@@ -25,7 +25,7 @@ import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 
 import { SectionHeader } from 'src/components/SectionHeader';
-import { LIBRARIES } from 'src/constants';
+import { LIB_TO_LANG, LIBRARIES } from 'src/constants';
 import { CONFIG } from 'src/global-config';
 import { sessionBusy, useAgentSession } from 'src/hooks/useAgentSession';
 import { useAnalytics } from 'src/hooks/useAnalytics';
@@ -82,7 +82,10 @@ export function AgentChatPage() {
 
   const spec = params.get('spec') ?? '';
   const library = params.get('library') ?? '';
-  const language = (params.get('language') ?? 'python').toLowerCase();
+  // The language follows the library (the catalogue's pairing), never the query:
+  // `?library=matplotlib&language=javascript` would otherwise pick the wrong
+  // highlighter and a back link to a page that does not exist.
+  const language = LIB_TO_LANG[library] ?? 'python';
   const valid = SPEC_PATTERN.test(spec) && (LIBRARIES as readonly string[]).includes(library);
 
   // `source` only says where the visitor came from; it is read once for

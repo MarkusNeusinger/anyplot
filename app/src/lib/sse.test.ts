@@ -70,6 +70,18 @@ describe('SseParser', () => {
       SseStreamError
     );
   });
+
+  it('refuses an oversized line even when its newline arrives in the same chunk', () => {
+    const parser = new SseParser();
+    const oversized = 'data: ' + 'x'.repeat(MAX_SSE_LINE_CHARS + 1) + '\n\n';
+    expect(() => parser.feed(oversized)).toThrow(SseStreamError);
+  });
+
+  it('accepts a line at exactly the limit', () => {
+    const parser = new SseParser();
+    const line = 'data: ' + 'x'.repeat(MAX_SSE_LINE_CHARS - 'data: '.length);
+    expect(parser.feed(line + '\n\n')).toHaveLength(1);
+  });
 });
 
 describe('readSseEvents', () => {

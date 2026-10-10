@@ -399,26 +399,33 @@ function defaultBindings(session, profile) {
   return bindings;
 }
 
-function csvText(session) {
+// The helpers below read `dataset` and `bindings` from whatever holds them: the
+// session while a run is in progress, or a version afterwards. A version keeps the
+// dataset and bindings it was made from (the session replaces, never mutates,
+// both on a reparse or a binding change), so its code, its CSV and a later theme
+// render stay its own after the admin pastes new data, like the real service's
+// stored run form.
+
+function csvText(holder) {
   const quote = cell => (/[",\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell);
-  return [session.dataset.header, ...session.dataset.rows]
+  return [holder.dataset.header, ...holder.dataset.rows]
     .map(row => row.map(quote).join(','))
     .join('\n')
     .concat('\n');
 }
 
-const columnOf = (session, name) => session.bindings.find(b => b.role === name)?.column;
+const columnOf = (holder, name) => holder.bindings.find(b => b.role === name)?.column;
 /** The bound y columns: `y` of scatter-basic, or every member `y1, y2, ...` of line-multi. */
-const yColumns = session => session.bindings.filter(b => /^y\d*$/.test(b.role)).map(b => b.column);
+const yColumns = holder => holder.bindings.filter(b => /^y\d*$/.test(b.role)).map(b => b.column);
 
 /** One point list per y column; a non-numeric x (a date) plots by row order. */
-function points(session) {
-  const names = session.dataset.header;
-  const x = names.indexOf(columnOf(session, 'x'));
+function points(holder) {
+  const names = holder.dataset.header;
+  const x = names.indexOf(columnOf(holder, 'x'));
   if (x < 0) return null;
-  return yColumns(session).map(column => {
+  return yColumns(holder).map(column => {
     const y = names.indexOf(column);
-    return session.dataset.rows
+    return holder.dataset.rows
       .map((row, index) => [
         Number.isFinite(Number(row[x])) ? Number(row[x]) : index,
         Number(row[y]),
@@ -428,8 +435,8 @@ function points(session) {
 }
 
 function plotPy(session, version) {
-  const x = columnOf(session, 'x') ?? 'x';
-  const y = yColumns(session)[0] ?? 'y';
+  const x = columnOf(version, 'x') ?? 'x';
+  const y = yColumns(version)[0] ?? 'y';
   const markerSize = version.number > 1 ? 160 : 110;
   return `# Adapted by anyplot.ai from ${session.specId} (${version.library}) for your data.csv; run: \`ANYPLOT_THEME=${version.theme} python plot.py\`
 import os
@@ -468,8 +475,8 @@ const sessions = new Map();
 let waitingTurns = 0;
 let runsInFlight = 0;
 
-function renderVersion(session, version, theme) {
-  version.pngs[theme] = drawPlot(theme, points(session), {
+function renderVersion(version, theme) {
+  version.pngs[theme] = drawPlot(theme, points(version), {
     firstColor: version.number > 1 ? 2 : 0,
   });
 }
@@ -623,12 +630,14 @@ async function streamTurn(req, res, session, body, ref) {
         number: session.versions.length + 1,
         library: session.library,
         theme,
+        dataset: session.dataset,
+        bindings: session.bindings,
         pngs: {},
       };
-      renderVersion(session, version, theme);
+      renderVersion(version, theme);
       session.versions.push(version);
-      const x = columnOf(session, 'x');
-      const y = yColumns(session).join(', ');
+      const x = columnOf(version, 'x');
+      const y = yColumns(version).join(', ');
       send('plot', {
         status: refine ? 'needs_attention' : 'ok',
         reason: null,
@@ -889,7 +898,7 @@ async function route(req, res) {
     const theme = body?.theme === 'dark' ? 'dark' : 'light';
     if (!version.pngs[theme]) {
       await sleep(1500);
-      renderVersion(session, version, theme);
+      renderVersion(version, theme);
     }
     const artifacts = ['light', 'dark']
       .filter(t => version.pngs[t])
@@ -917,7 +926,7 @@ async function route(req, res) {
     }
     if (name === 'data.csv') {
       res.writeHead(200, { ...headers, 'Content-Type': 'text/csv; charset=utf-8' });
-      res.end(csvText(session));
+      res.end(csvText(version));
       return;
     }
     const pngTheme = { 'plot-light.png': 'light', 'plot-dark.png': 'dark' }[name];

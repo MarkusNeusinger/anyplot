@@ -30,17 +30,6 @@ export const actionButtonSx = {
   '&:disabled': { opacity: 0.45, cursor: 'default' },
 } as const;
 
-/** Filled CTA (§7.4 hero CTA): ink on paper, green on hover. One per surface. */
-export const ctaButtonSx = {
-  ...actionButtonSx,
-  color: 'var(--bg-page)',
-  bgcolor: 'var(--ink)',
-  border: '1px solid transparent',
-  px: 2,
-  py: 1,
-  '&:hover:not(:disabled)': { color: '#fff', bgcolor: colors.primary },
-} as const;
-
 /** Ghost button (§7.4): for a second action next to the CTA. */
 export const ghostButtonSx = {
   ...actionButtonSx,

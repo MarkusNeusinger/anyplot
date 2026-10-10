@@ -20,8 +20,8 @@ import { MAX_DATASET_BYTES, utf8Bytes } from 'src/lib/agent';
 import { bindingRows, kindsHint } from 'src/sections/agent-chat/bindings';
 import { describeDataFailure } from 'src/sections/agent-chat/messages';
 import {
+  actionButtonSx,
   bodyTextSx,
-  ctaButtonSx,
   ghostButtonSx,
   labelSx,
   nativeControlSx,
@@ -294,7 +294,13 @@ export function DataPanel({ state, onParse, onBind, onCreatePlot }: DataPanelPro
               type="button"
               onClick={onCreatePlot}
               disabled={!canCreate}
-              sx={{ ...ctaButtonSx, width: { xs: '100%', sm: 'auto' } }}
+              sx={{
+                ...actionButtonSx,
+                border: '1px solid var(--rule)',
+                px: 2,
+                py: 1,
+                width: { xs: '100%', sm: 'auto' },
+              }}
             >
               .create_plot()
             </Box>
