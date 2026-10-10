@@ -7,7 +7,7 @@ launcher and the real harness.
 """
 
 import asyncio
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator, Callable, Iterator
 from typing import Any
 
 import google.auth.exceptions
@@ -24,10 +24,12 @@ from agents.renderer.executor import ExecutorConfig, SandboxExecutor
 from agents.renderer.main import Renderer, app, get_renderer
 from agents.renderer.settings import RendererSettings, get_settings
 
-from .helpers import AGENTS_SA, CANVAS_PLOT, URL, FakeExecutor, id_token
+from .conftest import FakeLauncher
+from .helpers import AGENTS_SA, CANVAS_PLOT, SLEEPER, URL, FakeExecutor, id_token
 
 
 GOOD = id_token(aud=URL, email=AGENTS_SA)
+NO_WAIT = (0.0, 0.0, 0.0, 0.0)
 
 
 class StaticTokens:
@@ -96,9 +98,29 @@ def overrides(settings: RendererSettings, renderer: Renderer) -> Iterator[None]:
 
 @pytest.fixture
 async def backend(overrides: None) -> AsyncIterator[RemoteBackend]:
-    backend = RemoteBackend(url=URL, tokens=StaticTokens(), transport=httpx.ASGITransport(app=app), retry_delay_s=0)
+    backend = RemoteBackend(
+        url=URL, tokens=StaticTokens(), transport=httpx.ASGITransport(app=app), retry_delays_s=NO_WAIT
+    )
     yield backend
     await backend.aclose()
+
+
+def mocked(handler: Callable[[httpx.Request], Any], **kwargs: Any) -> RemoteBackend:
+    """A backend whose requests `handler` answers (sync or async), with no pause between retries."""
+    return RemoteBackend(
+        url=URL, tokens=StaticTokens(), transport=httpx.MockTransport(handler), **{"retry_delays_s": NO_WAIT, **kwargs}
+    )
+
+
+def answer_json(**overrides: Any) -> dict[str, Any]:
+    """A renderer answer for job123 with one light theme, its fields overridable."""
+    light = {"theme": "light", "exit_code": 0, "png_base64": None, **overrides}
+    return {
+        "job_id": "job123",
+        "outputs": {"light": light},
+        "timings": {"slot_wait_s": 0, "total_s": 0},
+        "version": "x",
+    }
 
 
 class TestRoundTrip:
@@ -141,7 +163,10 @@ class TestRoundTrip:
 
 
 class TestFailures:
-    async def test_a_refused_caller_is_unavailable(self, overrides: None) -> None:
+    async def test_a_refused_caller_is_unavailable_and_logged(
+        self, overrides: None, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """The pipeline logs only the exception class, so a wrong audience at bootstrap must show here."""
         backend = RemoteBackend(
             url=URL,
             tokens=StaticTokens(id_token(aud=URL, email="someone@example.com")),
@@ -149,24 +174,75 @@ class TestFailures:
         )
         with pytest.raises(RendererUnavailable, match="refused this caller"):
             await backend.render(render_job())
+        assert "the renderer refused this caller (HTTP 403, forbidden)" in caplog.text
         await backend.aclose()
 
     async def test_one_connection_error_is_retried(self, overrides: None) -> None:
         transport = Flaky(httpx.ASGITransport(app=app), failures=1, error=httpx.ConnectError)
-        backend = RemoteBackend(url=URL, tokens=StaticTokens(), transport=transport, retry_delay_s=0)
+        backend = RemoteBackend(url=URL, tokens=StaticTokens(), transport=transport, retry_delays_s=NO_WAIT)
 
         result = await backend.render(render_job())
 
         assert result.outputs["light"].exit_code == 0 and transport.requests == 2
         await backend.aclose()
 
-    async def test_a_second_connection_error_is_unavailable(self, overrides: None) -> None:
-        transport = Flaky(httpx.ASGITransport(app=app), failures=2, error=httpx.ConnectError)
-        backend = RemoteBackend(url=URL, tokens=StaticTokens(), transport=transport, retry_delay_s=0)
+    async def test_connection_errors_past_the_retries_are_unavailable(
+        self, overrides: None, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        transport = Flaky(httpx.ASGITransport(app=app), failures=5, error=httpx.ConnectError)
+        backend = RemoteBackend(url=URL, tokens=StaticTokens(), transport=transport, retry_delays_s=NO_WAIT)
 
         with pytest.raises(RendererUnavailable, match=r"could not be reached \(ConnectError\)"):
             await backend.render(render_job())
-        assert transport.requests == 2
+        assert transport.requests == 1 + len(NO_WAIT)
+        assert "could not be reached (ConnectError)" in caplog.text  # logged, not only raised
+        await backend.aclose()
+
+    async def test_a_cold_start_is_ridden_out_with_backoff(self) -> None:
+        """Spike S after a scale from zero: a 500, then 429s, then the answer, about 17 s in all."""
+        answers = [
+            httpx.Response(500, text="<html>Server Error</html>", headers={"content-type": "text/html"}),
+            httpx.Response(429, text="<html>Rate exceeded.</html>", headers={"content-type": "text/html"}),
+            httpx.Response(429, text="<html>Rate exceeded.</html>", headers={"content-type": "text/html"}),
+            httpx.Response(200, json=answer_json()),
+        ]
+        sleeps: list[float] = []
+
+        async def no_sleep(delay: float) -> None:
+            sleeps.append(delay)
+
+        backend = RemoteBackend(
+            url=URL,
+            tokens=StaticTokens(),
+            transport=httpx.MockTransport(lambda request: answers.pop(0)),
+            sleep=no_sleep,
+        )
+
+        result = await backend.render(render_job())
+
+        assert result.outputs["light"].exit_code == 0
+        assert sleeps == [1.0, 3.0, 8.0]  # the default schedule
+        await backend.aclose()
+
+    async def test_retries_stop_at_the_budget(self) -> None:
+        clock = [0.0]
+        requests: list[float] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            requests.append(clock[0])
+            clock[0] += 12.0  # each answer arrives 12 s after its request
+            return httpx.Response(503, text="<html>Service Unavailable</html>", headers={"content-type": "text/html"})
+
+        async def advance(delay: float) -> None:
+            clock[0] += delay
+
+        backend = mocked(
+            handler, retry_delays_s=(1.0, 3.0, 8.0, 15.0), retry_budget_s=30.0, clock=lambda: clock[0], sleep=advance
+        )
+
+        with pytest.raises(RendererUnavailable, match="HTTP 503"):
+            await backend.render(render_job())
+        assert requests == [0.0, 13.0, 28.0]  # a fourth would start 48 s after the first
         await backend.aclose()
 
     async def test_a_front_end_error_is_retried_but_the_renderers_own_is_not(self) -> None:
@@ -180,28 +256,97 @@ class TestFailures:
             seen.append(request.headers["authorization"])
             return answers[len(seen) - 1]
 
-        backend = RemoteBackend(url=URL, tokens=StaticTokens(), transport=httpx.MockTransport(handler), retry_delay_s=0)
+        backend = mocked(handler)
 
         with pytest.raises(RendererUnavailable, match="HTTP 503, busy"):
             await backend.render(render_job())
         assert seen == [f"Bearer {GOOD}"] * 2
         await backend.aclose()
 
+    async def test_the_renderers_own_500_is_not_retried(self) -> None:
+        """A JSON 500 is the renderer's own; retrying it would run a job that broke the renderer twice."""
+        calls: list[str] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            calls.append(request.url.path)
+            return httpx.Response(500, json={"detail": "internal"})
+
+        backend = mocked(handler)
+
+        with pytest.raises(RendererUnavailable, match="HTTP 500, internal"):
+            await backend.render(render_job())
+        assert calls == ["/render"]
+        await backend.aclose()
+
     @pytest.mark.parametrize(
-        ("answer", "message"),
+        ("status", "text", "message", "requests"),
         [
-            (httpx.Response(200, text="not json"), "does not match the contract"),
-            (httpx.Response(500, text="<html>Server Error</html>"), "HTTP 500"),
+            (200, "not json", "does not match the contract", 1),
+            (500, "<html>Server Error</html>", "HTTP 500", 1 + len(NO_WAIT)),
         ],
     )
-    async def test_malformed_or_failed_answers_are_unavailable(self, answer: httpx.Response, message: str) -> None:
-        backend = RemoteBackend(
-            url=URL, tokens=StaticTokens(), transport=httpx.MockTransport(lambda request: answer), retry_delay_s=0
-        )
+    async def test_malformed_or_failed_answers_are_unavailable(
+        self, status: int, text: str, message: str, requests: int
+    ) -> None:
+        calls: list[str] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            calls.append(request.url.path)
+            return httpx.Response(status, text=text)
+
+        backend = mocked(handler)
 
         with pytest.raises(RendererUnavailable, match=message):
             await backend.render(render_job())
+        assert len(calls) == requests
         await backend.aclose()
+
+    async def test_a_launcher_failure_is_the_renderers_not_the_codes(self) -> None:
+        backend = mocked(
+            lambda request: httpx.Response(200, json=answer_json(exit_code=1, attempts=2, reason="launcher"))
+        )
+
+        with pytest.raises(RendererUnavailable, match="launcher failed twice"):
+            await backend.render(render_job())
+        await backend.aclose()
+
+    @pytest.mark.parametrize(
+        ("reason", "measured", "limit", "expected"),
+        [
+            (
+                "disk_budget",
+                70 * 1024 * 1024,
+                64 * 1024 * 1024,
+                "wrote 70.0 MiB to its working directory, over the 64.0 MiB limit",
+            ),
+            ("file_budget", 10_001, 10_000, "created 10001 files and directories, over the limit of 10000"),
+            ("file_budget", None, 10_000, "a directory tree too deep to measure"),
+            ("memory", 400, 512, "free memory fell to 400 MiB, below its 512 MiB floor"),
+            (
+                "output_rejected",
+                11 * 1024 * 1024,
+                10 * 1024 * 1024,
+                "plot-light.png is 11.0 MiB, over the 10.0 MiB limit",
+            ),
+            ("output_rejected", None, None, "plot-light.png is not a regular file"),
+        ],
+    )
+    async def test_a_limit_the_renderer_hit_reaches_the_repair_with_its_numbers(
+        self, reason: str, measured: int | None, limit: int | None, expected: str
+    ) -> None:
+        """Without the reason R1 read every stop as "failed with no error output" and spent the repair on it."""
+        exit_code = 0 if reason == "output_rejected" else None
+        answer = answer_json(exit_code=exit_code, reason=reason, measured=measured, limit=limit)
+        backend = mocked(lambda request: httpx.Response(200, json=answer))
+
+        result = await backend.render(render_job())
+        await backend.aclose()
+
+        output = result.outputs["light"]
+        assert (output.reason, output.measured, output.limit) == (reason, measured, limit)
+        report = evaluate(result, themes=("light",), library="matplotlib", rows=1)
+        assert not report.passed_host_gates and len(report.blocking) == 1
+        assert expected in report.blocking[0] and "no error output" not in report.blocking[0]
 
     async def test_an_answer_for_another_job_is_refused(self) -> None:
         def other(request: httpx.Request) -> httpx.Response:
@@ -248,6 +393,80 @@ class TestFailures:
             await backend.render(render_job(language="r"))
         assert calls == []
         await backend.aclose()
+
+
+class TestCancel:
+    """The front end may not pass a closed connection on, so the backend also asks the renderer to stop."""
+
+    async def test_a_cancelled_render_asks_the_renderer_to_stop(self) -> None:
+        started = asyncio.Event()
+        cancels: list[str] = []
+
+        async def handler(request: httpx.Request) -> httpx.Response:
+            if request.url.path.endswith("/cancel"):
+                cancels.append(request.url.path)
+                return httpx.Response(200, json={"cancelled": 1})
+            started.set()
+            await asyncio.Event().wait()
+            raise AssertionError("the render request never gets an answer")
+
+        backend = mocked(handler)
+        task = asyncio.create_task(backend.render(render_job()))
+        await asyncio.wait_for(started.wait(), 5)
+        task.cancel()
+
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        assert cancels == ["/render/job123/cancel"]
+        await backend.aclose()
+
+    async def test_an_answer_that_does_not_come_in_time_is_cancelled_too(self) -> None:
+        cancels: list[str] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            if request.url.path.endswith("/cancel"):
+                cancels.append(request.url.path)
+                return httpx.Response(200, json={"cancelled": 1})
+            raise httpx.ReadTimeout("timed out", request=request)
+
+        backend = mocked(handler)
+
+        with pytest.raises(RendererUnavailable, match=r"did not answer in time \(ReadTimeout\)"):
+            await backend.render(render_job())
+        assert cancels == ["/render/job123/cancel"]
+        await backend.aclose()
+
+    async def test_a_cancel_that_fails_is_only_logged(self, caplog: pytest.LogCaptureFixture) -> None:
+        def handler(request: httpx.Request) -> httpx.Response:
+            if request.url.path.endswith("/cancel"):
+                raise httpx.ConnectError("refused", request=request)
+            raise httpx.ReadTimeout("timed out", request=request)
+
+        backend = mocked(handler)
+
+        with pytest.raises(RendererUnavailable, match="did not answer in time"):
+            await backend.render(render_job())
+        assert "the cancel did not reach the renderer (ConnectError)" in caplog.text
+        await backend.aclose()
+
+    async def test_end_to_end_a_cancelled_render_stops_its_sandbox(
+        self, overrides: None, settings: RendererSettings, config: ExecutorConfig, launcher: FakeLauncher
+    ) -> None:
+        renderer = Renderer(settings, SandboxExecutor(config))
+        app.dependency_overrides[get_renderer] = lambda: renderer
+        backend = RemoteBackend(url=URL, tokens=StaticTokens(), transport=httpx.ASGITransport(app=app))
+        task = asyncio.create_task(backend.render(render_job(source=SLEEPER)))
+        for _ in range(200):
+            if launcher.launches():
+                break
+            await asyncio.sleep(0.05)
+        task.cancel()
+
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        await backend.aclose()
+        assert len(launcher.launches()) == 1 and launcher.deletes() == launcher.launches()
+        assert renderer.slot.in_flight == 0
 
 
 class FakeIdCredentials:

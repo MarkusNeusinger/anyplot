@@ -142,9 +142,9 @@ At the defaults only one run may start a minute, so a second "Create plot" withi
 
 `adk web` and the local `/v1` service can render through the deployed `anyplot-renderer`, the same sandboxes the deployed agents service uses. The renderer accepts a token only when Cloud Run IAM lets it through (`roles/run.invoker` on the service) and its claims pass the renderer's own check: the token's `aud` in `RENDERER_AUDIENCES` and its `email` in `RENDERER_ALLOWED_CALLERS`.
 
-1. Make sure your account has `roles/run.invoker` on `anyplot-renderer` and is listed in its `RENDERER_ALLOWED_CALLERS` (owner task 14 in the design doc).
+1. Make sure your account has `roles/run.invoker` on `anyplot-renderer` and is listed in its `RENDERER_ALLOWED_CALLERS`, and that the OAuth client id of your token (step 3) is in its `RENDERER_AUDIENCES` (owner task 14 in the design doc).
 
-2. Point the backend at the renderer:
+2. Point the backend at the renderer's service URL. Cloud Run accepts a service account's token only for that URL, never for a tag URL such as the deploy's `candidate`:
 
    ```bash
    export AGENT_RENDERER=remote \
@@ -159,9 +159,11 @@ At the defaults only one run may start a minute, so a second "Create plot" withi
 
    Or leave `AGENT_RENDER_TOKEN` unset: in development the backend then refreshes your Application Default Credentials (`gcloud auth application-default login`) and sends their ID token, renewing it before it expires. With a service-account key or an impersonated service account in `GOOGLE_APPLICATION_CREDENTIALS`, it mints a token for the renderer URL instead.
 
-   A user's ID token cannot name an audience, so its `aud` is the OAuth client id of the tool that minted it: `32555940559.apps.googleusercontent.com` for `gcloud auth print-identity-token`, and the client id of your Application Default Credentials for the second way. That id must be in the renderer's `RENDERER_AUDIENCES`. Whether Cloud Run IAM accepts the Application Default Credentials token was not verified before the first deploy; the gcloud token is the proven path.
+   A user's ID token cannot name an audience, so its `aud` is the OAuth client id of the tool that minted it: `32555940559.apps.googleusercontent.com` for `gcloud auth print-identity-token`, and `764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com` for the Application Default Credentials of `gcloud auth application-default login`. The bootstrap lists both in the deploy's `_AUDIENCES`. Whether Cloud Run IAM accepts the Application Default Credentials token was not verified before the first deploy; the gcloud token is the proven path.
 
-4. Start `adk web` or the service as above. A render that the renderer refuses ends the pipeline run with `failed`, reason `error`, and the backend logs the cause, such as `the renderer refused this caller (HTTP 403, forbidden)`.
+4. Start `adk web` or the service as above. A render that the renderer refuses ends the pipeline run with `failed`, reason `error`, and the backend logs the cause, such as `remote renderer: the renderer refused this caller (HTTP 403, forbidden)`.
+
+The backend rides out a cold start: it retries a connection error or a Cloud Run front-end 429 or 5xx after 1, 3, 8 and 15 seconds, within 30 seconds, because spike S saw a renderer scaled to zero answer only after about 17 seconds. It never retries the renderer's own refusals, such as `503 busy` or `500 internal`. When you stop a run, or an answer does not come in time, the backend also posts `/render/{job_id}/cancel`, so the renderer stops the sandbox and frees its only render slot.
 
 Never set `AGENT_RENDER_TOKEN` on a deployed service: the settings refuse it outside `ENVIRONMENT=development`, because a deployed service mints its token from the metadata server.
 
@@ -173,7 +175,9 @@ The renderer runs only on Cloud Run, because `sandbox do` exists only there. On 
 ENVIRONMENT=development uv run uvicorn agents.renderer.main:app --port 8003
 ```
 
-Its settings are `RENDERER_*` variables, documented in `renderer/settings.py`. The defaults are the deployed limits: a 64 MiB byte budget per run, a 30-second wait for the one render slot, a 1,024 MiB `MemAvailable` floor, and the rlimits 60 s CPU, 50 MiB per file, 1 GiB address space and 64 processes.
+Its settings are `RENDERER_*` variables, documented in `renderer/settings.py`. The defaults are the deployed limits: a 64 MiB byte budget and 10,000 files per run, a 30-second wait for the one render slot, a 1,024 MiB `MemAvailable` floor before a render and a 512 MiB floor during one (below it the watchdog kills the sandbox), and the rlimits 60 s CPU, 50 MiB per file, 1 GiB address space and 64 processes.
+
+On Cloud Run the service also checks itself: it refuses every render with `503 volume_missing` when `/tmp/runs` is not a mount of its own of at most 1 GiB (the deploy's in-memory volume), and it ends its own process when a sandbox launcher outlives its kill, so Cloud Run starts a fresh instance instead of answering `503 stuck` until the instance goes idle. `GET /status` reports both. A caller that goes away, or a `POST /render/{job_id}/cancel`, stops the render in progress.
 
 The image builds from the repository root:
 
@@ -181,7 +185,7 @@ The image builds from the repository root:
 docker build -f agents/renderer/Dockerfile -t anyplot-renderer:dev .
 ```
 
-`renderer/cloudbuild.yaml` builds, deploys a `candidate` revision without traffic, smokes it (IAM refuses an anonymous caller; with `_SMOKE_RENDER=true` a real matplotlib render through the candidate), and promotes it. The first build also creates the service. The deploy flags and the owner tasks are in [Agent network design](../docs/concepts/agent-network.md#serving-and-infrastructure).
+`renderer/cloudbuild.yaml` builds, deploys a `candidate` revision without traffic, smokes it (IAM refuses an anonymous caller; with `_SMOKE_RENDER=true`, `/status` reports the launcher and the volume and a real matplotlib render goes through the candidate, with a token minted for the service URL), and promotes it. The first build also creates the service; the deploy adds the service URL to `RENDERER_AUDIENCES` itself, and `_MIN_INSTANCES=1` keeps an instance warm. CI builds the same image before merge (`.github/workflows/ci-image.yml`). The deploy flags and the owner tasks are in [Agent network design](../docs/concepts/agent-network.md#serving-and-infrastructure).
 
 ### Test
 

@@ -185,8 +185,10 @@ def token(claims: dict) -> str:
 
 
 class FakeRequest:
-    def __init__(self, authorization: str | None) -> None:
+    def __init__(self, authorization: str | None, serverless: str | None = None) -> None:
         self.headers = {"authorization": authorization} if authorization else {}
+        if serverless is not None:
+            self.headers["x-serverless-authorization"] = serverless
 
 
 class TestCallerCheck:
@@ -216,3 +218,14 @@ class TestCallerCheck:
             with pytest.raises(AgentsError) as caught:
                 check_caller(FakeRequest(token(claims) if claims else None))
             assert caught.value.status == status
+
+        # With X-Serverless-Authorization present, Cloud Run checks only that header and
+        # passes Authorization through unverified: a forged Authorization must not count.
+        invoker = token({**good, "email": "editor@example.com"})
+        with pytest.raises(AgentsError) as caught:
+            check_caller(FakeRequest(token(good), serverless=invoker))
+        assert caught.value.status == 403
+        check_caller(FakeRequest(None, serverless=token(good)))
+        with pytest.raises(AgentsError) as caught:
+            check_caller(FakeRequest(token(good), serverless=""))
+        assert caught.value.status == 401

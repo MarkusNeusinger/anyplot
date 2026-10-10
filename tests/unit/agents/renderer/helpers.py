@@ -7,7 +7,6 @@ import time
 from typing import Any
 
 from agents.anyplot.render.backends.fake import fixture_png
-from agents.renderer.executor import Unavailable
 from agents.renderer.wire import RenderRequest, Theme, ThemeRun
 
 
@@ -38,6 +37,9 @@ ax.bar(["a", "b", "c", "d"], [3, 1, 4, 2], color="#009E73")
 fig.savefig(f"plot-{THEME}.png")
 """
 """A plot on the 3200x1800 catalogue canvas, which the host gates accept."""
+
+SLEEPER = "import time\ntime.sleep(60)\n"
+"""Code that runs until the renderer stops it."""
 
 FAKE_LAUNCHER = """\
 import json
@@ -119,7 +121,7 @@ class FakeExecutor:
         self.active = 0
         self.max_active = 0
         self.gate: asyncio.Event | None = None
-        self.error: Unavailable | None = None
+        self.error: Exception | None = None
         self.stuck = 0
         self.available = True
 

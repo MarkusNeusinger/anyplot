@@ -8,9 +8,11 @@ import asyncio
 import base64
 import os
 import signal
+import stat
 import time
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -28,17 +30,15 @@ from agents.renderer.executor import (
     read_head_tail,
     read_regular,
     read_tail,
+    runs_volume_ok,
     sandbox_env,
     tree_size,
 )
 from agents.renderer.settings import RendererSettings
-from agents.renderer.wire import MAX_STDERR_CHARS
+from agents.renderer.wire import MAX_STDERR_CHARS, ThemeRun
 
 from .conftest import FakeLauncher
-from .helpers import PLOT, job
-
-
-SLEEPER = "import time\ntime.sleep(60)\n"
+from .helpers import PLOT, SLEEPER, job
 
 
 def envs(argv: list[str]) -> dict[str, str]:
@@ -100,6 +100,7 @@ class TestRender:
         assert run.probe is not None and run.probe["canvas"] == [200, 100]
         assert run.max_rss_mb is not None and run.max_rss_mb > 0
         assert len(launcher.launches()) == 1 and launcher.launches()[0].endswith("-dark")
+        assert launcher.deletes() == []  # a clean exit needs no delete
         assert envs(launcher.calls()[0])["ANYPLOT_THEME"] == "dark"
         assert list(config.runs_dir.iterdir()) == []  # every run directory is removed
 
@@ -179,6 +180,7 @@ class TestRetry:
         assert run.exit_code == 1 and run.attempts == 2 and run.reason == "launcher" and run.png_base64 is None
         assert "failed to exec in container" in run.stderr_tail
         assert len(launcher.launches()) == 2
+        assert launcher.deletes() == launcher.launches()  # a failed launch may leave a half-created sandbox
 
     async def test_a_failure_in_the_plot_code_is_not_retried(
         self, executor: SandboxExecutor, launcher: FakeLauncher
@@ -187,7 +189,7 @@ class TestRetry:
 
         assert run.exit_code == 1 and run.attempts == 1 and run.reason is None
         assert "ValueError" in run.stderr_tail
-        assert len(launcher.launches()) == 1
+        assert len(launcher.launches()) == 1 and launcher.deletes() == launcher.launches()
 
     def test_only_a_run_without_the_harness_start_line_counts_as_a_launcher_failure(self) -> None:
         assert Attempt("r", exit_code=1).launcher_failed
@@ -223,7 +225,67 @@ class TestBounds:
         source = "import time\nfor index in range(5000):\n    open(f'f{index}', 'w').close()\n    time.sleep(0.001)\n"
         run = await executor.run_theme(job(source), "light")
 
-        assert run.reason == "disk_budget"
+        assert run.reason == "file_budget" and run.limit == 50
+        assert run.measured is not None and run.measured > 50
+
+    async def test_the_byte_watchdog_reports_the_measured_size_and_the_budget(
+        self, executor: SandboxExecutor, config: ExecutorConfig
+    ) -> None:
+        source = "import time\nopen('fill.bin', 'wb').write(b'x' * 12 * 1024 * 1024)\ntime.sleep(30)\n"
+
+        run = await executor.run_theme(job(source), "light")
+
+        assert run.reason == "disk_budget" and run.limit == config.run_budget_bytes
+        assert run.measured is not None and run.measured > config.run_budget_bytes
+
+    async def test_a_tree_past_path_max_counts_as_over_its_limit(
+        self, executor: SandboxExecutor, launcher: FakeLauncher
+    ) -> None:
+        """A walk by full paths cannot see past PATH_MAX; what it cannot measure must not escape the budget."""
+        source = (
+            "import os, time\nfor _ in range(40):\n    os.mkdir('d' * 200)\n    os.chdir('d' * 200)\ntime.sleep(30)\n"
+        )
+
+        run = await executor.run_theme(job(source), "light")
+
+        assert run.reason == "file_budget" and run.measured is None and run.exit_code is None
+        assert launcher.deletes() == launcher.launches()
+
+    async def test_the_memory_floor_kills_the_run(
+        self, config: ExecutorConfig, launcher: FakeLauncher, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A sandbox's private /tmp counts as instance memory (S2), so the watchdog reads MemAvailable too."""
+        readings = iter([3000, 3000, 400])
+        executor = SandboxExecutor(replace(config, kill_mem_available_mb=512), memory=lambda: next(readings, 400))
+
+        run = await executor.run_theme(job(SLEEPER), "light")
+
+        assert run.reason == "memory" and (run.measured, run.limit) == (400, 512)
+        assert run.exit_code is None and not run.timed_out and run.png_base64 is None
+        assert launcher.deletes() == launcher.launches()
+
+    async def test_a_host_io_error_is_unavailable_and_leaves_nothing(
+        self, executor: SandboxExecutor, launcher: FakeLauncher, config: ExecutorConfig, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        def full(self: Path, *args: object, **kwargs: object) -> None:
+            raise OSError(28, "No space left on device")
+
+        monkeypatch.setattr(Path, "write_text", full)
+
+        with pytest.raises(Unavailable, match="io"):
+            await executor.run_theme(job(PLOT), "light")
+        assert launcher.launches() == [] and list(config.runs_dir.iterdir()) == []
+
+    async def test_a_launcher_that_cannot_start_is_unavailable(
+        self, executor: SandboxExecutor, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        async def no_fork(*args: object, **kwargs: object) -> None:
+            raise BlockingIOError(11, "Resource temporarily unavailable")
+
+        monkeypatch.setattr(executor_module.asyncio, "create_subprocess_exec", no_fork)
+
+        with pytest.raises(Unavailable, match="io"):
+            await executor.run_theme(job(PLOT), "light")
 
     async def test_stderr_keeps_only_its_tail(self, executor: SandboxExecutor) -> None:
         source = "import sys\nsys.stderr.write('x' * 2_000_000)\nsys.stderr.write('THE-END')\nraise SystemExit(3)\n"
@@ -252,6 +314,49 @@ class TestBounds:
         run = await executor.run_theme(job(source), "light")
 
         assert run.png_base64 is not None and run.probe is None
+
+    async def test_an_oversized_png_reports_its_size_and_the_cap(
+        self, executor: SandboxExecutor, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(executor_module, "MAX_PNG_BYTES", 100)
+
+        run = await executor.run_theme(job(PLOT), "light")
+
+        assert run.reason == "output_rejected" and run.limit == 100
+        assert run.measured is not None and run.measured > 100 and run.png_base64 is None
+
+    @pytest.mark.parametrize("depth", [17, 210, 300])
+    async def test_a_deeply_nested_probe_is_dropped_and_the_answer_still_serialises(
+        self, executor: SandboxExecutor, depth: int
+    ) -> None:
+        """256 levels broke `model_dump`, about 200 the agents' parse; the renderer drops the probe instead."""
+        source = PLOT + f"open('probe-light.json', 'w').write('{{\"a\": ' + '[' * {depth} + ']' * {depth} + '}}')\n"
+
+        run = await executor.run_theme(job(source), "light")
+
+        assert run.png_base64 is not None and run.probe is None
+        ThemeRun.model_validate_json(run.model_dump_json())
+
+    @pytest.mark.parametrize(
+        "report",
+        [
+            '{"event": "end", "max_rss_mb": 1' + "0" * 400 + ', "cpu_s": -5}',
+            '{"event": "end", "max_rss_mb": 1e999, "cpu_s": NaN}',
+            '{"event": "end", "max_rss_mb": true, "cpu_s": "12"}',
+            '{"event": "end", "max_rss_mb": ' + "[" * 5000 + "]" * 5000 + "}",
+        ],
+    )
+    def test_a_forged_end_line_cannot_break_the_answer(self, report: str) -> None:
+        """The code shares stdout; a JSON int too large for a float made `to_wire` raise OverflowError (a 500)."""
+        attempt = Attempt("r", exit_code=0, stdout_tail=f"HARNESS {report}\n")
+
+        run = attempt.to_wire("light", 1)
+
+        assert run.max_rss_mb is None and run.cpu_s is None
+        assert Attempt("r", 0, stdout_tail='HARNESS {"event": "end", "max_rss_mb": 150.5, "cpu_s": 2}').usage() == {
+            "max_rss_mb": 150.5,
+            "cpu_s": 2.0,
+        }
 
 
 class TestHelpers:
@@ -289,11 +394,55 @@ class TestHelpers:
         (root / "work" / "nested" / "a.bin").write_bytes(b"y" * 100)
         os.symlink(big, root / "work" / "link")
 
-        size, entries = tree_size(root, 1_000_000, 1_000)
+        usage = tree_size(root, 1_000_000, 1_000)
 
         listed = [root / "work", root / "work" / "nested", root / "work" / "nested" / "a.bin", root / "work" / "link"]
-        assert entries == 4 and size == sum(os.lstat(path).st_size for path in listed)  # the link's own size only
-        assert tree_size(root, 10, 1_000)[0] > 10  # stops once over budget
+        assert usage.measurable and usage.entries == 4
+        assert usage.bytes == sum(os.lstat(path).st_size for path in listed)  # the link's own size only
+        assert tree_size(root, 10, 1_000).bytes > 10  # stops once over budget
+
+    def test_a_tree_too_deep_or_too_long_is_unmeasurable(self, tmp_path: Path) -> None:
+        root = tmp_path / "run"
+        deep = root.joinpath(*["d"] * 6)
+        deep.mkdir(parents=True)
+
+        assert tree_size(root, 1_000_000, 1_000, max_depth=8).measurable
+        assert not tree_size(root, 1_000_000, 1_000, max_depth=5).measurable
+
+        # Past PATH_MAX a full-path walk fails with ENAMETOOLONG; that must not read as "nothing here".
+        long_root = tmp_path / "long"
+        long_root.mkdir()
+        descriptor = os.open(long_root, os.O_RDONLY)
+        try:
+            for _ in range(25):
+                os.mkdir("n" * 200, dir_fd=descriptor)
+                child = os.open("n" * 200, os.O_RDONLY, dir_fd=descriptor)
+                os.close(descriptor)
+                descriptor = child
+        finally:
+            os.close(descriptor)
+        assert not tree_size(long_root, 1_000_000, 1_000).measurable
+
+    def test_runs_volume_ok_needs_a_small_mount_of_its_own(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        assert runs_volume_ok(tmp_path, 1 << 40, root=tmp_path) is False  # the same filesystem as `/`
+        assert runs_volume_ok(tmp_path / "missing", 1 << 40) is False
+
+        real_stat = os.stat
+
+        def other_device(path: str | os.PathLike[str], *args: object, **kwargs: object) -> os.stat_result:
+            result = real_stat(path)
+            if Path(path) == tmp_path:
+                values = list(result)
+                values[stat.ST_DEV] = result.st_dev + 1
+                return os.stat_result(values)
+            return result
+
+        monkeypatch.setattr(executor_module.os, "stat", other_device)
+        monkeypatch.setattr(executor_module.shutil, "disk_usage", lambda path: SimpleNamespace(total=512 << 20))
+        assert runs_volume_ok(tmp_path, 1024 << 20) is True
+        assert runs_volume_ok(tmp_path, 256 << 20) is False  # a mount larger than the volume should be
 
     def test_mem_available_reads_meminfo(self, tmp_path: Path) -> None:
         meminfo = tmp_path / "meminfo"

@@ -7,15 +7,17 @@
 # tag URL, and only then given 100 % of the traffic. One difference: the deploy
 # step creates the service itself on the very first build. gcloud refuses
 # `--no-traffic` for a service that does not exist yet, so when `services
-# describe` finds nothing the step deploys without it; there is no traffic to
-# protect before anyone calls the service.
+# describe` answers that the service is not found, the step deploys without it;
+# there is no traffic to protect before anyone calls the service. Any other
+# describe failure stops the build, so a permission or API error can never send
+# all traffic to an unsmoked revision.
 #
 # Run from the repository root (the build context is `.`, filtered by the root
 # `.dockerignore`), for example:
 #
 #   gcloud builds submit --config=agents/renderer/cloudbuild.yaml \
 #     --gcs-source-staging-dir=gs://anyplot-cloudbuild-eu/source \
-#     --substitutions=_ALLOWED_CALLERS=...,_AUDIENCES=...,_SMOKE_RENDER=true .
+#     "--substitutions=^|^_ALLOWED_CALLERS=...|_AUDIENCES=...|_SMOKE_RENDER=true" .
 #
 # The service account, the IAM bindings and the first build are owner tasks;
 # docs/concepts/agent-network.md lists them.
@@ -28,16 +30,20 @@ substitutions:
   # service account (for the render smoke below) and, for `adk web` against the
   # deployed renderer, the owner's account. Empty means nobody passes.
   _ALLOWED_CALLERS: ""
-  # RENDERER_AUDIENCES: the accepted ID-token `aud` values, separated by commas:
-  # the service URL and the candidate-tag URL (known after the first deploy),
-  # plus the OAuth client id of the owner's user token (agents/README.md).
+  # RENDERER_AUDIENCES beyond the service URL, separated by commas. The deploy
+  # step always adds the service's own URL (status.url): Cloud Run accepts no
+  # other audience for a service account's token, not even a tag URL. Add here
+  # only the OAuth client ids of the owner's user tokens (agents/README.md).
   _AUDIENCES: ""
   # "true": the smoke step renders a real plot through the candidate, which
   # proves the launcher, the in-memory volume and the harness. It needs this
-  # build's service account in _ALLOWED_CALLERS, the candidate URL in _AUDIENCES
-  # and roles/run.invoker on the service, so the very first build (before the
-  # URLs exist) runs with "false".
+  # build's service account in _ALLOWED_CALLERS, roles/run.invoker on the
+  # service and the service URL in RENDERER_AUDIENCES, so the very first build
+  # (which creates the service and its URL) runs with "false".
   _SMOKE_RENDER: "true"
+  # "1" keeps an instance warm (spike S: a request to a service scaled to zero
+  # met a 500 and a 429 for about 17 s); "0" scales to zero between sessions.
+  _MIN_INSTANCES: "0"
 
 steps:
   - name: "gcr.io/cloud-builders/docker"
@@ -68,9 +74,11 @@ steps:
   # time safely; one instance, because renders are serial and the run queue of
   # the agents service already holds the line; concurrency 4 only so a waiting
   # caller (the deployed agents and a developer's adk web) gets the render slot's
-  # `503 busy` instead of a Cloud Run 429; and the run directories on a 512 MiB
+  # `503 busy` instead of a Cloud Run 429, and so a cancel reaches the instance
+  # while a render holds the slot; and the run directories on a 512 MiB
   # in-memory volume, because a disk fill through /work on the plain filesystem
-  # crashed the instance at about 3.4 GB. No secrets, no Cloud SQL, no role.
+  # crashed the instance at about 3.4 GB (the service refuses to render without
+  # it: `503 volume_missing`). No secrets, no Cloud SQL, no role.
   #
   # `--update-env-vars`, never `--set-env-vars`, for the reason api/cloudbuild.yaml
   # gives: an out-of-band variable must survive a deploy.
@@ -81,11 +89,21 @@ steps:
       - |
         gcloud beta run deploy --help | grep -q -- "--sandbox-launcher" \
           || { echo "this gcloud does not know --sandbox-launcher; use a newer builder image"; exit 1; }
-        TRAFFIC=(--no-traffic)
-        if ! gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --platform=managed --format="value(metadata.name)" >/dev/null 2>&1; then
+        if SELF=$$(gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --platform=managed --format="value(status.url)" 2>describe.err); then
+          TRAFFIC=(--no-traffic)
+        elif grep -qE "Cannot find service|NOT_FOUND" describe.err; then
           echo "${_SERVICE_NAME} does not exist yet: creating it (gcloud refuses --no-traffic on a new service)"
+          SELF=""
           TRAFFIC=()
+        else
+          cat describe.err
+          echo "could not read ${_SERVICE_NAME}; refusing to deploy without --no-traffic"
+          exit 1
         fi
+        EXTRA="${_AUDIENCES}"
+        AUDIENCES="$$SELF"
+        if [ -n "$$EXTRA" ]; then AUDIENCES="$${AUDIENCES:+$$AUDIENCES,}$$EXTRA"; fi
+        echo "RENDERER_AUDIENCES=$$AUDIENCES"
         gcloud beta run deploy ${_SERVICE_NAME} \
           --image=europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID \
           --region=${_REGION} \
@@ -96,13 +114,13 @@ steps:
           --service-account=${_SERVICE_ACCOUNT} \
           --cpu=2 \
           --memory=4Gi \
-          --min-instances=0 \
+          --min-instances=${_MIN_INSTANCES} \
           --max-instances=1 \
           --concurrency=4 \
           --timeout=300 \
           --add-volume=name=runs,type=in-memory,size-limit=512Mi \
           --add-volume-mount=volume=runs,mount-path=/tmp/runs \
-          "--update-env-vars=^|^ENVIRONMENT=production|RENDERER_ALLOWED_CALLERS=${_ALLOWED_CALLERS}|RENDERER_AUDIENCES=${_AUDIENCES}" \
+          "--update-env-vars=^|^ENVIRONMENT=production|RENDERER_ALLOWED_CALLERS=${_ALLOWED_CALLERS}|RENDERER_AUDIENCES=$$AUDIENCES" \
           "$${TRAFFIC[@]}" \
           --tag=candidate \
           --revision-suffix=b$BUILD_ID
@@ -133,13 +151,16 @@ steps:
         echo "OK: IAM refuses an anonymous caller"
 
         # 2. A real render: the launcher, the in-memory volume, the harness and
-        #    the caller check, end to end. The first request after a deploy may
-        #    meet a cold instance, hence the retries.
+        #    the caller check, end to end. The token's audience is the SERVICE
+        #    URL even though the request goes to the tag URL: Cloud Run accepts
+        #    no other audience. The first request after a deploy may meet a cold
+        #    instance, hence the retries.
         if [ "${_SMOKE_RENDER}" = "true" ]; then
-          TOKEN=$$(gcloud auth print-identity-token --audiences="$$URL" --include-email)
+          SERVICE_URL=$$(gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --platform=managed --format="value(status.url)")
+          TOKEN=$$(gcloud auth print-identity-token --audiences="$$SERVICE_URL" --include-email)
           curl -fsS --retry 5 --retry-delay 5 --retry-all-errors -H "Authorization: Bearer $$TOKEN" -o status.json "$$URL/status" \
-            || { echo "/status failed with this build's token: check _ALLOWED_CALLERS, _AUDIENCES and roles/run.invoker"; exit 1; }
-          python3 -c "import json; s=json.load(open('status.json')); assert s['name']=='anyplot-renderer' and s['sandbox'], s; print('OK: /status', s['version'], s['mem_available_mb'], 'MiB available')"
+            || { echo "/status failed with this build's token: check _ALLOWED_CALLERS, roles/run.invoker and RENDERER_AUDIENCES ($$SERVICE_URL)"; exit 1; }
+          python3 -c "import json; s=json.load(open('status.json')); assert s['name']=='anyplot-renderer' and s['sandbox'] and s['volume'] is True, s; print('OK: /status', s['version'], s['mem_available_mb'], 'MiB available, volume in place')"
           python3 - <<'EOF'
         import json
         source = "\n".join([

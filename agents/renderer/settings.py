@@ -7,7 +7,7 @@ the deployed values, so an unset variable never weakens a limit.
 | Variable | Default | Meaning |
 |---|---|---|
 | `RENDERER_ALLOWED_CALLERS` | empty | Emails whose ID token may call the service (comma-separated): the agents service account, and the owner's account for `adk web` |
-| `RENDERER_AUDIENCES` | empty | Accepted ID-token `aud` values (comma-separated): the service URL and the candidate-tag URL, plus the OAuth client id of a developer's user token (see agents/README.md) |
+| `RENDERER_AUDIENCES` | empty | Accepted ID-token `aud` values (comma-separated): the service URL (the deploy step adds it), plus the OAuth client id of a developer's user token (see agents/README.md). Cloud Run requires the service URL as the audience even for a request to a tag URL |
 | `RENDERER_SANDBOX_BINARY` | `/usr/local/gcp/bin/sandbox` | The Cloud Run sandbox launcher |
 | `RENDERER_PYTHON` | `/app/.venv/bin/python` | The interpreter inside the sandbox (the image's own venv) |
 | `RENDERER_HARNESS` | `/opt/anyplot/harness.py` | The probe harness inside the sandbox |
@@ -18,6 +18,8 @@ the deployed values, so an unset variable never weakens a limit.
 | `RENDERER_WATCH_INTERVAL_S` | `0.05` | How often the watchdog measures a live run directory |
 | `RENDERER_SLOT_WAIT_S` | `30` | Longest wait for the render slot before `503 busy` |
 | `RENDERER_MIN_MEM_AVAILABLE_MB` | `1024` | Below this `MemAvailable` a render is refused with `503 low_memory`; 0 switches the floor off |
+| `RENDERER_KILL_MEM_AVAILABLE_MB` | `512` | Below this `MemAvailable` during a run the watchdog kills the sandbox (reason `memory`); 0 switches it off |
+| `RENDERER_RUNS_VOLUME_MAX_MB` | `1024` | On Cloud Run, `RENDERER_RUNS_DIR` must be a mount of its own of at most this size, or every render answers `503 volume_missing` |
 | `RENDERER_RLIMIT_CPU_S` | `60` | CPU seconds of the sandboxed process (also capped by the job's timeout) |
 | `RENDERER_RLIMIT_FSIZE_MB` | `50` | Largest file the sandboxed process may write |
 | `RENDERER_RLIMIT_AS_MB` | `1024` | Address space of the sandboxed process; 0 leaves it unset |
@@ -68,6 +70,13 @@ class RendererSettings(BaseSettings):
     watch_interval_s: PositiveFloat = 0.05
     slot_wait_s: PositiveFloat = 30.0
     min_mem_available_mb: NonNegativeInt = 1024
+    kill_mem_available_mb: NonNegativeInt = 512
+    """The watchdog's memory floor during a run (`RENDERER_KILL_MEM_AVAILABLE_MB`): a sandbox's
+    private `/tmp` counts as instance memory and no flag bounds it (spike S2), so a run that
+    pushes `MemAvailable` below this is killed before it takes the instance down."""
+    runs_volume_max_mb: PositiveInt = 1024
+    """Largest size the run-directory volume may report on Cloud Run (`RENDERER_RUNS_VOLUME_MAX_MB`);
+    the deploy mounts 512 MiB. A larger or shared filesystem means the volume flags were lost."""
     rlimit_cpu_s: PositiveInt = 60
     rlimit_fsize_mb: PositiveInt = 50
     rlimit_as_mb: NonNegativeInt = 1024

@@ -36,6 +36,39 @@ class TestContract:
             wire.RenderRequest.model_validate({**job().model_dump(), "timeout_s": wire.MAX_TIMEOUT_S + 1})
 
 
+class TestCleanProbe:
+    def test_a_harness_probe_passes_and_nan_becomes_null(self) -> None:
+        raw = b'{"canvas": [3200, 1800], "texts": [{"box": [1.5, 2, NaN, Infinity]}], "tick_overlaps": 0}'
+
+        assert wire.clean_probe(raw) == {
+            "canvas": [3200, 1800],
+            "texts": [{"box": [1.5, 2, None, None]}],
+            "tick_overlaps": 0,
+        }
+
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            None,
+            b"",
+            b"[1, 2]",
+            b"not json",
+            b"\xff\xfe",
+            b'{"a": ' + b"[" * 16 + b"]" * 16 + b"}",
+            b'{"a": ' + b"[" * 5000 + b"]" * 5000 + b"}",
+            b'{"big": 1' + b"0" * 400 + b"}",
+            b'{"big": 1e999}',
+        ],
+    )
+    def test_anything_the_wire_cannot_carry_is_dropped(self, raw: bytes | None) -> None:
+        assert wire.clean_probe(raw) is None
+
+    def test_the_depth_limit_counts_the_object_itself(self) -> None:
+        nested = b'{"a": ' + b"[" * 15 + b"]" * 15 + b"}"
+
+        assert wire.clean_probe(nested) is not None
+
+
 class TestPackage:
     def test_the_renderer_imports_neither_adk_nor_the_agents_runtime_nor_core(self) -> None:
         """The image holds only `agents/renderer/` and the plotting venv: no ADK, no `agents/anyplot/`, no `core/`."""
@@ -68,6 +101,7 @@ class TestSettings:
         assert settings.allowed_callers == [] and settings.audiences == []
         assert settings.runs_dir == "/tmp/runs" and settings.run_budget_mb == 64
         assert settings.slot_wait_s == 30 and settings.min_mem_available_mb == 1024
+        assert settings.kill_mem_available_mb == 512 and settings.runs_volume_max_mb == 1024
         assert (settings.rlimit_cpu_s, settings.rlimit_fsize_mb, settings.rlimit_as_mb, settings.rlimit_nproc) == (
             60,
             50,

@@ -12,6 +12,8 @@ renderer image does not install. The limits that also exist on the agents side
 pinned equal by `tests/unit/agents/renderer/test_wire.py`.
 """
 
+import json
+import math
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -30,14 +32,59 @@ MAX_TIMEOUT_S = 120.0
 MAX_PNG_BYTES = 10 * 1024 * 1024
 """Largest PNG the renderer returns; the agents' R2 gate (`render/png.py`) applies the same cap."""
 MAX_PROBE_BYTES = 256 * 1024
+MAX_PROBE_DEPTH = 16
+"""Deepest nesting a probe may have; the harness writes three levels."""
+MAX_PROBE_INT = 2**53
+"""Largest integer magnitude a probe may hold: what a JSON number keeps exactly as a float."""
 MAX_STDERR_CHARS = 2_000
 """The stderr tail a theme returns; the agents' `ThemeOutput` keeps the same number of characters."""
 
-RunReason = Literal["timeout", "disk_budget", "launcher", "output_rejected"]
+RunReason = Literal["timeout", "disk_budget", "file_budget", "memory", "launcher", "output_rejected"]
 """Why a theme has no usable output, when the renderer knows more than the exit code:
-`timeout` (killed at the job's time limit), `disk_budget` (killed for writing more than the
-per-run byte budget), `launcher` (the sandbox launcher failed twice before the harness
-started), `output_rejected` (an output file that is not a regular file or is over its cap)."""
+`timeout` (killed at the job's time limit), `disk_budget` (killed for writing more bytes than
+the per-run budget), `file_budget` (killed for creating more files and directories than the
+per-run limit, or a tree too deep to measure), `memory` (killed because the instance's
+`MemAvailable` fell below the renderer's floor during the run), `launcher` (the sandbox
+launcher failed twice before the harness started), `output_rejected` (the PNG is not a
+regular file or is over its cap). `measured` and `limit` carry the numbers where there are some."""
+
+
+def clean_probe(raw: bytes | None) -> dict[str, Any] | None:
+    """`probe-<theme>.json` as a JSON object the wire can carry, or None.
+
+    The code under test can write this file, so it is untrusted: `NaN` and
+    `Infinity` become null (the harness writes them for a text at an undefined
+    position), and a probe that is not an object, nests deeper than
+    `MAX_PROBE_DEPTH`, or holds a number that a float cannot carry exactly is
+    dropped whole, because serialising it would fail the response (a nesting of
+    256 levels) or the agents side's parse (about 200 levels, or an integer too
+    large for a float).
+    """
+    if not raw:
+        return None
+    try:
+        loaded = json.loads(raw, parse_constant=lambda _: None)
+    except (ValueError, RecursionError):
+        return None
+    if not isinstance(loaded, dict) or not _probe_value_ok(loaded, 1):
+        return None
+    return loaded
+
+
+def _probe_value_ok(value: Any, depth: int) -> bool:
+    if depth > MAX_PROBE_DEPTH:
+        return False
+    if isinstance(value, dict):
+        return all(_probe_value_ok(item, depth + 1) for item in value.values())
+    if isinstance(value, list):
+        return all(_probe_value_ok(item, depth + 1) for item in value)
+    if isinstance(value, bool) or value is None or isinstance(value, str):
+        return True
+    if isinstance(value, int):
+        return abs(value) <= MAX_PROBE_INT
+    if isinstance(value, float):
+        return math.isfinite(value)
+    return False
 
 
 class RenderRequest(BaseModel):
@@ -79,6 +126,12 @@ class ThemeRun(BaseModel):
     attempts: int = Field(default=1, ge=1, le=2)
     """Sandbox launches for this theme: 2 when the first launcher call failed before the harness started."""
     reason: RunReason | None = None
+    measured: int | None = None
+    """The value that broke a limit: bytes (`disk_budget`, an oversized PNG for `output_rejected`),
+    files and directories (`file_budget`; None for a tree too deep to measure), or MiB of
+    `MemAvailable` (`memory`). None for the other reasons."""
+    limit: int | None = None
+    """The limit `measured` broke, in the same unit."""
     max_rss_mb: float | None = None
     """Peak resident memory the harness reported for itself (advisory: the code shares its stdout)."""
     cpu_s: float | None = None
@@ -122,3 +175,6 @@ class RendererStatus(BaseModel):
     mem_available_mb: int | None
     sandbox: bool
     """Whether the sandbox launcher binary exists and is executable on this instance."""
+    volume: bool | None = None
+    """Whether `RENDERER_RUNS_DIR` is the size-limited volume it must be: checked on Cloud Run
+    only (None elsewhere); while it is False, renders answer `503 volume_missing`."""

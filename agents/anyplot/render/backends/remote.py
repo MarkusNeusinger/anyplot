@@ -15,6 +15,8 @@ carries a Google-signed ID token, minted by `IdTokenSource`:
   Cloud Run asks the metadata server for a token whose `aud` is the renderer URL and
   whose `email` is the agents service account (a service-account or
   impersonated-service-account file in `GOOGLE_APPLICATION_CREDENTIALS` works the same).
+  `AGENT_RENDER_URL` must be the service URL (`status.url`): Cloud Run accepts no
+  other audience, not even a tag URL.
 * Development: `AGENT_RENDER_TOKEN` when set (a token from
   `gcloud auth print-identity-token`, valid for one hour); otherwise Application
   Default Credentials. A user's ADC (`gcloud auth application-default login`) cannot
@@ -28,11 +30,23 @@ Tokens are cached and refreshed five minutes before they expire; minting runs in
 worker thread, because google-auth blocks.
 
 **Failures.** A connection error, or a Cloud Run front-end answer of 429 or 5xx
-without the renderer's own JSON `detail` (spike S saw a 500 and then a 429 on the
-first requests after a scale from zero), is retried once after a second. Everything
-else maps to `RendererUnavailable` with a message that names a status, a fixed error
-code or an exception class, never a response body. A theme the renderer did not
-answer is left out of the result, so R1 reports it.
+without the renderer's own JSON `detail`, is retried after 1, 3, 8 and 15 seconds,
+within `RETRY_BUDGET_S`: spike S saw a 500, then a 429 ten seconds later, and a 200
+only about 17 s after the first request to a service scaled to zero. The renderer's
+own refusals (`503 busy`, `500 internal`, ...) carry a JSON `detail` and are never
+retried. Everything else maps to `RendererUnavailable` with a message that names a
+status, a fixed error code or an exception class, never a response body; the
+message is also logged, so a refused caller or a wrong audience shows in the log.
+A theme the renderer did not answer is left out of the result, so R1 reports it; a
+theme whose sandbox launcher failed twice (`launcher`) is `RendererUnavailable`,
+because it is the renderer's failure and not the code's; the other reasons
+(`disk_budget`, `file_budget`, `memory`, `output_rejected`) go to the gates with the
+measured value and the limit.
+
+**Cancellation.** When this render is cancelled (an abort, the request deadline) or
+its answer does not come in time, the backend also posts
+`/render/{job_id}/cancel`, because a front end that does not pass the closed
+connection on would leave the sandbox running and the renderer's only slot taken.
 
 No semaphore here: `SerialRenderer` (`render/serial.py`) already hands this backend
 one theme at a time, and the renderer keeps its own single render slot for the
@@ -47,7 +61,7 @@ import logging
 import os
 import re
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable, Sequence
 from typing import Protocol
 
 import google.auth
@@ -72,7 +86,11 @@ CONNECT_TIMEOUT_S = 10.0
 RESPONSE_MARGIN_S = 45.0
 """On top of the job's own time per theme: the renderer's slot wait (`RENDERER_SLOT_WAIT_S`,
 30 s), the sandbox start and delete, and the transfer of up to 10 MiB of PNG."""
-RETRY_DELAY_S = 1.0
+RETRY_DELAYS_S = (1.0, 3.0, 8.0, 15.0)
+"""Pauses before the retries of a connection error or a front-end 429/5xx (spike S's cold start)."""
+RETRY_BUDGET_S = 30.0
+"""No retry starts later than this after the first request."""
+CANCEL_TIMEOUT_S = 5.0
 FRONT_END_RETRY = frozenset({429, 500, 502, 503, 504})
 _DETAIL = re.compile(r"^[a-z_]{1,32}$")
 _MAX_PNG_BASE64 = 4 * ((MAX_PNG_BYTES + 2) // 3)
@@ -82,6 +100,12 @@ class TokenSource(Protocol):
     """Where the backend gets the bearer token of the next request."""
 
     async def token(self) -> str: ...
+
+
+def _unavailable(message: str) -> RendererUnavailable:
+    """The error to raise, logged first: every message here is built from statuses, codes and class names."""
+    logger.warning("remote renderer: %s", message)
+    return RendererUnavailable(message)
 
 
 def token_expiry(token: str) -> float | None:
@@ -120,7 +144,7 @@ class IdTokenSource:
         if self.static_token is not None:
             expiry = token_expiry(self.static_token)
             if expiry is not None and expiry <= self.clock():
-                raise RendererUnavailable(
+                raise _unavailable(
                     "AGENT_RENDER_TOKEN has expired; export a fresh one from `gcloud auth print-identity-token`"
                 )
             return self.static_token
@@ -129,7 +153,7 @@ class IdTokenSource:
                 try:
                     token = await asyncio.to_thread(self._mint)
                 except google.auth.exceptions.GoogleAuthError as exc:
-                    raise RendererUnavailable(
+                    raise _unavailable(
                         f"no ID token for the renderer ({type(exc).__name__}); on a developer machine run "
                         "`gcloud auth application-default login` or set AGENT_RENDER_TOKEN"
                     ) from None
@@ -146,7 +170,7 @@ class IdTokenSource:
                 credentials.refresh(request)
                 user_token: str | None = credentials.id_token
                 if not user_token:
-                    raise RendererUnavailable(
+                    raise _unavailable(
                         "the Application Default Credentials carry no ID token; run "
                         "`gcloud auth application-default login` again or set AGENT_RENDER_TOKEN"
                     )
@@ -189,14 +213,23 @@ class RemoteBackend:
         url: str,
         tokens: TokenSource,
         transport: httpx.AsyncBaseTransport | None = None,
-        retry_delay_s: float = RETRY_DELAY_S,
+        retry_delays_s: Sequence[float] = RETRY_DELAYS_S,
+        retry_budget_s: float = RETRY_BUDGET_S,
+        clock: Callable[[], float] = time.monotonic,
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     ) -> None:
         self.url = url.rstrip("/")
         self.tokens = tokens
-        self.retry_delay_s = retry_delay_s
+        self.retry_delays_s = tuple(retry_delays_s)
+        self.retry_budget_s = retry_budget_s
+        self.clock = clock
+        self.sleep = sleep
         self._client = httpx.AsyncClient(transport=transport, follow_redirects=False)
+        self._cancels: set[asyncio.Task[None]] = set()
 
     async def aclose(self) -> None:
+        if self._cancels:
+            await asyncio.wait(self._cancels, timeout=CANCEL_TIMEOUT_S)
         await self._client.aclose()
 
     async def render(self, job: RenderJob) -> RenderResult:
@@ -214,30 +247,62 @@ class RemoteBackend:
             ).model_dump(mode="json")
         except ValidationError as exc:
             fields = ",".join(sorted({str(error["loc"][0]) for error in exc.errors() if error["loc"]}))
-            raise RendererUnavailable(f"the job does not fit the renderer contract ({fields})") from None
+            raise _unavailable(f"the job does not fit the renderer contract ({fields})") from None
         timeout = httpx.Timeout(job.timeout_s * len(job.themes) + RESPONSE_MARGIN_S, connect=CONNECT_TIMEOUT_S)
-        response = await self._post(body, timeout)
+        try:
+            response = await self._post(body, timeout)
+        except asyncio.CancelledError:
+            await self._cancel_remote(job.job_id)
+            raise
+        except httpx.TimeoutException as exc:  # the answer did not come in time; ConnectTimeout is retried in _post
+            await self._cancel_remote(job.job_id)
+            raise _unavailable(f"the renderer did not answer in time ({type(exc).__name__})") from None
         return self._result(job, response)
 
     async def _post(self, body: dict[str, object], timeout: httpx.Timeout) -> httpx.Response:
-        for attempt in (1, 2):
+        """POST the job, retrying connection errors and front-end 429/5xx with backoff inside the budget."""
+        delays = iter(self.retry_delays_s)
+        started = self.clock()
+        while True:
             headers = {"Authorization": f"Bearer {await self.tokens.token()}"}
+            response: httpx.Response | None = None
             try:
                 response = await self._client.post(f"{self.url}/render", json=body, headers=headers, timeout=timeout)
             except (httpx.ConnectError, httpx.ConnectTimeout, httpx.RemoteProtocolError) as exc:
-                if attempt == 1:
-                    logger.warning("renderer unreachable (%s); retrying once", type(exc).__name__)
-                    await asyncio.sleep(self.retry_delay_s)
-                    continue
-                raise RendererUnavailable(f"the renderer could not be reached ({type(exc).__name__})") from None
+                failure = f"could not be reached ({type(exc).__name__})"
+            except httpx.TimeoutException:
+                raise
             except httpx.HTTPError as exc:
-                raise RendererUnavailable(f"the render request failed ({type(exc).__name__})") from None
-            if attempt == 1 and response.status_code in FRONT_END_RETRY and _detail(response) is None:
-                logger.warning("renderer front end answered HTTP %s; retrying once", response.status_code)
-                await asyncio.sleep(self.retry_delay_s)
-                continue
-            return response
-        raise RendererUnavailable("the renderer could not be reached")  # the loop always returns or raises
+                raise _unavailable(f"the render request failed ({type(exc).__name__})") from None
+            else:
+                if response.status_code not in FRONT_END_RETRY or _detail(response) is not None:
+                    return response
+                failure = f"front end answered HTTP {response.status_code}"
+            delay = next(delays, None)
+            if delay is None or self.clock() - started + delay > self.retry_budget_s:
+                if response is not None:
+                    return response  # `_result` names the status
+                raise _unavailable(f"the renderer {failure}")
+            logger.warning("remote renderer %s; retrying in %.0f s", failure, delay)
+            await self.sleep(delay)
+
+    async def _cancel_remote(self, job_id: str) -> None:
+        """Best effort, shielded: ask the renderer to stop the job's sandbox and free its slot."""
+        task = asyncio.create_task(self._send_cancel(job_id))
+        self._cancels.add(task)
+        task.add_done_callback(self._cancels.discard)
+        await asyncio.shield(task)
+
+    async def _send_cancel(self, job_id: str) -> None:
+        try:
+            async with asyncio.timeout(CANCEL_TIMEOUT_S):
+                headers = {"Authorization": f"Bearer {await self.tokens.token()}"}
+                response = await self._client.post(
+                    f"{self.url}/render/{job_id}/cancel", headers=headers, timeout=CANCEL_TIMEOUT_S
+                )
+            logger.info("remote render %s: cancel sent (HTTP %s)", job_id, response.status_code)
+        except (TimeoutError, httpx.HTTPError, RendererUnavailable) as exc:
+            logger.warning("remote render %s: the cancel did not reach the renderer (%s)", job_id, type(exc).__name__)
 
     def _result(self, job: RenderJob, response: httpx.Response) -> RenderResult:
         status = response.status_code
@@ -245,31 +310,22 @@ class RemoteBackend:
             detail = _detail(response)
             suffix = f", {detail}" if detail else ""
             if status in (401, 403):
-                raise RendererUnavailable(
+                raise _unavailable(
                     f"the renderer refused this caller (HTTP {status}{suffix}): check roles/run.invoker, "
-                    "RENDERER_AUDIENCES and RENDERER_ALLOWED_CALLERS"
+                    "AGENT_RENDER_URL (the service URL), RENDERER_AUDIENCES and RENDERER_ALLOWED_CALLERS"
                 )
-            raise RendererUnavailable(f"the renderer answered HTTP {status}{suffix}")
+            raise _unavailable(f"the renderer answered HTTP {status}{suffix}")
         try:
             answer = RenderResponse.model_validate_json(response.content)
         except ValidationError:
-            raise RendererUnavailable("the renderer's answer does not match the contract") from None
+            raise _unavailable("the renderer's answer does not match the contract") from None
         if answer.job_id != job.job_id:
-            raise RendererUnavailable("the renderer answered for another job")
+            raise _unavailable("the renderer answered for another job")
         result = RenderResult(job_id=job.job_id)
         for theme in job.themes:
             run = answer.outputs.get(theme)
             if run is None:
                 continue  # R1 reports a theme without an output
-            result.outputs[theme] = ThemeOutput(
-                theme=theme,
-                exit_code=run.exit_code,
-                timed_out=run.timed_out,
-                png=_png(run.png_base64),
-                probe=run.probe,
-                stderr_tail=run.stderr_tail,
-                wall_s=run.wall_s,
-            )
             logger.info(
                 "remote render %s (%s): exit %s, reason %s, attempts %s, %.2f s",
                 job.job_id,
@@ -278,5 +334,19 @@ class RemoteBackend:
                 run.reason,
                 run.attempts,
                 run.wall_s,
+            )
+            if run.reason == "launcher":
+                raise _unavailable(f"the renderer's sandbox launcher failed twice ({theme})")
+            result.outputs[theme] = ThemeOutput(
+                theme=theme,
+                exit_code=run.exit_code,
+                timed_out=run.timed_out,
+                png=_png(run.png_base64),
+                probe=run.probe,
+                stderr_tail=run.stderr_tail,
+                wall_s=run.wall_s,
+                reason=run.reason,
+                measured=run.measured,
+                limit=run.limit,
             )
         return result

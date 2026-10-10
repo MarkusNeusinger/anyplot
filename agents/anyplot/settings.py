@@ -33,7 +33,7 @@ another provider, model or location.
 | `AGENT_JUDGE_TIMEOUT_S` | `4` | Wall-clock budget of one judge verdict, its single retry included |
 | `AGENT_SESSION_IDLE_S` | `3600` | Idle seconds after which the sweeper drops a session and its stores |
 | `AGENT_ALLOWED_CALLERS` | empty | Service-account emails allowed to call `/v1` (comma-separated) |
-| `AGENT_SERVICE_URLS` | empty | ID-token audiences accepted on `/v1`: the service URL and the candidate-tag URL (comma-separated) |
+| `AGENT_SERVICE_URLS` | empty | ID-token audiences accepted on `/v1` (comma-separated): the service URL, which Cloud Run requires as the audience even for a request to a tag URL |
 | `AGENT_DEV_FIXTURE` | unset | Development only: an eval fixture case id that seeds every new session |
 | `ENVIRONMENT` | `production` | Deployment environment, shared with the API; `development` (the caller check off) is refused on Cloud Run |
 
@@ -191,7 +191,8 @@ class AgentSettings(BaseSettings):
 
     service_urls: Annotated[list[str], NoDecode] = []
     """ID-token audiences accepted on `/v1` (`AGENT_SERVICE_URLS`, comma-separated): the
-    service URL and the candidate-tag URL. Empty means no caller passes outside development."""
+    service URL, which Cloud Run requires as `aud` even for a request to a traffic tag's
+    URL. Empty means no caller passes outside development."""
 
     dev_fixture: str | None = Field(default=None, pattern=FIXTURE_PATTERN)
     """Eval fixture case that seeds every new session (`AGENT_DEV_FIXTURE`); development only."""
