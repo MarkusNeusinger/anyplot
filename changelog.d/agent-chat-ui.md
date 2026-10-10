@@ -16,7 +16,7 @@
   expired Cloudflare Access session leaves a request without an answer. It is
   built only with `VITE_ENABLE_AGENT_CHAT=true` (off in `app/cloudbuild.yaml`,
   where the route answers the 404 page and the chunk is not in the bundle) and
-  opens only for local development or an admin's browser.
+  opens only for local development or an admin's browser. (#12114)
 - **A result card per plot version.** `app/src/sections/agent-chat/ResultCard.tsx`
   shows the rendered plot from its blob URL with the plot page's overlay
   actions (copy the PNG to the clipboard, with a download where the browser
@@ -25,25 +25,25 @@
   the adapted `plot.py` with syntax highlighting and one-click copy, downloads
   of `plot.py` and `data.csv` under the names the code reads, what changed,
   the residual notes, a refine composer and a slot for the quick-feedback
-  control. Earlier versions stay in the thread, collapsed.
+  control. Earlier versions stay in the thread, collapsed. (#12114)
 - **A `.adapt()` button on the plot page.** The fourth overlay button of the
   implementation view opens the chat page for that spec and library with a
   full navigation, so Cloudflare Access can intercept it. It shows only when
   the build has the chat, the browser is in local development or carries the
   admin hint that the debug page now sets after a successful `/debug/status`,
   and the BFF's eligibility route accepts the pair, so a public visitor never
-  sends a request to the debug API.
+  sends a request to the debug API. (#12114)
 - **Analytics for the agent chat, with enum properties only.** The pageview
   `/debug/agent` and the events `agent_open`, `agent_data_parsed`,
   `agent_plot_rendered` and `agent_guardrail_block`, plus `copy_code` with
-  `page: agent_chat`; none of them carries message text or data.
+  `page: agent_chat`; none of them carries message text or data. (#12114)
 - **A local mock of the agent chat BFF.** `node app/scripts/agent-bff-mock.mjs`
   serves the documented `/debug/agent/*` routes on the loopback interface, a
   scripted `anyplot/1` stream (queue positions, the pipeline steps, a plot, a
   reply) and PNGs drawn from the pasted data, plus the catalogue routes the
   plot page needs for `scatter-basic` and `line-multi`, so the whole flow runs
   in a browser without the API, the agents service, a model or the production
-  database.
+  database. (#12114)
 
 ### Changed
 
@@ -51,9 +51,9 @@
   an `ok` or `needs_attention` result as the session's next version and sends
   that number as `version`, which the BFF now passes on; a client addresses
   the artifact and theme toggle routes by it instead of counting plot events,
-  which showed another version's files when an event got lost.
+  which showed another version's files when an event got lost. (#12114)
 - **The dataset answer lists the spec's data roles.** `POST
   /debug/agent/sessions/{sid}/dataset` now returns `roles`, each
   `{name, kinds, required, variadic, description}`, so a client can offer a
   column choice for every role, and a refused binding set (`422 invalid`)
-  keeps the binding check's lines (at most 20) instead of only the code.
+  keeps the binding check's lines (at most 20) instead of only the code. (#12114)
