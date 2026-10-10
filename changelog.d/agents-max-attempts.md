@@ -8,4 +8,4 @@
   achieves without one. Every attempt after the first needs the repair's 75 s
   of the soft deadline and allows a full file, and feedback goes to the next
   attempt before any review while one is left. `PlotResult.attempts` now
-  accepts 3, and the report counts a pass from any repair attempt as repaired.
+  accepts 3, and the report counts a pass from any repair attempt as repaired. (#12119)
