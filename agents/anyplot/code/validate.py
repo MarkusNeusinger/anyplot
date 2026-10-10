@@ -750,9 +750,15 @@ class _Scan:
         original = [_hex(colour) for colour in original_palette]
         extension = [colour for colour in IMPRINT if _hex(colour) not in set(original)]
         statements: list[ast.Assign | ast.AnnAssign] = [*self.of(ast.Assign), *self.of(ast.AnnAssign)]
+        statements.sort(key=lambda statement: (statement.lineno, statement.col_offset))
+        assigned = 0
         for statement in statements:
             target = _single_name_target(statement)
             if target is None or target.id not in _PALETTE_NAMES:
+                continue
+            assigned += 1
+            if assigned > 1:  # the palette is one literal list, assigned once; a later one would replace it
+                self.add("palette-prefix", f"{target.id} is assigned again; keep one literal palette list", statement)
                 continue
             value = statement.value
             if not isinstance(value, ast.List | ast.Tuple) or not all(

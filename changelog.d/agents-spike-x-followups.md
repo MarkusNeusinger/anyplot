@@ -19,12 +19,12 @@
 
 ### Fixed
 
-- **The Gemini adapter's first answer is no longer cut off.** Gemini counts
+- **The Gemini adapter's edit call has room for its thinking.** Gemini counts
   thinking tokens toward the output cap, and the 2,048-token edit cap ended
   every first adapter call of the spike-X Gemini arm with `MAX_TOKENS`, so no
   run had a repair round. The Gemini edit cap is now 8,192 tokens, which holds
-  101 of the run's 112 plans and still lets a first answer cut off at the cap
-  leave the repair its time, and the full-file repair runs at 12,288 tokens
+  101 of the run's 112 measured plans; a first answer that still hits the cap
+  leaves the repair its time, and the full-file repair runs at 12,288 tokens
   with LOW thinking. Claude stays at 2,048 tokens with thinking disabled. The
   repair also no longer reserves the whole 60 s render timeout, so the first
   attempt keeps 65 s of the 140 s soft deadline instead of 35 s. (#12118)
