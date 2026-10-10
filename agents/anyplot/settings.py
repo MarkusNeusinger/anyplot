@@ -25,10 +25,10 @@ another provider, model or location.
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue; it also sizes the queue (`AGENT_RUNS_PER_MINUTE` x this / 60 entries) |
 | `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 to measure no repair or a second repair round |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request (the `RunConfig` cap) |
-| `AGENT_REQUEST_TOKEN_BUDGET` | `80000` | Tokens per request |
-| `AGENT_DAILY_TOKEN_BUDGET` | `1000000` | Tokens per user and day |
+| `AGENT_REQUEST_TOKEN_BUDGET` | `160000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
+| `AGENT_DAILY_TOKEN_BUDGET` | `2000000` | Cost-weighted tokens per user and day, weighted the same way: about 54 median runs on a warm cache, where the run cap binds first, and about 26 for a user whose every request starts cold |
 | `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
-| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `3000000` | Tokens per day across all users; reaching it pauses the service |
+| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `6000000` | Cost-weighted tokens per day across all users, three users at their daily budget; reaching it pauses the service |
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per render, host-enforced |
 | `AGENT_REQUEST_DEADLINE_S` | `180` | Hard request deadline, enforced through `abort_signal` |
 | `AGENT_SOFT_DEADLINE_S` | `140` | Soft deadline inside the pipeline; below the hard one |
@@ -38,6 +38,11 @@ another provider, model or location.
 | `AGENT_SERVICE_URLS` | empty | ID-token audiences accepted on `/v1` (comma-separated): the service URL, which Cloud Run requires as the audience even for a request to a tag URL |
 | `AGENT_DEV_FIXTURE` | unset | Development only: an eval fixture case id that seeds every new session |
 | `ENVIRONMENT` | `production` | Deployment environment, shared with the API; `development` (the caller check off) is refused on Cloud Run |
+
+The output caps of the model calls are constants in `models.py`, not settings, each with
+ample headroom above the measured answers: root and reviewer 4,096 tokens, the adapter
+8,192 for an edit-only call and 16,384 when a full file is allowed (12,288 on Gemini,
+which the soft deadline bounds), and the judge 256.
 
 No `.env` file is read here: the service runs on Cloud Run environment variables only,
 and the tests stay hermetic. `adk web` is different: it walks up from the agent
@@ -173,17 +178,27 @@ class AgentSettings(BaseSettings):
     max_llm_calls: PositiveInt = 12
     """LLM calls per request (`AGENT_MAX_LLM_CALLS`), the `RunConfig` cap."""
 
-    request_token_budget: PositiveInt = 80_000
-    """Tokens per request (`AGENT_REQUEST_TOKEN_BUDGET`)."""
+    request_token_budget: PositiveInt = 160_000
+    """Cost-weighted tokens per request (`AGENT_REQUEST_TOKEN_BUDGET`), in input-token equivalents
+    (`plugins/ledger.BUDGET_WEIGHTS`). A reviewed run with two adapter attempts books a median of
+    about 39,500 with a warm prompt cache (72,200 plain tokens) and about 77,700 on a cold one,
+    where each agent's first call writes its prefix; with a second review the costliest run comes
+    to about 115,000, and with three attempts about 117,300, so the budget leaves about 36 % on top.
+    A review starts only while `pipeline.REVIEW_RESERVE_TOKENS` is left for it and the root's
+    closing reply."""
 
-    daily_token_budget: PositiveInt = 1_000_000
-    """Tokens per user and day (`AGENT_DAILY_TOKEN_BUDGET`)."""
+    daily_token_budget: PositiveInt = 2_000_000
+    """Cost-weighted tokens per user and day (`AGENT_DAILY_TOKEN_BUDGET`), weighted like the request
+    budget: about 54 median runs with a warm cache, where the 40 runs of `daily_pipeline_runs`
+    bind first, and about 26 for a user whose every request starts cold (77,700 each), where
+    this budget binds."""
 
     daily_pipeline_runs: PositiveInt = 40
     """Pipeline runs per user and day (`AGENT_DAILY_PIPELINE_RUNS`)."""
 
-    global_daily_token_budget: PositiveInt = 3_000_000
-    """Tokens per day across all users (`AGENT_GLOBAL_DAILY_TOKEN_BUDGET`); reaching it pauses the service."""
+    global_daily_token_budget: PositiveInt = 6_000_000
+    """Cost-weighted tokens per day across all users (`AGENT_GLOBAL_DAILY_TOKEN_BUDGET`), three users
+    at their daily budget; reaching it pauses the service."""
 
     render_timeout_s: PositiveInt = 60
     """Seconds per render, host-enforced (`AGENT_RENDER_TIMEOUT_S`)."""

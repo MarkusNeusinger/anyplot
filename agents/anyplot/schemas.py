@@ -15,8 +15,17 @@ Lengths are counted in characters (`24 KiB` is 24,576 characters). Rules that ne
 more than one value from outside the model, such as "`find` matches the working
 form exactly once" or "`full_code` only from attempt 2 on", belong to the code that
 holds that context (the edit applier and the pipeline), not to these schemas.
+
+A model answer that misses a purely formal rule is mended rather than discarded:
+`repair_verdict` and `repair_plan` clip a text to its limit, keep the allowed number
+of items and derive a verdict's `ok` from its defects. `sub_agents/adapter.schema_guard`
+runs them only after the strict check failed, validates the result against the same
+strict schema and logs which rule each miss broke, so no repair is silent. Nothing
+that carries meaning is repaired: an edit stays exactly as the model wrote it, and a
+verdict that rejects without a usable defect stays unread.
 """
 
+import json
 import re
 from collections.abc import Iterable
 from typing import Annotated, Any, Literal, Self, get_args
@@ -39,7 +48,7 @@ MAX_CHANGES = 5
 MAX_DEFECTS = 5
 # Limits the design doc leaves open, decided here.
 MAX_CODE_CHARS = 48 * 1024  # the SECURITY validator parses at most 48 KB
-MAX_EDIT_CHARS = 8 * 1024  # per `find` or `replace`; on Claude the 2,048-token edit-call cap binds first
+MAX_EDIT_CHARS = 8 * 1024  # per `find` or `replace`; a whole edit call is capped at 8,192 output tokens
 MAX_WARNINGS = 2 * MAX_COLUMNS  # a rename and a date-order warning per column
 MAX_NOTES = 20  # readiness hints, gate notes
 MAX_FEEDBACK = 16  # defect and validator lines handed to the next repair attempt
@@ -94,6 +103,18 @@ ROLE_PATTERN = r"^[A-Za-z_][A-Za-z0-9_]{0,31}$"
 RENDER_ID_PATTERN = r"^[A-Za-z0-9_-]{1,64}$"
 
 _WHITESPACE = re.compile(r"\s+")
+ELLIPSIS = "…"
+
+
+def _defect_text(text: str, field_name: str) -> str:
+    """A defect text on one line; in `observed`, an arrow becomes `->` (the first `→` starts the target)."""
+    text = _WHITESPACE.sub(" ", text).strip()
+    return text.replace("→", "->") if field_name == "observed" else text
+
+
+def _clip(text: str, limit: int) -> str:
+    """`text` cut to at most `limit` characters, the last of them an ellipsis when it was longer."""
+    return text if len(text) <= limit else text[: limit - 1].rstrip() + ELLIPSIS
 
 
 class _ServerContract(BaseModel):
@@ -246,11 +267,7 @@ class Defect(_ModelOutput):
         becomes `->`. Both happen before the length check, so the limit bounds the
         stored text and therefore the rendered line.
         """
-        if isinstance(value, str):
-            value = _WHITESPACE.sub(" ", value).strip()
-            if info.field_name == "observed":
-                value = value.replace("→", "->")
-        return value
+        return _defect_text(value, info.field_name or "") if isinstance(value, str) else value
 
     def as_line(self) -> str:
         """`<ID> (<theme>): <observed> → <target>. Likely cause: <likely_cause>.`
@@ -281,6 +298,120 @@ class Verdict(_ModelOutput):
         if not self.ok and not self.defects:
             raise ValueError("a rejecting verdict names at least one defect")
         return self
+
+
+# --- Formal repairs of model answers --------------------------------------------------
+
+DEFECT_IDS: frozenset[str] = frozenset(get_args(DefectId))
+DEFECT_THEMES: frozenset[str] = frozenset(get_args(DefectTheme))
+DEFECT_TEXT_FIELDS = ("observed", "target", "likely_cause")
+
+
+def _json_list(value: Any) -> Any:
+    """A list the model sent as JSON text, parsed; anything else unchanged.
+
+    A forced tool call sometimes carries a nested array as a string; the items are
+    the model's own, only their wrapping differs.
+    """
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+        except ValueError:
+            return value
+        if isinstance(parsed, list):
+            return parsed
+    return value
+
+
+def _defect_id(item: Any) -> str:
+    """The case-folded id of a defect the model sent, empty when it has none."""
+    value = item.get("id") if isinstance(item, dict) else None
+    return value.strip().upper() if isinstance(value, str) else ""
+
+
+def _off_checklist(item: Any) -> bool:
+    """Whether a defect names an id, but one outside the reviewer's checklist (such as VQ-05)."""
+    defect_id = _defect_id(item)
+    return bool(defect_id) and defect_id not in DEFECT_IDS
+
+
+def _repair_defect(item: Any) -> dict[str, str] | None:
+    """One defect with its formal misses mended, or None when it cannot be used.
+
+    The id and theme are case-folded; a theme outside the set becomes `both`, which the
+    pipeline files under the one theme the reviewer saw. Each text is put on one line
+    and clipped to `MAX_DEFECT_TEXT_CHARS` with an ellipsis. A defect whose id is
+    outside the checklist, or that lacks one of its three texts, cannot be used.
+    """
+    if not isinstance(item, dict):
+        return None
+    defect_id = _defect_id(item)
+    if defect_id not in DEFECT_IDS:
+        return None
+    theme = item.get("theme")
+    theme = theme.strip().lower() if isinstance(theme, str) else ""
+    repaired = {"id": defect_id, "theme": theme if theme in DEFECT_THEMES else "both"}
+    for name in DEFECT_TEXT_FIELDS:
+        text = item.get(name)
+        text = _defect_text(text, name) if isinstance(text, str) else ""
+        if not text:
+            return None
+        repaired[name] = _clip(text, MAX_DEFECT_TEXT_CHARS)
+    return repaired
+
+
+def repair_verdict(data: Any) -> Any:
+    """A reviewer answer with its formal misses mended; `data` unchanged when nothing can be mended.
+
+    Every usable defect is kept (see `_repair_defect`), the first `MAX_DEFECTS` of
+    them, and `ok` follows from them: a verdict that names a usable defect rejects,
+    whatever its `ok` said. A pass (`ok` true) whose defects all name ids outside the
+    checklist stays a pass without them: the reviewer passed the render, and its
+    checklist leaves those criteria out. Any other verdict left without a usable
+    defect keeps its own `ok` and defects, so it still fails validation: a rejection
+    that names nothing usable gives the repair nothing to fix, and a checklist defect
+    without its texts is a rejection the reviewer meant.
+    """
+    if not isinstance(data, dict):
+        return data
+    raw = _json_list(data.get("defects", []))
+    if not isinstance(raw, list):
+        return data
+    defects = [defect for defect in map(_repair_defect, raw) if defect is not None][:MAX_DEFECTS]
+    if defects:
+        return {**data, "ok": False, "defects": defects}
+    if data.get("ok") is True and raw and all(map(_off_checklist, raw)):
+        return {**data, "defects": []}
+    return data
+
+
+def repair_plan(data: Any) -> Any:
+    """An adapter answer with its formal misses mended; the edits are never changed.
+
+    `changes` keeps its first `MAX_CHANGES` non-empty notes, each on one line and
+    clipped to `MAX_CHANGE_CHARS`; `title` is clipped to `MAX_TITLE_CHARS` (a missing
+    one is empty); a blank `full_code` means no full file. The edit contract stays
+    strict: an edit list over `MAX_EDITS`, an empty `find`, or edits next to a full
+    file still fail, because dropping or choosing hunks would change the plan.
+    """
+    if not isinstance(data, dict):
+        return data
+    repaired = dict(data)
+    if "edits" in data:
+        repaired["edits"] = _json_list(data["edits"])
+    full_code = data.get("full_code")
+    if isinstance(full_code, str) and not full_code.strip():
+        repaired["full_code"] = None
+    title = data.get("title")
+    if title is None:
+        repaired["title"] = ""
+    elif isinstance(title, str):
+        repaired["title"] = _clip(title.strip(), MAX_TITLE_CHARS)
+    changes = _json_list(data.get("changes", []))
+    if isinstance(changes, list):
+        notes = [_WHITESPACE.sub(" ", note).strip() for note in changes if isinstance(note, str)]
+        repaired["changes"] = [_clip(note, MAX_CHANGE_CHARS) for note in notes if note][:MAX_CHANGES]
+    return repaired
 
 
 # --- Result ----------------------------------------------------------------------------

@@ -2,16 +2,24 @@
 
 * `before_model_callback` halts **only the root** with the fixed `budget` reply when
   the request has spent `AGENT_MAX_LLM_CALLS` calls or `AGENT_REQUEST_TOKEN_BUDGET`
-  tokens, or the user or the service has spent its daily tokens. A halt inside the
-  adapter or the reviewer would break their schema parsing, so the pipeline checks
-  `ledger.budget_allows` before each `run_node` and finishes with
-  `PlotResult(failed, reason=budget)` instead.
+  cost-weighted tokens (`ledger.BUDGET_WEIGHTS`), or the user or the service has spent
+  its daily ones. A halt inside the adapter or the reviewer would break their schema
+  parsing, so the pipeline checks `ledger.budget_allows` before each `run_node` and
+  finishes with `PlotResult(failed, reason=budget)` instead. Before a review it keeps
+  room for the review and the root's closing reply (`pipeline.REVIEW_RESERVE_TOKENS`,
+  the measured need), and once a plot has shipped in the invocation
+  (`ledger.plot_shipped`) the root's next call is exempt from the halt, once and with
+  its tools stripped, so it can only be the closing reply and a shipped plot is never
+  answered with the `budget` refusal; that reply is bounded by the root's output cap,
+  and any further root call is checked again.
 * `after_model_callback` books every response's tokens (prompt + candidates +
-  thoughts + tool-use prompt; cached tokens are counted separately and never twice),
-  the call and the `model_version`, keeps the call's finish reason and output tokens
-  in `ledger.last_calls` for the pipeline, and writes one content-free attribution
-  line with the token counts by kind (`ledger.usage_breakdown`), which the eval
-  harness prices (`agents/evals/pricing.py`), and the finish reason by its enum name
+  thoughts + tool-use prompt; cached tokens are counted separately and never twice)
+  and their cost-weighted sum (`ledger.budget_tokens`, which the request and daily
+  budgets count; the attribution line carries it as `budget`), the call and the
+  `model_version`, keeps the call's finish reason and output tokens in
+  `ledger.last_calls` for the pipeline, and writes one content-free attribution line
+  with the token counts by kind (`ledger.usage_breakdown`), which the eval harness
+  prices (`agents/evals/pricing.py`), and the finish reason by its enum name
   (`STOP`, `MAX_TOKENS`).
 * `before_tool_callback` on `plot_pipeline` counts the user's daily pipeline runs
   and refuses the call with `{"status": "error", "code": "budget"}` past
@@ -36,7 +44,16 @@ from google.genai import types
 from ..policy import refusal
 from ..services import get_services
 from ..settings import get_settings
-from .ledger import CallFacts, attribution, budget_allows, finish_name, ledger_for, usage_breakdown, usage_tokens
+from .ledger import (
+    CallFacts,
+    attribution,
+    budget_allows,
+    budget_tokens,
+    finish_name,
+    ledger_for,
+    usage_breakdown,
+    usage_tokens,
+)
 from .tool_safety import ToolSafetyPlugin
 
 
@@ -48,6 +65,13 @@ PIPELINE_TOOL = "plot_pipeline"
 
 def budget_response(text: str) -> LlmResponse:
     return LlmResponse(content=types.Content(role="model", parts=[types.Part(text=text)]), turn_complete=True)
+
+
+def strip_tools(llm_request: LlmRequest) -> None:
+    """Leave the call without tools, so the model can only answer: both providers read these two fields."""
+    llm_request.config.tools = None
+    llm_request.config.tool_config = None
+    llm_request.tools_dict = {}
 
 
 class BudgetPlugin(BasePlugin):
@@ -66,6 +90,11 @@ class BudgetPlugin(BasePlugin):
             settings = get_settings()
             if not ledger.user_id:
                 ledger.user_id = callback_context.session.user_id
+            if ledger.plot_shipped:
+                ledger.plot_shipped = False  # one call only, and without tools: the closing reply
+                strip_tools(llm_request)
+                attribution("budget_exempt", ledger, agent=callback_context.agent_name)
+                return None
             if budget_allows(ledger, get_services().usage, settings):
                 return None
         except Exception as exc:
@@ -83,13 +112,15 @@ class BudgetPlugin(BasePlugin):
             if llm_response.partial:
                 return None
             billable, cached = usage_tokens(llm_response.usage_metadata)
+            weighted = budget_tokens(llm_response.usage_metadata)
             ledger.llm_calls += 1
             ledger.tokens += billable
             ledger.cached_tokens += cached
+            ledger.budget_tokens += weighted
             if llm_response.model_version:
                 ledger.model_versions.add(llm_response.model_version)
             user = ledger.user_id or callback_context.session.user_id
-            get_services().usage.add_tokens(user, billable)
+            get_services().usage.add_tokens(user, weighted)
             breakdown = usage_breakdown(llm_response.usage_metadata)
             finish = finish_name(llm_response.finish_reason)
             ledger.last_calls[callback_context.agent_name] = CallFacts(
@@ -101,6 +132,7 @@ class BudgetPlugin(BasePlugin):
                 agent=callback_context.agent_name,
                 billable=billable,
                 cached=cached,
+                budget=weighted,
                 **breakdown,
                 model_version=llm_response.model_version,
                 finish_reason=finish,
