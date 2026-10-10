@@ -68,14 +68,37 @@ file — if this sweep starts returning packages, an
 grep -roh '@fontsource/[a-z-]*' app/src app/package.json 2>/dev/null | sort -u
 ```
 
+**Tracked font files vs. notices** — every tracked font file must have
+its licence text AND a `README.md` notice in the same directory, and
+the notice must name every font file of that directory with its
+version, source URL and SHA-256. Since 2026-10-10 the one hit is
+`agents/anyplot/render/fonts/` (JetBrains Mono 2.304, SIL OFL 1.1,
+drawn into the footer strip of user plots by `render/watermark.py`);
+`tests/unit/agents/runtime/test_watermark.py` pins the hashes the
+notice records. Any other directory in this list is a finding:
+
+```bash
+for dir in $(git ls-files | grep -iE '\.(ttf|otf|woff2?)$' | xargs -r -n1 dirname | sort -u); do
+  if [ -f "$dir/README.md" ] && ls "$dir" | grep -qiE '^(OFL|LICENSE)'; then echo "OK: $dir"
+  else echo "MISSING notice or licence: $dir"; fi
+done
+```
+
 ## 2 · Judging the hits
 
 Every binary-sweep hit must be one of:
 
 1. **Own-created assets** (logos, icons, UI art under `app/`) — own
    expression, MIT-covered.
-2. **Bundled fonts/assets covered by a notices file** (none exist at
-   baseline; the first bundled asset creates the duty).
+2. **Bundled fonts/assets covered by a notices file.** Known entry:
+   `agents/anyplot/render/fonts/JetBrainsMono-{Regular,Bold}.ttf` —
+   JetBrains Mono 2.304, SIL OFL 1.1 (no Reserved Font Name), copied
+   unmodified from the official release zip, with `OFL.txt` and a
+   `README.md` notice (source URL, version, SHA-256 of every file)
+   beside them. The OFL allows bundling with MIT code as long as the
+   fonts are not sold by themselves and the licence travels with them.
+   A changed hash, a missing `OFL.txt`, or a modified/renamed font
+   without a new notice is a finding.
 3. **Pipeline artifacts that should not be tracked at all** (preview
    images, rendered plots) — findings even when self-generated (the
    GCS rule).
@@ -106,8 +129,13 @@ Judgment flags the greps can't raise:
   render (`plots/*/implementations/*/plot-*.png`, one
   `test_output.png`) — own expression, nothing protected. The
   deleted-paths sweep shows only own workflow/IDE files.
-- No `@fontsource` packages, no bundled fonts, no notices file needed
-  yet. Re-run the sweeps, don't trust these counts.
+- No `@fontsource` packages, so no `app/THIRD_PARTY_NOTICES.md`
+  needed yet.
+- Bundled fonts (refreshed 2026-10-10): exactly the two JetBrains Mono
+  2.304 TTFs in `agents/anyplot/render/fonts/`, with `OFL.txt` and the
+  `README.md` notice beside them (bucket 2). They are the only tracked
+  `.ttf` files and the only third-party binaries in HEAD. Re-run the
+  sweeps, don't trust these counts.
 
 ## Gotchas
 
