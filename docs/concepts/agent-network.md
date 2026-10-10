@@ -8,7 +8,7 @@ This document describes the agent network that lets a visitor paste their own da
 
 | Topic | Decision |
 |---|---|
-| Product step 1 | "Use with my data": the user pastes data on a plot page, the network adapts the catalogue implementation for that spec and library to the data, renders it in a sandbox, reviews it once with at most one repair round, and returns the image and the code. For measurements only, the eval switch `AGENT_MAX_ATTEMPTS` (`--max-attempts` of the harness) can raise this to three attempts, a second repair round; the default stays one repair round |
+| Product step 1 | "Use with my data": the user pastes data on a plot page, the network adapts the catalogue implementation for that spec and library to the data, renders it in a sandbox, reviews it with at most one repair round (a render repaired after a rejection is reviewed once more), and returns the image and the code. For measurements only, the eval switch `AGENT_MAX_ATTEMPTS` (`--max-attempts` of the harness) can raise this to three attempts, a second repair round; the default stays one repair round, and a run makes at most two reviewer calls either way |
 | Product step 2 | "Find the right plot type", built on the catalogue knowledge that also backs the MCP server |
 | Result delivery | Users see and copy both the image and the code: the plot is shown inline in the theme it was rendered in (light unless the user asked for a dark plot), a light and dark switch renders the other theme on demand without any model call, and the image can be copied to the clipboard and downloaded as PNG; the code is shown with syntax highlighting, copied with one click, and downloaded together with `data.csv` so it runs unchanged |
 | Plot attribution | Owner decision of 2026-10-10 (variant `s1c-jb-sq2` of the comparison): every PNG the service serves carries a footer strip below the plot, "made with any.plot()" on the left and "anyplot.ai/<spec-id>" on the right, in JetBrains Mono with the dot drawn as a brand-green square. It is composited at image level after the run and never written into the user's code, so the exported `plot.py` reproduces the plot without it. MonoLisa, the site's own font, is not used for it, because its EULA covers desktop, web, application and ePub use only. See [Footer strip](#footer-strip) |
@@ -100,7 +100,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs):
         yield Event(output=PlotResult.not_ready(s.reason)); return
     deadline = SoftDeadline(140)                       # abort_signal at 180 s is the hard backstop
     best, best_defects, best_reviewed = None, [], False  # the best render that passed R1+R2 and whether the reviewer saw it
-    review_defects, reviewer_used, feedback, reason = [], False, [], None
+    review_defects, reviews, feedback, reason = [], 0, [], None
     try:
         for attempt in range(1, settings.max_attempts + 1):   # AGENT_MAX_ATTEMPTS, 2 by default
             if not budget.check(ctx): reason = "budget"; break
@@ -118,10 +118,11 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs):
             if result.passed_host_gates:                     # R1 and R2 passed; R3 passed or was padded
                 best, best_defects, best_reviewed = result, result.defects, False
             feedback = result.defects                        # R3 miss and advisory probe gates feed the next attempt while one is allowed
-            if feedback or reviewer_used: continue
+            if feedback and attempt < settings.max_attempts: continue
+            if reviews == 2: break                           # both reviews used: nothing left to repair for
             yield Event(message="reviewing")
             verdict = await ctx.run_node(reviewer, s.review_request(run_form, result))
-            reviewer_used, best_reviewed = True, True
+            reviews, best_reviewed = reviews + 1, True
             review_defects = [d.as_line() for d in verdict.defects]
             feedback = review_defects
             if verdict.ok: break
@@ -131,7 +132,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs):
         yield Event(output=s.finish(ctx, best, best_defects, best_reviewed, review_defects, reason))  # every path
 ```
 
-`finish` returns `ok` only when `best` exists, the reviewer saw exactly that render (`best_reviewed`) and passed it, and the canvas was not padded; `needs_attention` when `best` exists but either the reviewer never saw it after giving defects (a repair that was not re-reviewed; the first review's lines become residual defects), or the canvas had to be padded, or advisory probe gates still report defects; `failed` when no render passed R1 and R2, with `reason` in `validation`, `render`, `deadline`, `budget` or `error`. The translator maps an abort without a `PlotResult` to `error{code:"deadline"}`.
+`finish` returns `ok` only when `best` exists, the reviewer saw exactly that render (`best_reviewed`) and passed it, and the canvas was not padded; `needs_attention` when `best` exists but either the last review rejected it (its lines become residual defects), or the reviewer never saw it after giving defects (a repair whose second review the budget or the deadline skipped, or whose answer could not be read; the first review's lines become residual defects), or the canvas had to be padded, or advisory probe gates still report defects; `failed` when no render passed R1 and R2, with `reason` in `validation`, `render`, `deadline`, `budget` or `error`. The translator maps an abort without a `PlotResult` to `error{code:"deadline"}`.
 
 #### Bounds
 
@@ -140,7 +141,7 @@ The owner decided the queue, the rate and the serial renders on 2026-10-09, afte
 | Bound | Value | Enforced by |
 |---|---|---|
 | Adapter calls per run | 2 | the pipeline loop |
-| Reviewer calls per run | 1 | the pipeline loop |
+| Reviewer calls per run | 2: the first review, and one more of the render repaired after a rejection (`MAX_REVIEWS`) | the pipeline loop |
 | Renders per run | 2 rounds of one theme (`PipelineArgs.theme`, `light` by default) | the pipeline loop |
 | `plot_pipeline` calls per invocation | 1 | `ToolSafety` |
 | LLM calls per request | 12: `RunConfig(max_llm_calls=12, streaming_mode=StreamingMode.NONE)`. `ADK_MAX_LLM_CALLS=20` only sets the default for runs without a `RunConfig`, such as `adk web` and evals | the budget plugin and the `RunConfig` |
@@ -155,7 +156,7 @@ The owner decided the queue, the rate and the serial renders on 2026-10-09, afte
 | Concurrent renders per instance | 1 (`AGENT_RENDER_CONCURRENCY`), one theme per slot, for every backend and every route; a waiting pipeline render gets a freed slot before a waiting theme toggle | `SerialRenderer` (`render/serial.py`), applied in `Services.backend` |
 | Theme toggle | one render; it waits for a render slot at most `AGENT_REQUEST_DEADLINE_S` - `AGENT_RENDER_TIMEOUT_S` (120 s), then answers `503 capacity`; a theme that failed the host gates twice is answered from its record | `theme_render.py` |
 
-A typical "Create plot" costs 4 LLM calls (root twice, adapter, reviewer); a repair adds one; each free-text turn adds one judge call; the theme toggle costs none.
+A typical "Create plot" costs 4 LLM calls (root twice, adapter, reviewer); a repair adds one, and the review of a render repaired after a rejection one more; each free-text turn adds one judge call; the theme toggle costs none.
 
 The run queue (`agents/anyplot/run_queue.py`) is an in-process FIFO in front of whole `/messages` turns, the memory, rate and cost limiter of the instance. It has two lanes: a `premium` entry goes before every `normal` one (first come, first served within a lane), but the concurrency and rate limits bind it too. Nothing sets `premium` yet; it is the lane for users who later pay for their own tokens. While a run waits, the stream sends `status{step:"queued", position, waiting}` at once, on every change, and every 15 s unchanged, so idle proxies keep the stream open; `position` 1 runs next and `waiting` counts every queued entry, this one included. A client that disconnects while it waits leaves the queue, and `POST .../cancel` takes a waiting run out at once. The run registry, which answers `409 run_active`, covers queued runs and theme toggles as well as running turns, and its stale sweep frees an entry whose stream vanished after the maximum wait or the deadline, plus a margin of 30 s. A queued turn counts as use of the session's dataset, so the idle sweep does not take it while the run waits. `GET /v1/status` reports `waiting` and `in_flight`. Runs that `adk web` starts bypass the queue, because they never pass through `/v1`; their renders still go through the one render slot.
 
