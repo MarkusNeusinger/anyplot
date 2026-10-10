@@ -26,9 +26,10 @@ substitutions:
   _REGION: europe-west4
   _SERVICE_ACCOUNT: anyplot-renderer@anyplot.iam.gserviceaccount.com
   # RENDERER_ALLOWED_CALLERS: the emails whose ID token the renderer accepts,
-  # separated by commas: the anyplot-agents service account, this build's own
-  # service account (for the render smoke below) and, for `adk web` against the
-  # deployed renderer, the owner's account. Empty means nobody passes.
+  # separated by commas: the anyplot-agents service account, the renderer's own
+  # service account (the render smoke below calls the candidate as that account)
+  # and, for `adk web` against the deployed renderer, the owner's account. Empty
+  # means nobody passes.
   _ALLOWED_CALLERS: ""
   # RENDERER_AUDIENCES beyond the service URL, separated by commas. The deploy
   # step always adds the service's own URL (status.url): Cloud Run accepts no
@@ -36,10 +37,12 @@ substitutions:
   # only the OAuth client ids of the owner's user tokens (agents/README.md).
   _AUDIENCES: ""
   # "true": the smoke step renders a real plot through the candidate, which
-  # proves the launcher, the in-memory volume and the harness. It needs this
-  # build's service account in _ALLOWED_CALLERS, roles/run.invoker on the
-  # service and the service URL in RENDERER_AUDIENCES, so the very first build
-  # (which creates the service and its URL) runs with "false".
+  # proves the launcher, the in-memory volume and the harness. It calls the
+  # candidate as the service's own account (_SERVICE_ACCOUNT), so it needs that
+  # account in _ALLOWED_CALLERS and with roles/run.invoker on the service, this
+  # build's account with roles/iam.serviceAccountTokenCreator on it, and the
+  # service URL in RENDERER_AUDIENCES, so the very first build (which creates
+  # the service and its URL) runs with "false".
   _SMOKE_RENDER: "true"
   # "1" keeps an instance warm (spike S: a request to a service scaled to zero
   # met a 500 and a 429 for about 17 s); "0" scales to zero between sessions.
@@ -157,14 +160,17 @@ steps:
         #    instance, hence the retries.
         if [ "${_SMOKE_RENDER}" = "true" ]; then
           SERVICE_URL=$$(gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --platform=managed --format="value(status.url)")
-          # The build's own identity comes from the metadata server, and gcloud's
-          # `print-identity-token --include-email` refuses that account type
-          # ("Requires an impersonate service account", build da6f53f5 on
-          # 2026-10-10), so the token is fetched from the metadata server itself:
-          # `format=full` puts the `email` claim in, which the caller check needs.
-          TOKEN=$$(curl -fsS -H "Metadata-Flavor: Google" \
-            "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=$$SERVICE_URL&format=full")
-          test -n "$$TOKEN" || { echo "could not mint the smoke token from the metadata server"; exit 1; }
+          # The smoke calls the candidate as the service's own account. A build
+          # cannot mint an ID token for its own identity (gcloud refuses
+          # `--include-email` for it, and Cloud Build's metadata server has no
+          # `identity` endpoint; builds da6f53f5 and a9d3ac7f on 2026-10-10), so it
+          # impersonates the service account, which needs
+          # roles/iam.serviceAccountTokenCreator on that account for the build's
+          # account, roles/run.invoker on the service for the service account, and
+          # the service account in _ALLOWED_CALLERS (the bootstrap grants all three).
+          TOKEN=$$(gcloud auth print-identity-token --impersonate-service-account="${_SERVICE_ACCOUNT}" \
+            --audiences="$$SERVICE_URL" --include-email 2>impersonate.err) \
+            || { cat impersonate.err; echo "could not mint the smoke token: grant roles/iam.serviceAccountTokenCreator on ${_SERVICE_ACCOUNT} to this build's account"; exit 1; }
           curl -fsS --retry 5 --retry-delay 5 --retry-all-errors -H "Authorization: Bearer $$TOKEN" -o status.json "$$URL/status" \
             || { echo "/status failed with this build's token: check _ALLOWED_CALLERS, roles/run.invoker and RENDERER_AUDIENCES ($$SERVICE_URL)"; exit 1; }
           python3 -c "import json; s=json.load(open('status.json')); assert s['name']=='anyplot-renderer' and s['sandbox'] and s['volume'] is True, s; print('OK: /status', s['version'], s['mem_available_mb'], 'MiB available, volume in place')"
