@@ -20,7 +20,7 @@
   ],
   "source": "synthetic: agents/evals/make_stress.py",
   "bound_expected": "parse and bindings accept one row; a model run shows whether the plot copes with a single point",
-  "needs_model": false,
+  "needs_model": true,
   "static": {
     "dataset": "ok",
     "rows": 1,

@@ -81,9 +81,9 @@ def test_each_over_cap_case_breaks_exactly_one_limit(files: dict[str, str], name
     assert len(_data(files, name).encode("utf-8")) <= MAX_INPUT_BYTES
 
 
-def test_over_bytes_is_one_kibibyte_past_the_cap_and_otherwise_valid(files: dict[str, str]) -> None:
+def test_over_bytes_is_one_byte_past_the_cap_and_otherwise_valid(files: dict[str, str]) -> None:
     text = _data(files, "over-bytes")
-    assert len(text.encode("utf-8")) == OVER_BYTES == MAX_INPUT_BYTES + 1024
+    assert len(text.encode("utf-8")) == OVER_BYTES == MAX_INPUT_BYTES + 1
     assert len(_records(text)) - 1 < MAX_ROWS
     with pytest.raises(ParseError) as caught:
         parse_dataset(text)
@@ -131,7 +131,10 @@ def test_case_json_schema_and_the_groups(files: dict[str, str]) -> None:
         "stress-compute-distances",
         "stress-compute-lorenz",
         "stress-compute-oversample",
+        "stress-constant-series",
+        "stress-inject-long-cell",
         "stress-pie-30-slices",
+        "stress-single-row",
     ]
     rejected = sorted(case_id for case_id, case in cases.items() if case["expected"] == "rejected")
     assert rejected == [

@@ -418,13 +418,20 @@ The 23 stress cases (`evals/fixtures/cases/stress-*`, from `evals/make_stress.py
      --renderer remote --render-url https://RENDERER_URL --gcloud-token
    ```
 
-   With a `remote` or `local` renderer the static stage also checks each case's `render` expectations and reports the render time and the harness's peak memory.
+   With a `remote` or `local` renderer the static stage also checks each case's `render` expectations and reports the render time. Only the `remote` renderer reports the harness's peak memory; the `local` backend leaves that column empty. When the renderer becomes unavailable during a stand-in render, the run stops with exit code 4, as an outage stops the matrix.
 
-3. Run the cases whose bound only a model run shows. The output names them as `needs a model run`: `stress-compute-lorenz`, `stress-compute-oversample` and `stress-compute-distances` (does the adapter write the mass-data code, and does G9 or the renderer stop it) and `stress-pie-30-slices` (only the reviewer sees its piled labels). This is a normal matrix run and spends tokens:
+3. Run the cases whose bound, or the outcome their bound leaves open, only a model run shows. The output names them as `needs a model run`:
+   - `stress-compute-lorenz`, `stress-compute-oversample` and `stress-compute-distances`: does the adapter write the mass-data code, and does G9 or the renderer stop it.
+   - `stress-pie-30-slices`: only the reviewer sees its piled labels.
+   - `stress-single-row` and `stress-constant-series`: how the plot copes with one point or a flat series.
+   - `stress-inject-long-cell`: whether the plot draws the injected cell as a tick label the reviewer reads.
+
+   This is a normal matrix run and spends tokens:
 
    ```bash
-   uv run --extra agents python -m agents.evals.matrix --cases "stress-compute-*,stress-pie-*" --no-baseline \
-     --budget-usd 1 --renderer remote --render-url https://RENDERER_URL --gcloud-token
+   uv run --extra agents python -m agents.evals.matrix \
+     --cases "stress-compute-*,stress-pie-*,stress-single-row,stress-constant-series,stress-inject-long-cell" \
+     --no-baseline --budget-usd 1 --renderer remote --render-url https://RENDERER_URL --gcloud-token
    ```
 
    `--cases stress` runs all 23 the same way. The four over-cap cases end at the dataset route before any model call, and the two bindings refusals after one judge call. The full matrix's measured cost per case puts the whole set at about $0.15 to $0.20 on the Claude arm and $3 to $4 on the Gemini arm; the computing cases send their change request as a second turn and cost about twice a normal case.

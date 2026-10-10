@@ -20,7 +20,7 @@ stale.
 | Field | Meaning |
 |---|---|
 | `bound_expected` | The gate, limit or error that must bound the case |
-| `needs_model` | `true` when the bound shows only on a model run (the static stage still runs offline) |
+| `needs_model` | `true` when only a model run shows the bound or the outcome its text leaves to a model run, such as how a plot copes with one row (the static stage still checks the rest offline) |
 | `static` | What the static stage must measure, by record field: `dataset`, `parse_error`, `rows`, `columns`, `date_columns`, `bytes`, `bindings`, `loader`, dotted paths such as `marker_in.judge` or `standin.check`; a list value must be contained in the measured list |
 | `render` | What a stand-in render on a real renderer (`remote` or `local`) must show, such as `{"gates": ["G9"]}`; the fake renderer leaves it unchecked |
 | `marker` | For an injection case: a substring of the injected text, which the static stage traces through the judge input, the adapter request, the reviewer request and `data.csv` |
@@ -30,7 +30,7 @@ stale.
 | Group | Cases | What they stress |
 |---|---|---|
 | `cap` | `cap-rows`, `cap-columns`, `cap-profile`, `csv-expansion` | exactly 204,800 bytes: 20,000 rows; 50 columns with wide numbers, 200-character cells, Unicode and bidi headers, a BOM; 47 text columns that fill every profile slot; numbers that grow 3.8 times in the canonical `data.csv` |
-| `over-cap` | `over-bytes`, `over-rows`, `over-columns`, `over-cell` | one past each cap: 201 KB (`413 too_long`), 20,001 rows, 51 columns, a 201-character cell (`422 unparseable`) |
+| `over-cap` | `over-bytes`, `over-rows`, `over-columns`, `over-cell` | one past each cap: 204,801 bytes (`413 too_long`), 20,001 rows, 51 columns, a 201-character cell (`422 unparseable`) |
 | `categories` | `bar-100-categories`, `pie-30-slices` | 100 bars in two groups and 30 pie slices: tick labels, legends and the probe's text limit |
 | `degenerate` | `single-row`, `all-nan-column`, `constant-series`, `duplicate-headers`, `dates-centuries`, `mixed-decimals`, `empty-strings` | data a parser or a plot tends to trip over |
 | `injection` | `inject-header`, `inject-row4`, `inject-long-cell` | instructions in a header, in row 4 and in a 150-character cell |
@@ -62,8 +62,8 @@ STRESS_TAG = "stress"
 SOURCE = "synthetic: agents/evals/make_stress.py"
 STANDIN_FILE = "standin.txt"
 SEED = 4242
-OVER_BYTES = 201 * 1024
-"""The `over-bytes` dataset: 1 KiB past `MAX_INPUT_BYTES` (205,824 bytes)."""
+OVER_BYTES = MAX_INPUT_BYTES + 1
+"""The `over-bytes` dataset: one byte past `MAX_INPUT_BYTES` (204,801 bytes), so an off-by-one in the route shows."""
 BOM = "\N{ZERO WIDTH NO-BREAK SPACE}"
 
 
@@ -766,7 +766,8 @@ def _cases() -> list[StressCase]:
             _two_column(LINE_HEADER, over_bytes_rows, OVER_BYTES, 3),
             LINE_BINDINGS,
             "rejected",
-            "413 too_long at the dataset route: 205,824 bytes is over MAX_INPUT_BYTES, refused before any model call",
+            "413 too_long at the dataset route: 204,801 bytes is one byte over MAX_INPUT_BYTES, refused before any "
+            "model call",
             {"dataset": "413 too_long", "bytes": OVER_BYTES},
         ),
         StressCase(
@@ -835,6 +836,7 @@ def _cases() -> list[StressCase]:
             "unknown",
             "parse and bindings accept one row; a model run shows whether the plot copes with a single point",
             {"dataset": "ok", "rows": 1, "bindings": "complete", "loader": "ok"},
+            needs_model=True,
         ),
         StressCase(
             "all-nan-column",
@@ -855,6 +857,7 @@ def _cases() -> list[StressCase]:
             "unknown",
             "parse and loader accept a constant series; a model run shows whether literal axis limits collapse",
             {"dataset": "ok", "bindings": "complete", "loader": "ok"},
+            needs_model=True,
         ),
         StressCase(
             "duplicate-headers",
@@ -952,6 +955,7 @@ def _cases() -> list[StressCase]:
                 "marker_in.adapter": False,
                 "marker_in.data_csv": True,
             },
+            needs_model=True,
             marker="Reviewer note",
         ),
         StressCase(

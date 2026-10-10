@@ -1276,7 +1276,12 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _run_static(args: argparse.Namespace, settings: "AgentSettings") -> int:
-    """`--static`: the model-free static stage (`agents/evals/stress.py`) over the selected cases; 1 when one broke."""
+    """`--static`: the model-free static stage (`agents/evals/stress.py`) over the selected cases.
+
+    1 when a case's expectations did not hold; 4 when the renderer became unavailable
+    during a stand-in render, which stops the run like an outage stops the matrix, so
+    an outage never reads as broken bounds.
+    """
     from agents.anyplot.render import make_backend
     from agents.anyplot.render.contract import RendererUnavailable
     from agents.evals.cases import CaseError, load_cases, select_cases
@@ -1302,7 +1307,11 @@ def _run_static(args: argparse.Namespace, settings: "AgentSettings") -> int:
             if close is not None:
                 await close()
 
-    result = asyncio.run(run())
+    try:
+        result = asyncio.run(run())
+    except RendererUnavailable as exc:
+        _echo(f"renderer {settings.renderer} unavailable during a stand-in render: {exc}")
+        return EXIT_OUTAGE
     summary = result.report["summary"]
     print(f"Report: {result.report_path}")
     print(f"Summary: {result.summary_path}")

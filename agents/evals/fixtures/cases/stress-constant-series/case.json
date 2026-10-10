@@ -20,7 +20,7 @@
   ],
   "source": "synthetic: agents/evals/make_stress.py",
   "bound_expected": "parse and loader accept a constant series; a model run shows whether literal axis limits collapse",
-  "needs_model": false,
+  "needs_model": true,
   "static": {
     "dataset": "ok",
     "bindings": "complete",

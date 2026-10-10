@@ -14,13 +14,14 @@ from agents.anyplot.code.edits import apply_plan
 from agents.anyplot.code.normalise import normalise
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome, Script
+from agents.anyplot.render.contract import RendererUnavailable
 from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.schemas import AdaptPlan
 from agents.anyplot.services import Services
 from agents.anyplot.settings import get_settings
 from agents.evals import matrix
 from agents.evals.cases import CaseError, EvalCase, load_cases, select_cases
-from agents.evals.matrix import EXIT_OK, configure, parse_args
+from agents.evals.matrix import EXIT_OK, EXIT_OUTAGE, configure, parse_args
 from agents.evals.stress import (
     StaticContext,
     compose_standin,
@@ -208,7 +209,10 @@ async def test_the_whole_stress_set_holds_offline(tmp_path: Path, stress_cases: 
         "stress-compute-distances",
         "stress-compute-lorenz",
         "stress-compute-oversample",
+        "stress-constant-series",
+        "stress-inject-long-cell",
         "stress-pie-30-slices",
+        "stress-single-row",
     ]
     assert json.loads(result.report_path.read_text())["kind"] == "static"
     table = result.summary_path.read_text()
@@ -235,6 +239,20 @@ def test_static_defaults_to_the_fake_renderer(tmp_path: Path) -> None:
         "stress-over-rows",
         "stress-single-row",
     ]
+
+
+def test_a_renderer_outage_stops_the_static_run_as_an_outage(tmp_path: Path) -> None:
+    """A stand-in render that finds the renderer gone ends the run with exit 4, never as a broken bound."""
+
+    def outage(job: Any, theme: str) -> FakeOutcome:
+        raise RendererUnavailable("connection refused")
+
+    with patch.dict(os.environ), patch("agents.anyplot.render.make_backend", return_value=FakeBackend(script=outage)):
+        os.environ.pop("AGENT_RENDERER", None)
+        code = matrix.main(["--cases", "stress-compute-oversample", "--static", "--out", str(tmp_path)])
+
+    assert code == EXIT_OUTAGE
+    assert not list(tmp_path.glob("*-static.json"))  # no report that would read as failed bounds
 
 
 # --- The dataset route on the cap cases ------------------------------------------------------

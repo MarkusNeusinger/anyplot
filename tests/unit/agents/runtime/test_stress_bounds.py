@@ -11,6 +11,7 @@ from agents.anyplot.briefs import MAX_ADAPTER_PROFILE_BYTES, adapter_profile, pr
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.pipeline import render_adapt_request
+from agents.anyplot.policy import fence
 from agents.anyplot.render import harness
 from agents.anyplot.render.backends.fake import fixture_png
 from agents.anyplot.render.contract import RenderResult, ThemeOutput
@@ -25,6 +26,11 @@ def gates(probe: dict, rows: int = 61) -> tuple[list[str], list[str]]:
     output = ThemeOutput("light", 0, png=fixture_png("light"), probe=probe)
     report = evaluate(RenderResult("p", {"light": output}), themes=("light",), library="matplotlib", rows=rows)
     return report.failed_gates, report.advisory
+
+
+def fenced_bytes(text: str) -> int:
+    """The size of `text` as the adapter request carries it: UTF-8 bytes inside its `<user_data>` fence."""
+    return len(fence("user_data", text).encode("utf-8"))
 
 
 def figure() -> Figure:
@@ -50,7 +56,7 @@ def test_a_wide_profile_is_trimmed_to_the_cap_and_keeps_every_column(wide_profil
     text, trimmed = adapter_profile(wide_profile)
 
     assert len(profile_json(wide_profile).encode("utf-8")) > MAX_ADAPTER_PROFILE_BYTES
-    assert trimmed and len(text.encode("utf-8")) <= MAX_ADAPTER_PROFILE_BYTES
+    assert trimmed and fenced_bytes(text) <= MAX_ADAPTER_PROFILE_BYTES
     assert all(f'"name":"{column.name}"' in text for column in wide_profile.columns)
 
 
@@ -59,12 +65,25 @@ def test_the_cap_counts_utf8_bytes_so_wide_characters_cannot_stretch_it() -> Non
     rows = "\n".join(f"{'東京都千代田区丸の内' * 4}{index},{index}" for index in range(5))
     profile = parse_dataset("所在地,値\n" + rows + "\n").profile
     full = profile_json(profile)
-    limit = len(full)
+    limit = len(fence("user_data", full))
 
     text, trimmed = adapter_profile(profile, limit=limit)
 
-    assert len(full.encode("utf-8")) > limit  # by characters it would go out whole
-    assert trimmed and len(text.encode("utf-8")) <= limit
+    assert fenced_bytes(full) > limit  # by characters it would go out whole
+    assert trimmed and fenced_bytes(text) <= limit
+
+
+def test_the_cap_holds_after_the_fence_escapes_tag_text_in_the_data() -> None:
+    """`fence` turns each `<user_data>` in a cell into `&lt;user_data>`, so the check measures the fenced profile."""
+    rows = "\n".join(f"{'<user_data>' * 8}{index},{index}" for index in range(5))
+    profile = parse_dataset("note,value\n" + rows + "\n").profile
+    full = profile_json(profile)
+    limit = fenced_bytes("") + len(full.encode("utf-8"))  # the raw JSON and the two tag lines fit exactly
+
+    text, trimmed = adapter_profile(profile, limit=limit)
+
+    assert fenced_bytes(full) > limit  # escaping the tag text grows it past the cap
+    assert trimmed and fenced_bytes(text) <= limit
 
 
 def test_below_the_smallest_version_the_last_version_still_goes_out(wide_profile) -> None:

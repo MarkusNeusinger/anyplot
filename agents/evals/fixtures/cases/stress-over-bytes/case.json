@@ -19,10 +19,10 @@
     "synthetic"
   ],
   "source": "synthetic: agents/evals/make_stress.py",
-  "bound_expected": "413 too_long at the dataset route: 205,824 bytes is over MAX_INPUT_BYTES, refused before any model call",
+  "bound_expected": "413 too_long at the dataset route: 204,801 bytes is one byte over MAX_INPUT_BYTES, refused before any model call",
   "needs_model": false,
   "static": {
     "dataset": "413 too_long",
-    "bytes": 205824
+    "bytes": 204801
   }
 }

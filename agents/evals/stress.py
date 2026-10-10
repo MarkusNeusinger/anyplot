@@ -34,7 +34,9 @@ expectation in the case's `static` (and, on a real renderer, `render`) field mat
 `mismatches` names the ones that did not. A `render` field needs a `standin.txt`, and on
 a real renderer a case that ended before its stand-in rendered does not hold. `model` is `pending` for a case whose bound
 needs a model run (`needs_model`). The report goes to `<out>/<date>-static.json` and
-its Markdown table; the exit code is 1 when an expectation did not hold.
+its Markdown table; the exit code is 1 when an expectation did not hold. A stand-in
+render that finds the renderer unavailable raises `RendererUnavailable` out of the run,
+and the harness exits with 4 for an outage, as the matrix does.
 """
 
 import io
@@ -59,7 +61,7 @@ from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParsedDataset, ParseError
 from agents.anyplot.opening import assess, dataset_judge_input
 from agents.anyplot.pipeline import _check, render_adapt_request, render_review_request
 from agents.anyplot.policy import FENCE_TAGS
-from agents.anyplot.render.contract import RenderBackend, RenderJob
+from agents.anyplot.render.contract import RenderBackend, RendererUnavailable, RenderJob
 from agents.anyplot.render.gates import data_rows, evaluate
 from agents.anyplot.render.runtimes.python import PythonRuntime
 from agents.anyplot.schemas import MAX_NOTES, AdaptPlan, AdaptRequest, Binding, ReviewRequest
@@ -243,6 +245,8 @@ async def static_record(case: EvalCase, context: StaticContext) -> dict[str, Any
     record = base_static_record(case, spec)
     try:
         await _steps(record, case, spec, context)
+    except RendererUnavailable:
+        raise  # an outage, not a broken case: the caller stops the run instead of failing every stand-in
     except Exception as exc:  # one broken case must not end the run; the type is enough to find it
         record["status"], record["error"] = "error", type(exc).__name__
     measured = record["static"]

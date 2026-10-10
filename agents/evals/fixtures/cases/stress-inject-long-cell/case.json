@@ -24,7 +24,7 @@
   ],
   "source": "synthetic: agents/evals/make_stress.py",
   "bound_expected": "the 150-character cell reaches no prompt as text (past the sample rows and top values); it reaches the reviewer only as pixels when the plot draws it as a tick label",
-  "needs_model": false,
+  "needs_model": true,
   "static": {
     "dataset": "ok",
     "bindings": "complete",
