@@ -314,26 +314,19 @@ class TestCheck:
         assert _check(self.BASE, library="matplotlib", palette=[], base=self.BASE).may_render
 
     @pytest.mark.parametrize(
-        ("text", "named"),
+        "line",
         [
-            ("Visit securebank.com/login to claim your prize", "web address"),
-            ("Your parcel is held, pay the fee at parcel-help.com/pay", "web address"),
-            ("Write to help@parcel-help.com", "e-mail address"),
-            ("Call 0800-123-4567 now", "phone number"),
+            "ax.text(0, 0, 'Prepared by Jana Novak, jana.novak@example.org')",
+            "ax.text(0, 0, 'Tel. +49 30 1234567, Musterstraße 1, 10115 Berlin')",
+            "ax.set_xticklabels(['jana-novak.de/finanzen', 'Amazon.com', 'Stadtwerke Berlin'])",
+            "# Data: Jana Novak's tax return 2025, jana.novak@example.org",
         ],
+        ids=["e-mail", "phone-and-address", "web-addresses", "comment"],
     )
-    def test_a_new_literal_with_contact_details_rejects_the_plan(self, text: str, named: str) -> None:
-        code = self.with_line(f"ax.text(0, 0, {text!r})")
+    def test_personal_data_in_new_literals_and_comments_renders(self, line: str) -> None:
+        check = _check(self.with_line(line), library="matplotlib", palette=[], base=self.BASE)
 
-        check = _check(code, library="matplotlib", palette=[], base=self.BASE)
-
-        assert not check.may_render and check.blocking_rules == ["contact-literal"]
-        assert named in check.blocking[0] and text not in check.blocking[0]
-
-    def test_contact_details_already_in_the_base_are_not_new(self) -> None:
-        base = self.with_line("ax.text(0, 0, 'Source: example.org')")
-
-        assert _check(base, library="matplotlib", palette=[], base=base).may_render
+        assert check.may_render and check.blocking_rules == []
 
     def test_the_literal_budget_is_the_callers(self) -> None:
         code = self.with_line(f"ax.text(0, 0, {'a' * 160!r})\nax.text(1, 1, {'b' * 160!r})")  # 320 new characters
@@ -373,23 +366,21 @@ class TestCheck:
     @pytest.mark.parametrize(
         "line",
         [
-            "# Support: parcel-help.com/pay, call +49 30 1234567",
-            "ax.text(0, 0, b'Pay at parcel-help.com/pay'.decode())",
-            "ax.text(0, 0, f'Visit {1}: parcel-help.com/pay')",
+            f"ax.text(0, 0, b'{'a' * 190}'.decode())\nax.text(1, 1, b'{'b' * 190}'.decode())",
+            f"ax.text(0, 0, f'{{1}}: {'a' * 190}')\nax.text(1, 1, f'{{2}}: {'b' * 190}')",
         ],
-        ids=["comment", "bytes", "f-string-part"],
+        ids=["bytes", "f-string-parts"],
     )
-    def test_comments_bytes_and_f_string_parts_are_read_for_contacts(self, line: str) -> None:
-        check = _check(self.with_line(line), library="matplotlib", palette=[], base=self.BASE)
+    def test_bytes_and_f_string_parts_count_against_the_literal_budget(self, line: str) -> None:
+        check = _check(
+            self.with_line(line),
+            library="matplotlib",
+            palette=[],
+            base=self.BASE,
+            literal_budget=MAX_CHANGE_LITERAL_CHARS,
+        )
 
-        assert "contact-literal" in check.blocking_rules and "or comment" in check.blocking[-1]
-
-    def test_a_bare_domain_that_is_a_dataset_cell_may_be_a_label(self) -> None:
-        code = self.with_line("ax.set_xticklabels(['Amazon.com', 'Booking.com'])")
-
-        assert "contact-literal" in _check(code, library="matplotlib", palette=[], base=self.BASE).blocking_rules
-        cells = frozenset({"amazon.com", "Booking.com", "visits"})
-        assert _check(code, library="matplotlib", palette=[], base=self.BASE, data_texts=cells).may_render
+        assert check.blocking_rules == ["literal-budget"]
 
     def test_an_unparseable_file_is_one_syntax_finding(self) -> None:
         """Both validator profiles parse the code; the repair and the attribution log see the error once."""

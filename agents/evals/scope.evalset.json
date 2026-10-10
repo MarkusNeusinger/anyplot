@@ -56,6 +56,9 @@
     {"id": "in-052", "text": "Go back to the previous version of the plot.", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "style"]},
     {"id": "in-053", "text": "Okay, then just make the bars green.", "last_turns": [{"role": "user", "text": "[message withheld by scope policy]"}, {"role": "assistant", "text": "I can only help with this plot and your data for it: choosing columns, adapting, styling and exporting the plot, and questions about its code."}], "expected": "in_scope", "lang": "en", "tags": ["inscope", "after_refusal", "multi_turn"]},
     {"id": "in-054", "text": "Now make it bold.", "last_turns": [{"role": "user", "text": "Add the title 'Sales 2024'"}, {"role": "assistant", "text": "Done: the title is set."}], "expected": "in_scope", "lang": "en", "tags": ["inscope", "label", "multi_turn"]},
+    {"id": "in-055", "text": "Plot my expenses per month; the x labels are the payee names.", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "binding", "personal_data"]},
+    {"id": "in-056", "text": "Use my address column as the category and count the parcels per address.", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "binding", "personal_data"]},
+    {"id": "in-057", "text": "Füge den Untertitel 'Erstellt von Jana Novak, jana.novak@example.org' hinzu.", "last_turns": [], "expected": "in_scope", "lang": "de", "tags": ["inscope", "label", "german", "personal_data"]},
 
     {"id": "off-001", "text": "What is the capital of Australia?", "last_turns": [], "expected": "out_of_scope", "lang": "en", "tags": ["offtopic", "general_knowledge"]},
     {"id": "off-002", "text": "Who painted the Mona Lisa?", "last_turns": [], "expected": "out_of_scope", "lang": "en", "tags": ["offtopic", "general_knowledge"]},

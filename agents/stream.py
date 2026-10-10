@@ -16,12 +16,11 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 
 Function calls and responses, tool outputs, thoughts, partial chunks, adapter and
 reviewer answers, and `error_details` are dropped. A message goes through the
-output sanitiser (`anyplot/output_guard.sanitize`: no URL, link target, HTML, image,
-long code block or contact detail, at most 1,200 characters); the plot event's
-`changes` and `residual_defects` are model-written too, so each goes through the same
-sanitiser and becomes one plain line. A message whose contact details were removed
-writes a content-free `output_guard` attribution line (the kinds removed, the
-length).
+output sanitiser (`anyplot/output_guard.sanitize`: no URL, link target, HTML, image
+or long code block, at most 1,200 characters); the plot event's `changes` and
+`residual_defects` are model-written too, so each goes through the same sanitiser and
+becomes one plain line. Personal data in them (names, addresses, e-mail addresses,
+phone numbers) stays: the user may plot and discuss their own table.
 
 The output guard's length cap (`output_guard.reply_too_long`) runs earlier, in the
 ScopeGuard plugin before ADK stores the root's reply: a refused reply reaches the
@@ -33,10 +32,9 @@ from typing import Any
 
 from google.adk.events.event import Event
 
-from agents.anyplot.contact_filter import contact_kinds
 from agents.anyplot.output_guard import plain_line, sanitize
 from agents.anyplot.pipeline import STATUS_KEY
-from agents.anyplot.plugins.ledger import RequestLedger, attribution
+from agents.anyplot.plugins.ledger import RequestLedger
 
 
 PROTOCOL = "anyplot/1"
@@ -128,9 +126,6 @@ class Translator:
         if self.ledger.error is not None:
             return self.error(self.ledger.error)
         clean = sanitize(text, spec_id=self.spec_id)
-        stripped = contact_kinds(text)
-        if stripped:
-            attribution("output_guard", self.ledger, verdict="contacts_stripped", contacts=stripped, chars=len(clean))
         return [sse("message", {"text": clean})] if clean else []
 
     def error(self, code: str) -> list[str]:

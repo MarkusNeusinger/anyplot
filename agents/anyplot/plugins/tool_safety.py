@@ -2,10 +2,11 @@
 
 * `before_tool_callback`: a per-agent allowlist (the root's five session tools; none
   for the adapters and the reviewer); Pydantic validation of the arguments (ADK
-  leaves `FUNCTION_TOOL_ARG_VALIDATION` off); no URL or file path in any string
-  argument; no web address, e-mail address or phone number in a `change_request`
-  (`contact_filter`, which also catches a bare `securebank.com/login`); at most one
-  `plot_pipeline` call per invocation (the "one repair round" bound).
+  leaves `FUNCTION_TOOL_ARG_VALIDATION` off); no URL (a scheme or `www.`) or file
+  path in any string argument; at most one `plot_pipeline` call per invocation (the
+  "one repair round" bound). Personal data in a `change_request` (a name, an address,
+  an e-mail address, a phone number, a bare web address) passes: whether plot text is
+  an advertisement or a message to other people is the scope judge's call, by intent.
 * `after_tool_callback`: a key allowlist per tool and a size cap of 8 KB (24 KB for
   `get_current_code`, 16 KB for `get_dataset_profile` and `plot_pipeline`); a result
   outside them becomes an error. The `plot_pipeline` result reaches the root with its
@@ -26,7 +27,6 @@ from google.adk.tools.base_tool import BaseTool
 from google.adk.tools.tool_context import ToolContext
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from ..contact_filter import has_contact
 from ..policy import DATA_PREAMBLE, fence
 from ..schemas import MAX_COLUMNS, Binding, PipelineArgs
 from .ledger import argument_hash, attribution, ledger_for
@@ -175,8 +175,6 @@ class ToolSafetyPlugin(BasePlugin):
             return "invalid_arguments"
         if has_url_or_path(arguments):
             return "url_or_path_not_allowed"
-        if name == PIPELINE_TOOL and has_contact(str(arguments.get("change_request") or "")):
-            return "contact_details_not_allowed"
         return None
 
     async def after_tool_callback(

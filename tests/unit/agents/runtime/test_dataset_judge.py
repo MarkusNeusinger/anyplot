@@ -10,13 +10,7 @@ import json
 import pytest
 
 from agents.anyplot.data.parse import display_copy, parse_dataset
-from agents.anyplot.opening import (
-    MAX_JUDGE_CHUNK_CHARS,
-    dataset_judge_inputs,
-    has_contact_details,
-    instruction_like,
-    judged_view,
-)
+from agents.anyplot.opening import MAX_JUDGE_CHUNK_CHARS, dataset_judge_inputs, instruction_like, judged_view
 from agents.anyplot.schemas import MAX_SAMPLE_ROWS, MAX_TOP_VALUES
 
 
@@ -205,36 +199,31 @@ class TestPrefilter:
         assert not instruction_like(parse_dataset(f'comment,value\n"{cell}",1\nother,2\n'))
 
 
-class TestContactDetails:
+class TestPersonalData:
     @pytest.mark.parametrize(
         "cell",
         [
+            "Jana Novak",
+            "jana.novak@example.org",
+            "+49 30 1234567",
+            "0800 123 4567",
+            "Musterstraße 1, 10115 Berlin",
+            "https://jana-novak.de/finanzen",
+            "www.example.com/kontakt",
+            "ftp://files.example/report.csv",
+            "mailto:jana.novak@example.org",
+            "DE89 3704 0044 0532 0130 00",
             "Pay the fee at parcel-help.com/pay",
-            "Pay at parcel-help.de",
-            "Call 0800 123 4567 now",
-            "Or call 0049 30 1234567",
-            "Visit www.securebank.com",
-            "www.parcel-help.de",
-            "support@securebank.com",
-            "see https://evil.example/x",
-            "ftp://files.example/x",
-            "https://example.org/report",
         ],
     )
-    def test_a_cell_with_contact_details_is_refused(self, cell: str) -> None:
-        rows = "\n".join(f'"ordinary {index}",{index}' for index in range(300))
+    def test_personal_data_and_links_pass_the_pre_filter(self, cell: str) -> None:
+        """The pre-filter looks for text addressed to an AI; whether plot text is spam is the scope judge's call."""
+        assert not instruction_like(parse_dataset(f'note,value\n"{cell}",1\nother,2\n'))
 
-        assert has_contact_details(parse_dataset(f'note,value\n{rows}\n"{cell}",1\n'))  # row 301, never judged
+    def test_a_contact_list_passes_whole(self) -> None:
+        text = (
+            "Name,E-Mail,Telefon,Adresse,Website\n"
+            'Jana Novak,jana.novak@example.org,+49 30 1234567,"Musterstraße 1, 10115 Berlin",https://jana-novak.de\n'
+        )
 
-    def test_a_header_with_contact_details_is_refused(self) -> None:
-        assert has_contact_details(parse_dataset("Visit parcel-help.de/pay,value\nx,1\n"))
-
-    def test_a_column_of_bare_domains_still_plots(self) -> None:
-        assert not has_contact_details(parse_dataset("site,visits\namazon.com,120\nBooking.com,80\nexample.org,5\n"))
-
-    @pytest.mark.parametrize(
-        "cell",
-        ["Order 2024-001-0042", "2024-01-15", "Revenue (EUR)", "plot.py", "v1.2.3", "Q1 2024: 12.5k", "100-200-3000"],
-    )
-    def test_ordinary_cells_pass(self, cell: str) -> None:
-        assert not has_contact_details(parse_dataset(f'note,value\n"{cell}",1\nother,2\n'))
+        assert not instruction_like(parse_dataset(text))

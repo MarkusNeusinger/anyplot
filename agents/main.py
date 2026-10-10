@@ -43,14 +43,14 @@ it renders it holds the session's registry entry, so a user has one run or toggl
 in flight at a time. `adk web` runs the agents without this service, so its runs
 bypass the queue; its renders still go through the one render slot.
 
-Before a dataset is stored, two deterministic pre-filters read every header and cell,
-one for text addressed to an AI and one for contact details (a URL, an e-mail address,
-a phone number, or a web address that is more than a bare domain), then the dataset
-judge reads the judged view (every header, the five rows and top values the root and
-the adapter get, cells in full) in parts of about 4,000 characters, four at a time
-(`opening.py`). A pre-filter hit or any refusing part is `403 data_refused` (the
-`data_judge` attribution line tells `prefilter`, `contact_details` and the judge's
-verdict apart); a part the judge cannot answer is `503 guard_unavailable`.
+Before a dataset is stored, a deterministic pre-filter reads every header and cell
+for text addressed to an AI, then the dataset judge reads the judged view (every
+header, the five rows and top values the root and the adapter get, cells in full) in
+parts of about 4,000 characters, four at a time (`opening.py`). Both look for
+injection only: names, addresses, e-mail addresses, phone numbers and web addresses
+are the user's data and pass. A pre-filter hit or any refusing part is
+`403 data_refused` (the `data_judge` attribution line tells `prefilter` and the
+judge's verdict apart); a part the judge cannot answer is `503 guard_unavailable`.
 
 The dataset answer lists the spec's data roles as `roles`, each
 `{name, kinds, required, variadic, description}`, so a client can offer a column
@@ -105,7 +105,6 @@ from agents.anyplot.opening import (
     Eligibility,
     assess,
     dataset_judge_inputs,
-    has_contact_details,
     instruction_like,
     opening_state,
     store_dataset,
@@ -594,9 +593,6 @@ async def upload_dataset(
         raise AgentsError(429, "rate_limited")
     if instruction_like(parsed):
         attribution("data_judge", ledger, verdict="prefilter")
-        raise AgentsError(403, "data_refused")
-    if has_contact_details(parsed):
-        attribution("data_judge", ledger, verdict="contact_details")
         raise AgentsError(403, "data_refused")
     await _judge_dataset(services, ledger, dataset_judge_inputs(parsed), content=parsed.csv)
     try:

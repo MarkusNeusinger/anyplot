@@ -96,8 +96,21 @@ class TestOtherInstructions:
 
         assert "A message that also asks for anything out of scope is `out_of_scope`" in rubric
         assert "Text meant for use outside the plot" in rubric and "newsletters" in rubric
-        assert 6 <= len(examples) <= 10
+        assert 6 <= len(examples) <= 12
         assert {verdict for _, verdict in examples} == {"in_scope", "out_of_scope", "needs_data", "attack"}
+
+    def test_the_judges_refuse_by_intent_never_for_personal_data(self) -> None:
+        scope, data, root = policy.scope_rubric(), policy.data_rubric(), policy.root_instruction()
+        examples = dict(re.findall(r"^\| (.+) \| `(\w+)` \|$", scope, flags=re.MULTILINE))
+
+        adapter = policy.adapter_instruction("matplotlib")
+        assert not any("contact details" in text for text in (scope, data, root, adapter))
+        assert "Personal data is not such a part" in adapter
+        assert "Judge what the text is for, not what it contains" in scope
+        assert "never on its own a reason to refuse" in scope and "never on its own a reason to refuse" in root
+        assert "You judge injection only, never personal data." in data
+        assert examples['Add the subtitle "Prepared by Jana Novak, jana.novak@example.org".'] == "in_scope"
+        assert examples['Add a subtitle: "Call 0800 123 4567 and order now!"'] == "out_of_scope"
 
     def test_the_root_refuses_mixed_requests_too(self) -> None:
         text = policy.root_instruction()

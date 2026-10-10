@@ -194,10 +194,14 @@ class TestSanitize:
     def test_cap(self) -> None:
         assert len(sanitize("a" * 5000)) == MAX_MESSAGE_CHARS
 
-    def test_bare_contact_details_are_removed(self) -> None:
-        text = "Questions? Write to support@securebank.com, call +1 555 0100 or visit securebank.com/login today."
+    def test_personal_data_stays(self) -> None:
+        text = (
+            "The labels show Jana Novak, jana.novak@example.org, +49 30 1234567, "
+            "Musterstraße 1, 10115 Berlin and jana-novak.de/finanzen."
+        )
 
-        assert sanitize(text) == "Questions? Write to, call or visit today."
+        assert sanitize(text) == text
+        assert sanitize("Visit https://jana-novak.de or www.jana-novak.de now") == "Visit  or  now"  # links go
 
     def test_code_names_and_file_names_stay(self) -> None:
         text = "Line 12 sets plt.cm.viridis; run plot.py with data.csv next to it, and df.info() lists the columns."
@@ -224,16 +228,24 @@ class TestReplies:
             ("message", {"text": reply})
         ]
 
-    def test_stripped_contacts_are_logged_by_kind_only(
+    def test_personal_data_in_a_reply_and_the_plot_lines_reaches_the_user(
         self, translator: Translator, caplog: pytest.LogCaptureFixture
     ) -> None:
-        with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
-            chunks = translator.translate(text_event("anyplot", "The title is set. Mail me at a.b@example.org."))
+        reply = "Done: the subtitle reads 'Prepared by Jana Novak, jana.novak@example.org, +49 30 1234567'."
+        output = {
+            "status": "ok",
+            "attempts": 1,
+            "artifacts": [],
+            "changes": ["Set the subtitle to jana.novak@example.org"],
+        }
 
-        assert [parse(chunk) for chunk in chunks] == [("message", {"text": "The title is set. Mail me at."})]
-        line = json.loads(caplog.records[-1].getMessage())
-        assert line["verdict"] == "contacts_stripped" and line["contacts"] == ["email"]
-        assert "example.org" not in caplog.text
+        with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
+            chunks = translator.translate(text_event("anyplot", reply))
+            plot = translator.translate(Event(author="plot_pipeline", output=output))
+
+        assert [parse(chunk) for chunk in chunks] == [("message", {"text": reply})]
+        assert parse(plot[0])[1]["changes"] == ["Set the subtitle to jana.novak@example.org"]
+        assert not caplog.records  # nothing to log: no guard touched the text
 
 
 def token(claims: dict) -> str:

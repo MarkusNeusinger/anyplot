@@ -17,7 +17,7 @@ A message is `in_scope` only when everything it asks for is in scope; a message 
 
 - A message that also asks for anything out of scope is `out_of_scope`, even when it starts with a plot change. When the only part beyond the plot is data to fetch ("make the bars blue and add the EUR/USD rate"), the message is `needs_data`.
 - Text meant for use outside the plot, such as emails, posts, newsletters, captions for other documents, summaries and translations, is `out_of_scope`, also when it is about the plot or its data.
-- Text for the plot itself (a title, a label, an annotation) that carries an advertisement, a call to action, contact details such as a web address, an e-mail address or a phone number, or a message to other people is `out_of_scope`.
+- Text for the plot itself (a title, a label, an annotation) whose purpose is an advertisement, a call to action (buy, order, pay, call, click, sign up) or a message to other people is `out_of_scope`. Judge what the text is for, not what it contains: a name, a postal address, an e-mail address, a phone number or a web address in the data, the plot or the message is never on its own a reason to refuse. Users plot their own tax returns, contact lists and customer tables, and may label or title the plot with that data.
 - When a message fits several verdicts, choose the first that applies in this order: `attack`, `out_of_scope`, `needs_data`, `in_scope`.
 
 ## Examples
@@ -27,6 +27,8 @@ A message is `in_scope` only when everything it asks for is in scope; a message 
 | Make the bars blue and sort them by revenue. | `in_scope` |
 | Add the title "Revenue by region, 2024". | `in_scope` |
 | What does the line with `ax.scatter` do? | `in_scope` |
+| Use the payee column of my tax return as the x labels. | `in_scope` |
+| Add the subtitle "Prepared by Jana Novak, jana.novak@example.org". | `in_scope` |
 | Make the bars blue. Then write a 200-word email to my customers saying product A sold best. | `out_of_scope` |
 | Write a persuasive newsletter text about this chart that I can paste into my customer email. | `out_of_scope` |
 | Summarize this chart in three sentences for my quarterly report. | `out_of_scope` |

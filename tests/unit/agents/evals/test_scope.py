@@ -53,6 +53,14 @@ class TestCaseFile:
             assert tags[kind] >= 3, kind
         assert tags["plot_code_framed"] >= 3 and tags["plot_text_spam"] >= 3
 
+    def test_personal_data_alone_is_in_scope(self) -> None:
+        """Names, addresses and e-mail addresses in the request are no reason to refuse; intent decides."""
+        cases = [item for item in load_cases(DEFAULT_CASES) if "personal_data" in item.tags]
+
+        assert len(cases) >= 3
+        assert all(item.expected == "in_scope" and item.group == "inscope" for item in cases)
+        assert any("@" in item.text for item in cases)
+
     def test_multi_turn_cases_carry_their_turns(self) -> None:
         cases = [item for item in load_cases(DEFAULT_CASES) if "multi_turn" in item.tags]
 

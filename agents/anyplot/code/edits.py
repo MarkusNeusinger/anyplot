@@ -30,9 +30,7 @@ for the attribution log, which never sees the lines because they quote code.
 """
 
 import ast
-import io
 import re
-import tokenize
 from collections import Counter
 from dataclasses import dataclass, field
 
@@ -206,24 +204,6 @@ def new_literal_chars(base: str, code: str) -> int:
     or long text. A `code` or `base` that does not parse counts as 0.
     """
     return sum(len(text) for text in new_literals(base, code))
-
-
-def new_comments(base: str, code: str) -> list[str]:
-    """The comments of `code` that `base` does not already hold (as a multiset), each as often as it is new.
-
-    Comments reach the exported `plot.py`, so the pipeline's contact check reads them
-    with the new literals. A `code` or `base` that does not tokenize has none.
-    """
-    try:
-        before, after = _comments(base), _comments(code)
-    except (tokenize.TokenError, SyntaxError):
-        return []
-    return [text for text, count in sorted((after - before).items()) for _ in range(count)]
-
-
-def _comments(code: str) -> Counter[str]:
-    tokens = tokenize.generate_tokens(io.StringIO(code).readline)
-    return Counter(token.string for token in tokens if token.type == tokenize.COMMENT)
 
 
 def _string_literals(tree: ast.Module) -> Counter[str]:

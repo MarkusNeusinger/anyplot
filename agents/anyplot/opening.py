@@ -6,10 +6,11 @@
 * `opening_state(...)` is the state delta that opens a session or switches its library.
 * `ingest_dataset(...)` parses pasted text, stores it in the session's dataset store
   (replacing an older dataset of the session), and proposes default bindings.
-* `instruction_like(parsed)`, `has_contact_details(parsed)` and
-  `dataset_judge_inputs(parsed)` are what the `/dataset` route checks before it stores
-  a dataset: two deterministic pre-filters over every header and cell (text addressed
-  to an AI; contact details), then the dataset judge on every part of the judged view.
+* `instruction_like(parsed)` and `dataset_judge_inputs(parsed)` are what the
+  `/dataset` route checks before it stores a dataset: a deterministic pre-filter over
+  every header and cell for text addressed to an AI, then the dataset judge on every
+  part of the judged view. Both look for injection only: personal data (names, postal
+  and e-mail addresses, phone numbers, web addresses, amounts) is ordinary data.
 
 Used by the `/v1` routes and by the development fixture seed, so a seeded session is
 exactly what the routes would have built. No ADK import.
@@ -27,7 +28,6 @@ from typing import Any
 from .code.normalise import SUPPORTED_LIBRARIES as NORMALISED_LIBRARIES
 from .code.normalise import normalise
 from .code.readiness import ReadinessStatus, scan
-from .contact_filter import find_contacts
 from .data.bindings import default_bindings
 from .data.parse import ParsedDataset, display_copy, parse_dataset
 from .data.store import DatasetStore
@@ -151,16 +151,10 @@ INSTRUCTION_LIKE = re.compile(
 A deliberately narrow list: every pattern is rare in real tables, so an ordinary
 free-text column (comments, product descriptions, a job title such as "Assistant:
 Maria Lopez", a log line such as "system: started") passes; "you are" alone or "act
-as" would not. Anything subtler is the judge's. Web addresses, e-mail addresses and
-phone numbers are `has_contact_details`'s."""
-
-URL_SCHEME = re.compile(r"(?i)\b(?:https?|ftps?|sftp|file)://")
-
-
-def _texts(parsed: ParsedDataset) -> list[str]:
-    """Every header and every non-empty cell of the canonical dataset."""
-    reader = csv.reader(io.StringIO(parsed.csv))
-    return [cell for row in reader for cell in row if cell]
+as" would not. Anything subtler is the judge's. Web addresses (with or without a
+scheme), e-mail addresses and phone numbers are personal data, not instructions, and
+pass; only a `javascript:` or `vbscript:` link, which runs code where a link is
+followed, is refused with the injections."""
 
 
 def instruction_like(parsed: ParsedDataset) -> bool:
@@ -170,27 +164,6 @@ def instruction_like(parsed: ParsedDataset) -> bool:
     and a cell anywhere can reach the reviewer's image as a label.
     """
     return INSTRUCTION_LIKE.search(parsed.csv) is not None
-
-
-def has_contact_details(parsed: ParsedDataset) -> bool:
-    """Whether any header or cell carries contact details that would reach the plot as a label.
-
-    Every header and cell counts, not only the ones the judge sees: any of them can
-    become a tick label, a legend entry or a title, and the PNG carries the anyplot.ai
-    footer. Refused: a URL with a scheme, an e-mail address, a phone number, and a web
-    address with `www.` or a path or with other words around it (`Pay at
-    parcel-help.de`). A cell that is a bare domain and nothing else (`amazon.com`)
-    passes, so a column of domains (visits per site) still plots; that is the one
-    trade-off, and `pipeline._check` lets the adapter write such a value as a literal.
-    """
-    for text in _texts(parsed):
-        if URL_SCHEME.search(text):
-            return True
-        for contact in find_contacts(text):
-            found = text[contact.start : contact.end]
-            if contact.kind != "web" or "/" in found or found.lower().startswith("www.") or found != text.strip():
-                return True
-    return False
 
 
 @dataclass(frozen=True)

@@ -4,11 +4,12 @@
 model-written line of the plot event (`agents/stream.py`): URLs (with protocol-relative
 `//host` links), `data:`, `javascript:` and `mailto:` links, HTML tags (an unclosed one
 too) and markdown images are removed, links keep their text, fenced (backtick or tilde)
-and indented code blocks longer than 10 lines become `[code omitted]`, bare web
-addresses, e-mail addresses and phone numbers are removed (`contact_filter`),
-`[[spec:id]]` tokens stay only for the session's own spec, and the text is capped at
-`MAX_MESSAGE_CHARS`. It is a backstop, not an HTML filter: the UI must render message
-and plot text as plain text, never as HTML or unescaped markdown.
+and indented code blocks longer than 10 lines become `[code omitted]`, `[[spec:id]]`
+tokens stay only for the session's own spec, and the text is capped at
+`MAX_MESSAGE_CHARS`. Personal data stays: names, postal and e-mail addresses, phone
+numbers and bare web addresses are what a user's own table holds, and the chat may
+name them. It is a backstop, not an HTML filter: the UI must render message and plot
+text as plain text, never as HTML or unescaped markdown.
 
 `reply_too_long(text)` is the output guard's rule, the same in every language: a root
 reply longer than `MAX_MESSAGE_CHARS` characters once sanitised becomes the fixed
@@ -34,8 +35,6 @@ No ADK import.
 """
 
 import re
-
-from .contact_filter import strip_contacts
 
 
 MAX_MESSAGE_CHARS = 1_200
@@ -81,7 +80,6 @@ def _clean(text: str, *, spec_id: str | None) -> str:
     text = _HTML.sub("", text)
     text = _HTML_UNCLOSED.sub("", text)
     text = _URL.sub("", text)
-    text = strip_contacts(text)
     text = _SPEC_TOKEN.sub(spec_token, text)
     return _BLANK_LINES.sub("\n\n", text).strip()
 
