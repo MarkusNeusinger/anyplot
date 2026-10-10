@@ -23,8 +23,11 @@ stopped (`stage`, the pipeline's `Stage`, and `stages` per attempt), the shipped
 the reviewed attempt, an `attempt_log` (per attempt: the adapter's outcome, finish
 reason, output tokens and plan shape, the check with its edit-failure kinds, the
 render gates and the review verdict), every model call's finish reason and tokens
-(`calls`, counted per agent kind in `finish_reasons`), the edit-failure kinds, and how
-many edits a tolerant matching tier applied (`edit_tolerant`, by tier).
+(`calls`, counted per agent kind in `finish_reasons`), the edit-failure kinds, how
+many edits a tolerant matching tier applied (`edit_tolerant`, by tier), and the module
+paths of the banned imports the validator refused (`banned_imports`, letters, digits,
+dots and underscores, at most 40 characters, anything else `?`), so a run shows which
+modules the adapter reaches for.
 Answers that failed their schema are counted by agent kind and outcome
 (`answer_outcomes`: `repaired` or `refused`) and by broken rule (`answer_rules`, list
 indices written `*`), from the guard's `answer_schema` lines.
@@ -96,6 +99,7 @@ import json
 import logging
 import os
 import platform
+import re
 import secrets
 import subprocess
 import sys
@@ -166,6 +170,8 @@ TOKEN_REFRESH_MARGIN_S = 600.0
 """`--gcloud-token` mints a new token when the current one expires within this many seconds."""
 PREFLIGHT_DATA = "x\n1\n"
 """The preflight renders the normalised catalogue file, which makes its own data; this only fills the slot."""
+MODULE_PATH = re.compile(r"^[A-Za-z0-9_.]{1,40}$")
+"""A banned-import module path as the record keeps it (`validate.module_label` writes it this way)."""
 
 logger = logging.getLogger("anyplot.evals")
 
@@ -551,9 +557,16 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
         "finish_reasons": {},
         "edit_failure_kinds": {},
         "edit_tolerant": {},
+        "banned_imports": {},
         "answer_outcomes": {},
         "answer_rules": {},
     }
+
+
+def module_path(value: Any) -> str:
+    """A logged banned-import module path, re-checked: letters, digits, dots and underscores, at most 40, else `?`."""
+    text = str(value)
+    return text if MODULE_PATH.match(text) else "?"
 
 
 def _int(value: Any) -> int:
@@ -611,6 +624,7 @@ def _book_attempt(record: dict[str, Any], hook: str, line: dict[str, Any]) -> No
         entry["edit_failure_kinds"] = dict(line.get("edit_failure_kinds") or {})
         entry["edit_tolerant"] = dict(line.get("edit_tolerant") or {})
         entry["validator"] = [str(rule) for rule in line.get("validator") or []]
+        entry["banned_imports"] = [module_path(module) for module in line.get("banned_imports") or []]
         entry["adaptation"] = [str(rule) for rule in line.get("adaptation") or []]
     elif hook == "pipeline_render":
         entry["render"] = {
@@ -642,6 +656,7 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
     agents: Counter[str] = Counter(record["llm_calls_by_agent"])
     kinds: Counter[str] = Counter(record["edit_failure_kinds"])
     tolerant: Counter[str] = Counter(record["edit_tolerant"])
+    modules: Counter[str] = Counter(record["banned_imports"])
     answers: Counter[str] = Counter(record["answer_outcomes"])
     rules: Counter[str] = Counter(record["answer_rules"])
     finishes = {kind: Counter[str](reasons) for kind, reasons in record["finish_reasons"].items()}
@@ -682,6 +697,7 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
             kinds.update({str(kind): _int(count) for kind, count in (line.get("edit_failure_kinds") or {}).items()})
             tolerant.update({str(tier): _int(count) for tier, count in (line.get("edit_tolerant") or {}).items()})
             validator.update(str(rule) for rule in line.get("validator") or [])
+            modules.update(module_path(module) for module in line.get("banned_imports") or [])
             if line.get("outcome") == "loader_failed":
                 validator["loader"] += 1
             _book_attempt(record, hook, line)
@@ -714,6 +730,7 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
     record["llm_calls_by_agent"] = dict(sorted(agents.items()))
     record["edit_failure_kinds"] = dict(sorted((kind, count) for kind, count in kinds.items() if count))
     record["edit_tolerant"] = dict(sorted((tier, count) for tier, count in tolerant.items() if count))
+    record["banned_imports"] = dict(sorted(modules.items()))
     record["answer_outcomes"] = dict(sorted(answers.items()))
     record["answer_rules"] = dict(sorted(rules.items()))
     record["finish_reasons"] = {kind: dict(sorted(reasons.items())) for kind, reasons in sorted(finishes.items())}

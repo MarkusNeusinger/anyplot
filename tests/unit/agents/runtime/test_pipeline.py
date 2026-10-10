@@ -322,3 +322,17 @@ class TestCheck:
         assert "derive it from df" not in palette
         assert "take the values from df" in lines["rng"] and "take the values from df" in lines["literal-data"]
         assert all(len(line) <= MAX_LINE_CHARS for line in check.defects)
+
+    def test_banned_imports_name_their_module_for_the_log_and_the_way_around_for_the_repair(self) -> None:
+        code = 'import io\nimport locale\nimport io as again\ndf = load_user_data()\nplt.savefig(f"plot-{THEME}.png")\n'
+
+        check = _check(code, library="matplotlib", palette=[], base=code)
+
+        assert check.banned_imports == ["io", "locale"]  # once each, in order
+        lines = [line for line in check.blocking if "banned-import" in line]
+        assert lines[0].startswith("validator banned-import (line 1): import of 'io' is not allowed with matplotlib → ")
+        assert "the data comes only from df = load_user_data()" in lines[0]
+        assert "matplotlib.ticker.FuncFormatter" in lines[1]
+
+    def test_a_clean_check_names_no_module(self) -> None:
+        assert _check("x = 1\n", library="matplotlib", palette=[], base="x = 1\n").banned_imports == []

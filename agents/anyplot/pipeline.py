@@ -56,7 +56,8 @@ Every step also writes one content-free attribution line (`plugins/ledger.attrib
 `pipeline_adapt` (the answer's outcome, `plan`, `schema`, `truncated` or
 `full_code_refused`, the plan's shape, and the call's finish reason and output tokens),
 `pipeline_check` (edit-apply failure count and kinds, how many edits a tolerant
-matching tier applied, blocking validator rule ids, ADAPTATION rule ids), `pipeline_render` (render and wall time, the gate ids that
+matching tier applied, blocking validator rule ids, the module paths of banned imports
+(letters, digits, dots and underscores, at most 40 characters each), ADAPTATION rule ids), `pipeline_render` (render and wall time, the gate ids that
 failed or reported), `pipeline_review` (the verdict, its defect ids and the call's
 finish reason) and `pipeline_result` (status, reason, attempts, the `Stage` that ended
 each attempt and the run, the shipped and the last reviewed attempt, the number of
@@ -427,6 +428,12 @@ class CheckResult:
     defects: list[str]
     blocking_rules: list[str]
     adaptation_rules: list[str]
+    banned_imports: list[str] = field(default_factory=list)
+    """The module paths of the `banned-import` findings (`validate.module_label`), at most `MAX_LOGGED_MODULES`."""
+
+
+MAX_LOGGED_MODULES = 8
+"""Banned module paths one `pipeline_check` line names; a plan that imports more is rare and says enough."""
 
 
 def _check(working: str, *, library: str, palette: list[str], base: str) -> CheckResult:
@@ -454,7 +461,10 @@ def _check(working: str, *, library: str, palette: list[str], base: str) -> Chec
         + f" → {ADAPTATION_TARGETS.get(f.rule, 'derive it from df')}. Likely cause: the adaptation ({f.rule})."
         for f in soft
     ]
-    return CheckResult(not blocking, blocking, defects, blocking_rules, [f.rule for f in soft])
+    modules = list(dict.fromkeys(f.module for f in blocking_findings if f.rule == "banned-import" and f.module))
+    return CheckResult(
+        not blocking, blocking, defects, blocking_rules, [f.rule for f in soft], modules[:MAX_LOGGED_MODULES]
+    )
 
 
 def finish(run: Run) -> PlotResult:
@@ -768,6 +778,7 @@ async def _attempts(
             edit_failures=0,
             edit_tolerant=dict(sorted(Counter(applied.tolerant).items())),
             validator=check.blocking_rules,
+            banned_imports=check.banned_imports,
             adaptation=check.adaptation_rules,
         )
         if not check.may_render:

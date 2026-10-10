@@ -133,6 +133,7 @@ async def test_two_fixtures_through_the_real_flow(
             "edit_failure_kinds": {},
             "edit_tolerant": {},
             "validator": [],
+            "banned_imports": [],
             "adaptation": [],
             "render": {"passed": True, "canvas_ok": True, "gates": []},
             "review": "ok",
@@ -745,6 +746,25 @@ def test_book_attribution_counts_the_edits_a_tolerant_tier_applied() -> None:
     ]
     page = summary_markdown({"schema": 2, "stamp": {}, "summary": summarize([record]), "runs": []})
     assert "| Edit applied by tolerant match, whitespace | 3 |" in page
+
+
+def test_book_attribution_names_the_banned_modules_content_free() -> None:
+    """The next run shows which modules the adapter reaches for; a value outside the pattern is `?`."""
+    settings = AgentSettings(provider="gemini", model="gemini-3.8-flash", judge_model="gemini-3.5-flash-lite")
+    record = matrix.base_record(two_fixtures()[1], 1)
+    record["turns"] = 1
+    check = {"hook": "pipeline_check", "outcome": "rejected", "edit_failures": 0, "adaptation": []}
+    lines: list[dict[str, Any]] = [
+        {**check, "attempt": 1, "validator": ["banned-import", "banned-call"], "banned_imports": ["io"]},
+        {**check, "attempt": 2, "validator": ["banned-import"], "banned_imports": ["io", "x y", "a" * 41]},
+    ]
+
+    matrix.book_attribution(record, lines, settings)
+
+    assert record["banned_imports"] == {"?": 2, "io": 2}
+    assert [entry["banned_imports"] for entry in record["attempt_log"]] == [["io"], ["io", "?", "?"]]
+    page = summary_markdown({"schema": 2, "stamp": {}, "summary": summarize([record]), "runs": []})
+    assert "| Validator banned import, io | 2 |" in page
 
 
 def test_a_baseline_is_refused_for_runs_that_ended_in_an_error(tmp_path: Path) -> None:

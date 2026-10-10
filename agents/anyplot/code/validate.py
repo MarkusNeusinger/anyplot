@@ -16,15 +16,29 @@ adapter's output boring: a fixed import surface, no reflection, no I/O, one data
 Decisions this module takes where the design leaves room:
 
 * **Import surface.** COMMON plus the science stack (`scipy.{stats, interpolate, signal,
-  cluster.hierarchy, spatial, optimize, special, integrate, ndimage}`, `sklearn` without
-  `datasets`, `statsmodels.{api, nonparametric, tsa, graphics}`) plus, for matplotlib
-  and seaborn, `matplotlib`, `seaborn` and the bundled `mpl_toolkits.{mplot3d,
-  axes_grid1, axisartist}`. The four extra scipy modules, `statsmodels.graphics` and
-  the toolkits were admitted after the readiness sweep showed them behind most of the
-  catalogue's benign import blocks; each was walked for file or network helpers and
-  has none. Third-party plotting helpers (cartopy, qrcode, wordcloud, matplotlib_venn,
-  squarify, adjustText) stay banned: they are not in the agents image, and admitting
-  one is an owner decision, not a validator default.
+  cluster.hierarchy, spatial, optimize, special, integrate, ndimage, fft, linalg,
+  constants}`, `sklearn` without `datasets`, `statsmodels.{api, nonparametric, tsa,
+  graphics}`) plus, for matplotlib and seaborn, `matplotlib`, `seaborn` and the bundled
+  `mpl_toolkits.{mplot3d, axes_grid1, axisartist}`. The four extra scipy modules,
+  `statsmodels.graphics` and the toolkits were admitted after the readiness sweep showed
+  them behind most of the catalogue's benign import blocks; each was walked for file or
+  network helpers and has none. The pure computing modules of the standard library
+  (`warnings`, `typing`, `calendar`, `decimal`, `fractions`, `zoneinfo`, `enum`,
+  `dataclasses`, `operator`, `bisect`, `heapq`, `numbers`, `cmath`) and
+  `scipy.{fft, linalg, constants}` were admitted by the owner (2026-10-10) for FFTs and
+  similar work; the walk behind them is at `COMMON_IMPORTS`, and the names it found are
+  banned below. Third-party plotting helpers (cartopy, qrcode, wordcloud,
+  matplotlib_venn, squarify, adjustText) stay banned: they are not in the agents image,
+  and admitting one is an owner decision, not a validator default. A `banned-import`
+  message names the module and what to use instead (`IMPORT_ALTERNATIVES`), and the
+  finding carries the module path (`Finding.module`, at most 40 characters of
+  letters, digits, dots and underscores) for the attribution log.
+* **Re-exports and private names.** An allowed module can hand out a module the import
+  rules keep out (`statistics.sys`, `enum.bltns`, which is `builtins`,
+  `dataclasses.inspect`) or a private helper that runs `exec` (`dataclasses._FuncBuilder`).
+  So the names in `ESCAPE_ATTRIBUTES` are banned as attributes on any object and as
+  `from` imports, and a private name (one leading underscore) is banned on anything an
+  import bound, and as a `from` import. No catalogue file uses either.
 * **Attribute names are banned outright, on any object.** `.format`, `.eval`, `.query`,
   `.show`, `.use`, `.load`, `.read_*`, `.to_csv` and the rest are findings wherever they
   appear, called or not, because the receiver's type is not knowable without executing
@@ -93,7 +107,7 @@ Decisions this module takes where the design leaves room:
 * **Placeholder (ADAPTATION).** Exactly one `df = load_user_data()` statement, anywhere;
   any other use of the name `load_user_data` is a separate finding.
 
-Rule ids: `size`, `encoding`, `syntax`, `banned-import`, `star-import`,
+Rule ids: `size`, `encoding`, `syntax`, `banned-import` (with `Finding.module`), `star-import`,
 `relative-import`, `os-use`, `banned-name`, `banned-call`, `banned-attribute`, `dunder`,
 `banned-statement`, `url-literal`, `string-length`, `savefig-target` (SECURITY);
 `placeholder-count`, `placeholder-use`, `rng`, `literal-data`, `palette-prefix`
@@ -122,9 +136,33 @@ MAX_STRING_CHARS = 200
 MAX_LITERAL_NUMBERS = 20
 MAX_MESSAGE_CHARS = 300
 MAX_SNIPPET_CHARS = 60
+MAX_MODULE_CHARS = 40
+"""The longest module path a finding carries for the attribution log (`Finding.module`)."""
 PLACEHOLDER = "df = load_user_data()"
 THEME_VARIABLE = "ANYPLOT_THEME"
 
+# The pure standard modules from `warnings` on were admitted by the owner (2026-10-10).
+# Each was walked for public names that read, load, save, open, fetch or evaluate, and
+# for the modules it re-exports (Python 3.13.12):
+# * warnings: `formatwarning`, `showwarning` and `warn_explicit` read a line of any file
+#   through `linecache` (the first returns it as text) or write to a file object, so
+#   they are in `BANNED_IO`; re-exports `sys`.
+# * typing: `get_type_hints` and `ForwardRef` evaluate annotation strings, which is
+#   `eval`; re-exports `sys` and `types` (whose `CodeType` and `FunctionType` build
+#   code): all in `ESCAPE_ATTRIBUTES`.
+# * calendar: prints to standard output only; re-exports `sys`, `datetime`, `_locale`.
+# * zoneinfo: `reset_tzpath` points the time zone search at any directory,
+#   `available_timezones` lists it, `ZoneInfo.from_file` reads a file object: in
+#   `BANNED_IO`. `ZoneInfo(key)` reads the time zone database only and refuses keys
+#   that leave it.
+# * enum: `bltns` is the `builtins` module and `global_enum` writes into a module's
+#   namespace: in `ESCAPE_ATTRIBUTES`; re-exports `sys`.
+# * dataclasses: re-exports `inspect` (source reads) and `sys`; the private
+#   `_FuncBuilder` runs `exec` on text, which the private-name rule covers.
+# * operator: `attrgetter` and `methodcaller` look attributes up by string, which is
+#   `getattr`: in `ESCAPE_ATTRIBUTES`.
+# * decimal, fractions, numbers, cmath, bisect, heapq: nothing (fractions re-exports
+#   `sys`, `re`, `math`, `operator`, `numbers` and `functools`).
 COMMON_IMPORTS: frozenset[str] = frozenset(
     {
         "numpy",
@@ -138,12 +176,28 @@ COMMON_IMPORTS: frozenset[str] = frozenset(
         "textwrap",
         "colorsys",
         "re",
+        "warnings",
+        "typing",
+        "calendar",
+        "decimal",
+        "fractions",
+        "zoneinfo",
+        "enum",
+        "dataclasses",
+        "operator",
+        "bisect",
+        "heapq",
+        "numbers",
+        "cmath",
     }
 )
 # Shared by every Python plotting library: the science stack minus its data loaders.
 # Every package here was walked for public names that read, load, save, open or fetch
 # (2026-10-09, scipy 1.18, statsmodels 0.14): none exist; `scipy.ndimage.imread` is
-# long gone. `scipy.io` and `scipy.datasets` stay out.
+# long gone. `scipy.io` and `scipy.datasets` stay out. `scipy.fft`, `scipy.linalg` and
+# `scipy.constants` were walked on 2026-10-10 (scipy 1.18.1): computation only, the
+# CODATA table of `scipy.constants` is parsed from a string inside the module, and the
+# private submodules they re-export fall under the private-name rule.
 SHARED_SCIENCE_IMPORTS: frozenset[str] = frozenset(
     {
         "scipy.stats",
@@ -155,6 +209,9 @@ SHARED_SCIENCE_IMPORTS: frozenset[str] = frozenset(
         "scipy.special",
         "scipy.integrate",
         "scipy.ndimage",
+        "scipy.fft",
+        "scipy.linalg",
+        "scipy.constants",
         "sklearn",
         "statsmodels.api",
         "statsmodels.nonparametric",
@@ -238,8 +295,65 @@ BANNED_IO: frozenset[str] = frozenset(
         "rc_file",
         "rc_params_from_file",
         "urlopen",
+        "formatwarning",
+        "showwarning",
+        "warn_explicit",
+        "reset_tzpath",
+        "available_timezones",
+        "from_file",
     }
 )
+# Banned as attributes on any object and as `from` imports: modules an allowed module
+# re-exports that the import rules keep out (`statistics.sys.modules`, `enum.bltns`,
+# `dataclasses.inspect`), and the reflection the stdlib walk found (see COMMON_IMPORTS).
+ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
+    {
+        "sys",
+        "os",
+        "builtins",
+        "bltns",
+        "modules",
+        "inspect",
+        "subprocess",
+        "importlib",
+        "pathlib",
+        "shutil",
+        "socket",
+        "linecache",
+        "get_type_hints",
+        "ForwardRef",
+        "CodeType",
+        "FunctionType",
+        "attrgetter",
+        "methodcaller",
+        "global_enum",
+    }
+)
+_DATA_FROM_DF = "the data comes only from df = load_user_data(), and the plot reads and writes no files"
+IMPORT_ALTERNATIVES: dict[str, str] = {
+    **dict.fromkeys(
+        ("io", "csv", "json", "pickle", "sqlite3", "urllib", "requests", "http", "pathlib", "shutil", "glob"),
+        _DATA_FROM_DF,
+    ),
+    **dict.fromkeys(("tempfile", "zipfile", "tarfile", "PIL", "imageio", "sklearn.datasets"), _DATA_FROM_DF),
+    **dict.fromkeys(("scipy.io", "scipy.datasets", "pandas.io", "numpy.lib.format"), _DATA_FROM_DF),
+    "os": 'os only as THEME = os.getenv("ANYPLOT_THEME", ...) after a plain import os',
+    "sys": "a plot needs nothing from the interpreter: remove the import",
+    "random": "values come from df; a seeded np.random.default_rng(<int>) is only for jitter or subsampling",
+    "secrets": "values come from df; a seeded np.random.default_rng(<int>) is only for jitter or subsampling",
+    "locale": "format numbers with f-strings or matplotlib.ticker.FuncFormatter, which need no locale",
+    "string": "use str methods, f-strings and literals",
+    "dateutil": "parse dates with pandas.to_datetime or datetime, time zones with zoneinfo",
+    "pytz": "use zoneinfo for time zones",
+    "statsmodels.formula": "fit with statsmodels.api on arrays taken from df",
+    "scipy": "import the scipy submodule itself, such as scipy.stats or scipy.fft",
+}
+"""What a `banned-import` repair line suggests instead, by module path or its longest known prefix."""
+DEFAULT_IMPORT_ALTERNATIVE = (
+    "use numpy, pandas, scipy's computing modules, sklearn, statsmodels.api, the plotting library, or pure "
+    "standard modules such as math, datetime, collections, re, warnings or zoneinfo"
+)
+_MODULE_PATH = re.compile(r"^[A-Za-z0-9_.]+$")
 # `read_*` (pandas readers), `fetch_*` (sklearn downloaders), `load*` (`np.load`,
 # `np.loadtxt`, `sns.load_dataset`, sklearn's `load_*`).
 _BANNED_IO_PATTERN = re.compile(r"^(?:read_\w+|fetch_\w+|load\w*)$")
@@ -272,11 +386,35 @@ _Node = TypeVar("_Node", bound=ast.AST)
 
 @dataclass(frozen=True, slots=True)
 class Finding:
-    """One validator result: a short kebab-case rule id, one message line, a 1-based line."""
+    """One validator result: a short kebab-case rule id, one message line, a 1-based line.
+
+    A `banned-import` finding also carries the module path it refused (`module_label`),
+    content-free enough for the attribution log; every other finding has None.
+    """
 
     rule: str
     message: str
     line: int | None
+    module: str | None = None
+
+
+def module_label(path: str) -> str:
+    """A module path for the attribution log: letters, digits, dots and underscores, at most 40 characters.
+
+    A path with any other character (Python allows non-ASCII identifiers) is `?`, so a
+    model cannot carry text into the log through an import.
+    """
+    return path[:MAX_MODULE_CHARS] if _MODULE_PATH.match(path) else "?"
+
+
+def import_alternative(path: str) -> str:
+    """What to use instead of the module `path`: the entry of its longest known prefix, else the default."""
+    parts = path.split(".")
+    for length in range(len(parts), 0, -1):
+        alternative = IMPORT_ALTERNATIVES.get(".".join(parts[:length]))
+        if alternative is not None:
+            return alternative
+    return DEFAULT_IMPORT_ALTERNATIVE
 
 
 def validate_security(code: str, *, library: str) -> list[Finding]:
@@ -374,6 +512,11 @@ def _snippet(node: ast.AST) -> str:
     return text
 
 
+def _io_hint(name: str) -> str:
+    """For a reader or loader (`read_*`, `load*`, `fetch_*`): where the data comes from instead."""
+    return f" → {_DATA_FROM_DF}" if _BANNED_IO_PATTERN.match(name) else ""
+
+
 def _module_allowed(path: str, allowed: Iterable[str]) -> bool:
     return any(path == prefix or path.startswith(prefix + ".") for prefix in allowed)
 
@@ -440,8 +583,13 @@ class _Scan:
 
     # -- shared --------------------------------------------------------------------------
 
-    def add(self, rule: str, message: str, node: ast.AST | None) -> None:
-        self.findings.append(Finding(rule, message[:MAX_MESSAGE_CHARS], self._line(node)))
+    def add(self, rule: str, message: str, node: ast.AST | None, *, module: str | None = None) -> None:
+        label = module_label(module) if module is not None else None
+        self.findings.append(Finding(rule, message[:MAX_MESSAGE_CHARS], self._line(node), label))
+
+    def ban_import(self, path: str, reason: str, node: ast.AST) -> None:
+        """A `banned-import` finding whose message names the module and what to use instead."""
+        self.add("banned-import", f"import of '{path}' {reason} → {import_alternative(path)}", node, module=path)
 
     def result(self) -> list[Finding]:
         unique = dict.fromkeys(self.findings)
@@ -524,7 +672,7 @@ class _Scan:
                 if alias.name == "os":
                     self.os_names.add(alias.asname or "os")
                 elif not permitted(alias.name):
-                    self.add("banned-import", f"import of '{alias.name}' is not allowed with {library}", alias)
+                    self.ban_import(alias.name, f"is not allowed with {library}", alias)
                 else:
                     self._check_module_path(alias.name, alias)
         for from_node in self.of(ast.ImportFrom):
@@ -538,7 +686,7 @@ class _Scan:
                     continue
                 path = f"{from_node.module}.{alias.name}"
                 if not module_banned and (denied(path) or not (permitted(from_node.module) or permitted(path))):
-                    self.add("banned-import", f"import of '{path}' is not allowed with {library}", alias)
+                    self.ban_import(path, f"is not allowed with {library}", alias)
                 self._check_function_name(alias.name, alias)
 
     def _check_module_path(self, path: str, node: ast.AST) -> bool:
@@ -549,16 +697,18 @@ class _Scan:
         """
         for part in path.split("."):
             if part in BANNED_ATTRIBUTES or part in BANNED_IO or _BANNED_IO_PATTERN.match(part):
-                self.add("banned-import", f"import of '{path}' reaches the banned name '{part}'", node)
+                self.ban_import(path, f"reaches the banned name '{part}'", node)
                 return True
         return False
 
     def _check_function_name(self, name: str, node: ast.AST) -> None:
-        """A function reached by a `from` import: the attribute set and the I/O set apply."""
-        if name in BANNED_ATTRIBUTES:
+        """A name reached by a `from` import: the attribute, escape and I/O sets apply, and no private name."""
+        if name in BANNED_ATTRIBUTES or name in ESCAPE_ATTRIBUTES:
             self.add("banned-attribute", f"'{name}' is not allowed", node)
         elif name in BANNED_IO or _BANNED_IO_PATTERN.match(name):
-            self.add("banned-call", f"'{name}' is not allowed", node)
+            self.add("banned-call", f"'{name}' is not allowed{_io_hint(name)}", node)
+        elif name.startswith("_") and not _DUNDER_NAME.match(name):
+            self.add("banned-attribute", f"the private name '{name}' is not allowed", node)
 
     def _check_os_use(self) -> None:
         for name in self.of(ast.Name):
@@ -609,13 +759,16 @@ class _Scan:
         for attribute in self.of(ast.Attribute):
             if _DUNDER_NAME.match(attribute.attr):
                 self.add("dunder", f"dunder attribute '.{attribute.attr}' is not allowed", attribute)
-            elif attribute.attr in BANNED_ATTRIBUTES:
+            elif attribute.attr in BANNED_ATTRIBUTES or attribute.attr in ESCAPE_ATTRIBUTES:
                 self.add("banned-attribute", f"attribute '.{attribute.attr}' is not allowed", attribute)
             elif attribute.attr in BANNED_IO or _BANNED_IO_PATTERN.match(attribute.attr):
                 # `df.load` / `df.read_count`: a column reached as an attribute, not a module function.
                 column_like = self.resolve(attribute.value) is None and attribute.attr.startswith(("read_", "load"))
-                hint = "; a column of that name must be subscripted" if column_like else ""
+                hint = "; a column of that name must be subscripted" if column_like else _io_hint(attribute.attr)
                 self.add("banned-call", f"'{_snippet(attribute)}' is not allowed{hint}", attribute)
+            elif attribute.attr.startswith("_") and self.resolve(attribute.value) is not None:
+                # `collections._sys`, `dataclasses._FuncBuilder`: private helpers of an imported name.
+                self.add("banned-attribute", f"the private attribute '{_snippet(attribute)}' is not allowed", attribute)
 
     def _check_calls(self) -> None:
         for call in self.of(ast.Call):

@@ -18,6 +18,7 @@ from agents.anyplot.code.validate import (
     PLACEHOLDER,
     Finding,
     Profile,
+    module_label,
     validate_adaptation,
     validate_security,
 )
@@ -303,9 +304,146 @@ class TestImports:
 
     def test_banned_component_message_names_the_component(self) -> None:
         findings = validate_security(plot("import numpy.lib.format as fmt\n"), library="matplotlib")
-        assert [(f.rule, f.message) for f in findings] == [
-            ("banned-import", "import of 'numpy.lib.format' reaches the banned name 'format'")
+        assert [(f.rule, f.message, f.module) for f in findings] == [
+            (
+                "banned-import",
+                "import of 'numpy.lib.format' reaches the banned name 'format' → the data comes only from "
+                "df = load_user_data(), and the plot reads and writes no files",
+                "numpy.lib.format",
+            )
         ]
+
+    @pytest.mark.parametrize(
+        ("body", "module", "alternative"),
+        [
+            ("import locale\n", "locale", "format numbers with f-strings or matplotlib.ticker.FuncFormatter"),
+            ("import io\n", "io", "the data comes only from df = load_user_data()"),
+            ("from io import StringIO\n", "io", "the data comes only from df = load_user_data()"),  # its banned part
+            ("import random\n", "random", "a seeded np.random.default_rng(<int>) is only for jitter"),
+            ("from os import getenv\n", "os.getenv", 'os only as THEME = os.getenv("ANYPLOT_THEME", ...)'),
+            ("import string\n", "string", "use str methods, f-strings and literals"),
+            ("import scipy\n", "scipy", "import the scipy submodule itself, such as scipy.stats or scipy.fft"),
+            ("from sklearn.datasets import load_iris\n", "sklearn.datasets.load_iris", "the data comes only from df"),
+            ("import yaml\n", "yaml", "pure standard modules such as math, datetime, collections, re, warnings"),
+        ],
+    )
+    def test_banned_import_message_names_the_module_and_what_to_use(
+        self, body: str, module: str, alternative: str
+    ) -> None:
+        """The rerun's 17 banned-import repairs got no hint; the line now names the module and the way around it."""
+        finding = next(f for f in validate_security(plot(body), library="matplotlib") if f.rule == "banned-import")
+
+        assert finding.message.startswith(f"import of '{module}' ")
+        assert " → " in finding.message and alternative in finding.message.split(" → ", 1)[1]
+        assert finding.module == module
+
+    def test_only_banned_imports_carry_a_module(self) -> None:
+        findings = validate_security(plot("import sys\nx = eval('1')\n"), library="matplotlib")
+
+        assert {(f.rule, f.module) for f in findings} == {("banned-import", "sys"), ("banned-name", None)}
+
+    @pytest.mark.parametrize(
+        ("path", "label"),
+        [
+            ("scipy.io.matlab", "scipy.io.matlab"),
+            ("a" * 45 + ".b", "a" * 40),
+            ("möbius", "?"),
+            ("data_2024.Q1", "data_2024.Q1"),
+        ],
+    )
+    def test_module_label_is_bounded_and_content_free(self, path: str, label: str) -> None:
+        assert module_label(path) == label
+
+    def test_a_reader_call_says_where_the_data_comes_from(self) -> None:
+        findings = validate_security(plot("x = pd.read_csv('data.csv')\n"), library="matplotlib")
+
+        assert [f.message for f in findings if f.rule == "banned-call"] == [
+            "'pd.read_csv' is not allowed → the data comes only from df = load_user_data(), "
+            "and the plot reads and writes no files"
+        ]
+
+
+PURE_MODULE_USES = [
+    "import warnings, typing, calendar, decimal, fractions, zoneinfo, enum, dataclasses\n",
+    "import operator, bisect, heapq, numbers, cmath\n",
+    "import warnings\nwarnings.filterwarnings('ignore', category=UserWarning)\n",
+    "import warnings\nwith warnings.catch_warnings():\n    warnings.simplefilter('ignore')\n",
+    "from scipy.fft import rfft, rfftfreq\nspectrum = np.abs(rfft(df['a'].to_numpy()))\n",
+    "import scipy.fft\nfreqs = scipy.fft.rfftfreq(8, d=1.0)\n",
+    "import scipy.linalg as la\nq, r = la.qr(np.eye(2))\n",
+    "from scipy import constants\nc = constants.c\n",
+    "from zoneinfo import ZoneInfo\ntz = ZoneInfo('Europe/Berlin')\n",
+    "from operator import itemgetter\nrows = sorted([(1, 2)], key=itemgetter(1))\n",
+    "import heapq\ntop = heapq.nlargest(3, [1, 2, 3])\n",
+    "from bisect import bisect_left\ni = bisect_left([1, 2], 2)\n",
+    "from decimal import Decimal\nx = Decimal('1.5')\n",
+    "from fractions import Fraction\nx = Fraction(1, 3)\n",
+    "import calendar\nnames = list(calendar.month_abbr)[1:]\n",
+    "from enum import Enum\nLevel = Enum('Level', 'LOW HIGH')\n",
+    "from dataclasses import dataclass, field\n",
+    "from typing import Any, NamedTuple\nPoint = NamedTuple('Point', [('x', float)])\n",
+    "import cmath\nz = cmath.exp(1j)\n",
+    "v = df._values\n",  # a private attribute of a value, not of an imported module
+]
+ESCAPES = [
+    ("import warnings\nline = warnings.formatwarning('', UserWarning, 'f', 1)\n", "banned-call"),
+    ("import warnings\nwarnings.showwarning('m', UserWarning, 'f', 1)\n", "banned-call"),
+    ("import warnings\nwarnings.warn_explicit('m', UserWarning, 'f', 1)\n", "banned-call"),
+    ("from warnings import formatwarning\n", "banned-call"),
+    ("import zoneinfo\nzoneinfo.reset_tzpath(to=['etc'])\n", "banned-call"),
+    ("import zoneinfo\nnames = zoneinfo.available_timezones()\n", "banned-call"),
+    ("from zoneinfo import ZoneInfo\nz = ZoneInfo.from_file(None)\n", "banned-call"),
+    ("import typing\nhints = typing.get_type_hints(len)\n", "banned-attribute"),
+    ("from typing import get_type_hints\n", "banned-attribute"),
+    ("import typing\nref = typing.ForwardRef('x')\n", "banned-attribute"),
+    ("import typing\nbuild = typing.types.CodeType\n", "banned-attribute"),
+    ("import operator\ngetter = operator.attrgetter('real')\n", "banned-attribute"),
+    ("from operator import methodcaller\n", "banned-attribute"),
+    ("import enum\nb = enum.bltns\n", "banned-attribute"),
+    ("import enum\nmark = enum.global_enum\n", "banned-attribute"),
+    ("import dataclasses\nsource = dataclasses.inspect\n", "banned-attribute"),
+    ("import dataclasses\nbuilder = dataclasses._FuncBuilder\n", "banned-attribute"),
+    ("from dataclasses import _FuncBuilder\n", "banned-attribute"),
+    ("import calendar\nc = calendar._locale\n", "banned-attribute"),
+    ("import scipy.fft\nb = scipy.fft._backend\n", "banned-attribute"),
+    # Routes the walk found in modules allowed before (2026-10-10): they passed the validator then.
+    ('import collections\nx = collections._sys.modules["builtins"].exec("y = 1")\n', "banned-attribute"),
+    ('import statistics\nx = statistics.sys.modules["os"].system("true")\n', "banned-attribute"),
+    ("import matplotlib\nrun = matplotlib.subprocess\n", "banned-attribute"),
+    ("import matplotlib\nm = matplotlib.os\n", "banned-attribute"),
+    ("import warnings\nw = warnings.sys\n", "banned-attribute"),
+]
+
+
+class TestPureModules:
+    """The owner's 2026-10-10 additions: allowed for computing, with the names that read, write or reflect banned."""
+
+    @pytest.mark.parametrize("body", PURE_MODULE_USES)
+    def test_allowed(self, body: str) -> None:
+        assert security_rules(body) == set()
+
+    @pytest.mark.parametrize(("body", "rule"), ESCAPES)
+    def test_escape_is_caught(self, body: str, rule: str) -> None:
+        assert rule in security_rules(body)
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            "import locale\n",
+            "import random\n",
+            "import sys\n",
+            "import pathlib\n",
+            "import string\n",
+            "import io\n",
+            "from os import path\n",
+            "from sklearn.datasets import make_blobs\n",
+            "import scipy.io\n",
+            "import scipy.datasets\n",
+            "import statsmodels.formula.api\n",
+        ],
+    )
+    def test_still_banned(self, body: str) -> None:
+        assert "banned-import" in security_rules(body)
 
 
 # --- os ---------------------------------------------------------------------------------
