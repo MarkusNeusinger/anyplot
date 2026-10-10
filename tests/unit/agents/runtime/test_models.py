@@ -13,7 +13,9 @@ from google.genai import types
 
 from agents.anyplot.models import (
     ADAPTER_FULL_MAX_OUTPUT_TOKENS,
+    GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS,
     GEMINI_ADAPTER_MAX_OUTPUT_TOKENS,
+    JUDGE_MAX_OUTPUT_TOKENS,
     STRUCTURED_TOOL,
     AnthropicJudge,
     FakeJudge,
@@ -27,7 +29,7 @@ from agents.anyplot.models import (
     make_model,
     response_json_schema,
 )
-from agents.anyplot.schemas import AdaptPlan, Verdict
+from agents.anyplot.schemas import MAX_FULL_CODE_CHARS, AdaptPlan, Verdict
 from agents.anyplot.settings import AgentSettings
 
 from .fakes import SCATTER_PLAN, FakeAnthropic
@@ -49,7 +51,7 @@ class TestFactories:
             "anyplot-eval",
             "global",
         )
-        assert model.max_tokens == 2048
+        assert model.max_tokens == {"root": 4096, "adapter": 8192, "reviewer": 4096}[kind]
 
     @pytest.mark.parametrize("kind", ["root", "adapter", "reviewer"])
     def test_gemini_model_comes_from_the_settings(self, kind: str) -> None:
@@ -94,14 +96,19 @@ class TestFactories:
             assert config.labels["service"] == "anyplot-agents"
 
     def test_output_caps_per_provider(self) -> None:
-        """Gemini's thinking counts toward the cap, so its edit-only adapter call gets room; Claude keeps 2,048."""
+        """Every cap leaves ample headroom above the spike-X rerun's largest answer of its kind.
+
+        At 2,048, 23 of 244 first Claude adapter calls were cut off; the largest finished plan
+        took 2,606 tokens, a review 600, a root reply 259, a judge answer 59.
+        """
         gemini = {kind: make_content_config(kind, GEMINI).max_output_tokens for kind in ("root", "adapter", "reviewer")}
         claude = {kind: make_content_config(kind, CLAUDE).max_output_tokens for kind in ("root", "adapter", "reviewer")}
 
-        assert gemini == {"root": 2048, "adapter": GEMINI_ADAPTER_MAX_OUTPUT_TOKENS, "reviewer": 2048}
-        assert GEMINI_ADAPTER_MAX_OUTPUT_TOKENS == 8_192
-        assert claude == {"root": 2048, "adapter": 2048, "reviewer": 2048}
-        assert make_model("adapter", CLAUDE).max_tokens == 2048
+        assert gemini == {"root": 4096, "adapter": GEMINI_ADAPTER_MAX_OUTPUT_TOKENS, "reviewer": 4096}
+        assert GEMINI_ADAPTER_MAX_OUTPUT_TOKENS == 8_192  # bounded by the soft deadline, not by the answers
+        assert claude == {"root": 4096, "adapter": 8192, "reviewer": 4096}
+        assert make_model("adapter", CLAUDE).max_tokens == 8192
+        assert JUDGE_MAX_OUTPUT_TOKENS == 256
 
     def test_allow_full_file_on_gemini_lowers_thinking_without_touching_the_agent_config(self) -> None:
         agent_config = make_content_config("adapter", GEMINI)
@@ -109,7 +116,7 @@ class TestFactories:
 
         allow_full_file(request.config)
 
-        assert request.config.max_output_tokens == ADAPTER_FULL_MAX_OUTPUT_TOKENS
+        assert request.config.max_output_tokens == GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS
         assert request.config.thinking_config is not None
         assert request.config.thinking_config.thinking_level == types.ThinkingLevel.LOW
         assert agent_config.max_output_tokens == GEMINI_ADAPTER_MAX_OUTPUT_TOKENS
@@ -126,7 +133,7 @@ class TestFactories:
         assert request.config.thinking_config is not None
         assert request.config.thinking_config.thinking_budget == 0
         assert request.config.thinking_config.thinking_level is None
-        assert agent_config.max_output_tokens == 2048
+        assert agent_config.max_output_tokens == 8192
 
     def test_unknown_kind_is_refused(self) -> None:
         with pytest.raises(ValueError):
@@ -237,7 +244,10 @@ class TestJudge:
         assert client.calls[0]["tool_choice"]["type"] == "tool"
 
     def test_adapter_full_cap(self) -> None:
-        assert ADAPTER_FULL_MAX_OUTPUT_TOKENS == 12_288
+        """Claude's full-file cap holds a plan at the schema's 24 KB limit; Gemini's is bounded by the deadline."""
+        assert ADAPTER_FULL_MAX_OUTPUT_TOKENS == 16_384
+        assert GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS == 12_288
+        assert MAX_FULL_CODE_CHARS / 2.5 < ADAPTER_FULL_MAX_OUTPUT_TOKENS  # 2.5 characters per Haiku 5.5 token
 
     async def test_cancellation_is_not_swallowed(self) -> None:
         judge = FakeJudge(delay_s=1.0)

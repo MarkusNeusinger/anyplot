@@ -22,7 +22,12 @@ from google.genai import types
 
 from agents.anyplot import pipeline
 from agents.anyplot.dev_fixture import snapshot_from_repo
-from agents.anyplot.models import GEMINI_ADAPTER_MAX_OUTPUT_TOKENS, JudgeVerdict
+from agents.anyplot.models import (
+    ADAPTER_FULL_MAX_OUTPUT_TOKENS,
+    GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS,
+    GEMINI_ADAPTER_MAX_OUTPUT_TOKENS,
+    JudgeVerdict,
+)
 from agents.anyplot.pipeline import SoftDeadline
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
 from agents.anyplot.render.contract import RenderJob, Theme
@@ -354,7 +359,8 @@ async def test_a_second_schema_miss_gets_a_third_attempt_only_when_allowed(
         assert (result["shipped_attempt"], result["reviewed_attempt"]) == (3, 3)
         assert len(inputs) == 3
         assert "did not match the plan schema" in inputs[2] and "this attempt allows a full file" in inputs[2]
-        assert adapter_caps(fake)[1:] == [12_288, 12_288]  # every repair attempt may send a full file
+        full_cap = GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS if provider == "gemini" else ADAPTER_FULL_MAX_OUTPUT_TOKENS
+        assert adapter_caps(fake)[1:] == [full_cap, full_cap]  # every repair attempt may send a full file
     assert not any(SCHEMA_CANARY in record.getMessage() for record in caplog.records)
 
 
@@ -919,11 +925,11 @@ async def test_the_repair_attempt_widens_the_adapter_request_only(
     else:
         assert isinstance(fake, FakeAnthropic)
         adapter_calls = [call for call in fake.calls if FakeAnthropic.kind(call) == "adapter"]
-        assert [call["max_tokens"] for call in adapter_calls] == [2048, 12_288]
+        assert [call["max_tokens"] for call in adapter_calls] == [8_192, 16_384]
         assert all(call.get("thinking") == {"type": "disabled"} for call in adapter_calls)
     # The per-request change never reaches the agent's own config, so the next run starts narrow again.
     config = ADAPTERS["matplotlib"].generate_content_config
-    assert config is not None and config.max_output_tokens == (8_192 if provider == "gemini" else 2048)
+    assert config is not None and config.max_output_tokens == 8_192
     if provider == "gemini":
         assert config.thinking_config is not None
         assert config.thinking_config.thinking_level == types.ThinkingLevel.MEDIUM

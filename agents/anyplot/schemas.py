@@ -48,7 +48,7 @@ MAX_CHANGES = 5
 MAX_DEFECTS = 5
 # Limits the design doc leaves open, decided here.
 MAX_CODE_CHARS = 48 * 1024  # the SECURITY validator parses at most 48 KB
-MAX_EDIT_CHARS = 8 * 1024  # per `find` or `replace`; on Claude the 2,048-token edit-call cap binds first
+MAX_EDIT_CHARS = 8 * 1024  # per `find` or `replace`; a whole edit call is capped at 8,192 output tokens
 MAX_WARNINGS = 2 * MAX_COLUMNS  # a rename and a date-order warning per column
 MAX_NOTES = 20  # readiness hints, gate notes
 MAX_FEEDBACK = 16  # defect and validator lines handed to the next repair attempt

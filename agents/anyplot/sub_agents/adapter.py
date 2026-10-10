@@ -13,8 +13,9 @@ turns that into a forced tool call. `schema_guard` mends an answer that misses o
 formal rule (`schemas.repair_plan`) and blanks one that still fails the schema, so
 the pipeline repairs it instead of ADK ending the run. On the second
 attempt, when a full file is allowed, the callback widens the request through
-`models.allow_full_file`: the output cap rises to `ADAPTER_FULL_MAX_OUTPUT_TOKENS`,
-and on Gemini the thinking level drops to LOW.
+`models.allow_full_file`: the output cap rises to `ADAPTER_FULL_MAX_OUTPUT_TOKENS`
+(16,384) on Claude and `GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS` (12,288) on Gemini, where
+the thinking level also drops to LOW.
 """
 
 import json

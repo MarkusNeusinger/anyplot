@@ -93,7 +93,7 @@ from agents.anyplot.data.store import StoreFull
 from agents.anyplot.dev_fixture import FixtureError, load_case
 from agents.anyplot.models import JudgeUnavailable
 from agents.anyplot.opening import Eligibility, assess, dataset_judge_input, opening_state, store_dataset
-from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution, budget_allows
+from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution, budget_allows, judge_budget_tokens
 from agents.anyplot.policy import data_rubric, fence, refusal
 from agents.anyplot.render.serial import RenderBusy
 from agents.anyplot.render.store import RenderStoreFull
@@ -580,7 +580,7 @@ async def upload_dataset(
     except JudgeUnavailable:
         attribution("data_judge", ledger, verdict="guard_unavailable")
         raise AgentsError(503, "guard_unavailable") from None
-    services.usage.add_tokens(user, verdict.tokens)
+    services.usage.add_tokens(user, judge_budget_tokens(verdict.tokens, verdict.input_tokens, verdict.output_tokens))
     attribution(
         "data_judge",
         ledger,

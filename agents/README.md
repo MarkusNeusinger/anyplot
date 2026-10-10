@@ -70,10 +70,10 @@ Three rules hold for everything here:
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue, after which the run ends with `capacity`; the queue holds rate x wait / 60 entries (10) and answers `503 capacity` beyond that. Through the BFF the whole turn, this wait included, ends by `AGENT_TURN_MAX_S` (890 s, see `docs/reference/api.md`), which the full wait plus the 180 s run fits into |
 | `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 (`--max-attempts`) to measure no repair or a second repair round |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request |
-| `AGENT_REQUEST_TOKEN_BUDGET` | `80000` | Tokens per request |
-| `AGENT_DAILY_TOKEN_BUDGET` | `1000000` | Tokens per user and day |
+| `AGENT_REQUEST_TOKEN_BUDGET` | `80000` | Cost-weighted tokens per request (see [Token budgets and output caps](#token-budgets-and-output-caps)) |
+| `AGENT_DAILY_TOKEN_BUDGET` | `1000000` | Cost-weighted tokens per user and day |
 | `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
-| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `3000000` | Tokens per day for the whole service |
+| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `3000000` | Cost-weighted tokens per day for the whole service |
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per theme render |
 | `AGENT_REQUEST_DEADLINE_S` | `180` | Hard request deadline |
 | `AGENT_SOFT_DEADLINE_S` | `140` | Soft deadline inside the pipeline |
@@ -83,6 +83,33 @@ Three rules hold for everything here:
 | `AGENT_SERVICE_URLS` | empty | ID-token audiences accepted on `/v1` outside development |
 | `AGENT_DEV_FIXTURE` | unset | Development only: a fixture case id that seeds every new session |
 | `ENVIRONMENT` | `production` | Shared with the API; `local` rendering, the fixture seed and skipping the caller check need `development`, which is refused on Cloud Run |
+
+### Token budgets and output caps
+
+The three token budgets count cost-weighted tokens, in input-token equivalents (`BUDGET_WEIGHTS` in `anyplot/plugins/ledger.py`). Each kind of token weighs its list price relative to an uncached input token, the same ratios `evals/pricing.py` prices with:
+
+| Token kind | Weight |
+|---|---|
+| Uncached input | 1 |
+| Cache read | 0.1 |
+| Cache write (five-minute lifetime) | 1.25 |
+| Output (candidates and thoughts) | 5 |
+
+The scope and dataset judges count their input at 1 and their output at 5. The `done` event and the attribution lines keep the plain token counts; each `model` attribution line adds the call's weighted count as `budget`.
+
+In the rerun of spike X on main (244 runs, Claude Haiku 5.5, warm prompt cache), the median run booked 37,157 weighted tokens against 70,488 plain ones, so 80,000 per request leaves room for a second review or a third attempt, and 1,000,000 per user and day holds about 26 median runs. A cold cache weighs more, because each agent's first call writes its prefix at 1.25 instead of reading it at 0.1. Simulated from the same calls, a reviewed run with two adapter attempts then books a median of about 77,700, and the request budget can stop the second review or the root's closing reply.
+
+The output caps per model call are constants in `anyplot/models.py`, set with ample headroom above the largest measured answer, because an unused cap costs nothing and a cut-off wastes the call:
+
+| Call | Claude | Gemini | Largest measured answer |
+|---|---|---|---|
+| Root | 4,096 | 4,096 | 259 |
+| Adapter, edits only (attempt 1) | 8,192 | 8,192 | 2,030 (23 of 244 were cut off at the old 2,048) |
+| Adapter, full file allowed (the repair) | 16,384 | 12,288 | 2,606 |
+| Reviewer | 4,096 | 4,096 | 600 |
+| Scope and dataset judge | 256 | 256 | 59 |
+
+On Gemini, thinking tokens count toward the cap, and the soft deadline bounds the adapter's caps: at spike X's fitted rate, a call that uses all 8,192 tokens still leaves the repair attempt its 75 s. Claude Haiku 5.5 runs at about 0.0029 s per output token, so a call that uses all 16,384 takes about 49 s, inside the 60 s the deadline check reserves for an adapter call.
 
 ## Run it locally
 
@@ -294,7 +321,7 @@ Before the first case the harness renders the catalogue file of the first case o
 | `--seed N`, `--gallery-size N` | The gallery's random sample: its seed (0) and size (30) |
 | `--runs-per-minute N` | The run queue's start rate for this process, 60 by default |
 
-For its own process the harness lifts the run queue's start rate and the service-wide daily token budget, and gives every case its own user id, so the per-user daily budgets never trip. The per-request limits (12 LLM calls, 80,000 tokens, the deadlines) stay at their production values. With `--max-attempts 3` a reviewed run on Claude Haiku passes the 80,000-token budget before the root's closing reply, which then becomes the `budget` refusal while the plot result stands; export a larger `AGENT_REQUEST_TOKEN_BUDGET` to keep the reply. It also sets `AGENT_WATERMARK=false` unless your environment already sets the variable, so `renders/` and the galleries hold the raw renders the gates and the reviewer judged, without the footer strip, comparable with the committed baselines. To see the renders as a user gets them, export `AGENT_WATERMARK=true` before the run.
+For its own process the harness lifts the run queue's start rate and the service-wide daily token budget, and gives every case its own user id, so the per-user daily budgets never trip. The per-request limits (12 LLM calls, 80,000 cost-weighted tokens, the deadlines) stay at their production values. It also sets `AGENT_WATERMARK=false` unless your environment already sets the variable, so `renders/` and the galleries hold the raw renders the gates and the reviewer judged, without the footer strip, comparable with the committed baselines. To see the renders as a user gets them, export `AGENT_WATERMARK=true` before the run.
 
 ### Read the results
 

@@ -11,13 +11,22 @@ from google.genai import types
 from agents.anyplot.briefs import trimmed_profiles
 from agents.anyplot.models import JudgeVerdict
 from agents.anyplot.plugins.budget import BudgetPlugin
-from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, ledger_for
+from agents.anyplot.plugins.ledger import (
+    BUDGET_WEIGHTS,
+    CURRENT_LEDGER,
+    RequestLedger,
+    budget_tokens,
+    judge_budget_tokens,
+    ledger_for,
+    weighted_tokens,
+)
 from agents.anyplot.plugins.scope_guard import WITHHELD, ScopeGuardPlugin, judge_input
 from agents.anyplot.plugins.tool_safety import ToolSafetyPlugin, has_url_or_path, result_limit, result_size
 from agents.anyplot.policy import DATA_PREAMBLE, fence
 from agents.anyplot.schemas import ColumnProfile, DatasetProfile
 from agents.anyplot.services import Services
 from agents.anyplot.settings import get_settings
+from agents.evals import pricing
 
 
 @dataclass
@@ -69,9 +78,19 @@ class TestScopeGuard:
         )
 
         assert result is None and ledger.lang == "de" and ledger.judge_tokens == 42
-        assert services.usage.user_tokens("adm_1") == 42
+        assert ledger.budget_tokens == 42 and services.usage.user_tokens("adm_1") == 42  # no split: the total
         assert "<user_message>\nMach es blau\n</user_message>" in judge.calls[0][0]
         assert await plugin.before_run_callback(invocation_context=FakeContext()) is None
+
+    async def test_the_judge_books_weighted_tokens(self, ledger: RequestLedger, services: Services, judge) -> None:
+        judge.script = [JudgeVerdict(verdict="in_scope", lang="en", tokens=1_140, input_tokens=1_081, output_tokens=59)]
+
+        await ScopeGuardPlugin().on_user_message_callback(
+            invocation_context=FakeContext(), user_message=text_message("x")
+        )
+
+        assert (ledger.judge_tokens, ledger.budget_tokens) == (1_140, 1_081 + 59 * 5)
+        assert services.usage.user_tokens("adm_1") == 1_376
 
     async def test_out_of_scope_is_withheld_and_halts_with_the_refusal(
         self, ledger: RequestLedger, services: Services, judge
@@ -166,8 +185,40 @@ class TestBudget:
         await BudgetPlugin().after_model_callback(callback_context=FakeContext(), llm_response=self.response())
 
         assert (ledger.llm_calls, ledger.tokens, ledger.cached_tokens) == (1, 125, 50)
+        # 50 uncached + 50 cached x 0.1 + 25 output x 5: the budgets count the weighted sum.
+        assert ledger.budget_tokens == 180
         assert ledger.model_versions == {"claude-haiku-5-5"}
-        assert services.usage.global_tokens() == 125
+        assert services.usage.global_tokens() == 180 and services.usage.user_tokens("adm_1") == 180
+
+    def test_the_weights_are_the_list_price_ratios(self) -> None:
+        """A price change in agents/evals/pricing.py must reach the budgets' weights too."""
+        assert BUDGET_WEIGHTS["uncached"] == 1.0
+        assert BUDGET_WEIGHTS["cached"] == pricing.CACHE_READ_FACTOR
+        assert BUDGET_WEIGHTS["cache_write"] == pricing.CACHE_WRITE_FACTOR
+        for model in ("claude-haiku-5-5", "gemini-3.8-flash"):
+            price = pricing.price_of(model)
+            assert BUDGET_WEIGHTS["output"] == pytest.approx(price.output / price.input)
+
+    def test_a_warm_two_attempt_run_books_about_half_its_plain_tokens(self) -> None:
+        """The rerun's median reviewed run with two adapter attempts (violin-basic-matplotlib-n12, repeat 2).
+
+        Its model calls summed to 67,570 prompt tokens (54,308 cached, 13,194 cache writes, 68 uncached)
+        and 3,245 output tokens; the judge read 1,069 and wrote 59. Plain: 71,943. Weighted: 39,580.
+        """
+        usage = types.GenerateContentResponseUsageMetadata(
+            prompt_token_count=67_570, cached_content_token_count=54_308, candidates_token_count=3_245
+        )
+        object.__setattr__(usage, "cache_creation_input_tokens", 13_194)  # how ADK's Claude model attaches it
+
+        weighted = budget_tokens(usage) + judge_budget_tokens(1_128, 1_069, 59)
+
+        assert budget_tokens(usage) == weighted_tokens(uncached=68, cached=54_308, cache_write=13_194, output=3_245)
+        assert weighted == round(68 + 5_430.8 + 16_492.5 + 16_225) + 1_069 + 295 == 39_580
+        assert weighted < get_settings().request_token_budget / 2 < 67_570 + 3_245 + 1_128
+
+    def test_a_judge_verdict_is_weighted_by_its_split(self) -> None:
+        assert judge_budget_tokens(1_140, 1_081, 59) == 1_081 + 59 * 5
+        assert judge_budget_tokens(42, 0, 0) == 42  # no split: the plain total
 
     async def test_halts_the_root_only(self, ledger: RequestLedger, services: Services, monkeypatch) -> None:
         monkeypatch.setenv("AGENT_MAX_LLM_CALLS", "2")
@@ -187,12 +238,27 @@ class TestBudget:
     async def test_request_token_budget(self, ledger: RequestLedger, services: Services, monkeypatch) -> None:
         monkeypatch.setenv("AGENT_REQUEST_TOKEN_BUDGET", "100")
         get_settings.cache_clear()
-        ledger.tokens = 100
+        ledger.budget_tokens = 100
 
         assert (
             await BudgetPlugin().before_model_callback(callback_context=FakeContext(), llm_request=LlmRequest())
             is not None
         )
+
+    async def test_the_request_budget_counts_weighted_not_plain_tokens(
+        self, ledger: RequestLedger, services: Services, monkeypatch
+    ) -> None:
+        """Mostly cache reads: 1,000 plain tokens weigh 100, so the root may still answer under a budget of 500."""
+        monkeypatch.setenv("AGENT_REQUEST_TOKEN_BUDGET", "500")
+        get_settings.cache_clear()
+        plugin = BudgetPlugin()
+        usage = types.GenerateContentResponseUsageMetadata(prompt_token_count=1_000, cached_content_token_count=1_000)
+        await plugin.after_model_callback(
+            callback_context=FakeContext(), llm_response=LlmResponse(usage_metadata=usage)
+        )
+
+        assert (ledger.tokens, ledger.budget_tokens) == (1_000, 100)
+        assert await plugin.before_model_callback(callback_context=FakeContext(), llm_request=LlmRequest()) is None
 
     async def test_daily_pipeline_runs(self, ledger: RequestLedger, services: Services, monkeypatch) -> None:
         monkeypatch.setenv("AGENT_DAILY_PIPELINE_RUNS", "1")

@@ -39,13 +39,16 @@ settings accept only the Claude models in `settings.CLAUDE_MODELS`.
 level per kind; no temperature, top_p or thinking budget, which Gemini 3 does not
 want.
 
-Per kind: the root chats (2,048 output tokens, low effort), the adapter edits code
-(medium effort; 2,048 tokens for edits on Claude, `GEMINI_ADAPTER_MAX_OUTPUT_TOKENS`
-on Gemini, whose thinking tokens count toward the cap; `allow_full_file`, called by
+Per kind: the root chats (4,096 output tokens, low effort), the adapter edits code
+(medium effort; 8,192 tokens for edits, `MAX_OUTPUT_TOKENS` on Claude and
+`GEMINI_ADAPTER_MAX_OUTPUT_TOKENS` on Gemini, whose thinking tokens count toward the
+cap; `allow_full_file`, called by
 the adapter's callback when a full file is allowed, raises the cap to
-`ADAPTER_FULL_MAX_OUTPUT_TOKENS` and on Gemini lowers thinking to
-`GEMINI_ADAPTER_FULL_THINKING`), the reviewer judges two images (2,048 tokens, low
-effort, medium media resolution on Gemini).
+`ADAPTER_FULL_MAX_OUTPUT_TOKENS` on Claude and `GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS`
+on Gemini, and on Gemini lowers thinking to `GEMINI_ADAPTER_FULL_THINKING`), the
+reviewer judges the render (4,096 tokens, low effort, medium media resolution on
+Gemini). Every cap leaves ample headroom above the measured answers (`MAX_OUTPUT_TOKENS`):
+an answer that finishes costs the same under any cap, and a cut-off wastes the call.
 """
 
 from __future__ import annotations
@@ -72,8 +75,47 @@ from .settings import AgentSettings, get_settings
 ModelKind = Literal["root", "adapter", "reviewer"]
 MODEL_KINDS: tuple[ModelKind, ...] = ("root", "adapter", "reviewer")
 
-MAX_OUTPUT_TOKENS: dict[ModelKind, int] = {"root": 2048, "adapter": 2048, "reviewer": 2048}
-ADAPTER_FULL_MAX_OUTPUT_TOKENS = 12_288
+MAX_OUTPUT_TOKENS: dict[ModelKind, int] = {"root": 4096, "adapter": 8192, "reviewer": 4096}
+"""Output caps per kind: every kind on Claude, the root and the reviewer on Gemini.
+
+The owner's rule (2026-10-10): a cap leaves ample headroom above the measured answers,
+because an unused cap costs nothing and a cut-off wastes the call. Measured in the
+rerun of spike X on main (244 runs, Claude Haiku 5.5, 2026-10-10):
+
+* adapter, edits only (attempt 1): at the old cap of 2,048, 23 of 244 first calls
+  ended with `MAX_TOKENS` (22 of them box-basic and heatmap-basic matplotlib), and the
+  finished ones reached 2,030, so the cap cut the distribution. Plans on attempt 2
+  finished at a median of 1,562 and at most 2,606 tokens. 8,192 is 3.1 times the
+  largest measured plan.
+* reviewer: at most 600 tokens (95th percentile 515) in 218 answers, all `STOP`; 4,096
+  is 6.8 times that.
+* root: at most 259 tokens (95th percentile 180) in 566 calls; 4,096 leaves room for
+  a longer reply in German or a code explanation.
+
+The caps also fit the soft deadline. Fitted on the rerun's run times, Claude Haiku 5.5
+takes about 0.8 s per call plus 0.0029 s per output token (R² 0.95), so a call that
+uses the whole 8,192 takes about 25 s, the whole 16,384 of `ADAPTER_FULL_MAX_OUTPUT_TOKENS`
+about 49 s (both inside the 60 s of `pipeline.ADAPTER_P95_S`), and the whole 4,096
+of the reviewer about 13 s (inside the 30 s of `pipeline.REVIEWER_P95_S`). On Gemini,
+whose thinking counts toward the cap, a reviewer call that uses all 4,096 takes about
+30 s at spike X's fitted rate (see `GEMINI_ADAPTER_MAX_OUTPUT_TOKENS`). The Gemini
+adapter keeps its own caps (`GEMINI_ADAPTER_MAX_OUTPUT_TOKENS`,
+`GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS`)."""
+ADAPTER_FULL_MAX_OUTPUT_TOKENS = 16_384
+"""The Claude adapter's cap when a full file is allowed (the repair attempt).
+
+Measured full-file plans finished at most at 2,606 tokens. A full file may hold
+`schemas.MAX_FULL_CODE_CHARS` (24 KB), about 9,800 tokens at the 2.5 characters per
+token measured for Haiku 5.5 before JSON escaping, so 16,384 holds a plan at the
+schema's own limit with its change notes; the largest phase-1 catalogue file
+(star-chart-constellation, matplotlib, 20,677 characters) is about 8,300. The
+Anthropic SDK accepts the cap without streaming (its limit is about 21,300 tokens)."""
+GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS = 12_288
+"""The Gemini adapter's cap when a full file is allowed, thinking included.
+
+The soft deadline bounds it like the edit cap: at spike X's fitted rate a call that
+uses all 12,288 tokens takes about 85 s, more than the 60 s that `pipeline.ADAPTER_P95_S`
+reserves, so a higher cap would only make a runaway call later."""
 GEMINI_THINKING: dict[ModelKind, types.ThinkingLevel] = {
     "root": types.ThinkingLevel.LOW,
     "adapter": types.ThinkingLevel.MEDIUM,
@@ -96,12 +138,14 @@ takes about 72 s and the deadline check would cancel attempt 2 exactly when it i
 needed. The trade-off: the 11 measured plans above 8,192 tokens are cut off and come
 back on attempt 2 (full file allowed, LOW thinking), without a repair round of their
 own; at the fitted rate, a finished plan of more than about 8,700 tokens leaves less
-than 75 s after its render anyway. Claude runs with thinking disabled and keeps 2,048."""
+than 75 s after its render anyway. Claude runs with thinking disabled and has the
+same 8,192 in `MAX_OUTPUT_TOKENS["adapter"]`, chosen from its own measurements."""
 GEMINI_ADAPTER_FULL_THINKING = types.ThinkingLevel.LOW
 """The Gemini adapter's thinking level when a full file is allowed (the repair attempt).
 
 At MEDIUM, 10 runs of the spike-X Gemini arm thought past the 12,288-token cap of
-that attempt as well; LOW leaves the answer room. The first attempt keeps MEDIUM."""
+that attempt as well (`GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS`); LOW leaves the answer
+room. The first attempt keeps MEDIUM."""
 ClaudeEffort = Literal["low", "medium", "high", "xhigh", "max"]
 CLAUDE_EFFORT: dict[ModelKind, ClaudeEffort] = {"root": "low", "adapter": "medium", "reviewer": "low"}
 SAFETY_CATEGORIES: tuple[types.HarmCategory, ...] = (
@@ -115,7 +159,11 @@ RETRY_ATTEMPTS = 3
 STRUCTURED_TOOL = "submit_result"
 """Name of the forced tool that carries a Claude structured answer."""
 
-JUDGE_MAX_OUTPUT_TOKENS = 64
+JUDGE_MAX_OUTPUT_TOKENS = 256
+"""The scope and dataset judge's cap. Its forced tool answer (`verdict` and `lang`) took
+59 tokens in every one of the rerun's 244 runs, 5 below the old cap of 64, and the
+Gemini judge 15 to 22 in spike X. 256 is 4.3 times the Claude answer and leaves room
+for a Gemini judge's minimal thinking; a finished answer costs the same under any cap."""
 JUDGE_TOOL = "submit_verdict"
 
 
@@ -288,16 +336,19 @@ def make_content_config(kind: ModelKind, settings: AgentSettings | None = None) 
 def allow_full_file(config: types.GenerateContentConfig) -> None:
     """Widen one adapter request's config for an answer that may be a full file.
 
-    The cap becomes `ADAPTER_FULL_MAX_OUTPUT_TOKENS` on both providers. On Gemini the
-    thinking level drops to `GEMINI_ADAPTER_FULL_THINKING`; Claude keeps thinking
-    disabled. The provider is read from the config's type, not from the settings, so
-    the request decides. ADK copies the agent's config per request only shallowly
-    (`_copy_request_scoped_fields`), so the thinking config is replaced, never
-    mutated: a change to the shared object would reach every later run.
+    The cap becomes `ADAPTER_FULL_MAX_OUTPUT_TOKENS` on Claude, which keeps thinking
+    disabled, and `GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS` on Gemini, whose thinking
+    level drops to `GEMINI_ADAPTER_FULL_THINKING`. The provider is read from the
+    config's type, not from the settings, so the request decides. ADK copies the
+    agent's config per request only shallowly (`_copy_request_scoped_fields`), so the
+    thinking config is replaced, never mutated: a change to the shared object would
+    reach every later run.
     """
-    config.max_output_tokens = ADAPTER_FULL_MAX_OUTPUT_TOKENS
-    if not isinstance(config, AnthropicGenerateContentConfig):
-        config.thinking_config = types.ThinkingConfig(thinking_level=GEMINI_ADAPTER_FULL_THINKING)
+    if isinstance(config, AnthropicGenerateContentConfig):
+        config.max_output_tokens = ADAPTER_FULL_MAX_OUTPUT_TOKENS
+        return
+    config.max_output_tokens = GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS
+    config.thinking_config = types.ThinkingConfig(thinking_level=GEMINI_ADAPTER_FULL_THINKING)
 
 
 # --- Judge -------------------------------------------------------------------------------

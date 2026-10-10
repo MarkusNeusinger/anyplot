@@ -12,6 +12,12 @@ The `UsageBook` holds the per-user and global daily counters for one instance
 lifetime (the `aiplatform` spend cap is the real backstop; persisting the counters is
 a phase-2 item). Days are UTC dates.
 
+The request, user-day and global-day budgets count cost-weighted tokens: each kind
+weighted by its price relative to an uncached input token (`BUDGET_WEIGHTS`), so a
+cache read counts a tenth and an output token five times. `RequestLedger.tokens` and
+`judge_tokens` keep the plain counts that the `done` event and the attribution lines
+report.
+
 `attribution` writes one JSON log line per hook with ids, counts and verdicts, and
 never content: no message text, no code, no data, no tool arguments (only their
 hash).
@@ -71,6 +77,8 @@ class RequestLedger:
     tokens: int = 0
     cached_tokens: int = 0
     judge_tokens: int = 0
+    budget_tokens: int = 0
+    """The model calls' and the judge's cost-weighted tokens (`BUDGET_WEIGHTS`): what the request budget counts."""
     pipeline_calls: int = 0
     pipeline_active: bool = False
     adapter_allow_full: bool = False
@@ -139,6 +147,7 @@ class UsageBook:
         return self._day
 
     def add_tokens(self, user_id: str, tokens: int) -> None:
+        """Book cost-weighted tokens (`weighted_tokens`) against the user's and the service's day."""
         day = self._current()
         day.user_tokens[user_id] = day.user_tokens.get(user_id, 0) + tokens
         day.global_tokens += tokens
@@ -168,10 +177,9 @@ class UsageBook:
 
 
 def request_ok(ledger: RequestLedger, settings: AgentSettings, *, next_calls: int = 1) -> bool:
-    """Whether the request may spend `next_calls` more LLM calls."""
+    """Whether the request may spend `next_calls` more LLM calls (its tokens are cost-weighted)."""
     return (
-        ledger.llm_calls + next_calls <= settings.max_llm_calls
-        and ledger.tokens + ledger.judge_tokens < settings.request_token_budget
+        ledger.llm_calls + next_calls <= settings.max_llm_calls and ledger.budget_tokens < settings.request_token_budget
     )
 
 
@@ -221,6 +229,62 @@ def usage_breakdown(usage: Any) -> dict[str, int]:
         value = getattr(usage, name, None) if usage is not None else None
         counts[key] = int(value) if isinstance(value, int) else 0
     return counts
+
+
+BUDGET_WEIGHTS: dict[str, float] = {"uncached": 1.0, "cached": 0.1, "cache_write": 1.25, "output": 5.0}
+"""What one token of each kind counts against the token budgets, in input-token equivalents.
+
+The weights are the list-price ratios of `agents/evals/pricing.py` (2026-10-10): a cache
+read costs 0.1 and a five-minute cache write 1.25 of an uncached input token, and an
+output token (candidates and thoughts) 5.0, Claude Haiku 5.5's $0.50 over $0.10 per
+million (Gemini 3.8 Flash has the same ratio, $7.50 over $1.50). A test checks them
+against that module, so a price change there names this constant.
+
+Measured on the rerun of spike X (244 runs on main, Claude Haiku 5.5, warm cache), the
+median run books 37,157 weighted against 70,488 plain tokens, and a reviewed run with
+two adapter attempts 39,499 against 72,172, so a second review (a median of 11,263) or
+a third attempt (12,145) fits the 80,000 of `AGENT_REQUEST_TOKEN_BUDGET`, and the 1,000,000 of
+`AGENT_DAILY_TOKEN_BUDGET` holds about 26 median runs instead of 14. A cold cache
+weighs more: each agent's first call writes its prefix at 1.25 instead of reading it
+at 0.1. Simulated from the same calls, a reviewed run with two attempts then books a
+median of about 77,700 (95th percentile 87,000), so on a cold cache the request
+budget can stop the second review or the root's closing reply."""
+
+
+def weighted_tokens(*, uncached: int = 0, cached: int = 0, cache_write: int = 0, output: int = 0) -> int:
+    """Token counts in input-token equivalents (`BUDGET_WEIGHTS`), rounded to a whole token."""
+    weights = BUDGET_WEIGHTS
+    total = (
+        uncached * weights["uncached"]
+        + cached * weights["cached"]
+        + cache_write * weights["cache_write"]
+        + output * weights["output"]
+    )
+    return round(total)
+
+
+def budget_tokens(usage: Any) -> int:
+    """One response's `usage_metadata` in input-token equivalents.
+
+    The prompt count includes the cached and the cache-write tokens (`USAGE_FIELDS`), so
+    the uncached part is what is left of it, plus the Gemini tool-use prompt.
+    """
+    counts = usage_breakdown(usage)
+    cached = usage_tokens(usage)[1]
+    prompt = counts["prompt"] + counts["tool_use_prompt"]
+    return weighted_tokens(
+        uncached=max(0, prompt - cached - counts["cache_write"]),
+        cached=cached,
+        cache_write=counts["cache_write"],
+        output=counts["candidates"] + counts["thoughts"],
+    )
+
+
+def judge_budget_tokens(tokens: int, input_tokens: int, output_tokens: int) -> int:
+    """A judge verdict in input-token equivalents: its input and output split, else its plain total."""
+    if input_tokens or output_tokens:
+        return weighted_tokens(uncached=input_tokens, output=output_tokens)
+    return tokens
 
 
 def argument_hash(arguments: Any) -> str:

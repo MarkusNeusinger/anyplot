@@ -67,12 +67,10 @@ the partial report before it stops.
 For its own process the harness lifts the run queue's start rate
 (`AGENT_RUNS_PER_MINUTE`, `--runs-per-minute`, 60) and the service-wide daily token
 budget, and gives every case and repeat its own user id, so the per-user daily
-budgets never trip; the per-request limits (12 LLM calls, 80k tokens, the deadlines)
-stay at their production values. `--max-attempts` sets the pipeline's attempt bound
-(`AGENT_MAX_ATTEMPTS`, 2 by default, recorded in the stamp as `max_attempts`); on Claude
-Haiku a third adapter call (about 22k tokens) takes a reviewed run past the 80k request
-budget, so the root's closing reply becomes the `budget` refusal while the plot result
-stands, unless the environment raises `AGENT_REQUEST_TOKEN_BUDGET`.
+budgets never trip; the per-request limits (12 LLM calls, 80k cost-weighted tokens,
+the deadlines) stay at their production values. `--max-attempts` sets the pipeline's
+attempt bound (`AGENT_MAX_ATTEMPTS`, 2 by default, recorded in the stamp as
+`max_attempts`).
 
 The harness sets `ENVIRONMENT=development` for the `remote` and `local` renderers unless
 it runs on Cloud Run (`K_SERVICE`), because a developer's renderer token is accepted
