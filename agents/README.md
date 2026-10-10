@@ -80,7 +80,7 @@ Three rules hold for everything here:
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per theme render |
 | `AGENT_REQUEST_DEADLINE_S` | `180` | Hard request deadline |
 | `AGENT_SOFT_DEADLINE_S` | `140` | Soft deadline inside the pipeline |
-| `AGENT_JUDGE_TIMEOUT_S` | `4` | Budget of one judge verdict, its one retry included |
+| `AGENT_JUDGE_TIMEOUT_S` | `4` | Budget of one judge verdict, its one retry and the half-second wait before it included |
 | `AGENT_KEEP_REFUSALS` | `false` | Keep the text and verdict of each message the scope judge refused, at most 20 per session in memory, shown only in the feedback bundle (`refusals`); never in a log. A phase-1 stub: the BFF has no bundle route, so read them with an ID-token call to `GET /v1/sessions/{sid}/bundle` (with `X-Anyplot-User`) while the session lives; the ring goes with the session |
 | `AGENT_ATTACK_STRIKES` | `3` | `attack` verdicts of the scope or dataset judge per user and day, once per distinct message or dataset, after which the user gets the budget refusal for the rest of the UTC day; only a new day, a redeploy or a scale-to-zero resets them. Every token-path caller shares one user id, so raise it for a jailbreak-testing session |
 | `AGENT_SESSION_IDLE_S` | `3600` | Idle time after which the sweeper drops a session |

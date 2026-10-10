@@ -12,8 +12,9 @@
   earlier turns (500 characters each, 1,500 in all, oldest first, as a JSON list)
   inside `<earlier_user_turns>`, so a request split across turns is judged as a
   whole; the fence tags are neutralised in all three;
-* a timeout, transport error or unparseable answer after the one retry inside the
-  4-second budget blocks with the error `guard_unavailable`;
+* a timeout, transport error or unparseable answer after the one retry, which
+  waits a short back-off first (`models.JUDGE_RETRY_BACKOFF_S`), inside the 4-second
+  budget blocks with the error `guard_unavailable`;
 * `out_of_scope` and `attack` withhold the message with the fixed `out_of_scope`
   refusal, and `needs_data` (a request for data the service would have to fetch) with
   the fixed `needs_data` refusal, each in the language the judge names (`policy.refusal`:
