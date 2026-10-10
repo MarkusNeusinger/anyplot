@@ -11,9 +11,11 @@ import json
 import os
 import subprocess
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import patch
 
+import httpx
 import pytest
 
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
@@ -521,3 +523,101 @@ def test_a_baseline_is_refused_for_runs_that_ended_in_an_error(tmp_path: Path) -
     report["runs"] = [good, {**good, "case_id": "b-seaborn-x", "status": "failed", "reason": "error"}]
     path, note = matrix.write_baseline(report, tmp_path / "other")
     assert path is None and note is not None and "b-seaborn-x" in note
+
+
+def test_is_error_counts_the_services_errors_and_an_error_event_with_a_plot() -> None:
+    """An outage or a bug, never the model's quality: these runs stop the matrix and keep a baseline from being written."""
+    for run in (
+        {"status": "error", "reason": "capacity"},  # the turn was refused
+        {"status": "error", "reason": "no_result"},
+        {"status": "error", "reason": "no_png"},  # a shipped plot without its PNG
+        {"status": "harness_error", "error": "KeyError"},
+        {"status": "failed", "reason": "error"},  # the pipeline's own error
+        {"status": "ok", "error": "deadline"},  # an error event came with the plot
+    ):
+        assert matrix.is_error(run), run
+    for run in (
+        {"status": "ok", "reason": None, "error": None, "pipeline_error": None},
+        {"status": "failed", "reason": "validation"},
+        {"status": "dataset_refused", "reason": "data_refused"},
+        {"status": "bindings_invalid", "reason": "invalid"},
+        {"status": "not_eligible", "reason": "not_eligible"},
+    ):
+        assert not matrix.is_error(run), run
+
+
+def runner_over(handler: Any, tmp_path: Path) -> matrix.CaseRunner:
+    """A case runner whose requests `handler` answers; the attribution is not booked."""
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler), base_url="http://evals")
+    return matrix.CaseRunner(
+        client=client,
+        timed=SimpleNamespace(chunks=[]),  # type: ignore[arg-type]
+        collector=SimpleNamespace(take=lambda _: []),  # type: ignore[arg-type]
+        settings=None,  # type: ignore[arg-type]
+        renders_dir=tmp_path / "renders",
+    )
+
+
+async def test_a_judge_outage_on_the_dataset_route_is_an_error_not_a_refusal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`503 guard_unavailable` is the service's failure: it counts towards the outage stop, unlike a refusal of the data."""
+    monkeypatch.setattr(matrix, "book_attribution", lambda *_: None)
+    case = two_fixtures()[0]
+    outcomes = []
+    answers = iter([(503, "guard_unavailable"), (403, "data_refused"), (422, "unparseable"), (413, "too_long")])
+
+    def handler(_: httpx.Request) -> httpx.Response:
+        status, detail = next(answers)
+        return httpx.Response(status, json={"detail": detail})
+
+    runner = runner_over(handler, tmp_path)
+    for _ in range(4):
+        record = matrix.base_record(case, 1)
+        went_on = await runner._dataset(record, case, "sid", {"X-Anyplot-User": "u", "X-Request-Id": "r-d"})
+        outcomes.append((went_on, record["status"], record["reason"], matrix.is_error(record)))
+
+    assert outcomes == [
+        (False, "error", "guard_unavailable", True),
+        (False, "dataset_refused", "data_refused", False),
+        (False, "dataset_refused", "unparseable", False),
+        (False, "dataset_refused", "too_long", False),
+    ]
+
+
+async def test_a_service_failure_on_the_bindings_route_is_an_error(tmp_path: Path) -> None:
+    answers = iter([(503, "capacity"), (422, "invalid")])
+
+    def handler(_: httpx.Request) -> httpx.Response:
+        status, detail = next(answers)
+        return httpx.Response(status, json={"detail": detail})
+
+    runner = runner_over(handler, tmp_path)
+    case = next(case for case in two_fixtures() if case.bindings)
+    outcomes = []
+    for _ in range(2):
+        record = matrix.base_record(case, 1)
+        went_on = await runner._bindings(record, case, "sid", {"X-Anyplot-User": "u", "X-Request-Id": "r-b"})
+        outcomes.append((went_on, record["status"], matrix.is_error(record)))
+
+    assert outcomes == [(False, "error", True), (False, "bindings_invalid", False)]
+
+
+async def test_a_shipped_plot_without_its_png_is_an_error_not_a_pass(tmp_path: Path) -> None:
+    """The galleries cannot show such a run and a baseline must not count it."""
+    runner = runner_over(lambda _: httpx.Response(404, json={"detail": "not_found"}), tmp_path)
+    case = two_fixtures()[0]
+    headers = {"X-Anyplot-User": "u", "X-Request-Id": "r-a"}
+
+    without = matrix.base_record(case, 1)
+    without["status"] = "ok"
+    await runner._save_png(without, case, 1, "sid", {"artifacts": ["plot.py", "data.csv"]}, headers)
+    unfetchable = matrix.base_record(case, 1)
+    unfetchable["status"] = "needs_attention"
+    await runner._save_png(unfetchable, case, 1, "sid", {"artifacts": ["plot-light.png", "plot.py"]}, headers)
+
+    for record in (without, unfetchable):
+        matrix.finish_record(record)
+        assert (record["status"], record["reason"], record["passed"]) == ("error", "no_png", False)
+        assert matrix.is_error(record) and record["png"] is None
+    assert not (tmp_path / "renders").exists()

@@ -4,7 +4,7 @@ This directory holds the anyplot agent network: the service that lets an admin p
 
 ## What is built
 
-The runtime core runs locally: the agents, the plot pipeline, the guardrail plugins, the render layer, the private `/v1` service with its run queue, and the theme toggle. The model-regression harness, the 120 synthetic spike-X cases, the blind two-run review gallery and the catalogue eligibility sweep are built (see [Run the regression harness](#run-the-regression-harness)); no baseline is committed yet. Not built yet: the Cloud Run sandbox render backend (it waits for spike S), the `remote` render backend, the container image, the deploy, the scope evalset, and the `agents-eval.yml` workflow.
+The runtime core runs locally: the agents, the plot pipeline, the guardrail plugins, the render layer, the private `/v1` service with its run queue, and the theme toggle. The model-regression harness, the 120 synthetic spike-X cases, the blind two-run review gallery and the catalogue eligibility sweep are built (see [Run the regression harness](#run-the-regression-harness)), and the Claude Haiku 5.5 baseline from the first spike-X run of 2026-10-10 is committed (`evals/baselines/claude-haiku-5-5.json`); the Gemini baseline is not. Not built yet: the Cloud Run sandbox render backend (it waits for spike S), the `remote` render backend, the container image, the deploy, the scope evalset, and the `agents-eval.yml` workflow.
 
 The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. **Gemini 3.8 Flash** is the second arm: set `AGENT_PROVIDER=gemini` together with Gemini model ids, so the two can be compared on price and quality later. Every agent and the scope judge run on the configured provider.
 

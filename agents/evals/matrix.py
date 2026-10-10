@@ -131,6 +131,10 @@ ATTRIBUTION_LOGGER = "anyplot.agents.attribution"
 MODEL_TOKEN_KINDS: tuple[str, ...] = ("prompt", "candidates", "thoughts", "cached", "cache_write", "tool_use_prompt")
 EXIT_OK, EXIT_REGRESSION, EXIT_SETUP, EXIT_STOPPED, EXIT_OUTAGE = 0, 1, 2, 3, 4
 RENDERER_OUTAGE = "RendererUnavailable"
+REFUSAL_STATUSES = frozenset({403, 409, 413, 422})
+"""HTTP statuses with which the service refuses a request on its merits (the data, the bindings), the case's own outcome.
+Any other failure (a 5xx, a judge outage) is the service's and counts as an error (`is_error`)."""
+ERROR_STATUSES = frozenset({"harness_error", "error"})
 """The pipeline's `error` class that means the renderer is down, not that the model failed."""
 MAX_ERRORS_IN_A_ROW = 3
 """Runs in a row that ended in an error (pipeline or harness) before the matrix stops as an outage."""
@@ -719,7 +723,12 @@ class CaseRunner:
         response = await self.client.post(f"/v1/sessions/{sid}/dataset", headers=headers, json={"text": case.data_text})
         book_attribution(record, self.collector.take(headers["X-Request-Id"]), self.settings)
         if response.status_code != 200:
-            record["status"], record["reason"] = "dataset_refused", _detail(response)
+            # A refusal of the data (the judge's `403 data_refused`, `413 too_long`,
+            # `422 unparseable`) is the case's outcome; anything else, such as the
+            # judge's own `503 guard_unavailable`, is the service's error: it counts
+            # towards the outage stop and keeps the run out of a baseline.
+            kind = "dataset_refused" if response.status_code in REFUSAL_STATUSES else "error"
+            record["status"], record["reason"] = kind, _detail(response)
             return False
         return True
 
@@ -729,7 +738,8 @@ class CaseRunner:
         payload = [binding.model_dump() for binding in case.bindings]
         response = await self.client.put(f"/v1/sessions/{sid}/bindings", headers=headers, json=payload)
         if response.status_code != 200:
-            record["status"], record["reason"] = "bindings_invalid", _detail(response)
+            kind = "bindings_invalid" if response.status_code in REFUSAL_STATUSES else "error"
+            record["status"], record["reason"] = kind, _detail(response)
             return False
         answer = response.json()
         if not answer.get("complete"):
@@ -762,11 +772,19 @@ class CaseRunner:
         plot: dict[str, Any],
         headers: dict[str, str],
     ) -> None:
+        # A shipped result without its PNG is not a pass: the galleries could not
+        # show it and a baseline must not count it, so it becomes an error.
         names = [name for name in plot.get("artifacts") or [] if str(name).endswith(".png")]
         if not names:
+            record["status"], record["reason"], record["error"] = "error", "no_png", "plot_without_png"
             return
         response = await self.client.get(f"/v1/sessions/{sid}/artifacts/{names[0]}", headers=headers)
         if response.status_code != 200:
+            record["status"], record["reason"], record["error"] = (
+                "error",
+                "no_png",
+                f"artifact http {response.status_code}",
+            )
             return
         self.renders_dir.mkdir(parents=True, exist_ok=True)
         file_name = f"{case.case_id}-r{repeat}.png"
@@ -862,8 +880,19 @@ def _unique(path: Path) -> Path:
 
 
 def is_error(run: dict[str, Any]) -> bool:
-    """A run that ended in an error (the harness's or the pipeline's), which measures an outage or a bug."""
-    return run.get("status") == "harness_error" or run.get("reason") == "error"
+    """A run that ended in an error, which measures an outage or a bug rather than the model.
+
+    The harness's own crash (`harness_error`), the service's refusal of a request
+    (`status == "error"`: a session that could not open, a judge outage, a turn that
+    ended with `capacity` or without a result, a shipped plot without its PNG), the
+    pipeline's `failed (error)`, and an `error` event that came with a plot all count.
+    """
+    return (
+        run.get("status") in ERROR_STATUSES
+        or run.get("reason") == "error"
+        or bool(run.get("error"))
+        or bool(run.get("pipeline_error"))
+    )
 
 
 def write_baseline(report: dict[str, Any], baselines_dir: Path) -> tuple[Path | None, str | None]:
