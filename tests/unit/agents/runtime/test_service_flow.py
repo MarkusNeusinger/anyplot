@@ -500,7 +500,7 @@ async def render_theme(
 
 
 async def test_theme_toggle_renders_the_other_theme_without_a_model_call(
-    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, services: Services
 ) -> None:
     fake = swap_models("gemini", default_script())
     sid = await open_session(client)
@@ -517,14 +517,18 @@ async def test_theme_toggle_renders_the_other_theme_without_a_model_call(
     assert backend.jobs[1].data_csv == backend.jobs[0].data_csv
     dark = await client.get(f"/v1/sessions/{sid}/artifacts/plot-dark.png?v=1", headers=HEADERS)
     assert dark.status_code == 200 and size_of(dark.content) == (3200, 1864)
+    light = await client.get(f"/v1/sessions/{sid}/artifacts/plot-light.png?v=1", headers=HEADERS)
+    stored = stored_render(services, sid)
+    # each strip takes its theme from the artifact name: a dark plot never gets a light strip
+    assert dark.content == add_footer(stored.pngs["dark"], theme="dark", spec_id="scatter-basic")
+    assert light.content == add_footer(stored.pngs["light"], theme="light", spec_id="scatter-basic")
 
     again = await render_theme(client, sid, "dark", version=0)  # 0 is the latest version
     assert again.json()["status"] == "ok"
     assert len(backend.jobs) == 2  # a rendered theme is answered from its record
     bundle = (await client.get(f"/v1/sessions/{sid}/bundle", headers=HEADERS)).json()
-    images = bundle["versions"][0]["images"]
-    assert set(images) == {"light", "dark"}
-    assert {size_of(base64.b64decode(data)) for data in images.values()} == {(3200, 1864)}
+    images = {theme: base64.b64decode(data) for theme, data in bundle["versions"][0]["images"].items()}
+    assert images == {"light": light.content, "dark": dark.content}
 
 
 async def test_theme_toggle_pads_an_off_canvas_theme(
