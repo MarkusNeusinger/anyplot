@@ -10,6 +10,7 @@ one test never wait for the rate window; `test_run_queue_flow.py` drives the que
 at its production defaults with a fake clock.
 """
 
+import base64
 import json
 from collections.abc import AsyncIterator, Iterator
 from typing import Any
@@ -22,9 +23,12 @@ from agents.anyplot.models import JudgeVerdict
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
 from agents.anyplot.render.contract import RenderJob, Theme
 from agents.anyplot.render.png import size_of
+from agents.anyplot.render.store import StoredRender
+from agents.anyplot.render.watermark import add_footer
 from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.schemas import AdaptPlan, Verdict
 from agents.anyplot.services import Services, get_services
+from agents.anyplot.settings import get_settings
 from agents.main import Runtime, app, get_runtime
 
 from .conftest import CASES
@@ -294,6 +298,59 @@ async def test_artifacts_and_bundle_after_a_plot(client: httpx.AsyncClient, swap
     assert with_data["versions"][0]["data_csv"].startswith("Student,")
 
 
+def stored_render(services: Services, sid: str) -> StoredRender:
+    version = services.versions.get(sid)
+    assert version is not None and version.render_id is not None
+    stored = services.renders.get(version.render_id, sid)
+    assert stored is not None
+    return stored
+
+
+async def test_served_pngs_carry_the_footer_strip_and_the_reviewer_saw_the_raw_render(
+    client: httpx.AsyncClient, swap_models, services: Services
+) -> None:
+    fake = swap_models("gemini", default_script())
+    sid = await open_session(client)
+    await create_plot(client, sid)
+
+    light = await client.get(f"/v1/sessions/{sid}/artifacts/plot-light.png", headers=HEADERS)
+
+    stored = stored_render(services, sid)
+    raw = stored.pngs["light"]
+    assert size_of(raw) == (3200, 1800)  # the store keeps the render the gates passed
+    assert size_of(light.content) == (3200, 1864)
+    assert light.content == add_footer(raw, theme="light", spec_id="scatter-basic")
+    assert stored.shown == {"light": light.content}  # composed once, then served from the cache
+    again = await client.get(f"/v1/sessions/{sid}/artifacts/plot-light.png?v=1", headers=HEADERS)
+    assert again.content == light.content
+    review = next(request for request in fake.requests if (request.config.labels or {})["agent_kind"] == "reviewer")
+    images = [part.inline_data.data for content in review.contents for part in content.parts or [] if part.inline_data]
+    assert images == [raw]  # the reviewer judged the raw render, without the strip
+    bundle = (await client.get(f"/v1/sessions/{sid}/bundle", headers=HEADERS)).json()
+    assert base64.b64decode(bundle["versions"][0]["images"]["light"]) == light.content
+    code = await client.get(f"/v1/sessions/{sid}/artifacts/plot.py", headers=HEADERS)
+    assert "made with" not in code.text  # the exported code reproduces the plot without the strip
+
+
+async def test_watermark_off_serves_the_raw_renders(
+    client: httpx.AsyncClient, swap_models, services: Services, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("AGENT_WATERMARK", "false")
+    get_settings.cache_clear()
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+    await create_plot(client, sid)
+
+    light = await client.get(f"/v1/sessions/{sid}/artifacts/plot-light.png", headers=HEADERS)
+    bundle = (await client.get(f"/v1/sessions/{sid}/bundle", headers=HEADERS)).json()
+
+    stored = stored_render(services, sid)
+    assert light.content == stored.pngs["light"]
+    assert size_of(light.content) == (3200, 1800)
+    assert base64.b64decode(bundle["versions"][0]["images"]["light"]) == stored.pngs["light"]
+    assert stored.shown == {}
+
+
 async def test_reviewer_rejection_gets_one_repair_and_ships_needs_attention(
     client: httpx.AsyncClient, swap_models
 ) -> None:
@@ -349,7 +406,7 @@ async def test_canvas_miss_is_repaired_then_padded(
     assert plot["residual_defects"][0] == "canvas padded after render (light)"
     assert plot["residual_defects"][1].startswith("VQ-05 (light): Canvas dimensions drifted")
     png = await client.get(f"/v1/sessions/{sid}/artifacts/plot-light.png", headers=HEADERS)
-    assert size_of(png.content) == (3200, 1800)
+    assert size_of(png.content) == (3200, 1864)  # padded to the canvas, then the footer strip
 
 
 DARK_SCRIPT_ROOT = [{"call": "plot_pipeline", "args": {"theme": "dark"}}, {"text": "Your dark plot is ready."}]
@@ -459,13 +516,15 @@ async def test_theme_toggle_renders_the_other_theme_without_a_model_call(
     assert backend.jobs[1].source == backend.jobs[0].source  # the same run form, the same data
     assert backend.jobs[1].data_csv == backend.jobs[0].data_csv
     dark = await client.get(f"/v1/sessions/{sid}/artifacts/plot-dark.png?v=1", headers=HEADERS)
-    assert dark.status_code == 200 and size_of(dark.content) == (3200, 1800)
+    assert dark.status_code == 200 and size_of(dark.content) == (3200, 1864)
 
     again = await render_theme(client, sid, "dark", version=0)  # 0 is the latest version
     assert again.json()["status"] == "ok"
     assert len(backend.jobs) == 2  # a rendered theme is answered from its record
     bundle = (await client.get(f"/v1/sessions/{sid}/bundle", headers=HEADERS)).json()
-    assert set(bundle["versions"][0]["images"]) == {"light", "dark"}
+    images = bundle["versions"][0]["images"]
+    assert set(images) == {"light", "dark"}
+    assert {size_of(base64.b64decode(data)) for data in images.values()} == {(3200, 1864)}
 
 
 async def test_theme_toggle_pads_an_off_canvas_theme(
@@ -485,7 +544,7 @@ async def test_theme_toggle_pads_an_off_canvas_theme(
     }
     for theme in ("light", "dark"):
         png = await client.get(f"/v1/sessions/{sid}/artifacts/plot-{theme}.png", headers=HEADERS)
-        assert png.status_code == 200 and size_of(png.content) == (3200, 1800), theme
+        assert png.status_code == 200 and size_of(png.content) == (3200, 1864), theme
 
 
 async def test_theme_toggle_reports_a_failed_render_and_retries_it_once(

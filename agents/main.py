@@ -48,6 +48,12 @@ The dataset answer lists the spec's data roles as `roles`, each
 choice for every role: a single role binds under its own name, a variadic family
 `y` binds its members `y1`, `y2`, ... (`data/bindings.py`).
 
+The PNG artifacts and the bundle's images carry the footer strip ("made with
+any.plot()", "anyplot.ai/<spec-id>", `render/watermark.py`), so a 3200x1800 render
+is served as 3200x1864. It is composed from the raw render on the first request and
+cached in the render store; `AGENT_WATERMARK=false` serves the raw renders. The
+gates, the reviewer and the exported `plot.py` never see the strip.
+
 Run locally with `uv run uvicorn agents.main:app --port 8001`.
 """
 
@@ -91,6 +97,7 @@ from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribu
 from agents.anyplot.policy import data_rubric, fence, refusal
 from agents.anyplot.render.serial import RenderBusy
 from agents.anyplot.render.store import RenderStoreFull
+from agents.anyplot.render.watermark import add_footer
 from agents.anyplot.run_queue import HEARTBEAT_S, QueueFull, QueueTimeout, QueueWithdrawn, RunQueue, Ticket
 from agents.anyplot.schemas import MAX_COLUMNS, Binding, Theme
 from agents.anyplot.services import Services, get_services
@@ -824,14 +831,34 @@ async def render_version_theme(
     return JSONResponse(result.public(), headers=_NO_STORE)
 
 
+async def _served_png(services: Services, sid: str, render_id: str, theme: Theme, spec_id: str) -> bytes | None:
+    """One theme's PNG as a user gets it: with the footer strip (`render/watermark.py`) unless `AGENT_WATERMARK` is off.
+
+    The strip is composed in a worker thread on the first request and cached next to
+    the raw render (`RenderStore.shown_png`); the raw PNG itself never changes.
+    """
+    if not get_settings().watermark:
+        stored = services.renders.get(render_id, sid)
+        return stored.pngs.get(theme) if stored else None
+
+    async def compose(raw: bytes) -> bytes:
+        return await asyncio.to_thread(add_footer, raw, theme=theme, spec_id=spec_id)
+
+    return await services.renders.shown_png(render_id, sid, theme, compose)
+
+
 @app.get("/v1/sessions/{sid}/artifacts/{name}", dependencies=v1_dependencies)
 async def artifact(
     sid: SessionId, name: str, user: User, runtime: RuntimeDep, v: Annotated[int | None, Query(ge=0, le=999)] = None
 ) -> Response:
+    """One artifact of a version; the PNGs carry the footer strip (`AGENT_WATERMARK`), the code and data do not."""
     media_type = ARTIFACT_TYPES.get(name)
     if media_type is None:
         raise AgentsError(404, "not_found")
-    await runtime.session(user, sid)
+    session = await runtime.session(user, sid)
+    view = read_session(session.state)
+    if view is None:
+        raise AgentsError(404, "session_expired")
     services = get_services()
     version = services.versions.get(sid, v or None)
     if version is None:
@@ -841,9 +868,11 @@ async def artifact(
         content = version.export.encode("utf-8")
     elif name == "data.csv":
         content = version.data_csv.encode("utf-8")
+    elif version.render_id:
+        theme: Theme = "light" if name == "plot-light.png" else "dark"
+        content = await _served_png(services, sid, version.render_id, theme, view.spec_id)
     else:
-        stored = services.renders.get(version.render_id, sid) if version.render_id else None
-        content = stored.pngs.get("light" if name == "plot-light.png" else "dark") if stored else None
+        content = None
     if content is None:
         raise AgentsError(404, "not_found")
     return Response(content, media_type=media_type, headers={**_NO_STORE, "X-Content-Type-Options": "nosniff"})
@@ -892,7 +921,13 @@ async def bundle(
     dataset = services.datasets.get(view.dataset_id, sid) if view.dataset_id else None
     items = []
     for item in versions:
+        images: dict[Theme, str] = {}
         stored = services.renders.get(item.render_id, sid) if item.render_id else None
+        if stored is not None:
+            for theme in list(stored.pngs):  # a copy: a theme toggle may add a theme during an await
+                png = await _served_png(services, sid, stored.render_id, theme, view.spec_id)
+                if png is not None:
+                    images[theme] = base64.b64encode(png).decode()
         items.append(
             {
                 "number": item.number,
@@ -906,9 +941,7 @@ async def bundle(
                 "themes": {
                     theme: {"status": record.status, "reason": record.reason} for theme, record in item.themes.items()
                 },
-                "images": {
-                    theme: base64.b64encode(data).decode() for theme, data in (stored.pngs.items() if stored else [])
-                },
+                "images": images,
                 "data_csv": item.data_csv if include_data else None,
             }
         )
