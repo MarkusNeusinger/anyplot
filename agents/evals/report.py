@@ -416,6 +416,13 @@ def summary_markdown(report: dict[str, Any], diff: Diff | None = None) -> str:
         f"commit `{str(stamp.get('git_sha') or '')[:12]}`.",
         "",
     ]
+    thinking = stamp.get("thinking_budget") or {}
+    if any(thinking.values()):
+        lines += [
+            f"**Thinking measurement:** adaptive Claude thinking with {thinking.get('root', 0):,} extra output tokens "
+            f"for the root and {thinking.get('adapter', 0):,} for the adapter (0 is off).",
+            "",
+        ]
     if report.get("stopped"):
         lines += [f"**Stopped early** ({report['stopped']}): the rates cover the runs that finished.", ""]
     lines += ["## Results", ""]

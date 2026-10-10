@@ -10,6 +10,7 @@ import base64
 import json
 import os
 import subprocess
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -23,7 +24,7 @@ from agents.anyplot.render.contract import RendererUnavailable, RenderJob, Rende
 from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.schemas import MAX_ATTEMPTS
 from agents.anyplot.services import Services
-from agents.anyplot.settings import AgentSettings, get_settings
+from agents.anyplot.settings import MAX_THINKING_BUDGET, AgentSettings, get_settings
 from agents.evals import matrix
 from agents.evals.cases import EvalCase, load_cases, select_cases
 from agents.evals.matrix import (
@@ -169,6 +170,7 @@ async def test_two_fixtures_through_the_real_flow(
         2,
         2,
     )
+    assert stamp["thinking_budget"] == {"root": 0, "adapter": 0}  # off unless a measurement asks
     assert result.report_path.name == f"{stamp['date']}-claude-haiku-5-5.json"
     assert json.loads(result.report_path.read_text())["runs"][1]["case_id"] == "scatter-basic-matplotlib"
     assert "## Runs that did not pass" in result.summary_path.read_text()
@@ -380,6 +382,34 @@ def test_configure_writes_the_attempt_bound_only_when_the_flag_names_one() -> No
 
 def test_the_flag_takes_exactly_the_settings_range() -> None:
     assert matrix.MAX_ATTEMPTS_CHOICES == tuple(range(1, MAX_ATTEMPTS + 1))
+    assert matrix.MAX_THINKING_BUDGET == MAX_THINKING_BUDGET
+
+
+def test_configure_writes_the_thinking_budgets_only_when_the_flag_names_them() -> None:
+    measured: dict[str, str] = {}
+    configure(parse_args(["--renderer", "fake", "--thinking-budget", "0,2048"]), measured)
+    assert (measured["AGENT_ROOT_THINKING_BUDGET"], measured["AGENT_ADAPTER_THINKING_BUDGET"]) == ("0", "2048")
+
+    unset: dict[str, str] = {}
+    configure(parse_args(["--renderer", "fake"]), unset)
+    assert "AGENT_ROOT_THINKING_BUDGET" not in unset and "AGENT_ADAPTER_THINKING_BUDGET" not in unset
+
+    for value in ("2048", "1,2,3", "-1,0", "0,4097", "a,b"):
+        with pytest.raises(SystemExit):
+            parse_args(["--thinking-budget", value])
+
+
+def test_the_stamp_and_the_summary_name_a_thinking_measurement(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("AGENT_ADAPTER_THINKING_BUDGET", "2048")
+    settings = AgentSettings()
+
+    stamp = matrix.build_stamp(settings, MatrixConfig(), [], datetime(2026, 10, 10, tzinfo=UTC))
+
+    assert stamp["thinking_budget"] == {"root": 0, "adapter": 2048}
+    page = summary_markdown({"schema": 2, "stamp": stamp, "summary": summarize([]), "runs": []})
+    assert "adaptive Claude thinking with 0 extra output tokens for the root and 2,048 for the adapter" in page
+    plain = summary_markdown({"schema": 2, "stamp": {"thinking_budget": {"root": 0, "adapter": 0}}, "summary": {}})
+    assert "Thinking measurement" not in plain
 
 
 def test_configure_refuses_contradictions() -> None:

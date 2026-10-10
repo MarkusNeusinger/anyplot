@@ -28,9 +28,10 @@ from agents.anyplot.models import (
     make_model,
     response_json_schema,
     structured_output_format,
+    thinking_budget,
 )
 from agents.anyplot.schemas import MAX_FULL_CODE_CHARS, AdaptPlan, Verdict
-from agents.anyplot.settings import AgentSettings
+from agents.anyplot.settings import MAX_THINKING_BUDGET, AgentSettings
 
 from .fakes import SCATTER_PLAN, FakeAnthropic
 
@@ -223,6 +224,68 @@ class TestClaudeStructuredOutput:
         for keyword in ("minLength", "maxLength", "maxItems", "minimum", "maximum"):
             assert f'"{keyword}"' not in text
         assert "maxItems: 5" in text  # the limit stays as a hint in the description
+
+
+THINKING = AgentSettings(
+    location="global", project="anyplot-eval", root_thinking_budget=2048, adapter_thinking_budget=4096
+)
+NON_STREAMING_LIMIT = 128_000 * 600 // 3600
+"""The largest `max_tokens` the Anthropic SDK sends without streaming (`_calculate_nonstreaming_timeout`)."""
+
+
+class TestThinkingMeasurement:
+    """`AGENT_*_THINKING_BUDGET`: adaptive Claude thinking with its room added to the cap, off by default."""
+
+    def test_off_by_default(self) -> None:
+        assert [thinking_budget(kind, CLAUDE) for kind in ("root", "adapter", "reviewer")] == [0, 0, 0]
+        assert thinking_budget("adapter", GEMINI) == 0
+
+    def test_a_budget_turns_on_adaptive_thinking_and_adds_its_room_to_the_cap(self) -> None:
+        configs = {kind: make_content_config(kind, THINKING) for kind in ("root", "adapter", "reviewer")}
+
+        assert {kind: config.max_output_tokens for kind, config in configs.items()} == {
+            "root": 4096 + 2048,
+            "adapter": 8192 + 4096,
+            "reviewer": 4096,
+        }
+        assert {kind: config.thinking_config.thinking_budget for kind, config in configs.items()} == {
+            "root": -1,
+            "adapter": -1,
+            "reviewer": 0,
+        }
+        assert make_model("adapter", THINKING).max_tokens == 8192 + 4096
+
+    def test_a_full_file_keeps_the_thinking_room_below_the_sdk_limit(self) -> None:
+        request = LlmRequest(config=make_content_config("adapter", THINKING).model_copy())
+
+        allow_full_file(request.config, THINKING)
+
+        assert request.config.max_output_tokens == ADAPTER_FULL_MAX_OUTPUT_TOKENS + 4096
+        assert request.config.thinking_config is not None and request.config.thinking_config.thinking_budget == -1
+        assert ADAPTER_FULL_MAX_OUTPUT_TOKENS + MAX_THINKING_BUDGET < NON_STREAMING_LIMIT
+
+    async def test_the_adapter_thinks_before_its_structured_answer(self) -> None:
+        client = FakeAnthropic({"unknown": [{"thought": "plan the edits first", "json": SCATTER_PLAN}]})
+        model = make_model("adapter", THINKING)
+        model.__dict__["_anthropic_client"] = client
+        config = make_content_config("adapter", THINKING)
+        config.response_schema = AdaptPlan
+        request = LlmRequest(
+            model="claude-haiku-5-5",
+            contents=[types.Content(role="user", parts=[types.Part(text="adapt this")])],
+            config=config,
+        )
+
+        responses = [response async for response in model.generate_content_async(request)]
+
+        call = client.calls[0]
+        assert call["thinking"] == {"type": "adaptive", "display": "summarized"}
+        assert call["max_tokens"] == 8192 + 4096
+        assert call["output_config"]["effort"] == "medium" and call["output_config"]["format"]["type"] == "json_schema"
+        parts = responses[0].content.parts
+        assert parts[0].thought and parts[0].text == "plan the edits first"
+        answer = "".join(part.text for part in parts if part.text and not part.thought)
+        assert AdaptPlan.model_validate_json(answer).title == SCATTER_PLAN["title"]
 
 
 class TestJudge:

@@ -23,6 +23,16 @@ nothing to check either, so ADK moving the session-context block between calls
 and the context filter trimming history stay harmless. Haiku 5.5 accepts disabled
 thinking at effort `high` or below, so every kind stays at `low` or `medium`.
 
+For measurements only, `AGENT_ROOT_THINKING_BUDGET` and `AGENT_ADAPTER_THINKING_BUDGET`
+(0, off, by default; at most `settings.MAX_THINKING_BUDGET`) turn thinking on for that
+kind (`thinking_budget`). Haiku 5.5 takes no thinking budget of its own
+(`budget_tokens` is a 400), so the config asks for ADK's adaptive mode
+(`thinking_budget=-1`, sent as `thinking: {type: "adaptive", display: "summarized"}`),
+the depth follows the kind's effort, and the budget is added to the kind's output cap,
+so the answer keeps its whole measured headroom however much the thinking uses. The
+summary comes back as thought parts, which the answer guard, ADK's output parsing and
+the stream translator all skip. With both at 0 every request is unchanged.
+
 ADK 2.11 sends no response schema to Claude: `basic.py` sets
 `config.response_schema` for a tool-less agent with an `output_schema`, and
 `anthropic_llm.py` never reads it, so the adapter and reviewer would get free text.
@@ -163,6 +173,9 @@ SAFETY_CATEGORIES: tuple[types.HarmCategory, ...] = (
     types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
 )
 RETRY_ATTEMPTS = 3
+ADAPTIVE_THINKING = -1
+"""ADK's `thinking_budget` for Claude's adaptive thinking; 0 is disabled, a positive budget is the
+`budget_tokens` mode that Haiku 5.5 refuses."""
 
 JUDGE_MAX_OUTPUT_TOKENS = 256
 """The scope and dataset judge's cap. Its answer (`verdict` and `lang`) took 59 tokens as a
@@ -293,6 +306,19 @@ def _retry_options() -> types.HttpRetryOptions:
 # --- Public factories --------------------------------------------------------------------
 
 
+def thinking_budget(kind: ModelKind, settings: AgentSettings | None = None) -> int:
+    """The output room a thinking measurement grants `kind` on Claude; 0 keeps its thinking off.
+
+    Only the root and the adapter take one (`AGENT_ROOT_THINKING_BUDGET`,
+    `AGENT_ADAPTER_THINKING_BUDGET`); the reviewer and every Gemini kind have 0.
+    """
+    settings = settings or get_settings()
+    if settings.provider != "anthropic-vertex":
+        return 0
+    budgets: dict[ModelKind, int] = {"root": settings.root_thinking_budget, "adapter": settings.adapter_thinking_budget}
+    return budgets.get(kind, 0)
+
+
 def make_model(kind: ModelKind, settings: AgentSettings | None = None) -> BaseLlm:
     """The ADK model of one agent kind for the configured provider."""
     settings = settings or get_settings()
@@ -301,7 +327,7 @@ def make_model(kind: ModelKind, settings: AgentSettings | None = None) -> BaseLl
     if settings.provider == "anthropic-vertex":
         return VertexClaude(
             model=settings.model,
-            max_tokens=MAX_OUTPUT_TOKENS[kind],
+            max_tokens=MAX_OUTPUT_TOKENS[kind] + thinking_budget(kind, settings),
             vertex_project=settings.project,
             vertex_region=settings.location,
         )
@@ -318,11 +344,13 @@ def make_content_config(kind: ModelKind, settings: AgentSettings | None = None) 
     if kind not in MODEL_KINDS:
         raise ValueError(f"unknown model kind {kind!r}")
     if settings.provider == "anthropic-vertex":
+        budget = thinking_budget(kind, settings)
         return AnthropicGenerateContentConfig(
-            max_output_tokens=MAX_OUTPUT_TOKENS[kind],
+            max_output_tokens=MAX_OUTPUT_TOKENS[kind] + budget,
             effort=CLAUDE_EFFORT[kind],
             # thinking_budget 0 is ADK's `thinking: {type: "disabled"}`; unset, Haiku 5.5 thinks.
-            thinking_config=types.ThinkingConfig(thinking_budget=0),
+            # A measurement's budget turns on adaptive thinking (Haiku 5.5 refuses `budget_tokens`).
+            thinking_config=types.ThinkingConfig(thinking_budget=ADAPTIVE_THINKING if budget else 0),
             labels=_labels(kind),
         )
     return types.GenerateContentConfig(
@@ -334,19 +362,22 @@ def make_content_config(kind: ModelKind, settings: AgentSettings | None = None) 
     )
 
 
-def allow_full_file(config: types.GenerateContentConfig) -> None:
+def allow_full_file(config: types.GenerateContentConfig, settings: AgentSettings | None = None) -> None:
     """Widen one adapter request's config for an answer that may be a full file.
 
-    The cap becomes `ADAPTER_FULL_MAX_OUTPUT_TOKENS` on Claude, which keeps thinking
-    disabled, and `GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS` on Gemini, whose thinking
-    level drops to `GEMINI_ADAPTER_FULL_THINKING`. The provider is read from the
-    config's type, not from the settings, so the request decides. ADK copies the
-    agent's config per request only shallowly (`_copy_request_scoped_fields`), so the
-    thinking config is replaced, never mutated: a change to the shared object would
-    reach every later run.
+    The cap becomes `ADAPTER_FULL_MAX_OUTPUT_TOKENS` on Claude, which keeps its thinking
+    as it was (off, or a measurement's adaptive thinking with the adapter's thinking
+    budget added to the cap again), and `GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS` on
+    Gemini, whose thinking level drops to `GEMINI_ADAPTER_FULL_THINKING`. The provider
+    is read from the config's type, not from the settings, so the request decides. ADK
+    copies the agent's config per request only shallowly (`_copy_request_scoped_fields`),
+    so the thinking config is replaced, never mutated: a change to the shared object
+    would reach every later run.
     """
     if isinstance(config, AnthropicGenerateContentConfig):
-        config.max_output_tokens = ADAPTER_FULL_MAX_OUTPUT_TOKENS
+        thinking = config.thinking_config.thinking_budget if config.thinking_config else 0
+        room = thinking_budget("adapter", settings) if thinking else 0
+        config.max_output_tokens = ADAPTER_FULL_MAX_OUTPUT_TOKENS + room
         return
     config.max_output_tokens = GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS
     config.thinking_config = types.ThinkingConfig(thinking_level=GEMINI_ADAPTER_FULL_THINKING)

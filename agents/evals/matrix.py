@@ -76,7 +76,11 @@ the deadlines) stay at their production values. `--max-attempts` sets the pipeli
 attempt bound (`AGENT_MAX_ATTEMPTS`, 2 by default, recorded in the stamp as
 `max_attempts`); a three-attempt run fits the request budget too, at about 117k
 weighted tokens for the costliest run simulated on a cold prompt cache with a second
-review.
+review. `--thinking-budget ROOT,ADAPTER` measures Claude's adaptive thinking for the
+root and the adapter: each value (0 to 4,096, 0 off) is added to that agent's output
+cap (`AGENT_ROOT_THINKING_BUDGET`, `AGENT_ADAPTER_THINKING_BUDGET`, recorded in the stamp
+as `thinking_budget`), and the thinking tokens are priced as output; the defaults
+change no request.
 
 The harness sets `ENVIRONMENT=development` for the `remote` and `local` renderers unless
 it runs on Cloud Run (`K_SERVICE`), because a developer's renderer token is accepted
@@ -153,6 +157,9 @@ EVAL_GLOBAL_DAILY_TOKENS = 1_000_000_000
 MAX_ATTEMPTS_CHOICES: tuple[int, ...] = (1, 2, 3)
 """The values `--max-attempts` takes: 1 to `agents.anyplot.schemas.MAX_ATTEMPTS`, written out because
 importing that module builds the agents before `configure` has set the environment (a test keeps them equal)."""
+MAX_THINKING_BUDGET = 4_096
+"""The largest `--thinking-budget` value: `agents.anyplot.settings.MAX_THINKING_BUDGET`, written out for the
+same reason (a test keeps them equal)."""
 ATTRIBUTION_LOGGER = "anyplot.agents.attribution"
 MODEL_TOKEN_KINDS: tuple[str, ...] = ("prompt", "candidates", "thoughts", "cached", "cache_write", "tool_use_prompt")
 EXIT_OK, EXIT_REGRESSION, EXIT_SETUP, EXIT_STOPPED, EXIT_OUTAGE = 0, 1, 2, 3, 4
@@ -213,6 +220,15 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         help="adapter attempts per pipeline run, AGENT_MAX_ATTEMPTS (default: the settings, 2)",
     )
     parser.add_argument(
+        "--thinking-budget",
+        type=thinking_budgets,
+        metavar="ROOT,ADAPTER",
+        help=(
+            "Claude only, for measurements: extra output tokens for adaptive thinking of the root and the adapter, "
+            f"0 to {MAX_THINKING_BUDGET} each, 0 off (AGENT_ROOT_THINKING_BUDGET, AGENT_ADAPTER_THINKING_BUDGET)"
+        ),
+    )
+    parser.add_argument(
         "--budget-usd",
         type=float,
         help="stop before a case that could take the estimated list-price cost past this (spent + costliest case)",
@@ -239,11 +255,23 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     return args
 
 
+def thinking_budgets(value: str) -> tuple[int, int]:
+    """`--thinking-budget ROOT,ADAPTER`: two whole numbers from 0 to `MAX_THINKING_BUDGET`."""
+    parts = value.split(",")
+    if len(parts) != 2 or not all(part.strip().isdigit() for part in parts):
+        raise argparse.ArgumentTypeError("expected ROOT,ADAPTER, two whole numbers such as 0,2048")
+    root, adapter = (int(part) for part in parts)
+    if root > MAX_THINKING_BUDGET or adapter > MAX_THINKING_BUDGET:
+        raise argparse.ArgumentTypeError(f"each budget is at most {MAX_THINKING_BUDGET}")
+    return root, adapter
+
+
 def configure(args: argparse.Namespace, environ: MutableMapping[str, str]) -> None:
     """Write the flags into the `AGENT_*` environment the settings read; runs before any `agents.anyplot` import.
 
     `--provider` alone selects that provider's default model and judge; `--model` alone
-    implies its provider; `--max-attempts` sets `AGENT_MAX_ATTEMPTS`. The environment's
+    implies its provider; `--max-attempts` sets `AGENT_MAX_ATTEMPTS`; `--thinking-budget`
+    sets `AGENT_ROOT_THINKING_BUDGET` and `AGENT_ADAPTER_THINKING_BUDGET`. The environment's
     own `AGENT_*` values stay for everything no flag names. With the `remote` or `local`
     renderer the process runs as `ENVIRONMENT=development` (outside Cloud Run), whatever
     the shell exported: only development accepts a developer's renderer token and the
@@ -271,6 +299,10 @@ def configure(args: argparse.Namespace, environ: MutableMapping[str, str]) -> No
         environ["AGENT_LOCATION"] = args.location
     if args.max_attempts is not None:
         environ["AGENT_MAX_ATTEMPTS"] = str(args.max_attempts)
+    if args.thinking_budget is not None:
+        root, adapter = args.thinking_budget
+        environ["AGENT_ROOT_THINKING_BUDGET"] = str(root)
+        environ["AGENT_ADAPTER_THINKING_BUDGET"] = str(adapter)
     configured = environ.get("AGENT_RENDERER")
     renderer = args.renderer or (configured if configured in RENDERERS else "remote")
     environ["AGENT_RENDERER"] = renderer
@@ -1010,6 +1042,7 @@ def build_stamp(
         "judge_model": settings.judge_model,
         "location": settings.location,
         "max_attempts": settings.max_attempts,
+        "thinking_budget": {"root": settings.root_thinking_budget, "adapter": settings.adapter_thinking_budget},
         "renderer": settings.renderer,
         "render_url": getattr(settings, "render_url", None),
         "adk_version": _version("google-adk"),

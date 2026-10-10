@@ -144,7 +144,10 @@ class FakeAnthropic:
         return "unknown"
 
     def respond(self, kwargs: dict[str, Any]) -> Message:
-        """The next scripted answer; `stop` overrides its stop reason (`max_tokens` marks a cut-off answer)."""
+        """The next scripted answer; `stop` overrides its stop reason (`max_tokens` marks a cut-off answer).
+
+        `thought` puts a summarized thinking block before the answer, as adaptive thinking returns one.
+        """
         kind = self.kind(kwargs)
         queue = self.script.get(kind, [])
         item = queue.pop(0) if queue else {"text": "fallback"}
@@ -166,13 +169,14 @@ class FakeAnthropic:
             block = {"type": "text", "text": item["text"]}
             stop = "end_turn"
         stop = item.get("stop", stop)
+        thinking = [{"type": "thinking", "thinking": item["thought"], "signature": "c2ln"}] if "thought" in item else []
         return Message.model_validate(
             {
                 "id": f"msg_{len(self.calls)}",
                 "type": "message",
                 "role": "assistant",
                 "model": "claude-haiku-5-5",
-                "content": [block],
+                "content": [*thinking, block],
                 "stop_reason": stop,
                 "stop_sequence": None,
                 "usage": {"input_tokens": 100, "output_tokens": 20},
