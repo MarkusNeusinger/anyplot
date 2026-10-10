@@ -6,3 +6,4 @@
   the root as `invalid_result` and its closing reply told the user that the
   run had failed while the plot was already on screen. The allowlist is now
   derived from the `PlotResult` schema, and a test holds the two together.
+  (#12123)
