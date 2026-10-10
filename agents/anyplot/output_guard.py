@@ -101,11 +101,15 @@ def plain_line(text: str, *, spec_id: str | None = None) -> str:
     return " ".join(sanitize(text, spec_id=spec_id).replace(CODE_OMITTED, " ").split())
 
 
-def reply_length(text: str) -> int:
-    """The characters of a root reply as the user would read it: sanitised, before the cap."""
-    return len(_clean(text, spec_id=None))
+def reply_length(text: str, *, spec_id: str | None = None) -> int:
+    """The characters of a root reply as the user would read it: sanitised, before the cap.
+
+    `spec_id` is the session's spec, whose `[[spec:id]]` tokens the stream keeps, so they
+    count here as they show there.
+    """
+    return len(_clean(text, spec_id=spec_id))
 
 
-def reply_too_long(text: str) -> bool:
+def reply_too_long(text: str, *, spec_id: str | None = None) -> bool:
     """Whether a root reply is longer than `MAX_MESSAGE_CHARS` once sanitised, in any language."""
-    return reply_length(text) > MAX_MESSAGE_CHARS
+    return reply_length(text, spec_id=spec_id) > MAX_MESSAGE_CHARS

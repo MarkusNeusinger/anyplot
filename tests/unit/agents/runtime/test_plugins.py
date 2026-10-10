@@ -380,8 +380,24 @@ class TestOutputGuard:
         assert cut == sanitize(text, spec_id="bar-basic") and len(cut) <= MAX_MESSAGE_CHARS and cut.endswith("…")
         assert cut.startswith("Done, see [[spec:bar-basic]]. The bars")
         line = json.loads(caplog.records[-1].getMessage())
-        assert line["hook"] == "output_guard" and line["verdict"] == "reply_cut" and line["chars"] == reply_length(text)
+        assert line["hook"] == "output_guard" and line["verdict"] == "reply_cut"
+        assert line["chars"] == reply_length(text, spec_id="bar-basic")  # the kept token counts
         assert "payee" not in caplog.text
+
+    async def test_the_sessions_spec_tokens_count_toward_the_cap(self, ledger: RequestLedger) -> None:
+        """A reply padded with the session's own spec token, which the stream keeps, is measured with it."""
+        text = "See [[spec:bar-basic]] for the original. " * 40  # about 920 characters without the tokens
+        context = FakeContext(session=FakeSession(state={SPEC_ID: "bar-basic"}))
+
+        plugin = ScopeGuardPlugin()
+
+        # without the session's spec the tokens go, as in the stream, and the reply fits
+        kept = await plugin.on_event_callback(invocation_context=FakeContext(), event=reply_event("anyplot", text))
+        assert kept is None and ledger.refusal is None
+
+        replaced = await plugin.on_event_callback(invocation_context=context, event=reply_event("anyplot", text))
+
+        assert replaced is not None and replaced.content.parts[0].text == policy.refusal("out_of_scope", "en")
 
     async def test_a_long_reply_after_a_pipeline_run_stays_cut_for_the_next_turn(self, ledger: RequestLedger) -> None:
         ledger.pipeline_calls = 1

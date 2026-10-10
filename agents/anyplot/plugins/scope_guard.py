@@ -244,14 +244,16 @@ class ScopeGuardPlugin(BasePlugin):
         ledger = ledger_for(invocation_context.invocation_id)
         if not text.strip() or ledger.refusal is not None or ledger.error is not None:
             return None
-        if not reply_too_long(text):
+        state_spec = invocation_context.session.state.get(SPEC_ID)
+        spec_id = state_spec if isinstance(state_spec, str) else None  # its tokens stay, as in the stream
+        if not reply_too_long(text, spec_id=spec_id):
             return None
+        chars = reply_length(text, spec_id=spec_id)
         if ledger.pipeline_calls:
-            attribution("output_guard", ledger, verdict="reply_cut", chars=reply_length(text))
-            spec_id = invocation_context.session.state.get(SPEC_ID)
-            cut = sanitize(text, spec_id=spec_id if isinstance(spec_id, str) else None)
+            attribution("output_guard", ledger, verdict="reply_cut", chars=chars)
+            cut = sanitize(text, spec_id=spec_id)
             return Event(author=event.author, content=types.Content(role="model", parts=[types.Part(text=cut)]))
-        attribution("output_guard", ledger, verdict="reply_too_long", chars=reply_length(text))
+        attribution("output_guard", ledger, verdict="reply_too_long", chars=chars)
         fixed = refusal("out_of_scope", ledger.lang)
         ledger.refuse("out_of_scope", fixed)
         return Event(author=event.author, content=types.Content(role="model", parts=[types.Part(text=fixed)]))

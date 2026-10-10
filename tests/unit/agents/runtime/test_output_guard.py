@@ -137,6 +137,14 @@ class TestReplyCap:
         assert len(code) > MAX_MESSAGE_CHARS and not reply_too_long("Here is the code:\n" + code)
         assert len(html) > MAX_MESSAGE_CHARS and reply_length(html) == len("The bars are blue.")
 
+    def test_the_sessions_spec_tokens_count_as_the_stream_shows_them(self) -> None:
+        """The stream keeps the session's `[[spec:id]]` tokens, so the cap counts them; other specs' go."""
+        text = "See [[spec:bar-basic]] for the original. " * 40
+
+        assert reply_length(text, spec_id="bar-basic") == len(text.strip())  # nothing removed
+        assert reply_too_long(text, spec_id="bar-basic")
+        assert not reply_too_long(text) and not reply_too_long(text, spec_id="line-basic")
+
     def test_the_cap_does_not_judge_content(self) -> None:
         """A short off-topic reply is the scope judge's to stop; the cap only bounds the length."""
         assert not reply_too_long("Our autumn sale starts on Friday. Every item is twenty percent off. Order now!")
