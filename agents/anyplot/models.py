@@ -360,9 +360,11 @@ _LANG = re.compile(r"^[a-z]{2}$")
 class JudgeVerdict(BaseModel):
     """What the judge decided, the reply language it saw, and the tokens it cost.
 
-    `tokens` is the total the budgets count; `input_tokens` and `output_tokens` split
-    it for the attribution log, so the eval harness can price the judge at the input
-    and output rates (output includes thinking tokens on Gemini).
+    `tokens` is the plain total, which the `done` event and the attribution line report;
+    `input_tokens` and `output_tokens` split it, so the eval harness can price the judge
+    at the input and output rates (output includes thinking tokens on Gemini) and the
+    budgets can weigh it: input at 1 and output at 5 (`ledger.judge_budget_tokens`,
+    which falls back to the plain total when there is no split).
     """
 
     model_config = ConfigDict(extra="ignore")

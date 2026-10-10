@@ -5,7 +5,9 @@
   cost-weighted tokens (`ledger.BUDGET_WEIGHTS`), or the user or the service has spent
   its daily ones. A halt inside the adapter or the reviewer would break their schema
   parsing, so the pipeline checks `ledger.budget_allows` before each `run_node` and
-  finishes with `PlotResult(failed, reason=budget)` instead.
+  finishes with `PlotResult(failed, reason=budget)` instead. Before a review it keeps
+  room for the review and the root's closing reply (`pipeline.REVIEW_RESERVE_TOKENS`),
+  so a review never turns the reply to a shipped plot into this halt.
 * `after_model_callback` books every response's tokens (prompt + candidates +
   thoughts + tool-use prompt; cached tokens are counted separately and never twice)
   and their cost-weighted sum (`ledger.budget_tokens`, which the request and daily

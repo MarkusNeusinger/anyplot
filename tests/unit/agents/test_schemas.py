@@ -395,6 +395,15 @@ class TestRepairVerdict:
 
         assert [item.id for item in verdict.defects] == ["VQ-02"]
 
+    def test_a_pass_whose_only_defects_are_off_the_checklist_stays_a_pass(self) -> None:
+        # The style guide that the reviewer reads names VQ-05; the reviewer's checklist leaves it out.
+        answer = {"ok": True, "defects": [defect(id="VQ-05"), defect(id="vq-04")]}
+        assert strict_errors(Verdict, answer)
+
+        verdict = Verdict.model_validate(repair_verdict(answer))
+
+        assert (verdict.ok, verdict.defects) == (True, [])
+
     def test_defects_sent_as_json_text_are_read(self) -> None:
         answer = {"ok": False, "defects": json.dumps([defect()])}
 
@@ -405,11 +414,21 @@ class TestRepairVerdict:
         [
             {"ok": False, "defects": []},
             {"ok": False, "defects": [defect(id="VQ-05")]},
+            {"defects": [defect(id="VQ-05")]},
+            {"ok": True, "defects": [defect(id="VQ-05"), defect(likely_cause="  ")]},
             {"ok": True, "defects": [defect(likely_cause="  ")]},
             {"defects": [{"id": "VQ-01"}]},
             {},
         ],
-        ids=["rejection-without-defects", "only-unknown-ids", "defect-without-cause", "defect-without-texts", "empty"],
+        ids=[
+            "rejection-without-defects",
+            "rejection-with-only-unknown-ids",
+            "unknown-ids-without-ok",
+            "pass-with-an-unknown-id-and-a-broken-checklist-defect",
+            "defect-without-cause",
+            "defect-without-texts",
+            "empty",
+        ],
     )
     def test_an_answer_without_a_usable_defect_stays_invalid(self, answer: dict[str, Any]) -> None:
         with pytest.raises(ValidationError):

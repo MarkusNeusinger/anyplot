@@ -323,6 +323,18 @@ def _json_list(value: Any) -> Any:
     return value
 
 
+def _defect_id(item: Any) -> str:
+    """The case-folded id of a defect the model sent, empty when it has none."""
+    value = item.get("id") if isinstance(item, dict) else None
+    return value.strip().upper() if isinstance(value, str) else ""
+
+
+def _off_checklist(item: Any) -> bool:
+    """Whether a defect names an id, but one outside the reviewer's checklist (such as VQ-05)."""
+    defect_id = _defect_id(item)
+    return bool(defect_id) and defect_id not in DEFECT_IDS
+
+
 def _repair_defect(item: Any) -> dict[str, str] | None:
     """One defect with its formal misses mended, or None when it cannot be used.
 
@@ -333,8 +345,7 @@ def _repair_defect(item: Any) -> dict[str, str] | None:
     """
     if not isinstance(item, dict):
         return None
-    defect_id = item.get("id")
-    defect_id = defect_id.strip().upper() if isinstance(defect_id, str) else ""
+    defect_id = _defect_id(item)
     if defect_id not in DEFECT_IDS:
         return None
     theme = item.get("theme")
@@ -354,9 +365,12 @@ def repair_verdict(data: Any) -> Any:
 
     Every usable defect is kept (see `_repair_defect`), the first `MAX_DEFECTS` of
     them, and `ok` follows from them: a verdict that names a usable defect rejects,
-    whatever its `ok` said. A verdict left without a usable defect keeps its own `ok`
-    and defects, so a rejection that names nothing usable still fails validation: the
-    repair would have nothing to fix, and the reviewer did not pass the render.
+    whatever its `ok` said. A pass (`ok` true) whose defects all name ids outside the
+    checklist stays a pass without them: the reviewer passed the render, and its
+    checklist leaves those criteria out. Any other verdict left without a usable
+    defect keeps its own `ok` and defects, so it still fails validation: a rejection
+    that names nothing usable gives the repair nothing to fix, and a checklist defect
+    without its texts is a rejection the reviewer meant.
     """
     if not isinstance(data, dict):
         return data
@@ -364,7 +378,11 @@ def repair_verdict(data: Any) -> Any:
     if not isinstance(raw, list):
         return data
     defects = [defect for defect in map(_repair_defect, raw) if defect is not None][:MAX_DEFECTS]
-    return {**data, "ok": False, "defects": defects} if defects else data
+    if defects:
+        return {**data, "ok": False, "defects": defects}
+    if data.get("ok") is True and raw and all(map(_off_checklist, raw)):
+        return {**data, "defects": []}
+    return data
 
 
 def repair_plan(data: Any) -> Any:

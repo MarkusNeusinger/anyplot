@@ -107,6 +107,19 @@ class TestSchemaGuard:
         assert (line["outcome"], line["errors"]) == ("refused", ["defects.0.id:literal_error"])
         assert not any(CANARY in record.getMessage() for record in caplog.records)
 
+    async def test_a_pass_that_names_only_an_off_checklist_id_is_read_as_a_pass(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+        response = answer({"ok": True, "defects": [defect(id="VQ-05", observed=CANARY)]})
+
+        await guard(Verdict, repair_verdict, response, "reviewer")
+
+        assert Verdict.model_validate_json(text_of(response)) == Verdict(ok=True)
+        (line,) = schema_lines(caplog)
+        assert (line["outcome"], line["errors"]) == ("repaired", ["defects.0.id:literal_error"])
+        assert not any(CANARY in record.getMessage() for record in caplog.records)
+
     async def test_text_that_is_not_json_is_blanked(self, caplog: pytest.LogCaptureFixture) -> None:
         caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
         response = answer(f"I think the plot is fine. {CANARY}")

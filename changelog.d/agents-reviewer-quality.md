@@ -17,25 +17,32 @@
   user-day and global-day budgets weigh each token by its list price relative
   to an uncached input token (cache read 0.1, cache write 1.25, output 5;
   `BUDGET_WEIGHTS`), the judges included. With a warm prompt cache the median
-  run books about 37,000 instead of 70,000 tokens, so a second review or a
-  third attempt fits the 80,000 per request and a user's 1,000,000 per day
-  holds about 26 runs instead of 14. The `done` event keeps the plain count.
+  run books about 37,000 instead of 70,000 tokens, so a user's 1,000,000 per
+  day holds about 26 runs instead of 14. A cold cache weighs more, so the
+  request budget rises from 80,000 to 160,000, about 36 % above the costliest
+  reviewed run simulated cold with a second review (about 115,000, or 117,300
+  with three attempts). A review starts only while 35,000 are left for it and
+  the root's closing reply, so a tight budget skips the review instead of
+  answering a shipped plot with the usage-limit refusal. The `done` event
+  keeps the plain count.
 - **The Claude eval baseline is the spike-X rerun on main.**
   `agents/evals/baselines/claude-haiku-5-5.json` now holds the 244 runs of the
   evening of 2026-10-10 (report schema 2, the drawn-text G3 probe, 90.6 %
-  passed the gates, 23.4 % ended `ok`) instead of the first spike-X run. The
-  G3 lines it still reports on heatmap-basic and scatter-basic are real clips
-  that the catalogue originals already carry.
+  passed the gates, 23.4 % ended `ok`) instead of the first spike-X run. Of
+  the 50 G3 lines it still reports, the 48 on heatmap-basic seaborn and
+  matplotlib and scatter-basic seaborn are real clips that the catalogue
+  originals already carry; the 2 on adapted renders were not examined.
 
 ### Fixed
 
 - **Reviewer and adapter answers that miss only a formal rule are mended.**
   The rerun of spike X could not read 44 of 218 reviewer answers, none of them
-  cut off. `schema_guard` now clips over-long texts, drops defects outside the
-  checklist, keeps the first five and derives `ok` from what is left, and
-  mends change notes and a blank `full_code` in adapter plans, then validates
-  the result against the same strict schema; the edit contract is never
-  repaired. Each failed answer writes a content-free `answer_schema` line with
+  cut off. `schema_guard` now clips over-long texts, keeps the first five
+  defects and derives `ok` from them, drops defects whose id is outside the
+  checklist (a pass that names only such ids stays a pass, a rejection that
+  names only such ids stays unread), and mends change notes and a blank
+  `full_code` in adapter plans, then validates the result against the same
+  strict schema; the edit contract is never repaired. Each failed answer writes a content-free `answer_schema` line with
   the broken rules, which the eval report counts.
 - **The agent reviewer judges sizes and colors by the style guide's own
   table.** It called the prescribed sizes (axis titles 10 pt, ticks 8 pt at

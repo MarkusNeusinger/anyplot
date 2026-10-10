@@ -905,6 +905,32 @@ async def test_the_second_review_waits_for_the_budget(
     assert (result["stage"], result["stages"], result["reviews"]) == ("budget", ["reviewer_defects", "budget"], 1)
 
 
+async def test_a_review_keeps_room_for_the_closing_reply(
+    client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Every scripted Gemini call books 200 weighted tokens: the first review fits with its reserve, the second not.
+
+    Without the reserve the second review would spend the last of the budget, and the root's
+    reply to the shipped plot would be the `budget` refusal.
+    """
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    monkeypatch.setenv("AGENT_REQUEST_TOKEN_BUDGET", str(pipeline.REVIEW_RESERVE_TOKENS + 600))
+    get_settings.cache_clear()
+    script = default_script(plans=[SCATTER_PLAN, SECOND_PLAN])
+    script["reviewer"] = [{"json": VERDICT_REJECT}, {"json": VERDICT_OK}]
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["attempts"]) == ("needs_attention", 2)
+    assert plot["residual_defects"][0].startswith("VQ-03 (light): 24 sparse markers")
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert (result["stage"], result["stages"], result["reviews"]) == ("budget", ["reviewer_defects", "budget"], 1)
+    assert [name for name, _ in events if name in ("message", "refusal")] == ["message"]
+
+
 @pytest.mark.parametrize("provider", PROVIDERS)
 async def test_the_repair_attempt_widens_the_adapter_request_only(
     client: httpx.AsyncClient, swap_models, provider: str

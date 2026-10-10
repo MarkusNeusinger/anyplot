@@ -31,7 +31,8 @@ The other theme of a finished version is rendered later by the theme toggle
 (`theme_render.py`) from the stored run form, without any model call.
 
 Bounds: one adapter call and one render of one theme per attempt (two each by
-default), `MAX_REVIEWS` reviewer calls. The budget is checked before every model call,
+default), `MAX_REVIEWS` reviewer calls. The budget is checked before every model call
+(before a review with `REVIEW_RESERVE_TOKENS` left for it and the root's closing reply),
 the soft deadline (`AGENT_SOFT_DEADLINE_S`) before every attempt after the first (each
 needs `ADAPTER_P95_S` plus `RENDER_P95_S` left, so the first attempt has the rest of
 the soft deadline) and for every render timeout;
@@ -143,6 +144,12 @@ MAX_REVIEWS = 2
 
 Without the second one a repaired render could never end `ok`: in the rerun of spike X
 on main, 39 of 244 runs shipped a repaired render unreviewed (`not_rereviewed`)."""
+REVIEW_RESERVE_TOKENS = 35_000
+"""Cost-weighted tokens a review needs left of every token budget, for itself and the root's closing reply.
+
+In the rerun of spike X (Claude Haiku 5.5) a review on a cold prompt cache weighed at
+most 28,099 and the closing reply at most 5,022. With less left, the render ships
+unreviewed, so the budget never answers a shipped plot with the `budget` refusal."""
 PADDED_LINE = "canvas padded after render ({theme})"
 """The residual line of a shipped render whose canvas was padded; it names the rendered theme."""
 NOT_REVIEWED_LINE = "the plot was not reviewed ({why})"
@@ -833,7 +840,7 @@ async def _attempts(
             _end_attempt(run, "not_rereviewed")
             return
 
-        if not budget_allows(ledger, services.usage, settings):
+        if not budget_allows(ledger, services.usage, settings, next_calls=2, reserve=REVIEW_RESERVE_TOKENS):
             run.unreviewed_why = "the usage limit was reached"
             _end_attempt(run, "budget")
             return

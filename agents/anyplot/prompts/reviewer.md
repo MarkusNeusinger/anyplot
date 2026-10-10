@@ -46,7 +46,7 @@ Answer with one JSON object:
 
 - `ok`: `true` when no criterion fails in the attached render, otherwise `false`. `ok` is the expected verdict for a correct plot: the checklist is not a search for improvements.
 - `defects`: empty when `ok` is `true`; otherwise one to five findings, the most severe first. Each finding has:
-  - `id`: one of `VQ-01`, `VQ-02`, `VQ-03`, `VQ-06`, `VQ-07`, `SC-01`, `SC-03`, `DQ-03`, `AR-09`;
+  - `id`: one of `VQ-01`, `VQ-02`, `VQ-03`, `VQ-06`, `VQ-07`, `SC-01`, `SC-03`, `DQ-03`, `AR-09`, never an id outside this table, such as the style guide's VQ-05;
   - `theme`: the attached render's theme (`light` or `dark`), or `code` when the problem is visible only in the code;
   - `observed`: what is wrong, with the observed value (for example "y tick labels at about 25 px");
   - `target`: the target or direction, with a signed delta when it is numeric (for example "about 44 px, the table's 8 pt (+19 px)");

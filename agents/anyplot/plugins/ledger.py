@@ -165,28 +165,37 @@ class UsageBook:
     def global_tokens(self) -> int:
         return self._current().global_tokens
 
-    def daily_ok(self, user_id: str, settings: AgentSettings) -> bool:
-        """Whether the user and the service still have daily token budget."""
+    def daily_ok(self, user_id: str, settings: AgentSettings, *, reserve: int = 0) -> bool:
+        """Whether the user and the service still have daily token budget, `reserve` tokens beyond the spend."""
         return (
-            self.user_tokens(user_id) < settings.daily_token_budget
-            and self.global_tokens() < settings.global_daily_token_budget
+            self.user_tokens(user_id) + reserve < settings.daily_token_budget
+            and self.global_tokens() + reserve < settings.global_daily_token_budget
         )
 
     def runs_ok(self, user_id: str, settings: AgentSettings) -> bool:
         return self.user_runs(user_id) < settings.daily_pipeline_runs
 
 
-def request_ok(ledger: RequestLedger, settings: AgentSettings, *, next_calls: int = 1) -> bool:
-    """Whether the request may spend `next_calls` more LLM calls (its tokens are cost-weighted)."""
+def request_ok(ledger: RequestLedger, settings: AgentSettings, *, next_calls: int = 1, reserve: int = 0) -> bool:
+    """Whether the request may make `next_calls` more LLM calls and still has `reserve` cost-weighted tokens left."""
     return (
-        ledger.llm_calls + next_calls <= settings.max_llm_calls and ledger.budget_tokens < settings.request_token_budget
+        ledger.llm_calls + next_calls <= settings.max_llm_calls
+        and ledger.budget_tokens + reserve < settings.request_token_budget
     )
 
 
-def budget_allows(ledger: RequestLedger, usage: UsageBook, settings: AgentSettings, *, next_calls: int = 1) -> bool:
-    """`budget.check()`: request, user-day and global-day budgets together."""
-    return request_ok(ledger, settings, next_calls=next_calls) and usage.daily_ok(
-        ledger.user_id or "anonymous", settings
+def budget_allows(
+    ledger: RequestLedger, usage: UsageBook, settings: AgentSettings, *, next_calls: int = 1, reserve: int = 0
+) -> bool:
+    """`budget.check()`: request, user-day and global-day budgets together.
+
+    `reserve` is what the caller still needs after the check, in cost-weighted tokens:
+    the pipeline keeps room for a review and the root's closing reply
+    (`pipeline.REVIEW_RESERVE_TOKENS`), so a review never leaves the reply to a shipped
+    plot to the `budget` refusal.
+    """
+    return request_ok(ledger, settings, next_calls=next_calls, reserve=reserve) and usage.daily_ok(
+        ledger.user_id or "anonymous", settings, reserve=reserve
     )
 
 
@@ -242,13 +251,15 @@ against that module, so a price change there names this constant.
 
 Measured on the rerun of spike X (244 runs on main, Claude Haiku 5.5, warm cache), the
 median run books 37,157 weighted against 70,488 plain tokens, and a reviewed run with
-two adapter attempts 39,499 against 72,172, so a second review (a median of 11,263) or
-a third attempt (12,145) fits the 80,000 of `AGENT_REQUEST_TOKEN_BUDGET`, and the 1,000,000 of
-`AGENT_DAILY_TOKEN_BUDGET` holds about 26 median runs instead of 14. A cold cache
-weighs more: each agent's first call writes its prefix at 1.25 instead of reading it
-at 0.1. Simulated from the same calls, a reviewed run with two attempts then books a
-median of about 77,700 (95th percentile 87,000), so on a cold cache the request
-budget can stop the second review or the root's closing reply."""
+two adapter attempts 39,499 against 72,172; a second review adds a median of 11,246.
+The 1,000,000 of `AGENT_DAILY_TOKEN_BUDGET` holds about 26 median runs instead of 14.
+A cold cache weighs more: each agent's first call writes its prefix at 1.25 instead of
+reading it at 0.1. The rerun's first, cold run of area-basic-seaborn-decimal-comma
+booked 100,282, and simulated cold from the same calls, a reviewed run with two
+attempts books a median of 77,747 (95th percentile 87,180, at most 103,800), and
+115,046 at most with a second review; with three attempts (`AGENT_MAX_ATTEMPTS=3`, the
+three-attempt rerun) at most 106,042, and about 117,300 with a second review. The
+160,000 of `AGENT_REQUEST_TOKEN_BUDGET` stays about 36 % above the costliest of these."""
 
 
 def weighted_tokens(*, uncached: int = 0, cached: int = 0, cache_write: int = 0, output: int = 0) -> int:

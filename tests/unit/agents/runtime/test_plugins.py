@@ -15,6 +15,7 @@ from agents.anyplot.plugins.ledger import (
     BUDGET_WEIGHTS,
     CURRENT_LEDGER,
     RequestLedger,
+    budget_allows,
     budget_tokens,
     judge_budget_tokens,
     ledger_for,
@@ -214,7 +215,8 @@ class TestBudget:
 
         assert budget_tokens(usage) == weighted_tokens(uncached=68, cached=54_308, cache_write=13_194, output=3_245)
         assert weighted == round(68 + 5_430.8 + 16_492.5 + 16_225) + 1_069 + 295 == 39_580
-        assert weighted < get_settings().request_token_budget / 2 < 67_570 + 3_245 + 1_128
+        assert 0.5 < weighted / (67_570 + 3_245 + 1_128) < 0.6
+        assert weighted < get_settings().request_token_budget / 4
 
     def test_a_judge_verdict_is_weighted_by_its_split(self) -> None:
         assert judge_budget_tokens(1_140, 1_081, 59) == 1_081 + 59 * 5
@@ -244,6 +246,25 @@ class TestBudget:
             await BudgetPlugin().before_model_callback(callback_context=FakeContext(), llm_request=LlmRequest())
             is not None
         )
+
+    def test_a_reserve_must_fit_every_token_budget(
+        self, ledger: RequestLedger, services: Services, monkeypatch
+    ) -> None:
+        """`reserve` is what the caller still needs after the check: the request and both daily budgets keep it."""
+        monkeypatch.setenv("AGENT_REQUEST_TOKEN_BUDGET", "1000")
+        monkeypatch.setenv("AGENT_DAILY_TOKEN_BUDGET", "1000")
+        get_settings.cache_clear()
+        settings = get_settings()
+        ledger.budget_tokens = 600
+
+        assert budget_allows(ledger, services.usage, settings, reserve=399)
+        assert not budget_allows(ledger, services.usage, settings, reserve=400)  # the request budget
+        ledger.budget_tokens = 0
+        services.usage.add_tokens("adm_1", 600)
+        assert budget_allows(ledger, services.usage, settings, reserve=399)
+        assert not budget_allows(ledger, services.usage, settings, reserve=400)  # the user's daily budget
+        ledger.llm_calls = settings.max_llm_calls - 1
+        assert not budget_allows(ledger, services.usage, settings, next_calls=2)  # the call cap counts the reply too
 
     async def test_the_request_budget_counts_weighted_not_plain_tokens(
         self, ledger: RequestLedger, services: Services, monkeypatch

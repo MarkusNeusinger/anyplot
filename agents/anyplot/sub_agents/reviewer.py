@@ -14,8 +14,10 @@ as ordinary image parts, each after a fixed label naming its theme, loaded by
 ever travels through session state or a tool. The answer is bound to `Verdict`;
 `schema_guard` mends an answer that misses only a formal rule (`schemas.repair_verdict`:
 a text over its limit, more than five defects, an `ok` that contradicts the defects,
-an id outside the checklist) and blanks one that still fails, which the pipeline
-reports as an unread review.
+a defect whose id is outside the checklist, dropped when a usable defect remains or
+the verdict passed the render) and blanks one that still fails, such as a rejection
+that names only ids outside the checklist, which the pipeline reports as an unread
+review.
 """
 
 from google.adk import Agent

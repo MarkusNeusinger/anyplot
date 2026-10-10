@@ -25,7 +25,7 @@ another provider, model or location.
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue; it also sizes the queue (`AGENT_RUNS_PER_MINUTE` x this / 60 entries) |
 | `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 to measure no repair or a second repair round |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request (the `RunConfig` cap) |
-| `AGENT_REQUEST_TOKEN_BUDGET` | `80000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
+| `AGENT_REQUEST_TOKEN_BUDGET` | `160000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
 | `AGENT_DAILY_TOKEN_BUDGET` | `1000000` | Cost-weighted tokens per user and day, weighted the same way |
 | `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
 | `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `3000000` | Cost-weighted tokens per day across all users; reaching it pauses the service |
@@ -178,11 +178,13 @@ class AgentSettings(BaseSettings):
     max_llm_calls: PositiveInt = 12
     """LLM calls per request (`AGENT_MAX_LLM_CALLS`), the `RunConfig` cap."""
 
-    request_token_budget: PositiveInt = 80_000
+    request_token_budget: PositiveInt = 160_000
     """Cost-weighted tokens per request (`AGENT_REQUEST_TOKEN_BUDGET`), in input-token equivalents
     (`plugins/ledger.BUDGET_WEIGHTS`). A reviewed run with two adapter attempts books a median of
-    about 39,500 with a warm prompt cache (72,200 plain tokens), so a second review fits. On a cold
-    cache the same run books about 77,700, and the budget can stop the second review or the root's
+    about 39,500 with a warm prompt cache (72,200 plain tokens) and about 77,700 on a cold one,
+    where each agent's first call writes its prefix; with a second review the costliest run comes
+    to about 115,000, and with three attempts about 117,300, so the budget leaves about 36 % on top.
+    A review starts only while `pipeline.REVIEW_RESERVE_TOKENS` is left for it and the root's
     closing reply."""
 
     daily_token_budget: PositiveInt = 1_000_000

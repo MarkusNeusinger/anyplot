@@ -67,10 +67,12 @@ the partial report before it stops.
 For its own process the harness lifts the run queue's start rate
 (`AGENT_RUNS_PER_MINUTE`, `--runs-per-minute`, 60) and the service-wide daily token
 budget, and gives every case and repeat its own user id, so the per-user daily
-budgets never trip; the per-request limits (12 LLM calls, 80k cost-weighted tokens,
+budgets never trip; the per-request limits (12 LLM calls, 160k cost-weighted tokens,
 the deadlines) stay at their production values. `--max-attempts` sets the pipeline's
 attempt bound (`AGENT_MAX_ATTEMPTS`, 2 by default, recorded in the stamp as
-`max_attempts`).
+`max_attempts`); a three-attempt run fits the request budget too, at about 117k
+weighted tokens for the costliest run simulated on a cold prompt cache with a second
+review.
 
 The harness sets `ENVIRONMENT=development` for the `remote` and `local` renderers unless
 it runs on Cloud Run (`K_SERVICE`), because a developer's renderer token is accepted
