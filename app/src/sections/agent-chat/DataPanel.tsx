@@ -4,14 +4,20 @@
  * warnings, and bind each spec role to a column (the server's defaults come
  * preselected). `.create_plot()` runs the pipeline once every required role
  * has a column.
+ *
+ * Every role of the spec gets a column choice (`bindingRows` in `bindings.ts`):
+ * a single role one dropdown, a variadic family one per member plus one for
+ * the next member. Required roles carry a `*`; the kinds a role accepts sit
+ * under its name and the spec's description is its tooltip.
  */
 
 import { useState } from 'react';
 
 import Box from '@mui/material/Box';
 
-import type { AgentSessionState } from 'src/hooks/useAgentSession';
+import { type AgentSessionState, sessionBusy } from 'src/hooks/useAgentSession';
 import { MAX_DATASET_BYTES, utf8Bytes } from 'src/lib/agent';
+import { bindingRows, kindsHint } from 'src/sections/agent-chat/bindings';
 import { describeDataFailure } from 'src/sections/agent-chat/messages';
 import {
   bodyTextSx,
@@ -40,10 +46,13 @@ export function DataPanel({ state, onParse, onBind, onCreatePlot }: DataPanelPro
   const bytes = utf8Bytes(text);
   const over = bytes > MAX_DATASET_BYTES;
   const ready = state.phase === 'ready' && !!state.sessionId;
-  const running = !!state.run;
+  // A turn, a theme render, a parse or a binding change in flight: the server
+  // would refuse or race a second one.
+  const busy = sessionBusy(state);
   const dataset = state.dataset;
   const columns = dataset?.parsed.profile.columns ?? [];
-  const canCreate = ready && !!dataset && state.bindingsComplete && !state.bindingsBusy && !running;
+  const canCreate = ready && !!dataset && state.bindingsComplete && !busy;
+  const rows = bindingRows(state.roles, state.bindings, columns.length);
 
   return (
     <Box component="section" aria-label="Your data" sx={panelSx}>
@@ -92,7 +101,7 @@ export function DataPanel({ state, onParse, onBind, onCreatePlot }: DataPanelPro
           component="button"
           type="button"
           onClick={() => onParse(text)}
-          disabled={!ready || !text.trim() || over || state.parsing || running}
+          disabled={!ready || !text.trim() || over || busy}
           sx={ghostButtonSx}
         >
           {state.parsing ? '.parse() …' : '.parse()'}
@@ -192,7 +201,7 @@ export function DataPanel({ state, onParse, onBind, onCreatePlot }: DataPanelPro
 
           <Box>
             <Box sx={{ ...labelSx, mb: 0.75 }}># bindings — which column plays which role</Box>
-            {state.roles.length === 0 && (
+            {rows.length === 0 && (
               <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
                 {state.bindingsBusy ? 'checking roles…' : 'this plot names no data roles'}
               </Box>
@@ -206,35 +215,50 @@ export function DataPanel({ state, onParse, onBind, onCreatePlot }: DataPanelPro
                 rowGap: 1,
               }}
             >
-              {state.roles.map(role => {
-                const missing = state.missingRoles.includes(role);
-                const id = `agent-role-${role}`;
+              {rows.map(row => {
+                const missing = row.first && state.missingRoles.includes(row.role.name);
+                const id = `agent-role-${row.name}`;
                 return (
-                  <Box key={role} sx={{ display: 'contents' }}>
+                  <Box key={row.name} sx={{ display: 'contents' }}>
                     <Box
                       component="label"
                       htmlFor={id}
+                      title={row.role.description || undefined}
                       sx={{
                         fontFamily: typography.mono,
                         fontSize: fontSize.md,
-                        color: missing ? colors.error : 'var(--ink)',
+                        color: missing
+                          ? colors.error
+                          : row.next
+                            ? 'var(--ink-muted)'
+                            : 'var(--ink)',
                         overflowWrap: 'anywhere',
+                        // The kinds line wraps instead of squeezing the dropdowns.
+                        maxWidth: { xs: '13ch', sm: '16ch' },
                       }}
                     >
-                      {role}
-                      {missing ? ' *' : ''}
+                      {row.name}
+                      {row.first && row.role.required ? ' *' : ''}
+                      {row.first && (
+                        <Box
+                          component="span"
+                          sx={{ display: 'block', ...labelSx, fontSize: smallText }}
+                        >
+                          {kindsHint(row.role)}
+                        </Box>
+                      )}
                     </Box>
                     <Box
                       component="select"
                       id={id}
-                      value={state.bindings[role] ?? ''}
-                      disabled={!ready || running || state.bindingsBusy}
+                      value={state.bindings[row.name] ?? ''}
+                      disabled={!ready || busy}
                       onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
-                        onBind(role, event.target.value || null)
+                        onBind(row.name, event.target.value || null)
                       }
                       sx={{ ...nativeControlSx, width: '100%' }}
                     >
-                      <option value="">— none —</option>
+                      <option value="">{row.next ? '— add a column —' : '— none —'}</option>
                       {columns.map(column => (
                         <option key={column.name} value={column.name}>
                           {column.name} ({column.dtype})
@@ -253,6 +277,13 @@ export function DataPanel({ state, onParse, onBind, onCreatePlot }: DataPanelPro
             {state.bindingsError && (
               <Box role="alert" sx={{ ...bodyTextSx, color: colors.error, mt: 1 }}>
                 {describeDataFailure(state.bindingsError.code, state.bindingsError.ref)}
+                {state.bindingsError.errors && state.bindingsError.errors.length > 0 && (
+                  <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2.5, fontSize: smallText }}>
+                    {state.bindingsError.errors.map((line, index) => (
+                      <li key={index}>{line}</li>
+                    ))}
+                  </Box>
+                )}
               </Box>
             )}
           </Box>

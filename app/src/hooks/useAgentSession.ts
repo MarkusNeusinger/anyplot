@@ -10,11 +10,27 @@
  * most one turn runs at a time; while it runs, `run` holds its timeline and
  * queue position.
  *
- * Versions: the `plot` event carries no version number. The agents service
- * numbers the versions of a session from 1 in the order it stores them, and it
- * stores exactly the results that ship a render (`ok`, `needs_attention`), so
- * the client numbers those plot events the same way and uses the number for
- * the artifact (`?v=`) and theme toggle routes.
+ * Versions: the `plot` event carries `version`, the number the agents service
+ * stored the result under, which the artifact (`?v=`) and theme toggle routes
+ * take. Against a server without that field the hook counts the shipped plot
+ * events instead (the server numbers them in the same order), which drifts
+ * only when a stored version's event never arrives.
+ *
+ * Bindings: the dataset answer lists the spec's roles. A single role binds
+ * under its own name, a variadic family `y` under its members `y1`, `y2`, ...;
+ * the hook keeps the members contiguous (`compactFamilies`), so clearing `y2`
+ * of three moves `y3` up. Every change replaces the whole set on the server.
+ *
+ * One thing at a time: the agents service runs one turn or theme render per
+ * user and answers anything else with `409 run_active`, and a parse or a
+ * binding change rewrites the data a turn reads. So the hook starts none of
+ * these while another is in flight, and Stop keeps the stream open until the
+ * server's `done` confirms the run ended (at most `STOP_GRACE_MS`), so the
+ * next action does not race the stopped run.
+ *
+ * Session lifetime: the session, with the pasted data and its renders, is
+ * deleted when the page unmounts and on `pagehide` (a reload or a closed tab,
+ * sent with `keepalive`); the server's idle sweep is the backstop.
  *
  * Analytics carry enum properties only, never text or data:
  * `agent_data_parsed{status, size_bucket}`,
@@ -40,11 +56,16 @@ import {
   type PlotResult,
   PNG_ARTIFACT,
   renderedThemes,
+  type RoleSpec,
   sizeBucket,
   type Theme,
   utf8Bytes,
 } from 'src/lib/agent';
 import { readSseEvents } from 'src/lib/sse';
+import { reloadOnceForAccess } from 'src/utils/adminAuth';
+
+/** How long Stop waits for the server's `done` before it lets go of the stream. */
+export const STOP_GRACE_MS = 30_000;
 
 // ============================================================================
 // State
@@ -55,6 +76,8 @@ export type SessionPhase = 'opening' | 'ready' | 'unauthorized' | 'ineligible' |
 export interface Failure {
   code: string;
   ref: string | null;
+  /** The binding check's lines of a refused binding set. */
+  errors?: string[];
 }
 
 export type TimelineStep = 'queued' | PipelineStep;
@@ -106,6 +129,9 @@ export interface DatasetState {
   bytes: number;
 }
 
+/** Binding name (`x`, `y1`) to column; only bound names are present. */
+export type BindingMap = Record<string, string>;
+
 export interface AgentSessionState {
   phase: SessionPhase;
   failure: Failure | null;
@@ -115,14 +141,17 @@ export interface AgentSessionState {
   dataset: DatasetState | null;
   parsing: boolean;
   datasetError: Failure | null;
-  /** Every role the UI shows a dropdown for: the server's defaults, then the missing roles. */
-  roles: string[];
-  bindings: Record<string, string | null>;
+  /** The spec's roles, in spec order; the data panel shows a column choice for each. */
+  roles: RoleSpec[];
+  bindings: BindingMap;
   bindingsComplete: boolean;
+  /** Required roles without a column; a variadic family by its name. */
   missingRoles: string[];
   bindingsBusy: boolean;
   bindingsError: Failure | null;
   libraryBusy: boolean;
+  /** A theme toggle render is in flight. */
+  themeBusy: boolean;
   items: ChatItem[];
   versions: Record<number, PlotVersion>;
   run: RunState | null;
@@ -135,17 +164,13 @@ type Action =
   | { type: 'parse_start' }
   | { type: 'parse_done'; parsed: DatasetParsed; bytes: number }
   | { type: 'parse_failed'; failure: Failure }
-  | { type: 'bindings_start'; bindings: Record<string, string | null> }
-  | {
-      type: 'bindings_done';
-      bindings: Record<string, string | null>;
-      complete: boolean;
-      missingRoles: string[];
-    }
-  | { type: 'bindings_failed'; bindings: Record<string, string | null>; failure: Failure }
+  | { type: 'bindings_start'; bindings: BindingMap }
+  | { type: 'bindings_done'; bindings: BindingMap; complete: boolean; missingRoles: string[] }
+  | { type: 'bindings_failed'; bindings: BindingMap; failure: Failure }
   | { type: 'library_start' }
   | { type: 'library_done'; library: string; eligibility: Eligibility }
   | { type: 'library_failed'; failure: Failure }
+  | { type: 'theme_busy'; busy: boolean }
   | { type: 'item'; item: ChatItem }
   | { type: 'run_start'; kind: RunState['kind'] }
   | { type: 'run_queued'; position: number; waiting: number }
@@ -173,11 +198,94 @@ export function initialAgentState(library: string): AgentSessionState {
     bindingsBusy: false,
     bindingsError: null,
     libraryBusy: false,
+    themeBusy: false,
     items: [],
     versions: {},
     run: null,
   };
 }
+
+// ============================================================================
+// Roles and bindings
+// ============================================================================
+
+/** A role the server named but did not describe (an older server, or a missing role). */
+function bareRole(name: string, required: boolean): RoleSpec {
+  return { name, kinds: [], required, variadic: false, description: '' };
+}
+
+/**
+ * The variadic family a binding name belongs to (`y3` → `y`), as the agents
+ * service resolves it: an exact single role wins, then the family with the
+ * longest name whose `<name><digits>` matches.
+ */
+export function familyOf(name: string, roles: readonly RoleSpec[]): RoleSpec | null {
+  if (roles.some(role => !role.variadic && role.name === name)) return null;
+  let best: RoleSpec | null = null;
+  for (const role of roles) {
+    if (!role.variadic || !name.startsWith(role.name)) continue;
+    if (!/^\d+$/.test(name.slice(role.name.length))) continue;
+    if (!best || role.name.length > best.name.length) best = role;
+  }
+  return best;
+}
+
+/** A family's bound members in member order: `[[y1, col], [y2, col], ...]`. */
+export function familyMembers(
+  bindings: BindingMap,
+  family: RoleSpec,
+  roles: readonly RoleSpec[]
+): [string, string][] {
+  return Object.entries(bindings)
+    .filter(([name]) => familyOf(name, roles)?.name === family.name)
+    .sort(([a], [b]) => Number(a.slice(family.name.length)) - Number(b.slice(family.name.length)));
+}
+
+/**
+ * The binding name of a family's `n`-th member (1-based). A name a single role
+ * of the spec owns (a family `y` next to a role `y2`) is skipped, because the
+ * server would read it as that role.
+ */
+export function nthMember(family: RoleSpec, n: number, roles: readonly RoleSpec[]): string {
+  const singles = new Set(roles.filter(role => !role.variadic).map(role => role.name));
+  let index = 0;
+  let name = family.name;
+  for (let found = 0; found < n;) {
+    index += 1;
+    name = `${family.name}${index}`;
+    if (!singles.has(name)) found += 1;
+  }
+  return name;
+}
+
+/** Renumber every family's bound members in their order, so the members stay contiguous. */
+export function compactFamilies(
+  bindings: Record<string, string | null>,
+  roles: readonly RoleSpec[]
+): BindingMap {
+  const bound: BindingMap = {};
+  for (const [name, column] of Object.entries(bindings)) if (column) bound[name] = column;
+  const result: BindingMap = {};
+  for (const [name, column] of Object.entries(bound)) {
+    if (!familyOf(name, roles)) result[name] = column;
+  }
+  for (const family of roles.filter(role => role.variadic)) {
+    familyMembers(bound, family, roles).forEach(([, column], index) => {
+      result[nthMember(family, index + 1, roles)] = column;
+    });
+  }
+  return result;
+}
+
+function toMap(bindings: readonly Binding[]): BindingMap {
+  const map: BindingMap = {};
+  for (const binding of bindings) if (binding.column) map[binding.role] = binding.column;
+  return map;
+}
+
+// ============================================================================
+// Reducer
+// ============================================================================
 
 function patchVersion(
   state: AgentSessionState,
@@ -199,37 +307,37 @@ export function agentReducer(state: AgentSessionState, action: Action): AgentSes
         eligibility: action.eligibility,
       };
     case 'open_failed':
-      return { ...state, phase: action.phase, failure: action.failure };
+      return { ...state, phase: action.phase, failure: action.failure, run: null };
     case 'unauthorized':
       return { ...state, phase: 'unauthorized', run: null };
     case 'parse_start':
       return { ...state, parsing: true, datasetError: null };
-    case 'parse_done': {
-      const bindings: Record<string, string | null> = {};
-      for (const binding of action.parsed.bindings) bindings[binding.role] = binding.column;
+    case 'parse_done':
       return {
         ...state,
         parsing: false,
         dataset: { parsed: action.parsed, bytes: action.bytes },
-        roles: action.parsed.bindings.map(binding => binding.role),
-        bindings,
+        // An older server names no roles: the default bindings stand in for them.
+        roles:
+          action.parsed.roles ??
+          action.parsed.bindings.map(binding => bareRole(binding.role, false)),
+        bindings: toMap(action.parsed.bindings),
         bindingsComplete: false,
         missingRoles: [],
         bindingsError: null,
       };
-    }
     case 'parse_failed':
       return { ...state, parsing: false, datasetError: action.failure };
     case 'bindings_start':
       return { ...state, bindingsBusy: true, bindingsError: null, bindings: action.bindings };
     case 'bindings_done': {
-      const roles = [...state.roles];
-      for (const role of action.missingRoles) if (!roles.includes(role)) roles.push(role);
+      const known = new Set(state.roles.map(role => role.name));
+      const missing = action.missingRoles.filter(name => !known.has(name));
       return {
         ...state,
         bindingsBusy: false,
-        roles,
-        bindings: { ...Object.fromEntries(roles.map(role => [role, null])), ...action.bindings },
+        roles: [...state.roles, ...missing.map(name => bareRole(name, true))],
+        bindings: action.bindings,
         bindingsComplete: action.complete,
         missingRoles: action.missingRoles,
       };
@@ -252,6 +360,8 @@ export function agentReducer(state: AgentSessionState, action: Action): AgentSes
       };
     case 'library_failed':
       return { ...state, libraryBusy: false };
+    case 'theme_busy':
+      return { ...state, themeBusy: action.busy };
     case 'item':
       return { ...state, items: [...state.items, action.item] };
     case 'run_start':
@@ -314,7 +424,11 @@ export interface UseAgentSessionOptions {
 const GUARDRAIL_REASONS = new Set(['out_of_scope', 'budget', 'unsupported_content']);
 
 function failureOf(err: unknown): Failure {
-  if (err instanceof AgentApiError) return { code: err.code, ref: err.ref };
+  if (err instanceof AgentApiError) {
+    return err.errors.length
+      ? { code: err.code, ref: err.ref, errors: err.errors }
+      : { code: err.code, ref: err.ref };
+  }
   return { code: 'network', ref: null };
 }
 
@@ -330,6 +444,10 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   stateRef.current = state;
   const abortRef = useRef<AbortController | null>(null);
   const stoppedRef = useRef(false);
+  const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Set synchronously, before the state catches up, so a double click starts nothing twice.
+  const themeRef = useRef(false);
+  const parseRef = useRef(false);
   const versionCounter = useRef(0);
   const blobUrls = useRef<Set<string>>(new Set());
   const mounted = useRef(true);
@@ -357,6 +475,18 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     [safeDispatch]
   );
 
+  /** Whether a turn, a theme render, a parse, a binding change or a library switch is in flight. */
+  const busy = useCallback(() => {
+    const current = stateRef.current;
+    return (
+      !!abortRef.current ||
+      themeRef.current ||
+      parseRef.current ||
+      current.bindingsBusy ||
+      current.libraryBusy
+    );
+  }, []);
+
   // Open the session for the page's spec; the library is the URL's at mount
   // time, later switches go through `switchLibrary`. The page remounts this
   // hook (a `key`) for another spec or token, so the state starts fresh.
@@ -365,7 +495,30 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     mounted.current = true;
     let cancelled = false;
     let opened: string | null = null;
+    let purged = false;
     const urls = blobUrls.current;
+
+    /** Delete the server session once: its dataset and renders go with it. */
+    const purge = (keepalive: boolean) => {
+      if (!opened || purged) return;
+      purged = true;
+      void agentApi.deleteSession(token, opened, { keepalive }).catch(() => undefined);
+    };
+    // A reload or a closed tab runs no effect cleanup; `pagehide` does fire.
+    const onPageHide = () => purge(true);
+    // Back from the back-forward cache, the page holds a session that is gone.
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted && purged) {
+        safeDispatch({
+          type: 'open_failed',
+          phase: 'error',
+          failure: { code: 'session_expired', ref: null },
+        });
+      }
+    };
+    window.addEventListener('pagehide', onPageHide);
+    window.addEventListener('pageshow', onPageShow);
+
     agentApi
       .openSession(token, specId, initialLibrary.current, locale)
       .then(result => {
@@ -387,6 +540,8 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
           safeDispatch({ type: 'unauthorized' });
         } else if (failure.code === 'not_eligible') {
           safeDispatch({ type: 'open_failed', phase: 'ineligible', failure });
+        } else if (failure.code === 'unreachable' && reloadOnceForAccess()) {
+          // An expired Access session: the reload lets Access sign the admin in.
         } else {
           safeDispatch({ type: 'open_failed', phase: 'error', failure });
         }
@@ -394,9 +549,11 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     return () => {
       cancelled = true;
       mounted.current = false;
+      window.removeEventListener('pagehide', onPageHide);
+      window.removeEventListener('pageshow', onPageShow);
+      if (stopTimer.current) clearTimeout(stopTimer.current);
       abortRef.current?.abort();
-      // Purge the session, its dataset and its renders on the server.
-      if (opened) void agentApi.deleteSession(token, opened).catch(() => undefined);
+      purge(false);
       for (const url of urls) URL.revokeObjectURL(url);
       urls.clear();
     };
@@ -405,20 +562,16 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   // ---------------------------------------------------------------- dataset
 
   const applyBindings = useCallback(
-    async (next: Record<string, string | null>, previous: Record<string, string | null>) => {
+    async (next: BindingMap, previous: BindingMap) => {
       const sid = stateRef.current.sessionId;
       if (!sid) return;
       safeDispatch({ type: 'bindings_start', bindings: next });
-      const payload: Binding[] = Object.entries(next)
-        .filter(([, column]) => column)
-        .map(([role, column]) => ({ role, column }));
+      const payload: Binding[] = Object.entries(next).map(([role, column]) => ({ role, column }));
       try {
         const applied = await agentApi.putBindings(token, sid, payload);
-        const bound: Record<string, string | null> = {};
-        for (const binding of applied.bindings) bound[binding.role] = binding.column;
         safeDispatch({
           type: 'bindings_done',
-          bindings: bound,
+          bindings: toMap(applied.bindings),
           complete: applied.complete,
           missingRoles: applied.missing_roles,
         });
@@ -432,7 +585,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   const parseData = useCallback(
     async (text: string) => {
       const sid = stateRef.current.sessionId;
-      if (!sid || !text.trim()) return;
+      if (!sid || !text.trim() || busy()) return;
       const bytes = utf8Bytes(text);
       const bucket = sizeBucket(bytes);
       if (bytes > MAX_DATASET_BYTES) {
@@ -440,15 +593,15 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
         trackEvent('agent_data_parsed', { status: 'too_long', size_bucket: bucket });
         return;
       }
+      parseRef.current = true;
       safeDispatch({ type: 'parse_start' });
       try {
         const parsed = await agentApi.uploadDataset(token, sid, text);
         safeDispatch({ type: 'parse_done', parsed, bytes });
         trackEvent('agent_data_parsed', { status: 'ok', size_bucket: bucket });
-        const defaults: Record<string, string | null> = {};
-        for (const binding of parsed.bindings) defaults[binding.role] = binding.column;
-        // Learn which required roles the defaults leave open (and store them,
-        // which the parse already did: the PUT is idempotent).
+        const defaults = toMap(parsed.bindings);
+        // Learn whether the defaults are complete and which required roles
+        // they leave open (the parse stored them already: the PUT is idempotent).
         await applyBindings(defaults, defaults);
       } catch (err) {
         const failure = handleFailure(err);
@@ -460,25 +613,29 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
         if (failure.code === 'data_refused') {
           trackEvent('agent_guardrail_block', { reason: 'data_refused' });
         }
+      } finally {
+        parseRef.current = false;
       }
     },
-    [token, safeDispatch, handleFailure, trackEvent, applyBindings]
+    [token, safeDispatch, handleFailure, trackEvent, applyBindings, busy]
   );
 
+  /** Bind `name` (a single role or a family member such as `y2`) to `column`, or clear it with `null`. */
   const setBinding = useCallback(
-    (role: string, column: string | null) => {
-      const current = stateRef.current.bindings;
+    (name: string, column: string | null) => {
+      if (busy()) return;
+      const { bindings: current, roles } = stateRef.current;
       const next: Record<string, string | null> = { ...current };
       // A column belongs to one role: taking it frees the role that held it.
       if (column) {
         for (const [other, held] of Object.entries(next)) {
-          if (other !== role && held === column) next[other] = null;
+          if (other !== name && held === column) next[other] = null;
         }
       }
-      next[role] = column;
-      void applyBindings(next, current);
+      next[name] = column;
+      void applyBindings(compactFamilies(next, roles), current);
     },
-    [applyBindings]
+    [applyBindings, busy]
   );
 
   // ---------------------------------------------------------------- versions
@@ -512,7 +669,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
           type: 'version_image',
           number,
           theme,
-          image: { state: 'failed', ...failure },
+          image: { state: 'failed', code: failure.code, ref: failure.ref },
         });
       }
     },
@@ -533,14 +690,20 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     [fetchArtifact, safeDispatch, handleFailure]
   );
 
-  /** The light and dark switch: render the other theme of a version (no model call), then show it. */
+  /**
+   * The light and dark switch: render the other theme of a version (no model
+   * call), then show it. Nothing starts while a turn or another render runs,
+   * which the server would refuse with `409 run_active`.
+   */
   const requestTheme = useCallback(
     async (number: number, theme: Theme) => {
       const sid = stateRef.current.sessionId;
       const version = stateRef.current.versions[number];
-      if (!sid || !version) return;
+      if (!sid || !version || busy()) return;
       const current = version.images[theme];
       if (current && current.state !== 'failed') return;
+      themeRef.current = true;
+      safeDispatch({ type: 'theme_busy', busy: true });
       safeDispatch({ type: 'version_image', number, theme, image: { state: 'loading' } });
       try {
         const rendered = await agentApi.renderTheme(token, sid, number, theme);
@@ -555,15 +718,19 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
         }
         await loadImage(number, theme, rendered.status);
       } catch (err) {
+        const failure = handleFailure(err);
         safeDispatch({
           type: 'version_image',
           number,
           theme,
-          image: { state: 'failed', ...handleFailure(err) },
+          image: { state: 'failed', code: failure.code, ref: failure.ref },
         });
+      } finally {
+        themeRef.current = false;
+        safeDispatch({ type: 'theme_busy', busy: false });
       }
     },
-    [token, safeDispatch, handleFailure, loadImage]
+    [token, safeDispatch, handleFailure, loadImage, busy]
   );
 
   // ---------------------------------------------------------------- turns
@@ -581,7 +748,9 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
         addItem({ kind: 'plot_failed', result });
         return;
       }
-      const number = ++versionCounter.current;
+      // The server's number; counting is the fallback for a server without it.
+      const number = result.version ?? versionCounter.current + 1;
+      versionCounter.current = Math.max(versionCounter.current, number);
       const theme = renderedThemes(result.artifacts)[0] ?? 'light';
       safeDispatch({
         type: 'version_add',
@@ -639,7 +808,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     async (body: { text: string } | { action: 'create_plot' }) => {
       const current = stateRef.current;
       const sid = current.sessionId;
-      if (!sid || current.run || abortRef.current) return;
+      if (!sid || current.run || busy()) return;
       const controller = new AbortController();
       abortRef.current = controller;
       stoppedRef.current = false;
@@ -662,22 +831,24 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
             break;
           }
         }
-        if (!finished) {
+        if (!finished && !stoppedRef.current) {
           // The BFF always ends a turn with `done`; a stream without it was cut.
           addItem({ kind: 'error', code: 'upstream', ref: null });
         }
       } catch (err) {
-        if (stoppedRef.current || isAbort(err)) {
-          if (stoppedRef.current) addItem({ kind: 'notice', text: 'stopped' });
-        } else {
-          addItem({ kind: 'error', ...handleFailure(err) });
+        if (!stoppedRef.current && !isAbort(err)) {
+          const failure = handleFailure(err);
+          addItem({ kind: 'error', code: failure.code, ref: failure.ref });
         }
       } finally {
+        if (stopTimer.current) clearTimeout(stopTimer.current);
+        stopTimer.current = null;
+        if (stoppedRef.current) addItem({ kind: 'notice', text: 'stopped' });
         if (abortRef.current === controller) abortRef.current = null;
         safeDispatch({ type: 'run_end' });
       }
     },
-    [token, safeDispatch, addItem, onEvent, handleFailure]
+    [token, safeDispatch, addItem, onEvent, handleFailure, busy]
   );
 
   const createPlot = useCallback(() => runTurn({ action: 'create_plot' }), [runTurn]);
@@ -691,19 +862,26 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     [runTurn]
   );
 
-  /** Stop: the cancel route takes a waiting run out of the queue; the abort closes the stream. */
+  /**
+   * Stop: the cancel route takes a waiting run out of the queue at once and
+   * aborts a running one at its next step boundary. The stream stays open
+   * until the server's `done` says the run is over, so the next action does
+   * not meet `409 run_active`, and a result stored just before the stop still
+   * arrives. After `STOP_GRACE_MS`, or when the cancel call fails, the stream
+   * is closed here.
+   */
   const stop = useCallback(async () => {
     const sid = stateRef.current.sessionId;
     const controller = abortRef.current;
-    if (!sid || !controller) return;
+    if (!sid || !controller || stoppedRef.current) return;
     stoppedRef.current = true;
     safeDispatch({ type: 'run_stopping' });
+    stopTimer.current = setTimeout(() => controller.abort(), STOP_GRACE_MS);
     try {
       await agentApi.cancel(token, sid);
     } catch {
-      /* the abort below still ends the turn in this tab */
+      controller.abort(); // the server may not have heard the cancel: end the turn in this tab
     }
-    controller.abort();
   }, [token, safeDispatch]);
 
   // ---------------------------------------------------------------- library
@@ -712,7 +890,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     async (next: string): Promise<boolean> => {
       const current = stateRef.current;
       const sid = current.sessionId;
-      if (!sid || current.run || current.libraryBusy || next === current.library) return false;
+      if (!sid || current.run || busy() || next === current.library) return false;
       safeDispatch({ type: 'library_start' });
       try {
         const result = await agentApi.switchLibrary(token, sid, specId, next);
@@ -721,11 +899,11 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
       } catch (err) {
         const failure = handleFailure(err);
         safeDispatch({ type: 'library_failed', failure });
-        addItem({ kind: 'error', ...failure });
+        addItem({ kind: 'error', code: failure.code, ref: failure.ref });
         return false;
       }
     },
-    [token, specId, safeDispatch, addItem, handleFailure]
+    [token, specId, safeDispatch, addItem, handleFailure, busy]
   );
 
   return {
@@ -742,3 +920,8 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
 }
 
 export type AgentSession = ReturnType<typeof useAgentSession>;
+
+/** Whether the page should hold back actions the server would refuse or race (see the module notes). */
+export function sessionBusy(state: AgentSessionState): boolean {
+  return !!state.run || state.parsing || state.bindingsBusy || state.libraryBusy || state.themeBusy;
+}

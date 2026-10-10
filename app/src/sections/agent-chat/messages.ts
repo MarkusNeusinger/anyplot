@@ -11,12 +11,15 @@ export const ERROR_TEXT: Record<string, string> = {
   guard_unavailable: 'the scope check is unavailable right now; try again',
   upstream: 'the agents service did not answer or cut the stream',
   internal: 'something went wrong on the server',
-  run_active: 'a run is already in progress, in this tab or another one',
+  run_active:
+    'a run or a theme render is still in progress, in this tab or another one (a stopped run ends after its current step); try again in a moment',
   too_long: 'the message is longer than 2,000 characters',
   not_eligible: 'this plot cannot be adapted in that library',
   not_found: 'that plot or library is not in the catalogue',
-  session_expired: 'the session expired; reload the page',
+  session_expired: 'the session expired',
   rate_limited: 'the daily limit is reached; try again tomorrow',
+  unreachable:
+    'no answer from the server: your sign-in may have expired, or the connection dropped',
   network: 'the server did not answer; check your connection',
 };
 
@@ -43,6 +46,8 @@ export const DATA_FAILURE: Record<string, string> = {
   no_dataset: 'parse the data first',
   invalid: 'the server refused these bindings',
   session_expired: 'the session expired; reload the page',
+  unreachable:
+    'no answer: your sign-in may have expired (reload the page), or the connection dropped',
   network: 'the server did not answer; check your connection',
 };
 
@@ -54,6 +59,7 @@ export const IMAGE_FAILURE: Record<string, string> = {
   capacity: 'no render slot came free; try again',
   not_found: 'this version is no longer on the server',
   session_expired: 'the session expired; reload the page',
+  unreachable: 'no answer: your sign-in may have expired (reload the page)',
 };
 
 export function describeDataFailure(code: string, ref: string | null): string {

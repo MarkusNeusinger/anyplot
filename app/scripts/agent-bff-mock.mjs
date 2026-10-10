@@ -4,19 +4,23 @@
  * routes the plot page needs, for driving the "Use with my data" UI in a
  * browser without the real API, the agents service, a model or a database.
  *
- *   node app/scripts/agent-bff-mock.mjs            # http://localhost:8010
+ *   node app/scripts/agent-bff-mock.mjs            # http://localhost:8010, loopback only
  *   cd app && VITE_ENABLE_AGENT_CHAT=true \
  *     VITE_API_URL=http://localhost:8010 VITE_DEBUG_API_URL=http://localhost:8010 yarn dev
  *   open http://localhost:3000/scatter-basic/python/matplotlib   (the .adapt() button)
  *   open http://localhost:3000/debug/agent?spec=scatter-basic&library=matplotlib&language=python
+ *   open http://localhost:3000/debug/agent?spec=line-multi&library=matplotlib&language=python
  *
  * It follows the documented contract (docs/reference/api.md, "Agent chat"):
  * the CSRF header on every POST, PUT and DELETE, `{detail, ref}` errors with
- * an `X-Request-Id`, and a scripted `anyplot/1` stream with `ready`, two
- * `queued` statuses, the pipeline steps, `plot`, `message` and `done`, with
- * `: ping` comments in between. Plots are drawn here as PNGs from the pasted
- * data (a scatter of the bound x and y columns, in the theme's colours), in
- * the spirit of the fake render backend's fixture PNG
+ * an `X-Request-Id`, the spec's `roles` in the dataset answer, the binding
+ * check's `errors` lines on a refused binding set, and a scripted `anyplot/1`
+ * stream with `ready`, two `queued` statuses, the pipeline steps, `plot` (with
+ * the stored `version`), `message` and `done`, with `: ping` comments in
+ * between. Two specs exist: scatter-basic (`x`, `y`) and line-multi (`x`, the
+ * series family `y1, y2, ...`, an optional `series`). Plots are drawn here as
+ * PNGs from the pasted data (a scatter of the bound x and y columns, in the
+ * theme's colours), in the spirit of the fake render backend's fixture PNG
  * (agents/anyplot/render/backends/fake.py); no code runs.
  *
  * Scripted behaviour of a chat message:
@@ -29,7 +33,10 @@
  *
  * Environment: PORT (8010), MOCK_STEP_MS (700, per pipeline step),
  * MOCK_QUEUE_MS (2500, per queue position), MOCK_QUEUE (2, the starting
- * position of a turn; 0 skips the queue).
+ * position of a turn; 0 skips the queue), MOCK_STOP_MS (2000, how long a run
+ * stopped during a pipeline step takes to finish that step before `done`,
+ * like the real run, which notices the abort only between steps; a turn that
+ * still waits in the queue leaves it at once).
  */
 
 import http from 'node:http';
@@ -40,19 +47,55 @@ const PORT = Number(process.env.PORT || 8010);
 const STEP_MS = Number(process.env.MOCK_STEP_MS || 700);
 const QUEUE_MS = Number(process.env.MOCK_QUEUE_MS || 2500);
 const QUEUE_START = Number(process.env.MOCK_QUEUE ?? 2);
+const STOP_MS = Number(process.env.MOCK_STOP_MS ?? 2000);
 const BASE = `http://localhost:${PORT}`;
 
-const SPEC = {
-  id: 'scatter-basic',
-  title: 'Basic Scatter Plot',
-  description:
-    'A fundamental 2D scatter plot that displays the relationship between two numeric variables.',
-  data: [
-    '`x` (numeric) - Independent variable values plotted on the horizontal axis',
-    '`y` (numeric) - Dependent variable values plotted on the vertical axis',
-  ],
-  notes: ['Points should have moderate transparency (alpha ~0.7) to reveal overlapping data'],
-  roles: ['x', 'y'],
+const role = (name, kinds, description, { required = true, variadic = false } = {}) => ({
+  name,
+  kinds,
+  required,
+  variadic,
+  description,
+});
+
+// Two catalogue specs with the roles the agents service parses from their
+// `## Data` bullets: scatter-basic (two single roles) and line-multi (a
+// variadic series family `y1, y2, ...` and an optional role).
+const SPECS = {
+  'scatter-basic': {
+    id: 'scatter-basic',
+    title: 'Basic Scatter Plot',
+    description:
+      'A fundamental 2D scatter plot that displays the relationship between two numeric variables.',
+    data: [
+      '`x` (numeric) - Independent variable values plotted on the horizontal axis',
+      '`y` (numeric) - Dependent variable values plotted on the vertical axis',
+    ],
+    notes: ['Points should have moderate transparency (alpha ~0.7) to reveal overlapping data'],
+    roles: [
+      role('x', ['numeric'], 'Independent variable values plotted on the horizontal axis'),
+      role('y', ['numeric'], 'Dependent variable values plotted on the vertical axis'),
+    ],
+  },
+  'line-multi': {
+    id: 'line-multi',
+    title: 'Multi-Line Comparison Plot',
+    description:
+      'A multi-line plot displays multiple data series on the same axes for direct comparison.',
+    data: [
+      '`x` (numeric/datetime) - Shared sequential or time values for alignment',
+      '`y1, y2, ...` (numeric) - Multiple continuous series to compare',
+      '`series` (categorical) - Optional grouping variable if data is in long format',
+    ],
+    notes: ['Use distinct colors for each series'],
+    roles: [
+      role('x', ['numeric', 'datetime'], 'Shared sequential or time values for alignment'),
+      role('y', ['numeric'], 'Multiple continuous series to compare', { variadic: true }),
+      role('series', ['categorical'], 'Optional grouping variable if data is in long format', {
+        required: false,
+      }),
+    ],
+  },
 };
 const AGENT_LIBRARIES = ['matplotlib', 'seaborn'];
 const MAX_DATASET_BYTES = 200 * 1024;
@@ -135,8 +178,8 @@ class Canvas {
   }
 }
 
-/** A plot-like PNG: axes, a light grid, and either a scatter of `points` or bars. */
-function drawPlot(theme, points, { width = 1600, height = 900, color = IMPRINT[0] } = {}) {
+/** A plot-like PNG: axes, a light grid, and either a scatter of each series in `series` or bars. */
+function drawPlot(theme, series, { width = 1600, height = 900, firstColor = 0 } = {}) {
   const { bg, ink, grid } = THEMES[theme];
   const canvas = new Canvas(width, height, bg);
   const left = width * 0.09;
@@ -151,14 +194,18 @@ function drawPlot(theme, points, { width = 1600, height = 900, color = IMPRINT[0
   }
   canvas.rect(left, top, left + 3, bottom + 3, ink);
   canvas.rect(left, bottom, right, bottom + 3, ink);
-  if (points && points.length > 1) {
-    const xs = points.map(p => p[0]);
-    const ys = points.map(p => p[1]);
+  const all = (series ?? []).flat();
+  if (all.length > 1) {
+    const xs = all.map(p => p[0]);
+    const ys = all.map(p => p[1]);
     const [xmin, xmax] = [Math.min(...xs), Math.max(...xs)];
     const [ymin, ymax] = [Math.min(...ys), Math.max(...ys)];
     const sx = v => left + 30 + ((v - xmin) / (xmax - xmin || 1)) * (right - left - 60);
     const sy = v => bottom - 30 - ((v - ymin) / (ymax - ymin || 1)) * (bottom - top - 60);
-    for (const [x, y] of points) canvas.disc(sx(x), sy(y), height * 0.016, color, 0.72);
+    series.forEach((points, index) => {
+      const color = IMPRINT[(firstColor + index) % IMPRINT.length];
+      for (const [x, y] of points) canvas.disc(sx(x), sy(y), height * 0.016, color, 0.72);
+    });
   } else {
     const bar = (right - left) / 12;
     IMPRINT.forEach((c, i) => {
@@ -279,24 +326,77 @@ function parseDataset(text) {
   };
 }
 
-const NUMERIC = new Set(['integer', 'number']);
+// The agents service's ACCEPTS table (agents/anyplot/data/bindings.py), without the tiers.
+const ACCEPTS = {
+  numeric: ['number', 'integer'],
+  categorical: ['text', 'boolean', 'integer'],
+  text: ['text', 'boolean', 'integer'],
+  boolean: ['boolean', 'integer'],
+  datetime: ['datetime'],
+};
+const accepts = (spec, dtype) =>
+  !spec.kinds.length || spec.kinds.some(kind => ACCEPTS[kind]?.includes(dtype));
 
-function checkBindings(session, bindings) {
-  const columns = new Map(session.dataset.profile.columns.map(c => [c.name, c]));
-  const seen = new Set();
-  for (const { role, column } of bindings) {
-    if (!SPEC.roles.includes(role) || seen.has(column) || !columns.has(column)) return null;
-    if (!NUMERIC.has(columns.get(column).dtype)) return null;
-    seen.add(column);
-  }
-  const bound = new Set(bindings.map(b => b.role));
-  const missing = SPEC.roles.filter(role => !bound.has(role));
-  return { bindings, complete: missing.length === 0, missing_roles: missing };
+/** The role a binding name refers to: an exact single role, else the family `<name><digits>`. */
+function resolveRole(roles, name) {
+  return (
+    roles.find(r => !r.variadic && r.name === name) ??
+    roles.find(r => r.variadic && new RegExp(`^${r.name}\\d+$`).test(name)) ??
+    null
+  );
 }
 
-function defaultBindings(profile) {
-  const numeric = profile.columns.filter(c => NUMERIC.has(c.dtype)).map(c => c.name);
-  return SPEC.roles.slice(0, numeric.length).map((role, i) => ({ role, column: numeric[i] }));
+/** Like `check_bindings`: the error lines, or the stored set with its completeness. */
+function checkBindings(session, bindings) {
+  const roles = SPECS[session.specId].roles;
+  const columns = new Map(session.dataset.profile.columns.map(c => [c.name, c]));
+  const errors = [];
+  const seen = new Set();
+  const bound = new Set();
+  for (const { role: name, column } of bindings) {
+    const spec = resolveRole(roles, name);
+    const family = roles.find(r => r.variadic && r.name === name);
+    if (!spec) {
+      errors.push(
+        family
+          ? `role '${name}' takes numbered members such as '${name}1'`
+          : `unknown role '${name}'`
+      );
+      continue;
+    }
+    if (!columns.has(column)) errors.push(`column '${column}' is not in the dataset`);
+    else if (seen.has(column)) errors.push(`column '${column}' is bound more than once`);
+    else if (!accepts(spec, columns.get(column).dtype)) {
+      errors.push(
+        `role '${name}' needs ${spec.kinds.join(' or ')} data, but column '${column}' is ${columns.get(column).dtype}`
+      );
+    } else bound.add(spec.name);
+    seen.add(column);
+  }
+  const missing = roles.filter(r => r.required && !bound.has(r.name)).map(r => r.name);
+  return { errors, bindings, complete: !errors.length && !missing.length, missing_roles: missing };
+}
+
+/** Required roles first; a family takes every unused numeric column, a single role the first fit. */
+function defaultBindings(session, profile) {
+  const roles = SPECS[session.specId].roles;
+  const used = new Set();
+  const bindings = [];
+  const order = [...roles.filter(r => r.required), ...roles.filter(r => !r.required)];
+  for (const spec of order) {
+    const free = profile.columns.filter(c => !used.has(c.name) && accepts(spec, c.dtype));
+    if (spec.variadic) {
+      const numeric = free.filter(c => c.dtype !== 'datetime');
+      numeric.slice(0, 12).forEach((c, i) => {
+        bindings.push({ role: `${spec.name}${i + 1}`, column: c.name });
+        used.add(c.name);
+      });
+    } else if (free.length) {
+      bindings.push({ role: spec.name, column: free[0].name });
+      used.add(free[0].name);
+    }
+  }
+  return bindings;
 }
 
 function csvText(session) {
@@ -307,21 +407,31 @@ function csvText(session) {
     .concat('\n');
 }
 
+const columnOf = (session, name) => session.bindings.find(b => b.role === name)?.column;
+/** The bound y columns: `y` of scatter-basic, or every member `y1, y2, ...` of line-multi. */
+const yColumns = session => session.bindings.filter(b => /^y\d*$/.test(b.role)).map(b => b.column);
+
+/** One point list per y column; a non-numeric x (a date) plots by row order. */
 function points(session) {
   const names = session.dataset.header;
-  const x = names.indexOf(session.bindings.find(b => b.role === 'x')?.column);
-  const y = names.indexOf(session.bindings.find(b => b.role === 'y')?.column);
-  if (x < 0 || y < 0) return null;
-  return session.dataset.rows
-    .map(row => [Number(row[x]), Number(row[y])])
-    .filter(([a, b]) => Number.isFinite(a) && Number.isFinite(b));
+  const x = names.indexOf(columnOf(session, 'x'));
+  if (x < 0) return null;
+  return yColumns(session).map(column => {
+    const y = names.indexOf(column);
+    return session.dataset.rows
+      .map((row, index) => [
+        Number.isFinite(Number(row[x])) ? Number(row[x]) : index,
+        Number(row[y]),
+      ])
+      .filter(([a, b]) => Number.isFinite(a) && Number.isFinite(b));
+  });
 }
 
 function plotPy(session, version) {
-  const x = session.bindings.find(b => b.role === 'x')?.column ?? 'x';
-  const y = session.bindings.find(b => b.role === 'y')?.column ?? 'y';
+  const x = columnOf(session, 'x') ?? 'x';
+  const y = yColumns(session)[0] ?? 'y';
   const markerSize = version.number > 1 ? 160 : 110;
-  return `# Adapted by anyplot.ai from ${SPEC.id} (${version.library}) for your data.csv; run: \`ANYPLOT_THEME=${version.theme} python plot.py\`
+  return `# Adapted by anyplot.ai from ${session.specId} (${version.library}) for your data.csv; run: \`ANYPLOT_THEME=${version.theme} python plot.py\`
 import os
 
 import matplotlib.pyplot as plt
@@ -360,7 +470,7 @@ let runsInFlight = 0;
 
 function renderVersion(session, version, theme) {
   version.pngs[theme] = drawPlot(theme, points(session), {
-    color: version.number > 1 ? IMPRINT[2] : IMPRINT[0],
+    firstColor: version.number > 1 ? 2 : 0,
   });
 }
 
@@ -479,7 +589,7 @@ async function streamTurn(req, res, session, body, ref) {
           changes: [],
           residual_defects: [],
         });
-        send('message', { text: 'Paste your data and bind the x and y roles first.' });
+        send('message', { text: 'Paste your data and bind the required roles first.' });
         return;
       }
       const refine = body.action !== 'create_plot';
@@ -503,6 +613,8 @@ async function streamTurn(req, res, session, body, ref) {
         if (stopped()) return;
         send('status', { step, attempt });
         await wait(STEP_MS);
+        // A stopped run finishes the step in progress before it ends.
+        if (session.cancelled && !closed) await sleep(STOP_MS);
       }
       if (stopped()) return;
       const previous = session.versions[session.versions.length - 1];
@@ -515,8 +627,8 @@ async function streamTurn(req, res, session, body, ref) {
       };
       renderVersion(session, version, theme);
       session.versions.push(version);
-      const x = session.bindings.find(b => b.role === 'x')?.column;
-      const y = session.bindings.find(b => b.role === 'y')?.column;
+      const x = columnOf(session, 'x');
+      const y = yColumns(session).join(', ');
       send('plot', {
         status: refine ? 'needs_attention' : 'ok',
         reason: null,
@@ -528,12 +640,14 @@ async function streamTurn(req, res, session, body, ref) {
         residual_defects: refine
           ? ['VQ-03 light: two markers overlap the y axis label; likely cause: axis limits']
           : [],
+        // The stored version's number, which the artifact and theme routes take.
+        version: version.number,
       });
       await sleep(STEP_MS / 2);
       send('message', {
         text: refine
           ? 'Done. One note remains: two markers sit close to the y axis label.'
-          : `Here is ${SPEC.title.toLowerCase()} with your data: ${x} on x and ${y} on y.`,
+          : `Here is ${SPECS[session.specId].title.toLowerCase()} with your data: ${x} on x and ${y} on y.`,
       });
     } finally {
       runsInFlight -= 1;
@@ -552,8 +666,8 @@ const LIBRARY_META = {
   seaborn: { id: 'seaborn', name: 'seaborn', language: 'python' },
 };
 
-function implementation(library) {
-  const base = `${BASE}/mock/plots/${SPEC.id}/${library}`;
+function implementation(specId, library) {
+  const base = `${BASE}/mock/plots/${specId}/${library}`;
   return {
     library_id: library,
     library_name: library,
@@ -562,7 +676,7 @@ function implementation(library) {
     preview_url_light: `${base}/plot-light.png`,
     preview_url_dark: `${base}/plot-dark.png`,
     quality_score: 92,
-    code: `# ${SPEC.id} (${library}) — catalogue code served by the mock\nimport matplotlib.pyplot as plt\n`,
+    code: `# ${specId} (${library}) — catalogue code served by the mock\nimport matplotlib.pyplot as plt\n`,
     library_version: '3.10.0',
   };
 }
@@ -581,26 +695,33 @@ async function route(req, res) {
   // Catalogue routes the layout and the plot page call.
   if (method === 'GET' && path === '/health') return json(res, 200, { status: 'ok' });
   if (method === 'GET' && path === '/specs')
-    return json(res, 200, [{ id: SPEC.id, title: SPEC.title, description: SPEC.description }]);
+    return json(
+      res,
+      200,
+      Object.values(SPECS).map(({ id, title, description }) => ({ id, title, description }))
+    );
   if (method === 'GET' && path === '/libraries')
     return json(res, 200, { libraries: Object.values(LIBRARY_META) });
   if (method === 'GET' && path === '/languages')
     return json(res, 200, { languages: [{ id: 'python', name: 'Python' }] });
   if (method === 'GET' && path === '/stats')
-    return json(res, 200, { specs: 1, plots: 2, libraries: 2 });
-  if (method === 'GET' && path === `/specs/${SPEC.id}`)
+    return json(res, 200, { specs: 2, plots: 4, libraries: 2 });
+  const specMatch = path.match(/^\/specs\/([a-z0-9-]+)$/);
+  if (method === 'GET' && specMatch && SPECS[specMatch[1]]) {
+    const spec = SPECS[specMatch[1]];
     return json(res, 200, {
-      id: SPEC.id,
-      title: SPEC.title,
-      description: SPEC.description,
-      data: SPEC.data,
-      notes: SPEC.notes,
-      tags: { plot_type: ['scatter'] },
-      implementations: AGENT_LIBRARIES.map(implementation),
+      id: spec.id,
+      title: spec.title,
+      description: spec.description,
+      data: spec.data,
+      notes: spec.notes,
+      tags: { plot_type: [spec.id.split('-')[0]] },
+      implementations: AGENT_LIBRARIES.map(library => implementation(spec.id, library)),
     });
+  }
   const codeMatch = path.match(/^\/specs\/([a-z0-9-]+)\/([a-z0-9]+)\/code$/);
   if (method === 'GET' && codeMatch)
-    return json(res, 200, { code: implementation(codeMatch[2]).code });
+    return json(res, 200, { code: implementation(codeMatch[1], codeMatch[2]).code });
   if (method === 'GET' && path.startsWith('/insights/related/'))
     return json(res, 200, { related: [] });
   if (method === 'GET' && path === '/plots/filter')
@@ -648,7 +769,7 @@ async function route(req, res) {
     );
   if (method === 'GET' && sub === '/eligibility') {
     const library = url.searchParams.get('library');
-    const eligible = url.searchParams.get('spec') === SPEC.id && AGENT_LIBRARIES.includes(library);
+    const eligible = !!SPECS[url.searchParams.get('spec')] && AGENT_LIBRARIES.includes(library);
     return json(
       res,
       200,
@@ -661,10 +782,11 @@ async function route(req, res) {
     );
   }
   if (method === 'POST' && sub === '/sessions') {
-    if (body?.spec_id !== SPEC.id) return fail(res, 404, 'not_found', ref);
+    if (!SPECS[body?.spec_id]) return fail(res, 404, 'not_found', ref);
     if (!AGENT_LIBRARIES.includes(body.library)) return fail(res, 422, 'not_eligible', ref);
     const sid = randomBytes(18).toString('base64url');
     sessions.set(sid, {
+      specId: body.spec_id,
       library: body.library,
       dataset: null,
       bindings: [],
@@ -717,8 +839,8 @@ async function route(req, res) {
       return fail(res, 422, 'unparseable', ref);
     }
     session.dataset = parsed;
-    session.bindings = defaultBindings(parsed.profile);
-    session.complete = session.bindings.length === SPEC.roles.length;
+    session.bindings = defaultBindings(session, parsed.profile);
+    session.complete = checkBindings(session, session.bindings).complete;
     return json(
       res,
       200,
@@ -727,6 +849,7 @@ async function route(req, res) {
         profile: parsed.profile,
         bindings: session.bindings,
         warnings: parsed.warnings,
+        roles: SPECS[session.specId].roles,
       },
       ref
     );
@@ -735,8 +858,10 @@ async function route(req, res) {
     if (session.active) return fail(res, 409, 'run_active', ref);
     if (!session.dataset) return fail(res, 422, 'no_dataset', ref);
     const wanted = (Array.isArray(body) ? body : []).filter(b => b && b.column);
-    const checked = checkBindings(session, wanted);
-    if (!checked) return fail(res, 422, 'invalid', ref);
+    const { errors, ...checked } = checkBindings(session, wanted);
+    // The BFF passes the check's lines of a refused set on (at most 20).
+    if (errors.length)
+      return json(res, 422, { detail: 'invalid', ref, errors: errors.slice(0, 20) }, ref);
     session.bindings = checked.bindings;
     session.complete = checked.complete;
     return json(res, 200, checked, ref);
@@ -812,7 +937,9 @@ http
       else res.end();
     });
   })
-  .listen(PORT, () => {
+  // Loopback only: the mock echoes pasted data back as images, so it must not
+  // be reachable from the local network.
+  .listen(PORT, '127.0.0.1', () => {
     console.log(
       `agent BFF mock on ${BASE} (step ${STEP_MS} ms, queue ${QUEUE_START} x ${QUEUE_MS} ms)`
     );

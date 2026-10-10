@@ -7,9 +7,10 @@
 
 import Box from '@mui/material/Box';
 
-import type { AgentSessionState, ChatItem } from 'src/hooks/useAgentSession';
+import { type AgentSessionState, type ChatItem, sessionBusy } from 'src/hooks/useAgentSession';
 import type { ArtifactName, Theme } from 'src/lib/agent';
 import { ERROR_TEXT, PLOT_FAILED_TEXT } from 'src/sections/agent-chat/messages';
+import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { ResultCard } from 'src/sections/agent-chat/ResultCard';
 import { bodyTextSx, labelSx } from 'src/sections/agent-chat/styles';
 import { colors, typography } from 'src/theme';
@@ -86,6 +87,7 @@ function Item({
           </Box>
           <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
             {ERROR_TEXT[item.code] ?? 'the request failed'}
+            <ReloadHint code={item.code} />
           </Box>
         </Box>
       );
@@ -112,7 +114,7 @@ function Item({
           specId={props.specId}
           language={props.language}
           latest={version.number === latestVersion}
-          busy={!!props.state.run}
+          busy={sessionBusy(props.state)}
           onRequestTheme={props.onRequestTheme}
           onFetchArtifact={props.onFetchArtifact}
           onRefine={props.onRefine}

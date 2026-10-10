@@ -27,7 +27,7 @@ import Box from '@mui/material/Box';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { LIBRARIES } from 'src/constants';
 import { CONFIG } from 'src/global-config';
-import { useAgentSession } from 'src/hooks/useAgentSession';
+import { sessionBusy, useAgentSession } from 'src/hooks/useAgentSession';
 import { useAnalytics } from 'src/hooks/useAnalytics';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { agentApi, browserLocale, DEFAULT_AGENT_LIBRARIES, MAX_MESSAGE_CHARS } from 'src/lib/agent';
@@ -38,6 +38,7 @@ import { ChatThread } from 'src/sections/agent-chat/ChatThread';
 import { DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { ERROR_TEXT } from 'src/sections/agent-chat/messages';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
+import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import {
   actionButtonSx,
   bodyTextSx,
@@ -202,15 +203,21 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
     if (running) chatRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
   }, [running]);
 
+  // A turn, a theme render, a parse or a binding change in flight: the server
+  // runs one at a time and would refuse or race a second.
+  const busy = sessionBusy(state);
+  // The session could not open for this pair: other libraries are links instead.
+  const reopen = state.phase === 'ineligible' || state.phase === 'error';
+
   const handleSend = useCallback(
     (event?: React.FormEvent) => {
       event?.preventDefault();
       const text = draft.trim();
-      if (!text || running) return;
+      if (!text || busy) return;
       void session.sendMessage(text);
       setDraft('');
     },
-    [draft, running, session]
+    [draft, busy, session]
   );
 
   const handleLibrary = useCallback(
@@ -268,22 +275,37 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
           </Box>
           {libraries.map(lib => {
             const active = lib === state.library;
+            const pillSx = {
+              ...actionButtonSx,
+              border: '1px solid',
+              borderColor: active ? 'var(--ink-muted)' : 'var(--rule)',
+              color: active ? 'var(--ink)' : 'var(--ink-soft)',
+              bgcolor: active ? 'var(--bg-elevated)' : 'transparent',
+              '&:disabled': { cursor: 'default', opacity: active ? 1 : 0.45 },
+            };
+            // No session to switch: another library opens the page anew, with
+            // its own session (a full navigation, like the `.adapt()` button).
+            if (!active && reopen) {
+              return (
+                <Box
+                  key={lib}
+                  component="a"
+                  href={paths.agentChat(specId, lib, language)}
+                  sx={{ ...pillSx, textDecoration: 'none' }}
+                >
+                  {lib}
+                </Box>
+              );
+            }
             return (
               <Box
                 key={lib}
                 component="button"
                 type="button"
                 aria-pressed={active}
-                disabled={active || running || state.libraryBusy || state.phase !== 'ready'}
+                disabled={active || busy || state.phase !== 'ready'}
                 onClick={() => void handleLibrary(lib)}
-                sx={{
-                  ...actionButtonSx,
-                  border: '1px solid',
-                  borderColor: active ? 'var(--ink-muted)' : 'var(--rule)',
-                  color: active ? 'var(--ink)' : 'var(--ink-soft)',
-                  bgcolor: active ? 'var(--bg-elevated)' : 'transparent',
-                  '&:disabled': { cursor: 'default', opacity: active ? 1 : 0.45 },
-                }}
+                sx={pillSx}
               >
                 {lib}
               </Box>
@@ -308,10 +330,11 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             </Box>
             <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
               {state.phase === 'ineligible'
-                ? 'this plot cannot be adapted in this library yet.'
+                ? 'this plot cannot be adapted in this library yet; pick another library above.'
                 : state.failure?.code === 'not_enabled'
                   ? 'the agent chat is switched off on this server (AGENT_ENABLED).'
                   : (ERROR_TEXT[state.failure?.code ?? ''] ?? 'the session could not be opened.')}
+              {state.phase === 'error' && <ReloadHint code={state.failure?.code} />}
             </Box>
           </Box>
         )}
@@ -437,13 +460,13 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                     '&:hover:not(:disabled)': { color: colors.error, borderColor: colors.error },
                   }}
                 >
-                  .stop()
+                  {state.run?.stopping ? '.stop() …' : '.stop()'}
                 </Box>
               ) : (
                 <Box
                   component="button"
                   type="submit"
-                  disabled={!draft.trim() || state.phase !== 'ready'}
+                  disabled={!draft.trim() || state.phase !== 'ready' || busy}
                   sx={ghostButtonSx}
                 >
                   .send()

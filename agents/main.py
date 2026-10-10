@@ -12,8 +12,8 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text}` | `{preview, profile, bindings, warnings}` | `413 too_long`, `422 unparseable`, `403 data_refused`, `503 guard_unavailable` |
-| `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles}` | `409 run_active`, `422 invalid` |
+| `POST /v1/sessions/{sid}/dataset` | `{text}` | `{preview, profile, bindings, warnings, roles}` | `413 too_long`, `422 unparseable`, `403 data_refused`, `503 guard_unavailable` |
+| `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles}` | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` | SSE `anyplot/1` | `413 too_long`, `409 run_active`, `503 capacity` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
@@ -40,6 +40,11 @@ but behind waiting pipeline renders in the render slot (`render/serial.py`); whi
 it renders it holds the session's registry entry, so a user has one run or toggle
 in flight at a time. `adk web` runs the agents without this service, so its runs
 bypass the queue; its renders still go through the one render slot.
+
+The dataset answer lists the spec's data roles as `roles`, each
+`{name, kinds, required, variadic, description}`, so a client can offer a column
+choice for every role: a single role binds under its own name, a variadic family
+`y` binds its members `y1`, `y2`, ... (`data/bindings.py`).
 
 Run locally with `uv run uvicorn agents.main:app --port 8001`.
 """
@@ -75,6 +80,7 @@ from starlette.background import BackgroundTask
 from agents.anyplot import agent as agent_module
 from agents.anyplot.code.readiness import MAP_SPECS
 from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParseError, parse_dataset
+from agents.anyplot.data.roles import DataRole
 from agents.anyplot.data.store import StoreFull
 from agents.anyplot.dev_fixture import FixtureError, load_case
 from agents.anyplot.models import JudgeUnavailable
@@ -570,9 +576,27 @@ async def upload_dataset(
             "profile": parsed.profile.model_dump(mode="json"),
             "bindings": [binding.model_dump() for binding in ingested.bindings],
             "warnings": parsed.warnings,
+            "roles": [_role_body(role) for role in view.snapshot.roles()],
         },
         headers=_NO_STORE,
     )
+
+
+MAX_ROLE_DESCRIPTION_CHARS = 200
+
+
+def _role_body(role: DataRole) -> dict[str, Any]:
+    """One spec data role for the binding controls; the description is the spec's own text, capped."""
+    description = role.description
+    if len(description) > MAX_ROLE_DESCRIPTION_CHARS:
+        description = description[: MAX_ROLE_DESCRIPTION_CHARS - 1].rstrip() + "…"
+    return {
+        "name": role.name,
+        "kinds": list(role.kinds),
+        "required": role.required,
+        "variadic": role.variadic,
+        "description": description,
+    }
 
 
 @app.put("/v1/sessions/{sid}/bindings", dependencies=v1_dependencies)

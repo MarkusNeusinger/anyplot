@@ -1,12 +1,15 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  agentApi,
+  agentFetch,
   browserLocale,
   parseAgentEvent,
   renderedThemes,
   sizeBucket,
   toAgentApiError,
 } from 'src/lib/agent';
+import { ACCESS_RELOAD_KEY } from 'src/utils/adminAuth';
 
 const raw = (event: string, data: unknown) => ({
   event,
@@ -47,8 +50,18 @@ describe('parseAgentEvent', () => {
         artifacts: ['plot-light.png', 'plot.py', 'data.csv'],
         changes: ['bigger markers'],
         residual_defects: ['VQ-03 light: overlap'],
+        version: null,
       },
     });
+  });
+
+  it("keeps the server's version number and drops one that is not a positive integer", () => {
+    const plot = (version: unknown) =>
+      parseAgentEvent(raw('plot', { status: 'ok', attempts: 1, artifacts: [], version }));
+    expect(plot(3)).toMatchObject({ type: 'plot', result: { version: 3 } });
+    expect(plot(0)).toMatchObject({ result: { version: null } });
+    expect(plot('3')).toMatchObject({ result: { version: null } });
+    expect(plot(1.5)).toMatchObject({ result: { version: null } });
   });
 
   it('reads an unknown error code as internal and keeps the ref', () => {
@@ -112,6 +125,53 @@ describe('toAgentApiError', () => {
       new Response(JSON.stringify({ detail: 'agent chat is not enabled' }), { status: 404 })
     );
     expect(error.code).toBe('not_enabled');
+  });
+
+  it("keeps the binding check's lines of a refused binding set", async () => {
+    const error = await toAgentApiError(
+      new Response(
+        JSON.stringify({ detail: 'invalid', ref: 'r', errors: ["role 'y' takes y1", 7] }),
+        { status: 422 }
+      )
+    );
+    expect(error).toMatchObject({ code: 'invalid', errors: ["role 'y' takes y1"] });
+  });
+});
+
+describe('agentFetch', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    sessionStorage.clear();
+  });
+
+  it('reports a request without a readable answer as unreachable', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new TypeError('Failed to fetch')))
+    );
+    await expect(agentFetch('/status', '')).rejects.toMatchObject({
+      status: 0,
+      code: 'unreachable',
+    });
+  });
+
+  it('clears the Access reload guard once an answer arrives', async () => {
+    sessionStorage.setItem(ACCESS_RELOAD_KEY, '1');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('{}', { status: 200 }))
+    );
+    await agentFetch('/status', '');
+    expect(sessionStorage.getItem(ACCESS_RELOAD_KEY)).toBeNull();
+  });
+
+  it('sends the delete with keepalive when the page goes away', async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+    await agentApi.deleteSession('', 'S1', { keepalive: true });
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(init).toMatchObject({ method: 'DELETE', keepalive: true });
+    expect((init.headers as Record<string, string>)['X-Anyplot-Client']).toBe('agent-chat/1');
   });
 });
 

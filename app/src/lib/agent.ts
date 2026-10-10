@@ -12,6 +12,7 @@
 import { DEBUG_API_URL } from 'src/constants';
 import { fetchWithAuth } from 'src/lib/api';
 import type { SseEvent } from 'src/lib/sse';
+import { clearAccessReloadGuard } from 'src/utils/adminAuth';
 
 export const AGENT_CLIENT_HEADERS = { 'X-Anyplot-Client': 'agent-chat/1' } as const;
 /** The BFF's limit on pasted data: 200 KB of UTF-8. */
@@ -78,6 +79,21 @@ export interface Binding {
   column: string | null;
 }
 
+/**
+ * One data role the spec declares. A single role binds under its own name; a
+ * variadic family (`y`) binds its members `y1`, `y2`, ... and never its bare
+ * name. A role without kinds accepts any column but has no default.
+ */
+export interface RoleSpec {
+  name: string;
+  /** `numeric`, `categorical`, `text`, `boolean`, `datetime`. */
+  kinds: string[];
+  required: boolean;
+  variadic: boolean;
+  /** The spec's own words for the role. */
+  description: string;
+}
+
 export interface DatasetParsed {
   /** Up to 20 data rows (the header is `profile.columns[].name`). */
   preview: string[][];
@@ -85,12 +101,14 @@ export interface DatasetParsed {
   /** The server's default bindings; roles it could not match are absent. */
   bindings: Binding[];
   warnings: string[];
+  /** Every role of the spec; absent from an agents service older than this field. */
+  roles?: RoleSpec[];
 }
 
 export interface BindingsApplied {
   bindings: Binding[];
   complete: boolean;
-  /** Required roles without a column. */
+  /** Required roles without a column; a variadic family by its name (`y`). */
   missing_roles: string[];
 }
 
@@ -103,6 +121,8 @@ export interface PlotResult {
   artifacts: ArtifactName[];
   changes: string[];
   residual_defects: string[];
+  /** The stored version's number (`ok` and `needs_attention`); `null` from an older server. */
+  version: number | null;
 }
 
 export interface ThemeRendered {
@@ -115,19 +135,29 @@ export interface ThemeRendered {
 // Errors
 // ============================================================================
 
+/** The strings of an array field; anything else is dropped. */
+const strings = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+
 export class AgentApiError extends Error {
   readonly status: number;
-  /** The BFF's code (`run_active`, `too_long`, ...), or `network` when nothing answered. */
+  /**
+   * The BFF's code (`run_active`, `too_long`, ...), or `unreachable` when the
+   * request got no answer the page can read (see `agentFetch`).
+   */
   readonly code: string;
   /** The request id to quote, when the BFF minted one. */
   readonly ref: string | null;
+  /** The binding check's lines of a refused `PUT /bindings` (`422 invalid`); empty otherwise. */
+  readonly errors: string[];
 
-  constructor(status: number, code: string, ref: string | null = null) {
+  constructor(status: number, code: string, ref: string | null = null, errors: string[] = []) {
     super(`agent request failed: ${status} ${code}`);
     this.name = 'AgentApiError';
     this.status = status;
     this.code = code;
     this.ref = ref;
+    this.errors = errors;
   }
 
   /** 401 and 403 from the admin gate: the browser is not (or no longer) signed in as an admin. */
@@ -153,12 +183,14 @@ const FALLBACK_CODES: Record<number, string> = {
 export async function toAgentApiError(response: Response): Promise<AgentApiError> {
   let code: string | null = null;
   let ref: string | null = response.headers.get('X-Request-Id');
+  let errors: string[] = [];
   try {
     const body: unknown = await response.json();
     if (body && typeof body === 'object') {
       const record = body as Record<string, unknown>;
       if (typeof record.detail === 'string') code = record.detail;
       if (typeof record.ref === 'string') ref = record.ref;
+      errors = strings(record.errors).slice(0, MAX_BINDING_ERRORS);
     }
   } catch {
     /* not JSON: the status decides */
@@ -169,9 +201,13 @@ export async function toAgentApiError(response: Response): Promise<AgentApiError
   return new AgentApiError(
     response.status,
     code ?? FALLBACK_CODES[response.status] ?? `http_${response.status}`,
-    ref
+    ref,
+    errors
   );
 }
+
+/** The BFF passes at most this many binding check lines. */
+const MAX_BINDING_ERRORS = 20;
 
 // ============================================================================
 // Requests
@@ -181,7 +217,16 @@ export function agentUrl(path: string): string {
   return `${DEBUG_API_URL}/debug/agent${path}`;
 }
 
-/** A raw BFF call with the CSRF header; throws `AgentApiError` on a non-2xx status. */
+/**
+ * A raw BFF call with the CSRF header; throws `AgentApiError` on a non-2xx status.
+ *
+ * A request that gets no readable answer becomes code `unreachable`. In
+ * production that is usually an expired Cloudflare Access session: the API
+ * answers with a cross-origin redirect to the Access login, which `fetch`
+ * cannot follow and reports as a `TypeError`, exactly like a dropped
+ * connection. The page offers a reload, which lets Access sign the admin in
+ * again (`reloadOnceForAccess`). Any answer clears that reload's one-shot guard.
+ */
 export async function agentFetch(path: string, token: string, init: RequestInit = {}) {
   let response: Response;
   try {
@@ -191,8 +236,9 @@ export async function agentFetch(path: string, token: string, init: RequestInit 
     });
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') throw err;
-    throw new AgentApiError(0, 'network');
+    throw new AgentApiError(0, 'unreachable');
   }
+  clearAccessReloadGuard();
   if (!response.ok) throw await toAgentApiError(response);
   return response;
 }
@@ -257,8 +303,9 @@ export const agentApi = {
     const response = await agentFetch(`${sessionPath(sid)}/artifacts/${name}?v=${version}`, token);
     return response.blob();
   },
-  deleteSession: async (token: string, sid: string) => {
-    await agentFetch(sessionPath(sid), token, { method: 'DELETE' });
+  /** `keepalive` lets the purge outlive the page (`pagehide`); best effort either way. */
+  deleteSession: async (token: string, sid: string, { keepalive = false } = {}) => {
+    await agentFetch(sessionPath(sid), token, { method: 'DELETE', keepalive });
   },
 };
 
@@ -296,8 +343,6 @@ export type AgentEvent =
 
 const isInt = (value: unknown): value is number =>
   typeof value === 'number' && Number.isInteger(value) && value >= 0;
-const strings = (value: unknown): string[] =>
-  Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
 const ARTIFACT_NAMES = new Set<string>(['plot-light.png', 'plot-dark.png', 'plot.py', 'data.csv']);
 const PLOT_STATUSES = new Set<string>(['ok', 'needs_attention', 'failed', 'not_ready']);
 
@@ -346,6 +391,7 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
           ),
           changes: strings(d.changes),
           residual_defects: strings(d.residual_defects),
+          version: isInt(d.version) && d.version >= 1 ? d.version : null,
         },
       };
     case 'refusal':

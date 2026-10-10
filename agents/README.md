@@ -127,7 +127,7 @@ Three rules hold for everything here:
 uv run uvicorn agents.main:app --port 8001
 ```
 
-The service needs the header `X-Anyplot-User` on every `/v1` route; outside `ENVIRONMENT=development` it also requires the IAM-forwarded ID token (`AGENT_SERVICE_URLS`, `AGENT_ALLOWED_CALLERS`). To drive it from the plot page, run the API with `AGENT_ENABLED=true AGENT_SERVICE_URL=http://localhost:8001` (see `api/routers/agent.py`).
+The service needs the header `X-Anyplot-User` on every `/v1` route; outside `ENVIRONMENT=development` it also requires the IAM-forwarded ID token (`AGENT_SERVICE_URLS`, `AGENT_ALLOWED_CALLERS`). To drive it from the plot page, run the API in front of it as described under [Drive the chat page](#drive-the-chat-page).
 
 At the defaults only one run may start a minute, so a second "Create plot" within a minute waits in the run queue and the stream shows `status` events with `step: "queued"`. To iterate faster on your own machine, export `AGENT_RUNS_PER_MINUTE=60`. The theme toggle (`POST /v1/sessions/{sid}/versions/{version}/render {"theme": "dark"}`) never waits in the queue.
 
@@ -135,8 +135,20 @@ At the defaults only one run may start a minute, so a second "Create plot" withi
 
 The chat page is the app's `/debug/agent?spec=&library=&language=`. Build or serve the app with `VITE_ENABLE_AGENT_CHAT=true`; local development shows it without an admin sign-in, and the plot page then shows the `.adapt()` button for eligible pairs.
 
-- **Against this service:** run the service as above and the API with `AGENT_ENABLED=true AGENT_SERVICE_URL=http://localhost:8001`, then start the app with `cd app && VITE_ENABLE_AGENT_CHAT=true yarn dev`.
-- **Without any backend:** the mock BFF serves the documented `/debug/agent/*` routes, a scripted stream (two queue positions, the pipeline steps, a plot and a reply) and PNGs drawn from the pasted data, plus the catalogue routes the plot page needs for `scatter-basic`. It touches no database and calls no model:
+- **Against this service:** the API's agent routes need all three of `AGENT_ENABLED`, `AGENT_SERVICE_URL` and `AGENT_USER_ID_KEY`, or every route answers `404 not_enabled`; and the admin gate has no development bypass, so you sign in with an admin token:
+
+  1. Run the service as above.
+  2. In a second terminal, run the API with the agent routes switched on and an admin token of your choice:
+
+     ```bash
+     AGENT_ENABLED=true AGENT_SERVICE_URL=http://localhost:8001 AGENT_USER_ID_KEY=dev-key \
+       ADMIN_TOKEN=<token> uv run uvicorn api.main:app --reload --port 8000
+     ```
+
+  3. In a third terminal, start the app with `cd app && VITE_ENABLE_AGENT_CHAT=true yarn dev`.
+  4. Open `http://localhost:3000/debug`, enter `<token>`, and open the chat page in the same tab: the token lives in that tab's session storage.
+
+- **Without any backend:** the mock BFF serves the documented `/debug/agent/*` routes, a scripted stream (two queue positions, the pipeline steps, a plot and a reply) and PNGs drawn from the pasted data, plus the catalogue routes the plot page needs for `scatter-basic` and `line-multi` (a series family `y1, y2, ...`). It listens on the loopback interface only, needs no sign-in, touches no database and calls no model:
 
   1. Start the mock:
 

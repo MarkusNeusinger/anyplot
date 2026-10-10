@@ -59,7 +59,11 @@ export interface ResultCardProps {
   language: string;
   /** Whether this is the newest version: only it is expanded and gets the composer. */
   latest: boolean;
-  /** A turn is running: refinements wait for it. */
+  /**
+   * A turn, a theme render, a parse or a binding change is in flight: a
+   * refinement and a theme that still has to render wait for it, since the
+   * server runs one at a time. A theme the version already has stays one click away.
+   */
   busy: boolean;
   onRequestTheme: (version: number, theme: Theme) => void;
   onFetchArtifact: (version: number, name: ArtifactName) => Promise<Blob>;
@@ -119,10 +123,18 @@ export function ResultCard({
       onTrack('copy_code', { spec: specId, library, method: 'agent', page: 'agent_chat' }),
   });
 
-  const handleTheme = (theme: Theme) => {
-    setShownTheme(theme);
+  /** Whether showing `theme` needs a render on the server first. */
+  const needsRender = (theme: Theme) => {
     const current = version.images[theme];
-    if (!current || current.state === 'failed') onRequestTheme(number, theme);
+    return !current || current.state === 'failed';
+  };
+
+  const handleTheme = (theme: Theme) => {
+    if (needsRender(theme)) {
+      if (busy) return;
+      onRequestTheme(number, theme);
+    }
+    setShownTheme(theme);
   };
 
   const handleCopyImage = async () => {
@@ -378,6 +390,7 @@ export function ResultCard({
                   component="button"
                   type="button"
                   aria-pressed={active}
+                  disabled={!active && busy && needsRender(theme)}
                   onClick={() => handleTheme(theme)}
                   sx={{
                     ...actionButtonSx,

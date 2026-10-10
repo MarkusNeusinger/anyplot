@@ -17,6 +17,7 @@ const makeVersion = (overrides: Partial<PlotVersion> = {}): PlotVersion => ({
     artifacts: ['plot-light.png', 'plot.py', 'data.csv'],
     changes: ['Marker size raised'],
     residual_defects: ['VQ-03 light: markers overlap the label'],
+    version: 2,
   },
   images: { light: { state: 'ready', url: 'blob:light', blob: pngBlob, status: 'ok' } },
   code: { state: 'ready', text: 'import pandas as pd\ndf = pd.read_csv("data.csv")\n' },
@@ -167,6 +168,31 @@ describe('ResultCard', () => {
       'src',
       'blob:dark'
     );
+  });
+
+  it('holds back a theme that needs a render while the session is busy', async () => {
+    const { onRequestTheme, onRefine } = renderCard({ busy: true });
+    const dark = screen.getByRole('button', { name: 'dark' });
+    expect(dark).toBeDisabled();
+    await userEvent.click(dark);
+    expect(onRequestTheme).not.toHaveBeenCalled();
+    await userEvent.type(screen.getByLabelText('Refine this plot'), 'log scale on y');
+    expect(screen.getByRole('button', { name: '.refine()' })).toBeDisabled();
+    expect(onRefine).not.toHaveBeenCalled();
+  });
+
+  it('switches to a theme the version already has even while busy', async () => {
+    renderCard({
+      busy: true,
+      version: makeVersion({
+        images: {
+          light: { state: 'ready', url: 'blob:light', blob: pngBlob, status: 'ok' },
+          dark: { state: 'ready', url: 'blob:dark', blob: pngBlob, status: 'ok' },
+        },
+      }),
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'dark' }));
+    expect(screen.getByAltText('Adapted plot, version 2, dark theme')).toBeInTheDocument();
   });
 
   it('sends a refinement from the composer', async () => {

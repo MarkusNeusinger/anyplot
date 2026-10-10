@@ -44,7 +44,10 @@ const json = (status: number, body: unknown) =>
 
 let fetchMock: ReturnType<typeof vi.fn>;
 
-function stubFetch(openStatus = 200) {
+function stubFetch(
+  openStatus = 200,
+  openBody: unknown = { status: openStatus, message: 'admin required' }
+) {
   fetchMock = vi.fn(async (input: string, init: RequestInit = {}) => {
     const url = new URL(input);
     const method = init.method ?? 'GET';
@@ -54,7 +57,7 @@ function stubFetch(openStatus = 200) {
             session_id: 'S1',
             eligibility: { eligible: true, status: 'clean', reasons: [] },
           })
-        : json(openStatus, { status: openStatus, message: 'admin required' });
+        : json(openStatus, openBody);
     }
     if (url.pathname.endsWith('/debug/agent/status')) {
       return json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true });
@@ -167,5 +170,37 @@ describe('AgentChatPage gating', () => {
     renderAt(PAGE);
     expect(await screen.findByText(/this page is for admins/)).toBeInTheDocument();
     await waitFor(() => expect(localStorage.getItem(ADMIN_HINT_KEY)).toBeNull());
+  });
+
+  it('offers the other libraries as links when the pair is not eligible', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    stubFetch(422, { detail: 'not_eligible', ref: 'r1' });
+    renderAt(PAGE);
+    expect(await screen.findByText('not eligible · ref r1')).toBeInTheDocument();
+    // No session exists to switch, so a pick opens the page anew with its own session.
+    await waitFor(() =>
+      expect(screen.getByRole('link', { name: 'seaborn' })).toHaveAttribute(
+        'href',
+        '/debug/agent?spec=scatter-basic&library=seaborn&language=python'
+      )
+    );
+    expect(screen.getByRole('button', { name: 'matplotlib' })).toBeDisabled();
+  });
+
+  it('offers a reload when the session open got no answer', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    sessionStorage.setItem('anyplot.debugAuthReloaded', '1'); // this tab already reloaded once
+    stubFetch();
+    const answered = fetchMock as unknown as (input: string, init?: RequestInit) => Response;
+    // Every BFF call meets the Access redirect; the public catalogue still answers.
+    fetchMock = vi.fn(async (input: string, init: RequestInit = {}) => {
+      if (String(input).includes('/debug/agent/')) throw new TypeError('Failed to fetch');
+      return answered(input, init);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    renderAt(PAGE);
+    expect(await screen.findByText('error · unreachable')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'reload to sign in again' })).toBeInTheDocument();
+    sessionStorage.clear();
   });
 });

@@ -292,6 +292,10 @@ class PlotResult(_ServerContract):
     padded. `needs_attention`: a render shipped with residual defect lines.
     `failed`: no render passed the blocking host gates; `reason` says why.
     `not_ready`: no dataset or incomplete bindings, decided before any LLM call.
+
+    `version` is the number the session's version store gave the shipped result
+    (`ok` or `needs_attention`), the one the artifact and theme toggle routes take;
+    it is set once the version is stored, and a `failed` or `not_ready` result has none.
     """
 
     status: PlotStatus
@@ -300,9 +304,12 @@ class PlotResult(_ServerContract):
     artifacts: list[ArtifactName] = Field(default_factory=list, max_length=4)
     changes: list[ChangeNote] = Field(default_factory=list, max_length=MAX_CHANGES)
     residual_defects: list[Line] = Field(default_factory=list, max_length=MAX_RESIDUAL_DEFECTS)
+    version: int | None = Field(default=None, ge=1)
 
     @model_validator(mode="after")
     def _status_rules(self) -> Self:
+        if self.status in ("failed", "not_ready") and self.version is not None:
+            raise ValueError(f"a {self.status!r} result stores no version")
         if self.status == "failed":
             if self.reason not in FAILURE_REASONS:
                 raise ValueError(f"a failed result needs a reason in {sorted(FAILURE_REASONS)}")

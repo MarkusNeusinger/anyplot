@@ -77,7 +77,12 @@ export function ProgressTimeline({ run }: { run: RunState }) {
               }}
             />
             {stepLabel(entry.step, entry.attempt, run)}
-            {active && run.stopping ? ' · stopping…' : ''}
+            {/* A stopped run ends at its next step boundary; the server's `done` confirms it. */}
+            {active && run.stopping
+              ? entry.step === 'queued'
+                ? ' · leaving the queue…'
+                : ' · stopping after this step…'
+              : ''}
             {index < current || upcoming.length > 0 ? (
               <Box component="span" aria-hidden sx={{ color: 'var(--ink-muted)', ml: 0.5 }}>
                 →
