@@ -6,6 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from agents.anyplot.schemas import (
+    MAX_ATTEMPTS,
     MAX_DEFECT_TEXT_CHARS,
     MAX_FULL_CODE_CHARS,
     MAX_LINE_CHARS,
@@ -393,6 +394,7 @@ class TestPlotResult:
         with pytest.raises(ValidationError, match="unique"):
             PlotResult(status="ok", attempts=1, artifacts=["plot.py", "plot.py"])
 
-    def test_attempts_are_bounded_by_the_single_repair(self) -> None:
+    def test_attempts_are_bounded_by_the_largest_attempt_setting(self) -> None:
+        assert PlotResult(status="failed", reason="render", attempts=MAX_ATTEMPTS).attempts == 3
         with pytest.raises(ValidationError):
-            PlotResult(status="failed", reason="render", attempts=3)
+            PlotResult(status="failed", reason="render", attempts=MAX_ATTEMPTS + 1)

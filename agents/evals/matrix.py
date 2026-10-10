@@ -65,9 +65,15 @@ For its own process the harness lifts the run queue's start rate
 (`AGENT_RUNS_PER_MINUTE`, `--runs-per-minute`, 60) and the service-wide daily token
 budget, and gives every case and repeat its own user id, so the per-user daily
 budgets never trip; the per-request limits (12 LLM calls, 80k tokens, the deadlines)
-stay at their production values. It sets `ENVIRONMENT=development` for the `remote`
-and `local` renderers unless it runs on Cloud Run (`K_SERVICE`), because a developer's
-renderer token is accepted only in development, and defaults it to `development`
+stay at their production values. `--max-attempts` sets the pipeline's attempt bound
+(`AGENT_MAX_ATTEMPTS`, 2 by default, recorded in the stamp as `max_attempts`); on Claude
+Haiku a third adapter call (about 22k tokens) takes a reviewed run past the 80k request
+budget, so the root's closing reply becomes the `budget` refusal while the plot result
+stands, unless the environment raises `AGENT_REQUEST_TOKEN_BUDGET`.
+
+The harness sets `ENVIRONMENT=development` for the `remote` and `local` renderers unless
+it runs on Cloud Run (`K_SERVICE`), because a developer's renderer token is accepted
+only in development, and defaults it to `development`
 otherwise; it never loads a `.env` file, and leaves the caller check out, because the
 requests never leave the process. It turns the footer strip off (`AGENT_WATERMARK=false`)
 unless the environment already sets the variable, so `renders/` and the galleries hold
@@ -136,6 +142,9 @@ MODEL_PROVIDERS: dict[str, str] = {"claude-": "anthropic-vertex", "gemini-": "ge
 DEFAULT_TOLERANCE = 0.05
 EVAL_RUNS_PER_MINUTE = 60
 EVAL_GLOBAL_DAILY_TOKENS = 1_000_000_000
+MAX_ATTEMPTS_CHOICES: tuple[int, ...] = (1, 2, 3)
+"""The values `--max-attempts` takes: 1 to `agents.anyplot.schemas.MAX_ATTEMPTS`, written out because
+importing that module builds the agents before `configure` has set the environment (a test keeps them equal)."""
 ATTRIBUTION_LOGGER = "anyplot.agents.attribution"
 MODEL_TOKEN_KINDS: tuple[str, ...] = ("prompt", "candidates", "thoughts", "cached", "cache_write", "tool_use_prompt")
 EXIT_OK, EXIT_REGRESSION, EXIT_SETUP, EXIT_STOPPED, EXIT_OUTAGE = 0, 1, 2, 3, 4
@@ -188,6 +197,12 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--cases", default="smoke", help="smoke, full, or comma-separated globs over case ids")
     parser.add_argument("--repeats", type=int, default=1, help="runs per case (default 1)")
     parser.add_argument(
+        "--max-attempts",
+        type=int,
+        choices=MAX_ATTEMPTS_CHOICES,
+        help="adapter attempts per pipeline run, AGENT_MAX_ATTEMPTS (default: the settings, 2)",
+    )
+    parser.add_argument(
         "--budget-usd",
         type=float,
         help="stop before a case that could take the estimated list-price cost past this (spent + costliest case)",
@@ -218,11 +233,12 @@ def configure(args: argparse.Namespace, environ: MutableMapping[str, str]) -> No
     """Write the flags into the `AGENT_*` environment the settings read; runs before any `agents.anyplot` import.
 
     `--provider` alone selects that provider's default model and judge; `--model` alone
-    implies its provider. The environment's own `AGENT_*` values stay for everything
-    no flag names. With the `remote` or `local` renderer the process runs as
-    `ENVIRONMENT=development` (outside Cloud Run), whatever the shell exported: only
-    development accepts a developer's renderer token and the `local` backend. The footer
-    strip is off unless the environment sets `AGENT_WATERMARK`, so the saved renders stay
+    implies its provider; `--max-attempts` sets `AGENT_MAX_ATTEMPTS`. The environment's
+    own `AGENT_*` values stay for everything no flag names. With the `remote` or `local`
+    renderer the process runs as `ENVIRONMENT=development` (outside Cloud Run), whatever
+    the shell exported: only development accepts a developer's renderer token and the
+    `local` backend. The footer strip is off unless the environment sets `AGENT_WATERMARK`,
+    so the saved renders stay
     the raw ones the baselines were made from.
     """
     environ["PYTHON_DOTENV_DISABLED"] = "1"
@@ -243,6 +259,8 @@ def configure(args: argparse.Namespace, environ: MutableMapping[str, str]) -> No
         environ["AGENT_JUDGE_MODEL"] = args.judge_model
     if args.location:
         environ["AGENT_LOCATION"] = args.location
+    if args.max_attempts is not None:
+        environ["AGENT_MAX_ATTEMPTS"] = str(args.max_attempts)
     configured = environ.get("AGENT_RENDERER")
     renderer = args.renderer or (configured if configured in RENDERERS else "remote")
     environ["AGENT_RENDERER"] = renderer
@@ -948,6 +966,7 @@ def build_stamp(
         "model": settings.model,
         "judge_model": settings.judge_model,
         "location": settings.location,
+        "max_attempts": settings.max_attempts,
         "renderer": settings.renderer,
         "render_url": getattr(settings, "render_url", None),
         "adk_version": _version("google-adk"),

@@ -17,7 +17,7 @@ start right after one. The `IMPRINT` palette list is not protected: the adapter 
 extend it, and the ADAPTATION validator checks that the existing entries keep their
 order. A failing edit is skipped and the rest still run, so one round reports every
 problem; the plan as a whole then yields no code. `full_code` replaces everything; the
-caller decides whether a full file is allowed (attempt 2 only), the applier only
+caller decides whether a full file is allowed (from attempt 2 on), the applier only
 applies it. After either kind of plan, `protected_drift` compares the result with the
 base: the protected statements must keep their exact text, and THEME and the theme
 tokens may not be bound again anywhere (a later `PAGE_BG = ...` passes the overlap

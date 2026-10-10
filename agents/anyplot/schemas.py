@@ -13,7 +13,7 @@ where it enters, never a silent truncation further down. Two families:
 
 Lengths are counted in characters (`24 KiB` is 24,576 characters). Rules that need
 more than one value from outside the model, such as "`find` matches the working
-form exactly once" or "`full_code` only on attempt 2", belong to the code that
+form exactly once" or "`full_code` only from attempt 2 on", belong to the code that
 holds that context (the edit applier and the pipeline), not to these schemas.
 """
 
@@ -42,7 +42,8 @@ MAX_CODE_CHARS = 48 * 1024  # the SECURITY validator parses at most 48 KB
 MAX_EDIT_CHARS = 8 * 1024  # per `find` or `replace`; on Claude the 2,048-token edit-call cap binds first
 MAX_WARNINGS = 2 * MAX_COLUMNS  # a rename and a date-order warning per column
 MAX_NOTES = 20  # readiness hints, gate notes
-MAX_FEEDBACK = 16  # defect and validator lines handed to the single repair
+MAX_FEEDBACK = 16  # defect and validator lines handed to the next repair attempt
+MAX_ATTEMPTS = 3  # the most adapter attempts a run may make; `AGENT_MAX_ATTEMPTS` is 1 to this, 2 by default
 MAX_RESIDUAL_DEFECTS = 16  # 5 reviewer lines, 4 advisory probe gates, canvas padding, adaptation findings
 MAX_NOTE_CHARS = 300
 MAX_CHANGE_CHARS = 200
@@ -184,7 +185,7 @@ class Edit(_ModelOutput):
 
 
 class AdaptPlan(_ModelOutput):
-    """The adapter's answer: edits to the working form, or a full file on attempt 2."""
+    """The adapter's answer: edits to the working form, or a full file from attempt 2 on."""
 
     edits: list[Edit] = Field(default_factory=list, max_length=MAX_EDITS)
     full_code: str | None = Field(default=None, min_length=1, max_length=MAX_FULL_CODE_CHARS)
@@ -300,7 +301,7 @@ class PlotResult(_ServerContract):
 
     status: PlotStatus
     reason: FailureReason | NotReadyReason | None = None
-    attempts: int = Field(default=0, ge=0, le=2)
+    attempts: int = Field(default=0, ge=0, le=MAX_ATTEMPTS)
     artifacts: list[ArtifactName] = Field(default_factory=list, max_length=4)
     changes: list[ChangeNote] = Field(default_factory=list, max_length=MAX_CHANGES)
     residual_defects: list[Line] = Field(default_factory=list, max_length=MAX_RESIDUAL_DEFECTS)

@@ -20,7 +20,7 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 | `anyplot/models.py` | The only place that builds a model or a model client: `make_model`, `make_content_config` and `make_judge_client`, for Claude on Vertex AI and for Gemini |
 | `anyplot/policy.py` | Composes each agent's static instruction from `anyplot/prompts/` and the catalogue's prompt sources, read verbatim; the fixed refusals; the data fences |
 | `anyplot/prompts/` | `root.md`, `adapter.md`, `reviewer.md`, `scope_judge.md`, `data_judge.md` and `refusals.yaml` (English and German) |
-| `anyplot/pipeline.py` | The `plot_pipeline` node: adapt, check, render, review once, repair once, always a `PlotResult` |
+| `anyplot/pipeline.py` | The `plot_pipeline` node: adapt, check, render, review once, repair once (`AGENT_MAX_ATTEMPTS`), always a `PlotResult` |
 | `anyplot/sub_agents/` | One single-turn adapter per enabled library and the tool-less reviewer |
 | `anyplot/tools/session.py` | The root's tools: `get_dataset_profile`, `get_spec_brief`, `get_current_code`, `set_bindings` and the `plot_pipeline` workflow |
 | `anyplot/plugins/` | `ScopeGuardPlugin`, `BudgetPlugin`, `ToolSafetyPlugin` and the request ledger they share |
@@ -68,6 +68,7 @@ Three rules hold for everything here:
 | `AGENT_RUN_CONCURRENCY` | `1` | Pipeline runs (whole `/messages` turns) in flight; the run queue holds the rest |
 | `AGENT_RUNS_PER_MINUTE` | `1` | Runs that may start within any 60 seconds (a sliding window) |
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue, after which the run ends with `capacity`; the queue holds rate x wait / 60 entries (10) and answers `503 capacity` beyond that. Through the BFF the whole turn, this wait included, ends by `AGENT_TURN_MAX_S` (890 s, see `docs/reference/api.md`), which the full wait plus the 180 s run fits into |
+| `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 (`--max-attempts`) to measure no repair or a second repair round |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `80000` | Tokens per request |
 | `AGENT_DAILY_TOKEN_BUDGET` | `1000000` | Tokens per user and day |
@@ -284,6 +285,7 @@ Before the first case the harness renders the catalogue file of the first case o
 | `--no-preflight` | Skip the preflight render before the first case |
 | `--cases` | `smoke` (default), `full`, or comma-separated globs over case ids |
 | `--repeats N` | Runs per case, to see how stable a result is |
+| `--max-attempts N` | Adapter attempts per run, 1 to 3 (`AGENT_MAX_ATTEMPTS`, 2 by default), so 1 measures the first attempt alone and 3 a second repair round; the report's stamp records the value as `max_attempts` |
 | `--budget-usd X` | Stop before a case that could take the estimated list-price cost past X (the spend so far plus the costliest case so far), or once the cost has passed X (exit code 3) |
 | `--out DIR` | Output directory, `agents/evals/reports/` by default (git-ignored) |
 | `--baseline FILE`, `--no-baseline` | The report to compare with; by default `evals/baselines/claude-haiku-5-5.json` when it exists |
@@ -292,13 +294,13 @@ Before the first case the harness renders the catalogue file of the first case o
 | `--seed N`, `--gallery-size N` | The gallery's random sample: its seed (0) and size (30) |
 | `--runs-per-minute N` | The run queue's start rate for this process, 60 by default |
 
-For its own process the harness lifts the run queue's start rate and the service-wide daily token budget, and gives every case its own user id, so the per-user daily budgets never trip. The per-request limits (12 LLM calls, 80,000 tokens, the deadlines) stay at their production values. It also sets `AGENT_WATERMARK=false` unless your environment already sets the variable, so `renders/` and the galleries hold the raw renders the gates and the reviewer judged, without the footer strip, comparable with the committed baselines. To see the renders as a user gets them, export `AGENT_WATERMARK=true` before the run.
+For its own process the harness lifts the run queue's start rate and the service-wide daily token budget, and gives every case its own user id, so the per-user daily budgets never trip. The per-request limits (12 LLM calls, 80,000 tokens, the deadlines) stay at their production values. With `--max-attempts 3` a reviewed run on Claude Haiku passes the 80,000-token budget before the root's closing reply, which then becomes the `budget` refusal while the plot result stands; export a larger `AGENT_REQUEST_TOKEN_BUDGET` to keep the reply. It also sets `AGENT_WATERMARK=false` unless your environment already sets the variable, so `renders/` and the galleries hold the raw renders the gates and the reviewer judged, without the footer strip, comparable with the committed baselines. To see the renders as a user gets them, export `AGENT_WATERMARK=true` before the run.
 
 ### Read the results
 
 A run writes to `--out`:
 
-- `<date>-<model>.json`: the report. It holds the stamp (provider, models, location, renderer, ADK version, commit, prompt hashes, prices), the summary, and one record per case and repeat: status and reason, the exception class when the pipeline ended in an error, attempts, gate failures by gate, validator rejections, edit-apply failures, the reviewer's verdict, LLM calls by agent, tokens by kind, `model_version`, the cost at list price, time to the first event, end-to-end time and render times. Since report schema 2, each record also says where the run stopped (`stage`, such as `adapter_truncated`, `edit_apply` or `reviewer_defects`, and `stages` per attempt), which attempt shipped and which the reviewer saw, an `attempt_log` with each attempt's adapter outcome, finish reason and plan shape, and every model call's finish reason and tokens; a schema-1 baseline still loads. The date is the UTC date.
+- `<date>-<model>.json`: the report. It holds the stamp (provider, models, location, attempt bound, renderer, ADK version, commit, prompt hashes, prices), the summary, and one record per case and repeat: status and reason, the exception class when the pipeline ended in an error, attempts, gate failures by gate, validator rejections, edit-apply failures, the reviewer's verdict, LLM calls by agent, tokens by kind, `model_version`, the cost at list price, time to the first event, end-to-end time and render times. Since report schema 2, each record also says where the run stopped (`stage`, such as `adapter_truncated`, `edit_apply` or `reviewer_defects`, and `stages` per attempt), which attempt shipped and which the reviewer saw, an `attempt_log` with each attempt's adapter outcome, finish reason and plan shape, and every model call's finish reason and tokens; a schema-1 baseline still loads. The date is the UTC date.
 - `<date>-<model>.md`: the Markdown summary, with pass rates by perturbation, library and spec, and the diff against the baseline.
 - `renders/`, `gallery.html` and `gallery-all.html`: the shipped PNG of every run, a review page with 30 renders sampled at random from the runs that passed, and a list of every run. On the review page, tick **Accept** or **Reject** for each plot and select **Export judgements as JSON**; the export counts your accepts and rejects. The page never names the model, but its folder may, so compare two arms with the blind gallery instead (see [Run spike X](#run-spike-x)). The next run in the same directory rewrites both pages, so give each run its own `--out` when you want to keep its gallery.
 

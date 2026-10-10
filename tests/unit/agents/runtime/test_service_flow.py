@@ -270,6 +270,101 @@ def attribution_lines(caplog: pytest.LogCaptureFixture, hook: str) -> list[dict[
     return [line for line in lines if line["hook"] == hook]
 
 
+def adapter_caps(fake: object) -> list[int | None]:
+    """The output cap of every adapter request, in order, for either provider's fake."""
+    if isinstance(fake, ScriptedLlm):
+        return [
+            request.config.max_output_tokens
+            for request in fake.requests
+            if (request.config.labels or {})["agent_kind"] == "adapter"
+        ]
+    assert isinstance(fake, FakeAnthropic)
+    return [call["max_tokens"] for call in fake.calls if FakeAnthropic.kind(call) == "adapter"]
+
+
+def set_max_attempts(monkeypatch: pytest.MonkeyPatch, value: str | None) -> None:
+    """`AGENT_MAX_ATTEMPTS` for this test; None keeps the default of two attempts."""
+    if value is not None:
+        monkeypatch.setenv("AGENT_MAX_ATTEMPTS", value)
+        get_settings.cache_clear()
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+@pytest.mark.parametrize("max_attempts", [None, "3"], ids=["default", "three"])
+async def test_a_second_schema_miss_gets_a_third_attempt_only_when_allowed(
+    client: httpx.AsyncClient,
+    swap_models,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    provider: str,
+    max_attempts: str | None,
+) -> None:
+    """By default a second miss ends the run (one repair round); `AGENT_MAX_ATTEMPTS=3` repairs it once more."""
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    set_max_attempts(monkeypatch, max_attempts)
+    miss = {**SCATTER_PLAN, "changes": [f"{SCHEMA_CANARY} {number}" for number in range(6)]}
+    fake = swap_models(provider, default_script(plans=[miss, miss, SCATTER_PLAN]))
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    steps = [data["step"] for name, data in events if name == "status"]
+    plot = next(data for name, data in events if name == "plot")
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    inputs = adapter_inputs(fake)
+    if max_attempts is None:
+        assert steps == ["adapting", "repairing"]
+        assert (plot["status"], plot["reason"], plot["attempts"]) == ("failed", "validation", 2)
+        assert (result["stage"], result["stages"]) == ("adapter_schema", ["adapter_schema", "adapter_schema"])
+        assert len(inputs) == 2
+    else:
+        assert steps == ["adapting", "repairing", "repairing", "checking", "rendering", "reviewing"]
+        assert (plot["status"], plot["attempts"]) == ("ok", 3)
+        assert result["stages"] == ["adapter_schema", "adapter_schema", "reviewer_ok"]
+        assert (result["shipped_attempt"], result["reviewed_attempt"]) == (3, 3)
+        assert len(inputs) == 3
+        assert "did not match the plan schema" in inputs[2] and "this attempt allows a full file" in inputs[2]
+        assert adapter_caps(fake)[1:] == [12_288, 12_288]  # every repair attempt may send a full file
+    assert not any(SCHEMA_CANARY in record.getMessage() for record in caplog.records)
+
+
+OVERLAPPING_TICKS: dict[str, Any] = {"canvas": [3200, 1800], "texts": [], "tick_overlaps": 2, "points": 0}
+"""A probe whose only finding is G7: advisory feedback on an exact canvas."""
+
+
+@pytest.mark.parametrize(("max_attempts", "attempts"), [("1", 1), (None, 2), ("3", 3)], ids=["one", "default", "three"])
+async def test_gate_feedback_goes_to_the_next_attempt_and_the_last_one_is_reviewed(
+    client: httpx.AsyncClient,
+    swap_models,
+    backend: FakeBackend,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    max_attempts: str | None,
+    attempts: int,
+) -> None:
+    """Feedback that no repair clears is repaired while an attempt is left; then the last attempt is reviewed.
+
+    With one attempt that is the first, so its feedback reaches the review as gate notes, not a repair.
+    """
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    set_max_attempts(monkeypatch, max_attempts)
+    backend.script = lambda job, theme: FakeOutcome(probe=OVERLAPPING_TICKS)
+    swap_models("gemini", default_script(plans=[SCATTER_PLAN] + [{"edits": [], "changes": []}] * (attempts - 1)))
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    steps = [data["step"] for name, data in events if name == "status"]
+    repairs = ["repairing", "checking", "rendering"] * (attempts - 1)
+    assert steps == ["adapting", "checking", "rendering", *repairs, "reviewing"]
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["attempts"]) == ("ok", attempts)  # the reviewer passed the render it saw
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert result["stages"] == [*["gates"] * (attempts - 1), "reviewer_ok"]
+    assert (result["shipped_attempt"], result["reviewed_attempt"]) == (attempts, attempts)
+    assert len(backend.jobs) == attempts
+
+
 # A plan cut off mid-string: Gemini's text stops, Claude's forced tool input stops before a required field.
 CUT_OFF = {
     "gemini": {"text": '{"edits": [{"find": "np.random.seed(42)\\nstudy_ho', "finish_reason": "MAX_TOKENS"},
@@ -638,10 +733,17 @@ async def test_watermark_off_serves_the_raw_renders(
     assert stored.shown == {}
 
 
+@pytest.mark.parametrize("max_attempts", [None, "3"], ids=["default", "three"])
 async def test_reviewer_rejection_gets_one_repair_and_ships_needs_attention(
-    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
+    client: httpx.AsyncClient,
+    swap_models,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    max_attempts: str | None,
 ) -> None:
+    """The repair clears every gate, so the run ships it unreviewed, even when a third attempt is allowed."""
     caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    set_max_attempts(monkeypatch, max_attempts)
     swap_models("gemini", default_script(verdict=VERDICT_REJECT, plans=[SCATTER_PLAN, {"edits": [], "changes": []}]))
     sid = await open_session(client)
 
