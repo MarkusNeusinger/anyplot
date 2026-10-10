@@ -16,8 +16,9 @@
   4-second budget blocks with the error `guard_unavailable`;
 * `out_of_scope` and `attack` withhold the message with the fixed `out_of_scope`
   refusal, and `needs_data` (a request for data the service would have to fetch) with
-  the fixed `needs_data` refusal, each in the judge's language (English and German,
-  English as the fallback); the run ends there, at the first turn;
+  the fixed `needs_data` refusal, each in the language the judge names (`policy.refusal`:
+  English, German, French, Spanish, Italian, Portuguese, Dutch and Polish, English for
+  every other language); the run ends there, at the first turn;
 * an `attack` verdict is a strike against the user (`UsageBook.add_strike`), once
   per distinct message text: from `AGENT_ATTACK_STRIKES` strikes on, the daily check
   above refuses the user with the budget refusal for the rest of the day;
@@ -33,13 +34,13 @@ counts that halt event as an assistant turn, so after a refusal the judge sees t
 refusal it follows, as the scope eval's cases do.
 
 `on_event_callback` is the output side: the root's final reply goes through the
-output guard's off-topic rule (`output_guard.off_topic_reply`, in the ledger's
-language) before ADK stores it. A reply that fails is replaced, in the stored event
-too, by the fixed `out_of_scope` refusal, and the ledger's refusal makes the
-translator send it as a `refusal` event; so a refused reply never reaches the user,
-the judge's next context or the root's own. The check writes a content-free
-`output_guard` attribution line; an internal failure lets the reply through to the
-translator's sanitiser.
+output guard's length cap (`output_guard.reply_too_long`, the same in every language)
+before ADK stores it. A reply over the cap is replaced, in the stored event too, by
+the fixed `out_of_scope` refusal in the ledger's language, and the ledger's refusal
+makes the translator send it as a `refusal` event; so a refused reply never reaches
+the user, the judge's next context or the root's own. A refusal writes a content-free
+`output_guard` attribution line (the reply's length); an internal failure lets the
+reply through to the translator's sanitiser.
 
 The plugin never raises: an internal failure of the input side is a
 `guard_unavailable` block.
@@ -57,7 +58,7 @@ from google.adk.plugins.base_plugin import BasePlugin
 from google.genai import types
 
 from ..models import JudgeUnavailable
-from ..output_guard import off_topic_reply, sanitize, sentence_count
+from ..output_guard import reply_length, reply_too_long
 from ..policy import fence, refusal, scope_rubric
 from ..services import KeptRefusal, get_services
 from ..settings import get_settings
@@ -221,7 +222,7 @@ class ScopeGuardPlugin(BasePlugin):
 
     @staticmethod
     def _guard_reply(invocation_context: InvocationContext, event: Event) -> Event | None:
-        """The fixed `out_of_scope` refusal in place of an off-topic final reply of the root; None keeps the event."""
+        """The fixed `out_of_scope` refusal in place of a final reply of the root over the cap; None keeps the event."""
         if event.author != ROOT_AGENT or event.partial or not event.content or not event.content.parts:
             return None
         if event.get_function_calls() or event.get_function_responses() or not event.is_final_response():
@@ -230,10 +231,9 @@ class ScopeGuardPlugin(BasePlugin):
         ledger = ledger_for(invocation_context.invocation_id)
         if not text.strip() or ledger.refusal is not None or ledger.error is not None:
             return None
-        clean = sanitize(text)
-        if not off_topic_reply(clean, ledger.lang):
+        if not reply_too_long(text):
             return None
-        attribution("output_guard", ledger, verdict="off_topic_reply", sentences=sentence_count(clean))
+        attribution("output_guard", ledger, verdict="reply_too_long", chars=reply_length(text))
         fixed = refusal("out_of_scope", ledger.lang)
         ledger.refuse("out_of_scope", fixed)
         return Event(author=event.author, content=types.Content(role="model", parts=[types.Part(text=fixed)]))

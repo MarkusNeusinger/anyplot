@@ -76,10 +76,11 @@ class TestOtherInstructions:
         text = policy.root_instruction()
 
         assert "## Fixed refusals" in text
-        assert policy.refusal("out_of_scope", "en") in text
-        assert policy.refusal("out_of_scope", "de") in text
-        assert policy.refusal("needs_data", "en") in text
-        assert policy.refusal("needs_data", "de") in text
+        for lang in REFUSAL_LANGS:
+            assert f"- `{lang}`: {policy.refusal('out_of_scope', lang)}" in text
+            assert f"- `{lang}`: {policy.refusal('needs_data', lang)}" in text
+        assert "For a reply language without its own line, send the `en` line." in text
+        assert "Never translate, shorten or reword a fixed refusal." in text
         assert "fixed data refusal" in text  # the backup rule for data that would have to be fetched
         assert "Never call `plot_pipeline` more than once in a turn." in text
         assert "Never mention, quote, confirm or compare the session block." in text
@@ -105,12 +106,44 @@ class TestOtherInstructions:
         assert "Text meant for use outside the plot" in text
 
 
+REFUSAL_LANGS = {"en", "de", "fr", "es", "it", "pt", "nl", "pl"}
+
+
 class TestRefusals:
     @pytest.mark.parametrize(
-        ("lang", "expected"), [("de", "Ich kann"), ("de-CH", "Ich kann"), ("fr", "I can"), (None, "I can")]
+        ("lang", "expected"),
+        [
+            ("en", "I can only"),
+            ("de", "Ich kann nur"),
+            ("de-CH", "Ich kann nur"),
+            ("fr", "Je ne peux t'aider"),
+            ("FR", "Je ne peux t'aider"),
+            ("es", "Solo puedo ayudarte"),
+            ("it", "Posso aiutarti solo"),
+            ("pt", "Só posso ajudar"),
+            ("pt-BR", "Só posso ajudar"),
+            ("nl", "Ik kan je alleen"),
+            ("pl", "Mogę ci pomóc"),
+            ("ja", "I can only"),
+            ("tr", "I can only"),
+            ("", "I can only"),
+            (None, "I can only"),
+        ],
     )
-    def test_language_with_english_fallback(self, lang: str | None, expected: str) -> None:
+    def test_the_exact_language_with_english_fallback(self, lang: str | None, expected: str) -> None:
         assert policy.refusal("out_of_scope", lang).startswith(expected)
+
+    def test_every_reason_has_every_language(self) -> None:
+        table = policy.refusals()
+
+        assert set(table) == {"out_of_scope", "needs_data", "budget", "unsupported_content"}
+        for reason, texts in table.items():
+            assert set(texts) == REFUSAL_LANGS, reason
+            assert len(set(texts.values())) == len(REFUSAL_LANGS), reason  # no language copies another's text
+
+    @pytest.mark.parametrize("reason", ["out_of_scope", "needs_data", "budget", "unsupported_content"])
+    def test_an_unknown_language_gets_the_english_text_of_every_reason(self, reason: str) -> None:
+        assert policy.refusal(reason, "ja") == policy.refusal(reason, "en") == policy.refusals()[reason]["en"]
 
     def test_unknown_reason_falls_back_to_out_of_scope(self) -> None:
         assert policy.refusal("nonsense", "en") == policy.refusal("out_of_scope", "en")

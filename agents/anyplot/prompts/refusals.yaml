@@ -1,21 +1,48 @@
 # Fixed replies of the anyplot agents service, by reason and language.
 #
-# The service sends these texts verbatim; no model writes them. `policy.refusal()`
-# picks the user's language and falls back to English. Keep every entry free of
-# URLs and markdown: the stream translator would strip them.
+# The service sends these texts verbatim; no model writes or translates them.
+# `policy.refusal()` picks the user's language (the scope judge's ISO 639-1 code)
+# and falls back to English for every language without its own entry. Every reason
+# has the same languages; the informal address where a language has one (du, tu,
+# tú, je, ty; você in Portuguese). Keep every entry free of URLs and markdown: the
+# stream translator would strip them.
 
 out_of_scope:
   en: "I can only help with this plot and your data for it: choosing columns, adapting, styling and exporting the plot, and questions about its code."
   de: "Ich kann nur bei diesem Plot und deinen Daten dafür helfen: Spalten wählen, den Plot anpassen, gestalten und exportieren sowie Fragen zu seinem Code."
+  fr: "Je ne peux t'aider qu'avec ce graphique et les données que tu veux y afficher : choisir les colonnes, adapter, mettre en forme et exporter le graphique, et répondre à tes questions sur son code."
+  es: "Solo puedo ayudarte con este gráfico y con los datos que quieras mostrar en él: elegir las columnas, adaptar, dar estilo y exportar el gráfico, y responder a tus preguntas sobre su código."
+  it: "Posso aiutarti solo con questo grafico e con i dati che vuoi rappresentare: scegliere le colonne, adattare, personalizzare ed esportare il grafico e rispondere alle tue domande sul suo codice."
+  pt: "Só posso ajudar com este gráfico e com os dados que você quer mostrar nele: escolher as colunas, adaptar, estilizar e exportar o gráfico e responder a perguntas sobre o código dele."
+  nl: "Ik kan je alleen helpen met deze grafiek en de gegevens die je erin wilt tonen: kolommen kiezen, de grafiek aanpassen, opmaken en exporteren, en vragen over de code ervan beantwoorden."
+  pl: "Mogę ci pomóc tylko przy tym wykresie i danych, które chcesz na nim pokazać: wybór kolumn, dopasowanie, stylizacja i eksport wykresu oraz pytania o jego kod."
 
 needs_data:
   en: "I cannot fetch data from the internet or any other source. Please get the data you want to plot yourself first, then paste it into the data panel as a table."
   de: "Ich kann keine Daten aus dem Internet oder anderen Quellen abrufen. Bitte besorge die Daten, die du darstellen willst, vorher selbst und füge sie dann als Tabelle in den Datenbereich ein."
+  fr: "Je ne peux pas récupérer de données sur Internet ni depuis une autre source. Procure-toi d'abord les données que tu veux représenter, puis colle-les sous forme de tableau dans la zone de données."
+  es: "No puedo obtener datos de internet ni de ninguna otra fuente. Consigue primero por tu cuenta los datos que quieras representar y después pégalos como tabla en el área de datos."
+  it: "Non posso recuperare dati da internet né da altre fonti. Procurati prima i dati che vuoi rappresentare, poi incollali come tabella nell'area dei dati."
+  pt: "Não posso buscar dados na internet nem em nenhuma outra fonte. Primeiro, reúna por conta própria os dados que quer representar e depois cole-os como tabela na área de dados."
+  nl: "Ik kan geen gegevens ophalen van internet of uit een andere bron. Verzamel eerst zelf de gegevens die je wilt weergeven en plak ze daarna als tabel in het gegevenspaneel."
+  pl: "Nie mogę pobierać danych z internetu ani z żadnego innego źródła. Najpierw samodzielnie zdobądź dane, które chcesz pokazać na wykresie, a potem wklej je jako tabelę w panelu danych."
 
 budget:
   en: "The usage limit for now is reached. Please try again later."
   de: "Das Nutzungslimit ist für den Moment erreicht. Bitte versuche es später noch einmal."
+  fr: "La limite d'utilisation est atteinte pour le moment. Réessaie plus tard, s'il te plaît."
+  es: "Se ha alcanzado el límite de uso por ahora. Vuelve a intentarlo más tarde, por favor."
+  it: "Per ora il limite di utilizzo è stato raggiunto. Riprova più tardi, per favore."
+  pt: "O limite de uso foi atingido por enquanto. Por favor, tente novamente mais tarde."
+  nl: "De gebruikslimiet is voorlopig bereikt. Probeer het later nog eens."
+  pl: "Limit użycia został na razie wyczerpany. Spróbuj ponownie później."
 
 unsupported_content:
   en: "Please send your request as text. To use your data, paste it into the data panel."
   de: "Bitte sende deine Anfrage als Text. Deine Daten fügst du im Datenbereich ein."
+  fr: "Envoie ta demande sous forme de texte, s'il te plaît. Pour utiliser tes données, colle-les dans la zone de données."
+  es: "Envía tu solicitud como texto, por favor. Para usar tus datos, pégalos en el área de datos."
+  it: "Invia la tua richiesta come testo, per favore. Per usare i tuoi dati, incollali nell'area dei dati."
+  pt: "Envie seu pedido como texto, por favor. Para usar seus dados, cole-os na área de dados."
+  nl: "Stuur je verzoek alsjeblieft als tekst. Je gegevens plak je in het gegevenspaneel."
+  pl: "Wyślij swoją prośbę jako tekst. Aby użyć swoich danych, wklej je w panelu danych."

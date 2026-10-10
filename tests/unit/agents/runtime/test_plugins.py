@@ -299,6 +299,8 @@ OFF_TOPIC = " ".join(
         "Thank you for your loyalty and see you soon.",
     ]
 )
+TOO_LONG = " ".join([OFF_TOPIC] * 4)
+"""An advertising mail of about 1,300 characters: longer than any reply root.md asks for."""
 
 
 def reply_event(author: str, text: str, **extra: Any) -> Event:
@@ -306,26 +308,27 @@ def reply_event(author: str, text: str, **extra: Any) -> Event:
 
 
 class TestOutputGuard:
-    async def test_an_off_topic_reply_is_replaced_before_it_is_stored(
-        self, ledger: RequestLedger, caplog: pytest.LogCaptureFixture
+    @pytest.mark.parametrize("lang", ["de", "pl", "ja"])
+    async def test_a_reply_over_the_cap_is_replaced_before_it_is_stored(
+        self, ledger: RequestLedger, caplog: pytest.LogCaptureFixture, lang: str
     ) -> None:
-        ledger.lang = "de"
+        ledger.lang = lang
 
         with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
             replaced = await ScopeGuardPlugin().on_event_callback(
-                invocation_context=FakeContext(), event=reply_event("anyplot", OFF_TOPIC)
+                invocation_context=FakeContext(), event=reply_event("anyplot", TOO_LONG)
             )
 
-        fixed = policy.refusal("out_of_scope", "de")
+        fixed = policy.refusal("out_of_scope", lang)
         assert replaced is not None and replaced.author == "anyplot" and replaced.content.parts[0].text == fixed
         assert ledger.refusal == ("out_of_scope", fixed)
         line = json.loads(caplog.records[-1].getMessage())
-        assert line["hook"] == "output_guard" and line["verdict"] == "off_topic_reply" and line["sentences"] == 6
+        assert line["hook"] == "output_guard" and line["verdict"] == "reply_too_long" and line["chars"] == len(TOO_LONG)
         assert "customers" not in caplog.text
 
     async def test_the_stored_refusal_is_what_the_judge_sees_next(self, ledger: RequestLedger) -> None:
         replaced = await ScopeGuardPlugin().on_event_callback(
-            invocation_context=FakeContext(), event=reply_event("anyplot", OFF_TOPIC)
+            invocation_context=FakeContext(), event=reply_event("anyplot", TOO_LONG)
         )
         events = [turn_event("user", "write it"), replaced]
 
@@ -333,15 +336,13 @@ class TestOutputGuard:
 
         assert context == policy.refusal("out_of_scope", "en") and "Dear customers" not in context
 
-    async def test_plot_replies_and_other_events_are_kept(self, ledger: RequestLedger) -> None:
+    async def test_replies_within_the_cap_and_other_events_are_kept(self, ledger: RequestLedger) -> None:
         plugin = ScopeGuardPlugin()
         kept = [
-            reply_event(
-                "anyplot", OFF_TOPIC + " The bars now show revenue. The legend is on the right. Done, title too."
-            ),
+            reply_event("anyplot", OFF_TOPIC),  # the cap bounds the length; the judge decides the topic
             reply_event("anyplot", "Done: the bars are blue."),
-            reply_event("plot_pipeline", OFF_TOPIC),
-            reply_event("anyplot", OFF_TOPIC, partial=True),
+            reply_event("plot_pipeline", TOO_LONG),
+            reply_event("anyplot", TOO_LONG, partial=True),
         ]
 
         for event in kept:
@@ -352,7 +353,7 @@ class TestOutputGuard:
         ledger.refuse("budget", "The usage limit for now is reached.")
 
         replaced = await ScopeGuardPlugin().on_event_callback(
-            invocation_context=FakeContext(), event=reply_event("anyplot", OFF_TOPIC)
+            invocation_context=FakeContext(), event=reply_event("anyplot", TOO_LONG)
         )
 
         assert replaced is None and ledger.refusal[0] == "budget"

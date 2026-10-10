@@ -1,68 +1,36 @@
-"""Tests for agents/anyplot/output_guard.py: the off-topic rule on the root's replies, in five languages.
+"""Tests for agents/anyplot/output_guard.py: the reply cap on the root's replies, the same in every language.
 
-The off-topic set is the shape the guardrail review of 2026-10-10 found passing: mails,
-a cover letter and ads that mention one everyday plot word, and an ad written as two
-long sentences. The must-pass set is the replies root.md asks for: change lists in
-the languages the root answers in, and how-to-run steps.
+The must-pass set is the replies root.md asks for ("two to five sentences, or a short
+list"): change lists and how-to-run steps in the languages the root answers in, a
+long five-sentence reply in German, and replies in scripts without spaces between
+sentences. The must-refuse set is text no reply of root.md's shape reaches: a long
+customer mail, a long Japanese essay and a list of sixty items.
 """
 
 import pytest
 
-from agents.anyplot.output_guard import MAX_REPLY_SENTENCES, MAX_UNCHECKED_REPLY_CHARS, off_topic_reply, sentence_count
+from agents.anyplot.output_guard import MAX_MESSAGE_CHARS, reply_length, reply_too_long, sanitize
 
 
-ESSAY = " ".join(
+CUSTOMER_MAIL = " ".join(
     [
-        "Dear customers, we are delighted to announce our autumn offer.",
-        "Product A sold better than ever this quarter.",
-        "Order now and save twenty percent on every purchase.",
-        "Our team is ready to help you with any question.",
-        "The offer ends on Friday, so do not wait too long.",
-        "Thank you for your loyalty and see you soon.",
+        "Dear customers, we are delighted to announce our big autumn offer, and we want you to be the first to know.",
+        "Product A sold better than ever this quarter, and we have decided to share that success with all of you.",
+        "From Friday on, every item in our shop is twenty percent off, and members get free shipping on every order.",
+        "Order now and save on every purchase, because stocks are limited and the best sizes always go first.",
+        "Our friendly team is ready to help you with any question about sizes, delivery times or returns.",
+        "If you have not signed up for our newsletter yet, now is the perfect moment to do so and never miss a deal.",
+        "Members also receive a personal birthday voucher and early access to every seasonal collection we launch.",
+        "The offer ends on Friday at midnight, so please do not wait too long if you have your eye on something.",
+        "Tell your friends and family about it too, because every new member also gets a welcome gift on sign-up.",
+        "Thank you for your loyalty over all these years, and we look forward to seeing you again very soon.",
+        "Warm regards from all of us, and enjoy the most colourful season of the year with your loved ones.",
+        "P.S. Our stores in every city stay open until ten in the evening on Friday and Saturday this week.",
+        "P.P.S. Follow us on social media for daily deals, styling tips and stories from the people behind our brand.",
     ]
 )
-PHISHING = (
-    "Dear customer, we noticed unusual activity on your account. For your safety, your account has been "
-    "temporarily suspended. To restore access, please confirm your identity within 24 hours. Enter the "
-    "verification code we sent you on our secure page. If you do not confirm, your account will be closed "
-    "permanently. Thank you for your cooperation."
-)
-COVER_LETTER = (
-    "Dear hiring manager, I am writing to apply for the role of marketing assistant. I have three years of "
-    "experience in retail and customer service. My strengths are communication, organisation and teamwork. "
-    "I would welcome the chance to bring these skills to your company. I am available for an interview at your "
-    "convenience. Thank you for considering my application."
-)
-PROMO = (
-    "Big news for our community! Our autumn sale starts this Friday. Every item in the shop is twenty percent "
-    "off. Members get free shipping on all orders. This is the best value we have ever offered. Stocks are "
-    "limited, so be quick. Sign up today and never miss a deal."
-)
-GERMAN_AD = (
-    "Liebe Kundinnen und Kunden! Unser Herbstverkauf beginnt am Freitag. Alle Artikel sind um zwanzig Prozent "
-    "reduziert. Mitglieder erhalten kostenlosen Versand. Ein Angebot mit echtem Wert für die ganze Familie. "
-    "Der Vorrat ist begrenzt. Melden Sie sich noch heute an."
-)
-LONG_AD = (
-    "Discover the most comfortable running shoes you will ever own, crafted from recycled materials, cushioned "
-    "for long distances, tested by professional athletes across three continents and now available in twelve "
-    "new seasonal shades that match every outfit, every mood and every training plan you could imagine for the "
-    "coming months, whether you sprint, jog or simply walk to the office every morning. Order today to receive "
-    "a free pair of socks, a matching water bottle and a personal training voucher worth fifty euros, because "
-    "you deserve the very best support on every single step of your journey towards a healthier and happier life."
-)
-POEM = "\n".join(
-    [
-        "The sea is wide and deep and slow,",
-        "it rolls where only sailors go,",
-        "it sings at night of distant lands,",
-        "of silver fish and golden sands,",
-        "it keeps the secrets of the deep,",
-        "it rocks the weary ships to sleep,",
-        "and when the morning sun is high,",
-        "it mirrors every cloud and sky.",
-    ]
-)
+JAPANESE_ESSAY = "海はとても広くて深く、遠い国の物語を静かに語り続けている。" * 45
+SIXTY_ITEMS = "\n".join(f"- Item {number}: order today and get a free gift with every purchase" for number in range(60))
 
 FRENCH = (
     "Voici ce qui a changé :\n- les barres sont maintenant bleues\n- la légende est en haut à droite\n"
@@ -77,6 +45,16 @@ SPANISH = (
 ITALIAN = (
     "Ecco cosa è cambiato:\n- le barre ora sono blu\n- la legenda è in alto a destra\n- il titolo è più grande\n"
     "- le etichette dell'asse x sono inclinate\n- la griglia è più chiara\n- i valori sono ordinati"
+)
+PORTUGUESE_STEPS = (
+    "Para executar o gráfico no seu computador:\n1. Instale o Python 3.12 ou mais recente.\n"
+    "2. Instale os pacotes com pip install matplotlib pandas.\n3. Baixe o plot.py e o data.csv.\n"
+    "4. Coloque os dois arquivos na mesma pasta.\n5. Abra um terminal nessa pasta.\n"
+    "6. Execute python plot.py.\n7. A imagem é salva como plot-light.png.\n8. Abra a imagem para conferir o resultado."
+)
+POLISH = (
+    "Wykres jest gotowy. Słupki pokazują sprzedaż w każdym regionie, posortowaną od największej. "
+    "Legenda jest teraz po prawej stronie, a tytuł podaje rok."
 )
 HOW_TO_RUN = (
     "Here is how to run it:\n1. Save both files in one folder.\n2. Open a terminal there.\n"
@@ -94,61 +72,74 @@ LONG_PLOT_REPLY = (
     "One issue is left: two tick labels on the y-axis are long and wrap onto a second line in the dark theme. "
     "If you want, I can shorten those labels or give the chart a little more room on the left side."
 )
+LONG_PLOT_REPLY_DE = (
+    "Der Plot zeigt jetzt den Umsatz pro Region als waagerechte Balken, absteigend nach dem größten Wert sortiert. "
+    "Die Legende habe ich außerhalb der Achsen platziert, damit sie den längsten Balken nicht mehr verdeckt, und der "
+    "Titel nennt jetzt das Geschäftsjahr. Die x-Achse verwendet Tausendertrennzeichen, und die Gitterlinien sind "
+    "heller, sodass sich die Balken deutlicher vom Hintergrund abheben. Ein Problem bleibt: Zwei Beschriftungen auf "
+    "der y-Achse sind sehr lang und brechen im dunklen Design auf eine zweite Zeile um. Wenn du möchtest, kann ich "
+    "diese Beschriftungen kürzen oder dem Diagramm auf der linken Seite etwas mehr Platz geben."
+)
+JAPANESE = "プロットができました。棒は売上の大きい順に並んでいます。凡例は右上にあります。タイトルには年を入れました。"
+CHINESE = "图表已经完成。柱子按销售额从高到低排列，图例在右上角，标题写明了年份。需要的话，我可以把颜色改成蓝色。"
 
 
-class TestSentences:
-    def test_sentences_and_list_items_are_counted(self) -> None:
-        assert sentence_count("One. Two! Three?\n- four\n- five\n\n") == 5
-        assert sentence_count("Pi is 3.14 here. 42. Yes.") == 2  # a decimal ends no sentence; a bare number is none
-
-
-class TestOffTopic:
+class TestReplyCap:
     @pytest.mark.parametrize(
-        ("text", "lang"),
-        [
-            (ESSAY, "en"),
-            (PHISHING, "en"),
-            (COVER_LETTER, "en"),
-            (PROMO, "en"),
-            (GERMAN_AD, "de"),
-            (LONG_AD, "en"),
-            (POEM, "en"),
-        ],
-        ids=["essay", "phishing-code", "cover-letter-role", "promo-value", "german-ad-wert", "long-ad", "poem"],
+        "text", [CUSTOMER_MAIL, JAPANESE_ESSAY, SIXTY_ITEMS], ids=["customer-mail", "japanese-essay", "sixty-items"]
     )
-    def test_mails_letters_and_ads_are_off_topic(self, text: str, lang: str) -> None:
-        assert off_topic_reply(text, lang)
-
-    def test_the_long_ad_is_caught_by_its_length_not_its_sentences(self) -> None:
-        assert sentence_count(LONG_AD) == 2 <= MAX_REPLY_SENTENCES and len(LONG_AD) > MAX_UNCHECKED_REPLY_CHARS
+    def test_text_longer_than_any_reply_is_refused(self, text: str) -> None:
+        assert reply_length(text) > MAX_MESSAGE_CHARS and reply_too_long(text)
 
     @pytest.mark.parametrize(
-        ("text", "lang"),
+        "text",
         [
-            (FRENCH, "fr"),
-            (SPANISH, "es"),
-            (ITALIAN, "it"),
-            (HOW_TO_RUN, "en"),
-            (HOW_TO_RUN_DE, "de"),
-            (LONG_PLOT_REPLY, "en"),
-            (
-                ESSAY + " The bars now show revenue per region. The legend sits on the right. The title names 2024.",
-                "en",
-            ),
-            ("Hello! Happy to help.", "en"),
+            FRENCH,
+            SPANISH,
+            ITALIAN,
+            PORTUGUESE_STEPS,
+            POLISH,
+            HOW_TO_RUN,
+            HOW_TO_RUN_DE,
+            LONG_PLOT_REPLY,
+            LONG_PLOT_REPLY_DE,
+            JAPANESE,
+            CHINESE,
+            "Hello! Happy to help.",
         ],
-        ids=["french", "spanish", "italian", "how-to-run", "how-to-run-de", "long-plot-reply", "mixed", "short"],
+        ids=[
+            "french",
+            "spanish",
+            "italian",
+            "portuguese-eight-steps",
+            "polish",
+            "how-to-run",
+            "how-to-run-de",
+            "five-long-sentences",
+            "five-long-sentences-de",
+            "japanese",
+            "chinese",
+            "short",
+        ],
     )
-    def test_plot_replies_in_every_covered_language_pass(self, text: str, lang: str) -> None:
-        assert not off_topic_reply(text, lang)
+    def test_replies_of_root_mds_shape_pass_in_every_language(self, text: str) -> None:
+        assert not reply_too_long(text)
 
-    def test_the_change_lists_are_long_enough_to_be_checked(self) -> None:
-        assert all(sentence_count(text) > MAX_REPLY_SENTENCES for text in (FRENCH, SPANISH, ITALIAN, HOW_TO_RUN))
+    def test_the_cap_is_counted_in_characters_whatever_the_script(self) -> None:
+        for character in ("a", "é", "語", "ש"):
+            assert not reply_too_long(character * MAX_MESSAGE_CHARS)
+            assert reply_too_long(character * (MAX_MESSAGE_CHARS + 1))
 
-    def test_inline_code_ties_a_sentence_to_the_plot(self) -> None:
-        reply = "\n".join(f"- Step {number}: run `step_{number}()` first." for number in range(8))
+    def test_the_cap_reads_the_sanitised_reply(self) -> None:
+        code = "```python\n" + "\n".join(f"value_{number} = {number} * 1000" for number in range(60)) + "\n```"
+        html = "<b>" * 500 + "The bars are blue."
 
-        assert not off_topic_reply(reply, "en")
+        assert len(code) > MAX_MESSAGE_CHARS and not reply_too_long("Here is the code:\n" + code)
+        assert len(html) > MAX_MESSAGE_CHARS and reply_length(html) == len("The bars are blue.")
 
-    def test_a_language_the_word_list_does_not_cover_is_not_checked(self) -> None:
-        assert off_topic_reply(ESSAY, "en") and not off_topic_reply(ESSAY, "pt")
+    def test_the_cap_does_not_judge_content(self) -> None:
+        """A short off-topic reply is the scope judge's to stop; the cap only bounds the length."""
+        assert not reply_too_long("Our autumn sale starts on Friday. Every item is twenty percent off. Order now!")
+
+    def test_the_sanitiser_still_cuts_at_the_cap(self) -> None:
+        assert len(sanitize(CUSTOMER_MAIL)) == MAX_MESSAGE_CHARS and sanitize(CUSTOMER_MAIL).endswith("…")

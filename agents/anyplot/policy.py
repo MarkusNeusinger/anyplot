@@ -16,10 +16,13 @@ The texts are read once per process (`lru_cache`), when `agent.py` builds the ag
 at import time. A missing file or heading raises at import, so a renamed section
 breaks the build instead of silently shrinking a prompt.
 
-The root's refusals come from `prompts/refusals.yaml` (English and German, English as
-the fallback); the scope guard sends the same texts without any model call. The root's
-instruction lists the two it may send itself, `out_of_scope` and `needs_data`
-(`ROOT_REFUSALS`), as its backup when a message got past the judge.
+The root's refusals come from `prompts/refusals.yaml` (English, German, French,
+Spanish, Italian, Portuguese, Dutch and Polish, written by hand; English for every
+other language); the scope guard sends the same texts without any model call. The
+root's instruction lists the two it may send itself, `out_of_scope` and `needs_data`
+(`ROOT_REFUSALS`), in every language, as its backup when a message got past the judge;
+root.md tells it to use the English line for any other language, never a translation
+of its own.
 
 `fence(tag, text)` wraps untrusted text (catalogue code, dataset profiles and column
 names, user messages, spec text that started as a public issue, and model-written
@@ -173,7 +176,11 @@ def refusals() -> RefusalTable:
 
 
 def refusal(reason: str, lang: str | None) -> str:
-    """The fixed reply for `reason` in `lang`, falling back to English (and to out_of_scope)."""
+    """The fixed reply for `reason` in `lang`, falling back to English (and to out_of_scope).
+
+    `lang` is an ISO 639-1 code or a language tag (`pt-BR` reads as `pt`); a language
+    without its own entry gets the English text, never a translation.
+    """
     table = refusals()
     texts = table.get(reason) or table["out_of_scope"]
     return texts.get((lang or DEFAULT_LANG).lower()[:2], texts[DEFAULT_LANG])

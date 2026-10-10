@@ -21,10 +21,10 @@ long code block or contact detail, at most 1,200 characters); the plot event's
 `changes` and `residual_defects` are model-written too, so each goes through the same
 sanitiser and becomes one plain line. A message whose contact details were removed
 writes a content-free `output_guard` attribution line (the kinds removed, the
-sentence count).
+length).
 
-The output guard's off-topic rule (`output_guard.off_topic_reply`) runs earlier, in
-the ScopeGuard plugin before ADK stores the root's reply: a refused reply reaches the
+The output guard's length cap (`output_guard.reply_too_long`) runs earlier, in the
+ScopeGuard plugin before ADK stores the root's reply: a refused reply reaches the
 translator as the ledger's `out_of_scope` refusal, so it goes out as a `refusal` event.
 """
 
@@ -34,7 +34,7 @@ from typing import Any
 from google.adk.events.event import Event
 
 from agents.anyplot.contact_filter import contact_kinds
-from agents.anyplot.output_guard import plain_line, sanitize, sentence_count
+from agents.anyplot.output_guard import plain_line, sanitize
 from agents.anyplot.pipeline import STATUS_KEY
 from agents.anyplot.plugins.ledger import RequestLedger, attribution
 
@@ -130,13 +130,7 @@ class Translator:
         clean = sanitize(text, spec_id=self.spec_id)
         stripped = contact_kinds(text)
         if stripped:
-            attribution(
-                "output_guard",
-                self.ledger,
-                verdict="contacts_stripped",
-                contacts=stripped,
-                sentences=sentence_count(clean),
-            )
+            attribution("output_guard", self.ledger, verdict="contacts_stripped", contacts=stripped, chars=len(clean))
         return [sse("message", {"text": clean})] if clean else []
 
     def error(self, code: str) -> list[str]:
