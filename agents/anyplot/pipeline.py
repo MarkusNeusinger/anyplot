@@ -699,7 +699,9 @@ async def _attempts(
     adapter = adapter_name(view.library)
 
     for attempt in range(1, settings.max_attempts + 1):
-        if not budget_allows(ledger, services.usage, settings):
+        # This call and the root's closing reply: a plot may ship from any attempt, and ADK's
+        # call cap would refuse the reply the Budget plugin's exemption cannot admit.
+        if not budget_allows(ledger, services.usage, settings, next_calls=2):
             run.reason, run.unreviewed_why, run.stage = "budget", "the usage limit was reached", "budget"
             return
         if attempt > 1 and not deadline.allows(ADAPTER_P95_S + RENDER_P95_S):

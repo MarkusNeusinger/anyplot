@@ -934,6 +934,31 @@ async def test_a_review_keeps_room_for_the_closing_reply(
     assert [name for name, _ in events if name in ("message", "refusal")] == ["message"]
 
 
+async def test_a_low_call_cap_keeps_the_slot_for_the_closing_reply(
+    client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """With two calls allowed, the root's first call leaves no room for an adapter call plus the reply.
+
+    The adapter is refused before it runs, so the pipeline fails with `budget` and the root's
+    second call is the reply: ADK's own call cap never refuses the reply to a shipped plot, and
+    the Budget plugin's exemption is never asked to admit a call the cap would reject.
+    """
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    monkeypatch.setenv("AGENT_MAX_LLM_CALLS", "2")
+    get_settings.cache_clear()
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["reason"], plot["attempts"]) == ("failed", "budget", 0)
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert (result["stage"], result["stages"]) == ("budget", [])
+    assert [name for name, _ in events if name in ("message", "refusal")] == ["message"]
+    assert next(data for name, data in events if name == "done")["llm_calls"] == 2
+
+
 @pytest.mark.parametrize("provider", PROVIDERS)
 async def test_the_repair_attempt_widens_the_adapter_request_only(
     client: httpx.AsyncClient, swap_models, provider: str
