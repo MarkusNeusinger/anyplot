@@ -1,0 +1,243 @@
+# Cloud Build configuration for anyplot-renderer, the sandbox renderer of the
+# agent network (agents/renderer/, docs/concepts/agent-network.md "Serving and
+# infrastructure").
+#
+# Same candidate -> smoke -> promote shape as api/cloudbuild.yaml: the new
+# revision is deployed without traffic under the `candidate` tag, smoked on its
+# tag URL, and only then given 100 % of the traffic. One difference: the deploy
+# step creates the service itself on the very first build. gcloud refuses
+# `--no-traffic` for a service that does not exist yet, so when `services
+# describe` answers that the service is not found, the step deploys without it;
+# there is no traffic to protect before anyone calls the service. Any other
+# describe failure stops the build, so a permission or API error can never send
+# all traffic to an unsmoked revision.
+#
+# Run from the repository root (the build context is `.`, filtered by the root
+# `.dockerignore`), for example:
+#
+#   gcloud builds submit --config=agents/renderer/cloudbuild.yaml \
+#     --gcs-source-staging-dir=gs://anyplot-cloudbuild-eu/source \
+#     "--substitutions=^|^_ALLOWED_CALLERS=...|_AUDIENCES=...|_SMOKE_RENDER=true" .
+#
+# The service account, the IAM bindings and the first build are owner tasks;
+# docs/concepts/agent-network.md lists them.
+substitutions:
+  _SERVICE_NAME: anyplot-renderer
+  _REGION: europe-west4
+  _SERVICE_ACCOUNT: anyplot-renderer@anyplot.iam.gserviceaccount.com
+  # RENDERER_ALLOWED_CALLERS: the emails whose ID token the renderer accepts,
+  # separated by commas: the anyplot-agents service account, the renderer's own
+  # service account (the render smoke below calls the candidate as that account)
+  # and, for `adk web` against the deployed renderer, the owner's account. Empty
+  # means nobody passes.
+  _ALLOWED_CALLERS: ""
+  # RENDERER_AUDIENCES beyond the service URL, separated by commas. The deploy
+  # step always adds the service's own URL (status.url): Cloud Run accepts no
+  # other audience for a service account's token, not even a tag URL. Add here
+  # only the OAuth client ids of the owner's user tokens (agents/README.md).
+  _AUDIENCES: ""
+  # "true": the smoke step renders a real plot through the candidate, which
+  # proves the launcher, the in-memory volume and the harness. It calls the
+  # candidate as the service's own account (_SERVICE_ACCOUNT), so it needs that
+  # account in _ALLOWED_CALLERS and with roles/run.invoker on the service, this
+  # build's account with roles/iam.serviceAccountTokenCreator on it, and the
+  # service URL in RENDERER_AUDIENCES, so the very first build (which creates
+  # the service and its URL) runs with "false".
+  _SMOKE_RENDER: "true"
+  # "1" keeps an instance warm (spike S: a request to a service scaled to zero
+  # met a 500 and a 429 for about 17 s); "0" scales to zero between sessions.
+  _MIN_INSTANCES: "0"
+
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "-t"
+      - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID"
+      - "-t"
+      - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest"
+      - "-f"
+      - "agents/renderer/Dockerfile"
+      - "."
+    id: "build-image"
+
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "push"
+      - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID"
+    id: "push-image"
+    waitFor: ["build-image"]
+
+  # Deploy WITHOUT traffic (except on the first build, see the header), tagged
+  # `candidate`, with a deterministic revision suffix so promote targets exactly
+  # this build's revision (`b` prefix: the suffix must start with a letter).
+  #
+  # The flags, each from spikes S and S2: gen2 plus --sandbox-launcher (a Preview
+  # feature, hence `gcloud beta`); 2 vCPU and 4 GiB, which serve one sandbox at a
+  # time safely; one instance, because renders are serial and the run queue of
+  # the agents service already holds the line; concurrency 4 only so a waiting
+  # caller (the deployed agents and a developer's adk web) gets the render slot's
+  # `503 busy` instead of a Cloud Run 429, and so a cancel reaches the instance
+  # while a render holds the slot; and the run directories on a 512 MiB
+  # in-memory volume, because a disk fill through /work on the plain filesystem
+  # crashed the instance at about 3.4 GB (the service refuses to render without
+  # it: `503 volume_missing`). No secrets, no Cloud SQL, no role.
+  #
+  # `--update-env-vars`, never `--set-env-vars`, for the reason api/cloudbuild.yaml
+  # gives: an out-of-band variable must survive a deploy.
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args:
+      - "-ceu"
+      - |
+        gcloud beta run deploy --help | grep -q -- "--sandbox-launcher" \
+          || { echo "this gcloud does not know --sandbox-launcher; use a newer builder image"; exit 1; }
+        if SELF=$$(gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --platform=managed --format="value(status.url)" 2>describe.err); then
+          TRAFFIC=(--no-traffic)
+        elif grep -qE "Cannot find service|NOT_FOUND" describe.err; then
+          echo "${_SERVICE_NAME} does not exist yet: creating it (gcloud refuses --no-traffic on a new service)"
+          SELF=""
+          TRAFFIC=()
+        else
+          cat describe.err
+          echo "could not read ${_SERVICE_NAME}; refusing to deploy without --no-traffic"
+          exit 1
+        fi
+        EXTRA="${_AUDIENCES}"
+        AUDIENCES="$$SELF"
+        if [ -n "$$EXTRA" ]; then AUDIENCES="$${AUDIENCES:+$$AUDIENCES,}$$EXTRA"; fi
+        echo "RENDERER_AUDIENCES=$$AUDIENCES"
+        gcloud beta run deploy ${_SERVICE_NAME} \
+          --image=europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID \
+          --region=${_REGION} \
+          --platform=managed \
+          --execution-environment=gen2 \
+          --sandbox-launcher \
+          --no-allow-unauthenticated \
+          --service-account=${_SERVICE_ACCOUNT} \
+          --cpu=2 \
+          --memory=4Gi \
+          --min-instances=${_MIN_INSTANCES} \
+          --max-instances=1 \
+          --concurrency=4 \
+          --timeout=300 \
+          --add-volume=name=runs,type=in-memory,size-limit=512Mi \
+          --add-volume-mount=volume=runs,mount-path=/tmp/runs \
+          "--update-env-vars=^|^ENVIRONMENT=production|RENDERER_ALLOWED_CALLERS=${_ALLOWED_CALLERS}|RENDERER_AUDIENCES=$$AUDIENCES" \
+          "$${TRAFFIC[@]}" \
+          --tag=candidate \
+          --revision-suffix=b$BUILD_ID
+    id: "deploy"
+    waitFor: ["push-image"]
+
+  # Pre-traffic smoke against the CANDIDATE revision on its tag URL.
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args:
+      - "-ceu"
+      - |
+        # The candidate tag must point at THIS build's revision, before and after
+        # the probes (the same double read as api/cloudbuild.yaml).
+        candidate() {
+          gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --platform=managed --format=json \
+            | python3 -c "import json,sys; t=json.load(sys.stdin)['status']['traffic']; c=next(x for x in t if x.get('tag')=='candidate'); print(c['url'], c['revisionName'])"
+        }
+        read -r URL REV <<< "$$(candidate)"
+        test "$$REV" = "${_SERVICE_NAME}-b$BUILD_ID" || { echo "candidate tag moved to $$REV (expected ${_SERVICE_NAME}-b$BUILD_ID)"; exit 1; }
+        echo "smoke against candidate $$URL ($$REV)"
+
+        # 1. Cloud Run IAM holds: without a token the front end answers 403 and
+        #    the request never reaches the container. A 200 would mean the
+        #    service lost --no-allow-unauthenticated.
+        code=$$(curl -s --retry 5 --retry-delay 5 -o /dev/null -w '%{http_code}' "$$URL/status")
+        test "$$code" = "403" || { echo "expected 403 without an ID token, got $$code"; exit 1; }
+        echo "OK: IAM refuses an anonymous caller"
+
+        # 2. A real render: the launcher, the in-memory volume, the harness and
+        #    the caller check, end to end. The token's audience is the SERVICE
+        #    URL even though the request goes to the tag URL: Cloud Run accepts
+        #    no other audience. The first request after a deploy may meet a cold
+        #    instance, hence the retries.
+        if [ "${_SMOKE_RENDER}" = "true" ]; then
+          SERVICE_URL=$$(gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --platform=managed --format="value(status.url)")
+          # The smoke calls the candidate as the service's own account. A build
+          # cannot mint an ID token for its own identity (gcloud refuses
+          # `--include-email` for it, and Cloud Build's metadata server has no
+          # `identity` endpoint; builds da6f53f5 and a9d3ac7f on 2026-10-10), so it
+          # impersonates the service account, which needs
+          # roles/iam.serviceAccountTokenCreator on that account for the build's
+          # account, roles/run.invoker on the service for the service account, and
+          # the service account in _ALLOWED_CALLERS (the bootstrap grants all three).
+          TOKEN=$$(gcloud auth print-identity-token --impersonate-service-account="${_SERVICE_ACCOUNT}" \
+            --audiences="$$SERVICE_URL" --include-email 2>impersonate.err) \
+            || { cat impersonate.err; echo "could not mint the smoke token: grant roles/iam.serviceAccountTokenCreator on ${_SERVICE_ACCOUNT} to this build's account"; exit 1; }
+          curl -fsS --retry 5 --retry-delay 5 --retry-all-errors -H "Authorization: Bearer $$TOKEN" -o status.json "$$URL/status" \
+            || { echo "/status failed with this build's token: check _ALLOWED_CALLERS, roles/run.invoker and RENDERER_AUDIENCES ($$SERVICE_URL)"; exit 1; }
+          python3 -c "import json; s=json.load(open('status.json')); assert s['name']=='anyplot-renderer' and s['sandbox'] and s['volume'] is True, s; print('OK: /status', s['version'], s['mem_available_mb'], 'MiB available, volume in place')"
+          python3 - <<'EOF'
+        import json
+        source = "\n".join([
+            "import matplotlib.pyplot as plt",
+            "fig, ax = plt.subplots(figsize=(16, 9), dpi=200)",
+            "ax.plot([1, 2, 3, 4], [3, 1, 4, 2], linewidth=6)",
+            "fig.savefig('plot-light.png')",
+        ])
+        job = {"job_id": "smoke", "language": "python", "library": "matplotlib", "source": source,
+               "data_csv": "x\n1\n", "themes": ["light"], "timeout_s": 60}
+        json.dump(job, open("job.json", "w"))
+        EOF
+          curl -fsS --retry 3 --retry-delay 10 --retry-all-errors --max-time 200 -H "Authorization: Bearer $$TOKEN" \
+            -H "Content-Type: application/json" --data @job.json -o render.json "$$URL/render" \
+            || { echo "the smoke render request failed"; exit 1; }
+          python3 -c "import json; r=json.load(open('render.json')); o=r['outputs']['light']; assert o['exit_code']==0 and o['png_base64'], {k: o[k] for k in ('exit_code','reason','attempts','wall_s')}; print('OK: smoke render', o['wall_s'], 's,', o['attempts'], 'attempt(s)')"
+        else
+          echo "render smoke skipped (_SMOKE_RENDER=${_SMOKE_RENDER})"
+        fi
+
+        read -r _ REV_AFTER <<< "$$(candidate)"
+        test "$$REV_AFTER" = "$$REV" || { echo "candidate tag moved to $$REV_AFTER mid-smoke (started on $$REV) - not promoting"; exit 1; }
+        echo "smoke OK"
+    id: "smoke"
+    waitFor: ["deploy"]
+
+  # Route 100 % of the traffic to EXACTLY the revision this build smoked.
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - "run"
+      - "services"
+      - "update-traffic"
+      - "${_SERVICE_NAME}"
+      - "--region=${_REGION}"
+      - "--platform=managed"
+      - "--to-revisions=${_SERVICE_NAME}-b$BUILD_ID=100"
+    id: "promote"
+    waitFor: ["smoke"]
+
+  # `:latest` moves only after this build promoted (see api/cloudbuild.yaml).
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "push"
+      - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest"
+    id: "push-latest"
+    waitFor: ["promote"]
+
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - "run"
+      - "services"
+      - "describe"
+      - "${_SERVICE_NAME}"
+      - "--region=${_REGION}"
+      - "--platform=managed"
+      - "--format=value(status.url)"
+    id: "get-url"
+    waitFor: ["promote"]
+
+images:
+  - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID"
+  - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: "1200s"

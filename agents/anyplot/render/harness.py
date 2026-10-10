@@ -6,32 +6,51 @@ Usage, from the run directory (the CI render command with the harness in front):
 
 It is a standalone script with no anyplot import, because it runs inside the
 sandbox with the isolated interpreter (`-I`: no user site, no current directory on
-`sys.path`, no `PYTHON*` environment). In order it:
+`sys.path`, no `PYTHON*` environment). The renderer service
+(`agents/renderer/`) and the local Docker backend both run it; the renderer's image
+copies it to `/opt/anyplot/harness.py`. In order it:
 
-1. sets resource limits: CPU seconds (`ANYPLOT_RLIMIT_CPU_S`, default 60), the
-   largest file it may write (`ANYPLOT_RLIMIT_FSIZE_MB`, default 32) and, when
-   `ANYPLOT_RLIMIT_AS_MB` is set, the address space (tuned in the sandbox spike);
-2. wraps `matplotlib.figure.Figure.savefig` so that every save also writes
+1. prints `HARNESS {"event": "start"}` on stdout before anything else, so the host
+   can tell a harness that ran (and failed in the plot code) from a launcher that
+   never started it; the renderer retries only the second kind;
+2. sets resource limits, soft and hard alike so the code cannot raise them again:
+   CPU seconds (`ANYPLOT_RLIMIT_CPU_S`, default 60), the largest file it may write
+   (`ANYPLOT_RLIMIT_FSIZE_MB`, default 32) and, only when set, the address space
+   (`ANYPLOT_RLIMIT_AS_MB`) and the number of processes (`ANYPLOT_RLIMIT_NPROC`).
+   The last two are opt-in because outside a sandbox they bind the whole user:
+   `RLIMIT_NPROC` counts every process of the real user id on a developer machine;
+3. when `ANYPLOT_MPL_SEED` names a directory, copies it into `MPLCONFIGDIR`, so
+   matplotlib starts from the font cache baked into the image instead of
+   rebuilding it in the sandbox's empty private `/tmp` (spike S measured the copy
+   as the faster variant);
+4. wraps `matplotlib.figure.Figure.savefig` so that every save also writes
    `probe-<theme>.json` next to the plot: the figure size and dpi, the bounding
    boxes of all visible text in display pixels, tick-label overlaps per axis,
    annotations outside their axes, and the number of drawn point marks;
-3. runs the plot file with `runpy.run_path` as `__main__`.
+5. runs the plot file with `runpy.run_path` as `__main__`;
+6. prints `HARNESS {"event": "end", "max_rss_mb": ..., "cpu_s": ...}` when the plot
+   file returns or raises; an exception still propagates, so its traceback reaches
+   stderr and the exit code stays non-zero.
 
 The probe feeds the advisory gates G3 (clipped text), G5 (annotation outside its
 axes), G7 (tick-label overlap) and G8 (more point marks than data rows). It is
 advisory because the code under test could tamper with it; the host never fails a
-render on it.
+render on it. The same holds for the `HARNESS` lines: the code under test shares
+stdout, so the host reads them as hints (a retry decision, a memory figure), never
+as a verdict.
 """
 
 import json
 import os
 import resource
 import runpy
+import shutil
 import sys
 
 
 PROBE_LIMIT = 400  # text boxes recorded per figure
 THEME_ENV = "ANYPLOT_THEME"
+MARKER = "HARNESS"
 
 
 def _limit(kind: int, value: int) -> None:
@@ -39,7 +58,7 @@ def _limit(kind: int, value: int) -> None:
         soft, hard = resource.getrlimit(kind)
         if hard != resource.RLIM_INFINITY:
             value = min(value, hard)
-        resource.setrlimit(kind, (value, hard))
+        resource.setrlimit(kind, (value, value))
     except (ValueError, OSError):
         pass  # a limit the platform refuses is left to the sandbox and the host timeout
 
@@ -52,6 +71,30 @@ def set_limits() -> None:
     address_space = os.environ.get("ANYPLOT_RLIMIT_AS_MB")
     if address_space:
         _limit(resource.RLIMIT_AS, int(address_space) * 1024 * 1024)
+    processes = os.environ.get("ANYPLOT_RLIMIT_NPROC")
+    if processes:
+        _limit(resource.RLIMIT_NPROC, int(processes))
+
+
+def seed_mplconfig() -> None:
+    """Copy the baked matplotlib cache into the writable `MPLCONFIGDIR`, before matplotlib is imported."""
+    seed = os.environ.get("ANYPLOT_MPL_SEED")
+    target = os.environ.get("MPLCONFIGDIR")
+    if not seed or not target or not os.path.isdir(seed):
+        return
+    try:
+        shutil.copytree(seed, target, dirs_exist_ok=True)
+    except OSError:
+        pass  # matplotlib rebuilds a missing cache itself, only slower
+
+
+def _report(event, **fields):
+    print(f"{MARKER} {json.dumps({'event': event, **fields})}", flush=True)
+
+
+def _usage():
+    usage = resource.getrusage(resource.RUSAGE_SELF)
+    return {"max_rss_mb": round(usage.ru_maxrss / 1024, 1), "cpu_s": round(usage.ru_utime + usage.ru_stime, 3)}
 
 
 def _box(extent):
@@ -150,6 +193,7 @@ def install_probe(theme):
 
 
 def main(argv):
+    _report("start")
     if len(argv) != 2:
         print("usage: harness.py <plot file>", file=sys.stderr)
         return 2
@@ -158,8 +202,15 @@ def main(argv):
         print(f"{THEME_ENV} must be light or dark", file=sys.stderr)
         return 2
     set_limits()
+    seed_mplconfig()
     install_probe(theme)
-    runpy.run_path(argv[1], run_name="__main__")
+    try:
+        runpy.run_path(argv[1], run_name="__main__")
+    finally:
+        try:
+            _report("end", **_usage())
+        except Exception:
+            pass  # a closed stdout must not hide the plot's own exception
     return 0
 
 

@@ -1,34 +1,28 @@
-"""The Cloud Run sandbox render backend (phase 1 production): a typed stub until spike S reports.
+"""The in-process sandbox render backend: a typed stub that phase 1 does not use.
 
-The design runs each theme as
+Phase 1 renders through the anyplot-renderer service (`AGENT_RENDERER=remote`,
+`backends/remote.py`): the owner decided on 2026-10-10 that the sandbox launcher
+runs in a service of its own, with a zero-role service account, so a local
+`adk web` and the deployed agents service share one renderer. The command shape,
+the kill path, the byte watchdog and the retry that spikes S and S2 settled live in
+`agents/renderer/executor.py`.
 
-    /usr/local/gcp/bin/sandbox do --sandbox-name r-<job_id>-<theme> --write
-        --mount type=bind,source=/tmp/runs/<job>,destination=/work -w /work
-        --env ANYPLOT_THEME=<theme> --env MPLBACKEND=Agg --env MPLCONFIGDIR=/opt/mplconfig --env HOME=/tmp
-        -- /app/.venv/bin/python -I /opt/anyplot/harness.py plot.py
-
-(docs/concepts/agent-network.md, "Render"). Spike S measures the real command shape,
-the timing, the memory per sandbox and the probe suite in europe-west4; until then
-this backend refuses to run, so `AGENT_RENDERER=sandbox` fails loudly instead of
-guessing a command line. Use `local` (Docker) or `fake` in development.
-
-Like the local backend, the implementation must stop its sandboxes when the render
-is cancelled (an abort or the request deadline): catch `asyncio.CancelledError`,
-run `sandbox delete` for each theme under `asyncio.shield`, then re-raise. It needs
-no semaphore of its own: `SerialRenderer` (`render/serial.py`), which
-`Services.backend` puts in front of every backend, already hands it one theme at a
-time under `AGENT_RENDER_CONCURRENCY` slots.
+This backend stays for the variant that launches sandboxes inside the agents
+service itself. It refuses to run, so `AGENT_RENDERER=sandbox` fails loudly instead
+of guessing; an implementation would reuse the renderer's executor rather than copy
+it. It needs no semaphore of its own: `SerialRenderer` (`render/serial.py`), which
+`Services.backend` puts in front of every backend, hands it one theme at a time.
 """
 
 from ..contract import RenderJob, RenderResult, RuntimeAdapter
 
 
 SANDBOX_BINARY = "/usr/local/gcp/bin/sandbox"
-FORBIDDEN_FLAGS = ("--allow-egress",)
+FORBIDDEN_FLAGS = ("--allow-egress", "--write")
 
 
 class SandboxBackend:
-    """Cloud Run `sandbox do` per theme; not implemented before spike S."""
+    """Cloud Run `sandbox do` inside the agents service; not used in phase 1."""
 
     name = "sandbox"
 
@@ -37,6 +31,6 @@ class SandboxBackend:
 
     async def render(self, job: RenderJob) -> RenderResult:
         raise NotImplementedError(
-            "the sandbox renderer waits for spike S (Cloud Run sandbox command shape, see "
-            "docs/concepts/agent-network.md, 'Phase 0'); use AGENT_RENDERER=local or fake"
+            "the in-process sandbox backend is not used in phase 1: renders go through the anyplot-renderer "
+            "service (AGENT_RENDERER=remote, AGENT_RENDER_URL); use local or fake in development"
         )

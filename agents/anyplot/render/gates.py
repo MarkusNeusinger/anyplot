@@ -2,7 +2,7 @@
 
 | Gate | Checks | Effect |
 |---|---|---|
-| R1 | an output for each of the job's themes, exit code 0, no timeout, a PNG per theme | blocking: the render is discarded, the error becomes repair feedback |
+| R1 | an output for each of the job's themes, exit code 0, no timeout, no renderer limit hit (`limit_line`), a PNG per theme | blocking: the render is discarded, the error becomes repair feedback |
 | R2 | PNG hardening (`png.harden`): signature, decode, size and pixel caps, not blank, re-encoded | blocking, like R1 |
 | R3 | canvas within 16 px of 3200x1800 or 2400x2400 (`core.canvas.check_canvas`) | repair-triggering: the VQ-05 defect line goes to the repair; a padded copy of each missed theme is kept as the fallback |
 | G3 | probe: text boxes beyond the canvas edge | advisory: an AR-09 line |
@@ -154,6 +154,49 @@ def error_summary(stderr_tail: str) -> str:
     return f"{names[-1]} at line {int(frames[-1])}" if frames else names[-1]
 
 
+def _mib(value: int | None) -> str:
+    return "more than allowed" if value is None else f"{value / (1024 * 1024):.1f} MiB"
+
+
+def limit_line(theme: Theme, reason: str | None, measured: int | None, limit: int | None) -> str | None:
+    """The R1 line for a run the renderer stopped or refused at one of its limits, naming the value and the limit.
+
+    None for any other reason: a timeout has its own line, and `launcher` never gets
+    here (the `remote` backend raises `RendererUnavailable` for it). The numbers come
+    from the renderer, never from the code under test.
+    """
+    png = f"plot-{theme}.png"
+    if reason == "disk_budget":
+        return (
+            f"render ({theme}): the code wrote {_mib(measured)} to its working directory, over the {_mib(limit)} "
+            f"limit, and was stopped → save only {png} and write no other files. Likely cause: data, caches or "
+            "extra images saved to disk."
+        )
+    if reason == "file_budget":
+        made = "a directory tree too deep to measure" if measured is None else f"{measured} files and directories"
+        return (
+            f"render ({theme}): the code created {made}, over the limit of {limit}, and was stopped → write no "
+            f"files besides {png}. Likely cause: a file written per row or per group, or nested output folders."
+        )
+    if reason == "memory":
+        return (
+            f"render ({theme}): the renderer's free memory fell to {measured} MiB, below its {limit} MiB floor, and "
+            "the code was stopped → use less memory. Likely cause: very many marks, a huge figure or large "
+            "temporary files."
+        )
+    if reason == "output_rejected":
+        if measured is not None and limit is not None:
+            return (
+                f"render ({theme}): {png} is {_mib(measured)}, over the {_mib(limit)} limit → save it once at the "
+                "catalogue canvas size. Likely cause: a high dpi or a very large figure size."
+            )
+        return (
+            f'render ({theme}): {png} is not a regular file → save the figure with fig.savefig("{png}"), never a '
+            "link or a special file."
+        )
+    return None
+
+
 def data_rows(data_csv: str) -> int:
     """Rows of the canonical data.csv (header excluded; the parser writes one row per line)."""
     return max(0, len([line for line in data_csv.split("\n") if line]) - 1)
@@ -175,6 +218,11 @@ def evaluate(result: RenderResult, *, themes: Sequence[Theme], library: str, row
             continue
         if output.timed_out:
             report.blocking.append(_line(f"render ({theme}): the code did not finish within the time limit"))
+            report.passed_host_gates = False
+            continue
+        stopped = limit_line(theme, output.reason, output.measured, output.limit)
+        if stopped is not None:
+            report.blocking.append(_line(stopped))
             report.passed_host_gates = False
             continue
         if output.exit_code != 0 or output.png is None:

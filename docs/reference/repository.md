@@ -101,6 +101,14 @@ anyplot/
 │   ├── main.py                        # anyplot-agents service: the private /v1 API around the ADK runner
 │   ├── stream.py                      # anyplot/1 SSE translator and output sanitiser
 │   ├── evals/fixtures/cases/          # Eval fixture cases (case.json + data.csv), also the adk web seed
+│   ├── renderer/                      # anyplot-renderer service: runs the code in Cloud Run sandboxes, no ADK import
+│   │   ├── main.py                    # POST /render and GET /status behind the IAM caller check, one render slot
+│   │   ├── executor.py                # sandbox do per theme: kill path, byte watchdog, launcher retry, bounded output
+│   │   ├── auth.py                    # Caller check on the IAM-forwarded ID-token claims
+│   │   ├── settings.py                # RendererSettings (RENDERER_* variables)
+│   │   ├── wire.py                    # JSON contract shared with the agents' remote render backend
+│   │   ├── Dockerfile                 # Renderer image: plotting venv, baked font cache, harness
+│   │   └── cloudbuild.yaml            # Build, candidate deploy, IAM and render smoke, promote
 │   └── anyplot/
 │       ├── agent.py                   # Root agent "anyplot", ALL_AGENTS registry, App with plugins
 │       ├── models.py                  # The only model and client factory (Claude on Vertex AI, Gemini)
@@ -110,7 +118,7 @@ anyplot/
 │       ├── sub_agents/                # Per-library adapters and the tool-less reviewer
 │       ├── tools/session.py           # Root's session tools and the plot_pipeline NodeTool
 │       ├── plugins/                   # ScopeGuard, Budget, ToolSafety and the request ledger
-│       ├── render/                    # Render contract, harness, host gates, PNG hardening, backends
+│       ├── render/                    # Render contract, harness, host gates, PNG hardening, backends (remote, local, fake)
 │       ├── schemas.py                 # Pydantic contracts of the plot pipeline
 │       ├── settings.py                # AgentSettings (AGENT_* variables)
 │       ├── data/                      # Deterministic data handling, no ADK import

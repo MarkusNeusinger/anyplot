@@ -38,7 +38,9 @@ class TestDefaults:
         assert settings.service_urls == []
         assert settings.dev_fixture is None
         assert settings.libraries == ["matplotlib", "seaborn"]
-        assert settings.renderer == "sandbox"
+        assert settings.renderer == "remote"  # phase 1 renders through the anyplot-renderer service
+        assert settings.render_url is None and settings.render_token is None
+        assert settings.render_image == "anyplot-renderer:dev"
         assert settings.max_llm_calls == 12
         assert settings.request_token_budget == 80_000
         assert settings.daily_token_budget == 1_000_000
@@ -268,6 +270,44 @@ class TestRendererValidator:
     def test_unknown_renderer_is_refused(self) -> None:
         with pytest.raises(ValidationError):
             AgentSettings(renderer="subprocess")
+
+
+class TestRemoteRendererSettings:
+    def test_render_url_comes_from_the_environment_without_its_slash(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("AGENT_RENDER_URL", "https://anyplot-renderer-239660669828.europe-west4.run.app/")
+
+        assert AgentSettings().render_url == "https://anyplot-renderer-239660669828.europe-west4.run.app"
+
+    def test_blank_render_url_is_unset(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("AGENT_RENDER_URL", "  ")
+
+        assert AgentSettings().render_url is None
+
+    @pytest.mark.parametrize(
+        "url",
+        ["https://renderer.example/render", "https://user@renderer.example", "ftp://renderer.example", "renderer"],
+    )
+    def test_render_url_is_an_origin(self, url: str) -> None:
+        with pytest.raises(ValidationError):
+            AgentSettings(render_url=url)
+
+    def test_plain_http_is_refused_in_production(self) -> None:
+        with pytest.raises(ValidationError, match="https"):
+            AgentSettings(render_url="http://localhost:8003", environment="production")
+
+    @pytest.mark.parametrize("environment", ["development", "test"])
+    def test_plain_http_is_allowed_in_development_and_test(self, environment: str) -> None:
+        settings = AgentSettings(render_url="http://localhost:8003", environment=environment)
+
+        assert settings.render_url == "http://localhost:8003"
+
+    def test_render_token_is_development_only(self) -> None:
+        settings = AgentSettings(render_token="a.b.c", environment="development")
+
+        assert settings.render_token is not None and settings.render_token.get_secret_value() == "a.b.c"
+        assert "a.b.c" not in repr(settings)
+        with pytest.raises(ValidationError, match="AGENT_RENDER_TOKEN"):
+            AgentSettings(render_token="a.b.c", environment="production")
 
 
 class TestOtherValidators:
