@@ -28,7 +28,7 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    boxes in display pixels of the texts the probe's own draw rendered (it measures
    the first `PROBE_MEASURE_LIMIT` in draw order and keeps at most `PROBE_LIMIT`,
    the ones past a canvas edge first; `texts_total` counts every drawn text), overlaps
-   between rendered tick labels per axis, annotations outside their axes, the
+   between the measured tick labels per axis, annotations outside their axes, the
    number of drawn point marks (scatter offsets) and the number of vertices of the
    visible `plot()` lines (`line_points`). Only rendered text counts: matplotlib keeps tick
    labels for locator positions outside the view interval and for hidden axes
@@ -66,7 +66,10 @@ PROBE_MEASURE_LIMIT = 2_000
 under the sandbox's `RLIMIT_CPU`, on top of the three full draws a render already pays (the
 probe's, the save's and pyplot's trailing one): measured on WSL2, the extents of 2,000 labels
 took 0.07 s and those of 20,000 took 6.5 s, past matplotlib's text-metrics cache. A clipped
-text drawn after the first 2,000 is not seen by G3."""
+text drawn after the first 2,000 is not seen by G3, nor a tick label by G7: G7 reuses these
+extents and measures none of its own. G5 reuses them too and measures the annotations
+missing from them, at most this many again: matplotlib draws no annotation whose point
+lies outside the view, which is the case G5 is there for."""
 THEME_ENV = "ANYPLOT_THEME"
 MARKER = "HARNESS"
 
@@ -162,12 +165,14 @@ def probe(figure, dpi):
     width_in, height_in = figure.get_size_inches()
     scale = (dpi or figure.dpi) / figure.dpi
     width_px, height_px = float(width_in) * float(dpi or figure.dpi), float(height_in) * float(dpi or figure.dpi)
+    extents = {}  # id(text) -> its box in figure pixels; G7 and G5 reuse these instead of measuring again
     measured = []
     for text in itertools.islice(drawn.values(), PROBE_MEASURE_LIMIT):
         try:
-            box = [value * scale for value in _box(text.get_window_extent(renderer))]
+            extents[id(text)] = _box(text.get_window_extent(renderer))
         except Exception:
             continue
+        box = [value * scale for value in extents[id(text)]]
         if all(math.isfinite(value) for value in box):  # one text at an infinite coordinate never voids the probe
             measured.append({"kind": type(text).__name__, "box": box})
     # Only PROBE_LIMIT boxes are kept: the ones past a canvas edge go first, so a plot with
@@ -179,23 +184,24 @@ def probe(figure, dpi):
     annotations_outside = 0
     points = 0
     line_points = 0
+    annotation_budget = PROBE_MEASURE_LIMIT
     for axes in figure.get_axes():
         for axis in (axes.xaxis, axes.yaxis):
-            boxes = []
-            for label in axis.get_ticklabels():
-                try:
-                    if id(label) in drawn:
-                        boxes.append(_box(label.get_window_extent(renderer)))
-                except Exception:
-                    continue
+            boxes = [extents[id(label)] for label in axis.get_ticklabels() if id(label) in extents]
             tick_overlaps += sum(1 for left, right in zip(boxes, boxes[1:], strict=False) if _overlaps(left, right))
         axes_box = _box(axes.get_window_extent(renderer))
         for child in axes.texts:
             try:
-                if child.get_visible() and type(child).__name__ == "Annotation":
+                if not child.get_visible() or type(child).__name__ != "Annotation":
+                    continue
+                box = extents.get(id(child))
+                if box is None:  # not drawn (its point is out of view) or past the measured texts
+                    if annotation_budget <= 0:
+                        continue
+                    annotation_budget -= 1
                     box = _box(child.get_window_extent(renderer))
-                    if not _overlaps(box, axes_box):
-                        annotations_outside += 1
+                if not _overlaps(box, axes_box):
+                    annotations_outside += 1
             except Exception:
                 continue
         for collection in axes.collections:

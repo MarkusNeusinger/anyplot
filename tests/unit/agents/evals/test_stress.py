@@ -19,7 +19,7 @@ from agents.anyplot.schemas import AdaptPlan
 from agents.anyplot.services import Services
 from agents.anyplot.settings import get_settings
 from agents.evals import matrix
-from agents.evals.cases import EvalCase, load_cases, select_cases
+from agents.evals.cases import CaseError, EvalCase, load_cases, select_cases
 from agents.evals.matrix import EXIT_OK, configure, parse_args
 from agents.evals.stress import (
     StaticContext,
@@ -161,6 +161,25 @@ async def test_render_expectations_hold_only_on_a_real_renderer(stress_cases: di
 
     assert held["render_checked"] and held["held"] and held["static"]["standin"]["gates"] == ["G9"]
     assert broken["held"] is False and broken["mismatches"] == ["gates: expected to contain ['G9'], measured []"]
+
+
+async def test_render_expectations_without_a_stand_in_result_never_hold(
+    tmp_path: Path, stress_cases: dict[str, EvalCase]
+) -> None:
+    case = stress_cases["stress-compute-oversample"]
+    copy = tmp_path / case.case_id
+    copy.mkdir()
+    (copy / "case.json").write_text((case.directory / "case.json").read_text(encoding="utf-8"), encoding="utf-8")
+
+    with pytest.raises(CaseError, match="standin.txt"):
+        stress_spec(EvalCase(**{**case.__dict__, "directory": copy}))
+
+    (copy / "standin.txt").write_text((case.directory / "standin.txt").read_text(encoding="utf-8"), encoding="utf-8")
+    refused = EvalCase(**{**case.__dict__, "directory": copy, "data_text": "x" * (200 * 1024 + 1)})
+    record = await static_record(refused, context(renderer="remote"))
+
+    assert record["render_checked"] and record["held"] is False
+    assert record["mismatches"][-1] == "render: no stand-in result to check (the case ended at dataset)"
 
 
 async def test_a_broken_case_file_is_an_error_record(tmp_path: Path, stress_cases: dict[str, EvalCase]) -> None:

@@ -1,10 +1,13 @@
 """The bounds the stress cases asked for: the adapter's profile cap, the G9 points cap, the probe's text order, R1 ids."""
 
+from typing import Any
+
 import pytest
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
+from matplotlib.text import Text
 
-from agents.anyplot.briefs import MAX_ADAPTER_PROFILE_CHARS, adapter_profile, profile_json, trimmed_profiles
+from agents.anyplot.briefs import MAX_ADAPTER_PROFILE_BYTES, adapter_profile, profile_json, trimmed_profiles
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.pipeline import render_adapt_request
@@ -46,9 +49,22 @@ def test_a_small_profile_goes_to_the_adapter_whole() -> None:
 def test_a_wide_profile_is_trimmed_to_the_cap_and_keeps_every_column(wide_profile) -> None:
     text, trimmed = adapter_profile(wide_profile)
 
-    assert len(profile_json(wide_profile)) > MAX_ADAPTER_PROFILE_CHARS
-    assert trimmed and len(text) <= MAX_ADAPTER_PROFILE_CHARS
+    assert len(profile_json(wide_profile).encode("utf-8")) > MAX_ADAPTER_PROFILE_BYTES
+    assert trimmed and len(text.encode("utf-8")) <= MAX_ADAPTER_PROFILE_BYTES
     assert all(f'"name":"{column.name}"' in text for column in wide_profile.columns)
+
+
+def test_the_cap_counts_utf8_bytes_so_wide_characters_cannot_stretch_it() -> None:
+    """A profile of CJK cells fits a character count of the limit but not its bytes, and is trimmed."""
+    rows = "\n".join(f"{'東京都千代田区丸の内' * 4}{index},{index}" for index in range(5))
+    profile = parse_dataset("所在地,値\n" + rows + "\n").profile
+    full = profile_json(profile)
+    limit = len(full)
+
+    text, trimmed = adapter_profile(profile, limit=limit)
+
+    assert len(full.encode("utf-8")) > limit  # by characters it would go out whole
+    assert trimmed and len(text.encode("utf-8")) <= limit
 
 
 def test_below_the_smallest_version_the_last_version_still_goes_out(wide_profile) -> None:
@@ -142,3 +158,63 @@ def test_the_probe_measures_only_the_first_texts_it_drew(monkeypatch: pytest.Mon
     assert len(report["texts"]) == 20 and report["texts_total"] > 60
     # The clipped text was drawn after the first 30, so it was never measured and G3 misses it.
     assert all(text["box"][2] <= report["canvas"][0] for text in report["texts"])
+
+
+def test_g7_measures_no_tick_label_past_the_cap(monkeypatch: pytest.MonkeyPatch) -> None:
+    """G7 reuses the capped extents: outside the draws, the probe measures at most PROBE_MEASURE_LIMIT texts."""
+    monkeypatch.setattr(harness, "PROBE_MEASURE_LIMIT", 30)
+    fig = figure()
+    ax = fig.add_subplot()
+    ax.set_xticks(range(100), [f"category {index}" for index in range(100)])
+    drawing: list[bool] = []
+    measured: list[Text] = []
+    draw, extent = fig.canvas.draw, Text.get_window_extent
+
+    def counted_draw(*args: Any, **kwargs: Any) -> Any:
+        drawing.append(True)
+        try:
+            return draw(*args, **kwargs)
+        finally:
+            drawing.pop()
+
+    def counted_extent(self: Text, *args: Any, **kwargs: Any) -> Any:
+        if not drawing:  # the draws measure every label themselves; only the probe's own calls count
+            measured.append(self)
+        return extent(self, *args, **kwargs)
+
+    monkeypatch.setattr(fig.canvas, "draw", counted_draw)
+    monkeypatch.setattr(Text, "get_window_extent", counted_extent)
+
+    report = harness.probe(fig, 200)
+
+    assert len(measured) <= 30 < report["texts_total"]
+    assert report["tick_overlaps"] > 0  # the overlapping labels among the measured ones still count
+
+
+def test_g5_sees_an_annotation_matplotlib_did_not_draw() -> None:
+    """An annotation whose point lies outside the view is never drawn, so G5 measures it on its own."""
+    fig = figure()
+    ax = fig.add_subplot()
+    ax.plot(range(10))
+    ax.set_xlim(0, 9)
+    ax.set_ylim(0, 9)
+    ax.annotate("off the view", xy=(50, 50))
+    ax.annotate("in view", xy=(4, 4))
+
+    report = harness.probe(fig, 200)
+
+    assert report["annotations_outside"] == 1
+
+
+def test_g5_measures_at_most_the_cap_of_undrawn_annotations(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(harness, "PROBE_MEASURE_LIMIT", 3)
+    fig = figure()
+    ax = fig.add_subplot()
+    ax.set_xlim(0, 9)
+    ax.set_ylim(0, 9)
+    for index in range(10):
+        ax.annotate(f"off the view {index}", xy=(50 + index, 50))
+
+    report = harness.probe(fig, 200)
+
+    assert report["annotations_outside"] == 3

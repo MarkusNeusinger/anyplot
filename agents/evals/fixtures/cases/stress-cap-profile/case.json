@@ -19,7 +19,7 @@
     "synthetic"
   ],
   "source": "synthetic: agents/evals/make_stress.py",
-  "bound_expected": "the full profile (five 40-character top values and five sample cells in each of 50 columns) is over MAX_ADAPTER_PROFILE_CHARS, so the adapter gets a trimmed one that keeps every column",
+  "bound_expected": "the full profile (five 40-character top values and five sample cells in each of 50 columns) is over MAX_ADAPTER_PROFILE_BYTES, so the adapter gets a trimmed one that keeps every column",
   "needs_model": false,
   "static": {
     "dataset": "ok",

@@ -354,7 +354,7 @@ def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
     catalogue lines, the feedback quotes model-written code (failed edits, validator
     findings) or is model-written (reviewer lines), and the previous plan is
     model-written and can copy catalogue or dataset text. The profile is the first
-    version of `trimmed_profiles` within `MAX_ADAPTER_PROFILE_CHARS` (`adapter_profile`):
+    version of `trimmed_profiles` within `MAX_ADAPTER_PROFILE_BYTES` (`adapter_profile`):
     50 text columns of long values make it about 28,000 characters in full (stress case
     `stress-cap-profile`), more than the rest of the request.
     """

@@ -738,7 +738,7 @@ def _cases() -> list[StressCase]:
             [_binding("x", PROFILE_X), _binding("y", PROFILE_Y)],
             "unknown",
             "the full profile (five 40-character top values and five sample cells in each of 50 columns) is "
-            "over MAX_ADAPTER_PROFILE_CHARS, so the adapter gets a trimmed one that keeps every column",
+            "over MAX_ADAPTER_PROFILE_BYTES, so the adapter gets a trimmed one that keeps every column",
             {
                 "dataset": "ok",
                 "bytes": MAX_INPUT_BYTES,

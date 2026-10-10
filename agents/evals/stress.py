@@ -31,7 +31,8 @@ A record's `status` says where the flow ended (`refused`, `not_eligible`,
 `bindings_invalid`, `loader_failed`, `ready`, `rendered`, `render_failed`,
 `standin_rejected`), `stage` the last step it reached, and `held` whether every
 expectation in the case's `static` (and, on a real renderer, `render`) field matched;
-`mismatches` names the ones that did not. `model` is `pending` for a case whose bound
+`mismatches` names the ones that did not. A `render` field needs a `standin.txt`, and on
+a real renderer a case that ended before its stand-in rendered does not hold. `model` is `pending` for a case whose bound
 needs a model run (`needs_model`). The report goes to `<out>/<date>-static.json` and
 its Markdown table; the exit code is 1 when an expectation did not hold.
 """
@@ -118,6 +119,8 @@ def stress_spec(case: EvalCase) -> StressSpec:
         raise CaseError(f"{where}: marker must be a non-empty string")
     standin_file = case.directory / STANDIN_FILE
     standin = standin_file.read_text(encoding="utf-8") if standin_file.is_file() else None
+    if render and standin is None:
+        raise CaseError(f"{where}: render expectations need a {STANDIN_FILE} to render")
     return StressSpec(bound, needs_model, static, render, marker, standin)
 
 
@@ -244,9 +247,12 @@ async def static_record(case: EvalCase, context: StaticContext) -> dict[str, Any
         record["status"], record["error"] = "error", type(exc).__name__
     measured = record["static"]
     found = mismatches(measured, spec.static)
-    if spec.render and context.renderer in REAL_RENDERERS and "standin" in measured:
+    if spec.render and context.renderer in REAL_RENDERERS:
         record["render_checked"] = True
-        found += mismatches(measured.get("standin") or {}, spec.render)
+        if "standin" in measured:
+            found += mismatches(measured["standin"] or {}, spec.render)
+        else:  # the case stopped before its stand-in, so none of its render expectations held
+            found.append(f"render: no stand-in result to check (the case ended at {record['stage']})")
     record["mismatches"] = found
     if spec.static or record["render_checked"]:
         record["held"] = not found and record["status"] != "error"

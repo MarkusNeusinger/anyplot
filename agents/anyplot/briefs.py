@@ -18,8 +18,12 @@ MAX_BRIEF_CHARS = 4_000
 MAX_DESCRIPTION_CHARS = 1_500
 MAX_NOTE_CHARS = 300
 MAX_SUMMARY_CHARS = 2_000
-MAX_ADAPTER_PROFILE_CHARS = 16 * 1024
-"""The dataset profile in an adapter request, at most: the root's `get_dataset_profile` result limit."""
+MAX_ADAPTER_PROFILE_BYTES = 16 * 1024
+"""The dataset profile in an adapter request, at most, in UTF-8 bytes like the root's `get_dataset_profile` result limit.
+
+Bytes, not characters: a CJK or emoji cell is three or four bytes, so a character
+count would let a profile of such cells grow the request several times past the cap.
+"""
 
 
 def describe_role(role: DataRole) -> str:
@@ -53,8 +57,8 @@ def profile_json(profile: DatasetProfile) -> str:
     return profile.model_dump_json(exclude={"warnings"})
 
 
-def adapter_profile(profile: DatasetProfile, limit: int = MAX_ADAPTER_PROFILE_CHARS) -> tuple[str, bool]:
-    """The adapter's profile JSON: the first of `trimmed_profiles` within `limit` characters, and whether it was trimmed.
+def adapter_profile(profile: DatasetProfile, limit: int = MAX_ADAPTER_PROFILE_BYTES) -> tuple[str, bool]:
+    """The adapter's profile JSON: the first of `trimmed_profiles` within `limit` UTF-8 bytes, and whether it was trimmed.
 
     The last version (every column's name, type and counts) goes out even over the
     limit, because the adapter cannot bind a column it never saw; at the parser's 50
@@ -62,7 +66,7 @@ def adapter_profile(profile: DatasetProfile, limit: int = MAX_ADAPTER_PROFILE_CH
     """
     last = ("", False)
     for version in trimmed_profiles(profile):
-        if len(version[0]) <= limit:
+        if len(version[0].encode("utf-8")) <= limit:
             return version
         last = version
     return last

@@ -28,7 +28,7 @@ Measured with the static stage on 2026-10-10 (WSL2, 32 cores; the stand-ins rend
 |---|---|---|
 | `cap-rows` | accepted at 204,800 bytes and 20,000 rows | parse 51 ms; adapter request 3,402 characters |
 | `cap-columns` | accepted at 50 columns, 200-character cells, Unicode and bidi | parse 32 ms; profile 10,936 characters, untrimmed |
-| `cap-profile` | `MAX_ADAPTER_PROFILE_CHARS` (16,384) trims the adapter's profile | full profile 27,907 characters, sent 7,225; adapter request 35,231 before the cap, 14,594 after |
+| `cap-profile` | `MAX_ADAPTER_PROFILE_BYTES` (16,384 bytes of UTF-8) trims the adapter's profile | full profile 27,907 characters (30,487 bytes), sent 7,225; adapter request 35,231 before the cap, 14,594 after |
 | `csv-expansion` | the renderer's 2 MiB `data_csv` limit | canonical `data.csv` 771,800 bytes, 3.8 times the input |
 | `over-bytes` | `413 too_long` before the parse | refused at 205,824 bytes |
 | `over-rows`, `over-columns`, `over-cell` | `422 unparseable` (`too_many_rows`, `too_many_columns`, `cell_too_long`) | refused within 10 ms |
