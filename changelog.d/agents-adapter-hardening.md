@@ -24,7 +24,8 @@
   `bisect`, `heapq`, `numbers`, `cmath`, `scipy.fft`, `scipy.linalg` and
   `scipy.constants`. Each was walked for names that read, write, fetch,
   evaluate or set the process locale, and those stay banned, as do `io`, `sys`,
-  `pathlib`, `random`, `locale` and `string`. A banned import's repair line names the module and
+  `pathlib`, `random`, `locale` and `string`. `calendar.main` is banned on the
+  calendar module only, so a column read as `df.main` still passes. A banned import's repair line names the module and
   what to use instead, and the eval record counts banned imports by module. The
   log names a module only by a word of a fixed list (the standard library, the
   allowlists and a few known packages), and any other import as `?`, so no word

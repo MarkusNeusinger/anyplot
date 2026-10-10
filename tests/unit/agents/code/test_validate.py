@@ -406,6 +406,7 @@ PURE_MODULE_USES = [
     "from typing import Any, NamedTuple\nPoint = NamedTuple('Point', [('x', float)])\n",
     "import cmath\nz = cmath.exp(1j)\n",
     "v = df._values\n",  # a private attribute of a value, not of an imported module
+    "top = df.main.max()\n",  # a column called main: calendar.main is banned on the calendar module only
 ]
 ESCAPES = [
     ("import warnings\nline = warnings.formatwarning('', UserWarning, 'f', 1)\n", "banned-call"),
@@ -436,6 +437,10 @@ ESCAPES = [
         "banned-attribute",
     ),
     ("import calendar\ncalendar.main(['cal', '-L', 'de_DE', '-e', 'utf-8'])\n", "banned-attribute"),
+    ("import calendar as cal\nrun = cal.main\n", "banned-attribute"),
+    ("from calendar import main\n", "banned-attribute"),
+    ("from calendar import main as show_month\n", "banned-attribute"),
+    ("import calendar.main\n", "banned-import"),
     # A private or escape component of an import path, which an alias would hide from the attribute check.
     ("import scipy.fft._backend as backend\nbackend.set_global_backend('scipy')\n", "banned-import"),
     ("from scipy.fft._pocketfft import r2c\n", "banned-import"),

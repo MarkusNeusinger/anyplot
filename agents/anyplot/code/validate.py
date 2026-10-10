@@ -162,9 +162,10 @@ THEME_VARIABLE = "ANYPLOT_THEME"
 #   `eval`; re-exports `sys` and `types` (whose `CodeType` and `FunctionType` build
 #   code): all in `ESCAPE_ATTRIBUTES`.
 # * calendar: `LocaleTextCalendar`, `LocaleHTMLCalendar` and `different_locale` set the
-#   process locale through `_locale.setlocale`, and `main` reaches them through its `-L`
-#   option, which the `locale` ban keeps out: in `ESCAPE_ATTRIBUTES`. The rest prints to
-#   standard output only; re-exports `sys`, `datetime`, `_locale`.
+#   process locale through `_locale.setlocale`, which the `locale` ban keeps out: in
+#   `ESCAPE_ATTRIBUTES`. `main` reaches them through its `-L` option, but a column may be
+#   called `main`, so it is banned on the calendar module only: in `MODULE_ESCAPES`. The
+#   rest prints to standard output only; re-exports `sys`, `datetime`, `_locale`.
 # * zoneinfo: `reset_tzpath` points the time zone search at any directory,
 #   `available_timezones` lists it, `ZoneInfo.from_file` reads a file object: in
 #   `BANNED_IO`. `ZoneInfo(key)` reads the time zone database only and refuses keys
@@ -351,7 +352,6 @@ ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
         "different_locale",
         "LocaleTextCalendar",
         "LocaleHTMLCalendar",
-        "main",
         "_sys",
         "_locale",
         "_random",
@@ -362,6 +362,11 @@ ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
         "_datasource",
     }
 )
+MODULE_ESCAPES: frozenset[str] = frozenset({"calendar.main"})
+"""Escapes banned only on their own module, because the bare name is plausible data: `calendar.main`
+sets the process locale through its `-L` option, while `df.main` is a column. Checked against the
+resolved attribute path, `from` imports and import paths; the `module-value` rule keeps the module
+from reaching it through an expression the resolver cannot follow."""
 _DATA_FROM_DF = "the data comes only from df = load_user_data(), and the plot reads and writes no files"
 IMPORT_ALTERNATIVES: dict[str, str] = {
     **dict.fromkeys(
@@ -774,6 +779,8 @@ class _Scan:
                 if not module_banned and (denied(path) or not (permitted(from_node.module) or permitted(path))):
                     self.ban_import(path, f"is not allowed with {library}", alias)
                 self._check_function_name(alias.name, alias)
+                if path in MODULE_ESCAPES:
+                    self.add("banned-attribute", f"'{path}' is not allowed", alias)
 
     def _check_module_path(self, path: str, node: ast.AST) -> bool:
         """An import path whose component is a banned name (`pandas.io`, `numpy.lib.format`), or
@@ -784,6 +791,10 @@ class _Scan:
         after `import scipy.fft._backend as backend` no `._backend`. The root itself is
         left to the allowlist, which keeps its message.
         """
+        escape = next((name for name in MODULE_ESCAPES if _module_allowed(path, [name])), None)
+        if escape is not None:
+            self.ban_import(path, f"reaches the banned name '{escape}'", node)
+            return True
         for position, part in enumerate(path.split(".")):
             if part in BANNED_ATTRIBUTES or part in BANNED_IO or _BANNED_IO_PATTERN.match(part):
                 self.ban_import(path, f"reaches the banned name '{part}'", node)
@@ -883,6 +894,8 @@ class _Scan:
                 column_like = self.resolve(attribute.value) is None and attribute.attr.startswith(("read_", "load"))
                 hint = "; a column of that name must be subscripted" if column_like else _io_hint(attribute.attr)
                 self.add("banned-call", f"'{_snippet(attribute)}' is not allowed{hint}", attribute)
+            elif self.resolve(attribute) in MODULE_ESCAPES:
+                self.add("banned-attribute", f"attribute '{_snippet(attribute)}' is not allowed", attribute)
             elif attribute.attr.startswith("_") and self.resolve(attribute.value) is not None:
                 # `collections._sys`, `dataclasses._FuncBuilder`: private helpers of an imported name.
                 self.add("banned-attribute", f"the private attribute '{_snippet(attribute)}' is not allowed", attribute)
