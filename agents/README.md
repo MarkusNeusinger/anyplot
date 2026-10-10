@@ -55,7 +55,7 @@ Three rules hold for everything here:
 | `AGENT_RENDER_CONCURRENCY` | `1` | Theme renders at the same time, for every backend (`render/serial.py`); serial, because one 4 GiB instance holds one sandbox safely (spikes S and S2) |
 | `AGENT_RUN_CONCURRENCY` | `1` | Pipeline runs (whole `/messages` turns) in flight; the run queue holds the rest |
 | `AGENT_RUNS_PER_MINUTE` | `1` | Runs that may start within any 60 seconds (a sliding window) |
-| `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue, after which the run ends with `capacity`; the queue holds rate x wait / 60 entries (10) and answers `503 capacity` beyond that. Through the BFF a turn waits at most about 385 s until anyplot-api's request timeout is raised (`AGENT_TURN_MAX_S` in `docs/reference/api.md`) |
+| `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue, after which the run ends with `capacity`; the queue holds rate x wait / 60 entries (10) and answers `503 capacity` beyond that. Through the BFF the whole turn, this wait included, ends by `AGENT_TURN_MAX_S` (890 s, see `docs/reference/api.md`), which the full wait plus the 180 s run fits into |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `80000` | Tokens per request |
 | `AGENT_DAILY_TOKEN_BUDGET` | `1000000` | Tokens per user and day |
