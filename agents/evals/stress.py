@@ -9,7 +9,8 @@ For each selected case (any case, though only the stress cases of `make_stress.p
 carry expectations) it does what the service does before and around the models:
 
 1. **dataset**: the dataset route's size check and `parse_dataset`, timed, as the route's
-   answer (`ok`, `413 too_long`, `422 unparseable`) and the parse error code;
+   answer (`ok`, `413 too_long`, `422 unparseable`) and the parse error code, with the
+   number of columns the parse types as dates (`date_columns`);
 2. **eligibility**: `opening.assess` on the case's snapshot (normalise, readiness scan);
 3. **bindings**: the case's bindings, or the defaults the route proposes, through
    `check_bindings` (`complete`, `incomplete`, `invalid` as `PUT /bindings` answers);
@@ -20,8 +21,9 @@ carry expectations) it does what the service does before and around the models:
    dataset judge's input, and the adapter request (`pipeline.render_adapt_request`)
    in characters; with a case's `marker`, which of them carry the injected text and
    whether any of it stands outside a fence;
-6. **stand-in**: with a `standin_plan.json`, the plan through `apply_plan`, the
-   SECURITY and ADAPTATION validators and the literal budget, then one light render
+6. **stand-in**: with a `standin.txt`, the stand-in body composed into a full working
+   form (`compose_standin`) through `apply_plan` and the pipeline's own check (the
+   SECURITY and ADAPTATION validators and the literal budget), then one light render
    through the configured backend and the host gates, with the render time and the
    harness's peak memory where the backend reports it (`remote`).
 
@@ -48,14 +50,13 @@ from typing import Any
 import pandas as pd
 
 from agents.anyplot.briefs import adapter_profile, profile_json, profile_summary, spec_brief
-from agents.anyplot.code.edits import MAX_NEW_LITERAL_CHARS, apply_plan, new_literal_chars
+from agents.anyplot.code.edits import apply_plan, new_literal_chars
 from agents.anyplot.code.loader import loader_arguments
 from agents.anyplot.code.regions import find_regions
-from agents.anyplot.code.validate import validate_adaptation, validate_security
 from agents.anyplot.data.bindings import check_bindings, default_bindings
 from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParsedDataset, ParseError, parse_dataset
 from agents.anyplot.opening import assess, dataset_judge_input
-from agents.anyplot.pipeline import BLOCKING_RULES, render_adapt_request, render_review_request
+from agents.anyplot.pipeline import _check, render_adapt_request, render_review_request
 from agents.anyplot.policy import FENCE_TAGS
 from agents.anyplot.render.contract import RenderBackend, RenderJob
 from agents.anyplot.render.gates import data_rows, evaluate
@@ -269,6 +270,7 @@ async def _steps(record: dict[str, Any], case: EvalCase, spec: StressSpec, conte
         len(profile.columns),
         len(parsed.warnings),
     )
+    measured["date_columns"] = len(parsed.parse_dates)
     measured["csv_bytes"] = len(parsed.csv.encode("utf-8"))
     measured["csv_fits_wire"] = len(parsed.csv) <= MAX_DATA_CSV_CHARS
 
@@ -382,15 +384,11 @@ async def _standin(
     working = applied.code
     regions = find_regions(normalised)
     palette = list(regions.imprint.entries) if regions.imprint else []
-    adaptation = validate_adaptation(working, original_palette=palette)
-    blocking = [finding.rule for finding in validate_security(working, library=case.library)]
-    blocking += [finding.rule for finding in adaptation if finding.rule in BLOCKING_RULES]
+    check = _check(working, library=case.library, palette=palette, base=normalised)
     standin["literal_chars"] = new_literal_chars(normalised, working)
-    if standin["literal_chars"] > MAX_NEW_LITERAL_CHARS:
-        blocking.append("literal-budget")
-    standin["validator"] = sorted(set(blocking))
-    standin["adaptation"] = sorted({finding.rule for finding in adaptation if finding.rule not in BLOCKING_RULES})
-    if blocking:
+    standin["validator"] = sorted(set(check.blocking_rules))
+    standin["adaptation"] = sorted(set(check.adaptation_rules))
+    if not check.may_render:
         record["status"] = "standin_rejected"
         return
     standin["check"] = "ok"

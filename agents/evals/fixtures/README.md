@@ -22,7 +22,7 @@ The tag `smoke` marks the 12 cases of `--cases smoke`: one generated case per sp
 
 ## Stress cases: what bounds them
 
-Measured with the static stage on 2026-10-10 (WSL2, 32 cores; the stand-ins rendered through `harness.py` with the renderer's limits: 60 s CPU, 1 GiB address space, one BLAS thread). Parse times are the in-process `parse_dataset`; the renderer's 2 vCPU are slower. "Adapter request" is the rendered adapter input in characters, catalogue code included.
+Measured with the static stage on 2026-10-10 (WSL2, 32 cores; the stand-ins rendered through `harness.py` with the renderer's limits: 60 s CPU, 1 GiB address space, one BLAS thread). Parse times are the in-process `parse_dataset`; the renderer's 2 vCPU are slower. "Adapter request" is the rendered adapter input in characters, catalogue code included. CPU and peak memory are the harness's own end line; wall time is the harness process from start to exit. Launch the harness from a shell when you measure it again: `ru_maxrss` keeps a parent's peak across `exec`, so a harness that a Python process starts reports at least that process's memory.
 
 | Case | Bound | Measured |
 |---|---|---|
@@ -32,16 +32,16 @@ Measured with the static stage on 2026-10-10 (WSL2, 32 cores; the stand-ins rend
 | `csv-expansion` | the renderer's 2 MiB `data_csv` limit | canonical `data.csv` 771,800 bytes, 3.8 times the input |
 | `over-bytes` | `413 too_long` before the parse | refused at 205,824 bytes |
 | `over-rows`, `over-columns`, `over-cell` | `422 unparseable` (`too_many_rows`, `too_many_columns`, `cell_too_long`) | refused within 10 ms |
-| `bar-100-categories` | G7 (advisory) | 99 overlapping tick-label pairs; 310 texts of the probe's 400; 1.9 s, 208 MiB |
-| `pie-30-slices` | the reviewer only | no gate fires: 92 texts, the legend covers the pie, small slices pile their labels; 1.3 s |
+| `bar-100-categories` | G7 (advisory) | 99 overlapping tick-label pairs; 310 texts of the probe's 400; 1.8 s CPU (1.9 s wall), 131 MiB peak |
+| `pie-30-slices` | the reviewer only | no gate fires: 92 texts, the legend covers the pie, small slices pile their labels; 1.0 s CPU (1.2 s wall), 127 MiB peak |
 | `all-nan-column`, `mixed-decimals` | `422 invalid` at `PUT /bindings` | the column is typed text |
-| `dates-centuries` | none needed | pandas 3 reads dates from 1066 to 2999 as datetime |
+| `dates-centuries` | none needed | the parse types the column as a date (`date_columns` 1) and pandas 3 reads dates from 1066 to 2999 as datetime |
 | `inject-header` | the `<user_data>` fence | judge, root, adapter and reviewer see it, always fenced |
 | `inject-row4` | the `<user_data>` fence | the judge's three sample rows miss it; the adapter's five carry it, fenced |
 | `inject-long-cell` | none in text; the reviewer sees it as pixels | no prompt carries it; only `data.csv` does |
-| `compute-lorenz` | G9 (advisory) | 10,000,000 line points; 5.8 s CPU and 889 MiB peak, under the sandbox limits |
-| `compute-oversample` | G9 (advisory) | 610,000 line points; 3.5 s, 357 MiB |
-| `compute-distances` | R1: `_ArrayMemoryError` under `RLIMIT_AS` | fails after 0.6 s asking for 18.6 GiB |
+| `compute-lorenz` | G9 (advisory) | 1,000,000 line points; 2.0 s CPU (2.1 s wall), 479 MiB peak; still renders with the address space cut to 610 MiB, fails at 605 MiB. At dt = 0.0001 (10,000,000 points) it peaks at 889 MiB (5.8 s CPU) and fails from 1,015 MiB down, a few MiB under the 1 GiB limit, so the case uses dt = 0.001 |
+| `compute-oversample` | G9 (advisory) | 610,000 line points; 2.8 s CPU (2.9 s wall), 234 MiB peak |
+| `compute-distances` | R1: `_ArrayMemoryError` under `RLIMIT_AS` | fails after 0.4 s CPU (0.6 s wall) asking for 18.6 GiB |
 
 The other degenerate cases (`single-row`, `constant-series`, `duplicate-headers`, `empty-strings`) parse, bind and load; how the plot copes needs a model run.
 

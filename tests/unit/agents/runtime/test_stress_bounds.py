@@ -125,3 +125,20 @@ def test_the_probe_keeps_clipped_texts_when_it_drops_some() -> None:
     assert len(report["texts"]) == harness.PROBE_LIMIT < report["texts_total"]
     assert report["texts"][0]["box"][2] > report["canvas"][0]
     assert "G3" in gates(report)[0]
+
+
+def test_the_probe_measures_only_the_first_texts_it_drew(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Each extent costs CPU under the sandbox's limit, so the probe stops measuring after PROBE_MEASURE_LIMIT."""
+    monkeypatch.setattr(harness, "PROBE_MEASURE_LIMIT", 30)
+    monkeypatch.setattr(harness, "PROBE_LIMIT", 20)
+    fig = figure()
+    ax = fig.add_subplot()
+    for index in range(60):
+        ax.text(0.5, 0.5, f"label {index}", transform=ax.transAxes)
+    fig.text(1.05, 0.5, "drawn last, past the right edge")
+
+    report = harness.probe(fig, 200)
+
+    assert len(report["texts"]) == 20 and report["texts_total"] > 60
+    # The clipped text was drawn after the first 30, so it was never measured and G3 misses it.
+    assert all(text["box"][2] <= report["canvas"][0] for text in report["texts"])

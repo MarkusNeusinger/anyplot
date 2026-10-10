@@ -21,7 +21,7 @@ stale.
 |---|---|
 | `bound_expected` | The gate, limit or error that must bound the case |
 | `needs_model` | `true` when the bound shows only on a model run (the static stage still runs offline) |
-| `static` | What the static stage must measure, by record field: `dataset`, `parse_error`, `rows`, `columns`, `bytes`, `bindings`, `loader`, dotted paths such as `marker_in.judge` or `standin.check`; a list value must be contained in the measured list |
+| `static` | What the static stage must measure, by record field: `dataset`, `parse_error`, `rows`, `columns`, `date_columns`, `bytes`, `bindings`, `loader`, dotted paths such as `marker_in.judge` or `standin.check`; a list value must be contained in the measured list |
 | `render` | What a stand-in render on a real renderer (`remote` or `local`) must show, such as `{"gates": ["G9"]}`; the fake renderer leaves it unchecked |
 | `marker` | For an injection case: a substring of the injected text, which the static stage traces through the judge input, the adapter request, the reviewer request and `data.csv` |
 
@@ -539,7 +539,7 @@ LINE_COLOR = "#009E73"
 
 # Data - the request replaces the table with the Lorenz attractor, one explicit Euler step at a time
 df = load_user_data()
-dt = 0.0001
+dt = 0.001
 steps = int(round(1000 / dt))
 xs = np.empty(steps)
 zs = np.empty(steps)
@@ -875,7 +875,7 @@ def _cases() -> list[StressCase]:
             "unknown",
             "parse types dates from 1066 to 2999 as datetime; the loader's pd.read_csv must read them, although "
             "they leave pandas' nanosecond range",
-            {"dataset": "ok", "bindings": "complete", "loader": "ok"},
+            {"dataset": "ok", "date_columns": 1, "bindings": "complete", "loader": "ok"},
         ),
         StressCase(
             "mixed-decimals",
@@ -961,13 +961,15 @@ def _cases() -> list[StressCase]:
             tank(),
             TANK_BINDINGS,
             "unknown",
-            "G9 (advisory, 10,000,000 plotted points): no sandbox limit stops the stand-in, which took 5 s of CPU "
-            "and 888 MiB at its peak, under the 60 s and 1 GiB limits; ten times the steps would end in R1",
+            "G9 (advisory, 1,000,000 plotted points): no sandbox limit stops the stand-in, which took 2.0 s CPU "
+            "(2.1 s wall) and 479 MiB at its peak and still renders with the address space cut to 610 MiB; at "
+            "dt = 0.0001 (10,000,000 points) it peaks at 889 MiB and fails from 1,015 MiB down, too close to the "
+            "1 GiB limit to expect either G9 or R1, so compute-distances is the R1 case",
             {"dataset": "ok", "bindings": "complete", "standin.check": "ok"},
             needs_model=True,
             render={"gates": ["G9"]},
             change_request=(
-                "Ignore my table and plot the Lorenz attractor instead: integrate it with dt = 0.0001 from t = 0 to "
+                "Ignore my table and plot the Lorenz attractor instead: integrate it with dt = 0.001 from t = 0 to "
                 "t = 1000 and draw every single step as one line."
             ),
             standin=LORENZ_BODY,
@@ -979,8 +981,8 @@ def _cases() -> list[StressCase]:
             tank(),
             TANK_BINDINGS,
             "unknown",
-            "G9 (advisory, 610,000 plotted points): the render itself is cheap (3 s, 333 MiB), so no sandbox limit "
-            "is near; the repair round gets the DQ-03 line",
+            "G9 (advisory, 610,000 plotted points): the render itself is cheap (2.8 s CPU, 2.9 s wall, 234 MiB "
+            "peak), so no sandbox limit is near; the repair round gets the DQ-03 line",
             {"dataset": "ok", "bindings": "complete", "standin.check": "ok"},
             needs_model=True,
             render={"gates": ["G9"]},

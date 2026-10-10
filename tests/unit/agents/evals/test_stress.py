@@ -126,6 +126,13 @@ async def test_bindings_refusals_and_injection_markers(stress_cases: dict[str, E
     }
 
 
+async def test_dates_out_of_the_nanosecond_range_stay_dates(stress_cases: dict[str, EvalCase]) -> None:
+    """`loader: ok` alone would also hold if the parse typed the column as text; `date_columns` pins the datetime."""
+    record = await static_record(stress_cases["stress-dates-centuries"], context())
+
+    assert (record["static"]["date_columns"], record["static"]["loader"], record["held"]) == (1, "ok", True)
+
+
 async def test_a_stand_in_renders_through_the_backend_and_its_gates(stress_cases: dict[str, EvalCase]) -> None:
     backend = FakeBackend()
     record = await static_record(stress_cases["stress-compute-oversample"], context(backend))

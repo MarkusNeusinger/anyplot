@@ -23,6 +23,7 @@
   "needs_model": false,
   "static": {
     "dataset": "ok",
+    "date_columns": 1,
     "bindings": "complete",
     "loader": "ok"
   }

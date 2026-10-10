@@ -17,8 +17,11 @@
 - **The agent pipeline bounds what the stress cases showed unbounded.** The
   adapter request carries the dataset profile trimmed to 16 KiB (47 text
   columns of long values made it 27,907 characters); the new advisory gate
-  G9 reports plots that draw more than 200,000 points, which a 10,000,000-step
-  Lorenz request reached in 5.8 s of CPU without hitting any sandbox limit;
-  the render probe keeps the texts past a canvas edge first when it keeps only
-  400, so G3 sees a clipped label drawn late; and a renderer limit that
-  stopped a run is counted as `R1-<reason>`.
+  G9 reports plots that draw more than 200,000 points, which a
+  1,000,000-step Lorenz request reached in 2.0 s of CPU at a 479 MiB peak, far
+  under the sandbox limits (10,000,000 steps peak at 889 MiB, within a few
+  MiB of the 1 GiB address space); the render probe measures at most 2,000
+  texts and keeps the ones past a canvas edge first when it keeps only 400,
+  so G3 sees a clipped label drawn late without the probe eating into the
+  CPU limit; and a renderer limit that stopped a run is counted as
+  `R1-<reason>`.

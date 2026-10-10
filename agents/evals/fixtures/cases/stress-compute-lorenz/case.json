@@ -19,7 +19,7 @@
     "synthetic"
   ],
   "source": "synthetic: agents/evals/make_stress.py",
-  "bound_expected": "G9 (advisory, 10,000,000 plotted points): no sandbox limit stops the stand-in, which took 5 s of CPU and 888 MiB at its peak, under the 60 s and 1 GiB limits; ten times the steps would end in R1",
+  "bound_expected": "G9 (advisory, 1,000,000 plotted points): no sandbox limit stops the stand-in, which took 2.0 s CPU (2.1 s wall) and 479 MiB at its peak and still renders with the address space cut to 610 MiB; at dt = 0.0001 (10,000,000 points) it peaks at 889 MiB and fails from 1,015 MiB down, too close to the 1 GiB limit to expect either G9 or R1, so compute-distances is the R1 case",
   "needs_model": true,
   "static": {
     "dataset": "ok",

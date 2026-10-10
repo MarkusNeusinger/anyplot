@@ -25,8 +25,9 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    as the faster variant);
 4. wraps `matplotlib.figure.Figure.savefig` so that every save also writes
    `probe-<theme>.json` next to the plot: the figure size and dpi, the bounding
-   boxes in display pixels of the texts the probe's own draw rendered (at most
-   `PROBE_LIMIT`, the ones past a canvas edge first, with `texts_total`), overlaps
+   boxes in display pixels of the texts the probe's own draw rendered (it measures
+   the first `PROBE_MEASURE_LIMIT` in draw order and keeps at most `PROBE_LIMIT`,
+   the ones past a canvas edge first; `texts_total` counts every drawn text), overlaps
    between rendered tick labels per axis, annotations outside their axes, the
    number of drawn point marks (scatter offsets) and the number of vertices of the
    visible `plot()` lines (`line_points`). Only rendered text counts: matplotlib keeps tick
@@ -49,6 +50,7 @@ as a verdict.
 """
 
 import functools
+import itertools
 import json
 import math
 import os
@@ -59,6 +61,12 @@ import sys
 
 
 PROBE_LIMIT = 400  # text boxes recorded per figure
+PROBE_MEASURE_LIMIT = 2_000
+"""Texts the probe measures per figure, in draw order. Each `get_window_extent` costs CPU time
+under the sandbox's `RLIMIT_CPU`, on top of the three full draws a render already pays (the
+probe's, the save's and pyplot's trailing one): measured on WSL2, the extents of 2,000 labels
+took 0.07 s and those of 20,000 took 6.5 s, past matplotlib's text-metrics cache. A clipped
+text drawn after the first 2,000 is not seen by G3."""
 THEME_ENV = "ANYPLOT_THEME"
 MARKER = "HARNESS"
 
@@ -155,7 +163,7 @@ def probe(figure, dpi):
     scale = (dpi or figure.dpi) / figure.dpi
     width_px, height_px = float(width_in) * float(dpi or figure.dpi), float(height_in) * float(dpi or figure.dpi)
     measured = []
-    for text in drawn.values():
+    for text in itertools.islice(drawn.values(), PROBE_MEASURE_LIMIT):
         try:
             box = [value * scale for value in _box(text.get_window_extent(renderer))]
         except Exception:
@@ -164,7 +172,7 @@ def probe(figure, dpi):
             measured.append({"kind": type(text).__name__, "box": box})
     # Only PROBE_LIMIT boxes are kept: the ones past a canvas edge go first, so a plot with
     # hundreds of labels (100 bars with value labels, a 100-entry legend) still shows G3
-    # every clipped text, whatever order matplotlib drew them in.
+    # every clipped text among the measured ones, whatever order matplotlib drew them in.
     measured.sort(key=lambda item: not _beyond(item["box"], width_px, height_px))
     texts = measured[:PROBE_LIMIT]
     tick_overlaps = 0
@@ -211,7 +219,7 @@ def probe(figure, dpi):
             round(float(height_in) * float(dpi or figure.dpi)),
         ],
         "texts": texts,
-        "texts_total": len(measured),
+        "texts_total": len(drawn),
         "tick_overlaps": tick_overlaps,
         "annotations_outside": annotations_outside,
         "points": points,
