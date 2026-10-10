@@ -45,9 +45,9 @@ class TestDefaults:
         assert settings.max_attempts == 2  # the first attempt and at most one repair round
         assert settings.max_llm_calls == 12
         assert settings.request_token_budget == 160_000  # above a cold reviewed run with a second review
-        assert settings.daily_token_budget == 1_000_000
+        assert settings.daily_token_budget == 2_000_000  # about 26 cold runs: the run cap binds first
         assert settings.daily_pipeline_runs == 40
-        assert settings.global_daily_token_budget == 3_000_000
+        assert settings.global_daily_token_budget == 6_000_000  # three users at their daily budget
         assert settings.render_timeout_s == 60
         assert settings.request_deadline_s == 180
         assert settings.soft_deadline_s == 140

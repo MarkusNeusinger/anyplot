@@ -71,9 +71,9 @@ Three rules hold for everything here:
 | `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 (`--max-attempts`) to measure no repair or a second repair round |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `160000` | Cost-weighted tokens per request (see [Token budgets and output caps](#token-budgets-and-output-caps)) |
-| `AGENT_DAILY_TOKEN_BUDGET` | `1000000` | Cost-weighted tokens per user and day |
+| `AGENT_DAILY_TOKEN_BUDGET` | `2000000` | Cost-weighted tokens per user and day |
 | `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
-| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `3000000` | Cost-weighted tokens per day for the whole service |
+| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `6000000` | Cost-weighted tokens per day for the whole service |
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per theme render |
 | `AGENT_REQUEST_DEADLINE_S` | `180` | Hard request deadline |
 | `AGENT_SOFT_DEADLINE_S` | `140` | Soft deadline inside the pipeline |
@@ -97,7 +97,7 @@ The three token budgets count cost-weighted tokens, in input-token equivalents (
 
 The scope and dataset judges count their input at 1 and their output at 5. The `done` event and the attribution lines keep the plain token counts; each `model` attribution line adds the call's weighted count as `budget`.
 
-In the rerun of spike X on main (244 runs, Claude Haiku 5.5, warm prompt cache), the median run booked 37,157 weighted tokens against 70,488 plain ones, and 1,000,000 per user and day holds about 26 median runs. A cold cache weighs more, because each agent's first call writes its prefix at 1.25 instead of reading it at 0.1; a request starts cold after a pause longer than the cache's five-minute lifetime. The rerun measured this as well: the first, cold run of area-basic-seaborn-decimal-comma booked 100,282, and 3 of the 244 runs, each the first run of its spec, booked too much to fit a second review under the earlier 80,000. Simulated cold from the same calls, a reviewed run with two adapter attempts books a median of 77,747 (at most 103,800), and at most 115,046 with a second review; the three-attempt rerun (`--max-attempts 3`) reaches about 117,300. The request budget of 160,000 stays about 36 % above the costliest of these. Before each review the pipeline also keeps 35,000 (`pipeline.REVIEW_RESERVE_TOKENS`) for the review and the root's closing reply, so a tight budget skips a review instead of answering a shipped plot with the `budget` refusal.
+In the rerun of spike X on main (244 runs, Claude Haiku 5.5, warm prompt cache), the median run booked 37,157 weighted tokens against 70,488 plain ones, so 2,000,000 per user and day holds about 54 median runs, or about 26 cold ones at the cold median below; the 40 runs of `AGENT_DAILY_PIPELINE_RUNS` bind first on a normal day, and the global 6,000,000 is three users at their daily budget. A cold cache weighs more, because each agent's first call writes its prefix at 1.25 instead of reading it at 0.1; a request starts cold after a pause longer than the cache's five-minute lifetime. The rerun measured this as well: the first, cold run of area-basic-seaborn-decimal-comma booked 100,282, and 3 of the 244 runs, each the first run of its spec, booked too much to fit a second review under the earlier 80,000. Simulated cold from the same calls, a reviewed run with two adapter attempts books a median of 77,747 (at most 103,800), and at most 115,046 with a second review; the three-attempt rerun (`--max-attempts 3`) reaches about 117,300. The request budget of 160,000 stays about 36 % above the costliest of these. Before each review the pipeline also keeps 35,000 (`pipeline.REVIEW_RESERVE_TOKENS`) for the review and the root's closing reply, so a tight budget skips a review instead of answering a shipped plot with the `budget` refusal.
 
 The output caps per model call are constants in `anyplot/models.py`, set with ample headroom above the largest measured answer, because an unused cap costs nothing and a cut-off wastes the call:
 

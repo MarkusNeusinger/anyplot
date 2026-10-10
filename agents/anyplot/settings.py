@@ -26,9 +26,9 @@ another provider, model or location.
 | `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 to measure no repair or a second repair round |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request (the `RunConfig` cap) |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `160000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
-| `AGENT_DAILY_TOKEN_BUDGET` | `1000000` | Cost-weighted tokens per user and day, weighted the same way |
+| `AGENT_DAILY_TOKEN_BUDGET` | `2000000` | Cost-weighted tokens per user and day, weighted the same way: about 54 median runs on a warm cache or 26 on a cold one, so the run cap binds first |
 | `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
-| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `3000000` | Cost-weighted tokens per day across all users; reaching it pauses the service |
+| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `6000000` | Cost-weighted tokens per day across all users, three users at their daily budget; reaching it pauses the service |
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per render, host-enforced |
 | `AGENT_REQUEST_DEADLINE_S` | `180` | Hard request deadline, enforced through `abort_signal` |
 | `AGENT_SOFT_DEADLINE_S` | `140` | Soft deadline inside the pipeline; below the hard one |
@@ -187,16 +187,17 @@ class AgentSettings(BaseSettings):
     A review starts only while `pipeline.REVIEW_RESERVE_TOKENS` is left for it and the root's
     closing reply."""
 
-    daily_token_budget: PositiveInt = 1_000_000
+    daily_token_budget: PositiveInt = 2_000_000
     """Cost-weighted tokens per user and day (`AGENT_DAILY_TOKEN_BUDGET`), weighted like the request
-    budget: about 26 median runs with a warm cache."""
+    budget: about 54 median runs with a warm cache and about 26 with a cold one (77,700 each), so
+    the 40 runs of `daily_pipeline_runs` bind first on a normal day."""
 
     daily_pipeline_runs: PositiveInt = 40
     """Pipeline runs per user and day (`AGENT_DAILY_PIPELINE_RUNS`)."""
 
-    global_daily_token_budget: PositiveInt = 3_000_000
-    """Cost-weighted tokens per day across all users (`AGENT_GLOBAL_DAILY_TOKEN_BUDGET`); reaching it
-    pauses the service."""
+    global_daily_token_budget: PositiveInt = 6_000_000
+    """Cost-weighted tokens per day across all users (`AGENT_GLOBAL_DAILY_TOKEN_BUDGET`), three users
+    at their daily budget; reaching it pauses the service."""
 
     render_timeout_s: PositiveInt = 60
     """Seconds per render, host-enforced (`AGENT_RENDER_TIMEOUT_S`)."""

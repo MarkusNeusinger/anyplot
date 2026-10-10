@@ -252,7 +252,8 @@ against that module, so a price change there names this constant.
 Measured on the rerun of spike X (244 runs on main, Claude Haiku 5.5, warm cache), the
 median run books 37,157 weighted against 70,488 plain tokens, and a reviewed run with
 two adapter attempts 39,499 against 72,172; a second review adds a median of 11,246.
-The 1,000,000 of `AGENT_DAILY_TOKEN_BUDGET` holds about 26 median runs instead of 14.
+The 2,000,000 of `AGENT_DAILY_TOKEN_BUDGET` holds about 54 median warm runs, or 26 cold
+ones, so the 40 runs of `AGENT_DAILY_PIPELINE_RUNS` bind first on a normal day.
 A cold cache weighs more: each agent's first call writes its prefix at 1.25 instead of
 reading it at 0.1. The rerun's first, cold run of area-basic-seaborn-decimal-comma
 booked 100,282, and simulated cold from the same calls, a reviewed run with two

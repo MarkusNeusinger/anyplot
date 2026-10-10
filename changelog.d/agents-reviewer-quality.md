@@ -17,14 +17,15 @@
   user-day and global-day budgets weigh each token by its list price relative
   to an uncached input token (cache read 0.1, cache write 1.25, output 5;
   `BUDGET_WEIGHTS`), the judges included. With a warm prompt cache the median
-  run books about 37,000 instead of 70,000 tokens, so a user's 1,000,000 per
-  day holds about 26 runs instead of 14. A cold cache weighs more, so the
-  request budget rises from 80,000 to 160,000, about 36 % above the costliest
-  reviewed run simulated cold with a second review (about 115,000, or 117,300
-  with three attempts). A review starts only while 35,000 are left for it and
-  the root's closing reply, so a tight budget skips the review instead of
-  answering a shipped plot with the usage-limit refusal. The `done` event
-  keeps the plain count.
+  run books about 37,000 instead of 70,000 tokens. A cold cache weighs more
+  (a reviewed run books about 78,000), so the request budget rises from
+  80,000 to 160,000, about 36 % above the costliest reviewed run simulated
+  cold with a second review (about 115,000, or 117,300 with three attempts),
+  and the user-day and global-day budgets double to 2,000,000 and 6,000,000:
+  about 26 cold runs per user, so the 40-run cap binds first. A review starts
+  only while 35,000 are left for it and the root's closing reply, so a tight
+  budget skips the review instead of answering a shipped plot with the
+  usage-limit refusal. The `done` event keeps the plain count.
 - **The Claude eval baseline is the spike-X rerun on main.**
   `agents/evals/baselines/claude-haiku-5-5.json` now holds the 244 runs of the
   evening of 2026-10-10 (report schema 2, the drawn-text G3 probe, 90.6 %
