@@ -24,7 +24,9 @@ tokens may not be bound again anywhere (a later `PAGE_BG = ...` passes the overl
 check above but would recolour the plot).
 
 Failure lines are repair feedback (`Line`): one line each, at most `MAX_LINE_CHARS`
-characters, quoting at most `MAX_QUOTE_CHARS` characters of code.
+characters, quoting at most `MAX_QUOTE_CHARS` characters of code. Next to them,
+`AppliedPlan.kinds` names each failure by a fixed, content-free kind (`FAILURE_KINDS`)
+for the attribution log, which never sees the lines because they quote code.
 """
 
 import ast
@@ -53,14 +55,35 @@ _KIND_NAMES = {
     "placeholder": "placeholder line",
     "savefig": "final savefig statement",
 }
+FAILURE_KINDS: frozenset[str] = frozenset(
+    {
+        "zero_match",
+        "multi_match",
+        *(f"protected:{kind}" for kind in _KIND_NAMES),
+        "drift:theme",
+        "drift:theme_token",
+        "drift:savefig",
+        "drift:rebind",
+        "working_unparseable",
+    }
+)
+"""The content-free kind of every failure line: no match, several matches, an overlap with
+a protected region (by region kind), a protected statement changed or a theme name bound
+again after the plan applied (`drift:*`), or a working form that does not parse."""
 
 
 @dataclass(frozen=True, slots=True)
 class AppliedPlan:
-    """The edited working form, or None with one failure line per refused edit."""
+    """The edited working form, or None with one failure line per refused edit.
+
+    `kinds` holds the `FAILURE_KINDS` entry of every failure, the ones past the
+    `MAX_FEEDBACK` lines included; trailer lines (the drift reminder, the overflow
+    count) have none.
+    """
 
     code: str | None
     failures: list[str] = field(default_factory=list)
+    kinds: tuple[str, ...] = ()
 
 
 def apply_plan(working: str, plan: AdaptPlan) -> AppliedPlan:
@@ -68,8 +91,11 @@ def apply_plan(working: str, plan: AdaptPlan) -> AppliedPlan:
     applied = _apply(working, plan)
     if applied.code is None:
         return applied
-    drift = protected_drift(working, applied.code)
-    return AppliedPlan(None, drift[:MAX_FEEDBACK]) if drift else applied
+    drift = _drift(working, applied.code)
+    if not drift:
+        return applied
+    lines = _with_drift_reminder([line for _, line in drift])
+    return AppliedPlan(None, lines[:MAX_FEEDBACK], tuple(kind for kind, _ in drift))
 
 
 def protected_drift(base: str, code: str) -> list[str]:
@@ -83,13 +109,25 @@ def protected_drift(base: str, code: str) -> list[str]:
     class, parameter, loop or `with` target, walrus, `except ... as`, match capture).
     A `code` that does not parse is left to the validator.
     """
+    return _with_drift_reminder([line for _, line in _drift(base, code)])
+
+
+def _with_drift_reminder(lines: list[str]) -> list[str]:
+    if not lines:
+        return []
+    reminder = "keep the THEME assignment, the theme tokens and the final savefig exactly as in the current code"
+    return [*lines, _line(reminder)]
+
+
+def _drift(base: str, code: str) -> list[tuple[str, str]]:
+    """`protected_drift` without its closing reminder: one `(kind, failure line)` pair per drift."""
     try:
         before_tree = ast.parse(base)
         after_tree = ast.parse(code)
     except SyntaxError:
         return []
     before, after = find_regions(base, before_tree), find_regions(code, after_tree)
-    failures: list[str] = []
+    failures: list[tuple[str, str]] = []
 
     def text(source: str, span: Span) -> str:
         return source[span.start : span.end].strip()
@@ -97,28 +135,25 @@ def protected_drift(base: str, code: str) -> list[str]:
     if before.theme is not None and (
         after.theme is None or text(base, before.theme.span) != text(code, after.theme.span)
     ):
-        failures.append("the plan changes or removes the protected THEME assignment")
+        failures.append(("drift:theme", "the plan changes or removes the protected THEME assignment"))
     after_tokens = {region.name: text(code, region.span) for region in after.theme_tokens}
     for region in before.theme_tokens:
         if after_tokens.get(region.name) != text(base, region.span):
-            failures.append(f"the plan changes or removes the protected theme token {region.name}")
+            failures.append(
+                ("drift:theme_token", f"the plan changes or removes the protected theme token {region.name}")
+            )
     if before.savefig is not None and before.savefig.statement is not None:
         after_savefig = after.savefig.statement if after.savefig is not None else None
         if after_savefig is None or text(base, before.savefig.statement) != text(code, after_savefig):
-            failures.append("the plan changes or removes the protected final savefig statement")
+            failures.append(("drift:savefig", "the plan changes or removes the protected final savefig statement"))
 
     names = {THEME_NAME, *(name for region in before.theme_tokens for name in region.name.split(", "))}
     counts_before, counts_after = _bindings(before_tree, names), _bindings(after_tree, names)
     for name in sorted(names):
         if counts_after.get(name, 0) > counts_before.get(name, 0):
-            failures.append(
-                f"the plan binds {name} a second time; the theme names are set once, on their protected line"
-            )
-    if failures:
-        failures.append(
-            "keep the THEME assignment, the theme tokens and the final savefig exactly as in the current code"
-        )
-    return [_line(failure) for failure in failures]
+            line = f"the plan binds {name} a second time; the theme names are set once, on their protected line"
+            failures.append(("drift:rebind", line))
+    return [(kind, _line(failure)) for kind, failure in failures]
 
 
 def _bindings(tree: ast.Module, names: set[str]) -> Counter[str]:
@@ -170,24 +205,28 @@ def _apply(working: str, plan: AdaptPlan) -> AppliedPlan:
     try:
         regions = find_regions(working)
     except SyntaxError as exc:
-        return AppliedPlan(None, [f"the working form does not parse at line {exc.lineno}; no edit was applied"])
+        line = f"the working form does not parse at line {exc.lineno}; no edit was applied"
+        return AppliedPlan(None, [line], ("working_unparseable",))
     # Placeholders are found as text on every step instead (see _PLACEHOLDER_LINE).
     protected = [region for region in regions.protected if region.kind != "placeholder"]
 
     text = working
     failures: list[str] = []
+    kinds: list[str] = []
     total = len(plan.edits)
     for number, edit in enumerate(plan.edits, start=1):
         label = f"edit {number}/{total}"
         matches = _occurrences(text, edit.find)
         if len(matches) != 1:
             failures.append(_count_failure(label, len(matches), edit.find))
+            kinds.append("zero_match" if not matches else "multi_match")
             continue
         start = matches[0]
         end = start + len(edit.find)
         hit = next((r for r in [*protected, *_placeholders(text)] if r.span.overlaps(start, end)), None)
         if hit is not None:
             failures.append(_protected_failure(label, text, start, end, hit))
+            kinds.append(f"protected:{hit.kind}")
             continue
         text = text[:start] + edit.replace + text[end:]
         protected = _shift(protected, end, len(edit.replace) - (end - start))
@@ -198,7 +237,7 @@ def _apply(working: str, plan: AdaptPlan) -> AppliedPlan:
             *failures[: MAX_FEEDBACK - 1],
             f"{hidden} more edits failed in the same way; fix the ones above first",
         ]
-    return AppliedPlan(None if failures else text, failures)
+    return AppliedPlan(None if failures else text, failures, tuple(kinds))
 
 
 def _occurrences(text: str, find: str) -> list[int]:

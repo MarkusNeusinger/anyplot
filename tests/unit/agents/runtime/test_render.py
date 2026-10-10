@@ -10,6 +10,9 @@ import tracemalloc
 from pathlib import Path
 
 import pytest
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.figure import Figure
+from matplotlib.text import Text
 from PIL import Image, PngImagePlugin
 
 from agents.anyplot.code.edits import apply_plan
@@ -17,7 +20,7 @@ from agents.anyplot.code.loader import to_run_form
 from agents.anyplot.code.normalise import normalise
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.dev_fixture import snapshot_from_repo
-from agents.anyplot.render import make_backend
+from agents.anyplot.render import harness, make_backend
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome, fixture_png
 from agents.anyplot.render.backends.local import LocalDockerBackend, read_tail
 from agents.anyplot.render.backends.remote import IdTokenSource, RemoteBackend
@@ -338,9 +341,84 @@ class TestHarness:
 
         assert report.passed_host_gates, report.blocking
         assert report.canvas_ok, report.canvas_defects
+        # Spike X saw a 441 px G3 here from the undrawn x tick label one step past the view.
+        assert report.failed_gates == [], report.advisory
         probe = json.loads((tmp_path / "probe-light.json").read_text())
         assert probe["canvas"] == [3200, 1800]
         assert probe["points"] == 24
+
+    @staticmethod
+    def figure() -> Figure:
+        fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(fig)
+        return fig
+
+    @staticmethod
+    def gates(probe: dict) -> list[str]:
+        """The probe gates the host derives from one in-process probe of a 3200x1800 canvas."""
+        output = ThemeOutput("light", 0, png=fixture_png("light", (3200, 1800)), probe=probe)
+        return evaluate(
+            RenderResult("p", {"light": output}), themes=("light",), library="matplotlib", rows=10_000
+        ).failed_gates
+
+    def test_tick_labels_outside_the_view_interval_are_not_measured(self) -> None:
+        fig = self.figure()
+        ax = fig.subplots()
+        ax.plot(range(1, 13), [-2, 1, 6, 12, 18, 24, 29, 31, 26, 18, 9, 2])
+        ax.set_title("Monthly temperature", fontsize=24)
+        fig.tight_layout()
+        assert max(ax.yaxis.get_majorticklocs()) > ax.get_ylim()[1]  # the locator places a tick past the view
+
+        report = harness.probe(fig, 200)
+
+        assert "G3" not in self.gates(report), report["texts"]
+
+    def test_a_drawn_title_beyond_the_canvas_is_still_measured(self) -> None:
+        fig = self.figure()
+        ax = fig.subplots()
+        ax.plot([0, 1], [0, 1])
+        ax.set_title("A title placed off the canvas", fontsize=24, x=1.08, ha="left")
+        fig.tight_layout()
+
+        assert "G3" in self.gates(harness.probe(fig, 200))
+
+    def test_tick_labels_of_a_hidden_axis_are_not_measured(self) -> None:
+        fig = self.figure()
+        ax = fig.subplots()
+        ax.plot(range(10), range(10))
+        ax.set_xticks(range(10), [f"a long category label {number}" for number in range(10)])
+        ax.axis("off")
+
+        report = harness.probe(fig, 200)
+
+        assert report["tick_overlaps"] == 0 and self.gates(report) == []
+
+    def test_an_annotation_clipped_out_of_its_axes_still_counts(self) -> None:
+        """G5 looks for exactly this: an annotation at a data coordinate of the example data."""
+        fig = self.figure()
+        ax = fig.subplots()
+        ax.plot([0, 1, 2], [3, 1, 2])
+        ax.set_xlim(0, 2)
+        ax.annotate("peak of the example data", xy=(40, 3))
+
+        assert harness.probe(fig, 200)["annotations_outside"] == 1
+
+    def test_the_probe_restores_text_draw_even_when_the_draw_fails(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        original = Text.draw
+        fig = self.figure()
+        fig.subplots().set_title("t")
+        harness.probe(fig, 200)
+        assert Text.draw is original
+
+        broken = self.figure()
+
+        def fail() -> None:
+            raise RuntimeError("draw failed")
+
+        monkeypatch.setattr(broken.canvas, "draw", fail)
+        with pytest.raises(RuntimeError):
+            harness.probe(broken, 200)
+        assert Text.draw is original
 
     def test_harness_refuses_an_unknown_theme(self, tmp_path: Path) -> None:
         (tmp_path / "plot.py").write_text("print('never')\n")

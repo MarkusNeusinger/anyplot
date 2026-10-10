@@ -2,7 +2,15 @@
 
 import pytest
 
-from agents.anyplot.code.edits import MAX_NEW_LITERAL_CHARS, MAX_QUOTE_CHARS, AppliedPlan, apply_plan, new_literal_chars
+from agents.anyplot.code.edits import (
+    FAILURE_KINDS,
+    MAX_NEW_LITERAL_CHARS,
+    MAX_QUOTE_CHARS,
+    AppliedPlan,
+    apply_plan,
+    new_literal_chars,
+    protected_drift,
+)
 from agents.anyplot.schemas import MAX_EDITS, MAX_FEEDBACK, MAX_LINE_CHARS, AdaptPlan, Edit
 
 from .conftest import source
@@ -154,6 +162,17 @@ def test_imprint_is_not_protected_and_neighbours_are_fine() -> None:
     assert result.code is not None and "#4467A3" in result.code and "ax.set_ylim" not in result.code
 
 
+def test_an_added_ink_muted_line_is_neither_drift_nor_a_rebind() -> None:
+    """adapter.md adds `INK_MUTED` right after the palette list for an "Other" group; both plan shapes keep it."""
+    palette = 'IMPRINT = ["#009E73", "#C475FD"]\n'
+    muted = 'INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"\n'
+    with_muted = WORKING.replace(palette, palette + muted)
+
+    assert protected_drift(WORKING, with_muted) == []
+    assert apply_plan(WORKING, AdaptPlan(full_code=with_muted)) == AppliedPlan(with_muted, [])
+    assert apply((palette, palette + muted)) == AppliedPlan(with_muted, [])
+
+
 def test_protected_regions_move_with_earlier_edits() -> None:
     result = apply(("import os\n", "import os\nimport math\n\n\n"), ('INK = "#1A1A17"', "INK = INK_X"))
     assert result.code is None and "theme token INK at line 10" in result.failures[0]
@@ -195,3 +214,58 @@ def test_failures_are_capped_at_the_feedback_limit() -> None:
 def test_unparseable_working_form() -> None:
     result = apply(("a", "b"), working="def broken(:\n")
     assert result.code is None and result.failures[0].startswith("the working form does not parse")
+    assert result.kinds == ("working_unparseable",)
+
+
+class TestFailureKinds:
+    """Each failure has a content-free kind for the attribution log; the lines quote code, the kinds never do."""
+
+    def test_match_and_overlap_kinds_follow_the_edits(self) -> None:
+        result = apply(
+            ("nope", "x"),
+            ("ax.", "x"),
+            ('PAGE_BG = "#FAF8F1"', "x"),
+            ("df = load_user_data()", "x"),
+            ("dpi=400, facecolor=PAGE_BG)", "x"),
+            ('THEME = os.getenv("ANYPLOT_THEME", "light")', "x"),
+        )
+
+        assert result.kinds == (
+            "zero_match",
+            "multi_match",
+            "protected:theme_token",
+            "protected:placeholder",
+            "protected:savefig",
+            "protected:theme",
+        )
+        assert set(result.kinds) <= FAILURE_KINDS
+
+    def test_drift_kinds_leave_the_reminder_without_a_kind(self) -> None:
+        full = WORKING.replace('INK = "#1A1A17" if', 'INK = "#FF00FF" if').replace(
+            "df = load_user_data()\n", 'df = load_user_data()\nPAGE_BG = "#FF00FF"\n'
+        )
+
+        result = apply_plan(WORKING, AdaptPlan(full_code=full))
+
+        assert result.kinds == ("drift:theme_token", "drift:rebind")
+        assert len(result.failures) == 3 and result.failures[-1].startswith("keep the THEME assignment")
+        assert result.failures == protected_drift(WORKING, full)
+
+    @pytest.mark.parametrize(
+        ("full", "kind"),
+        [
+            (WORKING.replace('getenv("ANYPLOT_THEME", "light")', 'getenv("ANYPLOT_THEME", "dark")'), "drift:theme"),
+            (WORKING.replace("dpi=400, facecolor=PAGE_BG", "dpi=100, facecolor=PAGE_BG"), "drift:savefig"),
+        ],
+    )
+    def test_each_protected_statement_has_its_drift_kind(self, full: str, kind: str) -> None:
+        assert apply_plan(WORKING, AdaptPlan(full_code=full)).kinds == (kind,)
+
+    def test_kinds_count_the_edits_past_the_feedback_cap(self) -> None:
+        result = apply(*((f"missing {i}", "x") for i in range(MAX_EDITS)))
+
+        assert len(result.failures) == MAX_FEEDBACK
+        assert result.kinds == ("zero_match",) * MAX_EDITS
+
+    def test_a_clean_plan_has_no_kinds(self) -> None:
+        assert apply(("ax.set_ylim(0, 100)", "ax.set_ylim(0, 50)")).kinds == ()
