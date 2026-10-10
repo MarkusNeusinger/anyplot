@@ -40,9 +40,12 @@ level per kind; no temperature, top_p or thinking budget, which Gemini 3 does no
 want.
 
 Per kind: the root chats (2,048 output tokens, low effort), the adapter edits code
-(2,048 tokens for edits, raised to `ADAPTER_FULL_MAX_OUTPUT_TOKENS` by the adapter's
-callback when a full file is allowed; medium effort), the reviewer judges two images
-(2,048 tokens, low effort, medium media resolution on Gemini).
+(medium effort; 2,048 tokens for edits on Claude, `GEMINI_ADAPTER_MAX_OUTPUT_TOKENS`
+on Gemini, whose thinking tokens count toward the cap; `allow_full_file`, called by
+the adapter's callback when a full file is allowed, raises the cap to
+`ADAPTER_FULL_MAX_OUTPUT_TOKENS` and on Gemini lowers thinking to
+`GEMINI_ADAPTER_FULL_THINKING`), the reviewer judges two images (2,048 tokens, low
+effort, medium media resolution on Gemini).
 """
 
 from __future__ import annotations
@@ -76,6 +79,19 @@ GEMINI_THINKING: dict[ModelKind, types.ThinkingLevel] = {
     "adapter": types.ThinkingLevel.MEDIUM,
     "reviewer": types.ThinkingLevel.LOW,
 }
+GEMINI_ADAPTER_MAX_OUTPUT_TOKENS = 10_240
+"""The Gemini adapter's cap for an edit-only call.
+
+Gemini 3 counts thinking tokens toward `max_output_tokens`. At 2,048 every first
+adapter call of the spike-X Gemini arm (2026-10-10) ended with `MAX_TOKENS` after
+about 1,970 thought and 65 answer tokens. The plan calls of that run needed a median
+of about 4,700 output tokens; 10,240 holds 110 of the 112 measured ones. Claude runs
+with thinking disabled and keeps 2,048."""
+GEMINI_ADAPTER_FULL_THINKING = types.ThinkingLevel.LOW
+"""The Gemini adapter's thinking level when a full file is allowed (the repair attempt).
+
+At MEDIUM, 10 runs of the spike-X Gemini arm thought past the 12,288-token cap of
+that attempt as well; LOW leaves the answer room. The first attempt keeps MEDIUM."""
 ClaudeEffort = Literal["low", "medium", "high", "xhigh", "max"]
 CLAUDE_EFFORT: dict[ModelKind, ClaudeEffort] = {"root": "low", "adapter": "medium", "reviewer": "low"}
 SAFETY_CATEGORIES: tuple[types.HarmCategory, ...] = (
@@ -251,12 +267,27 @@ def make_content_config(kind: ModelKind, settings: AgentSettings | None = None) 
             labels=_labels(kind),
         )
     return types.GenerateContentConfig(
-        max_output_tokens=MAX_OUTPUT_TOKENS[kind],
+        max_output_tokens=GEMINI_ADAPTER_MAX_OUTPUT_TOKENS if kind == "adapter" else MAX_OUTPUT_TOKENS[kind],
         thinking_config=types.ThinkingConfig(thinking_level=GEMINI_THINKING[kind]),
         safety_settings=_safety_settings(),
         labels=_labels(kind),
         media_resolution=types.MediaResolution.MEDIA_RESOLUTION_MEDIUM if kind == "reviewer" else None,
     )
+
+
+def allow_full_file(config: types.GenerateContentConfig) -> None:
+    """Widen one adapter request's config for an answer that may be a full file.
+
+    The cap becomes `ADAPTER_FULL_MAX_OUTPUT_TOKENS` on both providers. On Gemini the
+    thinking level drops to `GEMINI_ADAPTER_FULL_THINKING`; Claude keeps thinking
+    disabled. The provider is read from the config's type, not from the settings, so
+    the request decides. ADK copies the agent's config per request only shallowly
+    (`_copy_request_scoped_fields`), so the thinking config is replaced, never
+    mutated: a change to the shared object would reach every later run.
+    """
+    config.max_output_tokens = ADAPTER_FULL_MAX_OUTPUT_TOKENS
+    if not isinstance(config, AnthropicGenerateContentConfig):
+        config.thinking_config = types.ThinkingConfig(thinking_level=GEMINI_ADAPTER_FULL_THINKING)
 
 
 # --- Judge -------------------------------------------------------------------------------

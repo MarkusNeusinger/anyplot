@@ -11,8 +11,9 @@ scope; the callback removes it, so the adapter reads nothing but the request.)
 The answer is bound to `AdaptPlan` (`output_schema`); on Claude the model factory
 turns that into a forced tool call. `schema_guard` blanks an answer that fails the
 schema, so the pipeline repairs it instead of ADK ending the run. On the second
-attempt, when a full file is allowed, the callback raises the output cap to
-`ADAPTER_FULL_MAX_OUTPUT_TOKENS`.
+attempt, when a full file is allowed, the callback widens the request through
+`models.allow_full_file`: the output cap rises to `ADAPTER_FULL_MAX_OUTPUT_TOKENS`,
+and on Gemini the thinking level drops to LOW.
 """
 
 import logging
@@ -26,7 +27,7 @@ from google.adk.utils._schema_utils import validate_schema
 from google.genai import types
 from pydantic import BaseModel, ValidationError
 
-from ..models import ADAPTER_FULL_MAX_OUTPUT_TOKENS, make_content_config, make_model
+from ..models import allow_full_file, make_content_config, make_model
 from ..plugins.ledger import ledger_for
 from ..policy import adapter_instruction
 from ..schemas import AdaptPlan
@@ -73,7 +74,7 @@ def keep_last_content(llm_request: LlmRequest) -> None:
 async def adapter_before_model(callback_context: CallbackContext, llm_request: LlmRequest) -> LlmResponse | None:
     keep_last_content(llm_request)
     if ledger_for(callback_context.invocation_id).adapter_allow_full:
-        llm_request.config.max_output_tokens = ADAPTER_FULL_MAX_OUTPUT_TOKENS
+        allow_full_file(llm_request.config)
     return None
 
 

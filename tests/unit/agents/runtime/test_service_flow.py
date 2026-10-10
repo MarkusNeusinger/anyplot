@@ -16,6 +16,7 @@ from typing import Any
 
 import httpx
 import pytest
+from google.genai import types
 
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.models import JudgeVerdict
@@ -25,6 +26,7 @@ from agents.anyplot.render.png import size_of
 from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.schemas import AdaptPlan, Verdict
 from agents.anyplot.services import Services, get_services
+from agents.anyplot.sub_agents.adapter import ADAPTERS
 from agents.main import Runtime, app, get_runtime
 
 from .conftest import CASES
@@ -309,6 +311,36 @@ async def test_reviewer_rejection_gets_one_repair_and_ships_needs_attention(
     assert plot["attempts"] == 2
     # The reviewer's own line, filed under the one theme it saw although it wrote "both".
     assert plot["residual_defects"][0].startswith("VQ-03 (light): 24 sparse markers")
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+async def test_the_repair_attempt_widens_the_adapter_request_only(
+    client: httpx.AsyncClient, swap_models, provider: str
+) -> None:
+    """Attempt 1 keeps the edit-only cap; attempt 2 gets the full-file cap (and LOW thinking on Gemini)."""
+    fake = swap_models(provider, default_script(verdict=VERDICT_REJECT, plans=[SCATTER_PLAN, SECOND_PLAN]))
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    assert plot["attempts"] == 2
+    if isinstance(fake, ScriptedLlm):
+        adapter = [
+            request.config for request in fake.requests if (request.config.labels or {})["agent_kind"] == "adapter"
+        ]
+        caps = [(config.max_output_tokens, config.thinking_config.thinking_level) for config in adapter]
+        assert caps == [(10_240, types.ThinkingLevel.MEDIUM), (12_288, types.ThinkingLevel.LOW)]
+    else:
+        assert isinstance(fake, FakeAnthropic)
+        adapter_calls = [call for call in fake.calls if FakeAnthropic.kind(call) == "adapter"]
+        assert [call["max_tokens"] for call in adapter_calls] == [2048, 12_288]
+        assert all(call.get("thinking") == {"type": "disabled"} for call in adapter_calls)
+    # The per-request change never reaches the agent's own config, so the next run starts narrow again.
+    config = ADAPTERS["matplotlib"].generate_content_config
+    assert config is not None and config.max_output_tokens == (10_240 if provider == "gemini" else 2048)
+    if provider == "gemini":
+        assert config.thinking_config is not None
+        assert config.thinking_config.thinking_level == types.ThinkingLevel.MEDIUM
 
 
 async def test_failed_render_twice_is_a_failed_result(

@@ -28,8 +28,9 @@ The other theme of a finished version is rendered later by the theme toggle
 
 Bounds: two adapter calls, one reviewer call, two renders of one theme. The budget
 is checked before every model call, the soft deadline (`AGENT_SOFT_DEADLINE_S`)
-before the second attempt and for every render timeout; the request deadline is
-`abort_signal` on the run. A render waits in the `run` lane of the render slot
+before the second attempt (which needs `ADAPTER_P95_S` plus `RENDER_P95_S` left, so
+the first attempt has the rest of the soft deadline) and for every render timeout;
+the request deadline is `abort_signal` on the run. A render waits in the `run` lane of the render slot
 (`render/serial.py`), ahead of every waiting theme toggle, so it waits for at most
 the render in progress; its clamped timeout starts when it runs. The exported
 `plot.py` names the rendered theme in its run line.
@@ -112,8 +113,19 @@ from .sub_agents.reviewer import reviewer
 logger = logging.getLogger(__name__)
 
 STATUS_KEY = "anyplot_status"
-ADAPTER_P95_S = 45.0
-"""Seconds the second attempt's adapter call is budgeted at when checking the soft deadline."""
+ADAPTER_P95_S = 60.0
+"""Seconds the second attempt's adapter call is budgeted at when checking the soft deadline.
+
+Gemini's plan calls in spike X took about 62 s at the 95th percentile (Claude's whole
+runs about 25 s)."""
+RENDER_P95_S = 15.0
+"""Seconds the second attempt's render is budgeted at when checking the soft deadline.
+
+Spike X measured renders at 5.5 s at the 95th percentile and 10.2 s at most. With
+`ADAPTER_P95_S` the second attempt needs 75 s, which leaves the first attempt 65 s
+of the 140 s soft deadline; reserving the whole 60 s render timeout left it 35 s,
+less than a typical Gemini plan call. The render's own timeout is still clamped to
+what remains of the soft deadline."""
 REVIEWER_P95_S = 30.0
 """Seconds the review is budgeted at; with less left of the soft deadline the render ships unreviewed."""
 PADDED_LINE = "canvas padded after render ({theme})"
@@ -540,7 +552,7 @@ async def _attempts(
         if not budget_allows(ledger, services.usage, settings):
             run.reason, run.unreviewed_why = "budget", "the usage limit was reached"
             return
-        if attempt == 2 and not deadline.allows(ADAPTER_P95_S + settings.render_timeout_s):
+        if attempt == 2 and not deadline.allows(ADAPTER_P95_S + RENDER_P95_S):
             run.reason, run.unreviewed_why = "deadline", "the time limit was reached"
             return
         run.attempts = attempt

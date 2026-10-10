@@ -8,8 +8,10 @@ from agents.anyplot.data.store import DatasetStore
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.opening import dataset_judge_input
 from agents.anyplot.pipeline import (
+    ADAPTER_P95_S,
     NOT_REVIEWED_LINE,
     PADDED_LINE,
+    RENDER_P95_S,
     Candidate,
     Run,
     SoftDeadline,
@@ -21,6 +23,7 @@ from agents.anyplot.policy import DATA_PREAMBLE
 from agents.anyplot.schemas import AdaptPlan, AdaptRequest, Binding, Edit, PlotResult, ReviewRequest
 from agents.anyplot.services import CodeVersion, VersionStore
 from agents.anyplot.session_state import SessionView
+from agents.anyplot.settings import AgentSettings
 
 
 def run_with(shipped: bool = True, **candidate: object) -> Run:
@@ -96,6 +99,16 @@ class TestDeadline:
         assert deadline.clamp(60) == 40.0
         now[0] = 400.0
         assert deadline.clamp(60) == 1.0
+
+    def test_the_first_attempt_keeps_room_for_a_plan_call(self) -> None:
+        """The repair's reserve leaves attempt 1 at least 60 s: Gemini's median plan call took about 33 s."""
+        settings = AgentSettings()
+
+        window = settings.soft_deadline_s - (ADAPTER_P95_S + RENDER_P95_S)
+
+        assert window >= 60
+        # The repair's reserve covers the slowest render spike X measured (10.2 s), not the whole timeout.
+        assert 10.2 <= RENDER_P95_S < settings.render_timeout_s
 
 
 def test_adapt_request_is_fenced() -> None:
