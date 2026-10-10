@@ -66,6 +66,14 @@ class ThemeOutput:
     probe: dict[str, Any] | None = None
     stderr_tail: str = ""
     wall_s: float = 0.0
+    reason: str | None = None
+    """Why a renderer stopped or refused the run when it knows more than the exit code (the
+    `remote` backend's `RunReason`: `disk_budget`, `file_budget`, `memory`, `output_rejected`,
+    `timeout`); R1 turns it into a line that names the limit."""
+    measured: int | None = None
+    """The value that broke the limit (bytes, entries or MiB of `MemAvailable`, by `reason`)."""
+    limit: int | None = None
+    """The limit `measured` broke, in the same unit."""
 
     def __post_init__(self) -> None:
         self.stderr_tail = self.stderr_tail[-MAX_STDERR_CHARS:]
