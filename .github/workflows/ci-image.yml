@@ -665,3 +665,213 @@ jobs:
       - name: Skip notice
         if: steps.check.outputs.should_build == 'false'
         run: echo "::notice::Renderer image build skipped - no changes to agents/renderer/, the harness or the dependency lock"
+
+  # The agents image (agents/Dockerfile) is the anyplot-agents service, the
+  # private /v1 API in front of the ADK runner. Without this job its first build
+  # ever would be the bootstrap deploy, after the merge. The service needs no
+  # credentials to boot or to answer GET /v1/status, so the job checks what the
+  # deploy smoke (agents/cloudbuild.yaml) checks, minus Cloud Run IAM: the service
+  # reports the configuration its environment names (the deploy switches the model
+  # and the libraries through the environment alone), it refuses an anonymous
+  # caller outside development, it serves as uid 1000, and the files it reads off
+  # disk are in the image. The event-shape handling is the API job's in short form.
+  agents-image:
+    name: Build agents image and smoke the service
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    # A cold build installs the full base dependency set plus ADK and the Claude
+    # backend; 25 fails loudly instead of hanging on a slow package index.
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Check for agents-image changes
+        id: check
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          MG_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+          MG_HEAD_SHA: ${{ github.event.merge_group.head_sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.event.after }}
+          FORCE_RUN: ${{ inputs.force_run }}
+        run: |
+          set -uo pipefail
+          CHANGED_FILES=""
+          case "$EVENT_NAME" in
+            pull_request)
+              if ! CHANGED_FILES=$(git diff --name-only "$PR_BASE_SHA" "$PR_HEAD_SHA"); then
+                echo "::error::could not diff $PR_BASE_SHA..$PR_HEAD_SHA — refusing to decide whether the agents image needs building"
+                exit 1
+              fi ;;
+            merge_group)
+              if ! CHANGED_FILES=$(git diff --name-only "$MG_BASE_SHA" "$MG_HEAD_SHA"); then
+                echo "::error::could not diff $MG_BASE_SHA..$MG_HEAD_SHA — refusing to decide whether the agents image needs building"
+                exit 1
+              fi ;;
+            push)
+              if [[ "$PUSH_BEFORE" =~ ^0+$ ]] || ! CHANGED_FILES=$(git diff --name-only "$PUSH_BEFORE" "$PUSH_AFTER"); then
+                echo "::warning::the pushed range is not diffable — building the agents image rather than skipping the gate"
+                echo "should_build=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi ;;
+            *)
+              if ! CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD); then
+                echo "::warning::no parent commit to diff against — building the agents image rather than skipping the gate"
+                echo "should_build=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi ;;
+          esac
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          # What the image is built from, the same paths the deploy-agents trigger
+          # watches (agents/cloudbuild.yaml): the service package without the eval
+          # harness (the root .dockerignore keeps agents/evals out of the image),
+          # core/, the catalogue prompt files the adapter and the reviewer read,
+          # the dependency lock, README.md (copied next to pyproject.toml) and the
+          # root .dockerignore (the build context).
+          AGENTS_CHANGES=$(echo "$CHANGED_FILES" | grep -v '^agents/evals/' | grep -E '^(agents/|core/|prompts/(default-style-guide|quality-criteria)\.md$|prompts/library/|prompts/workflow-prompts/(impl-repair-claude|ai-quality-review)\.md$|pyproject\.toml$|uv\.lock$|README\.md$|\.dockerignore$|\.github/workflows/ci-image\.yml$)' || true)
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && "$FORCE_RUN" == "true" ]]; then
+            echo "Manual trigger with force_run=true, will build the agents image"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          elif [[ -n "$AGENTS_CHANGES" ]]; then
+            echo "Found agents-image changes, will build the agents image"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No agents-image changes, skipping the build"
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Buildx
+        if: steps.check.outputs.should_build == 'true'
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4.4.1
+
+      # Its own cache scope: its dependency layer differs from the API's (ADK) and
+      # the renderer's (no ADK, the plotting extras).
+      - name: Build the agents image
+        if: steps.check.outputs.should_build == 'true'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7.4.0
+        with:
+          context: .
+          file: agents/Dockerfile
+          push: false
+          load: true
+          tags: anyplot-agents:ci
+          cache-from: type=gha,scope=agents-image
+          cache-to: type=gha,mode=max,scope=agents-image
+
+      # THE assert this job exists for: the service boots from the image and
+      # reports what its environment configured. The first container runs in
+      # development (no caller check) with the fake renderer (no renderer URL, and
+      # nothing renders here) and with the Gemini arm and one library, so the
+      # report cannot pass on the settings defaults alone. The second runs with no
+      # environment at all, as production: an anonymous /v1/status must be refused
+      # by the service's own caller check.
+      - name: Smoke the service
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          want=$(python3 -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+
+          ready() {  # ready <port>: wait up to 60 s for any HTTP answer on /v1/status
+            for _ in $(seq 60); do
+              if [ "$(curl -s -o /dev/null -w '%{http_code}' "localhost:$1/v1/status")" != "000" ]; then return 0; fi
+              sleep 1
+            done
+            echo "::error::nothing answered on port $1 within 60 s"
+            exit 1
+          }
+
+          docker run -d --name agents -p 8004:8080 \
+            -e ENVIRONMENT=development -e AGENT_RENDERER=fake \
+            -e AGENT_PROVIDER=gemini -e AGENT_MODEL=gemini-3.8-flash -e AGENT_JUDGE_MODEL=gemini-3.5-flash-lite \
+            -e AGENT_LIBRARIES=seaborn \
+            anyplot-agents:ci
+          ready 8004
+          curl -fsS localhost:8004/v1/status -o status.json
+          python3 -c "
+          import json, sys
+          s = json.load(open('status.json'))
+          want = {'provider': 'gemini', 'model': 'gemini-3.8-flash', 'location': 'eu', 'libraries': ['seaborn'],
+                  'version': sys.argv[1], 'waiting': 0, 'in_flight': 0}
+          got = {key: s.get(key) for key in want}
+          assert got == want, (got, want)
+          print('OK: /v1/status', got)
+          " "$want"
+
+          docker run -d --name agents-prod -p 8005:8080 anyplot-agents:ci
+          ready 8005
+          code=$(curl -s -o prod.json -w '%{http_code}' localhost:8005/v1/status)
+          test "$code" = "401" && grep -q '"unauthenticated"' prod.json \
+            || { echo "::error::expected 401 unauthenticated without a token in production, got $code: $(cat prod.json)"; exit 1; }
+          echo "OK: production refuses an anonymous caller"
+
+      # Pins the runtime stage's COPY list: the files the service reads off disk
+      # next to its modules (agents/anyplot/policy.py, render/watermark.py), and
+      # the module the remote backend shares with the renderer. The Dockerfile's
+      # build check already reads all of them today (the import plus the two judge
+      # rubrics, which the service reads on first use); this keeps a future lazy
+      # read from slipping out of the image unnoticed. tests/unit/agents/test_image.py
+      # holds the same list against the Dockerfile and the root .dockerignore.
+      - name: The image holds what the service reads, and not the eval cases
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          for path in \
+            agents/anyplot/render/fonts/JetBrainsMono-Regular.ttf \
+            agents/anyplot/render/fonts/JetBrainsMono-Bold.ttf \
+            agents/anyplot/prompts/root.md \
+            agents/anyplot/prompts/adapter.md \
+            agents/anyplot/prompts/reviewer.md \
+            agents/anyplot/prompts/scope_judge.md \
+            agents/anyplot/prompts/data_judge.md \
+            agents/anyplot/prompts/refusals.yaml \
+            agents/renderer/wire.py \
+            prompts/default-style-guide.md \
+            prompts/quality-criteria.md \
+            prompts/library/matplotlib.md \
+            prompts/library/seaborn.md \
+            prompts/workflow-prompts/impl-repair-claude.md \
+            prompts/workflow-prompts/ai-quality-review.md; do
+            docker exec agents test -f "/app/$path" || { echo "::error::/app/$path is missing from the image"; exit 1; }
+          done
+          echo "COPY list OK"
+          # The promoted feedback cases (agents/evals/.cases) hold users' data.
+          if docker exec agents test -e /app/agents/evals; then
+            echo "::error::agents/evals reached the image"; exit 1
+          fi
+          echo "OK: no agents/evals in the image"
+          uid=$(docker exec agents id -u)
+          if [ "$uid" != "1000" ]; then
+            echo "::error::the container runs as uid $uid (expected 1000, the appuser the Dockerfile creates)"
+            exit 1
+          fi
+          echo "non-root OK: uid $uid"
+
+      - name: Container logs on failure
+        if: failure() && steps.check.outputs.should_build == 'true'
+        run: |
+          for c in agents agents-prod; do
+            echo "=== $c ==="
+            docker logs "$c" 2>&1 || true
+          done
+
+      # Same threshold as the Dockerfiles above.
+      - name: Hadolint (agents/Dockerfile)
+        if: steps.check.outputs.should_build == 'true'
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387  # v3.5.0
+        with:
+          dockerfile: agents/Dockerfile
+          failure-threshold: warning
+
+      - name: Skip notice
+        if: steps.check.outputs.should_build == 'false'
+        run: echo "::notice::Agents image build skipped - no changes to agents/ (outside agents/evals), core/, the catalogue prompts it reads or the dependency lock"
