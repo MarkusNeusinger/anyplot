@@ -1,0 +1,32 @@
+{
+  "spec_id": "pie-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {
+      "role": "category",
+      "column": "Expense Category"
+    },
+    {
+      "role": "value",
+      "column": "Monthly Amount (CHF)"
+    }
+  ],
+  "expected": "unknown",
+  "tags": [
+    "stress",
+    "categories",
+    "synthetic"
+  ],
+  "source": "synthetic: agents/evals/make_stress.py",
+  "bound_expected": "the reviewer (VQ-02) only: no host gate fires on the stand-in (92 texts, no tick labels, the legend stays on the canvas) although its 30-entry legend covers the pie and small slices pile their labels",
+  "needs_model": true,
+  "static": {
+    "dataset": "ok",
+    "bindings": "complete",
+    "standin.check": "ok"
+  },
+  "render": {
+    "passed": true
+  }
+}

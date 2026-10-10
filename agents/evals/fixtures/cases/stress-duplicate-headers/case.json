@@ -1,0 +1,31 @@
+{
+  "spec_id": "scatter-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Value_2"
+    },
+    {
+      "role": "y",
+      "column": "Value_3"
+    }
+  ],
+  "expected": "unknown",
+  "tags": [
+    "stress",
+    "degenerate",
+    "synthetic"
+  ],
+  "source": "synthetic: agents/evals/make_stress.py",
+  "bound_expected": "parse renames duplicates to Value_2, Value_3, Value_4 (case-sensitive: value stays), one warning each",
+  "needs_model": false,
+  "static": {
+    "dataset": "ok",
+    "columns": 5,
+    "warnings": 3,
+    "bindings": "complete",
+    "loader": "ok"
+  }
+}

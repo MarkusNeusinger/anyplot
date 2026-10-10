@@ -1,0 +1,19 @@
+import numpy as np
+
+# Data - the stores' path interpolated to 50,000 points, then every pairwise distance
+df = load_user_data()
+x = df["Ad Spend (kCHF)"].to_numpy(dtype=float)
+y = df["Revenue (kCHF)"].to_numpy(dtype=float)
+t = np.linspace(0, 1, len(x))
+fine_t = np.linspace(0, 1, 50_000)
+px = np.interp(fine_t, t, x)
+py = np.interp(fine_t, t, y)
+distances = np.hypot(px[:, None] - px[None, :], py[:, None] - py[None, :])
+
+# Plot
+fig, ax = plt.subplots(figsize=(6, 6), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+image = ax.imshow(distances, cmap="viridis")
+fig.colorbar(image, ax=ax, label="Distance")
+ax.set_title("Pairwise distances along the store path", fontsize=12, color=INK)
+plt.tight_layout()

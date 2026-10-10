@@ -1,0 +1,28 @@
+import numpy as np
+
+LINE_COLOR = "#009E73"
+
+# Data - the request replaces the table with the Lorenz attractor, one explicit Euler step at a time
+df = load_user_data()
+dt = 0.0001
+steps = int(round(1000 / dt))
+xs = np.empty(steps)
+zs = np.empty(steps)
+x, y, z = 1.0, 1.0, 1.0
+for i in range(steps):
+    x, y, z = x + 10.0 * (y - x) * dt, y + (x * (28.0 - z) - y) * dt, z + (x * y - 8.0 / 3.0 * z) * dt
+    xs[i] = x
+    zs[i] = z
+
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+ax.plot(xs, zs, linewidth=0.8, color=LINE_COLOR)
+ax.yaxis.grid(True, alpha=0.12, linewidth=0.8, color=INK)
+ax.set_xlabel("x", fontsize=20, color=INK)
+ax.set_ylabel("z", fontsize=20, color=INK)
+ax.set_title(f"Lorenz attractor, {steps:,} steps", fontsize=24, color=INK)
+ax.tick_params(axis="both", labelsize=16, labelcolor=INK_SOFT, length=0)
+for side in ("top", "right"):
+    ax.spines[side].set_visible(False)
+plt.tight_layout()

@@ -1,0 +1,28 @@
+{
+  "spec_id": "line-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Step"
+    },
+    {
+      "role": "y",
+      "column": "Signal (mV)"
+    }
+  ],
+  "expected": "rejected",
+  "tags": [
+    "stress",
+    "over-cap",
+    "synthetic"
+  ],
+  "source": "synthetic: agents/evals/make_stress.py",
+  "bound_expected": "413 too_long at the dataset route: 205,824 bytes is over MAX_INPUT_BYTES, refused before any model call",
+  "needs_model": false,
+  "static": {
+    "dataset": "413 too_long",
+    "bytes": 205824
+  }
+}

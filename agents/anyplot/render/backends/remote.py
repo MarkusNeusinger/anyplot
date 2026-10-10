@@ -351,5 +351,7 @@ class RemoteBackend:
                 reason=run.reason,
                 measured=run.measured,
                 limit=run.limit,
+                max_rss_mb=run.max_rss_mb,
+                cpu_s=run.cpu_s,
             )
         return result

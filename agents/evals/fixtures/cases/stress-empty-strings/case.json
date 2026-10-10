@@ -1,0 +1,29 @@
+{
+  "spec_id": "scatter-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Ad Spend (kCHF)"
+    },
+    {
+      "role": "y",
+      "column": "Revenue (kCHF)"
+    }
+  ],
+  "expected": "unknown",
+  "tags": [
+    "stress",
+    "degenerate",
+    "synthetic"
+  ],
+  "source": "synthetic: agents/evals/make_stress.py",
+  "bound_expected": "parse reads blank, quoted empty and whitespace-only cells as missing; the loader keeps them as NaN",
+  "needs_model": false,
+  "static": {
+    "dataset": "ok",
+    "bindings": "complete",
+    "loader": "ok"
+  }
+}

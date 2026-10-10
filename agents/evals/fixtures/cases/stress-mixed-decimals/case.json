@@ -1,0 +1,28 @@
+{
+  "spec_id": "scatter-basic",
+  "library": "matplotlib",
+  "locale": "de",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Gewicht (kg)"
+    },
+    {
+      "role": "y",
+      "column": "Wert"
+    }
+  ],
+  "expected": "rejected",
+  "tags": [
+    "stress",
+    "degenerate",
+    "synthetic"
+  ],
+  "source": "synthetic: agents/evals/make_stress.py",
+  "bound_expected": "422 invalid at PUT /bindings: a column that mixes decimal dots, commas and grouping stays text",
+  "needs_model": false,
+  "static": {
+    "dataset": "ok",
+    "bindings": "invalid"
+  }
+}

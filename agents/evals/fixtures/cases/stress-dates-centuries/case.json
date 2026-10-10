@@ -1,0 +1,29 @@
+{
+  "spec_id": "line-timeseries",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {
+      "role": "date",
+      "column": "Observed On"
+    },
+    {
+      "role": "value",
+      "column": "Reading"
+    }
+  ],
+  "expected": "unknown",
+  "tags": [
+    "stress",
+    "degenerate",
+    "synthetic"
+  ],
+  "source": "synthetic: agents/evals/make_stress.py",
+  "bound_expected": "parse types dates from 1066 to 2999 as datetime; the loader's pd.read_csv must read them, although they leave pandas' nanosecond range",
+  "needs_model": false,
+  "static": {
+    "dataset": "ok",
+    "bindings": "complete",
+    "loader": "ok"
+  }
+}
