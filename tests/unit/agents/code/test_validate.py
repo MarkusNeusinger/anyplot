@@ -883,6 +883,22 @@ class TestPalette:
         )
         assert "#BD8233" in findings[0].message
 
+    def test_message_names_the_limit_when_the_list_outgrows_the_palette(self) -> None:
+        body = "IMPRINT = [" + ", ".join(f'"{c}"' for c in [*IMPRINT, IMPRINT[0]]) + "]\n"
+
+        findings = validate_adaptation(ADAPTED + body, original_palette=ORIGINAL)
+
+        assert [f.message for f in findings] == ["IMPRINT has 9 entries, more than the 8 colours the palette has"]
+
+    def test_the_muted_other_group_of_the_adapter_prompt_passes(self) -> None:
+        """More than eight groups: seven palette colours and INK_MUTED for "Other", as adapter.md asks."""
+        body = (
+            "IMPRINT = [" + ", ".join(f'"{c}"' for c in IMPRINT) + "]\n"
+            'INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"\n'
+            "colors = IMPRINT[:7] + [INK_MUTED]\n"
+        )
+        assert adaptation_rules('import os\nTHEME = os.getenv("ANYPLOT_THEME", "light")\n' + body) == set()
+
     @pytest.mark.parametrize(
         "body",
         [

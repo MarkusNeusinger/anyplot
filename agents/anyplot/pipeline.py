@@ -140,6 +140,22 @@ BLOCKING_RULES = frozenset({"placeholder-count", "placeholder-use", "syntax", "s
 """ADAPTATION findings that keep the code from running: without one placeholder there is no loader."""
 ADAPTATION_IDS = {"rng": "DQ-03", "literal-data": "DQ-03", "palette-prefix": "VQ-07"}
 """The rubric id an ADAPTATION finding is reported under as a defect line."""
+ADAPTATION_TARGETS = {
+    "rng": "take the values from df; a seeded np.random.default_rng(<int>) is only for jitter or subsampling",
+    "literal-data": "take the values from df instead of writing them out",
+    "palette-prefix": (
+        "keep the Imprint palette one literal list of colour strings, assigned once: the original entries in "
+        "order, then only the next Imprint positions written out; pick colours from it under a new name "
+        "(colors = IMPRINT[: len(groups)]); with more than eight groups draw all but the seven largest in "
+        'INK_MUTED as "Other"'
+    ),
+}
+"""The target of each soft ADAPTATION finding's defect line, matching the rule the validator checks.
+
+The palette rule wants a literal list (`code/validate.py`, "Palette"), so its target
+never says "derive it": in spike X, 9 of Claude's 14 palette-prefix lines reported a
+computed palette list, the fix the old shared target ("derive it from df and the
+Imprint palette") suggested."""
 # Feedback only ever reaches attempt 2, which allows a full file, so the lines may say so.
 SCHEMA_MISS_LINE = (
     "the previous answer did not match the plan schema → answer with one JSON object: edits or full_code "
@@ -411,7 +427,7 @@ def _check(working: str, *, library: str, palette: list[str], base: str) -> Chec
     defects = [
         f"{ADAPTATION_IDS.get(f.rule, 'SC-03')} (code): {f.message}"
         + (f" at line {f.line}" if f.line else "")
-        + f" → derive it from df and the Imprint palette. Likely cause: the adaptation ({f.rule})."
+        + f" → {ADAPTATION_TARGETS.get(f.rule, 'derive it from df')}. Likely cause: the adaptation ({f.rule})."
         for f in soft
     ]
     return CheckResult(not blocking, blocking, defects, blocking_rules, [f.rule for f in soft])

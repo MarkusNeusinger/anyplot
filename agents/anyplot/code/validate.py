@@ -81,7 +81,9 @@ Decisions this module takes where the design leaves room:
   uses) must be lists or tuples of string literals that keep `original_palette` as their
   prefix in order (hex compared case-insensitively); the entries after the prefix must be
   the canonical `core.palette.IMPRINT` positions not already in the original, in
-  canonical order, which for a canonical original is exactly "the next positions".
+  canonical order, which for a canonical original is exactly "the next positions";
+  a list longer than the original plus those positions is a finding of its own,
+  because no literal list can give more groups distinct palette colours.
   The list is not changed afterwards either: a palette name, or a name bound to one by
   a plain `colors = IMPRINT`, may not be the target of anything but a plain assignment
   (no `+=`, unpacking, loop or `del` target), may not have items assigned or deleted,
@@ -765,6 +767,10 @@ class _Scan:
             ]
             if entries[: len(original)] != original:
                 message = f"{target.id} must keep the {len(original)} original palette entries in order"
+                self.add("palette-prefix", message, statement)
+            elif len(entries) > len(original) + len(extension):
+                limit = len(original) + len(extension)
+                message = f"{target.id} has {len(entries)} entries, more than the {limit} colours the palette has"
                 self.add("palette-prefix", message, statement)
             elif entries[len(original) :] != extension[: len(entries) - len(original)]:
                 next_positions = ", ".join(extension[:3]) or "none left"

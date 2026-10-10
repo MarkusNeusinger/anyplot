@@ -21,7 +21,7 @@ from agents.anyplot.pipeline import (
     render_review_request,
 )
 from agents.anyplot.policy import DATA_PREAMBLE
-from agents.anyplot.schemas import AdaptPlan, AdaptRequest, Binding, Edit, PlotResult, ReviewRequest
+from agents.anyplot.schemas import MAX_LINE_CHARS, AdaptPlan, AdaptRequest, Binding, Edit, PlotResult, ReviewRequest
 from agents.anyplot.services import CodeVersion, VersionStore
 from agents.anyplot.session_state import SessionView
 from agents.anyplot.settings import AgentSettings
@@ -291,3 +291,24 @@ class TestCheck:
         assert not check.may_render
         assert check.blocking_rules == ["syntax"]
         assert len(check.blocking) == 1
+
+    def test_each_soft_finding_gets_the_target_its_rule_checks(self) -> None:
+        """The palette target asks for the literal list the validator wants, never for a palette derived from df."""
+        code = (
+            "import numpy as np\n"
+            "df = load_user_data()\n"
+            "IMPRINT = [c for c in df['colour']]\n"
+            "noise = np.random.normal(0, 1, 10)\n"
+            "values = [" + ", ".join(str(number) for number in range(25)) + "]\n"
+        )
+
+        check = _check(code, library="matplotlib", palette=["#009E73", "#C475FD"], base=code)
+
+        assert set(check.adaptation_rules) == {"palette-prefix", "rng", "literal-data"}
+        lines = dict(zip(check.adaptation_rules, check.defects, strict=True))
+        palette = lines["palette-prefix"]
+        assert palette.startswith("VQ-07 (code): IMPRINT must be a list of colour string literals at line 3 → ")
+        assert "one literal list of colour strings, assigned once" in palette and "INK_MUTED" in palette
+        assert "derive it from df" not in palette
+        assert "take the values from df" in lines["rng"] and "take the values from df" in lines["literal-data"]
+        assert all(len(line) <= MAX_LINE_CHARS for line in check.defects)
