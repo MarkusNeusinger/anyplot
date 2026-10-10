@@ -20,7 +20,7 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 | `anyplot/models.py` | The only place that builds a model or a model client: `make_model`, `make_content_config` and `make_judge_client`, for Claude on Vertex AI and for Gemini |
 | `anyplot/policy.py` | Composes each agent's static instruction from `anyplot/prompts/` and the catalogue's prompt sources, read verbatim; the fixed refusals; the data fences |
 | `anyplot/prompts/` | `root.md`, `adapter.md`, `reviewer.md`, `scope_judge.md`, `data_judge.md` and `refusals.yaml` (English and German) |
-| `anyplot/pipeline.py` | The `plot_pipeline` node: adapt, check, render, review once, repair once (`AGENT_MAX_ATTEMPTS`), always a `PlotResult` |
+| `anyplot/pipeline.py` | The `plot_pipeline` node: adapt, check, render, review once, repair in at most `AGENT_MAX_ATTEMPTS` − 1 rounds (one by default), always a `PlotResult` |
 | `anyplot/sub_agents/` | One single-turn adapter per enabled library and the tool-less reviewer |
 | `anyplot/tools/session.py` | The root's tools: `get_dataset_profile`, `get_spec_brief`, `get_current_code`, `set_bindings` and the `plot_pipeline` workflow |
 | `anyplot/plugins/` | `ScopeGuardPlugin`, `BudgetPlugin`, `ToolSafetyPlugin` and the request ledger they share |
