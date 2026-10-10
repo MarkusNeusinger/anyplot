@@ -1,15 +1,19 @@
 """Tests for agents/anyplot/schemas.py: the field limits and the defect-line grammar."""
 
+import json
 from typing import Any, get_args
 
 import pytest
 from pydantic import ValidationError
 
 from agents.anyplot.schemas import (
+    ELLIPSIS,
     MAX_ATTEMPTS,
+    MAX_CHANGE_CHARS,
     MAX_DEFECT_TEXT_CHARS,
     MAX_FULL_CODE_CHARS,
     MAX_LINE_CHARS,
+    MAX_TITLE_CHARS,
     AdaptPlan,
     AdaptRequest,
     Binding,
@@ -23,6 +27,8 @@ from agents.anyplot.schemas import (
     PlotResult,
     ReviewRequest,
     Verdict,
+    repair_plan,
+    repair_verdict,
 )
 from automation.scripts.regen_gate import AR_IDS, CRITERIA, DEFECT, DEFECT_RE, defect_ids, defect_target, weakness_class
 
@@ -322,6 +328,161 @@ class TestVerdict:
     def test_rejection_without_defects_is_refused(self) -> None:
         with pytest.raises(ValidationError, match="at least one defect"):
             Verdict(ok=False)
+
+
+def strict_errors(schema: type[Verdict] | type[AdaptPlan], data: dict[str, Any]) -> list[tuple[Any, str]]:
+    """The location and type of every rule `data` breaks in the strict schema."""
+    with pytest.raises(ValidationError) as caught:
+        schema.model_validate(data)
+    return [(error["loc"], error["type"]) for error in caught.value.errors()]
+
+
+class TestRepairVerdict:
+    """The reviewer answers spike X and the rerun could not read, each mended to a valid verdict."""
+
+    def test_long_observed_is_clipped_with_an_ellipsis(self) -> None:
+        long = "the x tick labels " + "overlap the axis title " * 10
+        answer = {"ok": False, "defects": [defect(id="VQ-02", observed=long)]}
+        assert strict_errors(Verdict, answer) == [(("defects", 0, "observed"), "string_too_long")]
+
+        verdict = Verdict.model_validate(repair_verdict(answer))
+
+        observed = verdict.defects[0].observed
+        assert len(observed) == MAX_DEFECT_TEXT_CHARS and observed.endswith(ELLIPSIS)
+        assert observed.startswith("the x tick labels overlap the axis title")
+
+    def test_arrows_count_before_the_clip(self) -> None:
+        answer = {"ok": False, "defects": [defect(observed="→" * MAX_DEFECT_TEXT_CHARS)]}
+
+        verdict = Verdict.model_validate(repair_verdict(answer))
+
+        assert len(verdict.defects[0].observed) == MAX_DEFECT_TEXT_CHARS
+        assert verdict.defects[0].as_line().count("→") == 1
+
+    def test_ok_with_defects_becomes_a_rejection(self) -> None:
+        answer = {"ok": True, "defects": [defect()]}
+        assert strict_errors(Verdict, answer) == [((), "value_error")]
+
+        verdict = Verdict.model_validate(repair_verdict(answer))
+
+        assert verdict.ok is False and [item.id for item in verdict.defects] == ["VQ-01"]
+
+    def test_six_defects_keep_the_first_five(self) -> None:
+        ids = ["AR-09", "VQ-01", "VQ-02", "VQ-03", "VQ-06", "SC-03"]
+        answer = {"ok": False, "defects": [defect(id=item) for item in ids]}
+        assert strict_errors(Verdict, answer) == [(("defects",), "too_long")]
+
+        verdict = Verdict.model_validate(repair_verdict(answer))
+
+        assert [item.id for item in verdict.defects] == ids[:5]
+
+    @pytest.mark.parametrize(("theme", "kept"), [("both", "both"), ("Dark", "dark"), ("light and dark", "both")])
+    def test_theme_is_case_folded_and_an_unknown_one_becomes_both(self, theme: str, kept: str) -> None:
+        answer = {"ok": False, "defects": [defect(theme=theme)]}
+
+        verdict = Verdict.model_validate(repair_verdict(answer))
+
+        assert verdict.defects[0].theme == kept  # the pipeline files `both` under the rendered theme
+
+    def test_unknown_id_is_dropped_and_the_rest_kept(self) -> None:
+        answer = {"ok": False, "defects": [defect(id="VQ-05"), defect(id="vq-02")]}
+        assert strict_errors(Verdict, answer) == [
+            (("defects", 0, "id"), "literal_error"),
+            (("defects", 1, "id"), "literal_error"),
+        ]
+
+        verdict = Verdict.model_validate(repair_verdict(answer))
+
+        assert [item.id for item in verdict.defects] == ["VQ-02"]
+
+    def test_a_pass_whose_only_defects_are_off_the_checklist_stays_a_pass(self) -> None:
+        # The style guide that the reviewer reads names VQ-05; the reviewer's checklist leaves it out.
+        answer = {"ok": True, "defects": [defect(id="VQ-05"), defect(id="vq-04")]}
+        assert strict_errors(Verdict, answer)
+
+        verdict = Verdict.model_validate(repair_verdict(answer))
+
+        assert (verdict.ok, verdict.defects) == (True, [])
+
+    def test_defects_sent_as_json_text_are_read(self) -> None:
+        answer = {"ok": False, "defects": json.dumps([defect()])}
+
+        assert [item.id for item in Verdict.model_validate(repair_verdict(answer)).defects] == ["VQ-01"]
+
+    @pytest.mark.parametrize(
+        "answer",
+        [
+            {"ok": False, "defects": []},
+            {"ok": False, "defects": [defect(id="VQ-05")]},
+            {"defects": [defect(id="VQ-05")]},
+            {"ok": True, "defects": [defect(id="VQ-05"), defect(likely_cause="  ")]},
+            {"ok": True, "defects": [defect(likely_cause="  ")]},
+            {"defects": [{"id": "VQ-01"}]},
+            {},
+        ],
+        ids=[
+            "rejection-without-defects",
+            "rejection-with-only-unknown-ids",
+            "unknown-ids-without-ok",
+            "pass-with-an-unknown-id-and-a-broken-checklist-defect",
+            "defect-without-cause",
+            "defect-without-texts",
+            "empty",
+        ],
+    )
+    def test_an_answer_without_a_usable_defect_stays_invalid(self, answer: dict[str, Any]) -> None:
+        with pytest.raises(ValidationError):
+            Verdict.model_validate(repair_verdict(answer))
+
+    def test_a_valid_verdict_is_unchanged(self) -> None:
+        answer = {"ok": False, "defects": [defect()]}
+
+        assert Verdict.model_validate(repair_verdict(answer)) == Verdict.model_validate(answer)
+
+
+class TestRepairPlan:
+    def test_six_changes_keep_the_first_five(self) -> None:
+        answer = {"edits": [], "changes": [f"change {number}" for number in range(6)]}
+        assert strict_errors(AdaptPlan, answer) == [(("changes",), "too_long")]
+
+        assert AdaptPlan.model_validate(repair_plan(answer)).changes == [f"change {n}" for n in range(5)]
+
+    def test_long_title_and_changes_are_clipped(self) -> None:
+        answer = {"title": "t" * (MAX_TITLE_CHARS + 5), "changes": ["c" * (MAX_CHANGE_CHARS + 1), "  "]}
+
+        plan = AdaptPlan.model_validate(repair_plan(answer))
+
+        assert len(plan.title) == MAX_TITLE_CHARS and plan.title.endswith(ELLIPSIS)
+        assert len(plan.changes) == 1 and len(plan.changes[0]) == MAX_CHANGE_CHARS
+
+    def test_blank_full_code_means_no_full_file(self) -> None:
+        answer = {"edits": [{"find": "a", "replace": "b"}], "full_code": "", "title": None}
+        assert (("full_code",), "string_too_short") in strict_errors(AdaptPlan, answer)
+
+        plan = AdaptPlan.model_validate(repair_plan(answer))
+
+        assert (plan.full_code, plan.title, len(plan.edits)) == (None, "", 1)
+
+    def test_edits_sent_as_json_text_are_read_unchanged(self) -> None:
+        edits = [{"find": "x = [1, 2]\n", "replace": "x = df['x']\n"}]
+
+        plan = AdaptPlan.model_validate(repair_plan({"edits": json.dumps(edits)}))
+
+        assert [edit.model_dump() for edit in plan.edits] == edits
+
+    @pytest.mark.parametrize(
+        "answer",
+        [
+            {"edits": [{"find": "", "replace": "b"}]},
+            {"edits": [{"replace": "b"}]},
+            {"edits": [{"find": f"a{number}", "replace": "b"} for number in range(21)]},
+            {"edits": [{"find": "a", "replace": "b"}], "full_code": "import numpy as np\n"},
+        ],
+        ids=["empty-find", "missing-find", "21-edits", "edits-and-full-code"],
+    )
+    def test_the_edit_contract_is_never_repaired(self, answer: dict[str, Any]) -> None:
+        with pytest.raises(ValidationError):
+            AdaptPlan.model_validate(repair_plan(answer))
 
 
 class TestPlotResult:

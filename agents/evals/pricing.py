@@ -17,9 +17,11 @@ A call is priced from the attribution line's token counts (`plugins/ledger.usage
 
 The cache factors are Anthropic's published multipliers; Gemini's implicit cache is
 billed at the same 10 %. Not modelled: Claude Haiku 5.5's long-prompt tier ($0.50 input
-and $2.50 output above 100,000 prompt tokens), which no call reaches while the request
-budget is 80,000 tokens (`AGENT_REQUEST_TOKEN_BUDGET`); raise that budget and this
-module must price the tier. Re-check every number here, including Vertex AI's partner
+and $2.50 output above 100,000 prompt tokens in one call), which no call reaches: the
+request schemas' caps bound what one call carries, and the largest prompt in the
+spike-X reruns was 23,809 tokens. The request budget (`AGENT_REQUEST_TOKEN_BUDGET`)
+counts a whole request, so it does not bound one call; should a call ever approach the
+tier, this module must price it. Re-check every number here, including Vertex AI's partner
 pricing for Claude, before a spend decision: prices change on a monthly cadence.
 """
 

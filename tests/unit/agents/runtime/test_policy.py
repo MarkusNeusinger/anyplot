@@ -10,6 +10,7 @@ from core.palette import IMPRINT, muted_for
 
 
 REPO = Path(__file__).resolve().parents[4]
+STYLE = "prompts/default-style-guide.md"
 
 
 def source(relative: str) -> str:
@@ -71,6 +72,24 @@ class TestOtherInstructions:
         assert '**No text is "dark on dark"**' in text
         assert "Imprint palette" in text
         assert muted_for("light") in text and muted_for("dark") in text  # the adapter's "Other" group is compliant
+
+    def test_vq01_names_the_style_guides_own_sizes(self) -> None:
+        """Spike X: 27 of 29 VQ-01 lines called the table's own 8 pt and 10 pt too small; the row quotes the table."""
+        rows = {
+            match.group(1): int(match.group(2))
+            for match in re.finditer(r"^\| (Title|Axis labels|Tick labels|Legend) \| (\d+)pt \|", source(STYLE), re.M)
+        }
+        assert rows == {"Title": 12, "Axis labels": 10, "Tick labels": 8, "Legend": 8}
+        assert "| Canvas (16:9) | `figsize=(8, 4.5)` `dpi=400` |" in source(STYLE)
+        text = policy.reviewer_instruction()
+        assert "the title at 12 pt, axis titles at 10 pt, tick labels and legend text at 8 pt" in text
+        pixels = [round(points * 400 / 72) for points in (rows["Title"], rows["Axis labels"], rows["Tick labels"])]
+        assert f"(about {pixels[0]}, {pixels[1]} and {pixels[2]} px)" in text
+        assert "Text at or above these sizes is never too small" in text
+        # Size is only half of legibility: faint or background-coloured text fails at any size.
+        assert "too faint or lost against its background" in text
+        # Smaller text is judged by readability, not rejected by size: the style guide allows deviations.
+        assert "never for its size alone" in text and "it has no annotation row" in text
 
     def test_root_lists_the_fixed_refusals(self) -> None:
         text = policy.root_instruction()

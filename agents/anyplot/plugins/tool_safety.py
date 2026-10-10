@@ -30,7 +30,7 @@ from google.adk.tools.tool_context import ToolContext
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ..policy import DATA_PREAMBLE, fence
-from ..schemas import MAX_COLUMNS, Binding, PipelineArgs
+from ..schemas import MAX_COLUMNS, Binding, PipelineArgs, PlotResult
 from .ledger import argument_hash, attribution, ledger_for
 
 
@@ -85,9 +85,9 @@ RESULT_KEYS: dict[str, frozenset[str]] = {
     "get_spec_brief": frozenset({"status", "code", "brief"}),
     "get_current_code": frozenset({"status", "code", "version"}),
     "set_bindings": frozenset({"status", "reason", "code", "complete", "missing_roles", "errors"}),
-    PIPELINE_TOOL: frozenset(
-        {"status", "reason", "attempts", "artifacts", "changes", "residual_defects", "code", "result", "error"}
-    ),
+    # Every PlotResult field, so a field added to the schema (as `version` was) can never turn a
+    # shipped plot into `invalid_result` for the root, plus the tool-error shape.
+    PIPELINE_TOOL: frozenset(PlotResult.model_fields) | frozenset({"code", "result", "error"}),
 }
 
 

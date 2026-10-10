@@ -109,7 +109,7 @@ from agents.anyplot.opening import (
     opening_state,
     store_dataset,
 )
-from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution, budget_allows
+from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution, budget_allows, judge_budget_tokens
 from agents.anyplot.policy import data_rubric, fence, refusal
 from agents.anyplot.render.serial import RenderBusy
 from agents.anyplot.render.store import RenderStoreFull
@@ -619,14 +619,16 @@ DATASET_JUDGE_CONCURRENCY = 4
 async def _judge_dataset(services: Services, ledger: RequestLedger, parts: list[str], *, content: str) -> None:
     """Judge every part of the judged view, a few at a time; raise 503 on an outage and 403 on any refusal.
 
-    Every answered part books its tokens to the user and writes its own `data_judge`
-    attribution line (with `part` and `parts`), so the eval harness prices each call.
+    Every answered part books its cost-weighted tokens (`judge_budget_tokens`) to the user
+    and writes its own `data_judge` attribution line (with `part` and `parts`), so the
+    eval harness prices each call.
     The batches stop at the first refusal or outage: the rest would change nothing. An
     `attack` verdict is one strike against the user (`UsageBook.add_strike`), counted
     once per distinct `content` (the canonical CSV), so retrying one upload that the
     judge wrongly called an attack costs one strike, not one per try.
     """
     rubric = data_rubric()
+    judge_model = get_settings().judge_model
     for start in range(0, len(parts), DATASET_JUDGE_CONCURRENCY):
         batch = parts[start : start + DATASET_JUDGE_CONCURRENCY]
         answers = await asyncio.gather(
@@ -641,7 +643,10 @@ async def _judge_dataset(services: Services, ledger: RequestLedger, parts: list[
                 unavailable = True
                 attribution("data_judge", ledger, verdict="guard_unavailable", part=number, parts=len(parts))
                 continue
-            services.usage.add_tokens(ledger.user_id, answer.tokens)
+            services.usage.add_tokens(
+                ledger.user_id,
+                judge_budget_tokens(answer.tokens, answer.input_tokens, answer.output_tokens, judge_model),
+            )
             attribution(
                 "data_judge",
                 ledger,
