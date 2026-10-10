@@ -52,6 +52,14 @@ class TestAdapterInstruction:
         muted = f'INK_MUTED = "{muted_for("light")}" if THEME == "light" else "{muted_for("dark")}"'
         assert muted in section
 
+    def test_the_many_groups_rule_says_it_replaces_the_style_guides_small_multiples(self) -> None:
+        """Both instructions carry the style guide's 9+ row; each says which rule wins, so no model weighs two."""
+        assert "| 9+ | Out of palette | Use small multiples; never recycle colors |" in source(
+            "prompts/default-style-guide.md"
+        )
+        for text in (policy.adapter_instruction("matplotlib"), policy.reviewer_instruction()):
+            assert "replaces the style guide's" in text and "small multiples" in text and "nine or more series" in text
+
 
 class TestOtherInstructions:
     def test_reviewer_has_checklist_theme_check_and_style_guide(self) -> None:

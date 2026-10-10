@@ -6,6 +6,7 @@ import re
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.store import DatasetStore
 from agents.anyplot.dev_fixture import snapshot_from_repo
+from agents.anyplot.models import GEMINI_ADAPTER_MAX_OUTPUT_TOKENS
 from agents.anyplot.opening import dataset_judge_input
 from agents.anyplot.pipeline import (
     ADAPTER_P95_S,
@@ -25,6 +26,8 @@ from agents.anyplot.schemas import MAX_LINE_CHARS, AdaptPlan, AdaptRequest, Bind
 from agents.anyplot.services import CodeVersion, VersionStore
 from agents.anyplot.session_state import SessionView
 from agents.anyplot.settings import AgentSettings
+
+from .fakes import gemini_call_s
 
 
 def run_with(shipped: bool = True, **candidate: object) -> Run:
@@ -110,6 +113,13 @@ class TestDeadline:
         assert window >= 60
         # The repair's reserve covers the slowest render spike X measured (10.2 s), not the whole timeout.
         assert 10.2 <= RENDER_P95_S < settings.render_timeout_s
+
+    def test_a_gemini_call_cut_off_at_its_cap_fits_the_first_attempts_window(self) -> None:
+        """A cut-off attempt 1 still leaves the repair its reserve; at 10,240 tokens it would not have."""
+        window = AgentSettings().soft_deadline_s - (ADAPTER_P95_S + RENDER_P95_S)
+
+        assert gemini_call_s(GEMINI_ADAPTER_MAX_OUTPUT_TOKENS) <= window
+        assert gemini_call_s(10_240) > window
 
 
 def test_adapt_request_is_fenced() -> None:

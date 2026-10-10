@@ -79,14 +79,24 @@ GEMINI_THINKING: dict[ModelKind, types.ThinkingLevel] = {
     "adapter": types.ThinkingLevel.MEDIUM,
     "reviewer": types.ThinkingLevel.LOW,
 }
-GEMINI_ADAPTER_MAX_OUTPUT_TOKENS = 10_240
-"""The Gemini adapter's cap for an edit-only call.
+GEMINI_ADAPTER_MAX_OUTPUT_TOKENS = 8_192
+"""The Gemini adapter's cap for an edit-only call (attempt 1).
 
 Gemini 3 counts thinking tokens toward `max_output_tokens`. At 2,048 every first
 adapter call of the spike-X Gemini arm (2026-10-10) ended with `MAX_TOKENS` after
 about 1,970 thought and 65 answer tokens. The plan calls of that run needed a median
-of about 4,700 output tokens; 10,240 holds 110 of the 112 measured ones. Claude runs
-with thinking disabled and keeps 2,048."""
+of about 4,700 output tokens; 8,192 holds 101 of the 112 measured ones (10,240 would
+hold 110).
+
+The cap is also bounded by the pipeline's soft deadline: at spike X's fitted Gemini
+rate (1.83 s plus 0.00681 s per output token) a call that uses the whole cap takes
+about 58 s, so even a cut-off attempt 1 leaves the 75 s the repair attempt needs of
+the 140 s (`pipeline.ADAPTER_P95_S` plus `RENDER_P95_S`). At 10,240 a cut-off call
+takes about 72 s and the deadline check would cancel attempt 2 exactly when it is
+needed. The trade-off: the 11 measured plans above 8,192 tokens are cut off and come
+back on attempt 2 (full file allowed, LOW thinking), without a repair round of their
+own; at the fitted rate, a finished plan of more than about 8,700 tokens leaves less
+than 75 s after its render anyway. Claude runs with thinking disabled and keeps 2,048."""
 GEMINI_ADAPTER_FULL_THINKING = types.ThinkingLevel.LOW
 """The Gemini adapter's thinking level when a full file is allowed (the repair attempt).
 

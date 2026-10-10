@@ -162,6 +162,17 @@ def test_imprint_is_not_protected_and_neighbours_are_fine() -> None:
     assert result.code is not None and "#4467A3" in result.code and "ax.set_ylim" not in result.code
 
 
+def test_an_added_ink_muted_line_is_neither_drift_nor_a_rebind() -> None:
+    """adapter.md adds `INK_MUTED` right after the palette list for an "Other" group; both plan shapes keep it."""
+    palette = 'IMPRINT = ["#009E73", "#C475FD"]\n'
+    muted = 'INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"\n'
+    with_muted = WORKING.replace(palette, palette + muted)
+
+    assert protected_drift(WORKING, with_muted) == []
+    assert apply_plan(WORKING, AdaptPlan(full_code=with_muted)) == AppliedPlan(with_muted, [])
+    assert apply((palette, palette + muted)) == AppliedPlan(with_muted, [])
+
+
 def test_protected_regions_move_with_earlier_edits() -> None:
     result = apply(("import os\n", "import os\nimport math\n\n\n"), ('INK = "#1A1A17"', "INK = INK_X"))
     assert result.code is None and "theme token INK at line 10" in result.failures[0]

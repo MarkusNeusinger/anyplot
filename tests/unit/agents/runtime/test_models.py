@@ -99,7 +99,7 @@ class TestFactories:
         claude = {kind: make_content_config(kind, CLAUDE).max_output_tokens for kind in ("root", "adapter", "reviewer")}
 
         assert gemini == {"root": 2048, "adapter": GEMINI_ADAPTER_MAX_OUTPUT_TOKENS, "reviewer": 2048}
-        assert GEMINI_ADAPTER_MAX_OUTPUT_TOKENS == 10_240
+        assert GEMINI_ADAPTER_MAX_OUTPUT_TOKENS == 8_192
         assert claude == {"root": 2048, "adapter": 2048, "reviewer": 2048}
         assert make_model("adapter", CLAUDE).max_tokens == 2048
 

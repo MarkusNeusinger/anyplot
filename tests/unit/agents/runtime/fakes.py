@@ -55,6 +55,18 @@ VERDICT_REJECT: dict[str, Any] = {
 }
 ROOT_REPLY = "Your plot is ready: Exam Score against Study Hours."
 
+GEMINI_CALL_OVERHEAD_S = 1.83
+GEMINI_S_PER_OUTPUT_TOKEN = 0.00681
+"""Spike X's least-squares fit of a Gemini 3.8 Flash run's model time over its output tokens.
+
+Fitted on the 122 runs of the Gemini arm (2026-10-10), with thinking tokens counted as
+output: R² 0.74, RMSE 10.6 s. It reproduced the one-case probe run within 0.1 s."""
+
+
+def gemini_call_s(output_tokens: int) -> float:
+    """The fitted seconds of a Gemini call that produced `output_tokens` (thinking included)."""
+    return GEMINI_CALL_OVERHEAD_S + GEMINI_S_PER_OUTPUT_TOKEN * output_tokens
+
 
 def kind_of(llm_request: LlmRequest) -> str:
     labels = (llm_request.config.labels or {}) if llm_request.config else {}
