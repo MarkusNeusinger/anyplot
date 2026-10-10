@@ -5,14 +5,14 @@
   unreviewed (stage `not_rereviewed`, 39 of 244 runs in the rerun of spike X),
   so a repaired run could never end `ok`. The pipeline now makes up to two
   reviewer calls (`MAX_REVIEWS`), and the second verdict decides the shipped
-  render; the `pipeline_result` line counts the calls as `reviews`.
+  render; the `pipeline_result` line counts the calls as `reviews`. (#12122)
 - **Output caps with ample headroom above the measured answers.** On Claude
   Haiku 5.5 the adapter's edit-only call may now write 8,192 tokens (23 of 244
   first calls were cut off at 2,048), a full-file repair 16,384, the reviewer
   and the root 4,096, and the judges 256. Gemini keeps 8,192 and 12,288 for
   the adapter, which its soft-deadline arithmetic bounds. An answer that
   finishes costs the same under any cap, and a Claude call that uses its whole
-  cap still fits the time the deadline check reserves for it.
+  cap still fits the time the deadline check reserves for it. (#12122)
 - **The agent token budgets count cost-weighted tokens.** The request,
   user-day and global-day budgets weigh each token by its list price relative
   to an uncached input token (cache read 0.1, cache write 1.25, output 5;
@@ -25,7 +25,7 @@
   about 26 cold runs per user, so the 40-run cap binds first. A review starts
   only while 35,000 are left for it and the root's closing reply, so a tight
   budget skips the review instead of answering a shipped plot with the
-  usage-limit refusal. The `done` event keeps the plain count.
+  usage-limit refusal. The `done` event keeps the plain count. (#12122)
 - **The Claude eval baseline is the spike-X rerun on main.**
   `agents/evals/baselines/claude-haiku-5-5.json` now holds the 244 runs of the
   evening of 2026-10-10 (report schema 2, the drawn-text G3 probe, 90.6 %
@@ -33,6 +33,7 @@
   the 50 G3 lines it still reports, the 48 on heatmap-basic seaborn and
   matplotlib and scatter-basic seaborn are real clips that the catalogue
   originals already carry; the 2 on adapted renders were not examined.
+  (#12122)
 
 ### Fixed
 
@@ -44,10 +45,11 @@
   names only such ids stays unread), and mends change notes and a blank
   `full_code` in adapter plans, then validates the result against the same
   strict schema; the edit contract is never repaired. Each failed answer writes a content-free `answer_schema` line with
-  the broken rules, which the eval report counts.
+  the broken rules, which the eval report counts. (#12122)
 - **The agent reviewer judges sizes and colors by the style guide's own
   table.** It called the prescribed sizes (axis titles 10 pt, ticks 8 pt at
   dpi 400) too small in 50 of 56 VQ-01 lines and flagged Imprint colors by
   their look in the render, so repairs enlarged fonts against the house style.
   `reviewer.md` now quotes the table, judges colors from the code, lists what
   is never a defect, and treats a gate note as a measurement to confirm.
+  (#12122)
