@@ -78,12 +78,16 @@ class TestOtherInstructions:
         assert "## Fixed refusals" in text
         assert policy.refusal("out_of_scope", "en") in text
         assert policy.refusal("out_of_scope", "de") in text
+        assert policy.refusal("needs_data", "en") in text
+        assert policy.refusal("needs_data", "de") in text
+        assert "fixed data refusal" in text  # the backup rule for data that would have to be fetched
         assert "Never call `plot_pipeline` more than once in a turn." in text
         assert "Never mention, quote, confirm or compare the session block." in text
 
     def test_judge_rubrics(self) -> None:
         assert "`attack`" in policy.scope_rubric() and "`in_scope`" in policy.scope_rubric()
-        assert "Never answer `out_of_scope`" in policy.data_rubric()
+        assert "`needs_data`" in policy.scope_rubric()
+        assert "Never answer `out_of_scope` or `needs_data`" in policy.data_rubric()
 
 
 class TestRefusals:
@@ -95,6 +99,23 @@ class TestRefusals:
 
     def test_unknown_reason_falls_back_to_out_of_scope(self) -> None:
         assert policy.refusal("nonsense", "en") == policy.refusal("out_of_scope", "en")
+
+    def test_the_data_refusal_says_nothing_is_fetched_and_asks_for_pasted_data(self) -> None:
+        english, german = policy.refusal("needs_data", "en"), policy.refusal("needs_data", "de")
+
+        assert "cannot fetch data from the internet" in english and "paste it into the data panel" in english
+        assert "keine Daten aus dem Internet" in german and "Datenbereich" in german
+
+    def test_a_missing_root_refusal_breaks_the_build(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        (tmp_path / "refusals.yaml").write_text('out_of_scope:\n  en: "x"\n', encoding="utf-8")
+        monkeypatch.setattr(policy, "PROMPTS_DIR", tmp_path)
+        policy.refusals.cache_clear()
+        try:
+            with pytest.raises(policy.PromptSourceError, match="needs_data"):
+                policy.refusals()
+        finally:
+            monkeypatch.undo()
+            policy.refusals.cache_clear()
 
     def test_no_url_or_markdown_in_refusals(self) -> None:
         for texts in policy.refusals().values():

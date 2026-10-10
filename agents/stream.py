@@ -10,7 +10,7 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 | `status` | `step`, `attempt` | the pipeline's content-free `custom_metadata` progress events |
 | `message` | `text` | a final, non-partial text response authored by the root (`anyplot`) |
 | `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects`, `version` | the pipeline's `PlotResult` output event; `version`, the stored version's number, only on `ok` and `needs_attention` |
-| `refusal` | `code`, `text` | the request ledger's refusal (scope guard or budget), in place of the message; a user already over the daily budget gets it right after `ready`, without waiting in the queue |
+| `refusal` | `code`, `text` | the request ledger's refusal, in place of the message: `out_of_scope`, `needs_data` (data that would have to be fetched) and `unsupported_content` from the scope guard, `budget` from the budgets; a user already over the daily budget gets it right after `ready`, without waiting in the queue |
 | `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when the run waited the queue's maximum), `deadline` or `internal` |
 | `done` | `llm_calls`, `tokens` | the end of every run, always last |
 

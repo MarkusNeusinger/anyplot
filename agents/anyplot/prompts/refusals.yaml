@@ -8,6 +8,10 @@ out_of_scope:
   en: "I can only help with this plot and your data for it: choosing columns, adapting, styling and exporting the plot, and questions about its code."
   de: "Ich kann nur bei diesem Plot und deinen Daten dafür helfen: Spalten wählen, den Plot anpassen, gestalten und exportieren sowie Fragen zu seinem Code."
 
+needs_data:
+  en: "I cannot fetch data from the internet or any other source. Please get the data you want to plot yourself first, then paste it into the data panel as a table."
+  de: "Ich kann keine Daten aus dem Internet oder anderen Quellen abrufen. Bitte besorge die Daten, die du darstellen willst, vorher selbst und füge sie dann als Tabelle in den Datenbereich ein."
+
 budget:
   en: "The usage limit for now is reached. Please try again later."
   de: "Das Nutzungslimit ist für den Moment erreicht. Bitte versuche es später noch einmal."

@@ -302,7 +302,8 @@ def allow_full_file(config: types.GenerateContentConfig) -> None:
 
 # --- Judge -------------------------------------------------------------------------------
 
-Verdict = Literal["in_scope", "out_of_scope", "attack"]
+Verdict = Literal["in_scope", "out_of_scope", "attack", "needs_data"]
+"""`needs_data`: a request for data the service would have to fetch (owner rule of 2026-10-10)."""
 _LANG = re.compile(r"^[a-z]{2}$")
 
 

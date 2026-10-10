@@ -24,6 +24,7 @@ from agents.anyplot import pipeline
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.models import GEMINI_ADAPTER_MAX_OUTPUT_TOKENS, JudgeVerdict
 from agents.anyplot.pipeline import SoftDeadline
+from agents.anyplot.policy import refusal
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
 from agents.anyplot.render.contract import RenderJob, Theme
 from agents.anyplot.render.png import size_of
@@ -1123,6 +1124,25 @@ async def test_out_of_scope_text_is_refused_without_any_agent_call(
     assert refusal["text"].startswith("Ich kann nur bei diesem Plot")
     assert fake.requests == []
     assert events[-1][1]["llm_calls"] == 0
+
+
+async def test_a_request_for_data_to_fetch_ends_at_the_first_turn(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    fake = swap_models("gemini", default_script())
+    sid = await open_session(client, with_data=False)
+    judge.script = [JudgeVerdict(verdict="needs_data", lang="en")]
+
+    response = await client.post(
+        f"/v1/sessions/{sid}/messages",
+        headers=HEADERS,
+        json={"text": "Plot the stock price of XYZ over the last 3 months"},
+    )
+
+    events = parse_sse(response.text)
+    assert [name for name, _ in events] == ["ready", "refusal", "done"]
+    assert events[1][1] == {"code": "needs_data", "text": refusal("needs_data", "en")}
+    assert fake.requests == [] and events[-1][1]["llm_calls"] == 0
 
 
 async def test_judge_timeout_blocks_with_guard_unavailable(client: httpx.AsyncClient, swap_models, judge) -> None:

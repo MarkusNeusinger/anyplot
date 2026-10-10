@@ -469,6 +469,23 @@ describe('useAgentSession: turns', () => {
     expect(JSON.stringify(trackEvent.mock.calls)).not.toContain('joke');
   });
 
+  it('records a request for data the service would have to fetch as needs_data', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['ready', { v: 'anyplot/1', run_id: 'r' }],
+        ['refusal', { code: 'needs_data', text: 'I cannot fetch data from the internet.' }],
+        ['done', {}],
+      ]);
+    const { result } = await openSession(routes);
+    await act(() => result.current.sendMessage('plot the weather in Munich'));
+    expect(result.current.state.items).toContainEqual(
+      expect.objectContaining({ kind: 'refusal', code: 'needs_data' })
+    );
+    expect(trackEvent).toHaveBeenCalledWith('agent_guardrail_block', { reason: 'needs_data' });
+    expect(JSON.stringify(trackEvent.mock.calls)).not.toContain('Munich');
+  });
+
   it('turns an HTTP 409 and a stream without done into errors with their ref', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/messages'] = () => json(409, { detail: 'run_active', ref: 'r409' });

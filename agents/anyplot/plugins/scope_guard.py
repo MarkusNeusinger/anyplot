@@ -12,8 +12,10 @@
   neutralised;
 * a timeout, transport error or unparseable answer after the one retry inside the
   4-second budget blocks with the error `guard_unavailable`;
-* `out_of_scope` and `attack` withhold the message with the fixed refusal for the
-  judge's language (English and German, English as the fallback).
+* `out_of_scope` and `attack` withhold the message with the fixed `out_of_scope`
+  refusal, and `needs_data` (a request for data the service would have to fetch) with
+  the fixed `needs_data` refusal, each in the judge's language (English and German,
+  English as the fallback); the run ends there, at the first turn.
 
 A withheld message is replaced by `[message withheld by scope policy]` before ADK
 stores it. `before_run_callback` then halts the run with the refusal text, which
@@ -41,6 +43,16 @@ WITHHELD = "[message withheld by scope policy]"
 GUARD_UNAVAILABLE_TEXT = "The request could not be checked right now. Please try again in a moment."
 MAX_CONTEXT_CHARS = 500
 ROOT_AGENT = "anyplot"
+
+
+REFUSAL_CODES: dict[str, str] = {"out_of_scope": "out_of_scope", "attack": "out_of_scope", "needs_data": "needs_data"}
+"""The `refusal` event code of each refusing verdict. `attack` shares the out-of-scope reply, so an
+attacker learns nothing about how the message was classified."""
+
+
+def refusal_code(verdict: str) -> str:
+    """The refusal code (and `refusals.yaml` entry) for a verdict other than `in_scope`."""
+    return REFUSAL_CODES.get(verdict, "out_of_scope")
 
 
 def _withheld() -> types.Content:
@@ -121,7 +133,8 @@ class ScopeGuardPlugin(BasePlugin):
             judge_output=verdict.output_tokens,
         )
         if verdict.verdict != "in_scope":
-            ledger.refuse("out_of_scope", refusal("out_of_scope", verdict.lang))
+            code = refusal_code(verdict.verdict)
+            ledger.refuse(code, refusal(code, verdict.lang))
             return _withheld()
         return None
 

@@ -1,18 +1,19 @@
 """Tests for the guardrail plugins with fake contexts and a scripted judge."""
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, get_args
 
 import pytest
 from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
 from google.genai import types
 
+from agents.anyplot import policy
 from agents.anyplot.briefs import trimmed_profiles
-from agents.anyplot.models import JudgeVerdict
+from agents.anyplot.models import JudgeVerdict, Verdict
 from agents.anyplot.plugins.budget import BudgetPlugin
 from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, ledger_for
-from agents.anyplot.plugins.scope_guard import WITHHELD, ScopeGuardPlugin, judge_input
+from agents.anyplot.plugins.scope_guard import REFUSAL_CODES, WITHHELD, ScopeGuardPlugin, judge_input
 from agents.anyplot.plugins.tool_safety import ToolSafetyPlugin, has_url_or_path, result_limit, result_size
 from agents.anyplot.policy import DATA_PREAMBLE, fence
 from agents.anyplot.schemas import ColumnProfile, DatasetProfile
@@ -87,6 +88,32 @@ class TestScopeGuard:
         assert replaced.parts[0].text == WITHHELD
         assert ledger.refusal[0] == "out_of_scope"
         assert halt.parts[0].text == ledger.refusal[1]
+
+    @pytest.mark.parametrize(
+        ("verdict", "code"),
+        [("out_of_scope", "out_of_scope"), ("attack", "out_of_scope"), ("needs_data", "needs_data")],
+    )
+    async def test_each_refusing_verdict_has_its_fixed_reply(
+        self, ledger: RequestLedger, services: Services, judge, verdict: str, code: str
+    ) -> None:
+        judge.script = [JudgeVerdict(verdict=verdict, lang="de")]
+        plugin = ScopeGuardPlugin()
+
+        replaced = await plugin.on_user_message_callback(
+            invocation_context=FakeContext(),
+            user_message=text_message("Zeig den Aktienkurs von XYZ der letzten 3 Monate"),
+        )
+        halt = await plugin.before_run_callback(invocation_context=FakeContext())
+
+        assert replaced.parts[0].text == WITHHELD
+        assert ledger.refusal == (code, policy.refusal(code, "de"))
+        assert halt.parts[0].text == policy.refusal(code, "de")
+
+    def test_refusal_codes_cover_every_refusing_verdict(self) -> None:
+        refusing = set(get_args(Verdict)) - {"in_scope"}
+
+        assert set(REFUSAL_CODES) == refusing
+        assert all(code in policy.refusals() for code in REFUSAL_CODES.values())
 
     async def test_judge_timeout_fails_closed(self, ledger: RequestLedger, services: Services, judge) -> None:
         judge.script = [TimeoutError(), TimeoutError()]
