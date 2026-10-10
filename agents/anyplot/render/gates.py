@@ -5,9 +5,9 @@
 | R1 | an output for each of the job's themes, exit code 0, no timeout, no renderer limit hit (`limit_line`), a PNG per theme | blocking: the render is discarded, the error becomes repair feedback |
 | R2 | PNG hardening (`png.harden`): signature, decode, size and pixel caps, not blank, re-encoded | blocking, like R1 |
 | R3 | canvas within 16 px of 3200x1800 or 2400x2400 (`core.canvas.check_canvas`) | repair-triggering: the VQ-05 defect line goes to the repair; a padded copy of each missed theme is kept as the fallback |
-| G3 | probe: text boxes beyond the canvas edge | advisory: an AR-09 line |
+| G3 | probe: boxes of drawn text beyond the canvas edge (tick labels outside the view or on a hidden axis are never drawn, so never count) | advisory: an AR-09 line |
 | G5 | probe: annotations outside their axes | advisory: a DQ-03 line |
-| G7 | probe: overlapping tick labels | advisory: a VQ-02 line |
+| G7 | probe: overlapping drawn tick labels | advisory: a VQ-02 line |
 | G8 | probe: more point marks than data rows (fabricated data) | advisory: a DQ-03 line |
 
 A pipeline run renders one theme (`PipelineArgs.theme`) and the theme toggle renders
