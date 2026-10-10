@@ -336,7 +336,10 @@ class RemoteBackend:
                 run.wall_s,
             )
             if run.reason == "launcher":
-                raise _unavailable(f"the renderer's sandbox launcher failed twice ({theme})")
+                # The renderer retries a launcher failure once when the job's time
+                # allows it, so this is one failure or two: `attempts` says which.
+                times = "twice" if run.attempts > 1 else "once, with no time left for a retry"
+                raise _unavailable(f"the renderer's sandbox launcher failed {times} ({theme})")
             result.outputs[theme] = ThemeOutput(
                 theme=theme,
                 exit_code=run.exit_code,

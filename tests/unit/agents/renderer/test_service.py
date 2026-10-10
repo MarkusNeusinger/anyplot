@@ -162,10 +162,12 @@ class TestRender:
             assert "SECRET" not in response.text
 
     async def test_renders_are_serial(self, client: httpx.AsyncClient, fake: FakeExecutor) -> None:
-        responses = await asyncio.gather(*(client.post("/render", json=body(), headers=auth()) for _ in range(3)))
+        responses = await asyncio.gather(
+            *(client.post("/render", json=body(job_id=f"job{index}"), headers=auth()) for index in range(3))
+        )
 
         assert [response.status_code for response in responses] == [200, 200, 200]
-        assert fake.max_active == 1
+        assert fake.max_active == 1 and len(fake.calls) == 6
 
     async def test_a_request_that_cannot_get_the_slot_is_busy(
         self, client: httpx.AsyncClient, fake: FakeExecutor, settings: RendererSettings
@@ -176,11 +178,85 @@ class TestRender:
         while fake.active == 0:
             await asyncio.sleep(0.01)
 
-        second = await client.post("/render", json=body(), headers=auth())
+        second = await client.post("/render", json=body(job_id="other"), headers=auth())
         fake.gate.set()
 
         assert second.status_code == 503 and second.json() == {"detail": "busy"}
         assert (await first).status_code == 200
+
+    async def test_a_replay_while_the_render_runs_joins_it(self, client: httpx.AsyncClient, fake: FakeExecutor) -> None:
+        """The backend replays a POST after an ambiguous failure; the first may have arrived. The code runs once."""
+        fake.gate = asyncio.Event()
+        first = asyncio.create_task(client.post("/render", json=body(), headers=auth()))
+        while fake.active == 0:
+            await asyncio.sleep(0.01)
+        second = asyncio.create_task(client.post("/render", json=body(), headers=auth()))
+        await asyncio.sleep(0.05)
+        fake.gate.set()
+
+        responses = await asyncio.gather(first, second)
+
+        assert [response.status_code for response in responses] == [200, 200]
+        assert responses[0].content == responses[1].content
+        assert fake.calls == [("job123", "light"), ("job123", "dark")]
+
+    async def test_a_replay_after_the_render_finished_gets_the_stored_answer(
+        self, client: httpx.AsyncClient, fake: FakeExecutor
+    ) -> None:
+        first = await client.post("/render", json=body(), headers=auth())
+        second = await client.post("/render", json=body(), headers=auth())
+
+        assert first.status_code == second.status_code == 200 and first.content == second.content
+        assert fake.calls == [("job123", "light"), ("job123", "dark")]
+
+    async def test_another_payload_under_the_same_job_id_is_a_conflict(
+        self, client: httpx.AsyncClient, fake: FakeExecutor
+    ) -> None:
+        assert (await client.post("/render", json=body(), headers=auth())).status_code == 200
+
+        response = await client.post("/render", json=body(source="print('other')"), headers=auth())
+
+        assert response.status_code == 409 and response.json() == {"detail": "job_conflict"}
+        assert len(fake.calls) == 2
+
+    async def test_each_theme_request_of_a_job_is_its_own_render(
+        self, client: httpx.AsyncClient, fake: FakeExecutor
+    ) -> None:
+        """The backend sends one request per theme under the job's id (render/serial.py); the key includes the themes."""
+        light = await client.post("/render", json=body(themes=["light"]), headers=auth())
+        dark = await client.post("/render", json=body(themes=["dark"]), headers=auth())
+
+        assert light.status_code == dark.status_code == 200
+        assert fake.calls == [("job123", "light"), ("job123", "dark")]
+
+    async def test_the_stored_answers_are_bounded_and_refusals_are_not_stored(
+        self, client: httpx.AsyncClient, fake: FakeExecutor
+    ) -> None:
+        fake.error = Unavailable("stuck")
+        assert (await client.post("/render", json=body(), headers=auth())).status_code == 503
+        fake.error = None
+        assert (await client.post("/render", json=body(), headers=auth())).status_code == 200  # ran again
+        for index in range(main_module.DONE_CACHE):
+            assert (await client.post("/render", json=body(job_id=f"later{index}"), headers=auth())).status_code == 200
+        calls_before = len(fake.calls)
+
+        assert (await client.post("/render", json=body(), headers=auth())).status_code == 200
+
+        assert len(fake.calls) == calls_before + 2  # job123 fell out of the cache and rendered again
+
+    async def test_only_the_last_waiter_to_leave_may_cancel(self, renderer: Renderer, fake: FakeExecutor) -> None:
+        fake.gate = asyncio.Event()
+        request = job(themes=("light", "dark"))
+        task = renderer.join(request)
+        assert renderer.join(request) is task
+
+        assert renderer.leave(request) is False  # one waiter is still there
+        assert renderer.leave(request) is True  # the last one: this caller cancels
+        assert renderer.leave(request) is False  # a stray extra leave changes nothing
+
+        task.cancel()
+        await asyncio.wait({task})
+        assert renderer.cancel("job123") == 0
 
     async def test_low_memory_refuses_before_any_sandbox(
         self, client: httpx.AsyncClient, fake: FakeExecutor, settings: RendererSettings, monkeypatch: pytest.MonkeyPatch

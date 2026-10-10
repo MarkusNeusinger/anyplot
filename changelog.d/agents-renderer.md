@@ -6,15 +6,19 @@
   Cloud Run IAM and the same ID-token claims check as the agents service. It
   runs every theme of a job in a sandbox of its own, one at a time, built on
   what spikes S and S2 measured: no `--write` and no egress, an explicit
-  `PATH`, every user byte on a 512 MiB in-memory volume that the service
+  `PATH`, the run directories on a 512 MiB in-memory volume that the service
   requires on Cloud Run, a host watchdog that kills a run past 64 MiB,
-  10,000 files or a 512 MiB `MemAvailable` floor, a kill that counts only
-  once the launcher has exited, one retry when the launcher fails before the
-  harness starts, bounded stdout and stderr, a cleaned probe, and the
-  rlimits 60 s CPU, 50 MiB per file, 1 GiB address space and 64 processes.
-  A caller that disconnects or cancels stops its sandbox, an unexpected
-  error answers a JSON `500 internal` without its message, and a launcher
-  that outlives its kill ends the instance so Cloud Run starts a fresh one.
+  10,000 files or a 512 MiB `MemAvailable` floor and checks the directory
+  budgets once more after the code exits, a kill that counts only once the
+  launcher has exited, one retry when the launcher fails before the harness
+  starts, bounded stdout and stderr, a cleaned probe, and the rlimits 60 s
+  CPU, 50 MiB per file, 1 GiB address space and 64 processes. `job_id` and
+  the requested themes are an idempotency key: a replayed request joins the
+  render in flight or gets the stored answer, never a second run, and
+  another payload under the same key is refused with `409 job_conflict`. The last caller to leave, or a cancel,
+  stops the sandbox, an unexpected error answers a JSON `500 internal`
+  without its message, and a launcher that outlives its kill ends the
+  instance so Cloud Run starts a fresh one.
   It only runs code; the host gates stay in the agents service. Its image
   installs the plotting libraries without ADK, CI builds it and renders a
   seaborn plot through the harness before merge, and

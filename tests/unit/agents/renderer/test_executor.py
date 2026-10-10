@@ -218,6 +218,21 @@ class TestBounds:
         assert launcher.deletes() == launcher.launches()
         assert list(config.runs_dir.iterdir()) == []
 
+    async def test_a_fast_writer_that_exits_between_two_samples_is_still_refused(
+        self, config: ExecutorConfig, launcher: FakeLauncher
+    ) -> None:
+        """The watchdog sleeps between looks; a run that writes past the budget and exits before the next look must not pass."""
+        executor = SandboxExecutor(replace(config, watch_interval_s=30.0))  # the watchdog never samples
+        source = "open('fill.bin', 'wb').write(b'x' * 12 * 1024 * 1024)\n"
+
+        run = await executor.run_theme(job(source), "light")
+
+        assert run.reason == "disk_budget" and run.limit == config.run_budget_bytes
+        assert run.measured is not None and run.measured > config.run_budget_bytes
+        assert run.exit_code is None and run.png_base64 is None and not run.timed_out
+        assert launcher.deletes() == launcher.launches()
+        assert list(config.runs_dir.iterdir()) == []
+
     async def test_the_watchdog_counts_entries_too(
         self, executor: SandboxExecutor, monkeypatch: pytest.MonkeyPatch
     ) -> None:

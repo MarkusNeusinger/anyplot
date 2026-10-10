@@ -15,18 +15,22 @@ Each rule below comes from spike S or S2 (docs/concepts/agent-network.md, "Rende
   asserts that neither flag is ever present.
 * **A complete environment.** A sandbox sees only `HOME`, `LC_CTYPE` and the `--env`
   values, with no `PATH`, so `PATH` is passed explicitly.
-* **Every user byte under `/tmp/runs/<run>`.** The image and every host file outside
-  `/tmp` are readable from inside a sandbox, while sibling run directories are not
-  (spike G). On Cloud Run `/tmp/runs` is a size-limited in-memory volume, because a
-  disk fill through `/work` crashed the whole instance at about 3.4 GB (S2);
-  `runs_volume_ok` lets the service refuse to render without it.
+* **The run directory under `/tmp/runs/<run>`.** `/work` is the only host directory a
+  sandbox can write; the image and every host file outside `/tmp` are readable from
+  inside, while sibling run directories are not (spike G). On Cloud Run `/tmp/runs`
+  is a size-limited in-memory volume, because a disk fill through `/work` crashed the
+  whole instance at about 3.4 GB (S2); `runs_volume_ok` lets the service refuse to
+  render without it. A sandbox's private `/tmp` is a tmpfs of its own, bounded only
+  by the memory floor below (or bound into the run directory with `RENDERER_BIND_TMP`).
 * **A run watchdog.** Every `RENDERER_WATCH_INTERVAL_S` the host measures the live run
   directory and kills the sandbox once it holds more than `RENDERER_RUN_BUDGET_MB`
   (reason `disk_budget`), more than `MAX_RUN_ENTRIES` entries, or a tree it cannot
   measure: deeper than `MAX_RUN_DEPTH` or past `PATH_MAX` (`file_budget`). It also
   reads `MemAvailable` and kills the sandbox below `RENDERER_KILL_MEM_AVAILABLE_MB`
   (`memory`), because a sandbox's private `/tmp` counts as instance memory and no
-  flag bounds it (S2).
+  flag bounds it (S2). The directory budgets are checked once more after the code
+  exits on its own, so a run that writes past them between two samples and exits
+  before the next is still refused, with nothing of it collected.
 * **The kill path.** On a timeout, the watchdog, a cancellation or an unexpected
   error: `os.killpg` with SIGKILL on the launcher's process group, then
   `sandbox delete --force <name>`. `delete` exits 0 even when it did nothing (S2), so
@@ -275,8 +279,8 @@ class ExecutorConfig:
         )
 
 
-def check_run(root: Path, config: ExecutorConfig, memory: Callable[[], int | None]) -> Stop | None:
-    """One watchdog look at a live run: its directory against the budgets, then `MemAvailable` against the floor."""
+def check_tree(root: Path, config: ExecutorConfig) -> Stop | None:
+    """The run directory against the byte and entry budgets: the watchdog's look, and the last look after exit."""
     usage = tree_size(root, config.run_budget_bytes, MAX_RUN_ENTRIES)
     if not usage.measurable:
         return Stop("file_budget", None, MAX_RUN_ENTRIES)
@@ -284,6 +288,14 @@ def check_run(root: Path, config: ExecutorConfig, memory: Callable[[], int | Non
         return Stop("disk_budget", usage.bytes, config.run_budget_bytes)
     if usage.entries > MAX_RUN_ENTRIES:
         return Stop("file_budget", usage.entries, MAX_RUN_ENTRIES)
+    return None
+
+
+def check_run(root: Path, config: ExecutorConfig, memory: Callable[[], int | None]) -> Stop | None:
+    """One watchdog look at a live run: its directory against the budgets, then `MemAvailable` against the floor."""
+    verdict = check_tree(root, config)
+    if verdict is not None:
+        return verdict
     floor = config.kill_mem_available_mb
     if floor:
         available = memory()
@@ -575,9 +587,14 @@ class SandboxExecutor:
             if exited not in done:
                 stop = watchdog.result() if watchdog in done else Stop("timeout")
                 await self._stop(name, process)
-            elif process.returncode != 0:
-                # A failed launch may leave a half-created sandbox; `delete` is idempotent.
-                await self._delete(name)
+            else:
+                # The code exited on its own. The watchdog samples between sleeps, so a
+                # run that wrote past the budgets and exited before the next sample
+                # escaped it; one last look refuses that run like a live one. A failed
+                # launch may also leave a half-created sandbox; `delete` is idempotent.
+                stop = await asyncio.to_thread(check_tree, run_dir, self.config)
+                if stop is not None or process.returncode != 0:
+                    await self._delete(name)
         except BaseException:
             # A cancellation (the client went away, or `/render/{job_id}/cancel`) or an
             # unexpected error: stop the sandbox before _attempt removes its run

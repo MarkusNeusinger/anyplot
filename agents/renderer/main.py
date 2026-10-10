@@ -11,7 +11,7 @@ like `agents/evals/`.
 
 | Route | Body | Result | Errors |
 |---|---|---|---|
-| `POST /render` | `RenderRequest` (`wire.py`): `{job_id, language, library, source, data_csv, themes, timeout_s}` | `RenderResponse`: per theme the exit code, a timeout flag, the stderr tail, the probe, the PNG as base64, the attempts, a reason with the measured value and the limit; the slot wait and total time; `MemAvailable` | `401 unauthenticated`, `403 forbidden`, `422 invalid_job`, `499 cancelled` or `499 client_gone` (nobody reads it), `500 internal`, `503 busy` (no slot within `RENDERER_SLOT_WAIT_S`), `503 low_memory`, `503 stuck`, `503 sandbox_unavailable`, `503 volume_missing`, `503 io` |
+| `POST /render` | `RenderRequest` (`wire.py`): `{job_id, language, library, source, data_csv, themes, timeout_s}` | `RenderResponse`: per theme the exit code, a timeout flag, the stderr tail, the probe, the PNG as base64, the attempts, a reason with the measured value and the limit; the slot wait and total time; `MemAvailable` | `401 unauthenticated`, `403 forbidden`, `409 job_conflict` (another payload for a `job_id` and themes in flight or just finished), `422 invalid_job`, `499 cancelled` or `499 client_gone` (nobody reads it), `500 internal`, `503 busy` (no slot within `RENDERER_SLOT_WAIT_S`), `503 low_memory`, `503 stuck`, `503 sandbox_unavailable`, `503 volume_missing`, `503 io` |
 | `POST /render/{job_id}/cancel` | | `{"cancelled": n}`: the renders of that job it stopped | `401`, `403`, `422 invalid_job` |
 | `GET /status` | | `RendererStatus`: name, version, revision, in flight, waiting, stuck launchers, `MemAvailable`, whether the launcher exists, whether the run volume is in place | `401`, `403` |
 
@@ -27,9 +27,19 @@ many sandboxes crash the whole instance. A request waits at most
 `MemAvailable` is below `RENDERER_MIN_MEM_AVAILABLE_MB` (`503 low_memory`), which is
 the memory signal S2 asked for because the cgroup's memory counter is unreadable.
 
+**`job_id` and the themes are the idempotency key.** The `remote` backend and the
+deploy smoke replay a `POST /render` after an ambiguous failure (a connection error,
+a front-end 429 or 5xx), and the first request may have reached this service all the
+same. A replay with the same payload while that render runs joins it and gets the
+same answer; a replay after it finished gets the stored answer (the last `DONE_CACHE`
+successful renders are kept); a replay with another payload for the same `job_id`
+and themes is refused with `409 job_conflict`. The key includes the themes because
+the backend sends one request per theme under the job's id (`render/serial.py`).
+A job's code never runs twice because of a retry.
+
 **A render stops when its caller does.** uvicorn does not cancel a handler whose
 client went away, so the route runs the render as a task and races it against the
-connection's `http.disconnect`; a caller that is gone, or a
+connection's `http.disconnect`; the last caller to leave, or a
 `POST /render/{job_id}/cancel` from the `remote` backend when its own render was
 cancelled or timed out (for a front end that does not pass the disconnect on), cancels
 the task, and the executor's kill path stops the sandbox and frees the slot.
@@ -54,16 +64,19 @@ Run locally (without a launcher every render answers `503 sandbox_unavailable`):
 
 import asyncio
 import contextlib
+import hashlib
 import importlib.metadata
 import json
 import logging
 import os
 import signal
 import time
+from collections import OrderedDict
 from collections.abc import AsyncIterator, Callable
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, Request
 from fastapi import Path as PathParam
@@ -86,6 +99,34 @@ DISCONNECT_PAUSE_S = 0.5
 """Pause after a `receive()` message that is not `http.disconnect`, so the watcher never spins."""
 CLIENT_GONE = 499
 """The answer to a request that was cancelled or whose client left; nobody reads it."""
+DONE_CACHE = 16
+"""Finished renders kept by `job_id`, so a replay after the answer was lost gets it instead of a second run."""
+
+
+class JobConflict(Exception):
+    """A `POST /render` whose key is in flight or just finished with another payload; answered `409 job_conflict`."""
+
+
+type JobKey = tuple[str, tuple[Theme, ...]]
+"""The idempotency key of a request: its `job_id` and its themes, in order."""
+
+
+def job_key(job: RenderRequest) -> JobKey:
+    return (job.job_id, tuple(job.themes))
+
+
+def fingerprint(job: RenderRequest) -> str:
+    """What makes two `POST /render` the same job: the whole request, hashed (the body itself is never kept twice)."""
+    return hashlib.sha256(job.model_dump_json().encode("utf-8")).hexdigest()
+
+
+@dataclass
+class RunningJob:
+    """A render in flight and the requests waiting for it; the last one to leave may cancel it."""
+
+    fingerprint: str
+    task: "asyncio.Task[RenderResponse]"
+    waiters: int = 0
 
 
 def _version() -> str:
@@ -149,25 +190,62 @@ class Renderer:
             self.volume = runs_volume_ok(Path(settings.runs_dir), settings.runs_volume_max_mb * 1024 * 1024)
             if not self.volume:
                 logger.error(json.dumps({"event": "runs_volume_missing", "runs_dir": settings.runs_dir}))
-        self._running: dict[str, set[asyncio.Task[RenderResponse]]] = {}
+        self._running: dict[JobKey, RunningJob] = {}
+        self._done: OrderedDict[JobKey, tuple[str, RenderResponse]] = OrderedDict()
 
-    def start(self, job: RenderRequest) -> "asyncio.Task[RenderResponse]":
-        """Run `job` as a task that `cancel(job.job_id)` can stop."""
+    def join(self, job: RenderRequest) -> "asyncio.Future[RenderResponse]":
+        """The render of `job`, started now or already there, with this request counted as a waiter.
+
+        `job_id` and the themes are the idempotency key (see the module docstring):
+        the same payload joins the render in flight or gets the stored answer of a
+        finished one, and another payload under the same key raises `JobConflict`.
+        Every `join` is balanced by one `leave`.
+        """
+        key = job_key(job)
+        print_ = fingerprint(job)
+        running = self._running.get(key)
+        if running is not None:
+            if running.fingerprint != print_:
+                raise JobConflict
+            running.waiters += 1
+            logger.info(json.dumps({"event": "render_joined", "job_id": job.job_id, "finished": False}))
+            return running.task
+        done = self._done.get(key)
+        if done is not None:
+            if done[0] != print_:
+                raise JobConflict
+            logger.info(json.dumps({"event": "render_joined", "job_id": job.job_id, "finished": True}))
+            answer: asyncio.Future[RenderResponse] = asyncio.get_running_loop().create_future()
+            answer.set_result(done[1])
+            return answer
         task = asyncio.create_task(self.render(job))
-        self._running.setdefault(job.job_id, set()).add(task)
-        task.add_done_callback(lambda done: self._forget(job.job_id, done))
+        self._running[key] = RunningJob(print_, task, waiters=1)
+        task.add_done_callback(lambda finished: self._forget(key, print_, finished))
         return task
 
-    def _forget(self, job_id: str, task: "asyncio.Task[RenderResponse]") -> None:
-        tasks = self._running.get(job_id)
-        if tasks is not None:
-            tasks.discard(task)
-            if not tasks:
-                del self._running[job_id]
+    def leave(self, job: RenderRequest) -> bool:
+        """One waiter of `job` is gone; True when its render still runs and nobody waits for it any more."""
+        running = self._running.get(job_key(job))
+        if running is None or running.waiters == 0:
+            return False
+        running.waiters -= 1
+        return running.waiters == 0 and not running.task.done()
+
+    def _forget(self, key: JobKey, print_: str, task: "asyncio.Task[RenderResponse]") -> None:
+        running = self._running.get(key)
+        if running is not None and running.task is task:
+            del self._running[key]
+        if task.cancelled() or task.exception() is not None:
+            return  # only an answer is worth replaying; a refusal or an error runs again
+        self._done[key] = (print_, task.result())
+        while len(self._done) > DONE_CACHE:
+            self._done.popitem(last=False)
 
     def cancel(self, job_id: str) -> int:
-        """Cancel every running render of `job_id`; the executor's kill path stops its sandbox."""
-        tasks = [task for task in self._running.get(job_id, ()) if not task.done()]
+        """Cancel every running render of `job_id` (one per theme request); the executor's kill path stops its sandbox."""
+        tasks = [
+            running.task for (id_, _), running in self._running.items() if id_ == job_id and not running.task.done()
+        ]
         for task in tasks:
             task.cancel()
         return len(tasks)
@@ -273,6 +351,11 @@ async def _unavailable(_: Request, exc: Unavailable) -> JSONResponse:
     return JSONResponse(status_code=503, content={"detail": exc.code}, headers=_NO_STORE)
 
 
+@app.exception_handler(JobConflict)
+async def _job_conflict(_: Request, exc: JobConflict) -> JSONResponse:
+    return JSONResponse(status_code=409, content={"detail": "job_conflict"}, headers=_NO_STORE)
+
+
 @app.exception_handler(RequestValidationError)
 async def _invalid(_: Request, exc: RequestValidationError) -> JSONResponse:
     """A fixed answer: FastAPI's default would echo the body, which is the user's code and data."""
@@ -300,28 +383,31 @@ async def _client_gone(request: Request) -> None:
         await asyncio.sleep(DISCONNECT_PAUSE_S)
 
 
-async def _abandon(task: "asyncio.Task[RenderResponse]") -> None:
-    """Cancel a render and wait until its sandbox is stopped and its slot is free."""
-    task.cancel()
-    await asyncio.wait({task})
+async def _leave(renderer: Renderer, job: RenderRequest, task: "asyncio.Future[RenderResponse]") -> None:
+    """This request is done with the render; the last one to leave cancels it and waits for its sandbox to stop."""
+    if renderer.leave(job):
+        task.cancel()
+        await asyncio.wait({task})
 
 
 @app.post("/render", dependencies=caller_checked)
 async def render(job: RenderRequest, renderer: RendererDep, request: Request) -> JSONResponse:
     """Run every theme of `job` in its own sandbox, one after the other, inside the render slot."""
-    task = renderer.start(job)
+    task = renderer.join(job)
     gone = asyncio.create_task(_client_gone(request))
+    waiting: set[asyncio.Future[Any]] = {task, gone}
     try:
-        await asyncio.wait({task, gone}, return_when=asyncio.FIRST_COMPLETED)
+        await asyncio.wait(waiting, return_when=asyncio.FIRST_COMPLETED)
     except asyncio.CancelledError:
-        await _abandon(task)
+        await _leave(renderer, job, task)
         raise
     finally:
         gone.cancel()
     if not task.done():
-        await _abandon(task)
+        await _leave(renderer, job, task)
         logger.info(json.dumps({"event": "render_abandoned", "job_id": job.job_id, "why": "client_gone"}))
         return JSONResponse(status_code=CLIENT_GONE, content={"detail": "client_gone"}, headers=_NO_STORE)
+    renderer.leave(job)
     if task.cancelled():
         logger.info(json.dumps({"event": "render_abandoned", "job_id": job.job_id, "why": "cancelled"}))
         return JSONResponse(status_code=CLIENT_GONE, content={"detail": "cancelled"}, headers=_NO_STORE)
