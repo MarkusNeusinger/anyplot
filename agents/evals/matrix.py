@@ -5,6 +5,12 @@ Run it from the repository root. It calls the configured models, so it spends to
     uv run --extra agents python -m agents.evals.matrix --cases smoke --renderer remote --render-url URL
     uv run --extra agents python -m agents.evals.matrix --cases full --provider gemini --renderer remote ...
 
+`--static` calls no model: it runs the static stage of `agents/evals/stress.py` (parse,
+profile, eligibility, bindings, loader, prompt sizes and the stand-in renders of the
+stress cases) and writes `<date>-static.json` and its Markdown table instead; its
+renderer is `fake` unless `--renderer` or `AGENT_RENDERER` names another. `--cases
+stress` selects the 23 stress cases of `make_stress.py`, which `full` leaves out.
+
 Each case opens a session on `agents.main:app` through httpx's `ASGITransport`
 (`POST /v1/sessions` with the catalogue snapshot, `/dataset` with `data.csv`, `PUT
 /bindings` with the case's bindings, then `POST /messages {"action": "create_plot"}`,
@@ -209,7 +215,12 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         help="mint AGENT_RENDER_TOKEN with `gcloud auth print-identity-token` and renew it before it expires",
     )
     parser.add_argument("--no-preflight", action="store_true", help="skip the model-free preflight render")
-    parser.add_argument("--cases", default="smoke", help="smoke, full, or comma-separated globs over case ids")
+    parser.add_argument("--cases", default="smoke", help="smoke, full, stress, or comma-separated globs over case ids")
+    parser.add_argument(
+        "--static",
+        action="store_true",
+        help="run only the model-free static stage (agents/evals/stress.py); no model is called, renderer fake by default",
+    )
     parser.add_argument("--repeats", type=int, default=1, help="runs per case (default 1)")
     parser.add_argument(
         "--max-attempts",
@@ -302,7 +313,8 @@ def configure(args: argparse.Namespace, environ: MutableMapping[str, str]) -> No
         environ["AGENT_ROOT_THINKING_BUDGET"] = str(root)
         environ["AGENT_ADAPTER_THINKING_BUDGET"] = str(adapter)
     configured = environ.get("AGENT_RENDERER")
-    renderer = args.renderer or (configured if configured in RENDERERS else "remote")
+    fallback = "fake" if getattr(args, "static", False) else "remote"
+    renderer = args.renderer or (configured if configured in RENDERERS else fallback)
     environ["AGENT_RENDERER"] = renderer
     if renderer in DEVELOPER_RENDERERS and "K_SERVICE" not in environ:
         environ["ENVIRONMENT"] = "development"
@@ -1281,6 +1293,12 @@ def main(argv: list[str] | None = None) -> int:
     except ValidationError as exc:
         _echo(f"settings: {exc}")
         return EXIT_SETUP
+    if args.static:
+        try:
+            return _run_static(args, settings)
+        except SetupError as exc:
+            _echo(f"setup: {exc}")
+            return EXIT_SETUP
     try:
         result = _prepare_and_run(args, settings, argv)
     except (SetupError, UnknownPrice) as exc:
@@ -1310,6 +1328,54 @@ def main(argv: list[str] | None = None) -> int:
     if result.exit_code == EXIT_OUTAGE:
         print("Stopped by an outage: the report covers the runs that finished; fix the cause and rerun.")
     return result.exit_code
+
+
+def _run_static(args: argparse.Namespace, settings: "AgentSettings") -> int:
+    """`--static`: the model-free static stage (`agents/evals/stress.py`) over the selected cases.
+
+    1 when a case's expectations did not hold; 4 when the renderer became unavailable
+    during a stand-in render, which stops the run like an outage stops the matrix, so
+    an outage never reads as broken bounds.
+    """
+    from agents.anyplot.render import make_backend
+    from agents.anyplot.render.contract import RendererUnavailable
+    from agents.evals.cases import CaseError, load_cases, select_cases
+    from agents.evals.stress import StaticContext, StaticResult, run_static
+
+    try:
+        backend = make_backend(settings)
+    except RendererUnavailable as exc:
+        raise SetupError(f"renderer {settings.renderer}: {exc}") from exc
+    try:
+        cases = select_cases(load_cases(), args.cases)
+    except CaseError as exc:
+        raise SetupError(str(exc)) from exc
+    if not cases:
+        raise SetupError(f"no case matches --cases {args.cases!r}")
+
+    async def run() -> StaticResult:
+        try:
+            context = StaticContext(settings, backend, settings.renderer)
+            return await run_static(cases, context, args.out, selector=args.cases, git_sha=_git_sha())
+        finally:
+            close = getattr(backend, "aclose", None)
+            if close is not None:
+                await close()
+
+    try:
+        result = asyncio.run(run())
+    except RendererUnavailable as exc:
+        _echo(f"renderer {settings.renderer} unavailable during a stand-in render: {exc}")
+        return EXIT_OUTAGE
+    summary = result.report["summary"]
+    print(f"Report: {result.report_path}")
+    print(f"Summary: {result.summary_path}")
+    print(f"static ({settings.renderer}): {summary['held']} of {summary['judged']} cases held their expectations")
+    for case_id in [*summary["broken"], *summary["errors"]]:
+        print(f"did not hold: {case_id}")
+    if summary["model_pending"]:
+        print(f"needs a model run: {', '.join(summary['model_pending'])}")
+    return EXIT_REGRESSION if result.exit_code else EXIT_OK
 
 
 def _prepare_and_run(args: argparse.Namespace, settings: "AgentSettings", argv: list[str] | None) -> MatrixResult:

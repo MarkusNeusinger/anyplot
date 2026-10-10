@@ -9,8 +9,10 @@ A case is a directory with `case.json`, `data.csv` and optionally `snapshot.json
   yet; the harness reads the directory when it exists.
 
 `select_cases` takes the harness's `--cases` value: `smoke` (the cases tagged `smoke`:
-one generated case per spec plus the two hand-written ones), `full` (every case), or
-comma-separated shell globs over case ids (`*-seaborn-*`, `pie-basic-*`). The catalogue
+one generated case per spec plus the two hand-written ones), `full` (every case except
+the stress cases, so a full run and its baseline keep their 122 cases), `stress` (the
+cases tagged `stress`, from `make_stress.py`), or comma-separated shell globs over case
+ids (`*-seaborn-*`, `pie-basic-*`, `stress-compute-*`). The catalogue
 snapshot comes from `snapshot.json` or, without it, from `plots/<spec>/` in this
 checkout (`dev_fixture.snapshot_from_repo`).
 """
@@ -34,6 +36,7 @@ Expected = Literal["accepted", "rejected", "unknown"]
 Origin = Literal["fixtures", "promoted"]
 EXPECTED: tuple[str, ...] = ("accepted", "rejected", "unknown")
 SMOKE_TAG = "smoke"
+STRESS_TAG = "stress"
 MAX_CHANGE_REQUEST_CHARS = 600
 _CASE_ID = re.compile(FIXTURE_PATTERN)
 
@@ -143,10 +146,12 @@ def load_cases(fixtures_dir: Path = CASES_DIR, promoted_dir: Path = PROMOTED_DIR
 
 
 def select_cases(cases: list[EvalCase], selector: str) -> list[EvalCase]:
-    """The cases `--cases` names: `smoke`, `full`, or comma-separated globs over case ids."""
+    """The cases `--cases` names: `smoke`, `full` (all but the stress cases), `stress`, or comma-separated globs."""
     if selector == "full":
-        return list(cases)
+        return [case for case in cases if STRESS_TAG not in case.tags]
     if selector == "smoke":
         return [case for case in cases if SMOKE_TAG in case.tags]
+    if selector == STRESS_TAG:
+        return [case for case in cases if STRESS_TAG in case.tags]
     patterns = [pattern.strip() for pattern in selector.split(",") if pattern.strip()]
     return [case for case in cases if any(fnmatch.fnmatchcase(case.case_id, pattern) for pattern in patterns)]

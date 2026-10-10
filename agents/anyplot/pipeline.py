@@ -85,7 +85,7 @@ from google.adk.workflow._errors import DynamicNodeFailError
 from google.genai import types
 from pydantic import ValidationError
 
-from .briefs import profile_summary, spec_brief
+from .briefs import adapter_profile, profile_summary, spec_brief
 from .code.edits import MAX_NEW_LITERAL_CHARS, apply_plan, new_literal_chars
 from .code.export import export_code
 from .code.regions import find_regions
@@ -355,8 +355,12 @@ def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
     the way the `plot_pipeline` result reaches the root: the readiness hints quote
     catalogue lines, the feedback quotes model-written code (failed edits, validator
     findings) or is model-written (reviewer lines), and the previous plan is
-    model-written and can copy catalogue or dataset text.
+    model-written and can copy catalogue or dataset text. The profile is the first
+    version of `trimmed_profiles` within `MAX_ADAPTER_PROFILE_BYTES` (`adapter_profile`):
+    50 text columns of long values make it about 28,000 characters in full (stress case
+    `stress-cap-profile`), more than the rest of the request.
     """
+    profile_text, trimmed = adapter_profile(request.profile)
     lines = [
         f"Library: {view.library}",
         "",
@@ -364,8 +368,8 @@ def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
         "Spec brief:",
         fence("spec_text", spec_brief(view)),
         fence("catalogue_code", request.code),
-        "Dataset profile:",
-        fence("user_data", request.profile.model_dump_json(exclude={"warnings"})),
+        "Dataset profile (shortened: fewer sample rows or top values):" if trimmed else "Dataset profile:",
+        fence("user_data", profile_text),
         "Bindings and loader columns:",
         fence("user_data", _columns_json(request.bindings, request.loader_columns)),
     ]

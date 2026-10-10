@@ -1,0 +1,32 @@
+{
+  "spec_id": "scatter-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Inspection Score"
+    },
+    {
+      "role": "y",
+      "column": "Repair Cost (CHF)"
+    }
+  ],
+  "expected": "unknown",
+  "tags": [
+    "stress",
+    "cap",
+    "synthetic"
+  ],
+  "source": "synthetic: agents/evals/make_stress.py",
+  "bound_expected": "the full profile (five 40-character top values and five sample cells in each of 50 columns) is over MAX_ADAPTER_PROFILE_BYTES, so the adapter gets a trimmed one that keeps every column",
+  "needs_model": false,
+  "static": {
+    "dataset": "ok",
+    "bytes": 204800,
+    "columns": 50,
+    "bindings": "complete",
+    "loader": "ok",
+    "adapter_profile_trimmed": true
+  }
+}

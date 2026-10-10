@@ -1,0 +1,28 @@
+{
+  "spec_id": "scatter-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Ad Spend (kCHF)"
+    },
+    {
+      "role": "y",
+      "column": "Revenue (kCHF)"
+    }
+  ],
+  "expected": "rejected",
+  "tags": [
+    "stress",
+    "degenerate",
+    "synthetic"
+  ],
+  "source": "synthetic: agents/evals/make_stress.py",
+  "bound_expected": "422 invalid at PUT /bindings: a column of missing values only is typed text and cannot bind y",
+  "needs_model": false,
+  "static": {
+    "dataset": "ok",
+    "bindings": "invalid"
+  }
+}

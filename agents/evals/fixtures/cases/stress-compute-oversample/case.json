@@ -1,0 +1,34 @@
+{
+  "spec_id": "line-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Elapsed Time (min)"
+    },
+    {
+      "role": "y",
+      "column": "Tank Temperature (°C)"
+    }
+  ],
+  "expected": "unknown",
+  "tags": [
+    "stress",
+    "compute",
+    "synthetic"
+  ],
+  "source": "synthetic: agents/evals/make_stress.py",
+  "bound_expected": "G9 (advisory, 610,000 plotted points): the render itself is cheap (2.8 s CPU, 2.9 s wall, 234 MiB peak), so no sandbox limit is near; the repair round gets the DQ-03 line",
+  "needs_model": true,
+  "static": {
+    "dataset": "ok",
+    "bindings": "complete",
+    "standin.check": "ok"
+  },
+  "render": {
+    "gates": [
+      "G9"
+    ]
+  }
+}

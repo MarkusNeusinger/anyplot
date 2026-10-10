@@ -1,0 +1,18 @@
+{
+  "spec_id": "scatter-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "expected": "rejected",
+  "tags": [
+    "stress",
+    "over-cap",
+    "synthetic"
+  ],
+  "source": "synthetic: agents/evals/make_stress.py",
+  "bound_expected": "422 unparseable at the dataset route (parse error too_many_columns), before any model call",
+  "needs_model": false,
+  "static": {
+    "dataset": "422 unparseable",
+    "parse_error": "too_many_columns"
+  }
+}
