@@ -10,7 +10,7 @@
   the loader, prompt sizes, where injected text lands, and renders of
   hand-written stand-ins for the adapter's answer) without spending a token,
   and exits 1 when a bound did not hold. `--cases full` leaves the stress
-  cases out, so a full run and its baseline keep their 122 cases.
+  cases out, so a full run and its baseline keep their 122 cases. (#12125)
 
 ### Changed
 
@@ -24,4 +24,4 @@
   texts and keeps the ones past a canvas edge first when it keeps only 400,
   so G3 sees a clipped label drawn late without the probe eating into the
   CPU limit; and a renderer limit that stopped a run is counted as
-  `R1-<reason>`.
+  `R1-<reason>`. (#12125)
