@@ -101,6 +101,28 @@ describe('LegalPage', () => {
     expect(screen.getByRole('link', { name: /PostgreSQL/ })).toBeInTheDocument();
   });
 
+  // The repository vendors JetBrains Mono (agents/anyplot/render/fonts/) under
+  // the SIL OFL 1.1, so the MIT claim needs its qualifier and the font its own
+  // line — dropping either makes the page claim a licence the fonts do not have.
+  it('names JetBrains Mono and its own licence beside the MIT code', () => {
+    render(<LegalPage />);
+
+    expect(screen.getByRole('link', { name: 'JetBrains Mono' })).toHaveAttribute(
+      'href',
+      'https://github.com/JetBrains/JetBrainsMono'
+    );
+    expect(screen.getByRole('link', { name: 'SIL Open Font License 1.1' })).toHaveAttribute(
+      'href',
+      'https://openfontlicense.org'
+    );
+    expect(
+      screen.getByText(/the attribution strip under plots created from your own data/)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/bundled third-party fonts keep their own licences/)
+    ).toBeInTheDocument();
+  });
+
   it('renders hosting costs', () => {
     render(<LegalPage />);
 

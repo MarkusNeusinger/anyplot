@@ -516,6 +516,25 @@ export function LegalPage() {
                       MonoLisa
                     </Link>{' '}
                     by Marcus Sterz
+                    <br />
+                    <Link
+                      href="https://github.com/JetBrains/JetBrainsMono"
+                      target="_blank"
+                      rel="noopener"
+                      sx={proseLinkStyle}
+                    >
+                      JetBrains Mono
+                    </Link>{' '}
+                    2.304 (
+                    <Link
+                      href="https://openfontlicense.org"
+                      target="_blank"
+                      rel="noopener"
+                      sx={proseLinkStyle}
+                    >
+                      SIL Open Font License 1.1
+                    </Link>
+                    ) — for the attribution strip under plots created from your own data
                   </TableCell>
                 </TableRow>
               </TableBody>
@@ -528,6 +547,9 @@ export function LegalPage() {
               <Link href={GITHUB_URL} target="_blank" rel="noopener" sx={proseLinkStyle}>
                 github.com/MarkusNeusinger/anyplot
               </Link>
+              <br />
+              bundled third-party fonts keep their own licences — JetBrains Mono is under the SIL
+              Open Font License 1.1.
             </Typography>
 
             <Typography sx={subheadingStyle}>monthly hosting costs (approximate)</Typography>
@@ -576,7 +598,7 @@ export function LegalPage() {
             mt: 2,
           }}
         >
-          last updated: September 2026
+          last updated: October 2026
         </Typography>
       </Box>
     </>
