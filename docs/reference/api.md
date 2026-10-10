@@ -494,13 +494,21 @@ escape such as `"\ud800"`, which UTF-8 cannot carry (`422 invalid_text`).
 Personal data is allowed. Your dataset, your messages and the plot may carry
 names, postal and e-mail addresses, phone numbers, web addresses and amounts,
 for example from your own tax return or contact list, in tick labels, titles
-and annotations. The guardrails refuse misuse of the assistant by intent, such
-as plot text that advertises, calls to action, or addresses other people, and
-never refuse the data itself. The agents service keeps a session's data, code
-and images in memory for the session's lifetime and writes no content to its
-logs; anyplot stores none of it unless you submit quick feedback (not built
-yet), and that feedback case holds your data file only when you tick its data
-box.
+and annotations, and the assistant may name a single value in its reply. The
+guardrails refuse misuse of the assistant by intent, such as plot text that
+advertises, calls to action, or addresses other people, and never refuse the
+data itself. Links are the one limit, and only in what the model writes: a
+bare web address such as `jana-novak.de` passes, while a link with a scheme
+such as `https://` or with `www.` is stripped from a reply and refused in a
+change request, and a `mailto:` link is stripped from a reply. A dataset cell
+with a link plots as it is.
+
+The agents service keeps a session's data, code and images in memory for the
+session's lifetime and writes no content to its logs. anyplot stores none of
+it unless you submit quick feedback (not built yet). That feedback case
+always holds the conversation, the code, the images and the dataset profile
+with its column names and sample rows, so it can show your data even without
+the data box; the full data file is in it only when you tick the box.
 
 `POST /sessions` and `POST /sessions/{sid}/library` add the user id and a
 catalogue snapshot before they forward the body, because the agents service
@@ -578,9 +586,9 @@ is in [Agent network design](../concepts/agent-network.md#footer-strip).
 | `ready` | `{v, run_id}` |
 | `status` | `{step: "queued", position, waiting}` while the turn waits in the run queue: `position` 1 runs next, and `waiting` counts every queued turn, this one included |
 | `status` | `{step, attempt}` for a pipeline step: `adapting`, `checking`, `rendering`, `reviewing`, or `repairing` |
-| `message` | `{text}`: the assistant's reply as plain text, at most 1,200 characters; a longer reply arrives as the `out_of_scope` refusal instead |
+| `message` | `{text}`: the assistant's reply as plain text, at most 1,200 characters; a longer reply arrives cut to 1,200 characters when the turn ran the plot pipeline, and as the `out_of_scope` refusal otherwise |
 | `plot` | `{status, reason, attempts, artifacts, changes, residual_defects, version}`; `version` only on `ok` and `needs_attention` |
-| `refusal` | `{code, text}`; `code` is `out_of_scope`, `needs_data` (the request needs data the service would have to fetch), `unsupported_content` or `budget`, and `text` is the fixed reply for it in the language of your message: English, German, French, Spanish, Italian, Portuguese, Dutch or Polish, and English for any other language |
+| `refusal` | `{code, text}`; `code` is `out_of_scope`, `needs_data` (the request needs data the service would have to fetch), `unsupported_content` or `budget`, and `text` is the fixed reply for it in the language the scope judge detects in your message, or in the session's locale for a refusal sent before the judge runs (`budget`, `unsupported_content`): English, German, French, Spanish, Italian, Portuguese, Dutch or Polish, and English for any other language |
 | `error` | `{code, ref}`; `code` is `capacity` (also when the turn waited the run queue's maximum of 600 seconds, or the BFF's turn cap ran out while it waited), `deadline`, `guard_unavailable`, `upstream`, or `internal`; `ref` is the request id |
 | `done` | `{llm_calls, tokens}` |
 
