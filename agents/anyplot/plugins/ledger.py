@@ -81,6 +81,8 @@ class RequestLedger:
     """The model calls' and the judge's cost-weighted tokens (`BUDGET_WEIGHTS`): what the request budget counts."""
     pipeline_calls: int = 0
     pipeline_active: bool = False
+    plot_shipped: bool = False
+    """A plot shipped in this invocation: the Budget plugin never halts the root's closing reply then."""
     adapter_allow_full: bool = False
     review_render_id: str | None = None
     lang: str = "en"
@@ -246,9 +248,9 @@ BUDGET_WEIGHTS: dict[str, float] = {"uncached": 1.0, "cached": 0.1, "cache_write
 The weights are the list-price ratios of `agents/evals/pricing.py` (2026-10-10): a cache
 read costs 0.1 and a five-minute cache write 1.25 of an uncached input token, and an
 output token (candidates and thoughts) 5.0, Claude Haiku 5.5's $0.50 over $0.10 per
-million (Gemini 3.8 Flash has the same ratio, $7.50 over $1.50). The judges' output
-weighs its own model's ratio (`JUDGE_OUTPUT_WEIGHTS`). A test checks both against that
-module, so a price change there names these constants.
+million (Gemini 3.8 Flash has the same ratio, $7.50 over $1.50). The judges' tokens are
+priced against the same unit (`JUDGE_WEIGHTS`). A test checks both against that module,
+so a price change there names these constants.
 
 Measured on the rerun of spike X (244 runs on main, Claude Haiku 5.5, warm cache), the
 median run books 37,157 weighted against 70,488 plain tokens, and a reviewed run with
@@ -294,20 +296,24 @@ def budget_tokens(usage: Any) -> int:
     )
 
 
-JUDGE_OUTPUT_WEIGHTS: dict[str, float] = {"claude-haiku-5-5": 5.0, "gemini-3.5-flash-lite": 25 / 3}
-"""What one output token of a judge model counts, in input-token equivalents of that model.
+JUDGE_WEIGHTS: dict[str, tuple[float, float]] = {"claude-haiku-5-5": (1.0, 5.0), "gemini-3.5-flash-lite": (0.2, 5 / 3)}
+"""What one input and one output token of a judge model count, in input-token equivalents
+of the arm's main model, the unit every budget uses.
 
-The judges run on cheaper models than the agents, and their output-to-input price ratio
-differs: Claude Haiku 5.5 $0.50 over $0.10 (5.0), Gemini 3.5 Flash-Lite $2.50 over $0.30
-(8.33). A judge model outside this table weighs its output like the agents' models
-(`BUDGET_WEIGHTS["output"]`). A judge's input is never cached, so it counts 1.0."""
+The budgets count every token against the main model's uncached input token, so a judge
+on a cheaper model counts less (`agents/evals/pricing.py`, 2026-10-10): the Claude arm
+judges on Claude Haiku 5.5 itself ($0.10 in and $0.50 out against its own $0.10: 1.0 and
+5.0); the Gemini arm judges on Gemini 3.5 Flash-Lite ($0.30 in and $2.50 out against
+Gemini 3.8 Flash's $1.50: 0.2 and 1.67). A judge model outside this table counts like
+the agents' models (1.0 and `BUDGET_WEIGHTS["output"]`). A judge's input is never
+cached."""
 
 
 def judge_budget_tokens(tokens: int, input_tokens: int, output_tokens: int, model: str = "") -> int:
-    """A judge verdict in input-token equivalents: its input and output split, else its plain total."""
+    """A judge verdict in input-token equivalents of the main model: its split, else its plain total."""
     if input_tokens or output_tokens:
-        output_weight = JUDGE_OUTPUT_WEIGHTS.get(model, BUDGET_WEIGHTS["output"])
-        return round(input_tokens * BUDGET_WEIGHTS["uncached"] + output_tokens * output_weight)
+        input_weight, output_weight = JUDGE_WEIGHTS.get(model, (BUDGET_WEIGHTS["uncached"], BUDGET_WEIGHTS["output"]))
+        return round(input_tokens * input_weight + output_tokens * output_weight)
     return tokens
 
 

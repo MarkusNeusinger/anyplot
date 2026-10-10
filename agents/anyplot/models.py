@@ -363,9 +363,9 @@ class JudgeVerdict(BaseModel):
     `tokens` is the plain total, which the `done` event and the attribution line report;
     `input_tokens` and `output_tokens` split it, so the eval harness can price the judge
     at the input and output rates (output includes thinking tokens on Gemini) and the
-    budgets can weigh it: input at 1 and output at the judge model's own list-price ratio
-    (`ledger.judge_budget_tokens` with `JUDGE_OUTPUT_WEIGHTS`: 5 on Claude Haiku 5.5, 8.33 on
-    Gemini 3.5 Flash-Lite; it falls back to the plain total when there is no split).
+    budgets can weigh it against the main model's input token (`ledger.judge_budget_tokens`
+    with `JUDGE_WEIGHTS`: 1 and 5 on the Claude arm, 0.2 and 1.67 for the Flash-Lite judge on
+    the Gemini arm; it falls back to the plain total when there is no split).
     """
 
     model_config = ConfigDict(extra="ignore")

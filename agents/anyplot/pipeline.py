@@ -149,7 +149,10 @@ REVIEW_RESERVE_TOKENS = 35_000
 
 In the rerun of spike X (Claude Haiku 5.5) a review on a cold prompt cache weighed at
 most 28,099 and the closing reply at most 5,022. With less left, the render ships
-unreviewed, so the budget never answers a shipped plot with the `budget` refusal."""
+unreviewed. This is the measured need, not an upper bound: the reviewer's and the root's
+output caps alone could cost 2 x 4,096 x 5 weighted tokens, so the guarantee that a
+shipped plot is never answered with the `budget` refusal is structural instead, in the
+Budget plugin's exemption of the root's closing reply once `ledger.plot_shipped` is set."""
 PADDED_LINE = "canvas padded after render ({theme})"
 """The residual line of a shipped render whose canvas was padded; it names the rendered theme."""
 NOT_REVIEWED_LINE = "the plot was not reviewed ({why})"
@@ -616,6 +619,8 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         result = PlotResult(status="failed", reason="error", attempts=run.attempts)
         run.error_type = run.error_type or type(exc).__name__
         run.stage = "error"
+    # From here on the root's closing reply is never the budget refusal (plugins/budget.py).
+    ledger.plot_shipped = result.status in ("ok", "needs_attention")
     _attribute_result(ledger, run, result)
     yield close_scope(scope)
     yield _result_event(result)

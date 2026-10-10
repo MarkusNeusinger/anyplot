@@ -6,8 +6,11 @@
   its daily ones. A halt inside the adapter or the reviewer would break their schema
   parsing, so the pipeline checks `ledger.budget_allows` before each `run_node` and
   finishes with `PlotResult(failed, reason=budget)` instead. Before a review it keeps
-  room for the review and the root's closing reply (`pipeline.REVIEW_RESERVE_TOKENS`),
-  so a review never turns the reply to a shipped plot into this halt.
+  room for the review and the root's closing reply (`pipeline.REVIEW_RESERVE_TOKENS`,
+  the measured need), and once a plot has shipped in the invocation
+  (`ledger.plot_shipped`) the root's closing reply is exempt from the halt, so a
+  shipped plot is never answered with the `budget` refusal; the reply is bounded by the
+  root's output cap.
 * `after_model_callback` books every response's tokens (prompt + candidates +
   thoughts + tool-use prompt; cached tokens are counted separately and never twice)
   and their cost-weighted sum (`ledger.budget_tokens`, which the request and daily
@@ -79,6 +82,8 @@ class BudgetPlugin(BasePlugin):
             settings = get_settings()
             if not ledger.user_id:
                 ledger.user_id = callback_context.session.user_id
+            if ledger.plot_shipped:
+                return None  # the closing reply to a shipped plot is never the budget refusal
             if budget_allows(ledger, get_services().usage, settings):
                 return None
         except Exception as exc:

@@ -14,7 +14,7 @@ from agents.anyplot.plugins.budget import BudgetPlugin
 from agents.anyplot.plugins.ledger import (
     BUDGET_WEIGHTS,
     CURRENT_LEDGER,
-    JUDGE_OUTPUT_WEIGHTS,
+    JUDGE_WEIGHTS,
     RequestLedger,
     budget_allows,
     budget_tokens,
@@ -200,11 +200,12 @@ class TestBudget:
         for model in ("claude-haiku-5-5", "gemini-3.8-flash"):
             price = pricing.price_of(model)
             assert BUDGET_WEIGHTS["output"] == pytest.approx(price.output / price.input)
-        # The judges' output weighs its own model's ratio: Gemini 3.5 Flash-Lite is 8.33, not 5.
-        for model in ("claude-haiku-5-5", "gemini-3.5-flash-lite"):
-            price = pricing.price_of(model)
-            assert JUDGE_OUTPUT_WEIGHTS[model] == pytest.approx(price.output / price.input)
-        assert set(JUDGE_OUTPUT_WEIGHTS) == {"claude-haiku-5-5", "gemini-3.5-flash-lite"}  # the two judge models
+        # The judges' tokens are priced against the arm's main model: on the Gemini arm a
+        # Flash-Lite token costs 0.2 (input) and 1.67 (output) of a Gemini 3.8 Flash input token.
+        for judge, main in (("claude-haiku-5-5", "claude-haiku-5-5"), ("gemini-3.5-flash-lite", "gemini-3.8-flash")):
+            price, unit = pricing.price_of(judge), pricing.price_of(main).input
+            assert JUDGE_WEIGHTS[judge] == pytest.approx((price.input / unit, price.output / unit))
+        assert set(JUDGE_WEIGHTS) == {"claude-haiku-5-5", "gemini-3.5-flash-lite"}  # the two judge models
 
     def test_a_warm_two_attempt_run_books_about_half_its_plain_tokens(self) -> None:
         """The rerun's median reviewed run with two adapter attempts (violin-basic-matplotlib-n12, repeat 2).
@@ -226,8 +227,8 @@ class TestBudget:
 
     def test_a_judge_verdict_is_weighted_by_its_split(self) -> None:
         assert judge_budget_tokens(1_140, 1_081, 59, "claude-haiku-5-5") == 1_081 + 59 * 5
-        assert judge_budget_tokens(1_140, 1_081, 59, "gemini-3.5-flash-lite") == 1_081 + round(59 * 25 / 3)
-        assert judge_budget_tokens(1_140, 1_081, 59) == 1_081 + 59 * 5  # unknown judge: the agents' ratio
+        assert judge_budget_tokens(1_140, 1_081, 59, "gemini-3.5-flash-lite") == round(1_081 * 0.2 + 59 * 5 / 3)
+        assert judge_budget_tokens(1_140, 1_081, 59) == 1_081 + 59 * 5  # unknown judge: the agents' weights
         assert judge_budget_tokens(42, 0, 0) == 42  # no split: the plain total
 
     async def test_halts_the_root_only(self, ledger: RequestLedger, services: Services, monkeypatch) -> None:
@@ -254,6 +255,20 @@ class TestBudget:
             await BudgetPlugin().before_model_callback(callback_context=FakeContext(), llm_request=LlmRequest())
             is not None
         )
+
+    async def test_the_closing_reply_to_a_shipped_plot_is_never_halted(
+        self, ledger: RequestLedger, services: Services, monkeypatch
+    ) -> None:
+        """The reserve is the measured need; the exemption is the guarantee once a plot shipped."""
+        monkeypatch.setenv("AGENT_REQUEST_TOKEN_BUDGET", "100")
+        get_settings.cache_clear()
+        ledger.budget_tokens = 100_000  # a review and the reply used their whole caps
+        ledger.plot_shipped = True
+
+        assert (
+            await BudgetPlugin().before_model_callback(callback_context=FakeContext(), llm_request=LlmRequest()) is None
+        )
+        assert ledger.refusal is None
 
     def test_a_reserve_must_fit_every_token_budget(
         self, ledger: RequestLedger, services: Services, monkeypatch

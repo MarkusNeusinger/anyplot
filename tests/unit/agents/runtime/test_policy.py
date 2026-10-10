@@ -85,7 +85,9 @@ class TestOtherInstructions:
         assert "the title at 12 pt, axis titles at 10 pt, tick labels and legend text at 8 pt" in text
         pixels = [round(points * 400 / 72) for points in (rows["Title"], rows["Axis labels"], rows["Tick labels"])]
         assert f"(about {pixels[0]}, {pixels[1]} and {pixels[2]} px)" in text
-        assert "Text at or above these sizes is legible and never a defect" in text
+        assert "Text at or above these sizes is never too small" in text
+        # Size is only half of legibility: faint or background-coloured text fails at any size.
+        assert "too faint or lost against its background" in text
         # Smaller text is judged by readability, not rejected by size: the style guide allows deviations.
         assert "never for its size alone" in text and "it has no annotation row" in text
 
