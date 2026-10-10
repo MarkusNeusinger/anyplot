@@ -1,0 +1,29 @@
+# anyplot categorical palette - positions 1 to 5
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+
+# Data - one slice per expense category
+df = load_user_data()
+labels = df["Expense Category"].astype(str).tolist()
+values = df["Monthly Amount (CHF)"].to_numpy(dtype=float)
+colors = [IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i in range(len(values))]
+
+# Plot
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+wedges, texts, autotexts = ax.pie(
+    values,
+    labels=labels,
+    autopct="%1.1f%%",
+    colors=colors,
+    startangle=90,
+    textprops={"fontsize": 10, "color": INK},
+    wedgeprops={"linewidth": 2, "edgecolor": PAGE_BG},
+    pctdistance=0.72,
+    labeldistance=1.15,
+)
+ax.set_title("Monthly Budget by Expense Category", fontsize=12, fontweight="medium", color=INK, pad=10)
+leg = ax.legend(
+    wedges, labels, title="Expense Category", loc="lower center", bbox_to_anchor=(0.5, -0.08), fontsize=8, ncol=3
+)
+leg.get_frame().set_facecolor(PAGE_BG)
+plt.tight_layout()

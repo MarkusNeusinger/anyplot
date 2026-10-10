@@ -1,0 +1,26 @@
+import numpy as np
+
+LINE_COLOR = "#009E73"
+
+# Data - every reading, linearly interpolated onto 10,000 times as many points
+df = load_user_data()
+x = df["Elapsed Time (min)"].to_numpy(dtype=float)
+y = df["Tank Temperature (°C)"].to_numpy(dtype=float)
+order = np.argsort(x)
+x, y = x[order], y[order]
+fine_x = np.linspace(x.min(), x.max(), len(x) * 10_000)
+fine_y = np.interp(fine_x, x, y)
+
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+ax.fill_between(fine_x, fine_y.min(), fine_y, color=LINE_COLOR, alpha=0.15, linewidth=0)
+ax.plot(fine_x, fine_y, linewidth=3, color=LINE_COLOR, marker="o", markersize=4)
+ax.yaxis.grid(True, alpha=0.12, linewidth=0.8, color=INK)
+ax.set_xlabel("Elapsed Time (min)", fontsize=20, color=INK)
+ax.set_ylabel("Tank Temperature (°C)", fontsize=20, color=INK)
+ax.set_title(f"Tank temperature, {len(fine_x):,} interpolated points", fontsize=24, color=INK)
+ax.tick_params(axis="both", labelsize=16, labelcolor=INK_SOFT, length=0)
+for side in ("top", "right"):
+    ax.spines[side].set_visible(False)
+plt.tight_layout()

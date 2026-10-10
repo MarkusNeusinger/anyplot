@@ -1,0 +1,44 @@
+import numpy as np
+
+# Imprint palette (position 1 is always #009E73)
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+
+# Data - units sold per product and season, one bar per pair
+df = load_user_data()
+table = df.groupby(["Product", "Season"], sort=False)["Units Sold"].sum().unstack("Season")
+categories = list(table.index)
+groups = list(table.columns)
+x = np.arange(len(categories))
+bar_width = 0.8 / len(groups)
+
+# Plot
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+for i, group in enumerate(groups):
+    offset = (i - (len(groups) - 1) / 2) * bar_width
+    bars = ax.bar(x + offset, table[group].to_numpy(), bar_width, label=str(group), color=IMPRINT[i % len(IMPRINT)])
+    for bar in bars:
+        ax.annotate(
+            f"{int(bar.get_height())}",
+            xy=(bar.get_x() + bar.get_width() / 2, bar.get_height()),
+            xytext=(0, 3),
+            textcoords="offset points",
+            ha="center",
+            va="bottom",
+            fontsize=5,
+            color=INK,
+        )
+
+ax.set_title("Units Sold by Product and Season", fontsize=13, fontweight="bold", color=INK)
+ax.set_xlabel("Product", fontsize=10, color=INK)
+ax.set_ylabel("Units Sold", fontsize=10, color=INK)
+ax.set_xticks(x)
+ax.set_xticklabels(categories, fontsize=8, color=INK_SOFT)
+ax.tick_params(axis="y", labelsize=8, colors=INK_SOFT)
+leg = ax.legend(fontsize=8, loc="upper left", framealpha=0.95)
+leg.get_frame().set_facecolor(PAGE_BG)
+ax.yaxis.grid(True, alpha=0.12, linewidth=0.8, color=INK)
+ax.set_axisbelow(True)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+fig.subplots_adjust(left=0.075, right=0.985, top=0.91, bottom=0.11)

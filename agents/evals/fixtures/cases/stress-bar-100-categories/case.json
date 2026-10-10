@@ -1,0 +1,38 @@
+{
+  "spec_id": "bar-grouped",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {
+      "role": "category",
+      "column": "Product"
+    },
+    {
+      "role": "group",
+      "column": "Season"
+    },
+    {
+      "role": "value",
+      "column": "Units Sold"
+    }
+  ],
+  "expected": "unknown",
+  "tags": [
+    "stress",
+    "categories",
+    "synthetic"
+  ],
+  "source": "synthetic: agents/evals/make_stress.py",
+  "bound_expected": "G7 (advisory): the stand-in's 100 unrotated tick labels overlap in 99 pairs; with 200 value labels it draws 310 texts, under the probe's 400 boxes; the colliding value labels only the reviewer sees",
+  "needs_model": false,
+  "static": {
+    "dataset": "ok",
+    "bindings": "complete",
+    "standin.check": "ok"
+  },
+  "render": {
+    "gates": [
+      "G7"
+    ]
+  }
+}

@@ -29,10 +29,12 @@ VALID = {
 def test_every_committed_case_loads() -> None:
     cases = load_cases(promoted_dir=Path("/nonexistent"))
 
-    assert len(cases) == 122  # 120 generated plus the two hand-written cases
+    stress = [case for case in cases if "stress" in case.tags]
+    assert len(cases) - len(stress) == 122  # 120 generated plus the two hand-written cases
+    assert len(stress) == 23 and all(case.case_id.startswith("stress-") for case in stress)
     assert [case.case_id for case in cases] == sorted(case.case_id for case in cases)
     assert {case.origin for case in cases} == {"fixtures"}
-    hand_written = {case.case_id: case for case in cases if case.perturbation is None}
+    hand_written = {case.case_id: case for case in cases if case.perturbation is None and "stress" not in case.tags}
     assert set(hand_written) == {"scatter-basic-matplotlib", "bar-grouped-seaborn"}
     assert hand_written["bar-grouped-seaborn"].locale == "de"
 
@@ -42,7 +44,11 @@ def test_selection_by_smoke_full_and_globs() -> None:
 
     smoke = select_cases(cases, "smoke")
     assert len(smoke) == 12 and all("smoke" in case.tags for case in smoke)
-    assert select_cases(cases, "full") == cases
+    full = select_cases(cases, "full")
+    assert len(full) == 122 and full == [case for case in cases if "stress" not in case.tags]
+    stress = select_cases(cases, "stress")
+    assert len(stress) == 23 and all("stress" in case.tags for case in stress)
+    assert len(select_cases(cases, "stress-compute-*")) == 3
     assert len(select_cases(cases, "*-seaborn-n5000")) == 10
     picked = select_cases(cases, "pie-basic-*, scatter-basic-matplotlib")
     assert len(picked) == 13 and picked[-1].case_id == "scatter-basic-matplotlib"

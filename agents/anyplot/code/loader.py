@@ -54,6 +54,16 @@ def to_run_form(working: str, *, columns: list[str], dtypes: dict[str, str], par
     return _ensure_pandas(code)
 
 
+def loader_arguments(
+    columns: list[str], dtypes: dict[str, str], parse_dates: list[str]
+) -> tuple[dict[str, str], list[str]]:
+    """The `dtype=` mapping and the `parse_dates=` list of the run form's `pd.read_csv`, validated.
+
+    The eval harness's static stage reads `data.csv` with exactly these arguments.
+    """
+    return _loader_arguments(columns, dtypes, parse_dates)
+
+
 def _loader_arguments(
     columns: list[str], dtypes: dict[str, str], parse_dates: list[str]
 ) -> tuple[dict[str, str], list[str]]:

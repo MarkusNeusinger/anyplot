@@ -1,0 +1,32 @@
+{
+  "spec_id": "scatter-basic",
+  "library": "matplotlib",
+  "locale": "de",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Température (°C)"
+    },
+    {
+      "role": "y",
+      "column": "Umsatz (Tsd. €)"
+    }
+  ],
+  "expected": "unknown",
+  "tags": [
+    "stress",
+    "cap",
+    "synthetic"
+  ],
+  "source": "synthetic: agents/evals/make_stress.py",
+  "bound_expected": "accepted at exactly MAX_INPUT_BYTES and MAX_COLUMNS (50) with 200-character cells and Unicode, bidi and format characters; the profile clips cells to 40 characters, so it fits the adapter untrimmed",
+  "needs_model": false,
+  "static": {
+    "dataset": "ok",
+    "bytes": 204800,
+    "columns": 50,
+    "bindings": "complete",
+    "loader": "ok",
+    "adapter_profile_trimmed": false
+  }
+}

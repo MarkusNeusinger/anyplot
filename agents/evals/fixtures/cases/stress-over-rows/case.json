@@ -1,0 +1,28 @@
+{
+  "spec_id": "line-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Step"
+    },
+    {
+      "role": "y",
+      "column": "Signal (mV)"
+    }
+  ],
+  "expected": "rejected",
+  "tags": [
+    "stress",
+    "over-cap",
+    "synthetic"
+  ],
+  "source": "synthetic: agents/evals/make_stress.py",
+  "bound_expected": "422 unparseable at the dataset route (parse error too_many_rows), before any model call",
+  "needs_model": false,
+  "static": {
+    "dataset": "422 unparseable",
+    "parse_error": "too_many_rows"
+  }
+}

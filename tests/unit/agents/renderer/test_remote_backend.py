@@ -336,7 +336,9 @@ class TestFailures:
     ) -> None:
         """Without the reason R1 read every stop as "failed with no error output" and spent the repair on it."""
         exit_code = 0 if reason == "output_rejected" else None
-        answer = answer_json(exit_code=exit_code, reason=reason, measured=measured, limit=limit)
+        answer = answer_json(
+            exit_code=exit_code, reason=reason, measured=measured, limit=limit, max_rss_mb=412.5, cpu_s=3.25
+        )
         backend = mocked(lambda request: httpx.Response(200, json=answer))
 
         result = await backend.render(render_job())
@@ -344,6 +346,7 @@ class TestFailures:
 
         output = result.outputs["light"]
         assert (output.reason, output.measured, output.limit) == (reason, measured, limit)
+        assert (output.max_rss_mb, output.cpu_s) == (412.5, 3.25)  # the static stage's Peak MiB column
         report = evaluate(result, themes=("light",), library="matplotlib", rows=1)
         assert not report.passed_host_gates and len(report.blocking) == 1
         assert expected in report.blocking[0] and "no error output" not in report.blocking[0]

@@ -20,7 +20,7 @@ schema-2 run (`SUPPORTED_SCHEMAS`).
 **Pass.** A run passes when it shipped a render (`ok` or `needs_attention`) that
 passed every deterministic gate: the host gates R1 to R3 without a padded canvas, and
 no ADAPTATION validator finding on the shipped code. The advisory probe gates (G3,
-G5, G7, G8) and the reviewer's verdict do not decide a pass; the owner's blind
+G5, G7, G8, G9) and the reviewer's verdict do not decide a pass; the owner's blind
 judgement in the gallery does that for the sample, which holds passed renders only.
 Every rate counts all runs: a run that crashed in the harness did not pass.
 **Accept-match** compares the harness outcome (`accepted` when the status is `ok`, the

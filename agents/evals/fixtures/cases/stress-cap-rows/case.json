@@ -1,0 +1,31 @@
+{
+  "spec_id": "line-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Step"
+    },
+    {
+      "role": "y",
+      "column": "Signal (mV)"
+    }
+  ],
+  "expected": "unknown",
+  "tags": [
+    "stress",
+    "cap",
+    "synthetic"
+  ],
+  "source": "synthetic: agents/evals/make_stress.py",
+  "bound_expected": "accepted at exactly MAX_INPUT_BYTES (204,800 bytes) and MAX_ROWS (20,000); the adapter request stays bounded by the profile, not by the rows",
+  "needs_model": false,
+  "static": {
+    "dataset": "ok",
+    "bytes": 204800,
+    "rows": 20000,
+    "bindings": "complete",
+    "loader": "ok"
+  }
+}
