@@ -26,8 +26,9 @@
   when every request starts cold. A review starts
   only while 35,000 are left for it and the root's closing reply, so a tight
   budget skips the review instead of answering a shipped plot with the
-  usage-limit refusal, and once a plot has shipped the closing reply is exempt
-  from the budget halt. The `done` event keeps the plain count. (#12122)
+  usage-limit refusal, and once a plot has shipped the root's next call is
+  exempt from the budget halt, once and without tools, so it can only be the
+  closing reply. The `done` event keeps the plain count. (#12122)
 - **The Claude eval baseline is the spike-X rerun on main.**
   `agents/evals/baselines/claude-haiku-5-5.json` now holds the 244 runs of the
   evening of 2026-10-10 (report schema 2, the drawn-text G3 probe, 90.6 %

@@ -8,9 +8,10 @@
   finishes with `PlotResult(failed, reason=budget)` instead. Before a review it keeps
   room for the review and the root's closing reply (`pipeline.REVIEW_RESERVE_TOKENS`,
   the measured need), and once a plot has shipped in the invocation
-  (`ledger.plot_shipped`) the root's closing reply is exempt from the halt, so a
-  shipped plot is never answered with the `budget` refusal; the reply is bounded by the
-  root's output cap.
+  (`ledger.plot_shipped`) the root's next call is exempt from the halt, once and with
+  its tools stripped, so it can only be the closing reply and a shipped plot is never
+  answered with the `budget` refusal; that reply is bounded by the root's output cap,
+  and any further root call is checked again.
 * `after_model_callback` books every response's tokens (prompt + candidates +
   thoughts + tool-use prompt; cached tokens are counted separately and never twice)
   and their cost-weighted sum (`ledger.budget_tokens`, which the request and daily
@@ -66,6 +67,13 @@ def budget_response(text: str) -> LlmResponse:
     return LlmResponse(content=types.Content(role="model", parts=[types.Part(text=text)]), turn_complete=True)
 
 
+def strip_tools(llm_request: LlmRequest) -> None:
+    """Leave the call without tools, so the model can only answer: both providers read these two fields."""
+    llm_request.config.tools = None
+    llm_request.config.tool_config = None
+    llm_request.tools_dict = {}
+
+
 class BudgetPlugin(BasePlugin):
     """Counts and caps model calls, tokens and pipeline runs."""
 
@@ -83,7 +91,10 @@ class BudgetPlugin(BasePlugin):
             if not ledger.user_id:
                 ledger.user_id = callback_context.session.user_id
             if ledger.plot_shipped:
-                return None  # the closing reply to a shipped plot is never the budget refusal
+                ledger.plot_shipped = False  # one call only, and without tools: the closing reply
+                strip_tools(llm_request)
+                attribution("budget_exempt", ledger, agent=callback_context.agent_name)
+                return None
             if budget_allows(ledger, get_services().usage, settings):
                 return None
         except Exception as exc:

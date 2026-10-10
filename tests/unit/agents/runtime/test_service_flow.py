@@ -175,8 +175,11 @@ async def test_create_plot_streams_to_an_ok_plot_result(
         assert sum(1 for part in parts if part.inline_data is not None) == 1
     else:
         assert isinstance(fake, FakeAnthropic)
-        forced = [call["tool_choice"] for call in fake.calls if call.get("tool_choice", {}).get("type") == "tool"]
+        choices = [call.get("tool_choice") for call in fake.calls]
+        forced = [choice for choice in choices if isinstance(choice, dict) and choice.get("type") == "tool"]
         assert len(forced) == 2  # the adapter and the reviewer answered through the forced tool
+        # The root's closing reply after the shipped plot is the budget-exempt call: it carries no tools.
+        assert not isinstance(choices[-1], dict) and not fake.calls[-1].get("tools")
         assert all(call.get("thinking") == {"type": "disabled"} for call in fake.calls)
         adapter = next(call for call in fake.calls if FakeAnthropic.kind(call) == "adapter")
         assert adapter["system"][0]["cache_control"] == {"type": "ephemeral"}  # the static prefix is cached

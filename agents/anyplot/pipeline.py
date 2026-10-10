@@ -151,8 +151,9 @@ In the rerun of spike X (Claude Haiku 5.5) a review on a cold prompt cache weigh
 most 28,099 and the closing reply at most 5,022. With less left, the render ships
 unreviewed. This is the measured need, not an upper bound: the reviewer's and the root's
 output caps alone could cost 2 x 4,096 x 5 weighted tokens, so the guarantee that a
-shipped plot is never answered with the `budget` refusal is structural instead, in the
-Budget plugin's exemption of the root's closing reply once `ledger.plot_shipped` is set."""
+shipped plot is never answered with the `budget` refusal is structural instead: once
+`ledger.plot_shipped` is set, the Budget plugin exempts the root's next call, once and
+without tools, so it can only be the closing reply."""
 PADDED_LINE = "canvas padded after render ({theme})"
 """The residual line of a shipped render whose canvas was padded; it names the rendered theme."""
 NOT_REVIEWED_LINE = "the plot was not reviewed ({why})"

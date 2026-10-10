@@ -82,7 +82,7 @@ class RequestLedger:
     pipeline_calls: int = 0
     pipeline_active: bool = False
     plot_shipped: bool = False
-    """A plot shipped in this invocation: the Budget plugin never halts the root's closing reply then."""
+    """A plot shipped in this invocation: the Budget plugin exempts the root's next call once, without tools."""
     adapter_allow_full: bool = False
     review_render_id: str | None = None
     lang: str = "en"

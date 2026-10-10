@@ -259,16 +259,22 @@ class TestBudget:
     async def test_the_closing_reply_to_a_shipped_plot_is_never_halted(
         self, ledger: RequestLedger, services: Services, monkeypatch
     ) -> None:
-        """The reserve is the measured need; the exemption is the guarantee once a plot shipped."""
+        """The reserve is the measured need; once a plot shipped, one tool-less root call is the guarantee."""
         monkeypatch.setenv("AGENT_REQUEST_TOKEN_BUDGET", "100")
         get_settings.cache_clear()
         ledger.budget_tokens = 100_000  # a review and the reply used their whole caps
         ledger.plot_shipped = True
-
-        assert (
-            await BudgetPlugin().before_model_callback(callback_context=FakeContext(), llm_request=LlmRequest()) is None
+        declaration = types.FunctionDeclaration(name="get_current_code")
+        request = LlmRequest(
+            config=types.GenerateContentConfig(tools=[types.Tool(function_declarations=[declaration])])
         )
-        assert ledger.refusal is None
+        plugin = BudgetPlugin()
+
+        assert await plugin.before_model_callback(callback_context=FakeContext(), llm_request=request) is None
+        assert not request.config.tools and request.tools_dict == {}  # the exempt call can only answer
+        assert ledger.refusal is None and ledger.plot_shipped is False
+        # One shot: the next root call is checked again, so a tool loop cannot ride on the exemption.
+        assert await plugin.before_model_callback(callback_context=FakeContext(), llm_request=LlmRequest()) is not None
 
     def test_a_reserve_must_fit_every_token_budget(
         self, ledger: RequestLedger, services: Services, monkeypatch
