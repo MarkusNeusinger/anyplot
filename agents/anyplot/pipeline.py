@@ -55,8 +55,8 @@ which the stream translator turns into `status` events and no model ever reads.
 Every step also writes one content-free attribution line (`plugins/ledger.attribution`):
 `pipeline_adapt` (the answer's outcome, `plan`, `schema`, `truncated` or
 `full_code_refused`, the plan's shape, and the call's finish reason and output tokens),
-`pipeline_check` (edit-apply failure count and kinds, blocking validator rule ids,
-ADAPTATION rule ids), `pipeline_render` (render and wall time, the gate ids that
+`pipeline_check` (edit-apply failure count and kinds, how many edits a tolerant
+matching tier applied, blocking validator rule ids, ADAPTATION rule ids), `pipeline_render` (render and wall time, the gate ids that
 failed or reported), `pipeline_review` (the verdict, its defect ids and the call's
 finish reason) and `pipeline_result` (status, reason, attempts, the `Stage` that ended
 each attempt and the run, the shipped and the last reviewed attempt, the number of
@@ -766,6 +766,7 @@ async def _attempts(
             attempt=attempt,
             outcome="ok" if check.may_render else "rejected",
             edit_failures=0,
+            edit_tolerant=dict(sorted(Counter(applied.tolerant).items())),
             validator=check.blocking_rules,
             adaptation=check.adaptation_rules,
         )

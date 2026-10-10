@@ -23,7 +23,8 @@ stopped (`stage`, the pipeline's `Stage`, and `stages` per attempt), the shipped
 the reviewed attempt, an `attempt_log` (per attempt: the adapter's outcome, finish
 reason, output tokens and plan shape, the check with its edit-failure kinds, the
 render gates and the review verdict), every model call's finish reason and tokens
-(`calls`, counted per agent kind in `finish_reasons`), and the edit-failure kinds.
+(`calls`, counted per agent kind in `finish_reasons`), the edit-failure kinds, and how
+many edits a tolerant matching tier applied (`edit_tolerant`, by tier).
 Answers that failed their schema are counted by agent kind and outcome
 (`answer_outcomes`: `repaired` or `refused`) and by broken rule (`answer_rules`, list
 indices written `*`), from the guard's `answer_schema` lines.
@@ -549,6 +550,7 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
         "calls": [],
         "finish_reasons": {},
         "edit_failure_kinds": {},
+        "edit_tolerant": {},
         "answer_outcomes": {},
         "answer_rules": {},
     }
@@ -607,6 +609,7 @@ def _book_attempt(record: dict[str, Any], hook: str, line: dict[str, Any]) -> No
     elif hook == "pipeline_check":
         entry["check"] = str(line.get("outcome"))
         entry["edit_failure_kinds"] = dict(line.get("edit_failure_kinds") or {})
+        entry["edit_tolerant"] = dict(line.get("edit_tolerant") or {})
         entry["validator"] = [str(rule) for rule in line.get("validator") or []]
         entry["adaptation"] = [str(rule) for rule in line.get("adaptation") or []]
     elif hook == "pipeline_render":
@@ -638,6 +641,7 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
     adapter: Counter[str] = Counter(record["adapter_outcomes"])
     agents: Counter[str] = Counter(record["llm_calls_by_agent"])
     kinds: Counter[str] = Counter(record["edit_failure_kinds"])
+    tolerant: Counter[str] = Counter(record["edit_tolerant"])
     answers: Counter[str] = Counter(record["answer_outcomes"])
     rules: Counter[str] = Counter(record["answer_rules"])
     finishes = {kind: Counter[str](reasons) for kind, reasons in record["finish_reasons"].items()}
@@ -676,6 +680,7 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
         elif hook == "pipeline_check":
             record["edit_apply_failures"] += _int(line.get("edit_failures"))
             kinds.update({str(kind): _int(count) for kind, count in (line.get("edit_failure_kinds") or {}).items()})
+            tolerant.update({str(tier): _int(count) for tier, count in (line.get("edit_tolerant") or {}).items()})
             validator.update(str(rule) for rule in line.get("validator") or [])
             if line.get("outcome") == "loader_failed":
                 validator["loader"] += 1
@@ -708,6 +713,7 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
     record["adapter_outcomes"] = dict(sorted(adapter.items()))
     record["llm_calls_by_agent"] = dict(sorted(agents.items()))
     record["edit_failure_kinds"] = dict(sorted((kind, count) for kind, count in kinds.items() if count))
+    record["edit_tolerant"] = dict(sorted((tier, count) for tier, count in tolerant.items() if count))
     record["answer_outcomes"] = dict(sorted(answers.items()))
     record["answer_rules"] = dict(sorted(rules.items()))
     record["finish_reasons"] = {kind: dict(sorted(reasons.items())) for kind, reasons in sorted(finishes.items())}

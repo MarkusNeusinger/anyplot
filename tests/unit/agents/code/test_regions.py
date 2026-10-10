@@ -14,7 +14,7 @@ from agents.anyplot.code.regions import (
 )
 from agents.anyplot.code.regions import tests_theme as value_tests_theme  # not named test* for pytest
 
-from .conftest import CATALOGUE, source
+from .conftest import CATALOGUE, CATALOGUE_FILES, source
 
 
 def text(code: str, span: Span) -> str:
@@ -107,6 +107,39 @@ def test_placeholder_found_anywhere_but_not_in_strings() -> None:
 )
 def test_tests_theme(value: str, expected: bool) -> None:
     assert value_tests_theme(ast.parse(value, mode="eval").body) is expected
+
+
+def test_a_theme_token_picks_fixed_values_and_a_data_dependent_conditional_is_not_one() -> None:
+    """The catalogue's shapes: literals, lists, earlier tokens; box-basic's `_tight_text_color` reads the data."""
+    code = source("""
+        THEME = os.getenv("ANYPLOT_THEME", "light")
+        INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+        BANDS = [0.30, 0.22] if THEME == "light" else [0.45, 0.32]
+        EDGE = INK if THEME == "light" else "#999999"
+        IS_DARK = THEME == "dark"
+        LATER = LATE if THEME == "light" else "#000"
+        LATE = "#FFF" if THEME == "light" else "#000"
+        _tight = INK if THEME == "dark" else IMPRINT[best]
+        ALPHA = 0.3 if THEME == "light" else min(0.5, 0.4)
+    """)
+
+    assert [token.name for token in find_regions(code).theme_tokens] == ["INK", "BANDS", "EDGE", "IS_DARK", "LATE"]
+
+
+def test_every_catalogue_theme_conditional_but_one_is_a_token() -> None:
+    """Measured on 2026-10-10: 2,745 theme-testing assignments in the 650 files, one of them data-dependent."""
+    narrowed = []
+    for path in CATALOGUE_FILES:
+        code = path.read_text(encoding="utf-8")
+        tree = ast.parse(code)
+        tokens = {token.name for token in find_regions(code, tree).theme_tokens}
+        for stmt in tree.body:
+            if isinstance(stmt, ast.Assign) and len(stmt.targets) == 1 and isinstance(stmt.targets[0], ast.Name):
+                name = stmt.targets[0].id
+                if name != "THEME" and value_tests_theme(stmt.value) and name not in tokens:
+                    narrowed.append(f"{path.parts[-4]}/{path.name}:{name}")
+
+    assert narrowed == ["box-basic/matplotlib.py:_tight_text_color"]
 
 
 @pytest.mark.parametrize(

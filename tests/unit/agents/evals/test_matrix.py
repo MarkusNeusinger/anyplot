@@ -131,6 +131,7 @@ async def test_two_fixtures_through_the_real_flow(
             "full_code": False,
             "check": "ok",
             "edit_failure_kinds": {},
+            "edit_tolerant": {},
             "validator": [],
             "adaptation": [],
             "render": {"passed": True, "canvas_ok": True, "gates": []},
@@ -721,6 +722,29 @@ def test_book_attribution_counts_answers_that_failed_their_schema_by_rule() -> N
     assert summary["answer_outcomes"]["reviewer repaired"] == 2
     page = summary_markdown({"schema": 2, "stamp": {}, "summary": summary, "runs": []})
     assert "| Answer rule, reviewer defects.*.observed:string_too_long | 2 |" in page
+
+
+def test_book_attribution_counts_the_edits_a_tolerant_tier_applied() -> None:
+    settings = AgentSettings(provider="gemini", model="gemini-3.8-flash", judge_model="gemini-3.5-flash-lite")
+    record = matrix.base_record(two_fixtures()[1], 1)
+    record["turns"] = 1
+    check = {"hook": "pipeline_check", "outcome": "ok", "edit_failures": 0, "validator": [], "adaptation": []}
+    lines: list[dict[str, Any]] = [
+        {**check, "attempt": 1, "edit_tolerant": {"trailing_whitespace": 1, "whitespace": 2}},
+        {**check, "attempt": 2, "edit_tolerant": {"whitespace": 1}},
+        {**check, "attempt": 3},  # a line from before the field existed
+    ]
+
+    matrix.book_attribution(record, lines, settings)
+
+    assert record["edit_tolerant"] == {"trailing_whitespace": 1, "whitespace": 3}
+    assert [entry["edit_tolerant"] for entry in record["attempt_log"]] == [
+        {"trailing_whitespace": 1, "whitespace": 2},
+        {"whitespace": 1},
+        {},
+    ]
+    page = summary_markdown({"schema": 2, "stamp": {}, "summary": summarize([record]), "runs": []})
+    assert "| Edit applied by tolerant match, whitespace | 3 |" in page
 
 
 def test_a_baseline_is_refused_for_runs_that_ended_in_an_error(tmp_path: Path) -> None:
