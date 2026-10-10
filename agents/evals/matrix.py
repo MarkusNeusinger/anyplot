@@ -30,6 +30,9 @@ the reviewed attempt, an `attempt_log` (per attempt: the adapter's outcome, fini
 reason, output tokens and plan shape, the check with its edit-failure kinds, the
 render gates and the review verdict), every model call's finish reason and tokens
 (`calls`, counted per agent kind in `finish_reasons`), and the edit-failure kinds.
+Answers that failed their schema are counted by agent kind and outcome
+(`answer_outcomes`: `repaired` or `refused`) and by broken rule (`answer_rules`, list
+indices written `*`), from the guard's `answer_schema` lines.
 
 Outputs, under `--out` (default `agents/evals/reports/`, git-ignored):
 
@@ -70,12 +73,12 @@ the partial report before it stops.
 For its own process the harness lifts the run queue's start rate
 (`AGENT_RUNS_PER_MINUTE`, `--runs-per-minute`, 60) and the service-wide daily token
 budget, and gives every case and repeat its own user id, so the per-user daily
-budgets never trip; the per-request limits (12 LLM calls, 80k tokens, the deadlines)
-stay at their production values. `--max-attempts` sets the pipeline's attempt bound
-(`AGENT_MAX_ATTEMPTS`, 2 by default, recorded in the stamp as `max_attempts`); on Claude
-Haiku a third adapter call (about 22k tokens) takes a reviewed run past the 80k request
-budget, so the root's closing reply becomes the `budget` refusal while the plot result
-stands, unless the environment raises `AGENT_REQUEST_TOKEN_BUDGET`.
+budgets never trip; the per-request limits (12 LLM calls, 160k cost-weighted tokens,
+the deadlines) stay at their production values. `--max-attempts` sets the pipeline's
+attempt bound (`AGENT_MAX_ATTEMPTS`, 2 by default, recorded in the stamp as
+`max_attempts`); a three-attempt run fits the request budget too, at about 117k
+weighted tokens for the costliest run simulated on a cold prompt cache with a second
+review.
 
 The harness sets `ENVIRONMENT=development` for the `remote` and `local` renderers unless
 it runs on Cloud Run (`K_SERVICE`), because a developer's renderer token is accepted
@@ -558,6 +561,8 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
         "calls": [],
         "finish_reasons": {},
         "edit_failure_kinds": {},
+        "answer_outcomes": {},
+        "answer_rules": {},
     }
 
 
@@ -581,6 +586,13 @@ def agent_kind(name: Any) -> str:
     if text == "anyplot":
         return "root"
     return "adapter" if text.startswith("adapter_") else text
+
+
+def _any_index(rule: str) -> str:
+    """A logged schema rule (`defects.3.observed:string_too_long`) with its list indices written `*`."""
+    location, _, kind = rule.rpartition(":")
+    parts = ["*" if part.isdigit() else part for part in location.split(".")]
+    return f"{'.'.join(parts)}:{kind}"
 
 
 def _attempt_entry(record: dict[str, Any], attempt: int) -> dict[str, Any]:
@@ -638,6 +650,8 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
     adapter: Counter[str] = Counter(record["adapter_outcomes"])
     agents: Counter[str] = Counter(record["llm_calls_by_agent"])
     kinds: Counter[str] = Counter(record["edit_failure_kinds"])
+    answers: Counter[str] = Counter(record["answer_outcomes"])
+    rules: Counter[str] = Counter(record["answer_rules"])
     finishes = {kind: Counter[str](reasons) for kind, reasons in record["finish_reasons"].items()}
     versions = set(record["model_versions"])
     tokens = record["tokens"]
@@ -688,6 +702,10 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
         elif hook == "pipeline_review":
             record["reviewer"] = {"verdict": line.get("verdict"), "defects": list(line.get("defects") or [])}
             _book_attempt(record, hook, line)
+        elif hook == "answer_schema":
+            kind = agent_kind(line.get("agent"))
+            answers[f"{kind} {line.get('outcome')}"] += 1
+            rules.update(f"{kind} {_any_index(str(rule))}" for rule in line.get("errors") or [])
         elif hook == "pipeline_result":
             record["padded"] = bool(line.get("padded"))
             record["adaptation"] = [str(rule) for rule in line.get("adaptation") or []]
@@ -702,6 +720,8 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
     record["adapter_outcomes"] = dict(sorted(adapter.items()))
     record["llm_calls_by_agent"] = dict(sorted(agents.items()))
     record["edit_failure_kinds"] = dict(sorted((kind, count) for kind, count in kinds.items() if count))
+    record["answer_outcomes"] = dict(sorted(answers.items()))
+    record["answer_rules"] = dict(sorted(rules.items()))
     record["finish_reasons"] = {kind: dict(sorted(reasons.items())) for kind, reasons in sorted(finishes.items())}
     record["model_versions"] = sorted(versions)
 

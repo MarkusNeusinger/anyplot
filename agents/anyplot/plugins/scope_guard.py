@@ -32,7 +32,7 @@ from ..models import JudgeUnavailable
 from ..policy import fence, refusal, scope_rubric
 from ..services import get_services
 from ..settings import get_settings
-from .ledger import RequestLedger, attribution, ledger_for
+from .ledger import RequestLedger, attribution, judge_budget_tokens, ledger_for
 
 
 logger = logging.getLogger(__name__)
@@ -108,8 +108,12 @@ class ScopeGuardPlugin(BasePlugin):
             ledger.fail("guard_unavailable")
             attribution("scope_guard", ledger, verdict="guard_unavailable")
             return _withheld()
+        weighted = judge_budget_tokens(
+            verdict.tokens, verdict.input_tokens, verdict.output_tokens, settings.judge_model
+        )
         ledger.judge_tokens += verdict.tokens
-        services.usage.add_tokens(user, verdict.tokens)
+        ledger.budget_tokens += weighted
+        services.usage.add_tokens(user, weighted)
         ledger.lang = verdict.lang
         attribution(
             "scope_guard",

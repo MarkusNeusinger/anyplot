@@ -1,4 +1,8 @@
-"""The reviewer: a tool-less single-turn agent that judges the rendered theme once.
+"""The reviewer: a tool-less single-turn agent that judges a render in its one rendered theme.
+
+The pipeline calls it on the first render that passes the host gates and once more on
+the repaired render after a rejection (`pipeline.MAX_REVIEWS`); each call is fresh and
+sees only that render.
 
 Its static instruction is `policy.reviewer_instruction` (the reduced checklist, the
 defect grammar, the catalogue's theme-readability check and the style guide). The
@@ -8,8 +12,12 @@ pipeline run renders one, so the reviewer sees exactly the theme the user asked 
 as ordinary image parts, each after a fixed label naming its theme, loaded by
 `render_id` (from the request ledger) out of the session's `RenderStore`. No image
 ever travels through session state or a tool. The answer is bound to `Verdict`;
-`schema_guard` blanks an answer that fails it, which the pipeline reports as an
-unread review.
+`schema_guard` mends an answer that misses only a formal rule (`schemas.repair_verdict`:
+a text over its limit, more than five defects, an `ok` that contradicts the defects,
+a defect whose id is outside the checklist, dropped when a usable defect remains or
+the verdict passed the render) and blanks one that still fails, such as a rejection
+that names only ids outside the checklist, which the pipeline reports as an unread
+review.
 """
 
 from google.adk import Agent
@@ -22,7 +30,7 @@ from ..models import make_content_config, make_model
 from ..plugins.ledger import ledger_for
 from ..policy import reviewer_instruction
 from ..render.contract import THEMES
-from ..schemas import Verdict
+from ..schemas import Verdict, repair_verdict
 from ..services import get_services
 from .adapter import keep_last_content, schema_guard
 
@@ -65,5 +73,5 @@ reviewer = Agent(
     include_contents="none",
     output_schema=Verdict,
     before_model_callback=reviewer_before_model,
-    after_model_callback=schema_guard(Verdict),
+    after_model_callback=schema_guard(Verdict, repair_verdict),
 )

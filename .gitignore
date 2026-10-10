@@ -292,3 +292,6 @@ app/.designsync-fonts/*.woff2
 # private bucket, never committed. Baselines in agents/evals/baselines/ ARE committed.
 agents/evals/reports/
 agents/evals/.cases/
+# ADK's local session and artifact store (`adk web` without the `memory://` flags): users'
+# messages and datasets. Ignoring it here also keeps it out of a `gcloud builds submit` upload.
+.adk/

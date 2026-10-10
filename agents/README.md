@@ -4,7 +4,7 @@ This directory holds the anyplot agent network: the service that lets an admin p
 
 ## What is built
 
-The runtime core runs locally: the agents, the plot pipeline, the guardrail plugins, the render layer, the private `/v1` service with its run queue, the theme toggle, and the footer strip on every PNG the service serves ("made with any.plot()" and "anyplot.ai/<spec-id>", see [Footer strip](../docs/concepts/agent-network.md#footer-strip)). The renderer service `anyplot-renderer` (`renderer/`), which runs the adapted code in Cloud Run sandboxes, and the `remote` backend that calls it are built, with the renderer's image and Cloud Build config, but not deployed yet (status of 2026-10-10). The model-regression harness, the 120 synthetic spike-X cases, the 23 stress cases with their model-free static stage, the blind two-run review gallery and the catalogue eligibility sweep are built (see [Run the regression harness](#run-the-regression-harness)), and the Claude Haiku 5.5 baseline from the first spike-X run of 2026-10-10 is committed (`evals/baselines/claude-haiku-5-5.json`); the Gemini baseline is not. The chat page that uses the service through the API's `/debug/agent` routes is in the app (`app/src/pages/AgentChatPage.tsx`, built with `VITE_ENABLE_AGENT_CHAT=true`). Not built yet: the agents image, the deploy of either service, the scope evalset, and the `agents-eval.yml` workflow.
+The runtime core runs locally: the agents, the plot pipeline, the guardrail plugins, the render layer, the private `/v1` service with its run queue, the theme toggle, and the footer strip on every PNG the service serves ("made with any.plot()" and "anyplot.ai/<spec-id>", see [Footer strip](../docs/concepts/agent-network.md#footer-strip)). The renderer service `anyplot-renderer` (`renderer/`), which runs the adapted code in Cloud Run sandboxes, and the `remote` backend that calls it are built, with the renderer's image and Cloud Build config, but not deployed yet (status of 2026-10-10). The model-regression harness, the 120 synthetic spike-X cases, the 23 stress cases with their model-free static stage, the blind two-run review gallery and the catalogue eligibility sweep are built (see [Run the regression harness](#run-the-regression-harness)), and the Claude Haiku 5.5 baseline from the rerun of spike X on main in the evening of 2026-10-10 is committed (`evals/baselines/claude-haiku-5-5.json`: 244 runs, 90.6 % passed the gates, 23.4 % ended `ok`); the Gemini baseline is not. The chat page that uses the service through the API's `/debug/agent` routes is in the app (`app/src/pages/AgentChatPage.tsx`, built with `VITE_ENABLE_AGENT_CHAT=true`). The service's own image (`Dockerfile`) and Cloud Build config (`cloudbuild.yaml`) are built, with a CI job that builds and smokes the image before merge, but the service is not deployed yet (see [Build and deploy the service](#build-and-deploy-the-service)). Not built yet: the deploy of either service, the scope evalset, and the `agents-eval.yml` workflow.
 
 The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. **Gemini 3.8 Flash** is the second arm: set `AGENT_PROVIDER=gemini` together with Gemini model ids, so the two can be compared on price and quality later. Every agent and the scope judge run on the configured provider.
 
@@ -14,13 +14,14 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 |---|---|
 | `main.py` | The `anyplot-agents` FastAPI service: the `/v1` routes the BFF (`api/routers/agent.py`) calls, the caller check, the run registry behind `409 run_active`, in-memory session and artifact services, and the idle sweeper |
 | `stream.py` | The `anyplot/1` stream translator: ADK events in, sanitised `ready`, `status` (including `queued`), `message`, `plot`, `refusal`, `error` and `done` events out |
+| `Dockerfile`, `cloudbuild.yaml` | The `anyplot-agents` image (the `agents` extra, the source tree with its prompts and fonts, uid 1000) and its deploy: build, a `candidate` revision without traffic, the IAM and `/v1/status` smoke, promote. The config's header lists the owner's bootstrap steps |
 | `anyplot/run_queue.py` | The run queue in front of every `/messages` turn: one run in flight, one start a minute, a 600-second maximum wait, a `premium` lane that nothing sets yet |
 | `anyplot/theme_render.py` | The theme toggle: renders another theme of a finished version from its stored run form, behind waiting pipeline renders, with no model call |
 | `anyplot/agent.py` | The root agent `anyplot`, the `ALL_AGENTS` registry and `app` (the ADK `App` with its plugins), which `adk web` loads |
 | `anyplot/models.py` | The only place that builds a model or a model client: `make_model`, `make_content_config` and `make_judge_client`, for Claude on Vertex AI and for Gemini |
 | `anyplot/policy.py` | Composes each agent's static instruction from `anyplot/prompts/` and the catalogue's prompt sources, read verbatim; the fixed refusals; the data fences |
 | `anyplot/prompts/` | `root.md`, `adapter.md`, `reviewer.md`, `scope_judge.md`, `data_judge.md` and `refusals.yaml` (English and German) |
-| `anyplot/pipeline.py` | The `plot_pipeline` node: adapt, check, render, review once, repair in at most `AGENT_MAX_ATTEMPTS` − 1 rounds (one by default), always a `PlotResult` |
+| `anyplot/pipeline.py` | The `plot_pipeline` node: adapt, check, render, review, repair in at most `AGENT_MAX_ATTEMPTS` − 1 rounds (one by default) and review the repair after a rejection (two reviews at most), always a `PlotResult` |
 | `anyplot/sub_agents/` | One single-turn adapter per enabled library and the tool-less reviewer |
 | `anyplot/tools/session.py` | The root's tools: `get_dataset_profile`, `get_spec_brief`, `get_current_code`, `set_bindings` and the `plot_pipeline` workflow |
 | `anyplot/plugins/` | `ScopeGuardPlugin`, `BudgetPlugin`, `ToolSafetyPlugin` and the request ledger they share |
@@ -71,10 +72,10 @@ Three rules hold for everything here:
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue, after which the run ends with `capacity`; the queue holds rate x wait / 60 entries (10) and answers `503 capacity` beyond that. Through the BFF the whole turn, this wait included, ends by `AGENT_TURN_MAX_S` (890 s, see `docs/reference/api.md`), which the full wait plus the 180 s run fits into |
 | `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 (`--max-attempts`) to measure no repair or a second repair round |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request |
-| `AGENT_REQUEST_TOKEN_BUDGET` | `80000` | Tokens per request |
-| `AGENT_DAILY_TOKEN_BUDGET` | `1000000` | Tokens per user and day |
+| `AGENT_REQUEST_TOKEN_BUDGET` | `160000` | Cost-weighted tokens per request (see [Token budgets and output caps](#token-budgets-and-output-caps)) |
+| `AGENT_DAILY_TOKEN_BUDGET` | `2000000` | Cost-weighted tokens per user and day |
 | `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
-| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `3000000` | Tokens per day for the whole service |
+| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `6000000` | Cost-weighted tokens per day for the whole service |
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per theme render |
 | `AGENT_REQUEST_DEADLINE_S` | `180` | Hard request deadline |
 | `AGENT_SOFT_DEADLINE_S` | `140` | Soft deadline inside the pipeline |
@@ -84,6 +85,33 @@ Three rules hold for everything here:
 | `AGENT_SERVICE_URLS` | empty | ID-token audiences accepted on `/v1` outside development |
 | `AGENT_DEV_FIXTURE` | unset | Development only: a fixture case id that seeds every new session |
 | `ENVIRONMENT` | `production` | Shared with the API; `local` rendering, the fixture seed and skipping the caller check need `development`, which is refused on Cloud Run |
+
+### Token budgets and output caps
+
+The three token budgets count cost-weighted tokens, in input-token equivalents (`BUDGET_WEIGHTS` in `anyplot/plugins/ledger.py`). Each kind of token weighs its list price relative to an uncached input token, the same ratios `evals/pricing.py` prices with:
+
+| Token kind | Weight |
+|---|---|
+| Uncached input | 1 |
+| Cache read | 0.1 |
+| Cache write (five-minute lifetime) | 1.25 |
+| Output (candidates and thoughts) | 5 |
+
+The scope and dataset judges count against the same unit, the main model's uncached input token (`JUDGE_WEIGHTS`: input 1 and output 5 on the Claude arm, where the judge is Claude Haiku 5.5 itself; 0.2 and 1.67 on the Gemini arm, where the Flash-Lite judge is five times cheaper than Gemini 3.8 Flash). The `done` event and the attribution lines keep the plain token counts; each `model` attribution line adds the call's weighted count as `budget`.
+
+In the rerun of spike X on main (244 runs, Claude Haiku 5.5, warm prompt cache), the median run booked 37,157 weighted tokens against 70,488 plain ones, so 2,000,000 per user and day holds about 54 median runs, and the 40 runs of `AGENT_DAILY_PIPELINE_RUNS` bind first; a user whose every request starts cold gets about 26 at the cold median below, where the token budget binds instead. The global 6,000,000 is three users at their daily budget. A cold cache weighs more, because each agent's first call writes its prefix at 1.25 instead of reading it at 0.1; a request starts cold after a pause longer than the cache's five-minute lifetime. The rerun measured this as well: the first, cold run of area-basic-seaborn-decimal-comma booked 100,282, and 3 of the 244 runs, each the first run of its spec, booked too much to fit a second review under the earlier 80,000. Simulated cold from the same calls, a reviewed run with two adapter attempts books a median of 77,747 (at most 103,800), and at most 115,046 with a second review; the three-attempt rerun (`--max-attempts 3`) reaches about 117,300. The request budget of 160,000 stays about 36 % above the costliest of these. Before each review the pipeline also keeps 35,000 (`pipeline.REVIEW_RESERVE_TOKENS`) for the review and the root's closing reply, so a tight budget skips a review instead of answering a shipped plot with the `budget` refusal; that reserve is the measured need, and the guarantee is structural: once a plot has shipped in the invocation, the root's next call, the closing reply, is exempt from the budget halt, once and without tools, so it can only answer (bounded by the 4,096-token output cap); any further root call is checked again.
+
+The output caps per model call are constants in `anyplot/models.py`, set with ample headroom above the largest measured answer, because an unused cap costs nothing and a cut-off wastes the call:
+
+| Call | Claude | Gemini | Largest measured answer on Claude |
+|---|---|---|---|
+| Root | 4,096 | 4,096 | 259 |
+| Adapter, edits only (attempt 1) | 8,192 | 8,192 | 2,030 (23 of 244 were cut off at the old 2,048) |
+| Adapter, full file allowed (the repair) | 16,384 | 12,288 | 2,606 |
+| Reviewer | 4,096 | 4,096 | 600 |
+| Scope and dataset judge | 256 | 256 | 59 |
+
+On Gemini, thinking tokens count toward the cap, and the soft deadline bounds the adapter's caps: at spike X's fitted rate, a call that uses all 8,192 tokens still leaves the repair attempt its 75 s. Gemini's answers are larger: its plan calls in spike X needed a median of about 4,700 output tokens, and 11 of 112 needed more than 8,192. Claude Haiku 5.5 runs at about 0.0029 s per output token, so a call that uses all 16,384 takes about 49 s, inside the 60 s the deadline check reserves for an adapter call.
 
 ## Run it locally
 
@@ -240,7 +268,52 @@ docker build -f agents/renderer/Dockerfile -t anyplot-renderer:dev .
 uv run pytest tests/unit/agents -q
 ```
 
-`tests/unit/agents/renderer/` runs the executor against a fake `sandbox` launcher that runs the real harness with this interpreter, the service in process, and the `remote` backend against the service through httpx's ASGI transport.
+`tests/unit/agents/renderer/` runs the executor against a fake `sandbox` launcher that runs the real harness with this interpreter, the service in process, and the `remote` backend against the service through httpx's ASGI transport. `tests/unit/agents/test_image.py` holds the image and its deploy config against the code: every file the service reads must reach the image at its own path and be read by the build's check, the deploy's substitutions and variables must match the settings, and the deploy step's script runs against a fake `gcloud`.
+
+## Build and deploy the service
+
+The `anyplot-agents` image (`Dockerfile`) installs the `agents` extra without any plotting extra, because the service runs no plot code: every render goes to `anyplot-renderer` through the `remote` backend. It copies the source tree rather than a wheel, because the service reads its prompts, `refusals.yaml`, the footer-strip fonts and the catalogue prompt sources in `prompts/` from paths next to its modules, and its build fails when one of them is missing: it imports `agents.main` and reads the two judge rubrics, which the service otherwise reads on first use. The root `.dockerignore` keeps `evals/` and ADK's local `.adk/` store, which holds users' messages and datasets, out of the image.
+
+### Build the image
+
+From the repository root, run:
+
+```bash
+docker build -f agents/Dockerfile -t anyplot-agents:dev .
+```
+
+To try the container on your own machine without credentials:
+
+1. Start it in development with the `fake` renderer:
+
+   ```bash
+   docker run -d --name anyplot-agents -p 8001:8080 -e ENVIRONMENT=development -e AGENT_RENDERER=fake anyplot-agents:dev
+   ```
+
+2. Ask it for its status:
+
+   ```bash
+   curl localhost:8001/v1/status
+   ```
+
+3. Remove the container:
+
+   ```bash
+   docker rm -f anyplot-agents
+   ```
+
+The container has no Application Default Credentials, so a "Create plot" fails at the first model call; use `uv run uvicorn agents.main:app` (see [Run the service](#run-the-service)) for real runs. CI builds the same image before merge (`.github/workflows/ci-image.yml`, job `agents-image`).
+
+### Deploy
+
+`cloudbuild.yaml` builds the image, deploys a `candidate` revision without traffic, smokes it, and promotes exactly that revision:
+
+- The flags follow the design: one instance (sessions live in memory), 2 vCPU and 4 GiB, `--concurrency=20` and `--timeout=900` for the run queue's open streams, `--no-allow-unauthenticated`, the service account `anyplot-agents@`, no `--sandbox-launcher`, and `--update-env-vars` only.
+- `_PROVIDER`, `_MODEL`, `_JUDGE_MODEL` and `_LIBRARIES` default to the settings defaults, so a deploy switches the model arm without a code change. The budgets and limits are not set, so the deployed code's settings defaults apply.
+- `_RENDER_URL` is the `status.url` of the real `anyplot-renderer`, and the deploy refuses to run without it, because `--update-env-vars` would otherwise replace a working renderer URL with nothing. `AGENT_ALLOWED_CALLERS` is `_API_CALLER`, anyplot-api's runtime identity (the Compute Engine default service account unless a build sets another one), plus `anyplot-agents@` itself for the smoke. The deploy adds the service's own URL to `AGENT_SERVICE_URLS`.
+- The smoke expects Cloud Run IAM to refuse an anonymous `GET /v1/status` with `403`. With `_SMOKE_AUTH=true`, the default, it also calls `/v1/status` with an ID token minted for `anyplot-agents@` and checks that the answer names the configured provider, model, location and libraries.
+
+The first deploy is an owner task: grant the missing roles, run the bootstrap build with `_SMOKE_AUTH=false`, grant `roles/run.invoker` on the new service, rebuild with the token smoke, and create the `deploy-agents` trigger. The exact commands are in the header of `cloudbuild.yaml`; the roles and the environment are in [Agent network design](../docs/concepts/agent-network.md#serving-and-infrastructure).
 
 ## Run the regression harness
 
@@ -296,13 +369,13 @@ Before the first case the harness renders the catalogue file of the first case o
 | `--seed N`, `--gallery-size N` | The gallery's random sample: its seed (0) and size (30) |
 | `--runs-per-minute N` | The run queue's start rate for this process, 60 by default |
 
-For its own process the harness lifts the run queue's start rate and the service-wide daily token budget, and gives every case its own user id, so the per-user daily budgets never trip. The per-request limits (12 LLM calls, 80,000 tokens, the deadlines) stay at their production values. With `--max-attempts 3` a reviewed run on Claude Haiku passes the 80,000-token budget before the root's closing reply, which then becomes the `budget` refusal while the plot result stands; export a larger `AGENT_REQUEST_TOKEN_BUDGET` to keep the reply. It also sets `AGENT_WATERMARK=false` unless your environment already sets the variable, so `renders/` and the galleries hold the raw renders the gates and the reviewer judged, without the footer strip, comparable with the committed baselines. To see the renders as a user gets them, export `AGENT_WATERMARK=true` before the run.
+For its own process the harness lifts the run queue's start rate and the service-wide daily token budget, and gives every case its own user id, so the per-user daily budgets never trip. The per-request limits (12 LLM calls, 160,000 cost-weighted tokens, the deadlines) stay at their production values, which a run with `--max-attempts 3` fits as well (see [Token budgets and output caps](#token-budgets-and-output-caps)). It also sets `AGENT_WATERMARK=false` unless your environment already sets the variable, so `renders/` and the galleries hold the raw renders the gates and the reviewer judged, without the footer strip, comparable with the committed baselines. To see the renders as a user gets them, export `AGENT_WATERMARK=true` before the run.
 
 ### Read the results
 
 A run writes to `--out`:
 
-- `<date>-<model>.json`: the report. It holds the stamp (provider, models, location, attempt bound, renderer, ADK version, commit, prompt hashes, prices), the summary, and one record per case and repeat: status and reason, the exception class when the pipeline ended in an error, attempts, gate failures by gate, validator rejections, edit-apply failures, the reviewer's verdict, LLM calls by agent, tokens by kind, `model_version`, the cost at list price, time to the first event, end-to-end time and render times. Since report schema 2, each record also says where the run stopped (`stage`, such as `adapter_truncated`, `edit_apply` or `reviewer_defects`, and `stages` per attempt), which attempt shipped and which the reviewer saw, an `attempt_log` with each attempt's adapter outcome, finish reason and plan shape, and every model call's finish reason and tokens; a schema-1 baseline still loads. The date is the UTC date.
+- `<date>-<model>.json`: the report. It holds the stamp (provider, models, location, attempt bound, renderer, ADK version, commit, prompt hashes, prices), the summary, and one record per case and repeat: status and reason, the exception class when the pipeline ended in an error, attempts, gate failures by gate, validator rejections, edit-apply failures, the reviewer's verdict, LLM calls by agent, tokens by kind, `model_version`, the cost at list price, time to the first event, end-to-end time and render times. Since report schema 2, each record also says where the run stopped (`stage`, such as `adapter_truncated`, `edit_apply` or `reviewer_defects`, and `stages` per attempt), which attempt shipped and which the reviewer saw last, an `attempt_log` with each attempt's adapter outcome, finish reason and plan shape, every model call's finish reason and tokens, and the answers that failed their schema, by agent kind and outcome (`answer_outcomes`: `repaired` or `refused`) and by broken rule (`answer_rules`, such as `defects.*.observed:string_too_long`); a schema-1 baseline still loads, and a report without the answer counts reads as none. The date is the UTC date.
 - `<date>-<model>.md`: the Markdown summary, with pass rates by perturbation, library and spec, and the diff against the baseline.
 - `renders/`, `gallery.html` and `gallery-all.html`: the shipped PNG of every run, a review page with 30 renders sampled at random from the runs that passed, and a list of every run. On the review page, tick **Accept** or **Reject** for each plot and select **Export judgements as JSON**; the export counts your accepts and rejects. The page never names the model, but its folder may, so compare two arms with the blind gallery instead (see [Run spike X](#run-spike-x)). The next run in the same directory rewrites both pages, so give each run its own `--out` when you want to keep its gallery.
 
