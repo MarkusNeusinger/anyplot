@@ -18,18 +18,31 @@
   refusal, and `needs_data` (a request for data the service would have to fetch) with
   the fixed `needs_data` refusal, each in the judge's language (English and German,
   English as the fallback); the run ends there, at the first turn;
-* an `attack` verdict is a strike against the user (`UsageBook.add_strike`): from
-  `AGENT_ATTACK_STRIKES` strikes on, the daily check above refuses the user with the
-  budget refusal for the rest of the day;
+* an `attack` verdict is a strike against the user (`UsageBook.add_strike`), once
+  per distinct message text: from `AGENT_ATTACK_STRIKES` strikes on, the daily check
+  above refuses the user with the budget refusal for the rest of the day;
 * with `AGENT_KEEP_REFUSALS`, a refused message's text and verdict go into the
   session's bounded refusal ring (`services.RefusalStore`), which only the feedback
   bundle shows; the attribution line never carries the text.
 
 A withheld message is replaced by `[message withheld by scope policy]` before ADK
 stores it. `before_run_callback` then halts the run with the refusal text, which
-ADK emits as one final event; the stream translator turns the ledger's refusal or
-error into `refusal` or `error` events. The plugin never raises: an internal
-failure is a `guard_unavailable` block.
+ADK emits as one final event (author `model`); the stream translator turns the
+ledger's refusal or error into `refusal` or `error` events. The judge's context
+counts that halt event as an assistant turn, so after a refusal the judge sees the
+refusal it follows, as the scope eval's cases do.
+
+`on_event_callback` is the output side: the root's final reply goes through the
+output guard's off-topic rule (`output_guard.off_topic_reply`, in the ledger's
+language) before ADK stores it. A reply that fails is replaced, in the stored event
+too, by the fixed `out_of_scope` refusal, and the ledger's refusal makes the
+translator send it as a `refusal` event; so a refused reply never reaches the user,
+the judge's next context or the root's own. The check writes a content-free
+`output_guard` attribution line; an internal failure lets the reply through to the
+translator's sanitiser.
+
+The plugin never raises: an internal failure of the input side is a
+`guard_unavailable` block.
 """
 
 import json
@@ -39,10 +52,12 @@ from datetime import UTC, datetime
 from typing import Literal
 
 from google.adk.agents.invocation_context import InvocationContext
+from google.adk.events.event import Event
 from google.adk.plugins.base_plugin import BasePlugin
 from google.genai import types
 
 from ..models import JudgeUnavailable
+from ..output_guard import off_topic_reply, sanitize, sentence_count
 from ..policy import fence, refusal, scope_rubric
 from ..services import KeptRefusal, get_services
 from ..settings import get_settings
@@ -61,6 +76,8 @@ MAX_USER_CONTEXT_CHARS = 1_500
 """The earlier user turns the judge sees: the last three, 500 characters each, 1,500 in all (about 400 tokens)."""
 ROOT_AGENT = "anyplot"
 USER_AUTHOR = "user"
+HALT_AUTHOR = "model"
+"""ADK's author of the event a `before_run_callback` halt emits: the fixed refusal or the outage text."""
 
 Turn = tuple[Literal["user", "assistant"], str]
 
@@ -80,15 +97,16 @@ def _withheld() -> types.Content:
 
 
 def session_turns(invocation_context: InvocationContext) -> list[Turn]:
-    """The session's text turns so far, oldest first: the user's messages and the root's replies.
+    """The session's text turns so far, oldest first: the user's messages and the replies they got.
 
     ADK calls `on_user_message_callback` before it stores the new message, so the
     message being judged is never among them. A withheld message appears as its
-    placeholder, which tells the judge that an earlier turn was refused.
+    placeholder, and the halt event after it (author `model`) as the assistant turn
+    that carried the fixed refusal, which tells the judge that an earlier turn was refused.
     """
     turns: list[Turn] = []
     for event in invocation_context.session.events:
-        if event.author not in (USER_AUTHOR, ROOT_AGENT) or not event.content or not event.content.parts:
+        if event.author not in (USER_AUTHOR, ROOT_AGENT, HALT_AUTHOR) or not event.content or not event.content.parts:
             continue
         text = "".join(part.text or "" for part in event.content.parts if part.text and not part.thought).strip()
         if text:
@@ -172,7 +190,7 @@ class ScopeGuardPlugin(BasePlugin):
         ledger.judge_tokens += verdict.tokens
         services.usage.add_tokens(user, verdict.tokens)
         ledger.lang = verdict.lang
-        strikes = services.usage.add_strike(user) if verdict.verdict == "attack" else None
+        strikes = services.usage.add_strike(user, text) if verdict.verdict == "attack" else None
         attribution(
             "scope_guard",
             ledger,
@@ -193,6 +211,32 @@ class ScopeGuardPlugin(BasePlugin):
             ledger.refuse(code, refusal(code, verdict.lang))
             return _withheld()
         return None
+
+    async def on_event_callback(self, *, invocation_context: InvocationContext, event: Event) -> Event | None:
+        try:
+            return self._guard_reply(invocation_context, event)
+        except Exception as exc:  # the translator's sanitiser still runs
+            logger.warning("output guard failed: %s", type(exc).__name__)
+            return None
+
+    @staticmethod
+    def _guard_reply(invocation_context: InvocationContext, event: Event) -> Event | None:
+        """The fixed `out_of_scope` refusal in place of an off-topic final reply of the root; None keeps the event."""
+        if event.author != ROOT_AGENT or event.partial or not event.content or not event.content.parts:
+            return None
+        if event.get_function_calls() or event.get_function_responses() or not event.is_final_response():
+            return None
+        text = "".join(part.text for part in event.content.parts if part.text and not part.thought)
+        ledger = ledger_for(invocation_context.invocation_id)
+        if not text.strip() or ledger.refusal is not None or ledger.error is not None:
+            return None
+        clean = sanitize(text)
+        if not off_topic_reply(clean, ledger.lang):
+            return None
+        attribution("output_guard", ledger, verdict="off_topic_reply", sentences=sentence_count(clean))
+        fixed = refusal("out_of_scope", ledger.lang)
+        ledger.refuse("out_of_scope", fixed)
+        return Event(author=event.author, content=types.Content(role="model", parts=[types.Part(text=fixed)]))
 
     async def before_run_callback(self, *, invocation_context: InvocationContext) -> types.Content | None:
         try:

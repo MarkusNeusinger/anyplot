@@ -15,36 +15,28 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 | `done` | `llm_calls`, `tokens` | the end of every run, always last |
 
 Function calls and responses, tool outputs, thoughts, partial chunks, adapter and
-reviewer answers, and `error_details` are dropped. A message is sanitised: URLs
-(with protocol-relative `//host` links), `data:`, `javascript:` and `mailto:` links,
-HTML tags (an unclosed one too) and markdown images are removed, links keep their
-text, fenced (backtick or tilde) and indented code blocks longer than 10 lines become
-`[code omitted]`, bare web addresses, e-mail addresses and phone numbers are removed
-(`anyplot/contact_filter.py`), `[[spec:id]]` tokens stay only for the session's own
-spec, and the text is capped at 3,000 characters. The plot event's `changes` and
-`residual_defects` are model-written too, so each goes through the same sanitiser
-and becomes one plain line.
+reviewer answers, and `error_details` are dropped. A message goes through the
+output sanitiser (`anyplot/output_guard.sanitize`: no URL, link target, HTML, image,
+long code block or contact detail, at most 1,200 characters); the plot event's
+`changes` and `residual_defects` are model-written too, so each goes through the same
+sanitiser and becomes one plain line. A message whose contact details were removed
+writes a content-free `output_guard` attribution line (the kinds removed, the
+sentence count).
 
-The output guard then checks the root's reply itself: a reply of more than
-`MAX_REPLY_SENTENCES` sentences (root.md asks for two to five) that never mentions
-the plot, its data or its code (`PLOT_WORDS`) becomes the fixed `out_of_scope`
-refusal. Each check writes a content-free `output_guard` attribution line (the
-verdict, the kinds of contact detail removed, the sentence count).
-
-The sanitiser is a backstop, not an HTML filter: the UI must render message and
-plot text as plain text, never as HTML or unescaped markdown.
+The output guard's off-topic rule (`output_guard.off_topic_reply`) runs earlier, in
+the ScopeGuard plugin before ADK stores the root's reply: a refused reply reaches the
+translator as the ledger's `out_of_scope` refusal, so it goes out as a `refusal` event.
 """
 
 import json
-import re
 from typing import Any
 
 from google.adk.events.event import Event
 
-from agents.anyplot.contact_filter import contact_kinds, strip_contacts
+from agents.anyplot.contact_filter import contact_kinds
+from agents.anyplot.output_guard import plain_line, sanitize, sentence_count
 from agents.anyplot.pipeline import STATUS_KEY
 from agents.anyplot.plugins.ledger import RequestLedger, attribution
-from agents.anyplot.policy import refusal
 
 
 PROTOCOL = "anyplot/1"
@@ -56,93 +48,11 @@ QUEUED_STEP = "queued"
 """The status step the route sends while the run waits in the run queue; no pipeline event carries it."""
 PLOT_FIELDS = ("status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version")
 MODEL_WRITTEN_FIELDS = ("changes", "residual_defects")
-MAX_MESSAGE_CHARS = 3_000
-MAX_CODE_LINES = 10
-CODE_OMITTED = "[code omitted]"
-MAX_REPLY_SENTENCES = 5
-"""The upper end of root.md's "two to five sentences, or a short list" rule.
-
-A reply longer than this that never mentions the plot, its data or its code is not
-a plot reply (an essay, an email, a recipe that got past the judge), so the
-translator sends the fixed out-of-scope refusal instead. A plot reply that runs a
-little long names the plot anyway, so the rule costs no legitimate reply."""
-PLOT_WORDS = re.compile(
-    r"(?i)\b(?:"
-    r"plot|chart|graph|diagram|figure|axis|axes|x-axis|y-axis|label|title|legend|colou?r|palette|marker|bar|"
-    r"line|scatter|column|row|data|dataset|binding|role|spec|theme|render|version|code|tick|scale|grid|"
-    r"series|value|font|export|download|style|"
-    r"diagramm|grafik|abbildung|achse|beschriftung|titel|legende|farbe|markierung|balken|linie|spalte|"
-    r"zeile|daten|datensatz|zuordnung|rolle|darstellung|skala|raster|wert|schrift|stil"
-    r")(?:s|es|e|en|n|er|ern|ed|d|ing|ting|ted|led|ling)?\b"
-)
-"""Words, English and German, any of which ties a reply to the plot, with their common endings
-(`colors`, `labelled`, `Spalten`, `Werte`); a longer word that only starts with one (`still`) does not count."""
-_SENTENCE_END = re.compile(r"(?<=[.!?])\s+|\n+")
-_WORD = re.compile(r"[^\W\d_]{2,}")
-
-# A fenced block (backticks or tildes, three or more, closed by the same run or the end).
-_FENCE = re.compile(r"(?ms)^[ \t]{0,3}(`{3,}|~{3,})[^\n]*\n(.*?)(?:^[ \t]{0,3}\1[ \t]*$|\Z)")
-# A run of indented lines (four spaces or a tab), the other markdown code block.
-_INDENTED = re.compile(r"(?m)(?:^(?: {4}|\t)[^\n]*(?:\n|\Z))+")
-_IMAGE = re.compile(r"!\[[^\]]*\]\([^)]*\)")
-_LINK = re.compile(r"\[([^\]]+)\]\((?:[^)]*)\)")
-_HTML = re.compile(r"</?[A-Za-z][^>]*>")
-_HTML_UNCLOSED = re.compile(r"(?m)</?[A-Za-z][^>\n]*$")
-_URL = re.compile(
-    r"(?i)\b(?:https?|ftp)://\S+|\bwww\.\S+|\b(?:data|javascript|file|mailto):\S+|(?<![\w:/])//[^\s/]+\S*"
-)
-_SPEC_TOKEN = re.compile(r"\[\[spec:([a-z0-9-]{1,100})\]\]")
-_BLANK_LINES = re.compile(r"\n{3,}")
 
 
 def sse(event: str, data: dict[str, Any]) -> str:
     """One server-sent event in the wire format."""
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False, separators=(',', ':'))}\n\n"
-
-
-def sanitize(text: str, *, spec_id: str | None = None) -> str:
-    """The deterministic output sanitiser for root messages."""
-
-    def code_block(match: re.Match[str]) -> str:
-        return match.group(0) if len(match.group(2).splitlines()) <= MAX_CODE_LINES else CODE_OMITTED
-
-    def indented_block(match: re.Match[str]) -> str:
-        block = match.group(0)
-        if len(block.splitlines()) <= MAX_CODE_LINES:
-            return block
-        return CODE_OMITTED + ("\n" if block.endswith("\n") else "")
-
-    def spec_token(match: re.Match[str]) -> str:
-        return match.group(0) if spec_id is not None and match.group(1) == spec_id else ""
-
-    text = _FENCE.sub(code_block, text)
-    text = _INDENTED.sub(indented_block, text)
-    text = _IMAGE.sub("", text)
-    text = _LINK.sub(r"\1", text)
-    text = _HTML.sub("", text)
-    text = _HTML_UNCLOSED.sub("", text)
-    text = _URL.sub("", text)
-    text = strip_contacts(text)
-    text = _SPEC_TOKEN.sub(spec_token, text)
-    text = _BLANK_LINES.sub("\n\n", text).strip()
-    if len(text) > MAX_MESSAGE_CHARS:
-        text = text[: MAX_MESSAGE_CHARS - 1].rstrip() + "…"
-    return text
-
-
-def sentence_count(text: str) -> int:
-    """Sentences and list items in `text`: the pieces between sentence ends and line breaks that hold a word."""
-    return sum(1 for piece in _SENTENCE_END.split(text) if _WORD.search(piece))
-
-
-def off_topic_reply(text: str) -> bool:
-    """A reply longer than `MAX_REPLY_SENTENCES` that never mentions the plot, its data or its code."""
-    return sentence_count(text) > MAX_REPLY_SENTENCES and not PLOT_WORDS.search(text)
-
-
-def plain_line(text: str, *, spec_id: str | None = None) -> str:
-    """A model-written note as one sanitised line: no code block, link target, URL, HTML or image."""
-    return " ".join(sanitize(text, spec_id=spec_id).replace(CODE_OMITTED, " ").split())
 
 
 def _final_text(event: Event) -> str:
@@ -219,18 +129,14 @@ class Translator:
             return self.error(self.ledger.error)
         clean = sanitize(text, spec_id=self.spec_id)
         stripped = contact_kinds(text)
-        off_topic = off_topic_reply(clean)
-        if stripped or off_topic:
+        if stripped:
             attribution(
                 "output_guard",
                 self.ledger,
-                verdict="off_topic_reply" if off_topic else "contacts_stripped",
+                verdict="contacts_stripped",
                 contacts=stripped,
                 sentences=sentence_count(clean),
             )
-        if off_topic:
-            self.ledger.refuse("out_of_scope", refusal("out_of_scope", self.ledger.lang))
-            return self.refusal()
         return [sse("message", {"text": clean})] if clean else []
 
     def error(self, code: str) -> list[str]:

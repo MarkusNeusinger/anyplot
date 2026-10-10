@@ -8,18 +8,10 @@ from google.adk.events.event import Event
 from google.genai import types
 
 from agents.anyplot.data.roles import DataRole
+from agents.anyplot.output_guard import CODE_OMITTED, MAX_MESSAGE_CHARS, sanitize
 from agents.anyplot.plugins.ledger import RequestLedger
-from agents.anyplot.policy import refusal
 from agents.main import MAX_ROLE_DESCRIPTION_CHARS, AgentsError, _role_body, check_caller, decode_claims
-from agents.stream import (
-    CODE_OMITTED,
-    MAX_MESSAGE_CHARS,
-    MAX_REPLY_SENTENCES,
-    Translator,
-    off_topic_reply,
-    sanitize,
-    sentence_count,
-)
+from agents.stream import Translator
 
 
 def parse(chunk: str) -> tuple[str, dict]:
@@ -208,49 +200,22 @@ class TestSanitize:
         assert sanitize(text) == "Questions? Write to, call or visit today."
 
     def test_code_names_and_file_names_stay(self) -> None:
-        text = "Line 12 sets plt.cm.viridis; run plot.py with data.csv next to it."
+        text = "Line 12 sets plt.cm.viridis; run plot.py with data.csv next to it, and df.info() lists the columns."
 
         assert sanitize(text) == text
 
 
-ESSAY = " ".join(
-    [
-        "Dear customers, we are delighted to announce our autumn offer.",
-        "Product A sold better than ever this quarter.",
-        "Order now and save twenty percent on every purchase.",
-        "Our team is ready to help you with any question.",
-        "The offer ends on Friday, so do not wait too long.",
-        "Thank you for your loyalty and see you soon.",
-    ]
-)
-
-
-class TestOutputGuard:
-    def test_sentences_and_list_items_are_counted(self) -> None:
-        assert sentence_count("One. Two! Three?\n- four\n- five\n\n") == 5
-        assert sentence_count("Pi is 3.14 here. 42. Yes.") == 2  # a decimal ends no sentence; a bare number is none
-
-    def test_a_long_reply_without_the_plot_becomes_the_refusal(self, caplog: pytest.LogCaptureFixture) -> None:
+class TestReplies:
+    def test_a_refused_reply_reaches_the_translator_as_the_ledger_refusal(self) -> None:
         ledger = RequestLedger(request_id="r", lang="de")
+        ledger.refuse("out_of_scope", "Ich kann nur bei diesem Plot helfen.")  # the ScopeGuard's output side
         translator = Translator(ledger, "run")
 
-        with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
-            chunks = translator.translate(text_event("anyplot", ESSAY))
+        chunks = translator.translate(text_event("anyplot", "Ich kann nur bei diesem Plot helfen."))
 
-        assert off_topic_reply(ESSAY) and sentence_count(ESSAY) == 6 > MAX_REPLY_SENTENCES
         assert [parse(chunk) for chunk in chunks] == [
-            ("refusal", {"code": "out_of_scope", "text": refusal("out_of_scope", "de")})
+            ("refusal", {"code": "out_of_scope", "text": "Ich kann nur bei diesem Plot helfen."})
         ]
-        line = json.loads(caplog.records[-1].getMessage())
-        assert line["hook"] == "output_guard" and line["verdict"] == "off_topic_reply" and line["sentences"] == 6
-        assert "customers" not in caplog.text
-
-    def test_a_long_reply_about_the_plot_stays(self, translator: Translator) -> None:
-        reply = ESSAY + " The bars now show revenue per region."
-
-        chunks = translator.translate(text_event("anyplot", reply))
-
-        assert [parse(chunk)[0] for chunk in chunks] == ["message"]
 
     def test_a_short_reply_without_the_plot_stays(self, translator: Translator) -> None:
         reply = "Hello! Happy to help."

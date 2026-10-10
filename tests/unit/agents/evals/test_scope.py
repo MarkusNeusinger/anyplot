@@ -201,14 +201,30 @@ class TestMain:
         assert scope.main(["--cases", str(missing), "--out", str(tmp_path)], judge=FakeJudge()) == EXIT_SETUP
         assert scope.main(["--cases", str(cases), "--tags", "nothing"], judge=FakeJudge()) == EXIT_SETUP
 
-    def test_tags_select_cases(self, tmp_path: Path) -> None:
+    def test_tags_select_cases_and_gate_only_what_they_measure(self, tmp_path: Path) -> None:
         cases = write_cases(tmp_path / "cases.json", self.CASES)
         judge = FakeJudge([JudgeVerdict(verdict="in_scope")])
 
         code = scope.main(["--cases", str(cases), "--out", str(tmp_path), "--tags", "inscope"], judge=judge)
 
-        assert code == EXIT_FAILED  # no adversarial case was run, so its recall cannot pass
+        assert code == EXIT_OK  # no adversarial case was run, so its recall is not gated
         assert len(judge.calls) == 1
+        assert len(list(tmp_path.glob("*-scope-claude-haiku-5-5-inscope.json"))) == 1  # never the full report's name
+        assert not list(tmp_path.glob("*-scope-claude-haiku-5-5.json"))
+
+    def test_a_subset_still_fails_the_gate_it_measures(self, tmp_path: Path) -> None:
+        cases = write_cases(tmp_path / "cases.json", self.CASES)
+        judge = FakeJudge([JudgeVerdict(verdict="in_scope")] * 2)
+
+        code = scope.main(["--cases", str(cases), "--out", str(tmp_path), "--tags", "adversarial"], judge=judge)
+
+        assert code == EXIT_FAILED  # both adversarial cases were let through
+
+    def test_a_full_run_without_a_group_fails(self) -> None:
+        summary = scope.score(self.CASES[:1], [CaseResult("in-001", "in_scope")])["summary"]
+
+        assert verdict_of(summary, Gates())[0] == EXIT_FAILED
+        assert verdict_of(summary, Gates(), subset=True)[0] == EXIT_OK
 
 
 class TestConfigure:

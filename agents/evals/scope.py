@@ -31,9 +31,12 @@ in the design doc):
 
 It writes `<out>/<date>-scope-<judge model>.json` (the stamp, the summary, the
 per-tag table and every case's verdict and tokens; the case texts stay in the case
-file) and prints the summary. The exit code is 0 when both gates hold, 1 when one
-does not, 2 for a setup error (a case file that does not load, an unpriced model) and
-4 when more than `--max-unavailable` of the cases got no verdict (a judge outage).
+file), with the tags appended for a `--tags` run (`...-scope-<model>-needs_data.json`)
+so a subset run never overwrites the day's full report, and prints the summary. The
+exit code is 0 when both gates hold, 1 when one does not, 2 for a setup error (a case
+file that does not load, an unpriced model) and 4 when more than `--max-unavailable`
+of the cases got no verdict (a judge outage). A `--tags` run gates only the metrics
+its cases measure; a full run with no case for a metric fails that gate.
 """
 
 from __future__ import annotations
@@ -251,15 +254,20 @@ class Gates:
     max_unavailable: float = DEFAULT_MAX_UNAVAILABLE
 
 
-def verdict_of(summary: dict[str, Any], gates: Gates) -> tuple[int, list[str]]:
-    """The exit code and the reasons for it: an outage first, then each gate that does not hold."""
+def verdict_of(summary: dict[str, Any], gates: Gates, *, subset: bool = False) -> tuple[int, list[str]]:
+    """The exit code and the reasons for it: an outage first, then each gate that does not hold.
+
+    A full run fails a gate whose metric has no cases (the case file lost a group). A
+    `subset` run (`--tags`) gates only the metrics its cases measure: `--tags needs_data`
+    has no in-scope case, so its false-refusal rate is not gated.
+    """
     if (summary["unavailable_rate"] or 0.0) > gates.max_unavailable:
         return EXIT_OUTAGE, [f"{summary['unavailable']} cases got no verdict (more than {gates.max_unavailable:.0%})"]
     reasons = []
     recall, false_rate = summary["adversarial_recall"], summary["false_refusal_rate"]
-    if recall is None or recall < gates.min_adversarial_recall:
+    if (recall is None and not subset) or (recall is not None and recall < gates.min_adversarial_recall):
         reasons.append(f"adversarial recall {recall} is below {gates.min_adversarial_recall}")
-    if false_rate is None or false_rate > gates.max_false_refusals:
+    if (false_rate is None and not subset) or (false_rate is not None and false_rate > gates.max_false_refusals):
         reasons.append(f"false-refusal rate {false_rate} is above {gates.max_false_refusals}")
     return (EXIT_FAILED if reasons else EXIT_OK), reasons
 
@@ -360,6 +368,7 @@ def main(argv: list[str] | None = None, *, judge: JudgeClient | None = None) -> 
     try:
         configure(args, os.environ)
         cases = load_cases(args.cases)
+        wanted: set[str] = set()
         if args.tags:
             wanted = {tag.strip() for tag in args.tags.split(",") if tag.strip()}
             cases = [case for case in cases if wanted & set(case.tags)]
@@ -382,7 +391,7 @@ def main(argv: list[str] | None = None, *, judge: JudgeClient | None = None) -> 
         for result in results
     )
     gates = Gates(args.min_adversarial_recall, args.max_false_refusals, args.max_unavailable)
-    code, reasons = verdict_of(scored["summary"], gates)
+    code, reasons = verdict_of(scored["summary"], gates, subset=bool(wanted))
     report = {
         "stamp": stamp(settings, args.cases, len(cases)),
         "gates": asdict(gates),
@@ -393,7 +402,8 @@ def main(argv: list[str] | None = None, *, judge: JudgeClient | None = None) -> 
         "results": [asdict(result) for result in results],
     }
     args.out.mkdir(parents=True, exist_ok=True)
-    path = args.out / f"{report['stamp']['date']}-scope-{settings.judge_model}.json"
+    suffix = "-" + "-".join(sorted(wanted)) if wanted else ""
+    path = args.out / f"{report['stamp']['date']}-scope-{settings.judge_model}{suffix}.json"
     path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(summary_text(scored, cost, reasons))
     print(f"report: {path}")

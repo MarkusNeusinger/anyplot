@@ -12,9 +12,11 @@ and one repair round; the eval harness may set one or three):
 2. **check**: `edits.apply_plan` (which also keeps the protected theme statements
    intact), then the SECURITY validator (a finding rejects the code), the plan's
    literal budget (more than `MAX_NEW_LITERAL_CHARS` of new string literals, or
-   `MAX_CHANGE_LITERAL_CHARS` on a change of a previous version, rejects the code),
-   the contact check (a new string literal with a web address, an e-mail address or
-   a phone number rejects the code) and the ADAPTATION validator (a placeholder
+   `MAX_CHANGE_LITERAL_CHARS` on a change of a previous version, or more than
+   `MAX_NEW_LITERAL_CHARS` against the catalogue code over all versions, rejects the
+   code; dataset headers and cells are free), the contact check (a new string literal
+   or comment with a web address, an e-mail address or a phone number rejects the
+   code, except a bare domain that is a dataset cell) and the ADAPTATION validator (a placeholder
    finding rejects the code; the other findings become defect lines but the code
    still renders);
 3. **render**: `normalise`, the loader substitution (`to_run_form`), then the one
@@ -67,6 +69,8 @@ case; they never carry code, data, column names or model text. `PlotResult.reaso
 keeps its public vocabulary; the stage is only in the attribution line.
 """
 
+import csv
+import io
 import json
 import logging
 import secrets
@@ -84,11 +88,11 @@ from google.genai import types
 from pydantic import ValidationError
 
 from .briefs import profile_summary, spec_brief
-from .code.edits import MAX_CHANGE_LITERAL_CHARS, MAX_NEW_LITERAL_CHARS, apply_plan, new_literals
+from .code.edits import MAX_CHANGE_LITERAL_CHARS, MAX_NEW_LITERAL_CHARS, apply_plan, new_comments, new_literals
 from .code.export import export_code
 from .code.regions import find_regions
 from .code.validate import validate_adaptation, validate_security
-from .contact_filter import CONTACT_NAMES, contact_kinds
+from .contact_filter import CONTACT_NAMES, find_contacts
 from .data.bindings import check_bindings
 from .data.store import StoredDataset
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
@@ -412,14 +416,30 @@ class CheckResult:
     adaptation_rules: list[str]
 
 
+def _data_texts(data_csv: str) -> frozenset[str]:
+    """Every header and non-empty cell of the canonical data.csv."""
+    return frozenset(cell for row in csv.reader(io.StringIO(data_csv)) for cell in row if cell)
+
+
 def _check(
-    working: str, *, library: str, palette: list[str], base: str, literal_budget: int = MAX_NEW_LITERAL_CHARS
+    working: str,
+    *,
+    library: str,
+    palette: list[str],
+    base: str,
+    literal_budget: int = MAX_NEW_LITERAL_CHARS,
+    origin: str | None = None,
+    data_texts: frozenset[str] = frozenset(),
 ) -> CheckResult:
     """Validate a working form against its base: may it render, the blocking lines, the adaptation defect lines.
 
     Besides the two validator profiles, the plan's new string literals (`edits.new_literals`)
-    must fit `literal_budget` and may carry no web address, e-mail address or phone number
-    (`contact_filter`): plot text reaches the watermarked PNG and `plot.py`.
+    must fit `literal_budget`, and all new literals of the working form against `origin`
+    (the catalogue code) `MAX_NEW_LITERAL_CHARS`, so text cannot pile up turn by turn; a
+    literal that is a header or a cell of the dataset (`data_texts`) is free in both. No
+    new literal or comment may carry a web address, an e-mail address or a phone number
+    (`contact_filter`), except a bare domain that is a whole cell of the dataset: plot
+    text reaches the watermarked PNG and `plot.py`.
     """
     security = validate_security(working, library=library)
     adaptation = validate_adaptation(working, original_palette=palette)
@@ -430,7 +450,7 @@ def _check(
     ]
     blocking_rules = [f.rule for f in blocking_findings]
     literals = new_literals(base, working)
-    added = sum(len(text) for text in literals)
+    added = sum(len(text) for text in literals if text not in data_texts)
     if added > literal_budget:
         blocking_rules.append("literal-budget")
         blocking.append(
@@ -438,12 +458,31 @@ def _check(
             f"{added - literal_budget} over the limit of {literal_budget} → derive text and values "
             "from df instead of writing them out. Likely cause: data or long text written into the code."
         )
-    kinds = sorted({kind for text in literals for kind in contact_kinds(text)})
+    if origin is not None and origin != base:
+        total = sum(len(text) for text in new_literals(origin, working) if text not in data_texts)
+        if total > MAX_NEW_LITERAL_CHARS:
+            if "literal-budget" not in blocking_rules:
+                blocking_rules.append("literal-budget")
+            blocking.append(
+                f"validator literal-budget: the plot holds {total} characters of string literals the catalogue "
+                f"code does not, {total - MAX_NEW_LITERAL_CHARS} over the limit of {MAX_NEW_LITERAL_CHARS} for "
+                "all versions together → shorten or drop text added earlier instead of adding more. "
+                "Likely cause: text added turn by turn."
+            )
+    cells = {text.strip().lower() for text in data_texts}
+    kinds = sorted(
+        {
+            contact.kind
+            for text in [*literals, *new_comments(base, working)]
+            for contact in find_contacts(text)
+            if contact.kind != "web" or text[contact.start : contact.end].lower() not in cells
+        }
+    )
     if kinds:
         found = " and a ".join(CONTACT_NAMES[kind] for kind in kinds)
         blocking_rules.append("contact-literal")
         blocking.append(
-            f"validator contact-literal: a new string literal carries a {found} → remove it; plot text never "
+            f"validator contact-literal: a new string literal or comment carries a {found} → remove it; plot text never "
             "carries contact details or calls to action. Likely cause: the change request asked for it."
         )
     soft = [f for f in adaptation if f.rule not in BLOCKING_RULES]
@@ -686,6 +725,7 @@ async def _attempts(
     working = previous.working if previous is not None else view.normalised
     # A change on a previous version adds a little text; adapting the catalogue code renames much.
     budget = MAX_CHANGE_LITERAL_CHARS if previous is not None else MAX_NEW_LITERAL_CHARS
+    data_texts = _data_texts(dataset.csv)
     regions = find_regions(view.normalised)
     palette = list(regions.imprint.entries) if regions.imprint else []
     hints = view.hints[:MAX_NOTES] if previous is None else []
@@ -754,7 +794,15 @@ async def _attempts(
             feedback, previous_plan = applied.failures, plan
             _end_attempt(run, "edit_apply")
             continue
-        check = _check(applied.code, library=view.library, palette=palette, base=working, literal_budget=budget)
+        check = _check(
+            applied.code,
+            library=view.library,
+            palette=palette,
+            base=working,
+            literal_budget=budget,
+            origin=view.normalised,
+            data_texts=data_texts,
+        )
         adaptation_lines = check.defects
         attribution(
             "pipeline_check",

@@ -6,9 +6,10 @@
 * `opening_state(...)` is the state delta that opens a session or switches its library.
 * `ingest_dataset(...)` parses pasted text, stores it in the session's dataset store
   (replacing an older dataset of the session), and proposes default bindings.
-* `instruction_like(parsed)` and `dataset_judge_inputs(parsed)` are what the `/dataset`
-  route checks before it stores a dataset: a deterministic pre-filter, then the
-  dataset judge on every part of the judged view.
+* `instruction_like(parsed)`, `has_contact_details(parsed)` and
+  `dataset_judge_inputs(parsed)` are what the `/dataset` route checks before it stores
+  a dataset: two deterministic pre-filters over every header and cell (text addressed
+  to an AI; contact details), then the dataset judge on every part of the judged view.
 
 Used by the `/v1` routes and by the development fixture seed, so a seeded session is
 exactly what the routes would have built. No ADK import.
@@ -26,8 +27,9 @@ from typing import Any
 from .code.normalise import SUPPORTED_LIBRARIES as NORMALISED_LIBRARIES
 from .code.normalise import normalise
 from .code.readiness import ReadinessStatus, scan
+from .contact_filter import find_contacts
 from .data.bindings import default_bindings
-from .data.parse import ParsedDataset, parse_dataset
+from .data.parse import ParsedDataset, display_copy, parse_dataset
 from .data.store import DatasetStore
 from .schemas import MAX_SAMPLE_ROWS, MAX_TOP_VALUES, Binding
 from .session_state import BINDINGS, DATASET_ID, CatalogueSnapshot, initial_state
@@ -112,33 +114,53 @@ def ingest_dataset(
 MAX_JUDGE_CHUNK_CHARS = 4_000
 """The size of one part of the dataset judge's input in characters of JSON (about 1,000 tokens)."""
 
+_FILLER = r"(?:[\w'-]+\s+){0,3}"
+_RULE_QUALIFIER = r"(?:previous|prior|above|earlier|preceding|former|system|original|your|my|all|any|these)"
 INSTRUCTION_LIKE = re.compile(
     r"(?i)"
-    # "ignore all previous instructions", "disregard the rules", "forget your prompt"
-    r"\b(?:ignore|disregard|forget|override|bypass)\s+(?:all\s+|any\s+|the\s+|your\s+|my\s+|these\s+)?"
-    r"(?:previous\s+|prior\s+|above\s+|earlier\s+|preceding\s+|former\s+|system\s+|original\s+)?"
-    r"(?:instructions?|rules?|prompts?|directions?|guidelines?)\b"
-    # "ignoriere alle vorherigen Anweisungen"
-    r"|\bignorier\w*\s+(?:alle\s+|die\s+)?(?:vorherigen|bisherigen|obigen|vorigen|deine|ihre)\s+"
-    r"(?:anweisungen|regeln|instruktionen|vorgaben)\b"
-    # "you are now an AI without rules", "du bist jetzt ein Assistent"
-    r"|\byou\s+are\s+(?:now\s+|no\s+longer\s+)?(?:an?\s+|the\s+|my\s+)?(?:ai|assistant|chatbot|bot|"
-    r"language\s+model|llm|model|gpt|chatgpt|claude|gemini|dan|jailbroken|developer\s+mode|unrestricted)\b"
+    # "ignore all the previous instructions", "forget your prompt", "disregard every earlier guideline"
+    r"\b(?:ignore|disregard|forget|override|bypass)\s+" + _FILLER + r"(?:instructions?|prompts?|directions?|"
+    r"guidelines?)\b"
+    # "disregard all rules", "forget your rules"; not "ignore the rules of the road"
+    r"|\b(?:ignore|disregard|forget|override|bypass)\s+(?:\w+\s+){0,2}?" + _RULE_QUALIFIER + r"\s+(?:the\s+)?rules?\b"
+    # "ignore everything above"
+    r"|\b(?:ignore|disregard|forget)\s+(?:everything|anything|all)\s+(?:above|before|prior|previously|earlier)\b"
+    # "Ignoriere alle Anweisungen", "Vergiss alle vorherigen Anweisungen", "Missachte die bisherigen Regeln"
+    r"|\b(?:ignorier\w*|vergiss|vergesst|vergessen\s+sie|missacht\w*|übergeh\w*)\s+" + _FILLER + r"(?:anweisungen|"
+    r"instruktionen|vorgaben|prompts?|systemprompts?)\b"
+    r"|\b(?:ignorier\w*|vergiss|vergesst|vergessen\s+sie|missacht\w*|übergeh\w*)\s+(?:\w+\s+){0,2}?"
+    r"(?:vorherigen|bisherigen|obigen|vorigen|deine|ihre|alle)\s+regeln\b"
+    # "you are now an AI without rules", "you are a language model"; not "you are a model employee"
+    r"|\byou\s+are\s+(?:now|no\s+longer)\s+(?:an?\s+|the\s+|my\s+)?(?:ai|assistant|chatbot|bot|"
+    r"language\s+model|llm|model|gpt|chatgpt|claude|gemini|dan|jailbroken|in\s+developer\s+mode|unrestricted)\b"
+    r"|\byou\s+are\s+(?:an?\s+|the\s+|my\s+)?(?:ai|ai\s+model|language\s+model|llm|gpt|chatgpt|claude|gemini|"
+    r"dan|jailbroken|in\s+developer\s+mode|unrestricted)\b"
+    r"|\byou\s+are\s+(?:an?\s+|the\s+|my\s+)?(?:assistant|chatbot|bot|model)\s+now\b"
     r"|\bdu\s+bist\s+(?:jetzt\s+|nun\s+|ab\s+jetzt\s+)?(?:eine?\s+)?(?:ki|assistent\w*|chatbot|bot|sprachmodell)\b"
     r"|\bsystem\s+prompt\b"
-    # a role marker at the start of a cell or line: "system:", "assistant:"
-    r"|(?:^|[\n,\"])[ \t]*(?:system|assistant|developer)[ \t]*:"
+    # a role marker at the start of a cell or line followed by an order: "system: you obey", not "System: Linux"
+    r"|(?:^|[\n,\"])[ \t]*(?:system|assistant)[ \t]*:[ \t]*(?:you|ignore|disregard|forget|from\s+now|always|"
+    r"never|do|reply|respond|answer|act|pretend|print|reveal|repeat|say|write|follow|obey)\b"
     # chat-template tokens
     r"|<\|?(?:im_start|im_end|system|endoftext)\|?>|\[/?INST\]|<<SYS>>"
-    # URL schemes
-    r"|\b(?:https?|ftps?|sftp|file)://|\b(?:javascript|vbscript):"
+    # script links
+    r"|\b(?:javascript|vbscript):\S"
 )
-"""Text addressed to an AI, or a URL, in a header or a cell: the dataset is refused before the judge.
+"""Text addressed to an AI in a header or a cell: the dataset is refused before the judge.
 
 A deliberately narrow list: every pattern is rare in real tables, so an ordinary
-free-text column (comments, product descriptions) passes; "you are" alone or
-"act as" would not. URLs count because a cell reaches the plot as a label and the
-PNG carries the anyplot.ai footer. Anything subtler is the judge's."""
+free-text column (comments, product descriptions, a job title such as "Assistant:
+Maria Lopez", a log line such as "system: started") passes; "you are" alone or "act
+as" would not. Anything subtler is the judge's. Web addresses, e-mail addresses and
+phone numbers are `has_contact_details`'s."""
+
+URL_SCHEME = re.compile(r"(?i)\b(?:https?|ftps?|sftp|file)://")
+
+
+def _texts(parsed: ParsedDataset) -> list[str]:
+    """Every header and every non-empty cell of the canonical dataset."""
+    reader = csv.reader(io.StringIO(parsed.csv))
+    return [cell for row in reader for cell in row if cell]
 
 
 def instruction_like(parsed: ParsedDataset) -> bool:
@@ -148,6 +170,27 @@ def instruction_like(parsed: ParsedDataset) -> bool:
     and a cell anywhere can reach the reviewer's image as a label.
     """
     return INSTRUCTION_LIKE.search(parsed.csv) is not None
+
+
+def has_contact_details(parsed: ParsedDataset) -> bool:
+    """Whether any header or cell carries contact details that would reach the plot as a label.
+
+    Every header and cell counts, not only the ones the judge sees: any of them can
+    become a tick label, a legend entry or a title, and the PNG carries the anyplot.ai
+    footer. Refused: a URL with a scheme, an e-mail address, a phone number, and a web
+    address with `www.` or a path or with other words around it (`Pay at
+    parcel-help.de`). A cell that is a bare domain and nothing else (`amazon.com`)
+    passes, so a column of domains (visits per site) still plots; that is the one
+    trade-off, and `pipeline._check` lets the adapter write such a value as a literal.
+    """
+    for text in _texts(parsed):
+        if URL_SCHEME.search(text):
+            return True
+        for contact in find_contacts(text):
+            found = text[contact.start : contact.end]
+            if contact.kind != "web" or "/" in found or found.lower().startswith("www.") or found != text.strip():
+                return True
+    return False
 
 
 @dataclass(frozen=True)
@@ -165,7 +208,11 @@ def judged_view(parsed: ParsedDataset) -> JudgedView:
     The rows and values are the ones the profile gives the root and the adapter
     (`MAX_SAMPLE_ROWS` rows, `MAX_TOP_VALUES` values, the same order), read from the
     canonical `data.csv` so that each cell keeps its whole text (up to the parser's
-    200 characters) instead of the profile's 40-character display copy.
+    200 characters) instead of the profile's 40-character display copy. The top
+    values walk the column the way the profile does (`parse._profile_column`): by
+    frequency, until `MAX_TOP_VALUES` distinct display copies are found. Values whose
+    display copies coincide count once in the profile, so every one of them is judged,
+    and the lower-ranked values the profile reaches past them are judged too.
     """
     reader = csv.reader(io.StringIO(parsed.csv))
     columns = next(reader)
@@ -176,7 +223,13 @@ def judged_view(parsed: ParsedDataset) -> JudgedView:
         if dtypes.get(name) not in ("text", "boolean"):
             continue
         counts = Counter(row[index] for row in rows if index < len(row) and row[index])
-        values = [value for value, _ in counts.most_common(MAX_TOP_VALUES)]
+        values: list[str] = []
+        copies: set[str] = set()
+        for value, _ in counts.most_common():
+            values.append(value)
+            copies.add(display_copy(value))
+            if len(copies) == MAX_TOP_VALUES:
+                break
         if values:
             top_values[name] = values
     return JudgedView(columns=columns, top_values=top_values, sample=rows[:MAX_SAMPLE_ROWS])

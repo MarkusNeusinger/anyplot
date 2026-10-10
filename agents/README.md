@@ -25,7 +25,8 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 | `anyplot/sub_agents/` | One single-turn adapter per enabled library and the tool-less reviewer |
 | `anyplot/tools/session.py` | The root's tools: `get_dataset_profile`, `get_spec_brief`, `get_current_code`, `set_bindings` and the `plot_pipeline` workflow |
 | `anyplot/plugins/` | `ScopeGuardPlugin`, `BudgetPlugin`, `ToolSafetyPlugin` and the request ledger they share |
-| `anyplot/contact_filter.py` | Finds web addresses (a top-level-domain list in code), e-mail addresses and phone numbers without a network, for the stream sanitiser, ToolSafety and the pipeline's check of new plot text |
+| `anyplot/contact_filter.py` | Finds web addresses (a top-level-domain list in code), e-mail addresses and phone numbers without a network, Unicode look-alikes folded, for the output sanitiser, ToolSafety, the pipeline's check of new plot text and the dataset route's pre-filter |
+| `anyplot/output_guard.py` | The output sanitiser of every root message and plot-event line (at most 1,200 characters) and the off-topic rule the ScopeGuard runs on the root's final reply before it is stored |
 | `anyplot/render/` | The render contract, the probe harness, the host gates (R1-R3, advisory G3/G5/G7/G8), PNG hardening, the render store, the `remote` (the renderer service, phase 1), `local`, `fake` and `sandbox` (an unused in-process stub) backends, `serial.py`, the one render semaphore in front of every backend, and `watermark.py`, the footer strip the artifact route and the feedback bundle add to the raw render |
 | `anyplot/render/fonts/` | JetBrains Mono 2.304 Regular and Bold for the footer strip, unmodified, with `OFL.txt` (SIL Open Font License 1.1) and a notice with their SHA-256 values ([fonts README](anyplot/render/fonts/README.md)) |
 | `renderer/` | The `anyplot-renderer` service: `main.py` (`POST /render`, `GET /status`, one render slot), `executor.py` (one `sandbox do` per theme with the kill path, the byte watchdog and the launcher retry), `auth.py` (the caller check), `settings.py` (`RENDERER_*`), `wire.py` (the JSON contract the `remote` backend shares), `Dockerfile` and `cloudbuild.yaml`. No ADK import and no `__init__.py`, so `adk web agents` does not list it as an agent |
@@ -38,7 +39,7 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 | `evals/make_fixtures.py` | The seeded generator of the 120 synthetic spike-X cases |
 | `evals/cases.py`, `evals/pricing.py`, `evals/report.py` | Case loading and selection, list prices, and the summary, diff and gallery code; `report.py` also merges two runs into one blind gallery and scores its export |
 | `evals/eligibility.py` | The model-free sweep of the catalogue's matplotlib and seaborn files: eligible, coupled and blocked pairs, and why |
-| `evals/scope.py`, `evals/scope.evalset.json` | The judge-only scope eval and its 170 synthetic cases: in-scope, off-topic and adversarial messages, scored for adversarial recall and false refusals |
+| `evals/scope.py`, `evals/scope.evalset.json` | The judge-only scope eval and its 172 synthetic cases: in-scope, off-topic and adversarial messages, scored for adversarial recall and false refusals |
 | `evals/fixtures/cases/` | The eval cases: 120 generated (`<spec>-<library>-<perturbation>`) and the hand-written `scatter-basic-matplotlib` and `bar-grouped-seaborn` ([fixtures README](evals/fixtures/README.md)) |
 | `evals/baselines/` | Committed baseline reports, one per model ([baselines README](evals/baselines/README.md)) |
 
@@ -81,8 +82,8 @@ Three rules hold for everything here:
 | `AGENT_REQUEST_DEADLINE_S` | `180` | Hard request deadline |
 | `AGENT_SOFT_DEADLINE_S` | `140` | Soft deadline inside the pipeline |
 | `AGENT_JUDGE_TIMEOUT_S` | `4` | Budget of one judge verdict, its one retry included |
-| `AGENT_KEEP_REFUSALS` | `false` | Keep the text and verdict of each message the scope judge refused, at most 20 per session in memory, shown only in the feedback bundle (`refusals`); never in a log |
-| `AGENT_ATTACK_STRIKES` | `3` | `attack` verdicts of the scope or dataset judge per user and day after which the user gets the budget refusal for the rest of the day |
+| `AGENT_KEEP_REFUSALS` | `false` | Keep the text and verdict of each message the scope judge refused, at most 20 per session in memory, shown only in the feedback bundle (`refusals`); never in a log. A phase-1 stub: the BFF has no bundle route, so read them with an ID-token call to `GET /v1/sessions/{sid}/bundle` (with `X-Anyplot-User`) while the session lives; the ring goes with the session |
+| `AGENT_ATTACK_STRIKES` | `3` | `attack` verdicts of the scope or dataset judge per user and day, once per distinct message or dataset, after which the user gets the budget refusal for the rest of the UTC day; only a new day, a redeploy or a scale-to-zero resets them. Every token-path caller shares one user id, so raise it for a jailbreak-testing session |
 | `AGENT_SESSION_IDLE_S` | `3600` | Idle time after which the sweeper drops a session |
 | `AGENT_ALLOWED_CALLERS` | empty | Service-account emails allowed to call `/v1` outside development |
 | `AGENT_SERVICE_URLS` | empty | ID-token audiences accepted on `/v1` outside development |
@@ -431,7 +432,7 @@ uv run --extra agents python -m agents.evals.make_fixtures --check   # exit 1 wh
 
 ## Run the scope eval
 
-The scope eval (`evals/scope.py`) measures the scope judge alone: it sends every case of `evals/scope.evalset.json` to the judge the settings name, with the rubric `scope_judge.md` and the same context the ScopeGuard plugin builds (the user's earlier turns and the root's last reply), and scores the verdicts. It runs no agent, no render and no session, so a run takes about a minute and costs about $0.03 on Claude Haiku 5.5 (170 judge calls of about 1,300 input and 60 output tokens). Run it after every change to `scope_judge.md`, the judge model or the judge's input.
+The scope eval (`evals/scope.py`) measures the scope judge alone: it sends every case of `evals/scope.evalset.json` to the judge the settings name, with the rubric `scope_judge.md` and the same context the ScopeGuard plugin builds (the user's earlier turns and the root's last reply), and scores the verdicts. It runs no agent, no render and no session, so a run takes about a minute and costs about $0.03 on Claude Haiku 5.5 (172 judge calls of about 1,300 input and 60 output tokens). Run it after every change to `scope_judge.md`, the judge model or the judge's input.
 
 1. Complete steps 1 and 2 of [Before you begin](#before-you-begin): the dependencies and Application Default Credentials. The scorer reads no `.env` file.
 2. Run the eval:
@@ -440,9 +441,9 @@ The scope eval (`evals/scope.py`) measures the scope judge alone: it sends every
    uv run --extra agents python -m agents.evals.scope
    ```
 
-   To score the Gemini arm's judge, add `--provider gemini`; `--judge-model` and `--location` override the settings, and `--tags needs_data,german` runs only the cases with any of those tags.
+   To score the Gemini arm's judge, add `--provider gemini`; `--judge-model` and `--location` override the settings, and `--tags needs_data,german` runs only the cases with any of those tags. A tagged run gates only the metrics its cases measure: `--tags needs_data` has no in-scope case, so its false-refusal rate is not gated.
 
-3. Read the summary it prints, and the report it writes to `agents/evals/reports/<date>-scope-<judge model>.json` (`--out` changes the directory). The report holds every case's verdict, language and tokens, the confusion matrix, every metric per tag and the cost at list price; the case texts stay in the case file.
+3. Read the summary it prints, and the report it writes to `agents/evals/reports/<date>-scope-<judge model>.json`, or `<date>-scope-<judge model>-<tags>.json` for a tagged run, so it never overwrites the day's full report (`--out` changes the directory). The report holds every case's verdict, language and tokens, the confusion matrix, every metric per tag and the cost at list price; the case texts stay in the case file.
 
 The case file has three groups, named by a tag: 54 `inscope` cases (short confirmations, label, style and binding changes, code questions), 53 `offtopic` cases (general knowledge, programming, writing, advice, homework, other software) and 63 `adversarial` cases (instruction overrides, role play, German, base64 and other encodings, multi-turn drift, general programming framed as plot code, mixed and plot-framed requests, contact details in plot text, and 11 requests for data the service would have to fetch). Each case has `id`, `text`, `last_turns` (the turns before it, oldest first), `expected` (`in_scope`, `out_of_scope`, `attack` or `needs_data`), `lang` and `tags`. Every case is synthetic; never add a user's message.
 

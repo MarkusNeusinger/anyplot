@@ -30,7 +30,9 @@ for the attribution log, which never sees the lines because they quote code.
 """
 
 import ast
+import io
 import re
+import tokenize
 from collections import Counter
 from dataclasses import dataclass, field
 
@@ -45,7 +47,8 @@ MAX_NEW_LITERAL_CHARS = 2_000
 MAX_CHANGE_LITERAL_CHARS = 300
 """New string-literal text one plan may add on top of a previous version (a change turn): a new title,
 a subtitle or a few labels fit, a paragraph of text does not. The first adaptation of the catalogue
-code renames many titles and labels at once and keeps `MAX_NEW_LITERAL_CHARS`."""
+code renames many titles and labels at once and keeps `MAX_NEW_LITERAL_CHARS`, which also bounds the
+new literals of every version against the catalogue code, so text cannot pile up across turns."""
 
 # The placeholder statement as a line of text, so one that an earlier edit of the same
 # plan introduced is protected before the code parses again.
@@ -205,10 +208,33 @@ def new_literal_chars(base: str, code: str) -> int:
     return sum(len(text) for text in new_literals(base, code))
 
 
+def new_comments(base: str, code: str) -> list[str]:
+    """The comments of `code` that `base` does not already hold (as a multiset), each as often as it is new.
+
+    Comments reach the exported `plot.py`, so the pipeline's contact check reads them
+    with the new literals. A `code` or `base` that does not tokenize has none.
+    """
+    try:
+        before, after = _comments(base), _comments(code)
+    except (tokenize.TokenError, SyntaxError):
+        return []
+    return [text for text, count in sorted((after - before).items()) for _ in range(count)]
+
+
+def _comments(code: str) -> Counter[str]:
+    tokens = tokenize.generate_tokens(io.StringIO(code).readline)
+    return Counter(token.string for token in tokens if token.type == tokenize.COMMENT)
+
+
 def _string_literals(tree: ast.Module) -> Counter[str]:
-    return Counter(
-        node.value for node in ast.walk(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)
-    )
+    """Every str and bytes constant (bytes as Latin-1 text, as the validator reads them), f-string parts included."""
+    counts: Counter[str] = Counter()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            counts[node.value] += 1
+        elif isinstance(node, ast.Constant) and isinstance(node.value, bytes):
+            counts[node.value.decode("latin-1")] += 1
+    return counts
 
 
 def _apply(working: str, plan: AdaptPlan) -> AppliedPlan:

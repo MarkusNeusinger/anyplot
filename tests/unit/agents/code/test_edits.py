@@ -9,6 +9,7 @@ from agents.anyplot.code.edits import (
     MAX_QUOTE_CHARS,
     AppliedPlan,
     apply_plan,
+    new_comments,
     new_literal_chars,
     new_literals,
     protected_drift,
@@ -117,6 +118,21 @@ def test_new_literals_lists_each_added_string_as_often_as_it_is_new() -> None:
     assert new_literals(WORKING, added) == ["A", "A", "B"]
     assert new_literals(WORKING, "def broken(:\n") == []
     assert MAX_CHANGE_LITERAL_CHARS < MAX_NEW_LITERAL_CHARS
+
+
+def test_bytes_literals_count_as_text() -> None:
+    added = WORKING.replace("ax.set_ylim(0, 100)\n", "ax.set_title(b'Sales'.decode())\n")
+
+    assert new_literals(WORKING, added) == ["Sales"] and new_literal_chars(WORKING, added) == 5
+
+
+def test_new_comments_lists_each_added_comment() -> None:
+    commented = WORKING.replace("ax.set_ylim(0, 100)\n", "ax.set_ylim(0, 100)  # keep\n# keep\n# Support: x.com\n")
+
+    assert new_comments(WORKING, WORKING) == []
+    assert new_comments(WORKING, commented) == ["# Support: x.com", "# keep", "# keep"]
+    assert new_comments(commented, commented + "# keep\n") == ["# keep"]
+    assert new_comments(WORKING, "s = '''\n") == []
 
 
 def test_full_code_rebinding_a_token_is_refused() -> None:

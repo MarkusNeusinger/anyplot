@@ -343,6 +343,54 @@ class TestCheck:
         assert tight.blocking_rules == ["literal-budget"]
         assert f"over the limit of {MAX_CHANGE_LITERAL_CHARS}" in tight.blocking[0]
 
+    def test_text_cannot_pile_up_over_change_turns(self) -> None:
+        previous = self.with_line(f"ax.text(0, 0, {'a' * 190!r})\n" * 10)  # 1,900 characters over ten turns
+        code = self.with_line(f"ax.text(1, 1, {'b' * 150!r})", base=previous)  # 150 more fit the change budget
+
+        check = _check(
+            code,
+            library="matplotlib",
+            palette=[],
+            base=previous,
+            literal_budget=MAX_CHANGE_LITERAL_CHARS,
+            origin=self.BASE,
+        )
+
+        assert check.blocking_rules == ["literal-budget"]
+        assert "for all versions together" in check.blocking[0] and "2050 characters" in check.blocking[0]
+        assert _check(code, library="matplotlib", palette=[], base=previous, origin=previous).may_render
+
+    def test_dataset_headers_and_cells_are_free(self) -> None:
+        label = "Revenue per region and quarter in thousands of euros, before tax and returns"
+        code = self.with_line("\n".join(f"ax.set_ylabel({label + str(n)!r})" for n in range(5)))
+        cells = frozenset(label + str(n) for n in range(5))
+        budget = MAX_CHANGE_LITERAL_CHARS
+
+        assert not _check(code, library="matplotlib", palette=[], base=self.BASE, literal_budget=budget).may_render
+        free = _check(code, library="matplotlib", palette=[], base=self.BASE, literal_budget=budget, data_texts=cells)
+        assert free.may_render
+
+    @pytest.mark.parametrize(
+        "line",
+        [
+            "# Support: parcel-help.com/pay, call +49 30 1234567",
+            "ax.text(0, 0, b'Pay at parcel-help.com/pay'.decode())",
+            "ax.text(0, 0, f'Visit {1}: parcel-help.com/pay')",
+        ],
+        ids=["comment", "bytes", "f-string-part"],
+    )
+    def test_comments_bytes_and_f_string_parts_are_read_for_contacts(self, line: str) -> None:
+        check = _check(self.with_line(line), library="matplotlib", palette=[], base=self.BASE)
+
+        assert "contact-literal" in check.blocking_rules and "or comment" in check.blocking[-1]
+
+    def test_a_bare_domain_that_is_a_dataset_cell_may_be_a_label(self) -> None:
+        code = self.with_line("ax.set_xticklabels(['Amazon.com', 'Booking.com'])")
+
+        assert "contact-literal" in _check(code, library="matplotlib", palette=[], base=self.BASE).blocking_rules
+        cells = frozenset({"amazon.com", "Booking.com", "visits"})
+        assert _check(code, library="matplotlib", palette=[], base=self.BASE, data_texts=cells).may_render
+
     def test_an_unparseable_file_is_one_syntax_finding(self) -> None:
         """Both validator profiles parse the code; the repair and the attribution log see the error once."""
         check = _check("def broken(:\n", library="matplotlib", palette=[], base="x = 1\n")
