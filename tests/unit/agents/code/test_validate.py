@@ -314,28 +314,37 @@ class TestImports:
         ]
 
     @pytest.mark.parametrize(
-        ("body", "module", "alternative"),
+        ("body", "module", "label", "alternative"),
         [
-            ("import locale\n", "locale", "format numbers with f-strings or matplotlib.ticker.FuncFormatter"),
-            ("import io\n", "io", "the data comes only from df = load_user_data()"),
-            ("from io import StringIO\n", "io", "the data comes only from df = load_user_data()"),  # its banned part
-            ("import random\n", "random", "a seeded np.random.default_rng(<int>) is only for jitter"),
-            ("from os import getenv\n", "os.getenv", 'os only as THEME = os.getenv("ANYPLOT_THEME", ...)'),
-            ("import string\n", "string", "use str methods, f-strings and literals"),
-            ("import scipy\n", "scipy", "import the scipy submodule itself, such as scipy.stats or scipy.fft"),
-            ("from sklearn.datasets import load_iris\n", "sklearn.datasets.load_iris", "the data comes only from df"),
-            ("import yaml\n", "yaml", "pure standard modules such as math, datetime, collections, re, warnings"),
+            ("import locale\n", "locale", "locale", "format numbers with f-strings or matplotlib.ticker.FuncFormatter"),
+            ("import io\n", "io", "io", "the data comes only from df = load_user_data()"),
+            ("from io import StringIO\n", "io", "io", "the data comes only from df = load_user_data()"),  # banned part
+            ("import random\n", "random", "random", "a seeded np.random.default_rng(<int>) is only for jitter"),
+            ("from os import getenv\n", "os.getenv", "os", 'os only as THEME = os.getenv("ANYPLOT_THEME", ...)'),
+            ("import string\n", "string", "string", "use str methods, f-strings and literals"),
+            ("import scipy\n", "scipy", "scipy", "import the scipy submodule itself, such as scipy.stats or scipy.fft"),
+            (
+                "from sklearn.datasets import load_iris\n",
+                "sklearn.datasets.load_iris",
+                "sklearn.datasets",
+                "the data comes only from df",
+            ),
+            ("import yaml\n", "yaml", "yaml", "pure standard modules such as math, datetime, collections, re"),
+            ("import jane_doe_records\n", "jane_doe_records", "?", "pure standard modules such as math, datetime"),
         ],
     )
     def test_banned_import_message_names_the_module_and_what_to_use(
-        self, body: str, module: str, alternative: str
+        self, body: str, module: str, label: str, alternative: str
     ) -> None:
-        """The rerun's 17 banned-import repairs got no hint; the line now names the module and the way around it."""
+        """The rerun's 17 banned-import repairs got no hint; the line now names the module and the way around it.
+
+        The repair line goes back to the model and quotes the path; the log gets only its label.
+        """
         finding = next(f for f in validate_security(plot(body), library="matplotlib") if f.rule == "banned-import")
 
         assert finding.message.startswith(f"import of '{module}' ")
         assert " → " in finding.message and alternative in finding.message.split(" → ", 1)[1]
-        assert finding.module == module
+        assert finding.module == label
 
     def test_only_banned_imports_carry_a_module(self) -> None:
         findings = validate_security(plot("import sys\nx = eval('1')\n"), library="matplotlib")
@@ -345,14 +354,23 @@ class TestImports:
     @pytest.mark.parametrize(
         ("path", "label"),
         [
-            ("scipy.io.matlab", "scipy.io.matlab"),
-            ("a" * 45 + ".b", "a" * 40),
+            ("scipy.io.matlab", "scipy.io"),
+            ("pandas.io.common", "pandas.io"),
+            ("numpy.lib.format", "numpy.lib.format"),
+            ("os.path", "os"),
+            ("cartopy.crs", "cartopy"),
+            ("a" * 45 + ".b", "?"),
             ("möbius", "?"),
-            ("data_2024.Q1", "data_2024.Q1"),
+            ("data_2024.Q1", "?"),
+            ("Patient_Smith_Diagnosis", "?"),
+            ("os_jane_doe", "?"),  # a prefix of a component is not a prefix of the path
+            ("?", "?"),
         ],
     )
-    def test_module_label_is_bounded_and_content_free(self, path: str, label: str) -> None:
+    def test_module_label_is_a_word_of_a_closed_vocabulary(self, path: str, label: str) -> None:
+        """A word the model writes as an import path never reaches the log: only known module names do."""
         assert module_label(path) == label
+        assert module_label(label) == label  # idempotent, so the eval harness re-checks a logged label with it
 
     def test_a_reader_call_says_where_the_data_comes_from(self) -> None:
         findings = validate_security(plot("x = pd.read_csv('data.csv')\n"), library="matplotlib")

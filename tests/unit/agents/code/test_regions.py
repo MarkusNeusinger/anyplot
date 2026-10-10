@@ -126,6 +126,7 @@ def test_a_theme_token_picks_fixed_values_and_a_data_dependent_conditional_is_no
     assert [token.name for token in find_regions(code).theme_tokens] == ["INK", "BANDS", "EDGE", "IS_DARK", "LATE"]
 
 
+@pytest.mark.skipif(not CATALOGUE_FILES, reason="plots/ is not checked out")
 def test_every_catalogue_theme_conditional_but_one_is_a_token() -> None:
     """Measured on 2026-10-10: 2,745 theme-testing assignments in the 650 files, one of them data-dependent."""
     narrowed = []

@@ -31,8 +31,10 @@ Decisions this module takes where the design leaves room:
   matplotlib_venn, squarify, adjustText) stay banned: they are not in the agents image,
   and admitting one is an owner decision, not a validator default. A `banned-import`
   message names the module and what to use instead (`IMPORT_ALTERNATIVES`), and the
-  finding carries the module path (`Finding.module`, at most 40 characters of
-  letters, digits, dots and underscores) for the attribution log.
+  finding carries a label of the path for the attribution log (`Finding.module`): its
+  longest prefix in the closed vocabulary `LOGGED_MODULES`, else `?`. An import path
+  is code the model wrote, so a path outside the vocabulary (a word from the data
+  written as a module name) never reaches the log.
 * **Re-exports and private names.** An allowed module can hand out a module the import
   rules keep out (`statistics.sys`, `enum.bltns`, which is `builtins`,
   `dataclasses.inspect`) or a private helper that runs `exec` (`dataclasses._FuncBuilder`).
@@ -119,8 +121,9 @@ from __future__ import annotations
 
 import ast
 import re
+import sys
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Container, Iterable
 from dataclasses import dataclass
 from typing import Literal, TypeVar
 
@@ -136,8 +139,6 @@ MAX_STRING_CHARS = 200
 MAX_LITERAL_NUMBERS = 20
 MAX_MESSAGE_CHARS = 300
 MAX_SNIPPET_CHARS = 60
-MAX_MODULE_CHARS = 40
-"""The longest module path a finding carries for the attribution log (`Finding.module`)."""
 PLACEHOLDER = "df = load_user_data()"
 THEME_VARIABLE = "ANYPLOT_THEME"
 
@@ -353,7 +354,51 @@ DEFAULT_IMPORT_ALTERNATIVE = (
     "use numpy, pandas, scipy's computing modules, sklearn, statsmodels.api, the plotting library, or pure "
     "standard modules such as math, datetime, collections, re, warnings or zoneinfo"
 )
-_MODULE_PATH = re.compile(r"^[A-Za-z0-9_.]+$")
+# Third-party roots a banned import is logged under: the catalogue's banned plotting
+# helpers, the catalogue's other plotting libraries, and data and science packages a
+# model may reach for. A root missing here is logged as `?`; add it when a run shows one.
+THIRD_PARTY_MODULES: frozenset[str] = frozenset(
+    {
+        "adjustText",
+        "cartopy",
+        "matplotlib_venn",
+        "qrcode",
+        "squarify",
+        "wordcloud",
+        "altair",
+        "bokeh",
+        "highcharts_core",
+        "lets_plot",
+        "plotly",
+        "plotnine",
+        "pygal",
+        "IPython",
+        "geopandas",
+        "networkx",
+        "openpyxl",
+        "polars",
+        "pyarrow",
+        "shapely",
+        "skimage",
+        "sympy",
+        "xarray",
+        "yaml",
+    }
+)
+LOGGED_MODULES: frozenset[str] = frozenset(
+    {
+        *sys.stdlib_module_names,
+        *COMMON_IMPORTS,
+        *SHARED_SCIENCE_IMPORTS,
+        *DENIED_IMPORTS,
+        *(module for modules in LIBRARY_IMPORTS.values() for module in modules),
+        *IMPORT_ALTERNATIVES,
+        *THIRD_PARTY_MODULES,
+    }
+)
+"""The closed vocabulary of `Finding.module`: no word in it comes from a model or a user."""
+UNKNOWN_MODULE = "?"
+"""The label of a banned import with no prefix in `LOGGED_MODULES`."""
 # `read_*` (pandas readers), `fetch_*` (sklearn downloaders), `load*` (`np.load`,
 # `np.loadtxt`, `sns.load_dataset`, sklearn's `load_*`).
 _BANNED_IO_PATTERN = re.compile(r"^(?:read_\w+|fetch_\w+|load\w*)$")
@@ -388,8 +433,9 @@ _Node = TypeVar("_Node", bound=ast.AST)
 class Finding:
     """One validator result: a short kebab-case rule id, one message line, a 1-based line.
 
-    A `banned-import` finding also carries the module path it refused (`module_label`),
-    content-free enough for the attribution log; every other finding has None.
+    A `banned-import` finding also carries the label of the module path it refused
+    (`module_label`, a word of a closed vocabulary) for the attribution log; every other
+    finding has None.
     """
 
     rule: str
@@ -398,23 +444,30 @@ class Finding:
     module: str | None = None
 
 
-def module_label(path: str) -> str:
-    """A module path for the attribution log: letters, digits, dots and underscores, at most 40 characters.
+def _longest_prefix(path: str, known: Container[str]) -> str | None:
+    """The longest dotted prefix of `path` that is in `known` (`scipy.io.matlab` → `scipy.io`), else None."""
+    parts = path.split(".")
+    for length in range(len(parts), 0, -1):
+        prefix = ".".join(parts[:length])
+        if prefix in known:
+            return prefix
+    return None
 
-    A path with any other character (Python allows non-ASCII identifiers) is `?`, so a
-    model cannot carry text into the log through an import.
+
+def module_label(path: str) -> str:
+    """The label of a module path for the attribution log: its longest prefix in `LOGGED_MODULES`, else `?`.
+
+    The path is code the model wrote, so only a word of the closed vocabulary is logged:
+    `os.path` is `os`, `pandas.io.common` is `pandas.io`, and `patient_records` is `?`.
+    The function is idempotent, so a reader re-checks a logged label with it.
     """
-    return path[:MAX_MODULE_CHARS] if _MODULE_PATH.match(path) else "?"
+    return _longest_prefix(path, LOGGED_MODULES) or UNKNOWN_MODULE
 
 
 def import_alternative(path: str) -> str:
     """What to use instead of the module `path`: the entry of its longest known prefix, else the default."""
-    parts = path.split(".")
-    for length in range(len(parts), 0, -1):
-        alternative = IMPORT_ALTERNATIVES.get(".".join(parts[:length]))
-        if alternative is not None:
-            return alternative
-    return DEFAULT_IMPORT_ALTERNATIVE
+    prefix = _longest_prefix(path, IMPORT_ALTERNATIVES)
+    return IMPORT_ALTERNATIVES[prefix] if prefix is not None else DEFAULT_IMPORT_ALTERNATIVE
 
 
 def validate_security(code: str, *, library: str) -> list[Finding]:

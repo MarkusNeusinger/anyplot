@@ -779,14 +779,14 @@ def test_book_attribution_counts_the_edits_a_tolerant_tier_applied() -> None:
 
 
 def test_book_attribution_names_the_banned_modules_content_free() -> None:
-    """The next run shows which modules the adapter reaches for; a value outside the pattern is `?`."""
+    """The next run shows which modules the adapter reaches for; a value outside the validator's vocabulary is `?`."""
     settings = AgentSettings(provider="gemini", model="gemini-3.8-flash", judge_model="gemini-3.5-flash-lite")
     record = matrix.base_record(two_fixtures()[1], 1)
     record["turns"] = 1
     check = {"hook": "pipeline_check", "outcome": "rejected", "edit_failures": 0, "adaptation": []}
     lines: list[dict[str, Any]] = [
         {**check, "attempt": 1, "validator": ["banned-import", "banned-call"], "banned_imports": ["io"]},
-        {**check, "attempt": 2, "validator": ["banned-import"], "banned_imports": ["io", "x y", "a" * 41]},
+        {**check, "attempt": 2, "validator": ["banned-import"], "banned_imports": ["io", "x y", "jane_doe_1984"]},
     ]
 
     matrix.book_attribution(record, lines, settings)

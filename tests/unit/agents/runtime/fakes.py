@@ -146,7 +146,11 @@ class FakeAnthropic:
     def respond(self, kwargs: dict[str, Any]) -> Message:
         """The next scripted answer; `stop` overrides its stop reason (`max_tokens` marks a cut-off answer).
 
-        `thought` puts a summarized thinking block before the answer, as adaptive thinking returns one.
+        A structured answer (`json`) is JSON text, as `output_config.format` returns it. Cut
+        off at `max_tokens`, it is that text without its closing quotes and brackets, the
+        truncated JSON constrained decoding leaves at the limit: `{"edits": [{"find": "a`
+        for an edit, `{` for an empty object. `thought` puts a summarized thinking block
+        before the answer, as adaptive thinking returns one.
         """
         kind = self.kind(kwargs)
         queue = self.script.get(kind, [])
@@ -155,7 +159,10 @@ class FakeAnthropic:
             output_format = (kwargs.get("output_config") or {}).get("format") or {}
             assert output_format.get("type") == "json_schema", "a structured answer must be constrained by a format"
             assert "tool_choice" not in kwargs or not isinstance(kwargs["tool_choice"], dict), "no forced tool call"
-            block = {"type": "text", "text": json.dumps(item["json"], ensure_ascii=False)}
+            text = json.dumps(item["json"], ensure_ascii=False)
+            if item.get("stop") == "max_tokens":
+                text = text.rstrip('"]}')
+            block = {"type": "text", "text": text}
             stop = "end_turn"
         elif "call" in item:
             block = {

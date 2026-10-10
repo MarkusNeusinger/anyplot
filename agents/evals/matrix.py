@@ -25,9 +25,9 @@ reason, output tokens and plan shape, the check with its edit-failure kinds, the
 render gates and the review verdict), every model call's finish reason and tokens
 (`calls`, counted per agent kind in `finish_reasons`), the edit-failure kinds, how
 many edits a tolerant matching tier applied (`edit_tolerant`, by tier), and the module
-paths of the banned imports the validator refused (`banned_imports`, letters, digits,
-dots and underscores, at most 40 characters, anything else `?`), so a run shows which
-modules the adapter reaches for.
+labels of the banned imports the validator refused (`banned_imports`: the longest
+prefix of the path in the validator's closed vocabulary, such as `io` or `pandas.io`,
+anything else `?`), so a run shows which modules the adapter reaches for.
 Answers that failed their schema are counted by agent kind and outcome
 (`answer_outcomes`: `repaired` or `refused`) and by broken rule (`answer_rules`, list
 indices written `*`), from the guard's `answer_schema` lines.
@@ -103,7 +103,6 @@ import json
 import logging
 import os
 import platform
-import re
 import secrets
 import subprocess
 import sys
@@ -177,8 +176,6 @@ TOKEN_REFRESH_MARGIN_S = 600.0
 """`--gcloud-token` mints a new token when the current one expires within this many seconds."""
 PREFLIGHT_DATA = "x\n1\n"
 """The preflight renders the normalised catalogue file, which makes its own data; this only fills the slot."""
-MODULE_PATH = re.compile(r"^[A-Za-z0-9_.]{1,40}$")
-"""A banned-import module path as the record keeps it (`validate.module_label` writes it this way)."""
 
 logger = logging.getLogger("anyplot.evals")
 
@@ -596,9 +593,10 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
 
 
 def module_path(value: Any) -> str:
-    """A logged banned-import module path, re-checked: letters, digits, dots and underscores, at most 40, else `?`."""
-    text = str(value)
-    return text if MODULE_PATH.match(text) else "?"
+    """A logged banned-import label, re-checked against the validator's closed vocabulary, else `?`."""
+    from agents.anyplot.code.validate import module_label
+
+    return module_label(str(value))
 
 
 def _int(value: Any) -> int:

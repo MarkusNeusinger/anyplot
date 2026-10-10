@@ -14,7 +14,7 @@ record is one case and repeat (see `matrix.base_record` for its fields).
 the output limit) from `schema`, and counts an unparseable file as one `syntax`
 validator rejection instead of two; later schema-2 runs also count the answers that
 failed their schema (`answer_outcomes`, `answer_rules`), the edits a tolerant
-matching tier applied (`edit_tolerant`) and the module paths of banned imports
+matching tier applied (`edit_tolerant`) and the module labels of banned imports
 (`banned_imports`). Every reader here takes a schema-1 report too:
 a field it lacks reads as empty, so a schema-1 baseline still diffs against a
 schema-2 run (`SUPPORTED_SCHEMAS`).

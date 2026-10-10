@@ -56,8 +56,9 @@ Every step also writes one content-free attribution line (`plugins/ledger.attrib
 `pipeline_adapt` (the answer's outcome, `plan`, `schema`, `truncated` or
 `full_code_refused`, the plan's shape, and the call's finish reason and output tokens),
 `pipeline_check` (edit-apply failure count and kinds, how many edits a tolerant
-matching tier applied, blocking validator rule ids, the module paths of banned imports
-(letters, digits, dots and underscores, at most 40 characters each), ADAPTATION rule ids), `pipeline_render` (render and wall time, the gate ids that
+matching tier applied, blocking validator rule ids, the labels of banned imports
+(`validate.module_label`: a word of a closed vocabulary, or `?`), ADAPTATION rule
+ids), `pipeline_render` (render and wall time, the gate ids that
 failed or reported), `pipeline_review` (the verdict, its defect ids and the call's
 finish reason) and `pipeline_result` (status, reason, attempts, the `Stage` that ended
 each attempt and the run, the shipped and the last reviewed attempt, the number of
@@ -429,11 +430,11 @@ class CheckResult:
     blocking_rules: list[str]
     adaptation_rules: list[str]
     banned_imports: list[str] = field(default_factory=list)
-    """The module paths of the `banned-import` findings (`validate.module_label`), at most `MAX_LOGGED_MODULES`."""
+    """The module labels of the `banned-import` findings (`validate.module_label`), at most `MAX_LOGGED_MODULES`."""
 
 
 MAX_LOGGED_MODULES = 8
-"""Banned module paths one `pipeline_check` line names; a plan that imports more is rare and says enough."""
+"""Banned module labels one `pipeline_check` line names; a plan that imports more is rare and says enough."""
 
 
 def _check(working: str, *, library: str, palette: list[str], base: str) -> CheckResult:

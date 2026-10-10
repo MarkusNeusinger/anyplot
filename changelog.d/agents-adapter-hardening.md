@@ -25,7 +25,10 @@
   `scipy.constants`. Each was walked for names that read, write, fetch or
   evaluate, and those stay banned, as do `io`, `sys`, `pathlib`, `random`,
   `locale` and `string`. A banned import's repair line names the module and
-  what to use instead, and the eval record counts banned imports by module.
+  what to use instead, and the eval record counts banned imports by module. The
+  log names a module only by a word of a fixed list (the standard library, the
+  allowlists and a few known packages), and any other import as `?`, so no word
+  the model writes as an import path reaches the log.
 - **Edits match tolerantly, never fuzzily.** After an exact match, the edit
   applier tries the same text with the blanks before line breaks ignored, then
   whole lines whose words agree once indentation and spaces are ignored, with
