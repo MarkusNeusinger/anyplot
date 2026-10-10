@@ -1,4 +1,4 @@
-"""Tests for the anyplot/1 translator (agents/stream.py) and the caller check (agents/main.py)."""
+"""Tests for the anyplot/1 translator (agents/stream.py), the caller check and the role body (agents/main.py)."""
 
 import base64
 import json
@@ -7,8 +7,9 @@ import pytest
 from google.adk.events.event import Event
 from google.genai import types
 
+from agents.anyplot.data.roles import DataRole
 from agents.anyplot.plugins.ledger import RequestLedger
-from agents.main import AgentsError, check_caller, decode_claims
+from agents.main import MAX_ROLE_DESCRIPTION_CHARS, AgentsError, _role_body, check_caller, decode_claims
 from agents.stream import CODE_OMITTED, MAX_MESSAGE_CHARS, Translator, sanitize
 
 
@@ -59,6 +60,20 @@ class TestTranslator:
         assert [parse(chunk)[0] for chunk in chunks] == ["plot"]
         assert "secret" not in parse(chunks[0])[1]
         assert translator.translate(event) == []
+
+    @pytest.mark.parametrize(
+        ("output", "expected"),
+        [
+            ({"status": "ok", "attempts": 1, "artifacts": [], "version": 3}, 3),
+            ({"status": "failed", "reason": "render", "attempts": 2, "version": None}, None),
+        ],
+    )
+    def test_plot_carries_the_stored_version_only(self, translator: Translator, output, expected) -> None:
+        """The stored version's number goes out, so a client never counts plot events; `None` is dropped."""
+        _, data = parse(translator.translate(Event(author="plot_pipeline", output=output))[0])
+
+        assert data.get("version") == expected
+        assert ("version" in data) is (expected is not None)
 
     def test_messages_only_from_the_root(self, translator: Translator) -> None:
         assert [parse(c) for c in translator.translate(text_event("anyplot", "Done."))] == [
@@ -229,3 +244,22 @@ class TestCallerCheck:
         with pytest.raises(AgentsError) as caught:
             check_caller(FakeRequest(token(good), serverless=""))
         assert caught.value.status == 401
+
+
+class TestRoleBody:
+    def test_a_role_for_the_binding_controls(self) -> None:
+        family = DataRole(name="y", kinds=("numeric",), required=True, variadic=True, description="one series")
+
+        assert _role_body(family) == {
+            "name": "y",
+            "kinds": ["numeric"],
+            "required": True,
+            "variadic": True,
+            "description": "one series",
+        }
+
+    def test_a_long_description_is_capped(self) -> None:
+        role = DataRole(name="label", kinds=(), required=False, variadic=False, description="word " * 100)
+
+        description = _role_body(role)["description"]
+        assert len(description) <= MAX_ROLE_DESCRIPTION_CHARS and description.endswith("…")

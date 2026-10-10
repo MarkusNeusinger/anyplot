@@ -452,6 +452,24 @@ class TestBodies:
         assert response.status_code == 422
         assert upstream.requests == []
 
+    def test_refused_bindings_keep_the_check_lines(self, client, upstream) -> None:
+        """The one upstream body part passed on: at most 20 binding check lines, each one line of 300 characters."""
+        errors = ["role 'y' takes numbered members such as 'y1'", "line\nbreak", 7, "z" * 400] + ["more"] * 30
+        upstream.handler = lambda request: httpx.Response(422, json={"detail": "invalid", "errors": errors})
+        response = client.put(
+            "/debug/agent/sessions/s1/bindings", json=[{"role": "y", "column": "a"}], headers=CLIENT_HEADERS
+        )
+        assert response.status_code == 422
+        body = response.json()
+        assert (body["detail"], body["ref"]) == ("invalid", response.headers["X-Request-Id"])
+        assert body["errors"][:3] == ["role 'y' takes numbered members such as 'y1'", "line break", "z" * 300]
+        assert len(body["errors"]) == 20
+
+    def test_other_routes_never_pass_error_lines(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(422, json={"detail": "invalid", "errors": ["secret"]})
+        response = client.post("/debug/agent/sessions/s1/dataset", json={"text": "a,b"}, headers=CLIENT_HEADERS)
+        assert response.json() == {"detail": "invalid", "ref": response.headers["X-Request-Id"]}
+
 
 UPSTREAM_SSE = (
     b"event: ready\n"
@@ -511,6 +529,15 @@ class TestMessagesStream:
         )
         events = _sse_events(self._post(client).text)
         assert events[0] == ("error", {"code": "internal", "ref": events[0][1]["ref"]})
+
+    def test_plot_keeps_its_version(self, client, upstream) -> None:
+        """The stored version's number reaches the browser, so it never counts plot events."""
+        plot = {"status": "ok", "attempts": 1, "artifacts": ["plot-light.png"], "version": 2, "plan": "secret"}
+        upstream.handler = lambda request: httpx.Response(
+            200, content=f"event: plot\ndata: {json.dumps(plot)}\n\nevent: done\ndata: {{}}\n\n".encode()
+        )
+        events = _sse_events(self._post(client).text)
+        assert events[0] == ("plot", {"status": "ok", "attempts": 1, "artifacts": ["plot-light.png"], "version": 2})
 
     def test_text_message_forwarded(self, client, upstream) -> None:
         upstream.handler = lambda request: httpx.Response(200, content=b"event: done\ndata: {}\n\n")

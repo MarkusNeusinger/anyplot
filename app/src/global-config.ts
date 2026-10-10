@@ -11,9 +11,22 @@ interface GlobalConfig {
     debugBaseUrl: string;
   };
   isDev: boolean;
+  features: {
+    /** The admin-only "Use with my data" agent chat (`/debug/agent`). */
+    agentChat: boolean;
+  };
 }
 
 const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+/**
+ * Build-time switch for the agent chat (`docs/concepts/agent-network.md`).
+ * Vite inlines the variable, so with the flag unset this is the literal
+ * `false` and the bundler drops every branch behind it, the `.adapt()` probe
+ * included. The route in `src/routes/index.tsx` reads the variable inline for
+ * the same reason, so the chat page's chunk is not even built.
+ */
+export const AGENT_CHAT_ENABLED = import.meta.env.VITE_ENABLE_AGENT_CHAT === 'true';
 
 export const CONFIG: GlobalConfig = {
   appName: 'anyplot',
@@ -33,4 +46,7 @@ export const CONFIG: GlobalConfig = {
     debugBaseUrl: import.meta.env.VITE_DEBUG_API_URL || apiBaseUrl,
   },
   isDev: import.meta.env.DEV,
+  features: {
+    agentChat: AGENT_CHAT_ENABLED,
+  },
 };

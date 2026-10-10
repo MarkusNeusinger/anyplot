@@ -39,7 +39,9 @@ JSON dict. `ok` means the shipped render passed the host gates on the exact canv
 and the reviewer passed exactly that render; `needs_attention` ships a render with
 residual defect lines (reviewer lines that no reviewed render fixed, adaptation
 findings, a padded canvas, or no review because the budget or the deadline ran out);
-`failed` names its reason; `not_ready` comes before any model call. Progress goes out
+`failed` names its reason; `not_ready` comes before any model call. An `ok` or
+`needs_attention` result is stored as the session's next version before it is
+yielded, and carries that number as `version`. Progress goes out
 as content-free events with `custom_metadata={"anyplot_status": {"step", "attempt"}}`,
 which the stream translator turns into `status` events and no model ever reads.
 
@@ -351,17 +353,24 @@ def finish(run: Run) -> PlotResult:
     )
 
 
-def _store_version(ctx: Context, services: Services, run: Run, result: PlotResult) -> None:
+def _store_version(ctx: Context, services: Services, run: Run, result: PlotResult) -> PlotResult:
+    """Store a shipped result as the session's next version; the result comes back with its `version`.
+
+    The number travels in the `plot` event, so a client addresses the artifact and theme
+    toggle routes by the server's number instead of counting the events it received.
+    """
     shipped = run.best or run.padded
     if shipped is None or result.status not in ("ok", "needs_attention"):
-        return
+        return result
     session_id = ctx.session.id
     render_id = shipped.render_id or services.renders.put(session_id, shipped.pngs)
     snapshot = run.view.snapshot
+    number = services.versions.next_number(session_id)
+    result = PlotResult.model_validate({**result.model_dump(), "version": number})
     services.versions.add(
         session_id,
         CodeVersion(
-            number=services.versions.next_number(session_id),
+            number=number,
             working=shipped.working,
             run_form=shipped.run_form,
             export=export_code(
@@ -381,6 +390,7 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
             themes={run.theme: ThemeRender("needs_attention", PADDED_REASON) if shipped.padded else ThemeRender("ok")},
         ),
     )
+    return result
 
 
 async def _adapt(ctx: Context, scope: str, request_text: str, library: str) -> AdaptPlan | str:
@@ -455,7 +465,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         ledger.review_render_id = None
     result = finish(run)
     try:
-        _store_version(ctx, services, run, result)
+        result = _store_version(ctx, services, run, result)
     except Exception as exc:  # a result whose artifacts cannot be stored is not shippable
         logger.warning("storing the version failed: %s", type(exc).__name__)
         result = PlotResult(status="failed", reason="error", attempts=run.attempts)

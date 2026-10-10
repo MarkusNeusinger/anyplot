@@ -122,6 +122,17 @@ describe('SpecDetailView', () => {
     expect(screen.getByRole('button', { name: /show interactive/i })).toBeInTheDocument();
   });
 
+  it('shows the .adapt() button only when SpecPage passes onUseWithMyData', async () => {
+    const onUseWithMyData = vi.fn();
+    const user = userEvent.setup();
+    const { rerender } = render(<SpecDetailView {...defaultProps} />);
+    expect(screen.queryByRole('button', { name: 'Use with my data' })).not.toBeInTheDocument();
+
+    rerender(<SpecDetailView {...defaultProps} onUseWithMyData={onUseWithMyData} />);
+    await user.click(screen.getByRole('button', { name: 'Use with my data' }));
+    expect(onUseWithMyData).toHaveBeenCalledTimes(1);
+  });
+
   it('shows implementation counter with current/total', () => {
     render(<SpecDetailView {...defaultProps} />);
     // Sorted alphabetically: altair(1), matplotlib(2), plotly(3) -> matplotlib = 2/3

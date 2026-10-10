@@ -93,11 +93,15 @@ describe('DebugPage', () => {
       })
     );
 
+    localStorage.removeItem('anyplot.adminHint');
     render(<DebugPage />);
 
     await waitFor(() => {
       expect(screen.getAllByText('scatter-basic').length).toBeGreaterThan(0);
     });
+    // A 200 from /debug/status marks this browser as an admin's, which lets
+    // the plot page show the agent chat's `.adapt()` button.
+    expect(localStorage.getItem('anyplot.adminHint')).toBe('1');
   });
 
   it('handles fetch error gracefully', async () => {
@@ -128,6 +132,7 @@ describe('DebugPage', () => {
   // tests miss (and the codecov/patch gate flagged at 65% diff coverage).
   it('renders the admin-token form on 401', async () => {
     sessionStorage.clear();
+    localStorage.setItem('anyplot.adminHint', '1');
     vi.stubGlobal(
       'fetch',
       vi.fn(() => Promise.resolve({ ok: false, status: 401 }))
@@ -140,6 +145,8 @@ describe('DebugPage', () => {
     });
     expect(screen.getByRole('button', { name: /unlock/i })).toBeInTheDocument();
     expect(screen.getByText(/admin token required/i)).toBeInTheDocument();
+    // A refusal clears the admin hint again.
+    expect(localStorage.getItem('anyplot.adminHint')).toBeNull();
   });
 
   it('renders the admin-token form on 503 with the not-configured hint', async () => {

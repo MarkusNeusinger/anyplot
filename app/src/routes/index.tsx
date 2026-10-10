@@ -94,6 +94,19 @@ const router = createBrowserRouter([
             path: 'debug',
             lazy: () => import('src/pages/DebugPage').then(m => ({ Component: m.DebugPage })),
           },
+          // The admin-only agent chat. The variable is read inline, not through
+          // CONFIG: Vite inlines it, and only a literal in this module lets the
+          // bundler drop the dynamic import before it emits the chunk (through
+          // an imported constant the route folds, but the chunk is still
+          // built). Without VITE_ENABLE_AGENT_CHAT the path still answers with
+          // the 404 page instead of falling through to `:specId/:language`.
+          import.meta.env.VITE_ENABLE_AGENT_CHAT === 'true'
+            ? {
+                path: 'debug/agent',
+                lazy: () =>
+                  import('src/pages/AgentChatPage').then(m => ({ Component: m.AgentChatPage })),
+              }
+            : { path: 'debug/agent', element: <NotFoundPage /> },
           { path: ':specId', lazy: lazySpec },
           { path: ':specId/:language', element: <SpecLanguageRedirect /> },
           { path: ':specId/:language/:library', lazy: lazySpec },

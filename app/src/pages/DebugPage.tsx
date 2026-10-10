@@ -16,6 +16,14 @@ import { useAnalytics, useCopyCode } from 'src/hooks';
 import { fetchWithAuth } from 'src/lib/api';
 import { specPath } from 'src/routes/paths';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
+import {
+  clearAccessReloadGuard,
+  clearAdminToken,
+  readAdminToken,
+  reloadOnceForAccess,
+  setAdminHint,
+  writeAdminToken,
+} from 'src/utils/adminAuth';
 import { buildClaudePrompt } from 'src/utils/claudePrompt';
 
 // ============================================================================
@@ -211,31 +219,9 @@ function pingColor(ms: number): string {
 //     travel cross-origin to the API.
 //   - X-Admin-Token header as a fallback (CI, break-glass, local dev). Stored
 //     in sessionStorage so it survives reloads of the same tab without
-//     persisting across browser sessions.
-const ADMIN_TOKEN_KEY = 'anyplot.adminToken';
-// One-shot guard for the SPA-routed → CF Access page-gate bootstrap.
-const RELOAD_GUARD_KEY = 'anyplot.debugAuthReloaded';
-const readAdminToken = (): string => {
-  try {
-    return sessionStorage.getItem(ADMIN_TOKEN_KEY) ?? '';
-  } catch {
-    return '';
-  }
-};
-const writeAdminToken = (value: string): void => {
-  try {
-    sessionStorage.setItem(ADMIN_TOKEN_KEY, value);
-  } catch {
-    /* sessionStorage may be unavailable */
-  }
-};
-const clearAdminToken = (): void => {
-  try {
-    sessionStorage.removeItem(ADMIN_TOKEN_KEY);
-  } catch {
-    /* noop */
-  }
-};
+//     persisting across browser sessions (src/utils/adminAuth.ts).
+// A 200 from /debug/status also sets the admin hint that lets the plot page
+// show the agent chat's `.adapt()` button; a refusal clears it.
 
 export function DebugPage() {
   const { trackPageview } = useAnalytics();
@@ -281,16 +267,13 @@ export function DebugPage() {
         // still be 401/403/503 — those are handled below). Clear the one-shot
         // reload guard so a future cross-origin CF Access redirect can
         // re-trigger the bootstrap.
-        try {
-          sessionStorage.removeItem(RELOAD_GUARD_KEY);
-        } catch {
-          /* sessionStorage may be unavailable in private mode */
-        }
+        clearAccessReloadGuard();
         // 403 is the Cloudflare Access JWT path's denial: a signed-in Google
         // account that isn't on the admin_allowed_emails allow-list. Surface
         // it on the auth-required screen with the server's message so the
         // user knows to sign in with a different account or ask for access.
         if (r.status === 401 || r.status === 403 || r.status === 503) {
+          setAdminHint(false);
           setAuthRequired(true);
           if (r.status === 403) {
             const body = await r.json().catch(() => ({}));
@@ -301,6 +284,7 @@ export function DebugPage() {
           );
         }
         if (!r.ok) throw new Error(`${r.status}`);
+        setAdminHint(true);
         setAuthRequired(false);
         return r.json();
       })
@@ -311,28 +295,10 @@ export function DebugPage() {
         // *.cloudflareaccess.com, which fetch can't follow without CORS,
         // surfacing as TypeError("Failed to fetch"). Force one top-level
         // navigation so CF Access can intercept the page request and bounce
-        // to Google login. sessionStorage guard keeps this from looping if
-        // the second load ALSO fails (e.g. wrong allow-list).
-        if (e instanceof TypeError) {
-          let alreadyTried = false;
-          try {
-            alreadyTried = !!sessionStorage.getItem(RELOAD_GUARD_KEY);
-          } catch {
-            /* sessionStorage may be unavailable in private mode */
-          }
-          if (!alreadyTried) {
-            try {
-              sessionStorage.setItem(RELOAD_GUARD_KEY, '1');
-            } catch {
-              /* sessionStorage may be unavailable in private mode */
-            }
-            // replace() not assign() — assign would push the broken pre-auth
-            // /debug onto the back-stack, so the user could navigate back
-            // into the same loop after logging in.
-            window.location.replace(window.location.href);
-            return;
-          }
-        }
+        // to Google login. The sessionStorage guard keeps this from looping if
+        // the second load ALSO fails (e.g. wrong allow-list); the agent chat
+        // page shares it (src/utils/adminAuth.ts).
+        if (e instanceof TypeError && reloadOnceForAccess()) return;
         setError(e.message || 'failed to load');
       })
       .finally(() => setLoading(false));

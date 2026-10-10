@@ -413,10 +413,12 @@ Used to load interactive plots (plotly, bokeh, altair) in iframes with dynamic s
 
 ## Agent chat (admin only, switched off by default)
 
-> **Status (2026-10-09):** the routes exist and ship switched off. The
+> **Status (2026-10-10):** the routes exist and ship switched off. The
 > anyplot-agents service they call runs locally but is not deployed yet, so
 > with the switch on in production every route that calls it answers
-> `502 upstream` until that service is deployed. Design:
+> `502 upstream` until that service is deployed. The chat page that calls
+> these routes, `/debug/agent` in the app, is built only with
+> `VITE_ENABLE_AGENT_CHAT=true`. Design:
 > [Agent network design](../concepts/agent-network.md).
 
 The `/debug/agent/*` routes (`api/routers/agent.py`) are a backend for the
@@ -473,8 +475,8 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 | `GET /eligibility?spec=&library=` | Spec id and library id | The agents service's answer, passed through |
 | `POST /sessions` | `{spec_id, library, locale}` | `{session_id, eligibility}`; `404 not_found` when the spec has no implementation for the library |
 | `POST /sessions/{sid}/library` | `{spec_id, library}` | Switches the library; the dataset and bindings stay |
-| `POST /sessions/{sid}/dataset` | `{text}`, at most 200 KB (204,800 bytes) of UTF-8 | `{preview, profile, bindings, warnings}`; `413 too_long` above the limit |
-| `PUT /sessions/{sid}/bindings` | `[{role, column}]`, at most 50 | The agents service's answer |
+| `POST /sessions/{sid}/dataset` | `{text}`, at most 200 KB (204,800 bytes) of UTF-8 | `{preview, profile, bindings, warnings, roles}`; `413 too_long` above the limit |
+| `PUT /sessions/{sid}/bindings` | `[{role, column}]`, at most 50 | The agents service's `{bindings, complete, missing_roles}`; `422 no_dataset` before a parse, `422 invalid` with the check's `errors` lines for a binding the spec roles or the columns refuse |
 | `POST /sessions/{sid}/messages` | `{text}` (at most 2,000 characters) or `{"action": "create_plot"}` | An SSE stream in protocol `anyplot/1`; `413 too_long` above the limit, `409 run_active` while you have a queued or running turn or a theme render in any session, `503 capacity` when the run queue is full |
 | `POST /sessions/{sid}/cancel` | None | `204`; a turn that still waits leaves the run queue |
 | `POST /sessions/{sid}/versions/{version}/render` | `{"theme": "light"}` or `{"theme": "dark"}`; `version` is 0 to 999, where 0 is the latest version | `{status, reason?, artifacts}` once the render is done (see [Theme toggle](#theme-toggle)) |
@@ -493,6 +495,29 @@ escape such as `"\ud800"`, which UTF-8 cannot carry (`422 invalid_text`).
 catalogue snapshot before they forward the body, because the agents service
 has no database access: `{spec_id, title, description, data_roles, notes,
 code, library_version}`, with `# noqa` comments stripped from the code.
+
+Version numbers: `{version}` in the theme toggle route and `v` on the artifact
+route are the agents service's version numbers. A session's versions are
+numbered from 1 in the order the service stores them, and it stores exactly
+the turns whose `plot` event has the status `ok` or `needs_attention`. That
+`plot` event carries the stored number as `version`, so a client addresses a
+version by the server's number instead of counting the events it received; a
+`failed` or `not_ready` event has no `version`. `0`, or no `v`, means the
+latest version.
+
+Roles and bindings: the dataset response lists the spec's data roles as
+`roles`, each `{name, kinds, required, variadic, description}`, where `kinds`
+names what a role accepts (`numeric`, `categorical`, `text`, `boolean`,
+`datetime`; empty means any column) and `description` is the spec's own text,
+at most 200 characters. A single role binds under its own name. A variadic
+family such as `y` binds its members `y1`, `y2`, and so on, never its bare
+name. `PUT /sessions/{sid}/bindings` replaces the whole set and answers
+`{bindings, complete, missing_roles}`: the stored bindings, whether every
+required role has a column, and the required roles that still have none, a
+family by its name. A refused set answers
+`{"detail": "invalid", "ref": "<request id>", "errors": [...]}` with at most
+20 of the binding check's lines, such as
+`role 'y' takes numbered members such as 'y1'`.
 
 ### Theme toggle
 
@@ -531,7 +556,7 @@ agents service's render store is full.
 | `status` | `{step: "queued", position, waiting}` while the turn waits in the run queue: `position` 1 runs next, and `waiting` counts every queued turn, this one included |
 | `status` | `{step, attempt}` for a pipeline step: `adapting`, `checking`, `rendering`, `reviewing`, or `repairing` |
 | `message` | `{text}` |
-| `plot` | `{status, reason, attempts, artifacts, changes, residual_defects}` |
+| `plot` | `{status, reason, attempts, artifacts, changes, residual_defects, version}`; `version` only on `ok` and `needs_attention` |
 | `refusal` | `{code, text}` |
 | `error` | `{code, ref}`; `code` is `capacity` (also when the turn waited the run queue's maximum of 600 seconds, or the BFF's turn cap ran out while it waited), `deadline`, `guard_unavailable`, `upstream`, or `internal`; `ref` is the request id |
 | `done` | `{llm_calls, tokens}` |
@@ -580,7 +605,9 @@ keeps its status. Its code is one the agents service documents (`not_eligible`,
 `rate_limited`) or
 a generic one for the status (`bad_request`, `not_found`, `conflict`,
 `too_long`, `invalid`, `rate_limited`, `rejected`, `upstream`); the upstream
-body is never echoed. Two cases answer `502` instead:
+body is never echoed, except the binding check's `errors` lines of a refused
+binding set (see the routes above), each cut to one line of at most 300
+characters. Two cases answer `502` instead:
 
 - `upstream_auth`: an upstream `401`, or a `403` without a documented code.
   Cloud Run IAM refused the BFF's own ID token, which is not the admin's

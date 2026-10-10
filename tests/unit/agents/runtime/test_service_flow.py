@@ -87,6 +87,12 @@ async def open_session(client: httpx.AsyncClient, *, with_data: bool = True, use
         assert response.status_code == 200, response.text
         bindings = {item["role"]: item["column"] for item in response.json()["bindings"]}
         assert bindings == {"x": "Study Hours", "y": "Exam Score"}
+        roles = response.json()["roles"]  # every spec role, so the UI offers a choice for each
+        assert [(role["name"], role["required"], role["variadic"]) for role in roles] == [
+            ("x", True, False),
+            ("y", True, False),
+        ]
+        assert all(role["kinds"] == ["numeric"] and role["description"] for role in roles)
     return sid
 
 
@@ -123,6 +129,7 @@ async def test_create_plot_streams_to_an_ok_plot_result(
     assert steps == ["adapting", "checking", "rendering", "reviewing"]  # an idle queue sends no queued status
     plot = next(data for name, data in events if name == "plot")
     assert plot["status"] == "ok", plot
+    assert plot["version"] == 1
     assert plot["attempts"] == 1
     assert plot["artifacts"] == ["plot-light.png", "plot.py", "data.csv"]  # one theme per run, light by default
     assert [job.themes for job in backend.jobs] == [("light",)]
@@ -182,6 +189,7 @@ async def test_second_turn_reaches_the_root_and_runs_the_pipeline_again(
     assert steps == ["adapting", "checking", "rendering", "reviewing"]
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], plot["changes"]) == ("ok", ["Kept the plot"])
+    assert plot["version"] == 2  # the stored number, which the artifact and theme routes take
     assert [data["text"] for name, data in events if name == "message"] == ["Done: bigger markers."]
     queues = fake.script if isinstance(fake, ScriptedLlm | FakeAnthropic) else script
     assert queues["adapter"] == [] and queues["reviewer"] == []  # turn 2 called both again

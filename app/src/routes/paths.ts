@@ -12,6 +12,23 @@ export function specPath(specId: string, language?: string, library?: string): s
 }
 
 /**
+ * The admin-only agent chat for one catalogue pair:
+ * `/debug/agent?spec=&library=&language=` (plus `source` for `agent_open`).
+ * Navigate to it with a full page load, never the router, so Cloudflare
+ * Access can intercept the `/debug*` path.
+ */
+export function agentChatPath(
+  spec: string,
+  library: string,
+  language: string,
+  source?: string
+): string {
+  const params = new URLSearchParams({ spec, library, language });
+  if (source) params.set('source', source);
+  return `/debug/agent?${params.toString()}`;
+}
+
+/**
  * Reserved top-level paths that must never be assigned as spec ids.
  *
  * Keep in sync with `RESERVED_SLUGS` in `.github/workflows/spec-create.yml`.
@@ -63,6 +80,7 @@ export function specIdFromPath(pathname: string): string | undefined {
 export const paths = {
   home: '/',
   about: '/about',
+  agentChat: agentChatPath,
   debug: '/debug',
   legal: '/legal',
   libraries: '/libraries',

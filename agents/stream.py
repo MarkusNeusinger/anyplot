@@ -9,7 +9,7 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 | `status` | `step: "queued"`, `position`, `waiting` | the run queue, while the run waits: at once, on every change, and every 15 s unchanged (`position` 1 runs next; `waiting` counts every queued entry, this one included) |
 | `status` | `step`, `attempt` | the pipeline's content-free `custom_metadata` progress events |
 | `message` | `text` | a final, non-partial text response authored by the root (`anyplot`) |
-| `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects` | the pipeline's `PlotResult` output event |
+| `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects`, `version` | the pipeline's `PlotResult` output event; `version`, the stored version's number, only on `ok` and `needs_attention` |
 | `refusal` | `code`, `text` | the request ledger's refusal (scope guard or budget), in place of the message; a user already over the daily budget gets it right after `ready`, without waiting in the queue |
 | `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when the run waited the queue's maximum), `deadline` or `internal` |
 | `done` | `llm_calls`, `tokens` | the end of every run, always last |
@@ -45,7 +45,7 @@ HALT_AUTHOR = "model"  # ADK's author of the event a before_run halt emits
 STEPS = frozenset({"adapting", "checking", "rendering", "reviewing", "repairing"})
 QUEUED_STEP = "queued"
 """The status step the route sends while the run waits in the run queue; no pipeline event carries it."""
-PLOT_FIELDS = ("status", "reason", "attempts", "artifacts", "changes", "residual_defects")
+PLOT_FIELDS = ("status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version")
 MODEL_WRITTEN_FIELDS = ("changes", "residual_defects")
 MAX_MESSAGE_CHARS = 3_000
 MAX_CODE_LINES = 10
@@ -151,8 +151,13 @@ class Translator:
         return out
 
     def _plot(self, output: dict[str, Any]) -> dict[str, Any]:
-        """The plot event: the allowlisted fields, the model-written lines sanitised to one plain line each."""
+        """The plot event: the allowlisted fields, the model-written lines sanitised to one plain line each.
+
+        `version` goes out only when the result was stored as a version.
+        """
         data = {key: output[key] for key in PLOT_FIELDS if key in output}
+        if not isinstance(data.get("version"), int):
+            data.pop("version", None)
         for key in MODEL_WRITTEN_FIELDS:
             if isinstance(data.get(key), list):
                 lines = (plain_line(item, spec_id=self.spec_id) for item in data[key] if isinstance(item, str))

@@ -331,6 +331,16 @@ class TestPlotResult:
 
         assert result.reason is None
         assert result.residual_defects == []
+        assert result.version is None  # set once the version is stored
+
+    def test_only_a_shipped_result_carries_a_version(self) -> None:
+        assert PlotResult(status="ok", attempts=1, version=2).version == 2
+        with pytest.raises(ValidationError, match="stores no version"):
+            PlotResult(status="failed", reason="render", attempts=1, version=1)
+        with pytest.raises(ValidationError, match="stores no version"):
+            PlotResult(status="not_ready", reason="no_dataset", version=1)
+        with pytest.raises(ValidationError):
+            PlotResult(status="ok", attempts=1, version=0)
 
     def test_needs_attention_names_its_residual_defects(self) -> None:
         result = PlotResult(status="needs_attention", attempts=2, residual_defects=["canvas padded after render"])

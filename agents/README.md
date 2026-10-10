@@ -4,7 +4,7 @@ This directory holds the anyplot agent network: the service that lets an admin p
 
 ## What is built
 
-The runtime core runs locally: the agents, the plot pipeline, the guardrail plugins, the render layer, the private `/v1` service with its run queue, and the theme toggle. The renderer service `anyplot-renderer` (`renderer/`), which runs the adapted code in Cloud Run sandboxes, and the `remote` backend that calls it are built, with the renderer's image and Cloud Build config, but not deployed yet (status of 2026-10-10). The model-regression harness, the 120 synthetic spike-X cases, the blind two-run review gallery and the catalogue eligibility sweep are built (see [Run the regression harness](#run-the-regression-harness)), and the Claude Haiku 5.5 baseline from the first spike-X run of 2026-10-10 is committed (`evals/baselines/claude-haiku-5-5.json`); the Gemini baseline is not. Not built yet: the agents image, the deploy of either service, the scope evalset, and the `agents-eval.yml` workflow.
+The runtime core runs locally: the agents, the plot pipeline, the guardrail plugins, the render layer, the private `/v1` service with its run queue, and the theme toggle. The renderer service `anyplot-renderer` (`renderer/`), which runs the adapted code in Cloud Run sandboxes, and the `remote` backend that calls it are built, with the renderer's image and Cloud Build config, but not deployed yet (status of 2026-10-10). The model-regression harness, the 120 synthetic spike-X cases, the blind two-run review gallery and the catalogue eligibility sweep are built (see [Run the regression harness](#run-the-regression-harness)), and the Claude Haiku 5.5 baseline from the first spike-X run of 2026-10-10 is committed (`evals/baselines/claude-haiku-5-5.json`); the Gemini baseline is not. The chat page that uses the service through the API's `/debug/agent` routes is in the app (`app/src/pages/AgentChatPage.tsx`, built with `VITE_ENABLE_AGENT_CHAT=true`). Not built yet: the agents image, the deploy of either service, the scope evalset, and the `agents-eval.yml` workflow.
 
 The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. **Gemini 3.8 Flash** is the second arm: set `AGENT_PROVIDER=gemini` together with Gemini model ids, so the two can be compared on price and quality later. Every agent and the scope judge run on the configured provider.
 
@@ -141,9 +141,45 @@ Three rules hold for everything here:
 uv run uvicorn agents.main:app --port 8001
 ```
 
-The service needs the header `X-Anyplot-User` on every `/v1` route; outside `ENVIRONMENT=development` it also requires the IAM-forwarded ID token (`AGENT_SERVICE_URLS`, `AGENT_ALLOWED_CALLERS`). To drive it from the plot page, run the API with `AGENT_ENABLED=true AGENT_SERVICE_URL=http://localhost:8001` (see `api/routers/agent.py`).
+The service needs the header `X-Anyplot-User` on every `/v1` route; outside `ENVIRONMENT=development` it also requires the IAM-forwarded ID token (`AGENT_SERVICE_URLS`, `AGENT_ALLOWED_CALLERS`). To drive it from the plot page, run the API in front of it as described under [Drive the chat page](#drive-the-chat-page).
 
 At the defaults only one run may start a minute, so a second "Create plot" within a minute waits in the run queue and the stream shows `status` events with `step: "queued"`. To iterate faster on your own machine, export `AGENT_RUNS_PER_MINUTE=60`. The theme toggle (`POST /v1/sessions/{sid}/versions/{version}/render {"theme": "dark"}`) never waits in the queue.
+
+### Drive the chat page
+
+The chat page is the app's `/debug/agent?spec=&library=&language=`. Build or serve the app with `VITE_ENABLE_AGENT_CHAT=true`; local development shows it without an admin sign-in, and the plot page then shows the `.adapt()` button for eligible pairs.
+
+- **Against this service:** the API's agent routes need all three of `AGENT_ENABLED`, `AGENT_SERVICE_URL` and `AGENT_USER_ID_KEY`, or every route answers `404 not_enabled`; and the admin gate has no development bypass, so you sign in with an admin token:
+
+  1. Run the service as above.
+  2. In a second terminal, run the API with the agent routes switched on and an admin token of your choice:
+
+     ```bash
+     AGENT_ENABLED=true AGENT_SERVICE_URL=http://localhost:8001 AGENT_USER_ID_KEY=dev-key \
+       ADMIN_TOKEN=<token> uv run uvicorn api.main:app --reload --port 8000
+     ```
+
+  3. In a third terminal, start the app with `cd app && VITE_ENABLE_AGENT_CHAT=true yarn dev`.
+  4. Open `http://localhost:3000/debug`, enter `<token>`, and open the chat page in the same tab: the token lives in that tab's session storage.
+
+- **Without any backend:** the mock BFF serves the documented `/debug/agent/*` routes, a scripted stream (two queue positions, the pipeline steps, a plot and a reply) and PNGs drawn from the pasted data, plus the catalogue routes the plot page needs for `scatter-basic` and `line-multi` (a series family `y1, y2, ...`). It listens on the loopback interface only, needs no sign-in, touches no database and calls no model:
+
+  1. Start the mock:
+
+     ```bash
+     node app/scripts/agent-bff-mock.mjs
+     ```
+
+  2. In a second terminal, start the app against it:
+
+     ```bash
+     cd app && VITE_ENABLE_AGENT_CHAT=true VITE_API_URL=http://localhost:8010 \
+       VITE_DEBUG_API_URL=http://localhost:8010 yarn dev
+     ```
+
+  3. Open `http://localhost:3000/scatter-basic/python/matplotlib` and select the `.adapt()` button, or open `http://localhost:3000/debug/agent?spec=scatter-basic&library=matplotlib&language=python` directly. Paste `agents/evals/fixtures/cases/scatter-basic-matplotlib/data.csv` as your data.
+
+  The header of `app/scripts/agent-bff-mock.mjs` lists the scripted replies (a refusal, a capacity error, a question, a refinement with a repair round) and the timing variables.
 
 ### Render through the deployed renderer
 

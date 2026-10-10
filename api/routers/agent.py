@@ -88,12 +88,15 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
     # `attempt` on a pipeline step; `position` and `waiting` on `step: "queued"`.
     "status": frozenset({"step", "attempt", "position", "waiting"}),
     "message": frozenset({"text"}),
-    "plot": frozenset({"status", "reason", "attempts", "artifacts", "changes", "residual_defects"}),
+    # `version` is the agents service's number of the stored version (ok and needs_attention only).
+    "plot": frozenset({"status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version"}),
     "refusal": frozenset({"code", "text"}),
     "error": frozenset({"code", "ref"}),
     "done": frozenset({"llm_calls", "tokens"}),
 }
 _ERROR_CODES = frozenset({"capacity", "deadline", "guard_unavailable", "upstream", "internal"})
+_MAX_BINDING_ERRORS = 20
+_MAX_BINDING_ERROR_CHARS = 300
 _MAX_EVENT_CHARS = 64 * 1024
 _QUEUED_STEP = "queued"
 """The status step of a run that waits in the agents service's run queue."""
@@ -147,20 +150,23 @@ class AgentHTTPError(Exception):
     page needs a stable code and the request id to quote.
     """
 
-    def __init__(self, status_code: int, detail: str, ref: str | None = None) -> None:
+    def __init__(self, status_code: int, detail: str, ref: str | None = None, errors: list[str] | None = None) -> None:
         super().__init__(detail)
         self.status_code = status_code
         self.detail = detail
         self.ref = ref
+        self.errors = errors
 
 
 async def agent_http_error_handler(request: Request, exc: AgentHTTPError) -> JSONResponse:
     """Render an `AgentHTTPError`; registered on the app in api/main.py."""
-    content = {"detail": exc.detail}
+    content: dict[str, Any] = {"detail": exc.detail}
     headers = {"Cache-Control": _NO_STORE}
     if exc.ref:
         content["ref"] = exc.ref
         headers["X-Request-Id"] = exc.ref
+    if exc.errors:
+        content["errors"] = exc.errors
     return JSONResponse(status_code=exc.status_code, content=content, headers=headers)
 
 
@@ -435,8 +441,26 @@ def _log_unreachable(ctx: AgentContext, method: str, path: str, exc: BaseExcepti
     logger.warning("agent upstream %s %s unreachable (ref %s): %s", method, path, ctx.request_id, type(exc).__name__)
 
 
-def _upstream_error(response: httpx.Response, ref: str) -> AgentHTTPError:
-    """Map an upstream error to the same status with a generic code; never echo its body."""
+def _binding_errors(body: Any) -> list[str] | None:
+    """The agents service's binding check lines of a `422 invalid`, at most 20 strings of 300 characters.
+
+    The one part of an upstream error body the BFF passes on: lines `check_bindings`
+    builds from spec role names and the admin's own column names, such as
+    "role 'y' takes numbered members such as 'y1'". Anything else is dropped.
+    """
+    errors = body.get("errors") if isinstance(body, dict) else None
+    if not isinstance(errors, list):
+        return None
+    lines = [" ".join(item.split())[:_MAX_BINDING_ERROR_CHARS] for item in errors if isinstance(item, str)]
+    return [line for line in lines if line][:_MAX_BINDING_ERRORS] or None
+
+
+def _upstream_error(response: httpx.Response, ref: str, *, binding_errors: bool = False) -> AgentHTTPError:
+    """Map an upstream error to the same status with a generic code; never echo its body.
+
+    With `binding_errors`, a `422 invalid` keeps the agents service's binding check
+    lines (`_binding_errors`), so the chat page can say which binding was refused.
+    """
     status = response.status_code
     if status < 400 or status > 599:
         return AgentHTTPError(502, "upstream", ref)
@@ -458,6 +482,8 @@ def _upstream_error(response: httpx.Response, ref: str) -> AgentHTTPError:
         return AgentHTTPError(502, "upstream_auth", ref)
     if code is None:
         code = "upstream" if status >= 500 else _GENERIC_CODES.get(status, "rejected")
+    if binding_errors and status == 422 and code == "invalid":
+        return AgentHTTPError(status, code, ref, errors=_binding_errors(body))
     return AgentHTTPError(status, code, ref)
 
 
@@ -469,6 +495,7 @@ async def _call_upstream(
     *,
     json_body: Any = None,
     params: dict[str, str | int] | None = None,
+    binding_errors: bool = False,
 ) -> Any:
     """Call `/v1{path}` and return its JSON (None for an empty 2xx body)."""
     try:
@@ -480,7 +507,7 @@ async def _call_upstream(
         _log_unreachable(ctx, method, path, exc)
         raise AgentHTTPError(502, "upstream", ctx.request_id) from exc
     if not response.is_success:
-        raise _upstream_error(response, ctx.request_id)
+        raise _upstream_error(response, ctx.request_id, binding_errors=binding_errors)
     if not response.content:
         return None
     try:
@@ -715,7 +742,7 @@ async def switch_library(
 
 @router.post("/sessions/{sid}/dataset")
 async def upload_dataset(sid: SessionId, body: DatasetBody, ctx: Ctx, client: Client) -> Any:
-    """Parse pasted data: `{preview, profile, bindings, warnings}`. 413 above 200 KB of UTF-8."""
+    """Parse pasted data: `{preview, profile, bindings, warnings, roles}`. 413 above 200 KB of UTF-8."""
     if len(body.text.encode("utf-8")) > MAX_DATASET_BYTES:
         raise AgentHTTPError(413, "too_long", ctx.request_id)
     return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset", json_body={"text": body.text})
@@ -725,9 +752,10 @@ async def upload_dataset(sid: SessionId, body: DatasetBody, ctx: Ctx, client: Cl
 async def put_bindings(
     sid: SessionId, bindings: Annotated[list[Binding], Body(max_length=50)], ctx: Ctx, client: Client
 ) -> Any:
-    """Replace the role-to-column bindings."""
+    """Replace the role-to-column bindings; a refused set answers `422 invalid` with the check's `errors` lines."""
     payload = [binding.model_dump() for binding in bindings]
-    return await _call_upstream(client, ctx, "PUT", f"/sessions/{sid}/bindings", json_body=payload)
+    path = f"/sessions/{sid}/bindings"
+    return await _call_upstream(client, ctx, "PUT", path, json_body=payload, binding_errors=True)
 
 
 @router.post("/sessions/{sid}/messages", response_class=EventSourceResponse)

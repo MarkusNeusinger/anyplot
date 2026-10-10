@@ -10,6 +10,10 @@ ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
 ARG VITE_DEBUG_API_URL
 ENV VITE_DEBUG_API_URL=${VITE_DEBUG_API_URL}
+# `true` builds the admin-only agent chat (/debug/agent) and the `.adapt()`
+# button; anything else leaves both out of the bundle.
+ARG VITE_ENABLE_AGENT_CHAT
+ENV VITE_ENABLE_AGENT_CHAT=${VITE_ENABLE_AGENT_CHAT}
 
 # Set working directory
 WORKDIR /app
