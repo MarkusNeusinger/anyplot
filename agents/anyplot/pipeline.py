@@ -47,23 +47,27 @@ as content-free events with `custom_metadata={"anyplot_status": {"step", "attemp
 which the stream translator turns into `status` events and no model ever reads.
 
 Every step also writes one content-free attribution line (`plugins/ledger.attribution`):
-`pipeline_adapt` (the answer's outcome and edit count), `pipeline_check` (edit-apply
-failure count, blocking validator rule ids, ADAPTATION rule ids), `pipeline_render`
-(render and wall time, the gate ids that failed or reported), `pipeline_review` (the
-verdict and its defect ids) and `pipeline_result` (status, reason, attempts, whether
-the shipped render was padded or carries ADAPTATION or probe findings, and the
-exception class behind reason `error`). The
-eval harness (`agents/evals/matrix.py`) reads them per case; they never carry code,
-data, column names or model text.
+`pipeline_adapt` (the answer's outcome, `plan`, `schema`, `truncated` or
+`full_code_refused`, the plan's shape, and the call's finish reason and output tokens),
+`pipeline_check` (edit-apply failure count and kinds, blocking validator rule ids,
+ADAPTATION rule ids), `pipeline_render` (render and wall time, the gate ids that
+failed or reported), `pipeline_review` (the verdict, its defect ids and the call's
+finish reason) and `pipeline_result` (status, reason, attempts, the `Stage` that ended
+each attempt and the run, the shipped and the reviewed attempt, whether the shipped
+render was padded or carries ADAPTATION or probe findings, and the exception class
+behind reason `error`). The eval harness (`agents/evals/matrix.py`) reads them per
+case; they never carry code, data, column names or model text. `PlotResult.reason`
+keeps its public vocabulary; the stage is only in the attribution line.
 """
 
 import json
 import logging
 import secrets
 import time
+from collections import Counter
 from collections.abc import AsyncGenerator, Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Literal
 
 from google.adk import Context, Event
 from google.adk.agents.llm.task._finish_task_tool import FINISH_TASK_SUCCESS_RESULT, FINISH_TASK_TOOL_NAME
@@ -106,8 +110,8 @@ from .schemas import (
 from .services import PADDED_REASON, CodeVersion, Services, ThemeRender, get_services
 from .session_state import SessionView, read_session
 from .settings import AgentSettings, get_settings
-from .sub_agents.adapter import ADAPTERS
-from .sub_agents.reviewer import reviewer
+from .sub_agents.adapter import ADAPTERS, adapter_name
+from .sub_agents.reviewer import REVIEWER_NAME, reviewer
 
 
 logger = logging.getLogger(__name__)
@@ -135,6 +139,48 @@ BLOCKING_RULES = frozenset({"placeholder-count", "placeholder-use", "syntax", "s
 """ADAPTATION findings that keep the code from running: without one placeholder there is no loader."""
 ADAPTATION_IDS = {"rng": "DQ-03", "literal-data": "DQ-03", "palette-prefix": "VQ-07"}
 """The rubric id an ADAPTATION finding is reported under as a defect line."""
+SCHEMA_MISS_LINE = "the previous answer did not match the plan schema; answer with edits, title and changes"
+
+Stage = Literal[
+    "budget",
+    "deadline",
+    "error",
+    "adapter_schema",
+    "adapter_truncated",
+    "adapter_full_code",
+    "edit_apply",
+    "validator",
+    "loader",
+    "render",
+    "gates",
+    "not_rereviewed",
+    "reviewer_unreadable",
+    "reviewer_defects",
+    "reviewer_ok",
+]
+"""Where an attempt, or the run, stopped (content-free, for the attribution log only).
+
+`adapter_schema`: the answer failed the plan schema; `adapter_truncated`: it was cut
+off at the output limit; `adapter_full_code`: a full file where none was allowed;
+`edit_apply`: an edit did not apply; `validator`: a blocking validator finding or the
+literal budget; `loader`: the code could not take the data loader; `render`: the host
+gates R1 or R2 failed; `gates`: the render passed them but its canvas, probe or
+ADAPTATION findings went to the repair (or the canvas was padded); `not_rereviewed`:
+the repaired render shipped without a second review; `reviewer_*`: the review's
+outcome; `budget`, `deadline`: a limit stopped the run before an attempt or before the
+review; `error`: an exception."""
+AdaptOutcome = Literal["schema", "truncated"]
+
+
+@dataclass(frozen=True)
+class AdaptMiss:
+    """An adapter answer that yielded no plan: it failed the schema or was cut off at the output limit."""
+
+    outcome: AdaptOutcome
+
+    @property
+    def stage(self) -> Stage:
+        return "adapter_truncated" if self.outcome == "truncated" else "adapter_schema"
 
 
 class SoftDeadline:
@@ -192,6 +238,25 @@ class Run:
     unreviewed_why: str | None = None
     error_type: str | None = None
     """The exception class that ended the run with reason `error` (content-free, for the attribution log)."""
+    stage: Stage | None = None
+    """What stopped the run: the last attempt's stage, or a limit before the next attempt."""
+    stages: list[Stage] = field(default_factory=list)
+    """The stage that ended each attempt, in order."""
+    reviewed_attempt: int | None = None
+    """The attempt whose render the reviewer was called on, read or not."""
+
+
+def _end_attempt(run: Run, stage: Stage) -> None:
+    run.stages.append(stage)
+    run.stage = stage
+
+
+def _call_fields(ledger: RequestLedger, agent: str) -> dict[str, Any]:
+    """The content-free facts of `agent`'s latest model call for an attribution line."""
+    call = ledger.last_calls.get(agent)
+    if call is None:
+        return {"finish_reason": None, "candidates": 0, "thoughts": 0}
+    return {"finish_reason": call.finish_reason, "candidates": call.candidates, "thoughts": call.thoughts}
 
 
 def _line(text: str) -> str:
@@ -309,7 +374,8 @@ def _check(working: str, *, library: str, palette: list[str], base: str) -> Chec
     """Validate a working form against its base: may it render, the blocking lines, the adaptation defect lines."""
     security = validate_security(working, library=library)
     adaptation = validate_adaptation(working, original_palette=palette)
-    blocking_findings = [*security, *(f for f in adaptation if f.rule in BLOCKING_RULES)]
+    # Both profiles parse the code, so an unparseable file is one `syntax` finding, not two.
+    blocking_findings = list(dict.fromkeys([*security, *(f for f in adaptation if f.rule in BLOCKING_RULES)]))
     blocking = [
         f"validator {f.rule}" + (f" (line {f.line})" if f.line else "") + f": {f.message}" for f in blocking_findings
     ]
@@ -405,20 +471,29 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
     return result
 
 
-async def _adapt(ctx: Context, scope: str, request_text: str, library: str) -> AdaptPlan | str:
-    """One adapter call: the plan, or a feedback line when the answer does not parse."""
+async def _adapt(ctx: Context, scope: str, request_text: str, library: str) -> AdaptPlan | AdaptMiss:
+    """One adapter call: the plan, or the miss when the answer does not parse.
+
+    The call's finish reason (`ledger.last_calls`, written by the Budget plugin) tells a
+    cut-off answer from a schema miss; the entry is dropped first, so a call that
+    raised before it finished never reads the previous attempt's facts.
+    """
     agent = ADAPTERS.get(library)
     if agent is None:
         raise RendererUnavailable(f"no adapter for {library}")
+    ledger = ledger_for(ctx.invocation_id)
+    ledger.last_calls.pop(agent.name, None)
     try:
         raw = await ctx.run_node(agent, node_input=request_text, override_isolation_scope=scope)
         return AdaptPlan.model_validate(raw)
     except (ValidationError, DynamicNodeFailError) as exc:
         _reraise_unless_schema(exc)
-        return "the previous answer did not match the plan schema; answer with edits, title and changes"
+        call = ledger.last_calls.get(agent.name)
+        return AdaptMiss("truncated" if call is not None and call.finish_reason == "MAX_TOKENS" else "schema")
 
 
 async def _review(ctx: Context, scope: str, request: ReviewRequest) -> Verdict | None:
+    ledger_for(ctx.invocation_id).last_calls.pop(REVIEWER_NAME, None)
     try:
         raw = await ctx.run_node(reviewer, node_input=render_review_request(request), override_isolation_scope=scope)
         return Verdict.model_validate(raw)
@@ -471,6 +546,9 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         run.reason = "error"
         run.error_type = type(exc).__name__
         run.unreviewed_why = run.unreviewed_why or "an internal error stopped the run"
+        if len(run.stages) < run.attempts:
+            run.stages.append("error")
+        run.stage = "error"
     finally:
         ledger.pipeline_active = False
         ledger.adapter_allow_full = False
@@ -482,6 +560,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         logger.warning("storing the version failed: %s", type(exc).__name__)
         result = PlotResult(status="failed", reason="error", attempts=run.attempts)
         run.error_type = run.error_type or type(exc).__name__
+        run.stage = "error"
     _attribute_result(ledger, run, result)
     yield close_scope(scope)
     yield _result_event(result)
@@ -493,7 +572,10 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
     `padded`, `adaptation` (ADAPTATION rule ids) and `advisory` (probe gate ids) describe
     the shipped render; a failed run has none. `error` is the exception class behind
     reason `error` (for example `RendererUnavailable`, which the harness treats as an
-    outage rather than a model failure), never its message.
+    outage rather than a model failure), never its message. `stage` names what stopped
+    the run and `stages` what ended each attempt (`Stage`); `shipped_attempt` and
+    `reviewed_attempt` name the attempt whose render shipped and the one the reviewer
+    was called on.
     """
     shipped = (run.best or run.padded) if result.status in ("ok", "needs_attention") else None
     attribution(
@@ -502,6 +584,10 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
         status=result.status,
         reason=result.reason,
         attempts=result.attempts,
+        stage=run.stage,
+        stages=list(run.stages),
+        shipped_attempt=shipped.attempt if shipped else None,
+        reviewed_attempt=run.reviewed_attempt,
         theme=run.theme,
         reviewed=run.reviewed,
         padded=bool(shipped and shipped.padded),
@@ -548,12 +634,14 @@ async def _attempts(
     previous_plan: AdaptPlan | None = None
     rows = data_rows(dataset.csv)
 
+    adapter = adapter_name(view.library)
+
     for attempt in (1, 2):
         if not budget_allows(ledger, services.usage, settings):
-            run.reason, run.unreviewed_why = "budget", "the usage limit was reached"
+            run.reason, run.unreviewed_why, run.stage = "budget", "the usage limit was reached", "budget"
             return
         if attempt == 2 and not deadline.allows(ADAPTER_P95_S + RENDER_P95_S):
-            run.reason, run.unreviewed_why = "deadline", "the time limit was reached"
+            run.reason, run.unreviewed_why, run.stage = "deadline", "the time limit was reached", "deadline"
             return
         run.attempts = attempt
         yield _status("adapting" if attempt == 1 else "repairing", attempt)
@@ -570,14 +658,17 @@ async def _attempts(
         )
         ledger.adapter_allow_full = request.allow_full
         answer = await _adapt(ctx, scope, render_adapt_request(request, view), view.library)
-        if isinstance(answer, str):
-            attribution("pipeline_adapt", ledger, attempt=attempt, outcome="schema")
-            feedback, previous_plan = [answer], None
+        call = _call_fields(ledger, adapter)
+        if isinstance(answer, AdaptMiss):
+            attribution("pipeline_adapt", ledger, attempt=attempt, outcome=answer.outcome, **call)
+            feedback, previous_plan = [SCHEMA_MISS_LINE], None
+            _end_attempt(run, answer.stage)
             continue
         plan = answer
         if plan.full_code is not None and not request.allow_full:
-            attribution("pipeline_adapt", ledger, attempt=attempt, outcome="full_code_refused")
+            attribution("pipeline_adapt", ledger, attempt=attempt, outcome="full_code_refused", **call)
             feedback, previous_plan = ["full_code is allowed only on the second attempt; send edits instead"], None
+            _end_attempt(run, "adapter_full_code")
             continue
         attribution(
             "pipeline_adapt",
@@ -586,15 +677,22 @@ async def _attempts(
             outcome="plan",
             edits=len(plan.edits),
             full_code=plan.full_code is not None,
+            **call,
         )
 
         yield _status("checking", attempt)
         applied = apply_plan(working, plan)
         if applied.code is None:
             attribution(
-                "pipeline_check", ledger, attempt=attempt, outcome="edits_failed", edit_failures=len(applied.failures)
+                "pipeline_check",
+                ledger,
+                attempt=attempt,
+                outcome="edits_failed",
+                edit_failures=len(applied.failures),
+                edit_failure_kinds=dict(sorted(Counter(applied.kinds).items())),
             )
             feedback, previous_plan = applied.failures, plan
+            _end_attempt(run, "edit_apply")
             continue
         check = _check(applied.code, library=view.library, palette=palette, base=working)
         adaptation_lines = check.defects
@@ -609,6 +707,7 @@ async def _attempts(
         )
         if not check.may_render:
             feedback, previous_plan = check.blocking, plan
+            _end_attempt(run, "validator")
             continue
         working, previous_plan = applied.code, None
         try:
@@ -621,6 +720,7 @@ async def _attempts(
         except ValueError as exc:
             attribution("pipeline_check", ledger, attempt=attempt, outcome="loader_failed", edit_failures=0)
             feedback = [_line(f"the code could not take the data loader: {exc}")]
+            _end_attempt(run, "loader")
             continue
 
         yield _status("rendering", attempt)
@@ -651,6 +751,7 @@ async def _attempts(
         run.rendered = True
         if not report.passed_host_gates:
             feedback = [*report.blocking, *adaptation_lines]
+            _end_attempt(run, "render")
             continue
         candidate = Candidate(
             working=working,
@@ -672,18 +773,25 @@ async def _attempts(
         feedback = [*report.defects, *adaptation_lines]
         # Attempt 1 spends its feedback on the repair before any review; attempt 2 is reviewed
         # once if nothing was reviewed yet, with the advisory lines kept as gate notes.
-        if run.reviewed or not report.canvas_ok or (feedback and attempt == 1):
+        if not report.canvas_ok or (feedback and attempt == 1):
+            _end_attempt(run, "gates")
+            continue
+        if run.reviewed:
+            _end_attempt(run, "not_rereviewed")
             continue
 
         if not budget_allows(ledger, services.usage, settings):
             run.unreviewed_why = "the usage limit was reached"
+            _end_attempt(run, "budget")
             return
         if not deadline.allows(REVIEWER_P95_S):
             run.unreviewed_why = "the time limit was reached"
+            _end_attempt(run, "deadline")
             return
         yield _status("reviewing", attempt)
         candidate.render_id = services.renders.put(ctx.session.id, candidate.pngs)
         ledger.review_render_id = candidate.render_id
+        run.reviewed_attempt = attempt
         verdict = await _review(
             ctx,
             scope,
@@ -697,9 +805,11 @@ async def _attempts(
                 gate_notes=[_note(line) for line in report.advisory][:MAX_NOTES],
             ),
         )
+        review_call = _call_fields(ledger, REVIEWER_NAME)
         if verdict is None:
-            attribution("pipeline_review", ledger, attempt=attempt, verdict="unreadable")
+            attribution("pipeline_review", ledger, attempt=attempt, verdict="unreadable", **review_call)
             run.unreviewed_why = "the review answer could not be read"
+            _end_attempt(run, "reviewer_unreadable")
             return
         attribution(
             "pipeline_review",
@@ -707,13 +817,16 @@ async def _attempts(
             attempt=attempt,
             verdict="ok" if verdict.ok else "defects",
             defects=[defect.id for defect in verdict.defects],
+            **review_call,
         )
         run.reviewed = True
         candidate.reviewed_ok = verdict.ok
         if verdict.ok:
+            _end_attempt(run, "reviewer_ok")
             return
         run.review_lines = [_on_theme(defect, run.theme).as_line() for defect in verdict.defects]
         feedback = list(run.review_lines)
+        _end_attempt(run, "reviewer_defects")
 
 
 def _on_theme(defect: Defect, theme: Theme) -> Defect:

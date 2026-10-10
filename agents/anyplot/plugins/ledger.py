@@ -35,9 +35,32 @@ RequestKind = Literal["action", "text"]
 MAX_ADHOC_LEDGERS = 64
 
 
+@dataclass(frozen=True, slots=True)
+class CallFacts:
+    """The content-free facts of one model call: how it finished and the output tokens it spent."""
+
+    finish_reason: str | None
+    candidates: int = 0
+    thoughts: int = 0
+
+
+def finish_name(value: Any) -> str | None:
+    """A response's finish reason as its enum name (`MAX_TOKENS`), whether given as the enum or as text."""
+    if value is None:
+        return None
+    name = getattr(value, "name", None)
+    text = name if isinstance(name, str) else str(value)
+    return text.removeprefix("FinishReason.") or None
+
+
 @dataclass
 class RequestLedger:
-    """What one request has spent and decided."""
+    """What one request has spent and decided.
+
+    `last_calls` maps an agent name to the facts of its latest model call (written by
+    the Budget plugin), so the pipeline can tell a cut-off answer from a schema miss
+    without reading the answer.
+    """
 
     request_id: str = ""
     user_id: str = ""
@@ -56,6 +79,7 @@ class RequestLedger:
     refusal: tuple[str, str] | None = None
     error: str | None = None
     model_versions: set[str] = field(default_factory=set)
+    last_calls: dict[str, CallFacts] = field(default_factory=dict)
 
     def refuse(self, code: str, text: str) -> None:
         if self.refusal is None and self.error is None:

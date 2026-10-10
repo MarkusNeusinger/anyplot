@@ -78,6 +78,7 @@ class ScriptedLlm(BaseLlm):
 
 
 def gemini_response(item: dict[str, Any]) -> LlmResponse:
+    """A scripted answer; `finish_reason` (an enum name such as `MAX_TOKENS`) marks a cut-off one, `STOP` by default."""
     usage = types.GenerateContentResponseUsageMetadata(prompt_token_count=100, candidates_token_count=20)
     if "call" in item:
         part = types.Part(function_call=types.FunctionCall(name=item["call"], args=item.get("args", {})))
@@ -86,7 +87,10 @@ def gemini_response(item: dict[str, Any]) -> LlmResponse:
     else:
         part = types.Part(text=item["text"])
     return LlmResponse(
-        content=types.Content(role="model", parts=[part]), usage_metadata=usage, model_version="gemini-scripted"
+        content=types.Content(role="model", parts=[part]),
+        usage_metadata=usage,
+        model_version="gemini-scripted",
+        finish_reason=types.FinishReason[item.get("finish_reason", "STOP")],
     )
 
 
@@ -128,6 +132,7 @@ class FakeAnthropic:
         return "unknown"
 
     def respond(self, kwargs: dict[str, Any]) -> Message:
+        """The next scripted answer; `stop` overrides its stop reason (`max_tokens` marks a cut-off answer)."""
         kind = self.kind(kwargs)
         queue = self.script.get(kind, [])
         item = queue.pop(0) if queue else {"text": "fallback"}
@@ -152,6 +157,7 @@ class FakeAnthropic:
         else:
             block = {"type": "text", "text": item["text"]}
             stop = "end_turn"
+        stop = item.get("stop", stop)
         return Message.model_validate(
             {
                 "id": f"msg_{len(self.calls)}",

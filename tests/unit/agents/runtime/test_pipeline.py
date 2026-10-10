@@ -15,6 +15,7 @@ from agents.anyplot.pipeline import (
     Candidate,
     Run,
     SoftDeadline,
+    _check,
     finish,
     render_adapt_request,
     render_review_request,
@@ -280,3 +281,13 @@ def test_gate_notes_reach_the_reviewer_inside_tool_notes() -> None:
         "Gate notes:",
     }
     assert tool_notes(review) == ["VQ-02 (both): 2 pairs of tick labels overlap → no overlapping tick labels."]
+
+
+class TestCheck:
+    def test_an_unparseable_file_is_one_syntax_finding(self) -> None:
+        """Both validator profiles parse the code; the repair and the attribution log see the error once."""
+        check = _check("def broken(:\n", library="matplotlib", palette=[], base="x = 1\n")
+
+        assert not check.may_render
+        assert check.blocking_rules == ["syntax"]
+        assert len(check.blocking) == 1

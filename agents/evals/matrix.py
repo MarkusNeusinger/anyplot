@@ -18,7 +18,12 @@ failures by gate, validator rejections, edit-apply failures, the reviewer's verd
 LLM calls, tokens by kind, `model_version`, the cost at list price
 (`agents/evals/pricing.py`), the time to the first event, the end-to-end time, and
 the render times, read from the stream and from the content-free attribution log
-lines of that run's request ids.
+lines of that run's request ids. Since report schema 2 it also records where the run
+stopped (`stage`, the pipeline's `Stage`, and `stages` per attempt), the shipped and
+the reviewed attempt, an `attempt_log` (per attempt: the adapter's outcome, finish
+reason, output tokens and plan shape, the check with its edit-failure kinds, the
+render gates and the review verdict), every model call's finish reason and tokens
+(`calls`, counted per agent kind in `finish_reasons`), and the edit-failure kinds.
 
 Outputs, under `--out` (default `agents/evals/reports/`, git-ignored):
 
@@ -97,6 +102,7 @@ from agents.evals.report import (
     GALLERY_SIZE,
     REPORT_SCHEMA,
     SHIPPED,
+    SUPPORTED_SCHEMAS,
     Diff,
     compare,
     diff_markdown,
@@ -507,6 +513,15 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
         "png": None,
         "error": None,
         "pipeline_error": None,
+        # Schema 2: where the run stopped, attempt by attempt and call by call (all content-free).
+        "stage": None,
+        "stages": [],
+        "shipped_attempt": None,
+        "reviewed_attempt": None,
+        "attempt_log": [],
+        "calls": [],
+        "finish_reasons": {},
+        "edit_failure_kinds": {},
     }
 
 
@@ -518,12 +533,76 @@ def _number(value: Any) -> float:
     return float(value) if isinstance(value, int | float) and not isinstance(value, bool) else 0.0
 
 
+def finish_reason(value: Any) -> str:
+    """A logged finish reason by its enum name; older lines wrote `FinishReason.MAX_TOKENS`, a missing one is `unknown`."""
+    text = str(value).removeprefix("FinishReason.") if value else ""
+    return text or "unknown"
+
+
+def agent_kind(name: Any) -> str:
+    """The kind of a logged agent name: `root`, `adapter` (any library) or `reviewer`."""
+    text = str(name)
+    if text == "anyplot":
+        return "root"
+    return "adapter" if text.startswith("adapter_") else text
+
+
+def _attempt_entry(record: dict[str, Any], attempt: int) -> dict[str, Any]:
+    """The `attempt_log` entry of the current turn's attempt, appended on first use (attempts restart per turn)."""
+    turn = record["turns"]
+    log: list[dict[str, Any]] = record["attempt_log"]
+    for entry in log:
+        if entry["turn"] == turn and entry["attempt"] == attempt:
+            return entry
+    entry = {"turn": turn, "attempt": attempt}
+    log.append(entry)
+    return entry
+
+
+def _book_attempt(record: dict[str, Any], hook: str, line: dict[str, Any]) -> None:
+    """Fold one `pipeline_*` line into its attempt's entry: the per-attempt view the counters lose."""
+    entry = _attempt_entry(record, _int(line.get("attempt")))
+    if hook == "pipeline_adapt":
+        entry["adapter"] = str(line.get("outcome"))
+        entry["finish_reason"] = finish_reason(line.get("finish_reason"))
+        entry["candidates"], entry["thoughts"] = _int(line.get("candidates")), _int(line.get("thoughts"))
+        if line.get("outcome") == "plan":
+            entry["edits"], entry["full_code"] = _int(line.get("edits")), bool(line.get("full_code"))
+    elif hook == "pipeline_check":
+        entry["check"] = str(line.get("outcome"))
+        entry["edit_failure_kinds"] = dict(line.get("edit_failure_kinds") or {})
+        entry["validator"] = [str(rule) for rule in line.get("validator") or []]
+        entry["adaptation"] = [str(rule) for rule in line.get("adaptation") or []]
+    elif hook == "pipeline_render":
+        entry["render"] = {
+            "passed": bool(line.get("passed")),
+            "canvas_ok": bool(line.get("canvas_ok")),
+            "gates": [str(gate) for gate in line.get("gates") or []],
+        }
+    elif hook == "pipeline_review":
+        entry["review"] = str(line.get("verdict"))
+        entry["review_finish_reason"] = finish_reason(line.get("finish_reason"))
+
+
+def _book_stages(record: dict[str, Any], line: dict[str, Any]) -> None:
+    """The run's stage, the stage of each attempt of this turn, and the shipped and reviewed attempts."""
+    stages = [str(stage) for stage in line.get("stages") or []]
+    record["stage"] = str(line["stage"]) if line.get("stage") else None
+    record["stages"] = stages
+    record["shipped_attempt"] = _int(line.get("shipped_attempt")) or None
+    record["reviewed_attempt"] = _int(line.get("reviewed_attempt")) or None
+    for number, stage in enumerate(stages, start=1):
+        _attempt_entry(record, number)["stage"] = stage
+
+
 def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settings: "AgentSettings") -> None:
     """Add one request's attribution lines to the run record: calls, tokens, cost, and the pipeline's findings."""
     gates: Counter[str] = Counter(record["gate_failures"])
     validator: Counter[str] = Counter(record["validator_rejections"])
     adapter: Counter[str] = Counter(record["adapter_outcomes"])
     agents: Counter[str] = Counter(record["llm_calls_by_agent"])
+    kinds: Counter[str] = Counter(record["edit_failure_kinds"])
+    finishes = {kind: Counter[str](reasons) for kind, reasons in record["finish_reasons"].items()}
     versions = set(record["model_versions"])
     tokens = record["tokens"]
     for line in lines:
@@ -536,6 +615,16 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
             if line.get("model_version"):
                 versions.add(str(line["model_version"]))
             record["cost_usd"] += call_cost(settings.model, settings.location, line)
+            reason = finish_reason(line.get("finish_reason"))
+            finishes.setdefault(agent_kind(line.get("agent")), Counter())[reason] += 1
+            record["calls"].append(
+                {
+                    "turn": record["turns"],
+                    "agent": str(line.get("agent")),
+                    "finish_reason": reason,
+                    **{kind: _int(line.get(kind)) for kind in ("prompt", "cached", "candidates", "thoughts")},
+                }
+            )
         elif hook in ("data_judge", "scope_guard"):
             judge_in, judge_out = _int(line.get("judge_input")), _int(line.get("judge_output"))
             if not judge_in and not judge_out:
@@ -545,31 +634,39 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
             record["cost_usd"] += judge_cost(settings.judge_model, settings.location, judge_in, judge_out)
         elif hook == "pipeline_adapt":
             adapter[str(line.get("outcome"))] += 1
+            _book_attempt(record, hook, line)
         elif hook == "pipeline_check":
             record["edit_apply_failures"] += _int(line.get("edit_failures"))
+            kinds.update({str(kind): _int(count) for kind, count in (line.get("edit_failure_kinds") or {}).items()})
             validator.update(str(rule) for rule in line.get("validator") or [])
             if line.get("outcome") == "loader_failed":
                 validator["loader"] += 1
+            _book_attempt(record, hook, line)
         elif hook == "pipeline_render":
             gates.update(str(gate) for gate in line.get("gates") or [])
             record["render_s"].append(_number(line.get("render_s")))
             wall = line.get("wall_s")
             if isinstance(wall, dict):
                 record["render_wall_s"] += [_number(value) for value in wall.values()]
+            _book_attempt(record, hook, line)
         elif hook == "pipeline_review":
             record["reviewer"] = {"verdict": line.get("verdict"), "defects": list(line.get("defects") or [])}
+            _book_attempt(record, hook, line)
         elif hook == "pipeline_result":
             record["padded"] = bool(line.get("padded"))
             record["adaptation"] = [str(rule) for rule in line.get("adaptation") or []]
             record["advisory"] = [str(gate) for gate in line.get("advisory") or []]
             if line.get("error"):
                 record["pipeline_error"] = str(line["error"])
+            _book_stages(record, line)
         elif hook == "queue":
             record["queue_s"] = (record["queue_s"] or 0.0) + _number(line.get("waited_s"))
     record["gate_failures"] = dict(sorted(gates.items()))
     record["validator_rejections"] = dict(sorted(validator.items()))
     record["adapter_outcomes"] = dict(sorted(adapter.items()))
     record["llm_calls_by_agent"] = dict(sorted(agents.items()))
+    record["edit_failure_kinds"] = dict(sorted((kind, count) for kind, count in kinds.items() if count))
+    record["finish_reasons"] = {kind: dict(sorted(reasons.items())) for kind, reasons in sorted(finishes.items())}
     record["model_versions"] = sorted(versions)
 
 
@@ -980,6 +1077,7 @@ async def run_matrix(
                 echo(
                     f"[{index}/{len(plan)}] {case.case_id} r{repeat}: {record['status']}"
                     + (f" ({record['reason']})" if record["reason"] else "")
+                    + (f" [{record['stage']}]" if record.get("stage") else "")
                     + f", {'pass' if record['passed'] else 'fail'}, attempts {record['attempts']}, "
                     f"${record['cost_usd']:.4f}, {record['e2e_s'] or 0:.1f} s (total ${total:.4f})"
                 )
@@ -1053,13 +1151,14 @@ def write_outputs(report: dict[str, Any], config: MatrixConfig, diff: Diff | Non
 
 
 def load_baseline(path: Path) -> dict[str, Any]:
-    """A saved report to compare against; refuses another schema version."""
+    """A saved report to compare against; refuses a schema version the diff cannot read (`SUPPORTED_SCHEMAS`)."""
     try:
         baseline = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise SetupError(f"cannot read the baseline {path} ({type(exc).__name__})") from exc
-    if not isinstance(baseline, dict) or baseline.get("schema") != REPORT_SCHEMA or "summary" not in baseline:
-        raise SetupError(f"{path} is not a report of schema {REPORT_SCHEMA}")
+    if not isinstance(baseline, dict) or baseline.get("schema") not in SUPPORTED_SCHEMAS or "summary" not in baseline:
+        supported = ", ".join(str(schema) for schema in sorted(SUPPORTED_SCHEMAS))
+        raise SetupError(f"{path} is not a report of schema {supported}")
     return baseline
 
 

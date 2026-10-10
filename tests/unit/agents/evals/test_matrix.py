@@ -22,6 +22,7 @@ from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
 from agents.anyplot.render.contract import RendererUnavailable, RenderJob, RenderResult
 from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.services import Services
+from agents.anyplot.settings import AgentSettings
 from agents.evals import matrix
 from agents.evals.cases import EvalCase, load_cases, select_cases
 from agents.evals.matrix import (
@@ -114,8 +115,42 @@ async def test_two_fixtures_through_the_real_flow(
     assert bar["llm_calls"] == 4 and bar["cost_usd"] == pytest.approx(4 * CALL_COST)
     assert bar["png"] is None and bar["render_s"] == []
 
+    # Schema 2: where each run stopped, per attempt and per call, all content-free.
+    assert (scatter["stage"], scatter["stages"]) == ("reviewer_ok", ["reviewer_ok"])
+    assert (scatter["shipped_attempt"], scatter["reviewed_attempt"]) == (1, 1)
+    assert scatter["attempt_log"] == [
+        {
+            "turn": 1,
+            "attempt": 1,
+            "adapter": "plan",
+            "finish_reason": "STOP",
+            "candidates": 20,
+            "thoughts": 0,
+            "edits": len(SCATTER_PLAN["edits"]),
+            "full_code": False,
+            "check": "ok",
+            "edit_failure_kinds": {},
+            "validator": [],
+            "adaptation": [],
+            "render": {"passed": True, "canvas_ok": True, "gates": []},
+            "review": "ok",
+            "review_finish_reason": "STOP",
+            "stage": "reviewer_ok",
+        }
+    ]
+    assert scatter["finish_reasons"] == {"adapter": {"STOP": 1}, "reviewer": {"STOP": 1}, "root": {"STOP": 2}}
+    assert [call["agent"] for call in scatter["calls"]] == ["anyplot", "adapter_matplotlib", "reviewer", "anyplot"]
+    assert (bar["stage"], bar["stages"], bar["shipped_attempt"]) == ("edit_apply", ["edit_apply", "edit_apply"], None)
+    assert bar["edit_failure_kinds"] == {"zero_match": 2}
+    assert [entry["edit_failure_kinds"] for entry in bar["attempt_log"]] == [{"zero_match": 1}, {"zero_match": 1}]
+
     summary = result.report["summary"]
     assert (summary["pass_rate"], summary["accept_match_rate"]) == (0.5, 0.5)
+    assert summary["stages"] == {"edit_apply": 1, "reviewer_ok": 1}
+    assert summary["stages_not_passed"] == {"edit_apply": 1}
+    assert summary["adapter_outcomes_by_attempt"] == {"1": {"plan": 2}, "2": {"plan": 1}}
+    assert summary["shipped_from_attempt"] == {"1": 1}
+    assert result.report["schema"] == 2
     assert summary["cost_total_usd"] == pytest.approx(8 * CALL_COST)
     assert summary["cost_per_success_usd"] == pytest.approx(8 * CALL_COST)
     # The preflight renders each library's catalogue file once; then bar-grouped never reached the renderer.
@@ -511,6 +546,97 @@ def test_token_helpers_never_print_the_token(monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.setattr(matrix.subprocess, "run", failing)
     with pytest.raises(matrix.SetupError, match="exit 1"):
         matrix.gcloud_token()
+
+
+def test_load_baseline_takes_schema_1_and_2_and_refuses_others(tmp_path: Path) -> None:
+    for schema in (1, 2):
+        path = tmp_path / f"s{schema}.json"
+        path.write_text(json.dumps({"schema": schema, "stamp": {}, "summary": {}, "runs": []}))
+        assert matrix.load_baseline(path)["schema"] == schema
+    future = tmp_path / "s3.json"
+    future.write_text(json.dumps({"schema": 3, "stamp": {}, "summary": {}, "runs": []}))
+    with pytest.raises(matrix.SetupError, match="schema 1, 2"):
+        matrix.load_baseline(future)
+
+
+def test_book_attribution_keeps_the_attempt_order_and_reads_old_finish_reasons() -> None:
+    """A cut-off first answer, then a plan whose render went to the repair and shipped unreviewed."""
+    settings = AgentSettings(provider="gemini", model="gemini-3.8-flash", judge_model="gemini-3.5-flash-lite")
+    record = matrix.base_record(two_fixtures()[1], 1)
+    record["turns"] = 1
+    lines: list[dict[str, Any]] = [
+        {"hook": "model", "agent": "anyplot", "prompt": 2000, "candidates": 10, "finish_reason": "STOP"},
+        # An older log line wrote the enum's repr; the record keeps the name.
+        {
+            "hook": "model",
+            "agent": "adapter_matplotlib",
+            "candidates": 65,
+            "thoughts": 1967,
+            "finish_reason": "FinishReason.MAX_TOKENS",
+        },
+        {
+            "hook": "pipeline_adapt",
+            "attempt": 1,
+            "outcome": "truncated",
+            "finish_reason": "MAX_TOKENS",
+            "candidates": 65,
+            "thoughts": 1967,
+        },
+        {"hook": "model", "agent": "adapter_matplotlib", "candidates": 1072, "thoughts": 2124, "finish_reason": "STOP"},
+        {
+            "hook": "pipeline_adapt",
+            "attempt": 2,
+            "outcome": "plan",
+            "edits": 4,
+            "full_code": False,
+            "finish_reason": "STOP",
+        },
+        {
+            "hook": "pipeline_check",
+            "attempt": 2,
+            "outcome": "ok",
+            "edit_failures": 0,
+            "validator": [],
+            "adaptation": [],
+        },
+        {"hook": "pipeline_render", "attempt": 2, "passed": True, "canvas_ok": True, "gates": ["G3"], "render_s": 3.0},
+        {
+            "hook": "pipeline_result",
+            "status": "needs_attention",
+            "stage": "deadline",
+            "stages": ["adapter_truncated", "deadline"],
+            "shipped_attempt": 2,
+            "reviewed_attempt": None,
+            "advisory": ["G3"],
+        },
+    ]
+
+    matrix.book_attribution(record, lines, settings)
+
+    assert record["finish_reasons"] == {"adapter": {"MAX_TOKENS": 1, "STOP": 1}, "root": {"STOP": 1}}
+    assert [call["finish_reason"] for call in record["calls"]] == ["STOP", "MAX_TOKENS", "STOP"]
+    assert record["calls"][1] == {
+        "turn": 1,
+        "agent": "adapter_matplotlib",
+        "finish_reason": "MAX_TOKENS",
+        "prompt": 0,
+        "cached": 0,
+        "candidates": 65,
+        "thoughts": 1967,
+    }
+    assert record["adapter_outcomes"] == {"plan": 1, "truncated": 1}
+    first, second = record["attempt_log"]
+    assert first == {
+        "turn": 1,
+        "attempt": 1,
+        "adapter": "truncated",
+        "finish_reason": "MAX_TOKENS",
+        "candidates": 65,
+        "thoughts": 1967,
+        "stage": "adapter_truncated",
+    }
+    assert (second["edits"], second["render"]["gates"], second["stage"]) == (4, ["G3"], "deadline")
+    assert (record["stage"], record["shipped_attempt"], record["reviewed_attempt"]) == ("deadline", 2, None)
 
 
 def test_a_baseline_is_refused_for_runs_that_ended_in_an_error(tmp_path: Path) -> None:
