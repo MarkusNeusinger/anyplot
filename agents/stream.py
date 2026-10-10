@@ -19,10 +19,17 @@ reviewer answers, and `error_details` are dropped. A message is sanitised: URLs
 (with protocol-relative `//host` links), `data:`, `javascript:` and `mailto:` links,
 HTML tags (an unclosed one too) and markdown images are removed, links keep their
 text, fenced (backtick or tilde) and indented code blocks longer than 10 lines become
-`[code omitted]`, `[[spec:id]]` tokens stay only for the session's own spec, and the
-text is capped at 3,000 characters. The plot event's `changes` and
+`[code omitted]`, bare web addresses, e-mail addresses and phone numbers are removed
+(`anyplot/contact_filter.py`), `[[spec:id]]` tokens stay only for the session's own
+spec, and the text is capped at 3,000 characters. The plot event's `changes` and
 `residual_defects` are model-written too, so each goes through the same sanitiser
 and becomes one plain line.
+
+The output guard then checks the root's reply itself: a reply of more than
+`MAX_REPLY_SENTENCES` sentences (root.md asks for two to five) that never mentions
+the plot, its data or its code (`PLOT_WORDS`) becomes the fixed `out_of_scope`
+refusal. Each check writes a content-free `output_guard` attribution line (the
+verdict, the kinds of contact detail removed, the sentence count).
 
 The sanitiser is a backstop, not an HTML filter: the UI must render message and
 plot text as plain text, never as HTML or unescaped markdown.
@@ -34,8 +41,10 @@ from typing import Any
 
 from google.adk.events.event import Event
 
+from agents.anyplot.contact_filter import contact_kinds, strip_contacts
 from agents.anyplot.pipeline import STATUS_KEY
-from agents.anyplot.plugins.ledger import RequestLedger
+from agents.anyplot.plugins.ledger import RequestLedger, attribution
+from agents.anyplot.policy import refusal
 
 
 PROTOCOL = "anyplot/1"
@@ -50,6 +59,26 @@ MODEL_WRITTEN_FIELDS = ("changes", "residual_defects")
 MAX_MESSAGE_CHARS = 3_000
 MAX_CODE_LINES = 10
 CODE_OMITTED = "[code omitted]"
+MAX_REPLY_SENTENCES = 5
+"""The upper end of root.md's "two to five sentences, or a short list" rule.
+
+A reply longer than this that never mentions the plot, its data or its code is not
+a plot reply (an essay, an email, a recipe that got past the judge), so the
+translator sends the fixed out-of-scope refusal instead. A plot reply that runs a
+little long names the plot anyway, so the rule costs no legitimate reply."""
+PLOT_WORDS = re.compile(
+    r"(?i)\b(?:"
+    r"plot|chart|graph|diagram|figure|axis|axes|x-axis|y-axis|label|title|legend|colou?r|palette|marker|bar|"
+    r"line|scatter|column|row|data|dataset|binding|role|spec|theme|render|version|code|tick|scale|grid|"
+    r"series|value|font|export|download|style|"
+    r"diagramm|grafik|abbildung|achse|beschriftung|titel|legende|farbe|markierung|balken|linie|spalte|"
+    r"zeile|daten|datensatz|zuordnung|rolle|darstellung|skala|raster|wert|schrift|stil"
+    r")(?:s|es|e|en|n|er|ern|ed|d|ing|ting|ted|led|ling)?\b"
+)
+"""Words, English and German, any of which ties a reply to the plot, with their common endings
+(`colors`, `labelled`, `Spalten`, `Werte`); a longer word that only starts with one (`still`) does not count."""
+_SENTENCE_END = re.compile(r"(?<=[.!?])\s+|\n+")
+_WORD = re.compile(r"[^\W\d_]{2,}")
 
 # A fenced block (backticks or tildes, three or more, closed by the same run or the end).
 _FENCE = re.compile(r"(?ms)^[ \t]{0,3}(`{3,}|~{3,})[^\n]*\n(.*?)(?:^[ \t]{0,3}\1[ \t]*$|\Z)")
@@ -93,11 +122,22 @@ def sanitize(text: str, *, spec_id: str | None = None) -> str:
     text = _HTML.sub("", text)
     text = _HTML_UNCLOSED.sub("", text)
     text = _URL.sub("", text)
+    text = strip_contacts(text)
     text = _SPEC_TOKEN.sub(spec_token, text)
     text = _BLANK_LINES.sub("\n\n", text).strip()
     if len(text) > MAX_MESSAGE_CHARS:
         text = text[: MAX_MESSAGE_CHARS - 1].rstrip() + "…"
     return text
+
+
+def sentence_count(text: str) -> int:
+    """Sentences and list items in `text`: the pieces between sentence ends and line breaks that hold a word."""
+    return sum(1 for piece in _SENTENCE_END.split(text) if _WORD.search(piece))
+
+
+def off_topic_reply(text: str) -> bool:
+    """A reply longer than `MAX_REPLY_SENTENCES` that never mentions the plot, its data or its code."""
+    return sentence_count(text) > MAX_REPLY_SENTENCES and not PLOT_WORDS.search(text)
 
 
 def plain_line(text: str, *, spec_id: str | None = None) -> str:
@@ -178,6 +218,19 @@ class Translator:
         if self.ledger.error is not None:
             return self.error(self.ledger.error)
         clean = sanitize(text, spec_id=self.spec_id)
+        stripped = contact_kinds(text)
+        off_topic = off_topic_reply(clean)
+        if stripped or off_topic:
+            attribution(
+                "output_guard",
+                self.ledger,
+                verdict="off_topic_reply" if off_topic else "contacts_stripped",
+                contacts=stripped,
+                sentences=sentence_count(clean),
+            )
+        if off_topic:
+            self.ledger.refuse("out_of_scope", refusal("out_of_scope", self.ledger.lang))
+            return self.refusal()
         return [sse("message", {"text": clean})] if clean else []
 
     def error(self, code: str) -> list[str]:

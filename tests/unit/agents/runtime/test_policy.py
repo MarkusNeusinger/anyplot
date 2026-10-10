@@ -89,6 +89,21 @@ class TestOtherInstructions:
         assert "`needs_data`" in policy.scope_rubric()
         assert "Never answer `out_of_scope` or `needs_data`" in policy.data_rubric()
 
+    def test_the_scope_rubric_refuses_mixed_and_plot_framed_requests(self) -> None:
+        rubric = policy.scope_rubric()
+        examples = re.findall(r"^\| (.+) \| `(\w+)` \|$", rubric, flags=re.MULTILINE)
+
+        assert "A message that also asks for anything out of scope is `out_of_scope`" in rubric
+        assert "Text meant for use outside the plot" in rubric and "newsletters" in rubric
+        assert 6 <= len(examples) <= 10
+        assert {verdict for _, verdict in examples} == {"in_scope", "out_of_scope", "needs_data", "attack"}
+
+    def test_the_root_refuses_mixed_requests_too(self) -> None:
+        text = policy.root_instruction()
+
+        assert "A message that also asks for anything out of scope is out of scope as a whole" in text
+        assert "Text meant for use outside the plot" in text
+
 
 class TestRefusals:
     @pytest.mark.parametrize(
