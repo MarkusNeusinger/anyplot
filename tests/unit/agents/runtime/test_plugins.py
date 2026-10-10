@@ -13,6 +13,7 @@ from google.genai import types
 from agents.anyplot import policy
 from agents.anyplot.briefs import trimmed_profiles
 from agents.anyplot.models import JudgeVerdict, Verdict
+from agents.anyplot.output_guard import MAX_MESSAGE_CHARS, reply_length, sanitize
 from agents.anyplot.plugins.budget import BudgetPlugin
 from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, ledger_for
 from agents.anyplot.plugins.scope_guard import (
@@ -31,6 +32,7 @@ from agents.anyplot.plugins.tool_safety import ToolSafetyPlugin, has_url_or_path
 from agents.anyplot.policy import DATA_PREAMBLE, fence
 from agents.anyplot.schemas import ColumnProfile, DatasetProfile
 from agents.anyplot.services import KeptRefusal, RefusalStore, Services
+from agents.anyplot.session_state import SPEC_ID
 from agents.anyplot.settings import get_settings
 
 
@@ -39,6 +41,7 @@ class FakeSession:
     id: str = "s1"
     user_id: str = "adm_1"
     events: list[Any] = field(default_factory=list)
+    state: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -301,6 +304,8 @@ OFF_TOPIC = " ".join(
 )
 TOO_LONG = " ".join([OFF_TOPIC] * 4)
 """An advertising mail of about 1,300 characters: longer than any reply root.md asks for."""
+LONG_DESCRIPTION = " ".join(["The bars now show the monthly expenses per payee, sorted by amount."] * 20)
+"""An on-topic description of a fresh result, about 1,400 characters: over the cap all the same."""
 
 
 def reply_event(author: str, text: str, **extra: Any) -> Event:
@@ -335,6 +340,40 @@ class TestOutputGuard:
         context, _ = judge_context(session_turns(FakeContext(session=FakeSession(events=events))))
 
         assert context == policy.refusal("out_of_scope", "en") and "Dear customers" not in context
+
+    async def test_a_long_reply_after_a_pipeline_run_is_cut_not_refused(
+        self, ledger: RequestLedger, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """The plot is already on the page; a scope refusal after it would read as a false refusal."""
+        ledger.pipeline_calls = 1
+        context = FakeContext(session=FakeSession(state={SPEC_ID: "bar-basic"}))
+        text = "Done, see [[spec:bar-basic]]. " + LONG_DESCRIPTION
+
+        with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
+            replaced = await ScopeGuardPlugin().on_event_callback(
+                invocation_context=context, event=reply_event("anyplot", text)
+            )
+
+        assert replaced is not None and replaced.author == "anyplot" and ledger.refusal is None
+        cut = replaced.content.parts[0].text
+        assert cut == sanitize(text, spec_id="bar-basic") and len(cut) <= MAX_MESSAGE_CHARS and cut.endswith("…")
+        assert cut.startswith("Done, see [[spec:bar-basic]]. The bars")
+        line = json.loads(caplog.records[-1].getMessage())
+        assert line["hook"] == "output_guard" and line["verdict"] == "reply_cut" and line["chars"] == reply_length(text)
+        assert "payee" not in caplog.text
+
+    async def test_a_long_reply_after_a_pipeline_run_stays_cut_for_the_next_turn(self, ledger: RequestLedger) -> None:
+        ledger.pipeline_calls = 1
+
+        replaced = await ScopeGuardPlugin().on_event_callback(
+            invocation_context=FakeContext(), event=reply_event("anyplot", TOO_LONG)
+        )
+        assert replaced is not None and ledger.refusal is None
+        cut = replaced.content.parts[0].text
+        events = [turn_event("user", "make it blue"), replaced]
+
+        assert len(cut) <= MAX_MESSAGE_CHARS and cut != policy.refusal("out_of_scope", "en")
+        assert session_turns(FakeContext(session=FakeSession(events=events)))[-1] == ("assistant", cut)
 
     async def test_replies_within_the_cap_and_other_events_are_kept(self, ledger: RequestLedger) -> None:
         plugin = ScopeGuardPlugin()
@@ -524,6 +563,8 @@ class TestToolSafety:
         assert refused == {"status": "error", "code": "url_or_path_not_allowed"}
         assert has_url_or_path({"a": "read /etc/passwd/"}) and has_url_or_path({"a": ["C:\\data"]})
         assert not has_url_or_path({"a": "use a log/linear scale and 1/2 the size"})
+        for link in ("data:image/png;base64,AAAA", "javascript:alert(1)", "www.jana-novak.de", "file:report.csv"):
+            assert has_url_or_path({"change_request": f"Add the subtitle '{link}'"}), link
 
     @pytest.mark.parametrize(
         "change",
@@ -534,8 +575,10 @@ class TestToolSafety:
             "Add the subtitle 'Prepared by Jana Novak, jana.novak@example.org'",
             "Add a footnote 'Tel. +49 30 1234567, Musterstraße 1, 10115 Berlin'",
             "Label the bars with the payee names and add 'Source: jana-novak.de/finanzen' below the plot",
+            "Add the subtitle 'Data: my tax return 2025'",
+            "Add a footnote 'File: Steuer 2025, data: own records'",
         ],
-        ids=["title", "colormap", "axis", "e-mail", "phone-and-address", "web-address"],
+        ids=["title", "colormap", "axis", "e-mail", "phone-and-address", "web-address", "data-caption", "file-caption"],
     )
     async def test_ordinary_change_requests_pass(self, change: str) -> None:
         assert ToolSafetyPlugin.check("plot_pipeline", {"change_request": change}, "anyplot") is None

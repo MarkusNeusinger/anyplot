@@ -143,18 +143,16 @@ INSTRUCTION_LIKE = re.compile(
     r"never|do|reply|respond|answer|act|pretend|print|reveal|repeat|say|write|follow|obey)\b"
     # chat-template tokens
     r"|<\|?(?:im_start|im_end|system|endoftext)\|?>|\[/?INST\]|<<SYS>>"
-    # script links
-    r"|\b(?:javascript|vbscript):\S"
 )
 """Text addressed to an AI in a header or a cell: the dataset is refused before the judge.
 
 A deliberately narrow list: every pattern is rare in real tables, so an ordinary
 free-text column (comments, product descriptions, a job title such as "Assistant:
 Maria Lopez", a log line such as "system: started") passes; "you are" alone or "act
-as" would not. Anything subtler is the judge's. Web addresses (with or without a
-scheme), e-mail addresses and phone numbers are personal data, not instructions, and
-pass; only a `javascript:` or `vbscript:` link, which runs code where a link is
-followed, is refused with the injections."""
+as" would not. Anything subtler is the judge's. Links of any scheme (`javascript:`
+included), web addresses, e-mail addresses and phone numbers are data, not
+instructions, and pass: a cell reaches a plot only as a value of `df`, and the chat
+and the plot event strip links from what the root writes."""
 
 
 def instruction_like(parsed: ParsedDataset) -> bool:

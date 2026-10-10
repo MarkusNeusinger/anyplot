@@ -15,7 +15,7 @@ out_of_scope:
   it: "Posso aiutarti solo con questo grafico e con i dati che vuoi rappresentare: scegliere le colonne, adattare, personalizzare ed esportare il grafico e rispondere alle tue domande sul suo codice."
   pt: "Só posso ajudar com este gráfico e com os dados que você quer mostrar nele: escolher as colunas, adaptar, estilizar e exportar o gráfico e responder a perguntas sobre o código dele."
   nl: "Ik kan je alleen helpen met deze grafiek en de gegevens die je erin wilt tonen: kolommen kiezen, de grafiek aanpassen, opmaken en exporteren, en vragen over de code ervan beantwoorden."
-  pl: "Mogę ci pomóc tylko przy tym wykresie i danych, które chcesz na nim pokazać: wybór kolumn, dopasowanie, stylizacja i eksport wykresu oraz pytania o jego kod."
+  pl: "Mogę ci pomóc tylko z tym wykresem i danymi, które chcesz na nim pokazać: wybór kolumn, dostosowanie, stylizacja i eksport wykresu oraz pytania o jego kod."
 
 needs_data:
   en: "I cannot fetch data from the internet or any other source. Please get the data you want to plot yourself first, then paste it into the data panel as a table."

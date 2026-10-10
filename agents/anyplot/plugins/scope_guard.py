@@ -38,9 +38,12 @@ output guard's length cap (`output_guard.reply_too_long`, the same in every lang
 before ADK stores it. A reply over the cap is replaced, in the stored event too, by
 the fixed `out_of_scope` refusal in the ledger's language, and the ledger's refusal
 makes the translator send it as a `refusal` event; so a refused reply never reaches
-the user, the judge's next context or the root's own. A refusal writes a content-free
-`output_guard` attribution line (the reply's length); an internal failure lets the
-reply through to the translator's sanitiser.
+the user, the judge's next context or the root's own. A turn that called
+`plot_pipeline` is the exception: its reply describes a plot the user already has, so
+it is stored and sent cut at the cap, as the sanitiser cuts it, instead of being
+refused after the plot. Either case writes a content-free `output_guard` attribution
+line (`reply_too_long` or `reply_cut`, with the reply's length); an internal failure
+lets the reply through to the translator's sanitiser.
 
 The plugin never raises: an internal failure of the input side is a
 `guard_unavailable` block.
@@ -58,9 +61,10 @@ from google.adk.plugins.base_plugin import BasePlugin
 from google.genai import types
 
 from ..models import JudgeUnavailable
-from ..output_guard import reply_length, reply_too_long
+from ..output_guard import reply_length, reply_too_long, sanitize
 from ..policy import fence, refusal, scope_rubric
 from ..services import KeptRefusal, get_services
+from ..session_state import SPEC_ID
 from ..settings import get_settings
 from .ledger import RequestLedger, attribution, ledger_for
 
@@ -222,7 +226,11 @@ class ScopeGuardPlugin(BasePlugin):
 
     @staticmethod
     def _guard_reply(invocation_context: InvocationContext, event: Event) -> Event | None:
-        """The fixed `out_of_scope` refusal in place of a final reply of the root over the cap; None keeps the event."""
+        """A final reply of the root over the cap, replaced; None keeps the event.
+
+        After a `plot_pipeline` call in this turn the reply describes a plot the user already has, so it is
+        cut at the cap as the sanitiser cuts it; otherwise it becomes the fixed `out_of_scope` refusal.
+        """
         if event.author != ROOT_AGENT or event.partial or not event.content or not event.content.parts:
             return None
         if event.get_function_calls() or event.get_function_responses() or not event.is_final_response():
@@ -233,6 +241,11 @@ class ScopeGuardPlugin(BasePlugin):
             return None
         if not reply_too_long(text):
             return None
+        if ledger.pipeline_calls:
+            attribution("output_guard", ledger, verdict="reply_cut", chars=reply_length(text))
+            spec_id = invocation_context.session.state.get(SPEC_ID)
+            cut = sanitize(text, spec_id=spec_id if isinstance(spec_id, str) else None)
+            return Event(author=event.author, content=types.Content(role="model", parts=[types.Part(text=cut)]))
         attribution("output_guard", ledger, verdict="reply_too_long", chars=reply_length(text))
         fixed = refusal("out_of_scope", ledger.lang)
         ledger.refuse("out_of_scope", fixed)

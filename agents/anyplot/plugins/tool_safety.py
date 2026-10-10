@@ -2,11 +2,13 @@
 
 * `before_tool_callback`: a per-agent allowlist (the root's five session tools; none
   for the adapters and the reviewer); Pydantic validation of the arguments (ADK
-  leaves `FUNCTION_TOOL_ARG_VALIDATION` off); no URL (a scheme or `www.`) or file
-  path in any string argument; at most one `plot_pipeline` call per invocation (the
-  "one repair round" bound). Personal data in a `change_request` (a name, an address,
-  an e-mail address, a phone number, a bare web address) passes: whether plot text is
-  an advertisement or a message to other people is the scope judge's call, by intent.
+  leaves `FUNCTION_TOOL_ARG_VALIDATION` off); no link (a scheme such as `https://` or
+  `data:image`, or `www.`) or file path in any string argument, as link hygiene; at
+  most one `plot_pipeline` call per invocation (the "one repair round" bound).
+  Personal data in a `change_request` (a name, an address, an e-mail address, a phone
+  number, a web address without a scheme or `www.` such as `jana-novak.de`) passes:
+  whether plot text is an advertisement or a message to other people is the scope
+  judge's call, by intent.
 * `after_tool_callback`: a key allowlist per tool and a size cap of 8 KB (24 KB for
   `get_current_code`, 16 KB for `get_dataset_profile` and `plot_pipeline`); a result
   outside them becomes an error. The `plot_pipeline` result reaches the root with its
@@ -50,8 +52,10 @@ PIPELINE_NOTE_FIELDS = ("changes", "residual_defects")
 
 ErrorCode = str
 _URL_OR_PATH = re.compile(
-    r"(?i)\b(?:https?|ftp|file|data|javascript):|\bwww\.|(?:^|[\s'\"(])(?:~|\.{1,2})?/[\w.-]+/|[a-z]:\\|\\\\"
+    r"(?i)\b(?:https?|ftp|file|data|javascript):(?=\S)|\bwww\.|(?:^|[\s'\"(])(?:~|\.{1,2})?/[\w.-]+/|[a-z]:\\|\\\\"
 )
+"""A link (a scheme with something after its colon, or `www.`) or a file path. A scheme word before a space,
+as in the caption "Data: my tax return", is ordinary text, as in the sanitiser and the code validator."""
 
 
 class _NoArgs(BaseModel):

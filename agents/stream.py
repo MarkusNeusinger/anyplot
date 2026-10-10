@@ -24,7 +24,8 @@ phone numbers) stays: the user may plot and discuss their own table.
 
 The output guard's length cap (`output_guard.reply_too_long`) runs earlier, in the
 ScopeGuard plugin before ADK stores the root's reply: a refused reply reaches the
-translator as the ledger's `out_of_scope` refusal, so it goes out as a `refusal` event.
+translator as the ledger's `out_of_scope` refusal, so it goes out as a `refusal` event,
+and a reply after a `plot_pipeline` call arrives already cut at the cap.
 """
 
 import json

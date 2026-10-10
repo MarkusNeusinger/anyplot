@@ -13,11 +13,14 @@ text as plain text, never as HTML or unescaped markdown.
 
 `reply_too_long(text)` is the output guard's rule, the same in every language: a root
 reply longer than `MAX_MESSAGE_CHARS` characters once sanitised becomes the fixed
-`out_of_scope` refusal instead of being cut off. root.md asks for "two to five
-sentences, or a short list": about 300 to 700 characters in English, up to about 900
-in languages with longer words, and a list of eight short steps fits in about 600. The
-cap leaves a third on top of that, so a reply root.md allows is never refused, while a
-long email, essay or advertisement that got past the judge is.
+`out_of_scope` refusal instead of being cut off, unless the turn ran the plot
+pipeline: then the reply describes a plot the user already has, and it is stored as
+`sanitize` cuts it, so an on-topic description of a fresh result is never answered
+with a scope refusal. root.md asks for "two to five sentences, or a
+short list": about 300 to 700 characters in English, up to about 900 in languages with
+longer words, and a list of eight short steps fits in about 600. The cap leaves a third
+on top of that, so a reply root.md allows is never refused, while a long email, essay
+or advertisement that got past the judge is.
 
 The cap counts characters, not sentences. A sentence count needs a segmenter for every
 script (Chinese and Japanese end a sentence without a space, Thai without a mark), and
@@ -28,8 +31,8 @@ how much text one reply can carry, and the scope judge on the input side decides
 request is for. A short off-topic reply that got past the judge is not caught here.
 
 The ScopeGuard plugin runs the rule on the root's final reply before ADK stores it
-(`on_event_callback`), so a refused reply never re-enters the judge's or the root's
-context.
+(`on_event_callback`), so a refused or cut reply never re-enters the judge's or the
+root's context whole.
 
 No ADK import.
 """
@@ -38,8 +41,9 @@ import re
 
 
 MAX_MESSAGE_CHARS = 1_200
-"""The longest root message. A longer reply is refused (`reply_too_long`); the sanitiser cuts any other
-text at this length as a backstop. The plot event carries the changes and residual defects itself."""
+"""The longest root message. A longer reply is refused (`reply_too_long`), or cut after a pipeline run;
+the sanitiser cuts any other text at this length as a backstop. The plot event carries the changes and
+residual defects itself."""
 MAX_CODE_LINES = 10
 CODE_OMITTED = "[code omitted]"
 

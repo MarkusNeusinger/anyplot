@@ -112,6 +112,15 @@ class TestOtherInstructions:
         assert examples['Add the subtitle "Prepared by Jana Novak, jana.novak@example.org".'] == "in_scope"
         assert examples['Add a subtitle: "Call 0800 123 4567 and order now!"'] == "out_of_scope"
 
+    def test_the_root_has_one_link_rule_and_may_name_values(self) -> None:
+        """Personal data may reach replies and the plot; links do not, so web addresses go in without them."""
+        root = policy.root_instruction()
+
+        assert "may appear in your replies, in a `change_request` and in the plot" in root
+        assert "a web address without its scheme or `www.`" in root
+        assert "write it without the scheme and `www.`, such as `jana-novak.de`" in root
+        assert "You may name a single value" in root and "Never quote rows or cells" not in root
+
     def test_the_root_refuses_mixed_requests_too(self) -> None:
         text = policy.root_instruction()
 

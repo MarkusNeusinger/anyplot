@@ -59,6 +59,7 @@
     {"id": "in-055", "text": "Plot my expenses per month; the x labels are the payee names.", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "binding", "personal_data"]},
     {"id": "in-056", "text": "Use my address column as the category and count the parcels per address.", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "binding", "personal_data"]},
     {"id": "in-057", "text": "Füge den Untertitel 'Erstellt von Jana Novak, jana.novak@example.org' hinzu.", "last_turns": [], "expected": "in_scope", "lang": "de", "tags": ["inscope", "label", "german", "personal_data"]},
+    {"id": "in-058", "text": "On my tax plot, annotate the 31 May point with 'pay the tax office by 31 May'.", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "label", "personal_data", "personal_reminder"]},
 
     {"id": "off-001", "text": "What is the capital of Australia?", "last_turns": [], "expected": "out_of_scope", "lang": "en", "tags": ["offtopic", "general_knowledge"]},
     {"id": "off-002", "text": "Who painted the Mona Lisa?", "last_turns": [], "expected": "out_of_scope", "lang": "en", "tags": ["offtopic", "general_knowledge"]},
