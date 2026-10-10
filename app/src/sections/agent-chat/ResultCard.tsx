@@ -6,6 +6,9 @@
  * - The image is the blob URL of the theme the run rendered. The light and
  *   dark switch shows the other theme, rendering it first through the theme
  *   toggle route when the version does not have it yet (no model call).
+ * - The served PNG carries the service's footer strip ("made with any.plot()",
+ *   "anyplot.ai/<spec>"), so it is taller than the 16:9 render; the image box
+ *   takes the loaded PNG's own aspect instead of a fixed one.
  * - Copy image puts the PNG on the clipboard (`ClipboardItem`), or downloads
  *   it where the browser cannot; Download PNG and Open full size work on the
  *   theme on screen.
@@ -47,6 +50,12 @@ import { colors, fontSize, overlayButtonSx, typography } from 'src/theme';
 const CodeHighlighter = lazy(() => import('src/components/CodeHighlighter'));
 
 const TOAST_MS = 1500;
+/**
+ * The image box's aspect before the PNG has loaded: a 3200x1800 render plus the
+ * 64 px footer strip the agents service appends. Once loaded, the box takes the
+ * PNG's own aspect, so the square format (2400x2448) fits without a band.
+ */
+const PLACEHOLDER_ASPECT = '3200/1864';
 
 const STATUS_LABEL: Record<string, string> = {
   ok: 'ok',
@@ -91,6 +100,7 @@ export function ResultCard({
   const [toast, setToast] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
+  const [aspect, setAspect] = useState(PLACEHOLDER_ASPECT);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(null);
 
   // A newer version collapses this one; it stays one click away in the thread.
@@ -151,6 +161,12 @@ export function ResultCard({
 
   const handleOpen = () => {
     if (readyImage) window.open(readyImage.url, '_blank', 'noopener,noreferrer');
+  };
+
+  /** Size the box to the loaded PNG, so the strip's page colour never meets a letterbox band. */
+  const handleImageLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
+    const { naturalWidth, naturalHeight } = event.currentTarget;
+    if (naturalWidth > 0 && naturalHeight > 0) setAspect(`${naturalWidth}/${naturalHeight}`);
   };
 
   const handleDownloadFile = async (name: 'plot.py' | 'data.csv') => {
@@ -256,14 +272,16 @@ export function ResultCard({
               overflow: 'hidden',
               bgcolor: 'var(--bg-surface)',
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-              aspectRatio: '16/9',
+              aspectRatio: aspect,
             }}
+            data-testid="result-image-box"
           >
             {readyImage ? (
               <Box
                 component="img"
                 src={readyImage.url}
                 alt={`Adapted plot, version ${number}, ${shownTheme} theme`}
+                onLoad={handleImageLoad}
                 sx={{ display: 'block', width: '100%', height: '100%', objectFit: 'contain' }}
               />
             ) : image?.state === 'failed' ? (

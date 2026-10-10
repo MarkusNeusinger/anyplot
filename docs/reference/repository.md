@@ -127,7 +127,9 @@ anyplot/
 │       ├── sub_agents/                # Per-library adapters and the tool-less reviewer
 │       ├── tools/session.py           # Root's session tools and the plot_pipeline NodeTool
 │       ├── plugins/                   # ScopeGuard, Budget, ToolSafety and the request ledger
-│       ├── render/                    # Render contract, harness, host gates, PNG hardening, backends (remote, local, fake)
+│       ├── render/                    # Render contract, harness, host gates, PNG hardening, render store, backends (remote, local, fake)
+│       │   ├── watermark.py           # Footer strip on served PNGs ("made with any.plot()", "anyplot.ai/<spec-id>")
+│       │   └── fonts/                 # JetBrains Mono 2.304 Regular + Bold (SIL OFL 1.1, unmodified) and their notice
 │       ├── schemas.py                 # Pydantic contracts of the plot pipeline
 │       ├── settings.py                # AgentSettings (AGENT_* variables)
 │       ├── data/                      # Deterministic data handling, no ADK import

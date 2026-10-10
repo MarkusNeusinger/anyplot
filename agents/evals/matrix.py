@@ -64,7 +64,10 @@ stay at their production values. It sets `ENVIRONMENT=development` for the `remo
 and `local` renderers unless it runs on Cloud Run (`K_SERVICE`), because a developer's
 renderer token is accepted only in development, and defaults it to `development`
 otherwise; it never loads a `.env` file, and leaves the caller check out, because the
-requests never leave the process.
+requests never leave the process. It turns the footer strip off (`AGENT_WATERMARK=false`)
+unless the environment already sets the variable, so `renders/` and the galleries hold
+the raw renders the gates and the reviewer judged, comparable with the committed
+baselines and with runs made before the strip existed.
 """
 
 import argparse
@@ -212,11 +215,14 @@ def configure(args: argparse.Namespace, environ: MutableMapping[str, str]) -> No
     implies its provider. The environment's own `AGENT_*` values stay for everything
     no flag names. With the `remote` or `local` renderer the process runs as
     `ENVIRONMENT=development` (outside Cloud Run), whatever the shell exported: only
-    development accepts a developer's renderer token and the `local` backend.
+    development accepts a developer's renderer token and the `local` backend. The footer
+    strip is off unless the environment sets `AGENT_WATERMARK`, so the saved renders stay
+    the raw ones the baselines were made from.
     """
     environ["PYTHON_DOTENV_DISABLED"] = "1"
     environ["ADK_DISABLE_LOAD_DOTENV"] = "1"
     environ.pop("AGENT_DEV_FIXTURE", None)
+    environ.setdefault("AGENT_WATERMARK", "false")
     provider = args.provider
     if provider is None and args.model:
         provider = next((name for prefix, name in MODEL_PROVIDERS.items() if args.model.startswith(prefix)), None)
