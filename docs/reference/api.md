@@ -480,7 +480,7 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 | `POST /sessions/{sid}/messages` | `{text}` (at most 2,000 characters) or `{"action": "create_plot"}` | An SSE stream in protocol `anyplot/1`; `413 too_long` above the limit, `409 run_active` while you have a queued or running turn or a theme render in any session, `503 capacity` when the run queue is full |
 | `POST /sessions/{sid}/cancel` | None | `204`; a turn that still waits leaves the run queue |
 | `POST /sessions/{sid}/versions/{version}/render` | `{"theme": "light"}` or `{"theme": "dark"}`; `version` is 0 to 999, where 0 is the latest version | `{status, reason?, artifacts}` once the render is done (see [Theme toggle](#theme-toggle)) |
-| `GET /sessions/{sid}/artifacts/{name}?v=` | `name` is one of `plot-light.png`, `plot-dark.png`, `plot.py`, `data.csv` | The file, with `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`; any other name is `404`, and so is the PNG of a theme the version has not rendered |
+| `GET /sessions/{sid}/artifacts/{name}?v=` | `name` is one of `plot-light.png`, `plot-dark.png`, `plot.py`, `data.csv` | The file, with `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`; any other name is `404`, and so is the PNG of a theme the version has not rendered. A PNG carries the footer strip (see [Footer strip](#footer-strip)) |
 | `DELETE /sessions/{sid}` | None | `204` |
 
 Validation: `spec_id` matches `^[a-z0-9-]{1,100}$`; `library` is one of the 15
@@ -547,6 +547,18 @@ turn in the session also gets `409 run_active` while the theme renders),
 `404 not_found` for an unknown version or one whose render was swept, and
 `503 capacity` when no render slot came free within 120 seconds or the
 agents service's render store is full.
+
+### Footer strip
+
+The PNGs you download through the artifact route carry a strip below the
+plot: "made with any.plot()" on the left and "anyplot.ai/<spec-id>" on the
+right, in the theme's page colour. The strip adds 64 pixels to a 3200-pixel-wide
+plot, so a 3200x1800 render arrives as 3200x1864 and a 2400x2400 render as
+2400x2448; size an image box from the PNG itself, not from a fixed 16:9. The
+plot above the strip is the render exactly as the gates and the reviewer saw
+it, and the exported `plot.py` reproduces the plot without the strip. The
+agents service switches the strip off with `AGENT_WATERMARK=false`; the layout
+is in [Agent network design](../concepts/agent-network.md#footer-strip).
 
 ### SSE protocol `anyplot/1`
 

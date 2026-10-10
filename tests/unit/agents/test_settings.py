@@ -32,6 +32,7 @@ class TestDefaults:
         assert settings.project == "anyplot"
         assert settings.judge_timeout_s == 4.0
         assert settings.render_concurrency == 1  # serial renders: one sandbox per 4 GiB instance
+        assert settings.watermark is True  # served PNGs carry the footer strip
         assert settings.run_concurrency == 1
         assert settings.runs_per_minute == 1
         assert settings.queue_max_wait_s == 600
@@ -97,6 +98,14 @@ class TestEnvironmentOverrides:
         settings = AgentSettings()
 
         assert (settings.run_concurrency, settings.runs_per_minute, settings.queue_max_wait_s) == (2, 3, 300)
+
+    @pytest.mark.parametrize(("value", "expected"), [("false", False), ("0", False), ("true", True), ("1", True)])
+    def test_the_footer_strip_switch_comes_from_the_environment(
+        self, monkeypatch: pytest.MonkeyPatch, value: str, expected: bool
+    ) -> None:
+        monkeypatch.setenv("AGENT_WATERMARK", value)
+
+        assert AgentSettings().watermark is expected
 
     @pytest.mark.parametrize("name", ["AGENT_RUN_CONCURRENCY", "AGENT_RUNS_PER_MINUTE", "AGENT_QUEUE_MAX_WAIT_S"])
     def test_queue_settings_must_be_positive(self, monkeypatch: pytest.MonkeyPatch, name: str) -> None:

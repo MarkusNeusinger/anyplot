@@ -501,7 +501,7 @@ The `--serif` and `--sans` variables are kept as aliases to `--mono` so existing
 
 ### 5.2 Type Roles
 
-The key rule: **mono is the default, italic-ss01 is the editorial accent.** Everything is MonoLisa. Upright for structure, italic (which triggers ss01 script glyphs) for emphasis. No second font.
+The key rule: **mono is the default, italic-ss01 is the editorial accent.** Everything is MonoLisa. Upright for structure, italic (which triggers ss01 script glyphs) for emphasis. No second font. (One exception outside the site: the footer strip the agents service bakes into user plots, "made with any.plot()" and "anyplot.ai/<spec-id>", is set in JetBrains Mono, because MonoLisa's EULA covers desktop, web, application and ePub use only; see `agents/anyplot/render/watermark.py`.)
 
 | Element                | Variant           | Size                       | Weight | Notes                                                           |
 |------------------------|-------------------|----------------------------|--------|-----------------------------------------------------------------|

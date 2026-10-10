@@ -201,6 +201,8 @@ See **[Development Guide](docs/development.md)** for local setup instructions.
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
+The JetBrains Mono fonts bundled in `agents/anyplot/render/fonts/` for the footer strip of user plots are third-party files under the SIL Open Font License 1.1; see [their notice](agents/anyplot/render/fonts/README.md).
+
 ---
 
 ## Links

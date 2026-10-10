@@ -19,6 +19,7 @@ another provider, model or location.
 | `AGENT_RENDER_TOKEN` | unset | Development only: an ID token for the renderer (`gcloud auth print-identity-token`); without it the backend mints one from Application Default Credentials |
 | `AGENT_RENDER_IMAGE` | `anyplot-renderer:dev` | Image the `local` renderer runs with Docker (build it from `agents/renderer/Dockerfile`) |
 | `AGENT_RENDER_CONCURRENCY` | `1` | Renders (one theme each) that may run at the same time; serial, because one 4 GiB instance holds one sandbox safely (spikes S and S2) |
+| `AGENT_WATERMARK` | `true` | Append the footer strip ("made with any.plot()", "anyplot.ai/<spec-id>") to the PNGs the artifact route and the feedback bundle serve; `false` serves the raw renders. Gates, reviewer and `plot.py` always see the raw render |
 | `AGENT_RUN_CONCURRENCY` | `1` | Pipeline runs (whole `/messages` turns) in flight per instance; the run queue holds the rest |
 | `AGENT_RUNS_PER_MINUTE` | `1` | Runs that may start within any 60 seconds (a sliding window) |
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue; it also sizes the queue (`AGENT_RUNS_PER_MINUTE` x this / 60 entries) |
@@ -142,6 +143,12 @@ class AgentSettings(BaseSettings):
     """Theme renders that may run at the same time (`AGENT_RENDER_CONCURRENCY`), enforced for
     every backend by `render/serial.py`. Serial by default: spikes S and S2 showed one 4 GiB
     instance serves one sandbox at a time safely."""
+
+    watermark: bool = True
+    """Whether the served PNGs carry the footer strip (`AGENT_WATERMARK`, `render/watermark.py`).
+    It applies to the artifact route and the feedback bundle only; the gates, the reviewer, the
+    render store and the exported `plot.py` always work with the raw render. Off, both routes
+    serve the raw PNGs; the eval harness turns it off so its renders compare with its baselines."""
 
     run_concurrency: PositiveInt = 1
     """Pipeline runs in flight per instance (`AGENT_RUN_CONCURRENCY`); the run queue holds the rest."""

@@ -21,7 +21,9 @@
  * series family `y1, y2, ...`, an optional `series`). Plots are drawn here as
  * PNGs from the pasted data (a scatter of the bound x and y columns, in the
  * theme's colours), in the spirit of the fake render backend's fixture PNG
- * (agents/anyplot/render/backends/fake.py); no code runs.
+ * (agents/anyplot/render/backends/fake.py); no code runs. Like the agents
+ * service, the mock appends the footer strip below every plot it serves
+ * (1600x900 becomes 1600x932); catalogue previews stay without it.
  *
  * Scripted behaviour of a chat message:
  * - contains "weather" or "joke": the fixed out-of-scope refusal;
@@ -178,10 +180,115 @@ class Canvas {
   }
 }
 
-/** A plot-like PNG: axes, a light grid, and either a scatter of each series in `series` or bars. */
-function drawPlot(theme, series, { width = 1600, height = 900, firstColor = 0 } = {}) {
+// ---------------------------------------------------------------- the footer strip
+
+// The agents service appends a footer strip below every PNG it serves
+// (agents/anyplot/render/watermark.py): defined on the 3200 px canvas and scaled
+// with the width, so the mock's 1600x900 plots arrive as 1600x932. The mock draws
+// the same layout with a 5x9 pixel font instead of JetBrains Mono, which is close
+// enough to judge the result card at the served aspect.
+const FOOTER = { strip: 64, text: 22, inset: 40, capEm: 0.73, dotEm: 1.45 };
+const BRAND = [0x00, 0x9e, 0x73];
+// Rows top to bottom; rows 0-6 sit above the baseline, rows 7-8 are descenders. Bit 4 is the left column.
+const GLYPHS = {
+  a: [0, 0, 14, 1, 15, 17, 15, 0, 0],
+  b: [16, 16, 22, 25, 17, 17, 30, 0, 0],
+  c: [0, 0, 14, 16, 16, 17, 14, 0, 0],
+  d: [1, 1, 13, 19, 17, 17, 15, 0, 0],
+  e: [0, 0, 14, 17, 31, 16, 14, 0, 0],
+  f: [6, 9, 8, 28, 8, 8, 8, 0, 0],
+  g: [0, 0, 15, 17, 17, 17, 15, 1, 14],
+  h: [16, 16, 22, 25, 17, 17, 17, 0, 0],
+  i: [4, 0, 12, 4, 4, 4, 14, 0, 0],
+  j: [2, 0, 6, 2, 2, 2, 2, 18, 12],
+  k: [16, 16, 18, 20, 24, 20, 18, 0, 0],
+  l: [12, 4, 4, 4, 4, 4, 14, 0, 0],
+  m: [0, 0, 26, 21, 21, 21, 21, 0, 0],
+  n: [0, 0, 22, 25, 17, 17, 17, 0, 0],
+  o: [0, 0, 14, 17, 17, 17, 14, 0, 0],
+  p: [0, 0, 30, 17, 17, 17, 30, 16, 16],
+  q: [0, 0, 15, 17, 17, 17, 15, 1, 1],
+  r: [0, 0, 22, 25, 16, 16, 16, 0, 0],
+  s: [0, 0, 15, 16, 14, 1, 30, 0, 0],
+  t: [8, 8, 28, 8, 8, 9, 6, 0, 0],
+  u: [0, 0, 17, 17, 17, 19, 13, 0, 0],
+  v: [0, 0, 17, 17, 17, 10, 4, 0, 0],
+  w: [0, 0, 17, 17, 21, 21, 10, 0, 0],
+  x: [0, 0, 17, 10, 4, 10, 17, 0, 0],
+  y: [0, 0, 17, 17, 17, 17, 15, 1, 14],
+  z: [0, 0, 31, 2, 4, 8, 31, 0, 0],
+  '-': [0, 0, 0, 0, 14, 0, 0, 0, 0],
+  '/': [1, 2, 2, 4, 8, 8, 16, 0, 0],
+  '(': [2, 4, 8, 8, 8, 4, 2, 0, 0],
+  ')': [8, 4, 2, 2, 2, 4, 8, 0, 0],
+};
+const DOT = null;
+
+function footerHeight(width) {
+  return Math.round((FOOTER.strip * width) / 3200);
+}
+
+/** "made with any.plot()" and "anyplot.ai/<spec>" in the strip below the plot's `top` rows. */
+function drawFooter(canvas, theme, specId, top) {
+  const { ink } = THEMES[theme];
+  const scale = canvas.width / 3200;
+  const size = FOOTER.text * scale;
+  const inset = FOOTER.inset * scale;
+  const cell = Math.round(0.6 * size); // a monospaced advance
+  const dot = FOOTER.dotEm * size;
+  const side = Math.max(1, Math.round(0.185 * dot));
+  const baseline = top + Math.round((footerHeight(canvas.width) + FOOTER.capEm * size) / 2);
+  const widthOf = parts =>
+    parts.reduce((sum, part) => sum + (part === DOT ? 0.64 * dot : part[0].length * cell), 0);
+  const draw = (parts, start) => {
+    let x = start;
+    for (const part of parts) {
+      if (part === DOT) {
+        const x0 = Math.round(x + 0.251 * dot);
+        canvas.rect(x0, baseline - side, x0 + side, baseline, BRAND, 0.9);
+        x += 0.64 * dot;
+        continue;
+      }
+      const [text, bold, alpha] = part;
+      for (const ch of text) {
+        (GLYPHS[ch] ?? []).forEach((bits, row) => {
+          const mask = bold ? (bits << 1) | bits : bits << 1; // bold doubles each column
+          for (let column = 0; column < 6; column += 1) {
+            if (mask & (32 >> column)) {
+              const px = Math.round(x) + column;
+              const py = baseline - 7 + row;
+              canvas.rect(px, py, px + 1, py + 1, ink, alpha);
+            }
+          }
+        });
+        x += cell;
+      }
+    }
+  };
+  canvas.rect(0, top, canvas.width, top + 1, ink, 0.15);
+  const madeWith = [
+    ['made with ', false, 0.56],
+    ['any', true, 0.7],
+    DOT,
+    ['plot', true, 0.7],
+    ['()', false, 0.315],
+  ];
+  draw(madeWith, inset);
+  const address = [['anyplot', true, 0.7], DOT, ['ai', true, 0.7], [`/${specId}`, false, 0.56]];
+  draw(address, canvas.width - inset - widthOf(address));
+}
+
+/**
+ * A plot-like PNG: axes, a light grid, and either a scatter of each series in
+ * `series` or bars; with `footer` (a spec id), the served footer strip below it.
+ */
+function drawPlot(
+  theme,
+  series,
+  { width = 1600, height = 900, firstColor = 0, footer = null } = {}
+) {
   const { bg, ink, grid } = THEMES[theme];
-  const canvas = new Canvas(width, height, bg);
+  const canvas = new Canvas(width, footer ? height + footerHeight(width) : height, bg);
   const left = width * 0.09;
   const right = width * 0.96;
   const top = height * 0.08;
@@ -213,6 +320,7 @@ function drawPlot(theme, series, { width = 1600, height = 900, firstColor = 0 } 
       canvas.rect(x0, bottom - (i + 2) * ((bottom - top) / 9), x0 + bar, bottom - 2, c);
     });
   }
+  if (footer) drawFooter(canvas, theme, footer, height);
   return canvas.png();
 }
 
@@ -475,9 +583,10 @@ const sessions = new Map();
 let waitingTurns = 0;
 let runsInFlight = 0;
 
-function renderVersion(version, theme) {
+function renderVersion(session, version, theme) {
   version.pngs[theme] = drawPlot(theme, points(version), {
     firstColor: version.number > 1 ? 2 : 0,
+    footer: session.specId,
   });
 }
 
@@ -634,7 +743,7 @@ async function streamTurn(req, res, session, body, ref) {
         bindings: session.bindings,
         pngs: {},
       };
-      renderVersion(version, theme);
+      renderVersion(session, version, theme);
       session.versions.push(version);
       const x = columnOf(version, 'x');
       const y = yColumns(version).join(', ');
@@ -898,7 +1007,7 @@ async function route(req, res) {
     const theme = body?.theme === 'dark' ? 'dark' : 'light';
     if (!version.pngs[theme]) {
       await sleep(1500);
-      renderVersion(version, theme);
+      renderVersion(session, version, theme);
     }
     const artifacts = ['light', 'dark']
       .filter(t => version.pngs[t])

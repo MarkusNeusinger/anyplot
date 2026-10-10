@@ -567,3 +567,108 @@ class TestRenderStore:
         with pytest.raises(RenderStoreFull):
             store.put("s1", {"light": b"abcd"})
         assert len(store.sweep(10, now=100.0)) == 1
+
+
+class Composer:
+    """A `compose` callable for `RenderStore.shown_png` that counts its calls."""
+
+    def __init__(self, suffix: bytes = b"+strip") -> None:
+        self.suffix = suffix
+        self.calls: list[bytes] = []
+
+    async def __call__(self, raw: bytes) -> bytes:
+        self.calls.append(raw)
+        return raw + self.suffix
+
+
+class TestShownPng:
+    async def test_the_shown_variant_is_composed_once_and_counted(self) -> None:
+        store = RenderStore()
+        render_id = store.put("s1", {"light": b"raw"})
+        compose = Composer()
+
+        first = await store.shown_png(render_id, "s1", "light", compose)
+        second = await store.shown_png(render_id, "s1", "light", compose)
+
+        assert first == second == b"raw+strip"
+        assert compose.calls == [b"raw"]  # a hit does not compose again
+        stored = store.get(render_id, "s1")
+        assert stored is not None
+        assert stored.pngs == {"light": b"raw"}  # the raw render stays what the gates and the reviewer saw
+        assert stored.shown == {"light": b"raw+strip"}
+        assert stored.size_bytes == store.used_bytes == len(b"raw") + len(b"raw+strip")
+
+    async def test_a_missing_render_theme_or_session_composes_nothing(self) -> None:
+        store = RenderStore()
+        render_id = store.put("s1", {"light": b"raw"})
+        compose = Composer()
+
+        assert await store.shown_png(render_id, "s1", "dark", compose) is None
+        assert await store.shown_png(render_id, "s2", "light", compose) is None
+        assert await store.shown_png("unknown", "s1", "light", compose) is None
+        assert compose.calls == []
+
+    async def test_a_variant_over_the_cap_is_served_uncached(self) -> None:
+        store = RenderStore(max_bytes=10)
+        render_id = store.put("s1", {"light": b"raw"})
+        compose = Composer()
+
+        assert await store.shown_png(render_id, "s1", "light", compose) == b"raw+strip"
+        assert await store.shown_png(render_id, "s1", "light", compose) == b"raw+strip"
+
+        assert len(compose.calls) == 2
+        assert store.used_bytes == 3
+        stored = store.get(render_id, "s1")
+        assert stored is not None and stored.shown == {}
+
+    async def test_add_theme_drops_that_themes_variant_only(self) -> None:
+        store = RenderStore()
+        render_id = store.put("s1", {"light": b"raw", "dark": b"night"})
+        compose = Composer()
+        await store.shown_png(render_id, "s1", "light", compose)
+        await store.shown_png(render_id, "s1", "dark", compose)
+
+        store.add_theme(render_id, "s1", "light", b"padded")
+
+        stored = store.get(render_id, "s1")
+        assert stored is not None
+        assert stored.shown == {"dark": b"night+strip"}
+        assert store.used_bytes == len(b"padded") + len(b"night") + len(b"night+strip")
+        assert await store.shown_png(render_id, "s1", "light", compose) == b"padded+strip"
+
+    async def test_a_theme_replaced_while_composing_keeps_no_stale_variant(self) -> None:
+        store = RenderStore()
+        render_id = store.put("s1", {"light": b"old"})
+
+        async def compose(raw: bytes) -> bytes:
+            store.add_theme(render_id, "s1", "light", b"new")  # the toggle lands mid-composition
+            return raw + b"+strip"
+
+        assert await store.shown_png(render_id, "s1", "light", compose) == b"old+strip"
+        stored = store.get(render_id, "s1")
+        assert stored is not None and stored.shown == {}
+        assert store.used_bytes == len(b"new")
+
+    async def test_cached_variants_give_way_to_renders(self) -> None:
+        store = RenderStore(max_bytes=20)
+        render_id = store.put("s1", {"light": b"raw"})
+        await store.shown_png(render_id, "s1", "light", Composer())
+        assert store.used_bytes == 12
+
+        store.put("s1", {"light": b"0123456789"})  # fits only once the cached variant is gone
+
+        stored = store.get(render_id, "s1")
+        assert stored is not None and stored.shown == {}
+        assert store.used_bytes == 13
+
+    async def test_delete_and_sweep_free_the_variants_too(self) -> None:
+        store = RenderStore()
+        first = store.put("s1", {"light": b"raw"})
+        second = store.put("s2", {"dark": b"night"})
+        await store.shown_png(first, "s1", "light", Composer())
+        await store.shown_png(second, "s2", "dark", Composer())
+
+        assert store.delete_session("s1") == [first]
+        assert store.used_bytes == len(b"night") + len(b"night+strip")
+        assert store.sweep(0, now=float("inf")) == [second]
+        assert store.used_bytes == 0

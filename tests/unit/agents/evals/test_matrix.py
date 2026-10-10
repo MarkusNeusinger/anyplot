@@ -325,6 +325,16 @@ def test_configure_picks_the_provider_defaults_and_keeps_the_rest() -> None:
     assert on_cloud_run["ENVIRONMENT"] == "production"
 
 
+def test_configure_keeps_the_renders_raw_unless_the_environment_asks_for_the_strip() -> None:
+    plain: dict[str, str] = {}
+    configure(parse_args(["--renderer", "fake"]), plain)
+    assert plain["AGENT_WATERMARK"] == "false"  # renders and galleries compare with the raw baselines
+
+    asked: dict[str, str] = {"AGENT_WATERMARK": "true"}
+    configure(parse_args(["--renderer", "fake"]), asked)
+    assert asked["AGENT_WATERMARK"] == "true"
+
+
 def test_configure_refuses_contradictions() -> None:
     with pytest.raises(matrix.SetupError, match="needs --renderer remote"):
         configure(parse_args(["--renderer", "fake", "--render-url", "https://r"]), {})

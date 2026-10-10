@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PlotVersion } from 'src/hooks/useAgentSession';
 import { ResultCard, type ResultCardProps } from 'src/sections/agent-chat/ResultCard';
-import { render, screen, userEvent, waitFor } from 'src/test-utils';
+import { fireEvent, render, screen, userEvent, waitFor } from 'src/test-utils';
 
 const pngBlob = new Blob(['png'], { type: 'image/png' });
 
@@ -74,6 +74,19 @@ describe('ResultCard', () => {
     expect(screen.getByText('VQ-03 light: markers overlap the label')).toBeInTheDocument();
     expect(screen.getByTestId('result-status')).toHaveTextContent('needs attention');
     expect(screen.getByTestId('result-feedback-slot')).toBeInTheDocument();
+  });
+
+  it('sizes the image box to the loaded PNG, footer strip included', () => {
+    renderCard();
+    const box = screen.getByTestId('result-image-box');
+    expect(getComputedStyle(box).aspectRatio).toBe('3200/1864');
+
+    const image = screen.getByAltText('Adapted plot, version 2, light theme');
+    Object.defineProperty(image, 'naturalWidth', { value: 2400 });
+    Object.defineProperty(image, 'naturalHeight', { value: 2448 });
+    fireEvent.load(image);
+
+    expect(getComputedStyle(box).aspectRatio).toBe('2400/2448');
   });
 
   it('copies the PNG with the Clipboard API', async () => {
