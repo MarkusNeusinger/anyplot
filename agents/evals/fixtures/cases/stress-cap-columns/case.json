@@ -26,6 +26,7 @@
     "bytes": 204800,
     "columns": 50,
     "bindings": "complete",
-    "loader": "ok"
+    "loader": "ok",
+    "adapter_profile_trimmed": false
   }
 }

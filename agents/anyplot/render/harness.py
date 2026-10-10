@@ -25,9 +25,11 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    as the faster variant);
 4. wraps `matplotlib.figure.Figure.savefig` so that every save also writes
    `probe-<theme>.json` next to the plot: the figure size and dpi, the bounding
-   boxes in display pixels of every text the probe's own draw rendered, overlaps
-   between rendered tick labels per axis, annotations outside their axes, and the
-   number of drawn point marks. Only rendered text counts: matplotlib keeps tick
+   boxes in display pixels of the texts the probe's own draw rendered (at most
+   `PROBE_LIMIT`, the ones past a canvas edge first, with `texts_total`), overlaps
+   between rendered tick labels per axis, annotations outside their axes, the
+   number of drawn point marks (scatter offsets) and the number of vertices of the
+   visible `plot()` lines (`line_points`). Only rendered text counts: matplotlib keeps tick
    labels for locator positions outside the view interval and for hidden axes
    (`axis("off")`, a twin's), which report themselves visible but are never drawn,
    and an edge label one tick step past the view sat beyond the canvas in every
@@ -38,7 +40,8 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    stderr and the exit code stays non-zero.
 
 The probe feeds the advisory gates G3 (clipped text), G5 (annotation outside its
-axes), G7 (tick-label overlap) and G8 (more point marks than data rows). It is
+axes), G7 (tick-label overlap), G8 (more point marks than data rows) and G9 (more
+plotted points than any dataset within the parser's caps can hold). It is
 advisory because the code under test could tamper with it; the host never fails a
 render on it. The same holds for the `HARNESS` lines: the code under test shares
 stdout, so the host reads them as hints (a retry decision, a memory figure), never
@@ -112,6 +115,11 @@ def _overlaps(a, b):
     return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
 
 
+def _beyond(box, width, height):
+    """Whether a text box reaches past an edge of the `width` x `height` canvas."""
+    return box[0] < 0 or box[1] < 0 or box[2] > width or box[3] > height
+
+
 def _draw_recording_texts(figure):
     """Draw the figure once and return the texts that rendered, by id.
 
@@ -145,19 +153,24 @@ def probe(figure, dpi):
     renderer = figure.canvas.get_renderer()
     width_in, height_in = figure.get_size_inches()
     scale = (dpi or figure.dpi) / figure.dpi
-    texts = []
+    width_px, height_px = float(width_in) * float(dpi or figure.dpi), float(height_in) * float(dpi or figure.dpi)
+    measured = []
     for text in drawn.values():
-        if len(texts) >= PROBE_LIMIT:
-            break
         try:
             box = [value * scale for value in _box(text.get_window_extent(renderer))]
         except Exception:
             continue
         if all(math.isfinite(value) for value in box):  # one text at an infinite coordinate never voids the probe
-            texts.append({"kind": type(text).__name__, "box": box})
+            measured.append({"kind": type(text).__name__, "box": box})
+    # Only PROBE_LIMIT boxes are kept: the ones past a canvas edge go first, so a plot with
+    # hundreds of labels (100 bars with value labels, a 100-entry legend) still shows G3
+    # every clipped text, whatever order matplotlib drew them in.
+    measured.sort(key=lambda item: not _beyond(item["box"], width_px, height_px))
+    texts = measured[:PROBE_LIMIT]
     tick_overlaps = 0
     annotations_outside = 0
     points = 0
+    line_points = 0
     for axes in figure.get_axes():
         for axis in (axes.xaxis, axes.yaxis):
             boxes = []
@@ -184,6 +197,12 @@ def probe(figure, dpi):
                 points += len(collection.get_offsets())
             except Exception:
                 continue
+        for line in axes.get_lines():  # plot() lines and their markers: one vertex per plotted value
+            try:
+                if line.get_visible():
+                    line_points += len(line.get_xydata())
+            except Exception:
+                continue
     return {
         "figsize": [float(width_in), float(height_in)],
         "dpi": float(dpi or figure.dpi),
@@ -192,9 +211,11 @@ def probe(figure, dpi):
             round(float(height_in) * float(dpi or figure.dpi)),
         ],
         "texts": texts,
+        "texts_total": len(measured),
         "tick_overlaps": tick_overlaps,
         "annotations_outside": annotations_outside,
         "points": points,
+        "line_points": line_points,
     }
 
 

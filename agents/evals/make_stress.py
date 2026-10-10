@@ -720,7 +720,14 @@ def _cases() -> list[StressCase]:
             "unknown",
             "accepted at exactly MAX_INPUT_BYTES and MAX_COLUMNS (50) with 200-character cells and Unicode, bidi "
             "and format characters; the profile clips cells to 40 characters, so it fits the adapter untrimmed",
-            {"dataset": "ok", "bytes": MAX_INPUT_BYTES, "columns": MAX_COLUMNS, "bindings": "complete", "loader": "ok"},
+            {
+                "dataset": "ok",
+                "bytes": MAX_INPUT_BYTES,
+                "columns": MAX_COLUMNS,
+                "bindings": "complete",
+                "loader": "ok",
+                "adapter_profile_trimmed": False,
+            },
             locale="de",
         ),
         StressCase(
@@ -732,7 +739,14 @@ def _cases() -> list[StressCase]:
             "unknown",
             "the full profile (five 40-character top values and five sample cells in each of 50 columns) is "
             "over MAX_ADAPTER_PROFILE_CHARS, so the adapter gets a trimmed one that keeps every column",
-            {"dataset": "ok", "bytes": MAX_INPUT_BYTES, "columns": MAX_COLUMNS, "bindings": "complete", "loader": "ok"},
+            {
+                "dataset": "ok",
+                "bytes": MAX_INPUT_BYTES,
+                "columns": MAX_COLUMNS,
+                "bindings": "complete",
+                "loader": "ok",
+                "adapter_profile_trimmed": True,
+            },
         ),
         StressCase(
             "csv-expansion",

@@ -20,4 +20,29 @@ There are 145 cases:
 
 The tag `smoke` marks the 12 cases of `--cases smoke`: one generated case per spec, cycling through the perturbations and both libraries, plus the two hand-written cases.
 
+## Stress cases: what bounds them
+
+Measured with the static stage on 2026-10-10 (WSL2, 32 cores; the stand-ins rendered through `harness.py` with the renderer's limits: 60 s CPU, 1 GiB address space, one BLAS thread). Parse times are the in-process `parse_dataset`; the renderer's 2 vCPU are slower. "Adapter request" is the rendered adapter input in characters, catalogue code included.
+
+| Case | Bound | Measured |
+|---|---|---|
+| `cap-rows` | accepted at 204,800 bytes and 20,000 rows | parse 51 ms; adapter request 3,402 characters |
+| `cap-columns` | accepted at 50 columns, 200-character cells, Unicode and bidi | parse 32 ms; profile 10,936 characters, untrimmed |
+| `cap-profile` | `MAX_ADAPTER_PROFILE_CHARS` (16,384) trims the adapter's profile | full profile 27,907 characters, sent 7,225; adapter request 35,231 before the cap, 14,594 after |
+| `csv-expansion` | the renderer's 2 MiB `data_csv` limit | canonical `data.csv` 771,800 bytes, 3.8 times the input |
+| `over-bytes` | `413 too_long` before the parse | refused at 205,824 bytes |
+| `over-rows`, `over-columns`, `over-cell` | `422 unparseable` (`too_many_rows`, `too_many_columns`, `cell_too_long`) | refused within 10 ms |
+| `bar-100-categories` | G7 (advisory) | 99 overlapping tick-label pairs; 310 texts of the probe's 400; 1.9 s, 208 MiB |
+| `pie-30-slices` | the reviewer only | no gate fires: 92 texts, the legend covers the pie, small slices pile their labels; 1.3 s |
+| `all-nan-column`, `mixed-decimals` | `422 invalid` at `PUT /bindings` | the column is typed text |
+| `dates-centuries` | none needed | pandas 3 reads dates from 1066 to 2999 as datetime |
+| `inject-header` | the `<user_data>` fence | judge, root, adapter and reviewer see it, always fenced |
+| `inject-row4` | the `<user_data>` fence | the judge's three sample rows miss it; the adapter's five carry it, fenced |
+| `inject-long-cell` | none in text; the reviewer sees it as pixels | no prompt carries it; only `data.csv` does |
+| `compute-lorenz` | G9 (advisory) | 10,000,000 line points; 5.8 s CPU and 889 MiB peak, under the sandbox limits |
+| `compute-oversample` | G9 (advisory) | 610,000 line points; 3.5 s, 357 MiB |
+| `compute-distances` | R1: `_ArrayMemoryError` under `RLIMIT_AS` | fails after 0.6 s asking for 18.6 GiB |
+
+The other degenerate cases (`single-row`, `constant-series`, `duplicate-headers`, `empty-strings`) parse, bind and load; how the plot copes needs a model run.
+
 Fixture data is invented. Never commit a user's data here: everything under `fixtures/` ships under the repository's MIT licence. Promoted feedback cases live in the private case bucket and are synced into the git-ignored `agents/evals/.cases/`, which the image build also excludes.

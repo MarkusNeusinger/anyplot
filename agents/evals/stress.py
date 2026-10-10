@@ -47,7 +47,7 @@ from typing import Any
 
 import pandas as pd
 
-from agents.anyplot.briefs import profile_json, profile_summary, spec_brief
+from agents.anyplot.briefs import adapter_profile, profile_json, profile_summary, spec_brief
 from agents.anyplot.code.edits import MAX_NEW_LITERAL_CHARS, apply_plan, new_literal_chars
 from agents.anyplot.code.loader import loader_arguments
 from agents.anyplot.code.regions import find_regions
@@ -325,6 +325,7 @@ def _measure_prompts(
     """The sizes of what each model would read, and where a marker lands."""
     profile = parsed.profile
     columns = [column.name for column in profile.columns]
+    adapter_text, trimmed = adapter_profile(profile)
     request = AdaptRequest(
         code=view.normalised,
         profile=profile,
@@ -346,6 +347,8 @@ def _measure_prompts(
         )
     )
     measured["profile_chars"] = len(profile_json(profile))
+    measured["adapter_profile_chars"] = len(adapter_text)
+    measured["adapter_profile_trimmed"] = trimmed
     measured["judge_chars"] = len(judge_text)
     measured["adapter_prompt_chars"] = len(adapt_text)
     measured["catalogue_code_chars"] = len(view.normalised)
@@ -475,14 +478,16 @@ def static_markdown(report: dict[str, Any]) -> str:
                 lines.append(f"- `{record['case_id']}`: {line}")
         lines.append("")
     lines += [
-        "| Case | Status | Stage | Held | Bytes | Rows | Cols | Parse ms | Loader | Profile | "
+        "| Case | Status | Stage | Held | Bytes | Rows | Cols | Parse ms | Loader | Adapter profile | "
         "Adapter prompt | Judge | Stand-in gates | Render s | Peak MiB | Model |",
         "|---|---|---|---|--:|--:|--:|--:|---|--:|--:|--:|---|--:|--:|---|",
     ]
     for record in report["runs"]:
         measured = record["static"]
         standin = measured.get("standin") or {}
-        profile = _cell(measured.get("profile_chars"))
+        profile = _cell(measured.get("adapter_profile_chars"))
+        if measured.get("adapter_profile_trimmed"):
+            profile += f" (of {_cell(measured.get('profile_chars'))})"
         lines.append(
             "| "
             + " | ".join(
