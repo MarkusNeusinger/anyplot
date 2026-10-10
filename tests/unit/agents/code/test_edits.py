@@ -409,6 +409,38 @@ class TestTolerantMatching:
         """Moving `replace` back by four spaces is impossible when a line of it has none: no safe placement."""
         assert apply(("    ax.set_ylim(0, 100)\n", "ax.set_ylim(0, 50)\n")).kinds == ("zero_match",)
 
+    @pytest.mark.parametrize(
+        ("code", "find"),
+        [
+            ('ax.set_title("North America")\n', 'ax.set_title("North  America")\n'),
+            ('ax.set_title("North  America")\n', 'ax.set_title("North America")\n'),
+            ("ax.text(0, 0, '# of  runs')\n", "ax.text(0, 0, '# of runs')\n"),
+            ('ax.text(0, 0, "say \\"a  b\\"")\n', 'ax.text(0, 0, "say \\"a b\\"")\n'),
+        ],
+    )
+    def test_blanks_inside_a_string_literal_must_agree(self, code: str, find: str) -> None:
+        """A literal's text is the plot's text: other blanks inside it are other code, not a tolerable typo."""
+        working = WORKING.replace("ax.set_ylim(0, 100)\n", code)
+
+        assert apply((find, "x\n"), working=working).kinds == ("zero_match",)
+
+    def test_blanks_between_tokens_still_vary_next_to_a_string_literal(self) -> None:
+        working = WORKING.replace("ax.set_ylim(0, 100)\n", 'ax.set_title("North  America", fontsize=12)  # top\n')
+
+        result = apply(
+            ('ax.set_title("North  America",   fontsize=12) #  top\n', 'ax.set_title("Europe")\n'), working=working
+        )
+
+        assert result.failures == [] and result.tolerant == ("whitespace",)
+        assert result.code == working.replace(
+            'ax.set_title("North  America", fontsize=12)  # top\n', 'ax.set_title("Europe")\n'
+        )
+
+    def test_a_line_inside_a_multi_line_string_literal_is_never_matched_by_its_words(self) -> None:
+        working = WORKING.replace("ax.set_ylim(0, 100)\n", 'note = """first\n    second  line\n"""\n')
+
+        assert apply(("second line\n", "x\n"), working=working).kinds == ("zero_match",)
+
 
 def test_a_find_that_an_earlier_edit_already_changed_is_a_stale_match() -> None:
     result = apply(
@@ -418,3 +450,10 @@ def test_a_find_that_an_earlier_edit_already_changed_is_a_stale_match() -> None:
     assert result.kinds == ("stale_match",) and set(result.kinds) <= FAILURE_KINDS
     assert result.failures[0].startswith("edit 2/2: find matches the code only as it was before an earlier edit")
     assert "merge the two edits into one" in result.failures[0]
+
+
+def test_a_stale_find_is_recognised_in_a_tolerant_tier_too() -> None:
+    """A stale find written with other blanks than the code gets the stale-match line, not the zero-match one."""
+    result = apply(("ax.set_ylim(0, 100)", "ax.set_ylim(0, 50)"), ("ax.set_ylim(0,  100)\n", "ax.set_ylim(0, 90)\n"))
+
+    assert result.kinds == ("stale_match",)

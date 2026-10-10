@@ -22,17 +22,18 @@
   decision, adapted code may import `warnings`, `typing`, `calendar`,
   `decimal`, `fractions`, `zoneinfo`, `enum`, `dataclasses`, `operator`,
   `bisect`, `heapq`, `numbers`, `cmath`, `scipy.fft`, `scipy.linalg` and
-  `scipy.constants`. Each was walked for names that read, write, fetch or
-  evaluate, and those stay banned, as do `io`, `sys`, `pathlib`, `random`,
-  `locale` and `string`. A banned import's repair line names the module and
+  `scipy.constants`. Each was walked for names that read, write, fetch,
+  evaluate or set the process locale, and those stay banned, as do `io`, `sys`,
+  `pathlib`, `random`, `locale` and `string`. A banned import's repair line names the module and
   what to use instead, and the eval record counts banned imports by module. The
   log names a module only by a word of a fixed list (the standard library, the
   allowlists and a few known packages), and any other import as `?`, so no word
   the model writes as an import path reaches the log. (#12124)
 - **Edits match tolerantly, never fuzzily.** After an exact match, the edit
   applier tries the same text with the blanks before line breaks ignored, then
-  whole lines whose words agree once indentation and spaces are ignored, with
-  the replacement re-indented; the first tier with any match decides, and the
+  whole lines whose words agree once indentation and spaces outside string
+  literals are ignored, with the replacement re-indented; a literal's text must
+  agree exactly. The first tier with any match decides, and the
   unique-match and protected-region checks stay. A `find` that only matches the
   code before an earlier edit of the same plan gets its own repair line, and
   the eval record counts the edits each tier applied. (#12124)
@@ -58,6 +59,7 @@
   allowed module could hand out a module the import rules keep out
   (`statistics.sys.modules`, `collections._sys`, `enum.bltns`) or a private
   helper that runs `exec` (`dataclasses._FuncBuilder`); some of these passed
-  the validator before. Such names are now banned as attributes and as `from`
-  imports, and so is any private name of an imported module; no catalogue
-  file changes eligibility. (#12124)
+  the validator before. Such names are now banned as attributes, as `from`
+  imports and as components of an import path below its root, and so is any
+  private name or private submodule of an imported module; no catalogue file
+  changes eligibility. (#12124)

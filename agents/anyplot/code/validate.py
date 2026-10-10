@@ -40,7 +40,9 @@ Decisions this module takes where the design leaves room:
   `dataclasses.inspect`) or a private helper that runs `exec` (`dataclasses._FuncBuilder`).
   So the names in `ESCAPE_ATTRIBUTES` are banned as attributes on any object and as
   `from` imports, and a private name (one leading underscore) is banned on anything an
-  import bound, and as a `from` import. No catalogue file uses either.
+  import bound, and as a `from` import. Both are banned as a component of an import
+  path below its root too, where an alias would hide them from the attribute check
+  (`import scipy.fft._backend as backend`). No catalogue file uses either.
 * **Attribute names are banned outright, on any object.** `.format`, `.eval`, `.query`,
   `.show`, `.use`, `.load`, `.read_*`, `.to_csv` and the rest are findings wherever they
   appear, called or not, because the receiver's type is not knowable without executing
@@ -151,7 +153,10 @@ THEME_VARIABLE = "ANYPLOT_THEME"
 # * typing: `get_type_hints` and `ForwardRef` evaluate annotation strings, which is
 #   `eval`; re-exports `sys` and `types` (whose `CodeType` and `FunctionType` build
 #   code): all in `ESCAPE_ATTRIBUTES`.
-# * calendar: prints to standard output only; re-exports `sys`, `datetime`, `_locale`.
+# * calendar: `LocaleTextCalendar`, `LocaleHTMLCalendar` and `different_locale` set the
+#   process locale through `_locale.setlocale`, and `main` reaches them through its `-L`
+#   option, which the `locale` ban keeps out: in `ESCAPE_ATTRIBUTES`. The rest prints to
+#   standard output only; re-exports `sys`, `datetime`, `_locale`.
 # * zoneinfo: `reset_tzpath` points the time zone search at any directory,
 #   `available_timezones` lists it, `ZoneInfo.from_file` reads a file object: in
 #   `BANNED_IO`. `ZoneInfo(key)` reads the time zone database only and refuses keys
@@ -304,9 +309,10 @@ BANNED_IO: frozenset[str] = frozenset(
         "from_file",
     }
 )
-# Banned as attributes on any object and as `from` imports: modules an allowed module
-# re-exports that the import rules keep out (`statistics.sys.modules`, `enum.bltns`,
-# `dataclasses.inspect`), and the reflection the stdlib walk found (see COMMON_IMPORTS).
+# Banned as attributes on any object, as `from` imports and as an import path's component
+# below its root: modules an allowed module re-exports that the import rules keep out
+# (`statistics.sys.modules`, `enum.bltns`, `dataclasses.inspect`), and the reflection and
+# the locale setters the stdlib walk found (see COMMON_IMPORTS).
 ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
     {
         "sys",
@@ -328,6 +334,10 @@ ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
         "attrgetter",
         "methodcaller",
         "global_enum",
+        "different_locale",
+        "LocaleTextCalendar",
+        "LocaleHTMLCalendar",
+        "main",
     }
 )
 _DATA_FROM_DF = "the data comes only from df = load_user_data(), and the plot reads and writes no files"
@@ -743,14 +753,23 @@ class _Scan:
                 self._check_function_name(alias.name, alias)
 
     def _check_module_path(self, path: str, node: ast.AST) -> bool:
-        """An import path whose component is a banned name (`pandas.io`, `numpy.lib.format`).
+        """An import path whose component is a banned name (`pandas.io`, `numpy.lib.format`), or
+        below its root an escape name or a private module (`scipy.fft._backend`).
 
         The alias would hide the component from the attribute check: `common.get_handle`
-        after `import pandas.io.common as common` spells no `.io`.
+        after `import pandas.io.common as common` spells no `.io`, and `backend.set_backend`
+        after `import scipy.fft._backend as backend` no `._backend`. The root itself is
+        left to the allowlist, which keeps its message.
         """
-        for part in path.split("."):
+        for position, part in enumerate(path.split(".")):
             if part in BANNED_ATTRIBUTES or part in BANNED_IO or _BANNED_IO_PATTERN.match(part):
                 self.ban_import(path, f"reaches the banned name '{part}'", node)
+                return True
+            if position and part in ESCAPE_ATTRIBUTES:
+                self.ban_import(path, f"reaches the banned name '{part}'", node)
+                return True
+            if position and part.startswith("_"):
+                self.ban_import(path, f"reaches the private module '{part}'", node)
                 return True
         return False
 

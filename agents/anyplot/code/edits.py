@@ -21,10 +21,17 @@ a looser tier never picks among the candidates of a stricter one.
 2. `trailing_whitespace`: spaces and tabs before each line break ignored on both
    sides, and `\\r\\n` or `\\r` read as `\\n`; a `find` may still start or end inside
    a line.
-3. `whitespace`: whole lines whose words agree once indentation and runs of spaces
-   are ignored. The replacement is re-indented by the one indentation the code has
-   over `find` (or `find` over the code); when the lines do not share one such shift,
-   the tier finds nothing, because Python's indentation is meaning.
+3. `whitespace`: whole lines whose words agree once indentation and runs of blanks
+   outside string literals are ignored. A literal's text must agree exactly, so
+   `"North  America"` never matches `"North America"`, and a line that starts inside a
+   multi-line literal is never matched this way. The replacement is re-indented by
+   the one indentation the code has over `find` (or `find` over the code); when the
+   lines do not share one such shift, the tier finds nothing, because Python's
+   indentation is meaning.
+
+A `find` that matches nothing now but exactly once in the code before the plan, in
+any tier, failed because an earlier edit of the same plan changed that code
+(`stale_match`), and its repair line says so.
 
 `AppliedPlan.tolerant` names the tier of every edit a tolerant tier applied, so the
 attribution log shows how often they help.
@@ -264,7 +271,7 @@ def _apply(working: str, plan: AdaptPlan) -> AppliedPlan:
     for number, edit in enumerate(plan.edits, start=1):
         label = f"edit {number}/{total}"
         tier, matches = _locate(text, edit.find, edit.replace)
-        if not matches and text != working and len(_occurrences(working, edit.find)) == 1:
+        if not matches and text != working and len(_locate(working, edit.find, edit.replace)[1]) == 1:
             failures.append(_stale_failure(label, edit.find))
             kinds.append("stale_match")
             continue
@@ -368,16 +375,17 @@ def _whitespace_matches(text: str, find: str, replace: str) -> list[Match]:
     ends_with_break = len(find_lines) > 1 and find_lines[-1] == ""
     if ends_with_break:
         find_lines.pop()
-    find_words = [" ".join(line.split()) for line in find_lines]
+    find_words, _ = _line_words(find_lines)
     if not any(find_words):
         return []
     text_lines = _line_spans(text)
+    text_words, in_literal = _line_words([text[start:content_end] for start, content_end, _ in text_lines])
     count = len(find_lines)
     matches: list[Match] = []
     for first in range(len(text_lines) - count + 1):
-        window = text_lines[first : first + count]
-        if [" ".join(text[start:content_end].split()) for start, content_end, _ in window] != find_words:
+        if text_words[first : first + count] != find_words or any(in_literal[first : first + count]):
             continue
+        window = text_lines[first : first + count]
         indents = [
             (_indent(text[start:content_end]), _indent(line))
             for (start, content_end, _), line, words in zip(window, find_lines, find_words, strict=True)
@@ -394,6 +402,61 @@ def _whitespace_matches(text: str, find: str, replace: str) -> list[Match]:
         if len(matches) >= MAX_COUNTED_MATCHES:
             break
     return matches
+
+
+def _line_words(lines: list[str]) -> tuple[list[str], list[bool]]:
+    """Each line's words for the whitespace tier, and whether the line starts inside a string literal.
+
+    Outside string literals, indentation and trailing blanks go and every run of blanks
+    becomes one space, as `" ".join(line.split())` would; a comment collapses the same
+    way. A literal's text, quotes included, stays verbatim, so two lines that differ in
+    the blanks inside a string do not agree. The scan carries an open literal from one
+    line to the next (a triple-quoted one, or a quoted one continued by a backslash),
+    which marks the lines that start inside it.
+    """
+    words: list[str] = []
+    starts_inside: list[bool] = []
+    quote: str | None = None  # the open literal's delimiter: ', ", ''' or """
+    for line in lines:
+        starts_inside.append(quote is not None)
+        kept: list[str] = []
+        blank = False
+        position = 0
+        while position < len(line):
+            char = line[position]
+            if quote is not None:
+                if char == "\\":
+                    kept.append(line[position : position + 2])
+                    position += 2
+                elif line.startswith(quote, position):
+                    kept.append(quote)
+                    position += len(quote)
+                    quote = None
+                else:
+                    kept.append(char)
+                    position += 1
+                continue
+            if char.isspace():
+                blank = True
+                position += 1
+                continue
+            if blank and kept:
+                kept.append(" ")
+            blank = False
+            if char == "#":
+                kept.append(" ".join(line[position:].split()))
+                break
+            if char in "'\"":
+                quote = char * 3 if line.startswith(char * 3, position) else char
+                kept.append(quote)
+                position += len(quote)
+                continue
+            kept.append(char)
+            position += 1
+        if quote is not None and len(quote) == 1 and not line.endswith("\\"):
+            quote = None  # a one-quote literal ends with its line unless a backslash continues it
+        words.append("".join(kept))
+    return words, starts_inside
 
 
 def _indent(line: str) -> str:

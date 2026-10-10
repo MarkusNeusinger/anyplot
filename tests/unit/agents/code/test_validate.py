@@ -424,6 +424,19 @@ ESCAPES = [
     ("from dataclasses import _FuncBuilder\n", "banned-attribute"),
     ("import calendar\nc = calendar._locale\n", "banned-attribute"),
     ("import scipy.fft\nb = scipy.fft._backend\n", "banned-attribute"),
+    # calendar's locale classes set the process locale, which the `locale` ban keeps out.
+    ("import calendar\ncal = calendar.LocaleTextCalendar(locale='de_DE')\n", "banned-attribute"),
+    ("from calendar import LocaleHTMLCalendar\n", "banned-attribute"),
+    (
+        "import calendar\nwith calendar.different_locale('de_DE'):\n    names = list(calendar.month_abbr)\n",
+        "banned-attribute",
+    ),
+    ("import calendar\ncalendar.main(['cal', '-L', 'de_DE', '-e', 'utf-8'])\n", "banned-attribute"),
+    # A private or escape component of an import path, which an alias would hide from the attribute check.
+    ("import scipy.fft._backend as backend\nbackend.set_global_backend('scipy')\n", "banned-import"),
+    ("from scipy.fft._pocketfft import r2c\n", "banned-import"),
+    ("import scipy.linalg._decomp\n", "banned-import"),
+    ("import collections.sys as s\n", "banned-import"),
     # Routes the walk found in modules allowed before (2026-10-10): they passed the validator then.
     ('import collections\nx = collections._sys.modules["builtins"].exec("y = 1")\n', "banned-attribute"),
     ('import statistics\nx = statistics.sys.modules["os"].system("true")\n', "banned-attribute"),
@@ -443,6 +456,13 @@ class TestPureModules:
     @pytest.mark.parametrize(("body", "rule"), ESCAPES)
     def test_escape_is_caught(self, body: str, rule: str) -> None:
         assert rule in security_rules(body)
+
+    def test_a_private_module_in_an_import_path_is_named_and_logged_by_its_known_prefix(self) -> None:
+        findings = validate_security(plot("import scipy.fft._backend as backend\n"), library="matplotlib")
+
+        banned = [finding for finding in findings if finding.rule == "banned-import"]
+        assert [finding.module for finding in banned] == ["scipy.fft"]
+        assert "reaches the private module '_backend'" in banned[0].message
 
     @pytest.mark.parametrize(
         "body",
