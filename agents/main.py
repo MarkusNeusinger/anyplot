@@ -580,7 +580,10 @@ async def upload_dataset(
     except JudgeUnavailable:
         attribution("data_judge", ledger, verdict="guard_unavailable")
         raise AgentsError(503, "guard_unavailable") from None
-    services.usage.add_tokens(user, judge_budget_tokens(verdict.tokens, verdict.input_tokens, verdict.output_tokens))
+    services.usage.add_tokens(
+        user,
+        judge_budget_tokens(verdict.tokens, verdict.input_tokens, verdict.output_tokens, get_settings().judge_model),
+    )
     attribution(
         "data_judge",
         ledger,

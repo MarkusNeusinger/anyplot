@@ -108,7 +108,9 @@ class ScopeGuardPlugin(BasePlugin):
             ledger.fail("guard_unavailable")
             attribution("scope_guard", ledger, verdict="guard_unavailable")
             return _withheld()
-        weighted = judge_budget_tokens(verdict.tokens, verdict.input_tokens, verdict.output_tokens)
+        weighted = judge_budget_tokens(
+            verdict.tokens, verdict.input_tokens, verdict.output_tokens, settings.judge_model
+        )
         ledger.judge_tokens += verdict.tokens
         ledger.budget_tokens += weighted
         services.usage.add_tokens(user, weighted)

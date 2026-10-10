@@ -14,6 +14,7 @@ from agents.anyplot.plugins.budget import BudgetPlugin
 from agents.anyplot.plugins.ledger import (
     BUDGET_WEIGHTS,
     CURRENT_LEDGER,
+    JUDGE_OUTPUT_WEIGHTS,
     RequestLedger,
     budget_allows,
     budget_tokens,
@@ -199,6 +200,11 @@ class TestBudget:
         for model in ("claude-haiku-5-5", "gemini-3.8-flash"):
             price = pricing.price_of(model)
             assert BUDGET_WEIGHTS["output"] == pytest.approx(price.output / price.input)
+        # The judges' output weighs its own model's ratio: Gemini 3.5 Flash-Lite is 8.33, not 5.
+        for model in ("claude-haiku-5-5", "gemini-3.5-flash-lite"):
+            price = pricing.price_of(model)
+            assert JUDGE_OUTPUT_WEIGHTS[model] == pytest.approx(price.output / price.input)
+        assert set(JUDGE_OUTPUT_WEIGHTS) == {"claude-haiku-5-5", "gemini-3.5-flash-lite"}  # the two judge models
 
     def test_a_warm_two_attempt_run_books_about_half_its_plain_tokens(self) -> None:
         """The rerun's median reviewed run with two adapter attempts (violin-basic-matplotlib-n12, repeat 2).
@@ -219,7 +225,9 @@ class TestBudget:
         assert weighted < get_settings().request_token_budget / 4
 
     def test_a_judge_verdict_is_weighted_by_its_split(self) -> None:
-        assert judge_budget_tokens(1_140, 1_081, 59) == 1_081 + 59 * 5
+        assert judge_budget_tokens(1_140, 1_081, 59, "claude-haiku-5-5") == 1_081 + 59 * 5
+        assert judge_budget_tokens(1_140, 1_081, 59, "gemini-3.5-flash-lite") == 1_081 + round(59 * 25 / 3)
+        assert judge_budget_tokens(1_140, 1_081, 59) == 1_081 + 59 * 5  # unknown judge: the agents' ratio
         assert judge_budget_tokens(42, 0, 0) == 42  # no split: the plain total
 
     async def test_halts_the_root_only(self, ledger: RequestLedger, services: Services, monkeypatch) -> None:

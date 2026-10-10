@@ -22,7 +22,8 @@
   80,000 to 160,000, about 36 % above the costliest reviewed run simulated
   cold with a second review (about 115,000, or 117,300 with three attempts),
   and the user-day and global-day budgets double to 2,000,000 and 6,000,000:
-  about 26 cold runs per user, so the 40-run cap binds first. A review starts
+  about 54 warm runs per user, so the 40-run cap binds first, or about 26
+  when every request starts cold. A review starts
   only while 35,000 are left for it and the root's closing reply, so a tight
   budget skips the review instead of answering a shipped plot with the
   usage-limit refusal. The `done` event keeps the plain count. (#12122)

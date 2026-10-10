@@ -82,10 +82,12 @@ class TestOtherInstructions:
         assert rows == {"Title": 12, "Axis labels": 10, "Tick labels": 8, "Legend": 8}
         assert "| Canvas (16:9) | `figsize=(8, 4.5)` `dpi=400` |" in source(STYLE)
         text = policy.reviewer_instruction()
-        assert "title at 12 pt, axis titles at 10 pt, and tick labels, legend text and annotations at 8 pt" in text
+        assert "the title at 12 pt, axis titles at 10 pt, tick labels and legend text at 8 pt" in text
         pixels = [round(points * 400 / 72) for points in (rows["Title"], rows["Axis labels"], rows["Tick labels"])]
         assert f"(about {pixels[0]}, {pixels[1]} and {pixels[2]} px)" in text
-        assert "never report a size the table allows" in text
+        assert "Text at or above these sizes is legible and never a defect" in text
+        # Smaller text is judged by readability, not rejected by size: the style guide allows deviations.
+        assert "never for its size alone" in text and "it has no annotation row" in text
 
     def test_root_lists_the_fixed_refusals(self) -> None:
         text = policy.root_instruction()

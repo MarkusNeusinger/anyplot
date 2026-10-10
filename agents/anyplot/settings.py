@@ -26,7 +26,7 @@ another provider, model or location.
 | `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 to measure no repair or a second repair round |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request (the `RunConfig` cap) |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `160000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
-| `AGENT_DAILY_TOKEN_BUDGET` | `2000000` | Cost-weighted tokens per user and day, weighted the same way: about 54 median runs on a warm cache or 26 on a cold one, so the run cap binds first |
+| `AGENT_DAILY_TOKEN_BUDGET` | `2000000` | Cost-weighted tokens per user and day, weighted the same way: about 54 median runs on a warm cache, where the run cap binds first, and about 26 for a user whose every request starts cold |
 | `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
 | `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `6000000` | Cost-weighted tokens per day across all users, three users at their daily budget; reaching it pauses the service |
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per render, host-enforced |
@@ -189,8 +189,9 @@ class AgentSettings(BaseSettings):
 
     daily_token_budget: PositiveInt = 2_000_000
     """Cost-weighted tokens per user and day (`AGENT_DAILY_TOKEN_BUDGET`), weighted like the request
-    budget: about 54 median runs with a warm cache and about 26 with a cold one (77,700 each), so
-    the 40 runs of `daily_pipeline_runs` bind first on a normal day."""
+    budget: about 54 median runs with a warm cache, where the 40 runs of `daily_pipeline_runs`
+    bind first, and about 26 for a user whose every request starts cold (77,700 each), where
+    this budget binds."""
 
     daily_pipeline_runs: PositiveInt = 40
     """Pipeline runs per user and day (`AGENT_DAILY_PIPELINE_RUNS`)."""
