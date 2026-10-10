@@ -19,9 +19,10 @@ is light). It runs at most two attempts:
 4. **review**: at most once, on the first render that passes the host gates on the
    exact canvas; the reviewer agent sees the rendered theme's PNG, so each of its
    image defects is filed under that theme, whatever theme the reviewer named;
-5. **repair**: when attempt 1 left feedback (failed edits, validator findings, a
-   failed render, gate defects, reviewer defects), attempt 2 gets it, with a full
-   file allowed.
+5. **repair**: when attempt 1 left feedback (an answer that missed the schema or was
+   cut off at the output limit, each with its own line, failed edits, validator
+   findings, a failed render, gate defects, reviewer defects), attempt 2 gets it,
+   with a full file allowed.
 
 The other theme of a finished version is rendered later by the theme toggle
 (`theme_render.py`) from the stored run form, without any model call.
@@ -139,7 +140,20 @@ BLOCKING_RULES = frozenset({"placeholder-count", "placeholder-use", "syntax", "s
 """ADAPTATION findings that keep the code from running: without one placeholder there is no loader."""
 ADAPTATION_IDS = {"rng": "DQ-03", "literal-data": "DQ-03", "palette-prefix": "VQ-07"}
 """The rubric id an ADAPTATION finding is reported under as a defect line."""
-SCHEMA_MISS_LINE = "the previous answer did not match the plan schema; answer with edits, title and changes"
+# Feedback only ever reaches attempt 2, which allows a full file, so the lines may say so.
+SCHEMA_MISS_LINE = (
+    "the previous answer did not match the plan schema → answer with one JSON object: edits or full_code "
+    "(this attempt allows a full file), title and changes, each within its limits"
+)
+CUT_OFF_LINE = (
+    "the previous answer was cut off at the output limit before the plan was complete → send a shorter plan: "
+    "fewer and shorter edits, or full_code when the edits would be long (this attempt allows a full file). "
+    "Likely cause: a long plan, or long reasoning before it."
+)
+FULL_CODE_REFUSED_LINE = (
+    "the previous answer sent full_code, which the first attempt does not allow → this attempt allows edits or "
+    "full_code"
+)
 
 Stage = Literal[
     "budget",
@@ -181,6 +195,11 @@ class AdaptMiss:
     @property
     def stage(self) -> Stage:
         return "adapter_truncated" if self.outcome == "truncated" else "adapter_schema"
+
+    @property
+    def line(self) -> str:
+        """The repair's feedback line: a cut-off answer needs a shorter plan, a schema miss the schema."""
+        return CUT_OFF_LINE if self.outcome == "truncated" else SCHEMA_MISS_LINE
 
 
 class SoftDeadline:
@@ -661,13 +680,13 @@ async def _attempts(
         call = _call_fields(ledger, adapter)
         if isinstance(answer, AdaptMiss):
             attribution("pipeline_adapt", ledger, attempt=attempt, outcome=answer.outcome, **call)
-            feedback, previous_plan = [SCHEMA_MISS_LINE], None
+            feedback, previous_plan = [answer.line], None
             _end_attempt(run, answer.stage)
             continue
         plan = answer
         if plan.full_code is not None and not request.allow_full:
             attribution("pipeline_adapt", ledger, attempt=attempt, outcome="full_code_refused", **call)
-            feedback, previous_plan = ["full_code is allowed only on the second attempt; send edits instead"], None
+            feedback, previous_plan = [FULL_CODE_REFUSED_LINE], None
             _end_attempt(run, "adapter_full_code")
             continue
         attribution(

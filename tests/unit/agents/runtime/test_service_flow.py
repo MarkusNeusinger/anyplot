@@ -220,7 +220,7 @@ async def test_plan_that_fails_its_schema_is_repaired_without_content_in_logs(
     client: httpx.AsyncClient, swap_models, provider: str, caplog: pytest.LogCaptureFixture
 ) -> None:
     too_many_changes = {**SCATTER_PLAN, "changes": [f"{SCHEMA_CANARY} {number}" for number in range(6)]}
-    swap_models(provider, default_script(plans=[too_many_changes, SCATTER_PLAN]))
+    fake = swap_models(provider, default_script(plans=[too_many_changes, SCATTER_PLAN]))
     sid = await open_session(client)
 
     events = await create_plot(client, sid)
@@ -230,6 +230,19 @@ async def test_plan_that_fails_its_schema_is_repaired_without_content_in_logs(
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], plot["attempts"]) == ("ok", 2)
     assert not any(SCHEMA_CANARY in record.getMessage() for record in caplog.records)
+    second = adapter_inputs(fake)[1]
+    assert "did not match the plan schema" in second and "this attempt allows a full file" in second
+    assert "cut off at the output limit" not in second
+
+
+def adapter_inputs(fake: object) -> list[str]:
+    """The text every adapter request carried, in order, for either provider's fake."""
+    if isinstance(fake, ScriptedLlm):
+        requests = [request for request in fake.requests if (request.config.labels or {})["agent_kind"] == "adapter"]
+        return ["".join(part.text or "" for part in request.contents[-1].parts or []) for request in requests]
+    assert isinstance(fake, FakeAnthropic)
+    calls = [call for call in fake.calls if FakeAnthropic.kind(call) == "adapter"]
+    return [json.dumps(call["messages"], ensure_ascii=False, default=str) for call in calls]
 
 
 def attribution_lines(caplog: pytest.LogCaptureFixture, hook: str) -> list[dict[str, Any]]:
@@ -274,6 +287,54 @@ async def test_the_attribution_log_names_the_stage_of_every_attempt(
     models = attribution_lines(caplog, "model")
     assert [line["finish_reason"] for line in models if line["agent"] == "adapter_matplotlib"] == ["MAX_TOKENS", "STOP"]
     assert not any("study_ho" in record.getMessage() for record in caplog.records)
+
+
+# Claude's forced tool input cut off to `{}`: schema-valid (every AdaptPlan field has a default), still not a plan.
+CUT_OFF_EMPTY = {
+    "gemini": {"text": "", "finish_reason": "MAX_TOKENS"},
+    "anthropic-vertex": {"json": {}, "stop": "max_tokens"},
+}
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+@pytest.mark.parametrize("cut_off", [CUT_OFF, CUT_OFF_EMPTY], ids=["partial", "empty"])
+async def test_a_cut_off_answer_gets_its_own_repair_line(
+    client: httpx.AsyncClient,
+    swap_models,
+    provider: str,
+    cut_off: dict[str, dict[str, Any]],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    script = default_script()
+    script["adapter"] = [cut_off[provider], {"json": SCATTER_PLAN}]
+    fake = swap_models(provider, script)
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    assert (plot["status"], plot["attempts"]) == ("ok", 2)
+    second = adapter_inputs(fake)[1]
+    assert "cut off at the output limit" in second and "send a shorter plan" in second
+    assert "did not match the plan schema" not in second
+    assert [line["outcome"] for line in attribution_lines(caplog, "pipeline_adapt")] == ["truncated", "plan"]
+
+
+async def test_a_full_file_on_attempt_1_is_refused_and_attempt_2_may_send_one(
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    fake = swap_models("gemini", default_script(plans=[{"full_code": "x = 1\n", "changes": []}, SCATTER_PLAN]))
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    assert (plot["status"], plot["attempts"]) == ("ok", 2)
+    second = adapter_inputs(fake)[1]
+    assert "which the first attempt does not allow" in second and "this attempt allows edits or full_code" in second
+    assert "send edits instead" not in second  # the repair may send a full file; the old line said otherwise
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert result["stages"] == ["adapter_full_code", "reviewer_ok"]
 
 
 async def test_failed_edits_are_logged_by_kind_without_their_text(
