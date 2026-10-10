@@ -39,7 +39,7 @@ from agents.evals.matrix import (
     parse_events,
     run_matrix,
 )
-from agents.evals.report import Flip
+from agents.evals.report import Flip, summarize, summary_markdown
 from agents.main import Runtime
 
 from ..runtime.fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK
@@ -692,6 +692,35 @@ def test_book_attribution_keeps_the_attempt_order_and_reads_old_finish_reasons()
     }
     assert (second["edits"], second["render"]["gates"], second["stage"]) == (4, ["G3"], "deadline")
     assert (record["stage"], record["shipped_attempt"], record["reviewed_attempt"]) == ("deadline", 2, None)
+
+
+def test_book_attribution_counts_answers_that_failed_their_schema_by_rule() -> None:
+    settings = AgentSettings(provider="gemini", model="gemini-3.8-flash", judge_model="gemini-3.5-flash-lite")
+    record = matrix.base_record(two_fixtures()[1], 1)
+    lines: list[dict[str, Any]] = [
+        {"hook": "answer_schema", "agent": "adapter_seaborn", "outcome": "repaired", "errors": ["changes:too_long"]},
+        {
+            "hook": "answer_schema",
+            "agent": "reviewer",
+            "outcome": "repaired",
+            "errors": ["defects.0.observed:string_too_long", "defects.3.target:string_too_long"],
+        },
+        {"hook": "answer_schema", "agent": "reviewer", "outcome": "refused", "errors": ["answer:json_invalid"]},
+    ]
+
+    matrix.book_attribution(record, lines, settings)
+
+    assert record["answer_outcomes"] == {"adapter repaired": 1, "reviewer refused": 1, "reviewer repaired": 1}
+    assert record["answer_rules"] == {
+        "adapter changes:too_long": 1,
+        "reviewer answer:json_invalid": 1,
+        "reviewer defects.*.observed:string_too_long": 1,
+        "reviewer defects.*.target:string_too_long": 1,
+    }
+    summary = summarize([record, record])
+    assert summary["answer_outcomes"]["reviewer repaired"] == 2
+    page = summary_markdown({"schema": 2, "stamp": {}, "summary": summary, "runs": []})
+    assert "| Answer rule, reviewer defects.*.observed:string_too_long | 2 |" in page
 
 
 def test_a_baseline_is_refused_for_runs_that_ended_in_an_error(tmp_path: Path) -> None:

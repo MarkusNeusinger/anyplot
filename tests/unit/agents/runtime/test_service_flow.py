@@ -235,8 +235,9 @@ async def test_plan_that_fails_its_schema_is_repaired_without_content_in_logs(
     client: httpx.AsyncClient, swap_models, provider: str, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
-    too_many_changes = {**SCATTER_PLAN, "changes": [f"{SCHEMA_CANARY} {number}" for number in range(6)]}
-    fake = swap_models(provider, default_script(plans=[too_many_changes, SCATTER_PLAN]))
+    # An empty `find` breaks the edit contract, which the guard never mends.
+    empty_find = {**SCATTER_PLAN, "edits": [{"find": "", "replace": SCHEMA_CANARY}]}
+    fake = swap_models(provider, default_script(plans=[empty_find, SCATTER_PLAN]))
     sid = await open_session(client)
 
     events = await create_plot(client, sid)
@@ -249,8 +250,35 @@ async def test_plan_that_fails_its_schema_is_repaired_without_content_in_logs(
     second = adapter_inputs(fake)[1]
     assert "did not match the plan schema" in second and "this attempt allows a full file" in second
     assert "cut off at the output limit" not in second
+    (refused,) = attribution_lines(caplog, "answer_schema")
+    assert (refused["outcome"], refused["errors"]) == ("refused", ["edits.0.find:string_too_short"])
     (result,) = attribution_lines(caplog, "pipeline_result")
     assert result["stages"] == ["adapter_schema", "reviewer_ok"]
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+async def test_formal_misses_are_mended_instead_of_costing_a_repair_or_the_review(
+    client: httpx.AsyncClient, swap_models, provider: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Six change notes and a verdict that says ok next to an over-long defect: both are read, not discarded."""
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    six_changes = {**SCATTER_PLAN, "changes": [f"{SCHEMA_CANARY} {number}" for number in range(6)]}
+    long_defect = {**VERDICT_REJECT["defects"][0], "observed": f"{SCHEMA_CANARY} " + "markers look small " * 15}
+    script = default_script(verdict={"ok": True, "defects": [long_defect]}, plans=[six_changes, SECOND_PLAN])
+    swap_models(provider, script)
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    assert plot["attempts"] == 2  # the review on attempt 1 rejected, so the repair ran
+    repaired = attribution_lines(caplog, "answer_schema")
+    assert [(line["agent"], line["outcome"], line["errors"]) for line in repaired] == [
+        ("adapter_matplotlib", "repaired", ["changes:too_long"]),
+        ("reviewer", "repaired", ["defects.0.observed:string_too_long"]),
+    ]
+    reviews = attribution_lines(caplog, "pipeline_review")
+    assert [(line["attempt"], line["verdict"], line["defects"]) for line in reviews][0] == (1, "defects", ["VQ-03"])
+    assert not any(SCHEMA_CANARY in record.getMessage() for record in caplog.records)
 
 
 def adapter_inputs(fake: object) -> list[str]:

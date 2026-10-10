@@ -12,7 +12,8 @@ record is one case and repeat (see `matrix.base_record` for its fields).
 `shipped_attempt`, `reviewed_attempt`, `attempt_log`, `calls`, `finish_reasons`,
 `edit_failure_kinds`), splits the adapter outcome `truncated` (an answer cut off at
 the output limit) from `schema`, and counts an unparseable file as one `syntax`
-validator rejection instead of two. Every reader here takes a schema-1 report too:
+validator rejection instead of two; later schema-2 runs also count the answers that
+failed their schema (`answer_outcomes`, `answer_rules`). Every reader here takes a schema-1 report too:
 a field it lacks reads as empty, so a schema-1 baseline still diffs against a
 schema-2 run (`SUPPORTED_SCHEMAS`).
 
@@ -177,6 +178,8 @@ def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
         "adapter_outcomes_by_attempt": _adapter_by_attempt(runs),
         "edit_apply_failures": sum(int(run.get("edit_apply_failures") or 0) for run in runs),
         "edit_failure_kinds": _counter(runs, "edit_failure_kinds"),
+        "answer_outcomes": _counter(runs, "answer_outcomes"),
+        "answer_rules": _counter(runs, "answer_rules"),
         "finish_reasons": _finish_reasons(runs),
         "stages": _values(runs, "stage"),
         "stages_not_passed": _values([run for run in runs if not run.get("passed")], "stage"),
@@ -458,6 +461,8 @@ def summary_markdown(report: dict[str, Any], diff: Diff | None = None) -> str:
             for name, count in (summary.get("edit_failure_kinds") or {}).items()
         ),
         *(["Reviewer " + name, str(count)] for name, count in (summary.get("reviewer") or {}).items()),
+        *(["Answer " + name, str(count)] for name, count in (summary.get("answer_outcomes") or {}).items()),
+        *(["Answer rule, " + name, str(count)] for name, count in (summary.get("answer_rules") or {}).items()),
         *(
             [f"Finish {kind} {reason}", str(count)]
             for kind, reasons in (summary.get("finish_reasons") or {}).items()
