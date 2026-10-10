@@ -569,7 +569,7 @@ is in [Agent network design](../concepts/agent-network.md#footer-strip).
 | `status` | `{step, attempt}` for a pipeline step: `adapting`, `checking`, `rendering`, `reviewing`, or `repairing` |
 | `message` | `{text}` |
 | `plot` | `{status, reason, attempts, artifacts, changes, residual_defects, version}`; `version` only on `ok` and `needs_attention` |
-| `refusal` | `{code, text}` |
+| `refusal` | `{code, text}`; `code` is `out_of_scope`, `needs_data` (the request needs data the service would have to fetch), `unsupported_content` or `budget`, and `text` is the fixed reply for it |
 | `error` | `{code, ref}`; `code` is `capacity` (also when the turn waited the run queue's maximum of 600 seconds, or the BFF's turn cap ran out while it waited), `deadline`, `guard_unavailable`, `upstream`, or `internal`; `ref` is the request id |
 | `done` | `{llm_calls, tokens}` |
 
