@@ -286,14 +286,14 @@ class Settings(BaseSettings):
     above the agents service's own 180 s request deadline, so its `deadline`
     error arrives before the BFF gives up on the stream."""
 
-    agent_turn_max_s: int = 590
+    agent_turn_max_s: int = 890
     """Hard wall-clock cap in seconds on one relayed chat turn, queue wait
-    included. Keep it below anyplot-api's Cloud Run `--timeout` (600 s in
+    included. Keep it below anyplot-api's Cloud Run `--timeout` (900 s in
     `api/cloudbuild.yaml`), so Cloud Run never cuts a stream without `error`
     and `done`. A turn still queued when less than `agent_request_timeout_s`
     plus the queue's 15 s heartbeat is left ends with `capacity` and leaves the
-    queue before it spends a token, so at the defaults a turn waits at most
-    about 385 s through the BFF, not the agents service's 600 s maximum."""
+    queue before it spends a token; at the defaults the agents service's full
+    600 s queue maximum plus its 180 s run fit inside the cap."""
 
     # =============================================================================
     # CORS
