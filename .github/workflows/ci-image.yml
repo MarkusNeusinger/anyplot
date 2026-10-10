@@ -816,10 +816,11 @@ jobs:
 
       # Pins the runtime stage's COPY list: the files the service reads off disk
       # next to its modules (agents/anyplot/policy.py, render/watermark.py), and
-      # the module the remote backend shares with the renderer. An import already
-      # needs all of them today; this keeps a future lazy read from slipping out
-      # of the image unnoticed. tests/unit/agents/test_image.py holds the same list
-      # against the Dockerfile and the root .dockerignore.
+      # the module the remote backend shares with the renderer. The Dockerfile's
+      # build check already reads all of them today (the import plus the two judge
+      # rubrics, which the service reads on first use); this keeps a future lazy
+      # read from slipping out of the image unnoticed. tests/unit/agents/test_image.py
+      # holds the same list against the Dockerfile and the root .dockerignore.
       - name: The image holds what the service reads, and not the eval cases
         if: steps.check.outputs.should_build == 'true'
         run: |

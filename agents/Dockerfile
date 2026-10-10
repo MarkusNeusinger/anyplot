@@ -60,8 +60,8 @@ COPY --from=builder --chown=appuser:appuser /app/.venv ./.venv
 #   `prompts/` (agents/anyplot/policy.py): the style guide, every library file and
 #   three excerpts cut out by heading.
 #
-# tests/unit/agents/test_image.py holds this list against every non-Python file an
-# import of `agents.main` opens, and against the root `.dockerignore`.
+# tests/unit/agents/test_image.py holds this list against every non-Python file the
+# service reads, and against the root `.dockerignore`.
 COPY --chown=appuser:appuser agents/ ./agents/
 COPY --chown=appuser:appuser core/ ./core/
 COPY --chown=appuser:appuser prompts/default-style-guide.md prompts/quality-criteria.md ./prompts/
@@ -77,9 +77,11 @@ RUN .venv/bin/python -m compileall -q agents core
 # Fail the build, not the first request, when a prompt source or a font is
 # missing: `agent.py` composes every static instruction at import and
 # `render/watermark.py` parses both font files at import, and both raise on a
-# missing file or a renamed heading. The import needs no credentials and makes
-# no network call.
-RUN .venv/bin/python -c "import agents.main"
+# missing file or a renamed heading. The two judge rubrics are read on first use,
+# so the check reads them explicitly. None of it needs credentials or makes a
+# network call. tests/unit/agents/test_image.py runs this command and holds it
+# against every file the service reads.
+RUN .venv/bin/python -c "import agents.main; from agents.anyplot import policy; policy.scope_rubric(); policy.data_rubric()"
 
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080

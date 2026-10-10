@@ -8,13 +8,14 @@ Build only after the merge, so these tests read the two files instead:
   the footer-strip fonts) must reach the runtime stage at its repository path under
   `/app`, because the readers resolve them from `__file__`: a runtime-stage COPY has to
   carry it there, and the root `.dockerignore`, an allowlist, has to admit it into the
-  build context. A file that misses either fails the build at its import check, after
-  the merge; this test fails before.
+  build context. The Dockerfile's build check must read every one of them, so a file
+  that misses either fails the build, after the merge; these tests fail before.
 * **The deploy.** The model, judge and library substitutions default to the settings
   defaults, every `$NAME` in a step is a substitution or a Cloud Build built-in (a bash
   variable must be escaped as `$$NAME`, or Cloud Build refuses the whole config), every
   `AGENT_*` variable the deploy sets is a real setting, and the flags the design fixes
-  are there.
+  are there. The deploy step's script runs as Cloud Build would run it, against a fake
+  `gcloud`, so its refusals and the variables it writes are tested, not only read.
 """
 
 import importlib.metadata
@@ -22,6 +23,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -43,6 +45,9 @@ RENDERER_CLOUDBUILD = REPO_ROOT / "agents" / "renderer" / "cloudbuild.yaml"
 
 CLOUD_BUILD_BUILTINS = frozenset({"PROJECT_ID", "PROJECT_NUMBER", "BUILD_ID", "LOCATION"})
 """The built-in substitutions these configs use; anything else unescaped must be a `_NAME`."""
+
+API_CALLER = "239660669828-compute@developer.gserviceaccount.com"
+"""anyplot-api's runtime identity, the Compute Engine default service account (api/cloudbuild.yaml sets none)."""
 
 DEPLOYED_SETTINGS = frozenset(
     {
@@ -72,12 +77,12 @@ def hook(event, args):
 
 
 sys.addaudithook(hook)
-import agents.main
+exec(sys.argv[1])
 
 skip = tuple(os.path.realpath(prefix) + os.sep for prefix in {sys.prefix, sys.base_prefix})
 print(json.dumps(sorted(path for path in opened if not path.startswith(skip))))
 """
-"""Imports `agents.main` in a fresh interpreter and prints every file it opened outside the venv."""
+"""Runs the code in its first argument in a fresh interpreter and prints every file it opened outside the venv."""
 
 
 def _adk_installed() -> bool:
@@ -202,13 +207,18 @@ def dockerignore_admits(relative: str) -> bool:
     return admitted
 
 
-@pytest.fixture(scope="module")
-def opened_at_import() -> set[str]:
-    """The repo-relative non-Python files an import of `agents.main` opens, in a fresh interpreter."""
+def _opened_by(code: str) -> set[str]:
+    """The repo-relative non-Python files `code` opens, in a fresh interpreter without `AGENT_*` variables."""
     env = {name: value for name, value in os.environ.items() if not name.upper().startswith("AGENT_")}
     env["PYTHON_DOTENV_DISABLED"] = "1"
     result = subprocess.run(
-        [sys.executable, "-c", _PROBE], cwd=REPO_ROOT, env=env, capture_output=True, text=True, timeout=120, check=False
+        [sys.executable, "-c", _PROBE, code],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
     )
     assert result.returncode == 0, result.stderr[-2000:]
     root = str(REPO_ROOT.resolve()) + os.sep
@@ -221,6 +231,21 @@ def opened_at_import() -> set[str]:
             continue
         opened.add(relative)
     return opened
+
+
+@pytest.fixture(scope="module")
+def opened_at_import() -> set[str]:
+    """The repo-relative non-Python files an import of `agents.main` opens."""
+    return _opened_by("import agents.main")
+
+
+def _build_check() -> str:
+    """The code of the runtime stage's `RUN .venv/bin/python -c "..."`, the build's check for missing files."""
+    for keyword, arguments in _runtime_stage():
+        tokens = shlex.split(arguments)
+        if keyword == "RUN" and tokens[:2] == [".venv/bin/python", "-c"]:
+            return tokens[2]
+    raise AssertionError('agents/Dockerfile has no `RUN .venv/bin/python -c "..."` build check')
 
 
 def _read_by_the_service() -> set[str]:
@@ -246,6 +271,8 @@ class TestDockerignoreMatcher:
         [
             "agents/evals/fixtures/cases/scatter-basic-matplotlib/data.csv",
             "agents/evals/.cases/case-1/data.csv",
+            "agents/anyplot/.adk/session.db",
+            "agents/anyplot/.adk/artifacts/plot.png",
             "agents/anyplot/__pycache__/agent.cpython-313.pyc",
             "plots/scatter-basic/specification.md",
             "prompts/workflow-prompts/impl-generate-claude.md",
@@ -285,6 +312,18 @@ class TestCopyList:
 
         assert not not_copied, f"agents/Dockerfile copies these to no path under /app the service reads: {not_copied}"
         assert not not_admitted, f"the root .dockerignore keeps these out of the build context: {not_admitted}"
+
+    @requires_adk
+    def test_the_build_check_reads_every_file_the_service_reads(self) -> None:
+        """A missing prompt or font fails the build, not the first request: the judge rubrics, read on first use, too."""
+        code = _build_check()
+        assert "import agents.main" in code
+
+        unread = sorted(_read_by_the_service() - _opened_by(code))
+
+        assert not unread, (
+            f"the build check in agents/Dockerfile never reads {unread}, so the image could ship without them"
+        )
 
     def test_the_eval_harness_stays_out_of_the_image(self) -> None:
         """Its promoted cases hold users' data (agents/evals/.cases)."""
@@ -332,6 +371,71 @@ def _env_vars(deploy: str) -> dict[str, str]:
     return dict(item.split("=", 1) for item in flag.group(1).split("|"))
 
 
+def _substituted(text: str, values: dict[str, str]) -> str:
+    """`text` as Cloud Build hands it to a step: `$$` becomes `$`, `$NAME` and `${NAME}` become their value."""
+
+    def replace(match: re.Match[str]) -> str:
+        if match.group(0) == "$$":
+            return "$"
+        return values[match.group(1) or match.group(2)]
+
+    return re.sub(r"\$\$|\$\{(\w+)\}|\$(\w+)", replace, text)
+
+
+FAKE_GCLOUD = """#!/bin/sh
+if [ "$1 $2 $3" = "run services describe" ]; then
+  if [ -n "$FAKE_SERVICE_URL" ]; then echo "$FAKE_SERVICE_URL"; exit 0; fi
+  echo "ERROR: (gcloud.run.services.describe) Cannot find service [anyplot-agents]" >&2
+  exit 1
+fi
+if [ "$1 $2" = "run deploy" ]; then printf '%s\\n' "$@" > "$DEPLOY_ARGS"; exit 0; fi
+echo "unexpected gcloud call: $*" >&2
+exit 2
+"""
+"""Answers `run services describe` with `$FAKE_SERVICE_URL` (or not found) and records the `run deploy` arguments."""
+
+RENDER_URL = "https://anyplot-renderer-abc-ez.a.run.app"
+SERVICE_URL = "https://anyplot-agents-abc-ez.a.run.app"
+
+
+def _run_deploy(tmp_path: Path, service_url: str | None, **overrides: str) -> tuple[int, str, list[str] | None]:
+    """Run the deploy step's script with the config's substitutions plus `overrides`.
+
+    Returns the exit code, the output, and the arguments of `gcloud run deploy`, or
+    None when the step never got that far.
+    """
+    config = _config(CLOUDBUILD)
+    step = next(step for step in config["steps"] if step.get("id") == "deploy")
+    values = {**config["substitutions"], **overrides, "PROJECT_ID": "anyplot", "BUILD_ID": "build-1"}
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    gcloud = bin_dir / "gcloud"
+    gcloud.write_text(FAKE_GCLOUD, encoding="utf-8")
+    gcloud.chmod(0o755)
+    deploy_args = tmp_path / "deploy-args"
+    env = {
+        "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}",
+        "FAKE_SERVICE_URL": service_url or "",
+        "DEPLOY_ARGS": str(deploy_args),
+    }
+    result = subprocess.run(
+        [step["entrypoint"], *(_substituted(arg, values) for arg in step["args"])],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    deployed = deploy_args.read_text(encoding="utf-8").splitlines() if deploy_args.exists() else None
+    return result.returncode, result.stdout + result.stderr, deployed
+
+
+def _deployed_env(deployed: list[str]) -> dict[str, str]:
+    flag = next(arg for arg in deployed if arg.startswith("--update-env-vars=^|^"))
+    return dict(item.split("=", 1) for item in flag.removeprefix("--update-env-vars=^|^").split("|"))
+
+
 class TestCloudBuild:
     def test_substitution_defaults(self) -> None:
         defaults = AgentSettings.model_fields
@@ -340,7 +444,7 @@ class TestCloudBuild:
             "_SERVICE_NAME": "anyplot-agents",
             "_REGION": "europe-west4",
             "_SERVICE_ACCOUNT": "anyplot-agents@anyplot.iam.gserviceaccount.com",
-            "_ALLOWED_CALLERS": "",
+            "_API_CALLER": API_CALLER,
             "_AUDIENCES": "",
             "_RENDER_URL": "",
             "_PROVIDER": defaults["provider"].default,
@@ -395,7 +499,7 @@ class TestCloudBuild:
         assert env["AGENT_JUDGE_MODEL"] == "${_JUDGE_MODEL}"
         assert env["AGENT_LIBRARIES"] == "${_LIBRARIES}"
         assert env["AGENT_RENDER_URL"] == "${_RENDER_URL}"
-        assert env["AGENT_ALLOWED_CALLERS"] == "${_ALLOWED_CALLERS}"
+        assert env["AGENT_ALLOWED_CALLERS"] == "${_API_CALLER},${_SERVICE_ACCOUNT}"
         assert env["ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS"] == "false"
         agent_vars = {name for name in env if name.startswith("AGENT_")}
         assert agent_vars == DEPLOYED_SETTINGS
@@ -411,3 +515,61 @@ class TestCloudBuild:
         assert '"${_PROVIDER}" "${_MODEL}" "${_LIBRARIES}"' in smoke
         assert "--to-revisions=${_SERVICE_NAME}-b$BUILD_ID=100" in _step(config, "promote")
         assert next(step for step in config["steps"] if step["id"] == "promote")["waitFor"] == ["smoke"]
+
+
+requires_bash = pytest.mark.skipif(shutil.which("bash") is None, reason="the deploy step is a bash script")
+
+
+@requires_bash
+class TestDeployStep:
+    """The deploy step's script, substituted and run as Cloud Build would, against a fake `gcloud`."""
+
+    def test_deploys_a_candidate_the_bff_and_the_smoke_may_call(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        code, output, deployed = _run_deploy(tmp_path, SERVICE_URL, _RENDER_URL=RENDER_URL)
+
+        assert code == 0, output
+        assert deployed is not None and "--no-traffic" in deployed
+        env = _deployed_env(deployed)
+        assert env["AGENT_RENDER_URL"] == RENDER_URL
+        assert env["AGENT_SERVICE_URLS"] == SERVICE_URL
+        # The variables are valid settings, and the caller list holds both identities.
+        for name in [name for name in os.environ if name.upper().startswith("AGENT_")]:
+            monkeypatch.delenv(name)
+        for name, value in env.items():
+            monkeypatch.setenv(name, value)
+        settings = AgentSettings()
+        assert settings.allowed_callers == [API_CALLER, "anyplot-agents@anyplot.iam.gserviceaccount.com"]
+        assert settings.render_url == RENDER_URL
+
+    def test_creates_a_missing_service_with_traffic(self, tmp_path: Path) -> None:
+        """gcloud refuses `--no-traffic` on a new service; nothing calls it before AGENT_ENABLED is true."""
+        code, output, deployed = _run_deploy(tmp_path, None, _RENDER_URL=RENDER_URL)
+
+        assert code == 0, output
+        assert deployed is not None and "--no-traffic" not in deployed
+        assert _deployed_env(deployed)["AGENT_SERVICE_URLS"] == ""
+
+    @pytest.mark.parametrize(
+        ("overrides", "message"),
+        [
+            ({"_RENDER_URL": ""}, "_RENDER_URL is empty"),
+            ({"_RENDER_URL": RENDER_URL, "_API_CALLER": ""}, "_API_CALLER must be"),
+            ({"_RENDER_URL": RENDER_URL, "_API_CALLER": "owner@example.com"}, "_API_CALLER must be"),
+            (
+                {
+                    "_RENDER_URL": RENDER_URL,
+                    "_API_CALLER": f"{API_CALLER},anyplot-agents@anyplot.iam.gserviceaccount.com",
+                },
+                "_API_CALLER must be one email",
+            ),
+        ],
+        ids=["no-renderer", "no-api-caller", "not-a-service-account", "a-list"],
+    )
+    def test_refuses_before_deploying(self, tmp_path: Path, overrides: dict[str, str], message: str) -> None:
+        """`--update-env-vars` names both variables on every build, so a bad value would replace a good one."""
+        code, output, deployed = _run_deploy(tmp_path, SERVICE_URL, **overrides)
+
+        assert code != 0 and message in output, output
+        assert deployed is None

@@ -240,11 +240,11 @@ docker build -f agents/renderer/Dockerfile -t anyplot-renderer:dev .
 uv run pytest tests/unit/agents -q
 ```
 
-`tests/unit/agents/renderer/` runs the executor against a fake `sandbox` launcher that runs the real harness with this interpreter, the service in process, and the `remote` backend against the service through httpx's ASGI transport. `tests/unit/agents/test_image.py` holds the image and its deploy config against the code: every file an import of `main.py` opens must reach the image at its own path, and the deploy's substitutions and variables must match the settings.
+`tests/unit/agents/renderer/` runs the executor against a fake `sandbox` launcher that runs the real harness with this interpreter, the service in process, and the `remote` backend against the service through httpx's ASGI transport. `tests/unit/agents/test_image.py` holds the image and its deploy config against the code: every file the service reads must reach the image at its own path and be read by the build's check, the deploy's substitutions and variables must match the settings, and the deploy step's script runs against a fake `gcloud`.
 
 ## Build and deploy the service
 
-The `anyplot-agents` image (`Dockerfile`) installs the `agents` extra without any plotting extra, because the service runs no plot code: every render goes to `anyplot-renderer` through the `remote` backend. It copies the source tree rather than a wheel, because the service reads its prompts, `refusals.yaml`, the footer-strip fonts and the catalogue prompt sources in `prompts/` from paths next to its modules, and it fails the build when an import of `agents.main` cannot find one of them. The root `.dockerignore` keeps `evals/` out of the image.
+The `anyplot-agents` image (`Dockerfile`) installs the `agents` extra without any plotting extra, because the service runs no plot code: every render goes to `anyplot-renderer` through the `remote` backend. It copies the source tree rather than a wheel, because the service reads its prompts, `refusals.yaml`, the footer-strip fonts and the catalogue prompt sources in `prompts/` from paths next to its modules, and its build fails when one of them is missing: it imports `agents.main` and reads the two judge rubrics, which the service otherwise reads on first use. The root `.dockerignore` keeps `evals/` and ADK's local `.adk/` store, which holds users' messages and datasets, out of the image.
 
 ### Build the image
 
@@ -282,7 +282,7 @@ The container has no Application Default Credentials, so a "Create plot" fails a
 
 - The flags follow the design: one instance (sessions live in memory), 2 vCPU and 4 GiB, `--concurrency=20` and `--timeout=900` for the run queue's open streams, `--no-allow-unauthenticated`, the service account `anyplot-agents@`, no `--sandbox-launcher`, and `--update-env-vars` only.
 - `_PROVIDER`, `_MODEL`, `_JUDGE_MODEL` and `_LIBRARIES` default to the settings defaults, so a deploy switches the model arm without a code change. The budgets and limits are not set, so the deployed code's settings defaults apply.
-- `_RENDER_URL` is the `status.url` of the real `anyplot-renderer`, and `_ALLOWED_CALLERS` names anyplot-api's runtime identity and `anyplot-agents@` itself. The deploy adds the service's own URL to `AGENT_SERVICE_URLS`.
+- `_RENDER_URL` is the `status.url` of the real `anyplot-renderer`, and the deploy refuses to run without it, because `--update-env-vars` would otherwise replace a working renderer URL with nothing. `AGENT_ALLOWED_CALLERS` is `_API_CALLER`, anyplot-api's runtime identity (the Compute Engine default service account unless a build sets another one), plus `anyplot-agents@` itself for the smoke. The deploy adds the service's own URL to `AGENT_SERVICE_URLS`.
 - The smoke expects Cloud Run IAM to refuse an anonymous `GET /v1/status` with `403`. With `_SMOKE_AUTH=true`, the default, it also calls `/v1/status` with an ID token minted for `anyplot-agents@` and checks that the answer names the configured provider, model, location and libraries.
 
 The first deploy is an owner task: grant the missing roles, run the bootstrap build with `_SMOKE_AUTH=false`, grant `roles/run.invoker` on the new service, rebuild with the token smoke, and create the `deploy-agents` trigger. The exact commands are in the header of `cloudbuild.yaml`; the roles and the environment are in [Agent network design](../docs/concepts/agent-network.md#serving-and-infrastructure).
