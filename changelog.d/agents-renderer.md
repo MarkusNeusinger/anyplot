@@ -20,7 +20,7 @@
   seaborn plot through the harness before merge, and
   `agents/renderer/cloudbuild.yaml` builds it, deploys a candidate (creating
   the service on the first build, and only when the service is not found),
-  smokes it with an anonymous call and a real render, and promotes it.
+  smokes it with an anonymous call and a real render, and promotes it. (#12115)
 - **A `remote` render backend, now the default.** `AGENT_RENDERER=remote`
   sends each render to `AGENT_RENDER_URL` with an ID token from the metadata
   server, or in development from `AGENT_RENDER_TOKEN` or the developer's
@@ -31,7 +31,7 @@
   abandons, and logs every failure it maps to a renderer error. When the
   renderer stopped a run at a limit, the repair feedback names the limit and
   the measured value. The in-process `sandbox` backend stays as an unused
-  stub.
+  stub. (#12115)
 
 ### Changed
 
@@ -39,8 +39,8 @@
   `HARNESS` start line before anything else and a closing line with its peak
   memory and CPU time, sets every limit soft and hard alike, takes optional
   address-space and process limits, and copies the image's baked matplotlib
-  font cache into the sandbox before matplotlib loads.
+  font cache into the sandbox before matplotlib loads. (#12115)
 - **The caller check reads the header Cloud Run verified.** The agents
   service and the renderer read `X-Serverless-Authorization` whenever a
   request carries it, because Cloud Run then checks only that header and
-  passes `Authorization` through unverified.
+  passes `Authorization` through unverified. (#12115)
