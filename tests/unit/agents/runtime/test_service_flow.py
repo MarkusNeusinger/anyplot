@@ -264,13 +264,14 @@ async def test_formal_misses_are_mended_instead_of_costing_a_repair_or_the_revie
     caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
     six_changes = {**SCATTER_PLAN, "changes": [f"{SCHEMA_CANARY} {number}" for number in range(6)]}
     long_defect = {**VERDICT_REJECT["defects"][0], "observed": f"{SCHEMA_CANARY} " + "markers look small " * 15}
-    script = default_script(verdict={"ok": True, "defects": [long_defect]}, plans=[six_changes, SECOND_PLAN])
+    script = default_script(plans=[six_changes, SECOND_PLAN])
+    script["reviewer"] = [{"json": {"ok": True, "defects": [long_defect]}}, {"json": VERDICT_OK}]
     swap_models(provider, script)
     sid = await open_session(client)
 
     plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
 
-    assert plot["attempts"] == 2  # the review on attempt 1 rejected, so the repair ran
+    assert (plot["status"], plot["attempts"]) == ("ok", 2)  # the first review rejected, so the repair ran
     repaired = attribution_lines(caplog, "answer_schema")
     assert [(line["agent"], line["outcome"], line["errors"]) for line in repaired] == [
         ("adapter_matplotlib", "repaired", ["changes:too_long"]),
@@ -330,7 +331,8 @@ async def test_a_second_schema_miss_gets_a_third_attempt_only_when_allowed(
     """By default a second miss ends the run (one repair round); `AGENT_MAX_ATTEMPTS=3` repairs it once more."""
     caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
     set_max_attempts(monkeypatch, max_attempts)
-    miss = {**SCATTER_PLAN, "changes": [f"{SCHEMA_CANARY} {number}" for number in range(6)]}
+    # An empty `find` breaks the edit contract, which the guard never mends.
+    miss = {**SCATTER_PLAN, "edits": [{"find": "", "replace": SCHEMA_CANARY}]}
     fake = swap_models(provider, default_script(plans=[miss, miss, SCATTER_PLAN]))
     sid = await open_session(client)
 
@@ -761,32 +763,140 @@ async def test_watermark_off_serves_the_raw_renders(
     assert stored.shown == {}
 
 
-@pytest.mark.parametrize("max_attempts", [None, "3"], ids=["default", "three"])
-async def test_reviewer_rejection_gets_one_repair_and_ships_needs_attention(
-    client: httpx.AsyncClient,
-    swap_models,
-    monkeypatch: pytest.MonkeyPatch,
-    caplog: pytest.LogCaptureFixture,
-    max_attempts: str | None,
+REVIEWED_TWICE = ["adapting", "checking", "rendering", "reviewing", "repairing", "checking", "rendering", "reviewing"]
+SECOND_REJECT: dict[str, Any] = {
+    "ok": False,
+    "defects": [
+        {
+            "id": "VQ-02",
+            "theme": "light",
+            "observed": "the legend covers the top-right markers",
+            "target": "legend outside the data area",
+            "likely_cause": "ax.legend loc",
+        }
+    ],
+}
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+async def test_the_repaired_render_is_reviewed_again_and_can_end_ok(
+    client: httpx.AsyncClient, swap_models, provider: str, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """The repair clears every gate, so the run ships it unreviewed, even when a third attempt is allowed."""
     caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
-    set_max_attempts(monkeypatch, max_attempts)
-    swap_models("gemini", default_script(verdict=VERDICT_REJECT, plans=[SCATTER_PLAN, {"edits": [], "changes": []}]))
+    script = default_script(plans=[SCATTER_PLAN, SECOND_PLAN])
+    script["reviewer"] = [{"json": VERDICT_REJECT}, {"json": VERDICT_OK}]
+    fake = swap_models(provider, script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    assert [data["step"] for name, data in events if name == "status"] == REVIEWED_TWICE
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["attempts"], plot["residual_defects"]) == ("ok", 2, [])
+    assert "24 sparse markers" in adapter_inputs(fake)[1]  # the first review's line went to the repair
+    reviews = attribution_lines(caplog, "pipeline_review")
+    assert [(line["attempt"], line["verdict"]) for line in reviews] == [(1, "defects"), (2, "ok")]
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert (result["stage"], result["stages"]) == ("reviewer_ok", ["reviewer_defects", "reviewer_ok"])
+    assert (result["shipped_attempt"], result["reviewed_attempt"], result["reviews"]) == (2, 2, 2)
+    # Root twice, two adapter calls, two reviews: well inside the 12-call RunConfig cap.
+    assert events[-1][1]["llm_calls"] == 6 <= get_settings().max_llm_calls
+
+
+async def test_a_second_rejection_ships_needs_attention_with_the_second_reviews_lines(
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    script = default_script(plans=[SCATTER_PLAN, {"edits": [], "changes": []}])
+    script["reviewer"] = [{"json": VERDICT_REJECT}, {"json": SECOND_REJECT}]
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    assert [data["step"] for name, data in events if name == "status"] == REVIEWED_TWICE
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["attempts"]) == ("needs_attention", 2)
+    # The lines describe the shipped render: the second review's, not the first one's.
+    assert plot["residual_defects"] == [
+        "VQ-02 (light): the legend covers the top-right markers → legend outside the data area. "
+        "Likely cause: ax.legend loc."
+    ]
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert (result["stage"], result["stages"]) == ("reviewer_defects", ["reviewer_defects", "reviewer_defects"])
+    assert (result["shipped_attempt"], result["reviewed_attempt"], result["reviews"]) == (2, 2, 2)
+
+
+async def test_a_third_attempt_after_two_rejections_ships_unreviewed(
+    client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """`AGENT_MAX_ATTEMPTS=3` repairs the second rejection, but both reviews are spent: no third one."""
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    set_max_attempts(monkeypatch, "3")
+    empty = {"edits": [], "changes": []}
+    script = default_script(plans=[SCATTER_PLAN, empty, empty])
+    script["reviewer"] = [{"json": VERDICT_REJECT}, {"json": SECOND_REJECT}]
+    fake = swap_models("gemini", script)
     sid = await open_session(client)
 
     events = await create_plot(client, sid)
 
     steps = [data["step"] for name, data in events if name == "status"]
-    assert steps == ["adapting", "checking", "rendering", "reviewing", "repairing", "checking", "rendering"]
+    assert steps == [*REVIEWED_TWICE, "repairing", "checking", "rendering"]
     plot = next(data for name, data in events if name == "plot")
-    assert plot["status"] == "needs_attention"
-    assert plot["attempts"] == 2
+    assert (plot["status"], plot["attempts"]) == ("needs_attention", 3)
+    assert "the legend covers the top-right markers" in adapter_inputs(fake)[2]  # the second review's line
+    # No review saw the shipped render, so the last review's lines stay.
+    assert plot["residual_defects"][0].startswith("VQ-02 (light): the legend covers the top-right markers")
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert (result["stage"], result["stages"]) == (
+        "not_rereviewed",
+        ["reviewer_defects", "reviewer_defects", "not_rereviewed"],
+    )
+    assert (result["shipped_attempt"], result["reviewed_attempt"], result["reviews"]) == (3, 2, 2)
+
+
+async def test_an_unread_second_review_keeps_the_first_reviews_lines(
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    script = default_script(plans=[SCATTER_PLAN, {"edits": [], "changes": []}])
+    script["reviewer"] = [{"json": VERDICT_REJECT}, {"text": "not a verdict"}]
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    assert (plot["status"], plot["attempts"]) == ("needs_attention", 2)
     # The reviewer's own line, filed under the one theme it saw although it wrote "both".
     assert plot["residual_defects"][0].startswith("VQ-03 (light): 24 sparse markers")
     (result,) = attribution_lines(caplog, "pipeline_result")
-    assert (result["stage"], result["stages"]) == ("not_rereviewed", ["reviewer_defects", "not_rereviewed"])
-    assert (result["shipped_attempt"], result["reviewed_attempt"]) == (2, 1)
+    assert (result["stage"], result["stages"]) == ("reviewer_unreadable", ["reviewer_defects", "reviewer_unreadable"])
+    assert (result["shipped_attempt"], result["reviewed_attempt"], result["reviews"]) == (2, 2, 2)
+
+
+async def test_the_second_review_waits_for_the_budget(
+    client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A spent budget skips the second review: the repaired render ships with the first review's lines."""
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    checks: list[bool] = []
+
+    def budget_allows(*args: Any, **kwargs: Any) -> bool:
+        checks.append(len(checks) < 3)  # attempt 1, its review and attempt 2 pass; the second review does not
+        return checks[-1]
+
+    monkeypatch.setattr(pipeline, "budget_allows", budget_allows)
+    script = default_script(verdict=VERDICT_REJECT, plans=[SCATTER_PLAN, {"edits": [], "changes": []}])
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    assert (plot["status"], plot["attempts"]) == ("needs_attention", 2)
+    assert plot["residual_defects"][0].startswith("VQ-03 (light): 24 sparse markers")
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert (result["stage"], result["stages"], result["reviews"]) == ("budget", ["reviewer_defects", "budget"], 1)
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
@@ -922,6 +1032,7 @@ async def test_reviewer_defects_name_the_rendered_theme(client: httpx.AsyncClien
     defect = VERDICT_REJECT["defects"][0]
     verdict = {"ok": False, "defects": [{**defect, "theme": "light"}, {**defect, "id": "DQ-03", "theme": "code"}]}
     script = default_script(verdict=verdict, plans=[SCATTER_PLAN, {"edits": [], "changes": []}])
+    script["reviewer"] = [{"json": verdict}, {"json": verdict}]  # the repaired render is reviewed again
     swap_models("gemini", {**script, "root": list(DARK_SCRIPT_ROOT)})
     sid = await open_session(client)
 

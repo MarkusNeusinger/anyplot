@@ -17,8 +17,9 @@ and one repair round; the eval harness may set one or three):
 3. **render**: `normalise`, the loader substitution (`to_run_form`), then the one
    theme the call asks for (`PipelineArgs.theme`, light by default) through the
    render backend, and the host gates (`render/gates.py`) on exactly that theme;
-4. **review**: at most once, on the first render that passes the host gates on the
-   exact canvas and either left no feedback or came from the last allowed attempt;
+4. **review**: on the first render that passes the host gates on the exact canvas
+   and either left no feedback or came from the last allowed attempt, and once more
+   on the repaired render after a rejection (`MAX_REVIEWS` reviewer calls in all);
    the reviewer agent sees the rendered theme's PNG, so each of its image defects is
    filed under that theme, whatever theme the reviewer named;
 5. **repair**: when an attempt left feedback (an answer that missed the schema or was
@@ -30,10 +31,10 @@ The other theme of a finished version is rendered later by the theme toggle
 (`theme_render.py`) from the stored run form, without any model call.
 
 Bounds: one adapter call and one render of one theme per attempt (two each by
-default), one reviewer call. The budget is checked before every model call, the soft
-deadline (`AGENT_SOFT_DEADLINE_S`) before every attempt after the first (each needs
-`ADAPTER_P95_S` plus `RENDER_P95_S` left, so the first attempt has the rest of the
-soft deadline) and for every render timeout;
+default), `MAX_REVIEWS` reviewer calls. The budget is checked before every model call,
+the soft deadline (`AGENT_SOFT_DEADLINE_S`) before every attempt after the first (each
+needs `ADAPTER_P95_S` plus `RENDER_P95_S` left, so the first attempt has the rest of
+the soft deadline) and for every render timeout;
 the request deadline is `abort_signal` on the run. A render waits in the `run` lane of the render slot
 (`render/serial.py`), ahead of every waiting theme toggle, so it waits for at most
 the render in progress; its clamped timeout starts when it runs. The exported
@@ -57,7 +58,8 @@ Every step also writes one content-free attribution line (`plugins/ledger.attrib
 ADAPTATION rule ids), `pipeline_render` (render and wall time, the gate ids that
 failed or reported), `pipeline_review` (the verdict, its defect ids and the call's
 finish reason) and `pipeline_result` (status, reason, attempts, the `Stage` that ended
-each attempt and the run, the shipped and the reviewed attempt, whether the shipped
+each attempt and the run, the shipped and the last reviewed attempt, the number of
+reviewer calls, whether the shipped
 render was padded or carries ADAPTATION or probe findings, and the exception class
 behind reason `error`). The eval harness (`agents/evals/matrix.py`) reads them per
 case; they never carry code, data, column names or model text. `PlotResult.reason`
@@ -136,6 +138,11 @@ less than a typical Gemini plan call. The render's own timeout is still clamped 
 what remains of the soft deadline."""
 REVIEWER_P95_S = 30.0
 """Seconds the review is budgeted at; with less left of the soft deadline the render ships unreviewed."""
+MAX_REVIEWS = 2
+"""Reviewer calls per run: the first review, and one more of the repaired render after a rejection.
+
+Without the second one a repaired render could never end `ok`: in the rerun of spike X
+on main, 39 of 244 runs shipped a repaired render unreviewed (`not_rereviewed`)."""
 PADDED_LINE = "canvas padded after render ({theme})"
 """The residual line of a shipped render whose canvas was padded; it names the rendered theme."""
 NOT_REVIEWED_LINE = "the plot was not reviewed ({why})"
@@ -199,9 +206,10 @@ off at the output limit; `adapter_full_code`: a full file where none was allowed
 literal budget; `loader`: the code could not take the data loader; `render`: the host
 gates R1 or R2 failed; `gates`: the render passed them but its canvas, probe or
 ADAPTATION findings went to the repair (or the canvas was padded); `not_rereviewed`:
-the repaired render shipped without a second review; `reviewer_*`: the review's
-outcome; `budget`, `deadline`: a limit stopped the run before an attempt or before the
-review; `error`: an exception."""
+a repaired render shipped without another review because the run had made its
+`MAX_REVIEWS` reviewer calls; `reviewer_*`: the outcome of the attempt's review, the
+first or the second; `budget`, `deadline`: a limit stopped the run before an attempt
+or before a review; `error`: an exception."""
 AdaptOutcome = Literal["schema", "truncated"]
 
 
@@ -281,7 +289,9 @@ class Run:
     stages: list[Stage] = field(default_factory=list)
     """The stage that ended each attempt, in order."""
     reviewed_attempt: int | None = None
-    """The attempt whose render the reviewer was called on, read or not."""
+    """The attempt whose render the reviewer was last called on, read or not."""
+    reviews: int = 0
+    """Reviewer calls so far, at most `MAX_REVIEWS`."""
 
 
 def _end_attempt(run: Run, stage: Stage) -> None:
@@ -613,7 +623,7 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
     outage rather than a model failure), never its message. `stage` names what stopped
     the run and `stages` what ended each attempt (`Stage`); `shipped_attempt` and
     `reviewed_attempt` name the attempt whose render shipped and the one the reviewer
-    was called on.
+    was last called on, and `reviews` counts the reviewer calls.
     """
     shipped = (run.best or run.padded) if result.status in ("ok", "needs_attention") else None
     attribution(
@@ -626,6 +636,7 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
         stages=list(run.stages),
         shipped_attempt=shipped.attempt if shipped else None,
         reviewed_attempt=run.reviewed_attempt,
+        reviews=run.reviews,
         theme=run.theme,
         reviewed=run.reviewed,
         padded=bool(shipped and shipped.padded),
@@ -809,15 +820,16 @@ async def _attempts(
         else:
             run.padded = candidate
         feedback = [*report.defects, *adaptation_lines]
-        # Feedback goes to the next attempt before any review while one is allowed; the last
-        # attempt is reviewed once if nothing was reviewed yet, with the advisory lines kept as
-        # gate notes. With the default two attempts that is: attempt 1 repairs, attempt 2 is reviewed.
+        # Feedback goes to the next attempt before any review while one is allowed; a render
+        # without feedback, or from the last allowed attempt, is reviewed (the advisory lines
+        # kept as gate notes), again after a rejection, up to `MAX_REVIEWS` calls. With the
+        # default two attempts: attempt 1 repairs or is reviewed, attempt 2 is reviewed.
         if not report.canvas_ok or (feedback and attempt < settings.max_attempts):
             _end_attempt(run, "gates")
             continue
-        if run.reviewed:
-            # Reviewed before, and either no feedback or no attempt left for it: the run ends here,
-            # since another attempt would have nothing to repair.
+        if run.reviews >= MAX_REVIEWS:
+            # Every review used, and either no feedback or no attempt left for it: the run ends
+            # here, since another attempt would have nothing to repair.
             _end_attempt(run, "not_rereviewed")
             return
 
@@ -833,6 +845,7 @@ async def _attempts(
         candidate.render_id = services.renders.put(ctx.session.id, candidate.pngs)
         ledger.review_render_id = candidate.render_id
         run.reviewed_attempt = attempt
+        run.reviews += 1
         verdict = await _review(
             ctx,
             scope,

@@ -1,4 +1,8 @@
-"""The reviewer: a tool-less single-turn agent that judges the rendered theme once.
+"""The reviewer: a tool-less single-turn agent that judges a render in its one rendered theme.
+
+The pipeline calls it on the first render that passes the host gates and once more on
+the repaired render after a rejection (`pipeline.MAX_REVIEWS`); each call is fresh and
+sees only that render.
 
 Its static instruction is `policy.reviewer_instruction` (the reduced checklist, the
 defect grammar, the catalogue's theme-readability check and the style guide). The

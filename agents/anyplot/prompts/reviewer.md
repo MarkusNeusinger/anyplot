@@ -54,7 +54,7 @@ Answer with one JSON object:
 
   Each of the three texts is one short sentence of at most 200 characters.
 
-The server writes each finding as the line `<ID> (<theme>): <observed> → <target>. Likely cause: <likely_cause>.`, the same defect grammar as the catalogue review, and hands it to the one repair the plot gets. So:
+The server writes each finding as the line `<ID> (<theme>): <observed> → <target>. Likely cause: <likely_cause>.`, the same defect grammar as the catalogue review, and hands it to the repair, or to the user when the render was already repaired. So:
 
 - Name only defects the repair can fix in the code, one per finding.
 - Never ask for something nobody asked for: a trend or reference line, a highlight, a callout, an extra encoding, facets.
