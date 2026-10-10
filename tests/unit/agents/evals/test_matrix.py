@@ -21,8 +21,9 @@ import pytest
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
 from agents.anyplot.render.contract import RendererUnavailable, RenderJob, RenderResult
 from agents.anyplot.run_queue import RunQueue
+from agents.anyplot.schemas import MAX_ATTEMPTS
 from agents.anyplot.services import Services
-from agents.anyplot.settings import AgentSettings
+from agents.anyplot.settings import AgentSettings, get_settings
 from agents.evals import matrix
 from agents.evals.cases import EvalCase, load_cases, select_cases
 from agents.evals.matrix import (
@@ -159,15 +160,37 @@ async def test_two_fixtures_through_the_real_flow(
     assert "THEME" in backend.jobs[0].source and "load_user_data" not in backend.jobs[0].source
 
     stamp = result.report["stamp"]
-    assert (stamp["provider"], stamp["model"], stamp["location"], stamp["case_count"]) == (
+    assert (stamp["provider"], stamp["model"], stamp["location"], stamp["max_attempts"], stamp["case_count"]) == (
         "anthropic-vertex",
         "claude-haiku-5-5",
         "eu",
+        2,
         2,
     )
     assert result.report_path.name == f"{stamp['date']}-claude-haiku-5-5.json"
     assert json.loads(result.report_path.read_text())["runs"][1]["case_id"] == "scatter-basic-matplotlib"
     assert "## Runs that did not pass" in result.summary_path.read_text()
+
+
+async def test_the_attempt_bound_reaches_the_pipeline_and_the_stamp(
+    tmp_path: Path, services: Services, swap_models, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("AGENT_MAX_ATTEMPTS", "3")  # what `configure` writes for --max-attempts 3
+    get_settings.cache_clear()
+    three_misses = script()
+    three_misses["adapter"] = [{"json": BAD_PLAN}] * 3 + [{"json": SCATTER_PLAN}]
+    swap_models("anthropic-vertex", three_misses)
+
+    result = await run_matrix(
+        two_fixtures(), config(tmp_path), services=services, runtime=runtime(), echo=lambda _: None
+    )
+
+    bar, scatter = result.report["runs"]
+    assert (bar["status"], bar["reason"], bar["attempts"]) == ("failed", "validation", 3)
+    assert bar["stages"] == ["edit_apply"] * 3
+    assert (scatter["status"], scatter["attempts"]) == ("ok", 1)
+    assert result.report["stamp"]["max_attempts"] == 3
+    assert "at most 3 attempts per run" in result.summary_path.read_text()
 
 
 async def test_outputs_include_both_gallery_pages(tmp_path: Path, services: Services, swap_models) -> None:
@@ -333,6 +356,28 @@ def test_configure_keeps_the_renders_raw_unless_the_environment_asks_for_the_str
     asked: dict[str, str] = {"AGENT_WATERMARK": "true"}
     configure(parse_args(["--renderer", "fake"]), asked)
     assert asked["AGENT_WATERMARK"] == "true"
+
+
+def test_configure_writes_the_attempt_bound_only_when_the_flag_names_one() -> None:
+    three: dict[str, str] = {}
+    configure(parse_args(["--renderer", "fake", "--max-attempts", "3"]), three)
+    assert three["AGENT_MAX_ATTEMPTS"] == "3"
+
+    unset: dict[str, str] = {}
+    configure(parse_args(["--renderer", "fake"]), unset)
+    assert "AGENT_MAX_ATTEMPTS" not in unset  # the settings' default of two attempts applies
+
+    exported: dict[str, str] = {"AGENT_MAX_ATTEMPTS": "1"}
+    configure(parse_args(["--renderer", "fake"]), exported)
+    assert exported["AGENT_MAX_ATTEMPTS"] == "1"  # the environment's own value stays when no flag names one
+
+    for value in ("0", "4", "two"):
+        with pytest.raises(SystemExit):
+            parse_args(["--max-attempts", value])
+
+
+def test_the_flag_takes_exactly_the_settings_range() -> None:
+    assert matrix.MAX_ATTEMPTS_CHOICES == tuple(range(1, MAX_ATTEMPTS + 1))
 
 
 def test_configure_refuses_contradictions() -> None:

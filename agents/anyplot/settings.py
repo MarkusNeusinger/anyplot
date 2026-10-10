@@ -23,6 +23,7 @@ another provider, model or location.
 | `AGENT_RUN_CONCURRENCY` | `1` | Pipeline runs (whole `/messages` turns) in flight per instance; the run queue holds the rest |
 | `AGENT_RUNS_PER_MINUTE` | `1` | Runs that may start within any 60 seconds (a sliding window) |
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue; it also sizes the queue (`AGENT_RUNS_PER_MINUTE` x this / 60 entries) |
+| `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 to measure no repair or a second repair round |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request (the `RunConfig` cap) |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `80000` | Tokens per request |
 | `AGENT_DAILY_TOKEN_BUDGET` | `1000000` | Tokens per user and day |
@@ -55,6 +56,7 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 from core.constants import SUPPORTED_LIBRARIES
 
 from .code.normalise import SUPPORTED_LIBRARIES as RUNTIME_LIBRARIES
+from .schemas import MAX_ATTEMPTS
 
 
 FAKE_RENDERER_ENVIRONMENTS = frozenset({"development", "test"})
@@ -161,6 +163,12 @@ class AgentSettings(BaseSettings):
     count toward the request deadline; the queue holds `runs_per_minute * queue_max_wait_s / 60`
     entries and refuses more with `capacity`. That length assumes runs shorter than the 60 s
     rate window: longer runs delay later starts, so admission does not guarantee a start."""
+
+    max_attempts: int = Field(default=2, ge=1, le=MAX_ATTEMPTS)
+    """Adapter attempts per pipeline run (`AGENT_MAX_ATTEMPTS`), 1 to 3, enforced by the loop
+    in `pipeline.py`. The default 2 is the design's "at most one repair round"; the eval harness
+    (`--max-attempts`) sets 1 to measure no repair and 3 to measure a second repair round. Every
+    attempt after the first needs `ADAPTER_P95_S` plus `RENDER_P95_S` left of the soft deadline."""
 
     max_llm_calls: PositiveInt = 12
     """LLM calls per request (`AGENT_MAX_LLM_CALLS`), the `RunConfig` cap."""

@@ -130,6 +130,23 @@ def test_summary_counts_rates_and_cost() -> None:
     assert summary["statuses"] == {"failed": 1, "harness_error": 1, "needs_attention": 1, "ok": 1}
 
 
+def test_a_pass_after_any_repair_attempt_counts_as_repaired() -> None:
+    runs = [
+        run("a-matplotlib-x"),
+        run("b-matplotlib-x", attempts=2),
+        run("c-matplotlib-x", attempts=3),  # a second repair round (AGENT_MAX_ATTEMPTS=3)
+        run("d-matplotlib-x", attempts=3, status="failed", passed=False),
+    ]
+
+    summary = summarize(runs)
+
+    assert summary["repaired_passes"] == 2
+    text = summary_markdown(report_of(runs, max_attempts=3))
+    assert "at most 3 attempts per run" in text and "2 of them in a run with a repair attempt" in text
+    # A report made before the switch existed carries no bound: its runs had two attempts.
+    assert "at most 2 attempts per run" in summary_markdown(report_of(runs))
+
+
 def test_diff_flags_a_regression_beyond_the_tolerance_and_lists_flips() -> None:
     baseline = report_of([run("a-matplotlib-x"), run("b-matplotlib-x"), run("c-matplotlib-x")])
     candidate = report_of([run("a-matplotlib-x"), run("b-matplotlib-x", passed=False), run("c-matplotlib-x")])

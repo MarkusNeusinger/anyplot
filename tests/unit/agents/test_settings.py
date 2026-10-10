@@ -42,6 +42,7 @@ class TestDefaults:
         assert settings.renderer == "remote"  # phase 1 renders through the anyplot-renderer service
         assert settings.render_url is None and settings.render_token is None
         assert settings.render_image == "anyplot-renderer:dev"
+        assert settings.max_attempts == 2  # the first attempt and at most one repair round
         assert settings.max_llm_calls == 12
         assert settings.request_token_budget == 80_000
         assert settings.daily_token_budget == 1_000_000
@@ -106,6 +107,19 @@ class TestEnvironmentOverrides:
         monkeypatch.setenv("AGENT_WATERMARK", value)
 
         assert AgentSettings().watermark is expected
+
+    @pytest.mark.parametrize("value", ["1", "2", "3"])
+    def test_the_attempt_bound_comes_from_the_environment(self, monkeypatch: pytest.MonkeyPatch, value: str) -> None:
+        monkeypatch.setenv("AGENT_MAX_ATTEMPTS", value)
+
+        assert AgentSettings().max_attempts == int(value)
+
+    @pytest.mark.parametrize("value", ["0", "4", "-1", "two"])
+    def test_the_attempt_bound_is_1_to_3(self, monkeypatch: pytest.MonkeyPatch, value: str) -> None:
+        monkeypatch.setenv("AGENT_MAX_ATTEMPTS", value)
+
+        with pytest.raises(ValidationError, match="max_attempts"):
+            AgentSettings()
 
     @pytest.mark.parametrize("name", ["AGENT_RUN_CONCURRENCY", "AGENT_RUNS_PER_MINUTE", "AGENT_QUEUE_MAX_WAIT_S"])
     def test_queue_settings_must_be_positive(self, monkeypatch: pytest.MonkeyPatch, name: str) -> None:

@@ -4,7 +4,8 @@
 It reads spec, library, dataset and bindings from server-set session state, never from
 its input: `PipelineArgs` carries only `change_request`, `base` and `theme` (the one
 theme to render; omitted, a change keeps the previous version's theme and a new plot
-is light). It runs at most two attempts:
+is light). It runs at most `AGENT_MAX_ATTEMPTS` attempts, two by default (the first
+and one repair round; the eval harness may set one or three):
 
 1. **adapt**: the library's adapter agent turns the working form into an `AdaptPlan`
    (`ctx.run_node`, under its own isolation scope so the root never reads its answer);
@@ -17,20 +18,22 @@ is light). It runs at most two attempts:
    theme the call asks for (`PipelineArgs.theme`, light by default) through the
    render backend, and the host gates (`render/gates.py`) on exactly that theme;
 4. **review**: at most once, on the first render that passes the host gates on the
-   exact canvas; the reviewer agent sees the rendered theme's PNG, so each of its
-   image defects is filed under that theme, whatever theme the reviewer named;
-5. **repair**: when attempt 1 left feedback (an answer that missed the schema or was
+   exact canvas and either left no feedback or came from the last allowed attempt;
+   the reviewer agent sees the rendered theme's PNG, so each of its image defects is
+   filed under that theme, whatever theme the reviewer named;
+5. **repair**: when an attempt left feedback (an answer that missed the schema or was
    cut off at the output limit, each with its own line, failed edits, validator
-   findings, a failed render, gate defects, reviewer defects), attempt 2 gets it,
-   with a full file allowed.
+   findings, a failed render, gate defects, reviewer defects) and another attempt is
+   allowed, the next attempt gets it, with a full file allowed from attempt 2 on.
 
 The other theme of a finished version is rendered later by the theme toggle
 (`theme_render.py`) from the stored run form, without any model call.
 
-Bounds: two adapter calls, one reviewer call, two renders of one theme. The budget
-is checked before every model call, the soft deadline (`AGENT_SOFT_DEADLINE_S`)
-before the second attempt (which needs `ADAPTER_P95_S` plus `RENDER_P95_S` left, so
-the first attempt has the rest of the soft deadline) and for every render timeout;
+Bounds: one adapter call and one render of one theme per attempt (two each by
+default), one reviewer call. The budget is checked before every model call, the soft
+deadline (`AGENT_SOFT_DEADLINE_S`) before every attempt after the first (each needs
+`ADAPTER_P95_S` plus `RENDER_P95_S` left, so the first attempt has the rest of the
+soft deadline) and for every render timeout;
 the request deadline is `abort_signal` on the run. A render waits in the `run` lane of the render slot
 (`render/serial.py`), ahead of every waiting theme toggle, so it waits for at most
 the render in progress; its clamped timeout starts when it runs. The exported
@@ -119,15 +122,15 @@ logger = logging.getLogger(__name__)
 
 STATUS_KEY = "anyplot_status"
 ADAPTER_P95_S = 60.0
-"""Seconds the second attempt's adapter call is budgeted at when checking the soft deadline.
+"""Seconds a repair attempt's adapter call is budgeted at when checking the soft deadline.
 
 Gemini's plan calls in spike X took about 62 s at the 95th percentile (Claude's whole
 runs about 25 s)."""
 RENDER_P95_S = 15.0
-"""Seconds the second attempt's render is budgeted at when checking the soft deadline.
+"""Seconds a repair attempt's render is budgeted at when checking the soft deadline.
 
 Spike X measured renders at 5.5 s at the 95th percentile and 10.2 s at most. With
-`ADAPTER_P95_S` the second attempt needs 75 s, which leaves the first attempt 65 s
+`ADAPTER_P95_S` a repair attempt needs 75 s, which leaves the first attempt 65 s
 of the 140 s soft deadline; reserving the whole 60 s render timeout left it 35 s,
 less than a typical Gemini plan call. The render's own timeout is still clamped to
 what remains of the soft deadline."""
@@ -156,7 +159,7 @@ The palette rule wants a literal list (`code/validate.py`, "Palette"), so its ta
 never says "derive it": in spike X, 9 of Claude's 14 palette-prefix lines reported a
 computed palette list, the fix the old shared target ("derive it from df and the
 Imprint palette") suggested."""
-# Feedback only ever reaches attempt 2, which allows a full file, so the lines may say so.
+# Feedback only ever reaches a repair attempt (attempt 2 or later), and each allows a full file, so the lines say so.
 SCHEMA_MISS_LINE = (
     "the previous answer did not match the plan schema → answer with one JSON object: edits or full_code "
     "(this attempt allows a full file), title and changes, each within its limits"
@@ -671,11 +674,11 @@ async def _attempts(
 
     adapter = adapter_name(view.library)
 
-    for attempt in (1, 2):
+    for attempt in range(1, settings.max_attempts + 1):
         if not budget_allows(ledger, services.usage, settings):
             run.reason, run.unreviewed_why, run.stage = "budget", "the usage limit was reached", "budget"
             return
-        if attempt == 2 and not deadline.allows(ADAPTER_P95_S + RENDER_P95_S):
+        if attempt > 1 and not deadline.allows(ADAPTER_P95_S + RENDER_P95_S):
             run.reason, run.unreviewed_why, run.stage = "deadline", "the time limit was reached", "deadline"
             return
         run.attempts = attempt
@@ -689,7 +692,7 @@ async def _attempts(
             change_request=args.change_request,
             feedback=_clip_feedback(feedback),
             previous_plan=previous_plan,
-            allow_full=attempt == 2,
+            allow_full=attempt >= 2,
         )
         ledger.adapter_allow_full = request.allow_full
         answer = await _adapt(ctx, scope, render_adapt_request(request, view), view.library)
@@ -806,14 +809,17 @@ async def _attempts(
         else:
             run.padded = candidate
         feedback = [*report.defects, *adaptation_lines]
-        # Attempt 1 spends its feedback on the repair before any review; attempt 2 is reviewed
-        # once if nothing was reviewed yet, with the advisory lines kept as gate notes.
-        if not report.canvas_ok or (feedback and attempt == 1):
+        # Feedback goes to the next attempt before any review while one is allowed; the last
+        # attempt is reviewed once if nothing was reviewed yet, with the advisory lines kept as
+        # gate notes. With the default two attempts that is: attempt 1 repairs, attempt 2 is reviewed.
+        if not report.canvas_ok or (feedback and attempt < settings.max_attempts):
             _end_attempt(run, "gates")
             continue
         if run.reviewed:
+            # Reviewed before, and either no feedback or no attempt left for it: the run ends here,
+            # since another attempt would have nothing to repair.
             _end_attempt(run, "not_rereviewed")
-            continue
+            return
 
         if not budget_allows(ledger, services.usage, settings):
             run.unreviewed_why = "the usage limit was reached"

@@ -151,7 +151,7 @@ def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
         "statuses": dict(sorted(Counter(str(run.get("status")) for run in runs).items())),
         "passed": len(passed),
         "pass_rate": _rate(len(passed), len(runs)),
-        "repaired_passes": sum(1 for run in passed if run.get("attempts") == 2),
+        "repaired_passes": sum(1 for run in passed if (run.get("attempts") or 0) >= 2),
         "ok_rate": _rate(sum(1 for run in runs if run.get("status") == "ok"), len(runs)),
         "accept_judged": len(judged),
         "accept_match_rate": _rate(sum(1 for run in judged if run.get("accept_match")), len(judged)),
@@ -402,7 +402,9 @@ def summary_markdown(report: dict[str, Any], diff: Diff | None = None) -> str:
         f"# Eval run {stamp.get('date', '')}: {stamp.get('model', '')}",
         "",
         f"Provider `{stamp.get('provider')}`, model `{stamp.get('model')}`, judge `{stamp.get('judge_model')}`, "
-        f"location `{stamp.get('location')}`, renderer `{stamp.get('renderer')}`; cases `{stamp.get('cases')}` "
+        f"location `{stamp.get('location')}`, renderer `{stamp.get('renderer')}`, "
+        # Reports made before AGENT_MAX_ATTEMPTS existed carry no value: those runs had two attempts.
+        f"at most {stamp.get('max_attempts', 2)} attempts per run; cases `{stamp.get('cases')}` "
         f"({stamp.get('case_count')} cases, {stamp.get('repeats')} runs each); ADK {stamp.get('adk_version')}, "
         f"commit `{str(stamp.get('git_sha') or '')[:12]}`.",
         "",
@@ -421,7 +423,7 @@ def summary_markdown(report: dict[str, Any], diff: Diff | None = None) -> str:
             [
                 "Pass rate",
                 f"{_pct(summary.get('pass_rate'))} ({summary.get('passed')} passed, "
-                f"{summary.get('repaired_passes')} of them in a run with two attempts)",
+                f"{summary.get('repaired_passes')} of them in a run with a repair attempt)",
             ],
             ["ok rate", _pct(summary.get("ok_rate"))],
             ["Accept-match rate", f"{_pct(summary.get('accept_match_rate'))} of {summary.get('accept_judged')}"],
