@@ -1,0 +1,28 @@
+{
+  "spec_id": "scatter-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Ad Spend (kCHF)"
+    },
+    {
+      "role": "y",
+      "column": "Revenue (kCHF)"
+    }
+  ],
+  "expected": "rejected",
+  "tags": [
+    "stress",
+    "over-cap",
+    "synthetic"
+  ],
+  "source": "synthetic: agents/evals/make_stress.py",
+  "bound_expected": "422 unparseable at the dataset route (parse error cell_too_long: 201 characters), before any model call",
+  "needs_model": false,
+  "static": {
+    "dataset": "422 unparseable",
+    "parse_error": "cell_too_long"
+  }
+}

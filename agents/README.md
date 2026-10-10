@@ -4,7 +4,7 @@ This directory holds the anyplot agent network: the service that lets an admin p
 
 ## What is built
 
-The runtime core runs locally: the agents, the plot pipeline, the guardrail plugins, the render layer, the private `/v1` service with its run queue, the theme toggle, and the footer strip on every PNG the service serves ("made with any.plot()" and "anyplot.ai/<spec-id>", see [Footer strip](../docs/concepts/agent-network.md#footer-strip)). The renderer service `anyplot-renderer` (`renderer/`), which runs the adapted code in Cloud Run sandboxes, and the `remote` backend that calls it are built, with the renderer's image and Cloud Build config, but not deployed yet (status of 2026-10-10). The model-regression harness, the 120 synthetic spike-X cases, the blind two-run review gallery and the catalogue eligibility sweep are built (see [Run the regression harness](#run-the-regression-harness)), and the Claude Haiku 5.5 baseline from the rerun of spike X on main in the evening of 2026-10-10 is committed (`evals/baselines/claude-haiku-5-5.json`: 244 runs, 90.6 % passed the gates, 23.4 % ended `ok`); the Gemini baseline is not. The chat page that uses the service through the API's `/debug/agent` routes is in the app (`app/src/pages/AgentChatPage.tsx`, built with `VITE_ENABLE_AGENT_CHAT=true`). The service's own image (`Dockerfile`) and Cloud Build config (`cloudbuild.yaml`) are built, with a CI job that builds and smokes the image before merge, but the service is not deployed yet (see [Build and deploy the service](#build-and-deploy-the-service)). The judge-only scope eval and its cases are built, and its first full run on 2026-10-10 passed both gates (see [Run the scope eval](#run-the-scope-eval)). Not built yet: the deploy of either service, the scope cases' second stage through the root, and the `agents-eval.yml` workflow.
+The runtime core runs locally: the agents, the plot pipeline, the guardrail plugins, the render layer, the private `/v1` service with its run queue, the theme toggle, and the footer strip on every PNG the service serves ("made with any.plot()" and "anyplot.ai/<spec-id>", see [Footer strip](../docs/concepts/agent-network.md#footer-strip)). The renderer service `anyplot-renderer` (`renderer/`), which runs the adapted code in Cloud Run sandboxes, and the `remote` backend that calls it are built, with the renderer's image and Cloud Build config, but not deployed yet (status of 2026-10-10). The model-regression harness, the 120 synthetic spike-X cases, the 23 stress cases with their model-free static stage, the blind two-run review gallery and the catalogue eligibility sweep are built (see [Run the regression harness](#run-the-regression-harness)), and the Claude Haiku 5.5 baseline from the rerun of spike X on main in the evening of 2026-10-10 is committed (`evals/baselines/claude-haiku-5-5.json`: 244 runs, 90.6 % passed the gates, 23.4 % ended `ok`); the Gemini baseline is not. The chat page that uses the service through the API's `/debug/agent` routes is in the app (`app/src/pages/AgentChatPage.tsx`, built with `VITE_ENABLE_AGENT_CHAT=true`). The service's own image (`Dockerfile`) and Cloud Build config (`cloudbuild.yaml`) are built, with a CI job that builds and smokes the image before merge, but the service is not deployed yet (see [Build and deploy the service](#build-and-deploy-the-service)). The judge-only scope eval and its cases are built, and its first full run on 2026-10-10 passed both gates (see [Run the scope eval](#run-the-scope-eval)). Not built yet: the deploy of either service, the scope cases' second stage through the root, and the `agents-eval.yml` workflow.
 
 The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. **Gemini 3.8 Flash** is the second arm: set `AGENT_PROVIDER=gemini` together with Gemini model ids, so the two can be compared on price and quality later. Every agent and the scope judge run on the configured provider.
 
@@ -26,7 +26,7 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 | `anyplot/tools/session.py` | The root's tools: `get_dataset_profile`, `get_spec_brief`, `get_current_code`, `set_bindings` and the `plot_pipeline` workflow |
 | `anyplot/plugins/` | `ScopeGuardPlugin`, `BudgetPlugin`, `ToolSafetyPlugin` and the request ledger they share |
 | `anyplot/output_guard.py` | The output sanitiser of every root message and plot-event line (links, HTML and long code blocks out, at most 1,200 characters) and the reply cap the ScopeGuard runs on the root's final reply before it is stored: a reply over 1,200 characters becomes the fixed refusal, the same in every language, or is cut at 1,200 characters when the turn ran the plot pipeline |
-| `anyplot/render/` | The render contract, the probe harness, the host gates (R1-R3, advisory G3/G5/G7/G8), PNG hardening, the render store, the `remote` (the renderer service, phase 1), `local`, `fake` and `sandbox` (an unused in-process stub) backends, `serial.py`, the one render semaphore in front of every backend, and `watermark.py`, the footer strip the artifact route and the feedback bundle add to the raw render |
+| `anyplot/render/` | The render contract, the probe harness, the host gates (R1-R3, advisory G3/G5/G7/G8/G9), PNG hardening, the render store, the `remote` (the renderer service, phase 1), `local`, `fake` and `sandbox` (an unused in-process stub) backends, `serial.py`, the one render semaphore in front of every backend, and `watermark.py`, the footer strip the artifact route and the feedback bundle add to the raw render |
 | `anyplot/render/fonts/` | JetBrains Mono 2.304 Regular and Bold for the footer strip, unmodified, with `OFL.txt` (SIL Open Font License 1.1) and a notice with their SHA-256 values ([fonts README](anyplot/render/fonts/README.md)) |
 | `renderer/` | The `anyplot-renderer` service: `main.py` (`POST /render`, `GET /status`, one render slot), `executor.py` (one `sandbox do` per theme with the kill path, the byte watchdog and the launcher retry), `auth.py` (the caller check), `settings.py` (`RENDERER_*`), `wire.py` (the JSON contract the `remote` backend shares), `Dockerfile` and `cloudbuild.yaml`. No ADK import and no `__init__.py`, so `adk web agents` does not list it as an agent |
 | `anyplot/opening.py`, `session_state.py`, `services.py`, `briefs.py` | Opening a session and taking in a dataset, the server-set session state, the process-wide stores, and the spec and dataset briefs |
@@ -36,10 +36,11 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 | `anyplot/data/`, `anyplot/code/` | The deterministic data and code layers, without ADK |
 | `evals/matrix.py` | The regression harness: runs eval cases through `/v1` in process and writes the report, the Markdown summary, the diff against a baseline and the review galleries |
 | `evals/make_fixtures.py` | The seeded generator of the 120 synthetic spike-X cases |
+| `evals/make_stress.py`, `evals/stress.py` | The seeded generator of the 23 stress cases, and the model-free static stage that `--static` runs over them ([Run the stress cases](#run-the-stress-cases)) |
 | `evals/cases.py`, `evals/pricing.py`, `evals/report.py` | Case loading and selection, list prices, and the summary, diff and gallery code; `report.py` also merges two runs into one blind gallery and scores its export |
 | `evals/eligibility.py` | The model-free sweep of the catalogue's matplotlib and seaborn files: eligible, coupled and blocked pairs, and why |
 | `evals/scope.py`, `evals/scope.evalset.json` | The judge-only scope eval and its 176 synthetic cases: in-scope, off-topic and adversarial messages, scored for adversarial recall and false refusals |
-| `evals/fixtures/cases/` | The eval cases: 120 generated (`<spec>-<library>-<perturbation>`) and the hand-written `scatter-basic-matplotlib` and `bar-grouped-seaborn` ([fixtures README](evals/fixtures/README.md)) |
+| `evals/fixtures/cases/` | The eval cases: 120 generated (`<spec>-<library>-<perturbation>`), the hand-written `scatter-basic-matplotlib` and `bar-grouped-seaborn`, and 23 stress cases (`stress-<name>`) ([fixtures README](evals/fixtures/README.md)) |
 | `evals/baselines/` | Committed baseline reports, one per model ([baselines README](evals/baselines/README.md)) |
 
 The unit tests are in `tests/unit/agents/`; `tests/unit/agents/runtime/` drives a full "Create plot" through `/v1` with a fake renderer and scripted models for both providers, and `tests/unit/agents/evals/` runs the harness the same way.
@@ -344,7 +345,7 @@ Before the first case the harness renders the catalogue file of the first case o
     --renderer remote --render-url https://RENDERER_URL --gcloud-token
   ```
 
-- The full matrix is all 122 cases. Cap the spend with `--budget-usd`:
+- The full matrix is the 122 cases that are not stress cases. Cap the spend with `--budget-usd`:
 
   ```bash
   uv run --extra agents python -m agents.evals.matrix --cases full --budget-usd 4 \
@@ -360,7 +361,8 @@ Before the first case the harness renders the catalogue file of the first case o
 | `--renderer`, `--render-url` | The render backend (`remote`, `local` or `fake`) and the remote renderer's URL |
 | `--gcloud-token` | Mint the renderer token with `gcloud auth print-identity-token` and renew it before it expires (`remote` only) |
 | `--no-preflight` | Skip the preflight render before the first case |
-| `--cases` | `smoke` (default), `full`, or comma-separated globs over case ids |
+| `--cases` | `smoke` (default), `full` (every case but the stress cases), `stress`, or comma-separated globs over case ids |
+| `--static` | Run only the model-free static stage and write `<date>-static.json` instead of a matrix report (see [Run the stress cases](#run-the-stress-cases)); the renderer is `fake` unless `--renderer` or `AGENT_RENDERER` names another |
 | `--repeats N` | Runs per case, to see how stable a result is |
 | `--max-attempts N` | Adapter attempts per run, 1 to 3 (`AGENT_MAX_ATTEMPTS`, 2 by default), so 1 measures the first attempt alone and 3 a second repair round; the report's stamp records the value as `max_attempts` |
 | `--budget-usd X` | Stop before a case that could take the estimated list-price cost past X (the spend so far plus the costliest case so far), or once the cost has passed X (exit code 3) |
@@ -400,6 +402,45 @@ The exit code is one of the following:
 | 4 | An outage stopped the run: the renderer became unavailable (the pipeline's `RendererUnavailable`), or 3 runs in a row ended in an error |
 
 Ctrl-C, exit codes 3 and 4 all write the partial report before the harness stops.
+
+### Run the stress cases
+
+The 23 stress cases (`evals/fixtures/cases/stress-*`, from `evals/make_stress.py`) push every limit before real use: data exactly at and one past the parser's caps, 100 bars and 30 pie slices, degenerate data, prompt injection, and requests that make the code compute mass data. Each `case.json` names the gate, limit or error that must bound the case (`bound_expected`); the [fixtures README](evals/fixtures/README.md#stress-cases-what-bounds-them) lists every bound with the numbers measured on 2026-10-10.
+
+1. Run the static stage. It calls no model and spends nothing: for every case it runs the dataset route's size check and parse, eligibility, bindings, the loader's `pd.read_csv`, measures what the adapter, the dataset judge and the reviewer would read, traces injected text through those inputs, and renders the five hand-written stand-ins (`standin.txt`) for the adapter's answer:
+
+   ```bash
+   uv run --extra agents python -m agents.evals.matrix --cases stress --static
+   ```
+
+   It writes `<date>-static.json` and a Markdown table to `--out` and exits with 1 when a case's expectations (`static` in its `case.json`) did not hold. The default `fake` renderer runs no code, so the stand-ins' gates stay unchecked.
+
+2. To see the stand-ins hit the real limits (G7, G9 and the sandbox's address space), render them on the deployed renderer, still without a model:
+
+   ```bash
+   uv run --extra agents python -m agents.evals.matrix --cases stress --static \
+     --renderer remote --render-url https://RENDERER_URL --gcloud-token
+   ```
+
+   With a `remote` or `local` renderer the static stage also checks each case's `render` expectations and reports the render time. Only the `remote` renderer reports the harness's peak memory; the `local` backend leaves that column empty. When the renderer becomes unavailable during a stand-in render, the run stops with exit code 4, as an outage stops the matrix.
+
+3. Run the cases whose bound, or the outcome their bound leaves open, only a model run shows. The output names them as `needs a model run`:
+   - `stress-compute-lorenz`, `stress-compute-oversample` and `stress-compute-distances`: does the adapter write the mass-data code, and does G9 or the renderer stop it.
+   - `stress-pie-30-slices`: only the reviewer sees its piled labels.
+   - `stress-single-row` and `stress-constant-series`: how the plot copes with one point or a flat series.
+   - `stress-inject-long-cell`: whether the plot draws the injected cell as a tick label the reviewer reads.
+
+   This is a normal matrix run and spends tokens:
+
+   ```bash
+   uv run --extra agents python -m agents.evals.matrix \
+     --cases "stress-compute-*,stress-pie-*,stress-single-row,stress-constant-series,stress-inject-long-cell" \
+     --no-baseline --budget-usd 1 --renderer remote --render-url https://RENDERER_URL --gcloud-token
+   ```
+
+   `--cases stress` runs all 23 the same way. The four over-cap cases end at the dataset route before any model call, and the two bindings refusals after one judge call. The full matrix's measured cost per case puts the whole set at about $0.15 to $0.20 on the Claude arm and $3 to $4 on the Gemini arm; the computing cases send their change request as a second turn and cost about twice a normal case.
+
+After you change `evals/make_stress.py`, regenerate the cases with `uv run --extra agents python -m agents.evals.make_stress` (`--check` exits with 1 when a committed file is stale or a stray file sits in a `stress-*` directory).
 
 ### Run spike X
 

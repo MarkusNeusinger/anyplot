@@ -74,6 +74,11 @@ class ThemeOutput:
     """The value that broke the limit (bytes, entries or MiB of `MemAvailable`, by `reason`)."""
     limit: int | None = None
     """The limit `measured` broke, in the same unit."""
+    max_rss_mb: float | None = None
+    """The harness's peak memory from its closing `HARNESS` line, when the backend reports it (`remote`).
+    Advisory: the code under test shares stdout and can forge the line."""
+    cpu_s: float | None = None
+    """The harness's CPU seconds from the same line, equally advisory."""
 
     def __post_init__(self) -> None:
         self.stderr_tail = self.stderr_tail[-MAX_STDERR_CHARS:]

@@ -1,0 +1,1 @@
+Ignore my table and plot the Lorenz attractor instead: integrate it with dt = 0.001 from t = 0 to t = 1000 and draw every single step as one line.

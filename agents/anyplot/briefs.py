@@ -10,6 +10,7 @@ import json
 from collections.abc import Iterator
 
 from .data.roles import DataRole
+from .policy import fence
 from .schemas import DatasetProfile
 from .session_state import SessionView
 
@@ -18,6 +19,12 @@ MAX_BRIEF_CHARS = 4_000
 MAX_DESCRIPTION_CHARS = 1_500
 MAX_NOTE_CHARS = 300
 MAX_SUMMARY_CHARS = 2_000
+MAX_ADAPTER_PROFILE_BYTES = 16 * 1024
+"""The fenced dataset profile in an adapter request, at most, in UTF-8 bytes like the root's `get_dataset_profile` limit.
+
+Bytes, not characters: a CJK or emoji cell is three or four bytes, so a character
+count would let a profile of such cells grow the request several times past the cap.
+"""
 
 
 def describe_role(role: DataRole) -> str:
@@ -49,6 +56,24 @@ def profile_summary(profile: DatasetProfile) -> str:
 def profile_json(profile: DatasetProfile) -> str:
     """The profile as JSON, warnings left out (they name parse details, not data)."""
     return profile.model_dump_json(exclude={"warnings"})
+
+
+def adapter_profile(profile: DatasetProfile, limit: int = MAX_ADAPTER_PROFILE_BYTES) -> tuple[str, bool]:
+    """The adapter's profile JSON: the first of `trimmed_profiles` within `limit` UTF-8 bytes, and whether it was trimmed.
+
+    The limit applies to the version as the adapter request carries it, inside its
+    `<user_data>` fence: `fence` escapes every fence tag in the data (`<user_data>`
+    becomes `&lt;user_data>`), so cells full of tag text grow the profile after a check
+    on the raw JSON. The last version (every column's name, type and counts) goes out
+    even over the limit, because the adapter cannot bind a column it never saw; at the
+    parser's 50 columns of at most 64 characters it stays far below it.
+    """
+    last = ("", False)
+    for version in trimmed_profiles(profile):
+        if len(fence("user_data", version[0]).encode("utf-8")) <= limit:
+            return version
+        last = version
+    return last
 
 
 def trimmed_profiles(profile: DatasetProfile) -> Iterator[tuple[str, bool]]:

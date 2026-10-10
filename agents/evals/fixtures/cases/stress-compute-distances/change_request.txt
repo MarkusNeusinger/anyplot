@@ -1,0 +1,1 @@
+Interpolate my points to 50,000 along the path and show the full 50,000 by 50,000 matrix of pairwise distances as a heatmap.

@@ -25,9 +25,12 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    as the faster variant);
 4. wraps `matplotlib.figure.Figure.savefig` so that every save also writes
    `probe-<theme>.json` next to the plot: the figure size and dpi, the bounding
-   boxes in display pixels of every text the probe's own draw rendered, overlaps
-   between rendered tick labels per axis, annotations outside their axes, and the
-   number of drawn point marks. Only rendered text counts: matplotlib keeps tick
+   boxes in display pixels of the texts the probe's own draw rendered (it measures
+   the first `PROBE_MEASURE_LIMIT` in draw order and keeps at most `PROBE_LIMIT`,
+   the ones past a canvas edge first; `texts_total` counts every drawn text), overlaps
+   between the measured tick labels per axis, annotations outside their axes, the
+   number of drawn point marks (scatter offsets) and the number of vertices of the
+   visible `plot()` lines (`line_points`). Only rendered text counts: matplotlib keeps tick
    labels for locator positions outside the view interval and for hidden axes
    (`axis("off")`, a twin's), which report themselves visible but are never drawn,
    and an edge label one tick step past the view sat beyond the canvas in every
@@ -38,7 +41,8 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    stderr and the exit code stays non-zero.
 
 The probe feeds the advisory gates G3 (clipped text), G5 (annotation outside its
-axes), G7 (tick-label overlap) and G8 (more point marks than data rows). It is
+axes), G7 (tick-label overlap), G8 (more point marks than data rows) and G9 (more
+plotted points than any dataset within the parser's caps can hold). It is
 advisory because the code under test could tamper with it; the host never fails a
 render on it. The same holds for the `HARNESS` lines: the code under test shares
 stdout, so the host reads them as hints (a retry decision, a memory figure), never
@@ -46,6 +50,7 @@ as a verdict.
 """
 
 import functools
+import itertools
 import json
 import math
 import os
@@ -56,6 +61,15 @@ import sys
 
 
 PROBE_LIMIT = 400  # text boxes recorded per figure
+PROBE_MEASURE_LIMIT = 2_000
+"""Texts the probe measures per figure, in draw order. Each `get_window_extent` costs CPU time
+under the sandbox's `RLIMIT_CPU`, on top of the three full draws a render already pays (the
+probe's, the save's and pyplot's trailing one): measured on WSL2, the extents of 2,000 labels
+took 0.07 s and those of 20,000 took 6.5 s, past matplotlib's text-metrics cache. A clipped
+text drawn after the first 2,000 is not seen by G3, nor a tick label by G7: G7 reuses these
+extents and measures none of its own. G5 reuses them too and measures the annotations
+missing from them, at most this many again: matplotlib draws no annotation whose point
+lies outside the view, which is the case G5 is there for."""
 THEME_ENV = "ANYPLOT_THEME"
 MARKER = "HARNESS"
 
@@ -112,6 +126,11 @@ def _overlaps(a, b):
     return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
 
 
+def _beyond(box, width, height):
+    """Whether a text box reaches past an edge of the `width` x `height` canvas."""
+    return box[0] < 0 or box[1] < 0 or box[2] > width or box[3] > height
+
+
 def _draw_recording_texts(figure):
     """Draw the figure once and return the texts that rendered, by id.
 
@@ -145,36 +164,44 @@ def probe(figure, dpi):
     renderer = figure.canvas.get_renderer()
     width_in, height_in = figure.get_size_inches()
     scale = (dpi or figure.dpi) / figure.dpi
-    texts = []
-    for text in drawn.values():
-        if len(texts) >= PROBE_LIMIT:
-            break
+    width_px, height_px = float(width_in) * float(dpi or figure.dpi), float(height_in) * float(dpi or figure.dpi)
+    extents = {}  # id(text) -> its box in figure pixels; G7 and G5 reuse these instead of measuring again
+    measured = []
+    for text in itertools.islice(drawn.values(), PROBE_MEASURE_LIMIT):
         try:
-            box = [value * scale for value in _box(text.get_window_extent(renderer))]
+            extents[id(text)] = _box(text.get_window_extent(renderer))
         except Exception:
             continue
+        box = [value * scale for value in extents[id(text)]]
         if all(math.isfinite(value) for value in box):  # one text at an infinite coordinate never voids the probe
-            texts.append({"kind": type(text).__name__, "box": box})
+            measured.append({"kind": type(text).__name__, "box": box})
+    # Only PROBE_LIMIT boxes are kept: the ones past a canvas edge go first, so a plot with
+    # hundreds of labels (100 bars with value labels, a 100-entry legend) still shows G3
+    # every clipped text among the measured ones, whatever order matplotlib drew them in.
+    measured.sort(key=lambda item: not _beyond(item["box"], width_px, height_px))
+    texts = measured[:PROBE_LIMIT]
     tick_overlaps = 0
     annotations_outside = 0
     points = 0
+    line_points = 0
+    annotation_budget = PROBE_MEASURE_LIMIT
     for axes in figure.get_axes():
         for axis in (axes.xaxis, axes.yaxis):
-            boxes = []
-            for label in axis.get_ticklabels():
-                try:
-                    if id(label) in drawn:
-                        boxes.append(_box(label.get_window_extent(renderer)))
-                except Exception:
-                    continue
+            boxes = [extents[id(label)] for label in axis.get_ticklabels() if id(label) in extents]
             tick_overlaps += sum(1 for left, right in zip(boxes, boxes[1:], strict=False) if _overlaps(left, right))
         axes_box = _box(axes.get_window_extent(renderer))
         for child in axes.texts:
             try:
-                if child.get_visible() and type(child).__name__ == "Annotation":
+                if not child.get_visible() or type(child).__name__ != "Annotation":
+                    continue
+                box = extents.get(id(child))
+                if box is None:  # not drawn (its point is out of view) or past the measured texts
+                    if annotation_budget <= 0:
+                        continue
+                    annotation_budget -= 1
                     box = _box(child.get_window_extent(renderer))
-                    if not _overlaps(box, axes_box):
-                        annotations_outside += 1
+                if not _overlaps(box, axes_box):
+                    annotations_outside += 1
             except Exception:
                 continue
         for collection in axes.collections:
@@ -182,6 +209,12 @@ def probe(figure, dpi):
                 continue
             try:
                 points += len(collection.get_offsets())
+            except Exception:
+                continue
+        for line in axes.get_lines():  # plot() lines and their markers: one vertex per plotted value
+            try:
+                if line.get_visible():
+                    line_points += len(line.get_xydata())
             except Exception:
                 continue
     return {
@@ -192,9 +225,11 @@ def probe(figure, dpi):
             round(float(height_in) * float(dpi or figure.dpi)),
         ],
         "texts": texts,
+        "texts_total": len(drawn),
         "tick_overlaps": tick_overlaps,
         "annotations_outside": annotations_outside,
         "points": points,
+        "line_points": line_points,
     }
 
 

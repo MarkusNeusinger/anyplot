@@ -1,0 +1,31 @@
+{
+  "spec_id": "scatter-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "X Reading"
+    },
+    {
+      "role": "y",
+      "column": "Y Reading"
+    }
+  ],
+  "expected": "unknown",
+  "tags": [
+    "stress",
+    "cap",
+    "synthetic"
+  ],
+  "source": "synthetic: agents/evals/make_stress.py",
+  "bound_expected": "the canonical data.csv grows to about 3.8 times the input and still fits the renderer's 2 MiB data_csv limit (MAX_DATA_CSV_CHARS)",
+  "needs_model": false,
+  "static": {
+    "dataset": "ok",
+    "bytes": 204800,
+    "bindings": "complete",
+    "loader": "ok",
+    "csv_fits_wire": true
+  }
+}

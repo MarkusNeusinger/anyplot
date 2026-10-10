@@ -1,14 +1,15 @@
-"""Host gates on a render: R1-R3 decide, G3/G5/G7/G8 advise.
+"""Host gates on a render: R1-R3 decide, G3/G5/G7/G8/G9 advise.
 
 | Gate | Checks | Effect |
 |---|---|---|
-| R1 | an output for each of the job's themes, exit code 0, no timeout, no renderer limit hit (`limit_line`), a PNG per theme | blocking: the render is discarded, the error becomes repair feedback |
+| R1 | an output for each of the job's themes, exit code 0, no timeout, no renderer limit hit (`limit_line`, reported as `R1-<reason>`), a PNG per theme | blocking: the render is discarded, the error becomes repair feedback |
 | R2 | PNG hardening (`png.harden`): signature, decode, size and pixel caps, not blank, re-encoded | blocking, like R1 |
 | R3 | canvas within 16 px of 3200x1800 or 2400x2400 (`core.canvas.check_canvas`) | repair-triggering: the VQ-05 defect line goes to the repair; a padded copy of each missed theme is kept as the fallback |
 | G3 | probe: boxes of drawn text beyond the canvas edge (tick labels outside the view or on a hidden axis are never drawn, so never count) | advisory: an AR-09 line |
 | G5 | probe: annotations outside their axes | advisory: a DQ-03 line |
 | G7 | probe: overlapping drawn tick labels | advisory: a VQ-02 line |
 | G8 | probe: more point marks than data rows (fabricated data) | advisory: a DQ-03 line |
+| G9 | probe: scatter marks plus line vertices over `MAX_PLOTTED_POINTS` (computed mass data) | advisory: a DQ-03 line |
 
 A pipeline run renders one theme (`PipelineArgs.theme`) and the theme toggle renders
 the other one later, so `evaluate` judges exactly the themes of the job it is given:
@@ -41,6 +42,10 @@ from .png import PngRejected, harden, pad_to
 CLIP_TOLERANCE_PX = 2
 G8_SLACK = 10
 G8_FACTOR = 1.5
+MAX_PLOTTED_POINTS = 200_000
+"""G9: scatter marks plus line vertices a plot may draw. The parser's 200 KB cap holds at most about
+102,000 cells (two bytes each), so a plot past twice that drew points the code computed, such as an
+oversampled series or a simulated trajectory (stress cases `stress-compute-*`)."""
 CODE_FILE = "plot.py"
 """The file the Python runtime writes the code to; its frames give the error line."""
 ERROR_CLASSES = frozenset(
@@ -101,8 +106,9 @@ class GateReport:
     advisory: list[str] = field(default_factory=list)
     failed_gates: list[str] = field(default_factory=list)
     """The ids of the gates that failed or reported, one entry per theme and finding: `R1`,
-    `R1-timeout`, `R2`, `R3`, then the probe gates `G3`, `G5`, `G7`, `G8` in the order the
-    probe checks run (not sorted). Content-free, for the attribution log."""
+    `R1-timeout`, `R1-<reason>` for a renderer limit (`R1-memory`, `R1-disk_budget`, ...), `R2`,
+    `R3`, then the probe gates `G3`, `G5`, `G7`, `G8`, `G9` in the order the probe checks run
+    (not sorted). Content-free, for the attribution log."""
 
     @property
     def defects(self) -> list[str]:
@@ -229,6 +235,7 @@ def evaluate(result: RenderResult, *, themes: Sequence[Theme], library: str, row
         stopped = limit_line(theme, output.reason, output.measured, output.limit)
         if stopped is not None:
             report.blocking.append(_line(stopped))
+            report.failed_gates.append(f"R1-{output.reason}")
             report.passed_host_gates = False
             continue
         if output.exit_code != 0 or output.png is None:
@@ -338,6 +345,20 @@ def _probe_lines_unchecked(probe: dict[str, Any] | None, rows: int) -> list[tupl
                 "G8",
                 f"DQ-03 (code): the plot draws {points} point marks for {rows} data rows → draw marks only from df. "
                 "Likely cause: generated or duplicated data.",
+            )
+        )
+    plotted = sum(
+        value
+        for value in (points, probe.get("line_points"))
+        if isinstance(value, int) and not isinstance(value, bool) and value > 0
+    )
+    if plotted > MAX_PLOTTED_POINTS:
+        lines.append(
+            (
+                "G9",
+                f"DQ-03 (code): the plot draws {plotted} points, over the limit of {MAX_PLOTTED_POINTS} for "
+                f"{rows} data rows → plot the rows of df, at most one mark or line vertex per row and series. "
+                "Likely cause: data computed, interpolated or resampled in the code.",
             )
         )
     return lines

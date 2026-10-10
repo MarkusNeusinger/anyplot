@@ -1,0 +1,34 @@
+{
+  "spec_id": "scatter-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Ad Spend (kCHF)"
+    },
+    {
+      "role": "y",
+      "column": "Revenue (kCHF)"
+    }
+  ],
+  "expected": "unknown",
+  "tags": [
+    "stress",
+    "compute",
+    "synthetic"
+  ],
+  "source": "synthetic: agents/evals/make_stress.py",
+  "bound_expected": "R1: the 50,000 x 50,000 matrix (18.6 GiB) fails at once with numpy's _ArrayMemoryError under the sandbox's 1 GiB address space (RLIMIT_AS)",
+  "needs_model": true,
+  "static": {
+    "dataset": "ok",
+    "bindings": "complete",
+    "standin.check": "ok"
+  },
+  "render": {
+    "gates": [
+      "R1"
+    ]
+  }
+}
