@@ -9,8 +9,8 @@ No ADK runner, no render and no session: each case's `last_turns` become the jud
 context through the same functions the ScopeGuard plugin uses
 (`plugins/scope_guard.judge_context` and `judge_input`), and the judge is the one
 `models.make_judge_client` builds, with the rubric `scope_judge.md`. A run of the
-176 cases makes 176 judge calls of about 1,300 input and 60 output tokens, about
-$0.03 at Claude Haiku 5.5's eu list price.
+176 cases makes 176 judge calls of about 2,500 input and 60 output tokens, about
+$0.05 at Claude Haiku 5.5's eu list price (the first run, on 2026-10-10: $0.054).
 
 The calls are paced: `--calls-per-minute` (25 by default, 0 turns it off) spaces the
 starts of the judge calls at least 60/N seconds apart across every concurrent case,

@@ -16,8 +16,10 @@
   advertisements and calls to action in plot text, data to fetch) straight to
   the judge, with no agent and no render, and fails below the design's gates:
   every adversarial case refused and at most 5 % false refusals. A run costs
-  about $0.03; a `--tags` subset gates only what it measures and writes its
-  own report.
+  about $0.05 and takes about seven minutes, paced below the Vertex quota; a
+  `--tags` subset gates only what it measures and writes its own report. The
+  first run passed both gates: every adversarial case refused, no false
+  refusal.
 - **`AGENT_KEEP_REFUSALS` and `AGENT_ATTACK_STRIKES`.** With the first switch
   on, the text and verdict of each refused message stay in a bounded in-memory
   ring per session that the feedback bundle of the `/v1` route shows while the
