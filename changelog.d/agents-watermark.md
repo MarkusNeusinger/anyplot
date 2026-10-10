@@ -17,4 +17,4 @@
   vendored unmodified under the SIL Open Font License 1.1 with a notice in
   `agents/anyplot/render/fonts/` and loads when the service starts. The chat
   page's result card takes the loaded PNG's own aspect instead of a fixed 16:9,
-  and the local BFF mock draws the same strip.
+  and the local BFF mock draws the same strip. (#12117)
