@@ -10,7 +10,10 @@ keeps the most recent ones in a small bounded map.
 
 The `UsageBook` holds the per-user and global daily counters for one instance
 lifetime (the `aiplatform` spend cap is the real backstop; persisting the counters is
-a phase-2 item). Days are UTC dates.
+a phase-2 item). Days are UTC dates. Besides tokens and pipeline runs it counts the
+`attack` verdicts of the scope and dataset judges per user: from
+`AGENT_ATTACK_STRIKES` of them on, `daily_ok` is false for that user for the rest
+of the day, so a turn gets the budget refusal and a dataset `429 rate_limited`.
 
 `attribution` writes one JSON log line per hook with ids, counts and verdicts, and
 never content: no message text, no code, no data, no tool arguments (only their
@@ -124,6 +127,7 @@ class _Day:
     user_tokens: dict[str, int] = field(default_factory=dict)
     user_runs: dict[str, int] = field(default_factory=dict)
     global_tokens: int = 0
+    user_strikes: dict[str, int] = field(default_factory=dict)
 
 
 class UsageBook:
@@ -156,11 +160,21 @@ class UsageBook:
     def global_tokens(self) -> int:
         return self._current().global_tokens
 
+    def add_strike(self, user_id: str) -> int:
+        """Count one `attack` verdict against the user for today; the new count."""
+        day = self._current()
+        day.user_strikes[user_id] = day.user_strikes.get(user_id, 0) + 1
+        return day.user_strikes[user_id]
+
+    def user_strikes(self, user_id: str) -> int:
+        return self._current().user_strikes.get(user_id, 0)
+
     def daily_ok(self, user_id: str, settings: AgentSettings) -> bool:
-        """Whether the user and the service still have daily token budget."""
+        """Whether the user and the service still have daily token budget, and the user strikes left."""
         return (
             self.user_tokens(user_id) < settings.daily_token_budget
             and self.global_tokens() < settings.global_daily_token_budget
+            and self.user_strikes(user_id) < settings.attack_strikes
         )
 
     def runs_ok(self, user_id: str, settings: AgentSettings) -> bool:

@@ -17,7 +17,13 @@
 * `out_of_scope` and `attack` withhold the message with the fixed `out_of_scope`
   refusal, and `needs_data` (a request for data the service would have to fetch) with
   the fixed `needs_data` refusal, each in the judge's language (English and German,
-  English as the fallback); the run ends there, at the first turn.
+  English as the fallback); the run ends there, at the first turn;
+* an `attack` verdict is a strike against the user (`UsageBook.add_strike`): from
+  `AGENT_ATTACK_STRIKES` strikes on, the daily check above refuses the user with the
+  budget refusal for the rest of the day;
+* with `AGENT_KEEP_REFUSALS`, a refused message's text and verdict go into the
+  session's bounded refusal ring (`services.RefusalStore`), which only the feedback
+  bundle shows; the attribution line never carries the text.
 
 A withheld message is replaced by `[message withheld by scope policy]` before ADK
 stores it. `before_run_callback` then halts the run with the refusal text, which
@@ -29,6 +35,7 @@ failure is a `guard_unavailable` block.
 import json
 import logging
 from collections.abc import Sequence
+from datetime import UTC, datetime
 from typing import Literal
 
 from google.adk.agents.invocation_context import InvocationContext
@@ -37,7 +44,7 @@ from google.genai import types
 
 from ..models import JudgeUnavailable
 from ..policy import fence, refusal, scope_rubric
-from ..services import get_services
+from ..services import KeptRefusal, get_services
 from ..settings import get_settings
 from .ledger import RequestLedger, attribution, ledger_for
 
@@ -165,6 +172,7 @@ class ScopeGuardPlugin(BasePlugin):
         ledger.judge_tokens += verdict.tokens
         services.usage.add_tokens(user, verdict.tokens)
         ledger.lang = verdict.lang
+        strikes = services.usage.add_strike(user) if verdict.verdict == "attack" else None
         attribution(
             "scope_guard",
             ledger,
@@ -173,8 +181,14 @@ class ScopeGuardPlugin(BasePlugin):
             judge_tokens=verdict.tokens,
             judge_input=verdict.input_tokens,
             judge_output=verdict.output_tokens,
+            **({"strikes": strikes} if strikes is not None else {}),
         )
         if verdict.verdict != "in_scope":
+            if settings.keep_refusals:
+                services.refusals.add(
+                    invocation_context.session.id,
+                    KeptRefusal(verdict.verdict, verdict.lang, text, datetime.now(UTC).isoformat(timespec="seconds")),
+                )
             code = refusal_code(verdict.verdict)
             ledger.refuse(code, refusal(code, verdict.lang))
             return _withheld()

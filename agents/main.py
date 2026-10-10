@@ -18,7 +18,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
 | `GET /v1/sessions/{sid}/artifacts/{name}?v=` | | the file | `404` |
-| `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle | `404` |
+| `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle; with `AGENT_KEEP_REFUSALS` also `refusals`, the session's refused messages `[{verdict, lang, text, at}]` | `404` |
 | `DELETE /v1/sessions/{sid}` | | `204` | |
 
 Every `/v1` route needs `X-Anyplot-User` (the BFF's opaque user id); sessions are
@@ -77,7 +77,7 @@ import re
 import secrets
 import time
 from collections.abc import AsyncIterator, Callable
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Annotated, Any, Literal
 
 from fastapi import Body, Depends, FastAPI, Header, Path, Query, Request
@@ -619,7 +619,8 @@ async def _judge_dataset(services: Services, ledger: RequestLedger, parts: list[
 
     Every answered part books its tokens to the user and writes its own `data_judge`
     attribution line (with `part` and `parts`), so the eval harness prices each call.
-    The batches stop at the first refusal or outage: the rest would change nothing.
+    The batches stop at the first refusal or outage: the rest would change nothing. An
+    `attack` verdict is one strike against the user (`UsageBook.add_strike`).
     """
     rubric = data_rubric()
     for start in range(0, len(parts), DATASET_JUDGE_CONCURRENCY):
@@ -627,6 +628,8 @@ async def _judge_dataset(services: Services, ledger: RequestLedger, parts: list[
         answers = await asyncio.gather(
             *(services.judge.judge(fence("dataset", part), rubric) for part in batch), return_exceptions=True
         )
+        if any(isinstance(answer, JudgeVerdict) and answer.verdict == "attack" for answer in answers):
+            services.usage.add_strike(ledger.user_id)  # one strike per upload, however many parts
         refused = unavailable = False
         for offset, answer in enumerate(answers):
             number = start + offset + 1
@@ -989,7 +992,7 @@ async def bundle(
                 "data_csv": item.data_csv if include_data else None,
             }
         )
-    payload = {
+    payload: dict[str, Any] = {
         "session": {"spec_id": view.spec_id, "library": view.library, "locale": view.locale},
         "snapshot": {"spec_id": view.snapshot.spec_id, "library_version": view.snapshot.library_version},
         "transcript": transcript,
@@ -1006,6 +1009,9 @@ async def bundle(
             "prompt_hashes": _prompt_hashes(),
         },
     }
+    if settings.keep_refusals:
+        # The transcript holds only the placeholder of a refused message; the ring holds its text.
+        payload["refusals"] = [asdict(item) for item in services.refusals.all(sid)]
     return JSONResponse(payload, headers=_NO_STORE)
 
 

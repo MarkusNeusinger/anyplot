@@ -80,6 +80,8 @@ Three rules hold for everything here:
 | `AGENT_REQUEST_DEADLINE_S` | `180` | Hard request deadline |
 | `AGENT_SOFT_DEADLINE_S` | `140` | Soft deadline inside the pipeline |
 | `AGENT_JUDGE_TIMEOUT_S` | `4` | Budget of one judge verdict, its one retry included |
+| `AGENT_KEEP_REFUSALS` | `false` | Keep the text and verdict of each message the scope judge refused, at most 20 per session in memory, shown only in the feedback bundle (`refusals`); never in a log |
+| `AGENT_ATTACK_STRIKES` | `3` | `attack` verdicts of the scope or dataset judge per user and day after which the user gets the budget refusal for the rest of the day |
 | `AGENT_SESSION_IDLE_S` | `3600` | Idle time after which the sweeper drops a session |
 | `AGENT_ALLOWED_CALLERS` | empty | Service-account emails allowed to call `/v1` outside development |
 | `AGENT_SERVICE_URLS` | empty | ID-token audiences accepted on `/v1` outside development |

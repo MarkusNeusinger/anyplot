@@ -33,6 +33,8 @@ another provider, model or location.
 | `AGENT_REQUEST_DEADLINE_S` | `180` | Hard request deadline, enforced through `abort_signal` |
 | `AGENT_SOFT_DEADLINE_S` | `140` | Soft deadline inside the pipeline; below the hard one |
 | `AGENT_JUDGE_TIMEOUT_S` | `4` | Wall-clock budget of one judge verdict, its single retry included |
+| `AGENT_KEEP_REFUSALS` | `false` | Keep the text and verdict of each message the scope judge refused, in a bounded in-memory ring per session that only the feedback bundle shows; never in a log |
+| `AGENT_ATTACK_STRIKES` | `3` | `attack` verdicts per user and day after which the user gets the budget refusal for the rest of the day |
 | `AGENT_SESSION_IDLE_S` | `3600` | Idle seconds after which the sweeper drops a session and its stores |
 | `AGENT_ALLOWED_CALLERS` | empty | Service-account emails allowed to call `/v1` (comma-separated) |
 | `AGENT_SERVICE_URLS` | empty | ID-token audiences accepted on `/v1` (comma-separated): the service URL, which Cloud Run requires as the audience even for a request to a tag URL |
@@ -196,6 +198,16 @@ class AgentSettings(BaseSettings):
 
     judge_timeout_s: PositiveFloat = 4.0
     """Seconds for one judge verdict including its one retry (`AGENT_JUDGE_TIMEOUT_S`)."""
+
+    keep_refusals: bool = False
+    """Keep the text and verdict of every message the scope judge refused (`AGENT_KEEP_REFUSALS`), in a
+    bounded in-memory ring per session that only the feedback bundle shows, so false refusals can be
+    found and promoted to the scope eval. Off by default; for phase 1, where only the owner's data is
+    in the service. The text never reaches a log."""
+
+    attack_strikes: PositiveInt = 3
+    """`attack` verdicts of the scope or dataset judge per user and day (`AGENT_ATTACK_STRIKES`) after
+    which the user gets the budget refusal for the rest of the (UTC) day."""
 
     session_idle_s: PositiveInt = 3600
     """Idle seconds before the sweeper drops a session (`AGENT_SESSION_IDLE_S`)."""
