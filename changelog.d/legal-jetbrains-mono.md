@@ -7,4 +7,4 @@
   bundled third-party fonts keep their own licences beside the MIT-licensed
   code. The repository has vendored the font since the footer strip landed, so
   "the entire codebase is publicly available under the MIT License" needed that
-  qualifier to stay true.
+  qualifier to stay true. (#12120)
