@@ -7,7 +7,7 @@ from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.store import DatasetStore
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.models import GEMINI_ADAPTER_MAX_OUTPUT_TOKENS
-from agents.anyplot.opening import dataset_judge_input
+from agents.anyplot.opening import dataset_judge_inputs
 from agents.anyplot.pipeline import (
     ADAPTER_P95_S,
     NOT_REVIEWED_LINE,
@@ -177,7 +177,7 @@ def test_dataset_judge_sees_every_header() -> None:
     rows = [",".join(f"cell {row} {index} " + "z" * 25 for index in range(50)) for row in range(5)]
     parsed = parse_dataset(",".join(names) + "\n" + "\n".join(rows) + "\n")
 
-    payload = json.loads(dataset_judge_input(parsed))
+    payload = json.loads(dataset_judge_inputs(parsed)[0])
 
     assert payload["columns"] == names
     assert len(json.dumps(payload["columns"])) > 3_000  # more than the old blind cut
