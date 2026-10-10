@@ -4,7 +4,7 @@ This directory holds the anyplot agent network: the service that lets an admin p
 
 ## What is built
 
-The runtime core runs locally: the agents, the plot pipeline, the guardrail plugins, the render layer, the private `/v1` service with its run queue, the theme toggle, and the footer strip on every PNG the service serves ("made with any.plot()" and "anyplot.ai/<spec-id>", see [Footer strip](../docs/concepts/agent-network.md#footer-strip)). The renderer service `anyplot-renderer` (`renderer/`), which runs the adapted code in Cloud Run sandboxes, and the `remote` backend that calls it are built, with the renderer's image and Cloud Build config, but not deployed yet (status of 2026-10-10). The model-regression harness, the 120 synthetic spike-X cases, the blind two-run review gallery and the catalogue eligibility sweep are built (see [Run the regression harness](#run-the-regression-harness)), and the Claude Haiku 5.5 baseline from the first spike-X run of 2026-10-10 is committed (`evals/baselines/claude-haiku-5-5.json`); the Gemini baseline is not. The chat page that uses the service through the API's `/debug/agent` routes is in the app (`app/src/pages/AgentChatPage.tsx`, built with `VITE_ENABLE_AGENT_CHAT=true`). The judge-only scope eval and its 170 cases are built (see [Run the scope eval](#run-the-scope-eval)) but have not been run yet. Not built yet: the agents image, the deploy of either service, the scope cases' second stage through the root, and the `agents-eval.yml` workflow.
+The runtime core runs locally: the agents, the plot pipeline, the guardrail plugins, the render layer, the private `/v1` service with its run queue, the theme toggle, and the footer strip on every PNG the service serves ("made with any.plot()" and "anyplot.ai/<spec-id>", see [Footer strip](../docs/concepts/agent-network.md#footer-strip)). The renderer service `anyplot-renderer` (`renderer/`), which runs the adapted code in Cloud Run sandboxes, and the `remote` backend that calls it are built, with the renderer's image and Cloud Build config, but not deployed yet (status of 2026-10-10). The model-regression harness, the 120 synthetic spike-X cases, the blind two-run review gallery and the catalogue eligibility sweep are built (see [Run the regression harness](#run-the-regression-harness)), and the Claude Haiku 5.5 baseline from the first spike-X run of 2026-10-10 is committed (`evals/baselines/claude-haiku-5-5.json`); the Gemini baseline is not. The chat page that uses the service through the API's `/debug/agent` routes is in the app (`app/src/pages/AgentChatPage.tsx`, built with `VITE_ENABLE_AGENT_CHAT=true`). The service's own image (`Dockerfile`) and Cloud Build config (`cloudbuild.yaml`) are built, with a CI job that builds and smokes the image before merge, but the service is not deployed yet (see [Build and deploy the service](#build-and-deploy-the-service)). The judge-only scope eval and its cases are built (see [Run the scope eval](#run-the-scope-eval)) but have not been run yet. Not built yet: the deploy of either service, the scope cases' second stage through the root, and the `agents-eval.yml` workflow.
 
 The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. **Gemini 3.8 Flash** is the second arm: set `AGENT_PROVIDER=gemini` together with Gemini model ids, so the two can be compared on price and quality later. Every agent and the scope judge run on the configured provider.
 
@@ -14,6 +14,7 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 |---|---|
 | `main.py` | The `anyplot-agents` FastAPI service: the `/v1` routes the BFF (`api/routers/agent.py`) calls, the caller check, the run registry behind `409 run_active`, in-memory session and artifact services, and the idle sweeper |
 | `stream.py` | The `anyplot/1` stream translator: ADK events in, sanitised `ready`, `status` (including `queued`), `message`, `plot`, `refusal`, `error` and `done` events out |
+| `Dockerfile`, `cloudbuild.yaml` | The `anyplot-agents` image (the `agents` extra, the source tree with its prompts and fonts, uid 1000) and its deploy: build, a `candidate` revision without traffic, the IAM and `/v1/status` smoke, promote. The config's header lists the owner's bootstrap steps |
 | `anyplot/run_queue.py` | The run queue in front of every `/messages` turn: one run in flight, one start a minute, a 600-second maximum wait, a `premium` lane that nothing sets yet |
 | `anyplot/theme_render.py` | The theme toggle: renders another theme of a finished version from its stored run form, behind waiting pipeline renders, with no model call |
 | `anyplot/agent.py` | The root agent `anyplot`, the `ALL_AGENTS` registry and `app` (the ADK `App` with its plugins), which `adk web` loads |
@@ -243,7 +244,52 @@ docker build -f agents/renderer/Dockerfile -t anyplot-renderer:dev .
 uv run pytest tests/unit/agents -q
 ```
 
-`tests/unit/agents/renderer/` runs the executor against a fake `sandbox` launcher that runs the real harness with this interpreter, the service in process, and the `remote` backend against the service through httpx's ASGI transport.
+`tests/unit/agents/renderer/` runs the executor against a fake `sandbox` launcher that runs the real harness with this interpreter, the service in process, and the `remote` backend against the service through httpx's ASGI transport. `tests/unit/agents/test_image.py` holds the image and its deploy config against the code: every file the service reads must reach the image at its own path and be read by the build's check, the deploy's substitutions and variables must match the settings, and the deploy step's script runs against a fake `gcloud`.
+
+## Build and deploy the service
+
+The `anyplot-agents` image (`Dockerfile`) installs the `agents` extra without any plotting extra, because the service runs no plot code: every render goes to `anyplot-renderer` through the `remote` backend. It copies the source tree rather than a wheel, because the service reads its prompts, `refusals.yaml`, the footer-strip fonts and the catalogue prompt sources in `prompts/` from paths next to its modules, and its build fails when one of them is missing: it imports `agents.main` and reads the two judge rubrics, which the service otherwise reads on first use. The root `.dockerignore` keeps `evals/` and ADK's local `.adk/` store, which holds users' messages and datasets, out of the image.
+
+### Build the image
+
+From the repository root, run:
+
+```bash
+docker build -f agents/Dockerfile -t anyplot-agents:dev .
+```
+
+To try the container on your own machine without credentials:
+
+1. Start it in development with the `fake` renderer:
+
+   ```bash
+   docker run -d --name anyplot-agents -p 8001:8080 -e ENVIRONMENT=development -e AGENT_RENDERER=fake anyplot-agents:dev
+   ```
+
+2. Ask it for its status:
+
+   ```bash
+   curl localhost:8001/v1/status
+   ```
+
+3. Remove the container:
+
+   ```bash
+   docker rm -f anyplot-agents
+   ```
+
+The container has no Application Default Credentials, so a "Create plot" fails at the first model call; use `uv run uvicorn agents.main:app` (see [Run the service](#run-the-service)) for real runs. CI builds the same image before merge (`.github/workflows/ci-image.yml`, job `agents-image`).
+
+### Deploy
+
+`cloudbuild.yaml` builds the image, deploys a `candidate` revision without traffic, smokes it, and promotes exactly that revision:
+
+- The flags follow the design: one instance (sessions live in memory), 2 vCPU and 4 GiB, `--concurrency=20` and `--timeout=900` for the run queue's open streams, `--no-allow-unauthenticated`, the service account `anyplot-agents@`, no `--sandbox-launcher`, and `--update-env-vars` only.
+- `_PROVIDER`, `_MODEL`, `_JUDGE_MODEL` and `_LIBRARIES` default to the settings defaults, so a deploy switches the model arm without a code change. The budgets and limits are not set, so the deployed code's settings defaults apply.
+- `_RENDER_URL` is the `status.url` of the real `anyplot-renderer`, and the deploy refuses to run without it, because `--update-env-vars` would otherwise replace a working renderer URL with nothing. `AGENT_ALLOWED_CALLERS` is `_API_CALLER`, anyplot-api's runtime identity (the Compute Engine default service account unless a build sets another one), plus `anyplot-agents@` itself for the smoke. The deploy adds the service's own URL to `AGENT_SERVICE_URLS`.
+- The smoke expects Cloud Run IAM to refuse an anonymous `GET /v1/status` with `403`. With `_SMOKE_AUTH=true`, the default, it also calls `/v1/status` with an ID token minted for `anyplot-agents@` and checks that the answer names the configured provider, model, location and libraries.
+
+The first deploy is an owner task: grant the missing roles, run the bootstrap build with `_SMOKE_AUTH=false`, grant `roles/run.invoker` on the new service, rebuild with the token smoke, and create the `deploy-agents` trigger. The exact commands are in the header of `cloudbuild.yaml`; the roles and the environment are in [Agent network design](../docs/concepts/agent-network.md#serving-and-infrastructure).
 
 ## Run the regression harness
 

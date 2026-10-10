@@ -750,7 +750,7 @@ Issue ready for maintainer review
 |----------|---------|
 | **ci-lint.yml** | Ruff linting on PR |
 | **ci-tests.yml** | Unit tests on PR, plus the characteristic-section lint on every run (contract over every spec, blocking; style of changed specs, warnings) |
-| **ci-image.yml** | Builds `api/Dockerfile` and smoke-tests the container on PR (health, reported version vs `pyproject.toml`, the runtime stage's COPY payload, non-root uid) plus hadolint on both Dockerfiles; skips when only `plots/**` or frontend sources changed |
+| **ci-image.yml** | Builds `api/Dockerfile` and smoke-tests the container on PR (health, reported version vs `pyproject.toml`, the runtime stage's COPY payload, non-root uid) plus hadolint on both Dockerfiles; skips when only `plots/**` or frontend sources changed. Two more jobs build the agent network's images: `agents/renderer/Dockerfile` (a seaborn render through the harness) and `agents/Dockerfile` (`/v1/status` reports its configured model and libraries, the production default refuses an anonymous caller, the prompts and fonts are in the image) |
 | **sync-postgres.yml** | Syncs plots/ to database on push to main |
 | **sync-labels.yml** | Auto-syncs labels after manual PR merges (spec-ready, impl:*:done) |
 | **notify-deployment.yml** | Deployment notifications |
@@ -992,6 +992,8 @@ The project runs on **Google Cloud Platform**:
 Push to `main` branch triggers Cloud Build:
 - Changes in `api/`, `core/`, `pyproject.toml` -> Backend redeploy (`deploy-api`)
 - Changes in `app/` -> Frontend redeploy (`deploy-app`)
+
+The agent network's two services have their own configs, `agents/cloudbuild.yaml` (`anyplot-agents`) and `agents/renderer/cloudbuild.yaml` (`anyplot-renderer`). Their triggers, `deploy-agents` and `deploy-renderer`, are owner tasks and do not exist yet (2026-10-10). The header of `agents/cloudbuild.yaml` lists the agents service's bootstrap commands; the renderer's bootstrap is owner task 14 in `docs/concepts/agent-network.md`.
 
 Roughly five minutes from merge to live, per build.
 

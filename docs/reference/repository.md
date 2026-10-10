@@ -100,6 +100,8 @@ anyplot/
 ├── agents/                            # Agent network on Google ADK (see concepts/agent-network.md)
 │   ├── main.py                        # anyplot-agents service: the private /v1 API around the ADK runner
 │   ├── stream.py                      # anyplot/1 SSE translator and output sanitiser
+│   ├── Dockerfile                     # anyplot-agents image: agents extra, source tree with prompts and fonts, uid 1000
+│   ├── cloudbuild.yaml                # Build, candidate deploy, IAM and /v1/status smoke, promote; owner steps in its header
 │   ├── evals/                         # Model-regression harness (see agents/README.md)
 │   │   ├── matrix.py                  # Runs eval cases through /v1 in process; report, diff, gallery
 │   │   ├── make_fixtures.py           # Generates the 120 synthetic spike-X cases (seeded, rerunnable)

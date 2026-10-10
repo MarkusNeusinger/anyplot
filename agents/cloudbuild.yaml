@@ -1,0 +1,317 @@
+# Cloud Build configuration for anyplot-agents, the private `/v1` service of the
+# agent network (agents/main.py, agents/Dockerfile, docs/concepts/agent-network.md
+# "Serving and infrastructure").
+#
+# Same candidate -> smoke -> promote shape as agents/renderer/cloudbuild.yaml and
+# api/cloudbuild.yaml: the new revision is deployed without traffic under the
+# `candidate` tag, smoked on its tag URL, and only then given 100 % of the
+# traffic. The deploy step creates the service itself on the very first build:
+# gcloud refuses `--no-traffic` for a service that does not exist yet, so when
+# `services describe` answers that the service is not found, the step deploys
+# without it (nobody calls the service before the API's AGENT_ENABLED is true).
+# Any other describe failure stops the build, so a permission or API error can
+# never send all traffic to an unsmoked revision.
+#
+# The model, the judge and the libraries are substitutions, so a deploy switches
+# them (the Gemini arm: _PROVIDER=gemini, _MODEL=gemini-3.8-flash,
+# _JUDGE_MODEL=gemini-3.5-flash-lite) without a code change; their defaults are
+# the settings defaults (agents/anyplot/settings.py, held equal by
+# tests/unit/agents/test_image.py). The budgets and limits are not set here, so
+# they are the settings defaults of the deployed code.
+#
+# Owner steps for the first deploy (docs/concepts/agent-network.md, owner tasks 2
+# and 8). Every build of this config runs as the Compute Engine default service
+# account 239660669828-compute@developer.gserviceaccount.com, which is also
+# anyplot-api's runtime identity (_API_CALLER), so it is both the deployer and the
+# BFF's caller identity. The triggers already run as that account
+# (infra/cloudflare/README.md). A manual `gcloud builds submit` runs as the
+# project's default build account instead, which may still be the legacy
+# 239660669828@cloudbuild.gserviceaccount.com, so the commands below name the
+# account with `--service-account`; that flag needs `options.logging`, which this
+# config sets.
+#
+#   1. Grant the roles still missing (anyplot-agents@ already holds
+#      roles/aiplatform.user): telemetry for the service account, and for the build
+#      account the right to deploy as it (serviceAccountUser) and to mint the
+#      smoke's ID token as it (serviceAccountTokenCreator):
+#
+#        gcloud projects add-iam-policy-binding anyplot \
+#          --member=serviceAccount:anyplot-agents@anyplot.iam.gserviceaccount.com \
+#          --role=roles/telemetry.writer
+#        for role in roles/iam.serviceAccountUser roles/iam.serviceAccountTokenCreator; do
+#          gcloud iam service-accounts add-iam-policy-binding anyplot-agents@anyplot.iam.gserviceaccount.com \
+#            --member=serviceAccount:239660669828-compute@developer.gserviceaccount.com --role="$role"
+#        done
+#
+#   2. Bootstrap from the repository root (the build context is `.`, filtered by
+#      the root `.dockerignore`). The service does not exist yet, so it has no URL
+#      for AGENT_SERVICE_URLS and no invoker binding: the token half of the smoke
+#      runs from the second build on (_SMOKE_AUTH=false here). _RENDER_URL is the
+#      real anyplot-renderer's `status.url` (owner task 14 deploys the renderer
+#      first); the deploy step refuses to run without it:
+#
+#        gcloud builds submit --config=agents/cloudbuild.yaml --region=europe-west4 \
+#          --service-account=projects/anyplot/serviceAccounts/239660669828-compute@developer.gserviceaccount.com \
+#          --gcs-source-staging-dir=gs://anyplot-cloudbuild-eu/source \
+#          "--substitutions=^|^_SMOKE_AUTH=false|_RENDER_URL=<renderer status.url>" .
+#
+#   3. Let the API (the BFF) and the smoke's identity call the new service:
+#
+#        for member in serviceAccount:239660669828-compute@developer.gserviceaccount.com \
+#                      serviceAccount:anyplot-agents@anyplot.iam.gserviceaccount.com; do
+#          gcloud run services add-iam-policy-binding anyplot-agents --region=europe-west4 \
+#            --member="$member" --role=roles/run.invoker
+#        done
+#
+#   4. Rerun step 2 without `_SMOKE_AUTH=false`. This deploy finds the service, adds
+#      its URL to AGENT_SERVICE_URLS, and the smoke calls /v1/status with a token.
+#
+#   5. Create the deploy-agents trigger with the same _RENDER_URL. It runs as the
+#      account step 1 granted, and from the repository connection deploy-api
+#      uses; read that with `gcloud builds triggers describe deploy-api
+#      --region=europe-west4 --format='value(repositoryEventConfig.repository)'`.
+#      If that prints nothing, deploy-api is a first-generation GitHub App
+#      trigger: replace `--repository=...` with
+#      `--repo-owner=MarkusNeusinger --repo-name=anyplot`.
+#
+#        gcloud builds triggers create github --name=deploy-agents --region=europe-west4 \
+#          --repository=<repositoryEventConfig.repository of deploy-api> \
+#          --service-account=projects/anyplot/serviceAccounts/239660669828-compute@developer.gserviceaccount.com \
+#          --branch-pattern='^main$' --build-config=agents/cloudbuild.yaml \
+#          --included-files='agents/**,core/**,prompts/library/**,prompts/default-style-guide.md,prompts/quality-criteria.md,prompts/workflow-prompts/impl-repair-claude.md,prompts/workflow-prompts/ai-quality-review.md,pyproject.toml,uv.lock,README.md,.dockerignore' \
+#          --ignored-files='agents/evals/**' \
+#          "--substitutions=_RENDER_URL=<renderer status.url>"
+#
+#   Then point the API at the service: its trigger's `_AGENT_SERVICE_URL` is this
+#   service's `status.url` (the audience the BFF mints its token for), and
+#   `_AGENT_ENABLED` stays false until the owner switches the feature on.
+substitutions:
+  _SERVICE_NAME: anyplot-agents
+  _REGION: europe-west4
+  _SERVICE_ACCOUNT: anyplot-agents@anyplot.iam.gserviceaccount.com
+  # anyplot-api's runtime identity, the BFF and the only caller in production: the
+  # Compute Engine default service account. The deploy step sets
+  # AGENT_ALLOWED_CALLERS to it plus _SERVICE_ACCOUNT (the smoke below calls the
+  # candidate as that account), so a build without substitutions keeps both. The
+  # step refuses a value that is not one service-account email.
+  _API_CALLER: 239660669828-compute@developer.gserviceaccount.com
+  # AGENT_SERVICE_URLS beyond the service URL, separated by commas. The deploy step
+  # always adds the service's own URL (status.url): Cloud Run accepts no other
+  # audience for a service account's token, not even a tag URL.
+  _AUDIENCES: ""
+  # AGENT_RENDER_URL: the real anyplot-renderer's status.url (never a tag URL,
+  # never the spike's). Required: the deploy step refuses an empty one, because
+  # `--update-env-vars` would replace the service's renderer URL with nothing,
+  # and the service boots without one and fails only at the first render.
+  _RENDER_URL: ""
+  _PROVIDER: anthropic-vertex
+  _MODEL: claude-haiku-5-5
+  _JUDGE_MODEL: claude-haiku-5-5
+  _LIBRARIES: matplotlib,seaborn
+  # "1" keeps an instance warm; "0" scales to zero between sessions (and so
+  # forgets every in-memory session, which the client shows as "session expired").
+  _MIN_INSTANCES: "0"
+  # "true": the smoke step calls /v1/status with an ID token minted for
+  # _SERVICE_ACCOUNT and checks the configuration it reports. That needs the
+  # service URL in AGENT_SERVICE_URLS, roles/run.invoker on the service for
+  # _SERVICE_ACCOUNT, and roles/iam.serviceAccountTokenCreator on it for this
+  # build's account, so the very first build (which creates the service and its
+  # URL) runs with "false".
+  _SMOKE_AUTH: "true"
+
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "-t"
+      - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID"
+      - "-t"
+      - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest"
+      - "-f"
+      - "agents/Dockerfile"
+      - "."
+    id: "build-image"
+
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "push"
+      - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID"
+    id: "push-image"
+    waitFor: ["build-image"]
+
+  # Deploy WITHOUT traffic (except on the first build, see the header), tagged
+  # `candidate`, with a deterministic revision suffix so promote targets exactly
+  # this build's revision (`b` prefix: the suffix must start with a letter).
+  #
+  # The flags: gen2; no --sandbox-launcher, because this service runs no user code
+  # (every render goes to anyplot-renderer); 2 vCPU and 4 GiB (a smaller instance
+  # is an open decision in the design); ONE instance, because sessions, datasets,
+  # renders and the run queue live in memory; concurrency 20 and a 900 s timeout
+  # because of the run queue, not the CPU: every queued run holds an open stream,
+  # so the instance must take the queue's 10 waiting streams, the run in flight
+  # and the other routes, and one turn can last the queue's 600 s maximum wait plus
+  # the 180 s request deadline (anyplot-api's own --timeout is 900 for the same
+  # turn). No secrets, no Cloud SQL in phase 1.
+  #
+  # `--update-env-vars`, never `--set-env-vars`, for the reason api/cloudbuild.yaml
+  # gives: an out-of-band variable must survive a deploy.
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args:
+      - "-ceu"
+      - |
+        # The renderer URL and the BFF's identity are written from substitutions on
+        # every build, so check them before anything is deployed. The smoke can
+        # catch neither: /v1/status reports no renderer, and the smoke calls as
+        # _SERVICE_ACCOUNT, not as the BFF.
+        if [ -z "${_RENDER_URL}" ]; then
+          echo "_RENDER_URL is empty: pass the real anyplot-renderer's status.url. Without it this deploy would replace the service's renderer URL with nothing, and every render would fail"
+          exit 1
+        fi
+        case "${_API_CALLER}" in
+          *,*) echo "_API_CALLER must be one email, anyplot-api's runtime service account, not '${_API_CALLER}'"; exit 1 ;;
+          ?*@?*.gserviceaccount.com) ;;
+          *) echo "_API_CALLER must be anyplot-api's runtime service account, not '${_API_CALLER}': the BFF would get 403 on every call"; exit 1 ;;
+        esac
+        if SELF=$$(gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --platform=managed --format="value(status.url)" 2>describe.err); then
+          TRAFFIC=(--no-traffic)
+        elif grep -qE "Cannot find service|NOT_FOUND" describe.err; then
+          echo "${_SERVICE_NAME} does not exist yet: creating it (gcloud refuses --no-traffic on a new service)"
+          SELF=""
+          TRAFFIC=()
+        else
+          cat describe.err
+          echo "could not read ${_SERVICE_NAME}; refusing to deploy without --no-traffic"
+          exit 1
+        fi
+        EXTRA="${_AUDIENCES}"
+        AUDIENCES="$$SELF"
+        if [ -n "$$EXTRA" ]; then AUDIENCES="$${AUDIENCES:+$$AUDIENCES,}$$EXTRA"; fi
+        echo "AGENT_SERVICE_URLS=$$AUDIENCES"
+        gcloud run deploy ${_SERVICE_NAME} \
+          --image=europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID \
+          --region=${_REGION} \
+          --platform=managed \
+          --execution-environment=gen2 \
+          --no-allow-unauthenticated \
+          --service-account=${_SERVICE_ACCOUNT} \
+          --cpu=2 \
+          --memory=4Gi \
+          --min-instances=${_MIN_INSTANCES} \
+          --max-instances=1 \
+          --concurrency=20 \
+          --timeout=900 \
+          "--update-env-vars=^|^ENVIRONMENT=production|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GOOGLE_GENAI_USE_ENTERPRISE=TRUE|GOOGLE_CLOUD_LOCATION=eu|AGENT_LOCATION=eu|AGENT_PROVIDER=${_PROVIDER}|AGENT_MODEL=${_MODEL}|AGENT_JUDGE_MODEL=${_JUDGE_MODEL}|AGENT_LIBRARIES=${_LIBRARIES}|AGENT_RENDERER=remote|AGENT_RENDER_URL=${_RENDER_URL}|AGENT_ALLOWED_CALLERS=${_API_CALLER},${_SERVICE_ACCOUNT}|AGENT_SERVICE_URLS=$$AUDIENCES|ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS=false" \
+          "$${TRAFFIC[@]}" \
+          --tag=candidate \
+          --revision-suffix=b$BUILD_ID
+    id: "deploy"
+    waitFor: ["push-image"]
+
+  # Pre-traffic smoke against the CANDIDATE revision on its tag URL. Any failure
+  # here stops the build before promote.
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args:
+      - "-ceu"
+      - |
+        # The candidate tag must point at THIS build's revision, before and after
+        # the probes (the same double read as api/cloudbuild.yaml).
+        candidate() {
+          gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --platform=managed --format=json \
+            | python3 -c "import json,sys; t=json.load(sys.stdin)['status']['traffic']; c=next(x for x in t if x.get('tag')=='candidate'); print(c['url'], c['revisionName'])"
+        }
+        read -r URL REV <<< "$$(candidate)"
+        test "$$REV" = "${_SERVICE_NAME}-b$BUILD_ID" || { echo "candidate tag moved to $$REV (expected ${_SERVICE_NAME}-b$BUILD_ID)"; exit 1; }
+        echo "smoke against candidate $$URL ($$REV)"
+
+        # 1. Cloud Run IAM holds: without a token the front end answers 403 and the
+        #    request never reaches the container. Exactly 403: a 401 comes from the
+        #    container's own caller check, which means the request got past IAM,
+        #    so the service lost --no-allow-unauthenticated.
+        code=$$(curl -s --retry 5 --retry-delay 5 -o /dev/null -w '%{http_code}' "$$URL/v1/status")
+        test "$$code" = "403" || { echo "expected 403 from Cloud Run IAM without an ID token, got $$code"; exit 1; }
+        echo "OK: IAM refuses an anonymous caller"
+
+        # 2. The caller check and the configuration: /v1/status with an ID token of
+        #    the service's own account must answer 200 and name the model, the
+        #    provider, the location and the libraries this build configured. The
+        #    token's audience is the SERVICE URL even though the request goes to the
+        #    tag URL: Cloud Run accepts no other audience. A build cannot mint an ID
+        #    token for its own identity (agents/renderer/cloudbuild.yaml has the
+        #    evidence), so it impersonates the service account. The first request
+        #    after a deploy may meet a cold instance, hence the retries.
+        if [ "${_SMOKE_AUTH}" = "true" ]; then
+          SERVICE_URL=$$(gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --platform=managed --format="value(status.url)")
+          TOKEN=$$(gcloud auth print-identity-token --impersonate-service-account="${_SERVICE_ACCOUNT}" \
+            --audiences="$$SERVICE_URL" --include-email 2>impersonate.err) \
+            || { cat impersonate.err; echo "could not mint the smoke token: grant roles/iam.serviceAccountTokenCreator on ${_SERVICE_ACCOUNT} to this build's account"; exit 1; }
+          curl -fsS --retry 5 --retry-delay 5 --retry-all-errors -H "Authorization: Bearer $$TOKEN" -o status.json "$$URL/v1/status" \
+            || { echo "/v1/status failed with the smoke token: check that ${_SERVICE_ACCOUNT} has roles/run.invoker on ${_SERVICE_NAME} and that AGENT_SERVICE_URLS holds $$SERVICE_URL"; exit 1; }
+          python3 - "${_PROVIDER}" "${_MODEL}" "${_LIBRARIES}" <<'EOF'
+        import json
+        import sys
+
+        provider, model, libraries = sys.argv[1], sys.argv[2], sys.argv[3]
+        want = {
+            "provider": provider,
+            "model": model,
+            "location": "eu",
+            "libraries": [item.strip() for item in libraries.split(",") if item.strip()],
+        }
+        status = json.load(open("status.json"))
+        got = {key: status.get(key) for key in want}
+        assert got == want, f"/v1/status reports {got}, this build configured {want}"
+        print("OK: /v1/status", status.get("version"), got)
+        EOF
+        else
+          echo "token smoke skipped (_SMOKE_AUTH=${_SMOKE_AUTH})"
+        fi
+
+        read -r _ REV_AFTER <<< "$$(candidate)"
+        test "$$REV_AFTER" = "$$REV" || { echo "candidate tag moved to $$REV_AFTER mid-smoke (started on $$REV) - not promoting"; exit 1; }
+        echo "smoke OK"
+    id: "smoke"
+    waitFor: ["deploy"]
+
+  # Route 100 % of the traffic to EXACTLY the revision this build smoked.
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - "run"
+      - "services"
+      - "update-traffic"
+      - "${_SERVICE_NAME}"
+      - "--region=${_REGION}"
+      - "--platform=managed"
+      - "--to-revisions=${_SERVICE_NAME}-b$BUILD_ID=100"
+    id: "promote"
+    waitFor: ["smoke"]
+
+  # `:latest` moves only after this build promoted (see api/cloudbuild.yaml).
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "push"
+      - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest"
+    id: "push-latest"
+    waitFor: ["promote"]
+
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - "run"
+      - "services"
+      - "describe"
+      - "${_SERVICE_NAME}"
+      - "--region=${_REGION}"
+      - "--platform=managed"
+      - "--format=value(status.url)"
+    id: "get-url"
+    waitFor: ["promote"]
+
+images:
+  - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID"
+  - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: "1200s"

@@ -41,6 +41,10 @@
 # an image. The development-only fixture seed (AGENT_DEV_FIXTURE) reads the
 # cases from a checkout, never from an image.
 agents/evals
+# ADK's local store: `adk web` or `adk api_server` without the `memory://` flags
+# (agents/README.md) keeps each agent's sessions and artifacts, which means users'
+# messages and datasets, in `<agent>/.adk/` (session.db, artifacts/).
+**/.adk
 
 # …and the noise that lives inside the trees above. `__pycache__` matters twice
 # over now that the image compiles its own bytecode: a stale host `.pyc` copied
