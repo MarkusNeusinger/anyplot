@@ -1,0 +1,25 @@
+{
+  "spec_id": "line-timeseries",
+  "library": "matplotlib",
+  "locale": "de",
+  "perturbation": "renamed",
+  "bindings": [
+    {
+      "role": "date",
+      "column": "Messdatum"
+    },
+    {
+      "role": "value",
+      "column": "Feinstaub PM2,5 (µg/m³)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "time-series",
+    "renamed",
+    "synthetic",
+    "renamed-headers",
+    "non-ascii-headers"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 1010, renamed)"
+}

@@ -1,0 +1,26 @@
+{
+  "spec_id": "scatter-basic",
+  "library": "seaborn",
+  "locale": "en",
+  "perturbation": "date",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Ad Spend (kCHF)"
+    },
+    {
+      "role": "y",
+      "column": "Revenue (kCHF)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "scatter",
+    "date",
+    "synthetic",
+    "dd.mm.yyyy",
+    "iso-date",
+    "unbound-dates"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 101, date)"
+}

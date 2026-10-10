@@ -1,0 +1,26 @@
+{
+  "spec_id": "line-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "perturbation": "date",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Timestamp"
+    },
+    {
+      "role": "y",
+      "column": "Tank Temperature (°C)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "line",
+    "date",
+    "synthetic",
+    "dd.mm.yyyy",
+    "iso-date",
+    "date-axis"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 202, date)"
+}

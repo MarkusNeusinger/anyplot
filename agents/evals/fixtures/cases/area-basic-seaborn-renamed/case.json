@@ -1,0 +1,24 @@
+{
+  "spec_id": "area-basic",
+  "library": "seaborn",
+  "locale": "de",
+  "perturbation": "renamed",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "tag_nr"
+    },
+    {
+      "role": "y",
+      "column": "energieverbrauch_mwh"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "area",
+    "renamed",
+    "synthetic",
+    "renamed-headers"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 707, renamed)"
+}

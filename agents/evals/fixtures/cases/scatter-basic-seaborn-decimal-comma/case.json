@@ -1,0 +1,24 @@
+{
+  "spec_id": "scatter-basic",
+  "library": "seaborn",
+  "locale": "de",
+  "perturbation": "decimal-comma",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Ad Spend (kCHF)"
+    },
+    {
+      "role": "y",
+      "column": "Revenue (kCHF)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "scatter",
+    "decimal-comma",
+    "synthetic",
+    "semicolon"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 101, decimal-comma)"
+}

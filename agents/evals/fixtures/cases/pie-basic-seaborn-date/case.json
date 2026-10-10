@@ -1,0 +1,26 @@
+{
+  "spec_id": "pie-basic",
+  "library": "seaborn",
+  "locale": "en",
+  "perturbation": "date",
+  "bindings": [
+    {
+      "role": "category",
+      "column": "Expense Category"
+    },
+    {
+      "role": "value",
+      "column": "Amount (CHF)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "pie",
+    "date",
+    "synthetic",
+    "dd.mm.yyyy",
+    "iso-date",
+    "unbound-dates"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 909, date)"
+}

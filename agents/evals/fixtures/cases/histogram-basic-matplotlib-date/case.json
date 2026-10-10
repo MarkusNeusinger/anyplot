@@ -1,0 +1,22 @@
+{
+  "spec_id": "histogram-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "perturbation": "date",
+  "bindings": [
+    {
+      "role": "values",
+      "column": "Delivery Time (min)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "histogram",
+    "date",
+    "synthetic",
+    "dd.mm.yyyy",
+    "iso-date",
+    "unbound-dates"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 404, date)"
+}

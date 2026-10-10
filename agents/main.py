@@ -25,7 +25,9 @@ Every `/v1` route needs `X-Anyplot-User` (the BFF's opaque user id); sessions ar
 owned by that id, so another user's session id is `404 session_expired`. Outside
 development the caller check decodes the IAM-forwarded ID token (Cloud Run has
 already verified it and replaced the signature) and requires its `aud` in
-`AGENT_SERVICE_URLS` and its `email` in `AGENT_ALLOWED_CALLERS`.
+`AGENT_SERVICE_URLS` and its `email` in `AGENT_ALLOWED_CALLERS`. It reads
+`X-Serverless-Authorization` whenever that header is present, because Cloud Run then
+checks only that one and passes `Authorization` through unverified.
 
 Every `/messages` turn goes through the run queue (`anyplot/run_queue.py`): the route
 answers `503 capacity` when the queue is full, otherwise the stream sends `ready`,
@@ -332,12 +334,22 @@ def decode_claims(authorization: str | None) -> dict[str, Any] | None:
     return claims if isinstance(claims, dict) else None
 
 
+def checked_token(request: Request) -> str | None:
+    """The header Cloud Run IAM verified: `X-Serverless-Authorization` when present, else `Authorization`.
+
+    With both headers present Cloud Run checks only `X-Serverless-Authorization`, so an
+    invoker could otherwise add an unsigned `Authorization` that names an allowed email.
+    """
+    serverless = request.headers.get("x-serverless-authorization")
+    return serverless if serverless is not None else request.headers.get("authorization")
+
+
 def check_caller(request: Request) -> None:
     """Outside development: an IAM-forwarded ID token whose `aud` and `email` are allowed."""
     settings = get_settings()
     if settings.is_development:
         return
-    claims = decode_claims(request.headers.get("authorization"))
+    claims = decode_claims(checked_token(request))
     if claims is None:
         raise AgentsError(401, "unauthenticated")
     audience = claims.get("aud")
@@ -562,7 +574,14 @@ async def upload_dataset(
         attribution("data_judge", ledger, verdict="guard_unavailable")
         raise AgentsError(503, "guard_unavailable") from None
     services.usage.add_tokens(user, verdict.tokens)
-    attribution("data_judge", ledger, verdict=verdict.verdict, judge_tokens=verdict.tokens)
+    attribution(
+        "data_judge",
+        ledger,
+        verdict=verdict.verdict,
+        judge_tokens=verdict.tokens,
+        judge_input=verdict.input_tokens,
+        judge_output=verdict.output_tokens,
+    )
     if verdict.verdict != "in_scope":  # fail closed, like the scope guard
         raise AgentsError(403, "data_refused")
     try:

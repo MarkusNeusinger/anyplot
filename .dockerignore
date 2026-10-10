@@ -35,9 +35,12 @@
 !prompts/quality-criteria.md
 !prompts/workflow-prompts/impl-repair-claude.md
 !prompts/workflow-prompts/ai-quality-review.md
-# Promoted feedback cases hold users' data; they are synced here for eval runs
-# and are never committed, so they must never reach an image either.
-agents/evals/.cases
+# The eval harness (agents/evals/) is not service code: its fixture cases are
+# about 3 MB, its local reports hold renders and galleries, and its promoted
+# feedback cases (agents/evals/.cases) hold users' data, which must never reach
+# an image. The development-only fixture seed (AGENT_DEV_FIXTURE) reads the
+# cases from a checkout, never from an image.
+agents/evals
 
 # …and the noise that lives inside the trees above. `__pycache__` matters twice
 # over now that the image compiles its own bytecode: a stale host `.pyc` copied

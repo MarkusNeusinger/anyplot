@@ -2,7 +2,7 @@
 
 | Gate | Checks | Effect |
 |---|---|---|
-| R1 | an output for each of the job's themes, exit code 0, no timeout, a PNG per theme | blocking: the render is discarded, the error becomes repair feedback |
+| R1 | an output for each of the job's themes, exit code 0, no timeout, no renderer limit hit (`limit_line`), a PNG per theme | blocking: the render is discarded, the error becomes repair feedback |
 | R2 | PNG hardening (`png.harden`): signature, decode, size and pixel caps, not blank, re-encoded | blocking, like R1 |
 | R3 | canvas within 16 px of 3200x1800 or 2400x2400 (`core.canvas.check_canvas`) | repair-triggering: the VQ-05 defect line goes to the repair; a padded copy of each missed theme is kept as the fallback |
 | G3 | probe: text boxes beyond the canvas edge | advisory: an AR-09 line |
@@ -99,6 +99,10 @@ class GateReport:
     blocking: list[str] = field(default_factory=list)
     canvas_defects: list[str] = field(default_factory=list)
     advisory: list[str] = field(default_factory=list)
+    failed_gates: list[str] = field(default_factory=list)
+    """The ids of the gates that failed or reported, one entry per theme and finding: `R1`,
+    `R1-timeout`, `R2`, `R3`, then the probe gates `G3`, `G5`, `G7`, `G8` in the order the
+    probe checks run (not sorted). Content-free, for the attribution log."""
 
     @property
     def defects(self) -> list[str]:
@@ -154,6 +158,49 @@ def error_summary(stderr_tail: str) -> str:
     return f"{names[-1]} at line {int(frames[-1])}" if frames else names[-1]
 
 
+def _mib(value: int | None) -> str:
+    return "more than allowed" if value is None else f"{value / (1024 * 1024):.1f} MiB"
+
+
+def limit_line(theme: Theme, reason: str | None, measured: int | None, limit: int | None) -> str | None:
+    """The R1 line for a run the renderer stopped or refused at one of its limits, naming the value and the limit.
+
+    None for any other reason: a timeout has its own line, and `launcher` never gets
+    here (the `remote` backend raises `RendererUnavailable` for it). The numbers come
+    from the renderer, never from the code under test.
+    """
+    png = f"plot-{theme}.png"
+    if reason == "disk_budget":
+        return (
+            f"render ({theme}): the code wrote {_mib(measured)} to its working directory, over the {_mib(limit)} "
+            f"limit, and was stopped → save only {png} and write no other files. Likely cause: data, caches or "
+            "extra images saved to disk."
+        )
+    if reason == "file_budget":
+        made = "a directory tree too deep to measure" if measured is None else f"{measured} files and directories"
+        return (
+            f"render ({theme}): the code created {made}, over the limit of {limit}, and was stopped → write no "
+            f"files besides {png}. Likely cause: a file written per row or per group, or nested output folders."
+        )
+    if reason == "memory":
+        return (
+            f"render ({theme}): the renderer's free memory fell to {measured} MiB, below its {limit} MiB floor, and "
+            "the code was stopped → use less memory. Likely cause: very many marks, a huge figure or large "
+            "temporary files."
+        )
+    if reason == "output_rejected":
+        if measured is not None and limit is not None:
+            return (
+                f"render ({theme}): {png} is {_mib(measured)}, over the {_mib(limit)} limit → save it once at the "
+                "catalogue canvas size. Likely cause: a high dpi or a very large figure size."
+            )
+        return (
+            f'render ({theme}): {png} is not a regular file → save the figure with fig.savefig("{png}"), never a '
+            "link or a special file."
+        )
+    return None
+
+
 def data_rows(data_csv: str) -> int:
     """Rows of the canonical data.csv (header excluded; the parser writes one row per line)."""
     return max(0, len([line for line in data_csv.split("\n") if line]) - 1)
@@ -171,10 +218,17 @@ def evaluate(result: RenderResult, *, themes: Sequence[Theme], library: str, row
         output = result.outputs.get(theme)
         if output is None:
             report.blocking.append(_line(f"render ({theme}): the renderer returned no output for this theme"))
+            report.failed_gates.append("R1")
             report.passed_host_gates = False
             continue
         if output.timed_out:
             report.blocking.append(_line(f"render ({theme}): the code did not finish within the time limit"))
+            report.failed_gates.append("R1-timeout")
+            report.passed_host_gates = False
+            continue
+        stopped = limit_line(theme, output.reason, output.measured, output.limit)
+        if stopped is not None:
+            report.blocking.append(_line(stopped))
             report.passed_host_gates = False
             continue
         if output.exit_code != 0 or output.png is None:
@@ -183,12 +237,14 @@ def evaluate(result: RenderResult, *, themes: Sequence[Theme], library: str, row
             else:
                 reason = f"the code failed with {error_summary(output.stderr_tail)}"
             report.blocking.append(_line(f"render ({theme}): {reason}; fix the code so it runs on the user's data"))
+            report.failed_gates.append("R1")
             report.passed_host_gates = False
             continue
         try:
             hardened = harden(output.png)
         except PngRejected as exc:
             report.blocking.append(_line(f"render ({theme}): {exc}"))
+            report.failed_gates.append("R2")
             report.passed_host_gates = False
             continue
         report.pngs[theme] = hardened.data
@@ -196,10 +252,12 @@ def evaluate(result: RenderResult, *, themes: Sequence[Theme], library: str, row
         if not verdict.ok:
             report.canvas_ok = False
             missed.append(theme)
+            report.failed_gates.append("R3")
             if verdict.defect_line and verdict.defect_line not in report.canvas_defects:
                 report.canvas_defects.append(_line(verdict.defect_line))
             report.padded_pngs[theme] = pad_to(hardened.data, verdict.target)
-        for line in _probe_lines(output.probe, rows):
+        for gate, line in _probe_lines(output.probe, rows):
+            report.failed_gates.append(gate)
             advisory.setdefault(line, []).append(theme)
     if len(missed) == 1:
         # `core.canvas` writes the line as `(both)`; name the one theme that missed.
@@ -223,19 +281,19 @@ def _finite(values: Any, count: int) -> list[float] | None:
     return numbers if all(math.isfinite(number) for number in numbers) else None
 
 
-def _probe_lines(probe: dict[str, Any] | None, rows: int) -> list[str]:
-    """Advisory defect lines from one theme's probe; a malformed probe yields none, never an exception."""
+def _probe_lines(probe: dict[str, Any] | None, rows: int) -> list[tuple[str, str]]:
+    """Advisory `(gate, line)` pairs from one theme's probe; a malformed probe yields none, never an exception."""
     try:
         return _probe_lines_unchecked(probe, rows)
     except (ValueError, TypeError, OverflowError, AttributeError):
         return []
 
 
-def _probe_lines_unchecked(probe: dict[str, Any] | None, rows: int) -> list[str]:
-    """Advisory defect lines from one theme's probe; `(THEME)` is filled in by the caller."""
+def _probe_lines_unchecked(probe: dict[str, Any] | None, rows: int) -> list[tuple[str, str]]:
+    """Advisory `(gate, line)` pairs from one theme's probe; `(THEME)` is filled in by the caller."""
     if not isinstance(probe, dict):
         return []
-    lines: list[str] = []
+    lines: list[tuple[str, str]] = []
     canvas = _finite(probe.get("canvas"), 2)
     texts = probe.get("texts")
     if canvas is not None and isinstance(texts, list):
@@ -249,25 +307,37 @@ def _probe_lines_unchecked(probe: dict[str, Any] | None, rows: int) -> list[str]
             worst = max(worst, -x0, -y0, x1 - width, y1 - height)
         if worst > CLIP_TOLERANCE_PX:
             lines.append(
-                f"AR-09 (THEME): text extends {round(worst)} px beyond the canvas edge → keep every text inside "
-                "the canvas. Likely cause: a label position, a long tick label or a large font size."
+                (
+                    "G3",
+                    f"AR-09 (THEME): text extends {round(worst)} px beyond the canvas edge → keep every text inside "
+                    "the canvas. Likely cause: a label position, a long tick label or a large font size.",
+                )
             )
     overlaps = probe.get("tick_overlaps")
     if isinstance(overlaps, int) and overlaps > 0:
         lines.append(
-            f"VQ-02 (THEME): {overlaps} pairs of tick labels overlap → no overlapping tick labels. "
-            "Likely cause: too many ticks for the axis length, or unrotated long labels."
+            (
+                "G7",
+                f"VQ-02 (THEME): {overlaps} pairs of tick labels overlap → no overlapping tick labels. "
+                "Likely cause: too many ticks for the axis length, or unrotated long labels.",
+            )
         )
     outside = probe.get("annotations_outside")
     if isinstance(outside, int) and outside > 0:
         lines.append(
-            f"DQ-03 (THEME): {outside} annotations lie outside their axes → place annotations from a rule over df "
-            "or remove them. Likely cause: an annotation at a data coordinate of the example data."
+            (
+                "G5",
+                f"DQ-03 (THEME): {outside} annotations lie outside their axes → place annotations from a rule over "
+                "df or remove them. Likely cause: an annotation at a data coordinate of the example data.",
+            )
         )
     points = probe.get("points")
     if isinstance(points, int) and rows > 0 and points > rows * G8_FACTOR + G8_SLACK:
         lines.append(
-            f"DQ-03 (code): the plot draws {points} point marks for {rows} data rows → draw marks only from df. "
-            "Likely cause: generated or duplicated data."
+            (
+                "G8",
+                f"DQ-03 (code): the plot draws {points} point marks for {rows} data rows → draw marks only from df. "
+                "Likely cause: generated or duplicated data.",
+            )
         )
     return lines

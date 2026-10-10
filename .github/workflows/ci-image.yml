@@ -465,3 +465,203 @@ jobs:
       - name: Skip notice
         if: steps.check.outputs.should_build == 'false'
         run: echo "::notice::App image build skipped - no changes to app/Dockerfile, the nginx configuration or the build inputs"
+
+  # The renderer image (agents/renderer/Dockerfile) is what every Cloud Run
+  # sandbox runs the model-written code with, and what the local Docker backend
+  # runs in development. Without this job its first build ever would be the
+  # bootstrap deploy, after the merge. `sandbox do` exists only on Cloud Run, so
+  # the job checks the image the way the local backend uses it: the harness
+  # renders a seaborn plot under the deployed rlimits, with no network and a
+  # read-only root filesystem, and the service boots and reports itself. The
+  # event-shape handling is the API job's in short form.
+  renderer-image:
+    name: Build renderer image and render through the harness
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    # A cold build installs pandas, numpy, matplotlib and seaborn; 20 fails
+    # loudly instead of hanging on a slow package index.
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Check for renderer-image changes
+        id: check
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          MG_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+          MG_HEAD_SHA: ${{ github.event.merge_group.head_sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.event.after }}
+          FORCE_RUN: ${{ inputs.force_run }}
+        run: |
+          set -uo pipefail
+          CHANGED_FILES=""
+          case "$EVENT_NAME" in
+            pull_request)
+              if ! CHANGED_FILES=$(git diff --name-only "$PR_BASE_SHA" "$PR_HEAD_SHA"); then
+                echo "::error::could not diff $PR_BASE_SHA..$PR_HEAD_SHA — refusing to decide whether the renderer image needs building"
+                exit 1
+              fi ;;
+            merge_group)
+              if ! CHANGED_FILES=$(git diff --name-only "$MG_BASE_SHA" "$MG_HEAD_SHA"); then
+                echo "::error::could not diff $MG_BASE_SHA..$MG_HEAD_SHA — refusing to decide whether the renderer image needs building"
+                exit 1
+              fi ;;
+            push)
+              if [[ "$PUSH_BEFORE" =~ ^0+$ ]] || ! CHANGED_FILES=$(git diff --name-only "$PUSH_BEFORE" "$PUSH_AFTER"); then
+                echo "::warning::the pushed range is not diffable — building the renderer image rather than skipping the gate"
+                echo "should_build=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi ;;
+            *)
+              if ! CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD); then
+                echo "::warning::no parent commit to diff against — building the renderer image rather than skipping the gate"
+                echo "should_build=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi ;;
+          esac
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          # What the image is built from: its Dockerfile, the service package,
+          # the harness it copies, the dependency lock, README.md (copied next
+          # to pyproject.toml) and the root .dockerignore (the build context).
+          RENDERER_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(agents/renderer/|agents/__init__\.py$|agents/anyplot/render/harness\.py$|pyproject\.toml$|uv\.lock$|README\.md$|\.dockerignore$|\.github/workflows/ci-image\.yml$)' || true)
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && "$FORCE_RUN" == "true" ]]; then
+            echo "Manual trigger with force_run=true, will build the renderer image"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          elif [[ -n "$RENDERER_CHANGES" ]]; then
+            echo "Found renderer-image changes, will build the renderer image"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No renderer-image changes, skipping the build"
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Buildx
+        if: steps.check.outputs.should_build == 'true'
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4.4.1
+
+      # Its own cache scope, like the app image: no layer is shared with the API.
+      - name: Build the renderer image
+        if: steps.check.outputs.should_build == 'true'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7.4.0
+        with:
+          context: .
+          file: agents/renderer/Dockerfile
+          push: false
+          load: true
+          tags: anyplot-renderer:ci
+          cache-from: type=gha,scope=renderer-image
+          cache-to: type=gha,mode=max,scope=renderer-image
+
+      # THE assert this job exists for: the image renders. The flags are the
+      # local backend's (agents/anyplot/render/backends/local.py) and the
+      # environment is the sandbox's (agents/renderer/executor.py), except
+      # RLIMIT_NPROC: outside a sandbox it counts every process of the runner's
+      # user, so it would test the runner, not the image.
+      - name: Render a seaborn plot through the harness
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p work
+          printf 'x,y\na,1\nb,3\nc,2\n' > work/data.csv
+          cat > work/plot.py <<'EOF'
+          import os
+
+          import matplotlib.pyplot as plt
+          import pandas as pd
+          import seaborn as sns
+
+          THEME = os.environ["ANYPLOT_THEME"]
+          df = pd.read_csv("data.csv")
+          fig, ax = plt.subplots(figsize=(16, 9), dpi=200)
+          sns.barplot(data=df, x="x", y="y", ax=ax)
+          fig.savefig(f"plot-{THEME}.png")
+          EOF
+          docker run --rm --network none --read-only --tmpfs /tmp \
+            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+            -v "$PWD/work:/work" -w /work \
+            -e ANYPLOT_THEME=light -e MPLBACKEND=Agg -e MPLCONFIGDIR=/tmp/mpl -e ANYPLOT_MPL_SEED=/opt/mplconfig \
+            -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+            -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_RLIMIT_AS_MB=1024 \
+            anyplot-renderer:ci /app/.venv/bin/python -I /opt/anyplot/harness.py plot.py > harness.out
+          grep -qxF 'HARNESS {"event": "start"}' harness.out || { echo "::error::no HARNESS start line"; cat harness.out; exit 1; }
+          grep -q '^HARNESS {"event": "end"' harness.out || { echo "::error::no HARNESS end line"; cat harness.out; exit 1; }
+          python3 - <<'EOF'
+          import json, struct
+          png = open("work/plot-light.png", "rb").read()
+          assert png[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
+          width, height = struct.unpack(">II", png[16:24])
+          assert (width, height) == (3200, 1800), (width, height)
+          probe = json.load(open("work/probe-light.json"))
+          assert probe["canvas"] == [3200, 1800], probe.get("canvas")
+          print(f"OK: plot-light.png {width}x{height}, {len(png)} bytes; probe written")
+          EOF
+          tail -n 1 harness.out
+
+      - name: The image carries no ADK and the version it reports
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          docker run --rm anyplot-renderer:ci /app/.venv/bin/python -c "
+          import importlib.util, sys
+          try:
+              spec = importlib.util.find_spec('google.adk')
+          except ModuleNotFoundError:
+              spec = None
+          sys.exit('ADK is installed in the renderer image' if spec else 0)
+          "
+          echo "OK: no ADK"
+          want=$(python3 -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+
+          # The service boots (development: no caller check, no launcher on a
+          # runner) and reports itself; a render is refused, not attempted.
+          docker run -d --name renderer -p 8003:8080 -e ENVIRONMENT=development anyplot-renderer:ci
+          ready=0
+          for _ in $(seq 30); do
+            if curl -fsS localhost:8003/status -o status.json 2>/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          if [ "$ready" -ne 1 ]; then
+            echo "::error::the renderer never answered /status within 30 s"
+            exit 1
+          fi
+          python3 -c "
+          import json, sys
+          s = json.load(open('status.json'))
+          assert s['name'] == 'anyplot-renderer' and s['sandbox'] is False, s
+          assert s['version'] == sys.argv[1], (s['version'], sys.argv[1])
+          print('OK: /status', s['version'])
+          " "$want"
+          code=$(curl -s -o render.json -w '%{http_code}' -H 'Content-Type: application/json' \
+            --data '{"job_id": "ci", "language": "python", "library": "matplotlib", "source": "x = 1", "data_csv": "", "themes": ["light"], "timeout_s": 10}' \
+            localhost:8003/render)
+          test "$code" = "503" && grep -q '"sandbox_unavailable"' render.json \
+            || { echo "::error::expected 503 sandbox_unavailable, got $code: $(cat render.json)"; exit 1; }
+          echo "OK: a render without a launcher is refused"
+
+      - name: Container logs on failure
+        if: failure() && steps.check.outputs.should_build == 'true'
+        run: docker logs renderer 2>&1 || true
+
+      # Same threshold as the two Dockerfiles above; checked locally against
+      # hadolint 2.15.1 with no finding.
+      - name: Hadolint (agents/renderer/Dockerfile)
+        if: steps.check.outputs.should_build == 'true'
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387  # v3.5.0
+        with:
+          dockerfile: agents/renderer/Dockerfile
+          failure-threshold: warning
+
+      - name: Skip notice
+        if: steps.check.outputs.should_build == 'false'
+        run: echo "::notice::Renderer image build skipped - no changes to agents/renderer/, the harness or the dependency lock"

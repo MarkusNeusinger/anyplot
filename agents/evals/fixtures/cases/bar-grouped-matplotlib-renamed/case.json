@@ -1,0 +1,29 @@
+{
+  "spec_id": "bar-grouped",
+  "library": "matplotlib",
+  "locale": "de",
+  "perturbation": "renamed",
+  "bindings": [
+    {
+      "role": "category",
+      "column": "Fach"
+    },
+    {
+      "role": "group",
+      "column": "Jahrgangsstufe"
+    },
+    {
+      "role": "value",
+      "column": "Punkte (Ø)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "bar",
+    "renamed",
+    "synthetic",
+    "renamed-headers",
+    "non-ascii-headers"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 303, renamed)"
+}

@@ -8,5 +8,6 @@
     {"role": "value", "column": "Revenue (kEUR)"}
   ],
   "expected": "accepted",
-  "tags": ["categorical", "four-groups", "palette-extension", "german-locale"]
+  "tags": ["categorical", "four-groups", "palette-extension", "german-locale", "smoke"],
+  "source": "hand-written synthetic data"
 }

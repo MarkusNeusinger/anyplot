@@ -266,13 +266,20 @@ _LANG = re.compile(r"^[a-z]{2}$")
 
 
 class JudgeVerdict(BaseModel):
-    """What the judge decided, the reply language it saw, and the tokens it cost."""
+    """What the judge decided, the reply language it saw, and the tokens it cost.
+
+    `tokens` is the total the budgets count; `input_tokens` and `output_tokens` split
+    it for the attribution log, so the eval harness can price the judge at the input
+    and output rates (output includes thinking tokens on Gemini).
+    """
 
     model_config = ConfigDict(extra="ignore")
 
     verdict: Verdict
     lang: str = "en"
     tokens: int = Field(default=0, ge=0)
+    input_tokens: int = Field(default=0, ge=0)
+    output_tokens: int = Field(default=0, ge=0)
 
     @field_validator("lang", mode="before")
     @classmethod
@@ -353,8 +360,17 @@ class AnthropicJudge:
         if not isinstance(answer, dict):
             raise ValueError("the judge answered without a verdict")
         usage = message.usage
-        tokens = int(getattr(usage, "input_tokens", 0) or 0) + int(getattr(usage, "output_tokens", 0) or 0)
-        return JudgeVerdict(**_JudgeAnswer.model_validate(answer).model_dump(), tokens=tokens)
+        input_tokens = sum(
+            int(getattr(usage, name, 0) or 0)
+            for name in ("input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens")
+        )
+        output_tokens = int(getattr(usage, "output_tokens", 0) or 0)
+        return JudgeVerdict(
+            **_JudgeAnswer.model_validate(answer).model_dump(),
+            tokens=input_tokens + output_tokens,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+        )
 
     async def judge(self, text: str, rubric: str) -> JudgeVerdict:
         return await _within_budget(self._attempt, text, rubric, self.timeout_s)
@@ -395,8 +411,18 @@ class GeminiJudge:
         )
         answer = _JudgeAnswer.model_validate_json(response.text or "")
         usage = response.usage_metadata
-        tokens = int(getattr(usage, "total_token_count", 0) or 0) if usage else 0
-        return JudgeVerdict(**answer.model_dump(), tokens=tokens)
+
+        def count(name: str) -> int:
+            return int(getattr(usage, name, 0) or 0) if usage else 0
+
+        input_tokens = count("prompt_token_count") + count("tool_use_prompt_token_count")
+        output_tokens = count("candidates_token_count") + count("thoughts_token_count")
+        return JudgeVerdict(
+            **answer.model_dump(),
+            tokens=count("total_token_count"),
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+        )
 
     async def judge(self, text: str, rubric: str) -> JudgeVerdict:
         return await _within_budget(self._attempt, text, rubric, self.timeout_s)

@@ -1,0 +1,29 @@
+{
+  "spec_id": "heatmap-basic",
+  "library": "seaborn",
+  "locale": "de",
+  "perturbation": "renamed",
+  "bindings": [
+    {
+      "role": "y",
+      "column": "Wochentag"
+    },
+    {
+      "role": "x",
+      "column": "Stunde"
+    },
+    {
+      "role": "value",
+      "column": "Antwortzeit Ø (min)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "heatmap",
+    "renamed",
+    "synthetic",
+    "renamed-headers",
+    "non-ascii-headers"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 606, renamed)"
+}

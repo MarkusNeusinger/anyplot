@@ -1,0 +1,25 @@
+{
+  "spec_id": "area-basic",
+  "library": "matplotlib",
+  "locale": "de",
+  "perturbation": "renamed",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "tag_nr"
+    },
+    {
+      "role": "y",
+      "column": "energieverbrauch_mwh"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "area",
+    "renamed",
+    "synthetic",
+    "renamed-headers",
+    "smoke"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 707, renamed)"
+}

@@ -1,0 +1,28 @@
+{
+  "spec_id": "heatmap-basic",
+  "library": "matplotlib",
+  "locale": "de",
+  "perturbation": "decimal-comma",
+  "bindings": [
+    {
+      "role": "y",
+      "column": "Weekday"
+    },
+    {
+      "role": "x",
+      "column": "Hour"
+    },
+    {
+      "role": "value",
+      "column": "Response Time (min)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "heatmap",
+    "decimal-comma",
+    "synthetic",
+    "semicolon"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 606, decimal-comma)"
+}

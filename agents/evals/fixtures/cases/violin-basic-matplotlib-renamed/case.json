@@ -1,0 +1,24 @@
+{
+  "spec_id": "violin-basic",
+  "library": "matplotlib",
+  "locale": "de",
+  "perturbation": "renamed",
+  "bindings": [
+    {
+      "role": "category",
+      "column": "segment"
+    },
+    {
+      "role": "value",
+      "column": "basket_eur"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "violin",
+    "renamed",
+    "synthetic",
+    "renamed-headers"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 808, renamed)"
+}
