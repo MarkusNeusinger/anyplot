@@ -1,0 +1,24 @@
+{
+  "spec_id": "area-basic",
+  "library": "seaborn",
+  "locale": "en",
+  "perturbation": "x10",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Day"
+    },
+    {
+      "role": "y",
+      "column": "Energy Use (MWh)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "area",
+    "x10",
+    "synthetic",
+    "scaled-values"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 707, x10)"
+}

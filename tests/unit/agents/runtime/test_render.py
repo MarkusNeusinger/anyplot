@@ -240,6 +240,7 @@ class TestGates:
 
         assert not report.passed_host_gates
         assert "time limit" in report.blocking[0] and "saved no plot-dark.png" in report.blocking[1]
+        assert report.failed_gates == ["R1-timeout", "R1"]
 
     def test_canvas_miss_is_a_defect_with_a_padded_copy(self) -> None:
         report = evaluate(
@@ -252,6 +253,7 @@ class TestGates:
         assert report.passed_host_gates and not report.canvas_ok
         assert len(report.canvas_defects) == 1 and report.canvas_defects[0].startswith("VQ-05 (both)")
         assert size_of(report.padded_pngs["light"]) == (3200, 1800)
+        assert report.failed_gates == ["R3", "R3"]  # one entry per theme, for the attribution log
 
     def test_advisory_probe_lines(self) -> None:
         probe = {
@@ -275,6 +277,7 @@ class TestGates:
             "DQ-03 (both)",
             "DQ-03 (code)",
         ]
+        assert report.failed_gates == ["G3", "G7", "G5", "G8"] * 2  # per theme, in the probe's check order
 
     @pytest.mark.parametrize(
         "probe",

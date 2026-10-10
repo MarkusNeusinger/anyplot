@@ -1,0 +1,26 @@
+{
+  "spec_id": "line-timeseries",
+  "library": "matplotlib",
+  "locale": "en",
+  "perturbation": "date",
+  "bindings": [
+    {
+      "role": "date",
+      "column": "Date"
+    },
+    {
+      "role": "value",
+      "column": "PM2.5 (µg/m³)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "time-series",
+    "date",
+    "synthetic",
+    "dd.mm.yyyy",
+    "iso-date",
+    "date-axis"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 1010, date)"
+}

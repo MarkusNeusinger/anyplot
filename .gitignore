@@ -286,3 +286,9 @@ ds-bundle/
 app/.designsync-fonts/*.ttf
 app/.designsync-fonts/*.otf
 app/.designsync-fonts/*.woff2
+
+# Agent network regression harness (agents/evals/): run reports, renders and review
+# galleries are local; promoted feedback cases hold users' data and are synced from the
+# private bucket, never committed. Baselines in agents/evals/baselines/ ARE committed.
+agents/evals/reports/
+agents/evals/.cases/

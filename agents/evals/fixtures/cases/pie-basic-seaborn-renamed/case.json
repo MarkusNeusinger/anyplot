@@ -1,0 +1,24 @@
+{
+  "spec_id": "pie-basic",
+  "library": "seaborn",
+  "locale": "de",
+  "perturbation": "renamed",
+  "bindings": [
+    {
+      "role": "category",
+      "column": "Ausgabenposten"
+    },
+    {
+      "role": "value",
+      "column": "Betrag CHF"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "pie",
+    "renamed",
+    "synthetic",
+    "renamed-headers"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 909, renamed)"
+}

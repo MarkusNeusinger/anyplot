@@ -1,0 +1,26 @@
+{
+  "spec_id": "area-basic",
+  "library": "seaborn",
+  "locale": "en",
+  "perturbation": "date",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Date"
+    },
+    {
+      "role": "y",
+      "column": "Energy Use (MWh)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "area",
+    "date",
+    "synthetic",
+    "dd.mm.yyyy",
+    "iso-date",
+    "date-axis"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 707, date)"
+}

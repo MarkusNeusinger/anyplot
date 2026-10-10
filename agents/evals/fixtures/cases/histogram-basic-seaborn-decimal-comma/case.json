@@ -1,0 +1,20 @@
+{
+  "spec_id": "histogram-basic",
+  "library": "seaborn",
+  "locale": "de",
+  "perturbation": "decimal-comma",
+  "bindings": [
+    {
+      "role": "values",
+      "column": "Delivery Time (min)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "histogram",
+    "decimal-comma",
+    "synthetic",
+    "semicolon"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 404, decimal-comma)"
+}

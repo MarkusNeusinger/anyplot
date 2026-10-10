@@ -1,0 +1,24 @@
+{
+  "spec_id": "box-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "perturbation": "n12",
+  "bindings": [
+    {
+      "role": "category",
+      "column": "Production Line"
+    },
+    {
+      "role": "value",
+      "column": "Fill Weight (g)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "box",
+    "n12",
+    "synthetic",
+    "small"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 505, n12)"
+}

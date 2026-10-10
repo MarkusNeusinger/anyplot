@@ -1,0 +1,28 @@
+{
+  "spec_id": "heatmap-basic",
+  "library": "seaborn",
+  "locale": "en",
+  "perturbation": "x10",
+  "bindings": [
+    {
+      "role": "y",
+      "column": "Weekday"
+    },
+    {
+      "role": "x",
+      "column": "Hour"
+    },
+    {
+      "role": "value",
+      "column": "Response Time (min)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "heatmap",
+    "x10",
+    "synthetic",
+    "scaled-values"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 606, x10)"
+}

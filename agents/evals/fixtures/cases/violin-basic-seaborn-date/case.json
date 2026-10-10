@@ -1,0 +1,26 @@
+{
+  "spec_id": "violin-basic",
+  "library": "seaborn",
+  "locale": "en",
+  "perturbation": "date",
+  "bindings": [
+    {
+      "role": "category",
+      "column": "Customer Segment"
+    },
+    {
+      "role": "value",
+      "column": "Basket Value (EUR)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "violin",
+    "date",
+    "synthetic",
+    "dd.mm.yyyy",
+    "iso-date",
+    "unbound-dates"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 808, date)"
+}

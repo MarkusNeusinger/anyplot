@@ -1,0 +1,25 @@
+{
+  "spec_id": "pie-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "perturbation": "n12",
+  "bindings": [
+    {
+      "role": "category",
+      "column": "Expense Category"
+    },
+    {
+      "role": "value",
+      "column": "Amount (CHF)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "pie",
+    "n12",
+    "synthetic",
+    "small",
+    "smoke"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 909, n12)"
+}

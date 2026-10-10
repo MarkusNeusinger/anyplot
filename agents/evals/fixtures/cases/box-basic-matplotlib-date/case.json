@@ -1,0 +1,27 @@
+{
+  "spec_id": "box-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "perturbation": "date",
+  "bindings": [
+    {
+      "role": "category",
+      "column": "Production Line"
+    },
+    {
+      "role": "value",
+      "column": "Fill Weight (g)"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "box",
+    "date",
+    "synthetic",
+    "dd.mm.yyyy",
+    "iso-date",
+    "unbound-dates",
+    "smoke"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 505, date)"
+}

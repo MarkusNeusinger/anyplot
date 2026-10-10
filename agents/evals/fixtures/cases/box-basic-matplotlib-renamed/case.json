@@ -1,0 +1,25 @@
+{
+  "spec_id": "box-basic",
+  "library": "matplotlib",
+  "locale": "de",
+  "perturbation": "renamed",
+  "bindings": [
+    {
+      "role": "category",
+      "column": "Abfülllinie"
+    },
+    {
+      "role": "value",
+      "column": "Füllgewicht [g]"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "box",
+    "renamed",
+    "synthetic",
+    "renamed-headers",
+    "non-ascii-headers"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 505, renamed)"
+}

@@ -176,6 +176,29 @@ def usage_tokens(usage: Any) -> tuple[int, int]:
     return billable, count("cached_content_token_count")
 
 
+USAGE_FIELDS: dict[str, str] = {
+    "prompt": "prompt_token_count",
+    "candidates": "candidates_token_count",
+    "thoughts": "thoughts_token_count",
+    "tool_use_prompt": "tool_use_prompt_token_count",
+    "cache_write": "cache_creation_input_tokens",
+}
+"""The `usage_metadata` counts the attribution line carries by kind (`cached` is logged on its own).
+
+`prompt` includes the cached and cache-write tokens (ADK folds Anthropic's disjoint counts
+into one prompt count); `cache_write` is the Anthropic cache-creation count ADK attaches to
+the usage object. The eval harness prices each kind at its own rate."""
+
+
+def usage_breakdown(usage: Any) -> dict[str, int]:
+    """The token counts of `usage_metadata` by kind (`USAGE_FIELDS`); a missing count is 0."""
+    counts: dict[str, int] = {}
+    for key, name in USAGE_FIELDS.items():
+        value = getattr(usage, name, None) if usage is not None else None
+        counts[key] = int(value) if isinstance(value, int) else 0
+    return counts
+
+
 def argument_hash(arguments: Any) -> str:
     """A short, stable hash of tool arguments, so logs can correlate calls without their content."""
     try:

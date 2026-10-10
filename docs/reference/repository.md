@@ -100,7 +100,16 @@ anyplot/
 ├── agents/                            # Agent network on Google ADK (see concepts/agent-network.md)
 │   ├── main.py                        # anyplot-agents service: the private /v1 API around the ADK runner
 │   ├── stream.py                      # anyplot/1 SSE translator and output sanitiser
-│   ├── evals/fixtures/cases/          # Eval fixture cases (case.json + data.csv), also the adk web seed
+│   ├── evals/                         # Model-regression harness (see agents/README.md)
+│   │   ├── matrix.py                  # Runs eval cases through /v1 in process; report, diff, gallery
+│   │   ├── make_fixtures.py           # Generates the 120 synthetic spike-X cases (seeded, rerunnable)
+│   │   ├── cases.py                   # Case loading and --cases selection
+│   │   ├── pricing.py                 # List prices and the cost of one model call
+│   │   ├── report.py                  # Summary, baseline diff, Markdown, galleries; blind two-run gallery
+│   │   ├── eligibility.py             # Model-free sweep: which catalogue files can be adapted, and why not
+│   │   ├── baselines/                 # Committed baseline reports, one per model
+│   │   ├── fixtures/cases/            # Eval cases (case.json + data.csv), also the adk web seed
+│   │   └── reports/                   # Run reports, renders and galleries (git-ignored)
 │   ├── renderer/                      # anyplot-renderer service: runs the code in Cloud Run sandboxes, no ADK import
 │   │   ├── main.py                    # POST /render and GET /status behind the IAM caller check, one render slot
 │   │   ├── executor.py                # sandbox do per theme: kill path, byte watchdog, launcher retry, bounded output

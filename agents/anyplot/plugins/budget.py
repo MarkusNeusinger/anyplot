@@ -8,7 +8,9 @@
   `PlotResult(failed, reason=budget)` instead.
 * `after_model_callback` books every response's tokens (prompt + candidates +
   thoughts + tool-use prompt; cached tokens are counted separately and never twice),
-  the call and the `model_version`, and writes one content-free attribution line.
+  the call and the `model_version`, and writes one content-free attribution line
+  with the token counts by kind (`ledger.usage_breakdown`), which the eval harness
+  prices (`agents/evals/pricing.py`).
 * `before_tool_callback` on `plot_pipeline` counts the user's daily pipeline runs
   and refuses the call with `{"status": "error", "code": "budget"}` past
   `AGENT_DAILY_PIPELINE_RUNS`. A second call in the same invocation, and a call
@@ -32,7 +34,7 @@ from google.genai import types
 from ..policy import refusal
 from ..services import get_services
 from ..settings import get_settings
-from .ledger import attribution, budget_allows, ledger_for, usage_tokens
+from .ledger import attribution, budget_allows, ledger_for, usage_breakdown, usage_tokens
 from .tool_safety import ToolSafetyPlugin
 
 
@@ -92,6 +94,7 @@ class BudgetPlugin(BasePlugin):
                 agent=callback_context.agent_name,
                 billable=billable,
                 cached=cached,
+                **usage_breakdown(llm_response.usage_metadata),
                 model_version=llm_response.model_version,
                 finish_reason=str(llm_response.finish_reason) if llm_response.finish_reason else None,
             )

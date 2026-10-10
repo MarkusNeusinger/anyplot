@@ -42,6 +42,16 @@ findings, a padded canvas, or no review because the budget or the deadline ran o
 `failed` names its reason; `not_ready` comes before any model call. Progress goes out
 as content-free events with `custom_metadata={"anyplot_status": {"step", "attempt"}}`,
 which the stream translator turns into `status` events and no model ever reads.
+
+Every step also writes one content-free attribution line (`plugins/ledger.attribution`):
+`pipeline_adapt` (the answer's outcome and edit count), `pipeline_check` (edit-apply
+failure count, blocking validator rule ids, ADAPTATION rule ids), `pipeline_render`
+(render and wall time, the gate ids that failed or reported), `pipeline_review` (the
+verdict and its defect ids) and `pipeline_result` (status, reason, attempts, whether
+the shipped render was padded or carries ADAPTATION or probe findings, and the
+exception class behind reason `error`). The
+eval harness (`agents/evals/matrix.py`) reads them per case; they never carry code,
+data, column names or model text.
 """
 
 import json
@@ -66,7 +76,7 @@ from .code.regions import find_regions
 from .code.validate import validate_adaptation, validate_security
 from .data.bindings import check_bindings
 from .data.store import StoredDataset
-from .plugins.ledger import budget_allows, ledger_for
+from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, fence
 from .render.contract import RendererUnavailable, RenderJob, Theme
 from .render.gates import data_rows, evaluate
@@ -145,6 +155,10 @@ class Candidate:
     advisory_lines: list[str] = field(default_factory=list)
     reviewed_ok: bool | None = None
     render_id: str | None = None
+    adaptation_rules: list[str] = field(default_factory=list)
+    """The ADAPTATION validator rule ids behind `adaptation_lines`, for the attribution log."""
+    advisory_gates: list[str] = field(default_factory=list)
+    """The advisory probe gate ids (`G3`, `G5`, `G7`, `G8`) behind `advisory_lines`, for the attribution log."""
 
 
 @dataclass
@@ -162,6 +176,8 @@ class Run:
     reason: FailureReason | None = None
     rendered: bool = False
     unreviewed_why: str | None = None
+    error_type: str | None = None
+    """The exception class that ended the run with reason `error` (content-free, for the attribution log)."""
 
 
 def _line(text: str) -> str:
@@ -264,31 +280,42 @@ def _clip_feedback(lines: list[str]) -> list[str]:
     return unique[:MAX_FEEDBACK]
 
 
-def _check(working: str, *, library: str, palette: list[str], base: str) -> tuple[bool, list[str], list[str]]:
-    """Validate a working form against its base: (may render, blocking lines, adaptation defect lines)."""
+@dataclass(frozen=True)
+class CheckResult:
+    """The validator verdict on a working form: its lines for the repair, and its rule ids for the attribution log."""
+
+    may_render: bool
+    blocking: list[str]
+    defects: list[str]
+    blocking_rules: list[str]
+    adaptation_rules: list[str]
+
+
+def _check(working: str, *, library: str, palette: list[str], base: str) -> CheckResult:
+    """Validate a working form against its base: may it render, the blocking lines, the adaptation defect lines."""
     security = validate_security(working, library=library)
     adaptation = validate_adaptation(working, original_palette=palette)
-    blocking = [f"validator {f.rule}" + (f" (line {f.line})" if f.line else "") + f": {f.message}" for f in security]
-    blocking += [
-        f"validator {f.rule}" + (f" (line {f.line})" if f.line else "") + f": {f.message}"
-        for f in adaptation
-        if f.rule in BLOCKING_RULES
+    blocking_findings = [*security, *(f for f in adaptation if f.rule in BLOCKING_RULES)]
+    blocking = [
+        f"validator {f.rule}" + (f" (line {f.line})" if f.line else "") + f": {f.message}" for f in blocking_findings
     ]
+    blocking_rules = [f.rule for f in blocking_findings]
     added = new_literal_chars(base, working)
     if added > MAX_NEW_LITERAL_CHARS:
+        blocking_rules.append("literal-budget")
         blocking.append(
             f"validator literal-budget: the plan adds {added} characters of new string literals, "
             f"{added - MAX_NEW_LITERAL_CHARS} over the limit of {MAX_NEW_LITERAL_CHARS} → derive text and values "
             "from df instead of writing them out. Likely cause: data or long text written into the code."
         )
+    soft = [f for f in adaptation if f.rule not in BLOCKING_RULES]
     defects = [
         f"{ADAPTATION_IDS.get(f.rule, 'SC-03')} (code): {f.message}"
         + (f" at line {f.line}" if f.line else "")
         + f" → derive it from df and the Imprint palette. Likely cause: the adaptation ({f.rule})."
-        for f in adaptation
-        if f.rule not in BLOCKING_RULES
+        for f in soft
     ]
-    return not blocking, blocking, defects
+    return CheckResult(not blocking, blocking, defects, blocking_rules, [f.rule for f in soft])
 
 
 def finish(run: Run) -> PlotResult:
@@ -420,6 +447,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     except Exception as exc:  # every failure ends in a PlotResult; the type is logged, never the message
         logger.warning("pipeline failed: %s", type(exc).__name__)
         run.reason = "error"
+        run.error_type = type(exc).__name__
         run.unreviewed_why = run.unreviewed_why or "an internal error stopped the run"
     finally:
         ledger.pipeline_active = False
@@ -431,8 +459,35 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     except Exception as exc:  # a result whose artifacts cannot be stored is not shippable
         logger.warning("storing the version failed: %s", type(exc).__name__)
         result = PlotResult(status="failed", reason="error", attempts=run.attempts)
+        run.error_type = run.error_type or type(exc).__name__
+    _attribute_result(ledger, run, result)
     yield close_scope(scope)
     yield _result_event(result)
+
+
+def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> None:
+    """The content-free outcome line of one pipeline run: what the eval harness's pass and gate counts read.
+
+    `padded`, `adaptation` (ADAPTATION rule ids) and `advisory` (probe gate ids) describe
+    the shipped render; a failed run has none. `error` is the exception class behind
+    reason `error` (for example `RendererUnavailable`, which the harness treats as an
+    outage rather than a model failure), never its message.
+    """
+    shipped = (run.best or run.padded) if result.status in ("ok", "needs_attention") else None
+    attribution(
+        "pipeline_result",
+        ledger,
+        status=result.status,
+        reason=result.reason,
+        attempts=result.attempts,
+        theme=run.theme,
+        reviewed=run.reviewed,
+        padded=bool(shipped and shipped.padded),
+        adaptation=list(shipped.adaptation_rules) if shipped else [],
+        advisory=list(shipped.advisory_gates) if shipped else [],
+        residual=len(result.residual_defects),
+        error=run.error_type if result.reason == "error" else None,
+    )
 
 
 def close_scope(scope: str) -> Event:
@@ -494,23 +549,44 @@ async def _attempts(
         ledger.adapter_allow_full = request.allow_full
         answer = await _adapt(ctx, scope, render_adapt_request(request, view), view.library)
         if isinstance(answer, str):
+            attribution("pipeline_adapt", ledger, attempt=attempt, outcome="schema")
             feedback, previous_plan = [answer], None
             continue
         plan = answer
         if plan.full_code is not None and not request.allow_full:
+            attribution("pipeline_adapt", ledger, attempt=attempt, outcome="full_code_refused")
             feedback, previous_plan = ["full_code is allowed only on the second attempt; send edits instead"], None
             continue
+        attribution(
+            "pipeline_adapt",
+            ledger,
+            attempt=attempt,
+            outcome="plan",
+            edits=len(plan.edits),
+            full_code=plan.full_code is not None,
+        )
 
         yield _status("checking", attempt)
         applied = apply_plan(working, plan)
         if applied.code is None:
+            attribution(
+                "pipeline_check", ledger, attempt=attempt, outcome="edits_failed", edit_failures=len(applied.failures)
+            )
             feedback, previous_plan = applied.failures, plan
             continue
-        may_render, blocking, adaptation_lines = _check(
-            applied.code, library=view.library, palette=palette, base=working
+        check = _check(applied.code, library=view.library, palette=palette, base=working)
+        adaptation_lines = check.defects
+        attribution(
+            "pipeline_check",
+            ledger,
+            attempt=attempt,
+            outcome="ok" if check.may_render else "rejected",
+            edit_failures=0,
+            validator=check.blocking_rules,
+            adaptation=check.adaptation_rules,
         )
-        if not may_render:
-            feedback, previous_plan = blocking, plan
+        if not check.may_render:
+            feedback, previous_plan = check.blocking, plan
             continue
         working, previous_plan = applied.code, None
         try:
@@ -521,6 +597,7 @@ async def _attempts(
                 parse_dates=list(dataset.parse_dates),
             )
         except ValueError as exc:
+            attribution("pipeline_check", ledger, attempt=attempt, outcome="loader_failed", edit_failures=0)
             feedback = [_line(f"the code could not take the data loader: {exc}")]
             continue
 
@@ -534,7 +611,21 @@ async def _attempts(
             themes=(run.theme,),
             timeout_s=deadline.clamp(settings.render_timeout_s),
         )
-        report = evaluate(await services.backend.render(job), themes=job.themes, library=view.library, rows=rows)
+        started = time.monotonic()
+        rendered = await services.backend.render(job)
+        render_s = time.monotonic() - started
+        report = evaluate(rendered, themes=job.themes, library=view.library, rows=rows)
+        attribution(
+            "pipeline_render",
+            ledger,
+            attempt=attempt,
+            theme=run.theme,
+            render_s=round(render_s, 3),
+            wall_s={theme: round(output.wall_s, 3) for theme, output in rendered.outputs.items()},
+            passed=report.passed_host_gates,
+            canvas_ok=report.canvas_ok,
+            gates=report.failed_gates,
+        )
         run.rendered = True
         if not report.passed_host_gates:
             feedback = [*report.blocking, *adaptation_lines]
@@ -549,6 +640,8 @@ async def _attempts(
             canvas_line=report.canvas_defects[0] if report.canvas_defects else None,
             adaptation_lines=adaptation_lines,
             advisory_lines=list(report.advisory),
+            adaptation_rules=check.adaptation_rules,
+            advisory_gates=[gate for gate in report.failed_gates if gate.startswith("G")],
         )
         if report.canvas_ok:
             run.best = candidate
@@ -583,8 +676,16 @@ async def _attempts(
             ),
         )
         if verdict is None:
+            attribution("pipeline_review", ledger, attempt=attempt, verdict="unreadable")
             run.unreviewed_why = "the review answer could not be read"
             return
+        attribution(
+            "pipeline_review",
+            ledger,
+            attempt=attempt,
+            verdict="ok" if verdict.ok else "defects",
+            defects=[defect.id for defect in verdict.defects],
+        )
         run.reviewed = True
         candidate.reviewed_ok = verdict.ok
         if verdict.ok:

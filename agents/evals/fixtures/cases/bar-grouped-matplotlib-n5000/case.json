@@ -1,0 +1,29 @@
+{
+  "spec_id": "bar-grouped",
+  "library": "matplotlib",
+  "locale": "en",
+  "perturbation": "n5000",
+  "bindings": [
+    {
+      "role": "category",
+      "column": "Subject"
+    },
+    {
+      "role": "group",
+      "column": "Grade Level"
+    },
+    {
+      "role": "value",
+      "column": "Test Score"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "bar",
+    "n5000",
+    "synthetic",
+    "large",
+    "aggregation"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 303, n5000)"
+}

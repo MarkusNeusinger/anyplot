@@ -1,0 +1,24 @@
+{
+  "spec_id": "scatter-basic",
+  "library": "seaborn",
+  "locale": "de",
+  "perturbation": "renamed",
+  "bindings": [
+    {
+      "role": "x",
+      "column": "Werbebudget in Tsd. CHF"
+    },
+    {
+      "role": "y",
+      "column": "Umsatz in Tsd. CHF"
+    }
+  ],
+  "expected": "accepted",
+  "tags": [
+    "scatter",
+    "renamed",
+    "synthetic",
+    "renamed-headers"
+  ],
+  "source": "synthetic: agents/evals/make_fixtures.py (seed 101, renamed)"
+}
