@@ -7,9 +7,11 @@
 * a message with a non-text part is withheld with the `unsupported_content` refusal;
 * the per-user and global daily budget is checked before the judge runs, and the
   judge's tokens are booked to the ledger and the usage book;
-* the judge sees all text parts inside `<user_message>` plus the root's last reply
-  (at most 500 characters) inside `<last_assistant_turn>`, with the fence tags
-  neutralised;
+* the judge sees all text parts inside `<user_message>`, the root's last reply (at
+  most 500 characters) inside `<last_assistant_turn>`, and the user's last three
+  earlier turns (500 characters each, 1,500 in all, oldest first, as a JSON list)
+  inside `<earlier_user_turns>`, so a request split across turns is judged as a
+  whole; the fence tags are neutralised in all three;
 * a timeout, transport error or unparseable answer after the one retry inside the
   4-second budget blocks with the error `guard_unavailable`;
 * `out_of_scope` and `attack` withhold the message with the fixed `out_of_scope`
@@ -24,7 +26,10 @@ error into `refusal` or `error` events. The plugin never raises: an internal
 failure is a `guard_unavailable` block.
 """
 
+import json
 import logging
+from collections.abc import Sequence
+from typing import Literal
 
 from google.adk.agents.invocation_context import InvocationContext
 from google.adk.plugins.base_plugin import BasePlugin
@@ -42,7 +47,15 @@ logger = logging.getLogger(__name__)
 WITHHELD = "[message withheld by scope policy]"
 GUARD_UNAVAILABLE_TEXT = "The request could not be checked right now. Please try again in a moment."
 MAX_CONTEXT_CHARS = 500
+"""The root's last reply as the judge sees it."""
+MAX_USER_TURNS = 3
+MAX_USER_TURN_CHARS = 500
+MAX_USER_CONTEXT_CHARS = 1_500
+"""The earlier user turns the judge sees: the last three, 500 characters each, 1,500 in all (about 400 tokens)."""
 ROOT_AGENT = "anyplot"
+USER_AUTHOR = "user"
+
+Turn = tuple[Literal["user", "assistant"], str]
 
 
 REFUSAL_CODES: dict[str, str] = {"out_of_scope": "out_of_scope", "attack": "out_of_scope", "needs_data": "needs_data"}
@@ -59,21 +72,51 @@ def _withheld() -> types.Content:
     return types.Content(role="user", parts=[types.Part(text=WITHHELD)])
 
 
-def last_assistant_turn(invocation_context: InvocationContext) -> str:
-    """The root's last final text in the session, at most 500 characters."""
-    for event in reversed(invocation_context.session.events):
-        if event.author != ROOT_AGENT or not event.content or not event.content.parts:
+def session_turns(invocation_context: InvocationContext) -> list[Turn]:
+    """The session's text turns so far, oldest first: the user's messages and the root's replies.
+
+    ADK calls `on_user_message_callback` before it stores the new message, so the
+    message being judged is never among them. A withheld message appears as its
+    placeholder, which tells the judge that an earlier turn was refused.
+    """
+    turns: list[Turn] = []
+    for event in invocation_context.session.events:
+        if event.author not in (USER_AUTHOR, ROOT_AGENT) or not event.content or not event.content.parts:
             continue
-        text = "".join(part.text or "" for part in event.content.parts if part.text and not part.thought)
-        if text.strip():
-            return text.strip()[:MAX_CONTEXT_CHARS]
-    return ""
+        text = "".join(part.text or "" for part in event.content.parts if part.text and not part.thought).strip()
+        if text:
+            turns.append(("user" if event.author == USER_AUTHOR else "assistant", text))
+    return turns
 
 
-def judge_input(message_text: str, context: str) -> str:
-    parts = [fence("user_message", message_text)]
+def judge_context(turns: Sequence[Turn]) -> tuple[str, list[str]]:
+    """The root's last reply (at most `MAX_CONTEXT_CHARS`) and the last `MAX_USER_TURNS` user turns, oldest first.
+
+    Each user turn keeps at most `MAX_USER_TURN_CHARS` characters and all of them
+    together at most `MAX_USER_CONTEXT_CHARS`, the newest first when the budget runs out.
+    """
+    assistant = next((text for role, text in reversed(turns) if role == "assistant"), "")[:MAX_CONTEXT_CHARS]
+    earlier: list[str] = []
+    left = MAX_USER_CONTEXT_CHARS
+    for role, text in reversed(turns):
+        if role != "user":
+            continue
+        if len(earlier) == MAX_USER_TURNS or left <= 0:
+            break
+        piece = text[: min(MAX_USER_TURN_CHARS, left)]
+        earlier.append(piece)
+        left -= len(piece)
+    return assistant, earlier[::-1]
+
+
+def judge_input(message_text: str, context: str, earlier: Sequence[str] = ()) -> str:
+    """The judge's input: the earlier user turns, the root's last reply and the message, each fenced, in that order."""
+    parts = []
+    if earlier:
+        parts.append(fence("earlier_user_turns", json.dumps(list(earlier), ensure_ascii=False)))
     if context:
         parts.append(fence("last_assistant_turn", context))
+    parts.append(fence("user_message", message_text))
     return "\n".join(parts)
 
 
@@ -112,10 +155,9 @@ class ScopeGuardPlugin(BasePlugin):
             attribution("scope_guard", ledger, verdict="budget")
             return _withheld()
         text = "\n".join(part.text or "" for part in parts)
+        context, earlier = judge_context(session_turns(invocation_context))
         try:
-            verdict = await services.judge.judge(
-                judge_input(text, last_assistant_turn(invocation_context)), scope_rubric()
-            )
+            verdict = await services.judge.judge(judge_input(text, context, earlier), scope_rubric())
         except JudgeUnavailable:
             ledger.fail("guard_unavailable")
             attribution("scope_guard", ledger, verdict="guard_unavailable")

@@ -54,6 +54,7 @@ FENCE_TAGS = (
     "user_data",
     "user_message",
     "last_assistant_turn",
+    "earlier_user_turns",
     "dataset",
     "spec_text",
     "tool_notes",
