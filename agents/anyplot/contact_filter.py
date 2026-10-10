@@ -36,6 +36,8 @@ from typing import Literal
 
 
 ContactKind = Literal["web", "email", "phone"]
+CONTACT_NAMES: dict[str, str] = {"email": "e-mail address", "phone": "phone number", "web": "web address"}
+"""Each kind in words, for repair feedback."""
 
 COUNTRY_TLDS: frozenset[str] = frozenset(
     """

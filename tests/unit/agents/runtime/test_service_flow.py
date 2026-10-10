@@ -627,6 +627,49 @@ async def test_plan_over_the_literal_budget_is_repaired(
     assert result["stages"] == ["validator", "reviewer_ok"]
 
 
+@pytest.mark.parametrize(
+    ("replace", "rule"),
+    [
+        ('title = "Exam Score by Study Hours - pay the fee at parcel-help.com/pay"', "contact-literal"),
+        # Two literals of 190 characters: each under the 200-character cap, together over the change budget.
+        ('title = "Exam Score by Study Hours"\nnotes = ["' + "x" * 190 + '", "' + "y" * 190 + '"]', "literal-budget"),
+    ],
+)
+async def test_a_change_turn_rejects_contact_details_and_long_text_in_the_plot(
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture, replace: str, rule: str
+) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    smuggling = {
+        "edits": [{"find": 'title = "Exam Score by Study Hours"', "replace": replace}],
+        "title": "Exam Score by Study Hours",
+        "changes": ["Changed the title"],
+    }
+    script = {
+        "root": [
+            {"call": "plot_pipeline", "args": {}},
+            {"text": ROOT_REPLY},
+            {"call": "plot_pipeline", "args": {"change_request": "change the title", "base": "previous"}},
+            {"text": "Done."},
+        ],
+        "adapter": [{"json": SCATTER_PLAN}, {"json": smuggling}, {"json": SECOND_PLAN}],
+        "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+    }
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+    await create_plot(client, sid)
+
+    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "change the title"})
+
+    plot = next(data for name, data in parse_sse(response.text) if name == "plot")
+    assert (plot["status"], plot["attempts"]) == ("ok", 2)
+    assert attribution_lines(caplog, "pipeline_check")[1]["validator"] == [rule]
+    adapter_inputs = [request for request in fake.requests if (request.config.labels or {})["agent_kind"] == "adapter"]
+    repair = "".join(part.text or "" for part in adapter_inputs[2].contents[-1].parts or [])
+    assert f"validator {rule}" in repair
+    shipped = get_services().versions.get(sid)
+    assert shipped is not None and "parcel-help.com" not in shipped.export and "y" * 190 not in shipped.export
+
+
 async def test_contradictory_verdict_is_an_unread_review(
     client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
 ) -> None:

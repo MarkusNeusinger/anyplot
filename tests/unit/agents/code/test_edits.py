@@ -4,11 +4,13 @@ import pytest
 
 from agents.anyplot.code.edits import (
     FAILURE_KINDS,
+    MAX_CHANGE_LITERAL_CHARS,
     MAX_NEW_LITERAL_CHARS,
     MAX_QUOTE_CHARS,
     AppliedPlan,
     apply_plan,
     new_literal_chars,
+    new_literals,
     protected_drift,
 )
 from agents.anyplot.schemas import MAX_EDITS, MAX_FEEDBACK, MAX_LINE_CHARS, AdaptPlan, Edit
@@ -106,6 +108,15 @@ def test_new_literal_chars_counts_only_added_text() -> None:
     assert new_literal_chars(WORKING, renamed) == len("Sales by Month")
     assert new_literal_chars(WORKING, padded) == 2100 > MAX_NEW_LITERAL_CHARS
     assert new_literal_chars(WORKING, "def broken(:\n") == 0
+
+
+def test_new_literals_lists_each_added_string_as_often_as_it_is_new() -> None:
+    added = WORKING.replace("ax.set_ylim(0, 100)\n", 'ax.set_title("A")\nax.set_xlabel("A")\nax.text(0, 0, "B")\n')
+
+    assert new_literals(WORKING, WORKING) == []
+    assert new_literals(WORKING, added) == ["A", "A", "B"]
+    assert new_literals(WORKING, "def broken(:\n") == []
+    assert MAX_CHANGE_LITERAL_CHARS < MAX_NEW_LITERAL_CHARS
 
 
 def test_full_code_rebinding_a_token_is_refused() -> None:

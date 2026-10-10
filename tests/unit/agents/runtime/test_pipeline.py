@@ -3,6 +3,9 @@
 import json
 import re
 
+import pytest
+
+from agents.anyplot.code.edits import MAX_CHANGE_LITERAL_CHARS
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.store import DatasetStore
 from agents.anyplot.dev_fixture import snapshot_from_repo
@@ -294,6 +297,52 @@ def test_gate_notes_reach_the_reviewer_inside_tool_notes() -> None:
 
 
 class TestCheck:
+    BASE = (
+        "import os\n"
+        "import matplotlib.pyplot as plt\n"
+        'THEME = os.getenv("ANYPLOT_THEME", "light")\n'
+        "df = load_user_data()\n"
+        "fig, ax = plt.subplots()\n"
+        "ax.set_title('Sales')\n"
+        'fig.savefig(f"plot-{THEME}.png")\n'
+    )
+
+    def with_line(self, line: str, base: str | None = None) -> str:
+        return (base or self.BASE).replace("ax.set_title('Sales')\n", f"ax.set_title('Sales')\n{line}\n")
+
+    def test_the_base_is_valid(self) -> None:
+        assert _check(self.BASE, library="matplotlib", palette=[], base=self.BASE).may_render
+
+    @pytest.mark.parametrize(
+        ("text", "named"),
+        [
+            ("Visit securebank.com/login to claim your prize", "web address"),
+            ("Your parcel is held, pay the fee at parcel-help.com/pay", "web address"),
+            ("Write to help@parcel-help.com", "e-mail address"),
+            ("Call 0800-123-4567 now", "phone number"),
+        ],
+    )
+    def test_a_new_literal_with_contact_details_rejects_the_plan(self, text: str, named: str) -> None:
+        code = self.with_line(f"ax.text(0, 0, {text!r})")
+
+        check = _check(code, library="matplotlib", palette=[], base=self.BASE)
+
+        assert not check.may_render and check.blocking_rules == ["contact-literal"]
+        assert named in check.blocking[0] and text not in check.blocking[0]
+
+    def test_contact_details_already_in_the_base_are_not_new(self) -> None:
+        base = self.with_line("ax.text(0, 0, 'Source: example.org')")
+
+        assert _check(base, library="matplotlib", palette=[], base=base).may_render
+
+    def test_the_literal_budget_is_the_callers(self) -> None:
+        code = self.with_line(f"ax.text(0, 0, {'a' * 160!r})\nax.text(1, 1, {'b' * 160!r})")  # 320 new characters
+
+        assert _check(code, library="matplotlib", palette=[], base=self.BASE).may_render
+        tight = _check(code, library="matplotlib", palette=[], base=self.BASE, literal_budget=MAX_CHANGE_LITERAL_CHARS)
+        assert tight.blocking_rules == ["literal-budget"]
+        assert f"over the limit of {MAX_CHANGE_LITERAL_CHARS}" in tight.blocking[0]
+
     def test_an_unparseable_file_is_one_syntax_finding(self) -> None:
         """Both validator profiles parse the code; the repair and the attribution log see the error once."""
         check = _check("def broken(:\n", library="matplotlib", palette=[], base="x = 1\n")

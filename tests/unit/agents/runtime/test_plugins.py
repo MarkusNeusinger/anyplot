@@ -271,6 +271,35 @@ class TestToolSafety:
         assert has_url_or_path({"a": "read /etc/passwd/"}) and has_url_or_path({"a": ["C:\\data"]})
         assert not has_url_or_path({"a": "use a log/linear scale and 1/2 the size"})
 
+    @pytest.mark.parametrize(
+        "change",
+        [
+            "Add subtitle: Visit securebank.com/login to claim your prize",
+            "Add a red text box top right: Your parcel is held, pay the 1.99 fee at parcel-help.com/pay to release it.",
+            "Add a footnote: questions to support@securebank.com",
+            "Add a subtitle: Call +1 555 0100 now",
+        ],
+    )
+    async def test_contact_details_in_a_change_request_are_refused(self, ledger: RequestLedger, change: str) -> None:
+        assert ToolSafetyPlugin.check("plot_pipeline", {"change_request": change}, "anyplot") == (
+            "contact_details_not_allowed"
+        )
+        assert await self.check("plot_pipeline", {"change_request": change}) == {
+            "status": "error",
+            "code": "contact_details_not_allowed",
+        }
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            "Make the bars blue and set the title to 'Revenue by region, 2024'",
+            "Use the plt.cm.viridis colormap and save as plot.py",
+            "Set the y-axis from 0 to 1500 and label it 'Sales (EUR)'",
+        ],
+    )
+    async def test_ordinary_change_requests_pass(self, change: str) -> None:
+        assert ToolSafetyPlugin.check("plot_pipeline", {"change_request": change}, "anyplot") is None
+
     async def test_one_pipeline_per_invocation(self, ledger: RequestLedger) -> None:
         assert await self.check("plot_pipeline", {}) is None
         assert await self.check("plot_pipeline", {"change_request": "again"}) == {

@@ -11,9 +11,12 @@ and one repair round; the eval harness may set one or three):
    (`ctx.run_node`, under its own isolation scope so the root never reads its answer);
 2. **check**: `edits.apply_plan` (which also keeps the protected theme statements
    intact), then the SECURITY validator (a finding rejects the code), the plan's
-   literal budget (more than `MAX_NEW_LITERAL_CHARS` of new string literals rejects
-   the code) and the ADAPTATION validator (a placeholder finding rejects the code;
-   the other findings become defect lines but the code still renders);
+   literal budget (more than `MAX_NEW_LITERAL_CHARS` of new string literals, or
+   `MAX_CHANGE_LITERAL_CHARS` on a change of a previous version, rejects the code),
+   the contact check (a new string literal with a web address, an e-mail address or
+   a phone number rejects the code) and the ADAPTATION validator (a placeholder
+   finding rejects the code; the other findings become defect lines but the code
+   still renders);
 3. **render**: `normalise`, the loader substitution (`to_run_form`), then the one
    theme the call asks for (`PipelineArgs.theme`, light by default) through the
    render backend, and the host gates (`render/gates.py`) on exactly that theme;
@@ -81,10 +84,11 @@ from google.genai import types
 from pydantic import ValidationError
 
 from .briefs import profile_summary, spec_brief
-from .code.edits import MAX_NEW_LITERAL_CHARS, apply_plan, new_literal_chars
+from .code.edits import MAX_CHANGE_LITERAL_CHARS, MAX_NEW_LITERAL_CHARS, apply_plan, new_literals
 from .code.export import export_code
 from .code.regions import find_regions
 from .code.validate import validate_adaptation, validate_security
+from .contact_filter import CONTACT_NAMES, contact_kinds
 from .data.bindings import check_bindings
 from .data.store import StoredDataset
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
@@ -408,8 +412,15 @@ class CheckResult:
     adaptation_rules: list[str]
 
 
-def _check(working: str, *, library: str, palette: list[str], base: str) -> CheckResult:
-    """Validate a working form against its base: may it render, the blocking lines, the adaptation defect lines."""
+def _check(
+    working: str, *, library: str, palette: list[str], base: str, literal_budget: int = MAX_NEW_LITERAL_CHARS
+) -> CheckResult:
+    """Validate a working form against its base: may it render, the blocking lines, the adaptation defect lines.
+
+    Besides the two validator profiles, the plan's new string literals (`edits.new_literals`)
+    must fit `literal_budget` and may carry no web address, e-mail address or phone number
+    (`contact_filter`): plot text reaches the watermarked PNG and `plot.py`.
+    """
     security = validate_security(working, library=library)
     adaptation = validate_adaptation(working, original_palette=palette)
     # Both profiles parse the code, so an unparseable file is one `syntax` finding, not two.
@@ -418,13 +429,22 @@ def _check(working: str, *, library: str, palette: list[str], base: str) -> Chec
         f"validator {f.rule}" + (f" (line {f.line})" if f.line else "") + f": {f.message}" for f in blocking_findings
     ]
     blocking_rules = [f.rule for f in blocking_findings]
-    added = new_literal_chars(base, working)
-    if added > MAX_NEW_LITERAL_CHARS:
+    literals = new_literals(base, working)
+    added = sum(len(text) for text in literals)
+    if added > literal_budget:
         blocking_rules.append("literal-budget")
         blocking.append(
             f"validator literal-budget: the plan adds {added} characters of new string literals, "
-            f"{added - MAX_NEW_LITERAL_CHARS} over the limit of {MAX_NEW_LITERAL_CHARS} → derive text and values "
+            f"{added - literal_budget} over the limit of {literal_budget} → derive text and values "
             "from df instead of writing them out. Likely cause: data or long text written into the code."
+        )
+    kinds = sorted({kind for text in literals for kind in contact_kinds(text)})
+    if kinds:
+        found = " and a ".join(CONTACT_NAMES[kind] for kind in kinds)
+        blocking_rules.append("contact-literal")
+        blocking.append(
+            f"validator contact-literal: a new string literal carries a {found} → remove it; plot text never "
+            "carries contact details or calls to action. Likely cause: the change request asked for it."
         )
     soft = [f for f in adaptation if f.rule not in BLOCKING_RULES]
     defects = [
@@ -664,6 +684,8 @@ async def _attempts(
         services.versions.latest_rendered(ctx.session.id, library=view.library) if args.base == "previous" else None
     )
     working = previous.working if previous is not None else view.normalised
+    # A change on a previous version adds a little text; adapting the catalogue code renames much.
+    budget = MAX_CHANGE_LITERAL_CHARS if previous is not None else MAX_NEW_LITERAL_CHARS
     regions = find_regions(view.normalised)
     palette = list(regions.imprint.entries) if regions.imprint else []
     hints = view.hints[:MAX_NOTES] if previous is None else []
@@ -732,7 +754,7 @@ async def _attempts(
             feedback, previous_plan = applied.failures, plan
             _end_attempt(run, "edit_apply")
             continue
-        check = _check(applied.code, library=view.library, palette=palette, base=working)
+        check = _check(applied.code, library=view.library, palette=palette, base=working, literal_budget=budget)
         adaptation_lines = check.defects
         attribution(
             "pipeline_check",
