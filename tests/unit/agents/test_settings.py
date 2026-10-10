@@ -63,7 +63,7 @@ class TestDefaults:
             AgentSettings()
 
     @pytest.mark.parametrize("model", ["claude-opus-5-5", "claude-sonnet-5-5", "claude-fable-5-1"])
-    def test_claude_models_without_forced_tool_use_are_refused(self, model: str) -> None:
+    def test_claude_models_that_refuse_disabled_thinking_are_refused(self, model: str) -> None:
         with pytest.raises(ValidationError, match="not a supported Claude model"):
             AgentSettings(model=model)
 

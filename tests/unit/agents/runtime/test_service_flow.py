@@ -176,8 +176,9 @@ async def test_create_plot_streams_to_an_ok_plot_result(
     else:
         assert isinstance(fake, FakeAnthropic)
         choices = [call.get("tool_choice") for call in fake.calls]
-        forced = [choice for choice in choices if isinstance(choice, dict) and choice.get("type") == "tool"]
-        assert len(forced) == 2  # the adapter and the reviewer answered through the forced tool
+        formats = [call for call in fake.calls if "format" in (call.get("output_config") or {})]
+        assert len(formats) == 2  # the adapter and the reviewer answered under a structured-output format
+        assert not any(isinstance(choice, dict) and choice.get("type") == "tool" for choice in choices)
         # The root's closing reply after the shipped plot is the budget-exempt call: it carries no tools.
         assert not isinstance(choices[-1], dict) and not fake.calls[-1].get("tools")
         assert all(call.get("thinking") == {"type": "disabled"} for call in fake.calls)

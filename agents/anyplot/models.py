@@ -26,12 +26,19 @@ thinking at effort `high` or below, so every kind stays at `low` or `medium`.
 ADK 2.11 sends no response schema to Claude: `basic.py` sets
 `config.response_schema` for a tool-less agent with an `output_schema`, and
 `anthropic_llm.py` never reads it, so the adapter and reviewer would get free text.
-`VertexClaude` closes that gap with a forced tool call: when a request carries a
-response schema and no tools, it adds one tool whose input schema is the response
-schema, forces `tool_choice` to it, and turns the returned `tool_use` input back
-into the JSON text ADK's `validate_schema` parses. Claude Opus 5.5, Sonnet 5.5 and
-Fable 5.1 answer a forced `tool_choice` (and disabled thinking) with a 400, so the
-settings accept only the Claude models in `settings.CLAUDE_MODELS`.
+`VertexClaude` closes that gap with Claude's structured outputs: when a request
+carries a response schema and no tools, it sets `output_config.format` to that
+schema (`structured_output_format`), so constrained decoding makes the answer text
+valid JSON of exactly that shape, and ADK's `validate_schema` parses it as it is.
+The judge answers the same way. The grammar enforces types, enums, required fields
+and `additionalProperties: false`; what it cannot enforce (string lengths, item
+counts, a verdict's `ok` agreeing with its defects) the SDK's `transform_schema`
+moves into the field descriptions as hints, and `schemas.repair_plan` and
+`schemas.repair_verdict` mend after the strict check. Unlike a forced tool call, the
+format lets a thinking model think before it answers (on Haiku 5.5 a forced tool
+call skips thinking), and Claude Opus 5.5, Sonnet 5.5 and Fable 5.1 accept it.
+Those three refuse disabled thinking with a 400, so the settings still accept only
+the Claude models in `settings.CLAUDE_MODELS`.
 
 **Gemini** (`gemini`). `google.adk.models.google_llm.Gemini` with
 `client_kwargs={"enterprise": True, "project": ..., "location": ...}`, HTTP retries
@@ -61,6 +68,7 @@ from dataclasses import dataclass
 from functools import cached_property
 from typing import Any, Literal, Protocol
 
+from anthropic import transform_schema
 from google.adk.models.anthropic_llm import AnthropicGenerateContentConfig, Claude
 from google.adk.models.base_llm import BaseLlm
 from google.adk.models.google_llm import Gemini
@@ -156,15 +164,11 @@ SAFETY_CATEGORIES: tuple[types.HarmCategory, ...] = (
 )
 RETRY_ATTEMPTS = 3
 
-STRUCTURED_TOOL = "submit_result"
-"""Name of the forced tool that carries a Claude structured answer."""
-
 JUDGE_MAX_OUTPUT_TOKENS = 256
-"""The scope and dataset judge's cap. Its forced tool answer (`verdict` and `lang`) took
-59 tokens in every one of the rerun's 244 runs, 5 below the old cap of 64, and the
+"""The scope and dataset judge's cap. Its answer (`verdict` and `lang`) took 59 tokens as a
+forced tool call in every one of the rerun's 244 runs, 5 below the old cap of 64, and the
 Gemini judge 15 to 22 in spike X. 256 is 4.3 times the Claude answer and leaves room
 for a Gemini judge's minimal thinking; a finished answer costs the same under any cap."""
-JUDGE_TOOL = "submit_verdict"
 
 
 def _labels(kind: str) -> dict[str, str]:
@@ -215,12 +219,24 @@ def response_json_schema(schema: Any) -> dict[str, Any]:
     return result
 
 
+def structured_output_format(schema: Any) -> dict[str, Any]:
+    """The `output_config.format` that constrains a Claude answer to `schema`.
+
+    `anthropic.transform_schema` (the SDK's own helper behind `messages.parse`) makes
+    the inlined schema strict: `additionalProperties: false` on every object, and the
+    keywords constrained decoding does not support (`minLength`, `maxLength`,
+    `maxItems`, defaults) moved into the field's description, where the model still
+    reads them; the schema's own validators check them afterwards.
+    """
+    return {"type": "json_schema", "schema": transform_schema(response_json_schema(schema))}
+
+
 def _has_tools(llm_request: LlmRequest) -> bool:
     return bool(llm_request.config and llm_request.config.tools)
 
 
 class VertexClaude(Claude):
-    """ADK's `Claude` with a client from the settings and structured output through a forced tool."""
+    """ADK's `Claude` with a client from the settings and structured output through `output_config.format`."""
 
     vertex_project: str
     vertex_region: str
@@ -237,18 +253,18 @@ class VertexClaude(Claude):
     def _build_anthropic_kwargs(
         self, llm_request: LlmRequest, messages: Any, tools: Any, tool_choice: Any, thinking: Any
     ) -> dict[str, Any]:
-        """ADK's request arguments, plus the forced structured-answer tool when a response schema is set."""
+        """ADK's request arguments, plus the structured-output format when a response schema is set.
+
+        The format joins ADK's `output_config` (which holds the effort) rather than
+        replacing it. A request with tools (the root) gets no format: its answer is chat.
+        """
         kwargs: dict[str, Any] = super()._build_anthropic_kwargs(llm_request, messages, tools, tool_choice, thinking)
         schema = llm_request.config.response_schema if llm_request.config else None
         if schema is not None and not _has_tools(llm_request):
-            kwargs["tools"] = [
-                {
-                    "name": STRUCTURED_TOOL,
-                    "description": "Submit the final answer. Call this exactly once with the complete answer.",
-                    "input_schema": response_json_schema(schema),
-                }
-            ]
-            kwargs["tool_choice"] = {"type": "tool", "name": STRUCTURED_TOOL}
+            kwargs["output_config"] = {
+                **(kwargs.get("output_config") or {}),
+                "format": structured_output_format(schema),
+            }
         return kwargs
 
     async def generate_content_async(
@@ -257,22 +273,7 @@ class VertexClaude(Claude):
         structured = bool(llm_request.config and llm_request.config.response_schema) and not _has_tools(llm_request)
         # A structured answer is read whole, so it never streams.
         async for response in super().generate_content_async(llm_request, stream=stream and not structured):
-            yield _structured_text(response) if structured else response
-
-
-def _structured_text(response: LlmResponse) -> LlmResponse:
-    """Replace the forced tool call with the JSON text of its input, as a schema-bound Gemini answer reads."""
-    if response.content is None or not response.content.parts:
-        return response
-    parts: list[types.Part] = []
-    for part in response.content.parts:
-        call = part.function_call
-        if call is not None and call.name == STRUCTURED_TOOL:
-            parts.append(types.Part(text=json.dumps(call.args or {}, ensure_ascii=False)))
-        elif call is None:
-            parts.append(part)
-    response.content = types.Content(role=response.content.role or "model", parts=parts)
-    return response
+            yield response
 
 
 # --- Gemini ------------------------------------------------------------------------------
@@ -422,7 +423,7 @@ async def _within_budget(attempt: Attempt, text: str, rubric: str, timeout_s: fl
 
 @dataclass
 class AnthropicJudge:
-    """The judge on Claude through Vertex AI, answering through a forced tool call."""
+    """The judge on Claude through Vertex AI, answering under a structured-output format."""
 
     model: str
     project: str
@@ -442,18 +443,12 @@ class AnthropicJudge:
             thinking={"type": "disabled"},
             system=rubric,
             messages=[{"role": "user", "content": text}],
-            tools=[
-                {
-                    "name": JUDGE_TOOL,
-                    "description": "Submit the verdict.",
-                    "input_schema": response_json_schema(_JudgeAnswer),
-                }
-            ],
-            tool_choice={"type": "tool", "name": JUDGE_TOOL},
+            output_config={"format": structured_output_format(_JudgeAnswer)},
         )
-        answer = next((block.input for block in message.content if getattr(block, "type", "") == "tool_use"), None)
-        if not isinstance(answer, dict):
-            raise ValueError("the judge answered without a verdict")
+        # A refusal or a cut-off answer need not match the format; it is a failed attempt, not a verdict.
+        if message.stop_reason != "end_turn":
+            raise ValueError(f"the judge stopped with {message.stop_reason}")
+        answer = "".join(block.text for block in message.content if getattr(block, "type", "") == "text")
         usage = message.usage
         input_tokens = sum(
             int(getattr(usage, name, 0) or 0)
@@ -461,7 +456,7 @@ class AnthropicJudge:
         )
         output_tokens = int(getattr(usage, "output_tokens", 0) or 0)
         return JudgeVerdict(
-            **_JudgeAnswer.model_validate(answer).model_dump(),
+            **_JudgeAnswer.model_validate_json(answer).model_dump(),
             tokens=input_tokens + output_tokens,
             input_tokens=input_tokens,
             output_tokens=output_tokens,

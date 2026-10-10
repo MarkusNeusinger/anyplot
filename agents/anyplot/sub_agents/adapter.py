@@ -9,8 +9,10 @@ invocation's user message to a single-turn agent that runs under its own isolati
 scope; the callback removes it, so the adapter reads nothing but the request.)
 
 The answer is bound to `AdaptPlan` (`output_schema`); on Claude the model factory
-turns that into a forced tool call. `schema_guard` mends an answer that misses only a
-formal rule (`schemas.repair_plan`) and blanks one that still fails the schema, so
+turns that into a structured-output format (`models.structured_output_format`), whose
+grammar enforces the shape but not the lengths and counts. `schema_guard` mends an
+answer that misses only such a formal rule (`schemas.repair_plan`) and blanks one that
+still fails the schema, so
 the pipeline repairs it instead of ADK ending the run. On the second
 attempt, when a full file is allowed, the callback widens the request through
 `models.allow_full_file`: the output cap rises to `ADAPTER_FULL_MAX_OUTPUT_TOKENS`
@@ -102,9 +104,9 @@ def schema_guard(
     outcome (`repaired` or `refused`) and the broken rules (`schema_errors`).
 
     An answer that ended at the output limit (`FinishReason.MAX_TOKENS`) is blanked
-    without a check: every field of `AdaptPlan` has a default, so a Claude tool input
-    cut off to `{}` or to its first edits would pass as a plan that silently drops the
-    rest. The pipeline reads the finish reason from the request ledger and tells the
+    without a check: every field of `AdaptPlan` has a default, so an answer cut off and
+    then mended to `{}` or to its first edits would pass as a plan that silently drops
+    the rest. The pipeline reads the finish reason from the request ledger and tells the
     repair the answer was cut off.
     """
 

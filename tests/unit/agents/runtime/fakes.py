@@ -3,7 +3,7 @@
 `ScriptedLlm` stands in for any ADK model and answers from a per-kind queue (the kind
 comes from the `agent_kind` label every generation config carries). `FakeAnthropic`
 stands in for the `AsyncAnthropicVertex` client behind the real `VertexClaude`, so
-the Claude arm exercises the forced-tool structured output end to end.
+the Claude arm exercises the structured output (`output_config.format`) end to end.
 """
 
 import json
@@ -149,15 +149,11 @@ class FakeAnthropic:
         queue = self.script.get(kind, [])
         item = queue.pop(0) if queue else {"text": "fallback"}
         if "json" in item:
-            choice = kwargs.get("tool_choice") or {}
-            assert choice.get("type") == "tool", "a structured answer must be a forced tool call"
-            block = {
-                "type": "tool_use",
-                "id": f"toolu_{len(self.calls)}",
-                "name": choice["name"],
-                "input": item["json"],
-            }
-            stop = "tool_use"
+            output_format = (kwargs.get("output_config") or {}).get("format") or {}
+            assert output_format.get("type") == "json_schema", "a structured answer must be constrained by a format"
+            assert "tool_choice" not in kwargs or not isinstance(kwargs["tool_choice"], dict), "no forced tool call"
+            block = {"type": "text", "text": json.dumps(item["json"], ensure_ascii=False)}
+            stop = "end_turn"
         elif "call" in item:
             block = {
                 "type": "tool_use",

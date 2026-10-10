@@ -86,8 +86,9 @@ RENDER_URL_PATTERN = r"^https?://[A-Za-z0-9.-]{1,253}(:[0-9]{1,5})?/?$"
 LOCATIONS: tuple[str, ...] = ("eu", "us", "global")
 MODEL_PREFIXES: dict[str, str] = {"anthropic-vertex": "claude-", "gemini": "gemini-"}
 CLAUDE_MODELS: tuple[str, ...] = ("claude-haiku-5-5",)
-"""Claude models that accept a forced `tool_choice` with thinking disabled at effort low and
-medium (`models.VertexClaude`); Claude Opus 5.5, Sonnet 5.5 and Fable 5.1 answer both with a 400."""
+"""Claude models that accept disabled thinking at effort low and medium (`models.make_content_config`);
+Claude Opus 5.5, Sonnet 5.5 and Fable 5.1 answer disabled thinking with a 400. The structured
+answers (`output_config.format`) would work on all of them."""
 FIXTURE_PATTERN = r"^[a-z0-9][a-z0-9-]{0,79}$"
 
 
@@ -325,8 +326,7 @@ class AgentSettings(BaseSettings):
             if self.provider == "anthropic-vertex" and value not in CLAUDE_MODELS:
                 raise ValueError(
                     f"{name}={value!r} is not a supported Claude model ({', '.join(CLAUDE_MODELS)}): "
-                    "structured answers use a forced tool call with thinking disabled, which newer "
-                    "Claude models refuse with a 400"
+                    "the agents run with thinking disabled, which newer Claude models refuse with a 400"
                 )
         if self.is_development and self.cloud_run_service:
             raise ValueError(
