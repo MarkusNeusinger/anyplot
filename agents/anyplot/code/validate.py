@@ -81,7 +81,9 @@ Decisions this module takes where the design leaves room:
   uses) must be lists or tuples of string literals that keep `original_palette` as their
   prefix in order (hex compared case-insensitively); the entries after the prefix must be
   the canonical `core.palette.IMPRINT` positions not already in the original, in
-  canonical order, which for a canonical original is exactly "the next positions".
+  canonical order, which for a canonical original is exactly "the next positions";
+  a list longer than the original plus those positions is a finding of its own,
+  because no literal list can give more groups distinct palette colours.
   The list is not changed afterwards either: a palette name, or a name bound to one by
   a plain `colors = IMPRINT`, may not be the target of anything but a plain assignment
   (no `+=`, unpacking, loop or `del` target), may not have items assigned or deleted,
@@ -748,9 +750,15 @@ class _Scan:
         original = [_hex(colour) for colour in original_palette]
         extension = [colour for colour in IMPRINT if _hex(colour) not in set(original)]
         statements: list[ast.Assign | ast.AnnAssign] = [*self.of(ast.Assign), *self.of(ast.AnnAssign)]
+        statements.sort(key=lambda statement: (statement.lineno, statement.col_offset))
+        assigned = 0
         for statement in statements:
             target = _single_name_target(statement)
             if target is None or target.id not in _PALETTE_NAMES:
+                continue
+            assigned += 1
+            if assigned > 1:  # the palette is one literal list, assigned once; a later one would replace it
+                self.add("palette-prefix", f"{target.id} is assigned again; keep one literal palette list", statement)
                 continue
             value = statement.value
             if not isinstance(value, ast.List | ast.Tuple) or not all(
@@ -765,6 +773,10 @@ class _Scan:
             ]
             if entries[: len(original)] != original:
                 message = f"{target.id} must keep the {len(original)} original palette entries in order"
+                self.add("palette-prefix", message, statement)
+            elif len(entries) > len(original) + len(extension):
+                limit = len(original) + len(extension)
+                message = f"{target.id} has {len(entries)} entries, more than the {limit} colours the palette has"
                 self.add("palette-prefix", message, statement)
             elif entries[len(original) :] != extension[: len(entries) - len(original)]:
                 next_positions = ", ".join(extension[:3]) or "none left"

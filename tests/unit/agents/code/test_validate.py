@@ -861,6 +861,14 @@ class TestPalette:
             pytest.param('IMPRINT = ["#009E73", BRAND, "#4467A3"]\n', id="non-literal entry"),
             pytest.param("IMPRINT = []\n", id="emptied"),
             pytest.param('IMPRINT_PALETTE = ["#009E73", "#C475FD"]\n', id="IMPRINT_PALETTE truncated"),
+            pytest.param(
+                'IMPRINT = ["#009E73", "#C475FD", "#4467A3"]\nIMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]\n',
+                id="assigned twice, both valid",
+            ),
+            pytest.param(
+                'IMPRINT = ["#009E73", "#C475FD", "#4467A3"]\nIMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3"]\n',
+                id="both names assigned",
+            ),
         ],
     )
     def test_prefix_broken(self, body: str) -> None:
@@ -882,6 +890,32 @@ class TestPalette:
             ADAPTED + 'IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#AE3030"]\n', original_palette=ORIGINAL
         )
         assert "#BD8233" in findings[0].message
+
+    def test_second_assignment_is_named_and_the_first_still_checked(self) -> None:
+        body = 'IMPRINT = ["#C475FD", "#009E73", "#4467A3"]\nIMPRINT = ["#009E73", "#C475FD", "#4467A3"]\n'
+
+        findings = validate_adaptation(ADAPTED + body, original_palette=ORIGINAL)
+
+        assert [f.message for f in findings] == [
+            "IMPRINT must keep the 3 original palette entries in order",
+            "IMPRINT is assigned again; keep one literal palette list",
+        ]
+
+    def test_message_names_the_limit_when_the_list_outgrows_the_palette(self) -> None:
+        body = "IMPRINT = [" + ", ".join(f'"{c}"' for c in [*IMPRINT, IMPRINT[0]]) + "]\n"
+
+        findings = validate_adaptation(ADAPTED + body, original_palette=ORIGINAL)
+
+        assert [f.message for f in findings] == ["IMPRINT has 9 entries, more than the 8 colours the palette has"]
+
+    def test_the_muted_other_group_of_the_adapter_prompt_passes(self) -> None:
+        """More than eight groups: seven palette colours and INK_MUTED for "Other", as adapter.md asks."""
+        body = (
+            "IMPRINT = [" + ", ".join(f'"{c}"' for c in IMPRINT) + "]\n"
+            'INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"\n'
+            "colors = IMPRINT[:7] + [INK_MUTED]\n"
+        )
+        assert adaptation_rules('import os\nTHEME = os.getenv("ANYPLOT_THEME", "light")\n' + body) == set()
 
     @pytest.mark.parametrize(
         "body",

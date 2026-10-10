@@ -8,6 +8,14 @@ A report is the JSON `matrix.py` writes: `{"schema", "stamp", "summary", "runs",
 "stopped"}`; a baseline is a report kept under `agents/evals/baselines/`. Each run
 record is one case and repeat (see `matrix.base_record` for its fields).
 
+**Schemas.** Schema 2 adds the diagnostic fields of a run (`stage`, `stages`,
+`shipped_attempt`, `reviewed_attempt`, `attempt_log`, `calls`, `finish_reasons`,
+`edit_failure_kinds`), splits the adapter outcome `truncated` (an answer cut off at
+the output limit) from `schema`, and counts an unparseable file as one `syntax`
+validator rejection instead of two. Every reader here takes a schema-1 report too:
+a field it lacks reads as empty, so a schema-1 baseline still diffs against a
+schema-2 run (`SUPPORTED_SCHEMAS`).
+
 **Pass.** A run passes when it shipped a render (`ok` or `needs_attention`) that
 passed every deterministic gate: the host gates R1 to R3 without a padded canvas, and
 no ADAPTATION validator finding on the shipped code. The advisory probe gates (G3,
@@ -45,7 +53,9 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 
-REPORT_SCHEMA = 1
+REPORT_SCHEMA = 2
+SUPPORTED_SCHEMAS: frozenset[int] = frozenset({1, 2})
+"""Report schemas a baseline may have: the readers treat a field a schema-1 run lacks as empty."""
 SHIPPED = ("ok", "needs_attention")
 GALLERY_SIZE = 30
 GALLERY_MAX_WIDTH = 1600
@@ -89,6 +99,30 @@ def _counter(runs: list[dict[str, Any]], field_name: str) -> dict[str, int]:
     for run in runs:
         total.update(run.get(field_name) or {})
     return dict(sorted(total.items()))
+
+
+def _values(runs: list[dict[str, Any]], field_name: str) -> dict[str, int]:
+    """How often each value of a scalar field occurs among the runs that have one."""
+    return dict(sorted(Counter(str(run[field_name]) for run in runs if run.get(field_name) is not None).items()))
+
+
+def _finish_reasons(runs: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
+    """Model calls by agent kind and finish reason, summed over the runs."""
+    total: dict[str, Counter[str]] = {}
+    for run in runs:
+        for kind, reasons in (run.get("finish_reasons") or {}).items():
+            total.setdefault(str(kind), Counter()).update(reasons or {})
+    return {kind: dict(sorted(reasons.items())) for kind, reasons in sorted(total.items())}
+
+
+def _adapter_by_attempt(runs: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
+    """Adapter outcomes per attempt number, from the attempt logs."""
+    total: dict[str, Counter[str]] = {}
+    for run in runs:
+        for entry in run.get("attempt_log") or []:
+            if entry.get("adapter"):
+                total.setdefault(str(entry.get("attempt")), Counter())[str(entry["adapter"])] += 1
+    return {attempt: dict(sorted(outcomes.items())) for attempt, outcomes in sorted(total.items())}
 
 
 def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
@@ -140,7 +174,13 @@ def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
         "gate_failures": _counter(runs, "gate_failures"),
         "validator_rejections": _counter(runs, "validator_rejections"),
         "adapter_outcomes": _counter(runs, "adapter_outcomes"),
+        "adapter_outcomes_by_attempt": _adapter_by_attempt(runs),
         "edit_apply_failures": sum(int(run.get("edit_apply_failures") or 0) for run in runs),
+        "edit_failure_kinds": _counter(runs, "edit_failure_kinds"),
+        "finish_reasons": _finish_reasons(runs),
+        "stages": _values(runs, "stage"),
+        "stages_not_passed": _values([run for run in runs if not run.get("passed")], "stage"),
+        "shipped_from_attempt": _values(runs, "shipped_attempt"),
         "reviewer": dict(sorted(reviewer.items())),
         "model_versions": sorted({version for run in runs for version in run.get("model_versions") or []}),
         "by_perturbation": _group(runs, lambda run: str(run.get("perturbation") or "custom")),
@@ -346,10 +386,12 @@ def _groups_table(groups: dict[str, dict[str, Any]], label: str) -> list[str]:
 
 
 def _failure_reason(run: dict[str, Any]) -> str:
-    """The reason column of a run that did not pass, with the error class when there was one."""
+    """The reason column of a run that did not pass: the reason, the error class, and the stage that stopped it."""
     reason = str(run.get("reason") or ("canvas padded" if run.get("padded") else ""))
     error = run.get("pipeline_error") or (run.get("error") if run.get("status") == "harness_error" else None)
-    return f"{reason} ({error})" if reason and error else reason or str(error or "")
+    text = f"{reason} ({error})" if reason and error else reason or str(error or "")
+    stage = run.get("stage")
+    return f"{text} [{stage}]".strip() if stage else text
 
 
 def summary_markdown(report: dict[str, Any], diff: Diff | None = None) -> str:
@@ -379,7 +421,7 @@ def summary_markdown(report: dict[str, Any], diff: Diff | None = None) -> str:
             [
                 "Pass rate",
                 f"{_pct(summary.get('pass_rate'))} ({summary.get('passed')} passed, "
-                f"{summary.get('repaired_passes')} of them after a repair)",
+                f"{summary.get('repaired_passes')} of them in a run with two attempts)",
             ],
             ["ok rate", _pct(summary.get("ok_rate"))],
             ["Accept-match rate", f"{_pct(summary.get('accept_match_rate'))} of {summary.get('accept_judged')}"],
@@ -403,8 +445,31 @@ def summary_markdown(report: dict[str, Any], diff: Diff | None = None) -> str:
         *(["Gate " + name, str(count)] for name, count in (summary.get("gate_failures") or {}).items()),
         *(["Validator " + name, str(count)] for name, count in (summary.get("validator_rejections") or {}).items()),
         *(["Adapter " + name, str(count)] for name, count in (summary.get("adapter_outcomes") or {}).items()),
+        *(
+            [f"Adapter, attempt {attempt}, {name}", str(count)]
+            for attempt, outcomes in (summary.get("adapter_outcomes_by_attempt") or {}).items()
+            for name, count in outcomes.items()
+        ),
         ["Edit-apply failure lines", str(summary.get("edit_apply_failures"))],
+        *(
+            ["Edit-apply failure " + name, str(count)]
+            for name, count in (summary.get("edit_failure_kinds") or {}).items()
+        ),
         *(["Reviewer " + name, str(count)] for name, count in (summary.get("reviewer") or {}).items()),
+        *(
+            [f"Finish {kind} {reason}", str(count)]
+            for kind, reasons in (summary.get("finish_reasons") or {}).items()
+            for reason, count in reasons.items()
+        ),
+        *(["Stage " + name, str(count)] for name, count in (summary.get("stages") or {}).items()),
+        *(
+            ["Stage, not passed, " + name, str(count)]
+            for name, count in (summary.get("stages_not_passed") or {}).items()
+        ),
+        *(
+            ["Shipped from attempt " + name, str(count)]
+            for name, count in (summary.get("shipped_from_attempt") or {}).items()
+        ),
     ]
     lines += _table(["Finding", "Count"], counts)
     if diff is not None:
@@ -778,7 +843,8 @@ def gallery_all_html(report: dict[str, Any]) -> str:
         rows.append(
             "<tr>"
             f"<td>{image}</td><td>{_esc(run.get('case_id'))}<br>repeat {_esc(run.get('repeat'))}</td>"
-            f"<td>{_esc(run.get('status'))}{('<br>' + _esc(run.get('reason'))) if run.get('reason') else ''}</td>"
+            f"<td>{_esc(run.get('status'))}{('<br>' + _esc(run.get('reason'))) if run.get('reason') else ''}"
+            f"{('<br>' + _esc(run.get('stage'))) if run.get('stage') else ''}</td>"
             f"<td>{'pass' if run.get('passed') else 'fail'}</td><td>{_esc(run.get('attempts'))}</td>"
             f"<td>{residual}</td></tr>"
         )

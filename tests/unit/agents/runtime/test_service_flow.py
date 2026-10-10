@@ -12,14 +12,18 @@ at its production defaults with a fake clock.
 
 import base64
 import json
+import logging
 from collections.abc import AsyncIterator, Iterator
 from typing import Any
 
 import httpx
 import pytest
+from google.genai import types
 
+from agents.anyplot import pipeline
 from agents.anyplot.dev_fixture import snapshot_from_repo
-from agents.anyplot.models import JudgeVerdict
+from agents.anyplot.models import GEMINI_ADAPTER_MAX_OUTPUT_TOKENS, JudgeVerdict
+from agents.anyplot.pipeline import SoftDeadline
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
 from agents.anyplot.render.contract import RenderJob, Theme
 from agents.anyplot.render.png import size_of
@@ -29,10 +33,20 @@ from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.schemas import AdaptPlan, Verdict
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.settings import get_settings
+from agents.anyplot.sub_agents.adapter import ADAPTERS
 from agents.main import Runtime, app, get_runtime
 
 from .conftest import CASES
-from .fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK, VERDICT_REJECT, FakeAnthropic, ScriptedLlm, default_script
+from .fakes import (
+    ROOT_REPLY,
+    SCATTER_PLAN,
+    VERDICT_OK,
+    VERDICT_REJECT,
+    FakeAnthropic,
+    ScriptedLlm,
+    default_script,
+    gemini_call_s,
+)
 
 
 USER = "adm_0123456789abcdef"
@@ -220,8 +234,9 @@ SCHEMA_CANARY = "CANARY-PLAN-7c1e"
 async def test_plan_that_fails_its_schema_is_repaired_without_content_in_logs(
     client: httpx.AsyncClient, swap_models, provider: str, caplog: pytest.LogCaptureFixture
 ) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
     too_many_changes = {**SCATTER_PLAN, "changes": [f"{SCHEMA_CANARY} {number}" for number in range(6)]}
-    swap_models(provider, default_script(plans=[too_many_changes, SCATTER_PLAN]))
+    fake = swap_models(provider, default_script(plans=[too_many_changes, SCATTER_PLAN]))
     sid = await open_session(client)
 
     events = await create_plot(client, sid)
@@ -231,9 +246,269 @@ async def test_plan_that_fails_its_schema_is_repaired_without_content_in_logs(
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], plot["attempts"]) == ("ok", 2)
     assert not any(SCHEMA_CANARY in record.getMessage() for record in caplog.records)
+    second = adapter_inputs(fake)[1]
+    assert "did not match the plan schema" in second and "this attempt allows a full file" in second
+    assert "cut off at the output limit" not in second
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert result["stages"] == ["adapter_schema", "reviewer_ok"]
 
 
-async def test_plan_over_the_literal_budget_is_repaired(client: httpx.AsyncClient, swap_models) -> None:
+def adapter_inputs(fake: object) -> list[str]:
+    """The text every adapter request carried, in order, for either provider's fake."""
+    if isinstance(fake, ScriptedLlm):
+        requests = [request for request in fake.requests if (request.config.labels or {})["agent_kind"] == "adapter"]
+        return ["".join(part.text or "" for part in request.contents[-1].parts or []) for request in requests]
+    assert isinstance(fake, FakeAnthropic)
+    calls = [call for call in fake.calls if FakeAnthropic.kind(call) == "adapter"]
+    return [json.dumps(call["messages"], ensure_ascii=False, default=str) for call in calls]
+
+
+def attribution_lines(caplog: pytest.LogCaptureFixture, hook: str) -> list[dict[str, Any]]:
+    lines = [
+        json.loads(record.getMessage()) for record in caplog.records if record.name == "anyplot.agents.attribution"
+    ]
+    return [line for line in lines if line["hook"] == hook]
+
+
+# A plan cut off mid-string: Gemini's text stops, Claude's forced tool input stops before a required field.
+CUT_OFF = {
+    "gemini": {"text": '{"edits": [{"find": "np.random.seed(42)\\nstudy_ho', "finish_reason": "MAX_TOKENS"},
+    "anthropic-vertex": {"json": {"edits": [{"find": "np.random.seed(42)\nstudy_ho"}]}, "stop": "max_tokens"},
+}
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+async def test_the_attribution_log_names_the_stage_of_every_attempt(
+    client: httpx.AsyncClient, swap_models, provider: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A cut-off first answer is `truncated` (not `schema`), and the result line says where each attempt stopped."""
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    script = default_script()
+    script["adapter"] = [CUT_OFF[provider], {"json": SCATTER_PLAN}]
+    swap_models(provider, script)
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    assert (plot["status"], plot["attempts"]) == ("ok", 2)
+    adapt = attribution_lines(caplog, "pipeline_adapt")
+    assert [(line["attempt"], line["outcome"], line["finish_reason"]) for line in adapt] == [
+        (1, "truncated", "MAX_TOKENS"),
+        (2, "plan", "STOP"),
+    ]
+    assert adapt[1]["candidates"] == 20 and adapt[1]["edits"] == len(SCATTER_PLAN["edits"])
+    (review,) = attribution_lines(caplog, "pipeline_review")
+    assert (review["verdict"], review["finish_reason"]) == ("ok", "STOP")
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert (result["stage"], result["stages"]) == ("reviewer_ok", ["adapter_truncated", "reviewer_ok"])
+    assert (result["shipped_attempt"], result["reviewed_attempt"]) == (2, 2)
+    models = attribution_lines(caplog, "model")
+    assert [line["finish_reason"] for line in models if line["agent"] == "adapter_matplotlib"] == ["MAX_TOKENS", "STOP"]
+    assert not any("study_ho" in record.getMessage() for record in caplog.records)
+
+
+# Claude's forced tool input cut off to `{}`: schema-valid (every AdaptPlan field has a default), still not a plan.
+CUT_OFF_EMPTY = {
+    "gemini": {"text": "", "finish_reason": "MAX_TOKENS"},
+    "anthropic-vertex": {"json": {}, "stop": "max_tokens"},
+}
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+@pytest.mark.parametrize("cut_off", [CUT_OFF, CUT_OFF_EMPTY], ids=["partial", "empty"])
+async def test_a_cut_off_answer_gets_its_own_repair_line(
+    client: httpx.AsyncClient,
+    swap_models,
+    provider: str,
+    cut_off: dict[str, dict[str, Any]],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    script = default_script()
+    script["adapter"] = [cut_off[provider], {"json": SCATTER_PLAN}]
+    fake = swap_models(provider, script)
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    assert (plot["status"], plot["attempts"]) == ("ok", 2)
+    second = adapter_inputs(fake)[1]
+    assert "cut off at the output limit" in second and "send a shorter plan" in second
+    assert "did not match the plan schema" not in second
+    assert [line["outcome"] for line in attribution_lines(caplog, "pipeline_adapt")] == ["truncated", "plan"]
+
+
+@pytest.mark.parametrize(
+    ("first_call_s", "repaired"),
+    [(gemini_call_s(GEMINI_ADAPTER_MAX_OUTPUT_TOKENS), True), (gemini_call_s(10_240), False)],
+    ids=["cut-off-at-the-cap", "cut-off-at-10240"],
+)
+async def test_a_cut_off_first_call_keeps_the_repair_only_while_its_reserve_is_left(
+    client: httpx.AsyncClient,
+    swap_models,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    first_call_s: float,
+    repaired: bool,
+) -> None:
+    """At the fitted Gemini rate a call cut off at the cap takes about 58 s and leaves the repair its 75 s.
+
+    A call cut off at 10,240 tokens takes about 72 s, so the soft deadline refuses attempt 2.
+    """
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    now = [0.0]
+    monkeypatch.setattr(pipeline, "SoftDeadline", lambda seconds: SoftDeadline(seconds, clock=lambda: now[0]))
+    adapt = pipeline._adapt
+    calls: list[float] = []
+
+    async def timed_adapt(*args: Any, **kwargs: Any) -> Any:
+        answer = await adapt(*args, **kwargs)
+        calls.append(now[0])
+        if len(calls) == 1:
+            now[0] += first_call_s  # attempt 1's call is the one cut off at the cap
+        return answer
+
+    monkeypatch.setattr(pipeline, "_adapt", timed_adapt)
+    script = default_script()
+    script["adapter"] = [CUT_OFF["gemini"], {"json": SCATTER_PLAN}]
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    if repaired:
+        assert (plot["status"], plot["attempts"], len(calls)) == ("ok", 2, 2)
+        assert result["stages"] == ["adapter_truncated", "reviewer_ok"]
+    else:
+        assert (plot["status"], plot["reason"], plot["attempts"], len(calls)) == ("failed", "deadline", 1, 1)
+        assert (result["stage"], result["stages"]) == ("deadline", ["adapter_truncated"])
+
+
+@pytest.mark.parametrize("before", ["repair", "review"])
+async def test_a_spent_budget_stops_the_run_at_the_next_model_call(
+    client: httpx.AsyncClient,
+    swap_models,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    before: str,
+) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    checks: list[bool] = []
+
+    def budget_allows(*args: Any, **kwargs: Any) -> bool:
+        checks.append(not checks)  # the check before attempt 1 passes, the next one does not
+        return checks[-1]
+
+    monkeypatch.setattr(pipeline, "budget_allows", budget_allows)
+    script = default_script()
+    script["adapter"] = [CUT_OFF["gemini"], {"json": SCATTER_PLAN}] if before == "repair" else [{"json": SCATTER_PLAN}]
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert result["stage"] == "budget"
+    if before == "repair":
+        assert (plot["status"], plot["reason"], plot["attempts"]) == ("failed", "budget", 1)
+        assert result["stages"] == ["adapter_truncated"]
+    else:
+        assert plot["status"] == "needs_attention"
+        assert plot["residual_defects"] == ["the plot was not reviewed (the usage limit was reached)"]
+        assert (result["stages"], result["reviewed_attempt"]) == (["budget"], None)
+
+
+async def test_code_that_cannot_take_the_loader_is_repaired(
+    client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    loader_block = pipeline.PythonRuntime.loader_block
+    calls: list[str] = []
+
+    def refuse_once(self: Any, working: str, **kwargs: Any) -> str:
+        calls.append(working)
+        if len(calls) == 1:
+            raise ValueError("the placeholder line is missing")
+        return loader_block(self, working, **kwargs)
+
+    monkeypatch.setattr(pipeline.PythonRuntime, "loader_block", refuse_once)
+    fake = swap_models("gemini", default_script(plans=[SCATTER_PLAN, {"edits": [], "changes": []}]))
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    assert (plot["status"], plot["attempts"]) == ("ok", 2)
+    assert "the code could not take the data loader" in adapter_inputs(fake)[1]
+    checks = attribution_lines(caplog, "pipeline_check")
+    assert [(line["attempt"], line["outcome"]) for line in checks] == [(1, "ok"), (1, "loader_failed"), (2, "ok")]
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert result["stages"] == ["loader", "reviewer_ok"]
+
+
+async def test_an_exception_ends_the_run_with_its_class_but_not_its_message(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+
+    def explode(job: RenderJob, theme: Theme) -> FakeOutcome:
+        raise RuntimeError(f"{SCHEMA_CANARY} the render exploded")
+
+    backend.script = explode
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    assert (plot["status"], plot["reason"], plot["attempts"]) == ("failed", "error", 1)
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert (result["stage"], result["stages"], result["error"]) == ("error", ["error"], "RuntimeError")
+    assert not any(SCHEMA_CANARY in record.getMessage() for record in caplog.records)
+
+
+async def test_a_full_file_on_attempt_1_is_refused_and_attempt_2_may_send_one(
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    fake = swap_models("gemini", default_script(plans=[{"full_code": "x = 1\n", "changes": []}, SCATTER_PLAN]))
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    assert (plot["status"], plot["attempts"]) == ("ok", 2)
+    second = adapter_inputs(fake)[1]
+    assert "which the first attempt does not allow" in second and "this attempt allows edits or full_code" in second
+    assert "send edits instead" not in second  # the repair may send a full file; the old line said otherwise
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert result["stages"] == ["adapter_full_code", "reviewer_ok"]
+
+
+async def test_failed_edits_are_logged_by_kind_without_their_text(
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    missing = {**SCATTER_PLAN, "edits": [{"find": f"{SCHEMA_CANARY} not in the code", "replace": "x"}]}
+    swap_models("gemini", default_script(plans=[missing, SCATTER_PLAN]))
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    assert (plot["status"], plot["attempts"]) == ("ok", 2)
+    check = attribution_lines(caplog, "pipeline_check")[0]
+    assert (check["outcome"], check["edit_failures"], check["edit_failure_kinds"]) == (
+        "edits_failed",
+        1,
+        {"zero_match": 1},
+    )
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert result["stages"] == ["edit_apply", "reviewer_ok"]
+    assert not any(SCHEMA_CANARY in record.getMessage() for record in caplog.records)
+
+
+async def test_plan_over_the_literal_budget_is_repaired(
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
     padded = {
         **SCATTER_PLAN,
         # Twelve literals of 190 characters: each under the 200-character cap, together over the plan budget.
@@ -251,9 +526,15 @@ async def test_plan_over_the_literal_budget_is_repaired(client: httpx.AsyncClien
     adapter_inputs = [request for request in fake.requests if (request.config.labels or {})["agent_kind"] == "adapter"]
     second = "".join(part.text or "" for part in adapter_inputs[1].contents[-1].parts or [])
     assert "validator literal-budget: the plan adds" in second and "string-length" not in second
+    assert attribution_lines(caplog, "pipeline_check")[0]["validator"] == ["literal-budget"]
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert result["stages"] == ["validator", "reviewer_ok"]
 
 
-async def test_contradictory_verdict_is_an_unread_review(client: httpx.AsyncClient, swap_models) -> None:
+async def test_contradictory_verdict_is_an_unread_review(
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
     swap_models("gemini", default_script(verdict={"ok": False, "defects": []}))
     sid = await open_session(client)
 
@@ -261,6 +542,12 @@ async def test_contradictory_verdict_is_an_unread_review(client: httpx.AsyncClie
 
     assert plot["status"] == "needs_attention"
     assert plot["residual_defects"] == ["the plot was not reviewed (the review answer could not be read)"]
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert (result["stage"], result["stages"], result["reviewed_attempt"]) == (
+        "reviewer_unreadable",
+        ["reviewer_unreadable"],
+        1,
+    )
 
 
 async def test_artifacts_and_bundle_after_a_plot(client: httpx.AsyncClient, swap_models) -> None:
@@ -352,8 +639,9 @@ async def test_watermark_off_serves_the_raw_renders(
 
 
 async def test_reviewer_rejection_gets_one_repair_and_ships_needs_attention(
-    client: httpx.AsyncClient, swap_models
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
 ) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
     swap_models("gemini", default_script(verdict=VERDICT_REJECT, plans=[SCATTER_PLAN, {"edits": [], "changes": []}]))
     sid = await open_session(client)
 
@@ -366,11 +654,46 @@ async def test_reviewer_rejection_gets_one_repair_and_ships_needs_attention(
     assert plot["attempts"] == 2
     # The reviewer's own line, filed under the one theme it saw although it wrote "both".
     assert plot["residual_defects"][0].startswith("VQ-03 (light): 24 sparse markers")
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert (result["stage"], result["stages"]) == ("not_rereviewed", ["reviewer_defects", "not_rereviewed"])
+    assert (result["shipped_attempt"], result["reviewed_attempt"]) == (2, 1)
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+async def test_the_repair_attempt_widens_the_adapter_request_only(
+    client: httpx.AsyncClient, swap_models, provider: str
+) -> None:
+    """Attempt 1 keeps the edit-only cap; attempt 2 gets the full-file cap (and LOW thinking on Gemini)."""
+    fake = swap_models(provider, default_script(verdict=VERDICT_REJECT, plans=[SCATTER_PLAN, SECOND_PLAN]))
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    assert plot["attempts"] == 2
+    if isinstance(fake, ScriptedLlm):
+        adapter = [
+            request.config for request in fake.requests if (request.config.labels or {})["agent_kind"] == "adapter"
+        ]
+        caps = [(config.max_output_tokens, config.thinking_config.thinking_level) for config in adapter]
+        assert caps == [(8_192, types.ThinkingLevel.MEDIUM), (12_288, types.ThinkingLevel.LOW)]
+    else:
+        assert isinstance(fake, FakeAnthropic)
+        adapter_calls = [call for call in fake.calls if FakeAnthropic.kind(call) == "adapter"]
+        assert [call["max_tokens"] for call in adapter_calls] == [2048, 12_288]
+        assert all(call.get("thinking") == {"type": "disabled"} for call in adapter_calls)
+    # The per-request change never reaches the agent's own config, so the next run starts narrow again.
+    config = ADAPTERS["matplotlib"].generate_content_config
+    assert config is not None and config.max_output_tokens == (8_192 if provider == "gemini" else 2048)
+    if provider == "gemini":
+        assert config.thinking_config is not None
+        assert config.thinking_config.thinking_level == types.ThinkingLevel.MEDIUM
 
 
 async def test_failed_render_twice_is_a_failed_result(
-    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, caplog: pytest.LogCaptureFixture
 ) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+
     def crash(job: RenderJob, theme: Theme) -> FakeOutcome:
         return FakeOutcome(exit_code=1, stderr_tail="Traceback ...\nKeyError: 'Exam Score'\n")
 
@@ -391,11 +714,14 @@ async def test_failed_render_twice_is_a_failed_result(
         "residual_defects": [],
     }
     assert len(backend.jobs) == 2
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert (result["stage"], result["stages"]) == ("render", ["render", "render"])
 
 
 async def test_canvas_miss_is_repaired_then_padded(
-    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, caplog: pytest.LogCaptureFixture
 ) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
     backend.script = lambda job, theme: FakeOutcome(size=(3100, 1800))
     swap_models("gemini", default_script(plans=[SCATTER_PLAN, {"edits": [], "changes": []}]))
     sid = await open_session(client)
@@ -405,6 +731,8 @@ async def test_canvas_miss_is_repaired_then_padded(
     assert plot["status"] == "needs_attention"
     assert plot["residual_defects"][0] == "canvas padded after render (light)"
     assert plot["residual_defects"][1].startswith("VQ-05 (light): Canvas dimensions drifted")
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert (result["stages"], result["padded"], result["reviewed"]) == (["gates", "gates"], True, False)
     png = await client.get(f"/v1/sessions/{sid}/artifacts/plot-light.png", headers=HEADERS)
     assert size_of(png.content) == (3200, 1864)  # padded to the canvas, then the footer strip
 

@@ -8,9 +8,11 @@
   `PlotResult(failed, reason=budget)` instead.
 * `after_model_callback` books every response's tokens (prompt + candidates +
   thoughts + tool-use prompt; cached tokens are counted separately and never twice),
-  the call and the `model_version`, and writes one content-free attribution line
-  with the token counts by kind (`ledger.usage_breakdown`), which the eval harness
-  prices (`agents/evals/pricing.py`).
+  the call and the `model_version`, keeps the call's finish reason and output tokens
+  in `ledger.last_calls` for the pipeline, and writes one content-free attribution
+  line with the token counts by kind (`ledger.usage_breakdown`), which the eval
+  harness prices (`agents/evals/pricing.py`), and the finish reason by its enum name
+  (`STOP`, `MAX_TOKENS`).
 * `before_tool_callback` on `plot_pipeline` counts the user's daily pipeline runs
   and refuses the call with `{"status": "error", "code": "budget"}` past
   `AGENT_DAILY_PIPELINE_RUNS`. A second call in the same invocation, and a call
@@ -34,7 +36,7 @@ from google.genai import types
 from ..policy import refusal
 from ..services import get_services
 from ..settings import get_settings
-from .ledger import attribution, budget_allows, ledger_for, usage_breakdown, usage_tokens
+from .ledger import CallFacts, attribution, budget_allows, finish_name, ledger_for, usage_breakdown, usage_tokens
 from .tool_safety import ToolSafetyPlugin
 
 
@@ -88,15 +90,20 @@ class BudgetPlugin(BasePlugin):
                 ledger.model_versions.add(llm_response.model_version)
             user = ledger.user_id or callback_context.session.user_id
             get_services().usage.add_tokens(user, billable)
+            breakdown = usage_breakdown(llm_response.usage_metadata)
+            finish = finish_name(llm_response.finish_reason)
+            ledger.last_calls[callback_context.agent_name] = CallFacts(
+                finish, breakdown["candidates"], breakdown["thoughts"]
+            )
             attribution(
                 "model",
                 ledger,
                 agent=callback_context.agent_name,
                 billable=billable,
                 cached=cached,
-                **usage_breakdown(llm_response.usage_metadata),
+                **breakdown,
                 model_version=llm_response.model_version,
-                finish_reason=str(llm_response.finish_reason) if llm_response.finish_reason else None,
+                finish_reason=finish,
             )
         except Exception as exc:
             logger.warning("budget booking failed: %s", type(exc).__name__)

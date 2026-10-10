@@ -13,6 +13,7 @@ from google.genai import types
 
 from agents.anyplot.models import (
     ADAPTER_FULL_MAX_OUTPUT_TOKENS,
+    GEMINI_ADAPTER_MAX_OUTPUT_TOKENS,
     STRUCTURED_TOOL,
     AnthropicJudge,
     FakeJudge,
@@ -20,6 +21,7 @@ from agents.anyplot.models import (
     JudgeUnavailable,
     JudgeVerdict,
     VertexClaude,
+    allow_full_file,
     make_content_config,
     make_judge_client,
     make_model,
@@ -90,6 +92,41 @@ class TestFactories:
             assert config.temperature is None and config.top_p is None
             assert config.thinking_config.thinking_budget is None
             assert config.labels["service"] == "anyplot-agents"
+
+    def test_output_caps_per_provider(self) -> None:
+        """Gemini's thinking counts toward the cap, so its edit-only adapter call gets room; Claude keeps 2,048."""
+        gemini = {kind: make_content_config(kind, GEMINI).max_output_tokens for kind in ("root", "adapter", "reviewer")}
+        claude = {kind: make_content_config(kind, CLAUDE).max_output_tokens for kind in ("root", "adapter", "reviewer")}
+
+        assert gemini == {"root": 2048, "adapter": GEMINI_ADAPTER_MAX_OUTPUT_TOKENS, "reviewer": 2048}
+        assert GEMINI_ADAPTER_MAX_OUTPUT_TOKENS == 8_192
+        assert claude == {"root": 2048, "adapter": 2048, "reviewer": 2048}
+        assert make_model("adapter", CLAUDE).max_tokens == 2048
+
+    def test_allow_full_file_on_gemini_lowers_thinking_without_touching_the_agent_config(self) -> None:
+        agent_config = make_content_config("adapter", GEMINI)
+        request = LlmRequest(config=agent_config.model_copy())  # ADK's per-request copy is shallow like this
+
+        allow_full_file(request.config)
+
+        assert request.config.max_output_tokens == ADAPTER_FULL_MAX_OUTPUT_TOKENS
+        assert request.config.thinking_config is not None
+        assert request.config.thinking_config.thinking_level == types.ThinkingLevel.LOW
+        assert agent_config.max_output_tokens == GEMINI_ADAPTER_MAX_OUTPUT_TOKENS
+        assert agent_config.thinking_config is not None
+        assert agent_config.thinking_config.thinking_level == types.ThinkingLevel.MEDIUM
+
+    def test_allow_full_file_on_claude_keeps_thinking_disabled(self) -> None:
+        agent_config = make_content_config("adapter", CLAUDE)
+        request = LlmRequest(config=agent_config.model_copy())
+
+        allow_full_file(request.config)
+
+        assert request.config.max_output_tokens == ADAPTER_FULL_MAX_OUTPUT_TOKENS
+        assert request.config.thinking_config is not None
+        assert request.config.thinking_config.thinking_budget == 0
+        assert request.config.thinking_config.thinking_level is None
+        assert agent_config.max_output_tokens == 2048
 
     def test_unknown_kind_is_refused(self) -> None:
         with pytest.raises(ValueError):

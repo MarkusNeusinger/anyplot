@@ -213,6 +213,78 @@ def test_summary_markdown_has_every_section() -> None:
     assert "## Runs that did not pass" in text and "`b-matplotlib-x`" in text
 
 
+def schema_2_run(case_id: str, **fields: Any) -> dict[str, Any]:
+    """A run with the diagnostic fields of report schema 2."""
+    entries = [
+        {"turn": 1, "attempt": 1, "adapter": "truncated", "finish_reason": "MAX_TOKENS", "stage": "adapter_truncated"},
+        {"turn": 1, "attempt": 2, "adapter": "plan", "finish_reason": "STOP", "stage": "edit_apply"},
+    ]
+    values: dict[str, Any] = {
+        "stage": "edit_apply",
+        "stages": ["adapter_truncated", "edit_apply"],
+        "shipped_attempt": None,
+        "reviewed_attempt": None,
+        "attempt_log": entries,
+        "calls": [],
+        "finish_reasons": {"adapter": {"MAX_TOKENS": 1, "STOP": 1}, "root": {"STOP": 2}},
+        "edit_failure_kinds": {"multi_match": 1},
+        "status": "failed",
+        "reason": "validation",
+        "passed": False,
+        "attempts": 2,
+    }
+    values.update(fields)
+    return run(case_id, **values)
+
+
+def test_summary_counts_the_schema_2_diagnostics() -> None:
+    runs = [
+        schema_2_run("a-matplotlib-x"),
+        schema_2_run(
+            "b-matplotlib-x",
+            stage="reviewer_ok",
+            stages=["reviewer_ok"],
+            shipped_attempt=1,
+            reviewed_attempt=1,
+            attempt_log=[{"turn": 1, "attempt": 1, "adapter": "plan", "stage": "reviewer_ok"}],
+            finish_reasons={"adapter": {"STOP": 1}},
+            edit_failure_kinds={},
+            status="ok",
+            reason=None,
+            passed=True,
+            attempts=1,
+        ),
+    ]
+
+    summary = summarize(runs)
+
+    assert summary["stages"] == {"edit_apply": 1, "reviewer_ok": 1}
+    assert summary["stages_not_passed"] == {"edit_apply": 1}
+    assert summary["finish_reasons"] == {"adapter": {"MAX_TOKENS": 1, "STOP": 2}, "root": {"STOP": 2}}
+    assert summary["adapter_outcomes_by_attempt"] == {"1": {"plan": 1, "truncated": 1}, "2": {"plan": 1}}
+    assert summary["edit_failure_kinds"] == {"multi_match": 1}
+    assert summary["shipped_from_attempt"] == {"1": 1}
+    text = summary_markdown(report_of(runs))
+    assert "| Finish adapter MAX_TOKENS | 1 |" in text and "| Stage, not passed, edit_apply | 1 |" in text
+    assert "| validation [edit_apply] |" in text  # the reason column names the stage
+
+
+def test_a_schema_1_baseline_diffs_against_a_schema_2_run() -> None:
+    """A baseline written before the diagnostic fields existed reads them as empty, never as a crash."""
+    old = [run("a-matplotlib-x"), run("b-matplotlib-x", status="failed", reason="validation", passed=False)]
+    baseline = report_of(old)
+    new = [schema_2_run("a-matplotlib-x", status="ok", reason=None, passed=True), schema_2_run("b-matplotlib-x")]
+    candidate = {**report_of(new), "schema": 2}
+
+    diff = compare(baseline, candidate, tolerance=0.05)
+    text = summary_markdown(candidate, diff)
+
+    assert baseline["schema"] == 1 and not diff.regression and diff.flipped == []
+    assert summarize(old)["stages"] == {} and summarize(old)["finish_reasons"] == {}
+    assert "## Against the baseline" in text
+    assert summary_markdown(baseline, compare(candidate, baseline, tolerance=0.05)).startswith("# Eval run")
+
+
 # --- Galleries ------------------------------------------------------------------------------
 
 

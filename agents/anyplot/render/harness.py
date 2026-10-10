@@ -25,8 +25,13 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    as the faster variant);
 4. wraps `matplotlib.figure.Figure.savefig` so that every save also writes
    `probe-<theme>.json` next to the plot: the figure size and dpi, the bounding
-   boxes of all visible text in display pixels, tick-label overlaps per axis,
-   annotations outside their axes, and the number of drawn point marks;
+   boxes in display pixels of every text the probe's own draw rendered, overlaps
+   between rendered tick labels per axis, annotations outside their axes, and the
+   number of drawn point marks. Only rendered text counts: matplotlib keeps tick
+   labels for locator positions outside the view interval and for hidden axes
+   (`axis("off")`, a twin's), which report themselves visible but are never drawn,
+   and an edge label one tick step past the view sat beyond the canvas in every
+   line plot of spike X (a false G3);
 5. runs the plot file with `runpy.run_path` as `__main__`;
 6. prints `HARNESS {"event": "end", "max_rss_mb": ..., "cpu_s": ...}` when the plot
    file returns or raises; an exception still propagates, so its traceback reaches
@@ -40,7 +45,9 @@ stdout, so the host reads them as hints (a retry decision, a memory figure), nev
 as a verdict.
 """
 
+import functools
 import json
+import math
 import os
 import resource
 import runpy
@@ -105,23 +112,49 @@ def _overlaps(a, b):
     return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
 
 
+def _draw_recording_texts(figure):
+    """Draw the figure once and return the texts that rendered, by id.
+
+    Every way matplotlib draws text (tick labels, titles, legends, annotations, table
+    cells) goes through `Text.draw`, so wrapping it for this one draw sees exactly
+    what reaches the canvas. The wrapper is removed in `finally`; `functools.wraps`
+    keeps the attributes matplotlib's rasterization decorator set on the original.
+    """
+    from matplotlib.text import Text
+
+    drawn = {}
+    original = Text.draw
+
+    @functools.wraps(original)
+    def recording(self, renderer):
+        if self.get_visible() and self.get_text().strip():  # the cases Text.draw itself returns early on
+            drawn[id(self)] = self
+        return original(self, renderer)
+
+    Text.draw = recording
+    try:
+        figure.canvas.draw()
+    finally:
+        Text.draw = original
+    return drawn
+
+
 def probe(figure, dpi):
     """What the figure will look like on the canvas, measured before it is saved."""
-    figure.canvas.draw()
+    drawn = _draw_recording_texts(figure)
     renderer = figure.canvas.get_renderer()
     width_in, height_in = figure.get_size_inches()
     scale = (dpi or figure.dpi) / figure.dpi
     texts = []
-    for text in figure.findobj(lambda artist: hasattr(artist, "get_window_extent") and hasattr(artist, "get_text")):
+    for text in drawn.values():
         if len(texts) >= PROBE_LIMIT:
             break
         try:
-            if not text.get_visible() or not text.get_text().strip():
-                continue
-            extent = text.get_window_extent(renderer)
+            box = [value * scale for value in _box(text.get_window_extent(renderer))]
         except Exception:
             continue
-        texts.append({"kind": type(text).__name__, "box": [value * scale for value in _box(extent)]})
+        if all(math.isfinite(value) for value in box):  # one text at an infinite coordinate never voids the probe
+            texts.append({"kind": type(text).__name__, "box": box})
     tick_overlaps = 0
     annotations_outside = 0
     points = 0
@@ -130,7 +163,7 @@ def probe(figure, dpi):
             boxes = []
             for label in axis.get_ticklabels():
                 try:
-                    if label.get_visible() and label.get_text().strip():
+                    if id(label) in drawn:
                         boxes.append(_box(label.get_window_extent(renderer)))
                 except Exception:
                     continue

@@ -143,7 +143,7 @@ _CATEGORIES: tuple[tuple[str, str, str], ...] = (
     (
         "palette",
         "Short palette at",
-        "extend it in order with further Imprint positions from core/palette.py if df has more groups.",
+        "if df has more groups, extend it in order with further Imprint positions, written out as literals.",
     ),
     (
         "date-locators",

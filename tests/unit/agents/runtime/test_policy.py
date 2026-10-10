@@ -1,10 +1,12 @@
 """Tests for agents/anyplot/policy.py: instructions composed from verbatim sources, refusals, fences."""
 
+import re
 from pathlib import Path
 
 import pytest
 
 from agents.anyplot import policy
+from core.palette import IMPRINT, muted_for
 
 
 REPO = Path(__file__).resolve().parents[4]
@@ -40,6 +42,24 @@ class TestAdapterInstruction:
     def test_braces_survive_because_the_instruction_is_static(self) -> None:
         assert "{THEME}" in policy.adapter_instruction("matplotlib")
 
+    def test_the_palette_section_matches_core_palette(self) -> None:
+        """The prompt writes the palette out (the adapter cannot import core), so it must not drift from it."""
+        prompt = source("agents/anyplot/prompts/adapter.md")
+        section = prompt.split("## The palette", 1)[1].split("\n## ", 1)[0]
+        order = section.split("in this order:", 1)[1].split(".", 1)[0]
+
+        assert re.findall(r"#[0-9A-Fa-f]{6}", order) == IMPRINT
+        muted = f'INK_MUTED = "{muted_for("light")}" if THEME == "light" else "{muted_for("dark")}"'
+        assert muted in section
+
+    def test_the_many_groups_rule_says_it_replaces_the_style_guides_small_multiples(self) -> None:
+        """Both instructions carry the style guide's 9+ row; each says which rule wins, so no model weighs two."""
+        assert "| 9+ | Out of palette | Use small multiples; never recycle colors |" in source(
+            "prompts/default-style-guide.md"
+        )
+        for text in (policy.adapter_instruction("matplotlib"), policy.reviewer_instruction()):
+            assert "replaces the style guide's" in text and "small multiples" in text and "nine or more series" in text
+
 
 class TestOtherInstructions:
     def test_reviewer_has_checklist_theme_check_and_style_guide(self) -> None:
@@ -50,6 +70,7 @@ class TestOtherInstructions:
         assert policy.theme_readability_check() in source("prompts/workflow-prompts/ai-quality-review.md")
         assert '**No text is "dark on dark"**' in text
         assert "Imprint palette" in text
+        assert muted_for("light") in text and muted_for("dark") in text  # the adapter's "Other" group is compliant
 
     def test_root_lists_the_fixed_refusals(self) -> None:
         text = policy.root_instruction()

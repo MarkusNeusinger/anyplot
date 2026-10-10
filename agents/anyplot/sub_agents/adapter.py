@@ -11,8 +11,9 @@ scope; the callback removes it, so the adapter reads nothing but the request.)
 The answer is bound to `AdaptPlan` (`output_schema`); on Claude the model factory
 turns that into a forced tool call. `schema_guard` blanks an answer that fails the
 schema, so the pipeline repairs it instead of ADK ending the run. On the second
-attempt, when a full file is allowed, the callback raises the output cap to
-`ADAPTER_FULL_MAX_OUTPUT_TOKENS`.
+attempt, when a full file is allowed, the callback widens the request through
+`models.allow_full_file`: the output cap rises to `ADAPTER_FULL_MAX_OUTPUT_TOKENS`,
+and on Gemini the thinking level drops to LOW.
 """
 
 import logging
@@ -26,7 +27,7 @@ from google.adk.utils._schema_utils import validate_schema
 from google.genai import types
 from pydantic import BaseModel, ValidationError
 
-from ..models import ADAPTER_FULL_MAX_OUTPUT_TOKENS, make_content_config, make_model
+from ..models import allow_full_file, make_content_config, make_model
 from ..plugins.ledger import ledger_for
 from ..policy import adapter_instruction
 from ..schemas import AdaptPlan
@@ -37,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 
 def schema_guard(schema: type[BaseModel]) -> Callable[[CallbackContext, LlmResponse], Awaitable[LlmResponse | None]]:
-    """An `after_model_callback` that blanks an answer which fails `schema`.
+    """An `after_model_callback` that blanks an answer which fails `schema` or was cut off.
 
     ADK validates a single-turn agent's answer itself (`_llm_agent_wrapper.py`) and
     does not catch the failure: the run would end as an error with no repair, and
@@ -45,6 +46,12 @@ def schema_guard(schema: type[BaseModel]) -> Callable[[CallbackContext, LlmRespo
     at ERROR level. Checking the same way first and blanking an invalid answer makes
     ADK's output None, which the pipeline turns into repair feedback (adapter) or an
     unread review (reviewer). Only the error type is logged.
+
+    An answer that ended at the output limit (`FinishReason.MAX_TOKENS`) is blanked
+    without a check: every field of `AdaptPlan` has a default, so a Claude tool input
+    cut off to `{}` or to its first edits would pass as a plan that silently drops the
+    rest. The pipeline reads the finish reason from the request ledger and tells the
+    repair the answer was cut off.
     """
 
     async def guard(callback_context: CallbackContext, llm_response: LlmResponse) -> LlmResponse | None:
@@ -54,11 +61,16 @@ def schema_guard(schema: type[BaseModel]) -> Callable[[CallbackContext, LlmRespo
         text = "".join(part.text for part in content.parts if part.text and not part.thought)
         if not text.strip():
             return None
+        blank = types.Content(role=content.role or "model", parts=[types.Part(text="")])
+        if llm_response.finish_reason == types.FinishReason.MAX_TOKENS:
+            logger.warning("%s answer was cut off at the output limit", callback_context.agent_name)
+            llm_response.content = blank
+            return None
         try:
             validate_schema(schema, text)
         except (ValidationError, ValueError) as exc:
             logger.warning("%s answer failed its schema: %s", callback_context.agent_name, type(exc).__name__)
-            llm_response.content = types.Content(role=content.role or "model", parts=[types.Part(text="")])
+            llm_response.content = blank
         return None
 
     return guard
@@ -73,7 +85,7 @@ def keep_last_content(llm_request: LlmRequest) -> None:
 async def adapter_before_model(callback_context: CallbackContext, llm_request: LlmRequest) -> LlmResponse | None:
     keep_last_content(llm_request)
     if ledger_for(callback_context.invocation_id).adapter_allow_full:
-        llm_request.config.max_output_tokens = ADAPTER_FULL_MAX_OUTPUT_TOKENS
+        allow_full_file(llm_request.config)
     return None
 
 

@@ -6,21 +6,28 @@ import re
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.store import DatasetStore
 from agents.anyplot.dev_fixture import snapshot_from_repo
+from agents.anyplot.models import GEMINI_ADAPTER_MAX_OUTPUT_TOKENS
 from agents.anyplot.opening import dataset_judge_input
 from agents.anyplot.pipeline import (
+    ADAPTER_P95_S,
     NOT_REVIEWED_LINE,
     PADDED_LINE,
+    RENDER_P95_S,
     Candidate,
     Run,
     SoftDeadline,
+    _check,
     finish,
     render_adapt_request,
     render_review_request,
 )
 from agents.anyplot.policy import DATA_PREAMBLE
-from agents.anyplot.schemas import AdaptPlan, AdaptRequest, Binding, Edit, PlotResult, ReviewRequest
+from agents.anyplot.schemas import MAX_LINE_CHARS, AdaptPlan, AdaptRequest, Binding, Edit, PlotResult, ReviewRequest
 from agents.anyplot.services import CodeVersion, VersionStore
 from agents.anyplot.session_state import SessionView
+from agents.anyplot.settings import AgentSettings
+
+from .fakes import gemini_call_s
 
 
 def run_with(shipped: bool = True, **candidate: object) -> Run:
@@ -96,6 +103,23 @@ class TestDeadline:
         assert deadline.clamp(60) == 40.0
         now[0] = 400.0
         assert deadline.clamp(60) == 1.0
+
+    def test_the_first_attempt_keeps_room_for_a_plan_call(self) -> None:
+        """The repair's reserve leaves attempt 1 at least 60 s: Gemini's median plan call took about 33 s."""
+        settings = AgentSettings()
+
+        window = settings.soft_deadline_s - (ADAPTER_P95_S + RENDER_P95_S)
+
+        assert window >= 60
+        # The repair's reserve covers the slowest render spike X measured (10.2 s), not the whole timeout.
+        assert 10.2 <= RENDER_P95_S < settings.render_timeout_s
+
+    def test_a_gemini_call_cut_off_at_its_cap_fits_the_first_attempts_window(self) -> None:
+        """A cut-off attempt 1 still leaves the repair its reserve; at 10,240 tokens it would not have."""
+        window = AgentSettings().soft_deadline_s - (ADAPTER_P95_S + RENDER_P95_S)
+
+        assert gemini_call_s(GEMINI_ADAPTER_MAX_OUTPUT_TOKENS) <= window
+        assert gemini_call_s(10_240) > window
 
 
 def test_adapt_request_is_fenced() -> None:
@@ -267,3 +291,34 @@ def test_gate_notes_reach_the_reviewer_inside_tool_notes() -> None:
         "Gate notes:",
     }
     assert tool_notes(review) == ["VQ-02 (both): 2 pairs of tick labels overlap → no overlapping tick labels."]
+
+
+class TestCheck:
+    def test_an_unparseable_file_is_one_syntax_finding(self) -> None:
+        """Both validator profiles parse the code; the repair and the attribution log see the error once."""
+        check = _check("def broken(:\n", library="matplotlib", palette=[], base="x = 1\n")
+
+        assert not check.may_render
+        assert check.blocking_rules == ["syntax"]
+        assert len(check.blocking) == 1
+
+    def test_each_soft_finding_gets_the_target_its_rule_checks(self) -> None:
+        """The palette target asks for the literal list the validator wants, never for a palette derived from df."""
+        code = (
+            "import numpy as np\n"
+            "df = load_user_data()\n"
+            "IMPRINT = [c for c in df['colour']]\n"
+            "noise = np.random.normal(0, 1, 10)\n"
+            "values = [" + ", ".join(str(number) for number in range(25)) + "]\n"
+        )
+
+        check = _check(code, library="matplotlib", palette=["#009E73", "#C475FD"], base=code)
+
+        assert set(check.adaptation_rules) == {"palette-prefix", "rng", "literal-data"}
+        lines = dict(zip(check.adaptation_rules, check.defects, strict=True))
+        palette = lines["palette-prefix"]
+        assert palette.startswith("VQ-07 (code): IMPRINT must be a list of colour string literals at line 3 → ")
+        assert "one literal list of colour strings, assigned once" in palette and "INK_MUTED" in palette
+        assert "derive it from df" not in palette
+        assert "take the values from df" in lines["rng"] and "take the values from df" in lines["literal-data"]
+        assert all(len(line) <= MAX_LINE_CHARS for line in check.defects)
