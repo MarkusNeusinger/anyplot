@@ -20,7 +20,7 @@
   arm without a code change, while the budgets stay at the settings defaults.
   The deploy refuses to run without the renderer's URL, and it always lets
   anyplot-api's identity and the smoke's account call the service. The config's
-  header lists the owner's bootstrap steps.
+  header lists the owner's bootstrap steps. (#12121)
 - **A CI job that builds and smokes the agents image before merge.**
   `ci-image.yml` builds `agents/Dockerfile` when the service, `core/`, the
   catalogue prompts it reads or the dependency lock change. It checks that
@@ -31,3 +31,4 @@
   COPY list, its build check and the root `.dockerignore` against every file
   the service reads, and the deploy's substitutions and variables against the
   settings; it also runs the deploy step's script against a fake `gcloud`.
+  (#12121)
