@@ -118,7 +118,10 @@ steps:
       # two-slot semaphore (api/routers/og_images.py), so 40 in-flight requests
       # cannot become 40 concurrent PIL renders.
       - "--concurrency=40"
-      - "--timeout=600"
+      # 900 s: an agent chat turn may wait up to 600 s in the agents service's
+      # run queue and then run for 180 s; the BFF caps a turn at
+      # AGENT_TURN_MAX_S (890 s), which has to stay below this timeout.
+      - "--timeout=900"
       # Deploy WITHOUT routing traffic: the smoke step probes this revision on
       # its tag URL first, and only the promote step below shifts traffic — so a
       # bad image never serves users, not even between deploy and a failing

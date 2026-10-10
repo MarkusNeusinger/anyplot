@@ -583,12 +583,13 @@ sends `error {"code": "upstream"}` and then `done {}`. Time in the run queue
 does not count toward `AGENT_REQUEST_TIMEOUT_S`: every `queued` status starts
 the budget again with 15 seconds on top, because the run can start up to one
 `queued` status before its first event, and the first event after the wait
-starts it again. No turn runs past `AGENT_TURN_MAX_S` (590 seconds), which
-stays below anyplot-api's own request timeout of 600 seconds: a turn that is
+starts it again. No turn runs past `AGENT_TURN_MAX_S` (890 seconds), which
+stays below anyplot-api's own request timeout of 900 seconds: a turn that is
 still queued when its run could no longer finish inside that cap ends with
 `error {"code": "capacity"}` and `done {}`, and leaves the queue before it
-spends a token. At the defaults, a turn waits at most about 385 seconds
-through the BFF. Errors that happen before the stream starts, such as
+spends a token. At the defaults, the agents service's full 600-second queue
+maximum plus the 180-second run fit inside the cap, so the BFF never cuts a
+wait short. Errors that happen before the stream starts, such as
 `413 too_long`, an upstream `409 run_active`, or `503 capacity` from a full
 run queue, arrive as HTTP statuses instead.
 
@@ -622,7 +623,7 @@ characters. Two cases answer `502` instead:
 | `AGENT_SERVICE_URL` | Unset | Base URL of anyplot-agents, without `/v1`; also the ID-token audience |
 | `AGENT_USER_ID_KEY` | Unset | HMAC key for the user id; from Secret Manager in production |
 | `AGENT_REQUEST_TIMEOUT_S` | `190` | Upstream timeout, and the cap on one chat stream outside the run queue; above the agents service's 180-second deadline |
-| `AGENT_TURN_MAX_S` | `590` | Hard cap on one chat turn, queue wait included; keep it below anyplot-api's Cloud Run `--timeout` (600 seconds in `api/cloudbuild.yaml`) |
+| `AGENT_TURN_MAX_S` | `890` | Hard cap on one chat turn, queue wait included; keep it below anyplot-api's Cloud Run `--timeout` (900 seconds in `api/cloudbuild.yaml`) |
 
 In production, `AGENT_ENABLED` and `AGENT_SERVICE_URL` come from the
 `_AGENT_ENABLED` and `_AGENT_SERVICE_URL` substitutions in `api/cloudbuild.yaml`.
