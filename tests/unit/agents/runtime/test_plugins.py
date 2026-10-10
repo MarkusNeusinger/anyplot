@@ -13,9 +13,9 @@ from agents.anyplot.models import JudgeVerdict
 from agents.anyplot.plugins.budget import BudgetPlugin
 from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, ledger_for
 from agents.anyplot.plugins.scope_guard import WITHHELD, ScopeGuardPlugin, judge_input
-from agents.anyplot.plugins.tool_safety import ToolSafetyPlugin, has_url_or_path, result_limit, result_size
+from agents.anyplot.plugins.tool_safety import RESULT_KEYS, ToolSafetyPlugin, has_url_or_path, result_limit, result_size
 from agents.anyplot.policy import DATA_PREAMBLE, fence
-from agents.anyplot.schemas import ColumnProfile, DatasetProfile
+from agents.anyplot.schemas import ColumnProfile, DatasetProfile, PlotResult
 from agents.anyplot.services import Services
 from agents.anyplot.settings import get_settings
 
@@ -307,6 +307,20 @@ class TestToolSafety:
         assert await ToolSafetyPlugin().after_tool_callback(
             tool=FakeTool("plot_pipeline"), tool_args={}, tool_context=FakeContext(), result={"status": "failed"}
         ) == {"status": "failed"}
+
+    async def test_a_shipped_plot_result_reaches_the_root_whole(self, ledger: RequestLedger) -> None:
+        """Every PlotResult field is allowed: `version` (added with the chat UI) used to make the root read
+        `invalid_result` for every shipped plot and tell the user the run had failed."""
+        shipped = PlotResult(
+            status="ok", attempts=1, artifacts=["plot-light.png"], changes=["Plotted df"], version=1
+        ).model_dump(mode="json")
+
+        result = await ToolSafetyPlugin().after_tool_callback(
+            tool=FakeTool("plot_pipeline"), tool_args={}, tool_context=FakeContext(), result=shipped
+        )
+
+        assert result is not None and result["status"] == "ok" and result["version"] == 1
+        assert set(PlotResult.model_fields) <= RESULT_KEYS["plot_pipeline"]
 
     async def test_errors_become_fixed_codes(self, ledger: RequestLedger) -> None:
         result = await ToolSafetyPlugin().on_tool_error_callback(
