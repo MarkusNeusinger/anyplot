@@ -436,6 +436,18 @@ class TestTolerantMatching:
             'ax.set_title("North  America", fontsize=12)  # top\n', 'ax.set_title("Europe")\n'
         )
 
+    def test_a_failed_plan_still_names_the_tiers_its_other_edits_matched_in(self) -> None:
+        """The log counts every tolerant match, also in a plan that a sibling edit or a drift fails."""
+        sibling_failed = apply(("ax.set_ylim(0,  100)\n", "ax.set_ylim(0, 50)\n"), ("not in the code", "x"))
+        drifted = apply(("ax.set_ylim(0,  100)\n", 'ax.set_ylim(0, 50)\nINK = "#000000"\n'))
+
+        assert (sibling_failed.code, sibling_failed.kinds, sibling_failed.tolerant) == (
+            None,
+            ("zero_match",),
+            ("whitespace",),
+        )
+        assert (drifted.code, drifted.kinds, drifted.tolerant) == (None, ("drift:rebind",), ("whitespace",))
+
     def test_a_line_inside_a_multi_line_string_literal_is_never_matched_by_its_words(self) -> None:
         working = WORKING.replace("ax.set_ylim(0, 100)\n", 'note = """first\n    second  line\n"""\n')
 

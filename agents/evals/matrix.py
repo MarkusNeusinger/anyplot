@@ -24,7 +24,8 @@ the reviewed attempt, an `attempt_log` (per attempt: the adapter's outcome, fini
 reason, output tokens and plan shape, the check with its edit-failure kinds, the
 render gates and the review verdict), every model call's finish reason and tokens
 (`calls`, counted per agent kind in `finish_reasons`), the edit-failure kinds, how
-many edits a tolerant matching tier applied (`edit_tolerant`, by tier), and the module
+many edits a tolerant matching tier applied (`edit_tolerant`, by tier, also in a plan
+that another edit failed), and the module
 labels of the banned imports the validator refused (`banned_imports`: the longest
 prefix of the path in the validator's closed vocabulary, such as `io` or `pandas.io`,
 anything else `?`), so a run shows which modules the adapter reaches for.

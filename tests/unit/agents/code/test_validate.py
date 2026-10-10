@@ -278,7 +278,11 @@ class TestImports:
         assert security_rules(body) == {"relative-import"}
 
     def test_import_inside_a_function_is_checked_too(self) -> None:
-        assert security_rules("def f():\n    import subprocess\n    return subprocess\n") == {"banned-import"}
+        # Returning the module is a finding of its own: a module is never a value.
+        assert security_rules("def f():\n    import subprocess\n    return subprocess\n") == {
+            "banned-import",
+            "module-value",
+        }
 
     def test_from_import_of_a_banned_function(self) -> None:
         assert security_rules("from numpy import load\n") == {"banned-call"}
@@ -437,6 +441,18 @@ ESCAPES = [
     ("from scipy.fft._pocketfft import r2c\n", "banned-import"),
     ("import scipy.linalg._decomp\n", "banned-import"),
     ("import collections.sys as s\n", "banned-import"),
+    # A module laundered through an expression the resolver cannot follow (second review round).
+    ("import calendar\nc = [calendar][0]\nc._locale.setlocale(0, 'de_DE')\n", "module-value"),
+    ("import calendar\nc = [calendar][0]\nc._locale.setlocale(0, 'de_DE')\n", "banned-attribute"),
+    ("import dataclasses\nd = [dataclasses][0]\nb = d._FuncBuilder\n", "module-value"),
+    ("import dataclasses\nd = [dataclasses][0]\nb = d._FuncBuilder\n", "banned-attribute"),
+    ("import collections as c\nm = (lambda module: module)(c)\n", "module-value"),
+    ("import statistics\ns = statistics\n", "module-value"),
+    ("m = [np.lib][0]\nf = m._datasource.open('x')\n", "banned-attribute"),
+    ("import statistics\nr = [statistics.mean][0].__globals__\n", "dunder"),
+    ("import zoneinfo\nz = [zoneinfo.ZoneInfo][0]\np = z._tzpath\n", "banned-attribute"),
+    ("import warnings\nw = [warnings.warn][0]\ng = w._getcategory\n", "banned-attribute"),
+    ("from statistics import mean\nr = [mean][0]._random\n", "banned-attribute"),
     # Routes the walk found in modules allowed before (2026-10-10): they passed the validator then.
     ('import collections\nx = collections._sys.modules["builtins"].exec("y = 1")\n', "banned-attribute"),
     ('import statistics\nx = statistics.sys.modules["os"].system("true")\n', "banned-attribute"),

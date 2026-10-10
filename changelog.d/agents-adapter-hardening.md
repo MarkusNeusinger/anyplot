@@ -61,5 +61,9 @@
   helper that runs `exec` (`dataclasses._FuncBuilder`); some of these passed
   the validator before. Such names are now banned as attributes, as `from`
   imports and as components of an import path below its root, and so is any
-  private name or private submodule of an imported module; no catalogue file
-  changes eligibility. (#12124)
+  private name or private submodule of an imported module. A module bound by
+  `import` may no longer be used as a value, so `[calendar][0]._locale` cannot
+  launder it, and the dangerous private helpers a walk of the allowed modules
+  found (`_locale`, `_random`, `_tzpath`, `_FuncBuilder`, numpy's `_datasource`
+  and a few more) are banned by name on any object. No catalogue file changes
+  eligibility. (#12124)

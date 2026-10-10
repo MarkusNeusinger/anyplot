@@ -632,10 +632,11 @@ async def test_failed_edits_are_logged_by_kind_without_their_text(
 
     assert (plot["status"], plot["attempts"]) == ("ok", 2)
     check = attribution_lines(caplog, "pipeline_check")[0]
-    assert (check["outcome"], check["edit_failures"], check["edit_failure_kinds"]) == (
+    assert (check["outcome"], check["edit_failures"], check["edit_failure_kinds"], check["edit_tolerant"]) == (
         "edits_failed",
         1,
         {"zero_match": 1},
+        {},
     )
     (result,) = attribution_lines(caplog, "pipeline_result")
     assert result["stages"] == ["edit_apply", "reviewer_ok"]

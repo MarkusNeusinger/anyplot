@@ -765,6 +765,7 @@ async def _attempts(
                 outcome="edits_failed",
                 edit_failures=len(applied.failures),
                 edit_failure_kinds=dict(sorted(Counter(applied.kinds).items())),
+                edit_tolerant=dict(sorted(Counter(applied.tolerant).items())),
             )
             feedback, previous_plan = applied.failures, plan
             _end_attempt(run, "edit_apply")

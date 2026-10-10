@@ -43,6 +43,14 @@ Decisions this module takes where the design leaves room:
   import bound, and as a `from` import. Both are banned as a component of an import
   path below its root too, where an alias would hide them from the attribute check
   (`import scipy.fft._backend as backend`). No catalogue file uses either.
+* **A module is never a value.** A name bound by `import X [as Y]` may only be the
+  receiver of an attribute (`calendar.month_abbr`); as a value (`[calendar][0]`,
+  `f(dataclasses)`, `c = collections`) it would reach the attribute checks through an
+  expression the resolver cannot follow, so `c._locale` would pass the private-name
+  rule. No catalogue file uses a module as a value. A module reached through an
+  attribute chain (`[np.lib][0]`) or a `from` import cannot be told from a plain value
+  without importing it, so the dangerous private names the walk found are in
+  `ESCAPE_ATTRIBUTES` as well.
 * **Attribute names are banned outright, on any object.** `.format`, `.eval`, `.query`,
   `.show`, `.use`, `.load`, `.read_*`, `.to_csv` and the rest are findings wherever they
   appear, called or not, because the receiver's type is not knowable without executing
@@ -112,7 +120,7 @@ Decisions this module takes where the design leaves room:
   any other use of the name `load_user_data` is a separate finding.
 
 Rule ids: `size`, `encoding`, `syntax`, `banned-import` (with `Finding.module`), `star-import`,
-`relative-import`, `os-use`, `banned-name`, `banned-call`, `banned-attribute`, `dunder`,
+`relative-import`, `os-use`, `module-value`, `banned-name`, `banned-call`, `banned-attribute`, `dunder`,
 `banned-statement`, `url-literal`, `string-length`, `savefig-target` (SECURITY);
 `placeholder-count`, `placeholder-use`, `rng`, `literal-data`, `palette-prefix`
 (ADAPTATION). Findings are sorted by line; messages never echo more than about 60
@@ -312,7 +320,13 @@ BANNED_IO: frozenset[str] = frozenset(
 # Banned as attributes on any object, as `from` imports and as an import path's component
 # below its root: modules an allowed module re-exports that the import rules keep out
 # (`statistics.sys.modules`, `enum.bltns`, `dataclasses.inspect`), and the reflection and
-# the locale setters the stdlib walk found (see COMMON_IMPORTS).
+# the locale setters the stdlib walk found (see COMMON_IMPORTS). The private-name rule
+# needs the import resolver, which an expression defeats (`[np.lib][0]`), so the private
+# helpers a walk of the allowed modules found dangerous are banned here by name as well:
+# the re-exported `sys` (collections) and `_locale` (calendar), the stdlib RNG
+# (`statistics._random`), the time zone path and file readers (`zoneinfo._tzpath`,
+# `_common`), import by name (`warnings._getcategory`), `exec` on text
+# (`dataclasses._FuncBuilder`), and numpy's file opener (`numpy.lib._datasource.open`).
 ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
     {
         "sys",
@@ -338,6 +352,14 @@ ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
         "LocaleTextCalendar",
         "LocaleHTMLCalendar",
         "main",
+        "_sys",
+        "_locale",
+        "_random",
+        "_tzpath",
+        "_common",
+        "_getcategory",
+        "_FuncBuilder",
+        "_datasource",
     }
 )
 _DATA_FROM_DF = "the data comes only from df = load_user_data(), and the plot reads and writes no files"
@@ -716,6 +738,7 @@ class _Scan:
     def security(self, library: str, allowed_imports: frozenset[str]) -> None:
         self._check_imports(library, allowed_imports)
         self._check_os_use()
+        self._check_module_values()
         self._check_names()
         self._check_attributes()
         self._check_calls()
@@ -786,6 +809,28 @@ class _Scan:
         for name in self.of(ast.Name):
             if name.id in self.os_names and not self._is_theme_lookup(name):
                 self.add("os-use", f"'{name.id}' may only be used as {name.id}.getenv('{THEME_VARIABLE}', ...)", name)
+
+    def _check_module_values(self) -> None:
+        """A name bound by `import X [as Y]` only as the receiver of an attribute (module docstring).
+
+        `os` has its own, stricter rule (`os-use`).
+        """
+        modules = {
+            alias.asname or alias.name.split(".")[0]
+            for import_node in self.of(ast.Import)
+            for alias in import_node.names
+            if alias.name != "os"
+        }
+        for name in self.of(ast.Name):
+            if name.id not in modules or not isinstance(name.ctx, ast.Load):
+                continue
+            parent = self.parents.get(name)
+            if not (isinstance(parent, ast.Attribute) and parent.value is name):
+                self.add(
+                    "module-value",
+                    f"the module '{name.id}' may only be used as {name.id}.<name>, never as a value",
+                    name,
+                )
 
     def _is_theme_lookup(self, name: ast.Name) -> bool:
         """`os.getenv("ANYPLOT_THEME", ...)` or `os.environ.get("ANYPLOT_THEME", ...)` around `name`."""

@@ -114,7 +114,8 @@ class AppliedPlan:
     `kinds` holds the `FAILURE_KINDS` entry of every failure, the ones past the
     `MAX_FEEDBACK` lines included; trailer lines (the drift reminder, the overflow
     count) have none. `tolerant` names the `TOLERANT_TIERS` entry of every edit that
-    applied through a tolerant tier, in plan order.
+    applied through a tolerant tier, in plan order, also when another edit of the
+    plan failed or the plan drifted, so the log counts every match a tier found.
     """
 
     code: str | None
@@ -132,7 +133,7 @@ def apply_plan(working: str, plan: AdaptPlan) -> AppliedPlan:
     if not drift:
         return applied
     lines = _with_drift_reminder([line for _, line in drift])
-    return AppliedPlan(None, lines[:MAX_FEEDBACK], tuple(kind for kind, _ in drift))
+    return AppliedPlan(None, lines[:MAX_FEEDBACK], tuple(kind for kind, _ in drift), applied.tolerant)
 
 
 def protected_drift(base: str, code: str) -> list[str]:
