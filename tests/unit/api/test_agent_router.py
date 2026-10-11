@@ -784,9 +784,9 @@ class TestMessagesStream:
 
     def test_a_queue_that_outlasts_the_turn_cap_ends_with_capacity(self, client, upstream, monkeypatch) -> None:
         """Queued statuses never move the turn past AGENT_TURN_MAX_S, so Cloud Run never cuts it silently."""
-        monkeypatch.setattr(settings, "agent_request_timeout_s", 0.2)
-        monkeypatch.setattr(settings, "agent_turn_max_s", 0.6)
-        monkeypatch.setattr("api.routers.agent._QUEUED_HEARTBEAT_S", 0.1)
+        monkeypatch.setattr(settings, "agent_request_timeout_s", 0.5)
+        monkeypatch.setattr(settings, "agent_turn_max_s", 1.5)
+        monkeypatch.setattr("api.routers.agent._QUEUED_HEARTBEAT_S", 0.25)
         closed = asyncio.Event()
 
         async def endless_queue():
@@ -805,7 +805,12 @@ class TestMessagesStream:
 
         assert [event for event, _ in events][-2:] == ["error", "done"]
         assert events[-2][1] == {"code": "capacity", "ref": response.headers["X-Request-Id"]}
-        assert 2 <= len(events) - 2 <= 4  # about 0.3 s of statuses: the cap less the budget and the heartbeat
+        # TurnDeadline.restart relays a queued status that arrives t seconds after the turn
+        # opened only while t + budget + heartbeat <= cap, so statuses pass for the first
+        # 1.5 - 0.5 - 0.25 = 0.75 s. One arrives every 0.1 s: at most 8 (t = 0.0 to 0.7).
+        # Startup latency and a busy runner only make them arrive later, so fewer pass;
+        # 3 still allows about 0.55 s of delay before the third status (0.75 - 2 * 0.1).
+        assert 3 <= len(events) - 2 <= 8
         assert closed.is_set()  # the upstream stream was closed, which takes the turn out of the queue
 
 
