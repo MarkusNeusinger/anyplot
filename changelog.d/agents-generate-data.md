@@ -15,14 +15,14 @@
   next one, which `.undo()` takes back, when the session has data, or version 1 when
   it has none, with the default bindings for its columns; the user confirms it like a
   paste, and the plot and its export use it unchanged. `ToolSafety` validates the spec
-  against the same model first.
+  against the same model first. (#12134)
 - **Formulas pasted into the data field answer `422 formula`.** The dataset route
   refuses text that looks like a formula before the free-text transcriber reads it,
   because that model would compute the rows itself; the BFF passes the code on, and
   the page can point to the chat instead. Text that holds its own values stays data
   ("Mieten von 500 bis 900 Euro pro Quadratmeter: Berlin 12, Hamburg 14, München
   19"), and the transcriber's rubric now says to compute nothing. The `done` event's `dataset` now carries the
-  spec's `roles` too, so a first dataset made in the chat has its binding controls.
+  spec's `roles` too, so a first dataset made in the chat has its binding controls. (#12134)
 - **The chat page takes a formula from either box.** Until there is data, the data box
   and the chat both name the other source ("or ask for a curve in the chat: y = sin(x),
   x from -pi to pi"), and the chat is open without a paste. A formula pasted into the
@@ -30,10 +30,10 @@
   the button sends the text to the chat as a turn and empties the box. The table
   `generate_data` computes arrives like a data change, with its roles: version 1 in a
   session without data, whose `# changed` block names the generated rows and offers no
-  `.undo()`, or the next version over data that exists, which `.undo()` takes back.
+  `.undo()`, or the next version over data that exists, which `.undo()` takes back. (#12134)
 - **Formula cases in the evals.** The scope judge treats a request to draw a function,
   curve or distribution shape as in scope, never `needs_data` (six new English and
   German scope cases), and the prep eval scores `generate_data` calls on four new
   cases (21 in all): two calls match when they compute the same table. The root's
   step-1 rules now read a user who says how a column is meant to be read ("the dates
-  are month first") as a request for a change.
+  are month first") as a request for a change. (#12134)
