@@ -38,9 +38,9 @@
  * the action `{action: "summarize_data"}` answers a scripted summary of the
  * profile; a message containing "prozent" or "percent" plays a `set_type`
  * (number) on the second column (a unit such as `%` removed, a decimal comma
- * read), "gruppier" or "group" an `aggregate` (the first numeric column summed
- * by the first text column), "umbenenn" or "rename" a `rename` of the second
- * column. Each stores the result as the next dataset version (the previous one
+ * read), "gruppier" or "group" an `aggregate` (a numeric column summed by the
+ * column the message names, "gruppier nach x", else by the first text column),
+ * "umbenenn" or "rename" a `rename` of the second column. Each stores the result as the next dataset version (the previous one
  * kept, at most five, the bindings carried over, the confirmation dropped) and
  * the turn's `done.dataset` carries `{preview, profile, bindings, warnings,
  * changes, version}` like the service; `POST .../dataset/undo` restores the
@@ -742,7 +742,7 @@ async function streamTurn(req, res, session, body, ref) {
       const change = /prozent|percent/.test(lower)
         ? setTypeNumber
         : /gruppier|group/.test(lower)
-          ? aggregateSum
+          ? s => aggregateSum(s, lower)
           : /umbenenn|rename/.test(lower)
             ? s => renameSecond(s, /umbenenn/.test(lower))
             : null;
@@ -995,12 +995,22 @@ function setTypeNumber(session) {
   return `I read ${column} as numbers${units.size ? ` and removed the unit '${[...units][0]}'` : ''}. Check the preview and confirm the data.`;
 }
 
-/** `aggregate`: the first numeric column summed by the first text column; the other columns go. */
-function aggregateSum(session) {
+/**
+ * `aggregate`: the first other numeric column summed by the column the message
+ * names after "nach", "by", "per" or "pro" ("gruppier nach Monat"), else by the
+ * first text column; the other columns go.
+ */
+function aggregateSum(session, lower) {
   const { header, rows, profile } = session.dataset;
-  const key = profile.columns.findIndex(c => c.dtype === 'text');
-  const value = profile.columns.findIndex(c => c.dtype === 'number' || c.dtype === 'integer');
-  if (key < 0 || value < 0) return 'I need a text column to group by and a number column to sum.';
+  const escape = name => name.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const named = header.findIndex(name =>
+    new RegExp(`(?:nach|by|per|pro)\\s+${escape(name)}(?![\\p{L}\\p{N}_])`, 'u').test(lower)
+  );
+  const key = named >= 0 ? named : profile.columns.findIndex(c => c.dtype === 'text');
+  const value = profile.columns.findIndex(
+    (c, i) => i !== key && (c.dtype === 'number' || c.dtype === 'integer')
+  );
+  if (key < 0 || value < 0) return 'I need a column to group by and a number column to sum.';
   const sums = new Map();
   for (const row of rows) {
     const number = Number(row[value]);
@@ -1008,7 +1018,7 @@ function aggregateSum(session) {
     sums.set(row[key], (sums.get(row[key]) ?? 0) + number);
   }
   const grouped = [...sums.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
+    .sort(([a], [b]) => a.localeCompare(b, 'en', { numeric: true }))
     .map(([k, v]) => [k, String(v)]);
   if (!grouped.length) return 'There is nothing to sum.';
   const parsed = parseDataset(toCsv([header[key], header[value]], grouped));

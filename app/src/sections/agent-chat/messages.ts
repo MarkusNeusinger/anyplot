@@ -35,7 +35,7 @@ export const PLOT_FAILED_TEXT: Record<string, string> = {
   data_unconfirmed: 'confirm your data first: check the preview and the bindings, then .confirm()',
 };
 
-/** Failures of the dataset and bindings calls. */
+/** Failures of the dataset, bindings, confirmation and undo calls. */
 export const DATA_FAILURE: Record<string, string> = {
   too_long: 'more than 200 KB; paste fewer rows',
   unparseable: 'could not read this as CSV, TSV, semicolon CSV or JSON',
@@ -47,6 +47,8 @@ export const DATA_FAILURE: Record<string, string> = {
   capacity: 'the server is busy; try again in a minute',
   run_active: 'a run is in progress; wait for it to finish',
   no_dataset: 'parse the data first',
+  // The service keeps the last five versions, so the history can end above version 1.
+  nothing_to_undo: 'there is no earlier version to go back to',
   invalid: 'the server refused these bindings',
   session_expired: 'the session expired; reload the page',
   unreachable:

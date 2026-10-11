@@ -55,4 +55,21 @@ describe('ChatThread', () => {
     renderThread(notReady('something_new'));
     expect(screen.getByText('no plot this time')).toBeInTheDocument();
   });
+
+  it("shows the page's own turns: the summary without a library, create_plot with it", () => {
+    renderThread({
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+      items: [
+        { id: 1, kind: 'action', action: 'summarize_data', library: 'matplotlib' },
+        { id: 2, kind: 'assistant', text: '12 rows and 3 columns.' },
+        { id: 3, kind: 'action', action: 'create_plot', library: 'seaborn' },
+      ],
+    });
+    const log = screen.getByRole('log');
+    expect(log.children[0]).toHaveTextContent(/^❯\.summarize_data\(\)$/);
+    expect(log.children[1]).toHaveTextContent('12 rows and 3 columns.');
+    expect(log.children[2]).toHaveTextContent(/^❯\.create_plot\(\)# seaborn$/);
+  });
 });

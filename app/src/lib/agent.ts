@@ -54,6 +54,7 @@ export interface SessionOpened {
 }
 
 export type ColumnDtype = 'integer' | 'number' | 'datetime' | 'boolean' | 'text';
+const COLUMN_DTYPES = new Set<string>(['integer', 'number', 'datetime', 'boolean', 'text']);
 
 export interface ColumnProfile {
   name: string;
@@ -63,6 +64,9 @@ export interface ColumnProfile {
   min?: number | string | null;
   max?: number | string | null;
   top?: string[];
+  /** The statistics of a numeric column (six significant digits); `null` for any other column. */
+  mean?: number | null;
+  median?: number | null;
 }
 
 export interface DatasetProfile {
@@ -103,6 +107,29 @@ export interface DatasetParsed {
   warnings: string[];
   /** Every role of the spec; absent from an agents service older than this field. */
   roles?: RoleSpec[];
+  /**
+   * The data's version: a paste is 1, each change the assistant made to it one
+   * more, each undo one less. `.undo()` is possible while it is above 1.
+   */
+  version: number;
+}
+
+/**
+ * A data version the assistant made in step 1 (`done.dataset`, after its
+ * `prepare_data` changed the data): the dataset route's shape without the
+ * roles, plus one English line per operation. The data is unconfirmed again.
+ */
+export interface DatasetChanged {
+  /** Up to 20 data rows (the header is `profile.columns[].name`). */
+  preview: string[][];
+  profile: DatasetProfile;
+  /** The bindings carried over to the new version. */
+  bindings: Binding[];
+  warnings: string[];
+  /** What changed, one line per operation, such as `dropped 1 row where Tier = 'Gesamt'`. */
+  changes: string[];
+  /** 2 or more: the paste is version 1. */
+  version: number;
 }
 
 /**
@@ -166,6 +193,16 @@ export interface ThemeRendered {
   reason?: string | null;
   artifacts: ArtifactName[];
 }
+
+/**
+ * The page's own chat turns: `summarize_data` asks the assistant for the step-1
+ * summary of the stored data, `create_plot` starts step 2. Neither passes the
+ * scope judge.
+ */
+export type TurnAction = 'create_plot' | 'summarize_data';
+
+/** The body of `POST .../messages`: the user's words or one of the page's actions. */
+export type TurnBody = { text: string } | { action: TurnAction };
 
 // ============================================================================
 // Errors
@@ -327,13 +364,15 @@ export const agentApi = {
   /** Step 1's end: the stored dataset and its current bindings fit (`422 no_dataset` without one). */
   confirmDataset: (token: string, sid: string) =>
     agentJson<DatasetConfirmed>(`${sessionPath(sid)}/dataset/confirm`, token, post()),
+  /**
+   * `.undo()`: the version before the assistant's last change to the data is the
+   * current dataset again, unconfirmed; answered like a paste. `422
+   * nothing_to_undo` at the paste, `409 run_active` while a turn or a render runs.
+   */
+  undoDataset: (token: string, sid: string) =>
+    agentJson<DatasetParsed>(`${sessionPath(sid)}/dataset/undo`, token, post()),
   /** Opens the chat turn's SSE stream; the caller reads it with `readSseEvents`. */
-  postMessage: (
-    token: string,
-    sid: string,
-    body: { text: string } | { action: 'create_plot' },
-    signal: AbortSignal
-  ) =>
+  postMessage: (token: string, sid: string, body: TurnBody, signal: AbortSignal) =>
     agentFetch(`${sessionPath(sid)}/messages`, token, {
       ...post(body),
       headers: { Accept: 'text/event-stream' },
@@ -399,6 +438,11 @@ export type AgentEvent =
       bindings: Binding[] | null;
       /** The server's step state after the run; `null` when it sent none. */
       dataConfirmed: boolean | null;
+      /**
+       * The data version the turn made (the assistant's `prepare_data`), which
+       * replaces the page's preview; `null` when the data did not change.
+       */
+      dataset: DatasetChanged | null;
     };
 
 const isInt = (value: unknown): value is number =>
@@ -420,6 +464,72 @@ function bindingList(value: unknown): Binding[] | null {
   }
   return list;
 }
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  !!value && typeof value === 'object' && !Array.isArray(value);
+/** A profile's `min` or `max`: a number, a string, or `null` for anything else. */
+const scalar = (value: unknown): number | string | null =>
+  typeof value === 'number' || typeof value === 'string' ? value : null;
+const finite = (value: unknown): number | null =>
+  typeof value === 'number' && Number.isFinite(value) ? value : null;
+const isRow = (row: unknown): row is string[] =>
+  Array.isArray(row) && row.every(cell => typeof cell === 'string');
+
+/** One column of a `done` dataset's profile, its documented fields only; `null` without a name or a known type. */
+function columnProfile(value: unknown): ColumnProfile | null {
+  if (!isRecord(value) || typeof value.name !== 'string') return null;
+  if (typeof value.dtype !== 'string' || !COLUMN_DTYPES.has(value.dtype)) return null;
+  return {
+    name: value.name,
+    dtype: value.dtype as ColumnDtype,
+    missing: isInt(value.missing) ? value.missing : 0,
+    unique: isInt(value.unique) ? value.unique : 0,
+    min: scalar(value.min),
+    max: scalar(value.max),
+    top: strings(value.top),
+    mean: finite(value.mean),
+    median: finite(value.median),
+  };
+}
+
+function datasetProfile(value: unknown): DatasetProfile | null {
+  if (!isRecord(value) || !isInt(value.rows) || !Array.isArray(value.columns)) return null;
+  const columns: ColumnProfile[] = [];
+  for (const entry of value.columns) {
+    const column = columnProfile(entry);
+    if (!column) return null;
+    columns.push(column);
+  }
+  return {
+    rows: value.rows,
+    columns,
+    source_format: typeof value.source_format === 'string' ? value.source_format : '',
+    decimal: typeof value.decimal === 'string' ? value.decimal : '.',
+    warnings: strings(value.warnings),
+  };
+}
+
+/**
+ * The data version of a `done` event, or `null`. It replaces the page's
+ * preview, bindings and step as a whole, so anything malformed drops all of it
+ * rather than putting a table on screen that is not the server's.
+ */
+function datasetChanged(value: unknown): DatasetChanged | null {
+  if (!isRecord(value) || !isInt(value.version) || value.version < 1) return null;
+  const profile = datasetProfile(value.profile);
+  const bindings = bindingList(value.bindings);
+  if (!profile || !bindings) return null;
+  if (!Array.isArray(value.preview) || !value.preview.every(isRow)) return null;
+  return {
+    preview: value.preview,
+    profile,
+    bindings,
+    warnings: strings(value.warnings),
+    changes: strings(value.changes),
+    version: value.version,
+  };
+}
+
 const ARTIFACT_NAMES = new Set<string>(['plot-light.png', 'plot-dark.png', 'plot.py', 'data.csv']);
 const PLOT_STATUSES = new Set<string>(['ok', 'needs_attention', 'failed', 'not_ready']);
 
@@ -492,6 +602,7 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
         tokens: isInt(d.tokens) ? d.tokens : null,
         bindings: bindingList(d.bindings),
         dataConfirmed: typeof d.data_confirmed === 'boolean' ? d.data_confirmed : null,
+        dataset: datasetChanged(d.dataset),
       };
     default:
       return null;
@@ -518,6 +629,12 @@ export function sizeBucket(bytes: number): string {
   if (bytes < 50 * 1024) return '10_50kb';
   if (bytes <= MAX_DATASET_BYTES) return '50_200kb';
   return 'over_200kb';
+}
+
+/** Low-cardinality count bucket for analytics (`1`, `2`, `3+`); below 1 reads as `1`. */
+export function countBucket(count: number): '1' | '2' | '3+' {
+  if (count <= 1) return '1';
+  return count === 2 ? '2' : '3+';
 }
 
 export function utf8Bytes(text: string): number {

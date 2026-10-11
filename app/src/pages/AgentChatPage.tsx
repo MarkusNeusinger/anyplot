@@ -1,11 +1,13 @@
 /**
  * "Use with my data": the admin-only agent chat at `/debug/agent?spec=&library=&language=`.
  *
- * Two steps, data first: paste data, check the preview and the role bindings
- * and `.confirm()` them (step 1), then `.create_plot()` and refine in plain
- * words (step 2); every shipped version gets a result card with the image, the
- * code and the downloads. A line above the panels names the current step. The
- * page talks only to the BFF under `/debug/agent/*` (`src/lib/agent.ts`,
+ * Two steps, data first: paste data, read the assistant's summary of it, fix it
+ * in plain words if needed (each change shows in the data panel with
+ * `.undo()`), check the preview and the role bindings and `.confirm()` them
+ * (step 1), then `.create_plot()` and refine in plain words (step 2); every
+ * shipped version gets a result card with the image, the code and the
+ * downloads. A line above the panels names the current step. The page talks
+ * only to the BFF under `/debug/agent/*` (`src/lib/agent.ts`,
  * `src/hooks/useAgentSession.ts`).
  *
  * Gates, outermost first:
@@ -209,8 +211,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
     if (running) chatRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
   }, [running]);
 
-  // A turn, a theme render, a parse or a binding change in flight: the server
-  // runs one at a time and would refuse or race a second.
+  // A turn, a theme render, a parse, an undo or a binding change in flight: the
+  // server runs one at a time and would refuse or race a second.
   const busy = sessionBusy(state);
   // The session could not open for this pair: other libraries are links instead.
   const reopen = state.phase === 'ineligible' || state.phase === 'error';
@@ -373,6 +375,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             onDiscardTranscription={session.discardTranscription}
             onBind={session.setBinding}
             onConfirmData={() => void session.confirmData()}
+            onUndo={() => void session.undoData()}
             onCreatePlot={() => void session.createPlot()}
           />
 
@@ -415,8 +418,10 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
 
             {state.items.length === 0 && !state.run && (
               <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
-                paste your data, check the preview and the bindings, confirm, then{' '}
-                <code>.create_plot()</code>. afterwards, ask for changes in plain words: &quot;log
+                paste your data: the assistant sums it up here, and you can ask it to fix the data
+                in plain words, such as &quot;read Anteil as numbers&quot; or &quot;sum per
+                month&quot;. check the preview and the bindings, confirm, then{' '}
+                <code>.create_plot()</code>. afterwards, ask for changes to the plot: &quot;log
                 scale on y&quot;, &quot;dark version&quot;, &quot;label the outliers&quot;.
               </Box>
             )}
@@ -441,7 +446,12 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
               <Box
                 component="textarea"
                 aria-label="Message"
-                placeholder="ask about this plot, or ask for a change"
+                placeholder={
+                  // Step 1 talks about the data, step 2 about the plot.
+                  state.dataset && !state.dataConfirmed
+                    ? 'ask about your data, or for a fix: "sum per month"'
+                    : 'ask about this plot, or ask for a change'
+                }
                 value={draft}
                 maxLength={MAX_MESSAGE_CHARS}
                 rows={2}

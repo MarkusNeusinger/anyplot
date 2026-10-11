@@ -14,7 +14,7 @@ import {
   useAgentSession,
   type UseAgentSessionOptions,
 } from 'src/hooks/useAgentSession';
-import type { RoleSpec } from 'src/lib/agent';
+import type { DatasetChanged, DatasetParsed, RoleSpec } from 'src/lib/agent';
 
 const lastItem = (items: ChatItem[]) => items[items.length - 1];
 
@@ -119,7 +119,40 @@ const DATASET = {
   ],
   warnings: [],
   roles: [role('x'), role('y')],
+  version: 1,
 };
+
+/** `done.dataset` after the assistant read `Study Hours` in minutes: the next version. */
+const PREPARED = {
+  preview: [
+    ['S01', '90', '52'],
+    ['S02', '120', '58'],
+  ],
+  profile: {
+    ...DATASET.profile,
+    columns: [
+      { name: 'Student', dtype: 'text', missing: 0, unique: 2 },
+      { name: 'Minutes', dtype: 'integer', missing: 0, unique: 2, mean: 105, median: 105 },
+      { name: 'Exam Score', dtype: 'integer', missing: 0, unique: 2, mean: 55, median: 55 },
+    ],
+  },
+  bindings: [
+    { role: 'x', column: 'Minutes' },
+    { role: 'y', column: 'Exam Score' },
+  ],
+  warnings: [],
+  changes: ["renamed 'Study Hours' to 'Minutes'", 'Minutes: 2 cells multiplied by 60'],
+  version: 2,
+};
+
+/** The step-1 summary the page asks for after every stored parse. */
+const SUMMARY_TEXT = '2 rows and 3 columns; x reads Study Hours, y reads Exam Score.';
+const summaryStream = () =>
+  sse([
+    ['ready', { v: 'anyplot/1', run_id: 'sum' }],
+    ['message', { text: SUMMARY_TEXT }],
+    ['done', { llm_calls: 1 }],
+  ]);
 
 /** The answer to free text: a table the model read, not stored. */
 const TRANSCRIBED = {
@@ -185,6 +218,8 @@ const baseRoutes = (): Record<string, Handler> => ({
   'PUT /sessions/S1/bindings': call =>
     json(200, { bindings: call.body, complete: true, missing_roles: [] }),
   'POST /sessions/S1/dataset/confirm': () => json(200, { confirmed: true, rows: 2, columns: 3 }),
+  // Every stored parse is followed by the turn `summarize_data`.
+  'POST /sessions/S1/messages': summaryStream,
   'POST /sessions/S1/library': () =>
     json(200, { session_id: 'S1', eligibility: { eligible: true, status: 'clean', reasons: [] } }),
   'POST /sessions/S1/cancel': () => new Response(null, { status: 204 }),
@@ -612,6 +647,239 @@ describe('useAgentSession: confirming the data (step 1)', () => {
   });
 });
 
+describe('useAgentSession: the step-1 summary and data changes', () => {
+  const turnBodies = () => calls.filter(call => call.path.endsWith('/messages')).map(c => c.body);
+  const undoCalls = () => calls.filter(call => call.path.endsWith('/dataset/undo'));
+
+  /** A session with a parsed dataset, whose next turns answer `done` with `dataset`. */
+  async function withPreparedTurn(routes = baseRoutes(), done: Record<string, unknown> = {}) {
+    const hook = await openSession(routes);
+    await act(() => hook.result.current.parseData('a,b\n1,2\n'));
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['message', { text: 'I read Study Hours in minutes.' }],
+        [
+          'done',
+          {
+            llm_calls: 2,
+            bindings: PREPARED.bindings,
+            data_confirmed: false,
+            dataset: PREPARED,
+            ...done,
+          },
+        ],
+      ]);
+    return hook;
+  }
+
+  it('asks for the summary right after a stored parse, as the first turn', async () => {
+    const { result } = await openSession(baseRoutes());
+    await act(() => result.current.parseData('Student,Study Hours,Exam Score\nS01,1.5,52\n'));
+    expect(turnBodies()).toEqual([{ action: 'summarize_data' }]);
+    // The default bindings are applied first: the summary names the stored set.
+    const order = calls.map(call => `${call.method} ${call.path}`);
+    expect(order.indexOf('PUT /sessions/S1/bindings')).toBeLessThan(
+      order.indexOf('POST /sessions/S1/messages')
+    );
+    expect(result.current.state.items).toEqual([
+      expect.objectContaining({ kind: 'action', action: 'summarize_data' }),
+      expect.objectContaining({ kind: 'assistant', text: SUMMARY_TEXT }),
+    ]);
+    expect(result.current.state.run).toBeNull();
+    expect(result.current.state.dataset?.parsed.version).toBe(1);
+    expect(result.current.state.dataChange).toBeNull();
+  });
+
+  it('asks for the summary after .use() of a transcription, not for the transcription itself', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = call =>
+      json(200, (call.body as { confirmed?: boolean }).confirmed ? DATASET : TRANSCRIBED);
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData(FREE_TEXT));
+    expect(turnBodies()).toEqual([]);
+    await act(() => result.current.confirmTranscription());
+    expect(turnBodies()).toEqual([{ action: 'summarize_data' }]);
+  });
+
+  it('asks for no summary when the parse stored nothing', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'unparseable', ref: 'r' });
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('just words'));
+    expect(turnBodies()).toEqual([]);
+    expect(result.current.state.items).toEqual([]);
+  });
+
+  it('shows a failed summary as an error and leaves the data usable', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['ready', {}],
+        ['error', { code: 'capacity', ref: 'rs' }],
+        ['done', {}],
+      ]);
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    expect(lastItem(result.current.state.items)).toMatchObject({
+      kind: 'error',
+      code: 'capacity',
+      ref: 'rs',
+    });
+    expect(result.current.state.dataset?.parsed.preview).toEqual(DATASET.preview);
+    await act(() => result.current.confirmData());
+    expect(result.current.state.dataConfirmed).toBe(true);
+  });
+
+  it("takes the data version a turn's done carries and drops the confirmation", async () => {
+    const { result } = await withPreparedTurn();
+    await act(() => result.current.confirmData());
+    expect(result.current.state.dataConfirmed).toBe(true);
+
+    await act(() => result.current.sendMessage('das sind Minuten, nicht Stunden'));
+    const { dataset } = result.current.state;
+    expect(dataset?.parsed.preview).toEqual(PREPARED.preview);
+    expect(dataset?.parsed.profile.columns.map(column => column.name)).toEqual([
+      'Student',
+      'Minutes',
+      'Exam Score',
+    ]);
+    expect(dataset?.parsed.version).toBe(2);
+    // The pasted size stays the analytics bucket's measure.
+    expect(dataset?.bytes).toBe(8);
+    expect(result.current.state).toMatchObject({
+      bindings: { x: 'Minutes', y: 'Exam Score' },
+      bindingsComplete: true,
+      missingRoles: [],
+      dataConfirmed: false,
+      dataChange: { kind: 'changed', changes: PREPARED.changes, version: 2 },
+    });
+    expect(trackEvent).toHaveBeenCalledWith('agent_data_prepared', { changes: '2' });
+    expect(JSON.stringify(trackEvent.mock.calls)).not.toContain('Minutes');
+    // A data change asks for no new summary: the reply already says what changed.
+    expect(turnBodies()).toEqual([
+      { action: 'summarize_data' },
+      { text: 'das sind Minuten, nicht Stunden' },
+    ]);
+  });
+
+  it("follows done's own bindings when a binding change came after the data change", async () => {
+    const { result } = await withPreparedTurn(baseRoutes(), {
+      bindings: [{ role: 'x', column: 'Minutes' }],
+    });
+    await act(() => result.current.sendMessage('read minutes, and drop y'));
+    expect(result.current.state.dataset?.parsed.version).toBe(2);
+    expect(result.current.state).toMatchObject({
+      bindings: { x: 'Minutes' },
+      bindingsComplete: false,
+      missingRoles: ['y'],
+    });
+  });
+
+  it('.undo() restores the version before, unconfirmed, and asks for no summary', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset/undo'] = () => json(200, DATASET);
+    const { result } = await withPreparedTurn(routes);
+    await act(() => result.current.sendMessage('in Minuten'));
+    await act(() => result.current.confirmData());
+    expect(result.current.state.dataConfirmed).toBe(true);
+    const turns = turnBodies().length;
+
+    await act(() => result.current.undoData());
+    expect(undoCalls()).toEqual([
+      expect.objectContaining({ method: 'POST', path: '/sessions/S1/dataset/undo' }),
+    ]);
+    expect(undoCalls()[0].body).toBeUndefined();
+    expect(undoCalls()[0].headers['X-Anyplot-Client']).toBe('agent-chat/1');
+    expect(result.current.state.dataset?.parsed.preview).toEqual(DATASET.preview);
+    expect(result.current.state).toMatchObject({
+      bindings: { x: 'Study Hours', y: 'Exam Score' },
+      bindingsComplete: true,
+      dataConfirmed: false,
+      dataChange: { kind: 'undone', version: 1 },
+      undoBusy: false,
+      undoError: null,
+    });
+    expect(result.current.state.dataset?.parsed.version).toBe(1);
+    expect(turnBodies()).toHaveLength(turns);
+    expect(trackEvent).toHaveBeenLastCalledWith('agent_data_undo', { version: '1' });
+
+    // Back at the paste there is nothing to ask the server.
+    await act(() => result.current.undoData());
+    expect(undoCalls()).toHaveLength(1);
+  });
+
+  it('counts the versions down one undo at a time', async () => {
+    const routes = baseRoutes();
+    let version = 3;
+    routes['POST /sessions/S1/dataset/undo'] = () => {
+      version -= 1;
+      return json(200, { ...DATASET, version });
+    };
+    const { result } = await withPreparedTurn(routes, {
+      dataset: { ...PREPARED, version: 3 },
+    });
+    await act(() => result.current.sendMessage('und gruppier nach Monat'));
+    expect(result.current.state.dataset?.parsed.version).toBe(3);
+    await act(() => result.current.undoData());
+    expect(result.current.state.dataChange).toEqual({ kind: 'undone', version: 2 });
+    expect(trackEvent).toHaveBeenLastCalledWith('agent_data_undo', { version: '2' });
+    await act(() => result.current.undoData());
+    expect(result.current.state.dataset?.parsed.version).toBe(1);
+    expect(undoCalls()).toHaveLength(2);
+  });
+
+  it('stops offering .undo() after nothing_to_undo and keeps a 409 retryable', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset/undo'] = () =>
+      json(409, { detail: 'run_active', ref: 'r409' });
+    const { result } = await withPreparedTurn(routes);
+    await act(() => result.current.sendMessage('in Minuten'));
+
+    await act(() => result.current.undoData());
+    expect(result.current.state.undoError).toEqual({ code: 'run_active', ref: 'r409' });
+    expect(result.current.state.dataset?.parsed.version).toBe(2);
+    expect(trackEvent).not.toHaveBeenCalledWith('agent_data_undo', expect.anything());
+
+    // The history ended above the paste (the service keeps the last five versions).
+    routes['POST /sessions/S1/dataset/undo'] = () =>
+      json(422, { detail: 'nothing_to_undo', ref: 'r422' });
+    await act(() => result.current.undoData());
+    expect(result.current.state.undoError).toEqual({ code: 'nothing_to_undo', ref: 'r422' });
+    expect(result.current.state.dataChange).toMatchObject({ kind: 'changed', version: 2 });
+    await act(() => result.current.undoData());
+    expect(undoCalls()).toHaveLength(2);
+  });
+
+  it('starts no undo while a turn runs', async () => {
+    const routes = baseRoutes();
+    const { result } = await withPreparedTurn(routes);
+    await act(() => result.current.sendMessage('in Minuten'));
+    const stream = liveSse([['ready', {}]]);
+    routes['POST /sessions/S1/messages'] = () => stream.response;
+    let turn: Promise<void> = Promise.resolve();
+    act(() => {
+      turn = result.current.sendMessage('was ist auf x?');
+    });
+    await waitFor(() => expect(result.current.state.run).not.toBeNull());
+    await act(() => result.current.undoData());
+    expect(undoCalls()).toHaveLength(0);
+    stream.push('done', {});
+    stream.close();
+    await act(() => turn);
+  });
+
+  it('starts over at version 1 on a new parse and clears the change', async () => {
+    const routes = baseRoutes();
+    const { result } = await withPreparedTurn(routes);
+    await act(() => result.current.sendMessage('in Minuten'));
+    expect(result.current.state.dataChange).not.toBeNull();
+    routes['POST /sessions/S1/messages'] = summaryStream;
+    await act(() => result.current.parseData('a,b\n3,4\n'));
+    expect(result.current.state.dataChange).toBeNull();
+    expect(result.current.state.dataset?.parsed.version).toBe(1);
+  });
+});
+
 describe('useAgentSession: turns', () => {
   it('runs Create plot through the queue to a version with its image and code', async () => {
     const routes = baseRoutes();
@@ -981,6 +1249,9 @@ describe('agentReducer', () => {
       })
     );
     dropped(agentReducer(state, { type: 'confirm_lost' }));
+    dropped(agentReducer(state, { type: 'data_prepared', dataset: PREPARED as DatasetChanged }));
+    dropped(agentReducer(state, { type: 'undo_done', parsed: DATASET as DatasetParsed }));
+    kept(agentReducer(state, { type: 'undo_failed', failure }));
 
     const refused = agentReducer(agentReducer(state, { type: 'confirm_lost' }), {
       type: 'confirm_failed',
@@ -992,6 +1263,51 @@ describe('agentReducer', () => {
       confirmError: { code: 'run_active', ref: 'r' },
     });
     expect(agentReducer(refused, { type: 'confirm_start' }).confirmError).toBeNull();
+  });
+
+  it('numbers the data versions and keeps what changed until the next parse', () => {
+    let state: AgentSessionState = {
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+    };
+    // An answer without a version (an older server) is the paste's 1.
+    state = agentReducer(state, {
+      type: 'parse_done',
+      parsed: { ...(DATASET as DatasetParsed), version: 0 },
+      bytes: 8,
+    });
+    expect(state.dataset?.parsed.version).toBe(1);
+    expect(state.dataChange).toBeNull();
+
+    state = agentReducer(state, { type: 'data_prepared', dataset: PREPARED as DatasetChanged });
+    expect(state.dataset?.parsed).toMatchObject({ version: 2, preview: PREPARED.preview });
+    // `done.dataset` names no roles: the spec's stay.
+    expect(state.dataset?.parsed.roles?.map(r => r.name)).toEqual(['x', 'y']);
+    expect(state.roles.map(r => r.name)).toEqual(['x', 'y']);
+    expect(state.dataChange).toEqual({ kind: 'changed', changes: PREPARED.changes, version: 2 });
+
+    state = agentReducer(state, { type: 'undo_start' });
+    expect(sessionBusy(state)).toBe(true);
+    state = agentReducer(state, {
+      type: 'undo_failed',
+      failure: { code: 'run_active', ref: 'r' },
+    });
+    expect(sessionBusy(state)).toBe(false);
+    expect(state.undoError).toEqual({ code: 'run_active', ref: 'r' });
+    expect(state.dataChange?.kind).toBe('changed');
+
+    state = agentReducer(state, { type: 'undo_done', parsed: DATASET as DatasetParsed });
+    expect(state).toMatchObject({
+      dataChange: { kind: 'undone', version: 1 },
+      undoError: null,
+      undoBusy: false,
+      bindings: { x: 'Study Hours', y: 'Exam Score' },
+    });
+    expect(state.dataset?.bytes).toBe(8);
+
+    state = agentReducer(state, { type: 'parse_done', parsed: DATASET as DatasetParsed, bytes: 9 });
+    expect(state.dataChange).toBeNull();
   });
 });
 

@@ -1,8 +1,9 @@
 /**
  * The two steps of "Use with my data" as one quiet mono line above the panels:
  * `1 data · 2 plot`, the current step emphasised. Step 1 lasts until the user
- * confirms the data with `.confirm()`; a new parse or a binding change goes
- * back to it. It stays one line at phone width.
+ * confirms the data with `.confirm()`; a new parse, a binding change, a change
+ * the assistant made to the data and an undo go back to it. It stays one line
+ * at phone width.
  */
 
 import Box from '@mui/material/Box';

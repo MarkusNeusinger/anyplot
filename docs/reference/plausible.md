@@ -140,7 +140,9 @@ with `VITE_ENABLE_AGENT_CHAT=true`, and like every event they fire only on
 |------------|-----------|-------|-------------|
 | `agent_open` | `library`, `source`, `spec` | AgentChatPage.tsx | The chat page opened for an admin. `source` is `plot_page` when the plot page's `.adapt()` button led there, `direct` otherwise (a typed URL, a bookmark, a reload) |
 | `agent_data_parsed` | `status`, `size_bucket` | useAgentSession.ts | The pasted data came back from the parse. `status` ∈ `ok`, `too_long`, `unparseable`, `data_refused`, `error`, `transcribed` (the text was not a table, a model read it into one and the page asks the user to confirm it; nothing is stored yet), `discarded` (the user dropped such a table; `.use()` instead parses it again and reports `ok`); `size_bucket` ∈ `lt_1kb`, `1_10kb`, `10_50kb`, `50_200kb`, `over_200kb` (the last one is refused in the browser before anything is sent) |
-| `agent_data_confirmed` | `size_bucket` | useAgentSession.ts | The user ended step 1 with `.confirm()`: the stored data and its bindings fit, and the page now offers `.create_plot()`. Fires again after each new parse or binding change that the user confirms. `size_bucket` as for `agent_data_parsed` |
+| `agent_data_confirmed` | `size_bucket` | useAgentSession.ts | The user ended step 1 with `.confirm()`: the stored data and its bindings fit, and the page now offers `.create_plot()`. Fires again after each new parse, binding change, data change or undo that the user confirms. `size_bucket` as for `agent_data_parsed` |
+| `agent_data_prepared` | `changes` | useAgentSession.ts | The assistant changed the data in a turn (its `prepare_data`, for example "read Anteil as numbers" or "sum per month"): the turn's `done` carried a new data version, which the data panel shows with its change lines and `.undo()`. `changes` ∈ `1`, `2`, `3+`, the number of change lines (one per operation) |
+| `agent_data_undo` | `version` | useAgentSession.ts | The user took back the assistant's last change to the data with `.undo()`, and the server restored the version before it. `version` ∈ `1` (back at the paste), `2`, `3+`: the restored version |
 | `agent_plot_rendered` | `library`, `status`, `repaired`, `spec` | useAgentSession.ts | A turn's `plot` event arrived. `status` ∈ `ok`, `needs_attention`, `failed`, `not_ready`; `repaired` is `yes` when the run needed its repair round (two attempts), else `no` |
 | `agent_guardrail_block` | `reason` | useAgentSession.ts | A guardrail stopped a request. `reason` ∈ `out_of_scope`, `needs_data` (the request needs data the service would have to fetch), `budget`, `unsupported_content` (the stream's fixed refusals), `data_refused` (the pre-filter or the dataset judge refused the pasted data: text addressed to an AI, or the judge's verdict; personal data is never a reason), `guard_unavailable` (the scope check could not answer and failed closed), `other` (a refusal code the page does not know yet) |
 
@@ -499,6 +501,8 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `page` | Page context (home, plots, spec_overview, spec_detail, agent_chat) | `copy_code`, `download_image`, `og_image_view` |
 | `status` | Outcome of an agent chat step (`ok`, `needs_attention`, `failed`, `not_ready`; for a parse also `too_long`, `unparseable`, `data_refused`, `error`, `transcribed`, `discarded`) | `agent_data_parsed`, `agent_plot_rendered` |
 | `size_bucket` | Size class of pasted data (`lt_1kb` … `over_200kb`), never the size | `agent_data_parsed`, `agent_data_confirmed` |
+| `changes` | How many operations an assistant's data change made (`1`, `2`, `3+`) | `agent_data_prepared` |
+| `version` | The data version an undo restored (`1` is the paste, `2`, `3+`) | `agent_data_undo` |
 | `repaired` | Whether an agent run needed its repair round (`yes` / `no`) | `agent_plot_rendered` |
 | `reason` | Why a guardrail stopped an agent chat request (`out_of_scope`, `needs_data`, `budget`, `unsupported_content`, `data_refused`, `guard_unavailable`, `other`) | `agent_guardrail_block` |
 | `platform` | Bot/platform name (twitter, whatsapp, teams, etc.) | `og_image_view` |
@@ -565,6 +569,8 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `agent_open` | Custom Event | Track admin opens of the agent chat and where they came from |
 | `agent_data_parsed` | Custom Event | Track parse outcomes of pasted data in the agent chat |
 | `agent_data_confirmed` | Custom Event | Track how often users confirm their data before the agent chat plots it |
+| `agent_data_prepared` | Custom Event | Track how often the agent chat's assistant changes the data in step 1 |
+| `agent_data_undo` | Custom Event | Track how often users take back the assistant's change to their data |
 | `agent_plot_rendered` | Custom Event | Track agent chat plot outcomes and repair rounds |
 | `agent_guardrail_block` | Custom Event | Track agent chat refusals and failed-closed guard checks |
 | `LCP` | Custom Event | Largest Contentful Paint (Core Web Vital) |
@@ -643,6 +649,8 @@ User lands on anyplot.ai
 | `agent_open` | `library`, `source`, `spec` | AgentChatPage.tsx |
 | `agent_data_parsed` | `status`, `size_bucket` | useAgentSession.ts |
 | `agent_data_confirmed` | `size_bucket` | useAgentSession.ts |
+| `agent_data_prepared` | `changes` | useAgentSession.ts |
+| `agent_data_undo` | `version` | useAgentSession.ts |
 | `agent_plot_rendered` | `library`, `status`, `repaired`, `spec` | useAgentSession.ts |
 | `agent_guardrail_block` | `reason` | useAgentSession.ts |
 | `search` | `query`, `category` | FilterBar.tsx |
@@ -674,7 +682,7 @@ User lands on anyplot.ai
 | `TTFB` | `value`, `rating` | reportWebVitals.ts |
 | `og_image_view` | `page`, `platform`, `spec`?, `language`?, `library`?, `filter_*`? | api/analytics.py (server-side) |
 
-**Total: 35 client-side + 1 server-side = 36 events** (the five `agent_*`
+**Total: 37 client-side + 1 server-side = 38 events** (the seven `agent_*`
 events exist only in builds with `VITE_ENABLE_AGENT_CHAT=true`)
 
 > Removed events: `potd_dismiss` (and the `nav_click` sources `potd_image` /
@@ -869,12 +877,12 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 - [x] Server-side og:image tracking (`og_image_view`) with platform detection
 - [x] Landing-page navigation tracking (`nav_click`)
 - [x] Theme tracking (`theme_toggle` event + `theme` ambient pageview prop)
-- [x] Agent chat events (`agent_open`, `agent_data_parsed`, `agent_data_confirmed`, `agent_plot_rendered`, `agent_guardrail_block`), enum properties only
+- [x] Agent chat events (`agent_open`, `agent_data_parsed`, `agent_data_confirmed`, `agent_data_prepared`, `agent_data_undo`, `agent_plot_rendered`, `agent_guardrail_block`), enum properties only
 - [ ] Agent chat quick feedback (`agent_result_feedback`), with the feedback control
 
 ### Plausible dashboard checklist
 
-- [ ] Register all custom properties (see table above, including `rating`, `action`, `param`, `source`, `platform`, `filter_*`, and for the agent chat `status`, `size_bucket`, `repaired`, `reason`)
+- [ ] Register all custom properties (see table above, including `rating`, `action`, `param`, `source`, `platform`, `filter_*`, and for the agent chat `status`, `size_bucket`, `changes`, `version`, `repaired`, `reason`)
 - [ ] Create goals for key events (including `LCP`, `CLS`, `INP`)
 - [ ] Set up funnels (optional)
 - [ ] Create custom dashboard widgets (optional)

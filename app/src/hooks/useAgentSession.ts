@@ -41,13 +41,26 @@
  * A `plot{not_ready, data_unconfirmed}` without that sync still drops the
  * flag, so the panel offers `.confirm()` again.
  *
+ * Step 1 talks about the data. Every parse that stores a dataset (a table, or
+ * a transcription's `.use()`) is followed at once by the turn
+ * `{action: "summarize_data"}`, so the assistant's summary of the data is the
+ * first thing in the thread; an undo, a library switch or a transcription that
+ * still waits for its decision sends none. The user can then ask in words for
+ * a change to the data ("read Anteil as numbers", "sum per month"): when the
+ * assistant's `prepare_data` changed it, the turn's `done` carries the new
+ * version (`dataset`), which replaces the preview, the profile and the
+ * bindings, drops the confirmation and fills `dataChange` with the change
+ * lines. `undoData` (`.undo()`, `POST .../dataset/undo`) restores the version
+ * before the last change, unconfirmed as well; the data's `version` says
+ * whether there is one (a paste is 1, the service keeps the last five).
+ *
  * One thing at a time: the agents service runs one turn or theme render per
- * user and answers anything else with `409 run_active`, a parse or a binding
- * change rewrites the data a turn reads, and a confirmation must cover exactly
- * the data it was given. So the hook starts none of these while another is in
- * flight, and Stop keeps the stream open until the server's `done` confirms
- * the run ended (at most `STOP_GRACE_MS`), so the next action does not race
- * the stopped run.
+ * user and answers anything else with `409 run_active`, a parse, an undo or a
+ * binding change rewrites the data a turn reads, and a confirmation must cover
+ * exactly the data it was given. So the hook starts none of these while
+ * another is in flight, and Stop keeps the stream open until the server's
+ * `done` confirms the run ended (at most `STOP_GRACE_MS`), so the next action
+ * does not race the stopped run.
  *
  * Session lifetime: the session, with the pasted data and its renders, is
  * deleted when the page unmounts and on `pagehide` (a reload or a closed tab,
@@ -55,6 +68,7 @@
  *
  * Analytics carry enum properties only, never text or data:
  * `agent_data_parsed{status, size_bucket}`, `agent_data_confirmed{size_bucket}`,
+ * `agent_data_prepared{changes}`, `agent_data_undo{version}`,
  * `agent_plot_rendered{library, status, repaired, spec}` and
  * `agent_guardrail_block{reason}`.
  */
@@ -68,6 +82,8 @@ import {
   type AgentEvent,
   type ArtifactName,
   type Binding,
+  countBucket,
+  type DatasetChanged,
   type DatasetParsed,
   type DatasetProfile,
   type Eligibility,
@@ -82,6 +98,8 @@ import {
   type RoleSpec,
   sizeBucket,
   type Theme,
+  type TurnAction,
+  type TurnBody,
   utf8Bytes,
 } from 'src/lib/agent';
 import { readSseEvents } from 'src/lib/sse';
@@ -106,7 +124,7 @@ export interface Failure {
 export type TimelineStep = 'queued' | PipelineStep;
 
 export interface RunState {
-  kind: 'create_plot' | 'message';
+  kind: TurnAction | 'message';
   /** Steps in arrival order; the last one is in progress. */
   steps: { step: TimelineStep; attempt: number | null }[];
   /** Set while the turn waits in the run queue: `position` 1 runs next. */
@@ -135,7 +153,7 @@ export interface PlotVersion {
 
 export type ChatItem =
   | { id: number; kind: 'user'; text: string }
-  | { id: number; kind: 'action'; action: 'create_plot'; library: string }
+  | { id: number; kind: 'action'; action: TurnAction; library: string }
   | { id: number; kind: 'assistant'; text: string }
   | { id: number; kind: 'refusal'; code: string; text: string }
   | { id: number; kind: 'error'; code: string; ref: string | null }
@@ -148,9 +166,19 @@ type WithoutId<T> = T extends unknown ? Omit<T, 'id'> : never;
 type NewChatItem = WithoutId<ChatItem>;
 
 export interface DatasetState {
+  /** The current version of the data, as the server stored it. */
   parsed: DatasetParsed;
+  /** UTF-8 size of the pasted text, for the analytics bucket; a later version keeps it. */
   bytes: number;
 }
+
+/**
+ * The data panel's `# changed` block: the assistant's last change to the data
+ * (its change lines), or the undo that restored an earlier version. A new
+ * parse clears it; the next change or undo replaces it.
+ */
+export type DataChange =
+  { kind: 'changed'; changes: string[]; version: number } | { kind: 'undone'; version: number };
 
 /** A table the server read from free text; nothing is stored until the user confirms it. */
 export interface TranscriptionState {
@@ -196,6 +224,11 @@ export interface AgentSessionState {
   /** The confirmation call is in flight. */
   confirmBusy: boolean;
   confirmError: Failure | null;
+  /** The last change to the stored data, or the undo of one; `null` after a parse. */
+  dataChange: DataChange | null;
+  /** The undo call is in flight. */
+  undoBusy: boolean;
+  undoError: Failure | null;
   libraryBusy: boolean;
   /** A theme toggle render is in flight. */
   themeBusy: boolean;
@@ -223,6 +256,11 @@ type Action =
   | { type: 'confirm_lost' }
   /** A turn's `done` named the session's bindings and step state; `null` fields were absent. */
   | { type: 'server_sync'; bindings: BindingMap | null; dataConfirmed: boolean | null }
+  /** A turn's `done` carried the data version the assistant's `prepare_data` made. */
+  | { type: 'data_prepared'; dataset: DatasetChanged }
+  | { type: 'undo_start' }
+  | { type: 'undo_done'; parsed: DatasetParsed }
+  | { type: 'undo_failed'; failure: Failure }
   | { type: 'library_start' }
   | { type: 'library_done'; library: string; eligibility: Eligibility }
   | { type: 'library_failed'; failure: Failure }
@@ -257,6 +295,9 @@ export function initialAgentState(library: string): AgentSessionState {
     dataConfirmed: false,
     confirmBusy: false,
     confirmError: null,
+    dataChange: null,
+    undoBusy: false,
+    undoError: null,
     libraryBusy: false,
     themeBusy: false,
     items: [],
@@ -356,6 +397,45 @@ function toMap(bindings: readonly Binding[]): BindingMap {
   return map;
 }
 
+/** The data's version number; an answer without one (an older server) is the paste's 1. */
+function versionOf(value: unknown): number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 1 ? value : 1;
+}
+
+/**
+ * Replace the stored data with another version of it: one the assistant made
+ * (`done.dataset`) or the one an undo restored. The server carried the bindings
+ * over and dropped its confirmation, so the dropdowns take its bindings and the
+ * panel goes back to step 1. Completeness is read from the roles here, as for a
+ * turn's binding sync, because no binding call answers it.
+ */
+function withDataVersion(
+  state: AgentSessionState,
+  parsed: DatasetParsed,
+  dataChange: DataChange
+): AgentSessionState {
+  const roles = parsed.roles ?? state.roles;
+  const bindings = toMap(parsed.bindings);
+  const missing = missingRolesOf(bindings, roles);
+  return {
+    ...state,
+    dataset: {
+      parsed: { ...parsed, roles, version: versionOf(parsed.version) },
+      bytes: state.dataset?.bytes ?? 0,
+    },
+    roles,
+    bindings,
+    bindingsComplete: missing.length === 0,
+    missingRoles: missing,
+    bindingsError: null,
+    dataConfirmed: false,
+    confirmError: null,
+    dataChange,
+    undoBusy: false,
+    undoError: null,
+  };
+}
+
 // ============================================================================
 // Reducer
 // ============================================================================
@@ -396,7 +476,13 @@ export function agentReducer(state: AgentSessionState, action: Action): AgentSes
       return {
         ...state,
         parsing: false,
-        dataset: { parsed: action.parsed, bytes: action.bytes },
+        // A paste starts over at version 1: the server dropped the undo history with it.
+        dataset: {
+          parsed: { ...action.parsed, version: versionOf(action.parsed.version) },
+          bytes: action.bytes,
+        },
+        dataChange: null,
+        undoError: null,
         // An older server names no roles: the default bindings stand in for them.
         roles:
           action.parsed.roles ??
@@ -471,6 +557,23 @@ export function agentReducer(state: AgentSessionState, action: Action): AgentSes
       if (action.dataConfirmed !== null) next = { ...next, dataConfirmed: action.dataConfirmed };
       return next;
     }
+    case 'data_prepared': {
+      const { changes, version, ...parsed } = action.dataset;
+      return withDataVersion(
+        state,
+        { ...parsed, version },
+        { kind: 'changed', changes, version: versionOf(version) }
+      );
+    }
+    case 'undo_start':
+      return { ...state, undoBusy: true, undoError: null };
+    case 'undo_done':
+      return withDataVersion(state, action.parsed, {
+        kind: 'undone',
+        version: versionOf(action.parsed.version),
+      });
+    case 'undo_failed':
+      return { ...state, undoBusy: false, undoError: action.failure };
     case 'library_start':
       return { ...state, libraryBusy: true };
     case 'library_done':
@@ -573,6 +676,10 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   const themeRef = useRef(false);
   const parseRef = useRef(false);
   const confirmRef = useRef(false);
+  const undoRef = useRef(false);
+  // The parse's own binding call ends right before its summary turn starts,
+  // sooner than the state can say so.
+  const bindingsRef = useRef(false);
   const versionCounter = useRef(0);
   const blobUrls = useRef<Set<string>>(new Set());
   const mounted = useRef(true);
@@ -601,20 +708,20 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   );
 
   /**
-   * Whether a turn, a theme render, a parse, a binding change, a confirmation
-   * or a library switch is in flight.
+   * Whether a turn, a theme render, a parse, a binding change, a confirmation,
+   * an undo or a library switch is in flight.
    */
-  const busy = useCallback(() => {
-    const current = stateRef.current;
-    return (
+  const busy = useCallback(
+    () =>
       !!abortRef.current ||
       themeRef.current ||
       parseRef.current ||
       confirmRef.current ||
-      current.bindingsBusy ||
-      current.libraryBusy
-    );
-  }, []);
+      undoRef.current ||
+      bindingsRef.current ||
+      stateRef.current.libraryBusy,
+    []
+  );
 
   // Open the session for the page's spec; the library is the URL's at mount
   // time, later switches go through `switchLibrary`. The page remounts this
@@ -694,6 +801,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     async (next: BindingMap, previous: BindingMap) => {
       const sid = stateRef.current.sessionId;
       if (!sid) return;
+      bindingsRef.current = true;
       safeDispatch({ type: 'bindings_start', bindings: next });
       const payload: Binding[] = Object.entries(next).map(([role, column]) => ({ role, column }));
       try {
@@ -706,77 +814,12 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
         });
       } catch (err) {
         safeDispatch({ type: 'bindings_failed', bindings: previous, failure: handleFailure(err) });
+      } finally {
+        bindingsRef.current = false;
       }
     },
     [token, safeDispatch, handleFailure]
   );
-
-  const parseData = useCallback(
-    async (text: string, confirmed = false) => {
-      const sid = stateRef.current.sessionId;
-      if (!sid || !text.trim() || busy()) return;
-      const bytes = utf8Bytes(text);
-      const bucket = sizeBucket(bytes);
-      if (bytes > MAX_DATASET_BYTES) {
-        safeDispatch({ type: 'parse_failed', failure: { code: 'too_long', ref: null } });
-        trackEvent('agent_data_parsed', { status: 'too_long', size_bucket: bucket });
-        return;
-      }
-      parseRef.current = true;
-      safeDispatch({ type: 'parse_start' });
-      try {
-        const parsed = await agentApi.uploadDataset(token, sid, text, confirmed);
-        if (isTranscribed(parsed)) {
-          // Free text read into a table: shown for the user to confirm, not stored.
-          safeDispatch({
-            type: 'transcribed',
-            transcription: {
-              text: parsed.text,
-              preview: parsed.preview,
-              profile: parsed.profile,
-              warnings: parsed.warnings ?? [],
-              note: typeof parsed.note === 'string' ? parsed.note : '',
-              bytes,
-            },
-          });
-          trackEvent('agent_data_parsed', { status: 'transcribed', size_bucket: bucket });
-          return;
-        }
-        safeDispatch({ type: 'parse_done', parsed, bytes });
-        trackEvent('agent_data_parsed', { status: 'ok', size_bucket: bucket });
-        const defaults = toMap(parsed.bindings);
-        // Learn whether the defaults are complete and which required roles
-        // they leave open (the parse stored them already: the PUT is idempotent).
-        await applyBindings(defaults, defaults);
-      } catch (err) {
-        const failure = handleFailure(err);
-        safeDispatch({ type: 'parse_failed', failure });
-        const status = ['too_long', 'unparseable', 'data_refused'].includes(failure.code)
-          ? failure.code
-          : 'error';
-        trackEvent('agent_data_parsed', { status, size_bucket: bucket });
-        if (failure.code === 'data_refused') {
-          trackEvent('agent_guardrail_block', { reason: 'data_refused' });
-        }
-      } finally {
-        parseRef.current = false;
-      }
-    },
-    [token, safeDispatch, handleFailure, trackEvent, applyBindings, busy]
-  );
-
-  /**
-   * `.use()`: store the transcribed table. Its CSV goes through the normal
-   * parse as a confirmed table (the server skips only its free-text fallback),
-   * which stores it, applies the default bindings and reports
-   * `agent_data_parsed{status: ok}`; the parse's start clears the transcription.
-   * While something else is in flight nothing starts and the table stays.
-   */
-  const confirmTranscription = useCallback(() => {
-    const transcription = stateRef.current.transcription;
-    if (!transcription) return Promise.resolve();
-    return parseData(transcription.text, true);
-  }, [parseData]);
 
   /** `.discard()`: drop the transcribed table; nothing was stored, so the server is not asked. */
   const discardTranscription = useCallback(() => {
@@ -828,6 +871,31 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
       safeDispatch({ type: 'confirm_failed', failure: handleFailure(err) });
     } finally {
       confirmRef.current = false;
+    }
+  }, [token, safeDispatch, handleFailure, trackEvent, busy]);
+
+  /**
+   * `.undo()`: the version before the assistant's last change to the data is
+   * the current dataset again, unconfirmed (`POST .../dataset/undo`). Nothing
+   * starts at the paste (version 1), after the server said there is nothing
+   * left to undo, or while anything else is in flight.
+   */
+  const undoData = useCallback(async () => {
+    const current = stateRef.current;
+    const sid = current.sessionId;
+    const version = current.dataset?.parsed.version ?? 1;
+    if (!sid || version <= 1 || current.undoError?.code === 'nothing_to_undo') return;
+    if (current.run || busy()) return;
+    undoRef.current = true;
+    safeDispatch({ type: 'undo_start' });
+    try {
+      const parsed = await agentApi.undoDataset(token, sid);
+      safeDispatch({ type: 'undo_done', parsed });
+      trackEvent('agent_data_undo', { version: countBucket(versionOf(parsed.version)) });
+    } catch (err) {
+      safeDispatch({ type: 'undo_failed', failure: handleFailure(err) });
+    } finally {
+      undoRef.current = false;
     }
   }, [token, safeDispatch, handleFailure, trackEvent, busy]);
 
@@ -997,8 +1065,17 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
           }
           break;
         case 'done':
+          // The assistant changed the data (`prepare_data`): its new version replaces
+          // the preview, and the user checks and confirms it like a paste.
+          if (event.dataset) {
+            safeDispatch({ type: 'data_prepared', dataset: event.dataset });
+            trackEvent('agent_data_prepared', {
+              changes: countBucket(event.dataset.changes.length),
+            });
+          }
           // The root may have changed the bindings during the turn (`set_bindings`),
           // which also drops the server's confirmation: take both as the server has them.
+          // After a data change too, because a binding change may have followed it.
           if (event.bindings !== null || event.dataConfirmed !== null) {
             safeDispatch({
               type: 'server_sync',
@@ -1015,18 +1092,18 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   );
 
   const runTurn = useCallback(
-    async (body: { text: string } | { action: 'create_plot' }) => {
+    async (body: TurnBody) => {
       const current = stateRef.current;
       const sid = current.sessionId;
       if (!sid || current.run || busy()) return;
       const controller = new AbortController();
       abortRef.current = controller;
       stoppedRef.current = false;
-      safeDispatch({ type: 'run_start', kind: 'text' in body ? 'message' : 'create_plot' });
+      safeDispatch({ type: 'run_start', kind: 'text' in body ? 'message' : body.action });
       addItem(
         'text' in body
           ? { kind: 'user', text: body.text }
-          : { kind: 'action', action: 'create_plot', library: current.library }
+          : { kind: 'action', action: body.action, library: current.library }
       );
       let finished = false;
       try {
@@ -1071,6 +1148,88 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     },
     [runTurn]
   );
+
+  // ---------------------------------------------------------------- parse and summary
+
+  /**
+   * `.parse()`: send the pasted text. A table is stored (version 1, unconfirmed),
+   * its default bindings are applied, and the assistant's summary of it follows
+   * as the turn `summarize_data`; the returned promise ends with that turn.
+   * Text that is no table comes back as a transcription to decide on, which
+   * stores nothing and asks for no summary.
+   */
+  const parseData = useCallback(
+    async (text: string, confirmed = false) => {
+      const sid = stateRef.current.sessionId;
+      if (!sid || !text.trim() || busy()) return;
+      const bytes = utf8Bytes(text);
+      const bucket = sizeBucket(bytes);
+      if (bytes > MAX_DATASET_BYTES) {
+        safeDispatch({ type: 'parse_failed', failure: { code: 'too_long', ref: null } });
+        trackEvent('agent_data_parsed', { status: 'too_long', size_bucket: bucket });
+        return;
+      }
+      let stored = false;
+      parseRef.current = true;
+      safeDispatch({ type: 'parse_start' });
+      try {
+        const parsed = await agentApi.uploadDataset(token, sid, text, confirmed);
+        if (isTranscribed(parsed)) {
+          // Free text read into a table: shown for the user to confirm, not stored.
+          safeDispatch({
+            type: 'transcribed',
+            transcription: {
+              text: parsed.text,
+              preview: parsed.preview,
+              profile: parsed.profile,
+              warnings: parsed.warnings ?? [],
+              note: typeof parsed.note === 'string' ? parsed.note : '',
+              bytes,
+            },
+          });
+          trackEvent('agent_data_parsed', { status: 'transcribed', size_bucket: bucket });
+          return;
+        }
+        safeDispatch({ type: 'parse_done', parsed, bytes });
+        trackEvent('agent_data_parsed', { status: 'ok', size_bucket: bucket });
+        stored = true;
+        const defaults = toMap(parsed.bindings);
+        // Learn whether the defaults are complete and which required roles
+        // they leave open (the parse stored them already: the PUT is idempotent).
+        await applyBindings(defaults, defaults);
+      } catch (err) {
+        const failure = handleFailure(err);
+        safeDispatch({ type: 'parse_failed', failure });
+        const status = ['too_long', 'unparseable', 'data_refused'].includes(failure.code)
+          ? failure.code
+          : 'error';
+        trackEvent('agent_data_parsed', { status, size_bucket: bucket });
+        if (failure.code === 'data_refused') {
+          trackEvent('agent_guardrail_block', { reason: 'data_refused' });
+        }
+      } finally {
+        parseRef.current = false;
+      }
+      // The assistant describes the stored data first thing, so the user can
+      // correct it in words before confirming it.
+      if (stored && mounted.current) await runTurn({ action: 'summarize_data' });
+    },
+    [token, safeDispatch, handleFailure, trackEvent, applyBindings, busy, runTurn]
+  );
+
+  /**
+   * `.use()`: store the transcribed table. Its CSV goes through the normal
+   * parse as a confirmed table (the server skips only its free-text fallback),
+   * which stores it, applies the default bindings, reports
+   * `agent_data_parsed{status: ok}` and asks for the summary; the parse's start
+   * clears the transcription. While something else is in flight nothing starts
+   * and the table stays.
+   */
+  const confirmTranscription = useCallback(() => {
+    const transcription = stateRef.current.transcription;
+    if (!transcription) return Promise.resolve();
+    return parseData(transcription.text, true);
+  }, [parseData]);
 
   /**
    * Stop: the cancel route takes a waiting run out of the queue at once and
@@ -1123,6 +1282,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     discardTranscription,
     setBinding,
     confirmData,
+    undoData,
     createPlot,
     sendMessage,
     stop,
@@ -1141,6 +1301,7 @@ export function sessionBusy(state: AgentSessionState): boolean {
     state.parsing ||
     state.bindingsBusy ||
     state.confirmBusy ||
+    state.undoBusy ||
     state.libraryBusy ||
     state.themeBusy
   );

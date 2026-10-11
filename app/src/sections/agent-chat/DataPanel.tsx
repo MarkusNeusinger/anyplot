@@ -20,6 +20,13 @@
  * model's note, and `.parse()` waits until the user decides: `.use()` puts the
  * table's CSV into the text box and stores it through the normal parse,
  * `.discard()` drops it and keeps the pasted text for another try.
+ *
+ * The assistant can change the stored data in step 1 when the user asks it to
+ * in the chat. The preview then shows the new version, and a `# changed` block
+ * above it lists what changed, one line per operation, with `.undo()`, which
+ * restores the version before. After an undo the block says which version is
+ * back and keeps `.undo()` while an earlier one exists. Either way the panel is
+ * back at step 1. A new parse clears the block.
  */
 
 import { useState } from 'react';
@@ -28,6 +35,8 @@ import Box from '@mui/material/Box';
 
 import {
   type AgentSessionState,
+  type DataChange,
+  type Failure,
   sessionBusy,
   type TranscriptionState,
 } from 'src/hooks/useAgentSession';
@@ -192,6 +201,83 @@ function TranscriptionCard({ transcription, canUse, onUse, onDiscard }: Transcri
   );
 }
 
+interface ChangeBlockProps {
+  change: DataChange;
+  canUndo: boolean;
+  undoBusy: boolean;
+  error: Failure | null;
+  onUndo: () => void;
+}
+
+/** What the assistant last changed in the data, or the undo of it, with `.undo()`. */
+function ChangeBlock({ change, canUndo, undoBusy, error, onUndo }: ChangeBlockProps) {
+  return (
+    <Box
+      component="section"
+      aria-labelledby="agent-change-title"
+      data-testid="data-change"
+      sx={{
+        borderLeft: `3px solid ${colors.primary}`,
+        pl: 1.5,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 0.5,
+        minWidth: 0,
+      }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          columnGap: 1,
+          rowGap: 0.5,
+        }}
+      >
+        <Box id="agent-change-title" sx={{ ...labelSx, color: 'var(--ink)' }}>
+          {change.kind === 'changed'
+            ? `# changed · version ${change.version}`
+            : `# undone · back to version ${change.version}`}
+        </Box>
+        <Box
+          component="button"
+          type="button"
+          onClick={onUndo}
+          disabled={!canUndo}
+          aria-describedby="agent-change-title"
+          sx={ghostButtonSx}
+        >
+          {undoBusy ? '.undo() …' : '.undo()'}
+        </Box>
+      </Box>
+      {change.kind === 'changed' && change.changes.length > 0 && (
+        <Box
+          component="ul"
+          sx={{
+            m: 0,
+            pl: 2.5,
+            fontFamily: typography.mono,
+            fontSize: smallText,
+            color: 'var(--ink)',
+            lineHeight: 1.6,
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {change.changes.map((line, index) => (
+            <li key={index}>{line}</li>
+          ))}
+        </Box>
+      )}
+      {error && (
+        <Box role="alert" sx={{ ...bodyTextSx, color: colors.error }}>
+          {describeDataFailure(error.code, error.ref)}
+        </Box>
+      )}
+    </Box>
+  );
+}
+
 /** The step's one action under the bindings: `.confirm()`, then `.create_plot()`. */
 const stepButtonSx = {
   ...actionButtonSx,
@@ -208,6 +294,7 @@ interface DataPanelProps {
   onDiscardTranscription: () => void;
   onBind: (role: string, column: string | null) => void;
   onConfirmData: () => void;
+  onUndo: () => void;
   onCreatePlot: () => void;
 }
 
@@ -218,6 +305,7 @@ export function DataPanel({
   onDiscardTranscription,
   onBind,
   onConfirmData,
+  onUndo,
   onCreatePlot,
 }: DataPanelProps) {
   const [text, setText] = useState('');
@@ -233,6 +321,13 @@ export function DataPanel({
   // A pending transcription blocks both steps: the user decides on the data first.
   const canConfirm = ready && !!dataset && state.bindingsComplete && !busy && !transcription;
   const canCreate = canConfirm && state.dataConfirmed;
+  // An earlier version exists above the paste's 1, until the server says the
+  // history ended (it keeps the last five versions).
+  const canUndo =
+    ready &&
+    !busy &&
+    (dataset?.parsed.version ?? 1) > 1 &&
+    state.undoError?.code !== 'nothing_to_undo';
   const rows = bindingRows(state.roles, state.bindings, columns.length);
 
   // `.use()`: the text box shows the CSV that gets stored, so the user can
@@ -320,6 +415,16 @@ export function DataPanel({
 
       {dataset && (
         <Box sx={{ mt: 2.5, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+          {state.dataChange && (
+            <ChangeBlock
+              change={state.dataChange}
+              canUndo={canUndo}
+              undoBusy={state.undoBusy}
+              error={state.undoError}
+              onUndo={onUndo}
+            />
+          )}
+
           <Box sx={{ ...labelSx, color: 'var(--ink-soft)' }}>
             {dataset.parsed.profile.rows.toLocaleString('en-US')} rows · {columns.length} columns ·{' '}
             {dataset.parsed.profile.source_format}

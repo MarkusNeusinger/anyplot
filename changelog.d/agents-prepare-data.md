@@ -23,7 +23,18 @@
   requests through `/v1` in process with the real model and scores the root's
   `prepare_data` calls by exact operation match, order-insensitive, with an 80 % gate
   (`agents/evals/fixtures/prep/`).
+- **The data panel shows what the assistant changed, with `.undo()`.** After every
+  parse that stores a dataset (a paste, or a transcription's `.use()`) the page asks
+  for the step-1 summary, so the assistant's description of the data is the first
+  turn in the thread, and the composer takes data requests ("read Anteil as numbers",
+  "sum per month") before the confirmation. A turn whose `done` carries a new data
+  version replaces the preview, the profile and the bindings, takes the page back to
+  step 1 and shows a `# changed` block above the preview with one line per operation
+  and `.undo()`, which restores the version before, unconfirmed and without a new
+  summary. Two enum-only analytics events count it, `agent_data_prepared{changes}`
+  and `agent_data_undo{version}`.
 - **The mock BFF plays the data changes.** `app/scripts/agent-bff-mock.mjs` answers
-  `summarize_data` with a scripted summary, plays a `set_type`, an `aggregate` or a
-  `rename` on messages that ask for percentages, grouping or a rename, carries the new
-  version in `done.dataset`, and restores it through the undo route.
+  `summarize_data` with a scripted summary, plays a `set_type`, an `aggregate` (by the
+  column the message names, such as "gruppier nach x") or a `rename` on messages that
+  ask for percentages, grouping or a rename, carries the new version in
+  `done.dataset`, and restores it through the undo route.

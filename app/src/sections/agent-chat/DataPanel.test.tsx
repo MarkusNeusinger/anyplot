@@ -52,6 +52,7 @@ function stateWith(bindings: Record<string, string>, overrides: Partial<AgentSes
         bindings: [],
         warnings: [],
         roles: ROLES,
+        version: 1,
       },
     },
     roles: ROLES,
@@ -97,6 +98,7 @@ describe('DataPanel bindings', () => {
         onDiscardTranscription={vi.fn()}
         onBind={onBind}
         onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
         onCreatePlot={vi.fn()}
       />
     );
@@ -130,6 +132,7 @@ describe('DataPanel bindings', () => {
         onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
         onCreatePlot={vi.fn()}
       />
     );
@@ -148,6 +151,7 @@ describe('DataPanel bindings', () => {
         onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
         onCreatePlot={vi.fn()}
       />
     );
@@ -171,6 +175,7 @@ describe('DataPanel bindings', () => {
         onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
         onCreatePlot={vi.fn()}
       />
     );
@@ -193,6 +198,7 @@ describe('DataPanel steps', () => {
         onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
         onConfirmData={onConfirmData}
+        onUndo={vi.fn()}
         onCreatePlot={onCreatePlot}
       />
     );
@@ -247,6 +253,110 @@ describe('DataPanel steps', () => {
   });
 });
 
+const CHANGES = [
+  "renamed 'Study Hours' to 'Hours'",
+  "dropped 1 row where Tier = 'Gesamt'",
+  'summed Umsatz by Datum (month): 3 rows, 2 other columns dropped',
+];
+
+/** The panel after the assistant changed the data, now at `version`. */
+function changedState(
+  version: number,
+  overrides: Partial<AgentSessionState> = {}
+): AgentSessionState {
+  const base = stateWith({ x: 'month', y1: 'shoes' });
+  const dataset = base.dataset && { ...base.dataset, parsed: { ...base.dataset.parsed, version } };
+  return {
+    ...base,
+    dataset,
+    dataChange: { kind: 'changed', changes: CHANGES, version },
+    ...overrides,
+  };
+}
+
+describe('DataPanel data changes', () => {
+  function renderPanel(state: AgentSessionState) {
+    const onUndo = vi.fn();
+    const panel = (next: AgentSessionState) => (
+      <DataPanel
+        state={next}
+        onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onBind={vi.fn()}
+        onConfirmData={vi.fn()}
+        onUndo={onUndo}
+        onCreatePlot={vi.fn()}
+      />
+    );
+    const view = render(panel(state));
+    return { onUndo, rerender: (next: AgentSessionState) => view.rerender(panel(next)) };
+  }
+
+  it('lists what changed, line by line above the preview, with .undo()', async () => {
+    const { onUndo } = renderPanel(changedState(2));
+    const block = within(screen.getByTestId('data-change'));
+    expect(block.getByText('# changed · version 2')).toBeInTheDocument();
+    expect(block.getAllByRole('listitem').map(item => item.textContent)).toEqual(CHANGES);
+    expect(
+      screen.getByTestId('data-change').compareDocumentPosition(screen.getByText(/^# preview/)) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    const undo = screen.getByRole('button', { name: '.undo()' });
+    expect(undo).toHaveAccessibleDescription('# changed · version 2');
+    await userEvent.click(undo);
+    expect(onUndo).toHaveBeenCalledTimes(1);
+    // The changed data is unconfirmed: the panel is at step 1 again.
+    expect(screen.getByRole('button', { name: '.confirm()' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+  });
+
+  it('names the version an undo brought back and holds .undo() at the paste', () => {
+    const { rerender } = renderPanel(
+      changedState(1, { dataChange: { kind: 'undone', version: 1 } })
+    );
+    const block = within(screen.getByTestId('data-change'));
+    expect(block.getByText('# undone · back to version 1')).toBeInTheDocument();
+    expect(block.queryAllByRole('listitem')).toHaveLength(0);
+    expect(screen.getByRole('button', { name: '.undo()' })).toBeDisabled();
+
+    // Two changes, one undone: the first can still go.
+    rerender(changedState(2, { dataChange: { kind: 'undone', version: 2 } }));
+    expect(screen.getByText('# undone · back to version 2')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '.undo()' })).toBeEnabled();
+  });
+
+  it('holds .undo() back while anything runs and says why an undo was refused', () => {
+    const { rerender } = renderPanel(
+      changedState(2, { run: { kind: 'message', steps: [], queue: null, stopping: false } })
+    );
+    expect(screen.getByRole('button', { name: '.undo()' })).toBeDisabled();
+
+    rerender(changedState(2, { undoBusy: true }));
+    expect(screen.getByRole('button', { name: '.undo() …' })).toBeDisabled();
+
+    // A run in another tab: the undo can be tried again.
+    rerender(changedState(2, { undoError: { code: 'run_active', ref: 'r409' } }));
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'a run is in progress; wait for it to finish · ref r409'
+    );
+    expect(screen.getByRole('button', { name: '.undo()' })).toBeEnabled();
+
+    // The history ended above the paste: nothing left to ask for.
+    rerender(changedState(3, { undoError: { code: 'nothing_to_undo', ref: 'r422' } }));
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'there is no earlier version to go back to · ref r422'
+    );
+    expect(screen.getByRole('button', { name: '.undo()' })).toBeDisabled();
+  });
+
+  it('shows no change block for data as pasted', () => {
+    renderPanel(stateWith({ x: 'month', y1: 'shoes' }));
+    expect(screen.queryByTestId('data-change')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /\.undo\(\)/ })).not.toBeInTheDocument();
+  });
+});
+
 // "Hund 7 Katze 3 und Vogel 4", read by the model into a table.
 const TRANSCRIPTION: TranscriptionState = {
   text: 'animal,count\nHund,7\nKatze,3\nVogel,4\n',
@@ -290,6 +400,7 @@ describe('DataPanel transcription', () => {
         onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
         onCreatePlot={vi.fn()}
       />
     );
@@ -324,6 +435,7 @@ describe('DataPanel transcription', () => {
         onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
         onCreatePlot={vi.fn()}
       />
     );
@@ -343,6 +455,7 @@ describe('DataPanel transcription', () => {
         onDiscardTranscription={onDiscard}
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
         onCreatePlot={vi.fn()}
       />
     );
@@ -367,6 +480,7 @@ describe('DataPanel transcription', () => {
         onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
         onCreatePlot={vi.fn()}
       />
     );
