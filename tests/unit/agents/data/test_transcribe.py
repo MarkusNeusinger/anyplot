@@ -27,6 +27,9 @@ def test_free_text_is_one_column_without_a_delimiter_but_never_json() -> None:
     assert looks_like_free_text(parse_dataset("Hund 7\nKatze 3\nVogel 4\n"))
     assert not looks_like_free_text(parse_dataset("Tier,Anzahl\nHund,7\nKatze,3\n"))
     assert not looks_like_free_text(parse_dataset('[{"Anzahl": 7}, {"Anzahl": 3}]'))
+    # An object of values or a dict literal is `json_pairs`: data, never free text.
+    assert not looks_like_free_text(parse_dataset('{"Hund": 7, "Katze": 3}'))
+    assert not looks_like_free_text(parse_dataset("tiere = {'Hund': 7, 'Katze': 3}"))
 
 
 def test_one_line_prose_is_unparseable_not_free_text() -> None:

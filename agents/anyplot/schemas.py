@@ -69,7 +69,7 @@ ChangeNote = Annotated[str, Field(min_length=1, max_length=MAX_CHANGE_CHARS)]
 DefectText = Annotated[str, Field(min_length=1, max_length=MAX_DEFECT_TEXT_CHARS)]
 
 ColumnDtype = Literal["integer", "number", "datetime", "boolean", "text"]
-SourceFormat = Literal["csv", "tsv", "semicolon", "pipe", "json_records", "json_columns"]
+SourceFormat = Literal["csv", "tsv", "semicolon", "pipe", "json_records", "json_columns", "json_pairs"]
 
 # The reviewer's reduced checklist: the rubric criteria it scores plus AR-09 for clipping.
 DefectId = Literal["VQ-01", "VQ-02", "VQ-03", "VQ-06", "VQ-07", "SC-01", "SC-03", "DQ-03", "AR-09"]
