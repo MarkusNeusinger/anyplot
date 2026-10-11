@@ -1,0 +1,13 @@
+{
+  "dataset_text": "Study Hours,Exam Score\n2,55\n5,70\n8,85\n3,60\n",
+  "message": "plot the parabola y = x squared from -3 to 3 with 50 points",
+  "expected_operations": [
+    {
+      "op": "generate_data",
+      "variables": [{"start": "-3", "stop": "3", "points": 50}],
+      "series": [{"name": "y", "expression": "x**2"}]
+    }
+  ],
+  "locale": "en",
+  "tags": ["generate_data", "formula", "next_version"]
+}

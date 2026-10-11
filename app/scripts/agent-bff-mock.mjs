@@ -43,20 +43,34 @@
  * "umbenenn" or "rename" a `rename` of the second column. Each stores the result as the next dataset version (the previous one
  * kept, at most five, the bindings carried over, the confirmation dropped) and
  * the turn's `done.dataset` carries `{preview, profile, bindings, warnings,
- * changes, version}` like the service; `POST .../dataset/undo` restores the
- * previous version (`422 nothing_to_undo` at the paste).
+ * roles, changes, version}` like the service; `POST .../dataset/undo` restores
+ * the previous version (`422 nothing_to_undo` at the paste).
+ *
+ * The service's `generate_data` tool (a table computed from a formula) in
+ * miniature: a message that contains "sin(" or "cos(" or "x**2", or "= " together
+ * with "pi", "from" or "von", is a formula. A tiny fixed evaluator computes
+ * `sin(x)`, `cos(x)` or `x**2` over 200 evenly spaced points (or the "N points"
+ * the message names) of the range it names ("from -pi to pi", "von -3 bis 3"; by
+ * default -pi to pi, -3 to 3 for the parabola), and the turn's `done.dataset`
+ * carries the result: version 1 in a session without data (the roles included,
+ * since the page has none yet), the next version otherwise, unconfirmed either
+ * way. Pasted text that looks like a formula ("zeichne sin(x) von -pi bis pi",
+ * "y = x**2") answers `422 formula` instead of the transcription, as the
+ * service does, because a model must never compute rows.
  *
  * Scripted behaviour of a chat message:
  * - contains "weather" or "joke": the fixed out-of-scope refusal;
  * - contains "busy": `error {code: capacity}`;
  * - contains "swap": the root's `set_bindings` in miniature, swapping the
  *   columns of `x` and the first `y` (which drops the confirmation), and a reply;
+ * - a formula (see above): `generate_data`, and a reply naming the rows;
  * - contains "prozent"/"percent", "gruppier"/"group" or "umbenenn"/"rename":
  *   a data change, see above, and a reply naming it;
  * - ends with "?": a reply only, no pipeline run;
  * - anything else: a refinement with a repair round, shipped as
  *   `needs_attention`; "dark" in the text renders the dark theme.
- * Pasted data containing "ignore previous" answers `403 data_refused`.
+ * Pasted data containing "ignore previous" answers `403 data_refused`; pasted
+ * text that looks like a formula answers `422 formula`.
  *
  * Environment: PORT (8010), MOCK_STEP_MS (700, per pipeline step),
  * MOCK_QUEUE_MS (2500, per queue position), MOCK_QUEUE (2, the starting
@@ -441,7 +455,8 @@ function parseDataset(text) {
   const columns = header.map((name, index) => {
     const cells = rows.map(row => row[index]);
     const present = cells.filter(cell => cell !== '');
-    const numeric = present.length > 0 && present.every(cell => /^-?\d+(\.\d+)?$/.test(cell));
+    const numeric =
+      present.length > 0 && present.every(cell => /^-?\d+(\.\d+)?(e[+-]?\d+)?$/i.test(cell));
     const integer = numeric && present.every(cell => /^-?\d+$/.test(cell));
     const date =
       !numeric && present.length > 0 && present.every(c => /^\d{4}-\d{2}(-\d{2})?$/.test(c));
@@ -739,6 +754,11 @@ async function streamTurn(req, res, session, body, ref) {
         send('message', { text: summarizeData(session) });
         return;
       }
+      if (asksForFormula(lower)) {
+        await sleep(STEP_MS * 2);
+        send('message', { text: generateData(session, lower) });
+        return;
+      }
       const change = /prozent|percent/.test(lower)
         ? setTypeNumber
         : /gruppier|group/.test(lower)
@@ -932,7 +952,7 @@ function storeVersion(session, parsed, changes) {
   session.complete = checkBindings(session, session.bindings).complete;
   session.confirmed = false; // the user confirms every version they see
   session.version += 1;
-  session.changed = { ...datasetPayload(session), changes };
+  session.changed = { ...datasetPayload(session), roles: SPECS[session.specId].roles, changes };
 }
 
 /** `{preview, profile, bindings, warnings, version}`: a dataset as the routes and `done.dataset` answer it. */
@@ -1040,6 +1060,97 @@ function renameSecond(session, german) {
   const parsed = parseDataset(toCsv(renamed, rows));
   storeVersion(session, parsed, [`renamed '${header[1]}' to '${name}'`]);
   return `I renamed ${header[1]} to ${name}. Check the preview and confirm the data.`;
+}
+
+// ---------------------------------------------------------------- formulas (generate_data in miniature)
+
+/** Whether a chat message asks for a formula: `sin(`, `cos(` or `x**2`, or `= ` with "pi", "from" or "von". */
+function asksForFormula(lower) {
+  return (
+    /\b(?:sin|cos)\(|x\*\*2/.test(lower) ||
+    (lower.includes('= ') && /\bpi\b|\bfrom\b|\bvon\b/.test(lower))
+  );
+}
+
+/**
+ * The dataset route's guard, a short form of the service's `looks_like_formula`: at most
+ * 300 characters on at most three lines, and a function call (`sin(x)`), an assignment
+ * whose right side holds an operator (`y = x**2`), or a range phrase with numbers or pi
+ * next to a pi, a variable `x` or `t`, or a word such as "parabola".
+ */
+function looksLikeFormula(text) {
+  const trimmed = text.trim();
+  const lines = trimmed.split(/\r\n|\r|\n/).filter(line => line.trim());
+  if (!trimmed || trimmed.length > 300 || lines.length > 3) return false;
+  if (/(?<![\w.])(?:sin|cos|tan|exp|log|sqrt|abs)\(/i.test(trimmed)) return true;
+  if (/(?<![\w.])[a-z]\w*\s*=\s*[-(\w][^{}[\]=\n]*(?:\*\*|[*^/+-])/i.test(trimmed)) return true;
+  const range = /\b(?:from|von)\s+[-+]?\s*(?:\d|pi)[^\n]*?\b(?:to|bis)\s+[-+]?\s*(?:\d|pi)/i;
+  const math = /\bpi\b|π|(?<![\w'’.-])[xt](?![\w'’.-])|parab|squared|quadrat|kurve|curve|sinus/i;
+  return range.test(trimmed) && math.test(trimmed);
+}
+
+/** A range end the message names: a number, `pi`, `-pi`, `2 pi` or `2*pi`; null for anything else. */
+function rangeEnd(text) {
+  const match = text.trim().match(/^([+-])?\s*(\d+(?:[.,]\d+)?)?\s*\*?\s*(pi|π)?$/);
+  if (!match || (!match[2] && !match[3])) return null;
+  const number = match[2] ? Number(match[2].replace(',', '.')) : 1;
+  return (match[1] === '-' ? -1 : 1) * number * (match[3] ? Math.PI : 1);
+}
+
+/** A value close to the parser's number text: eight significant digits, `1.0` for a whole one, no `-0.0`. */
+function pyFloat(value) {
+  if (!Number.isFinite(value)) return '';
+  const rounded = Number(value.toPrecision(8));
+  if (rounded === 0) return '0.0';
+  if (Number.isInteger(rounded) && Math.abs(rounded) < 1e16) return rounded.toFixed(1);
+  return String(rounded).replace(/e([+-])(\d)$/, 'e$10$2'); // Python writes 1e-07 where JS writes 1e-7
+}
+
+/**
+ * `generate_data` in miniature: `sin(x)`, `cos(x)` or `x**2` over the range the message
+ * names, stored as version 1 in a session without data (default bindings, no history) or
+ * as the next version (`storeVersion`), unconfirmed either way, like the service.
+ */
+function generateData(session, lower) {
+  const [formula, f, defaultStart, defaultStop] = lower.includes('cos(')
+    ? ['cos(x)', Math.cos, -Math.PI, Math.PI]
+    : lower.includes('sin(')
+      ? ['sin(x)', Math.sin, -Math.PI, Math.PI]
+      : ['x**2', x => x * x, -3, 3];
+  let [start, stop] = [defaultStart, defaultStop];
+  const range = lower.match(
+    /\b(?:from|von)\s+(.+?)\s+(?:to|bis)\s+([-+]?\s*[\d.,]*\s*\*?\s*(?:pi|π)?)(?![\w.])/
+  );
+  if (range) {
+    const [a, b] = [rangeEnd(range[1]), rangeEnd(range[2])];
+    if (a !== null && b !== null && a !== b) [start, stop] = [a, b];
+  }
+  const named = lower.match(/(\d+)\s*(?:points|punkte)/);
+  const points = named ? Math.min(Math.max(Number(named[1]), 2), 5000) : 200;
+  const rows = Array.from({ length: points }, (_, i) => {
+    const x = i === points - 1 ? stop : start + ((stop - start) * i) / (points - 1);
+    return [pyFloat(x), pyFloat(f(x))];
+  });
+  const parsed = parseDataset(toCsv(['x', 'y'], rows));
+  const short = value => String(Number(value.toPrecision(5)));
+  const span = `x from ${short(start)} to ${short(stop)}`;
+  const changes = [`generated ${points} rows: ${span}, y = ${formula}`];
+  const first = !session.dataset;
+  if (first) {
+    session.dataset = parsed;
+    session.bindings = defaultBindings(session, parsed.profile);
+    session.complete = checkBindings(session, session.bindings).complete;
+    session.confirmed = false;
+    session.history = [];
+    session.version = 1;
+    session.changed = { ...datasetPayload(session), roles: SPECS[session.specId].roles, changes };
+  } else {
+    storeVersion(session, parsed, changes);
+  }
+  const undo = first
+    ? ''
+    : ' as a new version of your data; .undo() in the data panel takes it back';
+  return `I generated ${points} rows from y = ${formula} for ${span}${undo}. Check the preview and confirm the data.`;
 }
 
 /** The step-1 summary the root writes after `summarize_data`, from the profile alone. */
@@ -1248,6 +1359,9 @@ async function route(req, res) {
     try {
       parsed = parseDataset(text);
     } catch {
+      // A formula ("zeichne sin(x) von -pi bis pi") is never transcribed: a model would compute
+      // its rows. The service answers 422 formula; the page points to the chat's generate_data.
+      if (looksLikeFormula(text)) return fail(res, 422, 'formula', ref);
       // Free text (no delimiter, "Hund 7 Katze 3 und Vogel 4"): the real service has a model read
       // it into a table and answers it unstored, for the user to confirm. The mock pairs each
       // word with the number after it.

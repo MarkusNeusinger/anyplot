@@ -887,10 +887,13 @@ def validation_lines(exc: ValidationError, *, prefix: str = "") -> list[str]:
 
     `prefix` names the validated value when the error locations start below it (a
     `TypeAdapter` of the list starts at the index). The model's input is never echoed
-    back, only the location and Pydantic's message.
+    back, only the location and Pydantic's message; an error of the whole model (such
+    as `generate.Generate`'s distinct names) has no location and is the message alone.
     """
     lines: list[str] = []
     for error in exc.errors()[:MAX_VALIDATION_LINES]:
         location = "".join(f"[{part}]" if isinstance(part, int) else f".{part}" for part in error.get("loc", ()))
-        lines.append(f"{(prefix + location).lstrip('.')}: {error.get('msg', 'invalid')}")
+        where = (prefix + location).lstrip(".")
+        message = error.get("msg", "invalid")
+        lines.append(f"{where}: {message}" if where else message)
     return lines

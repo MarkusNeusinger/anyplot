@@ -1867,7 +1867,8 @@ async def test_a_prepare_data_turn_carries_the_new_dataset_version_in_done(
     name, done = events[-1]
     assert name == "done" and done["data_confirmed"] is False
     dataset = done["dataset"]
-    assert set(dataset) == {"preview", "profile", "bindings", "warnings", "changes", "version"}
+    assert set(dataset) == {"preview", "profile", "bindings", "warnings", "roles", "changes", "version"}
+    assert [role["name"] for role in dataset["roles"]] == ["x", "y"]  # the dataset route's shape, roles included
     assert dataset["version"] == 2 and dataset["changes"] == ["renamed 'Study Hours' to 'Hours'"]
     assert [column["name"] for column in dataset["profile"]["columns"]] == ["Student", "Hours", "Exam Score"]
     assert dataset["profile"]["rows"] == 24
@@ -2074,6 +2075,183 @@ async def test_prepare_data_refuses_without_a_dataset_during_a_run_and_bad_opera
     assert done["status"] == "ok" and (done["rows"], done["columns"], done["version"]) == (24, 3, 2)
     assert context.state[DATASET_VERSION] == 2 and len(services.datasets) == 2
     assert ledger_for("inv-prep-2").dataset_changes == ["renamed 'Study Hours' to 'Hours'"]
+
+
+def generate_call(*series: tuple[str, str], variables: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    return {
+        "call": "generate_data",
+        "args": {
+            "variables": variables or [{"start": "-pi", "stop": "pi"}],
+            "series": [{"name": name, "expression": expression} for name, expression in series],
+        },
+    }
+
+
+SINE_LINE = "generated 200 rows: x from -3.1416 to 3.1416, y = sin(x)"
+GENERATED_PLAN: dict[str, Any] = {
+    **SCATTER_PLAN,
+    "edits": [
+        {
+            **SCATTER_PLAN["edits"][0],
+            "replace": (
+                "df = load_user_data()\n"
+                'study_hours = df["x"].to_numpy(dtype=float)\n'
+                'exam_scores = df["y"].to_numpy(dtype=float)\n'
+            ),
+        },
+        *SCATTER_PLAN["edits"][1:],
+    ],
+}
+
+
+async def test_generate_data_without_data_stores_version_1_and_the_plot_uses_it(
+    client: httpx.AsyncClient, swap_models, services: Services
+) -> None:
+    """A formula is a step-1 data source: version 1 with its roles in `done`, confirmed like a paste, then plotted."""
+    script = default_script(plans=[GENERATED_PLAN])
+    script["root"] = [
+        generate_call(("y", "sin(x)")),
+        {"text": "I generated 200 rows from sin(x); check the preview and confirm."},
+        *script["root"],
+    ]
+    fake = swap_models("anthropic-vertex", script)
+    sid = await open_session(client, with_data=False)
+
+    response = await client.post(
+        f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "zeichne sin(x) von -pi bis pi"}
+    )
+    name, done = parse_sse(response.text)[-1]
+
+    assert name == "done" and done["data_confirmed"] is False
+    dataset = done["dataset"]
+    assert set(dataset) == {"preview", "profile", "bindings", "warnings", "roles", "changes", "version"}
+    assert dataset["version"] == 1 and dataset["changes"] == [SINE_LINE]
+    assert [(column["name"], column["dtype"]) for column in dataset["profile"]["columns"]] == [
+        ("x", "number"),
+        ("y", "number"),
+    ]
+    assert dataset["profile"]["rows"] == 200 and dataset["preview"][0] == ["-3.1415927", "-1.2246468e-16"]
+    assert dataset["bindings"] == [{"role": "x", "column": "x"}, {"role": "y", "column": "y"}]
+    # The page learns the spec's roles only from a dataset answer: a first dataset made in the chat carries them.
+    assert [role["name"] for role in dataset["roles"]] == ["x", "y"]
+    second_call = json.dumps(fake.calls[1]["messages"])
+    assert "<tool_notes>" in second_call and SINE_LINE in second_call and "<user_data>" in second_call
+    view = read_session(await _session_state(client, sid))
+    assert view is not None and view.dataset_version == 1 and view.dataset_history == [] and not view.data_confirmed
+    nothing = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+    assert (nothing.status_code, nothing.json()) == (422, {"detail": "nothing_to_undo"})
+
+    confirmed = await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)
+    assert confirmed.json() == {"confirmed": True, "rows": 200, "columns": 2}
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+    assert plot["status"] == "ok"
+    data = await client.get(f"/v1/sessions/{sid}/artifacts/data.csv", headers=HEADERS)
+    stored = services.datasets.get(view.dataset_id or "", sid)
+    assert stored is not None and data.text == stored.csv and data.text.startswith("x,y\n-3.1415927,")
+    code = await client.get(f"/v1/sessions/{sid}/artifacts/plot.py", headers=HEADERS)
+    assert 'df = pd.read_csv("data.csv"' in code.text and 'df["x"]' in code.text
+
+
+async def test_generate_data_on_a_paste_is_the_next_version_and_undo_restores_the_paste(
+    client: httpx.AsyncClient, swap_models, services: Services
+) -> None:
+    script = default_script()
+    script["root"] = [
+        generate_call(("y", "log(x)"), variables=[{"start": "-1", "stop": "1", "points": 5}]),
+        {"text": "I generated a new version from log(x); three values are undefined."},
+    ]
+    swap_models("anthropic-vertex", script)
+    sid = await open_session(client)  # a paste, confirmed by the helper
+    first = read_session(await _session_state(client, sid))
+    assert first is not None and first.dataset_id
+
+    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "plot log(x)"})
+    done = parse_sse(response.text)[-1][1]
+
+    assert done["data_confirmed"] is False and done["dataset"]["version"] == 2
+    assert done["dataset"]["changes"] == [
+        "generated 5 rows: x from -1 to 1, y = log(x)",
+        "y: 3 of 5 values are undefined and left empty",
+    ]
+    # No pasted column survives, so every role gets the default for the generated columns.
+    assert done["dataset"]["bindings"] == [{"role": "x", "column": "x"}, {"role": "y", "column": "y"}]
+    view = read_session(await _session_state(client, sid))
+    assert view is not None and view.dataset_history == [first.dataset_id] and view.dataset_version == 2
+    undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+    assert undone.status_code == 200 and undone.json()["version"] == 1
+    assert undone.json()["bindings"] == [{"role": "x", "column": "Study Hours"}, {"role": "y", "column": "Exam Score"}]
+    assert len(services.datasets) == 1
+
+
+async def test_generate_data_refuses_during_a_run_bad_arguments_and_formulas_it_cannot_compute(
+    client: httpx.AsyncClient, services: Services
+) -> None:
+    """The tool itself, called as ADK would call it: every refusal names what was wrong, fenced as data."""
+    from types import SimpleNamespace
+
+    from agents.anyplot.plugins.ledger import ledger_for
+    from agents.anyplot.session_state import DATASET_ID, DATASET_VERSION
+    from agents.anyplot.tools.session import generate_data
+
+    sid = await open_session(client, with_data=False)
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    context.invocation_id = "inv-gen-1"
+    variables = [{"start": "-pi", "stop": "pi"}]
+    sine = [{"name": "y", "expression": "sin(x)"}]
+
+    ledger_for("inv-gen-1").pipeline_active = True
+    assert await generate_data(variables, sine, context) == {"status": "error", "code": "run_active"}
+    ledger_for("inv-gen-1").pipeline_active = False
+
+    bad = await generate_data([], [{"name": "y", "expression": "sin(x)"}, {"name": "y", "expression": "x"}], context)
+    assert bad["code"] == "invalid_arguments" and "<user_data>" in bad["errors"] and "variables:" in bad["errors"]
+    named = await generate_data(variables, [{"name": "x", "expression": "x"}], context)
+    assert "variable and series names must be distinct" in named["errors"]
+    caret = await generate_data(variables, [{"name": "y", "expression": "x ^ 2"}], context)
+    assert caret["code"] == "invalid_expression" and "'^' is not a power; write x**2" in caret["message"]
+    assert "<user_data>" in caret["message"]
+    grid = [{"name": "x", "start": "0", "stop": "1"}, {"name": "t", "start": "0", "stop": "1"}]
+    too_many = await generate_data(grid, [{"name": "z", "expression": "x*t"}], context)
+    assert too_many["code"] == "too_many_points"
+    assert DATASET_ID not in context.state and len(services.datasets) == 0  # nothing stored by a refusal
+
+    done = await generate_data(variables, sine, context)
+    assert done["status"] == "ok" and (done["rows"], done["columns"], done["version"]) == (200, 2, 1)
+    assert set(done) == {"status", "rows", "columns", "version", "changes", "profile"}
+    assert context.state[DATASET_VERSION] == 1 and len(services.datasets) == 1
+    assert ledger_for("inv-gen-1").dataset_changes == [SINE_LINE]
+
+
+async def test_a_formula_in_the_data_field_is_refused_and_never_transcribed(
+    client: httpx.AsyncClient, judge, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A model must not compute rows: formula-like text gets `422 formula`; free text and literals keep their paths."""
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    sid = await open_session(client, with_data=False)
+
+    for text in (
+        "zeichne sin(x) von -pi bis pi",  # no table: the transcriber's path before
+        "y = x**2 from -3 to 3",
+        "y = (x+1)**2",  # an assignment that is no literal: the parser's `unparseable`
+        "x squared from -3 to 3\nfor 50 points",  # one column of two lines: the free-text fallback
+    ):
+        refused = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": text})
+        assert (refused.status_code, refused.json()) == (422, {"detail": "formula"}), text
+    assert judge.transcribe_calls == [] and judge.calls == []
+    assert [line["outcome"] for line in attribution_lines(caplog, "data_transcribe")] == ["formula"] * 4
+
+    judge.transcriptions = [
+        _reading(["Tier", "Anzahl"], [["Hund", "7"], ["Katze", "3"], ["Vogel", "4"]]),
+        _reading(["Tag", "Umsatz"], [["Mo", "10"], ["Fr", "12"]]),
+    ]
+    for text in ("Hund 7 Katze 3 und Vogel 4", "Umsatz from Monday to Friday: Mo 10, Fr 12"):
+        read = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": text})
+        assert read.status_code == 200 and read.json()["transcribed"] is True, text
+    literal = await client.post(
+        f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": 'cat_day = {"Mo": 3, "Di": 5}'}
+    )
+    assert literal.status_code == 200 and "transcribed" not in literal.json()
+    assert literal.json()["profile"]["rows"] == 2 and len(judge.transcribe_calls) == 2
 
 
 async def test_a_dataset_with_personal_data_is_stored(client: httpx.AsyncClient, judge) -> None:

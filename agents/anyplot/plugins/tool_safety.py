@@ -1,11 +1,12 @@
 """ToolSafety: which agent may call which tool, with which arguments, and what comes back.
 
-* `before_tool_callback`: a per-agent allowlist (the root's six session tools; none
+* `before_tool_callback`: a per-agent allowlist (the root's seven session tools; none
   for the adapters and the reviewer); Pydantic validation of the arguments (ADK
   leaves `FUNCTION_TOOL_ARG_VALIDATION` off; `prepare_data` takes at most five
-  operations of the `Operation` union, and its `invalid_arguments` refusal carries
-  the validation lines fenced as `errors`, like the tool's own `invalid_operations`,
-  so the model can fix the one field that was wrong); no link (a scheme such as
+  operations of the `Operation` union and `generate_data` the `generate.Generate`
+  spec, and the `invalid_arguments` refusal of either carries the validation lines
+  fenced as `errors`, like the tools' own refusals, so the model can fix the one
+  field that was wrong); no link (a scheme such as
   `https://` or `data:image`, or `www.`) or file path in any string argument, as link
   hygiene; at most one `plot_pipeline` call per invocation (the "one repair round"
   bound).
@@ -18,10 +19,11 @@
   and a name becomes a column header, neither is resolved, fetched or run, and both
   may legitimately hold what the user's own table holds, such as a web address in a
   payee column to drop or a column renamed to one. A column reference (`column`,
-  `columns`, `by`, `index`, ...) and the new names of a pivot stay under the rule.
+  `columns`, `by`, `index`, ...) and the new names of a pivot stay under the rule, and
+  so does every string of `generate_data`: its names and expressions never need a link.
 * `after_tool_callback`: a key allowlist per tool and a size cap of 8 KB (24 KB for
-  `get_current_code`, 16 KB for `get_dataset_profile`, `prepare_data` and
-  `plot_pipeline`); a result outside them becomes an error. The `plot_pipeline` result
+  `get_current_code`, 16 KB for `get_dataset_profile`, `prepare_data`,
+  `generate_data` and `plot_pipeline`); a result outside them becomes an error. The `plot_pipeline` result
   reaches the root with its model-written `changes` and `residual_defects` fenced as
   `<tool_notes>` under `notes`.
 * `on_tool_error_callback`: any exception becomes `{"status": "error", "code": ...}`
@@ -40,6 +42,7 @@ from google.adk.tools.base_tool import BaseTool
 from google.adk.tools.tool_context import ToolContext
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from ..data.generate import Generate
 from ..data.prepare import MAX_OPERATIONS, Operation, validation_lines
 from ..policy import DATA_PREAMBLE, fence
 from ..schemas import MAX_COLUMNS, Binding, PipelineArgs, PlotResult
@@ -51,6 +54,7 @@ logger = logging.getLogger(__name__)
 ROOT_AGENT = "anyplot"
 PIPELINE_TOOL = "plot_pipeline"
 PREPARE_TOOL = "prepare_data"
+GENERATE_TOOL = "generate_data"
 MAX_RESULT_BYTES = 8 * 1024
 MAX_CODE_RESULT_BYTES = 24 * 1024
 RESULT_LIMITS: dict[str, int] = {
@@ -59,6 +63,8 @@ RESULT_LIMITS: dict[str, int] = {
     "get_dataset_profile": 16 * 1024,
     # The new profile, trimmed like get_dataset_profile's, plus five change lines of at most 300 characters.
     PREPARE_TOOL: 16 * 1024,
+    # The profile of at most 12 columns, the change line and one warning per series.
+    GENERATE_TOOL: 16 * 1024,
     # A PlotResult at its schema maximum (16 lines of 640, 5 changes of 200) is about 12 KB.
     PIPELINE_TOOL: 16 * 1024,
 }
@@ -100,29 +106,23 @@ ARGUMENTS: dict[str, type[BaseModel]] = {
     "get_current_code": _VersionArgs,
     "set_bindings": _BindingArgs,
     PREPARE_TOOL: _PrepareArgs,
+    GENERATE_TOOL: Generate,
     PIPELINE_TOOL: PipelineArgs,
 }
+ARGUMENT_ERROR_TOOLS = frozenset({PREPARE_TOOL, GENERATE_TOOL})
+"""The tools whose `invalid_arguments` refusal carries the validation lines: arguments the model assembles field by field."""
 ALLOWED_TOOLS: dict[str, frozenset[str]] = {ROOT_AGENT: frozenset(ARGUMENTS)}
+_DATA_VERSION_KEYS = frozenset(
+    {"status", "reason", "code", "message", "errors", "rows", "columns", "version", "changes", "profile", "truncated"}
+)
+"""The keys of a tool result that stores the next dataset version (`prepare_data`, `generate_data`)."""
 RESULT_KEYS: dict[str, frozenset[str]] = {
     "get_dataset_profile": frozenset({"status", "reason", "code", "rows", "profile", "truncated"}),
     "get_spec_brief": frozenset({"status", "code", "brief"}),
     "get_current_code": frozenset({"status", "code", "version"}),
     "set_bindings": frozenset({"status", "reason", "code", "complete", "missing_roles", "errors"}),
-    PREPARE_TOOL: frozenset(
-        {
-            "status",
-            "reason",
-            "code",
-            "message",
-            "errors",
-            "rows",
-            "columns",
-            "version",
-            "changes",
-            "profile",
-            "truncated",
-        }
-    ),
+    PREPARE_TOOL: _DATA_VERSION_KEYS,
+    GENERATE_TOOL: _DATA_VERSION_KEYS,
     # Every PlotResult field, so a field added to the schema (as `version` was) can never turn a
     # shipped plot into `invalid_result` for the root, plus the tool-error shape.
     PIPELINE_TOOL: frozenset(PlotResult.model_fields) | frozenset({"code", "result", "error"}),
@@ -173,10 +173,10 @@ def has_url_or_path(arguments: dict[str, Any], skip: frozenset[str] = frozenset(
     return any(_URL_OR_PATH.search(text) for text in _strings(arguments, skip))
 
 
-def prepare_argument_errors(arguments: dict[str, Any]) -> str:
-    """The validation lines of a refused `prepare_data` call, fenced: they quote the model's own values."""
+def argument_errors(tool_name: str, arguments: dict[str, Any]) -> str:
+    """The validation lines of a refused `prepare_data` or `generate_data` call, fenced: they quote the model's own values."""
     try:
-        _PrepareArgs.model_validate(arguments)
+        ARGUMENTS[tool_name].model_validate(arguments)
     except ValidationError as exc:
         lines = validation_lines(exc)
     else:
@@ -217,8 +217,8 @@ class ToolSafetyPlugin(BasePlugin):
             if verdict is None:
                 return None
             refusal = tool_error(verdict)
-            if verdict == "invalid_arguments" and tool.name == PREPARE_TOOL:
-                refusal["errors"] = prepare_argument_errors(tool_args)
+            if verdict == "invalid_arguments" and tool.name in ARGUMENT_ERROR_TOOLS:
+                refusal["errors"] = argument_errors(tool.name, tool_args)
             return refusal
         except Exception as exc:
             logger.warning("tool check failed: %s", type(exc).__name__)

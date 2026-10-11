@@ -65,6 +65,13 @@ class TestCaseFile:
         # a note the user keeps on their own plot ("pay ... by 31 May") is no call to action to other people
         assert any("personal_reminder" in item.tags and "pay" in item.text for item in cases)
 
+    def test_a_formula_to_draw_is_in_scope(self) -> None:
+        """A function or curve is computed by `generate_data`, never fetched: in scope, never `needs_data`."""
+        cases = [item for item in load_cases(DEFAULT_CASES) if "formula" in item.tags]
+
+        assert Counter(item.lang for item in cases) == {"en": 3, "de": 3}
+        assert all(item.expected == "in_scope" and item.group == "inscope" for item in cases)
+
     def test_multi_turn_cases_carry_their_turns(self) -> None:
         cases = [item for item in load_cases(DEFAULT_CASES) if "multi_turn" in item.tags]
 

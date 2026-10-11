@@ -93,7 +93,8 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
     "refusal": frozenset({"code", "text"}),
     "error": frozenset({"code", "ref"}),
     # `bindings` and `data_confirmed` sync the page after a turn in which the root changed the bindings;
-    # `dataset` carries the new data version after a turn in which the root's `prepare_data` changed the data.
+    # `dataset` carries the new data version after a turn in which the root's `prepare_data` or
+    # `generate_data` changed the data (version 1 when `generate_data` made the session's first data).
     "done": frozenset({"llm_calls", "tokens", "bindings", "data_confirmed", "dataset"}),
 }
 _ERROR_CODES = frozenset({"capacity", "deadline", "guard_unavailable", "upstream", "internal"})
@@ -102,8 +103,8 @@ _MAX_BINDING_ERROR_CHARS = 300
 _MAX_EVENT_CHARS = 64 * 1024
 _MAX_DONE_EVENT_CHARS = 512 * 1024
 """The cap of a `done` event: after a turn in which the assistant changed the data it carries
-`dataset` (20 preview rows, the profile of up to 50 columns, the bindings and the change
-lines), which at every schema maximum is about 300,000 characters. The agents service proves
+`dataset` (20 preview rows, the profile of up to 50 columns, the bindings, the change lines
+and up to 50 spec roles), which at every schema maximum is about 393,000 characters. The agents service proves
 that its largest `done` fits (`agents/stream.py`, `MAX_DONE_EVENT_CHARS`, the same number;
 copied, because the API image does not ship the agents package)."""
 _QUEUED_STEP = "queued"
@@ -120,6 +121,7 @@ _UPSTREAM_CODES = frozenset(
         "run_active",
         "too_long",
         "unparseable",
+        "formula",
         "data_refused",
         "session_expired",
         "guard_unavailable",
@@ -765,7 +767,8 @@ async def switch_library(
 async def upload_dataset(sid: SessionId, body: DatasetBody, ctx: Ctx, client: Client) -> Any:
     """Parse pasted data: `{preview, profile, bindings, warnings, roles}`, stored; or, for free text the
     parser cannot read, the agents service's `{transcribed, text, preview, profile, warnings, note}`, a
-    model's reading that the page shows for confirmation and nothing stored. 413 above 200 KB of UTF-8."""
+    model's reading that the page shows for confirmation and nothing stored. 413 above 200 KB of UTF-8;
+    `422 formula` for text that asks for a formula, which the assistant computes in the chat instead."""
     if len(body.text.encode("utf-8")) > MAX_DATASET_BYTES:
         raise AgentHTTPError(413, "too_long", ctx.request_id)
     payload: dict[str, Any] = {"text": body.text}

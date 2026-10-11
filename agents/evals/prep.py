@@ -1,31 +1,38 @@
-"""Live prep eval: the root's `prepare_data` choices on short data requests, through `/v1` in process with the real model.
+"""Live prep eval: the root's step-1 data choices on short requests, through `/v1` in process with the real model.
 
 Run it with the models from the settings (Claude Haiku 5.5 on Vertex AI `eu` by default):
 
     uv run --extra agents python -m agents.evals.prep
     uv run --extra agents python -m agents.evals.prep --provider gemini
 
-Each case of `fixtures/prep/<id>.json` (`dataset_text`, `message`, `expected_operations`,
-`locale`, and optionally `spec_id`, `library`, `tags`) opens a session on
+Each case of `fixtures/prep/<id>.json` (`message`, `expected_operations`, `locale`, and
+optionally `dataset_text`, `spec_id`, `library`, `tags`) opens a session on
 `agents.main:app` through httpx's `ASGITransport`, as the matrix harness does, posts
-the dataset (the dataset judge runs for real), sends the message as a free-text turn
-(the scope judge, then the root with its tools) and reads the `prepare_data` calls the
-root made from the session's events. The pipeline never runs: no case confirms the
-data or asks for a plot, so no render and no adapter call happens.
+the dataset when the case has one (the dataset judge runs for real), sends the message
+as a free-text turn (the scope judge, then the root with its tools) and reads the
+`prepare_data` and `generate_data` calls the root made from the session's events. The
+pipeline never runs: no case confirms the data or asks for a plot, so no render and no
+adapter call happens.
 
-Scoring is exact operation match, order-insensitive, and every `prepare_data` call of
-the turn must have succeeded: the operations are applied in order, so a list the data
-refuses (a column named before its rename, a type its cells cannot take) is a miss
-however it reads (`failed_calls`). The operations of every `prepare_data` call of the
-turn are taken together (one call with two operations and two calls with one each are
-the same) and each is normalised through the `Operation`
+Scoring is exact operation match, order-insensitive, and every `prepare_data` and
+`generate_data` call of the turn must have succeeded: the operations are applied in
+order, so a list the data refuses (a column named before its rename, a type its cells
+cannot take) is a miss however it reads, and so is a formula the server cannot compute
+(`failed_calls`). The operations of every `prepare_data` call of the turn are taken
+together (one call with two operations and two calls with one each are the same) and
+each is normalised through the `Operation`
 models (`canonical_operations`): a default the model left out and one it wrote are
 the same, a `set_type` `decimal` equal to the dataset's own counts as left out, and
 the column list of `drop_columns` and `pivot_longer` and the conditions of
-`drop_rows` are sets. A case with `expected_operations: []` passes when the root made
-no `prepare_data` call: a scope refusal and a plain reply both pass, and the report
-lists every tool call and the refusal, so a false refusal stays visible. The gate is
-`--min-exact` (80 percent) of the answered cases.
+`drop_rows` are sets. A `generate_data` call is one item `{"op": "generate_data",
+"variables": [...], "series": [...]}`, normalised through the `generate.Generate` model
+the same way: defaults left out (a variable named `x`, 200 points), the whitespace of
+every expression and endpoint removed (`x ** 2` is `x**2`), the series a set; the
+variables keep their order, which decides the grid's. A case with
+`expected_operations: []` passes when the root made no data call: a scope refusal and
+a plain reply both pass, and the report lists every tool call and the refusal, so a
+false refusal stays visible. The gate is `--min-exact` (80 percent) of the answered
+cases.
 
 A case is `unavailable` when its dataset could not be stored (`503 guard_unavailable`)
 or its turn ended with an `error` event (the judge down, `capacity`); it counts in no
@@ -37,16 +44,16 @@ A case makes about five model calls: the dataset judge, the scope judge, and the
 two or three times (a profile read, the tool call, the reply). Under the 30 requests
 per minute Vertex quota for Claude Haiku in `eu` (see `scope.py`), `--calls-per-minute`
 (25 by default) spaces the starts of the cases `CALLS_PER_CASE` times further apart
-than the scope eval spaces its judge calls: 12 seconds at the default, so 16 cases
-take about 3 minutes; the cases run one at a time. The cost is the list price of
+than the scope eval spaces its judge calls: 12 seconds at the default, so 21 cases
+take about 4 minutes; the cases run one at a time. The cost is the list price of
 every call the attribution log booked (`pricing.call_cost`, `pricing.judge_cost`).
 
 It writes `<out>/<date>-prep-<model>.json` (the stamp, the gates, the summary, every
 case's canonical expected and found operations, its tool calls, refusal, cost and
 latency; never a dataset or a message, which stay in the fixtures) and prints a table.
 The exit code is 0 when the gate holds, 1 when it does not, 2 for a setup error (a
-fixture that does not load or whose expected operations fail the `Operation` models,
-an unpriced model) and 4 for an outage.
+fixture that does not load or whose expected operations fail the `Operation` or
+`Generate` models, an unpriced model) and 4 for an outage.
 """
 
 from __future__ import annotations
@@ -100,6 +107,9 @@ DEFAULT_MIN_EXACT = 0.8
 DEFAULT_MAX_UNAVAILABLE = 0.1
 EXIT_OK, EXIT_FAILED, EXIT_SETUP, EXIT_OUTAGE = 0, 1, 2, 4
 PREPARE_TOOL = "prepare_data"
+GENERATE_TOOL = "generate_data"
+DATA_TOOLS = frozenset({PREPARE_TOOL, GENERATE_TOOL})
+"""The root's tools that store a dataset version; every call of them in a turn must succeed."""
 SET_OPERATIONS: dict[str, str] = {"drop_columns": "columns", "pivot_longer": "columns", "drop_rows": "where"}
 """Per operation, the list field whose order carries no meaning (compared as a set)."""
 
@@ -109,12 +119,13 @@ class SetupError(Exception):
 
 
 class PrepCase(BaseModel):
-    """One data request on one small dataset, with the operations the root should choose."""
+    """One data request, on one small dataset or none, with the operations the root should choose."""
 
     model_config = ConfigDict(extra="forbid")
 
     id: str = Field(pattern=r"^[a-z0-9-]{1,64}$")
-    dataset_text: str = Field(min_length=1, max_length=MAX_DATASET_CHARS)
+    dataset_text: str | None = Field(default=None, min_length=1, max_length=MAX_DATASET_CHARS)
+    """Posted before the message; a formula case may leave it out (`generate_data` makes the first data)."""
     message: str = Field(min_length=1, max_length=MAX_MESSAGE_CHARS)
     expected_operations: list[dict[str, Any]]
     locale: str = Field(pattern=r"^[a-z]{2}$")
@@ -139,17 +150,21 @@ def load_cases(directory: Path) -> list[PrepCase]:
 
 
 def canonical_operations(operations: Sequence[dict[str, Any]], decimal: str) -> list[str]:
-    """The operations as sorted JSON lines after the `Operation` models and the order-free normalisations.
+    """The operations as sorted JSON lines after the `Operation` and `Generate` models and the order-free normalisations.
 
-    Raises `ValidationError` for an operation the models refuse (a fixture's expectation
-    is checked this way at setup; the root's own calls were checked by ToolSafety already).
+    An item with `"op": "generate_data"` is one `generate_data` call (`canonical_generate`);
+    every other item is a `prepare_data` operation. Raises `ValidationError` for an item
+    the models refuse (a fixture's expectation is checked this way at setup; the root's
+    own calls were checked by ToolSafety already).
     """
     from pydantic import TypeAdapter
 
     from agents.anyplot.data.prepare import Operation
 
-    lines = []
-    for operation in TypeAdapter(list[Operation]).validate_python(list(operations)):
+    generated = [item for item in operations if isinstance(item, dict) and item.get("op") == GENERATE_TOOL]
+    prepared = [item for item in operations if not (isinstance(item, dict) and item.get("op") == GENERATE_TOOL)]
+    lines = [canonical_generate(item) for item in generated]
+    for operation in TypeAdapter(list[Operation]).validate_python(prepared):
         data = operation.model_dump(exclude_none=True)
         if data["op"] == "set_type" and data.get("decimal") == decimal:
             data.pop("decimal")
@@ -161,10 +176,39 @@ def canonical_operations(operations: Sequence[dict[str, Any]], decimal: str) -> 
     return sorted(lines)
 
 
+def canonical_generate(item: dict[str, Any]) -> str:
+    """One `generate_data` call as a JSON line: after the `Generate` model, defaults left out, whitespace removed.
+
+    The whitespace of an expression or an endpoint carries no meaning (`x ** 2` is
+    `x**2`); the series are a set, sorted by name; the variables keep their order. A
+    JSON number as an endpoint is its text, as the model reads it. Raises `ValidationError`.
+    """
+    from agents.anyplot.data.generate import Generate
+
+    spec = Generate.model_validate({key: value for key, value in item.items() if key != "op"})
+    data = spec.model_dump(exclude_defaults=True)
+    for variable in data["variables"]:
+        for key in ("start", "stop"):
+            variable[key] = "".join(variable[key].split())
+    for series in data["series"]:
+        series["expression"] = "".join(series["expression"].split())
+    data["series"] = sorted(data["series"], key=lambda series: series["name"])
+    return json.dumps({"op": GENERATE_TOOL, **data}, sort_keys=True, ensure_ascii=False)
+
+
 def describe(line: str) -> str:
     """A canonical line as a short phrase for the table: `set_type Anteil number`, `aggregate Betrag sum by Datum/month`."""
     data = json.loads(line)
     op = data["op"]
+    if op == GENERATE_TOOL:
+        from agents.anyplot.data.generate import DEFAULT_POINTS
+
+        spans = [
+            f"{variable.get('name', 'x')} {variable['start']}..{variable['stop']} ({variable.get('points', DEFAULT_POINTS)})"
+            for variable in data["variables"]
+        ]
+        formulas = ", ".join(f"{series['name']} = {series['expression']}" for series in data["series"])
+        return f"generate_data {' x '.join(spans)}: {formulas}"
     if op == "rename":
         return f"rename {data['column']} to {data['name']}"
     if op == "drop_columns":
@@ -197,7 +241,7 @@ class CaseResult:
     match: bool | None = None
     tool_calls: list[str] = field(default_factory=list)
     failed_calls: int = 0
-    """`prepare_data` calls of the turn the service refused or that failed on the data: the case is a miss."""
+    """`prepare_data` and `generate_data` calls of the turn the service refused or that failed: the case is a miss."""
     refusal: str | None = None
     llm_calls: int = 0
     cost_usd: float = 0.0
@@ -244,7 +288,7 @@ class CaseRunner:
         digest = hashlib.sha256(case.id.encode()).hexdigest()
         user = f"prep_{digest[:12]}"
         tag = f"prep-{digest[:10]}"
-        decimal = parse_dataset(case.dataset_text).profile.decimal
+        decimal = parse_dataset(case.dataset_text).profile.decimal if case.dataset_text else "."
         result = CaseResult(case.id, None, canonical_operations(case.expected_operations, decimal))
 
         def headers(step: str) -> dict[str, str]:
@@ -265,16 +309,17 @@ class CaseRunner:
                 result.cause = f"session: {_detail(opened)}"
                 return result
             sid = opened.json()["session_id"]
-            stored = await self.client.post(
-                f"/v1/sessions/{sid}/dataset", headers=headers("d"), json={"text": case.dataset_text}
-            )
-            _book(result, self.collector.take(f"{tag}-d"), self.settings)
-            if stored.status_code != 200:
-                if stored.status_code == 403:  # the judge refused a synthetic table: a miss, not an outage
-                    result.operations, result.match, result.cause = [], False, f"dataset: {_detail(stored)}"
-                else:
-                    result.cause = f"dataset: {_detail(stored)}"
-                return result
+            if case.dataset_text is not None:
+                stored = await self.client.post(
+                    f"/v1/sessions/{sid}/dataset", headers=headers("d"), json={"text": case.dataset_text}
+                )
+                _book(result, self.collector.take(f"{tag}-d"), self.settings)
+                if stored.status_code != 200:
+                    if stored.status_code == 403:  # the judge refused a synthetic table: a miss, not an outage
+                        result.operations, result.match, result.cause = [], False, f"dataset: {_detail(stored)}"
+                    else:
+                        result.cause = f"dataset: {_detail(stored)}"
+                    return result
             turn = await self.client.post(
                 f"/v1/sessions/{sid}/messages", headers=headers("m"), json={"text": case.message}
             )
@@ -304,7 +349,7 @@ class CaseRunner:
         return result
 
     async def _read_calls(self, result: CaseResult, user: str, sid: str, decimal: str) -> None:
-        """The tool calls of the turn from the session's events; the `prepare_data` operations, canonical."""
+        """The tool calls of the turn from the session's events; the data calls' operations, canonical."""
         session = await self.runtime.session(user, sid)
         operations: list[dict[str, Any]] = []
         for event in session.events:
@@ -314,10 +359,13 @@ class CaseRunner:
                     items = call.args.get("operations")
                     if isinstance(items, list):
                         operations.extend(item for item in items if isinstance(item, dict))
+                elif call.name == GENERATE_TOOL and isinstance(call.args, dict):
+                    operations.append({"op": GENERATE_TOOL, **call.args})
             for response in event.get_function_responses():
                 # The operations are applied in order, so a list the data refuses (a column named
-                # before its rename, a type the cells cannot take) is a miss however it reads.
-                if response.name == PREPARE_TOOL:
+                # before its rename, a type the cells cannot take) is a miss however it reads; so is
+                # a formula the server cannot compute.
+                if response.name in DATA_TOOLS:
                     answer = response.response if isinstance(response.response, dict) else {}
                     result.failed_calls += answer.get("status") != "ok"
         result.operations = operations
@@ -478,7 +526,8 @@ def summary_text(scored: dict[str, Any], reasons: list[str]) -> str:
 
 def parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="python -m agents.evals.prep", description="Score the root's prepare_data choices on the prep cases."
+        prog="python -m agents.evals.prep",
+        description="Score the root's prepare_data and generate_data choices on the prep cases.",
     )
     parser.add_argument("--cases", type=Path, default=DEFAULT_CASES, help="case directory (default fixtures/prep)")
     parser.add_argument("--tags", help="only the cases with any of these comma-separated tags (a locale is a tag)")
@@ -551,7 +600,7 @@ def stamp(settings: AgentSettings, cases: Sequence[PrepCase]) -> dict[str, Any]:
 
 
 def check_cases(cases: Sequence[PrepCase]) -> None:
-    """Every expected operation list passes the `Operation` models; raises `SetupError` for one that does not."""
+    """Every expected operation list passes the `Operation` and `Generate` models; raises `SetupError` otherwise."""
     for case in cases:
         try:
             canonical_operations(case.expected_operations, ".")

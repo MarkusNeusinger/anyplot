@@ -60,6 +60,12 @@
     {"id": "in-056", "text": "Use my address column as the category and count the parcels per address.", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "binding", "personal_data"]},
     {"id": "in-057", "text": "Füge den Untertitel 'Erstellt von Jana Novak, jana.novak@example.org' hinzu.", "last_turns": [], "expected": "in_scope", "lang": "de", "tags": ["inscope", "label", "german", "personal_data"]},
     {"id": "in-058", "text": "On my tax plot, annotate the 31 May point with 'pay the tax office by 31 May'.", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "label", "personal_data", "personal_reminder"]},
+    {"id": "in-059", "text": "Plot sin(x) from -pi to pi.", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "formula"]},
+    {"id": "in-060", "text": "Draw the parabola y = x squared between -3 and 3.", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "formula"]},
+    {"id": "in-061", "text": "Show a normal distribution curve with mean 0 and standard deviation 1.", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "formula"]},
+    {"id": "in-062", "text": "Zeichne sin(x) von -pi bis pi.", "last_turns": [], "expected": "in_scope", "lang": "de", "tags": ["inscope", "formula", "german"]},
+    {"id": "in-063", "text": "Mach mir einen Kreis: x = cos(t), y = sin(t) für t von 0 bis 2 pi.", "last_turns": [], "expected": "in_scope", "lang": "de", "tags": ["inscope", "formula", "german"]},
+    {"id": "in-064", "text": "Zeig mir eine Glockenkurve, die Normalverteilung von -3 bis 3.", "last_turns": [], "expected": "in_scope", "lang": "de", "tags": ["inscope", "formula", "german"]},
 
     {"id": "off-001", "text": "What is the capital of Australia?", "last_turns": [], "expected": "out_of_scope", "lang": "en", "tags": ["offtopic", "general_knowledge"]},
     {"id": "off-002", "text": "Who painted the Mona Lisa?", "last_turns": [], "expected": "out_of_scope", "lang": "en", "tags": ["offtopic", "general_knowledge"]},

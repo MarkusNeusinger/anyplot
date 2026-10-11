@@ -779,6 +779,59 @@ class TestToolSafety:
             tool=FakeTool("prepare_data"), tool_args={}, tool_context=FakeContext(), result={**result, "csv": "a,b"}
         ) == {"status": "error", "code": "invalid_result"}
 
+    async def test_generate_data_takes_the_generate_spec(self, ledger: RequestLedger) -> None:
+        """The `Generate` model gates the call, and a refusal names the field that was wrong, fenced."""
+        sine = {"variables": [{"start": "-pi", "stop": "pi"}], "series": [{"name": "y", "expression": "sin(x)"}]}
+        assert await self.check("generate_data", sine) is None
+        assert (
+            await self.check("generate_data", {**sine, "variables": [{"start": -3, "stop": 3, "points": 50}]}) is None
+        )
+        for arguments, location in (
+            ({**sine, "variables": []}, "variables: "),
+            ({**sine, "series": [{"name": "y"}]}, "series[0].expression: "),
+            ({**sine, "variables": [{"start": "0", "stop": "1", "points": 5001}]}, "variables[0].points: "),
+            ({**sine, "series": [{"name": "x", "expression": "x"}]}, "names must be distinct"),
+            ({**sine, "extra": 1}, "extra: "),
+        ):
+            refused = await self.check("generate_data", arguments)
+            assert refused is not None and (refused["status"], refused["code"]) == ("error", "invalid_arguments")
+            assert set(refused) == {"status", "code", "errors"} and "<user_data>" in refused["errors"], arguments
+            assert location in refused["errors"], arguments
+
+    async def test_generate_data_strings_are_under_the_link_rule(self, ledger: RequestLedger) -> None:
+        """Names and expressions never need a link: unlike a prepare_data value, no key of generate_data is exempt."""
+        link = "https://evil.example/x"
+        for arguments in (
+            {"variables": [{"start": "0", "stop": "1"}], "series": [{"name": link, "expression": "x"}]},
+            {"variables": [{"start": "0", "stop": "1"}], "series": [{"name": "y", "expression": f"x # {link}"}]},
+        ):
+            assert await self.check("generate_data", arguments) == {
+                "status": "error",
+                "code": "url_or_path_not_allowed",
+            }
+
+    async def test_generate_data_result_keys(self, ledger: RequestLedger) -> None:
+        plugin = ToolSafetyPlugin()
+        result = {"status": "ok", "rows": 200, "columns": 2, "version": 1, "changes": "x", "profile": "y"}
+
+        assert (
+            await plugin.after_tool_callback(
+                tool=FakeTool("generate_data"), tool_args={}, tool_context=FakeContext(), result=result
+            )
+            is None
+        )
+        refused = {"status": "error", "code": "invalid_expression", "message": "m"}
+        assert (
+            await plugin.after_tool_callback(
+                tool=FakeTool("generate_data"), tool_args={}, tool_context=FakeContext(), result=refused
+            )
+            is None
+        )
+        assert await plugin.after_tool_callback(
+            tool=FakeTool("generate_data"), tool_args={}, tool_context=FakeContext(), result={**result, "csv": "x"}
+        ) == {"status": "error", "code": "invalid_result"}
+        assert result_limit("generate_data") == 16 * 1024
+
     async def test_one_pipeline_per_invocation(self, ledger: RequestLedger) -> None:
         assert await self.check("plot_pipeline", {}) is None
         assert await self.check("plot_pipeline", {"change_request": "again"}) == {

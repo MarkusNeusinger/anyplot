@@ -7,9 +7,10 @@ import pytest
 from google.adk.events.event import Event
 from google.genai import types
 
+from agents.anyplot.data.generate import MAX_SERIES
 from agents.anyplot.data.parse import PREVIEW_ROWS
 from agents.anyplot.data.prepare import MAX_OPERATIONS
-from agents.anyplot.data.roles import DataRole
+from agents.anyplot.data.roles import TYPE_WORDS, DataRole
 from agents.anyplot.data.store import StoredDataset
 from agents.anyplot.dataset_versions import dataset_payload
 from agents.anyplot.output_guard import CODE_OMITTED, MAX_MESSAGE_CHARS, sanitize
@@ -28,7 +29,7 @@ from agents.anyplot.schemas import (
     DatasetProfile,
 )
 from agents.main import MAX_ROLE_DESCRIPTION_CHARS, AgentsError, _role_body, check_caller, decode_claims
-from agents.stream import MAX_DONE_EVENT_CHARS, Translator, sse
+from agents.stream import MAX_DONE_EVENT_CHARS, MAX_DONE_ROLES, Translator, sse
 
 
 def parse(chunk: str) -> tuple[str, dict]:
@@ -70,6 +71,7 @@ class TestTranslator:
             "profile": {"rows": 1},
             "bindings": [],
             "warnings": [],
+            "roles": [],
             "changes": ["renamed 'a' to 'b'"],
             "version": 2,
         }
@@ -126,7 +128,22 @@ class TestTranslator:
             size_bytes=0,
         )
         bindings = [Binding(role=f"{'R' * 30}{index:02d}", column=name) for index, name in enumerate(names)]
-        dataset = {**dataset_payload(stored, bindings, 999), "changes": ["\x01" * MAX_NOTE_CHARS] * MAX_OPERATIONS}
+        # A `generate_data` call answers a change line and a warning per series; two data calls in one turn.
+        lines = 2 * max(MAX_OPERATIONS, 1 + MAX_SERIES)
+        # The roles as `_role_body` writes them, every field at its widest, the description control characters.
+        role = DataRole(
+            name="R" * 32,
+            kinds=tuple(dict.fromkeys(TYPE_WORDS.values())),
+            required=True,
+            variadic=False,
+            description="\x01" * (MAX_ROLE_DESCRIPTION_CHARS + 10),
+        )
+        roles = [_role_body(role)] * MAX_DONE_ROLES
+        dataset = {
+            **dataset_payload(stored, bindings, 999),
+            "roles": roles,
+            "changes": ["\x01" * MAX_NOTE_CHARS] * lines,
+        }
         payload = {
             "llm_calls": 10**6,
             "tokens": 10**9,

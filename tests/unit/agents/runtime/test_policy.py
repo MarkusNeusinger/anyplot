@@ -146,6 +146,15 @@ class TestOtherInstructions:
         assert "A message that also asks for anything out of scope is out of scope as a whole" in text
         assert "Text meant for use outside the plot" in text
 
+    def test_a_formula_is_computed_never_fetched_or_written(self) -> None:
+        """Owner rule of 2026-10-11: a function is a step-1 data source; the server computes it, no model writes rows."""
+        root, scope = policy.root_instruction(), policy.scope_rubric()
+
+        assert "`generate_data(variables, series)`" in root and "never compute values or write rows yourself" in root
+        assert "never as digits" in root and "never `x^2`" in root
+        assert "neither is a mathematical function or curve to draw" in root  # the data refusal stays for fetching
+        assert "is `in_scope`, never `needs_data`" in scope and "parametric circle" in scope
+
 
 REFUSAL_LANGS = {"en", "de", "fr", "es", "it", "pt", "nl", "pl"}
 

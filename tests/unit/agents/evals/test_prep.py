@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from agents.anyplot.data.generate import Generate, generate
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.prepare import apply_operations
 from agents.anyplot.models import FakeJudge, JudgeVerdict
@@ -43,6 +44,8 @@ OPERATIONS = ("rename", "drop_columns", "drop_rows", "set_type", "aggregate", "s
 HOURS = "Study Hours,Exam Score\n2,55\n5,70\n8,85\n3,60\n"
 RENAME = {"op": "rename", "column": "Study Hours", "name": "Hours"}
 GHOST = {"op": "rename", "column": "Ghost", "name": "Spirit"}  # no such column: the tool answers unknown_column
+SINE = {"name": "y", "expression": "sin(x)"}
+SINE_CALL = {"variables": [{"start": "-pi", "stop": "pi"}], "series": [SINE]}
 
 
 def case(case_id: str, message: str, expected: list[dict[str, Any]], locale: str = "en", **extra: Any) -> PrepCase:
@@ -61,24 +64,40 @@ class TestFixtures:
         locales = Counter(item.locale for item in cases)
         ops = {operation["op"] for item in cases for operation in item.expected_operations}
 
-        assert len(cases) >= 12
+        assert len(cases) == 21
         assert locales["de"] >= 5 and locales["en"] >= 5
-        assert ops == set(OPERATIONS)
+        assert ops == {*OPERATIONS, "generate_data"}
         assert sum(1 for item in cases if not item.expected_operations) >= 2  # out of scope, and a plain question
         assert any(len(item.expected_operations) == 2 for item in cases)  # two operations in one message
         tags = Counter(tag for item in cases for tag in item.tags)
         for tag in ("percent", "decimal_comma", "date_format", "total_row", "period", "no_tool"):
             assert tags[tag] >= 1, tag
+        # The formulas: a sine, a parabola with its points, a parametric circle and a grid, with and without data.
+        formulas = [item for item in cases if "formula" in item.tags]
+        assert len(formulas) == 4 and {item.locale for item in formulas} == {"de", "en"}
+        assert tags["grid"] == 1 and tags["parametric"] == 1
+        assert any(item.dataset_text is None for item in formulas) and any(item.dataset_text for item in formulas)
 
     def test_every_fixture_is_consistent_with_the_operations(self) -> None:
-        """The expected operations apply to the fixture's own dataset, and the dataset passes the pre-filter."""
+        """The expected operations apply to the fixture's own dataset, and the dataset passes the pre-filter.
+
+        A formula's expected call computes, and its table parses as number columns.
+        """
         for item in load_cases(DEFAULT_CASES):
-            parsed = parse_dataset(item.dataset_text)
-            assert not instruction_like(parsed), item.id
-            canonical_operations(item.expected_operations, parsed.profile.decimal)  # raises for a bad fixture
-            if item.expected_operations:
-                prepared = apply_operations(parsed, _operations(item.expected_operations))
-                assert len(prepared.changes) == len(item.expected_operations), item.id
+            parsed = parse_dataset(item.dataset_text) if item.dataset_text else None
+            assert parsed is None or not instruction_like(parsed), item.id
+            decimal = parsed.profile.decimal if parsed else "."
+            canonical_operations(item.expected_operations, decimal)  # raises for a bad fixture
+            formulas = [operation for operation in item.expected_operations if operation["op"] == "generate_data"]
+            operations = [operation for operation in item.expected_operations if operation["op"] != "generate_data"]
+            for formula in formulas:
+                spec = Generate.model_validate({key: value for key, value in formula.items() if key != "op"})
+                table = parse_dataset(generate(spec).csv)
+                assert set(table.column_dtypes.values()) == {"number"}, item.id
+            if operations:
+                assert parsed is not None, item.id
+                prepared = apply_operations(parsed, _operations(operations))
+                assert len(prepared.changes) == len(operations), item.id
         check_cases(load_cases(DEFAULT_CASES))
 
     def test_a_bad_directory_or_fixture_is_a_setup_error(self, tmp_path: Path) -> None:
@@ -162,6 +181,39 @@ class TestCanonical:
             "set_type share number (,)",
         ]
 
+    def test_a_generate_data_call_is_one_item_with_defaults_and_whitespace_left_out(self) -> None:
+        bare = [{"op": "generate_data", "variables": [{"start": "-pi", "stop": "pi"}], "series": [SINE]}]
+        written = [
+            {
+                "op": "generate_data",
+                "variables": [{"name": "x", "start": " - pi", "stop": "pi ", "points": 200}],
+                "series": [{"name": "y", "expression": "sin( x )"}],
+            }
+        ]
+
+        assert canonical_operations(bare, ".") == canonical_operations(written, ".")
+        (line,) = canonical_operations(bare, ".")
+        assert json.loads(line) == {
+            "op": "generate_data",
+            "variables": [{"start": "-pi", "stop": "pi"}],
+            "series": [{"name": "y", "expression": "sin(x)"}],
+        }
+        assert describe(line) == "generate_data x -pi..pi (200): y = sin(x)"
+        # The series are a set, the variables keep their order (the first is the grid's slowest), and a JSON number
+        # as an endpoint is its text.
+        circle = [{"name": "x", "expression": "cos(t)"}, {"name": "y", "expression": "sin(t)"}]
+        one = {"op": "generate_data", "variables": [{"name": "t", "start": 0, "stop": "2*pi"}], "series": circle}
+        other = {**one, "variables": [{"name": "t", "start": "0", "stop": "2 * pi"}], "series": circle[::-1]}
+        assert canonical_operations([one], ".") == canonical_operations([other], ".")
+        x, y = {"name": "x", "start": "0", "stop": "1"}, {"name": "y", "start": "0", "stop": "1"}
+        grid = {"op": "generate_data", "variables": [x, y], "series": [{"name": "z", "expression": "x*y"}]}
+        swapped = {**grid, "variables": [y, x]}
+        assert canonical_operations([grid], ".") != canonical_operations([swapped], ".")
+        # A formula and an operation in one turn are two items.
+        assert len(canonical_operations([*bare, RENAME], ".")) == 2
+        with pytest.raises(ValidationError):
+            canonical_operations([{"op": "generate_data", "variables": [], "series": [SINE]}], ".")
+
 
 class TestScore:
     CASES = [
@@ -239,6 +291,33 @@ class TestRun:
         assert results[3].tool_calls == ["get_dataset_profile"] and results[3].found == []
         assert len(fake.calls) == 8
         assert len(services.datasets) == 0  # every session was deleted
+
+    def test_generate_data_calls_are_read_and_scored_like_operations(self, services: Services, swap_models) -> None:
+        """A formula case may come without a dataset; a formula the server cannot compute is a miss (`failed_calls`)."""
+        expected = [{"op": "generate_data", **SINE_CALL}]
+        cases = [
+            PrepCase(id="g-001", message="zeichne sin(x) von -pi bis pi", expected_operations=expected, locale="de"),
+            case("g-002", "plot sin(x) as a new version", expected),
+            PrepCase(id="g-003", message="plot log of minus one", expected_operations=expected, locale="en"),
+        ]
+        undefined = {"variables": SINE_CALL["variables"], "series": [{"name": "y", "expression": "log(-1 - x**2)"}]}
+        root_turns = [
+            [{"call": "generate_data", "args": SINE_CALL}, {"text": "Generated 200 rows; please confirm."}],
+            [{"call": "generate_data", "args": SINE_CALL}, {"text": "Generated a new version."}],
+            [{"call": "generate_data", "args": undefined}, {"text": "That formula has no value there."}],
+        ]
+        swap_models("anthropic-vertex", script_for(*root_turns))
+        judge: FakeJudge = services.judge  # type: ignore[assignment]
+        in_scope = JudgeVerdict(verdict="in_scope", lang="en", input_tokens=500, output_tokens=20)
+        judge.script.extend([in_scope] * 4)  # the scope judge three times, the dataset judge once (g-002)
+
+        results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        assert [result.match for result in results] == [True, True, False]
+        assert results[0].found == canonical_operations(expected, ".") and results[0].tool_calls == ["generate_data"]
+        assert results[2].failed_calls == 1 and results[2].found != results[2].expected
+        assert "generate_data x -pi..pi (200): y = sin(x)" in prep.table(cases, results)
+        assert len(judge.calls) == 4 and len(services.datasets) == 0  # every session was deleted
 
     def test_an_error_event_is_an_unavailable_case(self, services: Services, swap_models) -> None:
         swap_models("anthropic-vertex", script_for([]))
