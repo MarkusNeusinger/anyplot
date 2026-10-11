@@ -389,6 +389,16 @@ class TestBodies:
         assert plain.status_code == 200
         assert upstream.last_json == {"text": "a,b\n1,2\n"}
 
+    def test_dataset_confirm_is_forwarded_without_a_body(self, client, upstream) -> None:
+        """Step 1 of two: `.confirm()` posts to the agents service's confirm route and relays its answer."""
+        upstream.handler = lambda request: httpx.Response(200, json={"confirmed": True, "rows": 3, "columns": 2})
+        response = client.post("/debug/agent/sessions/s1/dataset/confirm", headers=CLIENT_HEADERS)
+        assert response.status_code == 200
+        assert response.json() == {"confirmed": True, "rows": 3, "columns": 2}
+        sent = upstream.requests[-1]
+        assert (sent.method, sent.url.path) == ("POST", "/v1/sessions/s1/dataset/confirm")
+        assert not sent.content
+
     def test_dataset_over_limit_is_413(self, client, upstream) -> None:
         response = client.post(
             "/debug/agent/sessions/s1/dataset", json={"text": "a" * (MAX_DATASET_BYTES + 1)}, headers=CLIENT_HEADERS

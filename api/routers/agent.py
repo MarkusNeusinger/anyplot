@@ -766,6 +766,17 @@ async def put_bindings(
     return await _call_upstream(client, ctx, "PUT", path, json_body=payload, binding_errors=True)
 
 
+@router.post("/sessions/{sid}/dataset/confirm")
+async def confirm_dataset(sid: SessionId, ctx: Ctx, client: Client) -> Any:
+    """Step 1 of two: the user confirms that the stored dataset and its bindings fit.
+
+    The agents service answers `{confirmed, rows, columns}` and runs the plot pipeline
+    only on a confirmed dataset; `422 no_dataset` before a parse, `409 run_active` while
+    a turn or a render is in flight.
+    """
+    return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset/confirm")
+
+
 @router.post("/sessions/{sid}/messages", response_class=EventSourceResponse)
 async def post_message(upstream: UpstreamStream = Depends(open_message_stream)) -> AsyncIterator[ServerSentEvent]:
     """Relay one chat turn as SSE `anyplot/1`; always ends with a `done` event.

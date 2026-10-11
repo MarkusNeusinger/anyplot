@@ -85,6 +85,10 @@ async def session_context(context: ReadonlyContext) -> str:
         else:
             missing = ", ".join(check.missing_roles) or "none"
             lines.append(f"- Bindings: incomplete; missing roles: {missing}; {len(check.errors)} invalid")
+        if view.data_confirmed:
+            lines.append("- Data: confirmed by the user; the plot can be made")
+        else:
+            lines.append("- Data: not confirmed yet; the user confirms it in the data panel before any plot")
     versions = [version for version in services.versions.all(session_id) if version.library == view.library]
     if versions:
         latest = versions[-1]
