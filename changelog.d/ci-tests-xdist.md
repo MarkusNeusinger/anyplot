@@ -12,7 +12,7 @@
   and which was never measured (23,433 statements at 93 % in the pinned run,
   81 s), and the job also runs when `uv.lock`, a workflow or action under
   `.github/`, or a file under `prompts/` changes, because the workflow and
-  prompt tests read exactly those files. `--durations=25` lists the slowest tests, which the interleaved
+  prompt tests read exactly those files. (#12136) `--durations=25` lists the slowest tests, which the interleaved
   output of four workers no longer shows by timestamp, and the Cloud SQL proxy
   step polls its port every 0.2 s instead of sleeping 5 s. The turn-cap test
   of the agent stream tolerates about 0.5 s of slow start on a busy runner
