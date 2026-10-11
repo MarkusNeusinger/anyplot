@@ -1,8 +1,8 @@
 """The committed baselines: the pinned model has one, and each is a full report on synthetic cases only.
 
-`agents/evals/baselines/claude-haiku-5-5.json` is the rerun of spike X on main on the
-Claude arm (2026-10-10 evening, 244 runs, report schema 2). A model bump adds the new
-model's baseline in the same PR, or this test fails on the new default.
+`agents/evals/baselines/claude-haiku-5-5.json` is the thinking arm of the 2026-10-11
+measurement on main (122 runs, root 1,024 and adapter 2,048, report schema 2). A model
+bump adds the new model's baseline in the same PR, or this test fails on the new default.
 """
 
 from agents.anyplot.settings import AgentSettings

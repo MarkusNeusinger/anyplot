@@ -86,8 +86,8 @@ weighted tokens for the costliest run simulated on a cold prompt cache with a se
 review. `--thinking-budget ROOT,ADAPTER` measures Claude's adaptive thinking for the
 root and the adapter: each value (0 to 4,096, 0 off) is added to that agent's output
 cap (`AGENT_ROOT_THINKING_BUDGET`, `AGENT_ADAPTER_THINKING_BUDGET`, recorded in the stamp
-as `thinking_budget`), and the thinking tokens are priced as output; the defaults
-change no request.
+as `thinking_budget`), and the thinking tokens are priced as output; without the flag
+the settings defaults apply (root 1,024 and adapter 2,048 since 2026-10-11).
 
 The harness sets `ENVIRONMENT=development` for the `remote` and `local` renderers unless
 it runs on Cloud Run (`K_SERVICE`), because a developer's renderer token is accepted
@@ -1040,8 +1040,13 @@ def _version(package: str) -> str | None:
 def build_stamp(
     settings: "AgentSettings", config: MatrixConfig, cases: list["EvalCase"], started: datetime
 ) -> dict[str, Any]:
-    """What produced the report: the configuration, the versions, the prompts and the prices."""
+    """What produced the report: the configuration, the versions, the prompts and the prices.
+
+    The thinking budgets are the effective ones: on Gemini they are 0 whatever the
+    settings hold, so a Gemini report never claims Claude thinking it did not use.
+    """
     from agents import main as service
+    from agents.anyplot.models import thinking_budget
 
     return {
         "run_id": hashlib.sha256(f"{started.isoformat()}-{secrets.token_hex(8)}".encode()).hexdigest()[:12],
@@ -1053,7 +1058,7 @@ def build_stamp(
         "judge_model": settings.judge_model,
         "location": settings.location,
         "max_attempts": settings.max_attempts,
-        "thinking_budget": {"root": settings.root_thinking_budget, "adapter": settings.adapter_thinking_budget},
+        "thinking_budget": {"root": thinking_budget("root", settings), "adapter": thinking_budget("adapter", settings)},
         "renderer": settings.renderer,
         "render_url": getattr(settings, "render_url", None),
         "adk_version": _version("google-adk"),

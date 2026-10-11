@@ -38,7 +38,9 @@ from .fakes import SCATTER_PLAN, FakeAnthropic
 
 
 GEMINI = AgentSettings(provider="gemini", model="gemini-3.8-flash", judge_model="gemini-3.5-flash-lite")
-CLAUDE = AgentSettings(location="global", project="anyplot-eval")
+# Thinking off, so the caps below are the bare ones; the defaults (root 1,024, adapter 2,048) are tested apart.
+CLAUDE = AgentSettings(location="global", project="anyplot-eval", root_thinking_budget=0, adapter_thinking_budget=0)
+CLAUDE_DEFAULTS = AgentSettings(location="global", project="anyplot-eval")
 PACKAGE = Path(__file__).resolve().parents[4] / "agents"
 
 
@@ -137,6 +139,25 @@ class TestFactories:
         assert request.config.thinking_config.thinking_level is None
         assert agent_config.max_output_tokens == 8192
 
+    def test_claude_defaults_think_adaptively_with_the_budgets_added_to_the_caps(self) -> None:
+        """Since 2026-10-11 the root thinks with 1,024 and the adapter with 2,048 extra output tokens."""
+        from agents.anyplot.models import ADAPTIVE_THINKING
+
+        configs = {kind: make_content_config(kind, CLAUDE_DEFAULTS) for kind in ("root", "adapter", "reviewer")}
+
+        assert {kind: config.max_output_tokens for kind, config in configs.items()} == {
+            "root": 4096 + 1024,
+            "adapter": 8192 + 2048,
+            "reviewer": 4096,
+        }
+        assert configs["root"].thinking_config.thinking_budget == ADAPTIVE_THINKING
+        assert configs["adapter"].thinking_config.thinking_budget == ADAPTIVE_THINKING
+        assert configs["reviewer"].thinking_config.thinking_budget == 0  # the reviewer never thinks
+        assert make_model("adapter", CLAUDE_DEFAULTS).max_tokens == 8192 + 2048
+        request = LlmRequest(config=configs["adapter"].model_copy())
+        allow_full_file(request.config)
+        assert request.config.max_output_tokens == ADAPTER_FULL_MAX_OUTPUT_TOKENS + 2048
+
     def test_unknown_kind_is_refused(self) -> None:
         with pytest.raises(ValueError):
             make_model("judge", CLAUDE)
@@ -193,6 +214,29 @@ class TestClaudeStructuredOutput:
         assert responses[0].content.parts[0].text == "chat"
         assert "format" not in (client.calls[0].get("output_config") or {})
 
+    async def test_adaptive_thinking_asks_the_api_to_drop_a_rebound_thinking_block(self) -> None:
+        """The root replays its thinking block after a tool result while the session block moved,
+        so without the binding control the API answers 400 'Invalid signature in thinking block'."""
+        from agents.anyplot.models import ADAPTIVE_THINKING, THINKING_BINDING_BETA
+
+        thinking = self.request(AdaptPlan, tools=True)
+        thinking.config.thinking_config = types.ThinkingConfig(thinking_budget=ADAPTIVE_THINKING)
+        disabled = self.request(AdaptPlan, tools=True)
+        disabled.config.thinking_config = types.ThinkingConfig(thinking_budget=0)
+        client = FakeAnthropic({"unknown": [{"text": "chat"}, {"text": "chat"}]})
+        model = make_model("root", CLAUDE_DEFAULTS)
+        model.__dict__["_anthropic_client"] = client
+
+        for request in (thinking, disabled):
+            [_ async for _ in model.generate_content_async(request)]
+
+        with_thinking, without = client.calls
+        assert with_thinking["thinking"]["type"] != "disabled"
+        assert with_thinking["thinking"]["block_binding"] == {"prefix_mismatch_behavior": "drop_block"}
+        assert THINKING_BINDING_BETA in with_thinking["extra_headers"]["anthropic-beta"]
+        assert without["thinking"] == {"type": "disabled"}
+        assert "extra_headers" not in without
+
     async def test_verdict_schema_round_trip(self) -> None:
         responses, _ = await self.run(self.request(Verdict), {"ok": True, "defects": []})
 
@@ -235,9 +279,9 @@ NON_STREAMING_LIMIT = 128_000 * 600 // 3600
 
 
 class TestThinkingMeasurement:
-    """`AGENT_*_THINKING_BUDGET`: adaptive Claude thinking with its room added to the cap, off by default."""
+    """`AGENT_*_THINKING_BUDGET`: adaptive Claude thinking with its room added to the cap; 0 turns it off."""
 
-    def test_off_by_default(self) -> None:
+    def test_zero_turns_thinking_off(self) -> None:
         assert [thinking_budget(kind, CLAUDE) for kind in ("root", "adapter", "reviewer")] == [0, 0, 0]
         assert thinking_budget("adapter", GEMINI) == 0
 
@@ -280,7 +324,11 @@ class TestThinkingMeasurement:
         responses = [response async for response in model.generate_content_async(request)]
 
         call = client.calls[0]
-        assert call["thinking"] == {"type": "adaptive", "display": "summarized"}
+        assert call["thinking"] == {
+            "type": "adaptive",
+            "display": "summarized",
+            "block_binding": {"prefix_mismatch_behavior": "drop_block"},  # a rebound block is dropped, not a 400
+        }
         assert call["max_tokens"] == 8192 + 4096
         assert call["output_config"]["effort"] == "medium" and call["output_config"]["format"]["type"] == "json_schema"
         parts = responses[0].content.parts

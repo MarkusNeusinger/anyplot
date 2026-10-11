@@ -24,8 +24,8 @@ another provider, model or location.
 | `AGENT_RUNS_PER_MINUTE` | `1` | Runs that may start within any 60 seconds (a sliding window) |
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue; it also sizes the queue (`AGENT_RUNS_PER_MINUTE` x this / 60 entries) |
 | `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 to measure no repair or a second repair round |
-| `AGENT_ROOT_THINKING_BUDGET` | `0` | For measurements, Claude only: 0 keeps the root's thinking off; 1 to 4,096 turns on adaptive thinking and adds that many tokens to its output cap |
-| `AGENT_ADAPTER_THINKING_BUDGET` | `0` | The same for the adapter; the eval harness sets both with `--thinking-budget ROOT,ADAPTER` |
+| `AGENT_ROOT_THINKING_BUDGET` | `1024` | Claude only: adaptive thinking of the root, with that many tokens added to its output cap; 0 turns it off (the 2026-10-11 measurement: with thinking on root and adapter every run passed the gates and 51.6 % ended `ok`, against 91.0 % and 28.7 % without) |
+| `AGENT_ADAPTER_THINKING_BUDGET` | `2048` | The same for the adapter; the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request (the `RunConfig` cap) |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `160000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
 | `AGENT_DAILY_TOKEN_BUDGET` | `2000000` | Cost-weighted tokens per user and day, weighted the same way: about 54 median runs on a warm cache, where the run cap binds first, and about 26 for a user whose every request starts cold |
@@ -187,18 +187,25 @@ class AgentSettings(BaseSettings):
     (`--max-attempts`) sets 1 to measure no repair and 3 to measure a second repair round. Every
     attempt after the first needs `ADAPTER_P95_S` plus `RENDER_P95_S` left of the soft deadline."""
 
-    root_thinking_budget: int = Field(default=0, ge=0, le=MAX_THINKING_BUDGET)
-    """Claude thinking of the root, for measurements (`AGENT_ROOT_THINKING_BUDGET`): 0 (the default)
-    keeps it off. Above 0 the root thinks adaptively at its effort and its output cap grows by this
-    many tokens, so the reply keeps the whole measured headroom (`models.make_content_config`).
+    root_thinking_budget: int = Field(default=1_024, ge=0, le=MAX_THINKING_BUDGET)
+    """Claude thinking of the root (`AGENT_ROOT_THINKING_BUDGET`): 0 turns it off. Above 0 the root
+    thinks adaptively at its effort and its output cap grows by this many tokens, so the reply keeps
+    the whole measured headroom (`models.make_content_config`). On by default since 2026-10-11: the
+    root reads the user's questions, and the measurement of that day put the pass rate of 122 cases
+    at 100 % and the `ok` rate at 51.6 % with thinking on root and adapter (91.0 % and 28.7 % with it
+    off), for a median of $0.0063 instead of $0.0038 per plot and a p50 of 31.5 s instead of 13.6 s.
     Claude Haiku 5.5 takes no thinking budget of its own (`budget_tokens` is a 400), so this is the
     room thinking may use, not a limit the model sees. The root replays its thinking blocks after a
     tool result; an account that enforces the history-editing check of preserved thinking may refuse
     that call, which a measurement run shows as pipeline errors."""
 
-    adapter_thinking_budget: int = Field(default=0, ge=0, le=MAX_THINKING_BUDGET)
-    """The same for the adapter (`AGENT_ADAPTER_THINKING_BUDGET`). The adapter is single-turn, so
-    nothing is replayed; its structured answer (`output_config.format`) lets it think first."""
+    adapter_thinking_budget: int = Field(default=2_048, ge=0, le=MAX_THINKING_BUDGET)
+    """The same for the adapter (`AGENT_ADAPTER_THINKING_BUDGET`), on by default since 2026-10-11:
+    it is the lever behind the pass rate (without it the structured answer misses its edit anchors
+    in a third of the runs). The adapter is single-turn, so nothing is replayed; its structured
+    answer (`output_config.format`) lets it think first. Both budgets are ignored on Gemini, which
+    thinks by a level per agent kind; a non-zero budget set explicitly there is refused, an
+    explicit 0 (`--thinking-budget 0,0`) is accepted."""
 
     max_llm_calls: PositiveInt = 12
     """LLM calls per request (`AGENT_MAX_LLM_CALLS`), the `RunConfig` cap."""
@@ -360,9 +367,10 @@ class AgentSettings(BaseSettings):
             if self.provider == "anthropic-vertex" and value not in CLAUDE_MODELS:
                 raise ValueError(
                     f"{name}={value!r} is not a supported Claude model ({', '.join(CLAUDE_MODELS)}): "
-                    "the agents run with thinking disabled, which newer Claude models refuse with a 400"
+                    "the reviewer runs with thinking disabled, which newer Claude models refuse with a 400"
                 )
-        if self.provider != "anthropic-vertex" and (self.root_thinking_budget or self.adapter_thinking_budget):
+        explicit_thinking = {"root_thinking_budget", "adapter_thinking_budget"} & self.model_fields_set
+        if self.provider != "anthropic-vertex" and any(getattr(self, name) for name in explicit_thinking):
             raise ValueError(
                 "AGENT_ROOT_THINKING_BUDGET and AGENT_ADAPTER_THINKING_BUDGET apply to Claude only; "
                 "Gemini thinks by a level per agent kind"

@@ -170,7 +170,7 @@ async def test_two_fixtures_through_the_real_flow(
         2,
         2,
     )
-    assert stamp["thinking_budget"] == {"root": 0, "adapter": 0}  # off unless a measurement asks
+    assert stamp["thinking_budget"] == {"root": 1024, "adapter": 2048}  # the settings defaults since 2026-10-11
     assert result.report_path.name == f"{stamp['date']}-claude-haiku-5-5.json"
     assert json.loads(result.report_path.read_text())["runs"][1]["case_id"] == "scatter-basic-matplotlib"
     assert "## Runs that did not pass" in result.summary_path.read_text()
@@ -400,6 +400,7 @@ def test_configure_writes_the_thinking_budgets_only_when_the_flag_names_them() -
 
 
 def test_the_stamp_and_the_summary_name_a_thinking_measurement(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("AGENT_ROOT_THINKING_BUDGET", "0")
     monkeypatch.setenv("AGENT_ADAPTER_THINKING_BUDGET", "2048")
     settings = AgentSettings()
 
@@ -410,6 +411,21 @@ def test_the_stamp_and_the_summary_name_a_thinking_measurement(monkeypatch: pyte
     assert "adaptive Claude thinking with 0 extra output tokens for the root and 2,048 for the adapter" in page
     plain = summary_markdown({"schema": 2, "stamp": {"thinking_budget": {"root": 0, "adapter": 0}}, "summary": {}})
     assert "Thinking measurement" not in plain
+
+
+def test_a_gemini_stamp_records_the_effective_zero_budgets(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Gemini ignores the Claude defaults, so its report must not claim thinking it never used."""
+    monkeypatch.setenv("AGENT_PROVIDER", "gemini")
+    monkeypatch.setenv("AGENT_MODEL", "gemini-3.8-flash")
+    monkeypatch.setenv("AGENT_JUDGE_MODEL", "gemini-3.5-flash-lite")
+    settings = AgentSettings()
+    assert (settings.root_thinking_budget, settings.adapter_thinking_budget) == (1024, 2048)  # the raw defaults
+
+    stamp = matrix.build_stamp(settings, MatrixConfig(), [], datetime(2026, 10, 11, tzinfo=UTC))
+
+    assert stamp["thinking_budget"] == {"root": 0, "adapter": 0}
+    page = summary_markdown({"schema": 2, "stamp": stamp, "summary": summarize([]), "runs": []})
+    assert "Thinking measurement" not in page
 
 
 def test_configure_refuses_contradictions() -> None:

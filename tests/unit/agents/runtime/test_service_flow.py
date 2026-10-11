@@ -59,6 +59,12 @@ from .fakes import (
 USER = "adm_0123456789abcdef"
 HEADERS = {"X-Anyplot-User": USER, "X-Request-Id": "req-1"}
 PROVIDERS = ["gemini", "anthropic-vertex"]
+ADAPTIVE_THINKING = {
+    "type": "adaptive",
+    "display": "summarized",
+    "block_binding": {"prefix_mismatch_behavior": "drop_block"},
+}
+"""The thinking parameter of every root and adapter call on Claude under the settings defaults."""
 
 
 def permissive_queue() -> RunQueue:
@@ -183,7 +189,9 @@ async def test_create_plot_streams_to_an_ok_plot_result(
         assert not any(isinstance(choice, dict) and choice.get("type") == "tool" for choice in choices)
         # The root's closing reply after the shipped plot is the budget-exempt call: it carries no tools.
         assert not isinstance(choices[-1], dict) and not fake.calls[-1].get("tools")
-        assert all(call.get("thinking") == {"type": "disabled"} for call in fake.calls)
+        for call in fake.calls:  # the root and the adapter think by default, the reviewer never
+            expected = {"type": "disabled"} if FakeAnthropic.kind(call) == "reviewer" else ADAPTIVE_THINKING
+            assert call.get("thinking") == expected, FakeAnthropic.kind(call)
         adapter = next(call for call in fake.calls if FakeAnthropic.kind(call) == "adapter")
         assert adapter["system"][0]["cache_control"] == {"type": "ephemeral"}  # the static prefix is cached
 
@@ -365,8 +373,12 @@ async def test_a_second_schema_miss_gets_a_third_attempt_only_when_allowed(
         assert (result["shipped_attempt"], result["reviewed_attempt"]) == (3, 3)
         assert len(inputs) == 3
         assert "did not match the plan schema" in inputs[2] and "this attempt allows a full file" in inputs[2]
-        full_cap = GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS if provider == "gemini" else ADAPTER_FULL_MAX_OUTPUT_TOKENS
-        assert adapter_caps(fake)[1:] == [full_cap, full_cap]  # every repair attempt may send a full file
+        full_cap = (  # every repair attempt may send a full file; Claude's cap carries the adapter's thinking room
+            GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS
+            if provider == "gemini"
+            else ADAPTER_FULL_MAX_OUTPUT_TOKENS + get_settings().adapter_thinking_budget
+        )
+        assert adapter_caps(fake)[1:] == [full_cap, full_cap]
     assert not any(SCHEMA_CANARY in record.getMessage() for record in caplog.records)
 
 
@@ -1061,11 +1073,13 @@ async def test_the_repair_attempt_widens_the_adapter_request_only(
     else:
         assert isinstance(fake, FakeAnthropic)
         adapter_calls = [call for call in fake.calls if FakeAnthropic.kind(call) == "adapter"]
-        assert [call["max_tokens"] for call in adapter_calls] == [8_192, 16_384]
-        assert all(call.get("thinking") == {"type": "disabled"} for call in adapter_calls)
+        # The edit-only and the full-file cap, each plus the adapter's 2,048 tokens of thinking room.
+        assert [call["max_tokens"] for call in adapter_calls] == [8_192 + 2_048, 16_384 + 2_048]
+        assert all(call.get("thinking") == ADAPTIVE_THINKING for call in adapter_calls)
     # The per-request change never reaches the agent's own config, so the next run starts narrow again.
     config = ADAPTERS["matplotlib"].generate_content_config
-    assert config is not None and config.max_output_tokens == 8_192
+    narrow_cap = 8_192 if provider == "gemini" else 8_192 + 2_048  # Claude's cap carries its thinking room
+    assert config is not None and config.max_output_tokens == narrow_cap
     if provider == "gemini":
         assert config.thinking_config is not None
         assert config.thinking_config.thinking_level == types.ThinkingLevel.MEDIUM

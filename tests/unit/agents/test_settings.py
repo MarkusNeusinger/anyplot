@@ -67,9 +67,14 @@ class TestDefaults:
         with pytest.raises(ValidationError, match="not a supported Claude model"):
             AgentSettings(model=model)
 
-    def test_thinking_budgets_are_off_bounded_and_claude_only(self) -> None:
-        assert (AgentSettings().root_thinking_budget, AgentSettings().adapter_thinking_budget) == (0, 0)
+    def test_thinking_budgets_are_on_by_default_bounded_and_claude_only(self) -> None:
+        # The 2026-10-11 measurement: root 1,024 and adapter 2,048 pass every case and double the ok rate.
+        assert (AgentSettings().root_thinking_budget, AgentSettings().adapter_thinking_budget) == (1024, 2048)
         assert AgentSettings(adapter_thinking_budget=MAX_THINKING_BUDGET).adapter_thinking_budget == 4096
+        assert AgentSettings(root_thinking_budget=0, adapter_thinking_budget=0).adapter_thinking_budget == 0
+        # The defaults never trip the Gemini arm; only an explicit budget does.
+        gemini = AgentSettings(provider="gemini", model="gemini-3.8-flash", judge_model="gemini-3.5-flash-lite")
+        assert (gemini.root_thinking_budget, gemini.adapter_thinking_budget) == (1024, 2048)
         for field_name, value in (("adapter_thinking_budget", 4097), ("root_thinking_budget", -1)):
             with pytest.raises(ValidationError):
                 AgentSettings(**{field_name: value})
