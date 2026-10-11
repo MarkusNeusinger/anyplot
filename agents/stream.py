@@ -135,7 +135,19 @@ class Translator:
         self.closing_sent = True
         return [sse("error", {"code": code, "ref": self.ledger.request_id})]
 
-    def done(self) -> str:
-        return sse(
-            "done", {"llm_calls": self.ledger.llm_calls, "tokens": self.ledger.tokens + self.ledger.judge_tokens}
-        )
+    def done(self, *, bindings: list[dict[str, Any]] | None = None, data_confirmed: bool | None = None) -> str:
+        """The closing event; with the session's bindings and confirmation state when the route has them.
+
+        The root's `set_bindings` tool can change the bindings during a turn, which the page
+        could not learn otherwise: it syncs its dropdowns and its step from these two fields,
+        so a confirmation never covers bindings the user has not seen.
+        """
+        payload: dict[str, Any] = {
+            "llm_calls": self.ledger.llm_calls,
+            "tokens": self.ledger.tokens + self.ledger.judge_tokens,
+        }
+        if bindings is not None:
+            payload["bindings"] = bindings
+        if data_confirmed is not None:
+            payload["data_confirmed"] = data_confirmed
+        return sse("done", payload)

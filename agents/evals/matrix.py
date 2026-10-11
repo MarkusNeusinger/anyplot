@@ -13,7 +13,8 @@ stress` selects the 23 stress cases of `make_stress.py`, which `full` leaves out
 
 Each case opens a session on `agents.main:app` through httpx's `ASGITransport`
 (`POST /v1/sessions` with the catalogue snapshot, `/dataset` with `data.csv`, `PUT
-/bindings` with the case's bindings, then `POST /messages {"action": "create_plot"}`,
+/bindings` with the case's bindings, `POST /dataset/confirm` as the user's step-1
+confirmation, then `POST /messages {"action": "create_plot"}`,
 and a free-text turn when the case has a `change_request.txt`), so the run takes the
 same path as a user's: the ScopeGuard, Budget and ToolSafety plugins, the run queue,
 the data judge, the pipeline and its gates. The models come from the settings, the
@@ -903,6 +904,8 @@ class CaseRunner:
             return
         if not await self._bindings(record, case, sid, headers("b")):
             return
+        if not await self._confirm(record, sid, headers("c")):
+            return
         plot = await self._turn(record, sid, {"action": "create_plot"}, headers("m1"))
         if case.change_request and record["status"] in SHIPPED:
             plot = await self._turn(record, sid, {"text": case.change_request}, headers("m2"))
@@ -952,6 +955,14 @@ class CaseRunner:
         if not answer.get("complete"):
             record["status"] = "bindings_invalid"
             record["reason"] = "missing roles: " + ", ".join(answer.get("missing_roles") or [])
+            return False
+        return True
+
+    async def _confirm(self, record: dict[str, Any], sid: str, headers: dict[str, str]) -> bool:
+        """The user's step-1 confirmation of the dataset and its bindings, which every case gives."""
+        response = await self.client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=headers)
+        if response.status_code != 200:
+            record["status"], record["reason"] = "error", _detail(response)
             return False
         return True
 

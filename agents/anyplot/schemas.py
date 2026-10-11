@@ -79,7 +79,9 @@ Theme = Literal["light", "dark"]
 
 PlotStatus = Literal["ok", "needs_attention", "failed", "not_ready"]
 FailureReason = Literal["validation", "render", "deadline", "budget", "error"]
-NotReadyReason = Literal["no_dataset", "incomplete_bindings"]
+NotReadyReason = Literal["no_dataset", "incomplete_bindings", "data_unconfirmed"]
+"""`data_unconfirmed`: the dataset and its bindings are there, but the user has not confirmed
+them in the data panel yet (step 1 of two, owner rule of 2026-10-11)."""
 ArtifactName = Literal["plot-light.png", "plot-dark.png", "plot.py", "data.csv"]
 
 FAILURE_REASONS: frozenset[str] = frozenset(get_args(FailureReason))
@@ -425,7 +427,8 @@ class PlotResult(_ServerContract):
     `ok`: the reviewer passed exactly the shipped render and the canvas was not
     padded. `needs_attention`: a render shipped with residual defect lines.
     `failed`: no render passed the blocking host gates; `reason` says why.
-    `not_ready`: no dataset or incomplete bindings, decided before any LLM call.
+    `not_ready`: no dataset, incomplete bindings or data the user has not confirmed yet,
+    decided before any LLM call.
 
     `version` is the number the session's version store gave the shipped result
     (`ok` or `needs_attention`), the one the artifact and theme toggle routes take;
@@ -467,5 +470,5 @@ class PlotResult(_ServerContract):
 
     @classmethod
     def not_ready(cls, reason: NotReadyReason) -> Self:
-        """The result before any LLM call when the session lacks a dataset or bindings."""
+        """The result before any LLM call when the session lacks a dataset, bindings or the user's confirmation."""
         return cls(status="not_ready", reason=reason)

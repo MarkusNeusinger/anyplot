@@ -32,6 +32,7 @@ export const PLOT_FAILED_TEXT: Record<string, string> = {
   error: 'something went wrong while adapting',
   no_dataset: 'paste and parse your data first',
   incomplete_bindings: 'pick a column for every required role first',
+  data_unconfirmed: 'confirm your data first: check the preview and the bindings, then .confirm()',
 };
 
 /** Failures of the dataset and bindings calls. */

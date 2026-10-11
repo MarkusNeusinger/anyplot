@@ -92,7 +92,8 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
     "plot": frozenset({"status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version"}),
     "refusal": frozenset({"code", "text"}),
     "error": frozenset({"code", "ref"}),
-    "done": frozenset({"llm_calls", "tokens"}),
+    # `bindings` and `data_confirmed` sync the page after a turn in which the root changed the bindings.
+    "done": frozenset({"llm_calls", "tokens", "bindings", "data_confirmed"}),
 }
 _ERROR_CODES = frozenset({"capacity", "deadline", "guard_unavailable", "upstream", "internal"})
 _MAX_BINDING_ERRORS = 20
@@ -764,6 +765,17 @@ async def put_bindings(
     payload = [binding.model_dump() for binding in bindings]
     path = f"/sessions/{sid}/bindings"
     return await _call_upstream(client, ctx, "PUT", path, json_body=payload, binding_errors=True)
+
+
+@router.post("/sessions/{sid}/dataset/confirm")
+async def confirm_dataset(sid: SessionId, ctx: Ctx, client: Client) -> Any:
+    """Step 1 of two: the user confirms that the stored dataset and its bindings fit.
+
+    The agents service answers `{confirmed, rows, columns}` and runs the plot pipeline
+    only on a confirmed dataset; `422 no_dataset` before a parse, `409 run_active` while
+    a turn or a render is in flight.
+    """
+    return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset/confirm")
 
 
 @router.post("/sessions/{sid}/messages", response_class=EventSourceResponse)

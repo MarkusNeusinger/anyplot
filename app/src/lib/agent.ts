@@ -137,6 +137,17 @@ export interface BindingsApplied {
   missing_roles: string[];
 }
 
+/**
+ * The answer of `POST .../dataset/confirm`: the user checked the stored data and
+ * its bindings. The server drops the confirmation when the dataset or a binding
+ * changes; until it holds, `.create_plot()` answers `not_ready` (`data_unconfirmed`).
+ */
+export interface DatasetConfirmed {
+  confirmed: true;
+  rows: number;
+  columns: number;
+}
+
 export type PlotStatus = 'ok' | 'needs_attention' | 'failed' | 'not_ready';
 
 export interface PlotResult {
@@ -313,6 +324,9 @@ export const agentApi = {
       method: 'PUT',
       body: JSON.stringify(bindings),
     }),
+  /** Step 1's end: the stored dataset and its current bindings fit (`422 no_dataset` without one). */
+  confirmDataset: (token: string, sid: string) =>
+    agentJson<DatasetConfirmed>(`${sessionPath(sid)}/dataset/confirm`, token, post()),
   /** Opens the chat turn's SSE stream; the caller reads it with `readSseEvents`. */
   postMessage: (
     token: string,
@@ -374,10 +388,38 @@ export type AgentEvent =
   | { type: 'plot'; result: PlotResult }
   | { type: 'refusal'; code: string; text: string }
   | { type: 'error'; code: StreamErrorCode; ref: string | null }
-  | { type: 'done'; llmCalls: number | null; tokens: number | null };
+  | {
+      type: 'done';
+      llmCalls: number | null;
+      tokens: number | null;
+      /**
+       * The session's bindings after the run (the root may have changed them);
+       * `null` when the server sent none (a refused turn, a gone session).
+       */
+      bindings: Binding[] | null;
+      /** The server's step state after the run; `null` when it sent none. */
+      dataConfirmed: boolean | null;
+    };
 
 const isInt = (value: unknown): value is number =>
   typeof value === 'number' && Number.isInteger(value) && value >= 0;
+
+/**
+ * The binding list of a `done` sync, or `null`. The list replaces the page's
+ * bindings as a whole, so one malformed entry drops the whole list rather
+ * than leaving a partial set on screen.
+ */
+function bindingList(value: unknown): Binding[] | null {
+  if (!Array.isArray(value)) return null;
+  const list: Binding[] = [];
+  for (const entry of value) {
+    if (!entry || typeof entry !== 'object') return null;
+    const { role, column } = entry as Record<string, unknown>;
+    if (typeof role !== 'string' || (column !== null && typeof column !== 'string')) return null;
+    list.push({ role, column });
+  }
+  return list;
+}
 const ARTIFACT_NAMES = new Set<string>(['plot-light.png', 'plot-dark.png', 'plot.py', 'data.csv']);
 const PLOT_STATUSES = new Set<string>(['ok', 'needs_attention', 'failed', 'not_ready']);
 
@@ -448,6 +490,8 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
         type: 'done',
         llmCalls: isInt(d.llm_calls) ? d.llm_calls : null,
         tokens: isInt(d.tokens) ? d.tokens : null,
+        bindings: bindingList(d.bindings),
+        dataConfirmed: typeof d.data_confirmed === 'boolean' ? d.data_confirmed : null,
       };
     default:
       return null;

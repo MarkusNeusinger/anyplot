@@ -99,7 +99,55 @@ describe('parseAgentEvent', () => {
       type: 'done',
       llmCalls: null,
       tokens: null,
+      bindings: null,
+      dataConfirmed: null,
     });
+  });
+
+  it("reads done's sync of the bindings and the step state", () => {
+    expect(
+      parseAgentEvent(
+        raw('done', {
+          llm_calls: 3,
+          tokens: 900,
+          bindings: [
+            { role: 'x', column: 'score' },
+            { role: 'y', column: null },
+          ],
+          data_confirmed: false,
+        })
+      )
+    ).toEqual({
+      type: 'done',
+      llmCalls: 3,
+      tokens: 900,
+      bindings: [
+        { role: 'x', column: 'score' },
+        { role: 'y', column: null },
+      ],
+      dataConfirmed: false,
+    });
+    expect(parseAgentEvent(raw('done', { bindings: [], data_confirmed: true }))).toMatchObject({
+      bindings: [],
+      dataConfirmed: true,
+    });
+  });
+
+  it('drops a malformed binding list whole and a step state that is not a boolean', () => {
+    const sync = (data: unknown) => parseAgentEvent(raw('done', data));
+    // One bad entry: the list would replace every binding, so none of it is used.
+    expect(
+      sync({
+        bindings: [
+          { role: 'x', column: 'score' },
+          { role: 'y', column: 3 },
+        ],
+      })
+    ).toMatchObject({ bindings: null });
+    expect(sync({ bindings: [null] })).toMatchObject({ bindings: null });
+    expect(sync({ bindings: [{ column: 'score' }] })).toMatchObject({ bindings: null });
+    expect(sync({ bindings: 'x=score' })).toMatchObject({ bindings: null });
+    expect(sync({ data_confirmed: 'yes' })).toMatchObject({ dataConfirmed: null });
   });
 });
 

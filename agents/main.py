@@ -14,6 +14,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
 | `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, roles}`, stored; or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips only that fallback) | `413 too_long`, `422 unparseable`, `403 data_refused`, `503 guard_unavailable` |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles}` | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
+| `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
 | `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` | SSE `anyplot/1` | `413 too_long`, `409 run_active`, `503 capacity` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
@@ -119,7 +120,15 @@ from agents.anyplot.render.watermark import add_footer
 from agents.anyplot.run_queue import HEARTBEAT_S, QueueFull, QueueTimeout, QueueWithdrawn, RunQueue, Ticket
 from agents.anyplot.schemas import MAX_COLUMNS, Binding, Theme
 from agents.anyplot.services import Services, get_services
-from agents.anyplot.session_state import BINDINGS, CatalogueSnapshot, apply_bindings, read_session
+from agents.anyplot.session_state import (
+    BINDINGS,
+    CONFIRMED,
+    CatalogueSnapshot,
+    apply_bindings,
+    confirm_delta,
+    confirmation_fingerprint,
+    read_session,
+)
 from agents.anyplot.settings import AgentSettings, get_settings
 from agents.anyplot.theme_render import RenderGone, render_theme
 from agents.stream import Translator
@@ -540,6 +549,9 @@ def _fixture_seed(
     delta = ingested.state_delta()
     if case.bindings is not None:
         delta[BINDINGS] = [binding.model_dump() for binding in case.bindings]
+    # A fixture is the developer's own, confirmed data: its bindings (the case's or the defaults) count.
+    bindings = case.bindings if case.bindings is not None else ingested.bindings
+    delta[CONFIRMED] = confirmation_fingerprint(ingested.dataset_id, bindings)
     return delta
 
 
@@ -776,11 +788,52 @@ async def put_bindings(
         return JSONResponse(
             status_code=422, content={"detail": "invalid", "errors": check.errors[:20]}, headers=_NO_STORE
         )
+    # Other bindings than the user confirmed leave the confirmation's fingerprint behind: step 1 again.
     await runtime.write_state(session, delta)
     return JSONResponse(
         {"bindings": delta[BINDINGS], "complete": check.complete, "missing_roles": check.missing_roles},
         headers=_NO_STORE,
     )
+
+
+@app.post("/v1/sessions/{sid}/dataset/confirm", dependencies=v1_dependencies)
+async def confirm_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JSONResponse:
+    """Step 1 of two: the user confirms that the stored dataset and its bindings fit (owner rule of 2026-10-11).
+
+    The plot pipeline runs only on a confirmed dataset (`not_ready: data_unconfirmed`
+    otherwise). A new dataset or a binding change drops the confirmation; a library switch
+    keeps it, because the data and the bindings stay.
+    """
+    services = get_services()
+    session = await runtime.session(user, sid)
+    _active(runtime, sid)
+    view = read_session(session.state)
+    if view is None:
+        raise AgentsError(404, "session_expired")
+    stored = services.datasets.get(view.dataset_id, sid) if view.dataset_id else None
+    if stored is None:
+        raise AgentsError(422, "no_dataset")
+    await runtime.write_state(session, confirm_delta(view))
+    return JSONResponse(
+        {"confirmed": True, "rows": stored.profile.rows, "columns": len(stored.profile.columns)}, headers=_NO_STORE
+    )
+
+
+async def _session_sync(runtime: Runtime, user: str, sid: str) -> dict[str, Any]:
+    """The `done` event's sync fields after a turn: the session's bindings and whether the data is confirmed.
+
+    The root's `set_bindings` tool may have changed the bindings (and dropped the
+    confirmation) during the turn; the page learns it from `done`. Empty when the
+    session is gone, so the stream still closes.
+    """
+    try:
+        session = await runtime.session(user, sid)
+    except Exception:  # expired or purged while the turn ran: the page's next request learns it
+        return {}
+    view = read_session(session.state)
+    if view is None:
+        return {}
+    return {"bindings": [binding.model_dump() for binding in view.bindings], "data_confirmed": view.data_confirmed}
 
 
 async def _refused(translator: Translator, ledger: RequestLedger) -> AsyncIterator[str]:
@@ -901,7 +954,7 @@ async def post_message(
             for chunk in translator.error(failure):
                 yield chunk
         attribution("run", ledger, model_versions=sorted(ledger.model_versions), kind=ledger.kind)
-        yield translator.done()
+        yield translator.done(**await _session_sync(runtime, user, sid))
 
     return StreamingResponse(
         stream(),

@@ -27,19 +27,34 @@
  * table's CSV through the normal parse (`confirmTranscription`), or discards
  * it. A new parse, a library switch and a failed session clear it as well.
  *
+ * Two steps, data first: step 1 ends when the user confirms that the stored
+ * dataset and its bindings fit (`confirmData`, `POST .../dataset/confirm`);
+ * only then does the page offer `.create_plot()` (step 2). The server drops
+ * its confirmation whenever the dataset or a binding changes, and so does the
+ * hook: a stored parse and any applied binding change clear `dataConfirmed`,
+ * a library switch keeps it. A transcription clears it too, although the
+ * server keeps its own until `.use()` stores the table: the user decides on
+ * the data again either way. A turn can change the bindings on the server
+ * too (the root's `set_bindings`): its `done` event carries the session's
+ * bindings and step state, which replace the hook's (`server_sync`), so the
+ * dropdowns show what the server holds and the panel goes back to step 1.
+ * A `plot{not_ready, data_unconfirmed}` without that sync still drops the
+ * flag, so the panel offers `.confirm()` again.
+ *
  * One thing at a time: the agents service runs one turn or theme render per
- * user and answers anything else with `409 run_active`, and a parse or a
- * binding change rewrites the data a turn reads. So the hook starts none of
- * these while another is in flight, and Stop keeps the stream open until the
- * server's `done` confirms the run ended (at most `STOP_GRACE_MS`), so the
- * next action does not race the stopped run.
+ * user and answers anything else with `409 run_active`, a parse or a binding
+ * change rewrites the data a turn reads, and a confirmation must cover exactly
+ * the data it was given. So the hook starts none of these while another is in
+ * flight, and Stop keeps the stream open until the server's `done` confirms
+ * the run ended (at most `STOP_GRACE_MS`), so the next action does not race
+ * the stopped run.
  *
  * Session lifetime: the session, with the pasted data and its renders, is
  * deleted when the page unmounts and on `pagehide` (a reload or a closed tab,
  * sent with `keepalive`); the server's idle sweep is the backstop.
  *
  * Analytics carry enum properties only, never text or data:
- * `agent_data_parsed{status, size_bucket}`,
+ * `agent_data_parsed{status, size_bucket}`, `agent_data_confirmed{size_bucket}`,
  * `agent_plot_rendered{library, status, repaired, spec}` and
  * `agent_guardrail_block{reason}`.
  */
@@ -173,6 +188,14 @@ export interface AgentSessionState {
   missingRoles: string[];
   bindingsBusy: boolean;
   bindingsError: Failure | null;
+  /**
+   * Step 1 is done: the user confirmed that the stored dataset and its bindings
+   * fit. A stored parse, a transcription and an applied binding change clear it.
+   */
+  dataConfirmed: boolean;
+  /** The confirmation call is in flight. */
+  confirmBusy: boolean;
+  confirmError: Failure | null;
   libraryBusy: boolean;
   /** A theme toggle render is in flight. */
   themeBusy: boolean;
@@ -193,6 +216,13 @@ type Action =
   | { type: 'bindings_start'; bindings: BindingMap }
   | { type: 'bindings_done'; bindings: BindingMap; complete: boolean; missingRoles: string[] }
   | { type: 'bindings_failed'; bindings: BindingMap; failure: Failure }
+  | { type: 'confirm_start' }
+  | { type: 'confirm_done' }
+  | { type: 'confirm_failed'; failure: Failure }
+  /** The server answered `not_ready` with `data_unconfirmed`: its confirmation is gone. */
+  | { type: 'confirm_lost' }
+  /** A turn's `done` named the session's bindings and step state; `null` fields were absent. */
+  | { type: 'server_sync'; bindings: BindingMap | null; dataConfirmed: boolean | null }
   | { type: 'library_start' }
   | { type: 'library_done'; library: string; eligibility: Eligibility }
   | { type: 'library_failed'; failure: Failure }
@@ -224,6 +254,9 @@ export function initialAgentState(library: string): AgentSessionState {
     missingRoles: [],
     bindingsBusy: false,
     bindingsError: null,
+    dataConfirmed: false,
+    confirmBusy: false,
+    confirmError: null,
     libraryBusy: false,
     themeBusy: false,
     items: [],
@@ -304,6 +337,19 @@ export function compactFamilies(
   return result;
 }
 
+/**
+ * Required roles without a column, a variadic family by its name, as the
+ * binding check reports them in `missing_roles`.
+ */
+export function missingRolesOf(bindings: BindingMap, roles: readonly RoleSpec[]): string[] {
+  return roles
+    .filter(role => role.required)
+    .filter(role =>
+      role.variadic ? familyMembers(bindings, role, roles).length === 0 : !bindings[role.name]
+    )
+    .map(role => role.name);
+}
+
 function toMap(bindings: readonly Binding[]): BindingMap {
   const map: BindingMap = {};
   for (const binding of bindings) if (binding.column) map[binding.role] = binding.column;
@@ -359,12 +405,21 @@ export function agentReducer(state: AgentSessionState, action: Action): AgentSes
         bindingsComplete: false,
         missingRoles: [],
         bindingsError: null,
+        // A new dataset is unchecked: the server dropped its confirmation when it stored it.
+        dataConfirmed: false,
+        confirmError: null,
       };
     case 'parse_failed':
       return { ...state, parsing: false, datasetError: action.failure, transcription: null };
     case 'transcribed':
-      // Nothing is stored yet: the dataset and its bindings stay until the user confirms.
-      return { ...state, parsing: false, transcription: action.transcription };
+      // Nothing is stored yet: the dataset and its bindings stay until the user decides,
+      // but the user is back at the data step, so the confirmation goes as well.
+      return {
+        ...state,
+        parsing: false,
+        transcription: action.transcription,
+        dataConfirmed: false,
+      };
     case 'transcription_clear':
       return { ...state, transcription: null };
     case 'bindings_start':
@@ -379,6 +434,11 @@ export function agentReducer(state: AgentSessionState, action: Action): AgentSes
         bindings: action.bindings,
         bindingsComplete: action.complete,
         missingRoles: action.missingRoles,
+        // An applied change replaces the set the user confirmed, and the server
+        // drops its confirmation with it. The parse's own default PUT lands while
+        // the flag is already false, so it never looks like a change.
+        dataConfirmed: false,
+        confirmError: null,
       };
     }
     case 'bindings_failed':
@@ -388,9 +448,33 @@ export function agentReducer(state: AgentSessionState, action: Action): AgentSes
         bindings: action.bindings,
         bindingsError: action.failure,
       };
+    case 'confirm_start':
+      return { ...state, confirmBusy: true, confirmError: null };
+    case 'confirm_done':
+      return { ...state, confirmBusy: false, dataConfirmed: true };
+    case 'confirm_failed':
+      return { ...state, confirmBusy: false, confirmError: action.failure };
+    case 'confirm_lost':
+      return { ...state, dataConfirmed: false };
+    case 'server_sync': {
+      let next = state;
+      // The dropdowns show what the server holds; without a stored dataset there is nothing to bind.
+      if (action.bindings && state.dataset) {
+        const missing = missingRolesOf(action.bindings, state.roles);
+        next = {
+          ...next,
+          bindings: action.bindings,
+          bindingsComplete: missing.length === 0,
+          missingRoles: missing,
+        };
+      }
+      if (action.dataConfirmed !== null) next = { ...next, dataConfirmed: action.dataConfirmed };
+      return next;
+    }
     case 'library_start':
       return { ...state, libraryBusy: true };
     case 'library_done':
+      // The dataset, its bindings and their confirmation stay, as on the server.
       return {
         ...state,
         libraryBusy: false,
@@ -488,6 +572,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   // Set synchronously, before the state catches up, so a double click starts nothing twice.
   const themeRef = useRef(false);
   const parseRef = useRef(false);
+  const confirmRef = useRef(false);
   const versionCounter = useRef(0);
   const blobUrls = useRef<Set<string>>(new Set());
   const mounted = useRef(true);
@@ -515,13 +600,17 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     [safeDispatch]
   );
 
-  /** Whether a turn, a theme render, a parse, a binding change or a library switch is in flight. */
+  /**
+   * Whether a turn, a theme render, a parse, a binding change, a confirmation
+   * or a library switch is in flight.
+   */
   const busy = useCallback(() => {
     const current = stateRef.current;
     return (
       !!abortRef.current ||
       themeRef.current ||
       parseRef.current ||
+      confirmRef.current ||
       current.bindingsBusy ||
       current.libraryBusy
     );
@@ -718,6 +807,30 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     [applyBindings, busy]
   );
 
+  /**
+   * `.confirm()`: the end of step 1. The server marks the stored dataset and its
+   * current bindings as checked, which `.create_plot()` needs. Nothing starts
+   * without a stored dataset, while a table read from text waits for its
+   * decision, or while anything else is in flight.
+   */
+  const confirmData = useCallback(async () => {
+    const current = stateRef.current;
+    const sid = current.sessionId;
+    const dataset = current.dataset;
+    if (!sid || !dataset || current.transcription || current.run || busy()) return;
+    confirmRef.current = true;
+    safeDispatch({ type: 'confirm_start' });
+    try {
+      await agentApi.confirmDataset(token, sid);
+      safeDispatch({ type: 'confirm_done' });
+      trackEvent('agent_data_confirmed', { size_bucket: sizeBucket(dataset.bytes) });
+    } catch (err) {
+      safeDispatch({ type: 'confirm_failed', failure: handleFailure(err) });
+    } finally {
+      confirmRef.current = false;
+    }
+  }, [token, safeDispatch, handleFailure, trackEvent, busy]);
+
   // ---------------------------------------------------------------- versions
 
   const fetchArtifact = useCallback(
@@ -825,6 +938,12 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
         spec: specId,
       });
       if (result.status !== 'ok' && result.status !== 'needs_attention') {
+        // The server holds no confirmation: offer `.confirm()` again instead of a
+        // dead `.create_plot()`. The turn's `done` sync normally says so as well;
+        // this covers a stream that ends without it.
+        if (result.status === 'not_ready' && result.reason === 'data_unconfirmed') {
+          safeDispatch({ type: 'confirm_lost' });
+        }
         addItem({ kind: 'plot_failed', result });
         return;
       }
@@ -875,6 +994,17 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
           addItem({ kind: 'error', code: event.code, ref: event.ref });
           if (event.code === 'guard_unavailable') {
             trackEvent('agent_guardrail_block', { reason: 'guard_unavailable' });
+          }
+          break;
+        case 'done':
+          // The root may have changed the bindings during the turn (`set_bindings`),
+          // which also drops the server's confirmation: take both as the server has them.
+          if (event.bindings !== null || event.dataConfirmed !== null) {
+            safeDispatch({
+              type: 'server_sync',
+              bindings: event.bindings && toMap(event.bindings),
+              dataConfirmed: event.dataConfirmed,
+            });
           }
           break;
         default:
@@ -992,6 +1122,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     confirmTranscription,
     discardTranscription,
     setBinding,
+    confirmData,
     createPlot,
     sendMessage,
     stop,
@@ -1005,5 +1136,12 @@ export type AgentSession = ReturnType<typeof useAgentSession>;
 
 /** Whether the page should hold back actions the server would refuse or race (see the module notes). */
 export function sessionBusy(state: AgentSessionState): boolean {
-  return !!state.run || state.parsing || state.bindingsBusy || state.libraryBusy || state.themeBusy;
+  return (
+    !!state.run ||
+    state.parsing ||
+    state.bindingsBusy ||
+    state.confirmBusy ||
+    state.libraryBusy ||
+    state.themeBusy
+  );
 }

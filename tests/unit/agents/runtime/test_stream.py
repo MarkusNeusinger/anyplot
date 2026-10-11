@@ -34,6 +34,17 @@ class TestTranslator:
     def test_ready_and_done(self, translator: Translator) -> None:
         assert parse(translator.ready()) == ("ready", {"v": "anyplot/1", "run_id": "run-1"})
         assert parse(translator.done()) == ("done", {"llm_calls": 3, "tokens": 900})
+        # After a run the route adds the session's bindings and confirmation state, so the page syncs.
+        synced = translator.done(bindings=[{"role": "x", "column": "Study Hours"}], data_confirmed=False)
+        assert parse(synced) == (
+            "done",
+            {
+                "llm_calls": 3,
+                "tokens": 900,
+                "bindings": [{"role": "x", "column": "Study Hours"}],
+                "data_confirmed": False,
+            },
+        )
 
     def test_queued_status(self, translator: Translator) -> None:
         assert parse(translator.queued(2, 5)) == ("status", {"step": "queued", "position": 2, "waiting": 5})

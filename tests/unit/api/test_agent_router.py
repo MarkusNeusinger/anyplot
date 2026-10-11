@@ -389,6 +389,16 @@ class TestBodies:
         assert plain.status_code == 200
         assert upstream.last_json == {"text": "a,b\n1,2\n"}
 
+    def test_dataset_confirm_is_forwarded_without_a_body(self, client, upstream) -> None:
+        """Step 1 of two: `.confirm()` posts to the agents service's confirm route and relays its answer."""
+        upstream.handler = lambda request: httpx.Response(200, json={"confirmed": True, "rows": 3, "columns": 2})
+        response = client.post("/debug/agent/sessions/s1/dataset/confirm", headers=CLIENT_HEADERS)
+        assert response.status_code == 200
+        assert response.json() == {"confirmed": True, "rows": 3, "columns": 2}
+        sent = upstream.requests[-1]
+        assert (sent.method, sent.url.path) == ("POST", "/v1/sessions/s1/dataset/confirm")
+        assert not sent.content
+
     def test_dataset_over_limit_is_413(self, client, upstream) -> None:
         response = client.post(
             "/debug/agent/sessions/s1/dataset", json={"text": "a" * (MAX_DATASET_BYTES + 1)}, headers=CLIENT_HEADERS
@@ -508,7 +518,7 @@ UPSTREAM_SSE = (
     b'data: {"code": "capacity", "ref": "upstream-ref", "error_details": "Traceback (most recent call last)"}\n'
     b"\n"
     b"event: done\n"
-    b'data: {"llm_calls": 4, "tokens": 9000}\n'
+    b'data: {"llm_calls": 4, "tokens": 9000, "bindings": [{"role": "x", "column": "a"}], "data_confirmed": false, "secret": 1}\n'
     b"\n"
     b"event: message\n"
     b'data: {"text": "after done"}\n'
@@ -532,7 +542,11 @@ class TestMessagesStream:
             ("ready", {"v": 1, "run_id": "r1"}),
             ("status", {"step": "adapting", "attempt": 1}),
             ("error", {"code": "capacity", "ref": ref}),
-            ("done", {"llm_calls": 4, "tokens": 9000}),
+            # The sync fields pass; an unknown field is dropped like everywhere else.
+            (
+                "done",
+                {"llm_calls": 4, "tokens": 9000, "bindings": [{"role": "x", "column": "a"}], "data_confirmed": False},
+            ),
         ]
         sent = upstream.requests[0]
         assert str(sent.url) == f"{SERVICE_URL}/v1/sessions/s1/messages"
