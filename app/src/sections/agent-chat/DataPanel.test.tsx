@@ -96,6 +96,7 @@ describe('DataPanel bindings', () => {
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
         onBind={onBind}
+        onConfirmData={vi.fn()}
         onCreatePlot={vi.fn()}
       />
     );
@@ -128,6 +129,7 @@ describe('DataPanel bindings', () => {
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
+        onConfirmData={vi.fn()}
         onCreatePlot={vi.fn()}
       />
     );
@@ -137,22 +139,29 @@ describe('DataPanel bindings', () => {
     ).toBeInTheDocument();
   });
 
-  it('holds back create and parse while a theme renders', () => {
-    render(
+  it('holds back confirm, create and parse while a theme renders', () => {
+    const panel = (state: AgentSessionState) => (
       <DataPanel
-        state={stateWith({ x: 'month', y1: 'shoes' }, { themeBusy: true })}
+        state={state}
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
+        onConfirmData={vi.fn()}
         onCreatePlot={vi.fn()}
       />
     );
-    expect(screen.getByRole('button', { name: '.create_plot()' })).toBeDisabled();
+    const { rerender } = render(panel(stateWith({ x: 'month', y1: 'shoes' }, { themeBusy: true })));
+    expect(screen.getByRole('button', { name: '.confirm()' })).toBeDisabled();
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
+
+    rerender(
+      panel(stateWith({ x: 'month', y1: 'shoes' }, { themeBusy: true, dataConfirmed: true }))
+    );
+    expect(screen.getByRole('button', { name: '.create_plot()' })).toBeDisabled();
   });
 
-  it('holds back create while a table read from text awaits its decision', () => {
+  it('holds back the confirmation while a table read from text awaits its decision', () => {
     // The stored dataset and its bindings stay, but the user decides on the data first.
     render(
       <DataPanel
@@ -161,12 +170,80 @@ describe('DataPanel bindings', () => {
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
+        onConfirmData={vi.fn()}
         onCreatePlot={vi.fn()}
       />
     );
-    expect(screen.getByRole('button', { name: '.create_plot()' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '.confirm()' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '.parse()' })).toBeDisabled();
     expect(screen.getByRole('button', { name: '.use()' })).toBeEnabled();
+  });
+});
+
+describe('DataPanel steps', () => {
+  function renderPanel(state: AgentSessionState) {
+    const onConfirmData = vi.fn();
+    const onCreatePlot = vi.fn();
+    const panel = (next: AgentSessionState) => (
+      <DataPanel
+        state={next}
+        onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onBind={vi.fn()}
+        onConfirmData={onConfirmData}
+        onCreatePlot={onCreatePlot}
+      />
+    );
+    const view = render(panel(state));
+    return {
+      onConfirmData,
+      onCreatePlot,
+      rerender: (next: AgentSessionState) => view.rerender(panel(next)),
+    };
+  }
+
+  it('offers .confirm() once every required role has a column, and no .create_plot()', async () => {
+    const { onConfirmData, rerender } = renderPanel(
+      stateWith({ x: 'month' }, { bindingsComplete: false, missingRoles: ['y'] })
+    );
+    const confirm = screen.getByRole('button', { name: '.confirm()' });
+    expect(confirm).toBeDisabled();
+    expect(confirm).toHaveAccessibleDescription(
+      '# step 1 — check the preview and the bindings, then confirm'
+    );
+    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+
+    rerender(stateWith({ x: 'month', y1: 'shoes' }));
+    await userEvent.click(screen.getByRole('button', { name: '.confirm()' }));
+    expect(onConfirmData).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+
+    // The confirmation in flight: the button says so and holds still.
+    rerender(stateWith({ x: 'month', y1: 'shoes' }, { confirmBusy: true }));
+    expect(screen.getByRole('button', { name: '.confirm() …' })).toBeDisabled();
+    expect(screen.getByLabelText(/^x/)).toBeDisabled();
+  });
+
+  it("shows the data's shape and .create_plot() after the confirmation", async () => {
+    const { onCreatePlot } = renderPanel(
+      stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true })
+    );
+    expect(screen.getByTestId('data-step')).toHaveTextContent('data fits · 1 row · 5 columns');
+    expect(screen.queryByRole('button', { name: '.confirm()' })).not.toBeInTheDocument();
+    const create = screen.getByRole('button', { name: '.create_plot()' });
+    expect(create).toHaveAccessibleDescription('data fits · 1 row · 5 columns');
+    await userEvent.click(create);
+    expect(onCreatePlot).toHaveBeenCalledTimes(1);
+  });
+
+  it('names the reason of a refused confirmation', () => {
+    renderPanel(
+      stateWith({ x: 'month', y1: 'shoes' }, { confirmError: { code: 'no_dataset', ref: 'r-c' } })
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('parse the data first · ref r-c');
+    expect(screen.getByRole('button', { name: '.confirm()' })).toBeEnabled();
   });
 });
 
@@ -212,6 +289,7 @@ describe('DataPanel transcription', () => {
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
+        onConfirmData={vi.fn()}
         onCreatePlot={vi.fn()}
       />
     );
@@ -245,6 +323,7 @@ describe('DataPanel transcription', () => {
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
+        onConfirmData={vi.fn()}
         onCreatePlot={vi.fn()}
       />
     );
@@ -263,6 +342,7 @@ describe('DataPanel transcription', () => {
         onConfirmTranscription={onConfirm}
         onDiscardTranscription={onDiscard}
         onBind={vi.fn()}
+        onConfirmData={vi.fn()}
         onCreatePlot={vi.fn()}
       />
     );
@@ -286,6 +366,7 @@ describe('DataPanel transcription', () => {
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
+        onConfirmData={vi.fn()}
         onCreatePlot={vi.fn()}
       />
     );

@@ -26,11 +26,19 @@
  * (1600x900 becomes 1600x932); catalogue previews stay without it. Pasted text
  * that is no table ("Hund 7 Katze 3 und Vogel 4") comes back as the service's
  * transcribed answer (`transcribed: true`, the table's CSV in `text`, nothing
- * stored), so the confirmation card can be driven without a model.
+ * stored), so the confirmation card can be driven without a model. Step 1 ends
+ * with `POST .../dataset/confirm`, which marks the stored dataset and its
+ * bindings as checked (`422 no_dataset` without one); a stored parse or an
+ * applied binding change clears the mark, and until it holds every pipeline
+ * run answers `plot{status: not_ready, reason: data_unconfirmed}`. Every
+ * `done` carries the session's `bindings` and `data_confirmed`, as the service
+ * syncs them after a run.
  *
  * Scripted behaviour of a chat message:
  * - contains "weather" or "joke": the fixed out-of-scope refusal;
  * - contains "busy": `error {code: capacity}`;
+ * - contains "swap": the root's `set_bindings` in miniature, swapping the
+ *   columns of `x` and the first `y` (which drops the confirmation), and a reply;
  * - ends with "?": a reply only, no pipeline run;
  * - anything else: a refinement with a repair round, shipped as
  *   `needs_attention`; "dark" in the text renders the dark theme.
@@ -713,6 +721,11 @@ async function streamTurn(req, res, session, body, ref) {
         send('error', { code: 'capacity', ref });
         return;
       }
+      if (lower.includes('swap')) {
+        await sleep(STEP_MS);
+        send('message', { text: swapBindings(session) });
+        return;
+      }
       if (text.trim().endsWith('?')) {
         await sleep(STEP_MS * 2);
         send('message', {
@@ -720,17 +733,27 @@ async function streamTurn(req, res, session, body, ref) {
         });
         return;
       }
-      if (!session.dataset || !session.complete) {
+      if (!session.dataset || !session.complete || !session.confirmed) {
         await sleep(STEP_MS);
+        const reason = !session.dataset
+          ? 'no_dataset'
+          : !session.complete
+            ? 'incomplete_bindings'
+            : 'data_unconfirmed';
         send('plot', {
           status: 'not_ready',
-          reason: session.dataset ? 'incomplete_bindings' : 'no_dataset',
+          reason,
           attempts: 0,
           artifacts: [],
           changes: [],
           residual_defects: [],
         });
-        send('message', { text: 'Paste your data and bind the required roles first.' });
+        send('message', {
+          text:
+            reason === 'data_unconfirmed'
+              ? 'Check the preview and the bindings, then confirm your data first.'
+              : 'Paste your data and bind the required roles first.',
+        });
         return;
       }
       const refine = body.action !== 'create_plot';
@@ -797,9 +820,34 @@ async function streamTurn(req, res, session, body, ref) {
     }
   } finally {
     session.active = false;
-    send('done', { llm_calls: 4, tokens: 18734 });
+    // The sync fields: the session's bindings and step state after the run.
+    send('done', {
+      llm_calls: 4,
+      tokens: 18734,
+      bindings: session.bindings,
+      data_confirmed: session.confirmed,
+    });
     res.end();
   }
+}
+
+/**
+ * The root's `set_bindings` in miniature: swap the columns of `x` and the first
+ * `y`, as the binding check allows it. An applied change drops the confirmation.
+ */
+function swapBindings(session) {
+  const x = session.bindings.find(b => b.role === 'x');
+  const y = session.bindings.find(b => /^y1?$/.test(b.role));
+  if (!session.dataset || !x || !y) return 'There is nothing to swap yet: paste your data first.';
+  const swapped = session.bindings.map(b =>
+    b === x ? { ...b, column: y.column } : b === y ? { ...b, column: x.column } : b
+  );
+  const { errors, complete } = checkBindings(session, swapped);
+  if (errors.length) return `I cannot swap them: ${errors[0]}.`;
+  session.bindings = swapped;
+  session.complete = complete;
+  session.confirmed = false;
+  return `Swapped: x now reads ${y.column} and ${y.role} reads ${x.column}. Check the bindings and confirm your data again.`;
 }
 
 // ---------------------------------------------------------------- routes
@@ -934,6 +982,8 @@ async function route(req, res) {
       dataset: null,
       bindings: [],
       complete: false,
+      // Step 1's confirmation of the dataset and its bindings.
+      confirmed: false,
       versions: [],
       active: false,
       cancelled: false,
@@ -990,6 +1040,7 @@ async function route(req, res) {
     session.dataset = parsed;
     session.bindings = defaultBindings(session, parsed.profile);
     session.complete = checkBindings(session, session.bindings).complete;
+    session.confirmed = false; // a new dataset is unchecked
     return json(
       res,
       200,
@@ -1013,7 +1064,23 @@ async function route(req, res) {
       return json(res, 422, { detail: 'invalid', ref, errors: errors.slice(0, 20) }, ref);
     session.bindings = checked.bindings;
     session.complete = checked.complete;
+    session.confirmed = false; // the confirmation covered the previous set
     return json(res, 200, checked, ref);
+  }
+  if (method === 'POST' && rest === '/dataset/confirm') {
+    if (session.active) return fail(res, 409, 'run_active', ref);
+    if (!session.dataset) return fail(res, 422, 'no_dataset', ref);
+    session.confirmed = true;
+    return json(
+      res,
+      200,
+      {
+        confirmed: true,
+        rows: session.dataset.profile.rows,
+        columns: session.dataset.profile.columns.length,
+      },
+      ref
+    );
   }
   if (method === 'POST' && rest === '/messages') {
     if (session.active) return fail(res, 409, 'run_active', ref);
