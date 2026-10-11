@@ -411,14 +411,15 @@ Used to load interactive plots (plotly, bokeh, altair) in iframes with dynamic s
 
 ---
 
-## Agent chat (admin only, switched off by default)
+## Agent chat (admin only)
 
-> **Status (2026-10-11):** the routes exist and ship switched off. The
-> anyplot-agents service they call runs in Cloud Run since 2026-10-11; the
-> routes answer `404` until the API's deploy sets `AGENT_ENABLED=true`,
-> `AGENT_SERVICE_URL` and the `AGENT_USER_ID_KEY` secret. The chat page that calls
-> these routes, `/debug/agent` in the app, is built only with
-> `VITE_ENABLE_AGENT_CHAT=true`. Design:
+> **Status (2026-10-11):** the routes are switched on in production since
+> 2026-10-11: the deploy-api trigger sets `AGENT_ENABLED=true` and
+> `AGENT_SERVICE_URL`, the `AGENT_USER_ID_KEY` secret is bound, and the
+> anyplot-agents service they call runs in Cloud Run. They stay behind the admin
+> gate. The chat page that calls these routes, `/debug/agent` in the app, is
+> built only with `VITE_ENABLE_AGENT_CHAT=true`, which the deploy-app trigger
+> sets since the same day. Design:
 > [Agent network design](../concepts/agent-network.md).
 
 The `/debug/agent/*` routes (`api/routers/agent.py`) are a backend for the
@@ -437,8 +438,9 @@ Every request passes three checks, in this order:
    unconfigured gate gets `503`.
 2. **Kill switch.** Every route answers `404 {"detail": "agent chat is not enabled"}`
    unless `AGENT_ENABLED` is true and both `AGENT_SERVICE_URL` and
-   `AGENT_USER_ID_KEY` are set. Production deploys with `AGENT_ENABLED=false`,
-   so a deploy never breaks while the configuration is incomplete.
+   `AGENT_USER_ID_KEY` are set. Production has deployed with all three since
+   2026-10-11; a deploy that lacks one answers `404` instead of breaking, and
+   `_AGENT_ENABLED=false` on the deploy-api trigger switches the chat off again.
 3. **CSRF guard** on `POST`, `PUT`, and `DELETE`. The request needs the header
    `X-Anyplot-Client: agent-chat/1`; an `Origin` header, when the browser sends
    one, must be in the CORS allow-list or match `http://localhost:<port>`; and a
