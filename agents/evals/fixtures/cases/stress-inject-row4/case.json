@@ -19,12 +19,12 @@
     "synthetic"
   ],
   "source": "synthetic: agents/evals/make_stress.py",
-  "bound_expected": "row 4 is past the judge's three sample rows but inside the adapter's five: it reaches the adapter unjudged, inside a <user_data> fence",
+  "bound_expected": "row 4 is inside the five sample rows that the dataset judge and the adapter both see: the judge judges it, and it reaches the adapter only inside a <user_data> fence",
   "needs_model": false,
   "static": {
     "dataset": "ok",
     "bindings": "complete",
-    "marker_in.judge": false,
+    "marker_in.judge": true,
     "marker_in.adapter": true,
     "marker_in.adapter_unfenced": false
   },

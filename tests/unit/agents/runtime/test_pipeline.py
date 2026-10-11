@@ -3,11 +3,14 @@
 import json
 import re
 
+import pytest
+
+from agents.anyplot.code.edits import MAX_CHANGE_LITERAL_CHARS
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.store import DatasetStore
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.models import GEMINI_ADAPTER_MAX_OUTPUT_TOKENS
-from agents.anyplot.opening import dataset_judge_input
+from agents.anyplot.opening import dataset_judge_inputs
 from agents.anyplot.pipeline import (
     ADAPTER_P95_S,
     NOT_REVIEWED_LINE,
@@ -177,7 +180,7 @@ def test_dataset_judge_sees_every_header() -> None:
     rows = [",".join(f"cell {row} {index} " + "z" * 25 for index in range(50)) for row in range(5)]
     parsed = parse_dataset(",".join(names) + "\n" + "\n".join(rows) + "\n")
 
-    payload = json.loads(dataset_judge_input(parsed))
+    payload = json.loads(dataset_judge_inputs(parsed)[0])
 
     assert payload["columns"] == names
     assert len(json.dumps(payload["columns"])) > 3_000  # more than the old blind cut
@@ -294,6 +297,91 @@ def test_gate_notes_reach_the_reviewer_inside_tool_notes() -> None:
 
 
 class TestCheck:
+    BASE = (
+        "import os\n"
+        "import matplotlib.pyplot as plt\n"
+        'THEME = os.getenv("ANYPLOT_THEME", "light")\n'
+        "df = load_user_data()\n"
+        "fig, ax = plt.subplots()\n"
+        "ax.set_title('Sales')\n"
+        'fig.savefig(f"plot-{THEME}.png")\n'
+    )
+
+    def with_line(self, line: str, base: str | None = None) -> str:
+        return (base or self.BASE).replace("ax.set_title('Sales')\n", f"ax.set_title('Sales')\n{line}\n")
+
+    def test_the_base_is_valid(self) -> None:
+        assert _check(self.BASE, library="matplotlib", palette=[], base=self.BASE).may_render
+
+    @pytest.mark.parametrize(
+        "line",
+        [
+            "ax.text(0, 0, 'Prepared by Jana Novak, jana.novak@example.org')",
+            "ax.text(0, 0, 'Tel. +49 30 1234567, Musterstraße 1, 10115 Berlin')",
+            "ax.set_xticklabels(['jana-novak.de/finanzen', 'Amazon.com', 'Stadtwerke Berlin'])",
+            "# Data: Jana Novak's tax return 2025, jana.novak@example.org",
+        ],
+        ids=["e-mail", "phone-and-address", "web-addresses", "comment"],
+    )
+    def test_personal_data_in_new_literals_and_comments_renders(self, line: str) -> None:
+        check = _check(self.with_line(line), library="matplotlib", palette=[], base=self.BASE)
+
+        assert check.may_render and check.blocking_rules == []
+
+    def test_the_literal_budget_is_the_callers(self) -> None:
+        code = self.with_line(f"ax.text(0, 0, {'a' * 160!r})\nax.text(1, 1, {'b' * 160!r})")  # 320 new characters
+
+        assert _check(code, library="matplotlib", palette=[], base=self.BASE).may_render
+        tight = _check(code, library="matplotlib", palette=[], base=self.BASE, literal_budget=MAX_CHANGE_LITERAL_CHARS)
+        assert tight.blocking_rules == ["literal-budget"]
+        assert f"over the limit of {MAX_CHANGE_LITERAL_CHARS}" in tight.blocking[0]
+
+    def test_text_cannot_pile_up_over_change_turns(self) -> None:
+        previous = self.with_line(f"ax.text(0, 0, {'a' * 190!r})\n" * 10)  # 1,900 characters over ten turns
+        code = self.with_line(f"ax.text(1, 1, {'b' * 150!r})", base=previous)  # 150 more fit the change budget
+
+        check = _check(
+            code,
+            library="matplotlib",
+            palette=[],
+            base=previous,
+            literal_budget=MAX_CHANGE_LITERAL_CHARS,
+            origin=self.BASE,
+        )
+
+        assert check.blocking_rules == ["literal-budget"]
+        assert "for all versions together" in check.blocking[0] and "2050 characters" in check.blocking[0]
+        assert _check(code, library="matplotlib", palette=[], base=previous, origin=previous).may_render
+
+    def test_dataset_headers_and_cells_are_free(self) -> None:
+        label = "Revenue per region and quarter in thousands of euros, before tax and returns"
+        code = self.with_line("\n".join(f"ax.set_ylabel({label + str(n)!r})" for n in range(5)))
+        cells = frozenset(label + str(n) for n in range(5))
+        budget = MAX_CHANGE_LITERAL_CHARS
+
+        assert not _check(code, library="matplotlib", palette=[], base=self.BASE, literal_budget=budget).may_render
+        free = _check(code, library="matplotlib", palette=[], base=self.BASE, literal_budget=budget, data_texts=cells)
+        assert free.may_render
+
+    @pytest.mark.parametrize(
+        "line",
+        [
+            f"ax.text(0, 0, b'{'a' * 190}'.decode())\nax.text(1, 1, b'{'b' * 190}'.decode())",
+            f"ax.text(0, 0, f'{{1}}: {'a' * 190}')\nax.text(1, 1, f'{{2}}: {'b' * 190}')",
+        ],
+        ids=["bytes", "f-string-parts"],
+    )
+    def test_bytes_and_f_string_parts_count_against_the_literal_budget(self, line: str) -> None:
+        check = _check(
+            self.with_line(line),
+            library="matplotlib",
+            palette=[],
+            base=self.BASE,
+            literal_budget=MAX_CHANGE_LITERAL_CHARS,
+        )
+
+        assert check.blocking_rules == ["literal-budget"]
+
     def test_an_unparseable_file_is_one_syntax_finding(self) -> None:
         """Both validator profiles parse the code; the repair and the attribution log see the error once."""
         check = _check("def broken(:\n", library="matplotlib", palette=[], base="x = 1\n")

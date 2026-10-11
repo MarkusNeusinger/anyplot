@@ -18,7 +18,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
 | `GET /v1/sessions/{sid}/artifacts/{name}?v=` | | the file | `404` |
-| `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle | `404` |
+| `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle; with `AGENT_KEEP_REFUSALS` also `refusals`, the session's refused messages `[{verdict, lang, text, at}]` | `404` |
 | `DELETE /v1/sessions/{sid}` | | `204` | |
 
 Every `/v1` route needs `X-Anyplot-User` (the BFF's opaque user id); sessions are
@@ -42,6 +42,15 @@ but behind waiting pipeline renders in the render slot (`render/serial.py`); whi
 it renders it holds the session's registry entry, so a user has one run or toggle
 in flight at a time. `adk web` runs the agents without this service, so its runs
 bypass the queue; its renders still go through the one render slot.
+
+Before a dataset is stored, a deterministic pre-filter reads every header and cell
+for text addressed to an AI, then the dataset judge reads the judged view (every
+header, the five rows and top values the root and the adapter get, cells in full) in
+parts of about 4,000 characters, four at a time (`opening.py`). Both look for
+injection only: names, addresses, e-mail addresses, phone numbers and web addresses
+are the user's data and pass. A pre-filter hit or any refusing part is
+`403 data_refused` (the `data_judge` attribution line tells `prefilter` and the
+judge's verdict apart); a part the judge cannot answer is `503 guard_unavailable`.
 
 The dataset answer lists the spec's data roles as `roles`, each
 `{name, kinds, required, variadic, description}`, so a client can offer a column
@@ -70,7 +79,7 @@ import re
 import secrets
 import time
 from collections.abc import AsyncIterator, Callable
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Annotated, Any, Literal
 
 from fastapi import Body, Depends, FastAPI, Header, Path, Query, Request
@@ -91,8 +100,15 @@ from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParseError, parse_dataset
 from agents.anyplot.data.roles import DataRole
 from agents.anyplot.data.store import StoreFull
 from agents.anyplot.dev_fixture import FixtureError, load_case
-from agents.anyplot.models import JudgeUnavailable
-from agents.anyplot.opening import Eligibility, assess, dataset_judge_input, opening_state, store_dataset
+from agents.anyplot.models import JudgeVerdict
+from agents.anyplot.opening import (
+    Eligibility,
+    assess,
+    dataset_judge_inputs,
+    instruction_like,
+    opening_state,
+    store_dataset,
+)
 from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution, budget_allows, judge_budget_tokens
 from agents.anyplot.policy import data_rubric, fence, refusal
 from agents.anyplot.render.serial import RenderBusy
@@ -575,25 +591,10 @@ async def upload_dataset(
     ledger = RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action")
     if not services.usage.daily_ok(user, get_settings()):
         raise AgentsError(429, "rate_limited")
-    try:
-        verdict = await services.judge.judge(fence("dataset", dataset_judge_input(parsed)), data_rubric())
-    except JudgeUnavailable:
-        attribution("data_judge", ledger, verdict="guard_unavailable")
-        raise AgentsError(503, "guard_unavailable") from None
-    services.usage.add_tokens(
-        user,
-        judge_budget_tokens(verdict.tokens, verdict.input_tokens, verdict.output_tokens, get_settings().judge_model),
-    )
-    attribution(
-        "data_judge",
-        ledger,
-        verdict=verdict.verdict,
-        judge_tokens=verdict.tokens,
-        judge_input=verdict.input_tokens,
-        judge_output=verdict.output_tokens,
-    )
-    if verdict.verdict != "in_scope":  # fail closed, like the scope guard
+    if instruction_like(parsed):
+        attribution("data_judge", ledger, verdict="prefilter")
         raise AgentsError(403, "data_refused")
+    await _judge_dataset(services, ledger, dataset_judge_inputs(parsed), content=parsed.csv)
     try:
         ingested = store_dataset(services.datasets, sid, parsed, view.snapshot, previous_id=view.dataset_id)
     except StoreFull:
@@ -609,6 +610,58 @@ async def upload_dataset(
         },
         headers=_NO_STORE,
     )
+
+
+DATASET_JUDGE_CONCURRENCY = 4
+"""Parts of one dataset judged at the same time; most datasets are one part, the widest about 30."""
+
+
+async def _judge_dataset(services: Services, ledger: RequestLedger, parts: list[str], *, content: str) -> None:
+    """Judge every part of the judged view, a few at a time; raise 503 on an outage and 403 on any refusal.
+
+    Every answered part books its cost-weighted tokens (`judge_budget_tokens`) to the user
+    and writes its own `data_judge` attribution line (with `part` and `parts`), so the
+    eval harness prices each call.
+    The batches stop at the first refusal or outage: the rest would change nothing. An
+    `attack` verdict is one strike against the user (`UsageBook.add_strike`), counted
+    once per distinct `content` (the canonical CSV), so retrying one upload that the
+    judge wrongly called an attack costs one strike, not one per try.
+    """
+    rubric = data_rubric()
+    judge_model = get_settings().judge_model
+    for start in range(0, len(parts), DATASET_JUDGE_CONCURRENCY):
+        batch = parts[start : start + DATASET_JUDGE_CONCURRENCY]
+        answers = await asyncio.gather(
+            *(services.judge.judge(fence("dataset", part), rubric) for part in batch), return_exceptions=True
+        )
+        if any(isinstance(answer, JudgeVerdict) and answer.verdict == "attack" for answer in answers):
+            services.usage.add_strike(ledger.user_id, content)  # one strike per upload, however many parts
+        refused = unavailable = False
+        for offset, answer in enumerate(answers):
+            number = start + offset + 1
+            if not isinstance(answer, JudgeVerdict):
+                unavailable = True
+                attribution("data_judge", ledger, verdict="guard_unavailable", part=number, parts=len(parts))
+                continue
+            services.usage.add_tokens(
+                ledger.user_id,
+                judge_budget_tokens(answer.tokens, answer.input_tokens, answer.output_tokens, judge_model),
+            )
+            attribution(
+                "data_judge",
+                ledger,
+                verdict=answer.verdict,
+                part=number,
+                parts=len(parts),
+                judge_tokens=answer.tokens,
+                judge_input=answer.input_tokens,
+                judge_output=answer.output_tokens,
+            )
+            refused = refused or answer.verdict != "in_scope"  # fail closed, like the scope guard
+        if unavailable:
+            raise AgentsError(503, "guard_unavailable")
+        if refused:
+            raise AgentsError(403, "data_refused")
 
 
 MAX_ROLE_DESCRIPTION_CHARS = 200
@@ -948,7 +1001,7 @@ async def bundle(
                 "data_csv": item.data_csv if include_data else None,
             }
         )
-    payload = {
+    payload: dict[str, Any] = {
         "session": {"spec_id": view.spec_id, "library": view.library, "locale": view.locale},
         "snapshot": {"spec_id": view.snapshot.spec_id, "library_version": view.snapshot.library_version},
         "transcript": transcript,
@@ -965,6 +1018,9 @@ async def bundle(
             "prompt_hashes": _prompt_hashes(),
         },
     }
+    if settings.keep_refusals:
+        # The transcript holds only the placeholder of a refused message; the ring holds its text.
+        payload["refusals"] = [asdict(item) for item in services.refusals.all(sid)]
     return JSONResponse(payload, headers=_NO_STORE)
 
 

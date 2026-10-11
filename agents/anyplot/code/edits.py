@@ -69,6 +69,11 @@ MAX_QUOTE_CHARS = 80
 MAX_COUNTED_MATCHES = 1000
 MAX_NEW_LITERAL_CHARS = 2_000
 """New string-literal text one plan may add (design doc, "Adapt and validate")."""
+MAX_CHANGE_LITERAL_CHARS = 300
+"""New string-literal text one plan may add on top of a previous version (a change turn): a new title,
+a subtitle or a few labels fit, a paragraph of text does not. The first adaptation of the catalogue
+code renames many titles and labels at once and keeps `MAX_NEW_LITERAL_CHARS`, which also bounds the
+new literals of every version against the catalogue code, so text cannot pile up across turns."""
 
 # The placeholder statement as a line of text, so one that an earlier edit of the same
 # plan introduced is protected before the code parses again.
@@ -233,24 +238,37 @@ def _bindings(tree: ast.Module, names: set[str]) -> Counter[str]:
     return counts
 
 
-def new_literal_chars(base: str, code: str) -> int:
-    """Characters of string literals in `code` that `base` does not already hold (as a multiset).
+def new_literals(base: str, code: str) -> list[str]:
+    """The string literals of `code` that `base` does not already hold (as a multiset), each as often as it is new.
 
-    The plan's literal budget (`MAX_NEW_LITERAL_CHARS`): an adaptation renames titles
-    and labels, it does not write out data or long text. A `code` or `base` that does
-    not parse counts as 0; the validator reports the syntax error.
+    A `code` or `base` that does not parse has none; the validator reports the syntax error.
     """
     try:
         before, after = _string_literals(ast.parse(base)), _string_literals(ast.parse(code))
     except SyntaxError:
-        return 0
-    return sum(len(text) * count for text, count in (after - before).items())
+        return []
+    return [text for text, count in sorted((after - before).items()) for _ in range(count)]
+
+
+def new_literal_chars(base: str, code: str) -> int:
+    """Characters of string literals in `code` that `base` does not already hold (as a multiset).
+
+    The plan's literal budget (`MAX_NEW_LITERAL_CHARS`, `MAX_CHANGE_LITERAL_CHARS` on a
+    change turn): an adaptation renames titles and labels, it does not write out data
+    or long text. A `code` or `base` that does not parse counts as 0.
+    """
+    return sum(len(text) for text in new_literals(base, code))
 
 
 def _string_literals(tree: ast.Module) -> Counter[str]:
-    return Counter(
-        node.value for node in ast.walk(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)
-    )
+    """Every str and bytes constant (bytes as Latin-1 text, as the validator reads them), f-string parts included."""
+    counts: Counter[str] = Counter()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            counts[node.value] += 1
+        elif isinstance(node, ast.Constant) and isinstance(node.value, bytes):
+            counts[node.value.decode("latin-1")] += 1
+    return counts
 
 
 def _apply(working: str, plan: AdaptPlan) -> AppliedPlan:

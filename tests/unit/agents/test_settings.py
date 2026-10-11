@@ -135,6 +135,22 @@ class TestEnvironmentOverrides:
         with pytest.raises(ValidationError, match="max_attempts"):
             AgentSettings()
 
+    def test_refused_texts_are_dropped_and_three_strikes_count_by_default(self) -> None:
+        settings = AgentSettings()
+
+        assert settings.keep_refusals is False and settings.attack_strikes == 3
+
+    def test_the_guard_switches_come_from_the_environment(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("AGENT_KEEP_REFUSALS", "true")
+        monkeypatch.setenv("AGENT_ATTACK_STRIKES", "5")
+
+        settings = AgentSettings()
+
+        assert settings.keep_refusals is True and settings.attack_strikes == 5
+        monkeypatch.setenv("AGENT_ATTACK_STRIKES", "0")
+        with pytest.raises(ValidationError, match="attack_strikes"):
+            AgentSettings()
+
     @pytest.mark.parametrize("name", ["AGENT_RUN_CONCURRENCY", "AGENT_RUNS_PER_MINUTE", "AGENT_QUEUE_MAX_WAIT_S"])
     def test_queue_settings_must_be_positive(self, monkeypatch: pytest.MonkeyPatch, name: str) -> None:
         monkeypatch.setenv(name, "0")

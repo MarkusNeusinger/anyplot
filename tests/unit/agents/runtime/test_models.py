@@ -11,6 +11,7 @@ from google.adk.models.google_llm import Gemini
 from google.adk.models.llm_request import LlmRequest
 from google.genai import types
 
+from agents.anyplot import models
 from agents.anyplot.models import (
     ADAPTER_FULL_MAX_OUTPUT_TOKENS,
     GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS,
@@ -300,14 +301,50 @@ class TestJudge:
     async def test_two_failures_are_unavailable(self) -> None:
         judge = FakeJudge([ValueError("bad json"), ValueError("bad json")])
 
-        with pytest.raises(JudgeUnavailable):
+        with pytest.raises(JudgeUnavailable, match=r"failed twice \(ValueError\)"):
             await judge.judge("text", "rubric")
 
     async def test_budget_timeout_is_unavailable(self) -> None:
         judge = FakeJudge(delay_s=0.2, timeout_s=0.05)
 
-        with pytest.raises(JudgeUnavailable, match="in time"):
+        with pytest.raises(JudgeUnavailable, match="in time$"):
             await judge.judge("text", "rubric")
+
+    async def test_retry_waits_the_backoff(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """A transient failure is not retried in the same instant: the retry starts a back-off later."""
+        monkeypatch.setattr(models, "JUDGE_RETRY_BACKOFF_S", 0.05)
+        judge = FakeJudge([RuntimeError("429"), JudgeVerdict(verdict="in_scope", lang="en")])
+        loop = asyncio.get_running_loop()
+
+        started = loop.time()
+        verdict = await judge.judge("text", "rubric")
+
+        assert verdict.verdict == "in_scope"
+        assert len(judge.calls) == 2
+        assert loop.time() - started >= 0.05
+
+    async def test_first_answer_does_not_wait(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(models, "JUDGE_RETRY_BACKOFF_S", 1.0)
+        judge = FakeJudge([JudgeVerdict(verdict="in_scope", lang="en")])
+        loop = asyncio.get_running_loop()
+
+        started = loop.time()
+        await judge.judge("text", "rubric")
+
+        assert loop.time() - started < 0.5
+
+    async def test_budget_running_out_in_the_backoff_names_the_failure(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Fail closed, and keep the cause: the budget ends during the wait, after one failed call."""
+        monkeypatch.setattr(models, "JUDGE_RETRY_BACKOFF_S", 0.2)
+        judge = FakeJudge([RuntimeError("quota")], timeout_s=0.05)
+
+        with pytest.raises(JudgeUnavailable, match=r"in time \(after RuntimeError\)$"):
+            await judge.judge("text", "rubric")
+        assert len(judge.calls) == 1  # the retry never started
+
+    def test_backoff_fits_the_default_budget(self) -> None:
+        """Two judge calls of about 1.5 s each and the back-off fit the default 4 s budget."""
+        assert 2 * 1.5 + models.JUDGE_RETRY_BACKOFF_S <= AgentSettings().judge_timeout_s
 
     def test_factory_follows_the_provider(self) -> None:
         claude = make_judge_client(CLAUDE)
@@ -336,7 +373,7 @@ class TestJudge:
         assert (verdict.input_tokens, verdict.output_tokens) == (100, 20)  # the split the eval harness prices
         call = client.calls[0]
         schema = call["output_config"]["format"]["schema"]
-        assert schema["properties"]["verdict"]["enum"] == ["in_scope", "out_of_scope", "attack"]
+        assert schema["properties"]["verdict"]["enum"] == ["in_scope", "out_of_scope", "attack", "needs_data"]
         assert schema["additionalProperties"] is False and schema["required"] == ["verdict", "lang"]
         assert "tools" not in call and "tool_choice" not in call
         assert call["thinking"] == {"type": "disabled"}

@@ -58,7 +58,7 @@ from agents.anyplot.code.loader import loader_arguments
 from agents.anyplot.code.regions import find_regions
 from agents.anyplot.data.bindings import check_bindings, default_bindings
 from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParsedDataset, ParseError, parse_dataset
-from agents.anyplot.opening import assess, dataset_judge_input
+from agents.anyplot.opening import assess, dataset_judge_inputs
 from agents.anyplot.pipeline import _check, render_adapt_request, render_review_request
 from agents.anyplot.policy import FENCE_TAGS
 from agents.anyplot.render.contract import RenderBackend, RendererUnavailable, RenderJob
@@ -347,7 +347,7 @@ def _measure_prompts(
         change_request=change_request,
     )
     adapt_text = render_adapt_request(request, view)
-    judge_text = dataset_judge_input(parsed)
+    judge_text = "".join(dataset_judge_inputs(parsed))  # the judge sees every part, so measure them all
     review_text = render_review_request(
         ReviewRequest(
             render_id="static",
