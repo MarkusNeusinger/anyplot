@@ -10,6 +10,33 @@ import { bindingRows } from 'src/sections/agent-chat/bindings';
 import { DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { render, screen, userEvent, within } from 'src/test-utils';
 
+/** `scrollIntoView` as a spy: jsdom has none. */
+function stubScrollIntoView() {
+  const scroll = vi.fn();
+  Object.defineProperty(Element.prototype, 'scrollIntoView', {
+    value: scroll,
+    configurable: true,
+    writable: true,
+  });
+  return scroll;
+}
+
+function restoreScrollIntoView() {
+  delete (Element.prototype as Partial<Element>).scrollIntoView;
+}
+
+/** The options of every `scrollIntoView` call on `element`. */
+const scrolledTo = (scroll: ReturnType<typeof vi.fn>, element: Element) =>
+  scroll.mock.contexts.flatMap((context, index) =>
+    context === element ? [scroll.mock.calls[index][0]] : []
+  );
+
+/** Whether the page's styles hold the pinned header's scroll padding (40 + 64 px). */
+const scrollPaddingRule = () =>
+  [...document.querySelectorAll('style')].some(style =>
+    /scroll-padding-top:\s*104px/.test(style.textContent ?? '')
+  );
+
 const role = (name: string, overrides: Partial<RoleSpec> = {}): RoleSpec => ({
   name,
   kinds: ['numeric'],
@@ -258,25 +285,100 @@ describe('DataPanel steps', () => {
   });
 
   it('opens in full when the confirmation drops, and collapses at the next .confirm()', async () => {
-    const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
-    const { onConfirmData, rerender } = renderPanel(confirmed);
-    await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    const scroll = stubScrollIntoView();
+    try {
+      const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
+      const { onConfirmData, rerender } = renderPanel(confirmed);
+      await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
 
-    // A binding change, a data change or an undo: the server dropped the confirmation.
-    rerender({ ...confirmed, dataConfirmed: false });
-    expect(screen.queryByTestId('data-pinned')).not.toBeInTheDocument();
-    expect(screen.queryByText(/a change here takes the data back/)).not.toBeInTheDocument();
+      // A binding change, a data change or an undo: the server dropped the confirmation.
+      // The header stays and says so, and the line above the card stays in its place.
+      rerender({ ...confirmed, dataConfirmed: false });
+      expect(screen.getByTestId('data-summary')).toHaveTextContent(
+        'confirm again · 1 row · 5 columns · version 1'
+      );
+      expect(
+        screen.getByText('# step 1 again: check the data, then confirm it below')
+      ).toBeVisible();
+      expect(screen.queryByText(/a change here takes the data back/)).not.toBeInTheDocument();
+      expect(screen.getByTestId('data-step-status')).toHaveTextContent(
+        'step 1: check the data, then confirm it'
+      );
+      // The card is open in step 1 anyway: the header's button leads to its top.
+      const go = screen.getByRole('button', { name: 'Go to the data' });
+      expect(go).toHaveTextContent('.show()');
+      expect(go).not.toHaveAttribute('aria-expanded');
+      scroll.mockClear();
+      await userEvent.click(go);
+      expect(scrolledTo(scroll, screen.getByTestId('data-card'))).toEqual([
+        { behavior: 'smooth', block: 'start' },
+      ]);
+      expect(screen.getByTestId('data-card')).toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: '.confirm()' }));
+      expect(onConfirmData).toHaveBeenCalledTimes(1);
+
+      rerender(confirmed);
+      expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Show the data' })).toHaveAttribute(
+        'aria-expanded',
+        'false'
+      );
+    } finally {
+      restoreScrollIntoView();
+    }
+  });
+
+  it('brings the card in at its top on .show(), and .hide() goes back to the reading position', async () => {
+    const scroll = stubScrollIntoView();
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+    const scrollY = vi.spyOn(window, 'scrollY', 'get').mockReturnValue(1400);
+    try {
+      const { unmount } = render(
+        <DataPanel
+          state={stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true })}
+          onParse={vi.fn()}
+          onConfirmTranscription={vi.fn()}
+          onDiscardTranscription={vi.fn()}
+          onSendFormula={vi.fn()}
+          onBind={vi.fn()}
+          onConfirmData={vi.fn()}
+          onUndo={vi.fn()}
+        />
+      );
+      // While the header sticks, the page keeps focus and scrolling clear of it.
+      expect(scrollPaddingRule()).toBe(true);
+
+      await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+      expect(scrolledTo(scroll, screen.getByTestId('data-card'))).toEqual([
+        { behavior: 'smooth', block: 'start' },
+      ]);
+
+      scrollY.mockReturnValue(380);
+      await userEvent.click(screen.getByRole('button', { name: 'Hide the data' }));
+      expect(scrollTo).toHaveBeenCalledWith({ top: 1400 });
+
+      unmount();
+      expect(scrollPaddingRule()).toBe(false);
+    } finally {
+      scrollY.mockRestore();
+      scrollTo.mockRestore();
+      restoreScrollIntoView();
+    }
+  });
+
+  it('holds step 1 while a table read from text waits, and the header names the decision', () => {
+    const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
+    const { rerender } = renderPanel(confirmed);
+    // The server keeps its confirmation until `.use()`, and a turn's sync can report it.
+    rerender({ ...confirmed, transcription: TRANSCRIPTION });
+    expect(screen.getByTestId('data-summary')).toHaveTextContent(
+      'decide on the table first: .use() or .discard()'
+    );
+    expect(screen.getByTestId('transcription-card')).toBeVisible();
+    expect(screen.getByRole('button', { name: '.confirm()' })).toBeDisabled();
     expect(screen.getByTestId('data-step-status')).toHaveTextContent(
       'step 1: check the data, then confirm it'
-    );
-    await userEvent.click(screen.getByRole('button', { name: '.confirm()' }));
-    expect(onConfirmData).toHaveBeenCalledTimes(1);
-
-    rerender(confirmed);
-    expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Show the data' })).toHaveAttribute(
-      'aria-expanded',
-      'false'
     );
   });
 

@@ -8,7 +8,8 @@
  * place, with `.undo()`), check the preview and the role bindings and
  * `.confirm()` them at the card's foot (step 1). The card then collapses into
  * a pinned header at the top of the thread, `.show()` opens it again, and any
- * change to the data takes the page back to step 1 with the card open. In step
+ * change to the data takes the page back to step 1 with the card open; the
+ * header then stays as `! confirm again` and leads back to the card. In step
  * 2 the composer's action is `.create_plot()`: with an empty box it starts the
  * first plot as it is, with text the text goes as a turn and the assistant
  * makes the first plot with that change. Once the library has a plot, the
@@ -28,7 +29,7 @@
  * Design: docs/concepts/agent-network.md ("Frontend", "Request flow").
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
@@ -51,6 +52,7 @@ import { ERROR_TEXT } from 'src/sections/agent-chat/messages';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { StepHeader } from 'src/sections/agent-chat/StepHeader';
+import { inStep2 } from 'src/sections/agent-chat/steps';
 import {
   actionButtonSx,
   bodyTextSx,
@@ -176,7 +178,11 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   const [title, setTitle] = useState<string | null>(null);
   const [libraries, setLibraries] = useState<string[]>([...DEFAULT_AGENT_LIBRARIES]);
   const tailRef = useRef<HTMLDivElement>(null);
+  const messageRef = useRef<HTMLTextAreaElement>(null);
   const createRef = useRef<HTMLButtonElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  // Set by the user's own `.confirm()`: the step change it brings moves the focus, once.
+  const confirmFocus = useRef(false);
 
   // The spec's title and implemented libraries come from the public catalogue
   // API; the enabled libraries from the agents service. Both are best effort.
@@ -227,8 +233,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   const busy = sessionBusy(state);
   // The session could not open for this pair: other libraries are links instead.
   const reopen = state.phase === 'ineligible' || state.phase === 'error';
-  // Step 2: the data and its bindings are confirmed.
-  const step2 = state.dataConfirmed && !!state.dataset;
+  // Step 2: the data and its bindings are confirmed, and no table read from text waits.
+  const step2 = inStep2(state);
   const canCreate =
     state.phase === 'ready' && step2 && state.bindingsComplete && !state.transcription && !busy;
   // Until this library has a plot, `.create_plot()` is the composer's action and
@@ -236,11 +242,32 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   const firstPlot =
     step2 && !Object.values(state.versions).some(version => version.library === state.library);
 
-  // `.confirm()` collapsed the card and took its button away: the keyboard
-  // continues at `.create_plot()`, which a focus does not open a phone's keyboard for.
-  useEffect(() => {
-    if (step2) createRef.current?.focus();
-  }, [step2]);
+  // The user's own `.confirm()` collapsed the card and took its focused button
+  // away. Before the first plot the keyboard continues at `.create_plot()`, the
+  // step's next action (a button, so a phone opens no keyboard); after it at the
+  // pinned header's toggle, since a fresh run must not be one key press away by
+  // accident; it is in view where it sticks, so the focus scrolls nothing. Only
+  // for that confirmation, and only while nothing else holds the focus: a step 2
+  // that a turn's sync brings back never takes it from the composer. A layout
+  // effect, so the focus has moved by the time the button shows.
+  useLayoutEffect(() => {
+    if (!confirmFocus.current || state.confirmBusy) return;
+    confirmFocus.current = false;
+    const active = document.activeElement;
+    if (!step2 || (active && active !== document.body)) return;
+    if (firstPlot) createRef.current?.focus();
+    else toggleRef.current?.focus({ preventScroll: true });
+  }, [state.confirmBusy, step2, firstPlot]);
+
+  /**
+   * A key press on a composer button that a run replaces with `.stop()` (Enter
+   * and Space fire a click with `detail` 0): the focus continues in the message
+   * box, where a second press sends nothing, and stays there when the run ends.
+   * A pointer click moves no focus, so a phone opens no keyboard.
+   */
+  const keepKeyboardFocus = (event: React.MouseEvent) => {
+    if (event.detail === 0) messageRef.current?.focus();
+  };
 
   /**
    * The composer's action. The first plot: an empty box starts it as it is
@@ -407,32 +434,9 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
           aria-label="Chat"
           sx={{ ...panelSx, display: 'flex', flexDirection: 'column', gap: 2 }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minHeight: 28, mb: -0.5 }}>
-            <Box sx={labelSx}># chat</Box>
-            {state.run?.queue && (
-              <Box
-                role="status"
-                data-testid="queue-counter"
-                aria-label={`Queued: position ${state.run.queue.position}, ${state.run.queue.waiting} waiting`}
-                sx={{
-                  ml: 'auto',
-                  fontFamily: typography.mono,
-                  fontSize: smallText,
-                  color: 'var(--ink)',
-                  bgcolor: 'var(--bg-elevated)',
-                  border: '1px solid var(--rule)',
-                  borderRadius: 1,
-                  px: 1,
-                  py: 0.25,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                queue {state.run.queue.position}/{state.run.queue.waiting}
-              </Box>
-            )}
-          </Box>
+          <Box sx={{ ...labelSx, mb: -0.5 }}># chat</Box>
 
-          {/* The first turn: the data card, in step 2 the pinned header. A sibling of
+          {/* The first turn: the data card, once confirmed the pinned header. A sibling of
               the thread, so the header sticks over all of it. */}
           <DataPanel
             state={state}
@@ -441,8 +445,12 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             onDiscardTranscription={session.discardTranscription}
             onSendFormula={() => void session.sendFormula()}
             onBind={session.setBinding}
-            onConfirmData={() => void session.confirmData()}
+            onConfirmData={() => {
+              confirmFocus.current = true;
+              void session.confirmData();
+            }}
             onUndo={() => void session.undoData()}
+            toggleRef={toggleRef}
           />
 
           {state.items.length === 0 && !state.run && (
@@ -474,6 +482,29 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             ref={tailRef}
             sx={{ display: 'flex', flexDirection: 'column', gap: 2, scrollMarginBottom: 16 }}
           >
+            {/* At the foot with the progress, where a long thread keeps it in view. */}
+            {state.run?.queue && (
+              <Box
+                role="status"
+                data-testid="queue-counter"
+                aria-label={`Queued: position ${state.run.queue.position}, ${state.run.queue.waiting} waiting`}
+                sx={{
+                  alignSelf: 'flex-end',
+                  mb: -1,
+                  fontFamily: typography.mono,
+                  fontSize: smallText,
+                  color: 'var(--ink)',
+                  bgcolor: 'var(--bg-elevated)',
+                  border: '1px solid var(--rule)',
+                  borderRadius: 1,
+                  px: 1,
+                  py: 0.25,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                queue {state.run.queue.position}/{state.run.queue.waiting}
+              </Box>
+            )}
             {state.run && <ProgressTimeline run={state.run} />}
 
             {firstPlot && (
@@ -488,6 +519,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             >
               <Box
                 component="textarea"
+                ref={messageRef}
                 aria-label="Message"
                 placeholder={
                   // Step 1 talks about the data, step 2 about the plot. Without
@@ -516,11 +548,17 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 }}
                 sx={{ ...nativeControlSx, flex: '1 1 240px', resize: 'vertical' }}
               />
+              {/* Own keys: the button a run replaces never turns into `.stop()` in place,
+                  with a focus that a second key press would spend on stopping the run. */}
               {running ? (
                 <Box
+                  key="stop"
                   component="button"
                   type="button"
-                  onClick={() => void session.stop()}
+                  onClick={(event: React.MouseEvent) => {
+                    keepKeyboardFocus(event);
+                    void session.stop();
+                  }}
                   disabled={state.run?.stopping}
                   aria-label="Stop"
                   sx={{
@@ -533,9 +571,11 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 </Box>
               ) : firstPlot ? (
                 <Box
+                  key="create"
                   component="button"
                   type="submit"
                   ref={createRef}
+                  onClick={keepKeyboardFocus}
                   disabled={!canCreate}
                   aria-describedby={`${DATA_SUMMARY_ID} agent-create-line`}
                   sx={ctaButtonSx}
@@ -550,7 +590,10 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                       component="button"
                       type="button"
                       ref={createRef}
-                      onClick={() => void session.createPlot()}
+                      onClick={(event: React.MouseEvent) => {
+                        keepKeyboardFocus(event);
+                        void session.createPlot();
+                      }}
                       disabled={!canCreate}
                       aria-describedby={DATA_SUMMARY_ID}
                       sx={actionButtonSx}
@@ -561,6 +604,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                   <Box
                     component="button"
                     type="submit"
+                    onClick={keepKeyboardFocus}
                     disabled={!draft.trim() || state.phase !== 'ready' || busy}
                     sx={ghostButtonSx}
                   >

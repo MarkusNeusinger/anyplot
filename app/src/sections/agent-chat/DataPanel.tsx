@@ -9,11 +9,17 @@
  * bindings are right. The card then collapses into a pinned header at the top
  * of the thread, which stays in view on scroll: `✓ data fits · N rows · M
  * columns · version V` with `.show()`, which opens the full card again below it
- * without leaving step 2, and `.hide()`. Step 2's `.create_plot()` is the
- * page's composer, not the card's. A new parse, a binding change, a change the
- * assistant made to the data and an undo take the page back to step 1 with the
- * card open, because a plot of the wrong data is wrong however good it looks;
- * the server drops its confirmation for each of them already.
+ * without leaving step 2 and brings its top into view, and `.hide()`, which
+ * closes it and goes back to where the user was. Step 2's `.create_plot()` is
+ * the page's composer, not the card's. A new parse, a binding change, a change
+ * the assistant made to the data and an undo take the page back to step 1 with
+ * the card open, because a plot of the wrong data is wrong however good it
+ * looks; the server drops its confirmation for each of them already. The
+ * header stays then, in the warning colour (`! confirm again · ...`), and its
+ * `.show()` leads back to the card from anywhere in the thread, for example
+ * after a data request sent from below the plot. A table read from text that
+ * waits for its decision holds the page in step 1 as well, whatever a turn's
+ * sync says, and the header names that decision.
  *
  * Every role of the spec gets a column choice (`bindingRows` in `bindings.ts`):
  * a single role one dropdown, a variadic family one per member plus one for
@@ -41,9 +47,10 @@
  * text to the chat as a turn and empties the box.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 import Box from '@mui/material/Box';
+import GlobalStyles from '@mui/material/GlobalStyles';
 
 import {
   type AgentSessionState,
@@ -55,6 +62,7 @@ import {
 import { type ColumnProfile, MAX_DATASET_BYTES, utf8Bytes } from 'src/lib/agent';
 import { bindingRows, kindsHint } from 'src/sections/agent-chat/bindings';
 import { describeDataFailure } from 'src/sections/agent-chat/messages';
+import { inStep2 } from 'src/sections/agent-chat/steps';
 import {
   actionButtonSx,
   bodyTextSx,
@@ -62,6 +70,7 @@ import {
   ghostButtonSx,
   labelSx,
   nativeControlSx,
+  PINNED_CLEARANCE,
   PINNED_TOP,
   smallText,
   visuallyHiddenSx,
@@ -311,10 +320,10 @@ const stepButtonSx = {
 /** The line the pinned header shows, and `.create_plot()` names as its description. */
 export const DATA_SUMMARY_ID = 'agent-data-summary';
 
-/** The confirmed data in one line: `data fits · 2 rows · 2 columns · version 1`. */
-function dataSummary(dataset: NonNullable<AgentSessionState['dataset']>): string {
+/** The data's shape in one line: `2 rows · 2 columns · version 1`. */
+function dataShape(dataset: NonNullable<AgentSessionState['dataset']>): string {
   const { profile, version } = dataset.parsed;
-  return `data fits · ${countOf(profile.rows, 'row')} · ${countOf(profile.columns.length, 'column')} · version ${version ?? 1}`;
+  return `${countOf(profile.rows, 'row')} · ${countOf(profile.columns.length, 'column')} · version ${version ?? 1}`;
 }
 
 interface DataPanelProps {
@@ -327,6 +336,8 @@ interface DataPanelProps {
   onBind: (role: string, column: string | null) => void;
   onConfirmData: () => void;
   onUndo: () => void;
+  /** The pinned header's `.show()` / `.hide()`, for the page to move the keyboard focus to. */
+  toggleRef?: React.Ref<HTMLButtonElement>;
 }
 
 export function DataPanel({
@@ -338,11 +349,16 @@ export function DataPanel({
   onBind,
   onConfirmData,
   onUndo,
+  toggleRef,
 }: DataPanelProps) {
   const [text, setText] = useState('');
   // Step 2 only: whether the full card shows below the pinned header.
   const [expanded, setExpanded] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
+  // Where the commit after a toggle scrolls: the card's top after `.show()`,
+  // back to the reading position from before it after `.hide()`.
+  const scrollTarget = useRef<'card' | number | null>(null);
+  const returnTo = useRef<number | null>(null);
   const bytes = utf8Bytes(text);
   const over = bytes > MAX_DATASET_BYTES;
   const ready = state.phase === 'ready' && !!state.sessionId;
@@ -353,8 +369,14 @@ export function DataPanel({
   const dataset = state.dataset;
   const columns = dataset?.parsed.profile.columns ?? [];
   // Step 2: the card is collapsed into the pinned header unless the user opened it.
-  const confirmed = state.dataConfirmed && !!dataset;
+  const confirmed = inStep2(state);
   const open = !confirmed || expanded;
+  // Once the data was confirmed, the pinned header stays, also when the page is
+  // back at step 1: it leads back to the card from anywhere in the thread, and
+  // the content below it does not jump when the confirmation drops.
+  const everConfirmed = useRef(false);
+  if (confirmed) everConfirmed.current = true;
+  const pinned = !!dataset && everConfirmed.current;
   // A pending transcription blocks the confirmation: the user decides on the data first.
   const canConfirm = ready && !!dataset && state.bindingsComplete && !busy && !transcription;
   // An earlier version exists above the paste's 1, until the server says the
@@ -366,13 +388,34 @@ export function DataPanel({
     state.undoError?.code !== 'nothing_to_undo';
   const rows = bindingRows(state.roles, state.bindings, columns.length);
 
-  // `.show()` from far down the thread: the card opens at its top, out of
-  // view, so bring it in below the pinned header.
-  useEffect(() => {
-    if (confirmed && expanded) {
-      cardRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+  // `.show()` from far down the thread opens the card at the top of the thread,
+  // out of view: bring its top in below the pinned header (the page's
+  // scroll-padding keeps it clear). `.hide()` goes back to where the user read.
+  useLayoutEffect(() => {
+    const target = scrollTarget.current;
+    scrollTarget.current = null;
+    if (target === 'card') {
+      cardRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    } else if (target !== null && target !== window.scrollY) {
+      window.scrollTo({ top: target });
     }
-  }, [confirmed, expanded]);
+  }, [expanded]);
+
+  const handleToggle = () => {
+    // Step 1 again: the card is open anyway, somewhere above; the header leads to it.
+    if (!confirmed) {
+      cardRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    if (expanded) {
+      scrollTarget.current = returnTo.current;
+      returnTo.current = null;
+    } else {
+      returnTo.current = window.scrollY;
+      scrollTarget.current = 'card';
+    }
+    setExpanded(!expanded);
+  };
 
   // `.confirm()` collapses the card; a later step 1 opens it in full anyway.
   const handleConfirm = () => {
@@ -684,7 +727,9 @@ export function DataPanel({
             : ''}
       </Box>
 
-      {confirmed && dataset && (
+      {/* While the header sticks, the page's focus and scrolling land below it (WCAG 2.4.11). */}
+      {pinned && <GlobalStyles styles={{ html: { scrollPaddingTop: PINNED_CLEARANCE } }} />}
+      {pinned && dataset && (
         <Box
           data-testid="data-pinned"
           sx={{
@@ -698,7 +743,7 @@ export function DataPanel({
             gap: 1,
             bgcolor: 'var(--bg-elevated)',
             border: '1px solid var(--rule)',
-            borderLeft: `3px solid ${colors.primary}`,
+            borderLeft: `3px solid ${confirmed ? colors.primary : colors.warning}`,
             borderRadius: 1,
             pl: 1.5,
             pr: 0.75,
@@ -717,21 +762,33 @@ export function DataPanel({
               overflowWrap: 'anywhere',
             }}
           >
-            <Box component="span" aria-hidden sx={{ color: colors.success, mr: 0.75 }}>
-              ✓
+            <Box
+              component="span"
+              aria-hidden
+              sx={{ color: confirmed ? colors.success : colors.warning, mr: 0.75 }}
+            >
+              {confirmed ? '✓' : '!'}
             </Box>
-            {dataSummary(dataset)}
+            {confirmed
+              ? `data fits · ${dataShape(dataset)}`
+              : transcription
+                ? 'decide on the table first: .use() or .discard()'
+                : `confirm again · ${dataShape(dataset)}`}
           </Box>
           <Box
             component="button"
             type="button"
-            onClick={() => setExpanded(value => !value)}
-            aria-expanded={expanded}
-            aria-controls={expanded ? 'agent-data-card' : undefined}
-            aria-label={expanded ? 'Hide the data' : 'Show the data'}
+            ref={toggleRef}
+            onClick={handleToggle}
+            // Step 1 again: the card is open, and the button leads to it.
+            aria-expanded={confirmed ? expanded : undefined}
+            aria-controls={open ? 'agent-data-card' : undefined}
+            aria-label={
+              !confirmed ? 'Go to the data' : expanded ? 'Hide the data' : 'Show the data'
+            }
             sx={{ ...actionButtonSx, flex: 'none' }}
           >
-            {expanded ? '.hide()' : '.show()'}
+            {confirmed && expanded ? '.hide()' : '.show()'}
           </Box>
         </Box>
       )}
@@ -743,12 +800,15 @@ export function DataPanel({
           id="agent-data-card"
           data-testid="data-card"
           ref={cardRef}
-          // Clear of the masthead and the pinned header when `.show()` scrolls to it.
-          sx={{ ...cardSx, scrollMarginTop: PINNED_TOP + 64 }}
+          sx={cardSx}
         >
-          {confirmed && (
+          {/* With the header above it, one line says what a change here does; the line
+              stays when the confirmation drops, so the controls below it do not jump. */}
+          {pinned && (
             <Box sx={{ ...labelSx, mb: 1.5 }}>
-              # a change here takes the data back to step 1, where you confirm it again
+              {confirmed
+                ? '# a change here takes the data back to step 1, where you confirm it again'
+                : '# step 1 again: check the data, then confirm it below'}
             </Box>
           )}
           {cardContent}

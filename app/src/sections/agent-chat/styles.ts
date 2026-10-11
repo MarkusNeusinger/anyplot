@@ -1,8 +1,9 @@
 /**
  * Shared styles of the agent chat surfaces, after docs/reference/style-guide.md:
  * method-call buttons (§7.4), the filled CTA reserved for the one primary
- * action (`.create_plot()`), native form controls on the theme tokens, the
- * panel and card surfaces, and the pinned data header's offset. Colours come
+ * action (`.create_plot()`, the one place outside the landing hero that §7.4
+ * allows it), native form controls on the theme tokens, the panel and card
+ * surfaces, and the pinned data header's offset and clearance. Colours come
  * from the CSS variables, so both themes work.
  */
 
@@ -96,6 +97,18 @@ export const cardSx = {
  * leaving a gap the thread shows through.
  */
 export const PINNED_TOP = 40;
+
+/**
+ * The room the masthead and the pinned data header take at the top of the
+ * window (the header is 42 to 49 px high, two lines at phone width), with a gap.
+ * While the header shows, the page's `scroll-padding-top`: a control that gets
+ * the keyboard focus, or a card brought into view, lands below the header, never
+ * under it (WCAG 2.4.11). A per-element `scroll-margin-top` is not enough:
+ * Chrome's keyboard focus checks whether a control is in view against the
+ * padded viewport only. The header's own toggle sits in the padding where it
+ * sticks, so code focuses it with `preventScroll`.
+ */
+export const PINNED_CLEARANCE = PINNED_TOP + 64;
 
 /** Read by screen readers, invisible on screen. */
 export const visuallyHiddenSx = {

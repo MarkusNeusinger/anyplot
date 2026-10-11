@@ -43,6 +43,8 @@ const json = (status: number, body: unknown) =>
   });
 
 let fetchMock: ReturnType<typeof vi.fn>;
+/** Answers a parse held back with `slow` in its text; set while it is pending. */
+let releaseParse: (() => void) | null = null;
 
 const DATASET = {
   preview: [
@@ -121,6 +123,30 @@ const GENERATED = {
 
 const FORMULA = 'y = sin(x), x von -pi bis pi';
 
+/** Free text the server reads into a table with a model and does not store. */
+const FREE_TEXT = 'Hund 7 Katze 3 und Vogel 4';
+const TRANSCRIBED = {
+  transcribed: true,
+  text: 'animal,count\nHund,7\nKatze,3\nVogel,4\n',
+  preview: [
+    ['Hund', '7'],
+    ['Katze', '3'],
+    ['Vogel', '4'],
+  ],
+  profile: {
+    rows: 3,
+    columns: [
+      { name: 'animal', dtype: 'text', missing: 0, unique: 3 },
+      { name: 'count', dtype: 'integer', missing: 0, unique: 3 },
+    ],
+    source_format: 'csv',
+    decimal: '.',
+    warnings: [],
+  },
+  warnings: [],
+  note: '',
+};
+
 const SUMMARY = '2 rows: hours and score, both numbers. Is hours the x axis?';
 
 /** A shipped first plot; its artifacts are not served here, which the card shows as failed. */
@@ -155,6 +181,14 @@ function turnEvents(body: { text?: string; action?: string }): [string, unknown]
       ['plot', PLOT],
       ['message', { text: 'Here is your plot.' }],
       ['done', { llm_calls: 2, data_confirmed: true }],
+    ];
+  }
+  // A question about the data: the server reports the confirmation it holds, which a
+  // table read from text and then discarded left in place.
+  if (body.text?.includes('columns')) {
+    return [
+      ['message', { text: 'Two columns: hours and score.' }],
+      ['done', { llm_calls: 1, data_confirmed: true }],
     ];
   }
   // The assistant's `generate_data` computed the first data from a formula.
@@ -213,10 +247,16 @@ function stubFetch(
       return json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true });
     }
     if (url.pathname.endsWith('/sessions/S1/dataset') && method === 'POST') {
+      const text = String(init.body);
       // A formula is refused: the chat computes it.
-      return String(init.body).includes('sin(')
-        ? json(422, { detail: 'formula', ref: 'r-f' })
-        : json(200, DATASET);
+      if (text.includes('sin(')) return json(422, { detail: 'formula', ref: 'r-f' });
+      if (text.includes('Hund')) return json(200, TRANSCRIBED);
+      if (text.includes('slow')) {
+        return new Promise<Response>(resolve => {
+          releaseParse = () => resolve(json(200, DATASET));
+        });
+      }
+      return json(200, DATASET);
     }
     if (url.pathname.endsWith('/sessions/S1/bindings') && method === 'PUT') {
       return json(200, {
@@ -292,6 +332,25 @@ async function parseAndConfirm(value = 'hours,score\n1.5,52\n2.0,58\n') {
   await screen.findByTestId('data-pinned');
 }
 
+/** The turn in flight is over: its `done` was applied and `.stop()` gave way. */
+const turnEnded = () =>
+  waitFor(() => expect(screen.queryByRole('button', { name: 'Stop' })).not.toBeInTheDocument());
+
+/** Send `text` from the composer with Enter. */
+function sendFromComposer(text: string) {
+  const box = screen.getByLabelText('Message');
+  fireEvent.change(box, { target: { value: text } });
+  fireEvent.keyDown(box, { key: 'Enter' });
+}
+
+/** In step 2, open the card and paste free text, which comes back as a table to decide on. */
+async function transcribeInStep2() {
+  fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+  fireEvent.change(screen.getByLabelText(/# your data/), { target: { value: FREE_TEXT } });
+  fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+  await screen.findByTestId('transcription-card');
+}
+
 /** The step the step header marks as current. */
 const currentStep = () =>
   within(screen.getByRole('list', { name: 'Steps' }))
@@ -303,6 +362,7 @@ beforeEach(() => {
   flags.agentChat = true;
   flags.isDev = false;
   localStorage.clear();
+  releaseParse = null;
   analytics.trackEvent.mockClear();
   analytics.trackPageview.mockClear();
   stubFetch();
@@ -415,7 +475,7 @@ describe('AgentChatPage gating', () => {
       'data fits · 2 rows · 2 columns · version 1 # step 2 — create the plot as it is, or say first what it should do differently'
     );
     // The confirmation's button is gone with the card: the keyboard continues here.
-    expect(create).toHaveFocus();
+    await waitFor(() => expect(create).toHaveFocus());
     expect(screen.getByTestId('data-step-status')).toHaveTextContent(
       'step 2: the data is confirmed; create the plot below'
     );
@@ -439,7 +499,9 @@ describe('AgentChatPage gating', () => {
     expect(await screen.findByText('Swapped.')).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: '.confirm()' })).toBeEnabled();
     expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
-    expect(screen.queryByTestId('data-pinned')).not.toBeInTheDocument();
+    expect(screen.getByTestId('data-summary')).toHaveTextContent(
+      'confirm again · 2 rows · 2 columns · version 1'
+    );
     expect(screen.getByLabelText(/^x/)).toHaveValue('score');
     expect(screen.getByLabelText(/^y/)).toHaveValue('hours');
     expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
@@ -486,7 +548,7 @@ describe('AgentChatPage gating', () => {
     expect(undo).toBeEnabled();
     fireEvent.click(undo);
     expect(await screen.findByText('# undone · back to version 1')).toBeInTheDocument();
-    expect(screen.queryByTestId('data-pinned')).not.toBeInTheDocument();
+    expect(screen.getByTestId('data-summary')).toHaveTextContent('confirm again');
     expect(screen.getByTestId('data-card')).toBeInTheDocument();
     expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
     expect(screen.getByRole('button', { name: '.confirm()' })).toBeInTheDocument();
@@ -577,7 +639,11 @@ describe('AgentChatPage gating', () => {
     fireEvent.change(screen.getByLabelText(/^y/), { target: { value: 'hours' } });
 
     const confirm = await screen.findByRole('button', { name: '.confirm()' });
-    expect(screen.queryByTestId('data-pinned')).not.toBeInTheDocument();
+    // The header stays, now in step 1's words, and leads back to the open card.
+    expect(screen.getByTestId('data-summary')).toHaveTextContent(
+      'confirm again · 2 rows · 2 columns · version 1'
+    );
+    expect(screen.getByRole('button', { name: 'Go to the data' })).toBeInTheDocument();
     expect(screen.getByTestId('data-card')).toBeInTheDocument();
     expect(currentStep()).toEqual(['1 data']);
     expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
@@ -605,7 +671,9 @@ describe('AgentChatPage gating', () => {
     fireEvent.keyDown(box, { key: 'Enter' });
     expect(turnBodies()).toEqual([{ action: 'summarize_data' }]);
 
-    fireEvent.click(screen.getByRole('button', { name: '.create_plot()' }));
+    // A pointer click moves no focus into the box, so a phone opens no keyboard.
+    fireEvent.click(screen.getByRole('button', { name: '.create_plot()' }), { detail: 1 });
+    expect(box).not.toHaveFocus();
     expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
     expect(lastTurn()).toEqual({ action: 'create_plot' });
     const thread = screen.getByRole('log', { name: 'Conversation' });
@@ -634,6 +702,149 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByRole('button', { name: '.send()' })).toBeDisabled();
     expect(screen.getByRole('button', { name: '.create_plot()' })).toBeEnabled();
     expect(screen.getByTestId('data-pinned')).toBeInTheDocument();
+  });
+
+  it('goes back to step 1 on a data request after the plot, with the header leading to the card', async () => {
+    const scroll = vi.fn();
+    Object.defineProperty(Element.prototype, 'scrollIntoView', {
+      value: scroll,
+      configurable: true,
+      writable: true,
+    });
+    try {
+      localStorage.setItem(ADMIN_HINT_KEY, '1');
+      renderAt(PAGE);
+      await parseAndConfirm();
+      fireEvent.click(screen.getByRole('button', { name: '.create_plot()' }));
+      expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+      await turnEnded();
+      expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
+
+      // A change to the data asked for below the plot, with the card collapsed.
+      sendFromComposer('das ist prozent');
+      const change = await screen.findByTestId('data-change');
+      await turnEnded();
+      expect(within(change).getByText('# changed · version 2')).toBeInTheDocument();
+      expect(within(change).getByRole('button', { name: '.undo()' })).toBeEnabled();
+      expect(screen.getByRole('cell', { name: '0.52' })).toBeInTheDocument();
+      expect(currentStep()).toEqual(['1 data']);
+      expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+      // The header stays pinned in view and leads to the card's top, far above.
+      expect(screen.getByTestId('data-summary')).toHaveTextContent(
+        'confirm again · 2 rows · 2 columns · version 2'
+      );
+      scroll.mockClear();
+      fireEvent.click(screen.getByRole('button', { name: 'Go to the data' }));
+      expect(scroll.mock.contexts).toEqual([screen.getByTestId('data-card')]);
+      expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+
+      // Confirmed again with a plot already there: the keyboard lands on the header's
+      // toggle, not on a fresh run.
+      const confirm = screen.getByRole('button', { name: '.confirm()' });
+      await waitFor(() => expect(confirm).toBeEnabled());
+      confirm.focus();
+      fireEvent.click(confirm);
+      const show = await screen.findByRole('button', { name: 'Show the data' });
+      await waitFor(() => expect(show).toHaveFocus());
+      expect(screen.getByRole('button', { name: '.create_plot()' })).not.toHaveFocus();
+    } finally {
+      delete (Element.prototype as Partial<Element>).scrollIntoView;
+    }
+  });
+
+  it('holds step 1 while a table read from text waits, whatever a turn reports', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    await transcribeInStep2();
+    expect(currentStep()).toEqual(['1 data']);
+
+    // The server keeps its confirmation of the stored data, and the turn's sync says so;
+    // the text still goes as a turn.
+    sendFromComposer('what columns are there?');
+    expect(await screen.findByText('Two columns: hours and score.')).toBeInTheDocument();
+    await turnEnded();
+    expect(lastTurn()).toEqual({ text: 'what columns are there?' });
+    expect(currentStep()).toEqual(['1 data']);
+    expect(screen.getByTestId('transcription-card')).toBeInTheDocument();
+    expect(screen.getByTestId('data-summary')).toHaveTextContent(
+      'decide on the table first: .use() or .discard()'
+    );
+    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Message')).toHaveAttribute(
+      'placeholder',
+      'ask about your data, or for a fix: "sum per month"'
+    );
+
+    // Discarded, the stored data is the confirmed data again.
+    fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
+    expect(currentStep()).toEqual(['·2 plot']);
+    expect(screen.getByRole('button', { name: '.create_plot()' })).toBeEnabled();
+  });
+
+  it("leaves the composer's focus alone when a turn's sync confirms the data again", async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    await transcribeInStep2();
+    // The hook dropped its confirmation for the table; the server kept its own.
+    fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
+    expect(currentStep()).toEqual(['1 data']);
+
+    const box = screen.getByLabelText('Message');
+    box.focus();
+    sendFromComposer('what columns are there?');
+    expect(await screen.findByText('Two columns: hours and score.')).toBeInTheDocument();
+    await turnEnded();
+    expect(currentStep()).toEqual(['·2 plot']);
+    // No `.confirm()` of the user's: the next key press still types into the box.
+    expect(box).toHaveFocus();
+    expect(screen.getByRole('button', { name: '.create_plot()' })).not.toHaveFocus();
+  });
+
+  it('never spends a second key press on stopping the run it started', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    const create = screen.getByRole('button', { name: '.create_plot()' });
+    await waitFor(() => expect(create).toHaveFocus());
+
+    // Enter on the focused button: a click with `detail` 0. The focus continues in the
+    // box, and `.stop()` is a button of its own, not the one that had the focus.
+    fireEvent.click(create, { detail: 0 });
+    const box = screen.getByLabelText('Message');
+    expect(box).toHaveFocus();
+    const stop = screen.getByRole('button', { name: 'Stop' });
+    expect(stop).not.toBe(create);
+    expect(stop).not.toHaveFocus();
+    fireEvent.keyDown(box, { key: 'Enter' });
+
+    expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+    await turnEnded();
+    expect(turnBodies()).toEqual([{ action: 'summarize_data' }, { action: 'create_plot' }]);
+    expect(agentCalls().some(([input]) => String(input).endsWith('/cancel'))).toBe(false);
+    expect(box).toHaveFocus();
+  });
+
+  it("holds back the composer's .create_plot() while a parse runs", async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    const create = screen.getByRole('button', { name: '.create_plot()' });
+    expect(create).toBeEnabled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    fireEvent.change(screen.getByLabelText(/# your data/), {
+      target: { value: 'slow,data\n1,2\n' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    await waitFor(() => expect(releaseParse).not.toBeNull());
+    expect(create).toBeDisabled();
+
+    // A new parse is new data: step 1 again.
+    releaseParse?.();
+    expect(await screen.findByRole('button', { name: '.confirm()' })).toBeInTheDocument();
+    expect(currentStep()).toEqual(['1 data']);
   });
 
   it('offers a reload when the session open got no answer', async () => {
