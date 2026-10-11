@@ -343,6 +343,21 @@ const post = (body?: unknown): RequestInit => ({
 
 const sessionPath = (sid: string) => `/sessions/${encodeURIComponent(sid)}`;
 
+/**
+ * The name the BFF gives a session bundle: `anyplot-session-<the session id's
+ * first 8 characters>.json`, those reduced to `[A-Za-z0-9_-]`.
+ */
+export function bundleFilename(sid: string): string {
+  const short = sid.slice(0, 8).replace(/[^A-Za-z0-9_-]/g, '');
+  return `anyplot-session-${short || 'session'}.json`;
+}
+
+/** The quoted `filename` of an `attachment` disposition, when it is a plain `.json` name. */
+export function attachmentFilename(header: string | null): string | null {
+  const match = header?.match(/^attachment;\s*filename="([A-Za-z0-9_.-]{1,100})"$/);
+  return match && match[1].endsWith('.json') ? match[1] : null;
+}
+
 export const agentApi = {
   status: (token: string) => agentJson<AgentStatus>('/status', token),
   eligibility: (token: string, spec: string, library: string, signal?: AbortSignal) =>
@@ -407,6 +422,22 @@ export const agentApi = {
   artifact: async (token: string, sid: string, name: ArtifactName, version: number) => {
     const response = await agentFetch(`${sessionPath(sid)}/artifacts/${name}?v=${version}`, token);
     return response.blob();
+  },
+  /**
+   * `.save()`: the session's feedback case as a JSON file (`GET .../bundle`): the
+   * conversation, every version's code, plan, result and PNGs, the data profile,
+   * the bindings and the config stamp; each version's `data.csv` with
+   * `includeData`. The file name is the BFF's (`Content-Disposition`), or the same
+   * name built here where a cross-origin page cannot read that header (dev).
+   */
+  fetchBundle: async (token: string, sid: string, includeData: boolean) => {
+    const response = await agentFetch(
+      `${sessionPath(sid)}/bundle?include_data=${includeData ? 'true' : 'false'}`,
+      token
+    );
+    const filename =
+      attachmentFilename(response.headers.get('Content-Disposition')) ?? bundleFilename(sid);
+    return { blob: await response.blob(), filename };
   },
   /** `keepalive` lets the purge outlive the page (`pagehide`); best effort either way. */
   deleteSession: async (token: string, sid: string, { keepalive = false } = {}) => {

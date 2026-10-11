@@ -76,11 +76,16 @@
  * deleted when the page unmounts and on `pagehide` (a reload or a closed tab,
  * sent with `keepalive`); the server's idle sweep is the backstop.
  *
+ * Saving: `saveSession` (`.save()`) downloads the session's feedback case,
+ * the conversation, code, images and config the agents service assembles,
+ * as one JSON file. It only reads the session and starts no run, so no state
+ * tracks it: the button keeps its own saving flag and failure line.
+ *
  * Analytics carry enum properties only, never text or data:
  * `agent_data_parsed{status, size_bucket}`, `agent_data_confirmed{size_bucket}`,
  * `agent_data_prepared{changes}`, `agent_data_undo{version}`,
- * `agent_plot_rendered{library, status, repaired, spec}` and
- * `agent_guardrail_block{reason}`.
+ * `agent_plot_rendered{library, status, repaired, spec}`,
+ * `agent_guardrail_block{reason}` and `agent_session_saved{include_data}`.
  */
 
 import { useCallback, useEffect, useReducer, useRef } from 'react';
@@ -113,6 +118,7 @@ import {
   utf8Bytes,
 } from 'src/lib/agent';
 import { readSseEvents } from 'src/lib/sse';
+import { downloadBlob } from 'src/sections/agent-chat/files';
 import { reloadOnceForAccess } from 'src/utils/adminAuth';
 
 /** How long Stop waits for the server's `done` before it lets go of the stream. */
@@ -719,6 +725,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   // The parse's own binding call ends right before its summary turn starts,
   // sooner than the state can say so.
   const bindingsRef = useRef(false);
+  const saveRef = useRef(false);
   const versionCounter = useRef(0);
   const blobUrls = useRef<Set<string>>(new Set());
   const mounted = useRef(true);
@@ -1337,6 +1344,37 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     [token, specId, safeDispatch, addItem, handleFailure, busy]
   );
 
+  // ---------------------------------------------------------------- save
+
+  /**
+   * `.save()`: download the session's feedback case as `anyplot-session-<id>.json`,
+   * with each version's `data.csv` when `includeData` is set, and report
+   * `agent_session_saved{include_data}`. Nothing starts without a session, while
+   * anything else is in flight (the file would miss the turn in progress), or
+   * while a save runs. A failure rejects with an `AgentApiError` for the
+   * button's failure line; a 401 or 403 also shows the sign-in notice.
+   */
+  const saveSession = useCallback(
+    async (includeData: boolean): Promise<void> => {
+      const current = stateRef.current;
+      const sid = current.sessionId;
+      if (!sid || current.run || busy() || saveRef.current) return;
+      saveRef.current = true;
+      try {
+        const { blob, filename } = await agentApi.fetchBundle(token, sid, includeData);
+        if (!mounted.current) return;
+        downloadBlob(blob, filename);
+        trackEvent('agent_session_saved', { include_data: includeData ? 'yes' : 'no' });
+      } catch (err) {
+        const failure = handleFailure(err);
+        throw err instanceof AgentApiError ? err : new AgentApiError(0, failure.code);
+      } finally {
+        saveRef.current = false;
+      }
+    },
+    [token, handleFailure, trackEvent, busy]
+  );
+
   return {
     state,
     parseData,
@@ -1352,6 +1390,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     switchLibrary,
     requestTheme,
     fetchArtifact,
+    saveSession,
   };
 }
 

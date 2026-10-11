@@ -44,6 +44,7 @@ import { DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { ERROR_TEXT } from 'src/sections/agent-chat/messages';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
+import { SaveButton } from 'src/sections/agent-chat/SaveButton';
 import { StepHeader } from 'src/sections/agent-chat/StepHeader';
 import {
   actionButtonSx,
@@ -321,6 +322,13 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             );
           })}
         </Box>
+        {/* `.save()` downloads the session; without one (ineligible, error) there is nothing to save. */}
+        {!reopen && (
+          <SaveButton
+            disabled={state.phase !== 'ready' || !state.sessionId || busy}
+            onSave={session.saveSession}
+          />
+        )}
       </Box>
     </>
   );
