@@ -496,6 +496,21 @@ Spike X is the go or no-go for phase 1: 10 specs times matplotlib and seaborn ti
 7. Check the exit criteria in the design: at least 80 % pass after at most one repair, an owner acceptance of at least 75 % on the sample, and a median cost of at most $0.05 per successful plot.
 8. Commit `agents/evals/baselines/claude-haiku-5-5.json` and `gemini-3.8-flash.json` once you accept the runs. From then on, `tests/unit/agents/evals/test_baselines.py` requires a baseline for the pinned model. If `--save-baseline` refused a run because a case ended in an error, fix the cause and rerun that arm.
 
+### Import a feedback case
+
+`evals/import_case.py` turns a real session into an eval case: a bundle the chat page's `.save()` downloaded, or a case directory that the result card's quick feedback stored in the private case bucket and that you copied to this machine. Reading straight from `gs://` comes with the triage change.
+
+1. Run the import from the repository root:
+
+   ```bash
+   uv run --extra agents python -m agents.evals.import_case anyplot-session-AbCdEf12.json
+   uv run --extra agents python -m agents.evals.import_case cases/20261012T143005Z-1a2b3c4d --expected rejected
+   ```
+
+   The case goes to the git-ignored `evals/.cases/<id>/`, never to `evals/fixtures/`, because it holds a user's data. It needs the version's `data.csv`, so save the session or send the feedback with `# include data.csv` ticked. `--version N` picks a version of a bundle (the newest by default), `--id` names the case (by default `session-<hash>-v<n>` or `case-<case id>`), `--expected` sets the outcome (by default from the reaction: thumbs up and idea are `accepted`, thumbs down and bug `rejected`, and a bundle without a reaction `unknown`), and `--force` replaces an imported case of the same id.
+2. Check `change_request.txt` when the tool prints one: the transcript has no version markers, so the tool takes the `n`-th plot request after the first `create_plot` as the request of version `n`. Edit or delete the file when it is wrong.
+3. Run the case with `--cases <id>` (see [Run the smoke set or the full matrix](#run-the-smoke-set-or-the-full-matrix)). A run that holds promoted cases can't be saved as a baseline.
+
 ### Regenerate the fixtures
 
 The 120 generated cases come from `evals/make_fixtures.py`. After you change it, or when a NumPy upgrade changes a random stream, rerun it and commit the result:

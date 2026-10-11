@@ -6,7 +6,8 @@ A case is a directory with `case.json`, `data.csv` and optionally `snapshot.json
 * `agents/evals/fixtures/cases/`: committed, synthetic only (`origin="fixtures"`);
 * `agents/evals/.cases/`: promoted feedback cases synced from the private bucket,
   git-ignored because they hold users' data (`origin="promoted"`). Nothing syncs them
-  yet; the harness reads the directory when it exists.
+  yet; `agents/evals/import_case.py` writes one at a time from a saved session or a
+  stored case, and the harness reads the directory when it exists.
 
 `select_cases` takes the harness's `--cases` value: `smoke` (the cases tagged `smoke`:
 one generated case per spec plus the two hand-written ones), `full` (every case except
