@@ -14,4 +14,4 @@
   evaluates literals only, a name or a call is refused, and a bracket count
   that skips quoted strings refuses more than 50 nesting levels before anything
   is evaluated, so a 200 KB nested blob never reaches the stack. Text that
-  starts with a bare `(` and is no literal stays delimited text.
+  starts with a bare `(` and is no literal stays delimited text. (#12132)
