@@ -690,9 +690,10 @@ class TestUnits:
         parsed = parse_dataset(f"a,a,,{long}\n1 %,2 %,3 %,4 kg\n")
 
         names = [c.name for c in parsed.profile.columns]
-        assert names == ["a (%)", "a (%)_2", "column_3 (%)", "l" * (MAX_COLUMN_NAME_CHARS - 5) + " (kg)"]
+        # The duplicate suffix sits before the unit, so the unit stays at the end of every name.
+        assert names == ["a (%)", "a_2 (%)", "column_3 (%)", "l" * (MAX_COLUMN_NAME_CHARS - 5) + " (kg)"]
         assert all(len(name) <= MAX_COLUMN_NAME_CHARS for name in names)
-        assert warned(parsed, "column 2: duplicate header 'a (%)' renamed to 'a (%)_2'")
+        assert warned(parsed, "column 2: duplicate header 'a (%)' renamed to 'a_2 (%)'")
         assert warned(parsed, "column 3: empty header named 'column_3'")
         assert warned(parsed, "column 'column_3': unit '%' moved from the values into the name 'column_3 (%)'")
         assert warned(parsed, f"shortened to '{names[3]}'")
@@ -1008,3 +1009,14 @@ class TestReviewRegressions:
         assert column.name.endswith(" (%)") and len(column.name) <= 64
         assert column.dtype == "integer" and parsed.preview == [["65"], ["12"]]
         assert any("already carries it" in warning for warning in parsed.warnings)
+
+    def test_a_duplicate_suffix_never_cuts_into_the_unit(self) -> None:
+        header = "x" * 64
+        parsed = parse_dataset(f"{header},{header}\n65 %,12 %\n")
+        names = [column.name for column in parsed.profile.columns]
+        assert all(name.endswith(" (%)") and len(name) <= 64 for name in names)
+        assert names[1].endswith("_2 (%)") and names[0] != names[1]
+        assert [column.dtype for column in parsed.profile.columns] == ["integer", "integer"]
+
+        same = canonical_headers(["Anteil", "Anteil"], ["%", "%"])[0]
+        assert same == ["Anteil (%)", "Anteil_2 (%)"]

@@ -629,10 +629,13 @@ def canonical_headers(headers: Sequence[str], units: Sequence[str | None] | None
             )
         name += unit_suffix
         if name in used:
+            # The duplicate suffix goes before the unit suffix, so `_2` never cuts into ` (%)`.
             base, suffix = name, 2
+            stem = name[: len(name) - len(unit_suffix)]
             while name in used:
                 tail = f"_{suffix}"
-                name = base[: MAX_COLUMN_NAME_CHARS - len(tail)] + tail
+                room = MAX_COLUMN_NAME_CHARS - len(tail) - len(unit_suffix)
+                name = stem[:room].rstrip() + tail + unit_suffix
                 suffix += 1
             warnings.append(f"column {position}: duplicate header '{base}' renamed to '{name}'")
         used.add(name)
