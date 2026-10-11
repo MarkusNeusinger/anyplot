@@ -2,6 +2,7 @@
 
 import io
 import json
+import time
 from typing import Any
 
 import pandas as pd
@@ -270,16 +271,22 @@ class TestErrors:
             "[1, 2",
             "[]",
             "{}",
+            "()",
             "[1, 2]",
+            "(1, 2)",
+            "x = [1, 2]",
             '[{"a": {"nested": 1}}]',
             '[{"a": [1, 2]}]',
             '{"a": [1, 2], "b": [1]}',
-            '{"a": 1}',
+            '{"a": 1, "b": [2]}',
             '{"a": [[1]]}',
+            '[["a", 65], ["b"]]',
+            '[["a", 65], {"b": 12}]',
             "[" * 5000 + "]" * 5000,
         ],
     )
     def test_unparseable(self, text: str) -> None:
+        # `{"a": 1}` was in this list until the parser read an object of values as pairs (2026-10-11).
         assert error_code(text) == "unparseable"
 
     @pytest.mark.parametrize(
@@ -290,7 +297,14 @@ class TestErrors:
         assert error_code(text) == "no_table"
 
     def test_messages_never_quote_the_data(self) -> None:
-        for text in ('a,b\n"SECRET"y,1\n', "a,b\nSECRET,2,SECRET\n", '[{"a": {"SECRET": 1}}]'):
+        for text in (
+            'a,b\n"SECRET"y,1\n',
+            "a,b\nSECRET,2,SECRET\n",
+            '[{"a": {"SECRET": 1}}]',
+            "x = [SECRET]",
+            "{'SECRET': {'a': 1}}",
+            "{'SECRET': 1, 'b': [2]}",
+        ):
             with pytest.raises(ParseError) as caught:
                 parse_dataset(text)
             assert "SECRET" not in caught.value.message
@@ -383,6 +397,222 @@ class TestFormats:
 
     def test_json_with_surrounding_whitespace(self) -> None:
         assert parse_dataset('\n  [{"a": 1}]  \n').profile.rows == 1
+
+    def test_a_json_object_of_values_is_a_category_value_table_in_its_order(self) -> None:
+        parsed = parse_dataset('{"Schlafen & Dösen": 65, "Fellpflege": 12, "Fressen & Betteln": 8, "Rest": null}')
+
+        assert parsed.profile.source_format == "json_pairs"
+        assert parsed.column_dtypes == {"category": "text", "value": "integer"}
+        assert parsed.csv == "category,value\nSchlafen & Dösen,65\nFellpflege,12\nFressen & Betteln,8\nRest,\n"
+        assert column(parsed, "value").missing == 1
+        assert not parsed.warnings
+
+    def test_a_json_array_of_pairs_is_the_same_table(self) -> None:
+        parsed = parse_dataset('[["a", 65], ["b", 12.5], [3, true]]')
+
+        assert parsed.profile.source_format == "json_pairs"
+        assert parsed.column_dtypes == {"category": "text", "value": "text"}
+        assert parsed.csv == "category,value\na,65\nb,12.5\n3,true\n"
+
+    def test_json_pairs_row_boundary(self) -> None:
+        # Single CJK characters keep 20,001 distinct keys under the 200 KB input cap.
+        keys = {chr(0x4E00 + i): 1 for i in range(MAX_ROWS + 1)}
+        compact = {"ensure_ascii": False, "separators": (",", ":")}
+
+        assert error_code(json.dumps(keys, **compact)) == "too_many_rows"
+        assert error_code(json.dumps([["k", 1]] * (MAX_ROWS + 1), **compact)) == "too_many_rows"
+        assert parse_dataset(json.dumps([["k", 1]] * MAX_ROWS, **compact)).profile.rows == MAX_ROWS
+
+
+OWNER_DICT_LITERAL = """cat_day = {
+    "Schlafen & Dösen": 65,
+    "Fellpflege": 12,
+    "Fressen & Betteln": 8,
+    "Wand anstarren": 5,
+    "Zoomies um 3 Uhr": 5,
+    "Türen anjammern": 5,
+}
+"""
+
+
+class TestPythonLiterals:
+    def test_the_owners_dict_literal_with_its_assignment_and_trailing_comma(self) -> None:
+        parsed = parse_dataset(OWNER_DICT_LITERAL)
+
+        assert parsed.profile.source_format == "json_pairs"
+        assert parsed.column_dtypes == {"category": "text", "value": "integer"}
+        assert parsed.csv.splitlines()[1:] == [
+            "Schlafen & Dösen,65",
+            "Fellpflege,12",
+            "Fressen & Betteln,8",
+            "Wand anstarren,5",
+            "Zoomies um 3 Uhr,5",
+            "Türen anjammern,5",
+        ]
+
+    def test_single_quotes_tuples_and_python_constants(self) -> None:
+        parsed = parse_dataset("x = {'day': ('a', 'b', 'c',), 'ok': (True, False, None), 'n': [1, 2.5, None]}")
+
+        assert parsed.profile.source_format == "json_columns"
+        assert parsed.column_dtypes == {"day": "text", "ok": "boolean", "n": "number"}
+        assert parsed.csv == "day,ok,n\na,True,1.0\nb,False,2.5\nc,,\n"
+
+    def test_records_and_pairs_as_literals(self) -> None:
+        records = parse_dataset("rows = [{'x': 1, 'label': 'a'}, {'x': 2, 'label': 'b'},]")
+        pairs = parse_dataset("data = (('a', 1), ('b', 2))")
+
+        assert records.profile.source_format == "json_records"
+        assert records.csv == "x,label\n1,a\n2,b\n"
+        assert pairs.profile.source_format == "json_pairs"
+        assert pairs.csv == "category,value\na,1\nb,2\n"
+
+    def test_numeric_keys_become_names(self) -> None:
+        parsed = parse_dataset("{2023: [1, 2], 2024: [3, 4]}")
+
+        assert [c.name for c in parsed.profile.columns] == ["2023", "2024"]
+
+    def test_a_nested_dict_is_unparseable(self) -> None:
+        assert error_code("{'a': {'b': 1}}") == "unparseable"
+        assert error_code("x = {'a': {'b': 1}, 'c': {'d': 2}}") == "unparseable"
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "[1, len('x')]",
+            "x = [__import__('os').system('id')]",
+            "{'a': open('/etc/passwd')}",
+            "{'a': nan}",
+            "[1, 2] + [3]",
+            "x = {'a': 1}\ny = {'b': 2}",
+            "cat_day = {'a': 1",
+            "[" + "1" * 5000 + "]",
+        ],
+    )
+    def test_names_calls_and_broken_literals_are_unparseable(self, text: str) -> None:
+        assert error_code(text) == "unparseable"
+
+    @pytest.mark.parametrize("depth", [60, 100_000])
+    def test_a_deeply_nested_literal_is_refused_before_evaluation(self, depth: int) -> None:
+        started = time.perf_counter()
+
+        assert error_code("[" * depth + "]" * depth) == "unparseable"
+        assert time.perf_counter() - started < 1.0
+
+    def test_an_assignment_without_a_literal_is_delimited_text(self) -> None:
+        # `x = 5` is a header line without rows, so the route hands it to the transcriber.
+        assert error_code("x = 5") == "no_table"
+        assert parse_dataset("x = 5,y\n1,2\n").csv == "x = 5,y\n1,2\n"
+
+
+class TestUnits:
+    def test_a_percent_column_moves_the_unit_into_the_name(self) -> None:
+        parsed = parse_dataset("Kategorie,Anteil\nSchlafen,65 %\nFellpflege,12%\n")
+
+        assert parsed.column_dtypes == {"Kategorie": "text", "Anteil (%)": "integer"}
+        assert parsed.csv == "Kategorie,Anteil (%)\nSchlafen,65\nFellpflege,12\n"
+        assert column(parsed, "Anteil (%)").max == 65.0
+        assert parsed.warnings == ["column 'Anteil': unit '%' moved from the values into the name 'Anteil (%)'"]
+
+    def test_decimal_comma_hours(self) -> None:
+        parsed = parse_dataset("Tag;Dauer\nMo;15,6 h\nDi;8 h\n")
+
+        assert parsed.column_dtypes == {"Tag": "text", "Dauer (h)": "number"}
+        assert parsed.csv.splitlines()[1:] == ["Mo,15.6", "Di,8.0"]
+        assert parsed.profile.decimal == ","
+
+    def test_a_leading_euro_with_the_sign_before_it(self) -> None:
+        parsed = parse_dataset("Posten;Preis\nA;€ 5\nB;-€ 12,50\nC;€-1,5\n")
+
+        assert parsed.column_dtypes == {"Posten": "text", "Preis (€)": "number"}
+        assert parsed.csv.splitlines()[1:] == ["A,5.0", "B,-12.5", "C,-1.5"]
+
+    def test_a_currency_code_before_or_after_the_number(self) -> None:
+        parsed = parse_dataset("a,b\nx,CHF 1200\ny,800 CHF\n")
+
+        assert parsed.column_dtypes == {"a": "text", "b (CHF)": "integer"}
+        assert parsed.csv.splitlines()[1:] == ["x,1200", "y,800"]
+
+    def test_a_column_with_units_in_only_some_cells_stays_text(self) -> None:
+        parsed = parse_dataset("v\n65 %\n12\n")
+
+        assert parsed.column_dtypes == {"v": "text"}
+        assert parsed.csv == "v\n65 %\n12\n"
+        assert not parsed.warnings
+
+    def test_a_column_with_two_units_stays_text(self) -> None:
+        assert parse_dataset("v\n5 kg\n3 g\n").column_dtypes == {"v": "text"}
+        assert parse_dataset("v\n5 kg\n3 Kg\n").column_dtypes == {"v": "text"}
+
+    def test_a_negative_percent(self) -> None:
+        parsed = parse_dataset("v\n-3 %\n+2 %\n-0,5 %\n")
+
+        assert parsed.column_dtypes == {"v (%)": "number"}
+        assert parsed.csv.splitlines()[1:] == ["-3.0", "2.0", "-0.5"]
+
+    @pytest.mark.parametrize(
+        ("cells", "name", "dtype", "canonical"),
+        [
+            (["20 °C", "-5°C"], "v (°C)", "integer", ["20", "-5"]),
+            (["12°", "15 °"], "v (°)", "integer", ["12", "15"]),
+            (["5µs", "7 μs"], "v", "text", ["5µs", "7 μs"]),
+            (["5µs", "7 µs"], "v (µs)", "integer", ["5", "7"]),
+            (["3 Std", "4,5 Std"], "v (Std)", "number", ["3.0", "4.5"]),
+            (["1.234,56 €", "7,5 €"], "v (€)", "number", ["1234.56", "7.5"]),
+            (["$ 3", "-$ 2.5", "$-1"], "v ($)", "number", ["3.0", "-2.5", "-1.0"]),
+            (["12‰"], "v (‰)", "integer", ["12"]),
+            (["2E-2 h", "1e3h"], "v (h)", "number", ["0.02", "1000.0"]),
+            (["5 km/h"], "v", "text", ["5 km/h"]),
+            (["5 metre"], "v", "text", ["5 metre"]),
+            (["-$-1"], "v", "text", ["-$-1"]),
+            (["1e999 kg"], "v", "text", ["1e999 kg"]),
+            (["h 5"], "v", "text", ["h 5"]),
+            (["€"], "v", "text", ["€"]),
+        ],
+    )
+    def test_unit_shapes(self, cells: list[str], name: str, dtype: str, canonical: list[str]) -> None:
+        parsed = parse_dataset("v\n" + "\n".join(cells) + "\n")
+
+        assert parsed.column_dtypes == {name: dtype}
+        assert parsed.csv.splitlines()[1:] == canonical
+
+    def test_leading_zeros_behind_a_unit_keep_the_text(self) -> None:
+        parsed = parse_dataset("v\n007 kg\n12 kg\n")
+
+        assert parsed.column_dtypes == {"v": "text"}
+        assert parsed.warnings == ["column 'v': numbers with leading zeros kept as text"]
+
+    def test_dates_are_tried_before_units(self) -> None:
+        # `1.2.2024` could be a thousands-dot number behind no unit; a unit never changes that order.
+        parsed = parse_dataset("d;v\n01.02.2024;1 h\n")
+
+        assert parsed.column_dtypes == {"d": "datetime", "v (h)": "integer"}
+
+    def test_unit_names_take_the_canonical_path(self) -> None:
+        long = "l" * MAX_COLUMN_NAME_CHARS
+        parsed = parse_dataset(f"a,a,,{long}\n1 %,2 %,3 %,4 kg\n")
+
+        names = [c.name for c in parsed.profile.columns]
+        assert names == ["a (%)", "a (%)_2", "column_3 (%)", "l" * (MAX_COLUMN_NAME_CHARS - 5) + " (kg)"]
+        assert all(len(name) <= MAX_COLUMN_NAME_CHARS for name in names)
+        assert warned(parsed, "column 2: duplicate header 'a (%)' renamed to 'a (%)_2'")
+        assert warned(parsed, "column 3: empty header named 'column_3'")
+        assert warned(parsed, "column 'column_3': unit '%' moved from the values into the name 'column_3 (%)'")
+        assert warned(parsed, f"shortened to '{names[3]}'")
+
+    def test_thousands_dots_behind_a_unit_in_a_decimal_comma_file(self) -> None:
+        parsed = parse_dataset("Preis;Menge\n3,50 €;1.200 kg\n2,10 €;800 kg\n")
+
+        assert parsed.column_dtypes == {"Preis (€)": "number", "Menge (kg)": "integer"}
+        assert parsed.csv.splitlines()[1:] == ["3.5,1200", "2.1,800"]
+        assert warned(parsed, "column 'Menge (kg)': dots read as thousands separators")
+
+    def test_the_canonical_csv_of_a_unit_column_parses_to_itself(self) -> None:
+        parsed = parse_dataset("Anteil;Dauer\n65 %;15,6 h\n12 %;2,9 h\n")
+        again = parse_dataset(parsed.csv)
+
+        assert again.csv == parsed.csv
+        assert again.column_dtypes == parsed.column_dtypes
+        assert not again.warnings
 
 
 class TestTyping:
@@ -524,6 +754,8 @@ class TestRoundTrip:
             '[{"t": "2024-01-01T10:00", "v": 1.5, "n": 3, "s": "a,b"}, {"t": null, "v": null, "n": null, "s": null}]',
             'x\ty\tlabel\n1\t0.5\t#N/A\n2\t1e-3\t"quoted ""text"""\n',
             "d|id\n12/31/2024|0007\n01/15/2025|42\n",
+            "Anteil;Dauer;Preis\n65 %;15,6 h;€ 5\n12 %;;-€ 12,50\n",
+            "cat_day = {'Schlafen & Dösen': 65, 'Fellpflege': 12, 'Rest': None}",
         ],
     )
     def test_the_exported_csv_reproduces_the_typed_frame(self, text: str) -> None:
