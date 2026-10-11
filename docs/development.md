@@ -77,7 +77,7 @@ uv run pytest tests/e2e
 # With coverage report (sources configured in pyproject.toml)
 uv run pytest tests/unit tests/integration --cov --cov-report=html
 
-# Full run on one worker per CPU (pytest-xdist)
+# Unit and integration suites on one worker per CPU (pytest-xdist)
 uv run pytest tests/unit tests/integration -n auto
 ```
 
@@ -96,7 +96,7 @@ process. Tests must not depend on the order they run in or share a fixed file
 path, because each worker runs a different slice of the suite in its own
 process.
 
-**Coverage target**: 90%+ on tested modules (`core/`, `api/`, `automation/`, `agentic/workflows/modules/`).
+**Coverage target**: 90%+ on tested modules (`core/`, `api/`, `automation/`, `agentic/workflows/modules/`, `agents/`).
 Coverage config is in `pyproject.toml` (`[tool.coverage]`) and `codecov.yml`. Coverage
 measures through `sys.monitoring` (`core = "sysmon"`): on Python 3.13 the C tracer
 made a serial run about 45 % slower. On 3.13 sysmon measures lines only, so leave
