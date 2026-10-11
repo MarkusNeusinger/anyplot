@@ -1,0 +1,775 @@
+"""Tests for agents/anyplot/data/prepare.py: every operation, the error codes, the change lines, the round trip."""
+
+import csv
+import io
+from typing import Any
+
+import pytest
+from pydantic import TypeAdapter, ValidationError
+
+from agents.anyplot.data.parse import parse_dataset
+from agents.anyplot.data.prepare import (
+    MAX_CONDITIONS,
+    MAX_DROP_COLUMNS,
+    MAX_LONGER_COLUMNS,
+    MAX_OPERATIONS,
+    MAX_VALUE_CHARS,
+    MAX_WIDER_COLUMNS,
+    Aggregate,
+    DropRows,
+    Operation,
+    Prepared,
+    PrepareError,
+    Rename,
+    apply_operations,
+)
+from agents.anyplot.schemas import MAX_COLUMN_NAME_CHARS, MAX_NOTE_CHARS, MAX_ROWS
+
+
+OPERATIONS = TypeAdapter(list[Operation])
+
+# A semicolon file with decimal commas, DD.MM.YYYY dates, a unit column and a total row.
+SALES = (
+    "Datum;Tier;Anteil;Umsatz\n"
+    "05.01.2024;Hund;12,5 %;1.200,50\n"
+    "20.01.2024;Katze;7 %;800,00\n"
+    "14.02.2024;Hund;30 %;300,25\n"
+    "28.02.2024;Katze;;150,00\n"
+    "15.03.2024;Hund;50,5 %;999,75\n"
+    "31.03.2024;Gesamt;100 %;3.450,50\n"
+)
+SALES_CSV = (
+    "Datum,Tier,Anteil,Umsatz\n"
+    '2024-01-05,Hund,"12,5 %",1200.5\n'
+    "2024-01-20,Katze,7 %,800.0\n"
+    "2024-02-14,Hund,30 %,300.25\n"
+    "2024-02-28,Katze,,150.0\n"
+    '2024-03-15,Hund,"50,5 %",999.75\n'
+    "2024-03-31,Gesamt,100 %,3450.5\n"
+)
+# Two series with a missing cell each, for pivot_longer; its long form for pivot_wider.
+WIDE = "Monat,Hüte,Schuhe\n2024-01,10,20\n2024-02,15,\n2024-03,,30\n"
+LONG = "Monat,series,value\n2024-01,Hüte,10\n2024-02,Hüte,15\n2024-01,Schuhe,20\n2024-03,Schuhe,30\n"
+
+
+def prepare(text: str, *operations: dict[str, Any]) -> Prepared:
+    return apply_operations(parse_dataset(text), OPERATIONS.validate_python(list(operations)))
+
+
+def failure(text: str, *operations: dict[str, Any]) -> tuple[str, str]:
+    with pytest.raises(PrepareError) as caught:
+        prepare(text, *operations)
+    return caught.value.code, caught.value.message
+
+
+def rows(prepared: Prepared) -> list[str]:
+    return prepared.csv.splitlines()
+
+
+def cells(prepared: Prepared, index: int) -> list[str]:
+    """One column's cells below the header, read with the csv module (a cell may hold a comma)."""
+    return [row[index] for row in list(csv.reader(io.StringIO(prepared.csv)))[1:]]
+
+
+def dtypes(prepared: Prepared) -> dict[str, str]:
+    return dict(parse_dataset(prepared.csv).column_dtypes)
+
+
+def drop(column: str, test: str, value: str | None = None) -> dict[str, Any]:
+    condition: dict[str, Any] = {"column": column, "test": test}
+    if value is not None:
+        condition["value"] = value
+    return {"op": "drop_rows", "where": [condition]}
+
+
+class TestModels:
+    def test_the_discriminator_picks_the_operation(self) -> None:
+        parsed = OPERATIONS.validate_python(
+            [
+                {"op": "rename", "column": "a", "name": "b"},
+                {"op": "drop_rows", "where": [{"column": "a", "test": "eq"}]},
+            ]
+        )
+
+        assert isinstance(parsed[0], Rename)
+        assert isinstance(parsed[1], DropRows)
+
+    def test_defaults(self) -> None:
+        sort, longer, aggregate = OPERATIONS.validate_python(
+            [
+                {"op": "sort", "column": "a"},
+                {"op": "pivot_longer", "columns": ["a", "b"]},
+                {"op": "aggregate", "by": ["a"], "column": "b", "how": "sum"},
+            ]
+        )
+
+        assert sort.descending is False
+        assert (longer.names_to, longer.values_to) == ("series", "value")
+        assert isinstance(aggregate, Aggregate) and aggregate.period is None
+
+    @pytest.mark.parametrize(
+        "operation",
+        [
+            {"op": "melt", "columns": ["a", "b"]},
+            {"op": "rename", "column": "a", "name": "b", "extra": 1},
+            {"op": "rename", "column": "a", "name": ""},
+            {"op": "rename", "column": "a", "name": "x" * (MAX_COLUMN_NAME_CHARS + 1)},
+            {"op": "rename", "column": "a", "name": " b"},
+            {"op": "rename", "column": "a", "name": "b\tc"},
+            {"op": "rename", "column": "a", "name": "b\N{ZERO WIDTH SPACE}"},
+            {"op": "drop_columns", "columns": []},
+            {"op": "drop_columns", "columns": [f"c{i}" for i in range(MAX_DROP_COLUMNS + 1)]},
+            {"op": "drop_rows", "where": [{"column": "a", "test": "eq", "value": "x"}] * (MAX_CONDITIONS + 1)},
+            {"op": "drop_rows", "where": [{"column": "a", "test": "eq", "value": "x" * (MAX_VALUE_CHARS + 1)}]},
+            {"op": "drop_rows", "where": [{"column": "a", "test": "between", "value": "x"}]},
+            {"op": "set_type", "column": "a", "type": "integer"},
+            {"op": "set_type", "column": "a", "type": "datetime", "date_format": "%d.%m.%Y"},
+            {"op": "set_type", "column": "a", "type": "number", "decimal": ";"},
+            {"op": "aggregate", "by": ["a", "b", "c"], "column": "d", "how": "sum"},
+            {"op": "aggregate", "by": [], "column": "d", "how": "sum"},
+            {"op": "aggregate", "by": ["a"], "column": "d", "how": "median"},
+            {"op": "aggregate", "by": ["a"], "column": "d", "how": "sum", "period": "week"},
+            {"op": "pivot_longer", "columns": ["a"]},
+            {"op": "pivot_longer", "columns": [f"c{i}" for i in range(MAX_LONGER_COLUMNS + 1)]},
+            {"op": "pivot_longer", "columns": ["a", "b"], "names_to": "x "},
+            {"op": "pivot_wider", "names_from": "a", "values_from": "b", "index": []},
+            {"op": "pivot_wider", "names_from": "a", "values_from": "b", "index": ["c", "d", "e"]},
+        ],
+    )
+    def test_malformed_operations_fail_validation(self, operation: dict[str, Any]) -> None:
+        with pytest.raises(ValidationError):
+            OPERATIONS.validate_python([operation])
+
+
+class TestFixture:
+    def test_the_sales_fixture_parses_as_designed(self) -> None:
+        parsed = parse_dataset(SALES)
+
+        assert parsed.csv == SALES_CSV
+        assert parsed.column_dtypes == {"Datum": "datetime", "Tier": "text", "Anteil": "text", "Umsatz": "number"}
+        assert parsed.profile.decimal == ","
+
+
+class TestRename:
+    def test_renames_and_reports(self) -> None:
+        prepared = prepare(SALES, {"op": "rename", "column": "Tier", "name": "Segment"})
+
+        assert rows(prepared)[0] == "Datum,Segment,Anteil,Umsatz"
+        assert rows(prepared)[1:] == SALES_CSV.splitlines()[1:]
+        assert prepared.changes == ["renamed 'Tier' to 'Segment'"]
+
+    def test_unknown_column(self) -> None:
+        assert failure(SALES, {"op": "rename", "column": "Art", "name": "Segment"}) == (
+            "unknown_column",
+            "there is no column 'Art'",
+        )
+
+    @pytest.mark.parametrize("name", ["Umsatz", "Tier"])
+    def test_an_existing_name_is_refused(self, name: str) -> None:
+        code, message = failure(SALES, {"op": "rename", "column": "Tier", "name": name})
+
+        assert code == "invalid_operation"
+        assert f"'{name}'" in message
+
+
+class TestDropColumns:
+    def test_one_column(self) -> None:
+        prepared = prepare(SALES, {"op": "drop_columns", "columns": ["Anteil"]})
+
+        assert rows(prepared)[:2] == ["Datum,Tier,Umsatz", "2024-01-05,Hund,1200.5"]
+        assert prepared.changes == ["dropped column Anteil"]
+
+    def test_several_columns_once_each(self) -> None:
+        prepared = prepare(SALES, {"op": "drop_columns", "columns": ["Anteil", "Datum", "Anteil"]})
+
+        assert rows(prepared)[0] == "Tier,Umsatz"
+        assert prepared.changes == ["dropped 2 columns: Anteil, Datum"]
+
+    def test_unknown_column(self) -> None:
+        assert failure(SALES, {"op": "drop_columns", "columns": ["Anteil", "Art"]})[0] == "unknown_column"
+
+    def test_dropping_every_column_is_empty(self) -> None:
+        columns = ["Datum", "Tier", "Anteil", "Umsatz"]
+
+        assert failure(SALES, {"op": "drop_columns", "columns": columns})[0] == "empty_result"
+
+
+class TestDropRows:
+    def test_eq_on_text(self) -> None:
+        prepared = prepare(SALES, drop("Tier", "eq", "Gesamt"))
+
+        assert rows(prepared) == SALES_CSV.splitlines()[:-1]
+        assert prepared.changes == ["dropped 1 row where Tier = 'Gesamt'"]
+
+    def test_all_conditions_must_hold(self) -> None:
+        where = [{"column": "Umsatz", "test": "gt", "value": "500"}, {"column": "Tier", "test": "ne", "value": "Katze"}]
+        prepared = prepare(SALES, {"op": "drop_rows", "where": where})
+
+        assert cells(prepared, 1) == ["Katze", "Hund", "Katze"]
+        assert prepared.changes == ["dropped 3 rows where Umsatz > 500 and Tier ≠ 'Katze'"]
+
+    def test_numbers_compare_as_numbers(self) -> None:
+        prepared = prepare(SALES, drop("Umsatz", "lt", "1e3"))
+
+        assert cells(prepared, 3) == ["1200.5", "3450.5"]
+
+    def test_dates_compare_as_moments(self) -> None:
+        prepared = prepare(SALES, drop("Datum", "lt", "2024-02-01"))
+
+        assert len(rows(prepared)) == 5
+        assert prepared.changes == ["dropped 2 rows where Datum < 2024-02-01"]
+
+    def test_contains_searches_the_text(self) -> None:
+        prepared = prepare(SALES, drop("Anteil", "contains", ",5"))
+
+        assert len(rows(prepared)) == 5
+        assert prepared.changes == ["dropped 2 rows where Anteil contains ',5'"]
+
+    def test_contains_on_a_number_uses_its_canonical_text(self) -> None:
+        prepared = prepare(SALES, drop("Umsatz", "contains", ".25"))
+
+        assert prepared.changes == ["dropped 1 row where Umsatz contains '.25'"]
+
+    def test_is_missing(self) -> None:
+        prepared = prepare(SALES, drop("Anteil", "is_missing"))
+
+        assert len(rows(prepared)) == 6
+        assert prepared.changes == ["dropped 1 row where Anteil is missing"]
+
+    def test_a_missing_cell_matches_no_comparison(self) -> None:
+        kept_by_ne = prepare(SALES, drop("Anteil", "ne", "7 %"))
+        kept_by_contains = prepare(SALES, drop("Anteil", "contains", "%"))
+
+        assert rows(kept_by_ne)[1:] == ["2024-01-20,Katze,7 %,800.0", "2024-02-28,Katze,,150.0"]
+        assert rows(kept_by_contains)[1:] == ["2024-02-28,Katze,,150.0"]
+
+    def test_boolean_columns(self) -> None:
+        text = "flag,v\ntrue,1\nfalse,2\n,3\n"
+
+        assert rows(prepare(text, drop("flag", "eq", "TRUE")))[1:] == ["False,2", ",3"]
+        assert failure(text, drop("flag", "gt", "true"))[0] == "invalid_operation"
+        assert failure(text, drop("flag", "eq", "yes"))[0] == "invalid_operation"
+
+    def test_text_orders_as_text(self) -> None:
+        prepared = prepare(SALES, drop("Tier", "gt", "Hund"))
+
+        assert cells(prepared, 1) == ["Hund", "Hund", "Hund", "Gesamt"]
+
+    def test_nothing_matching_is_a_change_line_too(self) -> None:
+        prepared = prepare(SALES, drop("Tier", "eq", "Pferd"))
+
+        assert prepared.csv == SALES_CSV
+        assert prepared.changes == ["dropped 0 rows where Tier = 'Pferd'"]
+
+    def test_dropping_every_row_is_empty(self) -> None:
+        assert failure(SALES, drop("Umsatz", "gt", "0"))[0] == "empty_result"
+
+    @pytest.mark.parametrize(
+        ("condition", "fragment"),
+        [
+            (drop("Tier", "eq"), "needs a value"),
+            (drop("Tier", "eq", ""), "is_missing finds empty cells"),
+            (drop("Tier", "is_missing", "x"), "takes no value"),
+            (drop("Umsatz", "gt", "1,5"), "not a number"),
+            (drop("Umsatz", "eq", "Hund"), "not a number"),
+            (drop("Datum", "lt", "01.02.2024"), "not an ISO date"),
+            (drop("Datum", "lt", "2024-02-01T00:00:00+02:00"), "without a time zone"),
+        ],
+    )
+    def test_invalid_conditions(self, condition: dict[str, Any], fragment: str) -> None:
+        code, message = failure(SALES, condition)
+
+        assert code == "invalid_operation"
+        assert fragment in message
+        assert "Hund" not in message and "Gesamt" not in message
+
+    def test_unknown_column(self) -> None:
+        assert failure(SALES, drop("Art", "eq", "x"))[0] == "unknown_column"
+
+    def test_change_lines_stay_within_the_note_limit(self) -> None:
+        value = "x" * MAX_VALUE_CHARS
+        where = [{"column": name, "test": "ne", "value": value} for name in ("Tier", "Anteil", "Datum")]
+        where[2] = {"column": "Datum", "test": "lt", "value": "2030-01-01"}
+        prepared = prepare(SALES, {"op": "drop_rows", "where": where})
+
+        assert len(prepared.changes[0]) <= MAX_NOTE_CHARS
+        assert "'" + "x" * 39 + "…'" in prepared.changes[0]
+
+
+class TestSetTypeNumber:
+    def test_decimal_comma_with_a_trailing_unit(self) -> None:
+        prepared = prepare(SALES, {"op": "set_type", "column": "Anteil", "type": "number"})
+
+        assert cells(prepared, 2) == ["12.5", "7.0", "30.0", "", "50.5", "100.0"]
+        assert prepared.changes == ["Anteil: 5 cells read as numbers, unit '%' removed"]
+        assert dtypes(prepared)["Anteil"] == "number"
+
+    def test_dot_decimal_with_thousands_commas_and_whole_values_become_integers(self) -> None:
+        prepared = prepare('p,v\n"1,200 USD",1\n"3,000 USD",2\n', {"op": "set_type", "column": "p", "type": "number"})
+
+        assert rows(prepared)[1:] == ["1200,1", "3000,2"]
+        assert prepared.changes == ["p: 2 cells read as numbers, unit 'USD' removed"]
+        assert dtypes(prepared)["p"] == "integer"
+
+    def test_a_leading_unit_and_spaces_as_thousands_separators(self) -> None:
+        text = 'p,v\n"€ 1 200,50",1\n€12,2\n€ -3,3\n'
+        prepared = prepare(text, {"op": "set_type", "column": "p", "type": "number", "decimal": ","})
+
+        assert rows(prepared)[1:] == ["1200.5,1", "12.0,2", "-3.0,3"]
+        assert prepared.changes == ["p: 3 cells read as numbers, unit '€' removed"]
+
+    def test_the_decimal_argument_overrides_the_dataset_decimal(self) -> None:
+        text = "p,v\n1.200 kg,1\n"
+        with_comma = prepare(text, {"op": "set_type", "column": "p", "type": "number", "decimal": ","})
+        with_dot = prepare(text, {"op": "set_type", "column": "p", "type": "number", "decimal": "."})
+
+        assert rows(with_comma)[1] == "1200,1"
+        assert rows(with_dot)[1] == "1.2,1"
+
+    def test_a_tenth_may_fail_and_becomes_missing(self) -> None:
+        text = "p\n" + "".join(f"{n} kg\n" for n in range(9)) + "unknown\n"
+        prepared = prepare(text, {"op": "set_type", "column": "p", "type": "number"})
+
+        assert rows(prepared)[-1] == '""'
+        assert prepared.changes == [
+            "p: 9 cells read as numbers, unit 'kg' removed, 1 cell could not be read and is now missing"
+        ]
+
+    def test_more_than_a_tenth_failing_is_a_type_mismatch(self) -> None:
+        text = "p\n" + "".join(f"{n} kg\n" for n in range(8)) + "unknown\nn.k.\n"
+
+        assert failure(text, {"op": "set_type", "column": "p", "type": "number"}) == (
+            "type_mismatch",
+            "column 'p': 2 of 10 cells cannot be read as numbers",
+        )
+
+    def test_mixed_units_are_a_type_mismatch(self) -> None:
+        code, message = failure("p\n12 kg\n500 g\n", {"op": "set_type", "column": "p", "type": "number"})
+
+        assert code == "type_mismatch"
+        assert "kg" not in message and "mixes 2 different units" in message
+
+    def test_a_text_column_is_a_type_mismatch(self) -> None:
+        assert failure(SALES, {"op": "set_type", "column": "Tier", "type": "number"})[0] == "type_mismatch"
+
+    def test_booleans_become_ones_and_zeros(self) -> None:
+        prepared = prepare("f,v\ntrue,1\nfalse,2\n,3\n", {"op": "set_type", "column": "f", "type": "number"})
+
+        assert rows(prepared)[1:] == ["1,1", "0,2", ",3"]
+        assert prepared.changes == ["f: 2 cells read as numbers"]
+
+    def test_a_number_column_stays_as_it_is(self) -> None:
+        prepared = prepare(SALES, {"op": "set_type", "column": "Umsatz", "type": "number"})
+
+        assert prepared.csv == SALES_CSV
+        assert prepared.changes == ["Umsatz: already numbers, nothing changed"]
+
+
+class TestSetTypeDatetime:
+    def test_a_fixed_format_with_optional_times(self) -> None:
+        # The junk cell keeps the column text at parse time; it is within the tenth that may fail.
+        dates = [f"{day:02d}.02.2024" for day in range(1, 10)] + ["15.03.2024 10:30", "20.03.2024 08:05:09", "", "n.a."]
+        text = "t,v\n" + "".join(f"{cell},{n}\n" for n, cell in enumerate(dates))
+        operation = {"op": "set_type", "column": "t", "type": "datetime", "date_format": "DD.MM.YYYY"}
+        prepared = prepare(text, operation)
+
+        assert cells(prepared, 0)[:1] == ["2024-02-01T00:00:00"]
+        assert cells(prepared, 0)[9:] == ["2024-03-15T10:30:00", "2024-03-20T08:05:09", "", ""]
+        assert prepared.changes == [
+            "t: 11 cells read as dates (DD.MM.YYYY), 1 cell could not be read and is now missing"
+        ]
+        assert dtypes(prepared)["t"] == "datetime"
+
+    def test_month_first(self) -> None:
+        text = "t,v\n" + "".join(f"{m:02d}/{m + 1:02d}/2024,{m}\n" for m in range(1, 10)) + "n.a.,0\n"
+        operation = {"op": "set_type", "column": "t", "type": "datetime", "date_format": "MM/DD/YYYY"}
+        prepared = prepare(text, operation)
+
+        assert cells(prepared, 0)[:2] == ["2024-01-02", "2024-02-03"]
+        assert cells(prepared, 0)[-1] == ""
+        assert dtypes(prepared)["t"] == "datetime"
+
+    def test_month_first_on_an_ambiguous_slash_column_swaps_day_and_month(self) -> None:
+        text = "t,v\n01/02/2024,1\n03/04/2024 10:30,2\n,3\n"
+        parsed = parse_dataset(text)
+        operation = {"op": "set_type", "column": "t", "type": "datetime", "date_format": "MM/DD/YYYY"}
+        prepared = apply_operations(parsed, OPERATIONS.validate_python([operation]))
+
+        assert parsed.column_dtypes["t"] == "datetime"  # the parser read it day first, with its own warning
+        assert cells(prepared, 0) == ["2024-01-02T00:00:00", "2024-03-04T10:30:00", ""]
+        assert prepared.changes == ["t: 2 cells re-read as dates (MM/DD/YYYY, day and month swapped)"]
+
+    @pytest.mark.parametrize("date_format", [None, "YYYY-MM-DD", "DD.MM.YYYY", "MM/DD/YYYY"])
+    def test_a_datetime_column_is_left_as_it_is(self, date_format: str | None) -> None:
+        operation: dict[str, Any] = {"op": "set_type", "column": "Datum", "type": "datetime"}
+        if date_format:
+            operation["date_format"] = date_format
+        prepared = prepare(SALES, operation)  # the days 20, 14, 28 and 31 rule out a month-first reading
+
+        assert prepared.csv == SALES_CSV
+        assert prepared.changes == ["Datum: already dates, nothing changed"]
+
+    def test_failures_become_missing_within_the_tenth(self) -> None:
+        text = "t\n" + "".join(f"{day:02d}.01.2024\n" for day in range(1, 10)) + "n.a.\n"
+        operation = {"op": "set_type", "column": "t", "type": "datetime", "date_format": "DD.MM.YYYY"}
+        prepared = prepare(text, operation)
+
+        assert rows(prepared)[-1] == '""'
+        assert prepared.changes == [
+            "t: 9 cells read as dates (DD.MM.YYYY), 1 cell could not be read and is now missing"
+        ]
+
+    def test_too_many_failures(self) -> None:
+        text = "t,v\n01.02.2024,1\n15.03.2024,2\nn.a.,3\n"
+        operation = {"op": "set_type", "column": "t", "type": "datetime", "date_format": "DD.MM.YYYY"}
+
+        assert failure(text, operation) == ("type_mismatch", "column 't': 1 of 3 cells cannot be read as dates")
+
+    def test_without_a_format_the_format_is_inferred_day_first(self) -> None:
+        text = "t,v\nJan 2024,1\n2024-02,2\n03/04/2024,3\n15 March 2024,4\n"
+        prepared = prepare(text, {"op": "set_type", "column": "t", "type": "datetime"})
+
+        assert cells(prepared, 0) == ["2024-01-01", "2024-02-01", "2024-04-03", "2024-03-15"]
+        assert prepared.changes == ["t: 4 cells read as dates (format inferred, day before month)"]
+
+    def test_a_number_column_is_a_type_mismatch(self) -> None:
+        assert failure(SALES, {"op": "set_type", "column": "Umsatz", "type": "datetime"})[0] == "type_mismatch"
+
+
+class TestSetTypeText:
+    def test_cells_become_their_canonical_text(self) -> None:
+        prepared = prepare(SALES, {"op": "set_type", "column": "Datum", "type": "text"})
+
+        assert prepared.csv == SALES_CSV
+        assert prepared.changes == ["Datum: 6 cells now text"]
+
+    def test_text_then_back_to_dates(self) -> None:
+        prepared = prepare(
+            SALES,
+            {"op": "set_type", "column": "Datum", "type": "text"},
+            {"op": "set_type", "column": "Datum", "type": "datetime", "date_format": "YYYY-MM-DD"},
+        )
+
+        assert prepared.csv == SALES_CSV
+        assert prepared.changes == ["Datum: 6 cells now text", "Datum: 6 cells read as dates (YYYY-MM-DD)"]
+
+
+class TestAggregate:
+    def test_sum_per_month(self) -> None:
+        prepared = prepare(
+            SALES,
+            drop("Tier", "eq", "Gesamt"),
+            {"op": "aggregate", "by": ["Datum"], "column": "Umsatz", "how": "sum", "period": "month"},
+        )
+
+        assert rows(prepared) == ["Datum,Umsatz", "2024-01,2000.5", "2024-02,450.25", "2024-03,999.75"]
+        assert prepared.changes[1] == "summed Umsatz by Datum (month): 3 rows, 2 other columns dropped"
+        assert dtypes(prepared) == {"Datum": "text", "Umsatz": "number"}
+
+    def test_count_names_its_column_count(self) -> None:
+        prepared = prepare(SALES, {"op": "aggregate", "by": ["Tier"], "column": "Anteil", "how": "count"})
+
+        assert rows(prepared) == ["Tier,count", "Gesamt,1", "Hund,3", "Katze,1"]
+        assert prepared.changes == ["counted Anteil by Tier: 3 rows, 2 other columns dropped"]
+        assert dtypes(prepared)["count"] == "integer"
+
+    def test_mean_by_two_keys_per_quarter(self) -> None:
+        operation = {"op": "aggregate", "by": ["Tier", "Datum"], "column": "Umsatz", "how": "mean", "period": "quarter"}
+        prepared = prepare(SALES, operation)
+
+        assert rows(prepared) == [
+            "Tier,Datum,Umsatz",
+            "Gesamt,2024-Q1,3450.5",
+            "Hund,2024-Q1,833.5",
+            "Katze,2024-Q1,475.0",
+        ]
+        assert prepared.changes == ["averaged Umsatz by Tier and Datum (quarter): 3 rows, 1 other column dropped"]
+
+    def test_year_min_and_max(self) -> None:
+        minimum = prepare(
+            SALES, {"op": "aggregate", "by": ["Datum"], "column": "Umsatz", "how": "min", "period": "year"}
+        )
+        maximum = prepare(SALES, {"op": "aggregate", "by": ["Datum"], "column": "Tier", "how": "max", "period": "year"})
+
+        assert rows(minimum) == ["Datum,Umsatz", "2024,150.0"]
+        assert rows(maximum) == ["Datum,Tier", "2024,Katze"]
+        assert minimum.changes == ["took the minimum of Umsatz by Datum (year): 1 row, 2 other columns dropped"]
+        assert maximum.changes[0].startswith("took the maximum of Tier by Datum (year)")
+
+    def test_a_missing_key_forms_its_own_group(self) -> None:
+        prepared = prepare("k,v\na,1\n,2\na,3\n", {"op": "aggregate", "by": ["k"], "column": "v", "how": "sum"})
+
+        assert rows(prepared) == ["k,v", "a,4", ",2"]
+
+    def test_boolean_values_sum_and_average(self) -> None:
+        text = "k,f\na,true\na,false\nb,true\n"
+        summed = prepare(text, {"op": "aggregate", "by": ["k"], "column": "f", "how": "sum"})
+        averaged = prepare(text, {"op": "aggregate", "by": ["k"], "column": "f", "how": "mean"})
+
+        assert rows(summed) == ["k,f", "a,1", "b,1"]
+        assert rows(averaged) == ["k,f", "a,0.5", "b,1.0"]
+
+    @pytest.mark.parametrize(
+        ("operation", "code"),
+        [
+            ({"op": "aggregate", "by": ["Datum"], "column": "Tier", "how": "sum"}, "type_mismatch"),
+            ({"op": "aggregate", "by": ["Datum"], "column": "Anteil", "how": "mean"}, "type_mismatch"),
+            (
+                {"op": "aggregate", "by": ["Tier"], "column": "Umsatz", "how": "sum", "period": "month"},
+                "invalid_operation",
+            ),
+            ({"op": "aggregate", "by": ["Tier"], "column": "Tier", "how": "count"}, "invalid_operation"),
+            ({"op": "aggregate", "by": ["Art"], "column": "Umsatz", "how": "sum"}, "unknown_column"),
+            ({"op": "aggregate", "by": ["Tier"], "column": "Betrag", "how": "sum"}, "unknown_column"),
+        ],
+    )
+    def test_refusals(self, operation: dict[str, Any], code: str) -> None:
+        assert failure(SALES, operation)[0] == code
+
+    def test_a_key_named_count_cannot_take_a_count(self) -> None:
+        text = "count,v\na,1\n"
+
+        assert (
+            failure(text, {"op": "aggregate", "by": ["count"], "column": "v", "how": "count"})[0] == "invalid_operation"
+        )
+
+
+class TestSort:
+    def test_descending(self) -> None:
+        prepared = prepare(SALES, {"op": "sort", "column": "Umsatz", "descending": True})
+
+        assert cells(prepared, 3) == ["3450.5", "1200.5", "999.75", "800.0", "300.25", "150.0"]
+        assert prepared.changes == ["sorted by Umsatz, descending"]
+
+    def test_ascending_is_stable_with_missing_cells_last(self) -> None:
+        prepared = prepare(SALES, {"op": "sort", "column": "Anteil"})
+
+        assert cells(prepared, 1) == ["Gesamt", "Hund", "Hund", "Hund", "Katze", "Katze"]
+        assert rows(prepared)[-1] == "2024-02-28,Katze,,150.0"
+        assert prepared.changes == ["sorted by Anteil, ascending"]
+
+    def test_unknown_column(self) -> None:
+        assert failure(SALES, {"op": "sort", "column": "Art"})[0] == "unknown_column"
+
+
+class TestPivotLonger:
+    def test_two_unequal_series(self) -> None:
+        prepared = prepare(WIDE, {"op": "pivot_longer", "columns": ["Hüte", "Schuhe"]})
+
+        assert rows(prepared) == [
+            "Monat,series,value",
+            "2024-01,Hüte,10",
+            "2024-02,Hüte,15",
+            "2024-03,Hüte,",
+            "2024-01,Schuhe,20",
+            "2024-02,Schuhe,",
+            "2024-03,Schuhe,30",
+        ]
+        assert prepared.changes == ["pivoted 2 columns into series/value: 6 rows"]
+        assert dtypes(prepared) == {"Monat": "text", "series": "text", "value": "integer"}
+
+    def test_own_names(self) -> None:
+        operation = {"op": "pivot_longer", "columns": ["Hüte", "Schuhe"], "names_to": "Artikel", "values_to": "Stück"}
+
+        assert rows(prepare(WIDE, operation))[0] == "Monat,Artikel,Stück"
+
+    def test_mixed_kinds_become_text(self) -> None:
+        prepared = prepare("k,a,b\nx,1,t\n", {"op": "pivot_longer", "columns": ["a", "b"]})
+
+        assert rows(prepared)[1:] == ["x,a,1", "x,b,t"]
+        assert dtypes(prepared)["value"] == "text"
+
+    @pytest.mark.parametrize(
+        ("operation", "code"),
+        [
+            ({"op": "pivot_longer", "columns": ["Hüte", "Hüte"]}, "invalid_operation"),
+            ({"op": "pivot_longer", "columns": ["Hüte", "Schuhe"], "names_to": "Monat"}, "invalid_operation"),
+            (
+                {"op": "pivot_longer", "columns": ["Hüte", "Schuhe"], "names_to": "x", "values_to": "x"},
+                "invalid_operation",
+            ),
+            ({"op": "pivot_longer", "columns": ["Hüte", "Socken"]}, "unknown_column"),
+        ],
+    )
+    def test_refusals(self, operation: dict[str, Any], code: str) -> None:
+        assert failure(WIDE, operation)[0] == code
+
+    def test_the_row_cap(self) -> None:
+        text = "a,b\n" + "1,2\n" * (MAX_ROWS // 2 + 1)
+        code, message = failure(text, {"op": "pivot_longer", "columns": ["a", "b"]})
+
+        assert code == "invalid_operation"
+        assert f"{MAX_ROWS:,}" in message
+
+
+class TestPivotWider:
+    def test_round_trip_with_pivot_longer(self) -> None:
+        prepared = prepare(
+            WIDE,
+            {"op": "pivot_longer", "columns": ["Hüte", "Schuhe"]},
+            {"op": "pivot_wider", "names_from": "series", "values_from": "value", "index": ["Monat"]},
+        )
+
+        assert prepared.csv == parse_dataset(WIDE).csv
+        assert prepared.changes[1] == "pivoted series into 2 columns with values from value: 3 rows"
+
+    def test_missing_combinations_are_missing_cells(self) -> None:
+        operation = {"op": "pivot_wider", "names_from": "series", "values_from": "value", "index": ["Monat"]}
+        prepared = prepare(LONG, operation)
+
+        assert rows(prepared) == ["Monat,Hüte,Schuhe", "2024-01,10,20", "2024-02,15,", "2024-03,,30"]
+        assert dtypes(prepared) == {"Monat": "text", "Hüte": "integer", "Schuhe": "integer"}
+
+    def test_rows_without_a_name_are_left_out_and_other_columns_dropped(self) -> None:
+        text = (
+            "Monat,series,value,note\n"
+            "2024-01,Hüte,10,n\n"
+            "2024-02,Hüte,15,n\n"
+            "2024-01,Schuhe,20,n\n"
+            "2024-03,Schuhe,30,n\n"
+            "2024-03,,99,n\n"
+        )
+        operation = {"op": "pivot_wider", "names_from": "series", "values_from": "value", "index": ["Monat"]}
+        prepared = prepare(text, operation)
+
+        assert len(rows(prepared)) == 4
+        assert prepared.changes == [
+            "pivoted series into 2 columns with values from value: 3 rows, 1 row without a series left out, "
+            "1 other column dropped"
+        ]
+
+    def test_two_index_columns(self) -> None:
+        text = "y,m,s,v\n2024,1,a,1\n2024,1,b,2\n2024,2,a,3\n"
+        operation = {"op": "pivot_wider", "names_from": "s", "values_from": "v", "index": ["y", "m"]}
+
+        assert rows(prepare(text, operation)) == ["y,m,a,b", "2024,1,1,2", "2024,2,3,"]
+
+    def test_duplicate_pairs_are_refused(self) -> None:
+        operation = {"op": "pivot_wider", "names_from": "series", "values_from": "value", "index": ["Monat"]}
+        code, message = failure(LONG + "2024-01,Hüte,99\n", operation)
+
+        assert code == "invalid_operation"
+        assert "aggregate first" in message
+
+    def test_too_many_new_columns(self) -> None:
+        text = "k,s,v\n" + "".join(f"x,s{i},{i}\n" for i in range(MAX_WIDER_COLUMNS + 1))
+        operation = {"op": "pivot_wider", "names_from": "s", "values_from": "v", "index": ["k"]}
+
+        assert failure(text, operation)[0] == "too_wide"
+
+    def test_too_many_columns_in_all(self) -> None:
+        text = "k,j,s,v\n" + "".join(f"x,y,s{i},{i}\n" for i in range(MAX_WIDER_COLUMNS - 1))
+        operation = {"op": "pivot_wider", "names_from": "s", "values_from": "v", "index": ["k", "j"]}
+
+        assert failure(text, operation)[0] == "too_wide"
+
+    @pytest.mark.parametrize(
+        ("operation", "code"),
+        [
+            (
+                {"op": "pivot_wider", "names_from": "series", "values_from": "series", "index": ["Monat"]},
+                "invalid_operation",
+            ),
+            (
+                {"op": "pivot_wider", "names_from": "Monat", "values_from": "value", "index": ["Monat"]},
+                "invalid_operation",
+            ),
+            (
+                {"op": "pivot_wider", "names_from": "series", "values_from": "value", "index": ["Jahr"]},
+                "unknown_column",
+            ),
+        ],
+    )
+    def test_refusals(self, operation: dict[str, Any], code: str) -> None:
+        assert failure(LONG, operation)[0] == code
+
+    def test_a_name_equal_to_an_index_column_is_refused(self) -> None:
+        operation = {"op": "pivot_wider", "names_from": "series", "values_from": "value", "index": ["Monat"]}
+        code, message = failure(LONG + "2024-03,Monat,1\n", operation)
+
+        assert code == "invalid_operation"
+        assert "named like an index column" in message
+
+
+class TestSequences:
+    def test_operations_apply_in_order_and_see_earlier_renames(self) -> None:
+        prepared = prepare(
+            SALES,
+            {"op": "rename", "column": "Tier", "name": "Segment"},
+            drop("Segment", "eq", "Gesamt"),
+            {"op": "set_type", "column": "Anteil", "type": "number"},
+            {"op": "aggregate", "by": ["Segment"], "column": "Anteil", "how": "mean"},
+            {"op": "sort", "column": "Anteil", "descending": True},
+        )
+
+        assert rows(prepared) == ["Segment,Anteil", "Hund,31.0", "Katze,7.0"]
+        assert prepared.changes == [
+            "renamed 'Tier' to 'Segment'",
+            "dropped 1 row where Segment = 'Gesamt'",
+            "Anteil: 4 cells read as numbers, unit '%' removed",
+            "averaged Anteil by Segment: 2 rows, 2 other columns dropped",
+            "sorted by Anteil, descending",
+        ]
+
+    def test_an_old_name_is_unknown_after_a_rename(self) -> None:
+        code, message = failure(SALES, {"op": "rename", "column": "Tier", "name": "Segment"}, drop("Tier", "eq", "x"))
+
+        assert (code, message) == ("unknown_column", "there is no column 'Tier'")
+
+    def test_no_operation(self) -> None:
+        with pytest.raises(PrepareError) as caught:
+            apply_operations(parse_dataset(SALES), [])
+
+        assert caught.value.code == "invalid_operation"
+
+    def test_too_many_operations(self) -> None:
+        operations = [{"op": "sort", "column": "Umsatz"}] * (MAX_OPERATIONS + 1)
+
+        assert failure(SALES, *operations)[0] == "invalid_operation"
+
+    def test_the_error_carries_code_and_message(self) -> None:
+        error = PrepareError("too_wide", "the result would have 60 columns")
+
+        assert str(error) == "too_wide: the result would have 60 columns"
+
+
+class TestRoundTrip:
+    @pytest.mark.parametrize(
+        ("text", "operations"),
+        [
+            (SALES, [{"op": "rename", "column": "Tier", "name": "Segment"}]),
+            (SALES, [{"op": "drop_columns", "columns": ["Anteil"]}]),
+            (SALES, [drop("Tier", "eq", "Gesamt")]),
+            (SALES, [{"op": "set_type", "column": "Anteil", "type": "number"}]),
+            (SALES, [{"op": "set_type", "column": "Datum", "type": "text"}]),
+            (SALES, [{"op": "aggregate", "by": ["Datum"], "column": "Umsatz", "how": "sum", "period": "month"}]),
+            (SALES, [{"op": "aggregate", "by": ["Tier"], "column": "Umsatz", "how": "count"}]),
+            (SALES, [{"op": "sort", "column": "Datum", "descending": True}]),
+            (WIDE, [{"op": "pivot_longer", "columns": ["Hüte", "Schuhe"]}]),
+            (LONG, [{"op": "pivot_wider", "names_from": "series", "values_from": "value", "index": ["Monat"]}]),
+            ("d,v\n2024-01-05 10:30,1\n2024-01-06,2\n", [{"op": "sort", "column": "v", "descending": True}]),
+            (
+                "t,v\n" + "".join(f"{day:02d}.02.2024,{day}\n" for day in range(1, 11)) + "n.a.,0\n",
+                [{"op": "set_type", "column": "t", "type": "datetime", "date_format": "DD.MM.YYYY"}],
+            ),
+            (
+                "t,v\n01/02/2024,1\n03/04/2024,2\n",
+                [{"op": "set_type", "column": "t", "type": "datetime", "date_format": "MM/DD/YYYY"}],
+            ),
+            ('n,"a,b"\n0.1,"x, y"\n1e20,"say ""hi"""\n', [{"op": "sort", "column": "n", "descending": True}]),
+        ],
+    )
+    def test_the_result_is_already_canonical(self, text: str, operations: list[dict[str, Any]]) -> None:
+        prepared = prepare(text, *operations)
+        again = parse_dataset(prepared.csv)
+
+        assert again.csv == prepared.csv
+        assert prepared.csv.endswith("\n")
+        assert not again.warnings
+
+    def test_the_original_is_untouched(self) -> None:
+        parsed = parse_dataset(SALES)
+        prepare_csv = parsed.csv
+        apply_operations(parsed, OPERATIONS.validate_python([drop("Tier", "eq", "Gesamt")]))
+
+        assert parsed.csv == prepare_csv
