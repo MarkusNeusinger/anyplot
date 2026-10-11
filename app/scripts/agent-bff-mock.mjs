@@ -33,6 +33,11 @@
  * run answers `plot{status: not_ready, reason: data_unconfirmed}`. Every
  * `done` carries the session's `bindings` and `data_confirmed`, as the service
  * syncs them after a run, and `dataset` after a turn that changed the data.
+ * `GET .../bundle?include_data=&version=` (the page's `.save()`) answers the
+ * session's feedback case from the mock's state, with the agents service's
+ * top-level keys (the transcript of the turns, every version's code, result and
+ * PNGs as base64, the profile, the bindings, a config stamp; each version's
+ * `data.csv` only with `include_data`) and the BFF's attachment headers.
  *
  * The step-1 data changes (the service's `prepare_data` tool) in miniature:
  * the action `{action: "summarize_data"}` answers a scripted summary of the
@@ -140,6 +145,11 @@ const SPECS = {
 };
 const AGENT_LIBRARIES = ['matplotlib', 'seaborn'];
 const MAX_DATASET_BYTES = 200 * 1024;
+/** What the agents service stores as the user's message of an action turn (`ACTION_MESSAGES`). */
+const ACTION_MESSAGES = {
+  create_plot: '[action] Create the plot from my dataset and bindings.',
+  summarize_data: '[action] Summarize the dataset for the user.',
+};
 
 // ---------------------------------------------------------------- PNG drawing
 
@@ -716,8 +726,14 @@ async function streamTurn(req, res, session, body, ref) {
     'X-Accel-Buffering': 'no',
   });
   const send = (event, data) => {
+    // The bundle's transcript: the user's words or action and the assistant's replies.
+    if (event === 'message') session.transcript.push({ role: 'assistant', text: data.text });
     if (!closed) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
   };
+  session.transcript.push({
+    role: 'user',
+    text: body.action ? (ACTION_MESSAGES[body.action] ?? `[action] ${body.action}`) : text,
+  });
   const ping = () => {
     if (!closed) res.write(': ping\n\n');
   };
@@ -858,7 +874,8 @@ async function streamTurn(req, res, session, body, ref) {
       session.versions.push(version);
       const x = columnOf(version, 'x');
       const y = yColumns(version).join(', ');
-      send('plot', {
+      // Kept on the version for the bundle, like the service's stored `PlotResult`.
+      version.result = {
         status: refine ? 'needs_attention' : 'ok',
         reason: null,
         attempts: refine ? 2 : 1,
@@ -871,7 +888,8 @@ async function streamTurn(req, res, session, body, ref) {
           : [],
         // The stored version's number, which the artifact and theme routes take.
         version: version.number,
-      });
+      };
+      send('plot', version.result);
       await sleep(STEP_MS / 2);
       send('message', {
         text: refine
@@ -1358,6 +1376,8 @@ async function route(req, res) {
       version: 1,
       changed: null,
       versions: [],
+      // `{role, text}` per user message or action and per assistant reply, for the bundle.
+      transcript: [],
       active: false,
       cancelled: false,
     });
@@ -1520,7 +1540,76 @@ async function route(req, res) {
     res.end(version.pngs[pngTheme]);
     return;
   }
+  if (method === 'GET' && rest === '/bundle') {
+    // `.save()`: the feedback case, as the BFF relays the agents service's bundle.
+    const flag = (url.searchParams.get('include_data') ?? 'false').toLowerCase();
+    const includeData = ['true', '1', 'yes', 'on'].includes(flag);
+    const rawVersion = url.searchParams.get('version');
+    const number = rawVersion === null ? 0 : Number(rawVersion);
+    if (
+      (!includeData && !['false', '0', 'no', 'off'].includes(flag)) ||
+      !Number.isInteger(number) ||
+      number < 0 ||
+      number > 999
+    )
+      return fail(res, 422, 'invalid', ref);
+    const versions = number ? session.versions.filter(v => v.number === number) : session.versions;
+    if (number && versions.length === 0) return fail(res, 404, 'not_found', ref);
+    res.writeHead(200, {
+      'Content-Type': 'application/json',
+      'Content-Disposition': `attachment; filename="anyplot-session-${sid.slice(0, 8)}.json"`,
+      'Cache-Control': 'private, no-store',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Request-Id': ref,
+    });
+    res.end(JSON.stringify(sessionBundle(session, versions, includeData)));
+    return;
+  }
   return fail(res, 404, 'not_found', ref);
+}
+
+/**
+ * The agents service's feedback case (`GET /v1/sessions/{sid}/bundle`) from the mock's
+ * state: the same top-level keys, the PNGs the artifact route serves as base64, and the
+ * mock's one code form standing in for the working, run and exported code.
+ */
+function sessionBundle(session, versions, includeData) {
+  return {
+    session: { spec_id: session.specId, library: session.library, locale: 'en' },
+    snapshot: { spec_id: session.specId, library_version: '3.10.0' },
+    transcript: session.transcript,
+    versions: versions.map(version => {
+      const code = plotPy(session, version);
+      return {
+        number: version.number,
+        title: SPECS[session.specId].title,
+        working: code,
+        run_form: code,
+        plot_py: code,
+        plan: null,
+        result: version.result,
+        theme: version.theme,
+        themes: Object.fromEntries(
+          Object.keys(version.pngs).map(theme => [theme, { status: 'ok', reason: null }])
+        ),
+        images: Object.fromEntries(
+          Object.entries(version.pngs).map(([theme, png]) => [theme, png.toString('base64')])
+        ),
+        data_csv: includeData ? csvText(version) : null,
+      };
+    }),
+    profile: session.dataset ? session.dataset.profile : null,
+    bindings: session.bindings,
+    config: {
+      provider: 'mock',
+      model: 'claude-haiku-5-5',
+      judge_model: 'claude-haiku-5-5',
+      location: 'eu',
+      adk_version: 'mock',
+      service_version: 'mock',
+      prompt_hashes: {},
+    },
+  };
 }
 
 http

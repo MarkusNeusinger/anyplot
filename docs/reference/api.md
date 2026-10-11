@@ -485,6 +485,7 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 | `POST /sessions/{sid}/cancel` | None | `204`; a turn that still waits leaves the run queue |
 | `POST /sessions/{sid}/versions/{version}/render` | `{"theme": "light"}` or `{"theme": "dark"}`; `version` is 0 to 999, where 0 is the latest version | `{status, reason?, artifacts}` once the render is done (see [Theme toggle](#theme-toggle)) |
 | `GET /sessions/{sid}/artifacts/{name}?v=` | `name` is one of `plot-light.png`, `plot-dark.png`, `plot.py`, `data.csv` | The file, with `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`; any other name is `404`, and so is the PNG of a theme the version has not rendered. A PNG carries the footer strip (see [Footer strip](#footer-strip)) |
+| `GET /sessions/{sid}/bundle?include_data=&version=` | `include_data` is `true` or `false` (the default); `version` is 0 to 999, where 0 or none means every version | The session as one JSON file to save (the chat page's `.save()`), with `Content-Disposition: attachment; filename="anyplot-session-<first 8 characters of the session id>.json"`, `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`. `404 not_found` for a version the session does not have; a bundle over 32 MiB can't be saved (see [Session bundle](#session-bundle)) |
 | `DELETE /sessions/{sid}` | None | `204` |
 
 Validation: `spec_id` matches `^[a-z0-9-]{1,100}$`; `library` is one of the 15
@@ -512,7 +513,9 @@ session's lifetime and writes no content to its logs. anyplot stores none of
 it unless you submit quick feedback (not built yet). That feedback case
 always holds the conversation, the code, the images and the dataset profile
 with its column names and sample rows, so it can show your data even without
-the data box; the full data file is in it only when you tick the box.
+the data box; the full data file is in it only when you tick the box. The chat
+page's `.save()` downloads the same case to your computer (see
+[Session bundle](#session-bundle)); anyplot keeps no copy of it.
 
 `POST /sessions` and `POST /sessions/{sid}/library` add the user id and a
 catalogue snapshot before they forward the body, because the agents service
@@ -624,6 +627,33 @@ it, and the exported `plot.py` reproduces the plot without the strip. The
 agents service switches the strip off with `AGENT_WATERMARK=false`; the layout
 is in [Agent network design](../concepts/agent-network.md#footer-strip).
 
+### Session bundle
+
+`GET /sessions/{sid}/bundle` answers the feedback case that the agents service
+assembles for the session: the conversation (your messages and the assistant's
+replies, never tool calls or thoughts), the catalogue snapshot's spec id and
+library version, every version's working, run and exported code with its adapt
+plan, plot result, gate outcome per theme and the PNG of every rendered theme
+as base64 (with the footer strip), the dataset profile, the bindings, and a
+config stamp (provider, model, judge model, location, ADK and service versions,
+prompt hashes); each version's `data.csv` only with `include_data=true`. The
+top-level keys are `session`, `snapshot`, `transcript`, `versions`, `profile`,
+`bindings` and `config`, plus `refusals` when the agents service runs with
+`AGENT_KEEP_REFUSALS`.
+
+A bundle over 32 MiB can't be saved: that is Cloud Run's limit on an HTTP/1
+response that is not streamed, and the agents service answers the bundle in one
+piece. On Cloud Run, the agents service's side refuses such a bundle before the
+BFF reads a byte, so the route answers `500 upstream`. The BFF reads the whole
+bundle before it answers and refuses one over 32 MiB itself with
+`502 too_large`, which you see only where nothing sits in front of the agents
+service, such as a local run. A typical session stays far below the limit,
+because a version's PNGs take about 0.1 to 1 MB of base64.
+
+The BFF compresses the bundle with gzip in a worker thread when the browser
+accepts gzip, so the API's compression middleware doesn't hold the event loop
+for a large file.
+
 ### SSE protocol `anyplot/1`
 
 | Event | Data |
@@ -695,6 +725,10 @@ characters. Two cases answer `502` instead:
   session failing.
 - `upstream`: the agents service is unreachable, an ID token could not be
   fetched, or a success response is not JSON.
+
+A session bundle over 32 MiB answers `500 upstream` on Cloud Run and
+`502 too_large` where the BFF reads it itself (see
+[Session bundle](#session-bundle)).
 
 ### Configuration
 

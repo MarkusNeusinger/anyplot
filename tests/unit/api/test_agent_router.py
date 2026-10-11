@@ -6,6 +6,8 @@ httpx client on a MockTransport that records every upstream request.
 """
 
 import asyncio
+import base64
+import gzip
 import hashlib
 import hmac
 import json
@@ -14,11 +16,20 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
+from fastapi.concurrency import run_in_threadpool
 from fastapi.testclient import TestClient
 
 from api.dependencies import require_db
 from api.main import app, fastapi_app
-from api.routers.agent import MAX_DATASET_BYTES, NOT_ENABLED, derive_user_id, get_agent_client, load_catalogue_snapshot
+from api.routers.agent import (
+    MAX_BUNDLE_BYTES,
+    MAX_DATASET_BYTES,
+    NOT_ENABLED,
+    _bundle_filename,
+    derive_user_id,
+    get_agent_client,
+    load_catalogue_snapshot,
+)
 from api.routers.debug import AdminIdentity, require_admin_identity
 from core.config import settings
 
@@ -132,6 +143,7 @@ ALL_ROUTES = [
     ("POST", "/debug/agent/sessions/s1/cancel", None),
     ("POST", "/debug/agent/sessions/s1/versions/1/render", {"theme": "dark"}),
     ("GET", "/debug/agent/sessions/s1/artifacts/plot-light.png", None),
+    ("GET", "/debug/agent/sessions/s1/bundle?include_data=true", None),
     ("DELETE", "/debug/agent/sessions/s1", None),
 ]
 
@@ -907,6 +919,196 @@ class TestArtifacts:
         response = client.get("/debug/agent/sessions/s1/artifacts/plot.py")
         assert response.status_code == 404
         assert response.json() == {"detail": "session_expired", "ref": response.headers["X-Request-Id"]}
+
+
+def _bundle(versions: int = 1, png_bytes: int = 64) -> dict:
+    """A bundle shaped like the agents service's, with `versions` versions of two base64 PNGs each."""
+    image = base64.b64encode(b"\x89PNG" + b"\x00" * (png_bytes - 4)).decode()
+    return {
+        "session": {"spec_id": "scatter-basic", "library": "matplotlib", "locale": "en"},
+        "snapshot": {"spec_id": "scatter-basic", "library_version": "3.10.0"},
+        "transcript": [{"role": "user", "text": "log scale on y"}, {"role": "assistant", "text": "Done."}],
+        "versions": [
+            {"number": number, "images": {"light": image, "dark": image}, "data_csv": None}
+            for number in range(1, versions + 1)
+        ],
+        "profile": {"rows": 3, "columns": []},
+        "bindings": [{"role": "x", "column": "a"}],
+        "config": {"provider": "fake", "model": "m"},
+    }
+
+
+class TestBundle:
+    PATH = "/debug/agent/sessions/abcdefghijk/bundle"
+
+    def test_relays_the_bundle_as_a_json_attachment(self, client, upstream) -> None:
+        raw = json.dumps(_bundle()).encode()
+        upstream.handler = lambda request: httpx.Response(200, content=raw, headers={"Content-Type": "text/html"})
+
+        response = client.get(self.PATH)
+
+        assert response.status_code == 200
+        assert response.content == raw
+        assert response.headers["content-type"] == "application/json"
+        assert response.headers["Content-Disposition"] == 'attachment; filename="anyplot-session-abcdefgh.json"'
+        assert response.headers["Cache-Control"] == "private, no-store"
+        assert response.headers["X-Content-Type-Options"] == "nosniff"
+        assert response.headers["X-Request-Id"] == upstream.requests[0].headers["X-Request-Id"]
+        sent = upstream.requests[0]
+        assert (sent.method, sent.url.path) == ("GET", "/v1/sessions/abcdefghijk/bundle")
+        assert sent.headers["X-Anyplot-User"] == derive_user_id(KEY.encode(), ADMIN)
+
+    def test_compresses_the_bundle_in_a_worker_thread(self, client, upstream, monkeypatch) -> None:
+        """The API's GZipMiddleware would compress the buffered bundle in one call on the event loop."""
+        raw = json.dumps(_bundle(png_bytes=4096)).encode()
+        upstream.handler = lambda request: httpx.Response(200, content=raw)
+        in_thread: list[str] = []
+
+        async def recording(func, *args, **kwargs):
+            in_thread.append(func.__name__)
+            return await run_in_threadpool(func, *args, **kwargs)
+
+        monkeypatch.setattr("api.routers.agent.run_in_threadpool", recording)
+        with client.stream("GET", self.PATH, headers={"Accept-Encoding": "gzip, deflate"}) as response:
+            wire = b"".join(response.iter_raw())
+
+        assert response.status_code == 200
+        assert response.headers["Content-Encoding"] == "gzip"
+        assert response.headers["Vary"] == "Accept-Encoding"
+        # Compressed once: the middleware passed the encoded response through.
+        assert gzip.decompress(wire) == raw
+        assert "_prepare_bundle" in in_thread
+
+    def test_sends_the_bundle_as_is_to_a_client_without_gzip(self, client, upstream) -> None:
+        raw = json.dumps(_bundle(png_bytes=4096)).encode()
+        upstream.handler = lambda request: httpx.Response(200, content=raw)
+        with client.stream("GET", self.PATH, headers={"Accept-Encoding": "identity"}) as response:
+            wire = b"".join(response.iter_raw())
+
+        assert response.status_code == 200
+        assert "Content-Encoding" not in response.headers
+        assert wire == raw
+
+    @pytest.mark.parametrize(
+        ("query", "forwarded"),
+        [
+            ("other=1", {"include_data": "false"}),
+            ("include_data=true&other=1", {"include_data": "true"}),
+            ("include_data=1&version=2", {"include_data": "true", "version": "2"}),
+            ("include_data=false&version=0", {"include_data": "false", "version": "0"}),
+        ],
+    )
+    def test_forwards_only_the_validated_query(self, client, upstream, query, forwarded) -> None:
+        upstream.handler = lambda request: httpx.Response(200, json=_bundle())
+        assert client.get(f"{self.PATH}?{query}").status_code == 200
+        assert dict(upstream.requests[0].url.params) == forwarded
+
+    @pytest.mark.parametrize(
+        "path",
+        [
+            "/debug/agent/sessions/abc/bundle?version=1000",
+            "/debug/agent/sessions/abc/bundle?version=-1",
+            "/debug/agent/sessions/abc/bundle?version=two",
+            "/debug/agent/sessions/abc/bundle?include_data=maybe",
+            "/debug/agent/sessions/a.b/bundle",
+        ],
+    )
+    def test_422_for_an_invalid_request(self, client, upstream, path) -> None:
+        assert client.get(path).status_code == 422
+        assert upstream.requests == []
+
+    @pytest.mark.parametrize("code", ["not_found", "session_expired"])
+    def test_upstream_404_keeps_its_code(self, client, upstream, code) -> None:
+        upstream.handler = lambda request: httpx.Response(404, json={"detail": code})
+        response = client.get(f"{self.PATH}?version=7")
+        assert response.status_code == 404
+        assert response.json() == {"detail": code, "ref": response.headers["X-Request-Id"]}
+        assert "Content-Disposition" not in response.headers
+
+    def test_another_admins_session_is_session_expired(self, client, upstream) -> None:
+        """Ownership is the agents service's: it answers another user id's session as `404 session_expired`."""
+        owner = derive_user_id(KEY.encode(), ADMIN)
+        upstream.handler = lambda request: (
+            httpx.Response(200, json=_bundle())
+            if request.headers["X-Anyplot-User"] == owner
+            else httpx.Response(404, json={"detail": "session_expired"})
+        )
+        assert client.get(self.PATH).status_code == 200
+
+        other = AdminIdentity(email="other@example.com", via="cf_access")
+        fastapi_app.dependency_overrides[require_admin_identity] = lambda: other
+        response = client.get(self.PATH)
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "session_expired"
+        assert upstream.requests[-1].headers["X-Anyplot-User"] == derive_user_id(KEY.encode(), other)
+
+    def test_a_bundle_of_ten_versions_with_two_large_pngs_each_fits(self, client, upstream) -> None:
+        """Ten versions of a light and a dark PNG of 1 MiB each: about 27 MiB of JSON, under the cap."""
+        raw = json.dumps(_bundle(versions=10, png_bytes=1024 * 1024)).encode()
+        assert len(raw) < MAX_BUNDLE_BYTES
+        upstream.handler = lambda request: httpx.Response(200, content=raw)
+        response = client.get(self.PATH)
+        assert response.status_code == 200
+        assert len(response.json()["versions"]) == 10
+
+    def test_a_declared_length_over_the_cap_is_refused_unread(self, client, upstream, monkeypatch) -> None:
+        monkeypatch.setattr("api.routers.agent.MAX_BUNDLE_BYTES", 1000)
+        reads: list[int] = []
+
+        async def body() -> AsyncIterator[bytes]:
+            reads.append(1)
+            yield b"{}"
+
+        upstream.handler = lambda request: httpx.Response(200, content=body(), headers={"Content-Length": "5000"})
+        response = client.get(self.PATH)
+        assert response.status_code == 502
+        assert response.json() == {"detail": "too_large", "ref": response.headers["X-Request-Id"]}
+        assert "Content-Disposition" not in response.headers
+        assert reads == []
+
+    def test_a_chunked_body_over_the_cap_is_refused(self, client, upstream, monkeypatch) -> None:
+        monkeypatch.setattr("api.routers.agent.MAX_BUNDLE_BYTES", 1000)
+
+        async def chunks() -> AsyncIterator[bytes]:
+            yield b'{"transcript": "'
+            for _ in range(20):
+                yield b"x" * 100
+            yield b'"}'
+
+        upstream.handler = lambda request: httpx.Response(200, content=chunks())
+        response = client.get(self.PATH)
+        assert response.status_code == 502
+        assert response.json()["detail"] == "too_large"
+
+    def test_a_body_at_the_cap_passes(self, client, upstream, monkeypatch) -> None:
+        body = json.dumps({"transcript": "x" * 980}).encode()
+        monkeypatch.setattr("api.routers.agent.MAX_BUNDLE_BYTES", len(body))
+        upstream.handler = lambda request: httpx.Response(200, content=body)
+        assert client.get(self.PATH).content == body
+
+    @pytest.mark.parametrize("body", [b"<html>ok</html>", b"[1, 2]", b"", b"[" * 100_000 + b"]" * 100_000])
+    def test_a_success_that_is_no_json_object_is_502(self, client, upstream, body) -> None:
+        """Nesting past the parser's recursion limit is no JSON object either, not an unhandled 500."""
+        upstream.handler = lambda request: httpx.Response(200, content=body)
+        response = client.get(self.PATH)
+        assert response.status_code == 502
+        assert response.json()["detail"] == "upstream"
+
+    def test_unreachable_is_502(self, client, upstream) -> None:
+        def refuse(request):
+            raise httpx.ConnectError("refused")
+
+        upstream.handler = refuse
+        response = client.get(self.PATH)
+        assert response.status_code == 502
+        assert response.json()["detail"] == "upstream"
+
+    def test_file_name_keeps_eight_safe_characters(self) -> None:
+        assert _bundle_filename("abcdefghijk") == "anyplot-session-abcdefgh.json"
+        assert _bundle_filename("ab_-") == "anyplot-session-ab_-.json"
+        assert _bundle_filename('a"b/c\r\nd') == "anyplot-session-abcd.json"
+        assert _bundle_filename("..") == "anyplot-session-session.json"
 
 
 class TestUpstreamMapping:

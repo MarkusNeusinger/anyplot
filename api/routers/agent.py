@@ -17,6 +17,7 @@ not its configuration never breaks.
 from __future__ import annotations
 
 import asyncio
+import gzip
 import hashlib
 import hmac
 import json
@@ -69,6 +70,19 @@ ARTIFACT_MEDIA_TYPES: dict[str, str] = {
 }
 """The only artifact names the BFF fetches. The media type is set here and the
 upstream one is never forwarded."""
+
+MAX_BUNDLE_BYTES = 32 * 1024 * 1024
+"""The cap of a session bundle the BFF relays: Cloud Run's 32 MiB limit on an HTTP/1 response that is
+not streamed. The agents service answers its bundle (every version's PNGs as base64) as one
+`JSONResponse`, so on Cloud Run a larger bundle never reaches the BFF: Cloud Run refuses it on the
+agents service's side with a 500, which the BFF maps to `500 upstream` like any other. This cap is
+the BFF's own bound on what it buffers, and answers `502 too_large` where nothing sits in front of
+the agents service (a local run) or should that service ever stream the bundle."""
+_BUNDLE_SID_CHARS = 8
+"""The session id characters in a bundle's file name, `anyplot-session-<first 8>.json`."""
+_BUNDLE_GZIP_LEVEL = 6
+"""zlib's default level: base64 of PNGs shrinks by about a quarter at level 6 and no further at
+the API's middleware level 9, which costs about a fifth more time."""
 
 # Local dev servers on any port. api/main.py passes this same constant to
 # CORSMiddleware as `allow_origin_regex`, so the CSRF Origin check and CORS
@@ -556,6 +570,45 @@ async def _open_stream(
     return response
 
 
+async def _read_capped(response: httpx.Response, max_bytes: int) -> bytes | None:
+    """The whole body of an opened upstream response, or None once it passes `max_bytes`.
+
+    A declared `Content-Length` over the cap is refused before a byte is read; the count
+    is kept while reading too, because a chunked body declares none.
+    """
+    declared = response.headers.get("content-length", "")
+    if declared.isdigit() and int(declared) > max_bytes:
+        return None
+    body = bytearray()
+    async for chunk in response.aiter_bytes():
+        body += chunk
+        if len(body) > max_bytes:
+            return None
+    return bytes(body)
+
+
+def _prepare_bundle(content: bytes, compress: bool) -> bytes | None:
+    """The bundle as the browser gets it, gzip-compressed with `compress`; None unless it is a JSON object.
+
+    Runs in a worker thread: checking and compressing tens of megabytes of base64 would hold the
+    event loop for over a second, and the API's `GZipMiddleware` compresses a buffered response in
+    one call on the loop. That middleware leaves a response that already has a `Content-Encoding`
+    as it is. A nesting deeper than the parser's recursion limit counts as no JSON.
+    """
+    try:
+        if not isinstance(json.loads(content), dict):
+            return None
+    except (ValueError, RecursionError):
+        return None
+    return gzip.compress(content, compresslevel=_BUNDLE_GZIP_LEVEL, mtime=0) if compress else content
+
+
+def _bundle_filename(sid: str) -> str:
+    """`anyplot-session-<the session id's first 8 characters>.json`, those reduced to `[A-Za-z0-9_-]`."""
+    short = re.sub(r"[^A-Za-z0-9_-]", "", sid[:_BUNDLE_SID_CHARS]) or "session"
+    return f"anyplot-session-{short}.json"
+
+
 def _no_content(ctx: AgentContext) -> Response:
     # A returned Response skips the headers `agent_context` set, so repeat them.
     return Response(status_code=204, headers={"X-Request-Id": ctx.request_id, "Cache-Control": _NO_STORE})
@@ -893,6 +946,58 @@ async def get_artifact(
         headers={"Cache-Control": _NO_STORE, "X-Content-Type-Options": "nosniff", "X-Request-Id": ctx.request_id},
         background=BackgroundTask(response.aclose),
     )
+
+
+@router.get("/sessions/{sid}/bundle")
+async def get_bundle(
+    sid: SessionId,
+    request: Request,
+    ctx: Ctx,
+    client: Client,
+    version: Annotated[int | None, Query(ge=0, le=999)] = None,
+    include_data: bool = False,
+) -> Response:
+    """The session's feedback case as a JSON file to save: the page's `.save()`.
+
+    The agents service assembles it (`GET /v1/sessions/{sid}/bundle`): the transcript, every
+    version's code, plan, result and PNGs as base64, the dataset profile, the bindings and a
+    config stamp; each version's `data.csv` only with `include_data`, and only `version` when
+    one above 0 is given. The BFF reads it whole up to `MAX_BUNDLE_BYTES` (`502 too_large`
+    above), checks that it is a JSON object and compresses it in a worker thread
+    (`_prepare_bundle`), and answers it as an attachment.
+    """
+    path = f"/sessions/{sid}/bundle"
+    params: dict[str, str | int] = {"include_data": "true" if include_data else "false"}
+    if version is not None:
+        params["version"] = version
+    try:
+        response = await _open_stream(client, ctx, "GET", path, params=params)
+        try:
+            body = await _read_capped(response, MAX_BUNDLE_BYTES)
+        finally:
+            await response.aclose()
+    except _UNREACHABLE as exc:
+        _log_unreachable(ctx, "GET", path, exc)
+        raise AgentHTTPError(502, "upstream", ctx.request_id) from exc
+    if body is None:
+        logger.warning("agent bundle over %d bytes refused (ref %s)", MAX_BUNDLE_BYTES, ctx.request_id)
+        raise AgentHTTPError(502, "too_large", ctx.request_id)
+    # The middleware's own test for whether the client takes gzip.
+    compress = "gzip" in request.headers.get("Accept-Encoding", "")
+    content = await run_in_threadpool(_prepare_bundle, body, compress)
+    if content is None:
+        raise AgentHTTPError(502, "upstream", ctx.request_id)
+    headers = {
+        "Content-Disposition": f'attachment; filename="{_bundle_filename(sid)}"',
+        "Cache-Control": _NO_STORE,
+        "X-Content-Type-Options": "nosniff",
+        "X-Request-Id": ctx.request_id,
+    }
+    if compress:
+        # The middleware adds `Vary` to the responses it handles, and passes this one through.
+        headers["Content-Encoding"] = "gzip"
+        headers["Vary"] = "Accept-Encoding"
+    return Response(content, media_type="application/json", headers=headers)
 
 
 @router.delete("/sessions/{sid}", status_code=204)
