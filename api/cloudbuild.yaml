@@ -37,9 +37,9 @@ substitutions:
   # AGENT_USER_ID_KEY secret are both set. Flip it HERE (the trigger's
   # substitutions), not with `gcloud run services update`: this pipeline writes
   # both variables on every deploy, so an out-of-band change lasts only until
-  # the next build. AGENT_USER_ID_KEY joins `--update-secrets` below only once
-  # the owner has created that secret — Cloud Run refuses a deploy that names a
-  # secret which does not exist.
+  # the next build. The AGENT_USER_ID_KEY secret exists since 2026-10-11 and is
+  # bound in `--update-secrets` below (Cloud Run refuses a deploy that names a
+  # secret which does not exist, so the binding followed the secret).
   _AGENT_ENABLED: "false"
   _AGENT_SERVICE_URL: ""
 
@@ -97,7 +97,7 @@ steps:
       # that creates it. The cost of `--update-secrets` is that a binding
       # dropped from this line is no longer removed automatically — worth it
       # against a gate that turns itself off.
-      - "--update-secrets=DATABASE_URL=DATABASE_URL:latest,CACHE_INVALIDATE_TOKEN=CACHE_INVALIDATE_TOKEN:latest,ADMIN_TOKEN=ADMIN_TOKEN:latest,PLAUSIBLE_API_KEY=PLAUSIBLE_API_KEY:latest"
+      - "--update-secrets=DATABASE_URL=DATABASE_URL:latest,CACHE_INVALIDATE_TOKEN=CACHE_INVALIDATE_TOKEN:latest,ADMIN_TOKEN=ADMIN_TOKEN:latest,PLAUSIBLE_API_KEY=PLAUSIBLE_API_KEY:latest,AGENT_USER_ID_KEY=AGENT_USER_ID_KEY:latest"
       - "--execution-environment=gen2"
       # ^|^ alt delimiter: values contain @ (emails) and may contain , (multi-email lists)
       #
