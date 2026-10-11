@@ -9,7 +9,7 @@ For each selected case (any case, though only the stress cases of `make_stress.p
 carry expectations) it does what the service does before and around the models:
 
 1. **dataset**: the dataset route's size check and `parse_dataset`, timed, as the route's
-   answer (`ok`, `413 too_long`, `422 unparseable`) and the parse error code, with the
+   answer (`ok`, `413 too_long`, `422 unparseable`, `200 transcribed`) and the parse error code, with the
    number of columns the parse types as dates (`date_columns`);
 2. **eligibility**: `opening.assess` on the case's snapshot (normalise, readiness scan);
 3. **bindings**: the case's bindings, or the defaults the route proposes, through
@@ -58,6 +58,7 @@ from agents.anyplot.code.loader import loader_arguments
 from agents.anyplot.code.regions import find_regions
 from agents.anyplot.data.bindings import check_bindings, default_bindings
 from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParsedDataset, ParseError, parse_dataset
+from agents.anyplot.data.transcribe import looks_like_free_text, transcribable
 from agents.anyplot.opening import assess, dataset_judge_inputs
 from agents.anyplot.pipeline import _check, render_adapt_request, render_review_request
 from agents.anyplot.policy import FENCE_TAGS
@@ -145,13 +146,20 @@ def compose_standin(base: str, body: str) -> str:
 
 
 def dataset_outcome(text: str) -> tuple[str, ParsedDataset | None, str | None]:
-    """The dataset route's answer to `text` before its judge: `ok`, `413 too_long` or `422 unparseable`, and the parse."""
+    """The dataset route's answer to `text` before any model: `ok`, `413 too_long`, `422 unparseable` or
+    `200 transcribed` (free text the route hands to the transcriber, nothing stored), and the parse."""
     if len(text.encode("utf-8", errors="surrogatepass")) > MAX_INPUT_BYTES:
         return "413 too_long", None, "too_long"
     try:
         parsed = parse_dataset(text)
     except ParseError as exc:
-        return ("413 too_long" if exc.code == "too_long" else "422 unparseable"), None, exc.code
+        if exc.code == "too_long":
+            return "413 too_long", None, exc.code
+        if exc.code == "no_table" and transcribable(text):
+            return "200 transcribed", None, exc.code
+        return "422 unparseable", None, exc.code
+    if looks_like_free_text(parsed) and transcribable(text):
+        return "200 transcribed", parsed, None
     return "ok", parsed, None
 
 

@@ -12,7 +12,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text}` | `{preview, profile, bindings, warnings, roles}` | `413 too_long`, `422 unparseable`, `403 data_refused`, `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset` | `{text}` | `{preview, profile, bindings, warnings, roles}`, stored; or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored | `413 too_long`, `422 unparseable`, `403 data_refused`, `503 guard_unavailable` |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles}` | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` | SSE `anyplot/1` | `413 too_long`, `409 run_active`, `503 capacity` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
@@ -99,9 +99,11 @@ from agents.anyplot.code.readiness import MAP_SPECS
 from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParseError, parse_dataset
 from agents.anyplot.data.roles import DataRole
 from agents.anyplot.data.store import StoreFull
+from agents.anyplot.data.transcribe import looks_like_free_text, table_to_csv, transcribable
 from agents.anyplot.dev_fixture import FixtureError, load_case
-from agents.anyplot.models import JudgeVerdict
+from agents.anyplot.models import JudgeUnavailable, JudgeVerdict
 from agents.anyplot.opening import (
+    INSTRUCTION_LIKE,
     Eligibility,
     assess,
     dataset_judge_inputs,
@@ -110,7 +112,7 @@ from agents.anyplot.opening import (
     store_dataset,
 )
 from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution, budget_allows, judge_budget_tokens
-from agents.anyplot.policy import data_rubric, fence, refusal
+from agents.anyplot.policy import data_rubric, fence, refusal, transcribe_rubric
 from agents.anyplot.render.serial import RenderBusy
 from agents.anyplot.render.store import RenderStoreFull
 from agents.anyplot.render.watermark import add_footer
@@ -582,13 +584,19 @@ async def upload_dataset(
         raise AgentsError(404, "session_expired")
     if len(body.text.encode("utf-8", errors="surrogatepass")) > MAX_INPUT_BYTES:
         raise AgentsError(413, "too_long")
+    ledger = RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action")
     try:
         parsed = parse_dataset(body.text)
     except ParseError as exc:
-        raise AgentsError(
-            413 if exc.code == "too_long" else 422, "too_long" if exc.code == "too_long" else "unparseable"
-        ) from None
-    ledger = RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action")
+        if exc.code == "too_long":
+            raise AgentsError(413, "too_long") from None
+        # Text with no table in it (prose, a list on one line) is the transcriber's; a broken
+        # table (ragged rows, bad quoting, an over-long cell, invalid JSON) stays the parser's refusal.
+        if exc.code == "no_table" and transcribable(body.text):
+            return await _transcribe(services, ledger, body.text)
+        raise AgentsError(422, "unparseable") from None
+    if looks_like_free_text(parsed) and transcribable(body.text):
+        return await _transcribe(services, ledger, body.text)
     if not services.usage.daily_ok(user, get_settings()):
         raise AgentsError(429, "rate_limited")
     if instruction_like(parsed):
@@ -607,6 +615,64 @@ async def upload_dataset(
             "bindings": [binding.model_dump() for binding in ingested.bindings],
             "warnings": parsed.warnings,
             "roles": [_role_body(role) for role in view.snapshot.roles()],
+        },
+        headers=_NO_STORE,
+    )
+
+
+async def _transcribe(services: Services, ledger: RequestLedger, text: str) -> JSONResponse:
+    """Read free text as a table with the transcriber and answer with it, storing nothing.
+
+    The answer carries `transcribed: true` and the table's CSV in `text`; the user
+    confirms the preview, and the confirmation posts that CSV through the ordinary path
+    (parse, pre-filter, judge, store). The model reads the raw text, so the pre-filter runs
+    on it first; its answer is bound to `TranscribedTable`, then parsed like any paste, so
+    a reading that is no table (one column of prose) is `422 unparseable` here too. The
+    call books its tokens like a judge call and writes a `data_transcribe` attribution line.
+    """
+    user = ledger.user_id
+    if not services.usage.daily_ok(user, get_settings()):
+        raise AgentsError(429, "rate_limited")
+    if INSTRUCTION_LIKE.search(text):
+        attribution("data_transcribe", ledger, outcome="prefilter")
+        raise AgentsError(403, "data_refused")
+    try:
+        reading = await services.judge.transcribe(fence("user_text", text), transcribe_rubric())
+    except JudgeUnavailable:
+        attribution("data_transcribe", ledger, outcome="guard_unavailable")
+        raise AgentsError(503, "guard_unavailable") from None
+    services.usage.add_tokens(
+        user,
+        judge_budget_tokens(reading.tokens, reading.input_tokens, reading.output_tokens, get_settings().judge_model),
+    )
+    csv_text = table_to_csv(reading.table)
+    try:
+        parsed = parse_dataset(csv_text)
+    except ParseError:
+        attribution("data_transcribe", ledger, outcome="unparseable", judge_tokens=reading.tokens)
+        raise AgentsError(422, "unparseable") from None
+    if looks_like_free_text(parsed) and parsed.profile.columns[0].name == "text":
+        # The rubric's answer for text that holds no table: one column named `text`.
+        attribution("data_transcribe", ledger, outcome="no_table", judge_tokens=reading.tokens)
+        raise AgentsError(422, "unparseable")
+    attribution(
+        "data_transcribe",
+        ledger,
+        outcome="ok",
+        rows=parsed.profile.rows,
+        columns=len(parsed.profile.columns),
+        judge_tokens=reading.tokens,
+        judge_input=reading.input_tokens,
+        judge_output=reading.output_tokens,
+    )
+    return JSONResponse(
+        {
+            "transcribed": True,
+            "text": csv_text,
+            "preview": parsed.preview,
+            "profile": parsed.profile.model_dump(mode="json"),
+            "warnings": parsed.warnings,
+            "note": reading.table.note,
         },
         headers=_NO_STORE,
     )

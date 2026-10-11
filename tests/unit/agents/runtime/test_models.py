@@ -437,6 +437,26 @@ class TestJudge:
             await judge.judge("<user_message>x</user_message>", "# Scope judge")
         assert len(client.calls) == 2
 
+    async def test_anthropic_judge_transcribes_under_the_table_format(self) -> None:
+        """The same client reads free text as a table: a larger cap, the table schema, thinking off."""
+        from agents.anyplot.models import TRANSCRIBE_MAX_OUTPUT_TOKENS
+
+        judge = make_judge_client(CLAUDE)
+        assert isinstance(judge, AnthropicJudge)
+        table = {"columns": ["Tier", "Anzahl"], "rows": [["Hund", "7"], ["Katze", "3"]], "note": ""}
+        client = FakeAnthropic({"unknown": [{"json": table}]})
+        judge.__dict__["_client"] = client
+
+        reading = await judge.transcribe("<user_text>Hund 7 Katze 3</user_text>", "# Table transcriber")
+
+        assert reading.table.columns == ["Tier", "Anzahl"] and reading.table.rows == [["Hund", "7"], ["Katze", "3"]]
+        assert (reading.tokens, reading.input_tokens, reading.output_tokens) == (120, 100, 20)
+        call = client.calls[0]
+        assert call["max_tokens"] == TRANSCRIBE_MAX_OUTPUT_TOKENS and call["thinking"] == {"type": "disabled"}
+        schema = call["output_config"]["format"]["schema"]
+        assert set(schema["properties"]) == {"columns", "rows", "note"} and schema["additionalProperties"] is False
+        assert call["system"] == "# Table transcriber" and "tools" not in call
+
     def test_adapter_full_cap(self) -> None:
         """Claude's full-file cap holds a plan at the schema's 24 KB limit; Gemini's is bounded by the deadline."""
         assert ADAPTER_FULL_MAX_OUTPUT_TOKENS == 16_384

@@ -111,8 +111,11 @@ MISSING_VALUES: frozenset[str] = frozenset(
 PANDAS_DTYPES: dict[ColumnDtype, str] = {"integer": "Int64", "number": "float64", "boolean": "boolean", "text": "str"}
 
 ParseErrorCode = Literal[
-    "too_long", "unparseable", "too_many_columns", "too_many_rows", "cell_too_long", "control_chars"
+    "too_long", "unparseable", "no_table", "too_many_columns", "too_many_rows", "cell_too_long", "control_chars"
 ]
+"""`no_table` is text with no table in it (no columns, or a header line without rows: prose,
+a list on one line); the route hands such text to the transcriber. `unparseable` is a table
+that is broken (ragged rows, malformed quoting, invalid JSON), which stays a refusal."""
 
 _CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]")
 _HEADER_BREAKS = re.compile(r"[\t\r\n]+")
@@ -609,13 +612,13 @@ def _build(
     if dropped:
         warnings.append(f"{_count(dropped, 'empty column')} without a header dropped")
     if not columns:
-        raise ParseError("unparseable", "the data has no columns")
+        raise ParseError("no_table", "the data has no columns")
     if len(columns) > MAX_COLUMNS:
         raise ParseError(
             "too_many_columns", f"the data has {len(columns)} columns; at most {MAX_COLUMNS} are supported"
         )
     if not raw_rows:
-        raise ParseError("unparseable", "the data has a header but no rows")
+        raise ParseError("no_table", "the data has a header but no rows")
     for position, header in enumerate(headers, start=1):
         if len(header) > MAX_INPUT_CELL_CHARS:
             raise ParseError(
