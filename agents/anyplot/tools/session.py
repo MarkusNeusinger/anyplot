@@ -32,7 +32,7 @@ from ..plugins.tool_safety import result_limit, result_size
 from ..policy import DATA_PREAMBLE, fence
 from ..schemas import Binding, DatasetProfile, PipelineArgs
 from ..services import get_services
-from ..session_state import CONFIRMED, SessionView, apply_bindings, bindings_changed, read_session
+from ..session_state import SessionView, apply_bindings, read_session
 
 
 PLOT_PIPELINE = "plot_pipeline"
@@ -119,8 +119,7 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
         # The errors quote column names from the user's dataset.
         errors = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(check.errors[:10], ensure_ascii=False))
         return {"status": "error", "code": "invalid_bindings", "errors": errors}
-    if bindings_changed(view, parsed):
-        delta[CONFIRMED] = None  # other bindings than the user confirmed: the data panel asks again
+    # Other bindings than the user confirmed leave the confirmation's fingerprint behind; the panel asks again.
     for key, value in delta.items():
         tool_context.state[key] = value
     return {"status": "ok", "complete": check.complete, "missing_roles": check.missing_roles}

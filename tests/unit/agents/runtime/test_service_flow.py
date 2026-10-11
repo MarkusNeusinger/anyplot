@@ -1803,6 +1803,33 @@ async def test_done_carries_the_bindings_the_root_changed_and_the_dropped_confir
     assert done["data_confirmed"] is True and done["bindings"][0] == {"role": "x", "column": "Exam Score"}
 
 
+async def test_a_delayed_confirmation_never_covers_bindings_the_user_did_not_see(client: httpx.AsyncClient) -> None:
+    """The confirmation is a fingerprint of the dataset and the bindings it was computed on.
+
+    A confirm request that read the old bindings and writes after a binding change lands
+    stores the old fingerprint, so the new bindings stay unconfirmed (Copilot on #12131).
+    """
+    from agents.anyplot.session_state import CONFIRMED, confirm_delta
+
+    sid = await open_session(client)
+    before = read_session(await _session_state(client, sid))
+    assert before is not None and before.data_confirmed
+    stale_delta = confirm_delta(before)  # the confirmation as computed on the bindings the user saw
+
+    swapped = await client.put(
+        f"/v1/sessions/{sid}/bindings",
+        headers=HEADERS,
+        json=[{"role": "x", "column": "Exam Score"}, {"role": "y", "column": "Study Hours"}],
+    )
+    assert swapped.status_code == 200
+    runtime = app.dependency_overrides[get_runtime]()
+    session = await runtime.session(USER, sid)
+    await runtime.write_state(session, stale_delta)  # the delayed write lands after the change
+
+    after = read_session(await _session_state(client, sid))
+    assert after is not None and after.confirmed == stale_delta[CONFIRMED] and not after.data_confirmed
+
+
 async def test_confirm_needs_a_dataset(client: httpx.AsyncClient) -> None:
     sid = await open_session(client, with_data=False)
     response = await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)

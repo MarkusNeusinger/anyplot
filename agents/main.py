@@ -125,8 +125,8 @@ from agents.anyplot.session_state import (
     CONFIRMED,
     CatalogueSnapshot,
     apply_bindings,
-    bindings_changed,
     confirm_delta,
+    confirmation_fingerprint,
     read_session,
 )
 from agents.anyplot.settings import AgentSettings, get_settings
@@ -549,7 +549,9 @@ def _fixture_seed(
     delta = ingested.state_delta()
     if case.bindings is not None:
         delta[BINDINGS] = [binding.model_dump() for binding in case.bindings]
-    delta[CONFIRMED] = ingested.dataset_id  # a fixture is the developer's own, confirmed data
+    # A fixture is the developer's own, confirmed data: its bindings (the case's or the defaults) count.
+    bindings = case.bindings if case.bindings is not None else ingested.bindings
+    delta[CONFIRMED] = confirmation_fingerprint(ingested.dataset_id, bindings)
     return delta
 
 
@@ -786,8 +788,7 @@ async def put_bindings(
         return JSONResponse(
             status_code=422, content={"detail": "invalid", "errors": check.errors[:20]}, headers=_NO_STORE
         )
-    if bindings_changed(view, parsed):
-        delta[CONFIRMED] = None  # the user confirmed the data with other bindings; step 1 again
+    # Other bindings than the user confirmed leave the confirmation's fingerprint behind: step 1 again.
     await runtime.write_state(session, delta)
     return JSONResponse(
         {"bindings": delta[BINDINGS], "complete": check.complete, "missing_roles": check.missing_roles},
