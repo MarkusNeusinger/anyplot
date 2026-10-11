@@ -264,7 +264,6 @@ class TestErrors:
         [
             "",
             "  \n\n ",
-            "a,b\n",
             "a,b\n1,2,3\n",
             'a,b\n"x"y,1\n',
             'a,b\n"x,1\n',
@@ -272,7 +271,6 @@ class TestErrors:
             "[]",
             "{}",
             "[1, 2]",
-            '"just a string"',
             '[{"a": {"nested": 1}}]',
             '[{"a": [1, 2]}]',
             '{"a": [1, 2], "b": [1]}',
@@ -283,6 +281,13 @@ class TestErrors:
     )
     def test_unparseable(self, text: str) -> None:
         assert error_code(text) == "unparseable"
+
+    @pytest.mark.parametrize(
+        "text", ["a,b\n", '"just a string"', "Hund 7 Katze 3 und Vogel 4", "Hund 7, Katze 3, Vogel 4\n"]
+    )
+    def test_text_with_no_table_in_it_has_its_own_code(self, text: str) -> None:
+        """A header line alone, prose, a list on one line: `no_table`, which the route hands to the transcriber."""
+        assert error_code(text) == "no_table"
 
     def test_messages_never_quote_the_data(self) -> None:
         for text in ('a,b\n"SECRET"y,1\n', "a,b\nSECRET,2,SECRET\n", '[{"a": {"SECRET": 1}}]'):

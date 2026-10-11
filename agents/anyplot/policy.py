@@ -61,6 +61,7 @@ FENCE_TAGS = (
     "last_assistant_turn",
     "earlier_user_turns",
     "dataset",
+    "user_text",
     "spec_text",
     "tool_notes",
 )
@@ -231,6 +232,11 @@ def scope_rubric() -> str:
 
 def data_rubric() -> str:
     return own_prompt("data_judge.md")
+
+
+def transcribe_rubric() -> str:
+    """The table transcriber's instruction: free text in the data field read as a table."""
+    return own_prompt("transcriber.md")
 
 
 def fence(tag: str, text: str) -> str:

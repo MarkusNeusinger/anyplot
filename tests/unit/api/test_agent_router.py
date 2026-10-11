@@ -373,6 +373,22 @@ class TestBodies:
         assert response.status_code == 200
         assert upstream.last_json == {"text": text}
 
+    def test_dataset_confirmed_flag_is_forwarded_only_when_set(self, client, upstream) -> None:
+        """`.use()` on a transcription posts `confirmed: true`; a plain paste sends no flag."""
+        confirmed = client.post(
+            "/debug/agent/sessions/s1/dataset",
+            json={"text": "name\nAlice\n", "confirmed": True},
+            headers=CLIENT_HEADERS,
+        )
+        assert confirmed.status_code == 200
+        assert upstream.last_json == {"text": "name\nAlice\n", "confirmed": True}
+
+        plain = client.post(
+            "/debug/agent/sessions/s1/dataset", json={"text": "a,b\n1,2\n", "confirmed": False}, headers=CLIENT_HEADERS
+        )
+        assert plain.status_code == 200
+        assert upstream.last_json == {"text": "a,b\n1,2\n"}
+
     def test_dataset_over_limit_is_413(self, client, upstream) -> None:
         response = client.post(
             "/debug/agent/sessions/s1/dataset", json={"text": "a" * (MAX_DATASET_BYTES + 1)}, headers=CLIENT_HEADERS

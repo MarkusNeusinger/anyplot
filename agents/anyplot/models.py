@@ -89,6 +89,7 @@ from google.adk.models.llm_response import LlmResponse
 from google.genai import types
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
+from .data.transcribe import TranscribedTable
 from .settings import AgentSettings, get_settings
 
 
@@ -447,13 +448,37 @@ class JudgeUnavailable(Exception):
     """No verdict within the budget: timeout, transport error or an unparseable answer."""
 
 
+class Transcription(BaseModel):
+    """A table the transcriber read out of free text, and the tokens it cost (split like a verdict)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    table: TranscribedTable
+    tokens: int = Field(default=0, ge=0)
+    input_tokens: int = Field(default=0, ge=0)
+    output_tokens: int = Field(default=0, ge=0)
+
+
 class JudgeClient(Protocol):
-    """Classifies one fenced text against a rubric; fails closed with `JudgeUnavailable`."""
+    """The judge model's two jobs, both failing closed with `JudgeUnavailable`.
+
+    `judge` classifies one fenced text against a rubric. `transcribe` reads one fenced
+    text as a `TranscribedTable` (the data panel's free-text path): the same cheap model
+    and structured answer, with a larger output cap and a longer budget
+    (`TRANSCRIBE_TIMEOUT_S`).
+    """
 
     async def judge(self, text: str, rubric: str) -> JudgeVerdict: ...
 
+    async def transcribe(self, text: str, rubric: str) -> Transcription: ...
 
-Attempt = Callable[[str, str], Awaitable[JudgeVerdict]]
+
+TRANSCRIBE_MAX_OUTPUT_TOKENS = 8_192
+"""The transcriber's output cap: `MAX_TRANSCRIBE_CHARS` of text written back as a table of
+at most 200 rows and 20 columns is well under it, and a cut-off answer is a failed attempt."""
+TRANSCRIBE_TIMEOUT_S = 30.0
+"""The transcriber's wall-clock budget for its attempt and retry: a table of a few hundred
+cells takes the judge model several seconds to write, far more than a verdict."""
 
 JUDGE_RETRY_BACKOFF_S = 0.5
 """Seconds the judge waits before its one retry, inside the same budget (`AGENT_JUDGE_TIMEOUT_S`).
@@ -465,7 +490,9 @@ the default 4 s budget.
 """
 
 
-async def _within_budget(attempt: Attempt, text: str, rubric: str, timeout_s: float) -> JudgeVerdict:
+async def _within_budget[Answer](
+    attempt: Callable[[str, str], Awaitable[Answer]], text: str, rubric: str, timeout_s: float
+) -> Answer:
     """One attempt plus one retry after `JUDGE_RETRY_BACKOFF_S`, all inside one wall-clock budget.
 
     Fails closed with `JudgeUnavailable`, whose message names the type of the last
@@ -505,16 +532,19 @@ class AnthropicJudge:
 
         return AsyncAnthropicVertex(project_id=self.project, region=self.region, max_retries=0)
 
-    async def _attempt(self, text: str, rubric: str) -> JudgeVerdict:
+    async def _structured[Schema: BaseModel](
+        self, text: str, rubric: str, schema: type[Schema], max_tokens: int
+    ) -> tuple[Schema, int, int]:
+        """One call answered under `schema`'s format: the answer, its input tokens and its output tokens."""
         message = await self._client.messages.create(
             model=self.model,
-            max_tokens=JUDGE_MAX_OUTPUT_TOKENS,
+            max_tokens=max_tokens,
             thinking={"type": "disabled"},
             system=rubric,
             messages=[{"role": "user", "content": text}],
-            output_config={"format": structured_output_format(_JudgeAnswer)},
+            output_config={"format": structured_output_format(schema)},
         )
-        # A refusal or a cut-off answer need not match the format; it is a failed attempt, not a verdict.
+        # A refusal or a cut-off answer need not match the format; it is a failed attempt, not an answer.
         if message.stop_reason != "end_turn":
             raise ValueError(f"the judge stopped with {message.stop_reason}")
         answer = "".join(block.text for block in message.content if getattr(block, "type", "") == "text")
@@ -524,15 +554,32 @@ class AnthropicJudge:
             for name in ("input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens")
         )
         output_tokens = int(getattr(usage, "output_tokens", 0) or 0)
+        return schema.model_validate_json(answer), input_tokens, output_tokens
+
+    async def _attempt(self, text: str, rubric: str) -> JudgeVerdict:
+        answer, input_tokens, output_tokens = await self._structured(
+            text, rubric, _JudgeAnswer, JUDGE_MAX_OUTPUT_TOKENS
+        )
         return JudgeVerdict(
-            **_JudgeAnswer.model_validate_json(answer).model_dump(),
+            **answer.model_dump(),
             tokens=input_tokens + output_tokens,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
         )
 
+    async def _attempt_transcribe(self, text: str, rubric: str) -> Transcription:
+        table, input_tokens, output_tokens = await self._structured(
+            text, rubric, TranscribedTable, TRANSCRIBE_MAX_OUTPUT_TOKENS
+        )
+        return Transcription(
+            table=table, tokens=input_tokens + output_tokens, input_tokens=input_tokens, output_tokens=output_tokens
+        )
+
     async def judge(self, text: str, rubric: str) -> JudgeVerdict:
         return await _within_budget(self._attempt, text, rubric, self.timeout_s)
+
+    async def transcribe(self, text: str, rubric: str) -> Transcription:
+        return await _within_budget(self._attempt_transcribe, text, rubric, TRANSCRIBE_TIMEOUT_S)
 
 
 @dataclass
@@ -550,15 +597,18 @@ class GeminiJudge:
 
         return genai.Client(enterprise=True, project=self.project, location=self.location)
 
-    async def _attempt(self, text: str, rubric: str) -> JudgeVerdict:
+    async def _structured[Schema: BaseModel](
+        self, text: str, rubric: str, schema: type[Schema], max_tokens: int
+    ) -> tuple[Schema, int, int, int]:
+        """One call answered under `schema`: the answer, its total, input and output tokens."""
         response = await self._client.aio.models.generate_content(
             model=self.model,
             contents=text,
             config=types.GenerateContentConfig(
                 system_instruction=rubric,
                 response_mime_type="application/json",
-                response_schema=_JudgeAnswer,
-                max_output_tokens=JUDGE_MAX_OUTPUT_TOKENS,
+                response_schema=schema,
+                max_output_tokens=max_tokens,
                 thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.MINIMAL),
                 # The judge must see attacks to classify them, so its own filters are off.
                 safety_settings=[
@@ -568,7 +618,7 @@ class GeminiJudge:
                 labels=_labels("judge"),
             ),
         )
-        answer = _JudgeAnswer.model_validate_json(response.text or "")
+        answer = schema.model_validate_json(response.text or "")
         usage = response.usage_metadata
 
         def count(name: str) -> int:
@@ -576,30 +626,49 @@ class GeminiJudge:
 
         input_tokens = count("prompt_token_count") + count("tool_use_prompt_token_count")
         output_tokens = count("candidates_token_count") + count("thoughts_token_count")
-        return JudgeVerdict(
-            **answer.model_dump(),
-            tokens=count("total_token_count"),
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
+        return answer, count("total_token_count"), input_tokens, output_tokens
+
+    async def _attempt(self, text: str, rubric: str) -> JudgeVerdict:
+        answer, total, input_tokens, output_tokens = await self._structured(
+            text, rubric, _JudgeAnswer, JUDGE_MAX_OUTPUT_TOKENS
         )
+        return JudgeVerdict(**answer.model_dump(), tokens=total, input_tokens=input_tokens, output_tokens=output_tokens)
+
+    async def _attempt_transcribe(self, text: str, rubric: str) -> Transcription:
+        table, total, input_tokens, output_tokens = await self._structured(
+            text, rubric, TranscribedTable, TRANSCRIBE_MAX_OUTPUT_TOKENS
+        )
+        return Transcription(table=table, tokens=total, input_tokens=input_tokens, output_tokens=output_tokens)
 
     async def judge(self, text: str, rubric: str) -> JudgeVerdict:
         return await _within_budget(self._attempt, text, rubric, self.timeout_s)
+
+    async def transcribe(self, text: str, rubric: str) -> Transcription:
+        return await _within_budget(self._attempt_transcribe, text, rubric, TRANSCRIBE_TIMEOUT_S)
 
 
 class FakeJudge:
     """A scripted judge for tests: each call pops the next verdict or raises the next exception.
 
     `delay_s` makes every attempt sleep first, so a test can drive the budget into a timeout.
+    `transcriptions` scripts `transcribe` the same way; without a script it reads nothing
+    and fails closed, so a test that expects a table must script one.
     """
 
     def __init__(
-        self, script: Sequence[JudgeVerdict | Exception] = (), *, delay_s: float = 0.0, timeout_s: float = 4.0
+        self,
+        script: Sequence[JudgeVerdict | Exception] = (),
+        *,
+        delay_s: float = 0.0,
+        timeout_s: float = 4.0,
+        transcriptions: Sequence[Transcription | Exception] = (),
     ):
         self.script = list(script)
+        self.transcriptions = list(transcriptions)
         self.delay_s = delay_s
         self.timeout_s = timeout_s
         self.calls: list[tuple[str, str]] = []
+        self.transcribe_calls: list[tuple[str, str]] = []
 
     async def _attempt(self, text: str, rubric: str) -> JudgeVerdict:
         self.calls.append((text, rubric))
@@ -610,8 +679,22 @@ class FakeJudge:
             raise item
         return item
 
+    async def _attempt_transcribe(self, text: str, rubric: str) -> Transcription:
+        self.transcribe_calls.append((text, rubric))
+        if self.delay_s:
+            await asyncio.sleep(self.delay_s)
+        if not self.transcriptions:
+            raise ValueError("no transcription scripted")
+        item = self.transcriptions.pop(0)
+        if isinstance(item, Exception):
+            raise item
+        return item
+
     async def judge(self, text: str, rubric: str) -> JudgeVerdict:
         return await _within_budget(self._attempt, text, rubric, self.timeout_s)
+
+    async def transcribe(self, text: str, rubric: str) -> Transcription:
+        return await _within_budget(self._attempt_transcribe, text, rubric, self.timeout_s)
 
 
 def make_judge_client(settings: AgentSettings | None = None) -> JudgeClient:

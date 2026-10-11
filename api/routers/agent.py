@@ -342,6 +342,9 @@ class SwitchLibraryBody(_StrictBody):
 
 class DatasetBody(_StrictBody):
     text: Text
+    # `.use()` on a transcription: the table the user confirmed; the agents service then never
+    # hands the text to its transcriber again (a one-column table would loop otherwise).
+    confirmed: bool = False
 
 
 class Binding(_StrictBody):
@@ -742,10 +745,15 @@ async def switch_library(
 
 @router.post("/sessions/{sid}/dataset")
 async def upload_dataset(sid: SessionId, body: DatasetBody, ctx: Ctx, client: Client) -> Any:
-    """Parse pasted data: `{preview, profile, bindings, warnings, roles}`. 413 above 200 KB of UTF-8."""
+    """Parse pasted data: `{preview, profile, bindings, warnings, roles}`, stored; or, for free text the
+    parser cannot read, the agents service's `{transcribed, text, preview, profile, warnings, note}`, a
+    model's reading that the page shows for confirmation and nothing stored. 413 above 200 KB of UTF-8."""
     if len(body.text.encode("utf-8")) > MAX_DATASET_BYTES:
         raise AgentHTTPError(413, "too_long", ctx.request_id)
-    return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset", json_body={"text": body.text})
+    payload: dict[str, Any] = {"text": body.text}
+    if body.confirmed:
+        payload["confirmed"] = True
+    return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset", json_body=payload)
 
 
 @router.put("/sessions/{sid}/bindings")

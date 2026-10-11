@@ -105,6 +105,31 @@ export interface DatasetParsed {
   roles?: RoleSpec[];
 }
 
+/**
+ * The other answer of `POST .../dataset`: the pasted text was not a table, so
+ * the server read it with a model and stored nothing. The page shows the table
+ * for the user to check; confirming posts `text` again, which then parses and
+ * stores like any pasted CSV. No bindings and no roles yet.
+ */
+export interface DatasetTranscribed {
+  transcribed: true;
+  /** The canonical CSV the model wrote: comma-separated, header line first. */
+  text: string;
+  /** Up to 20 data rows (the header is `profile.columns[].name`). */
+  preview: string[][];
+  profile: DatasetProfile;
+  warnings: string[];
+  /** At most 200 characters from the model about anything ambiguous; often empty. */
+  note: string;
+}
+
+export type DatasetAnswer = DatasetParsed | DatasetTranscribed;
+
+/** Whether the dataset answer is a transcription that awaits the user's confirmation. */
+export function isTranscribed(answer: DatasetAnswer): answer is DatasetTranscribed {
+  return (answer as Partial<DatasetTranscribed>).transcribed === true;
+}
+
 export interface BindingsApplied {
   bindings: Binding[];
   complete: boolean;
@@ -271,8 +296,18 @@ export const agentApi = {
       token,
       post({ spec_id: specId, library })
     ),
-  uploadDataset: (token: string, sid: string, text: string) =>
-    agentJson<DatasetParsed>(`${sessionPath(sid)}/dataset`, token, post({ text })),
+  /**
+   * A stored dataset, or a transcription of free text to confirm first (`isTranscribed`).
+   * `confirmed` marks the table the user accepted with `.use()`: the server then never
+   * hands the text to its transcriber again (a one-column table would otherwise be read
+   * again), while the parse, the pre-filter, the judge and the store run as usual.
+   */
+  uploadDataset: (token: string, sid: string, text: string, confirmed = false) =>
+    agentJson<DatasetAnswer>(
+      `${sessionPath(sid)}/dataset`,
+      token,
+      post(confirmed ? { text, confirmed: true } : { text })
+    ),
   putBindings: (token: string, sid: string, bindings: Binding[]) =>
     agentJson<BindingsApplied>(`${sessionPath(sid)}/bindings`, token, {
       method: 'PUT',

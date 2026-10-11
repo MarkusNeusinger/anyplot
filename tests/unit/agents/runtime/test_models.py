@@ -4,6 +4,7 @@ import asyncio
 import json
 import re
 from pathlib import Path
+from typing import Any
 
 import pytest
 from google.adk.models.anthropic_llm import AnthropicGenerateContentConfig
@@ -436,6 +437,70 @@ class TestJudge:
         with pytest.raises(JudgeUnavailable, match="failed twice"):
             await judge.judge("<user_message>x</user_message>", "# Scope judge")
         assert len(client.calls) == 2
+
+    async def test_anthropic_judge_transcribes_under_the_table_format(self) -> None:
+        """The same client reads free text as a table: a larger cap, the table schema, thinking off."""
+        from agents.anyplot.models import TRANSCRIBE_MAX_OUTPUT_TOKENS
+
+        judge = make_judge_client(CLAUDE)
+        assert isinstance(judge, AnthropicJudge)
+        table = {"columns": ["Tier", "Anzahl"], "rows": [["Hund", "7"], ["Katze", "3"]], "note": ""}
+        client = FakeAnthropic({"unknown": [{"json": table}]})
+        judge.__dict__["_client"] = client
+
+        reading = await judge.transcribe("<user_text>Hund 7 Katze 3</user_text>", "# Table transcriber")
+
+        assert reading.table.columns == ["Tier", "Anzahl"] and reading.table.rows == [["Hund", "7"], ["Katze", "3"]]
+        assert (reading.tokens, reading.input_tokens, reading.output_tokens) == (120, 100, 20)
+        call = client.calls[0]
+        assert call["max_tokens"] == TRANSCRIBE_MAX_OUTPUT_TOKENS and call["thinking"] == {"type": "disabled"}
+        schema = call["output_config"]["format"]["schema"]
+        assert set(schema["properties"]) == {"columns", "rows", "note"} and schema["additionalProperties"] is False
+        assert call["system"] == "# Table transcriber" and "tools" not in call
+
+    async def test_gemini_judge_transcribes_under_the_response_schema(self) -> None:
+        """The Gemini judge reads a table too: the table schema, the larger cap, minimal thinking, its token split."""
+        from agents.anyplot.data.transcribe import TranscribedTable
+        from agents.anyplot.models import TRANSCRIBE_MAX_OUTPUT_TOKENS
+
+        judge = make_judge_client(GEMINI)
+        assert isinstance(judge, GeminiJudge)
+        calls: list[dict[str, Any]] = []
+
+        class _Usage:
+            prompt_token_count = 300
+            tool_use_prompt_token_count = 0
+            candidates_token_count = 40
+            thoughts_token_count = 5
+            total_token_count = 345
+
+        class _Response:
+            text = '{"columns": ["Tier", "Anzahl"], "rows": [["Hund", "7"]], "note": "ok"}'
+            usage_metadata = _Usage()
+
+        class _Models:
+            async def generate_content(self, **kwargs: Any) -> _Response:
+                calls.append(kwargs)
+                return _Response()
+
+        class _Client:
+            class aio:  # noqa: N801 - mirrors `genai.Client().aio.models`
+                models = _Models()
+
+        judge.__dict__["_client"] = _Client()
+
+        reading = await judge.transcribe("<user_text>Hund 7</user_text>", "# Table transcriber")
+
+        assert reading.table == TranscribedTable(columns=["Tier", "Anzahl"], rows=[["Hund", "7"]], note="ok")
+        assert (reading.tokens, reading.input_tokens, reading.output_tokens) == (345, 300, 45)
+        config = calls[0]["config"]
+        assert calls[0]["model"] == "gemini-3.5-flash-lite" and calls[0]["contents"] == "<user_text>Hund 7</user_text>"
+        assert config.response_schema is TranscribedTable and config.response_mime_type == "application/json"
+        assert config.max_output_tokens == TRANSCRIBE_MAX_OUTPUT_TOKENS
+        assert (
+            config.thinking_config is not None and config.thinking_config.thinking_level == types.ThinkingLevel.MINIMAL
+        )
+        assert config.system_instruction == "# Table transcriber"
 
     def test_adapter_full_cap(self) -> None:
         """Claude's full-file cap holds a plan at the schema's 24 KB limit; Gemini's is bounded by the deadline."""

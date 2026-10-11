@@ -365,6 +365,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
           <DataPanel
             state={state}
             onParse={text => void session.parseData(text)}
+            onConfirmTranscription={() => void session.confirmTranscription()}
+            onDiscardTranscription={session.discardTranscription}
             onBind={session.setBinding}
             onCreatePlot={() => void session.createPlot()}
           />
