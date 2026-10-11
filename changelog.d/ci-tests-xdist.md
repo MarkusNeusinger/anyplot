@@ -11,6 +11,7 @@
   215 s. `--durations=25` lists the slowest tests, which the interleaved
   output of four workers no longer shows by timestamp, and the Cloud SQL proxy
   step polls its port every 0.2 s instead of sleeping 5 s. The turn-cap test
-  of the agent stream gets about 0.55 s of slack for a slow runner instead of
-  0.2 s, and the MonoLisa font download writes one `.part` file per process, so
-  two workers that miss the cache at once no longer truncate each other's file.
+  of the agent stream tolerates about 0.5 s of slow start on a busy runner
+  instead of 0.2 s, and the MonoLisa font download writes one `.part` file per
+  process, so two workers that miss the cache at once no longer truncate each
+  other's file.

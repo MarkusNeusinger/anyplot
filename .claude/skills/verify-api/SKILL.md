@@ -80,8 +80,12 @@ edge case (empty filter, unknown spec-id → 404, `?lang=` filter).
 ## 4 · Tests (what CI gates)
 
 ```bash
-uv run pytest tests/unit tests/integration
+uv run pytest tests/unit tests/integration -n 4 --dist worksteal
 ```
+
+CI runs the suite on four pytest-xdist workers (`-n 4 --dist worksteal`,
+plus `tests/e2e` and the `--cov` flags); `-n auto` uses every local CPU.
+A single file or test needs no `-n`.
 
 Safe anywhere: unit tests are mocked, integration tests run on
 SQLite in-memory (`core/database/types.py` makes the types

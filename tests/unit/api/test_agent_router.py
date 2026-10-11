@@ -808,8 +808,11 @@ class TestMessagesStream:
         # TurnDeadline.restart relays a queued status that arrives t seconds after the turn
         # opened only while t + budget + heartbeat <= cap, so statuses pass for the first
         # 1.5 - 0.5 - 0.25 = 0.75 s. One arrives every 0.1 s: at most 8 (t = 0.0 to 0.7).
-        # Startup latency and a busy runner only make them arrive later, so fewer pass;
-        # 3 still allows about 0.55 s of delay before the third status (0.75 - 2 * 0.1).
+        # Startup latency and a busy runner only make them arrive later, so fewer pass.
+        # The lower bound of 3 tolerates about 0.5 s before the first status, which has to
+        # beat the first-event timeout TurnDeadline.open sets (the 0.5 s budget, or the
+        # turn ends with "upstream"), and a stall of about 0.55 s once statuses flow (the
+        # third, due at 0.2 s, still passes until 0.75 s).
         assert 3 <= len(events) - 2 <= 8
         assert closed.is_set()  # the upstream stream was closed, which takes the turn out of the queue
 
