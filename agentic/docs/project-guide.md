@@ -993,7 +993,7 @@ Push to `main` branch triggers Cloud Build:
 - Changes in `api/`, `core/`, `pyproject.toml` -> Backend redeploy (`deploy-api`)
 - Changes in `app/` -> Frontend redeploy (`deploy-app`)
 
-The agent network's two services have their own configs, `agents/cloudbuild.yaml` (`anyplot-agents`) and `agents/renderer/cloudbuild.yaml` (`anyplot-renderer`). Their triggers, `deploy-agents` and `deploy-renderer`, are owner tasks and do not exist yet (2026-10-10). The header of `agents/cloudbuild.yaml` lists the agents service's bootstrap commands; the renderer's bootstrap is owner task 14 in `docs/concepts/agent-network.md`.
+The agent network's two services have their own configs, `agents/cloudbuild.yaml` (`anyplot-agents`) and `agents/renderer/cloudbuild.yaml` (`anyplot-renderer`). Their triggers, `deploy-agents` and `deploy-renderer`, exist since 2026-10-11 and run as the Compute Engine default service account. The header of `agents/cloudbuild.yaml` lists the agents service's bootstrap commands; the renderer's bootstrap is owner task 14 in `docs/concepts/agent-network.md`.
 
 Roughly five minutes from merge to live, per build.
 
