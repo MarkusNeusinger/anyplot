@@ -1,14 +1,19 @@
 /**
- * The data panel of the agent chat: paste data (200 KB cap with a live
- * counter), parse it on the server, check the 20-row preview and the parser's
- * warnings, and bind each spec role to a column (the server's defaults come
- * preselected).
+ * The data card of the agent chat, the first turn of the thread: paste data
+ * (200 KB cap with a live counter), parse it on the server, check the 20-row
+ * preview and the parser's warnings, and bind each spec role to a column (the
+ * server's defaults come preselected).
  *
- * Two steps, data first. Step 1 ends with `.confirm()`, once every required
- * role has a column: the user says the preview and the bindings are right.
- * Only then does the panel show the data's shape and `.create_plot()` (step
- * 2). A new parse or a binding change takes the panel back to step 1, because
- * a plot of the wrong data is wrong however good it looks.
+ * Two steps, data first. Step 1 ends with `.confirm()` at the foot of the card,
+ * once every required role has a column: the user says the preview and the
+ * bindings are right. The card then collapses into a pinned header at the top
+ * of the thread, which stays in view on scroll: `✓ data fits · N rows · M
+ * columns · version V` with `.show()`, which opens the full card again below it
+ * without leaving step 2, and `.hide()`. Step 2's `.create_plot()` is the
+ * page's composer, not the card's. A new parse, a binding change, a change the
+ * assistant made to the data and an undo take the page back to step 1 with the
+ * card open, because a plot of the wrong data is wrong however good it looks;
+ * the server drops its confirmation for each of them already.
  *
  * Every role of the spec gets a column choice (`bindingRows` in `bindings.ts`):
  * a single role one dropdown, a variadic family one per member plus one for
@@ -36,7 +41,7 @@
  * text to the chat as a turn and empties the box.
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import Box from '@mui/material/Box';
 
@@ -53,11 +58,13 @@ import { describeDataFailure } from 'src/sections/agent-chat/messages';
 import {
   actionButtonSx,
   bodyTextSx,
+  cardSx,
   ghostButtonSx,
   labelSx,
   nativeControlSx,
-  panelSx,
+  PINNED_TOP,
   smallText,
+  visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
 import { colors, fontSize, typography } from 'src/theme';
 
@@ -292,7 +299,7 @@ function ChangeBlock({ change, canUndo, undoBusy, error, onUndo }: ChangeBlockPr
   );
 }
 
-/** The step's one action under the bindings: `.confirm()`, then `.create_plot()`. */
+/** Step 1's one action under the bindings: `.confirm()`. */
 const stepButtonSx = {
   ...actionButtonSx,
   border: '1px solid var(--rule)',
@@ -300,6 +307,15 @@ const stepButtonSx = {
   py: 1,
   width: { xs: '100%', sm: 'auto' },
 } as const;
+
+/** The line the pinned header shows, and `.create_plot()` names as its description. */
+export const DATA_SUMMARY_ID = 'agent-data-summary';
+
+/** The confirmed data in one line: `data fits · 2 rows · 2 columns · version 1`. */
+function dataSummary(dataset: NonNullable<AgentSessionState['dataset']>): string {
+  const { profile, version } = dataset.parsed;
+  return `data fits · ${countOf(profile.rows, 'row')} · ${countOf(profile.columns.length, 'column')} · version ${version ?? 1}`;
+}
 
 interface DataPanelProps {
   state: AgentSessionState;
@@ -311,7 +327,6 @@ interface DataPanelProps {
   onBind: (role: string, column: string | null) => void;
   onConfirmData: () => void;
   onUndo: () => void;
-  onCreatePlot: () => void;
 }
 
 export function DataPanel({
@@ -323,9 +338,11 @@ export function DataPanel({
   onBind,
   onConfirmData,
   onUndo,
-  onCreatePlot,
 }: DataPanelProps) {
   const [text, setText] = useState('');
+  // Step 2 only: whether the full card shows below the pinned header.
+  const [expanded, setExpanded] = useState(false);
+  const cardRef = useRef<HTMLElement>(null);
   const bytes = utf8Bytes(text);
   const over = bytes > MAX_DATASET_BYTES;
   const ready = state.phase === 'ready' && !!state.sessionId;
@@ -335,9 +352,11 @@ export function DataPanel({
   const transcription = state.transcription;
   const dataset = state.dataset;
   const columns = dataset?.parsed.profile.columns ?? [];
-  // A pending transcription blocks both steps: the user decides on the data first.
+  // Step 2: the card is collapsed into the pinned header unless the user opened it.
+  const confirmed = state.dataConfirmed && !!dataset;
+  const open = !confirmed || expanded;
+  // A pending transcription blocks the confirmation: the user decides on the data first.
   const canConfirm = ready && !!dataset && state.bindingsComplete && !busy && !transcription;
-  const canCreate = canConfirm && state.dataConfirmed;
   // An earlier version exists above the paste's 1, until the server says the
   // history ended (it keeps the last five versions).
   const canUndo =
@@ -346,6 +365,20 @@ export function DataPanel({
     (dataset?.parsed.version ?? 1) > 1 &&
     state.undoError?.code !== 'nothing_to_undo';
   const rows = bindingRows(state.roles, state.bindings, columns.length);
+
+  // `.show()` from far down the thread: the card opens at its top, out of
+  // view, so bring it in below the pinned header.
+  useEffect(() => {
+    if (confirmed && expanded) {
+      cardRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [confirmed, expanded]);
+
+  // `.confirm()` collapses the card; a later step 1 opens it in full anyway.
+  const handleConfirm = () => {
+    setExpanded(false);
+    onConfirmData();
+  };
 
   // `.use()`: the text box shows the CSV that gets stored, so the user can
   // read it and edit it for a later `.parse()`.
@@ -361,8 +394,10 @@ export function DataPanel({
     onSendFormula();
   };
 
-  return (
-    <Box component="section" aria-label="Your data" sx={panelSx}>
+  // The full card: the text box and its offers, then the stored data with its
+  // bindings, and in step 1 the confirmation at its foot.
+  const cardContent = (
+    <>
       <Box
         component="label"
         htmlFor="agent-data"
@@ -603,58 +638,122 @@ export function DataPanel({
             )}
           </Box>
 
-          <Box>
-            {/* One line that stays mounted, so a screen reader hears the step change. */}
-            <Box
-              id="agent-step-line"
-              data-testid="data-step"
-              aria-live="polite"
-              // A notch above the `#` labels: this line says what to do next.
-              sx={{ ...labelSx, mb: 0.75, color: 'var(--ink-soft)' }}
-            >
-              {state.dataConfirmed ? (
-                <>
-                  <Box component="span" aria-hidden sx={{ color: colors.success, mr: 0.75 }}>
-                    ✓
-                  </Box>
-                  data fits · {countOf(dataset.parsed.profile.rows, 'row')} ·{' '}
-                  {countOf(columns.length, 'column')}
-                </>
-              ) : (
-                '# step 1 — check the preview and the bindings, then confirm'
-              )}
-            </Box>
-            {state.dataConfirmed ? (
+          {/* Step 2 has no foot: the pinned header says the data fits, and the
+              composer below the thread holds `.create_plot()`. */}
+          {!confirmed && (
+            <Box>
               <Box
-                component="button"
-                type="button"
-                onClick={onCreatePlot}
-                disabled={!canCreate}
-                aria-describedby="agent-step-line"
-                sx={stepButtonSx}
+                id="agent-step-line"
+                data-testid="data-step"
+                // A notch above the `#` labels: this line says what to do next.
+                sx={{ ...labelSx, mb: 0.75, color: 'var(--ink-soft)' }}
               >
-                .create_plot()
+                # step 1 — check the preview and the bindings, then confirm
               </Box>
-            ) : (
               <Box
                 component="button"
                 type="button"
-                onClick={onConfirmData}
+                onClick={handleConfirm}
                 disabled={!canConfirm}
                 aria-describedby="agent-step-line"
                 sx={stepButtonSx}
               >
                 {state.confirmBusy ? '.confirm() …' : '.confirm()'}
               </Box>
-            )}
-            {state.confirmError && (
-              <Box role="alert" sx={{ ...bodyTextSx, color: colors.error, mt: 1 }}>
-                {describeDataFailure(state.confirmError.code, state.confirmError.ref)}
-              </Box>
-            )}
+              {state.confirmError && (
+                <Box role="alert" sx={{ ...bodyTextSx, color: colors.error, mt: 1 }}>
+                  {describeDataFailure(state.confirmError.code, state.confirmError.ref)}
+                </Box>
+              )}
+            </Box>
+          )}
+        </Box>
+      )}
+    </>
+  );
+
+  return (
+    <>
+      {/* Stays mounted, so a screen reader hears the step change: the lines that
+          say it on screen come and go with the card. */}
+      <Box data-testid="data-step-status" aria-live="polite" sx={visuallyHiddenSx}>
+        {confirmed
+          ? 'step 2: the data is confirmed; create the plot below'
+          : dataset
+            ? 'step 1: check the data, then confirm it'
+            : ''}
+      </Box>
+
+      {confirmed && dataset && (
+        <Box
+          data-testid="data-pinned"
+          sx={{
+            position: 'sticky',
+            top: PINNED_TOP,
+            zIndex: 10,
+            // One row: at phone width the line wraps beside the toggle, never under it,
+            // so the header stays two lines high at most.
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            bgcolor: 'var(--bg-elevated)',
+            border: '1px solid var(--rule)',
+            borderLeft: `3px solid ${colors.primary}`,
+            borderRadius: 1,
+            pl: 1.5,
+            pr: 0.75,
+            py: 0.5,
+            minWidth: 0,
+          }}
+        >
+          <Box
+            id={DATA_SUMMARY_ID}
+            data-testid="data-summary"
+            sx={{
+              ...labelSx,
+              color: 'var(--ink)',
+              flex: '1 1 auto',
+              minWidth: 0,
+              overflowWrap: 'anywhere',
+            }}
+          >
+            <Box component="span" aria-hidden sx={{ color: colors.success, mr: 0.75 }}>
+              ✓
+            </Box>
+            {dataSummary(dataset)}
+          </Box>
+          <Box
+            component="button"
+            type="button"
+            onClick={() => setExpanded(value => !value)}
+            aria-expanded={expanded}
+            aria-controls={expanded ? 'agent-data-card' : undefined}
+            aria-label={expanded ? 'Hide the data' : 'Show the data'}
+            sx={{ ...actionButtonSx, flex: 'none' }}
+          >
+            {expanded ? '.hide()' : '.show()'}
           </Box>
         </Box>
       )}
-    </Box>
+
+      {open && (
+        <Box
+          component="section"
+          aria-label="Your data"
+          id="agent-data-card"
+          data-testid="data-card"
+          ref={cardRef}
+          // Clear of the masthead and the pinned header when `.show()` scrolls to it.
+          sx={{ ...cardSx, scrollMarginTop: PINNED_TOP + 64 }}
+        >
+          {confirmed && (
+            <Box sx={{ ...labelSx, mb: 1.5 }}>
+              # a change here takes the data back to step 1, where you confirm it again
+            </Box>
+          )}
+          {cardContent}
+        </Box>
+      )}
+    </>
   );
 }

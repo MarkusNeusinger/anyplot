@@ -100,7 +100,6 @@ describe('DataPanel bindings', () => {
         onBind={onBind}
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}
-        onCreatePlot={vi.fn()}
       />
     );
     expect(screen.getByText('numeric / datetime')).toBeInTheDocument();
@@ -135,7 +134,6 @@ describe('DataPanel bindings', () => {
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}
-        onCreatePlot={vi.fn()}
       />
     );
     expect(screen.getByRole('alert')).toHaveTextContent('the server refused these bindings');
@@ -144,7 +142,7 @@ describe('DataPanel bindings', () => {
     ).toBeInTheDocument();
   });
 
-  it('holds back confirm, create and parse while a theme renders', () => {
+  it('holds back confirm, the bindings and parse while a theme renders, in both steps', async () => {
     const panel = (state: AgentSessionState) => (
       <DataPanel
         state={state}
@@ -155,17 +153,20 @@ describe('DataPanel bindings', () => {
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}
-        onCreatePlot={vi.fn()}
       />
     );
     const { rerender } = render(panel(stateWith({ x: 'month', y1: 'shoes' }, { themeBusy: true })));
     expect(screen.getByRole('button', { name: '.confirm()' })).toBeDisabled();
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
 
+    // Step 2: opening the card is only a look, so it works, but nothing in it starts.
     rerender(
       panel(stateWith({ x: 'month', y1: 'shoes' }, { themeBusy: true, dataConfirmed: true }))
     );
-    expect(screen.getByRole('button', { name: '.create_plot()' })).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    expect(screen.getByLabelText(/^x/)).toBeDisabled();
+    await userEvent.type(screen.getByLabelText(/# your data/), 'a,b');
+    expect(screen.getByRole('button', { name: '.parse()' })).toBeDisabled();
   });
 
   it('holds back the confirmation while a table read from text awaits its decision', () => {
@@ -180,7 +181,6 @@ describe('DataPanel bindings', () => {
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}
-        onCreatePlot={vi.fn()}
       />
     );
     expect(screen.getByRole('button', { name: '.confirm()' })).toBeDisabled();
@@ -193,7 +193,6 @@ describe('DataPanel bindings', () => {
 describe('DataPanel steps', () => {
   function renderPanel(state: AgentSessionState) {
     const onConfirmData = vi.fn();
-    const onCreatePlot = vi.fn();
     const panel = (next: AgentSessionState) => (
       <DataPanel
         state={next}
@@ -204,13 +203,11 @@ describe('DataPanel steps', () => {
         onBind={vi.fn()}
         onConfirmData={onConfirmData}
         onUndo={vi.fn()}
-        onCreatePlot={onCreatePlot}
       />
     );
     const view = render(panel(state));
     return {
       onConfirmData,
-      onCreatePlot,
       rerender: (next: AgentSessionState) => view.rerender(panel(next)),
     };
   }
@@ -237,16 +234,50 @@ describe('DataPanel steps', () => {
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
   });
 
-  it("shows the data's shape and .create_plot() after the confirmation", async () => {
-    const { onCreatePlot } = renderPanel(
-      stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true })
+  it('collapses into the pinned header after the confirmation, which .show() opens', async () => {
+    renderPanel(stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true }));
+    expect(screen.getByTestId('data-summary')).toHaveTextContent(
+      'data fits · 1 row · 5 columns · version 1'
     );
-    expect(screen.getByTestId('data-step')).toHaveTextContent('data fits · 1 row · 5 columns');
+    expect(screen.getByTestId('data-step-status')).toHaveTextContent(
+      'step 2: the data is confirmed; create the plot below'
+    );
+    expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '.confirm()' })).not.toBeInTheDocument();
-    const create = screen.getByRole('button', { name: '.create_plot()' });
-    expect(create).toHaveAccessibleDescription('data fits · 1 row · 5 columns');
-    await userEvent.click(create);
-    expect(onCreatePlot).toHaveBeenCalledTimes(1);
+    // Step 2's action is the page composer's, not the card's.
+    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    const card = within(screen.getByRole('region', { name: 'Your data' }));
+    expect(card.getByText(/a change here takes the data back to step 1/)).toBeInTheDocument();
+    expect(card.getByLabelText(/^x/)).toBeEnabled();
+    expect(card.queryByRole('button', { name: '.confirm()' })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Hide the data' }));
+    expect(screen.queryByRole('region', { name: 'Your data' })).not.toBeInTheDocument();
+  });
+
+  it('opens in full when the confirmation drops, and collapses at the next .confirm()', async () => {
+    const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
+    const { onConfirmData, rerender } = renderPanel(confirmed);
+    await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+
+    // A binding change, a data change or an undo: the server dropped the confirmation.
+    rerender({ ...confirmed, dataConfirmed: false });
+    expect(screen.queryByTestId('data-pinned')).not.toBeInTheDocument();
+    expect(screen.queryByText(/a change here takes the data back/)).not.toBeInTheDocument();
+    expect(screen.getByTestId('data-step-status')).toHaveTextContent(
+      'step 1: check the data, then confirm it'
+    );
+    await userEvent.click(screen.getByRole('button', { name: '.confirm()' }));
+    expect(onConfirmData).toHaveBeenCalledTimes(1);
+
+    rerender(confirmed);
+    expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Show the data' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
   });
 
   it('names the reason of a refused confirmation', () => {
@@ -292,7 +323,6 @@ describe('DataPanel data changes', () => {
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
         onUndo={onUndo}
-        onCreatePlot={vi.fn()}
       />
     );
     const view = render(panel(state));
@@ -398,7 +428,6 @@ describe('DataPanel formulas', () => {
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}
-        onCreatePlot={vi.fn()}
       />
     );
     const view = render(panel(state));
@@ -516,7 +545,6 @@ describe('DataPanel transcription', () => {
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}
-        onCreatePlot={vi.fn()}
       />
     );
     const card = within(screen.getByTestId('transcription-card'));
@@ -552,7 +580,6 @@ describe('DataPanel transcription', () => {
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}
-        onCreatePlot={vi.fn()}
       />
     );
     expect(screen.getByText('# read from your text — 1 row, 2 columns')).toBeInTheDocument();
@@ -573,7 +600,6 @@ describe('DataPanel transcription', () => {
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}
-        onCreatePlot={vi.fn()}
       />
     );
     const textbox = screen.getByLabelText(/# your data/);
@@ -599,7 +625,6 @@ describe('DataPanel transcription', () => {
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}
-        onCreatePlot={vi.fn()}
       />
     );
     const { rerender } = render(panel(transcribedState()));

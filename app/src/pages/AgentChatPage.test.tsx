@@ -123,6 +123,16 @@ const FORMULA = 'y = sin(x), x von -pi bis pi';
 
 const SUMMARY = '2 rows: hours and score, both numbers. Is hours the x axis?';
 
+/** A shipped first plot; its artifacts are not served here, which the card shows as failed. */
+const PLOT = {
+  status: 'ok',
+  attempts: 1,
+  artifacts: ['plot-light.png', 'plot.py', 'data.csv'],
+  changes: [],
+  residual_defects: [],
+  version: 1,
+};
+
 /** A turn's stream as the BFF sends it. */
 function sse(events: [string, unknown][]) {
   return new Response(
@@ -137,6 +147,14 @@ function turnEvents(body: { text?: string; action?: string }): [string, unknown]
     return [
       ['message', { text: SUMMARY }],
       ['done', { llm_calls: 1 }],
+    ];
+  }
+  // The first plot: `.create_plot()` as it is, or with a change the user typed first.
+  if (body.action === 'create_plot' || body.text?.includes('log scale')) {
+    return [
+      ['plot', PLOT],
+      ['message', { text: 'Here is your plot.' }],
+      ['done', { llm_calls: 2, data_confirmed: true }],
     ];
   }
   // The assistant's `generate_data` computed the first data from a formula.
@@ -256,6 +274,30 @@ function renderAt(url: string) {
 const PAGE = '/debug/agent?spec=scatter-basic&library=matplotlib&language=python';
 const agentCalls = () =>
   fetchMock.mock.calls.filter(([input]) => String(input).includes('/debug/agent'));
+/** The bodies of the chat turns the page posted, in order. */
+const turnBodies = () =>
+  agentCalls()
+    .filter(([input]) => String(input).endsWith('/messages'))
+    .map(([, init]) => JSON.parse(String((init as RequestInit).body)) as Record<string, string>);
+const lastTurn = () => turnBodies().slice(-1)[0];
+
+/** Paste a table, wait for its summary and confirm it: the page is at step 2. */
+async function parseAndConfirm(value = 'hours,score\n1.5,52\n2.0,58\n') {
+  fireEvent.change(await screen.findByLabelText(/# your data/), { target: { value } });
+  fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+  expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
+  const confirm = screen.getByRole('button', { name: '.confirm()' });
+  await waitFor(() => expect(confirm).toBeEnabled());
+  fireEvent.click(confirm);
+  await screen.findByTestId('data-pinned');
+}
+
+/** The step the step header marks as current. */
+const currentStep = () =>
+  within(screen.getByRole('list', { name: 'Steps' }))
+    .getAllByRole('listitem')
+    .filter(item => item.getAttribute('aria-current') === 'step')
+    .map(item => item.textContent);
 
 beforeEach(() => {
   flags.agentChat = true;
@@ -344,13 +386,8 @@ describe('AgentChatPage gating', () => {
   it('walks the two steps: confirm the data, then create the plot', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    const current = () =>
-      within(screen.getByRole('list', { name: 'Steps' }))
-        .getAllByRole('listitem')
-        .filter(item => item.getAttribute('aria-current') === 'step')
-        .map(item => item.textContent);
     expect(await screen.findByLabelText(/# your data/)).toBeInTheDocument();
-    expect(current()).toEqual(['1 data']);
+    expect(currentStep()).toEqual(['1 data']);
     expect(
       screen.getByText(/check the preview and the bindings, confirm, then/)
     ).toBeInTheDocument();
@@ -362,11 +399,26 @@ describe('AgentChatPage gating', () => {
     const confirm = await screen.findByRole('button', { name: '.confirm()' });
     await waitFor(() => expect(confirm).toBeEnabled());
     expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+    // The data card is the thread's first turn; the summary follows it.
+    const card = screen.getByTestId('data-card');
+    const thread = screen.getByRole('log', { name: 'Conversation' });
+    expect(card.compareDocumentPosition(thread) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     fireEvent.click(confirm);
-    expect(await screen.findByRole('button', { name: '.create_plot()' })).toBeEnabled();
-    expect(current()).toEqual(['·2 plot']);
-    expect(screen.getByTestId('data-step')).toHaveTextContent('data fits · 2 rows · 2 columns');
+    const create = await screen.findByRole('button', { name: '.create_plot()' });
+    expect(create).toBeEnabled();
+    expect(currentStep()).toEqual(['·2 plot']);
+    expect(screen.getByTestId('data-summary')).toHaveTextContent(
+      'data fits · 2 rows · 2 columns · version 1'
+    );
+    expect(create).toHaveAccessibleDescription(
+      'data fits · 2 rows · 2 columns · version 1 # step 2 — create the plot as it is, or say first what it should do differently'
+    );
+    // The confirmation's button is gone with the card: the keyboard continues here.
+    expect(create).toHaveFocus();
+    expect(screen.getByTestId('data-step-status')).toHaveTextContent(
+      'step 2: the data is confirmed; create the plot below'
+    );
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_confirmed', {
       size_bucket: 'lt_1kb',
     });
@@ -377,24 +429,21 @@ describe('AgentChatPage gating', () => {
   it("goes back to step 1 with the dropdowns the turn's done reports", async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    fireEvent.change(await screen.findByLabelText(/# your data/), {
-      target: { value: 'hours,score\n1.5,52\n2.0,58\n' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    const confirm = await screen.findByRole('button', { name: '.confirm()' });
-    await waitFor(() => expect(confirm).toBeEnabled());
-    fireEvent.click(confirm);
-    expect(await screen.findByRole('button', { name: '.create_plot()' })).toBeEnabled();
+    await parseAndConfirm();
+    fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
     expect(screen.getByLabelText(/^x/)).toHaveValue('hours');
 
+    // Text in step 2's box goes as a turn, whatever it asks for.
     fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'swap x and y' } });
-    fireEvent.click(screen.getByRole('button', { name: '.send()' }));
+    fireEvent.click(screen.getByRole('button', { name: '.create_plot()' }));
     expect(await screen.findByText('Swapped.')).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: '.confirm()' })).toBeEnabled();
     expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('data-pinned')).not.toBeInTheDocument();
     expect(screen.getByLabelText(/^x/)).toHaveValue('score');
     expect(screen.getByLabelText(/^y/)).toHaveValue('hours');
     expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
+    expect(lastTurn()).toEqual({ text: 'swap x and y' });
   });
 
   it('summarizes the data first, then shows a change to it with .undo()', async () => {
@@ -411,13 +460,12 @@ describe('AgentChatPage gating', () => {
       'placeholder',
       'ask about your data, or for a fix: "sum per month"'
     );
-    const confirm = screen.getByRole('button', { name: '.confirm()' });
-    await waitFor(() => expect(confirm).toBeEnabled());
-    fireEvent.click(confirm);
-    expect(await screen.findByRole('button', { name: '.create_plot()' })).toBeEnabled();
 
+    // A correction in words, before the confirmation: the card shows it in place.
+    const send = screen.getByRole('button', { name: '.send()' });
     fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'das ist prozent' } });
-    fireEvent.click(screen.getByRole('button', { name: '.send()' }));
+    await waitFor(() => expect(send).toBeEnabled());
+    fireEvent.click(send);
     const change = await screen.findByTestId('data-change');
     expect(within(change).getByText('# changed · version 2')).toBeInTheDocument();
     expect(within(change).getByText(PREPARED.changes[0])).toBeInTheDocument();
@@ -426,16 +474,27 @@ describe('AgentChatPage gating', () => {
     expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_prepared', { changes: '1' });
 
-    const undo = screen.getByRole('button', { name: '.undo()' });
-    await waitFor(() => expect(undo).toBeEnabled());
+    const confirm = screen.getByRole('button', { name: '.confirm()' });
+    await waitFor(() => expect(confirm).toBeEnabled());
+    fireEvent.click(confirm);
+    expect(await screen.findByTestId('data-summary')).toHaveTextContent('version 2');
+    expect(screen.queryByTestId('data-change')).not.toBeInTheDocument();
+
+    // The change and its `.undo()` are one `.show()` away; an undo is step 1 again.
+    fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    const undo = within(screen.getByTestId('data-change')).getByRole('button', { name: '.undo()' });
+    expect(undo).toBeEnabled();
     fireEvent.click(undo);
     expect(await screen.findByText('# undone · back to version 1')).toBeInTheDocument();
+    expect(screen.queryByTestId('data-pinned')).not.toBeInTheDocument();
+    expect(screen.getByTestId('data-card')).toBeInTheDocument();
+    expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByRole('button', { name: '.confirm()' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '.undo()' })).toBeDisabled();
     expect(screen.getByRole('cell', { name: '52' })).toBeInTheDocument();
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_undo', { version: '1' });
     // An undo asks for no new summary.
-    const turns = agentCalls().filter(([input]) => String(input).endsWith('/messages'));
-    expect(turns).toHaveLength(2);
+    expect(turnBodies()).toHaveLength(2);
   });
 
   it('sends a pasted formula to the chat, whose table becomes version 1', async () => {
@@ -479,6 +538,102 @@ describe('AgentChatPage gating', () => {
     await waitFor(() => expect(confirm).toBeEnabled());
     fireEvent.click(confirm);
     expect(await screen.findByRole('button', { name: '.create_plot()' })).toBeEnabled();
+  });
+
+  it('collapses the confirmed data into a pinned header that .show() opens and .hide() closes', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/# your data/)).not.toBeInTheDocument();
+    const show = screen.getByRole('button', { name: 'Show the data' });
+    expect(show).toHaveTextContent('.show()');
+    expect(show).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(show);
+    const hide = screen.getByRole('button', { name: 'Hide the data' });
+    expect(hide).toHaveTextContent('.hide()');
+    expect(hide).toHaveAttribute('aria-expanded', 'true');
+    expect(hide).toHaveAttribute('aria-controls', 'agent-data-card');
+    const card = within(screen.getByTestId('data-card'));
+    expect(card.getByText(/a change here takes the data back to step 1/)).toBeInTheDocument();
+    expect(card.getByRole('cell', { name: '52' })).toBeInTheDocument();
+    expect(card.getByLabelText(/^x/)).toHaveValue('hours');
+    // Looking is no change: the data stays confirmed, and step 2 stays.
+    expect(card.queryByRole('button', { name: '.confirm()' })).not.toBeInTheDocument();
+    expect(currentStep()).toEqual(['·2 plot']);
+    expect(screen.getByRole('button', { name: '.create_plot()' })).toBeEnabled();
+
+    fireEvent.click(hide);
+    expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Show the data' })).toBeInTheDocument();
+  });
+
+  it('goes back to step 1 with the card open when a binding changes in step 2', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    fireEvent.change(screen.getByLabelText(/^y/), { target: { value: 'hours' } });
+
+    const confirm = await screen.findByRole('button', { name: '.confirm()' });
+    expect(screen.queryByTestId('data-pinned')).not.toBeInTheDocument();
+    expect(screen.getByTestId('data-card')).toBeInTheDocument();
+    expect(currentStep()).toEqual(['1 data']);
+    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Message')).toHaveAttribute(
+      'placeholder',
+      'ask about your data, or for a fix: "sum per month"'
+    );
+
+    // Confirmed again, the card collapses again.
+    await waitFor(() => expect(confirm).toBeEnabled());
+    fireEvent.click(confirm);
+    expect(await screen.findByTestId('data-pinned')).toBeInTheDocument();
+    expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
+  });
+
+  it('starts the first plot from an empty box with .create_plot(), never on Enter', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    const box = screen.getByLabelText('Message');
+    expect(box).toHaveAttribute(
+      'placeholder',
+      'optional: what the first plot should do differently'
+    );
+    fireEvent.keyDown(box, { key: 'Enter' });
+    expect(turnBodies()).toEqual([{ action: 'summarize_data' }]);
+
+    fireEvent.click(screen.getByRole('button', { name: '.create_plot()' }));
+    expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+    expect(lastTurn()).toEqual({ action: 'create_plot' });
+    const thread = screen.getByRole('log', { name: 'Conversation' });
+    expect(within(thread).getByText('.create_plot()')).toBeInTheDocument();
+  });
+
+  it('sends a note typed before the first plot as the turn that makes it, then refines', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'log scale on y' } });
+    fireEvent.click(screen.getByRole('button', { name: '.create_plot()' }));
+    expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+    expect(lastTurn()).toEqual({ text: 'log scale on y' });
+    const thread = screen.getByRole('log', { name: 'Conversation' });
+    expect(within(thread).getByText('log scale on y')).toBeInTheDocument();
+    expect(within(thread).queryByText('.create_plot()')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Message')).toHaveValue('');
+
+    // This library has a plot: the composer refines, and a fresh plot is one quiet click.
+    expect(screen.getByRole('article', { name: 'Plot version 1' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Message')).toHaveAttribute(
+      'placeholder',
+      'ask about this plot, or ask for a change'
+    );
+    expect(screen.getByRole('button', { name: '.send()' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '.create_plot()' })).toBeEnabled();
+    expect(screen.getByTestId('data-pinned')).toBeInTheDocument();
   });
 
   it('offers a reload when the session open got no answer', async () => {
