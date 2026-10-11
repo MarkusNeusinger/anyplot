@@ -15,8 +15,14 @@ the repo root.
 ## 1 · Tests (what CI gates)
 
 ```bash
-uv run pytest tests/unit tests/integration
+uv run pytest tests/unit tests/integration -n 4 --dist worksteal
 ```
+
+CI runs the suite on four pytest-xdist workers (`-n 4 --dist worksteal`,
+plus `tests/e2e` and the `--cov` flags); `-n auto` uses every local CPU.
+A single file or test needs no `-n`. A test that passes alone but fails
+under `-n` depends on another test's state or a shared fixed path — fix
+the test, don't drop the flag.
 
 Safe anywhere: unit tests are mocked; integration tests run the API
 against SQLite in-memory (the custom types in

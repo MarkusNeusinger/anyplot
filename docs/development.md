@@ -76,10 +76,31 @@ uv run pytest tests/e2e
 
 # With coverage report (sources configured in pyproject.toml)
 uv run pytest tests/unit tests/integration --cov --cov-report=html
+
+# Full run on one worker per CPU (pytest-xdist)
+uv run pytest tests/unit tests/integration -n auto
 ```
 
+The CI job "Run Tests" (`.github/workflows/ci-tests.yml`) runs the suite on the
+four CPUs of the hosted runner:
+
+```bash
+uv run pytest tests/unit tests/integration tests/e2e -n 4 --dist worksteal --durations=25 \
+  --cov=core --cov=api --cov=automation --cov=agentic/workflows/modules
+```
+
+`-n` is not in the pytest defaults, so a single file or test still runs in one
+process. For a full run, add `-n auto` (one worker per CPU): on four CPUs the
+CI-equivalent run takes about 70 s instead of about 3.5 minutes in one
+process. Tests must not depend on the order they run in or share a fixed file
+path, because each worker runs a different slice of the suite in its own
+process.
+
 **Coverage target**: 90%+ on tested modules (`core/`, `api/`, `automation/`, `agentic/workflows/modules/`).
-Coverage config is in `pyproject.toml` (`[tool.coverage]`) and `codecov.yml`.
+Coverage config is in `pyproject.toml` (`[tool.coverage]`) and `codecov.yml`. Coverage
+measures through `sys.monitoring` (`core = "sysmon"`): on Python 3.13 the C tracer
+made a serial run about 45 % slower. On 3.13 sysmon measures lines only, so leave
+`branch` off; with it on, coverage falls back to the C tracer.
 
 ---
 

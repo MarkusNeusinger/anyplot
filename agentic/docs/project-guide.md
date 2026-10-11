@@ -66,6 +66,9 @@ uv run pytest tests/e2e
 # Run with coverage (sources configured in pyproject.toml)
 uv run pytest tests/unit tests/integration --cov --cov-report=html
 
+# Run the full suite on one worker per CPU (pytest-xdist; CI uses -n 4 --dist worksteal)
+uv run pytest tests/unit tests/integration -n auto
+
 # Run specific test file
 uv run pytest tests/unit/api/test_routers.py
 

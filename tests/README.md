@@ -82,6 +82,12 @@ uv run pytest -m e2e
 uv run pytest --cov=. --cov-report=html
 ```
 
+### Run on every CPU
+```bash
+# pytest-xdist: one worker per CPU; CI uses -n 4 --dist worksteal
+uv run pytest tests/unit tests/integration -n auto
+```
+
 ### Run specific test file
 ```bash
 uv run pytest tests/integration/test_repositories.py
@@ -137,10 +143,10 @@ async def async_client():
 
 GitHub Actions runs tests on every PR:
 
-- **ci-tests.yml**: Runs unit and integration tests with SQLite
+- **ci-tests.yml**: Runs the unit, integration (SQLite), and E2E tests (PostgreSQL through the Cloud SQL proxy) on four pytest-xdist workers (`-n 4 --dist worksteal`)
 - **Coverage**: Reports code coverage to ensure >90% coverage
 
-**Note**: Integration tests now work with SQLite thanks to custom database types that support both PostgreSQL and SQLite. E2E tests require database dependency override and are not yet included in CI.
+**Note**: Integration tests work with SQLite thanks to custom database types that support both PostgreSQL and SQLite. Each E2E test creates its own schema, so the four workers never share tables.
 
 ## Writing New Tests
 
