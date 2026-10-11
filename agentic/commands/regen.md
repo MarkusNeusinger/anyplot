@@ -65,7 +65,8 @@ Check whether `.regen-plan.md` exists at repo root.
 
 ### 1a. Refresh local main
 
-The picker reads metadata from the `origin/main` git tree (via `git show`), so a `git fetch` is required first.
+The picker reads metadata from the `origin/main` git tree (one `git ls-tree` and one `git cat-file --batch`), so a
+`git fetch` is required first.
 If the user happens to be on `main`, fast-forward.
 
 ```bash
