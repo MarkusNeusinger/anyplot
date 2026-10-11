@@ -413,6 +413,21 @@ def test_the_stamp_and_the_summary_name_a_thinking_measurement(monkeypatch: pyte
     assert "Thinking measurement" not in plain
 
 
+def test_a_gemini_stamp_records_the_effective_zero_budgets(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Gemini ignores the Claude defaults, so its report must not claim thinking it never used."""
+    monkeypatch.setenv("AGENT_PROVIDER", "gemini")
+    monkeypatch.setenv("AGENT_MODEL", "gemini-3.8-flash")
+    monkeypatch.setenv("AGENT_JUDGE_MODEL", "gemini-3.5-flash-lite")
+    settings = AgentSettings()
+    assert (settings.root_thinking_budget, settings.adapter_thinking_budget) == (1024, 2048)  # the raw defaults
+
+    stamp = matrix.build_stamp(settings, MatrixConfig(), [], datetime(2026, 10, 11, tzinfo=UTC))
+
+    assert stamp["thinking_budget"] == {"root": 0, "adapter": 0}
+    page = summary_markdown({"schema": 2, "stamp": stamp, "summary": summarize([]), "runs": []})
+    assert "Thinking measurement" not in page
+
+
 def test_configure_refuses_contradictions() -> None:
     with pytest.raises(matrix.SetupError, match="needs --renderer remote"):
         configure(parse_args(["--renderer", "fake", "--render-url", "https://r"]), {})

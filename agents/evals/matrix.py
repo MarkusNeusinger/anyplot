@@ -1040,8 +1040,13 @@ def _version(package: str) -> str | None:
 def build_stamp(
     settings: "AgentSettings", config: MatrixConfig, cases: list["EvalCase"], started: datetime
 ) -> dict[str, Any]:
-    """What produced the report: the configuration, the versions, the prompts and the prices."""
+    """What produced the report: the configuration, the versions, the prompts and the prices.
+
+    The thinking budgets are the effective ones: on Gemini they are 0 whatever the
+    settings hold, so a Gemini report never claims Claude thinking it did not use.
+    """
     from agents import main as service
+    from agents.anyplot.models import thinking_budget
 
     return {
         "run_id": hashlib.sha256(f"{started.isoformat()}-{secrets.token_hex(8)}".encode()).hexdigest()[:12],
@@ -1053,7 +1058,7 @@ def build_stamp(
         "judge_model": settings.judge_model,
         "location": settings.location,
         "max_attempts": settings.max_attempts,
-        "thinking_budget": {"root": settings.root_thinking_budget, "adapter": settings.adapter_thinking_budget},
+        "thinking_budget": {"root": thinking_budget("root", settings), "adapter": thinking_budget("adapter", settings)},
         "renderer": settings.renderer,
         "render_url": getattr(settings, "render_url", None),
         "adk_version": _version("google-adk"),
