@@ -91,7 +91,7 @@ uv run pytest tests/unit tests/integration tests/e2e -n 4 --dist worksteal --dur
 
 `-n` is not in the pytest defaults, so a single file or test still runs in one
 process. For a full run, add `-n auto` (one worker per CPU): on four CPUs the
-CI-equivalent run takes about 70 s instead of about 3.5 minutes in one
+CI-equivalent run takes about 80 s instead of about 3.5 minutes in one
 process. Tests must not depend on the order they run in or share a fixed file
 path, because each worker runs a different slice of the suite in its own
 process.

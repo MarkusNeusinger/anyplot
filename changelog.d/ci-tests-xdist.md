@@ -7,8 +7,9 @@
   (`core = "sysmon"`) instead of the C tracer, which cost about 45 % on Python
   3.13. Pinned to four CPUs, the CI-equivalent run took 68.9 s instead of
   300.8 s, with the same 9,162 passed and 21 skipped tests and the same
-  coverage total (10,723 statements, 92 %); the job should take about 165 to
-  215 s. The coverage now includes `agents/`, which half of the tests target
+  coverage total (10,723 statements, 92 %); the PR's first CI run took 245 s
+  for the job and 212 s for the pytest step (the medians before: 675 s and
+  635 s), with the 62-s picker test as the tail that #12135 removes. The coverage now includes `agents/`, which half of the tests target
   and which was never measured (23,433 statements at 93 % in the pinned run,
   81 s), and the job also runs when `uv.lock`, a workflow or action under
   `.github/`, or a file under `prompts/` changes, because the workflow and
