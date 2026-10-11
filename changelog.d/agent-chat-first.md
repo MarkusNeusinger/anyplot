@@ -13,5 +13,8 @@
   key press never stops the run the first one started. In step 2 the composer's
   filled `.create_plot()` starts the first plot as it is, or, with a note typed first
   ("log scale on y"), sends the note as the turn that makes it; once the library has a
-  plot, the composer refines as before. Frontend only: the contracts, the session hook
-  and the analytics events are unchanged.
+  plot, the composer refines as before. The contracts, the session hook and the
+  analytics events are unchanged; the root prompt gains two lines: a message in step 2
+  before any plot is the first plot with that request (`plot_pipeline` with the
+  `change_request`), and numbers about the data in a reply come from the latest tool
+  result, never from an earlier turn.
