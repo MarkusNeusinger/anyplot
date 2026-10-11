@@ -557,8 +557,9 @@ per operation with its counts (for example `dropped 1 row where Tier =
 'Gesamt'`), and `data_confirmed: false`: you check the preview and confirm the
 new version like a paste. A column the assistant set to text stays text in
 every later version. `POST /sessions/{sid}/dataset/undo` restores the
-version before the last change; the service keeps the last five, so five undos
-reach the paste, and the sixth answers `422 nothing_to_undo`. A new paste
+version before the last change; the service keeps the five versions before the
+current one, so after more than five changes the history ends above version 1,
+and an undo with nothing left answers `422 nothing_to_undo`. A new paste
 starts over at version 1 and drops the history.
 
 ### Theme toggle

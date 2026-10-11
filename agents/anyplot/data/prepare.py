@@ -548,7 +548,12 @@ def _pivot_longer(frame: pd.DataFrame, op: PivotLonger, carried: _Carried) -> tu
         # Unlike kinds melt into one text column: each column's canonical texts, a datetime with its time.
         work = frame.assign(**{name: _texts(frame[name], time) for name, time in zip(columns, times, strict=True)})
     melted = work.melt(id_vars=rest, value_vars=columns, var_name=op.names_to, value_name=op.values_to)
+    # The melted column stays text through the re-parse when a source was kept text by request
+    # (ids that look like numbers) or unlike kinds were written as text: by content it could type again.
+    explicit_text = any(name in carried.text_columns for name in columns)
     carried.forget(columns)
+    if explicit_text or len(kinds) > 1:
+        carried.text_columns.add(op.values_to)
     if kinds == {"datetime"}:
         carried.with_time[op.values_to] = any(bool(time) for time in times)
     return melted, f"pivoted {len(columns)} columns into {op.names_to}/{op.values_to}: {_count(rows, 'row')}"
@@ -590,7 +595,10 @@ def _pivot_wider(frame: pd.DataFrame, op: PivotWider, carried: _Carried) -> tupl
         ) from None
     wide = wide.reset_index()
     wide.columns = pd.Index([str(name) for name in wide.columns])
+    values_text = op.values_from in carried.text_columns  # the new columns hold its cells: they stay text too
     carried.keep_only(index)
+    if values_text:
+        carried.text_columns.update(distinct)
     if values_time is not None:
         carried.with_time.update(dict.fromkeys(distinct, values_time))
     change = f"pivoted {op.names_from} into {_count(len(distinct), 'column')} with values from {op.values_from}: "

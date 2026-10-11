@@ -905,19 +905,20 @@ function toCsv(header, rows) {
   return [header, ...rows].map(row => row.map(quote).join(',')).join('\n') + '\n';
 }
 
-/** `carry_bindings`: the bindings still valid for the new profile stay, the roles left get the defaults. */
+/**
+ * `carry_bindings`: the bindings still valid for the new profile stay, the roles left
+ * (a family counts as bound while one member stays) get the defaults, computed on the
+ * columns no kept binding uses, so a role whose first choice is taken gets its next one.
+ */
 function carryBindings(session, bindings, profile) {
   const holder = { specId: session.specId, dataset: { profile } };
   const kept = bindings.filter(b => !checkBindings(holder, [b]).errors.length);
   if (kept.length === bindings.length) return bindings;
   const used = new Set(kept.map(b => b.column));
-  const bound = new Set(kept.map(b => b.role));
-  for (const b of defaultBindings(session, profile)) {
-    if (!bound.has(b.role) && !used.has(b.column)) {
-      kept.push(b);
-      used.add(b.column);
-      bound.add(b.role);
-    }
+  const bound = new Set(kept.map(b => b.role.replace(/\d+$/, '')));
+  const free = { ...profile, columns: profile.columns.filter(c => !used.has(c.name)) };
+  for (const b of defaultBindings(session, free)) {
+    if (!bound.has(b.role.replace(/\d+$/, ''))) kept.push(b);
   }
   return kept;
 }

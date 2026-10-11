@@ -180,6 +180,21 @@ class TestCarryBindings:
         assert as_pairs(carried) == [("y1", "b"), ("group", "a")]
         assert check_bindings(carried, self.ROLES, data).missing_roles == ["x"]
 
+    def test_an_open_role_takes_the_next_free_column_past_a_kept_binding(self) -> None:
+        """The defaults alone would give `x` the column `y1` keeps; on the free columns `x` gets `c`."""
+        data = profile("a,b,c\nx,2,3\n")  # `a` is text now; `b` stays with y1
+        carried = carry_bindings(bind(("x", "a"), ("y1", "b")), self.ROLES, data)
+
+        assert as_pairs(carried) == [("x", "c"), ("y1", "b"), ("group", "a")]
+        assert check_bindings(carried, self.ROLES, data).complete
+
+    def test_a_family_keeps_its_members_and_gains_the_defaults_under_the_next_numbers(self) -> None:
+        data = profile("a,b,c\n1,2,3\n")  # `gone` was dropped; y1 stays, the defaults' y1 becomes y2
+        carried = carry_bindings(bind(("x", "gone"), ("y1", "b")), self.ROLES, data)
+
+        assert as_pairs(carried) == [("x", "a"), ("y1", "b"), ("y2", "c")]
+        assert check_bindings(carried, self.ROLES, data).complete
+
     def test_an_aggregate_replaces_every_column(self) -> None:
         data = profile("month,Umsatz\n2024-01,10\n")
         carried = carry_bindings(bind(("x", "a"), ("y1", "b"), ("y2", "c")), self.ROLES, data)

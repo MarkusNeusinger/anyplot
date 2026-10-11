@@ -887,6 +887,14 @@ class TestProfile:
         assert (column(parsed, "n").mean, column(parsed, "n").median) == (3.0, 2.0)
         assert (column(parsed, "share").mean, column(parsed, "share").median) == (0.2, 0.2)  # six digits, no noise
         assert column(parsed, "when").mean is None and column(parsed, "label").median is None
+
+    def test_statistics_that_no_float_holds_are_left_out_not_an_error(self) -> None:
+        """`fsum` of two `1e308` overflows; the parse must not fail on finite values."""
+        parsed = parse_dataset("v\n1e308\n1e308\n")
+
+        assert column(parsed, "v").dtype == "number"
+        assert column(parsed, "v").mean is None and column(parsed, "v").median == 1e308
+        assert column(parse_dataset("v\n1e308\n-1e308\n"), "v").median == 0.0
         assert parse_dataset("v\n1\n").profile.columns[0].mean == 1.0
         assert "mean" not in parsed.profile.sample[0]  # statistics are column facts, never sample cells
 

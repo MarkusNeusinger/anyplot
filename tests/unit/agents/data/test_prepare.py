@@ -754,6 +754,19 @@ class TestPivotLonger:
 
         assert rows(prepared)[1:] == ["x,a,1", "x,b,t"]
         assert dtypes(prepared)["value"] == "text"
+        assert "value" in prepared.text_columns  # by content the melted cells could type again
+
+    def test_a_source_kept_text_keeps_the_melted_column_text(self) -> None:
+        prepared = prepare(
+            "k,a,b\nx,2023,2024\n",
+            {"op": "set_type", "column": "a", "type": "text"},
+            {"op": "set_type", "column": "b", "type": "text"},
+            {"op": "pivot_longer", "columns": ["a", "b"]},
+        )
+
+        assert prepared.text_columns == ["value"]
+        assert parse_dataset(prepared.csv, text_columns=prepared.text_columns).column_dtypes["value"] == "text"
+        assert parse_dataset(prepared.csv).column_dtypes["value"] == "integer"  # what the hint prevents
 
     @pytest.mark.parametrize(
         ("operation", "code"),
@@ -821,6 +834,13 @@ class TestPivotWider:
 
         assert rows(prepared) == ["Monat,Hüte,Schuhe", "2024-01,10,20", "2024-02,15,", "2024-03,,30"]
         assert dtypes(prepared) == {"Monat": "text", "Hüte": "integer", "Schuhe": "integer"}
+
+    def test_values_kept_text_make_text_columns(self) -> None:
+        operation = {"op": "pivot_wider", "names_from": "series", "values_from": "value", "index": ["Monat"]}
+        prepared = prepare(LONG, {"op": "set_type", "column": "value", "type": "text"}, operation)
+
+        assert prepared.text_columns == ["Hüte", "Schuhe"]
+        assert dtypes(prepared) == {"Monat": "text", "Hüte": "text", "Schuhe": "text"}
 
     def test_rows_without_a_name_are_left_out_and_other_columns_dropped(self) -> None:
         text = (

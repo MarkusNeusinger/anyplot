@@ -13,9 +13,12 @@ the dataset (the dataset judge runs for real), sends the message as a free-text 
 root made from the session's events. The pipeline never runs: no case confirms the
 data or asks for a plot, so no render and no adapter call happens.
 
-Scoring is exact operation match, order-insensitive. The operations of every
-`prepare_data` call of the turn are taken together (one call with two operations and
-two calls with one each are the same) and each is normalised through the `Operation`
+Scoring is exact operation match, order-insensitive, and every `prepare_data` call of
+the turn must have succeeded: the operations are applied in order, so a list the data
+refuses (a column named before its rename, a type its cells cannot take) is a miss
+however it reads (`failed_calls`). The operations of every `prepare_data` call of the
+turn are taken together (one call with two operations and two calls with one each are
+the same) and each is normalised through the `Operation`
 models (`canonical_operations`): a default the model left out and one it wrote are
 the same, a `set_type` `decimal` equal to the dataset's own counts as left out, and
 the column list of `drop_columns` and `pivot_longer` and the conditions of
@@ -193,6 +196,8 @@ class CaseResult:
     found: list[str] = field(default_factory=list)
     match: bool | None = None
     tool_calls: list[str] = field(default_factory=list)
+    failed_calls: int = 0
+    """`prepare_data` calls of the turn the service refused or that failed on the data: the case is a miss."""
     refusal: str | None = None
     llm_calls: int = 0
     cost_usd: float = 0.0
@@ -309,12 +314,18 @@ class CaseRunner:
                     items = call.args.get("operations")
                     if isinstance(items, list):
                         operations.extend(item for item in items if isinstance(item, dict))
+            for response in event.get_function_responses():
+                # The operations are applied in order, so a list the data refuses (a column named
+                # before its rename, a type the cells cannot take) is a miss however it reads.
+                if response.name == PREPARE_TOOL:
+                    answer = response.response if isinstance(response.response, dict) else {}
+                    result.failed_calls += answer.get("status") != "ok"
         result.operations = operations
         try:
             result.found = canonical_operations(operations, decimal)
         except ValidationError:  # ToolSafety refused the call; the root got `invalid_arguments`
             result.found = [json.dumps(item, sort_keys=True, ensure_ascii=False) for item in operations]
-        result.match = result.found == result.expected
+        result.match = result.found == result.expected and not result.failed_calls
 
 
 async def run_cases(

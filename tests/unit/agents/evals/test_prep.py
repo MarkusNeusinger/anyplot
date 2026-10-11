@@ -42,6 +42,7 @@ from ..runtime.fakes import FakeAnthropic
 OPERATIONS = ("rename", "drop_columns", "drop_rows", "set_type", "aggregate", "sort", "pivot_longer", "pivot_wider")
 HOURS = "Study Hours,Exam Score\n2,55\n5,70\n8,85\n3,60\n"
 RENAME = {"op": "rename", "column": "Study Hours", "name": "Hours"}
+GHOST = {"op": "rename", "column": "Ghost", "name": "Spirit"}  # no such column: the tool answers unknown_column
 
 
 def case(case_id: str, message: str, expected: list[dict[str, Any]], locale: str = "en", **extra: Any) -> PrepCase:
@@ -204,6 +205,7 @@ class TestRun:
             case("r-002", "write an email", [], "de", tags=["no_tool"]),
             case("r-003", "sort it", [{"op": "sort", "column": "Exam Score"}]),
             case("r-004", "which column is x?", []),
+            case("r-005", "rename the ghost", [GHOST]),
         ]
         root_turns = [
             [{"call": "prepare_data", "args": {"operations": [RENAME]}}, {"text": "Renamed; please confirm."}],
@@ -216,15 +218,18 @@ class TestRun:
                 {"text": "Sorted."},
             ],
             [{"call": "get_dataset_profile", "args": {}}, {"text": "Study Hours is on x."}],
+            # The expected list, but the data refuses it (no such column): a miss, not a match.
+            [{"call": "prepare_data", "args": {"operations": [GHOST]}}, {"text": "There is no such column."}],
         ]
         fake: FakeAnthropic = swap_models("anthropic-vertex", script_for(*root_turns))
         judge: FakeJudge = services.judge  # type: ignore[assignment]
         in_scope = JudgeVerdict(verdict="in_scope", lang="en", input_tokens=500, output_tokens=20)
-        judge.script.extend([in_scope, in_scope, in_scope, JudgeVerdict(verdict="out_of_scope", lang="de")])
+        judge.script.extend([in_scope, in_scope, in_scope, JudgeVerdict(verdict="out_of_scope", lang="de"), in_scope])
 
         results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
 
-        assert [result.match for result in results] == [True, True, False, True]
+        assert [result.match for result in results] == [True, True, False, True, False]
+        assert results[4].found == results[4].expected and results[4].failed_calls == 1
         assert results[0].found == canonical_operations([RENAME], ".") and results[0].llm_calls == 2
         assert results[0].tool_calls == ["prepare_data"] and results[0].cost_usd > 0
         assert results[1].refusal == "out_of_scope" and results[1].tool_calls == [] and results[1].llm_calls == 0
@@ -232,7 +237,7 @@ class TestRun:
             [{"op": "sort", "column": "Exam Score", "descending": True}], "."
         )
         assert results[3].tool_calls == ["get_dataset_profile"] and results[3].found == []
-        assert len(fake.calls) == 6
+        assert len(fake.calls) == 8
         assert len(services.datasets) == 0  # every session was deleted
 
     def test_an_error_event_is_an_unavailable_case(self, services: Services, swap_models) -> None:

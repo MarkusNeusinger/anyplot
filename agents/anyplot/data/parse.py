@@ -980,7 +980,7 @@ def _profile_column(column: _Column) -> ColumnProfile:
     top: list[str] = []
     if column.dtype in ("integer", "number") and column.numbers:
         minimum, maximum = min(column.numbers), max(column.numbers)
-        mean, median = _rounded(statistics.fmean(column.numbers)), _rounded(statistics.median(column.numbers))
+        mean, median = _statistics(column.numbers)
     elif column.dtype == "datetime" and column.dates:
         minimum, maximum = _iso(min(column.dates), column.with_time), _iso(max(column.dates), column.with_time)
     elif column.dtype in ("text", "boolean"):
@@ -1000,6 +1000,26 @@ def _profile_column(column: _Column) -> ColumnProfile:
         mean=mean,
         median=median,
         top=top,
+    )
+
+
+def _statistics(numbers: Sequence[float]) -> tuple[float | None, float | None]:
+    """The mean and the median at six significant digits; None for one that no float holds.
+
+    `fsum` of two `1e308` values raises `OverflowError`, and the sum of the two middle
+    values can be infinite, so each is computed within the float range or left out
+    rather than failing the parse of a dataset whose values are all finite.
+    """
+    try:
+        mean: float | None = statistics.fmean(numbers)
+    except OverflowError:
+        mean = None
+    ordered = sorted(numbers)
+    middle = len(ordered) // 2
+    median = ordered[middle] if len(ordered) % 2 else ordered[middle - 1] / 2 + ordered[middle] / 2
+    return (
+        _rounded(mean) if mean is not None and math.isfinite(mean) else None,
+        _rounded(median) if math.isfinite(median) else None,
     )
 
 
