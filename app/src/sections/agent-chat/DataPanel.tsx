@@ -214,7 +214,8 @@ export function DataPanel({
   const transcription = state.transcription;
   const dataset = state.dataset;
   const columns = dataset?.parsed.profile.columns ?? [];
-  const canCreate = ready && !!dataset && state.bindingsComplete && !busy;
+  // A pending transcription blocks the plot too: the user decides on the data first.
+  const canCreate = ready && !!dataset && state.bindingsComplete && !busy && !transcription;
   const rows = bindingRows(state.roles, state.bindings, columns.length);
 
   // `.use()`: the text box shows the CSV that gets stored, so the user can

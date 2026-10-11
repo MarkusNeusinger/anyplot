@@ -6,5 +6,5 @@
   table (column names, rows, a short note on anything ambiguous). The page shows that
   table as a preview with `.use()` and `.discard()`, and nothing is stored until you
   use it: the confirmation posts the table's CSV through the ordinary parse, pre-filter
-  and judge path. Text over 4,000 characters, JSON and real tables take the old path
-  unchanged. (#12130)
+  and judge path. Text over 4,000 characters, JSON arrays and objects, and real tables
+  take the old path unchanged. (#12130)

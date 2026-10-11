@@ -9,7 +9,8 @@ through the ordinary parse, pre-filter and judge path (owner rule of 2026-10-11:
 step where the user checks that the data fits, or everything after it is wrong).
 
 This module holds the schema and the pure helpers around it; the model call is
-`models.TranscriberClient`, and the route is `main.upload_dataset`. No ADK import.
+`models.JudgeClient.transcribe` (the judge model under this schema), and the route is
+`main.upload_dataset`. No ADK import.
 """
 
 import csv
@@ -56,7 +57,8 @@ def looks_like_free_text(parsed: ParsedDataset) -> bool:
     """Whether a parse that succeeded probably read prose or a plain list, not a table.
 
     The sniffer found no delimiter, so the whole line became one column ("Hund 7" as the
-    header, "Katze 3" as a cell). JSON is never free text: it was written as data.
+    header, "Katze 3" as a cell). A JSON array or object is never free text: it was written
+    as data, and the parser reads or refuses it itself (a quoted JSON string is prose).
     """
     return len(parsed.profile.columns) == 1 and not parsed.profile.source_format.startswith("json")
 

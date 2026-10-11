@@ -151,6 +151,23 @@ describe('DataPanel bindings', () => {
     expect(screen.getByRole('button', { name: '.create_plot()' })).toBeDisabled();
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
   });
+
+  it('holds back create while a table read from text awaits its decision', () => {
+    // The stored dataset and its bindings stay, but the user decides on the data first.
+    render(
+      <DataPanel
+        state={stateWith({ x: 'month', y1: 'shoes' }, { transcription: TRANSCRIPTION })}
+        onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onBind={vi.fn()}
+        onCreatePlot={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('button', { name: '.create_plot()' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '.parse()' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '.use()' })).toBeEnabled();
+  });
 });
 
 // "Hund 7 Katze 3 und Vogel 4", read by the model into a table.
