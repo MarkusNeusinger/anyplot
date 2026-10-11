@@ -70,6 +70,14 @@ ARTIFACT_MEDIA_TYPES: dict[str, str] = {
 """The only artifact names the BFF fetches. The media type is set here and the
 upstream one is never forwarded."""
 
+MAX_BUNDLE_BYTES = 32 * 1024 * 1024
+"""The cap of a session bundle the BFF relays: Cloud Run's 32 MiB limit on an HTTP/1 response that is
+not streamed. The agents service answers its bundle (every version's two PNGs as base64) as one
+`JSONResponse` under that limit, and the BFF answers it the same way, so a larger bundle could reach
+the browser on neither hop; the BFF refuses it as `502 too_large` instead of a cut-off file."""
+_BUNDLE_SID_CHARS = 8
+"""The session id characters in a bundle's file name, `anyplot-session-<first 8>.json`."""
+
 # Local dev servers on any port. api/main.py passes this same constant to
 # CORSMiddleware as `allow_origin_regex`, so the CSRF Origin check and CORS
 # always agree on what counts as local.
@@ -556,6 +564,36 @@ async def _open_stream(
     return response
 
 
+async def _read_capped(response: httpx.Response, max_bytes: int) -> bytes | None:
+    """The whole body of an opened upstream response, or None once it passes `max_bytes`.
+
+    A declared `Content-Length` over the cap is refused before a byte is read; the count
+    is kept while reading too, because a chunked body declares none.
+    """
+    declared = response.headers.get("content-length", "")
+    if declared.isdigit() and int(declared) > max_bytes:
+        return None
+    body = bytearray()
+    async for chunk in response.aiter_bytes():
+        body += chunk
+        if len(body) > max_bytes:
+            return None
+    return bytes(body)
+
+
+def _is_json_object(content: bytes) -> bool:
+    try:
+        return isinstance(json.loads(content), dict)
+    except ValueError:
+        return False
+
+
+def _bundle_filename(sid: str) -> str:
+    """`anyplot-session-<the session id's first 8 characters>.json`, those reduced to `[A-Za-z0-9_-]`."""
+    short = re.sub(r"[^A-Za-z0-9_-]", "", sid[:_BUNDLE_SID_CHARS]) or "session"
+    return f"anyplot-session-{short}.json"
+
+
 def _no_content(ctx: AgentContext) -> Response:
     # A returned Response skips the headers `agent_context` set, so repeat them.
     return Response(status_code=204, headers={"X-Request-Id": ctx.request_id, "Cache-Control": _NO_STORE})
@@ -892,6 +930,53 @@ async def get_artifact(
         media_type=media_type,
         headers={"Cache-Control": _NO_STORE, "X-Content-Type-Options": "nosniff", "X-Request-Id": ctx.request_id},
         background=BackgroundTask(response.aclose),
+    )
+
+
+@router.get("/sessions/{sid}/bundle")
+async def get_bundle(
+    sid: SessionId,
+    ctx: Ctx,
+    client: Client,
+    version: Annotated[int | None, Query(ge=0, le=999)] = None,
+    include_data: bool = False,
+) -> Response:
+    """The session's feedback case as a JSON file to save: the page's `.save()`.
+
+    The agents service assembles it (`GET /v1/sessions/{sid}/bundle`): the transcript, every
+    version's code, plan, result and PNGs as base64, the dataset profile, the bindings and a
+    config stamp; each version's `data.csv` only with `include_data`, and only `version` when
+    one above 0 is given. The BFF reads it whole up to `MAX_BUNDLE_BYTES` (`502 too_large`
+    above), checks that it is a JSON object, and answers it as an attachment.
+    """
+    path = f"/sessions/{sid}/bundle"
+    params: dict[str, str | int] = {"include_data": "true" if include_data else "false"}
+    if version is not None:
+        params["version"] = version
+    try:
+        response = await _open_stream(client, ctx, "GET", path, params=params)
+        try:
+            body = await _read_capped(response, MAX_BUNDLE_BYTES)
+        finally:
+            await response.aclose()
+    except _UNREACHABLE as exc:
+        _log_unreachable(ctx, "GET", path, exc)
+        raise AgentHTTPError(502, "upstream", ctx.request_id) from exc
+    if body is None:
+        logger.warning("agent bundle over %d bytes refused (ref %s)", MAX_BUNDLE_BYTES, ctx.request_id)
+        raise AgentHTTPError(502, "too_large", ctx.request_id)
+    # Off the event loop: the bundle can be tens of megabytes of base64.
+    if not await run_in_threadpool(_is_json_object, body):
+        raise AgentHTTPError(502, "upstream", ctx.request_id)
+    return Response(
+        body,
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f'attachment; filename="{_bundle_filename(sid)}"',
+            "Cache-Control": _NO_STORE,
+            "X-Content-Type-Options": "nosniff",
+            "X-Request-Id": ctx.request_id,
+        },
     )
 
 
