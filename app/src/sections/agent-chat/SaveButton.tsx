@@ -9,7 +9,12 @@
  *
  * The button holds its own saving flag and failure line: a save only reads the
  * session, so the session state does not track it. The page disables the
- * button until a session exists and while anything else is in flight.
+ * button until a session exists and while anything else is in flight; the data
+ * box is locked with it, because the page renders the header anew once the
+ * session is open, and a choice made before then would silently reset. A save
+ * in progress marks the button `aria-disabled` instead of `disabled`, so the
+ * browser does not move the keyboard focus away from it. The failure line
+ * clears once anything else runs, because it is about an earlier attempt.
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -25,6 +30,8 @@ import { colors, typography } from 'src/theme';
 /** Failures only a save meets; any other code reads as the page's turn errors do. */
 const SAVE_FAILURE: Record<string, string> = {
   too_large: 'the session is over 32 MB, too large for one file',
+  // On Cloud Run, a bundle over 32 MB fails on the agents service's side, before the BFF reads it.
+  upstream: 'the session did not arrive; it may be over 32 MB',
   not_found: 'this session is no longer on the server',
   session_expired: 'the session expired',
 };
@@ -45,6 +52,13 @@ export function SaveButton({ disabled, onSave }: SaveButtonProps) {
   const [includeData, setIncludeData] = useState(true);
   const [saving, setSaving] = useState(false);
   const [failure, setFailure] = useState<{ code: string; ref: string | null } | null>(null);
+  // Something else started (a turn, a parse, a render): the failure line is stale.
+  const [wasDisabled, setWasDisabled] = useState(disabled);
+  if (disabled !== wasDisabled) {
+    setWasDisabled(disabled);
+    if (disabled) setFailure(null);
+  }
+  const locked = disabled || saving;
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -86,7 +100,7 @@ export function SaveButton({ disabled, onSave }: SaveButtonProps) {
             alignItems: 'center',
             gap: 0.75,
             minHeight: 32,
-            cursor: saving ? 'default' : 'pointer',
+            cursor: locked ? 'default' : 'pointer',
             whiteSpace: 'nowrap',
           }}
         >
@@ -94,7 +108,7 @@ export function SaveButton({ disabled, onSave }: SaveButtonProps) {
             component="input"
             type="checkbox"
             checked={includeData}
-            disabled={saving}
+            disabled={locked}
             onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
               setIncludeData(event.target.checked)
             }
@@ -106,12 +120,23 @@ export function SaveButton({ disabled, onSave }: SaveButtonProps) {
           component="button"
           type="button"
           onClick={() => void handleSave()}
-          disabled={disabled || saving}
+          disabled={disabled}
+          aria-disabled={saving || undefined}
           aria-label="Save"
           title="save the session as a json file"
-          sx={ghostButtonSx}
+          sx={{
+            ...ghostButtonSx,
+            '&[aria-disabled="true"]': { opacity: 0.45, cursor: 'default' },
+            '&[aria-disabled="true"]:hover': { color: 'var(--ink)', borderColor: 'var(--rule)' },
+          }}
         >
-          {saving ? '.save() …' : '.save()'}
+          {/* As wide as the longest label, so the header does not jump while saving. */}
+          <Box
+            component="span"
+            sx={{ display: 'inline-block', minWidth: '9ch', textAlign: 'center' }}
+          >
+            {saving ? '.save() …' : '.save()'}
+          </Box>
         </Box>
       </Box>
       {failure && (

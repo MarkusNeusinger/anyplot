@@ -40,7 +40,8 @@ const PAGE = '/debug/agent?spec=scatter-basic&library=matplotlib&language=python
 
 let bundleSearch: string[];
 
-function stubFetch(openStatus = 200) {
+/** `opened` holds the session's opening until it resolves. */
+function stubFetch(openStatus = 200, opened: Promise<void> = Promise.resolve()) {
   bundleSearch = [];
   vi.stubGlobal(
     'fetch',
@@ -48,6 +49,7 @@ function stubFetch(openStatus = 200) {
       const url = new URL(input);
       const method = init.method ?? 'GET';
       if (url.pathname.endsWith('/debug/agent/sessions') && method === 'POST') {
+        await opened;
         return openStatus === 200
           ? json(200, {
               session_id: 'S1',
@@ -117,10 +119,34 @@ describe('AgentChatPage .save()', () => {
     await waitFor(() =>
       expect(bundleSearch).toEqual(['?include_data=true', '?include_data=false'])
     );
+    await waitFor(() =>
+      expect(downloads).toEqual(['anyplot-session-S1.json', 'anyplot-session-S1.json'])
+    );
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_session_saved', {
       include_data: 'no',
     });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('locks the data box while the session opens, so the box shows what a save sends', async () => {
+    let open!: () => void;
+    stubFetch(
+      200,
+      new Promise<void>(resolve => {
+        open = resolve;
+      })
+    );
+    renderPage();
+    // The page renders the header anew once the session is open; a choice made
+    // while it opens would be lost there.
+    expect(await screen.findByRole('checkbox', { name: '# include data.csv' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+
+    open();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled());
+    const box = screen.getByRole('checkbox', { name: '# include data.csv' });
+    expect(box).toBeEnabled();
+    expect(box).toBeChecked();
   });
 
   it('offers no .save() when the session could not open', async () => {

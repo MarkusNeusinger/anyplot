@@ -30,6 +30,7 @@ interface Call {
 
 let calls: Call[];
 let bundle: (call: Call) => Response | Promise<Response>;
+let dataset: (call: Call) => Response | Promise<Response>;
 
 function mockFetch() {
   calls = [];
@@ -50,6 +51,9 @@ function mockFetch() {
         });
       }
       if (call.method === 'GET' && call.path === '/sessions/S1abcdefgh/bundle') return bundle(call);
+      if (call.method === 'POST' && call.path === '/sessions/S1abcdefgh/dataset') {
+        return dataset(call);
+      }
       if (call.method === 'DELETE') return new Response(null, { status: 204 });
       return json(404, { detail: 'not_found', ref: 'ref-404' });
     })
@@ -79,6 +83,7 @@ beforeEach(() => {
     json(200, BUNDLE, {
       'Content-Disposition': 'attachment; filename="anyplot-session-S1abcdef.json"',
     });
+  dataset = () => json(422, { detail: 'unparseable', ref: 'ref-u' });
   URL.createObjectURL = vi.fn(() => 'blob:bundle');
   URL.revokeObjectURL = vi.fn();
   vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
@@ -159,6 +164,45 @@ describe('useAgentSession: .save()', () => {
     release();
     await act(() => first);
     expect(downloads).toHaveLength(1);
+  });
+
+  it('starts no save while the data is parsed, and saves once the parse is over', async () => {
+    let release!: () => void;
+    dataset = () =>
+      new Promise<Response>(resolve => {
+        release = () => resolve(json(422, { detail: 'unparseable', ref: 'ref-u' }));
+      });
+    const { result } = await openSession();
+
+    let parse: Promise<void> = Promise.resolve();
+    act(() => {
+      parse = result.current.parseData('hours,score\n1.5,52\n');
+    });
+    await waitFor(() => expect(calls.some(item => item.path.endsWith('/dataset'))).toBe(true));
+    await act(() => result.current.saveSession(true));
+    expect(calls.filter(item => item.path.endsWith('/bundle'))).toHaveLength(0);
+    expect(downloads).toEqual([]);
+    expect(trackEvent).not.toHaveBeenCalledWith('agent_session_saved', expect.anything());
+
+    release();
+    await act(() => parse);
+    await act(() => result.current.saveSession(true));
+    expect(calls.filter(item => item.path.endsWith('/bundle'))).toHaveLength(1);
+    expect(downloads).toHaveLength(1);
+  });
+
+  it('lets go of the blob URL a second after the download starts', async () => {
+    const { result } = await openSession();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      await act(() => result.current.saveSession(true));
+      expect(downloads).toHaveLength(1);
+      expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1000);
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:bundle');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
