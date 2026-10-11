@@ -1,7 +1,7 @@
 {
-  "dataset_text": "Datum;Tier;Anteil;Umsatz\n05.01.2024;Hund;12,5 %;1.200,50\n20.01.2024;Katze;7 %;800,00\n14.02.2024;Hund;30 %;300,25\n28.02.2024;Katze;;150,00\n15.03.2024;Hund;50,5 %;999,75\n",
+  "dataset_text": "Datum;Tier;Anteil;Umsatz\n05.01.2024;Hund;12,5 %;1.200,50\n20.01.2024;Katze;7;800,00\n14.02.2024;Hund;30 %;300,25\n28.02.2024;Katze;;150,00\n15.03.2024;Hund;50,5 %;999,75\n",
   "message": "Die Spalte Anteil ist ein Prozentwert, kein Text. Bitte als Zahl lesen.",
   "expected_operations": [{"op": "set_type", "column": "Anteil", "type": "number"}],
   "locale": "de",
-  "tags": ["set_type", "unit", "percent"]
+  "tags": ["set_type", "unit", "percent", "decimal_comma"]
 }

@@ -1,7 +1,0 @@
-{
-  "dataset_text": "name,share,score\nAlpha,\"12,5 %\",1.5\nBeta,\"7 %\",2.25\nGamma,\"30 %\",0.75\nDelta,\"50,5 %\",3.0\n",
-  "message": "share is a percentage written with a decimal comma; read it as numbers.",
-  "expected_operations": [{"op": "set_type", "column": "share", "type": "number", "decimal": ","}],
-  "locale": "en",
-  "tags": ["set_type", "decimal_comma", "percent"]
-}

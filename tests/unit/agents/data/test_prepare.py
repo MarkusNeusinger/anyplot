@@ -1,4 +1,9 @@
-"""Tests for agents/anyplot/data/prepare.py: every operation, the error codes, the change lines, the round trip."""
+"""Tests for agents/anyplot/data/prepare.py: every operation, the error codes, the change lines, the round trip.
+
+The parser types a column whose every cell carries the same unit at the paste (`12,5 %`, `7 %` becomes
+`Anteil (%)`, numbers), so the unit columns here keep one bare cell (`7`): they stay text, and
+`set_type number` has cells to read.
+"""
 
 import csv
 import io
@@ -31,11 +36,12 @@ from agents.anyplot.schemas import MAX_COLUMN_NAME_CHARS, MAX_NOTE_CHARS, MAX_RO
 
 OPERATIONS = TypeAdapter(list[Operation])
 
-# A semicolon file with decimal commas, DD.MM.YYYY dates, a unit column and a total row.
+# A semicolon file with decimal commas, DD.MM.YYYY dates, a total row and a unit column that stays text: one
+# bare cell (`7`) next to `12,5 %` cells. With `7 %` the parser would type it as `Anteil (%)` at the paste.
 SALES = (
     "Datum;Tier;Anteil;Umsatz\n"
     "05.01.2024;Hund;12,5 %;1.200,50\n"
-    "20.01.2024;Katze;7 %;800,00\n"
+    "20.01.2024;Katze;7;800,00\n"
     "14.02.2024;Hund;30 %;300,25\n"
     "28.02.2024;Katze;;150,00\n"
     "15.03.2024;Hund;50,5 %;999,75\n"
@@ -44,7 +50,7 @@ SALES = (
 SALES_CSV = (
     "Datum,Tier,Anteil,Umsatz\n"
     '2024-01-05,Hund,"12,5 %",1200.5\n'
-    "2024-01-20,Katze,7 %,800.0\n"
+    "2024-01-20,Katze,7,800.0\n"
     "2024-02-14,Hund,30 %,300.25\n"
     "2024-02-28,Katze,,150.0\n"
     '2024-03-15,Hund,"50,5 %",999.75\n'
@@ -186,6 +192,7 @@ class TestFixture:
         assert parsed.csv == SALES_CSV
         assert parsed.column_dtypes == {"Datum": "datetime", "Tier": "text", "Anteil": "text", "Umsatz": "number"}
         assert parsed.profile.decimal == ","
+        assert not parsed.warnings  # no unit moved into a name: the bare `7` keeps `Anteil` text
 
 
 class TestRename:
@@ -275,11 +282,11 @@ class TestDropRows:
         assert prepared.changes == ["dropped 1 row where Anteil is missing"]
 
     def test_a_missing_cell_matches_no_comparison(self) -> None:
-        kept_by_ne = prepare(SALES, drop("Anteil", "ne", "7 %"))
+        kept_by_ne = prepare(SALES, drop("Anteil", "ne", "7"))
         kept_by_contains = prepare(SALES, drop("Anteil", "contains", "%"))
 
-        assert rows(kept_by_ne)[1:] == ["2024-01-20,Katze,7 %,800.0", "2024-02-28,Katze,,150.0"]
-        assert rows(kept_by_contains)[1:] == ["2024-02-28,Katze,,150.0"]
+        assert rows(kept_by_ne)[1:] == ["2024-01-20,Katze,7,800.0", "2024-02-28,Katze,,150.0"]
+        assert rows(kept_by_contains)[1:] == ["2024-01-20,Katze,7,800.0", "2024-02-28,Katze,,150.0"]
 
     def test_boolean_columns(self) -> None:
         text = "flag,v\ntrue,1\nfalse,2\n,3\n"
@@ -343,10 +350,12 @@ class TestSetTypeNumber:
         assert dtypes(prepared)["Anteil"] == "number"
 
     def test_dot_decimal_with_thousands_commas_and_whole_values_become_integers(self) -> None:
-        prepared = prepare('p,v\n"1,200 USD",1\n"3,000 USD",2\n', {"op": "set_type", "column": "p", "type": "number"})
+        text = 'p,v\n"1,200 USD",1\n"3,000 USD",2\n5,3\n'
+        assert parse_dataset(text).column_dtypes["p"] == "text"
+        prepared = prepare(text, {"op": "set_type", "column": "p", "type": "number"})
 
-        assert rows(prepared)[1:] == ["1200,1", "3000,2"]
-        assert prepared.changes == ["p: 2 cells read as numbers, unit 'USD' removed"]
+        assert rows(prepared)[1:] == ["1200,1", "3000,2", "5,3"]
+        assert prepared.changes == ["p: 3 cells read as numbers, unit 'USD' removed"]
         assert dtypes(prepared)["p"] == "integer"
 
     def test_a_leading_unit_and_spaces_as_thousands_separators(self) -> None:
@@ -357,7 +366,8 @@ class TestSetTypeNumber:
         assert prepared.changes == ["p: 3 cells read as numbers, unit '€' removed"]
 
     def test_the_decimal_argument_overrides_the_dataset_decimal(self) -> None:
-        text = "p,v\n1.200 kg,1\n"
+        text = "p,v\n1.200 kg,1\n7,2\n"
+        assert parse_dataset(text).column_dtypes["p"] == "text"
         with_comma = prepare(text, {"op": "set_type", "column": "p", "type": "number", "decimal": ","})
         with_dot = prepare(text, {"op": "set_type", "column": "p", "type": "number", "decimal": "."})
 
@@ -402,31 +412,59 @@ class TestSetTypeNumber:
         assert prepared.csv == SALES_CSV
         assert prepared.changes == ["Umsatz: already numbers, nothing changed"]
 
+    def test_a_uniform_unit_column_is_typed_at_parse_and_a_mixed_one_by_set_type(self) -> None:
+        """The division of labour: when every cell carries the same unit, the parser reads numbers at the paste and
+        moves the unit into the name, so `set_type number` has nothing to do; one bare cell keeps the column text."""
+        uniform = parse_dataset(SALES.replace("Katze;7;", "Katze;7 %;"))
+        assert uniform.column_dtypes["Anteil (%)"] == "number"
+        assert uniform.warnings == ["column 'Anteil': unit '%' moved from the values into the name 'Anteil (%)'"]
+        operation = {"op": "set_type", "column": "Anteil (%)", "type": "number"}
+        typed = apply_operations(uniform, OPERATIONS.validate_python([operation]))
+
+        assert typed.csv == uniform.csv
+        assert cells(typed, 2) == ["12.5", "7.0", "30.0", "", "50.5", "100.0"]
+        assert typed.changes == ["Anteil (%): already numbers, nothing changed"]
+
+        assert parse_dataset(SALES).column_dtypes["Anteil"] == "text"
+        read = prepare(SALES, {"op": "set_type", "column": "Anteil", "type": "number"})
+
+        assert cells(read, 2) == cells(typed, 2)
+        assert read.changes == ["Anteil: 5 cells read as numbers, unit '%' removed"]
+
     def test_a_mark_outside_three_digit_groups_is_a_decimal_never_a_thousands_separator(self) -> None:
-        """`12,5 %` in a dot-decimal file is 12.5, as the parser reads it, never 125 (the verifiers' finding)."""
-        dot_file = 'name,share,score\nAlpha,"12,5 %",1.5\nBeta,7 %,2.25\nGamma,30 %,0.75\nDelta,"50,5 %",3.0\n'
-        assert parse_dataset(dot_file).profile.decimal == "."
+        """`12,5 %` in a dot-decimal file is 12.5, as the parser reads it, never 125 (the verifiers' finding).
+
+        The bare `7` and `14` keep the columns text at parse; with a unit on every cell the parser would read them.
+        """
+        dot_file = 'name,share,score\nAlpha,"12,5 %",1.5\nBeta,7,2.25\nGamma,30 %,0.75\nDelta,"50,5 %",3.0\n'
+        parsed = parse_dataset(dot_file)
+        assert parsed.profile.decimal == "." and parsed.column_dtypes["share"] == "text"
         prepared = prepare(dot_file, {"op": "set_type", "column": "share", "type": "number"})
 
         assert cells(prepared, 1) == ["12.5", "7.0", "30.0", "50.5"]
         assert prepared.changes == ["share: 4 cells read as numbers (decimal comma), unit '%' removed"]
 
-        comma_file = "a;p\n1,5;12.5 %\n2,5;13.5 %\n"
-        assert parse_dataset(comma_file).profile.decimal == ","
+        comma_file = "a;p\n1,5;12.5 %\n2,5;13.5 %\n3,5;14\n"
+        parsed = parse_dataset(comma_file)
+        assert parsed.profile.decimal == "," and parsed.column_dtypes["p"] == "text"
         prepared = prepare(comma_file, {"op": "set_type", "column": "p", "type": "number"})
 
-        assert cells(prepared, 1) == ["12.5", "13.5"]
-        assert prepared.changes == ["p: 2 cells read as numbers (decimal point), unit '%' removed"]
+        assert cells(prepared, 1) == ["12.5", "13.5", "14.0"]
+        assert prepared.changes == ["p: 3 cells read as numbers (decimal point), unit '%' removed"]
 
     def test_the_other_decimal_is_used_for_the_whole_column_when_fewer_cells_fail(self) -> None:
         """One decimal per column: `1,200` next to `2,5` reads as 1.2 and 2.5 (decimal commas), never 1200 and 2.5."""
-        prepared = prepare("p,v\n1 kg,1\n", {"op": "set_type", "column": "p", "type": "number"})  # nothing to fall back
-        assert prepared.changes == ["p: 1 cell read as numbers, unit 'kg' removed"]
+        text = "p,v\n1 kg,1\n2,2\n"  # nothing to fall back
+        assert parse_dataset(text).column_dtypes["p"] == "text"
+        prepared = prepare(text, {"op": "set_type", "column": "p", "type": "number"})
+        assert prepared.changes == ["p: 2 cells read as numbers, unit 'kg' removed"]
 
-        prepared = prepare('p,v\n"1,200 kg",1\n"2,5 kg",2\n', {"op": "set_type", "column": "p", "type": "number"})
+        text = 'p,v\n"1,200 kg",1\n"2,5 kg",2\n3,3\n'
+        assert parse_dataset(text).column_dtypes["p"] == "text"
+        prepared = prepare(text, {"op": "set_type", "column": "p", "type": "number"})
 
-        assert cells(prepared, 0) == ["1.2", "2.5"]
-        assert prepared.changes == ["p: 2 cells read as numbers (decimal comma), unit 'kg' removed"]
+        assert cells(prepared, 0) == ["1.2", "2.5", "3.0"]
+        assert prepared.changes == ["p: 3 cells read as numbers (decimal comma), unit 'kg' removed"]
 
     def test_a_cell_unreadable_with_either_decimal_fails(self) -> None:
         """`1,200,5` and `1.2.3` read with neither mark; `2,5` reads with the comma, so the column falls back to it."""
