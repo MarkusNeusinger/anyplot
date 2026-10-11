@@ -12,10 +12,11 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, roles}`, stored; or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips only that fallback) | `413 too_long`, `422 unparseable`, `403 data_refused`, `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, roles, version}`, stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips only that fallback) | `413 too_long`, `422 unparseable`, `403 data_refused`, `503 guard_unavailable` |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles}` | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
-| `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` | SSE `anyplot/1` | `413 too_long`, `409 run_active`, `503 capacity` |
+| `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, roles, version}`: the dataset version before the root's last `prepare_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
+| `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` (`create_plot`, `summarize_data`) | SSE `anyplot/1`; the `done` event carries `dataset` after a turn whose `prepare_data` changed the data | `413 too_long`, `409 run_active`, `503 capacity` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
 | `GET /v1/sessions/{sid}/artifacts/{name}?v=` | | the file | `404` |
@@ -101,6 +102,7 @@ from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParseError, parse_dataset
 from agents.anyplot.data.roles import DataRole
 from agents.anyplot.data.store import StoreFull
 from agents.anyplot.data.transcribe import looks_like_free_text, table_to_csv, transcribable
+from agents.anyplot.dataset_versions import dataset_payload, undo_version
 from agents.anyplot.dev_fixture import FixtureError, load_case
 from agents.anyplot.models import JudgeUnavailable, JudgeVerdict
 from agents.anyplot.opening import (
@@ -143,7 +145,13 @@ USER_PATTERN = r"^[A-Za-z0-9_-]{1,64}$"
 SESSION_PATTERN = r"^[A-Za-z0-9_-]{1,128}$"
 SPEC_PATTERN = r"^[a-z0-9-]{1,100}$"
 LOCALE_PATTERN = r"^[A-Za-z]{2,3}([_-][A-Za-z0-9]{1,8}){0,3}$"
-ACTION_MESSAGE = "[action] Create the plot from my dataset and bindings."
+Action = Literal["create_plot", "summarize_data"]
+ACTION_MESSAGES: dict[str, str] = {
+    "create_plot": "[action] Create the plot from my dataset and bindings.",
+    "summarize_data": "[action] Summarize the dataset for the user.",
+}
+"""The fixed user message of each structured action; the scope judge is skipped for them (`ledger.kind`)."""
+ACTION_MESSAGE = ACTION_MESSAGES["create_plot"]
 SWEEP_INTERVAL_S = 300
 ARTIFACT_TYPES: dict[str, str] = {
     "plot-light.png": "image/png",
@@ -448,7 +456,7 @@ class BindingBody(_Body):
 
 class MessageBody(_Body):
     text: str | None = None
-    action: Literal["create_plot"] | None = None
+    action: Action | None = None
 
     @model_validator(mode="after")
     def _exactly_one(self) -> "MessageBody":
@@ -620,7 +628,9 @@ async def upload_dataset(
         raise AgentsError(403, "data_refused")
     await _judge_dataset(services, ledger, dataset_judge_inputs(parsed), content=parsed.csv)
     try:
-        ingested = store_dataset(services.datasets, sid, parsed, view.snapshot, previous_id=view.dataset_id)
+        ingested = store_dataset(
+            services.datasets, sid, parsed, view.snapshot, previous_id=view.dataset_id, history=view.dataset_history
+        )
     except StoreFull:
         raise AgentsError(503, "capacity") from None
     await runtime.write_state(session, ingested.state_delta())
@@ -631,6 +641,7 @@ async def upload_dataset(
             "bindings": [binding.model_dump() for binding in ingested.bindings],
             "warnings": parsed.warnings,
             "roles": [_role_body(role) for role in view.snapshot.roles()],
+            "version": 1,
         },
         headers=_NO_STORE,
     )
@@ -819,12 +830,41 @@ async def confirm_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     )
 
 
-async def _session_sync(runtime: Runtime, user: str, sid: str) -> dict[str, Any]:
-    """The `done` event's sync fields after a turn: the session's bindings and whether the data is confirmed.
+@app.post("/v1/sessions/{sid}/dataset/undo", dependencies=v1_dependencies)
+async def undo_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JSONResponse:
+    """The user's undo of the root's last `prepare_data`: the version before it is the current dataset again.
+
+    The session keeps the last five versions (`dataset_versions.MAX_DATASET_HISTORY`);
+    the bindings are carried over like after a `prepare_data`, and the restored version
+    is unconfirmed, because the user confirms every version they see. `422
+    nothing_to_undo` for a paste that was never prepared (or whose history is spent).
+    """
+    services = get_services()
+    session = await runtime.session(user, sid)
+    _active(runtime, sid)
+    view = read_session(session.state)
+    if view is None:
+        raise AgentsError(404, "session_expired")
+    restored = undo_version(services.datasets, sid, view, view.snapshot)
+    if restored is None:
+        raise AgentsError(422, "nothing_to_undo")
+    await runtime.write_state(session, restored.delta)
+    return JSONResponse(
+        {**restored.payload(), "roles": [_role_body(role) for role in view.snapshot.roles()]}, headers=_NO_STORE
+    )
+
+
+async def _session_sync(
+    runtime: Runtime, user: str, sid: str, *, dataset_before: str | None = None, ledger: RequestLedger | None = None
+) -> dict[str, Any]:
+    """The `done` event's sync fields after a turn: the bindings, whether the data is confirmed, a changed dataset.
 
     The root's `set_bindings` tool may have changed the bindings (and dropped the
-    confirmation) during the turn; the page learns it from `done`. Empty when the
-    session is gone, so the stream still closes.
+    confirmation) during the turn, and its `prepare_data` tool the dataset itself: when
+    the dataset id differs from `dataset_before`, `dataset` carries the new version as
+    the dataset route would answer it, plus the turn's change lines from the ledger. The
+    page learns both from `done`. Empty when the session is gone, so the stream still
+    closes.
     """
     try:
         session = await runtime.session(user, sid)
@@ -833,7 +873,16 @@ async def _session_sync(runtime: Runtime, user: str, sid: str) -> dict[str, Any]
     view = read_session(session.state)
     if view is None:
         return {}
-    return {"bindings": [binding.model_dump() for binding in view.bindings], "data_confirmed": view.data_confirmed}
+    payload: dict[str, Any] = {
+        "bindings": [binding.model_dump() for binding in view.bindings],
+        "data_confirmed": view.data_confirmed,
+    }
+    if view.dataset_id and view.dataset_id != dataset_before:
+        stored = get_services().datasets.get(view.dataset_id, sid)
+        if stored is not None:
+            changes = list(ledger.dataset_changes) if ledger is not None else []
+            payload["dataset"] = {**dataset_payload(stored, view.bindings, view.dataset_version), "changes": changes}
+    return payload
 
 
 async def _refused(translator: Translator, ledger: RequestLedger) -> AsyncIterator[str]:
@@ -895,10 +944,11 @@ async def post_message(
     # and an entry neither reached (a client gone before the first byte) goes stale
     # after the queue's maximum wait or the deadline.
     runtime.active[sid] = run
+    dataset_before = view.dataset_id if view is not None else None
     if view is not None and view.dataset_id:
         # A hit counts as use: the idle sweep must not take the dataset while the run waits.
         services.datasets.get(view.dataset_id, sid)
-    text = ACTION_MESSAGE if body.action else (body.text or "")
+    text = ACTION_MESSAGES[body.action] if body.action else (body.text or "")
     message = types.Content(role="user", parts=[types.Part(text=text)])
 
     async def stream() -> AsyncIterator[str]:
@@ -954,7 +1004,7 @@ async def post_message(
             for chunk in translator.error(failure):
                 yield chunk
         attribution("run", ledger, model_versions=sorted(ledger.model_versions), kind=ledger.kind)
-        yield translator.done(**await _session_sync(runtime, user, sid))
+        yield translator.done(**await _session_sync(runtime, user, sid, dataset_before=dataset_before, ledger=ledger))
 
     return StreamingResponse(
         stream(),

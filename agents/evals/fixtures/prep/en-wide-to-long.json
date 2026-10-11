@@ -1,0 +1,7 @@
+{
+  "dataset_text": "Month,Shoes,Hats,Bags\n2024-01,10,20,5\n2024-02,15,18,7\n2024-03,12,30,9\n",
+  "message": "Turn the product columns into rows: one row per month and product, with the columns product and revenue.",
+  "expected_operations": [{"op": "pivot_longer", "columns": ["Shoes", "Hats", "Bags"], "names_to": "product", "values_to": "revenue"}],
+  "locale": "en",
+  "tags": ["pivot_longer"]
+}

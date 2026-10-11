@@ -92,8 +92,9 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
     "plot": frozenset({"status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version"}),
     "refusal": frozenset({"code", "text"}),
     "error": frozenset({"code", "ref"}),
-    # `bindings` and `data_confirmed` sync the page after a turn in which the root changed the bindings.
-    "done": frozenset({"llm_calls", "tokens", "bindings", "data_confirmed"}),
+    # `bindings` and `data_confirmed` sync the page after a turn in which the root changed the bindings;
+    # `dataset` carries the new data version after a turn in which the root's `prepare_data` changed the data.
+    "done": frozenset({"llm_calls", "tokens", "bindings", "data_confirmed", "dataset"}),
 }
 _ERROR_CODES = frozenset({"capacity", "deadline", "guard_unavailable", "upstream", "internal"})
 _MAX_BINDING_ERRORS = 20
@@ -118,6 +119,7 @@ _UPSTREAM_CODES = frozenset(
         "guard_unavailable",
         "capacity",
         "no_dataset",
+        "nothing_to_undo",
         "rate_limited",
     }
 )
@@ -355,7 +357,8 @@ class Binding(_StrictBody):
 
 class MessageBody(_StrictBody):
     text: Text | None = None
-    action: Literal["create_plot"] | None = None
+    # `create_plot` starts step 2; `summarize_data` asks the assistant for the step-1 summary of the data.
+    action: Literal["create_plot", "summarize_data"] | None = None
 
     @model_validator(mode="after")
     def _exactly_one(self) -> MessageBody:
@@ -776,6 +779,17 @@ async def confirm_dataset(sid: SessionId, ctx: Ctx, client: Client) -> Any:
     a turn or a render is in flight.
     """
     return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset/confirm")
+
+
+@router.post("/sessions/{sid}/dataset/undo")
+async def undo_dataset(sid: SessionId, ctx: Ctx, client: Client) -> Any:
+    """Undo the assistant's last change to the data: the version before it becomes the current dataset.
+
+    The agents service answers `{preview, profile, bindings, warnings, roles, version}` like
+    the dataset route, unconfirmed; `422 nothing_to_undo` when the paste was never changed,
+    `409 run_active` while a turn or a render is in flight.
+    """
+    return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset/undo")
 
 
 @router.post("/sessions/{sid}/messages", response_class=EventSourceResponse)

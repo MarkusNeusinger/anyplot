@@ -12,7 +12,7 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 | `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects`, `version` | the pipeline's `PlotResult` output event; `version`, the stored version's number, only on `ok` and `needs_attention` |
 | `refusal` | `code`, `text` | the request ledger's refusal, in place of the message: `out_of_scope`, `needs_data` (data that would have to be fetched) and `unsupported_content` from the scope guard, `budget` from the budgets; a user already over the daily budget gets it right after `ready`, without waiting in the queue |
 | `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when the run waited the queue's maximum), `deadline` or `internal` |
-| `done` | `llm_calls`, `tokens` | the end of every run, always last |
+| `done` | `llm_calls`, `tokens`, and after a run `bindings`, `data_confirmed` and, when the turn changed the data, `dataset` | the end of every run, always last; the route adds the session's sync fields (`_session_sync` in `agents/main.py`) |
 
 Function calls and responses, tool outputs, thoughts, partial chunks, adapter and
 reviewer answers, and `error_details` are dropped. A message goes through the
@@ -135,12 +135,21 @@ class Translator:
         self.closing_sent = True
         return [sse("error", {"code": code, "ref": self.ledger.request_id})]
 
-    def done(self, *, bindings: list[dict[str, Any]] | None = None, data_confirmed: bool | None = None) -> str:
-        """The closing event; with the session's bindings and confirmation state when the route has them.
+    def done(
+        self,
+        *,
+        bindings: list[dict[str, Any]] | None = None,
+        data_confirmed: bool | None = None,
+        dataset: dict[str, Any] | None = None,
+    ) -> str:
+        """The closing event; with the session's bindings, confirmation state and a changed dataset when the route has them.
 
-        The root's `set_bindings` tool can change the bindings during a turn, which the page
-        could not learn otherwise: it syncs its dropdowns and its step from these two fields,
-        so a confirmation never covers bindings the user has not seen.
+        The root's `set_bindings` tool can change the bindings during a turn, and its
+        `prepare_data` tool the dataset itself, which the page could not learn otherwise:
+        it syncs its dropdowns, its step and its preview table from these fields, so a
+        confirmation never covers bindings or data the user has not seen. `dataset` is
+        `{preview, profile, bindings, warnings, changes, version}`, the dataset route's
+        shape plus the change lines of the turn, only after a turn that changed the data.
         """
         payload: dict[str, Any] = {
             "llm_calls": self.ledger.llm_calls,
@@ -150,4 +159,6 @@ class Translator:
             payload["bindings"] = bindings
         if data_confirmed is not None:
             payload["data_confirmed"] = data_confirmed
+        if dataset is not None:
+            payload["dataset"] = dataset
         return sse("done", payload)

@@ -46,6 +46,7 @@ import io
 import json
 import math
 import re
+import statistics
 import unicodedata
 from collections import Counter
 from collections.abc import Mapping, Sequence
@@ -673,9 +674,12 @@ def _profile_column(column: _Column) -> ColumnProfile:
     present = [cell for cell in column.cells if cell]
     minimum: float | str | None = None
     maximum: float | str | None = None
+    mean: float | None = None
+    median: float | None = None
     top: list[str] = []
     if column.dtype in ("integer", "number") and column.numbers:
         minimum, maximum = min(column.numbers), max(column.numbers)
+        mean, median = _rounded(statistics.fmean(column.numbers)), _rounded(statistics.median(column.numbers))
     elif column.dtype == "datetime" and column.dates:
         minimum, maximum = _iso(min(column.dates), column.with_time), _iso(max(column.dates), column.with_time)
     elif column.dtype in ("text", "boolean"):
@@ -692,8 +696,15 @@ def _profile_column(column: _Column) -> ColumnProfile:
         unique=len(set(present)),
         min=minimum,
         max=maximum,
+        mean=mean,
+        median=median,
         top=top,
     )
+
+
+def _rounded(value: float) -> float:
+    """A statistic at six significant digits, so a mean never carries float noise into the profile."""
+    return float(f"{value:.6g}")
 
 
 def _write_csv(names: list[str], rows: list[list[str]]) -> str:

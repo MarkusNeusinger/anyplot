@@ -1843,6 +1843,179 @@ async def _session_state(client: httpx.AsyncClient, sid: str) -> dict[str, Any]:
     return dict(session.state)
 
 
+def prepare_call(*operations: dict[str, Any]) -> dict[str, Any]:
+    return {"call": "prepare_data", "args": {"operations": list(operations)}}
+
+
+RENAME_HOURS = prepare_call({"op": "rename", "column": "Study Hours", "name": "Hours"})
+
+
+async def test_a_prepare_data_turn_carries_the_new_dataset_version_in_done(
+    client: httpx.AsyncClient, swap_models, services: Services
+) -> None:
+    """The root's `prepare_data` stores the next version: `done` carries it, unconfirmed, and undo restores the paste."""
+    script = default_script()
+    script["root"] = [RENAME_HOURS, {"text": "I renamed Study Hours to Hours; check the preview and confirm."}]
+    fake = swap_models("anthropic-vertex", script)
+    sid = await open_session(client)  # confirmed by the helper
+    first = read_session(await _session_state(client, sid))
+    assert first is not None and first.dataset_id
+
+    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "rename the hours"})
+    events = parse_sse(response.text)
+
+    name, done = events[-1]
+    assert name == "done" and done["data_confirmed"] is False
+    dataset = done["dataset"]
+    assert set(dataset) == {"preview", "profile", "bindings", "warnings", "changes", "version"}
+    assert dataset["version"] == 2 and dataset["changes"] == ["renamed 'Study Hours' to 'Hours'"]
+    assert [column["name"] for column in dataset["profile"]["columns"]] == ["Student", "Hours", "Exam Score"]
+    assert dataset["profile"]["rows"] == 24
+    assert len(dataset["preview"]) == 20 and len(dataset["preview"][0]) == 3
+    assert dataset["bindings"] == [{"role": "x", "column": "Hours"}, {"role": "y", "column": "Exam Score"}]
+    assert done["bindings"] == dataset["bindings"] and dataset["warnings"] == []
+    # The root read the change lines fenced as tool notes and the new profile fenced as user data.
+    second_call = json.dumps(fake.calls[1]["messages"])
+    assert "<tool_notes>" in second_call and "renamed 'Study Hours' to 'Hours'" in second_call
+    assert '\\"version\\": 2' in second_call and "<user_data>" in second_call
+    view = read_session(await _session_state(client, sid))
+    assert view is not None and view.dataset_version == 2 and view.dataset_history == [first.dataset_id]
+    assert services.datasets.get(first.dataset_id, sid) is not None  # kept for undo
+    assert not view.data_confirmed
+
+    undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+    assert undone.status_code == 200, undone.text
+    body = undone.json()
+    assert set(body) == {"preview", "profile", "bindings", "warnings", "roles", "version"}
+    assert body["version"] == 1 and body["profile"]["columns"][1]["name"] == "Study Hours"
+    assert body["bindings"] == [{"role": "x", "column": "Study Hours"}, {"role": "y", "column": "Exam Score"}]
+    assert [role["name"] for role in body["roles"]] == ["x", "y"]
+    view = read_session(await _session_state(client, sid))
+    assert view is not None and view.dataset_id == first.dataset_id and view.dataset_history == []
+    assert not view.data_confirmed  # the user confirms every version they see
+    assert services.datasets.get(first.dataset_id, sid) is not None and len(services.datasets) == 1  # version 2 left
+
+    nothing = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+    assert (nothing.status_code, nothing.json()) == (422, {"detail": "nothing_to_undo"})
+
+
+async def test_a_turn_that_changes_nothing_sends_no_dataset(client: httpx.AsyncClient, swap_models) -> None:
+    script = default_script()
+    script["root"] = [
+        prepare_call({"op": "rename", "column": "Nope", "name": "Hours"}),
+        {"text": "There is no column Nope."},
+    ]
+    fake = swap_models("anthropic-vertex", script)
+    sid = await open_session(client)
+
+    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "rename Nope"})
+    done = parse_sse(response.text)[-1][1]
+
+    assert "dataset" not in done and done["data_confirmed"] is True
+    second_call = json.dumps(fake.calls[1]["messages"])
+    assert "unknown_column" in second_call and "there is no column 'Nope'" in second_call
+    assert "<user_data>" in second_call  # the message names a column, so it is fenced
+    view = read_session(await _session_state(client, sid))
+    assert view is not None and view.dataset_version == 1 and view.dataset_history == []
+
+
+async def test_the_summarize_data_action_skips_the_judge_and_reaches_the_root(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    summary = "24 rows and 3 columns: Study Hours and Exam Score are numbers, no values are missing."
+    script = default_script()
+    script["root"] = [{"call": "get_dataset_profile", "args": {}}, {"text": summary}]
+    fake = swap_models("anthropic-vertex", script)
+    sid = await open_session(client)
+    judged = len(judge.calls)  # the dataset judge's call at the paste
+
+    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "summarize_data"})
+    events = parse_sse(response.text)
+
+    assert len(judge.calls) == judged  # an action, like create_plot: no scope judge
+    assert ("message", {"text": summary}) in events
+    assert events[-1][1]["data_confirmed"] is True and "dataset" not in events[-1][1]
+    first_call = json.dumps(fake.calls[0]["messages"])
+    assert "[action] Summarize the dataset for the user." in first_call
+    unknown = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "explode"})
+    assert unknown.status_code == 422
+
+
+async def test_the_dataset_history_keeps_the_last_five_versions(
+    client: httpx.AsyncClient, swap_models, services: Services
+) -> None:
+    script = default_script()
+    script["root"] = []
+    for number in range(6):
+        previous = "Study Hours" if number == 0 else f"c{number - 1}"
+        script["root"] += [
+            prepare_call({"op": "rename", "column": previous, "name": f"c{number}"}),
+            {"text": f"renamed to c{number}"},
+        ]
+    swap_models("anthropic-vertex", script)
+    sid = await open_session(client)
+    first = read_session(await _session_state(client, sid))
+    assert first is not None
+    ids = [first.dataset_id]
+    for number in range(6):
+        response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": f"rename {number}"})
+        done = parse_sse(response.text)[-1][1]
+        assert done["dataset"]["version"] == number + 2
+        view = read_session(await _session_state(client, sid))
+        assert view is not None and view.dataset_id
+        ids.append(view.dataset_id)
+
+    view = read_session(await _session_state(client, sid))
+    assert view is not None and view.dataset_version == 7 and view.dataset_history == ids[1:6]
+    assert services.datasets.get(ids[0], sid) is None  # the paste left the store: six versions stay
+    assert len(services.datasets) == 6
+    for expected in (6, 5, 4, 3, 2):
+        undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+        assert undone.status_code == 200 and undone.json()["version"] == expected
+    assert (await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)).status_code == 422
+    assert len(services.datasets) == 1
+
+    data = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text()
+    pasted = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": data})
+    assert pasted.status_code == 200 and pasted.json()["version"] == 1
+    assert len(services.datasets) == 1
+
+
+async def test_prepare_data_refuses_without_a_dataset_during_a_run_and_bad_operations(
+    client: httpx.AsyncClient, services: Services
+) -> None:
+    """The tool itself, called as ADK would call it, with the same answers whatever plugin runs first."""
+    from types import SimpleNamespace
+
+    from agents.anyplot.plugins.ledger import ledger_for
+    from agents.anyplot.session_state import DATASET_VERSION
+    from agents.anyplot.tools.session import prepare_data
+
+    rename = {"op": "rename", "column": "Study Hours", "name": "Hours"}
+    empty = await open_session(client, with_data=False)
+    context = SimpleNamespace(state=await _session_state(client, empty), session=SimpleNamespace(id=empty))
+    context.invocation_id = "inv-prep-1"
+    assert await prepare_data([rename], context) == {"status": "not_ready", "reason": "no_dataset"}
+
+    sid = await open_session(client)
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    context.invocation_id = "inv-prep-2"
+    too_many = await prepare_data([rename] * 6, context)
+    assert too_many["status"] == "error" and too_many["code"] == "invalid_operations"
+    assert "operations is a list of 1 to 5 operations" in too_many["errors"]
+    unknown = await prepare_data([{"op": "explode"}, {"op": "rename", "column": "Study Hours"}], context)
+    assert unknown["code"] == "invalid_operations" and "<user_data>" in unknown["errors"]
+    assert "operations[0]" in unknown["errors"] and "operations[1].rename.name" in unknown["errors"]
+    ledger_for("inv-prep-2").pipeline_active = True
+    assert await prepare_data([rename], context) == {"status": "error", "code": "run_active"}
+    ledger_for("inv-prep-2").pipeline_active = False
+
+    done = await prepare_data([rename], context)
+    assert done["status"] == "ok" and (done["rows"], done["columns"], done["version"]) == (24, 3, 2)
+    assert context.state[DATASET_VERSION] == 2 and len(services.datasets) == 2
+    assert ledger_for("inv-prep-2").dataset_changes == ["renamed 'Study Hours' to 'Hours'"]
+
+
 async def test_a_dataset_with_personal_data_is_stored(client: httpx.AsyncClient, judge) -> None:
     """Names, addresses, e-mail addresses, phone numbers and links are the user's data: no pre-filter refuses them."""
     sid = await open_session(client, with_data=False)

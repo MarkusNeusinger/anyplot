@@ -126,6 +126,8 @@ ALL_ROUTES = [
     ("POST", "/debug/agent/sessions/s1/library", {"spec_id": "scatter-basic", "library": "seaborn"}),
     ("POST", "/debug/agent/sessions/s1/dataset", {"text": "a,b\n1,2\n"}),
     ("PUT", "/debug/agent/sessions/s1/bindings", [{"role": "x", "column": "a"}]),
+    ("POST", "/debug/agent/sessions/s1/dataset/confirm", None),
+    ("POST", "/debug/agent/sessions/s1/dataset/undo", None),
     ("POST", "/debug/agent/sessions/s1/messages", {"action": "create_plot"}),
     ("POST", "/debug/agent/sessions/s1/cancel", None),
     ("POST", "/debug/agent/sessions/s1/versions/1/render", {"theme": "dark"}),
@@ -399,6 +401,41 @@ class TestBodies:
         assert (sent.method, sent.url.path) == ("POST", "/v1/sessions/s1/dataset/confirm")
         assert not sent.content
 
+    def test_dataset_undo_is_forwarded_without_a_body(self, client, upstream) -> None:
+        """`.undo()` posts to the agents service's undo route and relays the restored version like the dataset route."""
+        restored = {
+            "preview": [["1", "2"]],
+            "profile": {"rows": 1},
+            "bindings": [{"role": "x", "column": "a"}],
+            "warnings": [],
+            "roles": [],
+            "version": 1,
+        }
+        upstream.handler = lambda request: httpx.Response(200, json=restored)
+        response = client.post("/debug/agent/sessions/s1/dataset/undo", headers=CLIENT_HEADERS)
+        assert response.status_code == 200
+        assert response.json() == restored
+        sent = upstream.requests[-1]
+        assert (sent.method, sent.url.path) == ("POST", "/v1/sessions/s1/dataset/undo")
+        assert not sent.content
+
+        upstream.handler = lambda request: httpx.Response(422, json={"detail": "nothing_to_undo"})
+        nothing = client.post("/debug/agent/sessions/s1/dataset/undo", headers=CLIENT_HEADERS)
+        assert nothing.status_code == 422
+        assert nothing.json()["detail"] == "nothing_to_undo"
+
+    def test_the_summarize_data_action_is_forwarded(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(
+            200, content=b"event: done\ndata: {}\n\n", headers={"Content-Type": "text/event-stream"}
+        )
+        response = client.post(
+            "/debug/agent/sessions/s1/messages", json={"action": "summarize_data"}, headers=CLIENT_HEADERS
+        )
+        assert response.status_code == 200
+        assert upstream.last_json == {"action": "summarize_data"}
+        unknown = client.post("/debug/agent/sessions/s1/messages", json={"action": "explode"}, headers=CLIENT_HEADERS)
+        assert unknown.status_code == 422
+
     def test_dataset_over_limit_is_413(self, client, upstream) -> None:
         response = client.post(
             "/debug/agent/sessions/s1/dataset", json={"text": "a" * (MAX_DATASET_BYTES + 1)}, headers=CLIENT_HEADERS
@@ -518,7 +555,9 @@ UPSTREAM_SSE = (
     b'data: {"code": "capacity", "ref": "upstream-ref", "error_details": "Traceback (most recent call last)"}\n'
     b"\n"
     b"event: done\n"
-    b'data: {"llm_calls": 4, "tokens": 9000, "bindings": [{"role": "x", "column": "a"}], "data_confirmed": false, "secret": 1}\n'
+    b'data: {"llm_calls": 4, "tokens": 9000, "bindings": [{"role": "x", "column": "a"}], "data_confirmed": false, '
+    b'"dataset": {"preview": [["1"]], "profile": {"rows": 1}, "bindings": [], "warnings": [], '
+    b'"changes": ["dropped 1 row where Tier = \'Gesamt\'"], "version": 2}, "secret": 1}\n'
     b"\n"
     b"event: message\n"
     b'data: {"text": "after done"}\n'
@@ -542,10 +581,23 @@ class TestMessagesStream:
             ("ready", {"v": 1, "run_id": "r1"}),
             ("status", {"step": "adapting", "attempt": 1}),
             ("error", {"code": "capacity", "ref": ref}),
-            # The sync fields pass; an unknown field is dropped like everywhere else.
+            # The sync fields pass, `dataset` whole; an unknown field is dropped like everywhere else.
             (
                 "done",
-                {"llm_calls": 4, "tokens": 9000, "bindings": [{"role": "x", "column": "a"}], "data_confirmed": False},
+                {
+                    "llm_calls": 4,
+                    "tokens": 9000,
+                    "bindings": [{"role": "x", "column": "a"}],
+                    "data_confirmed": False,
+                    "dataset": {
+                        "preview": [["1"]],
+                        "profile": {"rows": 1},
+                        "bindings": [],
+                        "warnings": [],
+                        "changes": ["dropped 1 row where Tier = 'Gesamt'"],
+                        "version": 2,
+                    },
+                },
             ),
         ]
         sent = upstream.requests[0]
@@ -825,6 +877,7 @@ class TestUpstreamMapping:
             (503, {"detail": "guard_unavailable"}, 503, "guard_unavailable"),
             (503, {"detail": "capacity"}, 503, "capacity"),
             (422, {"detail": "no_dataset"}, 422, "no_dataset"),
+            (422, {"detail": "nothing_to_undo"}, 422, "nothing_to_undo"),
             (429, {"detail": "rate_limited"}, 429, "rate_limited"),
             (422, {"detail": "Traceback: KeyError in /app/agents/x.py"}, 422, "invalid"),
             (409, {"detail": ["run_active"]}, 409, "conflict"),

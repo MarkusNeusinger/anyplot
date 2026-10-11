@@ -8,6 +8,7 @@ at most five fenced sample rows) for the root and the adapter. No ADK import.
 
 import json
 from collections.abc import Iterator
+from typing import Any
 
 from .data.roles import DataRole
 from .policy import fence
@@ -55,7 +56,12 @@ def profile_summary(profile: DatasetProfile) -> str:
 
 def profile_json(profile: DatasetProfile) -> str:
     """The profile as JSON, warnings left out (they name parse details, not data)."""
-    return profile.model_dump_json(exclude={"warnings"})
+    return _dump(profile)
+
+
+def _dump(profile: DatasetProfile, exclude: dict[str, Any] | None = None) -> str:
+    """The profile JSON a model reads: no warnings, and no field without a value (a text column's `min`, `mean`, ...)."""
+    return profile.model_dump_json(exclude={"warnings": True, **(exclude or {})}, exclude_none=True)
 
 
 def adapter_profile(profile: DatasetProfile, limit: int = MAX_ADAPTER_PROFILE_BYTES) -> tuple[str, bool]:
@@ -80,14 +86,15 @@ def trimmed_profiles(profile: DatasetProfile) -> Iterator[tuple[str, bool]]:
     """The profile JSON, then ever smaller versions of it, each with whether it was trimmed.
 
     The order of what goes: the sample rows one by one, then every column's top values,
-    then the min and max. Every version keeps every column name, its type and counts,
-    so a caller with a size cap takes the first version that fits.
+    then the ranges and the statistics (min, max, mean, median). Every version keeps
+    every column name, its type and counts, so a caller with a size cap takes the first
+    version that fits.
     """
     yield profile_json(profile), False
     for keep in range(len(profile.sample) - 1, -1, -1):
-        yield profile.model_copy(update={"sample": profile.sample[:keep]}).model_dump_json(exclude={"warnings"}), True
+        yield _dump(profile.model_copy(update={"sample": profile.sample[:keep]})), True
     bare = profile.model_copy(
         update={"sample": [], "columns": [column.model_copy(update={"top": []}) for column in profile.columns]}
     )
-    yield bare.model_dump_json(exclude={"warnings"}), True
-    yield bare.model_dump_json(exclude={"warnings": True, "columns": {"__all__": {"min", "max", "top"}}}), True
+    yield _dump(bare), True
+    yield _dump(bare, {"columns": {"__all__": {"min", "max", "mean", "median", "top"}}}), True

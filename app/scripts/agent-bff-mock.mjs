@@ -32,13 +32,27 @@
  * applied binding change clears the mark, and until it holds every pipeline
  * run answers `plot{status: not_ready, reason: data_unconfirmed}`. Every
  * `done` carries the session's `bindings` and `data_confirmed`, as the service
- * syncs them after a run.
+ * syncs them after a run, and `dataset` after a turn that changed the data.
+ *
+ * The step-1 data changes (the service's `prepare_data` tool) in miniature:
+ * the action `{action: "summarize_data"}` answers a scripted summary of the
+ * profile; a message containing "prozent" or "percent" plays a `set_type`
+ * (number) on the second column (a unit such as `%` removed, a decimal comma
+ * read), "gruppier" or "group" an `aggregate` (the first numeric column summed
+ * by the first text column), "umbenenn" or "rename" a `rename` of the second
+ * column. Each stores the result as the next dataset version (the previous one
+ * kept, at most five, the bindings carried over, the confirmation dropped) and
+ * the turn's `done.dataset` carries `{preview, profile, bindings, warnings,
+ * changes, version}` like the service; `POST .../dataset/undo` restores the
+ * previous version (`422 nothing_to_undo` at the paste).
  *
  * Scripted behaviour of a chat message:
  * - contains "weather" or "joke": the fixed out-of-scope refusal;
  * - contains "busy": `error {code: capacity}`;
  * - contains "swap": the root's `set_bindings` in miniature, swapping the
  *   columns of `x` and the first `y` (which drops the confirmation), and a reply;
+ * - contains "prozent"/"percent", "gruppier"/"group" or "umbenenn"/"rename":
+ *   a data change, see above, and a reply naming it;
  * - ends with "?": a reply only, no pipeline run;
  * - anything else: a refinement with a repair round, shipped as
  *   `needs_attention`; "dark" in the text renders the dark theme.
@@ -438,6 +452,12 @@ function parseDataset(text) {
     const missing = cells.length - present.length;
     if (missing)
       warnings.push(`column '${name}': ${missing} missing value${missing > 1 ? 's' : ''}`);
+    const sorted = [...values].sort((a, b) => a - b);
+    const median = sorted.length
+      ? sorted.length % 2
+        ? sorted[(sorted.length - 1) / 2]
+        : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+      : null;
     return {
       name,
       dtype,
@@ -445,6 +465,11 @@ function parseDataset(text) {
       unique: counts.size,
       min: numeric ? Math.min(...values) : (present[0] ?? null),
       max: numeric ? Math.max(...values) : (present[present.length - 1] ?? null),
+      // The service's statistics of a numeric column (six significant digits), for the step-1 summary.
+      mean: numeric
+        ? Number((values.reduce((a, b) => a + b, 0) / values.length).toPrecision(6))
+        : null,
+      median: numeric ? Number(median.toPrecision(6)) : null,
       top: [...counts.entries()]
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5)
@@ -688,6 +713,7 @@ async function streamTurn(req, res, session, body, ref) {
   };
   session.active = true;
   session.cancelled = false;
+  session.changed = null; // set by a data change of this turn, carried in `done.dataset`
   try {
     send('ready', { v: 'anyplot/1', run_id: randomBytes(8).toString('hex') });
     // Pretend `QUEUE_START - 1` other turns wait ahead of this one.
@@ -708,6 +734,23 @@ async function streamTurn(req, res, session, body, ref) {
     }
     runsInFlight += 1;
     try {
+      if (body.action === 'summarize_data') {
+        await sleep(STEP_MS * 2);
+        send('message', { text: summarizeData(session) });
+        return;
+      }
+      const change = /prozent|percent/.test(lower)
+        ? setTypeNumber
+        : /gruppier|group/.test(lower)
+          ? aggregateSum
+          : /umbenenn|rename/.test(lower)
+            ? s => renameSecond(s, /umbenenn/.test(lower))
+            : null;
+      if (change) {
+        await sleep(STEP_MS * 2);
+        send('message', { text: session.dataset ? change(session) : 'Paste your data first.' });
+        return;
+      }
       if (/weather|joke/.test(lower)) {
         await sleep(STEP_MS);
         send('refusal', {
@@ -820,12 +863,14 @@ async function streamTurn(req, res, session, body, ref) {
     }
   } finally {
     session.active = false;
-    // The sync fields: the session's bindings and step state after the run.
+    // The sync fields: the session's bindings and step state after the run, and the
+    // new dataset version after a turn that changed the data.
     send('done', {
       llm_calls: 4,
       tokens: 18734,
       bindings: session.bindings,
       data_confirmed: session.confirmed,
+      ...(session.changed ? { dataset: session.changed } : {}),
     });
     res.end();
   }
@@ -848,6 +893,165 @@ function swapBindings(session) {
   session.complete = complete;
   session.confirmed = false;
   return `Swapped: x now reads ${y.column} and ${y.role} reads ${x.column}. Check the bindings and confirm your data again.`;
+}
+
+// ---------------------------------------------------------------- data versions (prepare_data in miniature)
+
+const MAX_DATASET_HISTORY = 5;
+
+/** The CSV of a header and rows, for a re-parse through `parseDataset` after an operation. */
+function toCsv(header, rows) {
+  const quote = cell => (/[",\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell);
+  return [header, ...rows].map(row => row.map(quote).join(',')).join('\n') + '\n';
+}
+
+/** `carry_bindings`: the bindings still valid for the new profile stay, the roles left get the defaults. */
+function carryBindings(session, bindings, profile) {
+  const holder = { specId: session.specId, dataset: { profile } };
+  const kept = bindings.filter(b => !checkBindings(holder, [b]).errors.length);
+  if (kept.length === bindings.length) return bindings;
+  const used = new Set(kept.map(b => b.column));
+  const bound = new Set(kept.map(b => b.role));
+  for (const b of defaultBindings(session, profile)) {
+    if (!bound.has(b.role) && !used.has(b.column)) {
+      kept.push(b);
+      used.add(b.column);
+      bound.add(b.role);
+    }
+  }
+  return kept;
+}
+
+/** Store `parsed` as the session's next dataset version; the previous one joins the history (at most five). */
+function storeVersion(session, parsed, changes) {
+  session.history.push({ dataset: session.dataset, bindings: session.bindings });
+  session.history = session.history.slice(-MAX_DATASET_HISTORY);
+  session.dataset = parsed;
+  session.bindings = carryBindings(session, session.bindings, parsed.profile);
+  session.complete = checkBindings(session, session.bindings).complete;
+  session.confirmed = false; // the user confirms every version they see
+  session.version += 1;
+  session.changed = { ...datasetPayload(session), changes };
+}
+
+/** `{preview, profile, bindings, warnings, version}`: a dataset as the routes and `done.dataset` answer it. */
+function datasetPayload(session) {
+  return {
+    preview: session.dataset.preview,
+    profile: session.dataset.profile,
+    bindings: session.bindings,
+    warnings: session.dataset.warnings,
+    version: session.version,
+  };
+}
+
+/** The unit token at either end of a cell (`12,5 %`, `€ 12`), or null; a plain number has none. */
+function unitOf(cell) {
+  const match = cell.match(/^(?:([^\d\s+-][^\d]*?)\s*)?[+-]?[\d.,' ]*\d(?:\s*([^\d\s][^\d]*))?$/);
+  return match ? (match[1] ?? match[2] ?? null) : null;
+}
+
+/** `set_type number` on the second column: the unit removed, thousands separators dropped, a decimal comma read. */
+function setTypeNumber(session) {
+  const { header, rows } = session.dataset;
+  if (header.length < 2) return 'There is no second column to read as numbers.';
+  const index = 1;
+  const column = header[index];
+  if (session.dataset.profile.columns[index].dtype !== 'text')
+    return `${column} already holds numbers; nothing changed.`;
+  const decimalComma = rows.some(row => /\d,\d/.test(row[index]));
+  const units = new Set();
+  let failed = 0;
+  const converted = rows.map(row => {
+    const cell = row[index];
+    if (!cell) return '';
+    const unit = unitOf(cell);
+    if (unit) units.add(unit);
+    let body = unit ? cell.replace(unit, '').trim() : cell;
+    body = body.replace(/[\s']/g, '').replace(decimalComma ? /\./g : /,/g, '');
+    if (decimalComma) body = body.replace(',', '.');
+    if (!/^[+-]?\d+(\.\d+)?$/.test(body)) {
+      failed += 1;
+      return '';
+    }
+    return body;
+  });
+  if (units.size > 1)
+    return `I cannot read ${column} as numbers: it mixes ${units.size} different units.`;
+  const present = rows.filter(row => row[index]).length;
+  if (present && failed / present > 0.1)
+    return `I cannot read ${column} as numbers: ${failed} of ${present} cells are no number.`;
+  const parsed = parseDataset(
+    toCsv(
+      header,
+      rows.map((row, i) => row.map((c, j) => (j === index ? converted[i] : c)))
+    )
+  );
+  let change = `${column}: ${present - failed} cells read as numbers`;
+  if (units.size) change += `, unit '${[...units][0]}' removed`;
+  if (failed)
+    change += `, ${failed} cell${failed > 1 ? 's' : ''} could not be read and ${failed > 1 ? 'are' : 'is'} now missing`;
+  storeVersion(session, parsed, [change]);
+  return `I read ${column} as numbers${units.size ? ` and removed the unit '${[...units][0]}'` : ''}. Check the preview and confirm the data.`;
+}
+
+/** `aggregate`: the first numeric column summed by the first text column; the other columns go. */
+function aggregateSum(session) {
+  const { header, rows, profile } = session.dataset;
+  const key = profile.columns.findIndex(c => c.dtype === 'text');
+  const value = profile.columns.findIndex(c => c.dtype === 'number' || c.dtype === 'integer');
+  if (key < 0 || value < 0) return 'I need a text column to group by and a number column to sum.';
+  const sums = new Map();
+  for (const row of rows) {
+    const number = Number(row[value]);
+    if (!row[value] || !Number.isFinite(number)) continue;
+    sums.set(row[key], (sums.get(row[key]) ?? 0) + number);
+  }
+  const grouped = [...sums.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => [k, String(v)]);
+  if (!grouped.length) return 'There is nothing to sum.';
+  const parsed = parseDataset(toCsv([header[key], header[value]], grouped));
+  const other = header.length - 2;
+  let change = `summed ${header[value]} by ${header[key]}: ${grouped.length} row${grouped.length > 1 ? 's' : ''}`;
+  if (other) change += `, ${other} other column${other > 1 ? 's' : ''} dropped`;
+  storeVersion(session, parsed, [change]);
+  return `I summed ${header[value]} per ${header[key]}: ${grouped.length} rows. Check the preview and confirm the data.`;
+}
+
+/** `rename`: the second column gets a new name. */
+function renameSecond(session, german) {
+  const { header, rows } = session.dataset;
+  if (header.length < 2) return 'There is no second column to rename.';
+  const name = german ? 'Wert' : 'Value';
+  if (header.includes(name)) return `A column named '${name}' already exists.`;
+  const renamed = header.map((h, i) => (i === 1 ? name : h));
+  const parsed = parseDataset(toCsv(renamed, rows));
+  storeVersion(session, parsed, [`renamed '${header[1]}' to '${name}'`]);
+  return `I renamed ${header[1]} to ${name}. Check the preview and confirm the data.`;
+}
+
+/** The step-1 summary the root writes after `summarize_data`, from the profile alone. */
+function summarizeData(session) {
+  if (!session.dataset) return 'Paste your data first; then I can summarize it.';
+  const { profile } = session.dataset;
+  const columns = profile.columns
+    .map(
+      c =>
+        `${c.name} (${c.dtype}${c.dtype === 'number' || c.dtype === 'integer' ? `, mean ${c.mean}` : ''})`
+    )
+    .join(', ');
+  const missing = profile.columns.filter(c => c.missing).map(c => `${c.missing} in ${c.name}`);
+  const percent = profile.columns.find(c => c.top.some(v => /%$/.test(v)));
+  const bound = session.bindings.map(b => `${b.role} → ${b.column}`).join(', ');
+  return [
+    `${profile.rows} rows and ${profile.columns.length} columns: ${columns}.`,
+    missing.length ? `Missing values: ${missing.join(', ')}.` : 'No values are missing.',
+    `Proposed bindings: ${bound || 'none yet'}.`,
+    percent
+      ? `${percent.name} looks like percentages written as text; should I read it as numbers?`
+      : 'Is the first column the one to plot on x?',
+  ].join(' ');
 }
 
 // ---------------------------------------------------------------- routes
@@ -984,6 +1188,10 @@ async function route(req, res) {
       complete: false,
       // Step 1's confirmation of the dataset and its bindings.
       confirmed: false,
+      // The dataset versions: the paste is 1, each data change one more, undo one less.
+      history: [],
+      version: 1,
+      changed: null,
       versions: [],
       active: false,
       cancelled: false,
@@ -1041,18 +1249,20 @@ async function route(req, res) {
     session.bindings = defaultBindings(session, parsed.profile);
     session.complete = checkBindings(session, session.bindings).complete;
     session.confirmed = false; // a new dataset is unchecked
-    return json(
-      res,
-      200,
-      {
-        preview: parsed.preview,
-        profile: parsed.profile,
-        bindings: session.bindings,
-        warnings: parsed.warnings,
-        roles: SPECS[session.specId].roles,
-      },
-      ref
-    );
+    session.history = []; // a paste starts over at version 1
+    session.version = 1;
+    return json(res, 200, { ...datasetPayload(session), roles: SPECS[session.specId].roles }, ref);
+  }
+  if (method === 'POST' && rest === '/dataset/undo') {
+    if (session.active) return fail(res, 409, 'run_active', ref);
+    const previous = session.history.pop();
+    if (!previous) return fail(res, 422, 'nothing_to_undo', ref);
+    session.dataset = previous.dataset;
+    session.bindings = carryBindings(session, session.bindings, previous.dataset.profile);
+    session.complete = checkBindings(session, session.bindings).complete;
+    session.confirmed = false; // restored, but confirmed again by the user
+    session.version -= 1;
+    return json(res, 200, { ...datasetPayload(session), roles: SPECS[session.specId].roles }, ref);
   }
   if (method === 'PUT' && rest === '/bindings') {
     if (session.active) return fail(res, 409, 'run_active', ref);

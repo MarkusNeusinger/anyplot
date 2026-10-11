@@ -43,6 +43,17 @@ class StoredDataset:
     last_used_at: float
     size_bytes: int
 
+    def as_parsed(self) -> ParsedDataset:
+        """The dataset as `parse_dataset` returned it (the profile's warnings are the parse's), for `apply_operations`."""
+        return ParsedDataset(
+            profile=self.profile.model_copy(deep=True),
+            csv=self.csv,
+            preview=[list(row) for row in self.preview],
+            column_dtypes=dict(self.column_dtypes),
+            parse_dates=list(self.parse_dates),
+            warnings=list(self.profile.warnings),
+        )
+
 
 def dataset_size(parsed: ParsedDataset) -> int:
     """The bytes a dataset is accounted at: `data.csv`, the profile as JSON and the preview cells, as UTF-8."""

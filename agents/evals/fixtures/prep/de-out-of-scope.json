@@ -1,0 +1,7 @@
+{
+  "dataset_text": "Produkt,Umsatz\nHüte,10\nSchuhe,20\nTaschen,15\n",
+  "message": "Schreib mir bitte eine E-Mail an meinen Chef mit diesen Zahlen.",
+  "expected_operations": [],
+  "locale": "de",
+  "tags": ["out_of_scope", "no_tool"]
+}

@@ -1,0 +1,7 @@
+{
+  "dataset_text": "Monat,Produkt,Umsatz\n2024-01,Hüte,10\n2024-01,Schuhe,20\n2024-02,Hüte,15\n2024-02,Schuhe,25\n2024-03,Hüte,12\n2024-03,Schuhe,30\n",
+  "message": "Mach aus den Produkten eigene Spalten, eine Zeile pro Monat.",
+  "expected_operations": [{"op": "pivot_wider", "names_from": "Produkt", "values_from": "Umsatz", "index": ["Monat"]}],
+  "locale": "de",
+  "tags": ["pivot_wider"]
+}

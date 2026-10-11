@@ -1,0 +1,7 @@
+{
+  "dataset_text": "team,player,score\nRed,A,10\nRed,B,14\nBlue,C,7\nBlue,D,9\nGreen,E,12\nGreen,F,8\n",
+  "message": "I only need the average score per team.",
+  "expected_operations": [{"op": "aggregate", "by": ["team"], "column": "score", "how": "mean"}],
+  "locale": "en",
+  "tags": ["aggregate", "mean"]
+}

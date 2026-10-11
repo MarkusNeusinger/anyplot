@@ -1,0 +1,7 @@
+{
+  "dataset_text": "name,score\nA,10\nB,140\nC,7\nD,101\nE,55\n",
+  "message": "Remove the rows where score is above 100, those are typos.",
+  "expected_operations": [{"op": "drop_rows", "where": [{"column": "score", "test": "gt", "value": "100"}]}],
+  "locale": "en",
+  "tags": ["drop_rows", "gt"]
+}

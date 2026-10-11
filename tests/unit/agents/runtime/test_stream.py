@@ -46,6 +46,22 @@ class TestTranslator:
             },
         )
 
+    def test_done_carries_a_changed_dataset(self, translator: Translator) -> None:
+        """After a turn whose `prepare_data` changed the data, the route adds the new version for the page's table."""
+        dataset = {
+            "preview": [["1", "2"]],
+            "profile": {"rows": 1},
+            "bindings": [],
+            "warnings": [],
+            "changes": ["renamed 'a' to 'b'"],
+            "version": 2,
+        }
+
+        _, payload = parse(translator.done(bindings=[], data_confirmed=False, dataset=dataset))
+
+        assert payload["dataset"] == dataset
+        assert "dataset" not in parse(translator.done(bindings=[], data_confirmed=True))[1]
+
     def test_queued_status(self, translator: Translator) -> None:
         assert parse(translator.queued(2, 5)) == ("status", {"step": "queued", "position": 2, "waiting": 5})
 

@@ -1,0 +1,7 @@
+{
+  "dataset_text": "Datum;Betrag\n05.01.2024;120\n20.01.2024;80\n14.02.2024;30\nunbekannt;15\n15.03.2024;99\n28.03.2024;45\n01.04.2024;60\n12.04.2024;72\n19.04.2024;15\n30.04.2024;9\n",
+  "message": "Datum ist ein Datum im Format Tag.Monat.Jahr; 'unbekannt' darf leer bleiben.",
+  "expected_operations": [{"op": "set_type", "column": "Datum", "type": "datetime", "date_format": "DD.MM.YYYY"}],
+  "locale": "de",
+  "tags": ["set_type", "datetime", "date_format"]
+}

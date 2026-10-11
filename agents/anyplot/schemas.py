@@ -135,7 +135,11 @@ class _ModelOutput(BaseModel):
 
 
 class ColumnProfile(_ServerContract):
-    """One column of the pasted dataset, as the deterministic parser profiled it."""
+    """One column of the pasted dataset, as the deterministic parser profiled it.
+
+    `mean` and `median` are set for integer and number columns only (six significant
+    digits), so the root can say what a column holds, such as values that sum to 100.
+    """
 
     name: ColumnName
     dtype: ColumnDtype
@@ -143,6 +147,8 @@ class ColumnProfile(_ServerContract):
     unique: NonNegativeInt
     min: float | Cell | None = None
     max: float | Cell | None = None
+    mean: float | None = None
+    median: float | None = None
     top: list[Cell] = Field(default_factory=list, max_length=MAX_TOP_VALUES)
 
 

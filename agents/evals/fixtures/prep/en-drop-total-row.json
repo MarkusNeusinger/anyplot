@@ -1,0 +1,7 @@
+{
+  "dataset_text": "Category,Revenue\nShoes,120\nHats,80\nBags,45\nTotal,245\n",
+  "message": "Drop the Total row, it is not a category.",
+  "expected_operations": [{"op": "drop_rows", "where": [{"column": "Category", "test": "eq", "value": "Total"}]}],
+  "locale": "en",
+  "tags": ["drop_rows", "total_row"]
+}

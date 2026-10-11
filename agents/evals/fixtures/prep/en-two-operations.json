@@ -1,0 +1,10 @@
+{
+  "dataset_text": "name,score,notes\nA,10,ok\nB,14,late\nC,7,\nD,12,ok\n",
+  "message": "Drop the notes column and sort by score, highest first.",
+  "expected_operations": [
+    {"op": "drop_columns", "columns": ["notes"]},
+    {"op": "sort", "column": "score", "descending": true}
+  ],
+  "locale": "en",
+  "tags": ["drop_columns", "sort", "two_operations"]
+}
