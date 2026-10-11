@@ -234,6 +234,20 @@ steps:
         # the router lost the gate; a 200 would mean it answers anyone.
         code=$$(curl -s $$RETRY "$${HDR[@]}" -o /dev/null -w '%{http_code}' "$$URL/debug/agent/status")
         test "$$code" = "401" || { echo "agent BFF gate expected 401, got $$code"; exit 1; }
+        # With the chat switched on, an admin call has to reach the agents
+        # service before this revision takes traffic: a 200 proves AGENT_ENABLED,
+        # AGENT_SERVICE_URL, the user-id secret and the invoker grant together,
+        # which the bare 401 above cannot. The admin token is read like the
+        # origin secret, used once and never echoed. With the switch off the
+        # probe is skipped, because 404 is then the documented answer.
+        if [ "${_AGENT_ENABLED}" = "true" ]; then
+          ADMIN_TOKEN=$$(gcloud secrets versions access latest --secret=ADMIN_TOKEN 2>/dev/null || true)
+          test -n "$$ADMIN_TOKEN" || { echo "the agent BFF probe needs ADMIN_TOKEN, which this build could not read"; exit 1; }
+          code=$$(curl -s $$RETRY "$${HDR[@]}" -H "X-Admin-Token: $$ADMIN_TOKEN" -o body.out -w '%{http_code}' "$$URL/debug/agent/status")
+          test "$$code" = "200" || { echo "agent BFF status with an admin token expected 200, got $$code"; exit 1; }
+          grep -qF '"libraries"' body.out || { echo "agent BFF status did not relay the agents service's status"; exit 1; }
+          echo "OK: /debug/agent/status reaches anyplot-agents"
+        fi
         # Re-assert the tag AFTER the probes. `candidate` is a shared tag, so a
         # concurrent build could move it between the check above and the last
         # probe, and this build would then have smoked someone else's revision
