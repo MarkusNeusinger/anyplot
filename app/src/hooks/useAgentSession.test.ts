@@ -880,6 +880,183 @@ describe('useAgentSession: the step-1 summary and data changes', () => {
   });
 });
 
+describe('useAgentSession: formulas', () => {
+  const FORMULA = 'zeichne sin(x) von -pi bis pi';
+  const turnBodies = () => calls.filter(call => call.path.endsWith('/messages')).map(c => c.body);
+
+  /** `done.dataset` after `generate_data` in a session without data: version 1, with the roles. */
+  const GENERATED = {
+    preview: [
+      ['-3.1415927', '-1.2246468e-16'],
+      ['-3.1100183', '-0.031569866'],
+    ],
+    profile: {
+      rows: 200,
+      columns: [
+        { name: 'x', dtype: 'number', missing: 0, unique: 200 },
+        { name: 'y', dtype: 'number', missing: 0, unique: 199 },
+      ],
+      source_format: 'csv',
+      decimal: '.',
+      warnings: [],
+    },
+    bindings: [
+      { role: 'x', column: 'x' },
+      { role: 'y', column: 'y' },
+    ],
+    warnings: [],
+    roles: [role('x'), role('y')],
+    changes: ['generated 200 rows: x from -3.1416 to 3.1416, y = sin(x)'],
+    version: 1,
+  };
+
+  const generatedStream = () =>
+    sse([
+      ['message', { text: 'I generated 200 rows from y = sin(x). Check the preview.' }],
+      [
+        'done',
+        {
+          llm_calls: 2,
+          bindings: GENERATED.bindings,
+          data_confirmed: false,
+          dataset: GENERATED,
+        },
+      ],
+    ]);
+
+  it('takes a generated first dataset from the chat: version 1, step 1, nothing to undo', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = generatedStream;
+    const { result } = await openSession(routes);
+    expect(result.current.state.dataset).toBeNull();
+
+    // No data yet, and the chat is open: a formula is a turn like any other.
+    await act(() => result.current.sendMessage(FORMULA));
+    expect(turnBodies()).toEqual([{ text: FORMULA }]);
+    const { dataset } = result.current.state;
+    expect(dataset?.parsed).toMatchObject({
+      version: 1,
+      preview: GENERATED.preview,
+      bindings: GENERATED.bindings,
+    });
+    expect(dataset?.bytes).toBe(0);
+    expect(result.current.state.roles.map(r => r.name)).toEqual(['x', 'y']);
+    expect(result.current.state).toMatchObject({
+      bindings: { x: 'x', y: 'y' },
+      bindingsComplete: true,
+      missingRoles: [],
+      dataConfirmed: false,
+      dataChange: { kind: 'changed', changes: GENERATED.changes, version: 1 },
+    });
+    expect(trackEvent).toHaveBeenCalledWith('agent_data_prepared', { changes: '1' });
+    // A generated table asks for no summary and no binding call: done said it all.
+    expect(turnBodies()).toHaveLength(1);
+    expect(calls.some(call => call.method === 'PUT')).toBe(false);
+
+    // Version 1 has nothing before it: no undo is asked for.
+    await act(() => result.current.undoData());
+    expect(calls.some(call => call.path.endsWith('/dataset/undo'))).toBe(false);
+
+    // It is confirmed like a paste, which opens step 2.
+    await act(() => result.current.confirmData());
+    expect(result.current.state.dataConfirmed).toBe(true);
+  });
+
+  it('keeps a pasted formula as an offer, not an error, and .send() turns it into a turn', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'formula', ref: 'r-f' });
+    routes['POST /sessions/S1/messages'] = generatedStream;
+    const { result } = await openSession(routes);
+
+    await act(() => result.current.parseData(FORMULA));
+    expect(result.current.state).toMatchObject({
+      formula: FORMULA,
+      datasetError: null,
+      dataset: null,
+      parsing: false,
+    });
+    // Nothing was stored, so there is no summary to ask for.
+    expect(turnBodies()).toEqual([]);
+    // The parse's analytics stay as they were: a refused parse that is no known status.
+    expect(trackEvent).toHaveBeenCalledWith('agent_data_parsed', {
+      status: 'error',
+      size_bucket: 'lt_1kb',
+    });
+
+    await act(() => result.current.sendFormula());
+    expect(turnBodies()).toEqual([{ text: FORMULA }]);
+    expect(result.current.state.items[0]).toMatchObject({ kind: 'user', text: FORMULA });
+    expect(result.current.state.formula).toBeNull();
+    expect(result.current.state.dataset?.parsed.version).toBe(1);
+
+    // Sent once: a second click has nothing left to send.
+    await act(() => result.current.sendFormula());
+    expect(turnBodies()).toHaveLength(1);
+  });
+
+  it('clears the offer on the next parse and on data the chat computed', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'formula', ref: 'r-f' });
+    routes['POST /sessions/S1/messages'] = generatedStream;
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData(FORMULA));
+    expect(result.current.state.formula).toBe(FORMULA);
+
+    // The user typed the formula into the chat instead of using .send().
+    await act(() => result.current.sendMessage('sin(x) from -pi to pi'));
+    expect(result.current.state.formula).toBeNull();
+
+    await act(() => result.current.parseData(FORMULA));
+    expect(result.current.state.formula).toBe(FORMULA);
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'unparseable', ref: 'r-u' });
+    await act(() => result.current.parseData('just words'));
+    expect(result.current.state).toMatchObject({
+      formula: null,
+      datasetError: { code: 'unparseable', ref: 'r-u' },
+    });
+  });
+
+  it('starts no .send() while a turn runs, and keeps the offer', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'formula', ref: 'r-f' });
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData(FORMULA));
+    const stream = liveSse([['ready', {}]]);
+    routes['POST /sessions/S1/messages'] = () => stream.response;
+    let turn: Promise<void> = Promise.resolve();
+    act(() => {
+      turn = result.current.sendMessage('was kann ich hier tun?');
+    });
+    await waitFor(() => expect(result.current.state.run).not.toBeNull());
+    await act(() => result.current.sendFormula());
+    expect(turnBodies()).toEqual([{ text: 'was kann ich hier tun?' }]);
+    expect(result.current.state.formula).toBe(FORMULA);
+    stream.push('done', {});
+    stream.close();
+    await act(() => turn);
+  });
+
+  it('takes a generated version over pasted data as the next one, with .undo()', async () => {
+    const routes = baseRoutes();
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['message', { text: 'I generated 200 rows.' }],
+        ['done', { data_confirmed: false, dataset: { ...GENERATED, version: 2 } }],
+      ]);
+    await act(() => result.current.sendMessage('zeichne cos(x) von 0 bis 2*pi'));
+    expect(result.current.state.dataset?.parsed.version).toBe(2);
+    // The pasted size stays the analytics bucket's measure.
+    expect(result.current.state.dataset?.bytes).toBe(8);
+    expect(result.current.state.dataChange).toMatchObject({ kind: 'changed', version: 2 });
+    routes['POST /sessions/S1/dataset/undo'] = () => json(200, DATASET);
+    await act(() => result.current.undoData());
+    expect(result.current.state.dataset?.parsed.preview).toEqual(DATASET.preview);
+    expect(result.current.state.dataChange).toEqual({ kind: 'undone', version: 1 });
+  });
+});
+
 describe('useAgentSession: turns', () => {
   it('runs Create plot through the queue to a version with its image and code', async () => {
     const routes = baseRoutes();
@@ -1308,6 +1485,43 @@ describe('agentReducer', () => {
 
     state = agentReducer(state, { type: 'parse_done', parsed: DATASET as DatasetParsed, bytes: 9 });
     expect(state.dataChange).toBeNull();
+  });
+
+  it('makes a generated version the first dataset, its roles from done or its bindings', () => {
+    const empty: AgentSessionState = {
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+      formula: 'y = sin(x)',
+    };
+    const generated = {
+      ...(PREPARED as DatasetChanged),
+      bindings: [
+        { role: 'x', column: 'Minutes' },
+        { role: 'y', column: 'Exam Score' },
+      ],
+      changes: ['generated 200 rows: x from -3.1416 to 3.1416, y = sin(x)'],
+      version: 1,
+    };
+    let state = agentReducer(empty, {
+      type: 'data_prepared',
+      dataset: { ...generated, roles: [role('x'), role('y'), role('series', { required: false })] },
+    });
+    expect(state.dataset).toMatchObject({ bytes: 0, parsed: { version: 1 } });
+    expect(state.roles.map(r => r.name)).toEqual(['x', 'y', 'series']);
+    expect(state).toMatchObject({
+      formula: null,
+      bindingsComplete: true,
+      dataChange: { kind: 'changed', version: 1 },
+    });
+
+    // A service without `roles` in done: the bindings stand in, as for a paste.
+    state = agentReducer(empty, { type: 'data_prepared', dataset: generated });
+    expect(state.roles).toEqual([
+      { name: 'x', kinds: [], required: false, variadic: false, description: '' },
+      { name: 'y', kinds: [], required: false, variadic: false, description: '' },
+    ]);
+    expect(state.bindingsComplete).toBe(true);
   });
 });
 

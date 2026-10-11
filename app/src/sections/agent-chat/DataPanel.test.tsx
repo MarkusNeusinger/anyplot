@@ -96,6 +96,7 @@ describe('DataPanel bindings', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
         onBind={onBind}
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}
@@ -130,6 +131,7 @@ describe('DataPanel bindings', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}
@@ -149,6 +151,7 @@ describe('DataPanel bindings', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}
@@ -173,6 +176,7 @@ describe('DataPanel bindings', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}
@@ -196,6 +200,7 @@ describe('DataPanel steps', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onConfirmData={onConfirmData}
         onUndo={vi.fn()}
@@ -283,6 +288,7 @@ describe('DataPanel data changes', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
         onUndo={onUndo}
@@ -355,6 +361,97 @@ describe('DataPanel data changes', () => {
     expect(screen.queryByTestId('data-change')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /\.undo\(\)/ })).not.toBeInTheDocument();
   });
+
+  it('names a first dataset the assistant generated, with nothing to undo', () => {
+    const generated = 'generated 200 rows: x from -3.1416 to 3.1416, y = sin(x)';
+    const undefinedValues = 'y: 3 of 200 values are undefined and left empty';
+    renderPanel(
+      changedState(1, {
+        dataChange: { kind: 'changed', changes: [generated, undefinedValues], version: 1 },
+      })
+    );
+    const block = within(screen.getByTestId('data-change'));
+    expect(block.getByText('# changed · version 1')).toBeInTheDocument();
+    expect(block.getAllByRole('listitem').map(item => item.textContent)).toEqual([
+      generated,
+      undefinedValues,
+    ]);
+    expect(screen.queryByRole('button', { name: /\.undo\(\)/ })).not.toBeInTheDocument();
+    // Generated data is unconfirmed like a paste: step 1 ends with .confirm().
+    expect(screen.getByRole('button', { name: '.confirm()' })).toBeEnabled();
+  });
+});
+
+describe('DataPanel formulas', () => {
+  const FORMULA = 'y = sin(x), x von -pi bis pi';
+
+  function renderPanel(state: AgentSessionState) {
+    const onSendFormula = vi.fn();
+    const onParse = vi.fn();
+    const panel = (next: AgentSessionState) => (
+      <DataPanel
+        state={next}
+        onParse={onParse}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onSendFormula={onSendFormula}
+        onBind={vi.fn()}
+        onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
+        onCreatePlot={vi.fn()}
+      />
+    );
+    const view = render(panel(state));
+    return {
+      onSendFormula,
+      onParse,
+      rerender: (next: AgentSessionState) => view.rerender(panel(next)),
+    };
+  }
+
+  const empty = (overrides: Partial<AgentSessionState> = {}): AgentSessionState => ({
+    ...initialAgentState('matplotlib'),
+    phase: 'ready',
+    sessionId: 'S1',
+    ...overrides,
+  });
+
+  it('names the chat as the other source of data until there is some', () => {
+    const { rerender } = renderPanel(empty());
+    const hint = 'or ask for a curve in the chat: y = sin(x), x from -pi to pi';
+    expect(screen.getByLabelText(/# your data/)).toHaveAccessibleDescription(hint);
+
+    rerender(stateWith({ x: 'month', y1: 'shoes' }));
+    expect(screen.queryByText(hint)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/# your data/)).not.toHaveAccessibleDescription();
+  });
+
+  it('offers .send() for a refused formula, which empties the box', async () => {
+    const { onSendFormula, onParse, rerender } = renderPanel(empty());
+    const textbox = screen.getByLabelText(/# your data/);
+    await userEvent.type(textbox, FORMULA);
+    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    expect(onParse).toHaveBeenCalledWith(FORMULA);
+    expect(screen.queryByTestId('formula-offer')).not.toBeInTheDocument();
+
+    rerender(empty({ formula: FORMULA }));
+    const send = screen.getByRole('button', { name: '.send()' });
+    expect(send).toHaveAccessibleDescription(
+      'looks like a formula: send it to the chat? the assistant computes the table from it.'
+    );
+    // A formula is no error: nothing is shown as one.
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    await userEvent.click(send);
+    expect(onSendFormula).toHaveBeenCalledTimes(1);
+    expect(textbox).toHaveValue('');
+  });
+
+  it('holds .send() back while anything runs', () => {
+    renderPanel(
+      empty({ formula: FORMULA, run: { kind: 'message', steps: [], queue: null, stopping: false } })
+    );
+    expect(screen.getByRole('button', { name: '.send()' })).toBeDisabled();
+  });
 });
 
 // "Hund 7 Katze 3 und Vogel 4", read by the model into a table.
@@ -398,6 +495,7 @@ describe('DataPanel transcription', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}
@@ -433,6 +531,7 @@ describe('DataPanel transcription', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}
@@ -453,6 +552,7 @@ describe('DataPanel transcription', () => {
         onParse={vi.fn()}
         onConfirmTranscription={onConfirm}
         onDiscardTranscription={onDiscard}
+        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}
@@ -478,6 +578,7 @@ describe('DataPanel transcription', () => {
         onParse={onParse}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}

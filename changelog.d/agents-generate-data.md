@@ -19,6 +19,14 @@
   because that model would compute the rows itself; the BFF passes the code on, and
   the page can point to the chat instead. The `done` event's `dataset` now carries the
   spec's `roles` too, so a first dataset made in the chat has its binding controls.
+- **The chat page takes a formula from either box.** Until there is data, the data box
+  and the chat both name the other source ("or ask for a curve in the chat: y = sin(x),
+  x from -pi to pi"), and the chat is open without a paste. A formula pasted into the
+  data box gets the server's `422 formula` as a line with `.send()`, not as an error:
+  the button sends the text to the chat as a turn and empties the box. The table
+  `generate_data` computes arrives like a data change, with its roles: version 1 in a
+  session without data, whose `# changed` block names the generated rows and offers no
+  `.undo()`, or the next version over data that exists, which `.undo()` takes back.
 - **Formula cases in the evals.** The scope judge treats a request to draw a function,
   curve or distribution shape as in scope, never `needs_data` (six new English and
   German scope cases), and the prep eval scores `generate_data` calls like

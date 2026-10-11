@@ -27,6 +27,13 @@
  * restores the version before. After an undo the block says which version is
  * back and keeps `.undo()` while an earlier one exists. Either way the panel is
  * back at step 1. A new parse clears the block.
+ *
+ * A formula is data the assistant computes, not text to paste. Asked for in
+ * the chat, its table arrives like a change: the next version of the data, or
+ * version 1 when there was none, whose `# changed` block names the generated
+ * rows and offers no `.undo()`. Pasted into the text box, the server refuses it
+ * (`422 formula`), and a line under the box offers `.send()`, which sends the
+ * text to the chat as a turn and empties the box.
  */
 
 import { useState } from 'react';
@@ -209,8 +216,13 @@ interface ChangeBlockProps {
   onUndo: () => void;
 }
 
-/** What the assistant last changed in the data, or the undo of it, with `.undo()`. */
+/**
+ * What the assistant last changed in the data, or the undo of it, with
+ * `.undo()`. A first dataset the assistant generated (version 1) has nothing
+ * before it, so its block offers no `.undo()`.
+ */
 function ChangeBlock({ change, canUndo, undoBusy, error, onUndo }: ChangeBlockProps) {
+  const first = change.kind === 'changed' && change.version <= 1;
   return (
     <Box
       component="section"
@@ -240,16 +252,18 @@ function ChangeBlock({ change, canUndo, undoBusy, error, onUndo }: ChangeBlockPr
             ? `# changed · version ${change.version}`
             : `# undone · back to version ${change.version}`}
         </Box>
-        <Box
-          component="button"
-          type="button"
-          onClick={onUndo}
-          disabled={!canUndo}
-          aria-describedby="agent-change-title"
-          sx={ghostButtonSx}
-        >
-          {undoBusy ? '.undo() …' : '.undo()'}
-        </Box>
+        {!first && (
+          <Box
+            component="button"
+            type="button"
+            onClick={onUndo}
+            disabled={!canUndo}
+            aria-describedby="agent-change-title"
+            sx={ghostButtonSx}
+          >
+            {undoBusy ? '.undo() …' : '.undo()'}
+          </Box>
+        )}
       </Box>
       {change.kind === 'changed' && change.changes.length > 0 && (
         <Box
@@ -292,6 +306,8 @@ interface DataPanelProps {
   onParse: (text: string) => void;
   onConfirmTranscription: () => void;
   onDiscardTranscription: () => void;
+  /** `.send()` next to a refused formula: the refused text goes to the chat as a turn. */
+  onSendFormula: () => void;
   onBind: (role: string, column: string | null) => void;
   onConfirmData: () => void;
   onUndo: () => void;
@@ -303,6 +319,7 @@ export function DataPanel({
   onParse,
   onConfirmTranscription,
   onDiscardTranscription,
+  onSendFormula,
   onBind,
   onConfirmData,
   onUndo,
@@ -338,17 +355,38 @@ export function DataPanel({
     onConfirmTranscription();
   };
 
+  // `.send()`: the formula moves to the chat as a turn, so the box is free for a table.
+  const handleSendFormula = () => {
+    setText('');
+    onSendFormula();
+  };
+
   return (
     <Box component="section" aria-label="Your data" sx={panelSx}>
-      <Box component="label" htmlFor="agent-data" sx={{ ...labelSx, display: 'block', mb: 0.75 }}>
+      <Box
+        component="label"
+        htmlFor="agent-data"
+        sx={{ ...labelSx, display: 'block', mb: dataset ? 0.75 : 0.25 }}
+      >
         # your data — paste CSV, TSV, semicolon CSV, JSON or plain text
       </Box>
+      {/* Until there is data, the other source: a curve the assistant computes. */}
+      {!dataset && (
+        <Box id="agent-data-hint" sx={{ ...labelSx, mb: 0.75 }}>
+          or ask for a curve in the chat: y = sin(x), x from{' '}
+          <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
+            -pi
+          </Box>{' '}
+          to pi
+        </Box>
+      )}
       <Box
         component="textarea"
         id="agent-data"
         value={text}
         rows={8}
         spellCheck={false}
+        aria-describedby={dataset ? undefined : 'agent-data-hint'}
         placeholder={'month,revenue\n2026-01,120\n2026-02,135'}
         onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setText(event.target.value)}
         sx={{
@@ -395,6 +433,41 @@ export function DataPanel({
       {transcription && (
         <Box id="agent-parse-hint" sx={{ ...labelSx, mt: 0.75, textAlign: 'right' }}>
           decide on the table below first: .use() or .discard()
+        </Box>
+      )}
+
+      {state.formula !== null && (
+        <Box
+          data-testid="formula-offer"
+          sx={{
+            mt: 1.5,
+            borderLeft: `3px solid ${colors.primary}`,
+            pl: 1.5,
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            columnGap: 1,
+            rowGap: 0.75,
+          }}
+        >
+          <Box
+            id="agent-formula-line"
+            role="status"
+            sx={{ ...labelSx, color: 'var(--ink)', flex: '1 1 220px', lineHeight: 1.6 }}
+          >
+            looks like a formula: send it to the chat? the assistant computes the table from it.
+          </Box>
+          <Box
+            component="button"
+            type="button"
+            onClick={handleSendFormula}
+            disabled={!ready || busy}
+            aria-describedby="agent-formula-line"
+            sx={ghostButtonSx}
+          >
+            .send()
+          </Box>
         </Box>
       )}
 

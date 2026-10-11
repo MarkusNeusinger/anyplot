@@ -54,6 +54,16 @@
  * before the last change, unconfirmed as well; the data's `version` says
  * whether there is one (a paste is 1, the service keeps the last five).
  *
+ * Formulas: the assistant's `generate_data` computes a table from a formula
+ * the user asks for in the chat ("y = sin(x), x from -pi to pi"). Its `done`
+ * carries the table like any data change: the next version when data exists,
+ * or version 1 when the session had none, which then becomes the hook's first
+ * dataset with the roles and default bindings `done` names (nothing to undo).
+ * The dataset route refuses such text pasted into the data box with `422
+ * formula`, because its free-text reader is a model that would write the rows
+ * itself; the hook keeps the refused text (`formula`), and `sendFormula`
+ * (`.send()`) sends it to the chat as the user's turn.
+ *
  * One thing at a time: the agents service runs one turn or theme render per
  * user and answers anything else with `409 run_active`, a parse, an undo or a
  * binding change rewrites the data a turn reads, and a confirmation must cover
@@ -206,6 +216,12 @@ export interface AgentSessionState {
   dataset: DatasetState | null;
   parsing: boolean;
   datasetError: Failure | null;
+  /**
+   * Text the dataset route refused as a formula (`422 formula`): nothing was
+   * stored, and the panel offers to send it to the chat, where the assistant
+   * computes the table. The next parse, the send or a new data version clears it.
+   */
+  formula: string | null;
   /** A table read from free text that awaits `.use()` or `.discard()`. */
   transcription: TranscriptionState | null;
   /** The spec's roles, in spec order; the data panel shows a column choice for each. */
@@ -243,7 +259,10 @@ type Action =
   | { type: 'unauthorized' }
   | { type: 'parse_start' }
   | { type: 'parse_done'; parsed: DatasetParsed; bytes: number }
-  | { type: 'parse_failed'; failure: Failure }
+  /** `formula` is the refused text of a `422 formula`, which is no error to show. */
+  | { type: 'parse_failed'; failure: Failure; formula?: string }
+  /** The refused formula went to the chat as a turn. */
+  | { type: 'formula_sent' }
   | { type: 'transcribed'; transcription: TranscriptionState }
   | { type: 'transcription_clear' }
   | { type: 'bindings_start'; bindings: BindingMap }
@@ -285,6 +304,7 @@ export function initialAgentState(library: string): AgentSessionState {
     dataset: null,
     parsing: false,
     datasetError: null,
+    formula: null,
     transcription: null,
     roles: [],
     bindings: {},
@@ -408,13 +428,22 @@ function versionOf(value: unknown): number {
  * over and dropped its confirmation, so the dropdowns take its bindings and the
  * panel goes back to step 1. Completeness is read from the roles here, as for a
  * turn's binding sync, because no binding call answers it.
+ *
+ * A version the assistant generated from a formula can be the session's first
+ * data: there is no stored dataset to keep the pasted size of (0 stands in),
+ * and the roles come with the version; from a server that names none, the
+ * bindings stand in for them, as for a paste.
  */
 function withDataVersion(
   state: AgentSessionState,
   parsed: DatasetParsed,
   dataChange: DataChange
 ): AgentSessionState {
-  const roles = parsed.roles ?? state.roles;
+  const roles =
+    parsed.roles ??
+    (state.roles.length > 0
+      ? state.roles
+      : parsed.bindings.map(binding => bareRole(binding.role, false)));
   const bindings = toMap(parsed.bindings);
   const missing = missingRolesOf(bindings, roles);
   return {
@@ -471,7 +500,7 @@ export function agentReducer(state: AgentSessionState, action: Action): AgentSes
       return { ...state, phase: 'unauthorized', run: null, transcription: null };
     case 'parse_start':
       // A new parse (a confirmed transcription is one) replaces a pending transcription.
-      return { ...state, parsing: true, datasetError: null, transcription: null };
+      return { ...state, parsing: true, datasetError: null, formula: null, transcription: null };
     case 'parse_done':
       return {
         ...state,
@@ -496,7 +525,16 @@ export function agentReducer(state: AgentSessionState, action: Action): AgentSes
         confirmError: null,
       };
     case 'parse_failed':
-      return { ...state, parsing: false, datasetError: action.failure, transcription: null };
+      // A formula is no failure of the data: the panel offers the chat instead.
+      return {
+        ...state,
+        parsing: false,
+        datasetError: action.formula === undefined ? action.failure : null,
+        formula: action.formula ?? null,
+        transcription: null,
+      };
+    case 'formula_sent':
+      return { ...state, formula: null };
     case 'transcribed':
       // Nothing is stored yet: the dataset and its bindings stay until the user decides,
       // but the user is back at the data step, so the confirmation goes as well.
@@ -559,8 +597,9 @@ export function agentReducer(state: AgentSessionState, action: Action): AgentSes
     }
     case 'data_prepared': {
       const { changes, version, ...parsed } = action.dataset;
+      // A formula refused in the data box is answered once the chat computed data.
       return withDataVersion(
-        state,
+        { ...state, formula: null },
         { ...parsed, version },
         { kind: 'changed', changes, version: versionOf(version) }
       );
@@ -1065,8 +1104,9 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
           }
           break;
         case 'done':
-          // The assistant changed the data (`prepare_data`): its new version replaces
-          // the preview, and the user checks and confirms it like a paste.
+          // The assistant changed the data (`prepare_data`) or computed it from a
+          // formula (`generate_data`, version 1 when there was none): the version
+          // replaces the preview, and the user checks and confirms it like a paste.
           if (event.dataset) {
             safeDispatch({ type: 'data_prepared', dataset: event.dataset });
             trackEvent('agent_data_prepared', {
@@ -1199,7 +1239,12 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
         await applyBindings(defaults, defaults);
       } catch (err) {
         const failure = handleFailure(err);
-        safeDispatch({ type: 'parse_failed', failure });
+        // A formula is refused so that the chat computes it (`sendFormula`).
+        safeDispatch({
+          type: 'parse_failed',
+          failure,
+          ...(failure.code === 'formula' ? { formula: text } : {}),
+        });
         const status = ['too_long', 'unparseable', 'data_refused'].includes(failure.code)
           ? failure.code
           : 'error';
@@ -1230,6 +1275,22 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     if (!transcription) return Promise.resolve();
     return parseData(transcription.text, true);
   }, [parseData]);
+
+  /**
+   * `.send()` next to a refused formula: the text goes to the chat as the
+   * user's turn, where the assistant's `generate_data` computes the table. The
+   * returned promise ends with that turn. While anything else is in flight
+   * nothing starts and the offer stays.
+   */
+  const sendFormula = useCallback(() => {
+    const current = stateRef.current;
+    const text = current.formula?.trim();
+    if (!text || text.length > MAX_MESSAGE_CHARS || current.run || busy()) {
+      return Promise.resolve();
+    }
+    safeDispatch({ type: 'formula_sent' });
+    return runTurn({ text });
+  }, [safeDispatch, busy, runTurn]);
 
   /**
    * Stop: the cancel route takes a waiting run out of the queue at once and
@@ -1280,6 +1341,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     parseData,
     confirmTranscription,
     discardTranscription,
+    sendFormula,
     setBinding,
     confirmData,
     undoData,

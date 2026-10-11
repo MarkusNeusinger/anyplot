@@ -93,6 +93,34 @@ const PREPARED = {
   version: 2,
 };
 
+/** `done.dataset` after `generate_data` in a session without data: version 1, with the roles. */
+const GENERATED = {
+  preview: [
+    ['-3.1415927', '-1.2246468e-16'],
+    ['3.1415927', '1.2246468e-16'],
+  ],
+  profile: {
+    rows: 200,
+    columns: [
+      { name: 'x', dtype: 'number', missing: 0, unique: 200 },
+      { name: 'y', dtype: 'number', missing: 0, unique: 199 },
+    ],
+    source_format: 'csv',
+    decimal: '.',
+    warnings: [],
+  },
+  bindings: [
+    { role: 'x', column: 'x' },
+    { role: 'y', column: 'y' },
+  ],
+  warnings: [],
+  roles: DATASET.roles,
+  changes: ['generated 200 rows: x from -3.1416 to 3.1416, y = sin(x)'],
+  version: 1,
+};
+
+const FORMULA = 'y = sin(x), x von -pi bis pi';
+
 const SUMMARY = '2 rows: hours and score, both numbers. Is hours the x axis?';
 
 /** A turn's stream as the BFF sends it. */
@@ -109,6 +137,16 @@ function turnEvents(body: { text?: string; action?: string }): [string, unknown]
     return [
       ['message', { text: SUMMARY }],
       ['done', { llm_calls: 1 }],
+    ];
+  }
+  // The assistant's `generate_data` computed the first data from a formula.
+  if (body.text?.includes('sin(')) {
+    return [
+      ['message', { text: 'I generated 200 rows from y = sin(x).' }],
+      [
+        'done',
+        { llm_calls: 2, bindings: GENERATED.bindings, data_confirmed: false, dataset: GENERATED },
+      ],
     ];
   }
   // The assistant's `prepare_data` changed the data; `done` carries the new version.
@@ -157,7 +195,10 @@ function stubFetch(
       return json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true });
     }
     if (url.pathname.endsWith('/sessions/S1/dataset') && method === 'POST') {
-      return json(200, DATASET);
+      // A formula is refused: the chat computes it.
+      return String(init.body).includes('sin(')
+        ? json(422, { detail: 'formula', ref: 'r-f' })
+        : json(200, DATASET);
     }
     if (url.pathname.endsWith('/sessions/S1/bindings') && method === 'PUT') {
       return json(200, {
@@ -395,6 +436,49 @@ describe('AgentChatPage gating', () => {
     // An undo asks for no new summary.
     const turns = agentCalls().filter(([input]) => String(input).endsWith('/messages'));
     expect(turns).toHaveLength(2);
+  });
+
+  it('sends a pasted formula to the chat, whose table becomes version 1', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    const textbox = await screen.findByLabelText(/# your data/);
+    // Without data, both boxes name the other source: a curve the assistant computes.
+    expect(textbox).toHaveAccessibleDescription(
+      'or ask for a curve in the chat: y = sin(x), x from -pi to pi'
+    );
+    expect(screen.getByLabelText('Message')).toHaveAttribute(
+      'placeholder',
+      'ask for a curve: "y = sin(x), x from -pi to pi"'
+    );
+    expect(screen.getByText(/or ask here for a curve/)).toBeInTheDocument();
+
+    fireEvent.change(textbox, { target: { value: FORMULA } });
+    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    // The data panel's own .send(), next to the line; the composer has one too.
+    const offer = await screen.findByTestId('formula-offer');
+    const send = within(offer).getByRole('button', { name: '.send()' });
+    expect(send).toHaveAccessibleDescription(/looks like a formula/);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    fireEvent.click(send);
+    expect(await screen.findByText('I generated 200 rows from y = sin(x).')).toBeInTheDocument();
+    const thread = screen.getByRole('log', { name: 'Conversation' });
+    expect(within(thread).getByText(FORMULA)).toBeInTheDocument();
+    expect(textbox).toHaveValue('');
+    expect(screen.queryByTestId('formula-offer')).not.toBeInTheDocument();
+
+    const change = await screen.findByTestId('data-change');
+    expect(within(change).getByText('# changed · version 1')).toBeInTheDocument();
+    expect(within(change).getByText(GENERATED.changes[0])).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /\.undo\(\)/ })).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^x/)).toHaveValue('x');
+    expect(screen.getByRole('cell', { name: '-1.2246468e-16' })).toBeInTheDocument();
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_prepared', { changes: '1' });
+
+    const confirm = screen.getByRole('button', { name: '.confirm()' });
+    await waitFor(() => expect(confirm).toBeEnabled());
+    fireEvent.click(confirm);
+    expect(await screen.findByRole('button', { name: '.create_plot()' })).toBeEnabled();
   });
 
   it('offers a reload when the session open got no answer', async () => {
