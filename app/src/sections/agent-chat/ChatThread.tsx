@@ -8,7 +8,12 @@
 
 import Box from '@mui/material/Box';
 
-import { type AgentSessionState, type ChatItem, sessionBusy } from 'src/hooks/useAgentSession';
+import {
+  type AgentSessionState,
+  type ChatItem,
+  type FeedbackInput,
+  sessionBusy,
+} from 'src/hooks/useAgentSession';
 import type { ArtifactName, Theme } from 'src/lib/agent';
 import { ERROR_TEXT, PLOT_FAILED_TEXT } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
@@ -24,6 +29,8 @@ interface ChatThreadProps {
   onFetchArtifact: (version: number, name: ArtifactName) => Promise<Blob>;
   onRefine: (text: string) => void;
   onTrack: (event: string, props?: Record<string, string | undefined>) => void;
+  /** The result cards' quick feedback; without it they show no control. */
+  onSendFeedback?: (version: number, input: FeedbackInput) => Promise<void>;
 }
 
 const promptSx = {
@@ -123,6 +130,7 @@ function Item({
           onFetchArtifact={props.onFetchArtifact}
           onRefine={props.onRefine}
           onTrack={props.onTrack}
+          onSendFeedback={props.onSendFeedback}
         />
       );
     }

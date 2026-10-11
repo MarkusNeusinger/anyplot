@@ -1,0 +1,194 @@
+/**
+ * Quick feedback on the chat page: the result card's control stores the
+ * version's case through the BFF, shows `sent · v<n>`, takes an edit, and shows
+ * a failure line. The flows of the page are in AgentChatPage.test.tsx; this
+ * file stubs only the calls a plot and its feedback need.
+ */
+
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { ThemeProvider } from '@mui/material/styles';
+
+import { AgentChatPage } from 'src/pages/AgentChatPage';
+import { theme } from 'src/theme';
+import { ADMIN_HINT_KEY } from 'src/utils/adminAuth';
+
+vi.mock('src/global-config', async importOriginal => {
+  const actual = await importOriginal<typeof import('src/global-config')>();
+  return {
+    ...actual,
+    CONFIG: { ...actual.CONFIG, isDev: false, features: { agentChat: true } },
+  };
+});
+
+vi.mock('react-helmet-async', () => ({
+  Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+const analytics = vi.hoisted(() => ({ trackEvent: vi.fn(), trackPageview: vi.fn() }));
+vi.mock('src/hooks/useAnalytics', () => ({ useAnalytics: () => analytics }));
+
+const json = (status: number, body: unknown) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+function sse(events: [string, unknown][]) {
+  return new Response(
+    events.map(([event, data]) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`).join(''),
+    { status: 200, headers: { 'Content-Type': 'text/event-stream' } }
+  );
+}
+
+const PLOT = {
+  status: 'ok',
+  attempts: 1,
+  artifacts: ['plot-light.png', 'plot.py', 'data.csv'],
+  changes: [],
+  residual_defects: [],
+  version: 1,
+};
+
+const PAGE = '/debug/agent?spec=scatter-basic&library=matplotlib&language=python';
+
+let feedbackBodies: unknown[];
+let feedbackAnswer: () => Response;
+
+function stubFetch() {
+  feedbackBodies = [];
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: string, init: RequestInit = {}) => {
+      const url = new URL(input);
+      const method = init.method ?? 'GET';
+      if (url.pathname.endsWith('/debug/agent/sessions') && method === 'POST') {
+        return json(200, {
+          session_id: 'S1',
+          eligibility: { eligible: true, status: 'clean', reasons: [] },
+        });
+      }
+      if (url.pathname.endsWith('/sessions/S1/messages') && method === 'POST') {
+        return sse([
+          ['plot', PLOT],
+          ['message', { text: 'Here is your plot.' }],
+          ['done', { llm_calls: 2 }],
+        ]);
+      }
+      if (url.pathname.endsWith('/sessions/S1/artifacts/plot.py')) {
+        return new Response('import pandas as pd\n', { status: 200 });
+      }
+      if (url.pathname.includes('/sessions/S1/artifacts/')) {
+        return new Response('png', { status: 200, headers: { 'Content-Type': 'image/png' } });
+      }
+      if (url.pathname.endsWith('/sessions/S1/feedback') && method === 'POST') {
+        feedbackBodies.push(JSON.parse(String(init.body)));
+        return feedbackAnswer();
+      }
+      if (url.pathname.endsWith('/debug/agent/status')) {
+        return json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true });
+      }
+      if (method === 'DELETE') return new Response(null, { status: 204 });
+      return json(404, { detail: 'not_found' });
+    })
+  );
+}
+
+function renderPage() {
+  return render(
+    <ThemeProvider theme={theme}>
+      <MemoryRouter initialEntries={[PAGE]}>
+        <AgentChatPage />
+      </MemoryRouter>
+    </ThemeProvider>
+  );
+}
+
+/** Ask in the chat; the stub answers every turn with version 1. */
+async function plotVersionOne() {
+  const box = await screen.findByLabelText('Message');
+  fireEvent.change(box, { target: { value: 'plot it' } });
+  fireEvent.keyDown(box, { key: 'Enter' });
+  return screen.findByRole('form', { name: 'Feedback on version 1' });
+}
+
+beforeEach(() => {
+  localStorage.clear();
+  localStorage.setItem(ADMIN_HINT_KEY, '1');
+  analytics.trackEvent.mockClear();
+  feedbackAnswer = () =>
+    json(201, {
+      case_id: `20261012T14300${feedbackBodies.length}Z-1a2b3c4d`,
+      stored: ['plot.py', 'manifest.json'],
+    });
+  URL.createObjectURL = vi.fn(() => 'blob:png');
+  URL.revokeObjectURL = vi.fn();
+  stubFetch();
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
+
+describe('AgentChatPage quick feedback', () => {
+  it('sends feedback on a version, shows it as sent, and sends an edit', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    const form = await plotVersionOne();
+
+    await user.click(within(form).getByRole('button', { name: 'Thumbs down' }));
+    await user.type(within(form).getByLabelText('Feedback message'), 'the legend hides points');
+    expect(within(form).getByRole('checkbox', { name: '# include data.csv' })).toBeChecked();
+    await user.click(within(form).getByRole('button', { name: 'Send feedback' }));
+
+    const sent = await screen.findByText(/sent · v1/);
+    expect(sent).toHaveTextContent('sent · v1 · thumbs down · with data.csv');
+    expect(feedbackBodies).toEqual([
+      {
+        reaction: 'thumbs_down',
+        message: 'the legend hides points',
+        include_data: true,
+        result_version: 1,
+      },
+    ]);
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_result_feedback', {
+      reaction: 'thumbs_down',
+      include_data: 'yes',
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Edit the feedback on version 1' }));
+    await user.click(screen.getByRole('button', { name: 'Thumbs up' }));
+    await user.click(screen.getByRole('button', { name: 'Send feedback' }));
+    await waitFor(() =>
+      expect(screen.getByText(/sent · v1/)).toHaveTextContent('sent · v1 · thumbs up')
+    );
+    expect(feedbackBodies).toHaveLength(2);
+    expect(feedbackBodies[1]).toMatchObject({ reaction: 'thumbs_up', result_version: 1 });
+  });
+
+  it('shows a failed send under the control and keeps the form', async () => {
+    const user = userEvent.setup();
+    feedbackAnswer = () => json(502, { detail: 'storage', ref: 'ref-st' });
+    renderPage();
+    const form = await plotVersionOne();
+
+    await user.click(within(form).getByRole('button', { name: 'Bug' }));
+    await user.click(within(form).getByRole('button', { name: 'Send feedback' }));
+
+    expect(await within(form).findByRole('alert')).toHaveTextContent(
+      'the case could not be stored; try again · ref ref-st'
+    );
+    expect(within(form).getByRole('button', { name: 'Bug' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(analytics.trackEvent).not.toHaveBeenCalledWith(
+      'agent_result_feedback',
+      expect.anything()
+    );
+  });
+});

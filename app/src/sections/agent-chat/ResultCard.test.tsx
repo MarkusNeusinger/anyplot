@@ -222,4 +222,34 @@ describe('ResultCard', () => {
     expect(screen.getByAltText('Adapted plot, version 2, light theme')).toBeInTheDocument();
     expect(screen.queryByLabelText('Refine this plot')).not.toBeInTheDocument();
   });
+
+  it('has no feedback control without onSendFeedback', () => {
+    renderCard();
+    expect(screen.queryByTestId('result-feedback')).not.toBeInTheDocument();
+  });
+
+  it('offers quick feedback on the version even while the session is busy', async () => {
+    const onSendFeedback = vi.fn(async () => undefined);
+    renderCard({ busy: true, onSendFeedback });
+    expect(screen.getByRole('form', { name: 'Feedback on version 2' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Thumbs up' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Send feedback' }));
+    expect(onSendFeedback).toHaveBeenCalledWith(2, {
+      reaction: 'thumbs_up',
+      message: '',
+      includeData: true,
+    });
+  });
+
+  it("shows the version's stored case, also on an earlier version opened again", async () => {
+    renderCard({
+      latest: false,
+      onSendFeedback: vi.fn(async () => undefined),
+      version: makeVersion({
+        feedback: { reaction: 'bug', message: null, includeData: false, caseId: 'c1' },
+      }),
+    });
+    await userEvent.click(screen.getByRole('button', { name: /Version 2/ }));
+    expect(screen.getByRole('status')).toHaveTextContent('sent · v2 · bug');
+  });
 });

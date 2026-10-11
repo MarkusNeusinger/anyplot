@@ -81,11 +81,21 @@
  * as one JSON file. It only reads the session and starts no run, so no state
  * tracks it: the button keeps its own saving flag and failure line.
  *
+ * Quick feedback: `sendFeedback` (`.send()` on a result card) has the BFF store
+ * the case of one version in the private case bucket. It starts no run and
+ * waits for nothing else in flight, so it never blocks the flow, and a turn
+ * never waits for it. The stored case is recorded on the version
+ * (`PlotVersion.feedback`), which the card shows as `sent · v<n>`: the record
+ * outlives the card's body, which a newer version collapses and unmounts. A
+ * later send for the same version stores a new case and replaces the record;
+ * the sending flag and the failure line stay in the control.
+ *
  * Analytics carry enum properties only, never text or data:
  * `agent_data_parsed{status, size_bucket}`, `agent_data_confirmed{size_bucket}`,
  * `agent_data_prepared{changes}`, `agent_data_undo{version}`,
  * `agent_plot_rendered{library, status, repaired, spec}`,
- * `agent_guardrail_block{reason}` and `agent_session_saved{include_data}`.
+ * `agent_guardrail_block{reason}`, `agent_session_saved{include_data}` and
+ * `agent_result_feedback{reaction, include_data}`.
  */
 
 import { useCallback, useEffect, useReducer, useRef } from 'react';
@@ -102,8 +112,10 @@ import {
   type DatasetParsed,
   type DatasetProfile,
   type Eligibility,
+  type FeedbackReaction,
   isTranscribed,
   MAX_DATASET_BYTES,
+  MAX_FEEDBACK_CHARS,
   MAX_MESSAGE_CHARS,
   parseAgentEvent,
   type PipelineStep,
@@ -156,6 +168,23 @@ export type ThemeImage =
 export type CodeText =
   { state: 'loading' } | { state: 'ready'; text: string } | { state: 'failed' };
 
+/** What the user sends with the feedback control of a result card. */
+export interface FeedbackInput {
+  reaction: FeedbackReaction;
+  /** Optional; stripped, and at most `MAX_FEEDBACK_CHARS` after the strip. */
+  message: string;
+  /** Store the version's `data.csv` with the case. */
+  includeData: boolean;
+}
+
+/** A feedback case stored for a version: what was sent, and the case id the BFF gave it. */
+export interface FeedbackRecord {
+  reaction: FeedbackReaction;
+  message: string | null;
+  includeData: boolean;
+  caseId: string;
+}
+
 export interface PlotVersion {
   /** The agents service's version number (1-based within the session). */
   number: number;
@@ -165,6 +194,8 @@ export interface PlotVersion {
   theme: Theme;
   images: Partial<Record<Theme, ThemeImage>>;
   code: CodeText;
+  /** The last feedback case stored for this version; absent until one is sent. */
+  feedback?: FeedbackRecord;
 }
 
 export type ChatItem =
@@ -298,7 +329,9 @@ type Action =
   | { type: 'run_end' }
   | { type: 'version_add'; version: PlotVersion }
   | { type: 'version_image'; number: number; theme: Theme; image: ThemeImage }
-  | { type: 'version_code'; number: number; code: CodeText };
+  | { type: 'version_code'; number: number; code: CodeText }
+  /** A feedback case was stored for the version; a later one replaces the record. */
+  | { type: 'version_feedback'; number: number; feedback: FeedbackRecord };
 
 export function initialAgentState(library: string): AgentSessionState {
   return {
@@ -677,6 +710,11 @@ export function agentReducer(state: AgentSessionState, action: Action): AgentSes
       }));
     case 'version_code':
       return patchVersion(state, action.number, version => ({ ...version, code: action.code }));
+    case 'version_feedback':
+      return patchVersion(state, action.number, version => ({
+        ...version,
+        feedback: action.feedback,
+      }));
     default:
       return state;
   }
@@ -726,6 +764,8 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   // sooner than the state can say so.
   const bindingsRef = useRef(false);
   const saveRef = useRef(false);
+  // The feedback send in flight per version: a second `.send()` for it joins the first.
+  const feedbackRef = useRef<Map<number, Promise<void>>>(new Map());
   const versionCounter = useRef(0);
   const blobUrls = useRef<Set<string>>(new Set());
   const mounted = useRef(true);
@@ -1375,6 +1415,65 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     [token, handleFailure, trackEvent, busy]
   );
 
+  // ---------------------------------------------------------------- feedback
+
+  /**
+   * `.send()` on a result card: store the case of version `number` (`POST
+   * .../feedback`), record it on the version and report
+   * `agent_result_feedback{reaction, include_data}`. It runs whatever else is in
+   * flight, because it starts no run and only reads the session; a second call
+   * for a version whose send is still in flight joins that one. A failure
+   * rejects with an `AgentApiError` for the control's failure line, and records
+   * nothing; a 401 or 403 also shows the sign-in notice.
+   */
+  const sendFeedback = useCallback(
+    (number: number, input: FeedbackInput): Promise<void> => {
+      const pending = feedbackRef.current.get(number);
+      if (pending) return pending;
+      const sid = stateRef.current.sessionId;
+      if (!sid || !stateRef.current.versions[number]) {
+        return Promise.reject(new AgentApiError(0, 'no_session'));
+      }
+      const message = input.message.trim() || null;
+      if (message && message.length > MAX_FEEDBACK_CHARS) {
+        return Promise.reject(new AgentApiError(0, 'too_long'));
+      }
+      const send = async () => {
+        try {
+          const stored = await agentApi.sendFeedback(token, sid, {
+            reaction: input.reaction,
+            message,
+            include_data: input.includeData,
+            result_version: number,
+          });
+          safeDispatch({
+            type: 'version_feedback',
+            number,
+            feedback: {
+              reaction: input.reaction,
+              message,
+              includeData: input.includeData,
+              caseId: stored.case_id,
+            },
+          });
+          trackEvent('agent_result_feedback', {
+            reaction: input.reaction,
+            include_data: input.includeData ? 'yes' : 'no',
+          });
+        } catch (err) {
+          const failure = handleFailure(err);
+          throw err instanceof AgentApiError ? err : new AgentApiError(0, failure.code);
+        } finally {
+          feedbackRef.current.delete(number);
+        }
+      };
+      const promise = send();
+      feedbackRef.current.set(number, promise);
+      return promise;
+    },
+    [token, safeDispatch, handleFailure, trackEvent]
+  );
+
   return {
     state,
     parseData,
@@ -1391,6 +1490,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     requestTheme,
     fetchArtifact,
     saveSession,
+    sendFeedback,
   };
 }
 
