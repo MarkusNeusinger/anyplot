@@ -413,10 +413,10 @@ Used to load interactive plots (plotly, bokeh, altair) in iframes with dynamic s
 
 ## Agent chat (admin only, switched off by default)
 
-> **Status (2026-10-10):** the routes exist and ship switched off. The
-> anyplot-agents service they call runs locally but is not deployed yet, so
-> with the switch on in production every route that calls it answers
-> `502 upstream` until that service is deployed. The chat page that calls
+> **Status (2026-10-11):** the routes exist and ship switched off. The
+> anyplot-agents service they call runs in Cloud Run since 2026-10-11; the
+> routes answer `404` until the API's deploy sets `AGENT_ENABLED=true`,
+> `AGENT_SERVICE_URL` and the `AGENT_USER_ID_KEY` secret. The chat page that calls
 > these routes, `/debug/agent` in the app, is built only with
 > `VITE_ENABLE_AGENT_CHAT=true`. Design:
 > [Agent network design](../concepts/agent-network.md).
