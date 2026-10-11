@@ -70,8 +70,10 @@ jobs:
         # Plot implementations don't have unit tests
         TESTABLE_CHANGES=$(echo "$CHANGED_FILES" | grep '\.py$' | grep -v '^plots/' || true)
 
-        # Also run tests if test configuration files change
-        CONFIG_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(pyproject\.toml|pytest\.ini|conftest\.py)$' || true)
+        # Also run tests when the test configuration, the lock file, a workflow or action,
+        # or a prompt changes: tests/unit/workflows parses every workflow YAML and
+        # tests/unit/prompts reads the prompt files, so those changes are testable too.
+        CONFIG_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(pyproject\.toml|pytest\.ini|conftest\.py|uv\.lock)$|^(\.github/workflows/|\.github/actions/|prompts/)' || true)
 
         # Force run on workflow_dispatch with force_run=true
         if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.force_run }}" == "true" ]]; then
@@ -141,8 +143,16 @@ jobs:
         # Start proxy in background (localhost:5432 -> Cloud SQL)
         ./cloud-sql-proxy --port 5432 ${{ secrets.INSTANCE_CONNECTION_NAME }} &
 
-        # Wait for proxy to be ready
-        sleep 5
+        # Wait for the proxy to accept connections: poll every 0.2 s, give up after 10 s
+        ready=false
+        for _ in $(seq 50); do
+          if (exec 3<>/dev/tcp/127.0.0.1/5432) 2>/dev/null; then ready=true; break; fi
+          sleep 0.2
+        done
+        if [[ "$ready" != true ]]; then
+          echo "::error::Cloud SQL Proxy did not open 127.0.0.1:5432 within 10 s"
+          exit 1
+        fi
 
         # Set DATABASE_URL for tests
         echo "DATABASE_URL=postgresql+asyncpg://${{ secrets.DB_USER }}:${{ secrets.DB_PASS }}@localhost:5432/${{ secrets.DB_NAME }}" >> $GITHUB_ENV
@@ -152,7 +162,8 @@ jobs:
       run: |
         uv run pytest tests/unit tests/integration tests/e2e \
           -v --tb=short \
-          --cov=core --cov=api --cov=automation --cov=agentic/workflows/modules \
+          -n 4 --dist worksteal --durations=25 \
+          --cov=core --cov=api --cov=automation --cov=agentic/workflows/modules --cov=agents \
           --cov-report=term-missing \
           --cov-report=xml
       # Tests include:
@@ -163,7 +174,7 @@ jobs:
     - name: Run unit + integration tests (Dependabot)
       if: steps.check.outputs.should_test == 'true' && github.actor == 'dependabot[bot]'
       run: |
-        uv run pytest tests/unit tests/integration -v --tb=short
+        uv run pytest tests/unit tests/integration -v --tb=short -n 4 --dist worksteal
 
     - name: Upload coverage to GitHub Artifacts
       if: steps.check.outputs.should_test == 'true' && github.actor != 'dependabot[bot]' && always()

@@ -17,6 +17,7 @@ Usage as CLI:
 """
 
 import logging
+import os
 import threading
 import time
 from io import BytesIO
@@ -455,9 +456,14 @@ def _get_monolisa_font_path(local_only: bool = False, italic: bool = False) -> P
         # Try to download from GCS — once per cooldown, see _FONT_DOWNLOAD_RETRY_AFTER.
         # The bytes land in a `.part` file first and are published with one
         # rename: a reader sees either no font or the whole font, never the
-        # partial file `download_to_filename` opens before it fetches.
+        # partial file `download_to_filename` opens before it fetches. The lock
+        # only serializes this process's threads, while the cache directory is
+        # shared by every process on the host (the pytest-xdist workers in CI,
+        # for one), so the `.part` name carries the process ID: two processes
+        # downloading at once each write their own file, and the second rename
+        # replaces a whole font with a whole font.
         if not _download_recently_failed(cache_filename):
-            partial = cached_font.with_name(cached_font.name + ".part")
+            partial = cached_font.with_name(f"{cached_font.name}.{os.getpid()}.part")
             try:
                 from google.cloud import storage
 

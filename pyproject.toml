@@ -61,6 +61,7 @@ test = [
     "pytest>=9.1.1",
     "pytest-cov>=6.2.1",
     "pytest-asyncio>=1.4.0",
+    "pytest-xdist>=3.8.0",  # CI runs the suite with -n 4 --dist worksteal
     "httpx>=0.28.0",  # For testing FastAPI
     "aiosqlite>=0.20.0",  # SQLite async driver for integration tests
 ]
@@ -260,6 +261,12 @@ markers = [
 [tool.coverage.run]
 source = ["core", "api", "automation", "agentic/workflows/modules", "agents"]
 omit = ["*/tests/*", "*/migrations/*"]
+# sys.monitoring instead of the C tracer: on Python 3.13 the C tracer made the
+# serial CI-equivalent run about 45 % slower (301 s against 208 s, 2026-10-11),
+# and sysmon is coverage's own default from Python 3.14. On 3.13 sysmon measures
+# lines only: with `branch` on, coverage warns ("no-sysmon") and falls back to
+# the C tracer, so `branch` stays off.
+core = "sysmon"
 
 [tool.coverage.report]
 exclude_lines = [

@@ -94,7 +94,7 @@ Then the local CI equivalents — the same commands the pipeline runs.
 # backend (CI job "Run Linting" + "Run Tests")
 uv run ruff check . && uv run ruff format --check .
 uv run --extra typecheck mypy api core --pretty
-uv run pytest tests/unit tests/integration
+uv run pytest tests/unit tests/integration -n auto  # CI: -n 4 --dist worksteal
 
 # frontend, only if app/ changed (CI job "Run Frontend Tests")
 cd app && yarn lint && yarn fm:check && yarn type-check && yarn test
