@@ -446,11 +446,28 @@ describe('DataPanel formulas', () => {
     expect(textbox).toHaveValue('');
   });
 
-  it('holds .send() back while anything runs', () => {
-    renderPanel(
+  it('holds .send() back while anything runs', async () => {
+    const { rerender } = renderPanel(empty());
+    await userEvent.type(screen.getByLabelText(/# your data/), FORMULA);
+    rerender(
       empty({ formula: FORMULA, run: { kind: 'message', steps: [], queue: null, stopping: false } })
     );
     expect(screen.getByRole('button', { name: '.send()' })).toBeDisabled();
+  });
+
+  it('takes the offer away once the box is edited', async () => {
+    const { onSendFormula, rerender } = renderPanel(empty());
+    const textbox = screen.getByLabelText(/# your data/);
+    await userEvent.type(textbox, FORMULA);
+    rerender(empty({ formula: FORMULA }));
+    expect(screen.getByTestId('formula-offer')).toBeInTheDocument();
+
+    // The offer was made for the refused text: newer text in the box is not sent in its place.
+    await userEvent.type(textbox, ' und cos(x)');
+    expect(screen.queryByTestId('formula-offer')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
+    expect(onSendFormula).not.toHaveBeenCalled();
+    expect(textbox).toHaveValue(`${FORMULA} und cos(x)`);
   });
 });
 

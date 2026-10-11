@@ -436,7 +436,9 @@ export function DataPanel({
         </Box>
       )}
 
-      {state.formula !== null && (
+      {/* The offer belongs to the text it was made for: an edit of the box takes it away, so
+          `.send()` never sends an older text than the one shown. */}
+      {state.formula !== null && text === state.formula && (
         <Box
           data-testid="formula-offer"
           sx={{
