@@ -95,10 +95,14 @@ class SessionView:
 
 
 def confirmation_fingerprint(dataset_id: str | None, bindings: list[Binding]) -> str:
-    """What a confirmation covers: the dataset id and the bindings, as one short digest."""
-    payload = json.dumps(
-        {"dataset": dataset_id, "bindings": [binding.model_dump() for binding in bindings]}, sort_keys=True
-    )
+    """What a confirmation covers: the dataset id and the bindings, as one short digest.
+
+    The bindings are a set of role-to-column assignments (`check_bindings` reads them
+    unordered), so they are sorted before hashing: the same assignments in another order
+    are the same confirmation.
+    """
+    assignments = sorted((binding.role, binding.column) for binding in bindings)
+    payload = json.dumps({"dataset": dataset_id, "bindings": assignments})
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
 
 

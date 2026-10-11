@@ -1737,14 +1737,14 @@ async def test_the_confirmation_drops_with_a_binding_change_or_a_new_dataset(cli
     view = read_session(await _session_state(client, sid))
     assert view is not None and view.data_confirmed
 
-    same = await client.put(
-        f"/v1/sessions/{sid}/bindings",
-        headers=HEADERS,
-        json=[{"role": "x", "column": "Study Hours"}, {"role": "y", "column": "Exam Score"}],
-    )
-    assert same.status_code == 200
-    view = read_session(await _session_state(client, sid))
-    assert view is not None and view.data_confirmed  # the same bindings again keep the confirmation
+    for same_bindings in (
+        [{"role": "x", "column": "Study Hours"}, {"role": "y", "column": "Exam Score"}],
+        [{"role": "y", "column": "Exam Score"}, {"role": "x", "column": "Study Hours"}],  # the order is not a change
+    ):
+        same = await client.put(f"/v1/sessions/{sid}/bindings", headers=HEADERS, json=same_bindings)
+        assert same.status_code == 200
+        view = read_session(await _session_state(client, sid))
+        assert view is not None and view.data_confirmed  # the same assignments keep the confirmation
 
     swapped = await client.put(
         f"/v1/sessions/{sid}/bindings",
