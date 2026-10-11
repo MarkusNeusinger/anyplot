@@ -782,22 +782,42 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByRole('button', { name: '.create_plot()' })).toBeEnabled();
   });
 
-  it("leaves the composer's focus alone when a turn's sync confirms the data again", async () => {
+  it('returns to step 2 when a table read from text is discarded at once', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndConfirm();
     await transcribeInStep2();
-    // The hook dropped its confirmation for the table; the server kept its own.
+    expect(currentStep()).toEqual(['1 data']);
+
+    // The transcription stored nothing and the server kept its confirmation: discarding it
+    // is back where the user was, with no turn in between.
     fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
+    expect(currentStep()).toEqual(['·2 plot']);
+    expect(screen.getByTestId('data-summary')).toHaveTextContent('data fits');
+    expect(screen.getByRole('button', { name: '.create_plot()' })).toBeEnabled();
+    expect(screen.queryByTestId('transcription-card')).not.toBeInTheDocument();
+  });
+
+  it("leaves the composer's focus alone when step 2 returns without the user's .confirm()", async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    await transcribeInStep2();
     expect(currentStep()).toEqual(['1 data']);
 
     const box = screen.getByLabelText('Message');
     box.focus();
+    // A turn's sync confirms the data again while the table still waits: step 1 holds.
     sendFromComposer('what columns are there?');
     expect(await screen.findByText('Two columns: hours and score.')).toBeInTheDocument();
     await turnEnded();
+    expect(currentStep()).toEqual(['1 data']);
+    expect(box).toHaveFocus();
+
+    // Discarding the table brings step 2 back with no `.confirm()` of the user's: the next
+    // key press still types into the box.
+    fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
     expect(currentStep()).toEqual(['·2 plot']);
-    // No `.confirm()` of the user's: the next key press still types into the box.
     expect(box).toHaveFocus();
     expect(screen.getByRole('button', { name: '.create_plot()' })).not.toHaveFocus();
   });
