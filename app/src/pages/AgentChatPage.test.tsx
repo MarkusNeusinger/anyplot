@@ -458,14 +458,14 @@ describe('AgentChatPage gating', () => {
     fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
     const confirm = await screen.findByRole('button', { name: '.confirm()' });
     await waitFor(() => expect(confirm).toBeEnabled());
-    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
     // The data card is the thread's first turn; the summary follows it.
     const card = screen.getByTestId('data-card');
     const thread = screen.getByRole('log', { name: 'Conversation' });
     expect(card.compareDocumentPosition(thread) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     fireEvent.click(confirm);
-    const create = await screen.findByRole('button', { name: '.create_plot()' });
+    const create = await screen.findByRole('button', { name: 'Create plot' });
     expect(create).toBeEnabled();
     expect(currentStep()).toEqual(['·2 plot']);
     expect(screen.getByTestId('data-summary')).toHaveTextContent(
@@ -495,10 +495,10 @@ describe('AgentChatPage gating', () => {
 
     // Text in step 2's box goes as a turn, whatever it asks for.
     fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'swap x and y' } });
-    fireEvent.click(screen.getByRole('button', { name: '.create_plot()' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
     expect(await screen.findByText('Swapped.')).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: '.confirm()' })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
     expect(screen.getByTestId('data-summary')).toHaveTextContent(
       'confirm again · 2 rows · 2 columns · version 1'
     );
@@ -533,7 +533,7 @@ describe('AgentChatPage gating', () => {
     expect(within(change).getByText(PREPARED.changes[0])).toBeInTheDocument();
     expect(screen.getByRole('cell', { name: '0.52' })).toBeInTheDocument();
     expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
-    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_prepared', { changes: '1' });
 
     const confirm = screen.getByRole('button', { name: '.confirm()' });
@@ -599,7 +599,7 @@ describe('AgentChatPage gating', () => {
     const confirm = screen.getByRole('button', { name: '.confirm()' });
     await waitFor(() => expect(confirm).toBeEnabled());
     fireEvent.click(confirm);
-    expect(await screen.findByRole('button', { name: '.create_plot()' })).toBeEnabled();
+    expect(await screen.findByRole('button', { name: 'Create plot' })).toBeEnabled();
   });
 
   it('collapses the confirmed data into a pinned header that .show() opens and .hide() closes', async () => {
@@ -624,7 +624,7 @@ describe('AgentChatPage gating', () => {
     // Looking is no change: the data stays confirmed, and step 2 stays.
     expect(card.queryByRole('button', { name: '.confirm()' })).not.toBeInTheDocument();
     expect(currentStep()).toEqual(['·2 plot']);
-    expect(screen.getByRole('button', { name: '.create_plot()' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
 
     fireEvent.click(hide);
     expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
@@ -646,7 +646,7 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByRole('button', { name: 'Go to the data' })).toBeInTheDocument();
     expect(screen.getByTestId('data-card')).toBeInTheDocument();
     expect(currentStep()).toEqual(['1 data']);
-    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
       'ask about your data, or for a fix: "sum per month"'
@@ -672,7 +672,7 @@ describe('AgentChatPage gating', () => {
     expect(turnBodies()).toEqual([{ action: 'summarize_data' }]);
 
     // A pointer click moves no focus into the box, so a phone opens no keyboard.
-    fireEvent.click(screen.getByRole('button', { name: '.create_plot()' }), { detail: 1 });
+    fireEvent.click(screen.getByRole('button', { name: 'Create plot' }), { detail: 1 });
     expect(box).not.toHaveFocus();
     expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
     expect(lastTurn()).toEqual({ action: 'create_plot' });
@@ -685,7 +685,7 @@ describe('AgentChatPage gating', () => {
     renderAt(PAGE);
     await parseAndConfirm();
     fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'log scale on y' } });
-    fireEvent.click(screen.getByRole('button', { name: '.create_plot()' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
     expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
     expect(lastTurn()).toEqual({ text: 'log scale on y' });
     const thread = screen.getByRole('log', { name: 'Conversation' });
@@ -700,7 +700,7 @@ describe('AgentChatPage gating', () => {
       'ask about this plot, or ask for a change'
     );
     expect(screen.getByRole('button', { name: '.send()' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: '.create_plot()' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
     expect(screen.getByTestId('data-pinned')).toBeInTheDocument();
   });
 
@@ -715,7 +715,7 @@ describe('AgentChatPage gating', () => {
       localStorage.setItem(ADMIN_HINT_KEY, '1');
       renderAt(PAGE);
       await parseAndConfirm();
-      fireEvent.click(screen.getByRole('button', { name: '.create_plot()' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
       expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
       await turnEnded();
       expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
@@ -728,7 +728,7 @@ describe('AgentChatPage gating', () => {
       expect(within(change).getByRole('button', { name: '.undo()' })).toBeEnabled();
       expect(screen.getByRole('cell', { name: '0.52' })).toBeInTheDocument();
       expect(currentStep()).toEqual(['1 data']);
-      expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
       // The header stays pinned in view and leads to the card's top, far above.
       expect(screen.getByTestId('data-summary')).toHaveTextContent(
         'confirm again · 2 rows · 2 columns · version 2'
@@ -746,7 +746,7 @@ describe('AgentChatPage gating', () => {
       fireEvent.click(confirm);
       const show = await screen.findByRole('button', { name: 'Show the data' });
       await waitFor(() => expect(show).toHaveFocus());
-      expect(screen.getByRole('button', { name: '.create_plot()' })).not.toHaveFocus();
+      expect(screen.getByRole('button', { name: 'Create plot' })).not.toHaveFocus();
     } finally {
       delete (Element.prototype as Partial<Element>).scrollIntoView;
     }
@@ -770,7 +770,7 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByTestId('data-summary')).toHaveTextContent(
       'decide on the table first: .use() or .discard()'
     );
-    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
       'ask about your data, or for a fix: "sum per month"'
@@ -779,7 +779,7 @@ describe('AgentChatPage gating', () => {
     // Discarded, the stored data is the confirmed data again.
     fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
     expect(currentStep()).toEqual(['·2 plot']);
-    expect(screen.getByRole('button', { name: '.create_plot()' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
   });
 
   it('returns to step 2 when a table read from text is discarded at once', async () => {
@@ -794,7 +794,7 @@ describe('AgentChatPage gating', () => {
     fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
     expect(currentStep()).toEqual(['·2 plot']);
     expect(screen.getByTestId('data-summary')).toHaveTextContent('data fits');
-    expect(screen.getByRole('button', { name: '.create_plot()' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
     expect(screen.queryByTestId('transcription-card')).not.toBeInTheDocument();
   });
 
@@ -819,14 +819,14 @@ describe('AgentChatPage gating', () => {
     fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
     expect(currentStep()).toEqual(['·2 plot']);
     expect(box).toHaveFocus();
-    expect(screen.getByRole('button', { name: '.create_plot()' })).not.toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Create plot' })).not.toHaveFocus();
   });
 
   it('never spends a second key press on stopping the run it started', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndConfirm();
-    const create = screen.getByRole('button', { name: '.create_plot()' });
+    const create = screen.getByRole('button', { name: 'Create plot' });
     await waitFor(() => expect(create).toHaveFocus());
 
     // Enter on the focused button: a click with `detail` 0. The focus continues in the
@@ -850,7 +850,7 @@ describe('AgentChatPage gating', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndConfirm();
-    const create = screen.getByRole('button', { name: '.create_plot()' });
+    const create = screen.getByRole('button', { name: 'Create plot' });
     expect(create).toBeEnabled();
 
     fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));

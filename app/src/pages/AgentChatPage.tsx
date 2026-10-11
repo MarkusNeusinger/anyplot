@@ -577,6 +577,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                   ref={createRef}
                   onClick={keepKeyboardFocus}
                   disabled={!canCreate}
+                  aria-label="Create plot"
                   aria-describedby={`${DATA_SUMMARY_ID} agent-create-line`}
                   sx={ctaButtonSx}
                 >
@@ -595,6 +596,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                         void session.createPlot();
                       }}
                       disabled={!canCreate}
+                      aria-label="Create plot"
                       aria-describedby={DATA_SUMMARY_ID}
                       sx={actionButtonSx}
                     >

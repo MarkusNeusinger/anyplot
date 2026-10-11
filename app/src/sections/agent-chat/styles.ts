@@ -52,7 +52,10 @@ export const ctaButtonSx = {
   border: '1px solid transparent',
   px: 2,
   py: 1,
-  '&:hover:not(:disabled)': { color: '#FFF', bgcolor: colors.primary },
+  // The hover uses the light theme's ink in both themes: 14 px white text on the brand
+  // green reads 3.4:1 and the dark theme's ink 3.0:1, under the 4.5:1 of WCAG AA, while
+  // this dark foreground reads 5.1:1.
+  '&:hover:not(:disabled)': { color: colors.gray[800], bgcolor: colors.primary },
 } as const;
 
 /** Native input, textarea and select on the theme tokens. */

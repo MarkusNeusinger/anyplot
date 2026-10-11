@@ -211,7 +211,7 @@ describe('DataPanel bindings', () => {
       />
     );
     expect(screen.getByRole('button', { name: '.confirm()' })).toBeDisabled();
-    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '.parse()' })).toBeDisabled();
     expect(screen.getByRole('button', { name: '.use()' })).toBeEnabled();
   });
@@ -248,12 +248,12 @@ describe('DataPanel steps', () => {
     expect(confirm).toHaveAccessibleDescription(
       '# step 1 — check the preview and the bindings, then confirm'
     );
-    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
 
     rerender(stateWith({ x: 'month', y1: 'shoes' }));
     await userEvent.click(screen.getByRole('button', { name: '.confirm()' }));
     expect(onConfirmData).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
 
     // The confirmation in flight: the button says so and holds still.
     rerender(stateWith({ x: 'month', y1: 'shoes' }, { confirmBusy: true }));
@@ -272,7 +272,7 @@ describe('DataPanel steps', () => {
     expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '.confirm()' })).not.toBeInTheDocument();
     // Step 2's action is the page composer's, not the card's.
-    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
     const card = within(screen.getByRole('region', { name: 'Your data' }));
@@ -446,7 +446,7 @@ describe('DataPanel data changes', () => {
     expect(onUndo).toHaveBeenCalledTimes(1);
     // The changed data is unconfirmed: the panel is at step 1 again.
     expect(screen.getByRole('button', { name: '.confirm()' })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
   });
 
   it('names the version an undo brought back and holds .undo() at the paste', () => {
@@ -660,7 +660,7 @@ describe('DataPanel transcription', () => {
     expect(card.getAllByRole('row')).toHaveLength(4);
     expect(card.getByRole('cell', { name: 'Katze' })).toBeInTheDocument();
     // Nothing is stored yet: no bindings and no `.create_plot()`.
-    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
   });
 
   it('leaves the note out when the model had none and names one row in the singular', () => {
