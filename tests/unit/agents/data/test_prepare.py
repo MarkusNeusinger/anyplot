@@ -842,6 +842,17 @@ class TestPivotWider:
         assert prepared.text_columns == ["Hüte", "Schuhe"]
         assert dtypes(prepared) == {"Monat": "text", "Hüte": "text", "Schuhe": "text"}
 
+    def test_text_hints_carry_the_names_the_reparse_gives(self) -> None:
+        """A value longer than a column name may be is shortened by the re-parse; the hint must match it."""
+        long_name = "x" * 70
+        text = f"k,series,value\na,{long_name},2023\nb,{long_name},2024\n"
+        operation = {"op": "pivot_wider", "names_from": "series", "values_from": "value", "index": ["k"]}
+        prepared = prepare(text, {"op": "set_type", "column": "value", "type": "text"}, operation)
+
+        assert prepared.text_columns == ["x" * 64]
+        again = parse_dataset(prepared.csv, text_columns=prepared.text_columns)
+        assert again.column_dtypes == {"k": "text", "x" * 64: "text"}
+
     def test_rows_without_a_name_are_left_out_and_other_columns_dropped(self) -> None:
         text = (
             "Monat,series,value,note\n"

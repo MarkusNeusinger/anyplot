@@ -85,7 +85,7 @@ from pandas.api.types import is_bool_dtype, is_datetime64_any_dtype, is_numeric_
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
 
 from ..schemas import MAX_CELL_CHARS, MAX_COLUMNS, MAX_NOTE_CHARS, MAX_ROWS, ColumnName
-from .parse import AMBIGUOUS_DATE_ORDER, MAX_INPUT_BYTES, ParsedDataset, pandas_dtypes
+from .parse import AMBIGUOUS_DATE_ORDER, MAX_INPUT_BYTES, ParsedDataset, canonical_names, pandas_dtypes
 
 
 MAX_OPERATIONS = 5  # per `prepare_data` call, the design's "at most five operations"
@@ -342,7 +342,11 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation]) -> Prep
             f"the result would be larger than {MAX_INPUT_BYTES // 1024} KB; "
             "drop columns or aggregate before pivoting to the long format",
         )
-    text_columns = [name for name in map(str, frame.columns) if name in carried.text_columns]
+    # Named as the re-parse will name them: a pivot's value or a long new name may be shortened or
+    # suffixed by `canonical_headers`, and the hint must match the header the CSV gets.
+    names = [str(name) for name in frame.columns]
+    canonical = canonical_names(names)
+    text_columns = [canon for name, canon in zip(names, canonical, strict=True) if name in carried.text_columns]
     return Prepared(csv=csv_text, changes=changes, text_columns=text_columns)
 
 

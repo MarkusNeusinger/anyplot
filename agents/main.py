@@ -995,20 +995,28 @@ async def post_message(
         except Exception as exc:  # the stream always ends with error + done, never a traceback
             logger.warning("run failed (ref %s): %s", rid, type(exc).__name__)
             failure = _error_code(exc)
+        except BaseException:  # the generator is closed or cancelled (the client went): release the run now
+            runtime.finish(sid, run)
+            raise
         finally:
             if timer is not None:
                 timer.cancel()
-            runtime.finish(sid, run)
             CURRENT_LEDGER.reset(token)
-        if ledger.error is not None:
-            failure = ledger.error
-        elif run.deadline_hit and not translator.plot_sent:
-            failure = "deadline"
-        if failure is not None:
-            for chunk in translator.error(failure):
-                yield chunk
-        attribution("run", ledger, model_versions=sorted(ledger.model_versions), kind=ledger.kind)
-        yield translator.done(**await _session_sync(runtime, user, sid, dataset_before=dataset_before, ledger=ledger))
+        try:
+            if ledger.error is not None:
+                failure = ledger.error
+            elif run.deadline_hit and not translator.plot_sent:
+                failure = "deadline"
+            if failure is not None:
+                for chunk in translator.error(failure):
+                    yield chunk
+            attribution("run", ledger, model_versions=sorted(ledger.model_versions), kind=ledger.kind)
+            # Read while the run is still active: no undo or paste can slip in between the run's end
+            # and the `done` that reports its dataset, so the version and the change lines agree.
+            sync = await _session_sync(runtime, user, sid, dataset_before=dataset_before, ledger=ledger)
+        finally:
+            runtime.finish(sid, run)
+        yield translator.done(**sync)
 
     return StreamingResponse(
         stream(),

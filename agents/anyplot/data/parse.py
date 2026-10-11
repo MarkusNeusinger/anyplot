@@ -600,6 +600,16 @@ def _clean_key(raw: str) -> tuple[str, bool]:
     return text.replace("\r\n", "\n").replace("\r", "\n").strip(), invisible
 
 
+def canonical_names(headers: Sequence[str]) -> list[str]:
+    """The column names `parse_dataset` gives these raw headers when no cell carries a unit.
+
+    The same cleaning and canonicalisation as the parse (`_clean_header`, then
+    `canonical_headers`), for a caller that writes a CSV and must name its columns as
+    the re-parse will: `prepare.py` keeps `text_columns` by those names.
+    """
+    return canonical_headers([_clean_header(raw)[0] for raw in headers])[0]
+
+
 def _clean_header(raw: str) -> tuple[str, bool, bool]:
     """The header text, whether invisible characters went, and whether tabs or line breaks became spaces."""
     text, invisible = _strip_invisible(raw)

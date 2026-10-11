@@ -1976,6 +1976,31 @@ async def test_the_summarize_data_action_skips_the_judge_and_reaches_the_root(
     assert unknown.status_code == 422
 
 
+async def test_the_done_sync_reads_the_state_while_the_run_is_still_active(
+    client: httpx.AsyncClient, runtime: Runtime, swap_models, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An undo or a paste cannot slip in between the run's end and the `done` that reports its dataset."""
+    import agents.main as service
+
+    script = default_script()
+    script["root"] = [{"text": "Nothing to change."}]
+    swap_models("anthropic-vertex", script)
+    sid = await open_session(client)
+    original = service._session_sync
+    active_during_sync: list[bool] = []
+
+    async def spy(runtime_: Runtime, user: str, sid_: str, **kwargs: Any) -> dict[str, Any]:
+        active_during_sync.append(sid_ in runtime_.active)
+        return await original(runtime_, user, sid_, **kwargs)
+
+    monkeypatch.setattr(service, "_session_sync", spy)
+    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "summarize_data"})
+
+    assert parse_sse(response.text)[-1][0] == "done"
+    assert active_during_sync == [True]
+    assert sid not in runtime.active  # released before `done` was sent
+
+
 async def test_the_dataset_history_keeps_the_last_five_versions(
     client: httpx.AsyncClient, swap_models, services: Services
 ) -> None:
