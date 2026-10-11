@@ -14,24 +14,26 @@ from the settings (ADK's own builds one from `GOOGLE_CLOUD_PROJECT` and
 Reasoning depth is the Claude `effort` of `AnthropicGenerateContentConfig`; ADK 2.11
 ignores `thinking_config.thinking_level` for Claude and raises when both are set.
 
-Thinking is disabled explicitly (`thinking_budget=0`, which ADK maps to
-`thinking: {type: "disabled"}`). Left unset, Claude Haiku 5.5 thinks adaptively by
-default with the display omitted, and ADK 2.11 sends such a signature-only block
-back as `redacted_thinking`, which breaks the root's call after a tool result.
-Without thinking blocks, the history-editing check of preserved thinking has
-nothing to check either, so ADK moving the session-context block between calls
-and the context filter trimming history stay harmless. Haiku 5.5 accepts disabled
-thinking at effort `high` or below, so every kind stays at `low` or `medium`.
+Claude thinks adaptively by default (since 2026-10-11): the root with
+`AGENT_ROOT_THINKING_BUDGET` (1,024) and the adapter with `AGENT_ADAPTER_THINKING_BUDGET`
+(2,048) extra output tokens, at most `settings.MAX_THINKING_BUDGET` each; the reviewer
+never thinks, and a budget of 0 turns thinking off for that kind (`thinking_budget=0`,
+which ADK maps to `thinking: {type: "disabled"}`; Gemini ignores both budgets). Haiku 5.5
+takes no thinking budget of its own (`budget_tokens` is a 400), so the config asks for
+ADK's adaptive mode (`thinking_budget=-1`, sent as
+`thinking: {type: "adaptive", display: "summarized"}`), the depth follows the kind's
+effort, and the budget is added to the kind's output cap, so the answer keeps its whole
+measured headroom however much the thinking uses. The summary comes back as thought
+parts, which the answer guard, ADK's output parsing and the stream translator all skip.
 
-For measurements only, `AGENT_ROOT_THINKING_BUDGET` and `AGENT_ADAPTER_THINKING_BUDGET`
-(0, off, by default; at most `settings.MAX_THINKING_BUDGET`) turn thinking on for that
-kind (`thinking_budget`). Haiku 5.5 takes no thinking budget of its own
-(`budget_tokens` is a 400), so the config asks for ADK's adaptive mode
-(`thinking_budget=-1`, sent as `thinking: {type: "adaptive", display: "summarized"}`),
-the depth follows the kind's effort, and the budget is added to the kind's output cap,
-so the answer keeps its whole measured headroom however much the thinking uses. The
-summary comes back as thought parts, which the answer guard, ADK's output parsing and
-the stream translator all skip. With both at 0 every request is unchanged.
+Two details keep the replayed thinking blocks harmless. Left unset, Haiku 5.5 would
+think with the display omitted, and ADK 2.11 sends such a signature-only block back as
+`redacted_thinking`, which breaks the root's call after a tool result; the summarized
+display avoids that. And the root replays its thinking block after a tool result while
+ADK moves the session-context block between calls, which fails the block's signature
+check; `VertexClaude` asks the API to drop such a block instead (`block_binding`, see
+`THINKING_BINDING_BETA`). Haiku 5.5 accepts disabled thinking at effort `high` or below,
+so every kind stays at `low` or `medium`.
 
 ADK 2.11 sends no response schema to Claude: `basic.py` sets
 `config.response_schema` for a tool-less agent with an `output_schema`, and
@@ -156,8 +158,9 @@ takes about 72 s and the deadline check would cancel attempt 2 exactly when it i
 needed. The trade-off: the 11 measured plans above 8,192 tokens are cut off and come
 back on attempt 2 (full file allowed, LOW thinking), without a repair round of their
 own; at the fitted rate, a finished plan of more than about 8,700 tokens leaves less
-than 75 s after its render anyway. Claude runs with thinking disabled and has the
-same 8,192 in `MAX_OUTPUT_TOKENS["adapter"]`, chosen from its own measurements."""
+than 75 s after its render anyway. Claude has the same 8,192 in
+`MAX_OUTPUT_TOKENS["adapter"]`, chosen from its own measurements, with its 2,048 tokens
+of thinking room added on top (`AGENT_ADAPTER_THINKING_BUDGET`)."""
 GEMINI_ADAPTER_FULL_THINKING = types.ThinkingLevel.LOW
 """The Gemini adapter's thinking level when a full file is allowed (the repair attempt).
 
@@ -244,6 +247,11 @@ def structured_output_format(schema: Any) -> dict[str, Any]:
     return {"type": "json_schema", "schema": transform_schema(response_json_schema(schema))}
 
 
+THINKING_BINDING_BETA = "thinking-binding-controls-2026-08-01"
+"""The Anthropic beta that lets a request say what to do with a replayed thinking block whose
+signature no longer matches the conversation prefix (`thinking.block_binding`)."""
+
+
 def _has_tools(llm_request: LlmRequest) -> bool:
     return bool(llm_request.config and llm_request.config.tools)
 
@@ -278,6 +286,18 @@ class VertexClaude(Claude):
                 **(kwargs.get("output_config") or {}),
                 "format": structured_output_format(schema),
             }
+        thinking_param = kwargs.get("thinking")
+        if isinstance(thinking_param, dict) and thinking_param.get("type") != "disabled":
+            # The root replays its thinking block after a tool result while ADK moves the session
+            # block between the two calls, so the block's signature no longer matches the prefix
+            # and the API answers 400 "Invalid `signature` in `thinking` block" (2 of 122 runs on
+            # 2026-10-11, every run on the rerun). With this control the API drops such a block
+            # instead of refusing the call; it needs the beta header, which the SDK knows.
+            kwargs["thinking"] = {**thinking_param, "block_binding": {"prefix_mismatch_behavior": "drop_block"}}
+            headers = dict(kwargs.get("extra_headers") or {})
+            betas = [value for value in (headers.get("anthropic-beta"), THINKING_BINDING_BETA) if value]
+            headers["anthropic-beta"] = ",".join(betas)
+            kwargs["extra_headers"] = headers
         return kwargs
 
     async def generate_content_async(
@@ -366,8 +386,8 @@ def allow_full_file(config: types.GenerateContentConfig, settings: AgentSettings
     """Widen one adapter request's config for an answer that may be a full file.
 
     The cap becomes `ADAPTER_FULL_MAX_OUTPUT_TOKENS` on Claude, which keeps its thinking
-    as it was (off, or a measurement's adaptive thinking with the adapter's thinking
-    budget added to the cap again), and `GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS` on
+    as it was (the default adaptive thinking with the adapter's thinking budget added to
+    the cap again, or off at a budget of 0), and `GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS` on
     Gemini, whose thinking level drops to `GEMINI_ADAPTER_FULL_THINKING`. The provider
     is read from the config's type, not from the settings, so the request decides. ADK
     copies the agent's config per request only shallowly (`_copy_request_scoped_fields`),

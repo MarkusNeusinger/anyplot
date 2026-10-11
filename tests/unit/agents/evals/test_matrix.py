@@ -170,7 +170,7 @@ async def test_two_fixtures_through_the_real_flow(
         2,
         2,
     )
-    assert stamp["thinking_budget"] == {"root": 0, "adapter": 0}  # off unless a measurement asks
+    assert stamp["thinking_budget"] == {"root": 1024, "adapter": 2048}  # the settings defaults since 2026-10-11
     assert result.report_path.name == f"{stamp['date']}-claude-haiku-5-5.json"
     assert json.loads(result.report_path.read_text())["runs"][1]["case_id"] == "scatter-basic-matplotlib"
     assert "## Runs that did not pass" in result.summary_path.read_text()
@@ -400,6 +400,7 @@ def test_configure_writes_the_thinking_budgets_only_when_the_flag_names_them() -
 
 
 def test_the_stamp_and_the_summary_name_a_thinking_measurement(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("AGENT_ROOT_THINKING_BUDGET", "0")
     monkeypatch.setenv("AGENT_ADAPTER_THINKING_BUDGET", "2048")
     settings = AgentSettings()
 

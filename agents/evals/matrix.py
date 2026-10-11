@@ -86,8 +86,8 @@ weighted tokens for the costliest run simulated on a cold prompt cache with a se
 review. `--thinking-budget ROOT,ADAPTER` measures Claude's adaptive thinking for the
 root and the adapter: each value (0 to 4,096, 0 off) is added to that agent's output
 cap (`AGENT_ROOT_THINKING_BUDGET`, `AGENT_ADAPTER_THINKING_BUDGET`, recorded in the stamp
-as `thinking_budget`), and the thinking tokens are priced as output; the defaults
-change no request.
+as `thinking_budget`), and the thinking tokens are priced as output; without the flag
+the settings defaults apply (root 1,024 and adapter 2,048 since 2026-10-11).
 
 The harness sets `ENVIRONMENT=development` for the `remote` and `local` renderers unless
 it runs on Cloud Run (`K_SERVICE`), because a developer's renderer token is accepted
