@@ -13,4 +13,4 @@
   and compresses it in a worker thread, off the event loop. A bundle over
   32 MiB, Cloud Run's limit on a response that is not streamed, can't be saved:
   the page shows an error line instead of a cut-off file. Analytics:
-  `agent_session_saved{include_data}`.
+  `agent_session_saved{include_data}`. (#12138)
