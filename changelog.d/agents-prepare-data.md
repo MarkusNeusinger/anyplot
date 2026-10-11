@@ -38,3 +38,12 @@
   column the message names, such as "gruppier nach x") or a `rename` on messages that
   ask for percentages, grouping or a rename, carries the new version in
   `done.dataset`, and restores it through the undo route.
+
+### Changed
+
+- **Step-1 turns skip the run queue's minute rule.** A turn that starts while the
+  data is unconfirmed cannot render (the pipeline answers `not_ready`, and nothing can
+  confirm the data during a turn), so the queue gives it the slot but counts no start
+  in the sliding window: the summary after a paste, a data request and the plot that
+  follows the confirmation no longer wait a minute for each other, while whole
+  pipeline runs keep one start a minute (`agents/anyplot/run_queue.py`).

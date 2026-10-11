@@ -933,8 +933,12 @@ async def post_message(
             headers={**_NO_STORE, "X-Accel-Buffering": "no"},
         )
     queue = runtime.run_queue()
+    # A turn while the data is unconfirmed cannot render (the pipeline answers `not_ready`,
+    # and no confirmation lands while the turn is active), so it takes the slot but no start
+    # in the minute: the summary after a paste and the data requests of step 1 do not wait.
+    rated = view is None or view.data_confirmed
     try:
-        ticket = queue.submit(user, sid)
+        ticket = queue.submit(user, sid, rated=rated)
     except QueueFull:
         logger.info("run queue full (ref %s): %d waiting", rid, queue.waiting_count)
         raise AgentsError(503, "capacity") from None

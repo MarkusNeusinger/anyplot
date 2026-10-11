@@ -148,7 +148,7 @@ The owner decided the queue, the rate and the serial renders on 2026-10-09, afte
 | Render time | 60 s per render, host-enforced and clamped to the remaining soft deadline | the pipeline's clamp and the renderer's kill path (`timeout_s` per theme) |
 | Request deadline | 180 s through `abort_signal` plus task cancellation on disconnect, counted from the moment the run leaves the queue | the `/messages` route |
 | Runs in flight per instance | 1 (`AGENT_RUN_CONCURRENCY`) | the run queue |
-| Run starts | fewer than `AGENT_RUNS_PER_MINUTE` (1) in the last 60 s, a sliding window of start times | the run queue |
+| Run starts | fewer than `AGENT_RUNS_PER_MINUTE` (1) in the last 60 s, a sliding window of start times; a turn started while the data is unconfirmed cannot render and takes no start, only the slot | the run queue |
 | Wait in the queue | at most `AGENT_QUEUE_MAX_WAIT_S` (600 s); a run that waited that long ends with `error{code:"capacity"}`, unless its turn comes at that very moment. Through the BFF, a whole turn ends by `AGENT_TURN_MAX_S` (890 s), below anyplot-api's 900 s request timeout, so the full wait plus the 180 s run fits | the run queue; `AGENT_TURN_MAX_S` in the BFF |
 | Queue length | rate x maximum wait / 60, so 10 entries at the defaults; a new entry past that is refused with `503 capacity` before the stream starts. The formula assumes runs within the 60 s rate window, so admission promises a place, not a start | the run queue |
 | Runs per user | one queued or running run, or one theme toggle in flight, in any session; anything more gets `409 run_active` | the run registry |

@@ -6,7 +6,14 @@ allow it, in the order of its lane and then its arrival:
 * **Concurrency.** At most `AGENT_RUN_CONCURRENCY` runs are in flight (default 1),
   because spikes S and S2 showed one 4 GiB instance serves one sandbox at a time safely.
 * **Rate.** A run may start only while fewer than `AGENT_RUNS_PER_MINUTE` runs started
-  in the last 60 seconds (default 1), a sliding window of start times.
+  in the last 60 seconds (default 1), a sliding window of start times. An entry
+  submitted as not `rated` takes a slot but no place in the window and never waits
+  for it: the route marks a turn so while the session's data is unconfirmed, because
+  such a turn cannot render (the pipeline answers `not_ready`, and no confirmation can
+  land while the turn is active), so the summary after a paste and the data requests
+  of step 1 follow each other at once while whole pipeline runs keep the minute rule.
+  The order stays first come first served: an unrated entry behind a rated one that
+  waits for the window waits with it.
 
 The queue holds at most `capacity = AGENT_RUNS_PER_MINUTE * AGENT_QUEUE_MAX_WAIT_S / 60`
 waiting entries (10 at the defaults): a new entry that would stand at a position past
@@ -94,6 +101,8 @@ class Ticket:
     lane: Lane
     seq: int
     enqueued_at: float
+    rated: bool = True
+    """Counts toward the rate window; False for a turn that cannot render (see the module docstring)."""
     state: TicketState = "waiting"
     started_at: float | None = None
     changed: asyncio.Event = field(default_factory=asyncio.Event, repr=False)
@@ -161,13 +170,13 @@ class RunQueue:
     def in_flight(self) -> int:
         return len(self._running)
 
-    def submit(self, user: str, session_id: str, lane: Lane = "normal") -> Ticket:
+    def submit(self, user: str, session_id: str, lane: Lane = "normal", *, rated: bool = True) -> Ticket:
         """Queue a run, or start it at once; raises `QueueFull` when it would wait past the maximum."""
         now = self._clock()
         self._pump(now)
-        ticket = Ticket(user=user, session_id=session_id, lane=lane, seq=next(self._seq), enqueued_at=now)
+        ticket = Ticket(user=user, session_id=session_id, lane=lane, seq=next(self._seq), enqueued_at=now, rated=rated)
         position = 1 + sum(1 for other in self._waiting if other.order < ticket.order)
-        if position > self.capacity and not (position == 1 and self._can_start(now)):
+        if position > self.capacity and not (position == 1 and self._can_start(now, rated)):
             raise QueueFull(f"position {position} is past the queue's capacity of {self.capacity}")
         self._waiting.append(ticket)
         self._waiting.sort(key=lambda entry: entry.order)
@@ -212,7 +221,8 @@ class RunQueue:
             return math.inf
         times = [entry.enqueued_at + self.max_wait_s for entry in self._waiting]
         self._trim(now)
-        if len(self._running) < self.concurrency and len(self._starts) >= self.per_minute:
+        head = self._waiting[0]
+        if head.rated and len(self._running) < self.concurrency and len(self._starts) >= self.per_minute:
             times.append(self._starts[0] + self.window_s)
         return min(times)
 
@@ -255,9 +265,9 @@ class RunQueue:
         while self._starts and now - self._starts[0] >= self.window_s:
             self._starts.popleft()
 
-    def _can_start(self, now: float) -> bool:
+    def _can_start(self, now: float, rated: bool = True) -> bool:
         self._trim(now)
-        return len(self._running) < self.concurrency and len(self._starts) < self.per_minute
+        return len(self._running) < self.concurrency and (not rated or len(self._starts) < self.per_minute)
 
     def _pump(self, now: float) -> None:
         # An entry past its maximum wait never starts, however late the pump that finds
@@ -265,11 +275,12 @@ class RunQueue:
         # than leaving with `capacity`. So: expire the overdue, start, expire the due.
         expired = self._expire(lambda waited: waited > self.max_wait_s, now)
         started: list[Ticket] = []
-        while self._waiting and self._can_start(now):
+        while self._waiting and self._can_start(now, self._waiting[0].rated):
             entry = self._waiting.pop(0)
             entry.state, entry.started_at = "running", now
             self._running.append(entry)
-            self._starts.append(now)
+            if entry.rated:
+                self._starts.append(now)
             started.append(entry)
         expired += self._expire(lambda waited: waited >= self.max_wait_s, now)
         if expired or started:

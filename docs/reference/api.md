@@ -624,8 +624,11 @@ relayed up to 512 KiB (the largest dataset the service accepts fits). An error
 code outside the list becomes `internal`. The BFF stops reading after `done`.
 
 Every turn waits in the agents service's run queue, which runs one turn at a
-time and starts at most one a minute. A turn that can start at once sends no
-`queued` status. Otherwise the stream sends `ready`, then a `queued` status at
+time and starts at most one a minute. A turn that starts while the data is
+unconfirmed cannot draw a plot (the pipeline answers `not_ready`, and nothing
+can confirm the data during a turn), so it takes the slot but no start in the
+minute: the summary after a paste and the data requests of step 1 follow each
+other without a wait. A turn that can start at once sends no `queued` status. Otherwise the stream sends `ready`, then a `queued` status at
 once, on every change of the position or the queue length, and every 15
 seconds while nothing changes, and then the turn's own events. If you are
 already over the daily token budget, the stream sends `ready`,
