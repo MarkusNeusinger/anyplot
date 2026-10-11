@@ -11,4 +11,4 @@
   `test_pick_oldest_returns_real_spec` drops from 30.3 s to 2.9 s locally (mean
   of three runs) and from 63.7 s to 5.2 s under coverage, as CI runs it; new
   fake-git tests pin the listing, batch-parsing and picking rules in
-  milliseconds.
+  milliseconds. (#12135)
