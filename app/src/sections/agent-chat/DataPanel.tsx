@@ -2,8 +2,13 @@
  * The data panel of the agent chat: paste data (200 KB cap with a live
  * counter), parse it on the server, check the 20-row preview and the parser's
  * warnings, and bind each spec role to a column (the server's defaults come
- * preselected). `.create_plot()` runs the pipeline once every required role
- * has a column.
+ * preselected).
+ *
+ * Two steps, data first. Step 1 ends with `.confirm()`, once every required
+ * role has a column: the user says the preview and the bindings are right.
+ * Only then does the panel show the data's shape and `.create_plot()` (step
+ * 2). A new parse or a binding change takes the panel back to step 1, because
+ * a plot of the wrong data is wrong however good it looks.
  *
  * Every role of the spec gets a column choice (`bindingRows` in `bindings.ts`):
  * a single role one dropdown, a variadic family one per member plus one for
@@ -187,12 +192,22 @@ function TranscriptionCard({ transcription, canUse, onUse, onDiscard }: Transcri
   );
 }
 
+/** The step's one action under the bindings: `.confirm()`, then `.create_plot()`. */
+const stepButtonSx = {
+  ...actionButtonSx,
+  border: '1px solid var(--rule)',
+  px: 2,
+  py: 1,
+  width: { xs: '100%', sm: 'auto' },
+} as const;
+
 interface DataPanelProps {
   state: AgentSessionState;
   onParse: (text: string) => void;
   onConfirmTranscription: () => void;
   onDiscardTranscription: () => void;
   onBind: (role: string, column: string | null) => void;
+  onConfirmData: () => void;
   onCreatePlot: () => void;
 }
 
@@ -202,20 +217,22 @@ export function DataPanel({
   onConfirmTranscription,
   onDiscardTranscription,
   onBind,
+  onConfirmData,
   onCreatePlot,
 }: DataPanelProps) {
   const [text, setText] = useState('');
   const bytes = utf8Bytes(text);
   const over = bytes > MAX_DATASET_BYTES;
   const ready = state.phase === 'ready' && !!state.sessionId;
-  // A turn, a theme render, a parse or a binding change in flight: the server
-  // would refuse or race a second one.
+  // A turn, a theme render, a parse, a binding change or a confirmation in
+  // flight: the server would refuse or race a second one.
   const busy = sessionBusy(state);
   const transcription = state.transcription;
   const dataset = state.dataset;
   const columns = dataset?.parsed.profile.columns ?? [];
-  // A pending transcription blocks the plot too: the user decides on the data first.
-  const canCreate = ready && !!dataset && state.bindingsComplete && !busy && !transcription;
+  // A pending transcription blocks both steps: the user decides on the data first.
+  const canConfirm = ready && !!dataset && state.bindingsComplete && !busy && !transcription;
+  const canCreate = canConfirm && state.dataConfirmed;
   const rows = bindingRows(state.roles, state.bindings, columns.length);
 
   // `.use()`: the text box shows the CSV that gets stored, so the user can
@@ -407,21 +424,54 @@ export function DataPanel({
           </Box>
 
           <Box>
+            {/* One line that stays mounted, so a screen reader hears the step change. */}
             <Box
-              component="button"
-              type="button"
-              onClick={onCreatePlot}
-              disabled={!canCreate}
-              sx={{
-                ...actionButtonSx,
-                border: '1px solid var(--rule)',
-                px: 2,
-                py: 1,
-                width: { xs: '100%', sm: 'auto' },
-              }}
+              id="agent-step-line"
+              data-testid="data-step"
+              aria-live="polite"
+              // A notch above the `#` labels: this line says what to do next.
+              sx={{ ...labelSx, mb: 0.75, color: 'var(--ink-soft)' }}
             >
-              .create_plot()
+              {state.dataConfirmed ? (
+                <>
+                  <Box component="span" aria-hidden sx={{ color: colors.success, mr: 0.75 }}>
+                    ✓
+                  </Box>
+                  data fits · {countOf(dataset.parsed.profile.rows, 'row')} ·{' '}
+                  {countOf(columns.length, 'column')}
+                </>
+              ) : (
+                '# step 1 — check the preview and the bindings, then confirm'
+              )}
             </Box>
+            {state.dataConfirmed ? (
+              <Box
+                component="button"
+                type="button"
+                onClick={onCreatePlot}
+                disabled={!canCreate}
+                aria-describedby="agent-step-line"
+                sx={stepButtonSx}
+              >
+                .create_plot()
+              </Box>
+            ) : (
+              <Box
+                component="button"
+                type="button"
+                onClick={onConfirmData}
+                disabled={!canConfirm}
+                aria-describedby="agent-step-line"
+                sx={stepButtonSx}
+              >
+                {state.confirmBusy ? '.confirm() …' : '.confirm()'}
+              </Box>
+            )}
+            {state.confirmError && (
+              <Box role="alert" sx={{ ...bodyTextSx, color: colors.error, mt: 1 }}>
+                {describeDataFailure(state.confirmError.code, state.confirmError.ref)}
+              </Box>
+            )}
           </Box>
         </Box>
       )}

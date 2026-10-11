@@ -115,6 +115,7 @@ from .schemas import (
     Binding,
     Defect,
     FailureReason,
+    NotReadyReason,
     PipelineArgs,
     PlotResult,
     ReviewRequest,
@@ -338,8 +339,15 @@ def _result_event(result: PlotResult) -> Event:
     return Event(output=result.model_dump(mode="json"))
 
 
-def load_inputs(ctx: Context, services: Services) -> tuple[SessionView | None, StoredDataset | None, str | None]:
-    """The session view and dataset, or the `not_ready` reason (`no_dataset`, `incomplete_bindings`)."""
+def load_inputs(
+    ctx: Context, services: Services
+) -> tuple[SessionView | None, StoredDataset | None, NotReadyReason | None]:
+    """The session view and dataset, or the `not_ready` reason.
+
+    `no_dataset`, `incomplete_bindings`, or `data_unconfirmed`: the user has not confirmed
+    the dataset with its bindings in the data panel (step 1 of two), so neither the model
+    nor a stale page can start a plot on data the user has not looked at.
+    """
     view = read_session(ctx.state)
     if view is None:
         return None, None, "no_dataset"
@@ -349,6 +357,8 @@ def load_inputs(ctx: Context, services: Services) -> tuple[SessionView | None, S
     check = check_bindings(view.bindings, view.snapshot.roles(), dataset.profile)
     if not check.complete:
         return view, dataset, "incomplete_bindings"
+    if not view.data_confirmed:
+        return view, dataset, "data_unconfirmed"
     return view, dataset, None
 
 
@@ -643,9 +653,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     ledger = ledger_for(ctx.invocation_id)
     view, dataset, not_ready = load_inputs(ctx, services)
     if not_ready is not None or view is None or dataset is None:
-        yield _result_event(
-            PlotResult.not_ready("incomplete_bindings" if not_ready == "incomplete_bindings" else "no_dataset")
-        )
+        yield _result_event(PlotResult.not_ready(not_ready or "no_dataset"))
         return
     ledger.pipeline_active = True
     theme = node_input.theme or _default_theme(services, ctx.session.id, view.library, node_input.base)

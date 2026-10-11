@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -44,6 +44,35 @@ const json = (status: number, body: unknown) =>
 
 let fetchMock: ReturnType<typeof vi.fn>;
 
+const DATASET = {
+  preview: [
+    ['1.5', '52'],
+    ['2.0', '58'],
+  ],
+  profile: {
+    rows: 2,
+    columns: [
+      { name: 'hours', dtype: 'number', missing: 0, unique: 2 },
+      { name: 'score', dtype: 'integer', missing: 0, unique: 2 },
+    ],
+    source_format: 'csv',
+    decimal: '.',
+    warnings: [],
+  },
+  bindings: [
+    { role: 'x', column: 'hours' },
+    { role: 'y', column: 'score' },
+  ],
+  warnings: [],
+  roles: ['x', 'y'].map(name => ({
+    name,
+    kinds: ['numeric'],
+    required: true,
+    variadic: false,
+    description: `${name} values`,
+  })),
+};
+
 function stubFetch(
   openStatus = 200,
   openBody: unknown = { status: openStatus, message: 'admin required' }
@@ -61,6 +90,34 @@ function stubFetch(
     }
     if (url.pathname.endsWith('/debug/agent/status')) {
       return json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true });
+    }
+    if (url.pathname.endsWith('/sessions/S1/dataset') && method === 'POST') {
+      return json(200, DATASET);
+    }
+    if (url.pathname.endsWith('/sessions/S1/bindings') && method === 'PUT') {
+      return json(200, {
+        bindings: JSON.parse(String(init.body)),
+        complete: true,
+        missing_roles: [],
+      });
+    }
+    if (url.pathname.endsWith('/sessions/S1/dataset/confirm') && method === 'POST') {
+      return json(200, { confirmed: true, rows: 2, columns: 2 });
+    }
+    if (url.pathname.endsWith('/sessions/S1/messages') && method === 'POST') {
+      // The root swapped the columns during the turn; `done` syncs the result.
+      const done = {
+        llm_calls: 2,
+        bindings: [
+          { role: 'x', column: 'score' },
+          { role: 'y', column: 'hours' },
+        ],
+        data_confirmed: false,
+      };
+      return new Response(
+        `event: message\ndata: {"text":"Swapped."}\n\nevent: done\ndata: ${JSON.stringify(done)}\n\n`,
+        { status: 200, headers: { 'Content-Type': 'text/event-stream' } }
+      );
     }
     if (url.pathname.endsWith('/specs/scatter-basic')) {
       return json(200, {
@@ -185,6 +242,62 @@ describe('AgentChatPage gating', () => {
       )
     );
     expect(screen.getByRole('button', { name: 'matplotlib' })).toBeDisabled();
+  });
+
+  it('walks the two steps: confirm the data, then create the plot', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    const current = () =>
+      within(screen.getByRole('list', { name: 'Steps' }))
+        .getAllByRole('listitem')
+        .filter(item => item.getAttribute('aria-current') === 'step')
+        .map(item => item.textContent);
+    expect(await screen.findByLabelText(/# your data/)).toBeInTheDocument();
+    expect(current()).toEqual(['1 data']);
+    expect(
+      screen.getByText(/check the preview and the bindings, confirm, then/)
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/# your data/), {
+      target: { value: 'hours,score\n1.5,52\n2.0,58\n' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    const confirm = await screen.findByRole('button', { name: '.confirm()' });
+    await waitFor(() => expect(confirm).toBeEnabled());
+    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+
+    fireEvent.click(confirm);
+    expect(await screen.findByRole('button', { name: '.create_plot()' })).toBeEnabled();
+    expect(current()).toEqual(['·2 plot']);
+    expect(screen.getByTestId('data-step')).toHaveTextContent('data fits · 2 rows · 2 columns');
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_confirmed', {
+      size_bucket: 'lt_1kb',
+    });
+    // The chat composer was usable the whole time; it is not part of the steps.
+    expect(screen.getByLabelText('Message')).toBeEnabled();
+  });
+
+  it("goes back to step 1 with the dropdowns the turn's done reports", async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    fireEvent.change(await screen.findByLabelText(/# your data/), {
+      target: { value: 'hours,score\n1.5,52\n2.0,58\n' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    const confirm = await screen.findByRole('button', { name: '.confirm()' });
+    await waitFor(() => expect(confirm).toBeEnabled());
+    fireEvent.click(confirm);
+    expect(await screen.findByRole('button', { name: '.create_plot()' })).toBeEnabled();
+    expect(screen.getByLabelText(/^x/)).toHaveValue('hours');
+
+    fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'swap x and y' } });
+    fireEvent.click(screen.getByRole('button', { name: '.send()' }));
+    expect(await screen.findByText('Swapped.')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: '.confirm()' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^x/)).toHaveValue('score');
+    expect(screen.getByLabelText(/^y/)).toHaveValue('hours');
+    expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
   });
 
   it('offers a reload when the session open got no answer', async () => {

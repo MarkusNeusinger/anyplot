@@ -119,6 +119,7 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
         # The errors quote column names from the user's dataset.
         errors = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(check.errors[:10], ensure_ascii=False))
         return {"status": "error", "code": "invalid_bindings", "errors": errors}
+    # Other bindings than the user confirmed leave the confirmation's fingerprint behind; the panel asks again.
     for key, value in delta.items():
         tool_context.state[key] = value
     return {"status": "ok", "complete": check.complete, "missing_roles": check.missing_roles}

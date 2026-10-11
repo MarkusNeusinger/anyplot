@@ -1,10 +1,12 @@
 /**
  * "Use with my data": the admin-only agent chat at `/debug/agent?spec=&library=&language=`.
  *
- * Paste data, check the preview and the role bindings, `.create_plot()`, then
- * refine in plain words; every shipped version gets a result card with the
- * image, the code and the downloads. The page talks only to the BFF under
- * `/debug/agent/*` (`src/lib/agent.ts`, `src/hooks/useAgentSession.ts`).
+ * Two steps, data first: paste data, check the preview and the role bindings
+ * and `.confirm()` them (step 1), then `.create_plot()` and refine in plain
+ * words (step 2); every shipped version gets a result card with the image, the
+ * code and the downloads. A line above the panels names the current step. The
+ * page talks only to the BFF under `/debug/agent/*` (`src/lib/agent.ts`,
+ * `src/hooks/useAgentSession.ts`).
  *
  * Gates, outermost first:
  * 1. `CONFIG.features.agentChat` (build-time `VITE_ENABLE_AGENT_CHAT`): off, the
@@ -39,6 +41,7 @@ import { DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { ERROR_TEXT } from 'src/sections/agent-chat/messages';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
+import { StepHeader } from 'src/sections/agent-chat/StepHeader';
 import {
   actionButtonSx,
   bodyTextSx,
@@ -354,6 +357,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
       {/* `colorScheme` gives the native controls (scrollbars, select menus) the site theme. */}
       <Box sx={{ py: 2, maxWidth: 1480, mx: 'auto', colorScheme: isDark ? 'dark' : 'light' }}>
         {header}
+        <StepHeader current={state.dataConfirmed ? 2 : 1} />
         <Box
           sx={{
             display: 'grid',
@@ -368,6 +372,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             onConfirmTranscription={() => void session.confirmTranscription()}
             onDiscardTranscription={session.discardTranscription}
             onBind={session.setBinding}
+            onConfirmData={() => void session.confirmData()}
             onCreatePlot={() => void session.createPlot()}
           />
 
@@ -410,9 +415,9 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
 
             {state.items.length === 0 && !state.run && (
               <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
-                paste your data, check the bindings, then <code>.create_plot()</code>. afterwards,
-                ask for changes in plain words: &quot;log scale on y&quot;, &quot;dark
-                version&quot;, &quot;label the outliers&quot;.
+                paste your data, check the preview and the bindings, confirm, then{' '}
+                <code>.create_plot()</code>. afterwards, ask for changes in plain words: &quot;log
+                scale on y&quot;, &quot;dark version&quot;, &quot;label the outliers&quot;.
               </Box>
             )}
 

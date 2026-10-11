@@ -185,7 +185,8 @@ async def test_a_run_that_waited_the_maximum_ends_with_capacity(
 
     assert [name for name, _ in events] == ["ready", "status", "error", "done"]
     assert events[2][1] == {"code": "capacity", "ref": "req-1"}
-    assert events[3][1] == {"llm_calls": 0, "tokens": 0}
+    # No model ran; `done` still syncs the session's bindings and confirmation state.
+    assert (events[3][1]["llm_calls"], events[3][1]["tokens"], events[3][1]["data_confirmed"]) == (0, 0, True)
     assert fake.requests == [] and sid not in runtime.active
 
 

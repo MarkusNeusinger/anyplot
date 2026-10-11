@@ -10,6 +10,8 @@ dataset and bindings from here, never from its arguments.
 agents service knows about the catalogue pair, since it has no database access.
 """
 
+import hashlib
+import json
 from dataclasses import dataclass, field
 from typing import Any, Self
 
@@ -30,6 +32,12 @@ HINTS = PREFIX + "hints"
 READINESS = PREFIX + "readiness"
 DATASET_ID = PREFIX + "dataset_id"
 BINDINGS = PREFIX + "bindings"
+CONFIRMED = PREFIX + "confirmed"
+"""The fingerprint of what the user confirmed (`.confirm()` in the data panel): the dataset
+id and the bindings as they were (`confirmation_fingerprint`). The plot pipeline runs only
+while the fingerprint of the current state equals it, so a new dataset (a paste, a
+transcription's `.use()`) or any binding change, also one that lands between the
+confirmation's read and its write, leaves the data unconfirmed without an explicit reset."""
 LAST_STATUS = PREFIX + "last_status"
 VERSIONS = PREFIX + "versions"
 
@@ -73,10 +81,34 @@ class SessionView:
     bindings: list[Binding] = field(default_factory=list)
     versions: int = 0
     last_status: str | None = None
+    confirmed: str | None = None
+    """The confirmation fingerprint the state holds, if any (`CONFIRMED`)."""
 
     @property
     def lang(self) -> str:
         return self.locale.lower()[:2] if self.locale else "en"
+
+    @property
+    def data_confirmed(self) -> bool:
+        """Whether the user confirmed the current dataset with its current bindings (step 1 of two)."""
+        return bool(self.dataset_id) and self.confirmed == confirmation_fingerprint(self.dataset_id, self.bindings)
+
+
+def confirmation_fingerprint(dataset_id: str | None, bindings: list[Binding]) -> str:
+    """What a confirmation covers: the dataset id and the bindings, as one short digest.
+
+    The bindings are a set of role-to-column assignments (`check_bindings` reads them
+    unordered), so they are sorted before hashing: the same assignments in another order
+    are the same confirmation.
+    """
+    assignments = sorted((binding.role, binding.column) for binding in bindings)
+    payload = json.dumps({"dataset": dataset_id, "bindings": assignments})
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
+
+
+def confirm_delta(view: SessionView) -> dict[str, Any]:
+    """The state delta of `.confirm()`: the current dataset with its current bindings counts as confirmed."""
+    return {CONFIRMED: confirmation_fingerprint(view.dataset_id, view.bindings)}
 
 
 def initial_state(
@@ -113,6 +145,7 @@ def read_session(state: Any) -> SessionView | None:
         bindings=[Binding.model_validate(item) for item in raw_bindings],
         versions=int(state.get(VERSIONS) or 0),
         last_status=state.get(LAST_STATUS),
+        confirmed=state.get(CONFIRMED),
     )
 
 

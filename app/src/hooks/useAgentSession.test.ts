@@ -8,6 +8,8 @@ import {
   compactFamilies,
   familyOf,
   initialAgentState,
+  missingRolesOf,
+  sessionBusy,
   type TranscriptionState,
   useAgentSession,
   type UseAgentSessionOptions,
@@ -182,6 +184,9 @@ const baseRoutes = (): Record<string, Handler> => ({
   'POST /sessions/S1/dataset': () => json(200, DATASET),
   'PUT /sessions/S1/bindings': call =>
     json(200, { bindings: call.body, complete: true, missing_roles: [] }),
+  'POST /sessions/S1/dataset/confirm': () => json(200, { confirmed: true, rows: 2, columns: 3 }),
+  'POST /sessions/S1/library': () =>
+    json(200, { session_id: 'S1', eligibility: { eligible: true, status: 'clean', reasons: [] } }),
   'POST /sessions/S1/cancel': () => new Response(null, { status: 204 }),
   'GET /sessions/S1/artifacts/plot-light.png': () =>
     new Response('png', { status: 200, headers: { 'Content-Type': 'image/png' } }),
@@ -457,6 +462,153 @@ describe('useAgentSession: data and bindings', () => {
       status: 'discarded',
       size_bucket: 'lt_1kb',
     });
+  });
+});
+
+describe('useAgentSession: confirming the data (step 1)', () => {
+  const confirmCalls = () => calls.filter(call => call.path.endsWith('/dataset/confirm'));
+
+  it('confirms the stored data and its bindings, then records the size bucket', async () => {
+    const { result } = await openSession(baseRoutes());
+    await act(() => result.current.parseData('Student,Study Hours,Exam Score\nS01,1.5,52\n'));
+    expect(result.current.state.dataConfirmed).toBe(false);
+
+    await act(() => result.current.confirmData());
+    expect(confirmCalls()).toEqual([
+      expect.objectContaining({ method: 'POST', path: '/sessions/S1/dataset/confirm' }),
+    ]);
+    expect(confirmCalls()[0].body).toBeUndefined();
+    expect(confirmCalls()[0].headers['X-Anyplot-Client']).toBe('agent-chat/1');
+    expect(result.current.state.dataConfirmed).toBe(true);
+    expect(result.current.state.confirmBusy).toBe(false);
+    expect(trackEvent).toHaveBeenLastCalledWith('agent_data_confirmed', { size_bucket: 'lt_1kb' });
+  });
+
+  it('asks nothing without a stored dataset or while a table read from text waits', async () => {
+    const routes = baseRoutes();
+    const { result } = await openSession(routes);
+    await act(() => result.current.confirmData());
+    expect(confirmCalls()).toHaveLength(0);
+
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    routes['POST /sessions/S1/dataset'] = () => json(200, TRANSCRIBED);
+    await act(() => result.current.parseData(FREE_TEXT));
+    await act(() => result.current.confirmData());
+    expect(confirmCalls()).toHaveLength(0);
+    expect(result.current.state.dataConfirmed).toBe(false);
+  });
+
+  it('keeps the reason of a refused confirmation and stays at step 1', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset/confirm'] = () =>
+      json(422, { detail: 'no_dataset', ref: 'r-c' });
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    await act(() => result.current.confirmData());
+    expect(result.current.state.confirmError).toEqual({ code: 'no_dataset', ref: 'r-c' });
+    expect(result.current.state.dataConfirmed).toBe(false);
+    expect(trackEvent).not.toHaveBeenCalledWith('agent_data_confirmed', expect.anything());
+  });
+
+  it('drops the confirmation on a binding change and a new parse, not on a library switch', async () => {
+    const { result } = await openSession(baseRoutes());
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    await act(() => result.current.confirmData());
+    expect(result.current.state.dataConfirmed).toBe(true);
+
+    await act(async () => {
+      await result.current.switchLibrary('seaborn');
+    });
+    expect(result.current.state.dataConfirmed).toBe(true);
+
+    await act(async () => result.current.setBinding('x', 'Student'));
+    await waitFor(() => expect(result.current.state.bindingsBusy).toBe(false));
+    expect(result.current.state.bindings).toEqual({ x: 'Student', y: 'Exam Score' });
+    expect(result.current.state.dataConfirmed).toBe(false);
+
+    await act(() => result.current.confirmData());
+    expect(result.current.state.dataConfirmed).toBe(true);
+    // The parse's own default PUT lands after the store already cleared it.
+    await act(() => result.current.parseData('a,b\n3,4\n'));
+    expect(result.current.state.dataConfirmed).toBe(false);
+    expect(confirmCalls()).toHaveLength(2);
+  });
+
+  it("takes the bindings and the step state a turn's done reports", async () => {
+    const routes = baseRoutes();
+    let done: Record<string, unknown> = { llm_calls: 1 };
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['message', { text: 'Done.' }],
+        ['done', done],
+      ]);
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    await act(() => result.current.confirmData());
+
+    // A done without the fields (a refused turn, a gone session) changes nothing.
+    await act(() => result.current.sendMessage('what is on x?'));
+    expect(result.current.state.bindings).toEqual({ x: 'Study Hours', y: 'Exam Score' });
+    expect(result.current.state.dataConfirmed).toBe(true);
+
+    // The root swapped the columns: the dropdowns follow and step 1 is back.
+    done = {
+      llm_calls: 2,
+      bindings: [
+        { role: 'x', column: 'Exam Score' },
+        { role: 'y', column: 'Study Hours' },
+      ],
+      data_confirmed: false,
+    };
+    await act(() => result.current.sendMessage('swap x and y'));
+    expect(result.current.state.bindings).toEqual({ x: 'Exam Score', y: 'Study Hours' });
+    expect(result.current.state).toMatchObject({
+      bindingsComplete: true,
+      missingRoles: [],
+      dataConfirmed: false,
+    });
+
+    // A list that leaves a required role open marks the set incomplete.
+    done = {
+      bindings: [
+        { role: 'x', column: 'Exam Score' },
+        { role: 'y', column: null },
+      ],
+      data_confirmed: false,
+    };
+    await act(() => result.current.sendMessage('drop y'));
+    expect(result.current.state.bindings).toEqual({ x: 'Exam Score' });
+    expect(result.current.state).toMatchObject({ bindingsComplete: false, missingRoles: ['y'] });
+    // The sync only reads: the one PUT is the parse's own.
+    expect(calls.filter(call => call.method === 'PUT')).toHaveLength(1);
+  });
+
+  it('offers .confirm() again when the server answers data_unconfirmed', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        [
+          'plot',
+          {
+            status: 'not_ready',
+            reason: 'data_unconfirmed',
+            attempts: 0,
+            artifacts: [],
+            changes: [],
+            residual_defects: [],
+          },
+        ],
+        ['done', {}],
+      ]);
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    await act(() => result.current.confirmData());
+    await act(() => result.current.createPlot());
+    expect(lastItem(result.current.state.items)).toMatchObject({
+      kind: 'plot_failed',
+      result: { status: 'not_ready', reason: 'data_unconfirmed' },
+    });
+    expect(result.current.state.dataConfirmed).toBe(false);
   });
 });
 
@@ -788,6 +940,59 @@ describe('agentReducer', () => {
       transcription
     );
   });
+
+  it('holds the confirmation until the data or a binding changes', () => {
+    let state: AgentSessionState = {
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+    };
+    state = agentReducer(state, { type: 'confirm_start' });
+    expect(sessionBusy(state)).toBe(true);
+    state = agentReducer(state, { type: 'confirm_done' });
+    expect(state).toMatchObject({ dataConfirmed: true, confirmBusy: false });
+
+    const eligibility = { eligible: true, status: 'clean', reasons: [] };
+    const failure = { code: 'invalid', ref: null };
+    const kept = (next: AgentSessionState) => expect(next.dataConfirmed).toBe(true);
+    const dropped = (next: AgentSessionState) => expect(next.dataConfirmed).toBe(false);
+    kept(agentReducer(state, { type: 'library_done', library: 'seaborn', eligibility }));
+    kept(agentReducer(state, { type: 'bindings_failed', bindings: {}, failure }));
+    kept(agentReducer(state, { type: 'parse_failed', failure }));
+    const profile = { ...DATASET.profile, columns: [] };
+    dropped(
+      agentReducer(state, { type: 'parse_done', parsed: { ...DATASET, profile }, bytes: 10 })
+    );
+    const transcription: TranscriptionState = {
+      text: TRANSCRIBED.text,
+      preview: TRANSCRIBED.preview,
+      profile,
+      warnings: [],
+      note: '',
+      bytes: 26,
+    };
+    dropped(agentReducer(state, { type: 'transcribed', transcription }));
+    dropped(
+      agentReducer(state, {
+        type: 'bindings_done',
+        bindings: { x: 'a' },
+        complete: true,
+        missingRoles: [],
+      })
+    );
+    dropped(agentReducer(state, { type: 'confirm_lost' }));
+
+    const refused = agentReducer(agentReducer(state, { type: 'confirm_lost' }), {
+      type: 'confirm_failed',
+      failure: { code: 'run_active', ref: 'r' },
+    });
+    expect(refused).toMatchObject({
+      dataConfirmed: false,
+      confirmBusy: false,
+      confirmError: { code: 'run_active', ref: 'r' },
+    });
+    expect(agentReducer(refused, { type: 'confirm_start' }).confirmError).toBeNull();
+  });
 });
 
 describe('variadic families', () => {
@@ -804,6 +1009,13 @@ describe('variadic families', () => {
     expect(familyOf('yerr1', roles)?.name).toBe('yerr');
     expect(familyOf('y', roles)).toBeNull();
     expect(familyOf('ya', roles)).toBeNull();
+  });
+
+  it('names the required roles without a column, a family by its name', () => {
+    const spec = [role('x'), role('y', { variadic: true }), role('series', { required: false })];
+    expect(missingRolesOf({}, spec)).toEqual(['x', 'y']);
+    expect(missingRolesOf({ x: 'a', y2: 'b' }, spec)).toEqual([]);
+    expect(missingRolesOf({ y1: 'b', series: 'c' }, spec)).toEqual(['x']);
   });
 
   it('renumbers each family in member order and drops cleared members', () => {
