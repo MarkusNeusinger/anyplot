@@ -7,6 +7,7 @@ httpx client on a MockTransport that records every upstream request.
 
 import asyncio
 import base64
+import gzip
 import hashlib
 import hmac
 import json
@@ -15,6 +16,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
+from fastapi.concurrency import run_in_threadpool
 from fastapi.testclient import TestClient
 
 from api.dependencies import require_db
@@ -956,6 +958,37 @@ class TestBundle:
         assert (sent.method, sent.url.path) == ("GET", "/v1/sessions/abcdefghijk/bundle")
         assert sent.headers["X-Anyplot-User"] == derive_user_id(KEY.encode(), ADMIN)
 
+    def test_compresses_the_bundle_in_a_worker_thread(self, client, upstream, monkeypatch) -> None:
+        """The API's GZipMiddleware would compress the buffered bundle in one call on the event loop."""
+        raw = json.dumps(_bundle(png_bytes=4096)).encode()
+        upstream.handler = lambda request: httpx.Response(200, content=raw)
+        in_thread: list[str] = []
+
+        async def recording(func, *args, **kwargs):
+            in_thread.append(func.__name__)
+            return await run_in_threadpool(func, *args, **kwargs)
+
+        monkeypatch.setattr("api.routers.agent.run_in_threadpool", recording)
+        with client.stream("GET", self.PATH, headers={"Accept-Encoding": "gzip, deflate"}) as response:
+            wire = b"".join(response.iter_raw())
+
+        assert response.status_code == 200
+        assert response.headers["Content-Encoding"] == "gzip"
+        assert response.headers["Vary"] == "Accept-Encoding"
+        # Compressed once: the middleware passed the encoded response through.
+        assert gzip.decompress(wire) == raw
+        assert "_prepare_bundle" in in_thread
+
+    def test_sends_the_bundle_as_is_to_a_client_without_gzip(self, client, upstream) -> None:
+        raw = json.dumps(_bundle(png_bytes=4096)).encode()
+        upstream.handler = lambda request: httpx.Response(200, content=raw)
+        with client.stream("GET", self.PATH, headers={"Accept-Encoding": "identity"}) as response:
+            wire = b"".join(response.iter_raw())
+
+        assert response.status_code == 200
+        assert "Content-Encoding" not in response.headers
+        assert wire == raw
+
     @pytest.mark.parametrize(
         ("query", "forwarded"),
         [
@@ -1021,11 +1054,18 @@ class TestBundle:
 
     def test_a_declared_length_over_the_cap_is_refused_unread(self, client, upstream, monkeypatch) -> None:
         monkeypatch.setattr("api.routers.agent.MAX_BUNDLE_BYTES", 1000)
-        upstream.handler = lambda request: httpx.Response(200, content=b"{" + b" " * 1000 + b"}")
+        reads: list[int] = []
+
+        async def body() -> AsyncIterator[bytes]:
+            reads.append(1)
+            yield b"{}"
+
+        upstream.handler = lambda request: httpx.Response(200, content=body(), headers={"Content-Length": "5000"})
         response = client.get(self.PATH)
         assert response.status_code == 502
         assert response.json() == {"detail": "too_large", "ref": response.headers["X-Request-Id"]}
         assert "Content-Disposition" not in response.headers
+        assert reads == []
 
     def test_a_chunked_body_over_the_cap_is_refused(self, client, upstream, monkeypatch) -> None:
         monkeypatch.setattr("api.routers.agent.MAX_BUNDLE_BYTES", 1000)
@@ -1047,8 +1087,9 @@ class TestBundle:
         upstream.handler = lambda request: httpx.Response(200, content=body)
         assert client.get(self.PATH).content == body
 
-    @pytest.mark.parametrize("body", [b"<html>ok</html>", b"[1, 2]", b""])
+    @pytest.mark.parametrize("body", [b"<html>ok</html>", b"[1, 2]", b"", b"[" * 100_000 + b"]" * 100_000])
     def test_a_success_that_is_no_json_object_is_502(self, client, upstream, body) -> None:
+        """Nesting past the parser's recursion limit is no JSON object either, not an unhandled 500."""
         upstream.handler = lambda request: httpx.Response(200, content=body)
         response = client.get(self.PATH)
         assert response.status_code == 502

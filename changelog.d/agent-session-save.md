@@ -9,8 +9,8 @@
   before the stored feedback cases exist. The BFF's new
   `GET /debug/agent/sessions/{sid}/bundle?include_data=&version=` relays the
   agents service's bundle as an attachment (`anyplot-session-<id>.json`) behind
-  the same admin gate, ownership and error mapping as the other session routes;
-  it reads the bundle whole and refuses one over 32 MiB as `502 too_large`,
-  because that is Cloud Run's limit on a response that is not streamed, so a
-  larger file could not arrive whole anyway. Analytics:
+  the same admin gate, ownership and error mapping as the other session routes,
+  and compresses it in a worker thread, off the event loop. A bundle over
+  32 MiB, Cloud Run's limit on a response that is not streamed, can't be saved:
+  the page shows an error line instead of a cut-off file. Analytics:
   `agent_session_saved{include_data}`.
