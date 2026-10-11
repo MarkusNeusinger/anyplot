@@ -10,30 +10,30 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 | `status` | `step`, `attempt` | the pipeline's content-free `custom_metadata` progress events |
 | `message` | `text` | a final, non-partial text response authored by the root (`anyplot`) |
 | `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects`, `version` | the pipeline's `PlotResult` output event; `version`, the stored version's number, only on `ok` and `needs_attention` |
-| `refusal` | `code`, `text` | the request ledger's refusal (scope guard or budget), in place of the message; a user already over the daily budget gets it right after `ready`, without waiting in the queue |
+| `refusal` | `code`, `text` | the request ledger's refusal, in place of the message: `out_of_scope`, `needs_data` (data that would have to be fetched) and `unsupported_content` from the scope guard, `budget` from the budgets; a user already over the daily budget gets it right after `ready`, without waiting in the queue |
 | `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when the run waited the queue's maximum), `deadline` or `internal` |
 | `done` | `llm_calls`, `tokens` | the end of every run, always last |
 
 Function calls and responses, tool outputs, thoughts, partial chunks, adapter and
-reviewer answers, and `error_details` are dropped. A message is sanitised: URLs
-(with protocol-relative `//host` links), `data:`, `javascript:` and `mailto:` links,
-HTML tags (an unclosed one too) and markdown images are removed, links keep their
-text, fenced (backtick or tilde) and indented code blocks longer than 10 lines become
-`[code omitted]`, `[[spec:id]]` tokens stay only for the session's own spec, and the
-text is capped at 3,000 characters. The plot event's `changes` and
-`residual_defects` are model-written too, so each goes through the same sanitiser
-and becomes one plain line.
+reviewer answers, and `error_details` are dropped. A message goes through the
+output sanitiser (`anyplot/output_guard.sanitize`: no URL, link target, HTML, image
+or long code block, at most 1,200 characters); the plot event's `changes` and
+`residual_defects` are model-written too, so each goes through the same sanitiser and
+becomes one plain line. Personal data in them (names, addresses, e-mail addresses,
+phone numbers) stays: the user may plot and discuss their own table.
 
-The sanitiser is a backstop, not an HTML filter: the UI must render message and
-plot text as plain text, never as HTML or unescaped markdown.
+The output guard's length cap (`output_guard.reply_too_long`) runs earlier, in the
+ScopeGuard plugin before ADK stores the root's reply: a refused reply reaches the
+translator as the ledger's `out_of_scope` refusal, so it goes out as a `refusal` event,
+and a reply after a `plot_pipeline` call arrives already cut at the cap.
 """
 
 import json
-import re
 from typing import Any
 
 from google.adk.events.event import Event
 
+from agents.anyplot.output_guard import plain_line, sanitize
 from agents.anyplot.pipeline import STATUS_KEY
 from agents.anyplot.plugins.ledger import RequestLedger
 
@@ -47,62 +47,11 @@ QUEUED_STEP = "queued"
 """The status step the route sends while the run waits in the run queue; no pipeline event carries it."""
 PLOT_FIELDS = ("status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version")
 MODEL_WRITTEN_FIELDS = ("changes", "residual_defects")
-MAX_MESSAGE_CHARS = 3_000
-MAX_CODE_LINES = 10
-CODE_OMITTED = "[code omitted]"
-
-# A fenced block (backticks or tildes, three or more, closed by the same run or the end).
-_FENCE = re.compile(r"(?ms)^[ \t]{0,3}(`{3,}|~{3,})[^\n]*\n(.*?)(?:^[ \t]{0,3}\1[ \t]*$|\Z)")
-# A run of indented lines (four spaces or a tab), the other markdown code block.
-_INDENTED = re.compile(r"(?m)(?:^(?: {4}|\t)[^\n]*(?:\n|\Z))+")
-_IMAGE = re.compile(r"!\[[^\]]*\]\([^)]*\)")
-_LINK = re.compile(r"\[([^\]]+)\]\((?:[^)]*)\)")
-_HTML = re.compile(r"</?[A-Za-z][^>]*>")
-_HTML_UNCLOSED = re.compile(r"(?m)</?[A-Za-z][^>\n]*$")
-_URL = re.compile(
-    r"(?i)\b(?:https?|ftp)://\S+|\bwww\.\S+|\b(?:data|javascript|file|mailto):\S+|(?<![\w:/])//[^\s/]+\S*"
-)
-_SPEC_TOKEN = re.compile(r"\[\[spec:([a-z0-9-]{1,100})\]\]")
-_BLANK_LINES = re.compile(r"\n{3,}")
 
 
 def sse(event: str, data: dict[str, Any]) -> str:
     """One server-sent event in the wire format."""
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False, separators=(',', ':'))}\n\n"
-
-
-def sanitize(text: str, *, spec_id: str | None = None) -> str:
-    """The deterministic output sanitiser for root messages."""
-
-    def code_block(match: re.Match[str]) -> str:
-        return match.group(0) if len(match.group(2).splitlines()) <= MAX_CODE_LINES else CODE_OMITTED
-
-    def indented_block(match: re.Match[str]) -> str:
-        block = match.group(0)
-        if len(block.splitlines()) <= MAX_CODE_LINES:
-            return block
-        return CODE_OMITTED + ("\n" if block.endswith("\n") else "")
-
-    def spec_token(match: re.Match[str]) -> str:
-        return match.group(0) if spec_id is not None and match.group(1) == spec_id else ""
-
-    text = _FENCE.sub(code_block, text)
-    text = _INDENTED.sub(indented_block, text)
-    text = _IMAGE.sub("", text)
-    text = _LINK.sub(r"\1", text)
-    text = _HTML.sub("", text)
-    text = _HTML_UNCLOSED.sub("", text)
-    text = _URL.sub("", text)
-    text = _SPEC_TOKEN.sub(spec_token, text)
-    text = _BLANK_LINES.sub("\n\n", text).strip()
-    if len(text) > MAX_MESSAGE_CHARS:
-        text = text[: MAX_MESSAGE_CHARS - 1].rstrip() + "…"
-    return text
-
-
-def plain_line(text: str, *, spec_id: str | None = None) -> str:
-    """A model-written note as one sanitised line: no code block, link target, URL, HTML or image."""
-    return " ".join(sanitize(text, spec_id=spec_id).replace(CODE_OMITTED, " ").split())
 
 
 def _final_text(event: Event) -> str:

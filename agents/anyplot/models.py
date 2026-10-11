@@ -353,7 +353,8 @@ def allow_full_file(config: types.GenerateContentConfig) -> None:
 
 # --- Judge -------------------------------------------------------------------------------
 
-Verdict = Literal["in_scope", "out_of_scope", "attack"]
+Verdict = Literal["in_scope", "out_of_scope", "attack", "needs_data"]
+"""`needs_data`: a request for data the service would have to fetch (owner rule of 2026-10-10)."""
 _LANG = re.compile(r"^[a-z]{2}$")
 
 
@@ -402,13 +403,29 @@ class JudgeClient(Protocol):
 
 Attempt = Callable[[str, str], Awaitable[JudgeVerdict]]
 
+JUDGE_RETRY_BACKOFF_S = 0.5
+"""Seconds the judge waits before its one retry, inside the same budget (`AGENT_JUDGE_TIMEOUT_S`).
+
+A 429 or a transport error retried in the same instant meets the same cause, and on a
+per-minute quota a failed call counts as well, so an instant retry doubles the burn. A
+judge call takes about one to two seconds, so the wait still leaves the retry room in
+the default 4 s budget.
+"""
+
 
 async def _within_budget(attempt: Attempt, text: str, rubric: str, timeout_s: float) -> JudgeVerdict:
-    """One attempt plus one retry, both inside one wall-clock budget."""
+    """One attempt plus one retry after `JUDGE_RETRY_BACKOFF_S`, all inside one wall-clock budget.
+
+    Fails closed with `JudgeUnavailable`, whose message names the type of the last
+    failure (for example `RateLimitError`), also when the budget ran out during the wait
+    or the retry, so a caller can tell a quota from a timeout without the exception text.
+    """
     last: BaseException | None = None
     try:
         async with asyncio.timeout(timeout_s):
-            for _ in range(2):
+            for number in range(2):
+                if number:
+                    await asyncio.sleep(JUDGE_RETRY_BACKOFF_S)
                 try:
                     return await attempt(text, rubric)
                 except asyncio.CancelledError:
@@ -416,7 +433,8 @@ async def _within_budget(attempt: Attempt, text: str, rubric: str, timeout_s: fl
                 except Exception as exc:  # any transport, API or parse failure gets the one retry
                     last = exc
     except TimeoutError as exc:
-        raise JudgeUnavailable("the judge did not answer in time") from exc
+        after = f" (after {type(last).__name__})" if last is not None else ""
+        raise JudgeUnavailable(f"the judge did not answer in time{after}") from exc
     raise JudgeUnavailable(f"the judge failed twice ({type(last).__name__})") from last
 
 

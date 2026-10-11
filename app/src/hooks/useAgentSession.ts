@@ -421,7 +421,7 @@ export interface UseAgentSessionOptions {
   token: string;
 }
 
-const GUARDRAIL_REASONS = new Set(['out_of_scope', 'budget', 'unsupported_content']);
+const GUARDRAIL_REASONS = new Set(['out_of_scope', 'needs_data', 'budget', 'unsupported_content']);
 
 function failureOf(err: unknown): Failure {
   if (err instanceof AgentApiError) {

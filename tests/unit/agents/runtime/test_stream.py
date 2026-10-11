@@ -8,9 +8,10 @@ from google.adk.events.event import Event
 from google.genai import types
 
 from agents.anyplot.data.roles import DataRole
+from agents.anyplot.output_guard import CODE_OMITTED, MAX_MESSAGE_CHARS, sanitize
 from agents.anyplot.plugins.ledger import RequestLedger
 from agents.main import MAX_ROLE_DESCRIPTION_CHARS, AgentsError, _role_body, check_caller, decode_claims
-from agents.stream import CODE_OMITTED, MAX_MESSAGE_CHARS, Translator, sanitize
+from agents.stream import Translator
 
 
 def parse(chunk: str) -> tuple[str, dict]:
@@ -192,6 +193,59 @@ class TestSanitize:
 
     def test_cap(self) -> None:
         assert len(sanitize("a" * 5000)) == MAX_MESSAGE_CHARS
+
+    def test_personal_data_stays(self) -> None:
+        text = (
+            "The labels show Jana Novak, jana.novak@example.org, +49 30 1234567, "
+            "Musterstraße 1, 10115 Berlin and jana-novak.de/finanzen."
+        )
+
+        assert sanitize(text) == text
+        assert sanitize("Visit https://jana-novak.de or www.jana-novak.de now") == "Visit  or  now"  # links go
+
+    def test_code_names_and_file_names_stay(self) -> None:
+        text = "Line 12 sets plt.cm.viridis; run plot.py with data.csv next to it, and df.info() lists the columns."
+
+        assert sanitize(text) == text
+
+
+class TestReplies:
+    def test_a_refused_reply_reaches_the_translator_as_the_ledger_refusal(self) -> None:
+        ledger = RequestLedger(request_id="r", lang="de")
+        ledger.refuse("out_of_scope", "Ich kann nur bei diesem Plot helfen.")  # the ScopeGuard's output side
+        translator = Translator(ledger, "run")
+
+        chunks = translator.translate(text_event("anyplot", "Ich kann nur bei diesem Plot helfen."))
+
+        assert [parse(chunk) for chunk in chunks] == [
+            ("refusal", {"code": "out_of_scope", "text": "Ich kann nur bei diesem Plot helfen."})
+        ]
+
+    def test_a_short_reply_without_the_plot_stays(self, translator: Translator) -> None:
+        reply = "Hello! Happy to help."
+
+        assert [parse(chunk) for chunk in translator.translate(text_event("anyplot", reply))] == [
+            ("message", {"text": reply})
+        ]
+
+    def test_personal_data_in_a_reply_and_the_plot_lines_reaches_the_user(
+        self, translator: Translator, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        reply = "Done: the subtitle reads 'Prepared by Jana Novak, jana.novak@example.org, +49 30 1234567'."
+        output = {
+            "status": "ok",
+            "attempts": 1,
+            "artifacts": [],
+            "changes": ["Set the subtitle to jana.novak@example.org"],
+        }
+
+        with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
+            chunks = translator.translate(text_event("anyplot", reply))
+            plot = translator.translate(Event(author="plot_pipeline", output=output))
+
+        assert [parse(chunk) for chunk in chunks] == [("message", {"text": reply})]
+        assert parse(plot[0])[1]["changes"] == ["Set the subtitle to jana.novak@example.org"]
+        assert not caplog.records  # nothing to log: no guard touched the text
 
 
 def token(claims: dict) -> str:

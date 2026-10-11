@@ -117,7 +117,7 @@ async def test_bindings_refusals_and_injection_markers(stress_cases: dict[str, E
 
     assert (nan["status"], nan["static"]["bindings"], nan["held"]) == ("bindings_invalid", "invalid", True)
     assert row4["static"]["marker_in"] == {
-        "judge": False,
+        "judge": True,  # the dataset judge sees the same five sample rows as the adapter
         "root": True,
         "adapter": True,
         "adapter_unfenced": False,

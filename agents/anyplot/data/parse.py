@@ -717,6 +717,11 @@ def _clip(text: str, limit: int = MAX_CELL_CHARS) -> str:
     return text if len(text) <= limit else text[: limit - 1] + "…"
 
 
+def display_copy(cell: str) -> str:
+    """The copy of a cell the profile shows (sample rows and top values): one line, at most 40 characters."""
+    return _clip(cell)
+
+
 def _cap_warnings(warnings: list[str]) -> list[str]:
     """At most `MAX_WARNINGS`, the last slot noting how many were left out; each within `MAX_NOTE_CHARS`."""
     notes = [_clip(warning, MAX_NOTE_CHARS) for warning in warnings]

@@ -928,12 +928,12 @@ def _cases() -> list[StressCase]:
             inject_row4(),
             STORE_BINDINGS,
             "unknown",
-            "row 4 is past the judge's three sample rows but inside the adapter's five: it reaches the adapter "
-            "unjudged, inside a <user_data> fence",
+            "row 4 is inside the five sample rows that the dataset judge and the adapter both see: the judge "
+            "judges it, and it reaches the adapter only inside a <user_data> fence",
             {
                 "dataset": "ok",
                 "bindings": "complete",
-                "marker_in.judge": False,
+                "marker_in.judge": True,
                 "marker_in.adapter": True,
                 "marker_in.adapter_unfenced": False,
             },

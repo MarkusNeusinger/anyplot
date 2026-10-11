@@ -10,8 +10,12 @@ run form, the exported `plot.py`, the `data.csv` it ran on, the render id of its
 PNGs (the run's theme, plus the other theme once the toggle rendered it), the gate
 outcome per rendered theme, the adapter plan and the `PlotResult`. The artifact,
 bundle and theme-toggle routes read from it.
+
+`RefusalStore` keeps, only with `AGENT_KEEP_REFUSALS`, the messages the scope judge
+refused, per session and bounded, for the feedback bundle.
 """
 
+from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Literal
@@ -76,6 +80,41 @@ class CodeVersion:
         return artifact_names([theme for theme, record in self.themes.items() if record.rendered] or [self.theme])
 
 
+MAX_KEPT_REFUSALS = 20
+"""Refused messages kept per session when `AGENT_KEEP_REFUSALS` is on; the oldest goes first."""
+
+
+@dataclass(frozen=True)
+class KeptRefusal:
+    """One message the scope judge refused: its text, the verdict and language, and when (UTC, ISO 8601)."""
+
+    verdict: str
+    lang: str
+    text: str
+    at: str
+
+
+class RefusalStore:
+    """The refused messages of each session, a ring of `MAX_KEPT_REFUSALS`; filled only with `AGENT_KEEP_REFUSALS`.
+
+    The feedback bundle is the only reader. Nothing here is logged, and a session's
+    ring goes with the session (`Services.purge_session`).
+    """
+
+    def __init__(self, per_session: int = MAX_KEPT_REFUSALS) -> None:
+        self.per_session = per_session
+        self._rings: dict[str, deque[KeptRefusal]] = {}
+
+    def add(self, session_id: str, refusal: KeptRefusal) -> None:
+        self._rings.setdefault(session_id, deque(maxlen=self.per_session)).append(refusal)
+
+    def all(self, session_id: str) -> list[KeptRefusal]:
+        return list(self._rings.get(session_id, ()))
+
+    def delete_session(self, session_id: str) -> None:
+        self._rings.pop(session_id, None)
+
+
 class VersionStore:
     """Code versions per session, numbered from 1."""
 
@@ -122,6 +161,7 @@ class Services:
     renders: RenderStore = field(default_factory=RenderStore)
     versions: VersionStore = field(default_factory=VersionStore)
     usage: UsageBook = field(default_factory=UsageBook)
+    refusals: RefusalStore = field(default_factory=RefusalStore)
     backend_factory: Callable[[], RenderBackend] = field(default=lambda: make_backend(get_settings()))
     judge_factory: Callable[[], JudgeClient] = field(default=lambda: make_judge_client(get_settings()))
     _backend: SerialRenderer | None = None
@@ -146,6 +186,7 @@ class Services:
         self.datasets.delete_session(session_id)
         self.renders.delete_session(session_id)
         self.versions.delete_session(session_id)
+        self.refusals.delete_session(session_id)
 
 
 _SERVICES: Services | None = None

@@ -10,7 +10,11 @@ keeps the most recent ones in a small bounded map.
 
 The `UsageBook` holds the per-user and global daily counters for one instance
 lifetime (the `aiplatform` spend cap is the real backstop; persisting the counters is
-a phase-2 item). Days are UTC dates.
+a phase-2 item). Days are UTC dates. Besides tokens and pipeline runs it counts the
+`attack` verdicts of the scope and dataset judges per user, once per distinct message
+or dataset: from `AGENT_ATTACK_STRIKES` of them on, `daily_ok` is false for that user
+for the rest of the day, so a turn gets the budget refusal and a dataset
+`429 rate_limited`. Only a new UTC day, a redeploy or a scale-to-zero resets them.
 
 The request, user-day and global-day budgets count cost-weighted tokens: each kind
 weighted by its price relative to an uncached input token (`BUDGET_WEIGHTS`), so a
@@ -134,6 +138,7 @@ class _Day:
     user_tokens: dict[str, int] = field(default_factory=dict)
     user_runs: dict[str, int] = field(default_factory=dict)
     global_tokens: int = 0
+    user_strikes: dict[str, set[str]] = field(default_factory=dict)
 
 
 class UsageBook:
@@ -167,11 +172,26 @@ class UsageBook:
     def global_tokens(self) -> int:
         return self._current().global_tokens
 
+    def add_strike(self, user_id: str, content: str) -> int:
+        """Count one `attack` verdict against the user for today, once per distinct content; the new count.
+
+        `content` is the refused message's text or the refused dataset's canonical CSV;
+        only its hash is kept. Retrying the same message or upload after a false
+        `attack` verdict therefore costs one strike, not one per try.
+        """
+        day = self._current()
+        day.user_strikes.setdefault(user_id, set()).add(hashlib.sha256(content.encode()).hexdigest()[:16])
+        return len(day.user_strikes[user_id])
+
+    def user_strikes(self, user_id: str) -> int:
+        return len(self._current().user_strikes.get(user_id, ()))
+
     def daily_ok(self, user_id: str, settings: AgentSettings, *, reserve: int = 0) -> bool:
-        """Whether the user and the service still have daily token budget, `reserve` tokens beyond the spend."""
+        """Whether the user and the service still have daily token budget, `reserve` tokens beyond the spend, and strikes left."""
         return (
             self.user_tokens(user_id) + reserve < settings.daily_token_budget
             and self.global_tokens() + reserve < settings.global_daily_token_budget
+            and self.user_strikes(user_id) < settings.attack_strikes
         )
 
     def runs_ok(self, user_id: str, settings: AgentSettings) -> bool:
