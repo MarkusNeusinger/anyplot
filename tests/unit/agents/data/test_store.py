@@ -131,6 +131,31 @@ class TestSweep:
         assert store.sweep(60, now=1060.0) == []
         assert store.sweep(60, now=1060.5) == [dataset_id]
 
+    def test_a_sessions_undo_history_lives_as_long_as_its_current_dataset(
+        self, store: DatasetStore, parsed: ParsedDataset, clock: Clock
+    ) -> None:
+        """Only the current version is read during a session; the history waits for an undo, so idleness is the session's."""
+        history = store.put("s1", parsed)
+        current = store.put("s1", parsed)
+        other = store.put("s2", parsed)
+        clock.now += 50
+        assert store.get(current, "s1") is not None  # a turn reads the current version only
+        clock.now += 50
+
+        assert store.sweep(60) == [other]
+        assert store.get(history, "s1") is not None and store.get(current, "s1") is not None
+
+        clock.now += 100
+        assert sorted(store.sweep(60)) == sorted([history, current])
+        assert len(store) == 0
+
+    def test_the_stored_copy_keeps_the_columns_kept_text(self, store: DatasetStore) -> None:
+        parsed = parse_dataset("year,v\n2023,1\n", text_columns=["year"])
+        stored = store.get(store.put("s1", parsed), "s1")
+
+        assert stored is not None and stored.text_columns == ["year"]
+        assert stored.as_parsed().text_columns == ["year"] and stored.as_parsed().column_dtypes["year"] == "text"
+
 
 class TestCap:
     def test_byte_accounting(self, store: DatasetStore, parsed: ParsedDataset) -> None:

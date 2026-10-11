@@ -92,7 +92,8 @@ def test_undo_restores_the_newest_entry_and_drops_the_current_one() -> None:
     assert undo_version(store, SID, view_of(state), SNAPSHOT) is None  # nothing left to undo
 
 
-def test_undo_skips_an_entry_the_sweep_took() -> None:
+def test_undo_skips_an_entry_the_store_lost() -> None:
+    """The sweep takes a session's history only with its current version; a lost entry (the store emptied) is skipped."""
     store = DatasetStore()
     state = opened(store)
     first = state[DATASET_ID]
@@ -100,7 +101,7 @@ def test_undo_skips_an_entry_the_sweep_took() -> None:
     state.update(second.delta)
     third = push_version(store, SID, view_of(state), parse_dataset("a,b\n7,8\n"), SNAPSHOT)
     state.update(third.delta)
-    store.delete(second.dataset_id, SID)  # as the idle sweep would
+    store.delete(second.dataset_id, SID)  # the store lost the entry behind the state
 
     restored = undo_version(store, SID, view_of(state), SNAPSHOT)
 

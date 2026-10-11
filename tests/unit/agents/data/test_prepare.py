@@ -7,21 +7,24 @@ from typing import Any
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from agents.anyplot.data.parse import parse_dataset
+from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParsedDataset, parse_dataset
 from agents.anyplot.data.prepare import (
     MAX_CONDITIONS,
     MAX_DROP_COLUMNS,
     MAX_LONGER_COLUMNS,
     MAX_OPERATIONS,
+    MAX_VALIDATION_LINES,
     MAX_VALUE_CHARS,
     MAX_WIDER_COLUMNS,
     Aggregate,
+    Condition,
     DropRows,
     Operation,
     Prepared,
     PrepareError,
     Rename,
     apply_operations,
+    validation_lines,
 )
 from agents.anyplot.schemas import MAX_COLUMN_NAME_CHARS, MAX_NOTE_CHARS, MAX_ROWS
 
@@ -71,11 +74,16 @@ def cells(prepared: Prepared, index: int) -> list[str]:
     return [row[index] for row in list(csv.reader(io.StringIO(prepared.csv)))[1:]]
 
 
+def reparse(prepared: Prepared) -> ParsedDataset:
+    """The result as `prepare_data` re-parses it: the columns kept text stay text."""
+    return parse_dataset(prepared.csv, text_columns=prepared.text_columns)
+
+
 def dtypes(prepared: Prepared) -> dict[str, str]:
-    return dict(parse_dataset(prepared.csv).column_dtypes)
+    return dict(reparse(prepared).column_dtypes)
 
 
-def drop(column: str, test: str, value: str | None = None) -> dict[str, Any]:
+def drop(column: str, test: str, value: object = None) -> dict[str, Any]:
     condition: dict[str, Any] = {"column": column, "test": test}
     if value is not None:
         condition["value"] = value
@@ -139,6 +147,36 @@ class TestModels:
     def test_malformed_operations_fail_validation(self, operation: dict[str, Any]) -> None:
         with pytest.raises(ValidationError):
             OPERATIONS.validate_python([operation])
+
+    @pytest.mark.parametrize(("value", "text"), [(100, "100"), (100.0, "100.0"), (-3, "-3"), (1e20, "1e+20")])
+    def test_a_number_value_is_read_as_its_text(self, value: object, text: str) -> None:
+        """The model writes `"value": 100` for a numeric comparison; a JSON number needs no quoting."""
+        condition = Condition.model_validate({"column": "score", "test": "gt", "value": value})
+
+        assert condition.value == text
+        # `gt`, so that a row stays for every value (1e20 drops none; `lt` would drop them all).
+        prepared = prepare("name,score\nA,10\nB,140\nC,-7\n", drop("score", "gt", value))
+        assert cells(prepared, 1) == [cell for cell in ("10", "140", "-7") if float(cell) <= float(text)]
+
+    def test_a_boolean_value_is_not_a_text(self) -> None:
+        with pytest.raises(ValidationError):
+            Condition.model_validate({"column": "flag", "test": "eq", "value": True})
+
+    def test_validation_lines_name_the_location_and_never_echo_the_input(self) -> None:
+        operations = [{"op": "explode"}, {"op": "rename", "column": "Study Hours"}]
+        with pytest.raises(ValidationError) as caught:
+            OPERATIONS.validate_python(operations)
+        lines = validation_lines(caught.value, prefix="operations")
+
+        assert lines[0].startswith("operations[0]: ")
+        assert lines[1].startswith("operations[1].rename.name: Field required")
+        assert all("Study Hours" not in line for line in lines)
+
+    def test_validation_lines_are_capped(self) -> None:
+        with pytest.raises(ValidationError) as caught:
+            OPERATIONS.validate_python([{"op": "sort"}] * (MAX_VALIDATION_LINES + 5))
+
+        assert len(validation_lines(caught.value)) == MAX_VALIDATION_LINES
 
 
 class TestFixture:
@@ -364,6 +402,41 @@ class TestSetTypeNumber:
         assert prepared.csv == SALES_CSV
         assert prepared.changes == ["Umsatz: already numbers, nothing changed"]
 
+    def test_a_mark_outside_three_digit_groups_is_a_decimal_never_a_thousands_separator(self) -> None:
+        """`12,5 %` in a dot-decimal file is 12.5, as the parser reads it, never 125 (the verifiers' finding)."""
+        dot_file = 'name,share,score\nAlpha,"12,5 %",1.5\nBeta,7 %,2.25\nGamma,30 %,0.75\nDelta,"50,5 %",3.0\n'
+        assert parse_dataset(dot_file).profile.decimal == "."
+        prepared = prepare(dot_file, {"op": "set_type", "column": "share", "type": "number"})
+
+        assert cells(prepared, 1) == ["12.5", "7.0", "30.0", "50.5"]
+        assert prepared.changes == ["share: 4 cells read as numbers (decimal comma), unit '%' removed"]
+
+        comma_file = "a;p\n1,5;12.5 %\n2,5;13.5 %\n"
+        assert parse_dataset(comma_file).profile.decimal == ","
+        prepared = prepare(comma_file, {"op": "set_type", "column": "p", "type": "number"})
+
+        assert cells(prepared, 1) == ["12.5", "13.5"]
+        assert prepared.changes == ["p: 2 cells read as numbers (decimal point), unit '%' removed"]
+
+    def test_the_other_decimal_is_used_for_the_whole_column_when_fewer_cells_fail(self) -> None:
+        """One decimal per column: `1,200` next to `2,5` reads as 1.2 and 2.5 (decimal commas), never 1200 and 2.5."""
+        prepared = prepare("p,v\n1 kg,1\n", {"op": "set_type", "column": "p", "type": "number"})  # nothing to fall back
+        assert prepared.changes == ["p: 1 cell read as numbers, unit 'kg' removed"]
+
+        prepared = prepare('p,v\n"1,200 kg",1\n"2,5 kg",2\n', {"op": "set_type", "column": "p", "type": "number"})
+
+        assert cells(prepared, 0) == ["1.2", "2.5"]
+        assert prepared.changes == ["p: 2 cells read as numbers (decimal comma), unit 'kg' removed"]
+
+    def test_a_cell_unreadable_with_either_decimal_fails(self) -> None:
+        """`1,200,5` and `1.2.3` read with neither mark; `2,5` reads with the comma, so the column falls back to it."""
+        text = 'p\n"1,200,5"\n"1.2.3"\n"2,5"\n' + "".join(f"{n}\n" for n in range(7))
+
+        assert failure(text, {"op": "set_type", "column": "p", "type": "number"}) == (
+            "type_mismatch",
+            "column 'p': 2 of 10 cells cannot be read as numbers",
+        )
+
 
 class TestSetTypeDatetime:
     def test_a_fixed_format_with_optional_times(self) -> None:
@@ -409,6 +482,37 @@ class TestSetTypeDatetime:
         assert prepared.csv == SALES_CSV
         assert prepared.changes == ["Datum: already dates, nothing changed"]
 
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "date,visits\n2024-01-05,10\n2024-02-03,12\n2024-03-09,8\n",  # ISO: the order was never in doubt
+            "date,visits\n05.01.2024,10\n03.02.2024,12\n09.03.2024,8\n",  # dotted: day first by definition
+            "date,visits\n01/01/2024,10\n02/02/2024,12\n",  # a slash column whose parts never differ: no guess
+        ],
+        ids=["iso", "dotted", "slash-equal-parts"],
+    )
+    def test_month_first_leaves_a_column_the_parser_read_without_a_guess_alone(self, text: str) -> None:
+        """Only a slash column the parser flagged as ambiguous was guessed; every other order is settled (verifiers)."""
+        parsed = parse_dataset(text)
+        assert parsed.column_dtypes["date"] == "datetime" and not parsed.warnings
+        operation = {"op": "set_type", "column": "date", "type": "datetime", "date_format": "MM/DD/YYYY"}
+
+        prepared = apply_operations(parsed, OPERATIONS.validate_python([operation]))
+
+        assert prepared.csv == parsed.csv
+        assert prepared.changes == ["date: already dates, nothing changed"]
+
+    def test_the_swap_follows_a_rename_and_happens_once(self) -> None:
+        text = "t,v\n01/02/2024,1\n03/04/2024,2\n"
+        swap = {"op": "set_type", "column": "when", "type": "datetime", "date_format": "MM/DD/YYYY"}
+        prepared = prepare(text, {"op": "rename", "column": "t", "name": "when"}, swap, swap)
+
+        assert cells(prepared, 0) == ["2024-01-02", "2024-03-04"]
+        assert prepared.changes[1:] == [
+            "when: 2 cells re-read as dates (MM/DD/YYYY, day and month swapped)",
+            "when: already dates, nothing changed",
+        ]
+
     def test_failures_become_missing_within_the_tenth(self) -> None:
         text = "t\n" + "".join(f"{day:02d}.01.2024\n" for day in range(1, 10)) + "n.a.\n"
         operation = {"op": "set_type", "column": "t", "type": "datetime", "date_format": "DD.MM.YYYY"}
@@ -437,11 +541,44 @@ class TestSetTypeDatetime:
 
 
 class TestSetTypeText:
-    def test_cells_become_their_canonical_text(self) -> None:
+    def test_cells_become_their_canonical_text_and_stay_text_through_the_reparse(self) -> None:
+        """The change line is true: the column is text in the next version, not re-typed by its cells (verifiers)."""
         prepared = prepare(SALES, {"op": "set_type", "column": "Datum", "type": "text"})
 
         assert prepared.csv == SALES_CSV
         assert prepared.changes == ["Datum: 6 cells now text"]
+        assert prepared.text_columns == ["Datum"]
+        again = reparse(prepared)
+        assert again.column_dtypes["Datum"] == "text" and again.text_columns == ["Datum"]
+        assert again.profile.columns[0].top == ["2024-01-05", "2024-01-20", "2024-02-14", "2024-02-28", "2024-03-15"]
+
+    def test_a_column_kept_text_stays_text_in_later_versions_until_set_back(self) -> None:
+        """The hint travels with the stored version: a later change re-parses with it, and `set_type number` lifts it."""
+        text = "year,v\n2023,1\n2024,2\n"
+        prepared = prepare(text, {"op": "set_type", "column": "year", "type": "text"})
+        version_two = reparse(prepared)
+        assert version_two.column_dtypes["year"] == "text" and version_two.text_columns == ["year"]
+
+        renamed = apply_operations(
+            version_two, OPERATIONS.validate_python([{"op": "rename", "column": "year", "name": "Jahr"}])
+        )
+        assert renamed.text_columns == ["Jahr"] and reparse(renamed).column_dtypes["Jahr"] == "text"
+        dropped = apply_operations(
+            version_two, OPERATIONS.validate_python([{"op": "drop_columns", "columns": ["year"]}])
+        )
+        assert dropped.text_columns == []
+        numbers = apply_operations(
+            version_two, OPERATIONS.validate_python([{"op": "set_type", "column": "year", "type": "number"}])
+        )
+        assert numbers.text_columns == [] and reparse(numbers).column_dtypes["year"] == "integer"
+        assert numbers.changes == ["year: 2 cells read as numbers"]
+
+    def test_an_already_text_column_is_kept_text(self) -> None:
+        prepared = prepare(SALES, {"op": "set_type", "column": "Tier", "type": "text"})
+
+        assert prepared.csv == SALES_CSV
+        assert prepared.changes == ["Tier: already text, nothing changed"]
+        assert prepared.text_columns == ["Tier"]
 
     def test_text_then_back_to_dates(self) -> None:
         prepared = prepare(
@@ -452,6 +589,7 @@ class TestSetTypeText:
 
         assert prepared.csv == SALES_CSV
         assert prepared.changes == ["Datum: 6 cells now text", "Datum: 6 cells read as dates (YYYY-MM-DD)"]
+        assert prepared.text_columns == []
 
 
 class TestAggregate:
@@ -600,6 +738,32 @@ class TestPivotLonger:
 
         assert code == "invalid_operation"
         assert f"{MAX_ROWS:,}" in message
+
+    def test_a_result_over_the_input_cap_is_refused_before_the_reparse(self) -> None:
+        """The long format of a wide dataset can exceed the parser's 200 KB; the model hears a code, not `internal`."""
+        header = "id," + ",".join(f"t{i}" for i in range(8)) + ",a,b\n"
+        text = header + "".join(f"{row}," + ",".join(["t" * 38] * 8) + f",{row},{row * 2}\n" for row in range(380))
+        assert len(text.encode()) < MAX_INPUT_BYTES
+        code, message = failure(text, {"op": "pivot_longer", "columns": ["a", "b"]})
+
+        assert code == "invalid_operation"
+        assert f"{MAX_INPUT_BYTES // 1024} KB" in message
+
+    def test_a_datetime_with_times_keeps_them_next_to_another_kind(self) -> None:
+        """Unlike kinds melt into text: a timestamp is written with its time, as its own column was (verifiers)."""
+        prepared = prepare(
+            "id,d,v\n1,2024-01-05 10:30,2\n2,2024-02-03 11:00,3\n", {"op": "pivot_longer", "columns": ["d", "v"]}
+        )
+
+        assert cells(prepared, 2) == ["2024-01-05T10:30:00", "2024-02-03T11:00:00", "2", "3"]
+        assert dtypes(prepared)["value"] == "text"
+
+    def test_datetime_columns_alone_keep_their_kind_and_time(self) -> None:
+        text = "id,start,end\n1,2024-01-05 10:30,2024-01-06 00:00\n"
+        prepared = prepare(text, {"op": "pivot_longer", "columns": ["start", "end"]})
+
+        assert cells(prepared, 2) == ["2024-01-05T10:30:00", "2024-01-06T00:00:00"]
+        assert dtypes(prepared)["value"] == "datetime"
 
 
 class TestPivotWider:
@@ -761,11 +925,27 @@ class TestRoundTrip:
     )
     def test_the_result_is_already_canonical(self, text: str, operations: list[dict[str, Any]]) -> None:
         prepared = prepare(text, *operations)
-        again = parse_dataset(prepared.csv)
+        again = reparse(prepared)
 
         assert again.csv == prepared.csv
         assert prepared.csv.endswith("\n")
         assert not again.warnings
+
+    def test_an_untouched_column_with_midnight_times_is_written_as_stored(self) -> None:
+        """The parser writes a column with a time when any source cell had one; `T00:00:00` stays (verifiers)."""
+        parsed = parse_dataset("t,v\n2024-01-15 00:00,1\n2024-01-16 00:00,2\n")
+        assert parsed.csv == "t,v\n2024-01-15T00:00:00,1\n2024-01-16T00:00:00,2\n"
+
+        prepared = apply_operations(parsed, OPERATIONS.validate_python([{"op": "rename", "column": "v", "name": "w"}]))
+
+        assert prepared.csv == "t,w\n2024-01-15T00:00:00,1\n2024-01-16T00:00:00,2\n"
+        assert reparse(prepared).profile.columns[0].min == "2024-01-15T00:00:00"
+
+    def test_a_date_read_by_an_operation_carries_a_time_when_a_cell_had_one(self) -> None:
+        text = "t,v\n15.01.2024 00:00,1\n16.01.2024,2\n"
+        operation = {"op": "set_type", "column": "t", "type": "datetime", "date_format": "DD.MM.YYYY"}
+
+        assert cells(prepare(text, operation), 0) == ["2024-01-15T00:00:00", "2024-01-16T00:00:00"]
 
     def test_the_original_is_untouched(self) -> None:
         parsed = parse_dataset(SALES)

@@ -100,6 +100,12 @@ _ERROR_CODES = frozenset({"capacity", "deadline", "guard_unavailable", "upstream
 _MAX_BINDING_ERRORS = 20
 _MAX_BINDING_ERROR_CHARS = 300
 _MAX_EVENT_CHARS = 64 * 1024
+_MAX_DONE_EVENT_CHARS = 512 * 1024
+"""The cap of a `done` event: after a turn in which the assistant changed the data it carries
+`dataset` (20 preview rows, the profile of up to 50 columns, the bindings and the change
+lines), which at every schema maximum is about 300,000 characters. The agents service proves
+that its largest `done` fits (`agents/stream.py`, `MAX_DONE_EVENT_CHARS`, the same number;
+copied, because the API image does not ship the agents package)."""
 _QUEUED_STEP = "queued"
 """The status step of a run that waits in the agents service's run queue."""
 _QUEUED_HEARTBEAT_S = 15.0
@@ -601,7 +607,10 @@ async def _read_events(
     Comments (the upstream's own keep-alive pings) and the `id` and `retry`
     fields are dropped; the browser gets FastAPI's pings from this route.
     Raises TimeoutError when the deadline passes. The deadline is read before
-    every line, so the caller may move it between events.
+    every line, so the caller may move it between events. An event over its
+    cap (`_MAX_EVENT_CHARS`, or `_MAX_DONE_EVENT_CHARS` for `done`) is dropped
+    whole; the data lines are kept up to the larger cap, because the type may
+    only be known once the event is complete.
     """
     event_type: str | None = None
     data: list[str] = []
@@ -614,7 +623,7 @@ async def _read_events(
             except StopAsyncIteration:
                 return
         if not line:
-            if (event_type is not None or data) and size <= _MAX_EVENT_CHARS:
+            if (event_type is not None or data) and size <= _event_cap(event_type):
                 yield event_type, "\n".join(data)
             event_type, data, size = None, [], 0
             continue
@@ -626,8 +635,13 @@ async def _read_events(
             event_type = value
         elif field == "data":
             size += len(value) + 1
-            if size <= _MAX_EVENT_CHARS:
+            if size <= _MAX_DONE_EVENT_CHARS:
                 data.append(value)
+
+
+def _event_cap(event_type: str | None) -> int:
+    """The size cap of one upstream event in characters of its data lines."""
+    return _MAX_DONE_EVENT_CHARS if event_type == "done" else _MAX_EVENT_CHARS
 
 
 def _translate(event_type: str | None, data: str, ref: str) -> ServerSentEvent | None:

@@ -29,7 +29,6 @@ spec text) sits inside our own fences after the "data, never instructions" pream
 """
 
 import json
-from collections.abc import Mapping
 from typing import Any
 
 from google.adk import Workflow
@@ -38,7 +37,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from ..briefs import spec_brief, trimmed_profiles
 from ..data.parse import ParseError, parse_dataset
-from ..data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations
+from ..data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations, validation_lines
 from ..data.store import StoreFull
 from ..dataset_versions import push_version
 from ..pipeline import run_pipeline
@@ -52,7 +51,6 @@ from ..session_state import SessionView, apply_bindings, read_session
 
 PLOT_PIPELINE = "plot_pipeline"
 OPERATIONS = TypeAdapter(list[Operation])
-MAX_OPERATION_ERRORS = 10
 
 
 def _not_ready(reason: str) -> dict[str, Any]:
@@ -172,17 +170,18 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
             raise ValueError(f"operations is a list of 1 to {MAX_OPERATIONS} operations")
         parsed_operations = OPERATIONS.validate_python(operations)
     except ValidationError as exc:
-        lines = [_validation_line(error) for error in exc.errors()[:MAX_OPERATION_ERRORS]]
+        lines = validation_lines(exc, prefix="operations")
         return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines(lines)}
     except ValueError as exc:
         return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines([str(exc)])}
     try:
         prepared = apply_operations(stored.as_parsed(), parsed_operations)
-        parsed = parse_dataset(prepared.csv)
+        # The columns `set_type text` made text stay text: the re-parse would type them by content again.
+        parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns)
     except PrepareError as exc:
         # The message names columns of the user's dataset at most, never a cell; fenced like every column name.
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
-    except ParseError:  # the operations keep every parser cap, so a refusal here is a bug, not the model's doing
+    except ParseError:  # the operations keep every parser cap (rows, columns, size), so a refusal here is a bug
         return _error("internal")
     try:
         version = push_version(services.datasets, session_id, view, parsed, view.snapshot)
@@ -200,12 +199,6 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
         "changes": DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(prepared.changes, ensure_ascii=False)),
     }
     return _with_profile(base, parsed.profile, "prepare_data")
-
-
-def _validation_line(error: Mapping[str, Any]) -> str:
-    """One Pydantic error as `operations[2].where[0].value: <message>`, without the model's input echoed back."""
-    location = "".join(f"[{part}]" if isinstance(part, int) else f".{part}" for part in error.get("loc", ()))
-    return f"operations{location}: {error.get('msg', 'invalid')}"
 
 
 def _fenced_lines(lines: list[str]) -> str:

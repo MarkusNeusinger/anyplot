@@ -716,17 +716,34 @@ class TestToolSafety:
         assert ToolSafetyPlugin.check("plot_pipeline", {"change_request": change}, "anyplot") is None
 
     async def test_prepare_data_takes_at_most_five_valid_operations(self, ledger: RequestLedger) -> None:
+        """A refused list carries the validation lines, fenced, so the model can fix the one field that was wrong."""
         rename = {"op": "rename", "column": "Tier", "name": "Segment"}
         assert await self.check("prepare_data", {"operations": [rename] * 5}) is None
-        for operations in (
-            [rename] * 6,
-            [],
-            [{"op": "explode", "column": "Tier"}],
-            [{"op": "rename", "column": "Tier"}],  # no name
-            [{"op": "drop_rows", "where": [{"column": "x", "test": "eq", "value": "a", "extra": 1}]}],
+        for operations, location in (
+            ([rename] * 6, "operations: "),
+            ([], "operations: "),
+            ([{"op": "explode", "column": "Tier"}], "operations[0]: "),
+            ([{"op": "rename", "column": "Tier"}], "operations[0].rename.name: "),
+            (
+                [{"op": "drop_rows", "where": [{"column": "x", "test": "eq", "value": "a", "extra": 1}]}],
+                "operations[0].drop_rows.where[0].extra: ",
+            ),
         ):
             refused = await self.check("prepare_data", {"operations": operations})
-            assert refused == {"status": "error", "code": "invalid_arguments"}, operations
+            assert refused is not None and (refused["status"], refused["code"]) == ("error", "invalid_arguments")
+            assert set(refused) == {"status", "code", "errors"} and "<user_data>" in refused["errors"], operations
+            assert location in refused["errors"], operations
+        # Other tools keep the bare refusal: their arguments are not a list the model assembles field by field.
+        assert await self.check("get_current_code", {"version": -1}) == {"status": "error", "code": "invalid_arguments"}
+
+    async def test_prepare_data_takes_a_number_as_a_condition_value(self, ledger: RequestLedger) -> None:
+        """`{"test": "gt", "value": 100}` is how the model writes a numeric comparison (one live eval miss)."""
+        for value in (100, 100.0, -3):
+            condition = {"column": "score", "test": "gt", "value": value}
+            assert await self.check("prepare_data", {"operations": [{"op": "drop_rows", "where": [condition]}]}) is None
+        boolean = {"column": "flag", "test": "eq", "value": True}
+        refused = await self.check("prepare_data", {"operations": [{"op": "drop_rows", "where": [boolean]}]})
+        assert refused is not None and refused["code"] == "invalid_arguments"
 
     async def test_prepare_data_links_in_data_values_pass_but_not_in_column_references(
         self, ledger: RequestLedger

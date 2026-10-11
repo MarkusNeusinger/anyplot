@@ -583,3 +583,16 @@ class TestRoundTrip:
         assert again.csv == parsed.csv
         assert again.column_dtypes == parsed.column_dtypes
         assert again.profile.decimal == "."
+
+    def test_a_column_named_in_text_columns_stays_text(self) -> None:
+        """`set_type text` of the data operations survives the re-parse through this hint; unknown names are ignored."""
+        parsed = parse_dataset(
+            "year,when,v\n2023,2024-01-05,1\n2024,2024-01-06,2\n", text_columns=["year", "when", "x"]
+        )
+
+        assert parsed.column_dtypes == {"year": "text", "when": "text", "v": "integer"}
+        assert parsed.text_columns == ["year", "when"] and parsed.parse_dates == []
+        assert parsed.csv == "year,when,v\n2023,2024-01-05,1\n2024,2024-01-06,2\n"
+        assert column(parsed, "year").min is None and column(parsed, "year").top == ["2023", "2024"]
+        assert pd.api.types.is_string_dtype(read_back(parsed)["year"])
+        assert parse_dataset(parsed.csv).column_dtypes["year"] == "integer"  # without the hint: by content again

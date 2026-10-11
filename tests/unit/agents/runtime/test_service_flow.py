@@ -1899,6 +1899,41 @@ async def test_a_prepare_data_turn_carries_the_new_dataset_version_in_done(
     assert (nothing.status_code, nothing.json()) == (422, {"detail": "nothing_to_undo"})
 
 
+async def test_a_column_set_to_text_stays_text_in_later_versions_until_undone(
+    client: httpx.AsyncClient, swap_models, services: Services
+) -> None:
+    """`set_type text` is kept through the re-parse of every later version, so its change line is true (verifiers)."""
+
+    def dtype_of(dataset: dict[str, Any], name: str) -> str:
+        return next(column["dtype"] for column in dataset["profile"]["columns"] if column["name"] == name)
+
+    script = default_script()
+    script["root"] = [
+        prepare_call({"op": "set_type", "column": "Exam Score", "type": "text"}),
+        {"text": "Exam Score is a category now."},
+        prepare_call({"op": "rename", "column": "Student", "name": "Name"}),
+        {"text": "Renamed Student to Name."},
+    ]
+    swap_models("anthropic-vertex", script)
+    sid = await open_session(client)
+
+    first = parse_sse((await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "a"})).text)
+    dataset = first[-1][1]["dataset"]
+    assert dataset["changes"] == ["Exam Score: 24 cells now text"] and dtype_of(dataset, "Exam Score") == "text"
+    second = parse_sse((await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "b"})).text)
+    dataset = second[-1][1]["dataset"]
+    assert dataset["version"] == 3 and dtype_of(dataset, "Exam Score") == "text"
+    view = read_session(await _session_state(client, sid))
+    assert view is not None and view.dataset_id
+    stored = services.datasets.get(view.dataset_id, sid)
+    assert stored is not None and stored.text_columns == ["Exam Score"] and stored.column_dtypes["Exam Score"] == "text"
+
+    undone = (await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)).json()
+    assert undone["version"] == 2 and dtype_of(undone, "Exam Score") == "text"
+    undone = (await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)).json()
+    assert undone["version"] == 1 and dtype_of(undone, "Exam Score") == "integer"
+
+
 async def test_a_turn_that_changes_nothing_sends_no_dataset(client: httpx.AsyncClient, swap_models) -> None:
     script = default_script()
     script["root"] = [

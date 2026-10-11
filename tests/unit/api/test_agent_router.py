@@ -605,6 +605,40 @@ class TestMessagesStream:
         assert sent.headers["Accept"] == "text/event-stream"
         assert upstream.last_json == {"action": "create_plot"}
 
+    def test_a_done_event_over_64_kib_is_relayed_whole(self, client, upstream) -> None:
+        """`done.dataset` of a wide dataset is well over 64 KiB and must reach the page; any other event that size is dropped."""
+        columns = [{"name": f"column_name_{i:02d}", "dtype": "text", "top": ["v" * 40] * 5} for i in range(50)]
+        warnings = [f"column 'column_name_{i:02d}': header longer than 64 characters shortened" for i in range(50)]
+        profile = {"rows": 25, "columns": columns, "sample": [["v" * 40] * 50 for _ in range(5)], "warnings": warnings}
+        dataset = {
+            "preview": [["v" * 40] * 50 for _ in range(20)],
+            "profile": profile,
+            "bindings": [],
+            "warnings": warnings,
+            "changes": ["renamed 'column_name_00' to 'first'"],
+            "version": 2,
+        }
+        done = json.dumps({"llm_calls": 2, "tokens": 900, "bindings": [], "data_confirmed": False, "dataset": dataset})
+        message = json.dumps({"text": "x" * 70_000})
+        assert len(done) > 64 * 1024 and len(message) > 64 * 1024
+        upstream.handler = lambda request: httpx.Response(
+            200, content=f"event: message\ndata: {message}\n\nevent: done\ndata: {done}\n\n".encode()
+        )
+
+        events = _sse_events(self._post(client).text)
+
+        assert [event for event, _ in events] == ["done"]
+        assert events[0][1]["dataset"] == dataset and events[0][1]["data_confirmed"] is False
+
+    def test_a_done_event_over_its_own_cap_is_dropped(self, client, upstream) -> None:
+        done = json.dumps({"llm_calls": 2, "dataset": {"preview": [["v" * 40] * 50 for _ in range(300)]}})
+        assert len(done) > 512 * 1024
+        upstream.handler = lambda request: httpx.Response(200, content=f"event: done\ndata: {done}\n\n".encode())
+
+        events = _sse_events(self._post(client).text)
+
+        assert [event for event, _ in events] == ["error", "done"] and events[0][1]["code"] == "upstream"
+
     def test_unknown_error_code_becomes_internal(self, client, upstream) -> None:
         upstream.handler = lambda request: httpx.Response(
             200, content=b'event: error\ndata: {"code": "KeyError: secret"}\n\nevent: done\ndata: {}\n\n'

@@ -3,9 +3,12 @@
 * `before_tool_callback`: a per-agent allowlist (the root's six session tools; none
   for the adapters and the reviewer); Pydantic validation of the arguments (ADK
   leaves `FUNCTION_TOOL_ARG_VALIDATION` off; `prepare_data` takes at most five
-  operations of the `Operation` union); no link (a scheme such as `https://` or
-  `data:image`, or `www.`) or file path in any string argument, as link hygiene; at
-  most one `plot_pipeline` call per invocation (the "one repair round" bound).
+  operations of the `Operation` union, and its `invalid_arguments` refusal carries
+  the validation lines fenced as `errors`, like the tool's own `invalid_operations`,
+  so the model can fix the one field that was wrong); no link (a scheme such as
+  `https://` or `data:image`, or `www.`) or file path in any string argument, as link
+  hygiene; at most one `plot_pipeline` call per invocation (the "one repair round"
+  bound).
   Personal data in a `change_request` (a name, an address, an e-mail address, a phone
   number, a web address without a scheme or `www.` such as `jana-novak.de`) passes:
   whether plot text is an advertisement or a message to other people is the scope
@@ -37,7 +40,7 @@ from google.adk.tools.base_tool import BaseTool
 from google.adk.tools.tool_context import ToolContext
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from ..data.prepare import MAX_OPERATIONS, Operation
+from ..data.prepare import MAX_OPERATIONS, Operation, validation_lines
 from ..policy import DATA_PREAMBLE, fence
 from ..schemas import MAX_COLUMNS, Binding, PipelineArgs, PlotResult
 from .ledger import argument_hash, attribution, ledger_for
@@ -170,6 +173,17 @@ def has_url_or_path(arguments: dict[str, Any], skip: frozenset[str] = frozenset(
     return any(_URL_OR_PATH.search(text) for text in _strings(arguments, skip))
 
 
+def prepare_argument_errors(arguments: dict[str, Any]) -> str:
+    """The validation lines of a refused `prepare_data` call, fenced: they quote the model's own values."""
+    try:
+        _PrepareArgs.model_validate(arguments)
+    except ValidationError as exc:
+        lines = validation_lines(exc)
+    else:
+        lines = []
+    return DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(lines, ensure_ascii=False))
+
+
 def error_code(error: Exception) -> ErrorCode:
     """A fixed code for a tool exception; the exception text is never used."""
     if isinstance(error, ValidationError | ValueError | TypeError | KeyError):
@@ -200,7 +214,12 @@ class ToolSafetyPlugin(BasePlugin):
             attribution(
                 "tool", ledger, agent=agent, tool=tool.name, args=argument_hash(tool_args), verdict=verdict or "allowed"
             )
-            return tool_error(verdict) if verdict else None
+            if verdict is None:
+                return None
+            refusal = tool_error(verdict)
+            if verdict == "invalid_arguments" and tool.name == PREPARE_TOOL:
+                refusal["errors"] = prepare_argument_errors(tool_args)
+            return refusal
         except Exception as exc:
             logger.warning("tool check failed: %s", type(exc).__name__)
             return tool_error("internal")

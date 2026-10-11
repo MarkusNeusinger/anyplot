@@ -93,9 +93,11 @@ def undo_version(
 ) -> DatasetVersion | None:
     """Make the newest history entry the current dataset again, or None when there is nothing to undo.
 
-    The current version leaves the store (there is no redo). A history entry the idle
-    sweep already took is skipped, and the version number drops once more for it, so
-    the numbers stay one apart. The restored version is unconfirmed even when the user
+    The current version leaves the store (there is no redo). The idle sweep takes a
+    session's history only together with its current version (`DatasetStore.sweep`),
+    so an entry missing from the store means the store was emptied behind the state (a
+    restart keeps neither): such an entry is skipped, and the version number drops once
+    more for it, so the numbers stay one apart. The restored version is unconfirmed even when the user
     confirmed it before the change it undoes (the fingerprint would match again): what
     is on the screen changed, so the user confirms what they see, as after a paste.
     """

@@ -39,6 +39,13 @@ from agents.anyplot.plugins.ledger import RequestLedger
 
 
 PROTOCOL = "anyplot/1"
+MAX_DONE_EVENT_CHARS = 512 * 1024
+"""The BFF relays a `done` event of at most this many characters (`api/routers/agent.py`,
+`_MAX_DONE_EVENT_CHARS`; 64 KiB for every other event). A `done` that carries `dataset` holds
+20 preview rows and the profile of up to 50 columns with their names, top values, sample rows
+and warnings, the bindings twice and the change lines, every string at its schema maximum
+and JSON-escaped at its worst about 300,000 characters; the bound is proven by
+`tests/unit/agents/runtime/test_stream.py`, so a changed dataset always reaches the page."""
 ROOT_AUTHOR = "anyplot"
 PIPELINE_AUTHOR = "plot_pipeline"
 HALT_AUTHOR = "model"  # ADK's author of the event a before_run halt emits

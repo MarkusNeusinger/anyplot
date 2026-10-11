@@ -555,7 +555,8 @@ numbered from the paste's 1. The turn's `done` event then carries `dataset`,
 the new version as the dataset route would answer it plus `changes`, one line
 per operation with its counts (for example `dropped 1 row where Tier =
 'Gesamt'`), and `data_confirmed: false`: you check the preview and confirm the
-new version like a paste. `POST /sessions/{sid}/dataset/undo` restores the
+new version like a paste. A column the assistant set to text stays text in
+every later version. `POST /sessions/{sid}/dataset/undo` restores the
 version before the last change; the service keeps the last five, so five undos
 reach the paste, and the sixth answers `422 nothing_to_undo`. A new paste
 starts over at version 1 and drops the history.
@@ -617,8 +618,10 @@ is in [Agent network design](../concepts/agent-network.md#footer-strip).
 The BFF re-frames the upstream stream instead of forwarding it. It assembles
 each complete event and drops events of any other type, events without a type,
 data that is not a JSON object, and every field the table does not list, so
-`error_details` and stack traces never reach the browser. An error code outside
-the list becomes `internal`. The BFF stops reading after `done`.
+`error_details` and stack traces never reach the browser. An event over 64 KiB
+is dropped whole, except `done`, which may carry a dataset version and is
+relayed up to 512 KiB (the largest dataset the service accepts fits). An error
+code outside the list becomes `internal`. The BFF stops reading after `done`.
 
 Every turn waits in the agents service's run queue, which runs one turn at a
 time and starts at most one a minute. A turn that can start at once sends no

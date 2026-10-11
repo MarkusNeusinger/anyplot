@@ -15,43 +15,58 @@ The operations:
 * `rename` a column; `drop_columns` (1 to 10); `drop_rows` where 1 to 3 conditions on
   single columns all hold; `sort` by one column.
 * `set_type` of one column to `number`, `datetime` or `text`. To number: one unit token
-  at either end (`12,5 %`, `€ 12`, `1.200 EUR`) and the thousands separators that go
-  with `decimal` (the other mark, and spaces) are removed, then the cell is read as a
-  dot-decimal number; the unit must be the same wherever it occurs. To datetime: with
-  `date_format` the cells are read in exactly that format, with an optional time
-  (`HH:MM[:SS]`) after it; without one pandas infers the format per cell, day before
-  month when ambiguous, as the parser reads a slash date. Either way a cell that cannot
-  be read becomes missing and the change line counts it; when more than 10 % of the
-  non-missing cells fail, the operation is a `type_mismatch` instead. To text: every
-  cell becomes its canonical text (the re-parse types the column by content again, so
-  a column of plain numbers comes back as numbers). A column that already is a number
-  or a datetime column is left as it is ("already numbers, nothing changed"), with one
-  exception: `MM/DD/YYYY` on a datetime column whose days are all at most 12 swaps day
-  and month, because the parser could only guess the order of such a slash column and
-  read it day first (see `_reread_dates`).
+  at either end (`12,5 %`, `€ 12`, `1.200 EUR`) is removed, then the cell is read with
+  `decimal` as the parser reads a number: the other mark is a thousands separator in
+  three-digit groups only (`1,234.5` with a dot decimal), spaces and apostrophes
+  separate thousands too, and a mark anywhere else makes the cell unreadable with that
+  decimal (`12,5` is no dot-decimal number, never 125). When cells fail with `decimal`
+  and fewer fail with the other mark, the whole column is read with the other mark and
+  the change line says so ("read as numbers (decimal comma)"); the unit must be the
+  same wherever it occurs. To datetime: with `date_format` the cells are read in
+  exactly that format, with an optional time (`HH:MM[:SS]`) after it; without one
+  pandas infers the format per cell, day before month when ambiguous, as the parser
+  reads a slash date. Either way a cell that cannot be read becomes missing and the
+  change line counts it; when more than 10 % of the non-missing cells fail, the
+  operation is a `type_mismatch` instead. To text: every cell becomes its canonical
+  text and the column is kept text through the re-parse (`Prepared.text_columns`,
+  `parse_dataset(text_columns=...)`), so a column of years or ids stays a category in
+  every later version. A column that already is a number or a datetime column is left
+  as it is ("already numbers, nothing changed"), with one exception: `MM/DD/YYYY` on a
+  slash column the parser read day first by guess (its `AMBIGUOUS_DATE_ORDER` warning)
+  swaps day and month; a column read without a guess (ISO, dotted, or a slash column
+  with a day over 12) stays as it is (see `_reread_dates`).
 * `aggregate`: group by one or two key columns and reduce one value column with `sum`,
   `mean`, `count`, `min` or `max`. A `period` turns every datetime key into `YYYY-MM`,
   `YYYY-Qn` or `YYYY` text before grouping. The result holds the key columns and one
   value column named like the source, or `count`; every other column is dropped, rows
   with a missing key form their own group, and the rows are sorted by the keys.
 * `pivot_longer`: 2 to 20 columns become a `names_to`/`values_to` pair (long format,
-  one row per source row and column, missing values kept). `pivot_wider`: the distinct
+  one row per source row and column, missing values kept; columns of unlike kinds melt
+  into their canonical texts, a datetime with its time). `pivot_wider`: the distinct
   values of `names_from` become new columns (at most 50, and at most 50 columns in all,
   else `too_wide`) holding `values_from`, one row per distinct index; duplicate index
   and name pairs are refused rather than aggregated.
 
 Values in conditions are never evaluated: a condition compares text with text for a
-text column, numbers for a numeric column (the value is a dot-decimal number), moments
-for a datetime column (the value is an ISO date or date-time), `true`/`false` for a
-boolean column. A missing cell matches only `is_missing`. `contains` searches the
-cell's canonical text, case-sensitively.
+text column, numbers for a numeric column (the value is a dot-decimal number, which
+the model may also pass as a JSON number), moments for a datetime column (the value is
+an ISO date or date-time), `true`/`false` for a boolean column. A missing cell matches
+only `is_missing`. `contains` searches the cell's canonical text, case-sensitively.
+
+What the canonical CSV does not say about its columns travels with the frame as
+`_Carried`: the columns the parser read by guess, the columns kept text, and whether a
+datetime column is written with its time (the parser's choice, read from the profile),
+so a column no operation touched is written back exactly as it was stored.
 
 Errors raise `PrepareError(code, message)`: `unknown_column`, `type_mismatch`,
 `empty_result` (no rows or no columns would remain), `too_wide` and
 `invalid_operation` (an operation that is well-formed but cannot apply, such as a
-condition without its value or a `period` without a datetime key). Messages name
-columns, never cells. Change lines name column names bare, condition values quoted
-and clipped to 40 characters, and are at most `MAX_NOTE_CHARS` long.
+condition without its value, a `period` without a datetime key, or a long format that
+would exceed the parser's 200 KB input cap). Messages name columns, never cells.
+Change lines name column names bare, condition values quoted and clipped to 40
+characters, and are at most `MAX_NOTE_CHARS` long. `validation_lines` formats a
+Pydantic error of the operation models for the model (`tools/session.py` and
+`plugins/tool_safety.py` share it), one line per error with its location.
 """
 
 import io
@@ -59,17 +74,18 @@ import math
 import re
 import unicodedata
 import warnings
-from dataclasses import dataclass
+from collections.abc import Iterable
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Annotated, Literal
 
 import numpy as np
 import pandas as pd
 from pandas.api.types import is_bool_dtype, is_datetime64_any_dtype, is_numeric_dtype
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
 
 from ..schemas import MAX_CELL_CHARS, MAX_COLUMNS, MAX_NOTE_CHARS, MAX_ROWS, ColumnName
-from .parse import ParsedDataset, pandas_dtypes
+from .parse import AMBIGUOUS_DATE_ORDER, MAX_INPUT_BYTES, ParsedDataset, pandas_dtypes
 
 
 MAX_OPERATIONS = 5  # per `prepare_data` call, the design's "at most five operations"
@@ -80,6 +96,7 @@ MAX_KEYS = 2
 MAX_LONGER_COLUMNS = 20
 MAX_WIDER_COLUMNS = 50
 MAX_FAILED_SHARE = 0.10  # of the non-missing cells; more than this is `type_mismatch`
+MAX_VALIDATION_LINES = 10  # of a refused operation list, for the model
 _INT64_MIN, _INT64_MAX = -(2**63), 2**63 - 1
 
 Test = Literal["eq", "ne", "contains", "is_missing", "gt", "lt"]
@@ -104,12 +121,19 @@ _TEST_SIGNS: dict[str, str] = {"eq": "=", "ne": "≠", "gt": ">", "lt": "<"}
 
 # The parser's number shape: a dot decimal with an optional exponent, ASCII digits only.
 _NUMBER = re.compile(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?")
+# The parser's thousands-grouped shapes, per decimal mark: the other mark between three-digit
+# groups, never starting with a zero group, then an optional fraction (`1,234.5` and `1.234,5`).
+_GROUPED: dict[str, re.Pattern[str]] = {
+    ".": re.compile(r"[+-]?[1-9][0-9]{0,2}(?:,[0-9]{3})+(?:\.[0-9]+)?"),
+    ",": re.compile(r"[+-]?[1-9][0-9]{0,2}(?:\.[0-9]{3})+(?:,[0-9]+)?"),
+}
 # A number body for the unit split: a sign, then digits with separators, ending in a digit.
 _BODY = r"[+-]?[0-9](?:[0-9.,'\s]*[0-9])?"
 _TRAILING_UNIT = re.compile(rf"^(?P<body>{_BODY})\s*(?P<unit>[^0-9\s][^0-9]*)$")
 _LEADING_UNIT = re.compile(rf"^(?P<unit>[^0-9\s+-][^0-9]*?)\s*(?P<body>{_BODY})$")
 _SPACES = re.compile(r"\s+")
 _HEADER_BREAKS = re.compile(r"[\t\r\n]")
+_AMBIGUOUS_WARNING = re.compile(rf"column '(?P<name>.+)': {re.escape(AMBIGUOUS_DATE_ORDER)}")
 
 
 class PrepareError(Exception):
@@ -127,6 +151,57 @@ class Prepared:
 
     csv: str
     changes: list[str]
+    text_columns: list[str] = field(default_factory=list)
+    """The columns `set_type text` keeps text: the caller passes them to `parse_dataset(text_columns=...)`."""
+
+
+@dataclass
+class _Carried:
+    """What the canonical CSV does not say about its columns, carried through the operations.
+
+    The parse's notes name columns, and an operation renames, drops or creates them,
+    so the notes follow the frame: `ambiguous_dates` are the slash columns the parser
+    read day first by guess (its `AMBIGUOUS_DATE_ORDER` warning, which only the
+    version a paste made carries: after a change the re-parse reads ISO dates and the
+    order is settled), `text_columns` the columns kept text through the re-parse, and
+    `with_time` whether a datetime column is written with its time (the parser's
+    choice, read from the profile's `min`; a column no operation touched is therefore
+    written back exactly as stored, `T00:00:00` included).
+    """
+
+    decimal: str
+    ambiguous_dates: set[str] = field(default_factory=set)
+    text_columns: set[str] = field(default_factory=set)
+    with_time: dict[str, bool] = field(default_factory=dict)
+
+    @classmethod
+    def of(cls, parsed: ParsedDataset) -> "_Carried":
+        matches = (_AMBIGUOUS_WARNING.fullmatch(warning) for warning in parsed.warnings)
+        ambiguous = {match.group("name") for match in matches if match}
+        with_time = {
+            column.name: isinstance(column.min, str) and "T" in column.min
+            for column in parsed.profile.columns
+            if column.dtype == "datetime"
+        }
+        return cls(parsed.profile.decimal, ambiguous, set(parsed.text_columns), with_time)
+
+    def rename(self, old: str, new: str) -> None:
+        for names in (self.ambiguous_dates, self.text_columns):
+            if old in names:
+                names.remove(old)
+                names.add(new)
+        if old in self.with_time:
+            self.with_time[new] = self.with_time.pop(old)
+
+    def forget(self, names: Iterable[str]) -> None:
+        for name in names:
+            self.ambiguous_dates.discard(name)
+            self.text_columns.discard(name)
+            self.with_time.pop(name, None)
+
+    def keep_only(self, names: Iterable[str]) -> None:
+        kept = set(names)
+        self.forget({*self.ambiguous_dates, *self.text_columns, *self.with_time} - kept)
 
 
 # --- Operation models -----------------------------------------------------------------------
@@ -150,7 +225,13 @@ class _Strict(BaseModel):
 
 
 class Condition(_Strict):
-    """One test on one column; `value` is required for every test but `is_missing`."""
+    """One test on one column; `value` is required for every test but `is_missing`.
+
+    A JSON number as the value (`{"test": "gt", "value": 100}`) is read as its text,
+    so a numeric comparison needs no quoting.
+    """
+
+    model_config = ConfigDict(extra="forbid", coerce_numbers_to_str=True)
 
     column: ColumnName
     test: Test
@@ -227,32 +308,42 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation]) -> Prep
         raise PrepareError("invalid_operation", "there is no operation to apply")
     if len(operations) > MAX_OPERATIONS:
         raise PrepareError("invalid_operation", f"at most {MAX_OPERATIONS} operations can be applied at once")
+    carried = _Carried.of(parsed)
     frame = _read(parsed)
     changes: list[str] = []
     for operation in operations:
         match operation:
             case Rename():
-                frame, change = _rename(frame, operation)
+                frame, change = _rename(frame, operation, carried)
             case DropColumns():
-                frame, change = _drop_columns(frame, operation)
+                frame, change = _drop_columns(frame, operation, carried)
             case DropRows():
-                frame, change = _drop_rows(frame, operation)
+                frame, change = _drop_rows(frame, operation, carried)
             case SetType():
-                frame, change = _set_type(frame, operation, parsed.profile.decimal)
+                frame, change = _set_type(frame, operation, carried)
             case Aggregate():
-                frame, change = _aggregate(frame, operation)
+                frame, change = _aggregate(frame, operation, carried)
             case Sort():
                 frame, change = _sort(frame, operation)
             case PivotLonger():
-                frame, change = _pivot_longer(frame, operation)
+                frame, change = _pivot_longer(frame, operation, carried)
             case PivotWider():
-                frame, change = _pivot_wider(frame, operation)
+                frame, change = _pivot_wider(frame, operation, carried)
         if not frame.shape[1]:
             raise PrepareError("empty_result", "no column would remain")
         if not len(frame):
             raise PrepareError("empty_result", "no row would remain")
         changes.append(_clip(change, MAX_NOTE_CHARS))
-    return Prepared(csv=_write(frame), changes=changes)
+    csv_text = _write(frame, carried)
+    if len(csv_text.encode("utf-8")) > MAX_INPUT_BYTES:
+        # Only the long format grows the data; the re-parse would refuse it, so the model hears it from here.
+        raise PrepareError(
+            "invalid_operation",
+            f"the result would be larger than {MAX_INPUT_BYTES // 1024} KB; "
+            "drop columns or aggregate before pivoting to the long format",
+        )
+    text_columns = [name for name in map(str, frame.columns) if name in carried.text_columns]
+    return Prepared(csv=csv_text, changes=changes, text_columns=text_columns)
 
 
 def _read(parsed: ParsedDataset) -> pd.DataFrame:
@@ -265,37 +356,40 @@ def _read(parsed: ParsedDataset) -> pd.DataFrame:
     )
 
 
-def _write(frame: pd.DataFrame) -> str:
+def _write(frame: pd.DataFrame, carried: _Carried) -> str:
     """Canonical CSV text: every column written through its canonical cell texts."""
-    out = pd.DataFrame({str(name): _texts(frame[name]) for name in frame.columns})
+    out = pd.DataFrame({str(name): _texts(frame[name], _with_time(frame[name], carried)) for name in frame.columns})
     return out.to_csv(index=False, lineterminator="\n")
 
 
-def _rename(frame: pd.DataFrame, op: Rename) -> tuple[pd.DataFrame, str]:
+def _rename(frame: pd.DataFrame, op: Rename, carried: _Carried) -> tuple[pd.DataFrame, str]:
     _require(frame, op.column)
     if op.name in frame.columns:
         raise PrepareError("invalid_operation", f"a column named '{op.name}' already exists")
+    carried.rename(op.column, op.name)
     return frame.rename(columns={op.column: op.name}), f"renamed '{op.column}' to '{op.name}'"
 
 
-def _drop_columns(frame: pd.DataFrame, op: DropColumns) -> tuple[pd.DataFrame, str]:
+def _drop_columns(frame: pd.DataFrame, op: DropColumns, carried: _Carried) -> tuple[pd.DataFrame, str]:
     columns = _distinct(op.columns)
     for name in columns:
         _require(frame, name)
     if len(columns) >= frame.shape[1]:
         raise PrepareError("empty_result", "dropping these columns would leave no column")
+    carried.forget(columns)
     if len(columns) == 1:
         return frame.drop(columns=columns), f"dropped column {columns[0]}"
     return frame.drop(columns=columns), f"dropped {len(columns)} columns: {', '.join(columns)}"
 
 
-def _drop_rows(frame: pd.DataFrame, op: DropRows) -> tuple[pd.DataFrame, str]:
+def _drop_rows(frame: pd.DataFrame, op: DropRows, carried: _Carried) -> tuple[pd.DataFrame, str]:
     mask = pd.Series(True, index=frame.index)
     clauses: list[str] = []
     for condition in op.where:
         _require(frame, condition.column)
-        mask &= _matches(frame[condition.column], condition)
-        clauses.append(_describe(condition, _kind(frame[condition.column])))
+        series = frame[condition.column]
+        mask &= _matches(series, condition, _with_time(series, carried))
+        clauses.append(_describe(condition, _kind(series)))
     dropped = int(mask.sum())
     if dropped == len(frame):
         raise PrepareError("empty_result", "every row matches the conditions; no row would remain")
@@ -303,61 +397,74 @@ def _drop_rows(frame: pd.DataFrame, op: DropRows) -> tuple[pd.DataFrame, str]:
     return kept, f"dropped {_count(dropped, 'row')} where {' and '.join(clauses)}"
 
 
-def _set_type(frame: pd.DataFrame, op: SetType, dataset_decimal: str) -> tuple[pd.DataFrame, str]:
+def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.DataFrame, str]:
     _require(frame, op.column)
     series = frame[op.column]
     present = int(series.notna().sum())
     kind = _kind(series)
     result = frame.copy()
     if op.type == "text":
-        result[op.column] = _texts(series)
+        # Kept text through the re-parse either way: a text column stays one when a later change makes its cells typeable.
+        carried.text_columns.add(op.column)
+        if kind == "text":
+            return frame, f"{op.column}: already text, nothing changed"
+        result[op.column] = _texts(series, _with_time(series, carried))
+        carried.with_time.pop(op.column, None)
         return result, f"{op.column}: {_count(present, 'cell')} now text"
     if op.type == "number":
         if kind == "number":
             # The canonical text of a number is a dot decimal; re-reading it under a decimal comma would be wrong.
             return frame, f"{op.column}: already numbers, nothing changed"
-        converted, unit, failed = _to_numbers(series, op.decimal or dataset_decimal)
+        requested = op.decimal or carried.decimal
+        converted, unit, failed, used = _to_numbers(series, requested)
         _check_failed(op.column, failed, present, "numbers")
         result[op.column] = converted
+        carried.with_time.pop(op.column, None)
         change = f"{op.column}: {_count(present - failed, 'cell')} read as numbers"
+        if used != requested:
+            change += " (decimal comma)" if used == "," else " (decimal point)"
         if unit:
             change += f", unit '{_clip(unit, MAX_CELL_CHARS)}' removed"
     else:
         if kind == "datetime":
-            return _reread_dates(frame, op, present)
-        converted, failed = _to_dates(series, op.date_format)
+            return _reread_dates(frame, op, present, carried)
+        converted, failed, with_time = _to_dates(series, op.date_format)
         _check_failed(op.column, failed, present, "dates")
         result[op.column] = converted
+        carried.with_time[op.column] = with_time
         how = op.date_format or "format inferred, day before month"
         change = f"{op.column}: {_count(present - failed, 'cell')} read as dates ({how})"
+    carried.text_columns.discard(op.column)
     if failed:
         verb = "is" if failed == 1 else "are"
         change += f", {_count(failed, 'cell')} could not be read and {verb} now missing"
     return result, change
 
 
-def _reread_dates(frame: pd.DataFrame, op: SetType, present: int) -> tuple[pd.DataFrame, str]:
+def _reread_dates(frame: pd.DataFrame, op: SetType, present: int, carried: _Carried) -> tuple[pd.DataFrame, str]:
     """A datetime column asked for a date format: nothing to read, except the one order the parser could only guess.
 
     The parser reads a slash column day first when every day and month part is at most
-    12 (with its own ambiguity warning), and the canonical CSV no longer holds the
-    original text. `MM/DD/YYYY` on such a column (every day at most 12) therefore swaps
-    day and month in every cell; any other format, or a column with a day over 12, is
-    left as it is.
+    12 and says so in a warning (`AMBIGUOUS_DATE_ORDER`), and the canonical CSV no
+    longer holds the original text. `MM/DD/YYYY` on exactly such a column swaps day and
+    month in every cell; any other format, or a column the parser read without a guess
+    (ISO, dotted, or a slash column with a day over 12), is left as it is. The warning
+    lives in the version a paste made: after a change the re-parse reads ISO dates and
+    the order is settled, so the swap is possible on the pasted version only.
     """
-    series = frame[op.column]
-    days = series.dt.day.dropna()
-    if op.date_format != "MM/DD/YYYY" or not present or not bool((days <= 12).all()):
+    if op.date_format != "MM/DD/YYYY" or op.column not in carried.ambiguous_dates or not present:
         return frame, f"{op.column}: already dates, nothing changed"
+    series = frame[op.column]
     swapped = [
         value.replace(month=value.day, day=value.month) if isinstance(value, pd.Timestamp) else None for value in series
     ]
     result = frame.copy()
     result[op.column] = pd.Series(swapped, index=series.index, dtype=series.dtype)
+    carried.ambiguous_dates.discard(op.column)
     return result, f"{op.column}: {_count(present, 'cell')} re-read as dates (MM/DD/YYYY, day and month swapped)"
 
 
-def _aggregate(frame: pd.DataFrame, op: Aggregate) -> tuple[pd.DataFrame, str]:
+def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[pd.DataFrame, str]:
     keys = _distinct(op.by)
     for name in [*keys, op.column]:
         _require(frame, name)
@@ -393,6 +500,9 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate) -> tuple[pd.DataFrame, str]:
             aggregated = grouped.max()
     result = aggregated.reset_index()
     result.columns = pd.Index([*keys, value_name])
+    carried.keep_only([*keys, value_name])
+    if op.period:
+        carried.forget(date_keys)  # period labels are text now
 
     by = " and ".join(keys) + (f" ({op.period})" if op.period else "")
     change = f"{_VERBS[op.how]} {op.column} by {by}: {_count(len(result), 'row')}"
@@ -414,7 +524,7 @@ def _sort(frame: pd.DataFrame, op: Sort) -> tuple[pd.DataFrame, str]:
     return ordered.reset_index(drop=True), f"sorted by {op.column}, {order}"
 
 
-def _pivot_longer(frame: pd.DataFrame, op: PivotLonger) -> tuple[pd.DataFrame, str]:
+def _pivot_longer(frame: pd.DataFrame, op: PivotLonger, carried: _Carried) -> tuple[pd.DataFrame, str]:
     columns = _distinct(op.columns)
     for name in columns:
         _require(frame, name)
@@ -431,11 +541,20 @@ def _pivot_longer(frame: pd.DataFrame, op: PivotLonger) -> tuple[pd.DataFrame, s
         raise PrepareError(
             "invalid_operation", f"pivoting {len(columns)} columns would give {rows:,} rows; at most {MAX_ROWS:,} fit"
         )
-    melted = frame.melt(id_vars=rest, value_vars=columns, var_name=op.names_to, value_name=op.values_to)
+    kinds = {_kind(frame[name]) for name in columns}
+    times = [_with_time(frame[name], carried) for name in columns]
+    work = frame
+    if len(kinds) > 1:
+        # Unlike kinds melt into one text column: each column's canonical texts, a datetime with its time.
+        work = frame.assign(**{name: _texts(frame[name], time) for name, time in zip(columns, times, strict=True)})
+    melted = work.melt(id_vars=rest, value_vars=columns, var_name=op.names_to, value_name=op.values_to)
+    carried.forget(columns)
+    if kinds == {"datetime"}:
+        carried.with_time[op.values_to] = any(bool(time) for time in times)
     return melted, f"pivoted {len(columns)} columns into {op.names_to}/{op.values_to}: {_count(rows, 'row')}"
 
 
-def _pivot_wider(frame: pd.DataFrame, op: PivotWider) -> tuple[pd.DataFrame, str]:
+def _pivot_wider(frame: pd.DataFrame, op: PivotWider, carried: _Carried) -> tuple[pd.DataFrame, str]:
     index = _distinct(op.index)
     for name in [*index, op.names_from, op.values_from]:
         _require(frame, name)
@@ -447,7 +566,8 @@ def _pivot_wider(frame: pd.DataFrame, op: PivotWider) -> tuple[pd.DataFrame, str
     work = work[~without_name]
     if not len(work):
         raise PrepareError("empty_result", f"every cell of column '{op.names_from}' is missing")
-    names = _texts(work[op.names_from])
+    names = _texts(work[op.names_from], _with_time(work[op.names_from], carried))
+    values_time = _with_time(work[op.values_from], carried)
     distinct = [str(name) for name in names.unique()]
     if len(distinct) > MAX_WIDER_COLUMNS:
         raise PrepareError(
@@ -470,6 +590,9 @@ def _pivot_wider(frame: pd.DataFrame, op: PivotWider) -> tuple[pd.DataFrame, str
         ) from None
     wide = wide.reset_index()
     wide.columns = pd.Index([str(name) for name in wide.columns])
+    carried.keep_only(index)
+    if values_time is not None:
+        carried.with_time.update(dict.fromkeys(distinct, values_time))
     change = f"pivoted {op.names_from} into {_count(len(distinct), 'column')} with values from {op.values_from}: "
     change += _count(len(wide), "row")
     if left_out:
@@ -483,7 +606,7 @@ def _pivot_wider(frame: pd.DataFrame, op: PivotWider) -> tuple[pd.DataFrame, str
 # --- Conditions ------------------------------------------------------------------------------
 
 
-def _matches(series: pd.Series, condition: Condition) -> pd.Series:
+def _matches(series: pd.Series, condition: Condition, with_time: bool | None) -> pd.Series:
     """The rows of `series` that satisfy `condition`, as booleans; a missing cell matches only `is_missing`."""
     column, test, value = condition.column, condition.test, condition.value
     if test == "is_missing":
@@ -498,7 +621,7 @@ def _matches(series: pd.Series, condition: Condition) -> pd.Series:
             f"the condition {test} on column '{column}' needs a value; is_missing finds empty cells",
         )
     if test == "contains":
-        return _bools(_texts(series).str.contains(value, regex=False))
+        return _bools(_texts(series, with_time).str.contains(value, regex=False))
     kind = _kind(series)
     target: object
     if kind == "number":
@@ -561,15 +684,40 @@ def _bools(mask: pd.Series) -> pd.Series:
 # --- Conversions -----------------------------------------------------------------------------
 
 
-def _to_numbers(series: pd.Series, decimal: str) -> tuple[pd.Series, str | None, int]:
-    """The cells as numbers (`Int64` when every value is whole, else `float64`), the unit removed, the failures."""
+def _to_numbers(series: pd.Series, decimal: str) -> tuple[pd.Series, str | None, int, str]:
+    """The cells as numbers (`Int64` when every value is whole, else `float64`), the unit removed, the failures, the decimal used.
+
+    The cells are read with `decimal` first. When some fail and fewer fail with the
+    other mark, the column is written that way (a `12,5 %` column in a dot-decimal
+    file, `12.5 %` in a decimal-comma file) and every cell is read with the other mark:
+    one decimal per column, never a mix.
+    """
     if _kind(series) == "boolean":
-        return series.astype("Int64"), None, 0
+        return series.astype("Int64"), None, 0, decimal
+    texts = [text if isinstance(text, str) else None for text in _texts(series)]
+    values, units, failed = _read_numbers(texts, decimal)
+    if failed:
+        other = "," if decimal == "." else "."
+        alternative = _read_numbers(texts, other)
+        if alternative[2] < failed:
+            (values, units, failed), decimal = alternative, other
+    if len(units) > 1:
+        raise PrepareError("type_mismatch", f"column '{series.name}' mixes {len(units)} different units")
+    unit = next(iter(units)) if units else None
+    whole = all(value is None or (value.is_integer() and _INT64_MIN <= value <= _INT64_MAX) for value in values)
+    if whole:
+        integers = [None if value is None else int(value) for value in values]
+        return pd.Series(pd.array(integers, dtype="Int64"), index=series.index), unit, failed, decimal
+    return pd.Series(values, index=series.index, dtype="float64"), unit, failed, decimal
+
+
+def _read_numbers(texts: list[str | None], decimal: str) -> tuple[list[float | None], set[str], int]:
+    """Every cell read with `decimal`: the values (None for missing and failed cells), the units seen, the failures."""
     values: list[float | None] = []
     units: set[str] = set()
     failed = 0
-    for text in _texts(series):
-        if not isinstance(text, str):
+    for text in texts:
+        if text is None:
             values.append(None)
             continue
         number, unit = _read_number(text, decimal)
@@ -578,14 +726,7 @@ def _to_numbers(series: pd.Series, decimal: str) -> tuple[pd.Series, str | None,
         elif unit:
             units.add(unit)
         values.append(number)
-    if len(units) > 1:
-        raise PrepareError("type_mismatch", f"column '{series.name}' mixes {len(units)} different units")
-    unit = next(iter(units)) if units else None
-    whole = all(value is None or (value.is_integer() and _INT64_MIN <= value <= _INT64_MAX) for value in values)
-    if whole:
-        integers = [None if value is None else int(value) for value in values]
-        return pd.Series(pd.array(integers, dtype="Int64"), index=series.index), unit, failed
-    return pd.Series(values, index=series.index, dtype="float64"), unit, failed
+    return values, units, failed
 
 
 def _read_number(text: str, decimal: str) -> tuple[float | None, str | None]:
@@ -601,9 +742,18 @@ def _read_number(text: str, decimal: str) -> tuple[float | None, str | None]:
 
 
 def _plain_number(body: str, decimal: str) -> float | None:
-    """`body` without its thousands separators, read as a dot decimal; None when it is not a finite number."""
+    """`body` read with `decimal` as the parser reads a number; None when it is no finite number that way.
+
+    Spaces and apostrophes separate thousands. The other mark does so only between
+    three-digit groups (`_GROUPED`); anywhere else it makes the cell unreadable with
+    this decimal (`12,5` is no dot-decimal number), so a decimal mark is never dropped.
+    """
     thousands = "." if decimal == "," else ","
-    cleaned = _SPACES.sub("", body).replace(thousands, "").replace("'", "")
+    cleaned = _SPACES.sub("", body).replace("'", "")
+    if _GROUPED[decimal].fullmatch(cleaned):
+        cleaned = cleaned.replace(thousands, "")
+    elif thousands in cleaned:
+        return None
     if decimal == ",":
         cleaned = cleaned.replace(",", ".")
     if not _NUMBER.fullmatch(cleaned):
@@ -612,8 +762,9 @@ def _plain_number(body: str, decimal: str) -> float | None:
     return number if math.isfinite(number) else None
 
 
-def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, int]:
-    """The cells as datetimes (NaT where a cell cannot be read) and how many non-missing cells failed."""
+def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, int, bool]:
+    """The cells as datetimes (NaT where a cell cannot be read), how many non-missing cells failed, and whether
+    the column is written with a time (the parser's rule: any source cell holds a colon)."""
     texts = _texts(series)
     if date_format:
         strptime = STRPTIME[date_format]
@@ -625,7 +776,8 @@ def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, in
             warnings.simplefilter("ignore")
             result = pd.to_datetime(texts, errors="coerce", format="mixed", dayfirst=True)
     failed = int((result.isna() & texts.notna()).sum())
-    return result, failed
+    with_time = any(":" in text for text in texts if isinstance(text, str))
+    return result, failed, with_time
 
 
 def _check_failed(column: str, failed: int, present: int, what: str) -> None:
@@ -660,12 +812,27 @@ def _kind(series: pd.Series) -> Kind:
     return "text"
 
 
-def _texts(series: pd.Series) -> pd.Series:
-    """Every cell as its canonical text (`str` dtype, missing stays missing), as `data.csv` writes it."""
-    with_time = False
-    if _kind(series) == "datetime":
-        with_time = bool(((series.dt.normalize() != series) & series.notna()).any())
-    return pd.Series([_cell_text(value, with_time) for value in series], index=series.index, dtype="str")
+def _texts(series: pd.Series, with_time: bool | None = None) -> pd.Series:
+    """Every cell as its canonical text (`str` dtype, missing stays missing), as `data.csv` writes it.
+
+    `with_time` is the datetime column's carried flag; None derives it from the values
+    (a column an operation made, or a mixed object column after a melt).
+    """
+    if with_time is None and _kind(series) == "datetime":
+        with_time = _has_time(series)
+    return pd.Series([_cell_text(value, bool(with_time)) for value in series], index=series.index, dtype="str")
+
+
+def _has_time(series: pd.Series) -> bool:
+    return bool(((series.dt.normalize() != series) & series.notna()).any())
+
+
+def _with_time(series: pd.Series, carried: _Carried) -> bool | None:
+    """A datetime column's carried time flag, derived from its values when none is carried; None for other kinds."""
+    if _kind(series) != "datetime":
+        return None
+    flag = carried.with_time.get(str(series.name))
+    return _has_time(series) if flag is None else flag
 
 
 def _cell_text(value: object, with_time: bool) -> str | None:
@@ -701,3 +868,17 @@ def _count(number: int, noun: str) -> str:
 
 def _clip(text: str, limit: int) -> str:
     return text if len(text) <= limit else text[: limit - 1] + "…"
+
+
+def validation_lines(exc: ValidationError, *, prefix: str = "") -> list[str]:
+    """At most `MAX_VALIDATION_LINES` Pydantic errors as `operations[2].where[0].value: <message>` lines.
+
+    `prefix` names the validated value when the error locations start below it (a
+    `TypeAdapter` of the list starts at the index). The model's input is never echoed
+    back, only the location and Pydantic's message.
+    """
+    lines: list[str] = []
+    for error in exc.errors()[:MAX_VALIDATION_LINES]:
+        location = "".join(f"[{part}]" if isinstance(part, int) else f".{part}" for part in error.get("loc", ()))
+        lines.append(f"{(prefix + location).lstrip('.')}: {error.get('msg', 'invalid')}")
+    return lines

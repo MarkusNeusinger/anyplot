@@ -7,11 +7,28 @@ import pytest
 from google.adk.events.event import Event
 from google.genai import types
 
+from agents.anyplot.data.parse import PREVIEW_ROWS
+from agents.anyplot.data.prepare import MAX_OPERATIONS
 from agents.anyplot.data.roles import DataRole
+from agents.anyplot.data.store import StoredDataset
+from agents.anyplot.dataset_versions import dataset_payload
 from agents.anyplot.output_guard import CODE_OMITTED, MAX_MESSAGE_CHARS, sanitize
 from agents.anyplot.plugins.ledger import RequestLedger
+from agents.anyplot.schemas import (
+    MAX_CELL_CHARS,
+    MAX_COLUMN_NAME_CHARS,
+    MAX_COLUMNS,
+    MAX_NOTE_CHARS,
+    MAX_ROWS,
+    MAX_SAMPLE_ROWS,
+    MAX_TOP_VALUES,
+    MAX_WARNINGS,
+    Binding,
+    ColumnProfile,
+    DatasetProfile,
+)
 from agents.main import MAX_ROLE_DESCRIPTION_CHARS, AgentsError, _role_body, check_caller, decode_claims
-from agents.stream import Translator
+from agents.stream import MAX_DONE_EVENT_CHARS, Translator, sse
 
 
 def parse(chunk: str) -> tuple[str, dict]:
@@ -61,6 +78,66 @@ class TestTranslator:
 
         assert payload["dataset"] == dataset
         assert "dataset" not in parse(translator.done(bindings=[], data_confirmed=True))[1]
+
+    def test_the_largest_done_event_fits_the_bff_cap(self) -> None:
+        """`done` with `dataset` at every schema maximum, JSON-escaped at its worst, stays within the BFF's cap for `done`.
+
+        The BFF drops an event over its cap whole (`_MAX_DONE_EVENT_CHARS` in
+        api/routers/agent.py, the same number), and the page would never learn that the
+        data changed (the verifiers' finding on a 50-column paste). Every string here is
+        quotes, which JSON writes as two characters each; the change lines are control
+        characters, six each.
+        """
+        quotes = '"' * MAX_CELL_CHARS
+        names = ['"' * (MAX_COLUMN_NAME_CHARS - 2) + f"{index:02d}" for index in range(MAX_COLUMNS)]
+        columns = [
+            ColumnProfile(
+                name=name,
+                dtype="text",
+                missing=MAX_ROWS,
+                unique=MAX_ROWS,
+                min=quotes,
+                max=quotes,
+                mean=-1.2345678901234567e-300,
+                median=-1.2345678901234567e-300,
+                top=[quotes] * MAX_TOP_VALUES,
+            )
+            for name in names
+        ]
+        profile = DatasetProfile(
+            rows=MAX_ROWS,
+            columns=columns,
+            sample=[[quotes] * MAX_COLUMNS] * MAX_SAMPLE_ROWS,
+            source_format="json_records",
+            decimal=",",
+            warnings=['"' * MAX_NOTE_CHARS] * MAX_WARNINGS,
+        )
+        stored = StoredDataset(
+            dataset_id="d",
+            session_id="s",
+            csv="",
+            profile=profile,
+            column_dtypes=dict.fromkeys(names, "text"),
+            parse_dates=[],
+            text_columns=names,
+            preview=[[quotes] * MAX_COLUMNS] * PREVIEW_ROWS,
+            created_at=0.0,
+            last_used_at=0.0,
+            size_bytes=0,
+        )
+        bindings = [Binding(role=f"{'R' * 30}{index:02d}", column=name) for index, name in enumerate(names)]
+        dataset = {**dataset_payload(stored, bindings, 999), "changes": ["\x01" * MAX_NOTE_CHARS] * MAX_OPERATIONS}
+        payload = {
+            "llm_calls": 10**6,
+            "tokens": 10**9,
+            "bindings": [binding.model_dump() for binding in bindings],
+            "data_confirmed": False,
+            "dataset": dataset,
+        }
+
+        event = sse("done", payload)
+
+        assert 64 * 1024 < len(event) <= MAX_DONE_EVENT_CHARS
 
     def test_queued_status(self, translator: Translator) -> None:
         assert parse(translator.queued(2, 5)) == ("status", {"step": "queued", "position": 2, "waiting": 5})
