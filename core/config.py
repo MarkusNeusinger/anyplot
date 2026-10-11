@@ -295,6 +295,15 @@ class Settings(BaseSettings):
     queue before it spends a token; at the defaults the agents service's full
     600 s queue maximum plus its 180 s run fit inside the cap."""
 
+    agent_cases_bucket: str = "anyplot-agent-cases"
+    """Private GCS bucket that holds the feedback cases of the agent chat
+    (`POST /debug/agent/sessions/{sid}/feedback`), each under
+    `cases/<case_id>/`. A private EU bucket of its own with uniform access,
+    public-access prevention and a lifecycle rule that deletes objects after
+    180 days (docs/concepts/agent-network.md, "Feedback capture"); never the
+    public `gcs_bucket`. The API's runtime identity needs object create rights
+    on it; the route writes nothing else."""
+
     # =============================================================================
     # CORS
     # =============================================================================
