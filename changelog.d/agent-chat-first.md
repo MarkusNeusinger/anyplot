@@ -17,4 +17,4 @@
   analytics events are unchanged; the root prompt gains two lines: a message in step 2
   before any plot is the first plot with that request (`plot_pipeline` with the
   `change_request`), and numbers about the data in a reply come from the latest tool
-  result, never from an earlier turn.
+  result, never from an earlier turn. (#12137)
