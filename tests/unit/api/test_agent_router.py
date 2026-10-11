@@ -518,7 +518,7 @@ UPSTREAM_SSE = (
     b'data: {"code": "capacity", "ref": "upstream-ref", "error_details": "Traceback (most recent call last)"}\n'
     b"\n"
     b"event: done\n"
-    b'data: {"llm_calls": 4, "tokens": 9000}\n'
+    b'data: {"llm_calls": 4, "tokens": 9000, "bindings": [{"role": "x", "column": "a"}], "data_confirmed": false, "secret": 1}\n'
     b"\n"
     b"event: message\n"
     b'data: {"text": "after done"}\n'
@@ -542,7 +542,11 @@ class TestMessagesStream:
             ("ready", {"v": 1, "run_id": "r1"}),
             ("status", {"step": "adapting", "attempt": 1}),
             ("error", {"code": "capacity", "ref": ref}),
-            ("done", {"llm_calls": 4, "tokens": 9000}),
+            # The sync fields pass; an unknown field is dropped like everywhere else.
+            (
+                "done",
+                {"llm_calls": 4, "tokens": 9000, "bindings": [{"role": "x", "column": "a"}], "data_confirmed": False},
+            ),
         ]
         sent = upstream.requests[0]
         assert str(sent.url) == f"{SERVICE_URL}/v1/sessions/s1/messages"

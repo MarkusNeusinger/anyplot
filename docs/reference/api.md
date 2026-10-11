@@ -593,7 +593,7 @@ is in [Agent network design](../concepts/agent-network.md#footer-strip).
 | `plot` | `{status, reason, attempts, artifacts, changes, residual_defects, version}`; `version` only on `ok` and `needs_attention` |
 | `refusal` | `{code, text}`; `code` is `out_of_scope`, `needs_data` (the request needs data the service would have to fetch), `unsupported_content` or `budget`, and `text` is the fixed reply for it in the language the scope judge detects in your message, or in the session's locale for a refusal sent before the judge runs (`budget`, `unsupported_content`): English, German, French, Spanish, Italian, Portuguese, Dutch or Polish, and English for any other language |
 | `error` | `{code, ref}`; `code` is `capacity` (also when the turn waited the run queue's maximum of 600 seconds, or the BFF's turn cap ran out while it waited), `deadline`, `guard_unavailable`, `upstream`, or `internal`; `ref` is the request id |
-| `done` | `{llm_calls, tokens}` |
+| `done` | `{llm_calls, tokens, bindings?, data_confirmed?}`: after a run, the session's bindings and whether the data is confirmed, so the page syncs its dropdowns and its step after a turn in which the root's `set_bindings` changed them |
 
 The BFF re-frames the upstream stream instead of forwarding it. It assembles
 each complete event and drops events of any other type, events without a type,

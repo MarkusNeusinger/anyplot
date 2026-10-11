@@ -818,6 +818,23 @@ async def confirm_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     )
 
 
+async def _session_sync(runtime: Runtime, user: str, sid: str) -> dict[str, Any]:
+    """The `done` event's sync fields after a turn: the session's bindings and whether the data is confirmed.
+
+    The root's `set_bindings` tool may have changed the bindings (and dropped the
+    confirmation) during the turn; the page learns it from `done`. Empty when the
+    session is gone, so the stream still closes.
+    """
+    try:
+        session = await runtime.session(user, sid)
+    except Exception:  # expired or purged while the turn ran: the page's next request learns it
+        return {}
+    view = read_session(session.state)
+    if view is None:
+        return {}
+    return {"bindings": [binding.model_dump() for binding in view.bindings], "data_confirmed": view.data_confirmed}
+
+
 async def _refused(translator: Translator, ledger: RequestLedger) -> AsyncIterator[str]:
     """A turn the ledger refused before it entered the queue: `ready`, the refusal, `done`."""
     yield translator.ready()
@@ -936,7 +953,7 @@ async def post_message(
             for chunk in translator.error(failure):
                 yield chunk
         attribution("run", ledger, model_versions=sorted(ledger.model_versions), kind=ledger.kind)
-        yield translator.done()
+        yield translator.done(**await _session_sync(runtime, user, sid))
 
     return StreamingResponse(
         stream(),

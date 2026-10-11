@@ -92,7 +92,8 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
     "plot": frozenset({"status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version"}),
     "refusal": frozenset({"code", "text"}),
     "error": frozenset({"code", "ref"}),
-    "done": frozenset({"llm_calls", "tokens"}),
+    # `bindings` and `data_confirmed` sync the page after a turn in which the root changed the bindings.
+    "done": frozenset({"llm_calls", "tokens", "bindings", "data_confirmed"}),
 }
 _ERROR_CODES = frozenset({"capacity", "deadline", "guard_unavailable", "upstream", "internal"})
 _MAX_BINDING_ERRORS = 20

@@ -1772,6 +1772,37 @@ async def test_the_confirmation_drops_with_a_binding_change_or_a_new_dataset(cli
     assert view is not None and view.data_confirmed  # a library switch keeps the data and the confirmation
 
 
+async def test_done_carries_the_bindings_the_root_changed_and_the_dropped_confirmation(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    """The root's `set_bindings` during a turn drops the confirmation; the page learns both from `done`."""
+    script = default_script()
+    script["root"] = [
+        {
+            "call": "set_bindings",
+            "args": {"bindings": [{"role": "x", "column": "Exam Score"}, {"role": "y", "column": "Study Hours"}]},
+        },
+        {"text": "I swapped the axes; please confirm the data again."},
+    ]
+    swap_models("anthropic-vertex", script)
+    sid = await open_session(client)  # confirmed by the helper
+
+    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "swap x and y"})
+    events = parse_sse(response.text)
+
+    done = next(data for name, data in events if name == "done")
+    assert done["bindings"] == [{"role": "x", "column": "Exam Score"}, {"role": "y", "column": "Study Hours"}]
+    assert done["data_confirmed"] is False
+    view = read_session(await _session_state(client, sid))
+    assert view is not None and not view.data_confirmed
+
+    confirmed = await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)
+    assert confirmed.status_code == 200
+    events = await create_plot(client, sid)
+    done = next(data for name, data in events if name == "done")
+    assert done["data_confirmed"] is True and done["bindings"][0] == {"role": "x", "column": "Exam Score"}
+
+
 async def test_confirm_needs_a_dataset(client: httpx.AsyncClient) -> None:
     sid = await open_session(client, with_data=False)
     response = await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)
