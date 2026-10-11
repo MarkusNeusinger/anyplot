@@ -1073,20 +1073,63 @@ function asksForFormula(lower) {
 }
 
 /**
- * The dataset route's guard, a short form of the service's `looks_like_formula`: at most
- * 300 characters on at most three lines, and a function call (`sin(x)`), an assignment
- * whose right side holds an operator (`y = x**2`), or a range phrase with numbers or pi
- * next to a pi, a variable `x` or `t`, or a word such as "parabola".
+ * The dataset route's guard, a short form of the service's `looks_like_formula`. Text
+ * that holds its own values (three numbers or more besides its ranges, expressions and
+ * point counts) is data. Otherwise a line or sentence of at most 300 characters asks
+ * for a formula with a call whose argument holds a variable (`sin(x)`, never `Max(3)`),
+ * an assignment of an expression to a short name (`y = x**2`, never `Äpfel = 3x`), or
+ * a range phrase with numbers or pi next to pi, a one-letter variable before it, a
+ * power (never a unit such as `m²`) or a curve's name such as "Parabel" (never a word
+ * that data has as well, such as "curve" or "Quadratmeter").
  */
 function looksLikeFormula(text) {
   const trimmed = text.trim();
+  if (!trimmed || trimmed.length > 4000) return false;
   const lines = trimmed.split(/\r\n|\r|\n/).filter(line => line.trim());
-  if (!trimmed || trimmed.length > 300 || lines.length > 3) return false;
-  if (/(?<![\w.])(?:sin|cos|tan|exp|log|sqrt|abs)\(/i.test(trimmed)) return true;
-  if (/(?<![\w.])[a-z]\w*\s*=\s*[-(\w][^{}[\]=\n]*(?:\*\*|[*^/+-])/i.test(trimmed)) return true;
-  const range = /\b(?:from|von)\s+[-+]?\s*(?:\d|pi)[^\n]*?\b(?:to|bis)\s+[-+]?\s*(?:\d|pi)/i;
-  const math = /\bpi\b|π|(?<![\w'’.-])[xt](?![\w'’.-])|parab|squared|quadrat|kurve|curve|sinus/i;
-  return range.test(trimmed) && math.test(trimmed);
+  const delimiter = [',', ';', '\t', '|'].find(mark => lines[0].includes(mark));
+  if (lines.length > 1 && delimiter && lines.filter(line => line.includes(delimiter)).length >= 2) {
+    return false; // a table, perhaps a broken one
+  }
+  const end = String.raw`[-+]?\s*(?:\d+(?:[.,]\d+)?\s*\*?\s*(?:pi)?|pi)`;
+  const phrase = String.raw`\b(?:from|von|between|zwischen)\s+(${end})\s+(?:to|bis|and|und)\s+(${end})(?!\w)`;
+  const range = new RegExp(phrase, 'gi');
+  const call = /(?<![\w.])(?:sin|cos|tan|exp|log|sqrt|abs|min|max)\s*\(([^()]*)\)/gi;
+  const stop = String.raw`(?=\s+(?:from|von|for|für|mit|with)\b|[,;\n]|$)`;
+  const name = String.raw`(?<![\w.])(?:[a-z]\w?|[a-z]\w*\([a-z]\))`;
+  const assignment = new RegExp(String.raw`${name}\s*=\s*([^=\n,;]*?)${stop}`, 'gi');
+  const power = /\*\*|(?<=[\w)])\s?\^|(?<![a-z])[a-ln-z]\s?[²³]/i;
+  const shape = /\b(?:sinus\w*|[ck]osinus\w*|parab\w*|squared|normalverteilung|gau\w*kurve)/i;
+  const subject = /(?<![\w.,-])(?<!\bin )[b-df-z](?:\s+(?:and|und)\s+[b-df-z])?\s+$/;
+  let formula = false;
+  for (const segment of trimmed.split(/\n|(?<=[.!?;])\s+/).filter(part => part.length <= 300)) {
+    for (const match of segment.matchAll(call)) {
+      const argument = match[1].trim();
+      const lowercase = /^[a-z]/.test(match[0]);
+      if (/[a-z]/i.test(argument) && (lowercase || /^[a-z]$|[-+*/^]/i.test(argument))) {
+        formula = true;
+      }
+    }
+    for (const match of segment.matchAll(assignment)) {
+      const right = match[1].trim();
+      if (/[a-z]/i.test(right) && /\*\*|[*^/+-]|\(|^[a-z]\w?$/i.test(right)) {
+        formula = true;
+      }
+    }
+    for (const match of segment.matchAll(range)) {
+      const constant = /pi/i.test(match[1] + match[2]);
+      const variable = subject.test(segment.slice(0, match.index));
+      if (constant || variable || power.test(segment) || shape.test(segment)) {
+        formula = true;
+      }
+    }
+  }
+  const rest = trimmed
+    .replace(range, ' ')
+    .replace(call, match => (/[a-z]/i.test(match.slice(match.indexOf('('))) ? ' ' : match))
+    .replace(assignment, ' ')
+    .replace(/\d+\s*(?:points?|punkte?n?)\b/gi, ' ');
+  const value = /(?<![\w.^*/+-])[-+]?\d+(?:[.,]\d+)?(?![*^/]|[a-z]?\s*[*^/]|[a-z]\s*[+-])/gi;
+  return formula && (rest.match(value) ?? []).length < 3;
 }
 
 /** A range end the message names: a number, `pi`, `-pi`, `2 pi` or `2*pi`; null for anything else. */

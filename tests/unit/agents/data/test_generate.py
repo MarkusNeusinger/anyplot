@@ -114,7 +114,7 @@ class TestTables:
         rows = table(generate(spec(("y", "2*x"), variables=[{"start": "pi", "stop": "-pi", "points": 3}])))
 
         assert [row["x"] for row in rows] == ["3.1415927", "0.0", "-3.1415927"]
-        assert [row["y"] for row in rows] == ["6.2831853", "0.0", "-6.2831853"]
+        assert [row["y"] for row in rows] == ["6.2831854", "0.0", "-6.2831854"]  # twice the x shown, not 2*pi
 
     def test_a_series_without_a_variable_is_constant(self) -> None:
         rows = table(generate(spec(("y", "2 + 3"), variables=[{"start": "0", "stop": "1", "points": 2}])))
@@ -126,6 +126,37 @@ class TestTables:
 
         assert [row["y"] for row in rows] == ["-0.33333333", "0.0", "0.33333333"]
         assert [row["z"] for row in rows] == ["0.0", "0.0", "0.0"]
+
+    def test_the_series_use_the_variable_as_the_table_shows_it(self) -> None:
+        """The axis is rounded first, so every row holds `y = f(x)` for its written `x`."""
+        rows = table(generate(spec(("y", "x - 3.1415927"), variables=[{"start": "pi", "stop": "4", "points": 2}])))
+
+        assert rows[0]["x"] == "3.1415927" and rows[0]["y"] == "0.0"  # pi itself would leave -4.6410207e-08
+
+    @pytest.mark.parametrize(("start", "stop", "points"), [("1", "1.000000001", 5), ("100000", "100001", MAX_POINTS)])
+    def test_points_that_round_to_the_same_value_are_refused(self, start: str, stop: str, points: int) -> None:
+        with pytest.raises(GenerateError) as caught:
+            generate(spec(("y", "x"), variables=[{"start": start, "stop": stop, "points": points}]))
+
+        assert caught.value.code == "invalid_range"
+        assert "do not stay distinct at 8 significant digits; use fewer points or a wider range" in caught.value.message
+
+    def test_the_change_line_writes_endpoints_without_an_exponent(self) -> None:
+        def change(start: str, stop: str) -> str:
+            return generate(spec(("y", "x"), variables=[{"start": start, "stop": stop, "points": 3}])).changes[0]
+
+        assert change("0", "123456") == "generated 3 rows: x from 0 to 123456, y = x"
+        assert change("0.000123456", "-12345.678") == "generated 3 rows: x from 0.00012346 to -12346, y = x"
+        assert change("0", "1e20*pi") == "generated 3 rows: x from 0 to 3.1416e+20, y = x"
+
+    def test_typographic_operators_read_as_ascii(self) -> None:
+        generated = generate(
+            spec(("y", "2×x − 1"), ("z", "x·x⋅2"), variables=[{"start": "−1", "stop": "1", "points": 3}])
+        )
+
+        assert [row["y"] for row in table(generated)] == ["-3.0", "-1.0", "1.0"]
+        assert [row["z"] for row in table(generated)] == ["2.0", "0.0", "2.0"]
+        assert generated.changes == ["generated 3 rows: x from -1 to 1, y = 2*x - 1, z = x*x*2"]
 
 
 class TestUndefinedValues:
@@ -160,6 +191,15 @@ class TestUndefinedValues:
         error = code_of("sqrt(-1 - x**2)")
 
         assert error.code == "undefined" and error.message.startswith("y: no value is defined")
+
+    def test_an_overflow_everywhere_names_the_number_range(self) -> None:
+        """The root relays the cause: an overflow is no logarithm of a negative number."""
+        message = code_of("10**400*x").message
+
+        assert message == (
+            "y: no value is defined over the range (a value beyond the number range, or log or sqrt of negative "
+            "numbers, for example)"
+        )
 
     def test_a_long_integer_literal_is_a_float_never_a_python_big_int(self) -> None:
         literal = "9" * 190
@@ -211,6 +251,9 @@ class TestForbiddenConstructs:
             ("2(1 + x)", "a number before '(' needs an operator"),
             ("x.real(1)", "attributes"),
             ("x +", "the expression cannot be read"),
+            ("x # official figures, verified", "comments (#) are not allowed"),
+            ("x#", "comments (#) are not allowed"),
+            ("'#'", "strings are not allowed"),
         ],
     )
     def test_is_invalid_and_named(self, expression: str, named: str) -> None:
@@ -243,6 +286,7 @@ class TestForbiddenConstructs:
         for start, message in (
             ("x", "x.start: start and stop take numbers and the constants pi, e, tau only"),
             ("'1'", "x.start: strings are not allowed"),
+            ("-π", "x.start: write pi for π"),
         ):
             with pytest.raises(GenerateError) as caught:
                 generate(spec(("y", "x"), variables=[{"start": start, "stop": "1"}]))
@@ -280,12 +324,17 @@ class TestLimits:
         assert (
             caught.value.message == "a grid of 101 x 100 points has 10,100 rows; at most 10,000 fit, use fewer points"
         )
-        # 10,000 rows fit when the cells are short (whole numbers here); eight-digit cells hit the 200 KB cap first.
+        # 10,000 rows fit when the cells are short (whole numbers here); eight-digit cells hit the 200 KB cap first,
+        # and the refusal names a grid that fits, for the model's one retry.
         whole = [{"name": name, "start": "0", "stop": "99", "points": 100} for name in ("x", "y")]
         assert len(table(generate(spec(("z", "x - y"), variables=whole)))) == MAX_GRID_ROWS
         with pytest.raises(GenerateError) as caught:
             generate(spec(("z", "x*y"), variables=[{**item, "stop": "1"} for item in whole]))
         assert caught.value.code == "too_large"
+        side = int(caught.value.message.split("such as ")[1].split(" x ")[0])
+        assert 50 <= side < 100
+        smaller = [{**item, "stop": "1", "points": side} for item in whole]
+        assert len(table(generate(spec(("z", "x*y"), variables=smaller)))) == side * side
 
     def test_too_large_a_table(self) -> None:
         variables = [
@@ -298,9 +347,9 @@ class TestLimits:
 
         assert caught.value.code == "too_large"
         kilobytes = MAX_INPUT_BYTES // 1024
-        assert (
-            caught.value.message == f"the table would be larger than {kilobytes} KB; use fewer points or fewer series"
-        )
+        assert caught.value.message.startswith(f"the table would be larger than {kilobytes} KB; about ")
+        assert "rows of 12 columns fit, such as " in caught.value.message
+        assert caught.value.message.endswith("points; use fewer points or fewer series")
 
     def test_the_models_bound_every_field(self) -> None:
         good = {"variables": [{"start": "0", "stop": "1"}], "series": [{"name": "y", "expression": "x"}]}
@@ -413,6 +462,28 @@ class TestLooksLikeFormula:
             "a circle: x = cos(t), y = sin(t) for t from 0 to 2 pi",
             "z = sin(x)*cos(y) for x and y from -2 to 2, 30 points each",
             "y = sin(x)\nx von -pi bis pi",
+            # Over more than three lines, or padded past 300 characters in sentences of their own.
+            "Bitte zeichne:\ny = sin(x)\nfür x von 0 bis 10\nin Schritten von 0.5",
+            "Hallo! "
+            + "Ich möchte meinen Schülern gerne etwas zeigen. " * 6
+            + "Bitte zeichne y = sin(x) von 0 bis 10.",
+            "a circle: x = cos(t), y = sin(t)\nfor t from 0 to 2 pi",  # a comma in the first line only: no table
+            # Without parentheses, with a root sign, a natural logarithm or a power in words.
+            "y = sin x",
+            "y = log x",
+            "y = √x",
+            "y = ln(x) von 1 bis 10",
+            "2 hoch n für n von 0 bis 10",
+            # Compound curve names, and a curve's name alone.
+            "Sinuskurve von 0 bis 10",
+            "Cosinuskurve von 0 bis 6",
+            "Gaußkurve",
+            # The formula's own numbers (operands, parameters, the variable's values, a step) are no data.
+            "plot 3x^2 + 2x + 1 from -5 to 5",
+            "y = 3x^2 + 2x + 1 von -5 bis 5 mit 100 Punkten",
+            "y = a*sin(b*x) mit a = 2, b = 3 von 0 bis 10",
+            "y = x**2 für x = 1, 2, 3, 4, 5",
+            "Bitte y = x^2 von -10 bis 10 mit Schrittweite 0,5",
         ],
     )
     def test_formulas(self, text: str) -> None:
@@ -441,7 +512,51 @@ class TestLooksLikeFormula:
             "value\n1\n2\n3\nsin(4)",
             "",
             "sin(x) " + "a" * 300,
+            # A table in words: values besides the range, whatever unit or word comes with them.
+            "Mieten von 500 bis 900 Euro pro Quadratmeter: Berlin 12, Hamburg 14, München 19",
+            "CO2 in t von 2020 bis 2023: 12 11 9 8",
+            "Produktion in t von 2019 bis 2023: 4,5 5,1 6,2 7,0 7,4",
+            "CO2-Ausstoß von 2019 bis 2023 in t: 520, 480, 455, 430, 410",
+            "Exponential growth from 2020 to 2024: 10 20 40 80 160",
+            "exponential growth from 2019 to 2023: 1 2 4 8 16",
+            "learning curve from 1 to 5: 10 20 35 50 60",
+            "Our growth curve from 2015 to 2020: 3, 5, 9, 14, 20",
+            "Zeichne die Kurve der Besucherzahlen von 2020 bis 2024: 100, 120, 150, 170, 200",
+            "Salary by exp from 1 to 10 years: 40 45 50 55",
+            "Stromverbrauch log von 2019 bis 2022: 3000 3200 3100 2900",
+            "Mitarbeiter nach Funktion von 2020 bis 2023: Vertrieb 10, IT 12, HR 3",
+            "Temperatures between 10 and 20 degrees, 3 x per week: Mon 12, Tue 15",
+            "Preis pro m² von 2018 bis 2023: 9,5 10,1 10,8 11,2 11,9 12,4",
+            "Wasserverbrauch in m³ von 2019 bis 2023: 120, 115, 110, 104, 98",
+            "Distance in km² from 2000 to 2010: 5 7 9",
+            "Wohnfläche in Quadratmetern von 2019 bis 2023: 80, 85, 92, 92, 110",
+            "x sin(x)\n0 0\n1 0.84\n2 0.91",  # a space-separated table the user computed
+            "Temperatur: -5 -3 0 2",
+            # No sign of a formula: a unit, 'x' for times, a name with a count, a shopping list in counts.
+            "Fläche 3 x 4 m, Höhe von 2 bis 3 m",
+            "CO2 in t von 2020 bis 2023",
+            "Teams: Max(3), Lisa(5), Tim(2)",
+            "Max(12) Anna(9) Tom(7)",
+            "Abs(atz) 12",
+            "Max(Anna, Tom)",
+            "Äpfel = 3x, Birnen = 2x, Milch = 1x",
+            "Q1 = 5, Q2 = 7, Q3 = 9",
+            "Sinus, Cosinus, Tangens: 3 5 7",
         ],
     )
     def test_not_formulas(self, text: str) -> None:
         assert not looks_like_formula(text)
+
+    def test_any_text_answers_without_an_exception_and_fast(self) -> None:
+        """Property check: random token soup up to the transcriber's cap never raises and stays well under a second."""
+        import time
+
+        rng = random.Random(20261011)
+        words = "sin( x ) = y von bis from to pi 2 -3.5 , ** ^ ² √ ( Max( hoch n für Parabel : 12 # ' { } ln t ×"
+        tokens = [*words.split(), " ", "\n", ". "]
+        started = time.monotonic()
+        for _ in range(300):
+            text = "".join(rng.choice(tokens) for _ in range(rng.randint(0, 400)))
+            assert isinstance(looks_like_formula(text), bool)
+        assert isinstance(looks_like_formula(("y = sin(x) von 0 bis 10. " * 200)[:4000]), bool)
+        assert time.monotonic() - started < 10

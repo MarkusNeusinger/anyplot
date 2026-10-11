@@ -574,9 +574,12 @@ computes the table and stores it like a change: as the next version when the
 session has data, which you can undo, or as version 1 when it has none. The
 turn's `done` event carries it with a change line such as `generated 200 rows:
 x from -3.1416 to 3.1416, y = sin(x)`, plus one line per series with values
-the formula does not define (they stay empty). A formula pasted into the data
+the formula does not define (they stay empty). The generated table starts
+from the default bindings for its columns. A formula pasted into the data
 field answers `422 formula` instead, because the free-text reader is a model
-and would write the rows itself.
+and would write the rows itself. Text that holds its own values is data, not
+a formula: with three numbers or more besides a range, such as `Umsatz von
+2020 bis 2024: 10 12 15 18`, the free-text reader reads it as a table.
 
 ### Theme toggle
 

@@ -57,6 +57,19 @@ def test_push_keeps_the_previous_version_and_carries_the_bindings() -> None:
     assert version.payload()["profile"]["columns"][0]["name"] == "hours"
 
 
+def test_a_replacing_table_gets_the_default_bindings_where_a_change_carries_them() -> None:
+    """`rebind` (a generated table) starts from the defaults even where the old columns' names return."""
+    store = DatasetStore()
+    state = opened(store, "x,y\n1,2\n3,4\n")
+    state[BINDINGS] = [{"role": "x", "column": "y"}, {"role": "y", "column": "x"}]  # the user swapped them
+
+    carried = push_version(store, SID, view_of(state), parse_dataset("x,y\n5,6\n7,8\n"), SNAPSHOT)
+    fresh = push_version(store, SID, view_of(state), parse_dataset("x,y\n5,6\n7,8\n"), SNAPSHOT, rebind=True)
+
+    assert carried.delta[BINDINGS] == [{"role": "x", "column": "y"}, {"role": "y", "column": "x"}]
+    assert fresh.delta[BINDINGS] == [{"role": "x", "column": "x"}, {"role": "y", "column": "y"}]
+
+
 def test_the_history_keeps_five_versions_and_deletes_the_oldest() -> None:
     store = DatasetStore()
     state = opened(store)

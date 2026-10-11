@@ -20,9 +20,10 @@ tree; no text ever reaches `eval`, `exec` or `compile`:
 
 Anything else (attributes, indexing, strings, comparisons, `and` and `or`, conditionals,
 lambdas, comprehensions, keyword or starred arguments, `:=`, the bitwise operators,
-`^` among them, a number glued to a name such as `2x`) is `invalid_expression` with a
-message that names the construct, and so is an expression of more than
-`MAX_EXPRESSION_NODES` nodes. A range's `start` and `stop` are expressions over the
+`^` among them, a number glued to a name such as `2x`, a `#` comment) is
+`invalid_expression` with a message that names the construct, and so is an expression
+of more than `MAX_EXPRESSION_NODES` nodes. The typographic operators `−`, `×`, `·` and
+`⋅` read as `-` and `*`. A range's `start` and `stop` are expressions over the
 constants only. Every value is a float64 array evaluated under `np.errstate(all="ignore")`,
 never a Python int or float, so an overflow (`10**400`), a division by zero or a function
 outside its domain (`log(-1)`) gives inf or NaN, which become missing cells, never an
@@ -32,15 +33,19 @@ The table: the variable columns first (two variables make a grid, the cartesian
 product with the first variable slowest), then the series columns; every value
 rounded to `SIGNIFICANT_DIGITS` significant digits and written as the parser writes a
 number (`repr` of the float, so every column re-parses as `number`), a missing cell
-empty. Errors raise `GenerateError(code, message)`: `invalid_expression`,
-`invalid_range` (an endpoint that is not finite, equal endpoints, a range wider than a
-float holds), `too_many_points` (a grid over `MAX_GRID_ROWS`), `undefined` (a series
-without one defined value) and `too_large` (a CSV over the parser's input cap). A
-message names the variable or series and at most quotes the expression's own text.
+empty. The variables are rounded before the series are computed, so every row holds
+`y = f(x)` for the `x` it shows. Errors raise `GenerateError(code, message)`:
+`invalid_expression`, `invalid_range` (an endpoint that is not finite, equal endpoints,
+a range wider than a float holds, points that round to the same value),
+`too_many_points` (a grid over `MAX_GRID_ROWS`), `undefined` (a series without one
+defined value) and `too_large` (a CSV over the parser's input cap; the message names
+about how many rows fit). A message names the variable or series and at most quotes
+the expression's own text, and the change line quotes only the checked expression.
 
 `looks_like_formula` is the dataset route's guard: text pasted into the data field that
 asks for a formula is refused (`422 formula`) instead of reaching the transcriber, which
-would let a model write the rows.
+would let a model write the rows. Text that holds its own values is data, never a
+formula, so the guard never keeps a table in words from the transcriber.
 """
 
 import ast
@@ -58,8 +63,9 @@ import numpy.typing as npt
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
 
 from ..schemas import MAX_NOTE_CHARS
-from .parse import MAX_INPUT_BYTES, sniff_delimiter
+from .parse import MAX_INPUT_BYTES, SNIFF_LINES, sniff_delimiter
 from .prepare import NewName
+from .transcribe import MAX_TRANSCRIBE_CHARS
 
 
 MAX_EXPRESSION_CHARS = 200
@@ -76,7 +82,9 @@ SIGNIFICANT_DIGITS = 8
 CHANGE_DIGITS = 5
 """Significant digits of a range's endpoints in the change line."""
 MAX_FORMULA_CHARS = 300
-MAX_FORMULA_LINES = 3
+"""The longest line or sentence the guard reads for a formula; a longer one is prose or a table row."""
+MIN_DATA_VALUES = 3
+"""Numbers besides a formula's own (its ranges, its expressions, a point count) that make pasted text data."""
 
 GenerateErrorCode = Literal["invalid_expression", "invalid_range", "too_many_points", "undefined", "too_large"]
 Array = npt.NDArray[np.float64]
@@ -138,6 +146,8 @@ _FORBIDDEN: tuple[tuple[type[ast.AST] | tuple[type[ast.AST], ...], str], ...] = 
 )
 _GLUED = re.compile(r"(?<![\w.])(?P<number>[0-9]+(?:\.[0-9]*)?)(?![eE][+-]?[0-9])(?P<name>[A-Za-z_]\w*)")
 _WHITESPACE = re.compile(r"\s+")
+_TYPOGRAPHIC = str.maketrans({"−": "-", "×": "*", "·": "*", "⋅": "*"})
+"""Operators a model or a user types as typography; each reads as its ASCII form."""
 _IDENTIFIER = r"^[A-Za-z_][A-Za-z0-9_]{0,63}$"
 
 
@@ -231,10 +241,7 @@ def generate(spec: Generate) -> Generated:
     # Every expression is checked before any is computed, so one bad series fails the call as a whole.
     trees = [(series, parse_expression(series.expression, allowed, series.name)) for series in spec.series]
 
-    axes = [
-        np.linspace(start, stop, variable.points, dtype=np.float64)
-        for variable, (start, stop) in zip(spec.variables, ranges, strict=True)
-    ]
+    axes = [_axis(variable, start, stop) for variable, (start, stop) in zip(spec.variables, ranges, strict=True)]
     if len(axes) == 2:
         values = {names[0]: np.repeat(axes[0], axes[1].size), names[1]: np.tile(axes[1], axes[0].size)}
     else:
@@ -250,7 +257,8 @@ def generate(spec: Generate) -> Generated:
         if undefined == rows:
             raise GenerateError(
                 "undefined",
-                f"{series.name}: no value is defined over the range (for example log or sqrt of negative numbers)",
+                f"{series.name}: no value is defined over the range (a value beyond the number range, or log or sqrt "
+                "of negative numbers, for example)",
             )
         if undefined:
             verb = "is" if undefined == 1 else "are"
@@ -258,10 +266,17 @@ def generate(spec: Generate) -> Generated:
         columns.append(_texts(result))
 
     csv_text = _write([*names, *(series.name for series in spec.series)], columns)
-    if len(csv_text.encode("utf-8")) > MAX_INPUT_BYTES:
+    size = len(csv_text.encode("utf-8"))
+    if size > MAX_INPUT_BYTES:
+        # The row count that fits at this table's width, so the model's one retry aims at a size that fits.
+        fit = rows * MAX_INPUT_BYTES // size
+        hint = f"about {fit:,} rows of {len(columns)} columns fit"
+        if len(spec.variables) > 1:
+            side = math.isqrt(fit)
+            hint += f", such as {side} x {side} points"
         raise GenerateError(
             "too_large",
-            f"the table would be larger than {MAX_INPUT_BYTES // 1024} KB; use fewer points or fewer series",
+            f"the table would be larger than {MAX_INPUT_BYTES // 1024} KB; {hint}; use fewer points or fewer series",
         )
     return Generated(csv=csv_text, changes=[_change(spec, ranges, rows)], warnings=warnings)
 
@@ -286,16 +301,33 @@ def _endpoint(text: str, where: str) -> float:
     return value
 
 
+def _axis(variable: Range, start: float, stop: float) -> Array:
+    """The variable's points at `SIGNIFICANT_DIGITS` significant digits: the values the table shows and the series use.
+
+    Rounding before the series are computed keeps every row true to what it shows
+    (`y = f(x)` for the written `x`). A range so narrow for its points that two
+    neighbours round to the same value is refused: the column would repeat an `x`
+    with different `y` values.
+    """
+    points = np.array([_round(value) for value in np.linspace(start, stop, variable.points).tolist()], dtype=np.float64)
+    if np.any(np.diff(points) == 0):
+        raise GenerateError(
+            "invalid_range",
+            f"{variable.name}: {variable.points} points from {_number_text(start)} to {_number_text(stop)} do not "
+            f"stay distinct at {SIGNIFICANT_DIGITS} significant digits; use fewer points or a wider range",
+        )
+    return points
+
+
+def _round(value: float) -> float:
+    """`value` at `SIGNIFICANT_DIGITS` significant digits, `0.0` for a negative zero."""
+    rounded = float(f"{value:.{SIGNIFICANT_DIGITS}g}")
+    return rounded if rounded else 0.0
+
+
 def _texts(values: Array) -> list[str]:
     """Every value at `SIGNIFICANT_DIGITS` significant digits, written as the parser writes a number; NaN and inf empty."""
-    texts = []
-    for value in values.tolist():
-        if not math.isfinite(value):
-            texts.append("")
-            continue
-        rounded = float(f"{value:.{SIGNIFICANT_DIGITS}g}")
-        texts.append(repr(rounded if rounded else 0.0))  # no `-0.0`
-    return texts
+    return [repr(_round(value)) if math.isfinite(value) else "" for value in values.tolist()]
 
 
 def _write(names: list[str], columns: list[list[str]]) -> str:
@@ -311,15 +343,34 @@ def _change(spec: Generate, ranges: list[tuple[float, float]], rows: int) -> str
     grid = len(spec.variables) > 1
     spans = []
     for variable, (start, stop) in zip(spec.variables, ranges, strict=True):
-        span = f"{variable.name} from {start:.{CHANGE_DIGITS}g} to {stop:.{CHANGE_DIGITS}g}"
+        span = f"{variable.name} from {_number_text(start)} to {_number_text(stop)}"
         spans.append(f"{span} ({variable.points} points)" if grid else span)
-    formulas = ", ".join(f"{series.name} = {_one_line(series.expression)}" for series in spec.series)
+    # The source parse_expression read: whitespace collapsed, typographic operators in ASCII, no comment.
+    formulas = ", ".join(f"{series.name} = {_source(series.expression)}" for series in spec.series)
     line = f"generated {rows} {'row' if rows == 1 else 'rows'}: {' and '.join(spans)}, {formulas}"
     return line if len(line) <= MAX_NOTE_CHARS else line[: MAX_NOTE_CHARS - 1] + "…"
 
 
+def _number_text(value: float) -> str:
+    """An endpoint for the change line: a whole number in full, else `CHANGE_DIGITS` significant digits.
+
+    Ordinary magnitudes are written without an exponent (`123456`, `-3.1416`, `0.00012346`);
+    only a very large or very small value keeps one (`1.2346e+20`).
+    """
+    if value.is_integer() and abs(value) < 1e15:
+        return str(int(value))
+    if 1e-4 <= abs(value) < 1e15:
+        return np.format_float_positional(value, precision=CHANGE_DIGITS, unique=False, fractional=False, trim="-")
+    return f"{value:.{CHANGE_DIGITS}g}"
+
+
 def _one_line(text: str) -> str:
     return _WHITESPACE.sub(" ", text).strip()
+
+
+def _source(text: str) -> str:
+    """The text `parse_expression` reads: one line, the typographic operators in ASCII."""
+    return _one_line(text).translate(_TYPOGRAPHIC)
 
 
 # --- Expressions ------------------------------------------------------------------------------
@@ -332,7 +383,7 @@ def parse_expression(text: str, variables: frozenset[str] | None, where: str, *,
     any name that is no function (`looks_like_formula` reads a pasted formula whose
     variables it cannot know). `where` names the series or endpoint in the message.
     """
-    source = _one_line(text)
+    source = _source(text)
     try:
         tree = ast.parse(source, mode="eval")
     except SyntaxError as exc:
@@ -340,6 +391,9 @@ def parse_expression(text: str, variables: frozenset[str] | None, where: str, *,
     except (ValueError, RecursionError, MemoryError):
         raise GenerateError("invalid_expression", f"{where}: the expression cannot be read") from None
     _check(tree.body, variables, where, endpoint)
+    if "#" in source:
+        # No string passed the check, so a '#' starts a comment: free text the change line would quote.
+        raise GenerateError("invalid_expression", f"{where}: comments (#) are not allowed; write the expression only")
     nodes = sum(1 for node in ast.walk(tree.body) if isinstance(node, ast.expr))
     if nodes > MAX_EXPRESSION_NODES:
         raise GenerateError(
@@ -379,11 +433,11 @@ def _check(node: ast.expr, variables: frozenset[str] | None, where: str, endpoin
                 return
             if name in FUNCTIONS:
                 raise fail(f"'{name}' is a function; write {name}(x)")
+            if name == "π":
+                raise fail("write pi for π")
             if endpoint:
                 raise fail("start and stop take numbers and the constants pi, e, tau only, no variable")
             if variables is not None and name not in variables:
-                if name == "π":
-                    raise fail("write pi for π")
                 known = ", ".join(sorted(variables))
                 raise fail(f"unknown name '{_clip(name)}'; use the variables {known} and the constants pi, e, tau")
         case ast.UnaryOp(op=op, operand=operand):
@@ -461,11 +515,24 @@ def _clip(text: str, limit: int = 40) -> str:
 
 # --- The dataset route's guard ------------------------------------------------------------------
 
-_CALL = re.compile(r"(?i)(?<![\w.])(?:" + "|".join(sorted(FUNCTIONS, key=len, reverse=True)) + r")\(")
+_SEGMENT = re.compile(r"\n|(?<=[.!?;])\s+")
+"""Where pasted text splits into the lines and sentences the guard reads one by one."""
+_CALL = re.compile(r"(?i)(?<![\w.])(?P<name>" + "|".join(sorted(FUNCTIONS, key=len, reverse=True)) + r")\s*\(")
+_BARE_FUNCTIONS = "asin|acos|atan|sinh|cosh|tanh|sin|cos|tan|exp|log10|log2|log|ln|sqrt"
+_BARE_CALL = re.compile(rf"(?i)(?<![\w.])(?P<name>{_BARE_FUNCTIONS})\s+(?P<arg>[A-Za-z])(?![\w(])")
+"""A call written without parentheses, of one one-letter variable: `sin x`, `log x`, `ln t`."""
+_ROOT_SIGN = re.compile(r"√\s*(?:(?P<paren>\()|(?P<arg>[A-Za-z_]\w*|[0-9]+(?:\.[0-9]+)?))")
+_LN = re.compile(r"(?i)(?<![\w.])ln\s*\(")
+_IMPLICIT_PRODUCT = re.compile(r"(?<![\w.])([0-9]+(?:\.[0-9]+)?)(?![eE][+-]?[0-9])(?=[A-Za-z_(])")
 _ASSIGNMENT = re.compile(
-    r"(?<![\w.=<>!])[A-Za-z_]\w{0,30}(?:\s*\(\s*[A-Za-z_]\w{0,10}(?:\s*,\s*[A-Za-z_]\w{0,10})?\s*\))?"
-    r"\s*=(?!=)\s*(?P<rhs>[^\n=;]{1,200})"
+    # A lookahead, so that assignments in a row ("a = 2, y = x**2") are each found.
+    r"(?<![\w.=<>!])(?=(?P<lhs>[^\W\d]\w{0,30}(?:\s*\(\s*[^\W\d]\w{0,10}(?:\s*,\s*[^\W\d]\w{0,10})?\s*\))?)"
+    r"\s*=(?!=)\s*(?P<rhs>[^\n=;]{1,200}))"
 )
+_MATH_NAME = re.compile(r"[^\W\d]\w?|[^\W\d]\w{0,10}\s*\(.*\)")
+"""The left side of a formula: a name of one or two characters (`y`, `y1`) or a function's head (`f(x)`)."""
+_PARAMETER = re.compile(r"[^\W\d_]")
+"""The left side of a parameter (`a = 2`) or of a variable's values (`x = 1, 2, 3`): one letter."""
 _RHS_STOP = re.compile(
     r"(?i)\s(?:from|von|for|für|fuer|with|mit|between|zwischen|in|over|über|ueber|on|auf|where|wobei|bis|to|and|und)\b"
 )
@@ -474,14 +541,38 @@ _RANGE = re.compile(
     rf"(?i)\b(?:from|von|between|zwischen)\s+(?P<start>{_ENDPOINT})\s+(?:to|bis|and|und)\s+(?P<stop>{_ENDPOINT})(?!\w)"
 )
 _CONSTANT_ENDPOINT = re.compile(r"(?i)pi|π|tau|^[-+−]?\s?e$")
-_VARIABLE = re.compile(r"(?i)(?<![\w'’.-])[xtyz](?![\w'’.-])")
-_MATH_WORDS = re.compile(
-    r"(?i)\b(?:a?sinh?|a?cosh?|a?tanh?|atan2|exp|log(?:10|2)?|ln|sqrt|sine|sinus|cosine|[ck]osinus|tangent|tangens"
-    r"|parabola|parabel|squared|quadrat\w*|cubed|functions?|funktion\w*|curve|kurve|exponential\w*|logarithm\w*"
-    r"|wurzel|polynom\w*|gau(?:ss|ß)\w*|normalverteilung|normal\s+distribution|bell\s+curve|glockenkurve|spirale?)\b"
+_SUBJECT = re.compile(
+    r"(?<![\w'’.,-])(?<!\bin )(?<!\bpro )(?<!\bper )(?<!\bje )(?<![0-9] )"
+    r"[b-df-zθφ](?:\s*(?:,|\band\b|\bund\b)\s*[b-df-zθφ])?\s+$"
 )
-_POWER = re.compile(r"\*\*|\^|[²³]")
-_IMPLICIT_PRODUCT = re.compile(r"(?<![\w.])([0-9]+(?:\.[0-9]+)?)(?![eE][+-]?[0-9])(?=[A-Za-z_(])")
+"""A one-letter variable right before a range phrase (`x von`, `für n von`, `x and y from`): never `a` or `e`,
+and never a unit (`CO2 in t von`, `12 t von`)."""
+_POWER = re.compile(
+    r"\*\*|(?<=[\w)])\s?\^\s?(?=[\w(+-])|(?:(?<!\w)[a-ln-zA-LN-Z]|\))\s?[²³]|(?i:\bhoch\s+(?:[0-9]+|[a-z])\b)"
+)
+"""A power: `**`, `^` between operands, `²` or `³` after a one-letter variable or a parenthesis (`x²`, never
+a unit such as `m²` or `km²`), `hoch n`."""
+_SHAPES = re.compile(
+    r"(?i)\b(?:sine|sinus\w*|cosine|[ck]osinus\w*|tangens\w*|parab\w*|hyperb\w*|squared|cubed|quadratic"
+    r"|quadratisch\w*|cubic|kubisch\w*|polynom\w*|logarithm\w*|exponential(?:funktion|kurve)\w*"
+    r"|exponential\s+(?:function|curve)|wurzelfunktion\w*|square\s+root|quadratwurzel\w*"
+    r"|gau(?:ss|ß)(?:\s*-?\s*kurve|sche\w*|ian|verteilung)\w*|gaussian|normalverteilung\w*"
+    r"|normal\s+(?:distribution|curve)|bell\s+curve|glockenkurve\w*|spiralen?|spirals?)\b"
+)
+"""The names of a curve. Words that data has as well (`curve`, `Kurve`, `function`, `exp`, `exponential growth`,
+`Quadratmeter`) are none: a formula request needs more than they say."""
+_COUNT = re.compile(
+    r"(?i)(?<![\w.])[0-9]+\s*(?:points?|punkte?n?|werte?n?|values?|samples?|stützstellen|steps?|schritte?n?)\b"
+    r"|\b(?:in\s+steps\s+of|step(?:\s+size)?|schrittweite|(?:in\s+)?schritten\s+von|abstand)\s*[:=]?\s*"
+    r"[-+−]?[0-9]+(?:[.,][0-9]+)?"
+)
+"""A point count or a step (`30 points`, `mit 50 Punkten`, `in Schritten von 0.5`): part of a formula request."""
+_VALUE = re.compile(r"(?<![\w.])[-+−]?[0-9]+(?:[.,][0-9]+)?(?P<unit>[^\W\d_]*)")
+_OPERATOR_BEFORE = frozenset("+-−*/^×·")
+_OPERATOR_AFTER = frozenset("*/^×·²³")
+_DIGIT = re.compile(r"[0-9]")
+MAX_SHAPE_WORDS = 6
+"""The longest request that names a curve and nothing else (`zeichne eine Gaußkurve`), in words."""
 
 
 def looks_like_formula(text: str) -> bool:
@@ -489,66 +580,225 @@ def looks_like_formula(text: str) -> bool:
 
     The dataset route asks this only where the parser found no table (`no_table`, a
     broken `unparseable`, or the one-column reading the transcriber would get), so the
-    text reaches neither the transcriber nor the store. A formula is short: at most
-    `MAX_FORMULA_CHARS` characters on at most `MAX_FORMULA_LINES` lines, and text of
-    several lines with a delimiter in its first one is a table, perhaps a broken one. It
-    then needs one of these:
+    text reaches neither the transcriber nor the store. It reads what the transcriber
+    would read (at most `MAX_TRANSCRIBE_CHARS` characters); text of several lines whose
+    sniffed delimiter splits two of its first lines is a table, perhaps a broken one.
+    The rest is read line by line and sentence by sentence, each of at most
+    `MAX_FORMULA_CHARS` characters, and is a formula when one of them holds one of these:
 
-    * a call of a function of the expression language, as in `sin(x)` or `exp(-t)`;
-    * an assignment `<name> = <expression>` whose expression (cut before a word such as
-      `from`, `for` or `von`) parses under the whitelist and uses a variable: with an
-      operator or a call (`y = x**2`, `f(x) = 2x + 1`), or a bare name of one or two
-      letters (`y = x`), so `Tier = Hund` or `Anzahl = 7` stays data;
+    * a call of a function of the expression language whose argument uses a variable
+      (`sin(x)`, `exp(-t)`, `Sin(x)`; never `Max(3)`, a name with a count, see
+      `_formula_call`), or a call without parentheses (`sin x`, `√x`);
+    * an assignment of an expression with a variable (`y = x**2`, `f(x) = 2x + 1`,
+      `y = x`; never `Tier = Hund` or `Äpfel = 3x`, see `_assignment`);
     * a range phrase `from <a> to <b>` or `von <a> bis <b>` whose ends are numbers, `pi`
-      or `e` (`-pi`, `2 pi`, `-3.5`), together with a sign of mathematics: a constant at
-      an end, a variable `x`, `t`, `y` or `z` as a word, a power (`**`, `^`, `²`), or a
-      word such as `sin`, `parabola` or `Kurve`. So "Umsatz von 2020 bis 2024: 10 12 15"
-      stays data, and "from Monday to Friday" has no numbers at all.
+      or `e`, with a constant at an end, a one-letter variable right before it
+      (`für n von 0 bis 10`; never a unit, as in `CO2 in t von 2020 bis 2023`), a power
+      (`x**2`, `x^2`, `x²`, `hoch n`; never `m²`) or a curve's name in the text
+      (`Parabel`, `Sinuskurve`, `normal distribution`; never a word that data has as
+      well, such as `curve`, `Funktion`, `exp` or `Quadratmeter`);
+    * a curve's name and nothing else, in at most `MAX_SHAPE_WORDS` words without a
+      number (`Gaußkurve`).
+
+    Text that holds its own values is data, whatever else it says: `MIN_DATA_VALUES`
+    numbers or more outside a formula's parts (its ranges, its expressions, parameters
+    such as `a = 2` or `x = 1, 2, 3`, a point count or a step) make it a table in words
+    for the transcriber ("Umsatz von 2020 bis 2024: 10 12 15", "exponential growth from
+    2019 to 2023: 1 2 4 8 16", a space-separated table under the header `x sin(x)`). A
+    number glued to a word (`CO2`) or that is the operand of an operator (`x^2`,
+    `2x + 1`) is no value. A formula on a line or sentence longer than
+    `MAX_FORMULA_CHARS` characters is not found; the transcriber's own rule
+    (`prompts/transcriber.md`: compute nothing, write only the values the text holds)
+    covers it.
     """
     stripped = text.strip()
-    if not stripped or len(stripped) > MAX_FORMULA_CHARS:
+    if not stripped or len(stripped) > MAX_TRANSCRIBE_CHARS:
         return False
     lines = [line for line in stripped.splitlines() if line.strip()]
-    if len(lines) > MAX_FORMULA_LINES:
+    if _delimited(stripped, lines):
         return False
-    if len(lines) > 1 and sniff_delimiter(stripped)[0] is not None:
+    segments = [segment.strip() for segment in _SEGMENT.split(stripped) if segment.strip()]
+    readable = "\n".join(segment for segment in segments if len(segment) <= MAX_FORMULA_CHARS)
+    signs = bool(_POWER.search(readable) or _SHAPES.search(readable))
+    formula = False
+    values = 0
+    for segment in segments:
+        if len(segment) <= MAX_FORMULA_CHARS:
+            parts, found = _formula_parts(segment, signs)
+            formula = formula or found
+            segment = _blank(segment, parts)
+        values += _data_values(segment)
+    if values >= MIN_DATA_VALUES:
         return False
-    if _CALL.search(stripped):
-        return True
-    if any(_formula_expression(match.group("rhs")) for match in _ASSIGNMENT.finditer(stripped)):
-        return True
-    for match in _RANGE.finditer(stripped):
+    return formula or _shape_only(stripped)
+
+
+def _delimited(text: str, lines: list[str]) -> bool:
+    """Whether text of several lines is a table: its sniffed delimiter is in at least two of its first lines."""
+    if len(lines) < 2:
+        return False
+    delimiter = sniff_delimiter(text)[0]
+    return delimiter is not None and sum(delimiter in line for line in lines[:SNIFF_LINES]) >= 2
+
+
+def _formula_parts(segment: str, signs: bool) -> tuple[list[tuple[int, int]], bool]:
+    """The spans of one line or sentence that belong to a formula request, and whether it asks for a formula.
+
+    `signs` says whether the text has a power or a curve's name, which makes a range
+    phrase with plain numbers a formula's range. Parameters (`a = 2`, `x = 1, 2, 3`),
+    point counts and every range phrase are parts without being a formula by themselves.
+    """
+    parts: list[tuple[int, int]] = []
+    found = False
+    for match in _CALL.finditer(segment):
+        end = _closing(segment, match.end() - 1)
+        if end is not None and _formula_call(match.group("name"), segment[match.start() : end]):
+            parts.append((match.start(), end))
+            found = True
+    for pattern in (_BARE_CALL, _ROOT_SIGN):
+        for match in pattern.finditer(segment):
+            parts.append(match.span())
+            found = True
+    for match in _ASSIGNMENT.finditer(segment):
+        part, formula = _assignment(match)
+        if part is not None:
+            parts.append(part)
+            found = found or formula
+    for match in _RANGE.finditer(segment):
+        parts.append(match.span())
         ends = (match.group("start"), match.group("stop"))
         if (
-            any(_CONSTANT_ENDPOINT.search(end.strip()) for end in ends)
-            or _VARIABLE.search(stripped)
-            or _POWER.search(stripped)
-            or _MATH_WORDS.search(stripped)
+            signs
+            or any(_CONSTANT_ENDPOINT.search(end.strip()) for end in ends)
+            or _SUBJECT.search(segment[: match.start()])
         ):
-            return True
-    return False
+            found = True
+    parts.extend(match.span() for match in _COUNT.finditer(segment))
+    return parts, found
 
 
-def _formula_expression(rhs: str) -> bool:
-    """Whether the right side of an assignment, up to a word such as `from`, is an expression with a variable."""
-    candidate = _RHS_STOP.split(rhs, maxsplit=1)[0]
-    for text in (candidate, candidate.split(",", 1)[0]):
-        normalised = text.strip().replace("^", "**").replace("²", "**2").replace("³", "**3")
-        normalised = normalised.replace("π", "pi").replace("·", "*").replace("×", "*").replace("−", "-")
+def _formula_call(name: str, text: str) -> bool:
+    """Whether a call found in pasted text (`text` from the name to its `)`) is a formula's.
+
+    Its argument must parse under the whitelist and use a variable, so `Max(3)` or
+    `Abs(12)` (a name with a count) is none. A function name written with a capital
+    letter, as a name or a word is (`Max(Anna, Tom)`, `Abs(atz)`), counts only with a
+    one-letter variable or an operator inside (`Sin(x)`, `Exp(-t)`).
+    """
+    tree = _parse_formula(name.lower() + text[len(name) :], implicit_product=True)
+    if tree is None:
+        return False
+    variables = _variables(tree)
+    if not variables:
+        return False
+    operator = any(isinstance(node, ast.BinOp | ast.UnaryOp) for node in ast.walk(tree))
+    return name.islower() or operator or all(len(variable) == 1 for variable in variables)
+
+
+def _assignment(match: re.Match[str]) -> tuple[tuple[int, int] | None, bool]:
+    """The span of an assignment's right side that is part of a formula request, and whether it is a formula.
+
+    The right side, cut before a word such as `from`, `for` or `von`, or its part before
+    the first comma, is a formula when it parses under the whitelist and uses a
+    variable: with an operator or a call (`y = x**2`), or as a bare name of one or two
+    letters (`y = x`), so `Tier = Hund` stays data. A number glued to a name (`2x`) is a
+    product only after a formula's left side (`y`, `f(x)`), so `Äpfel = 3x` stays a
+    count. One letter set to numbers (`a = 2`, `x = 1, 2, 3`) is a parameter: part of
+    the request, but no formula by itself.
+    """
+    lhs, rhs, start = match.group("lhs"), match.group("rhs"), match.start("rhs")
+    candidate = _RHS_STOP.split(rhs, maxsplit=1)[0].rstrip()
+    math_name = _MATH_NAME.fullmatch(lhs) is not None
+    for piece in dict.fromkeys((candidate, candidate.split(",", 1)[0].rstrip())):
+        tree = _parse_formula(piece, implicit_product=math_name)
+        if tree is None or not _variables(tree):
+            continue
+        if isinstance(tree, ast.Name) and len(tree.id) > 2:
+            continue
+        return (start, start + len(piece)), True
+    if _PARAMETER.fullmatch(lhs) and _constants(candidate):
+        return (start, start + len(candidate)), False
+    return None, False
+
+
+def _constants(text: str) -> bool:
+    """Whether `text` is one or more numbers or constant expressions, separated by commas or semicolons."""
+    for item in re.split(r"[,;]", text):
+        tree = _parse_formula(item, implicit_product=True)
+        if tree is None or _variables(tree):
+            return False
+    return True
+
+
+def _parse_formula(text: str, *, implicit_product: bool) -> ast.expr | None:
+    """The checked tree of a formula as people type it (`x^2`, `x²`, `√x`, `sin x`, `ln(x)`, `2x`), or None."""
+    normalised = text.strip().replace("^", "**").replace("²", "**2").replace("³", "**3").replace("π", "pi")
+    normalised = _LN.sub("log(", normalised)
+    normalised = _ROOT_SIGN.sub(lambda m: "sqrt(" if m.group("paren") else f"sqrt({m.group('arg')})", normalised)
+    normalised = _BARE_CALL.sub(lambda m: f"{_bare_name(m.group('name'))}({m.group('arg')})", normalised)
+    if implicit_product:
         normalised = _IMPLICIT_PRODUCT.sub(r"\1*", normalised)
-        if not normalised:
+    if not normalised:
+        return None
+    try:
+        return parse_expression(normalised, None, "text")
+    except GenerateError:
+        return None
+
+
+def _bare_name(name: str) -> str:
+    lower = name.lower()
+    return "log" if lower == "ln" else lower
+
+
+def _variables(tree: ast.expr) -> list[str]:
+    """The names of a checked tree that are neither a function nor a constant."""
+    return [
+        node.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Name) and node.id not in FUNCTIONS and node.id not in CONSTANTS
+    ]
+
+
+def _closing(text: str, index: int) -> int | None:
+    """One past the `)` that closes the parenthesis at `index`, within `MAX_EXPRESSION_CHARS`; None without one."""
+    depth = 0
+    for position in range(index, min(len(text), index + MAX_EXPRESSION_CHARS)):
+        if text[position] == "(":
+            depth += 1
+        elif text[position] == ")":
+            depth -= 1
+            if depth == 0:
+                return position + 1
+    return None
+
+
+def _blank(text: str, parts: list[tuple[int, int]]) -> str:
+    """`text` with every span of `parts` replaced by spaces, so its numbers count as no value."""
+    chars = list(text)
+    for start, end in parts:
+        chars[start:end] = " " * (end - start)
+    return "".join(chars)
+
+
+def _data_values(text: str) -> int:
+    """How many numbers of `text` stand as values: not glued to a word, and no operand of an operator.
+
+    `CO2` holds none, `x^2` and `2x + 1` none (the `2` follows `^`, `2x` comes before
+    `+`), while `3x,` (a count), `m² 5 7 9`, `-5 -3 0` and `4,5 5,1` hold values.
+    """
+    count = 0
+    for match in _VALUE.finditer(text):
+        before = text[: match.start()].rstrip()[-1:]
+        after = text[match.end() :].lstrip()[:1]
+        if before in _OPERATOR_BEFORE or after in _OPERATOR_AFTER:
             continue
-        try:
-            tree = parse_expression(normalised, None, "rhs")
-        except GenerateError:
+        if len(match.group("unit")) == 1 and after and after in "+-−":
             continue
-        names = [node.id for node in ast.walk(tree) if isinstance(node, ast.Name)]
-        variables = [name for name in names if name not in FUNCTIONS and name not in CONSTANTS]
-        if not variables:
-            continue
-        if isinstance(tree, ast.Name):
-            if len(tree.id) <= 2:
-                return True
-            continue
-        return True
-    return False
+        count += 1
+    return count
+
+
+def _shape_only(text: str) -> bool:
+    """A short request that names a curve and holds no number (`Gaußkurve`, `eine Parabel`)."""
+    return len(text.split()) <= MAX_SHAPE_WORDS and not _DIGIT.search(text) and _SHAPES.search(text) is not None

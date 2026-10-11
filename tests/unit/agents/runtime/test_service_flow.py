@@ -2130,7 +2130,8 @@ async def test_generate_data_without_data_stores_version_1_and_the_plot_uses_it(
         ("x", "number"),
         ("y", "number"),
     ]
-    assert dataset["profile"]["rows"] == 200 and dataset["preview"][0] == ["-3.1415927", "-1.2246468e-16"]
+    # y is sin of the x the table shows (-3.1415927), not of pi itself.
+    assert dataset["profile"]["rows"] == 200 and dataset["preview"][0] == ["-3.1415927", "4.6410207e-08"]
     assert dataset["bindings"] == [{"role": "x", "column": "x"}, {"role": "y", "column": "y"}]
     # The page learns the spec's roles only from a dataset answer: a first dataset made in the chat carries them.
     assert [role["name"] for role in dataset["roles"]] == ["x", "y"]
@@ -2173,7 +2174,7 @@ async def test_generate_data_on_a_paste_is_the_next_version_and_undo_restores_th
         "generated 5 rows: x from -1 to 1, y = log(x)",
         "y: 3 of 5 values are undefined and left empty",
     ]
-    # No pasted column survives, so every role gets the default for the generated columns.
+    # A generated table starts from the default bindings for its columns.
     assert done["dataset"]["bindings"] == [{"role": "x", "column": "x"}, {"role": "y", "column": "y"}]
     view = read_session(await _session_state(client, sid))
     assert view is not None and view.dataset_history == [first.dataset_id] and view.dataset_version == 2
@@ -2190,7 +2191,7 @@ async def test_generate_data_refuses_during_a_run_bad_arguments_and_formulas_it_
     from types import SimpleNamespace
 
     from agents.anyplot.plugins.ledger import ledger_for
-    from agents.anyplot.session_state import DATASET_ID, DATASET_VERSION
+    from agents.anyplot.session_state import BINDINGS, DATASET_ID, DATASET_VERSION
     from agents.anyplot.tools.session import generate_data
 
     sid = await open_session(client, with_data=False)
@@ -2221,6 +2222,14 @@ async def test_generate_data_refuses_during_a_run_bad_arguments_and_formulas_it_
     assert context.state[DATASET_VERSION] == 1 and len(services.datasets) == 1
     assert ledger_for("inv-gen-1").dataset_changes == [SINE_LINE]
 
+    # Bindings the user made for the old data are not carried over, even where the columns keep their names.
+    defaults = [{"role": "x", "column": "x"}, {"role": "y", "column": "y"}]
+    assert context.state[BINDINGS] == defaults
+    context.state[BINDINGS] = [{"role": "x", "column": "y"}, {"role": "y", "column": "x"}]
+    again = await generate_data(variables, [{"name": "y", "expression": "cos(x)"}], context)
+    assert again["status"] == "ok" and again["version"] == 2
+    assert context.state[DATASET_VERSION] == 2 and context.state[BINDINGS] == defaults
+
 
 async def test_a_formula_in_the_data_field_is_refused_and_never_transcribed(
     client: httpx.AsyncClient, judge, caplog: pytest.LogCaptureFixture
@@ -2229,29 +2238,39 @@ async def test_a_formula_in_the_data_field_is_refused_and_never_transcribed(
     caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
     sid = await open_session(client, with_data=False)
 
-    for text in (
+    formulas = (
         "zeichne sin(x) von -pi bis pi",  # no table: the transcriber's path before
         "y = x**2 from -3 to 3",
         "y = (x+1)**2",  # an assignment that is no literal: the parser's `unparseable`
         "x squared from -3 to 3\nfor 50 points",  # one column of two lines: the free-text fallback
-    ):
+        "Bitte zeichne:\ny = sin(x)\nfür x von 0 bis 10\nin Schritten von 0.5",  # four lines
+        "y = sin x",  # no parentheses
+    )
+    for text in formulas:
         refused = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": text})
         assert (refused.status_code, refused.json()) == (422, {"detail": "formula"}), text
     assert judge.transcribe_calls == [] and judge.calls == []
-    assert [line["outcome"] for line in attribution_lines(caplog, "data_transcribe")] == ["formula"] * 4
+    assert [line["outcome"] for line in attribution_lines(caplog, "data_transcribe")] == ["formula"] * len(formulas)
 
-    judge.transcriptions = [
-        _reading(["Tier", "Anzahl"], [["Hund", "7"], ["Katze", "3"], ["Vogel", "4"]]),
-        _reading(["Tag", "Umsatz"], [["Mo", "10"], ["Fr", "12"]]),
-    ]
-    for text in ("Hund 7 Katze 3 und Vogel 4", "Umsatz from Monday to Friday: Mo 10, Fr 12"):
+    # Text that holds its own values is data, whatever unit, curve word or name with a count it carries.
+    data = (
+        "Hund 7 Katze 3 und Vogel 4",
+        "Umsatz from Monday to Friday: Mo 10, Fr 12",
+        "Mieten von 500 bis 900 Euro pro Quadratmeter: Berlin 12, Hamburg 14, München 19",
+        "CO2 in t von 2020 bis 2023: 12 11 9 8",
+        "Exponential growth from 2020 to 2024: 10 20 40 80 160",
+        "Teams: Max(3), Lisa(5), Tim(2)",
+        "Äpfel = 3x, Birnen = 2x, Milch = 1x",
+    )
+    judge.transcriptions = [_reading(["Name", "Wert"], [["a", "1"], ["b", "2"]]) for _ in data]
+    for text in data:
         read = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": text})
         assert read.status_code == 200 and read.json()["transcribed"] is True, text
     literal = await client.post(
         f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": 'cat_day = {"Mo": 3, "Di": 5}'}
     )
     assert literal.status_code == 200 and "transcribed" not in literal.json()
-    assert literal.json()["profile"]["rows"] == 2 and len(judge.transcribe_calls) == 2
+    assert literal.json()["profile"]["rows"] == 2 and len(judge.transcribe_calls) == len(data)
 
 
 async def test_a_dataset_with_personal_data_is_stored(client: httpx.AsyncClient, judge) -> None:

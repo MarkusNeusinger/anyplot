@@ -26,9 +26,11 @@ the same, a `set_type` `decimal` equal to the dataset's own counts as left out, 
 the column list of `drop_columns` and `pivot_longer` and the conditions of
 `drop_rows` are sets. A `generate_data` call is one item `{"op": "generate_data",
 "variables": [...], "series": [...]}`, normalised through the `generate.Generate` model
-the same way: defaults left out (a variable named `x`, 200 points), the whitespace of
-every expression and endpoint removed (`x ** 2` is `x**2`), the series a set; the
-variables keep their order, which decides the grid's. A case with
+the same way for the report (defaults left out, the whitespace of every expression and
+endpoint removed, the series a set; the variables keep their order, which decides the
+grid's), and two calls match when they compute the same table (`comparison_key`): the
+same names, points and values, so `-3.0` is `-3`, `tau` is `2*pi` and `x*x` is
+`x**2`. A case with
 `expected_operations: []` passes when the root made no data call: a scope refusal and
 a plain reply both pass, and the report lists every tool call and the refusal, so a
 false refusal stays visible. The gate is `--min-exact` (80 percent) of the answered
@@ -181,7 +183,9 @@ def canonical_generate(item: dict[str, Any]) -> str:
 
     The whitespace of an expression or an endpoint carries no meaning (`x ** 2` is
     `x**2`); the series are a set, sorted by name; the variables keep their order. A
-    JSON number as an endpoint is its text, as the model reads it. Raises `ValidationError`.
+    JSON number as an endpoint is its text, as the model reads it. The line is for the
+    report; a match compares the table the call computes (`comparison_key`). Raises
+    `ValidationError`.
     """
     from agents.anyplot.data.generate import Generate
 
@@ -194,6 +198,34 @@ def canonical_generate(item: dict[str, Any]) -> str:
         series["expression"] = "".join(series["expression"].split())
     data["series"] = sorted(data["series"], key=lambda series: series["name"])
     return json.dumps({"op": GENERATE_TOOL, **data}, sort_keys=True, ensure_ascii=False)
+
+
+def comparison_key(line: str) -> str:
+    """What a canonical line is compared by: the line itself, or for a `generate_data` call the table it computes.
+
+    Two formula calls that compute the same table (the same names, points and values at
+    eight significant digits) are the same choice however the model wrote the endpoints
+    or the expressions (`-3.0` and `-3`, `tau` and `2*pi`, `x*x` and `x**2`). A call the
+    server cannot compute keeps its line, so it matches nothing but itself.
+    """
+    from agents.anyplot.data.generate import Generate, GenerateError, generate
+
+    try:
+        data = json.loads(line)
+    except ValueError:
+        return line
+    if not isinstance(data, dict) or data.get("op") != GENERATE_TOOL:
+        return line
+    try:
+        table = generate(Generate.model_validate({key: value for key, value in data.items() if key != "op"})).csv
+    except (ValidationError, GenerateError):
+        return line
+    return json.dumps({"op": GENERATE_TOOL, "table": hashlib.sha256(table.encode("utf-8")).hexdigest()})
+
+
+def same_operations(found: Sequence[str], expected: Sequence[str]) -> bool:
+    """Whether the found canonical lines are the expected ones, compared by `comparison_key`, order-insensitive."""
+    return sorted(map(comparison_key, found)) == sorted(map(comparison_key, expected))
 
 
 def describe(line: str) -> str:
@@ -373,7 +405,7 @@ class CaseRunner:
             result.found = canonical_operations(operations, decimal)
         except ValidationError:  # ToolSafety refused the call; the root got `invalid_arguments`
             result.found = [json.dumps(item, sort_keys=True, ensure_ascii=False) for item in operations]
-        result.match = result.found == result.expected and not result.failed_calls
+        result.match = same_operations(result.found, result.expected) and not result.failed_calls
 
 
 async def run_cases(

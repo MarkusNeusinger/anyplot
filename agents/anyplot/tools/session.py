@@ -29,9 +29,9 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   paste and stored as the session's next dataset version (`push_version`, the
   previous data kept for undo) or, in a session without data, as version 1 the way
   the dataset route stores a paste. Either way the confirmation drops by itself, the
-  bindings are the defaults for the new columns (`carry_bindings` keeps a binding only
-  where a column of that name and kind survives), and the turn's `done` carries the
-  version with its change line. The result has `prepare_data`'s shape; a
+  bindings are the defaults for the new columns (`push_version(rebind=True)`: a
+  binding made for the old data is not carried over, even where a column name such as
+  `x` returns), and the turn's `done` carries the version with its change line. The result has `prepare_data`'s shape; a
   `GenerateError` answers its code and its message (fenced). Refused while the
   pipeline runs. The model writes no rows: it chooses the spec, NumPy computes it.
 * `plot_pipeline`: the `Workflow` around `pipeline.run_pipeline`, which ADK exposes as
@@ -221,7 +221,8 @@ async def generate_data(
 
     variables: one or two ranges {"name": "x", "start": "-pi", "stop": "pi", "points": 200}; start and stop are
     numbers or expressions over the constants pi, e and tau; points is 2 to 5000 (default 200); two variables make a
-    grid (every pair, at most 10000 rows: set points on both, such as 50). series: one to ten {"name": "y",
+    grid (every pair, at most 10000 rows: set points on both, such as 50). The table holds at most 200 KB, about 6000
+    rows of three columns of 8-digit numbers. series: one to ten {"name": "y",
     "expression": "sin(x)"}, each an expression over the variables with numbers, pi, e, tau, + - * / ** % //,
     parentheses and the functions sin cos tan asin acos atan sinh cosh tanh exp log log10 log2 sqrt abs floor ceil
     round sign atan2 min max. Returns the change lines and the new profile, or an error with a code and a message.
@@ -272,7 +273,7 @@ def _store_generated(session_id: str, view: SessionView, parsed: ParsedDataset) 
     store = get_services().datasets
     current = store.get(view.dataset_id, session_id) if view.dataset_id else None
     if current is not None:
-        version = push_version(store, session_id, view, parsed, view.snapshot)
+        version = push_version(store, session_id, view, parsed, view.snapshot, rebind=True)
         return version.delta, version.version
     ingested = store_dataset(
         store, session_id, parsed, view.snapshot, previous_id=view.dataset_id, history=view.dataset_history

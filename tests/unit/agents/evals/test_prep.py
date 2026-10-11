@@ -214,6 +214,28 @@ class TestCanonical:
         with pytest.raises(ValidationError):
             canonical_operations([{"op": "generate_data", "variables": [], "series": [SINE]}], ".")
 
+    def test_a_generate_data_call_matches_by_the_table_it_computes(self) -> None:
+        """Endpoints compare by value and expressions by what they compute, so an equivalent call is no miss."""
+
+        def lines(start: Any, stop: Any, expression: str, points: int = 50, name: str = "y") -> list[str]:
+            variables = [{"start": start, "stop": stop, "points": points}]
+            call = {"op": "generate_data", "variables": variables, "series": [{"name": name, "expression": expression}]}
+            return canonical_operations([call, RENAME], ".")
+
+        parabola = lines("-3", "3", "x**2")
+        for start, stop, expression in ((-3.0, 3.0, "x**2"), ("-3.0", "3", "x*x"), ("-3", "3", "(x)**2")):
+            found = lines(start, stop, expression)
+            assert found != parabola and prep.same_operations(found, parabola), (start, stop, expression)
+        assert prep.same_operations(lines("0", "tau", "sin(x)"), lines("0", "pi*2", "sin(x)"))
+        # Other points, another name or another formula are a miss; so is a call the server cannot compute.
+        assert not prep.same_operations(lines("-3", "3", "x**2", points=51), parabola)
+        assert not prep.same_operations(lines("-3", "3", "x**2", name="f"), parabola)
+        assert not prep.same_operations(lines("-3", "3", "x**3"), parabola)
+        undefined = lines("-3", "3", "log(-1 - x**2)")
+        (formula,) = [line for line in undefined if "generate_data" in line]
+        assert prep.comparison_key(formula) == formula and not prep.same_operations(undefined, parabola)
+        assert prep.same_operations(undefined, undefined)
+
 
 class TestScore:
     CASES = [
