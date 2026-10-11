@@ -23,7 +23,10 @@
  * theme's colours), in the spirit of the fake render backend's fixture PNG
  * (agents/anyplot/render/backends/fake.py); no code runs. Like the agents
  * service, the mock appends the footer strip below every plot it serves
- * (1600x900 becomes 1600x932); catalogue previews stay without it.
+ * (1600x900 becomes 1600x932); catalogue previews stay without it. Pasted text
+ * that is no table ("Hund 7 Katze 3 und Vogel 4") comes back as the service's
+ * transcribed answer (`transcribed: true`, the table's CSV in `text`, nothing
+ * stored), so the confirmation card can be driven without a model.
  *
  * Scripted behaviour of a chat message:
  * - contains "weather" or "joke": the fixed out-of-scope refusal;
@@ -352,6 +355,28 @@ function splitLine(line, delimiter) {
   }
   cells.push(cell.trim());
   return cells;
+}
+
+/**
+ * The transcribed answer of `POST .../dataset` for text that is no table: every
+ * `<label> <number>` pair becomes a row of `category,value`, and the CSV goes
+ * through `parseDataset` so the preview and profile match a later `.use()`.
+ * Returns null when the text holds no such pair (the real service answers 422).
+ */
+function transcribeFreeText(text) {
+  const pairs = [...text.matchAll(/([\p{L}][\p{L}\p{N}_-]*)\s+(-?\d+(?:[.,]\d+)?)\b/gu)];
+  if (!pairs.length) return null;
+  const rows = pairs.map(([, label, number]) => [label, number.replace(',', '.')]);
+  const csv = ['category,value', ...rows.map(row => row.join(','))].join('\n') + '\n';
+  const parsed = parseDataset(csv);
+  return {
+    transcribed: true,
+    text: csv,
+    preview: parsed.preview,
+    profile: parsed.profile,
+    warnings: parsed.warnings,
+    note: rows.length < 3 ? 'only two values found; check the text' : '',
+  };
 }
 
 function parseDataset(text) {
@@ -954,7 +979,13 @@ async function route(req, res) {
     try {
       parsed = parseDataset(text);
     } catch {
-      return fail(res, 422, 'unparseable', ref);
+      // Free text (no delimiter, "Hund 7 Katze 3 und Vogel 4"): the real service has a model read
+      // it into a table and answers it unstored, for the user to confirm. The mock pairs each
+      // word with the number after it.
+      const transcribed = transcribeFreeText(text);
+      if (!transcribed) return fail(res, 422, 'unparseable', ref);
+      await sleep(900);
+      return json(res, 200, transcribed, ref);
     }
     session.dataset = parsed;
     session.bindings = defaultBindings(session, parsed.profile);

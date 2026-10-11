@@ -139,7 +139,7 @@ with `VITE_ENABLE_AGENT_CHAT=true`, and like every event they fire only on
 | Event Name | Properties | Where | Description |
 |------------|-----------|-------|-------------|
 | `agent_open` | `library`, `source`, `spec` | AgentChatPage.tsx | The chat page opened for an admin. `source` is `plot_page` when the plot page's `.adapt()` button led there, `direct` otherwise (a typed URL, a bookmark, a reload) |
-| `agent_data_parsed` | `status`, `size_bucket` | useAgentSession.ts | The pasted data came back from the parse. `status` ∈ `ok`, `too_long`, `unparseable`, `data_refused`, `error`; `size_bucket` ∈ `lt_1kb`, `1_10kb`, `10_50kb`, `50_200kb`, `over_200kb` (the last one is refused in the browser before anything is sent) |
+| `agent_data_parsed` | `status`, `size_bucket` | useAgentSession.ts | The pasted data came back from the parse. `status` ∈ `ok`, `too_long`, `unparseable`, `data_refused`, `error`, `transcribed` (the text was not a table, a model read it into one and the page asks the user to confirm it; nothing is stored yet), `discarded` (the user dropped such a table; `.use()` instead parses it again and reports `ok`); `size_bucket` ∈ `lt_1kb`, `1_10kb`, `10_50kb`, `50_200kb`, `over_200kb` (the last one is refused in the browser before anything is sent) |
 | `agent_plot_rendered` | `library`, `status`, `repaired`, `spec` | useAgentSession.ts | A turn's `plot` event arrived. `status` ∈ `ok`, `needs_attention`, `failed`, `not_ready`; `repaired` is `yes` when the run needed its repair round (two attempts), else `no` |
 | `agent_guardrail_block` | `reason` | useAgentSession.ts | A guardrail stopped a request. `reason` ∈ `out_of_scope`, `needs_data` (the request needs data the service would have to fetch), `budget`, `unsupported_content` (the stream's fixed refusals), `data_refused` (the pre-filter or the dataset judge refused the pasted data: text addressed to an AI, or the judge's verdict; personal data is never a reason), `guard_unavailable` (the scope check could not answer and failed closed), `other` (a refusal code the page does not know yet) |
 
@@ -496,7 +496,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `library` | Library name (matplotlib, seaborn, etc.) | `copy_code`, `download_image`, `external_link`, `internal_link`, `open_interactive`, `tab_toggle`, `og_image_view`, `feedback_submitted` (plot-overlay votes only), `agent_open`, `agent_plot_rendered` |
 | `method` | Action method (card, image, tab, agent, click, space, doubletap) | `copy_code`, `random_filter` |
 | `page` | Page context (home, plots, spec_overview, spec_detail, agent_chat) | `copy_code`, `download_image`, `og_image_view` |
-| `status` | Outcome of an agent chat step (`ok`, `needs_attention`, `failed`, `not_ready`; for a parse also `too_long`, `unparseable`, `data_refused`, `error`) | `agent_data_parsed`, `agent_plot_rendered` |
+| `status` | Outcome of an agent chat step (`ok`, `needs_attention`, `failed`, `not_ready`; for a parse also `too_long`, `unparseable`, `data_refused`, `error`, `transcribed`, `discarded`) | `agent_data_parsed`, `agent_plot_rendered` |
 | `size_bucket` | Size class of pasted data (`lt_1kb` … `over_200kb`), never the size | `agent_data_parsed` |
 | `repaired` | Whether an agent run needed its repair round (`yes` / `no`) | `agent_plot_rendered` |
 | `reason` | Why a guardrail stopped an agent chat request (`out_of_scope`, `needs_data`, `budget`, `unsupported_content`, `data_refused`, `guard_unavailable`, `other`) | `agent_guardrail_block` |

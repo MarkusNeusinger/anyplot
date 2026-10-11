@@ -21,6 +21,12 @@
  * the hook keeps the members contiguous (`compactFamilies`), so clearing `y2`
  * of three moves `y3` up. Every change replaces the whole set on the server.
  *
+ * Transcriptions: pasted text that is not a table comes back as a table the
+ * server read with a model and did not store (`transcription`). The dataset
+ * and bindings stay as they were until the user confirms it, which posts the
+ * table's CSV through the normal parse (`confirmTranscription`), or discards
+ * it. A new parse, a library switch and a failed session clear it as well.
+ *
  * One thing at a time: the agents service runs one turn or theme render per
  * user and answers anything else with `409 run_active`, and a parse or a
  * binding change rewrites the data a turn reads. So the hook starts none of
@@ -48,7 +54,9 @@ import {
   type ArtifactName,
   type Binding,
   type DatasetParsed,
+  type DatasetProfile,
   type Eligibility,
+  isTranscribed,
   MAX_DATASET_BYTES,
   MAX_MESSAGE_CHARS,
   parseAgentEvent,
@@ -129,6 +137,20 @@ export interface DatasetState {
   bytes: number;
 }
 
+/** A table the server read from free text; nothing is stored until the user confirms it. */
+export interface TranscriptionState {
+  /** The canonical CSV the confirmation posts. */
+  text: string;
+  /** Up to 20 data rows (the header is `profile.columns[].name`). */
+  preview: string[][];
+  profile: DatasetProfile;
+  warnings: string[];
+  /** The model's remark on anything ambiguous; empty when it had none. */
+  note: string;
+  /** UTF-8 size of the pasted text it was read from, for the analytics bucket. */
+  bytes: number;
+}
+
 /** Binding name (`x`, `y1`) to column; only bound names are present. */
 export type BindingMap = Record<string, string>;
 
@@ -141,6 +163,8 @@ export interface AgentSessionState {
   dataset: DatasetState | null;
   parsing: boolean;
   datasetError: Failure | null;
+  /** A table read from free text that awaits `.use()` or `.discard()`. */
+  transcription: TranscriptionState | null;
   /** The spec's roles, in spec order; the data panel shows a column choice for each. */
   roles: RoleSpec[];
   bindings: BindingMap;
@@ -164,6 +188,8 @@ type Action =
   | { type: 'parse_start' }
   | { type: 'parse_done'; parsed: DatasetParsed; bytes: number }
   | { type: 'parse_failed'; failure: Failure }
+  | { type: 'transcribed'; transcription: TranscriptionState }
+  | { type: 'transcription_clear' }
   | { type: 'bindings_start'; bindings: BindingMap }
   | { type: 'bindings_done'; bindings: BindingMap; complete: boolean; missingRoles: string[] }
   | { type: 'bindings_failed'; bindings: BindingMap; failure: Failure }
@@ -191,6 +217,7 @@ export function initialAgentState(library: string): AgentSessionState {
     dataset: null,
     parsing: false,
     datasetError: null,
+    transcription: null,
     roles: [],
     bindings: {},
     bindingsComplete: false,
@@ -307,11 +334,18 @@ export function agentReducer(state: AgentSessionState, action: Action): AgentSes
         eligibility: action.eligibility,
       };
     case 'open_failed':
-      return { ...state, phase: action.phase, failure: action.failure, run: null };
+      return {
+        ...state,
+        phase: action.phase,
+        failure: action.failure,
+        run: null,
+        transcription: null,
+      };
     case 'unauthorized':
-      return { ...state, phase: 'unauthorized', run: null };
+      return { ...state, phase: 'unauthorized', run: null, transcription: null };
     case 'parse_start':
-      return { ...state, parsing: true, datasetError: null };
+      // A new parse (a confirmed transcription is one) replaces a pending transcription.
+      return { ...state, parsing: true, datasetError: null, transcription: null };
     case 'parse_done':
       return {
         ...state,
@@ -327,7 +361,12 @@ export function agentReducer(state: AgentSessionState, action: Action): AgentSes
         bindingsError: null,
       };
     case 'parse_failed':
-      return { ...state, parsing: false, datasetError: action.failure };
+      return { ...state, parsing: false, datasetError: action.failure, transcription: null };
+    case 'transcribed':
+      // Nothing is stored yet: the dataset and its bindings stay until the user confirms.
+      return { ...state, parsing: false, transcription: action.transcription };
+    case 'transcription_clear':
+      return { ...state, transcription: null };
     case 'bindings_start':
       return { ...state, bindingsBusy: true, bindingsError: null, bindings: action.bindings };
     case 'bindings_done': {
@@ -357,6 +396,7 @@ export function agentReducer(state: AgentSessionState, action: Action): AgentSes
         libraryBusy: false,
         library: action.library,
         eligibility: action.eligibility,
+        transcription: null,
       };
     case 'library_failed':
       return { ...state, libraryBusy: false };
@@ -597,6 +637,22 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
       safeDispatch({ type: 'parse_start' });
       try {
         const parsed = await agentApi.uploadDataset(token, sid, text);
+        if (isTranscribed(parsed)) {
+          // Free text read into a table: shown for the user to confirm, not stored.
+          safeDispatch({
+            type: 'transcribed',
+            transcription: {
+              text: parsed.text,
+              preview: parsed.preview,
+              profile: parsed.profile,
+              warnings: parsed.warnings ?? [],
+              note: typeof parsed.note === 'string' ? parsed.note : '',
+              bytes,
+            },
+          });
+          trackEvent('agent_data_parsed', { status: 'transcribed', size_bucket: bucket });
+          return;
+        }
         safeDispatch({ type: 'parse_done', parsed, bytes });
         trackEvent('agent_data_parsed', { status: 'ok', size_bucket: bucket });
         const defaults = toMap(parsed.bindings);
@@ -619,6 +675,29 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     },
     [token, safeDispatch, handleFailure, trackEvent, applyBindings, busy]
   );
+
+  /**
+   * `.use()`: store the transcribed table. Its CSV goes through the normal
+   * parse, which stores it, applies the default bindings and reports
+   * `agent_data_parsed{status: ok}`; the parse's start clears the transcription.
+   * While something else is in flight nothing starts and the table stays.
+   */
+  const confirmTranscription = useCallback(() => {
+    const transcription = stateRef.current.transcription;
+    if (!transcription) return Promise.resolve();
+    return parseData(transcription.text);
+  }, [parseData]);
+
+  /** `.discard()`: drop the transcribed table; nothing was stored, so the server is not asked. */
+  const discardTranscription = useCallback(() => {
+    const transcription = stateRef.current.transcription;
+    if (!transcription) return;
+    safeDispatch({ type: 'transcription_clear' });
+    trackEvent('agent_data_parsed', {
+      status: 'discarded',
+      size_bucket: sizeBucket(transcription.bytes),
+    });
+  }, [safeDispatch, trackEvent]);
 
   /** Bind `name` (a single role or a family member such as `y2`) to `column`, or clear it with `null`. */
   const setBinding = useCallback(
@@ -909,6 +988,8 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   return {
     state,
     parseData,
+    confirmTranscription,
+    discardTranscription,
     setBinding,
     createPlot,
     sendMessage,

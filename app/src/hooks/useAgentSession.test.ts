@@ -8,6 +8,7 @@ import {
   compactFamilies,
   familyOf,
   initialAgentState,
+  type TranscriptionState,
   useAgentSession,
   type UseAgentSessionOptions,
 } from 'src/hooks/useAgentSession';
@@ -117,6 +118,30 @@ const DATASET = {
   warnings: [],
   roles: [role('x'), role('y')],
 };
+
+/** The answer to free text: a table the model read, not stored. */
+const TRANSCRIBED = {
+  transcribed: true,
+  text: 'animal,count\nHund,7\nKatze,3\nVogel,4\n',
+  preview: [
+    ['Hund', '7'],
+    ['Katze', '3'],
+    ['Vogel', '4'],
+  ],
+  profile: {
+    rows: 3,
+    columns: [
+      { name: 'animal', dtype: 'text', missing: 0, unique: 3 },
+      { name: 'count', dtype: 'integer', missing: 0, unique: 3 },
+    ],
+    source_format: 'csv',
+    decimal: '.',
+    warnings: [],
+  },
+  warnings: [],
+  note: 'read "und" as a separator',
+};
+const FREE_TEXT = 'Hund 7 Katze 3 und Vogel 4';
 
 const PLOT_OK = {
   status: 'ok',
@@ -374,6 +399,64 @@ describe('useAgentSession: data and bindings', () => {
     await act(() => result.current.parseData('x'.repeat(200 * 1024 + 1)));
     expect(result.current.state.datasetError?.code).toBe('too_long');
     expect(calls.some(call => call.path.endsWith('/dataset'))).toBe(false);
+  });
+
+  it('holds a table read from free text unbound, then stores its CSV on confirmation', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = call =>
+      json(200, (call.body as { text: string }).text.includes(',') ? DATASET : TRANSCRIBED);
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData(FREE_TEXT));
+    expect(result.current.state.transcription).toEqual({
+      text: TRANSCRIBED.text,
+      preview: TRANSCRIBED.preview,
+      profile: TRANSCRIBED.profile,
+      warnings: [],
+      note: 'read "und" as a separator',
+      bytes: 26,
+    });
+    expect(result.current.state.parsing).toBe(false);
+    expect(result.current.state.dataset).toBeNull();
+    expect(calls.some(call => call.method === 'PUT')).toBe(false);
+    expect(trackEvent).toHaveBeenCalledWith('agent_data_parsed', {
+      status: 'transcribed',
+      size_bucket: 'lt_1kb',
+    });
+
+    await act(() => result.current.confirmTranscription());
+    expect(calls.filter(call => call.path.endsWith('/dataset')).map(call => call.body)).toEqual([
+      { text: FREE_TEXT },
+      { text: TRANSCRIBED.text },
+    ]);
+    expect(result.current.state.transcription).toBeNull();
+    expect(result.current.state.dataset?.parsed).toEqual(DATASET);
+    expect(result.current.state.bindingsComplete).toBe(true);
+    expect(trackEvent).toHaveBeenLastCalledWith('agent_data_parsed', {
+      status: 'ok',
+      size_bucket: 'lt_1kb',
+    });
+  });
+
+  it('keeps the stored dataset while a transcription waits and discards it locally', async () => {
+    const routes = baseRoutes();
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    routes['POST /sessions/S1/dataset'] = () => json(200, { ...TRANSCRIBED, note: undefined });
+    await act(() => result.current.parseData(FREE_TEXT));
+    expect(result.current.state.transcription?.note).toBe('');
+    expect(result.current.state.dataset?.parsed).toEqual(DATASET);
+    expect(result.current.state.bindings).toEqual({ x: 'Study Hours', y: 'Exam Score' });
+    expect(calls.filter(call => call.method === 'PUT')).toHaveLength(1);
+
+    const before = calls.length;
+    act(() => result.current.discardTranscription());
+    expect(result.current.state.transcription).toBeNull();
+    expect(result.current.state.dataset?.parsed).toEqual(DATASET);
+    expect(calls).toHaveLength(before);
+    expect(trackEvent).toHaveBeenLastCalledWith('agent_data_parsed', {
+      status: 'discarded',
+      size_bucket: 'lt_1kb',
+    });
   });
 });
 
@@ -665,6 +748,45 @@ describe('agentReducer', () => {
     expect(state.run?.steps.map(step => step.step)).toEqual(['queued', 'adapting']);
     state = agentReducer(state, { type: 'run_end' });
     expect(state.run).toBeNull();
+  });
+
+  it('stores a transcription beside the data and clears it on a decision, a parse or a switch', () => {
+    const transcription: TranscriptionState = {
+      text: TRANSCRIBED.text,
+      preview: TRANSCRIBED.preview,
+      profile: { ...TRANSCRIBED.profile, columns: [] },
+      warnings: [],
+      note: '',
+      bytes: 26,
+    };
+    let state: AgentSessionState = {
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+    };
+    state = agentReducer(state, { type: 'parse_start' });
+    state = agentReducer(state, { type: 'transcribed', transcription });
+    expect(state.transcription).toEqual(transcription);
+    expect(state.parsing).toBe(false);
+    expect(state.dataset).toBeNull();
+    expect(state.bindings).toEqual({});
+
+    const failure = { code: 'session_expired', ref: null };
+    const eligibility = { eligible: true, status: 'clean', reasons: [] };
+    for (const cleared of [
+      agentReducer(state, { type: 'transcription_clear' }),
+      agentReducer(state, { type: 'parse_start' }),
+      agentReducer(state, { type: 'parse_failed', failure: { code: 'too_long', ref: null } }),
+      agentReducer(state, { type: 'library_done', library: 'seaborn', eligibility }),
+      agentReducer(state, { type: 'open_failed', phase: 'error', failure }),
+      agentReducer(state, { type: 'unauthorized' }),
+    ]) {
+      expect(cleared.transcription).toBeNull();
+    }
+    // A theme render leaves the pending table alone.
+    expect(agentReducer(state, { type: 'theme_busy', busy: true }).transcription).toEqual(
+      transcription
+    );
   });
 });
 

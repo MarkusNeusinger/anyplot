@@ -39,7 +39,9 @@ export const DATA_FAILURE: Record<string, string> = {
   too_long: 'more than 200 KB; paste fewer rows',
   unparseable: 'could not read this as CSV, TSV, semicolon CSV or JSON',
   data_refused: 'the content check refused this data',
-  guard_unavailable: 'the content check is unavailable right now; try again',
+  // The dataset judge or the model that reads free text into a table failed closed.
+  guard_unavailable:
+    'the model that checks and reads your data is unavailable right now; try again in a minute',
   rate_limited: 'the daily limit is reached; try again tomorrow',
   capacity: 'the server is busy; try again in a minute',
   run_active: 'a run is in progress; wait for it to finish',

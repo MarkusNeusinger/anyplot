@@ -1,10 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { type AgentSessionState, initialAgentState } from 'src/hooks/useAgentSession';
+import {
+  type AgentSessionState,
+  initialAgentState,
+  type TranscriptionState,
+} from 'src/hooks/useAgentSession';
 import type { RoleSpec } from 'src/lib/agent';
 import { bindingRows } from 'src/sections/agent-chat/bindings';
 import { DataPanel } from 'src/sections/agent-chat/DataPanel';
-import { render, screen, userEvent } from 'src/test-utils';
+import { render, screen, userEvent, within } from 'src/test-utils';
 
 const role = (name: string, overrides: Partial<RoleSpec> = {}): RoleSpec => ({
   name,
@@ -89,6 +93,8 @@ describe('DataPanel bindings', () => {
       <DataPanel
         state={stateWith({ x: 'month', y1: 'shoes' }, { missingRoles: [] })}
         onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
         onBind={onBind}
         onCreatePlot={vi.fn()}
       />
@@ -119,6 +125,8 @@ describe('DataPanel bindings', () => {
           }
         )}
         onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
         onCreatePlot={vi.fn()}
       />
@@ -134,11 +142,154 @@ describe('DataPanel bindings', () => {
       <DataPanel
         state={stateWith({ x: 'month', y1: 'shoes' }, { themeBusy: true })}
         onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
         onCreatePlot={vi.fn()}
       />
     );
     expect(screen.getByRole('button', { name: '.create_plot()' })).toBeDisabled();
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
+  });
+});
+
+// "Hund 7 Katze 3 und Vogel 4", read by the model into a table.
+const TRANSCRIPTION: TranscriptionState = {
+  text: 'animal,count\nHund,7\nKatze,3\nVogel,4\n',
+  preview: [
+    ['Hund', '7'],
+    ['Katze', '3'],
+    ['Vogel', '4'],
+  ],
+  profile: {
+    rows: 3,
+    columns: [
+      { name: 'animal', dtype: 'text', missing: 0, unique: 3 },
+      { name: 'count', dtype: 'integer', missing: 0, unique: 3 },
+    ],
+    source_format: 'csv',
+    decimal: '.',
+    warnings: [],
+  },
+  warnings: ['column count has only 3 values'],
+  note: 'read "und" as a separator, not as an animal',
+  bytes: 26,
+};
+
+function transcribedState(overrides: Partial<AgentSessionState> = {}): AgentSessionState {
+  return {
+    ...initialAgentState('matplotlib'),
+    phase: 'ready',
+    sessionId: 'S1',
+    transcription: TRANSCRIPTION,
+    ...overrides,
+  };
+}
+
+describe('DataPanel transcription', () => {
+  it('shows the table read from the text with its note and warnings', () => {
+    render(
+      <DataPanel
+        state={transcribedState()}
+        onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onBind={vi.fn()}
+        onCreatePlot={vi.fn()}
+      />
+    );
+    const card = within(screen.getByTestId('transcription-card'));
+    expect(card.getByText('# read from your text — 3 rows, 2 columns')).toBeInTheDocument();
+    expect(card.getByText('read "und" as a separator, not as an animal')).toBeInTheDocument();
+    expect(card.getByText('column count has only 3 values')).toBeInTheDocument();
+    expect(card.getAllByRole('columnheader').map(th => th.textContent)).toEqual([
+      'animaltext',
+      'countinteger',
+    ]);
+    expect(card.getAllByRole('row')).toHaveLength(4);
+    expect(card.getByRole('cell', { name: 'Katze' })).toBeInTheDocument();
+    // Nothing is stored yet: no bindings and no `.create_plot()`.
+    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+  });
+
+  it('leaves the note out when the model had none and names one row in the singular', () => {
+    render(
+      <DataPanel
+        state={transcribedState({
+          transcription: {
+            ...TRANSCRIPTION,
+            note: '',
+            warnings: [],
+            preview: [['Hund', '7']],
+            profile: { ...TRANSCRIPTION.profile, rows: 1 },
+          },
+        })}
+        onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onBind={vi.fn()}
+        onCreatePlot={vi.fn()}
+      />
+    );
+    expect(screen.getByText('# read from your text — 1 row, 2 columns')).toBeInTheDocument();
+    expect(screen.queryByText('# note from the model')).not.toBeInTheDocument();
+    expect(screen.queryByText('# warnings')).not.toBeInTheDocument();
+  });
+
+  it('.use() confirms and puts the CSV into the text box; .discard() drops it', async () => {
+    const onConfirm = vi.fn();
+    const onDiscard = vi.fn();
+    render(
+      <DataPanel
+        state={transcribedState()}
+        onParse={vi.fn()}
+        onConfirmTranscription={onConfirm}
+        onDiscardTranscription={onDiscard}
+        onBind={vi.fn()}
+        onCreatePlot={vi.fn()}
+      />
+    );
+    const textbox = screen.getByLabelText(/# your data/);
+    await userEvent.type(textbox, 'Hund 7 Katze 3 und Vogel 4');
+    await userEvent.click(screen.getByRole('button', { name: '.discard()' }));
+    expect(onDiscard).toHaveBeenCalledTimes(1);
+    expect(textbox).toHaveValue('Hund 7 Katze 3 und Vogel 4');
+
+    await userEvent.click(screen.getByRole('button', { name: '.use()' }));
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    expect(textbox).toHaveValue(TRANSCRIPTION.text);
+  });
+
+  it('holds back .parse() until the user decides, and .use() while the session is busy', async () => {
+    const onParse = vi.fn();
+    const panel = (state: AgentSessionState) => (
+      <DataPanel
+        state={state}
+        onParse={onParse}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onBind={vi.fn()}
+        onCreatePlot={vi.fn()}
+      />
+    );
+    const { rerender } = render(panel(transcribedState()));
+    await userEvent.type(screen.getByLabelText(/# your data/), 'animal,count');
+    const parse = screen.getByRole('button', { name: '.parse()' });
+    expect(parse).toBeDisabled();
+    expect(parse).toHaveAccessibleDescription(
+      'decide on the table below first: .use() or .discard()'
+    );
+    expect(screen.getByRole('button', { name: '.use()' })).toBeEnabled();
+
+    // A theme render in flight: the confirmation's parse would race it.
+    rerender(panel(transcribedState({ themeBusy: true })));
+    expect(screen.getByRole('button', { name: '.use()' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '.discard()' })).toBeEnabled();
+
+    rerender(panel(transcribedState({ transcription: null })));
+    expect(screen.queryByTestId('transcription-card')).not.toBeInTheDocument();
+    expect(screen.queryByText(/decide on the table/)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    expect(onParse).toHaveBeenCalledWith('animal,count');
   });
 });
