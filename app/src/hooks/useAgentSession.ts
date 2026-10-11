@@ -623,7 +623,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   );
 
   const parseData = useCallback(
-    async (text: string) => {
+    async (text: string, confirmed = false) => {
       const sid = stateRef.current.sessionId;
       if (!sid || !text.trim() || busy()) return;
       const bytes = utf8Bytes(text);
@@ -636,7 +636,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
       parseRef.current = true;
       safeDispatch({ type: 'parse_start' });
       try {
-        const parsed = await agentApi.uploadDataset(token, sid, text);
+        const parsed = await agentApi.uploadDataset(token, sid, text, confirmed);
         if (isTranscribed(parsed)) {
           // Free text read into a table: shown for the user to confirm, not stored.
           safeDispatch({
@@ -678,14 +678,15 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
 
   /**
    * `.use()`: store the transcribed table. Its CSV goes through the normal
-   * parse, which stores it, applies the default bindings and reports
+   * parse as a confirmed table (the server skips only its free-text fallback),
+   * which stores it, applies the default bindings and reports
    * `agent_data_parsed{status: ok}`; the parse's start clears the transcription.
    * While something else is in flight nothing starts and the table stays.
    */
   const confirmTranscription = useCallback(() => {
     const transcription = stateRef.current.transcription;
     if (!transcription) return Promise.resolve();
-    return parseData(transcription.text);
+    return parseData(transcription.text, true);
   }, [parseData]);
 
   /** `.discard()`: drop the transcribed table; nothing was stored, so the server is not asked. */

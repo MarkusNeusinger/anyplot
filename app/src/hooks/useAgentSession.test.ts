@@ -426,7 +426,7 @@ describe('useAgentSession: data and bindings', () => {
     await act(() => result.current.confirmTranscription());
     expect(calls.filter(call => call.path.endsWith('/dataset')).map(call => call.body)).toEqual([
       { text: FREE_TEXT },
-      { text: TRANSCRIBED.text },
+      { text: TRANSCRIBED.text, confirmed: true }, // the server skips only its free-text fallback
     ]);
     expect(result.current.state.transcription).toBeNull();
     expect(result.current.state.dataset?.parsed).toEqual(DATASET);

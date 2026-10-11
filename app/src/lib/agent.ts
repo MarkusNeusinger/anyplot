@@ -296,9 +296,18 @@ export const agentApi = {
       token,
       post({ spec_id: specId, library })
     ),
-  /** A stored dataset, or a transcription of free text to confirm first (`isTranscribed`). */
-  uploadDataset: (token: string, sid: string, text: string) =>
-    agentJson<DatasetAnswer>(`${sessionPath(sid)}/dataset`, token, post({ text })),
+  /**
+   * A stored dataset, or a transcription of free text to confirm first (`isTranscribed`).
+   * `confirmed` marks the table the user accepted with `.use()`: the server then never
+   * hands the text to its transcriber again (a one-column table would otherwise be read
+   * again), while the parse, the pre-filter, the judge and the store run as usual.
+   */
+  uploadDataset: (token: string, sid: string, text: string, confirmed = false) =>
+    agentJson<DatasetAnswer>(
+      `${sessionPath(sid)}/dataset`,
+      token,
+      post(confirmed ? { text, confirmed: true } : { text })
+    ),
   putBindings: (token: string, sid: string, bindings: Binding[]) =>
     agentJson<BindingsApplied>(`${sessionPath(sid)}/bindings`, token, {
       method: 'PUT',

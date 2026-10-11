@@ -12,7 +12,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text}` | `{preview, profile, bindings, warnings, roles}`, stored; or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored | `413 too_long`, `422 unparseable`, `403 data_refused`, `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, roles}`, stored; or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips only that fallback) | `413 too_long`, `422 unparseable`, `403 data_refused`, `503 guard_unavailable` |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles}` | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` | SSE `anyplot/1` | `413 too_long`, `409 run_active`, `503 capacity` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
@@ -426,6 +426,10 @@ class SwitchLibraryBody(_Body):
 
 class DatasetBody(_Body):
     text: str = Field(min_length=1)
+    confirmed: bool = False
+    """The text is a table the user confirmed (the page's `.use()` on a transcription): the
+    route never hands it to the transcriber again, so a one-column reading can be stored;
+    the parse, the pre-filter, the judge and the store run as for any paste."""
 
 
 class BindingBody(_Body):
@@ -595,7 +599,7 @@ async def upload_dataset(
         if exc.code == "no_table" and transcribable(body.text):
             return await _transcribe(services, ledger, body.text)
         raise AgentsError(422, "unparseable") from None
-    if looks_like_free_text(parsed) and transcribable(body.text):
+    if not body.confirmed and looks_like_free_text(parsed) and transcribable(body.text):
         return await _transcribe(services, ledger, body.text)
     if not services.usage.daily_ok(user, get_settings()):
         raise AgentsError(429, "rate_limited")

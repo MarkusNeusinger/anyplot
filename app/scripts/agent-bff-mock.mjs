@@ -982,7 +982,7 @@ async function route(req, res) {
       // Free text (no delimiter, "Hund 7 Katze 3 und Vogel 4"): the real service has a model read
       // it into a table and answers it unstored, for the user to confirm. The mock pairs each
       // word with the number after it.
-      const transcribed = transcribeFreeText(text);
+      const transcribed = body?.confirmed ? null : transcribeFreeText(text);
       if (!transcribed) return fail(res, 422, 'unparseable', ref);
       await sleep(900);
       return json(res, 200, transcribed, ref);
