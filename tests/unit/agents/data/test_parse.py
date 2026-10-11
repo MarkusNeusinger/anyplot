@@ -2,6 +2,7 @@
 
 import io
 import json
+import sys
 import time
 from typing import Any
 
@@ -261,6 +262,34 @@ class TestErrors:
         assert error_code("h" * (MAX_INPUT_CELL_CHARS + 1) + "\n1\n") == "cell_too_long"
 
     @pytest.mark.parametrize(
+        "shape",
+        ["v\n{big}\n", "a\tb\nx\t{big}\n", '[{{"id": "{big}"}}]', '{{"a": "{big}"}}', "v\n{big} kg\n", "v\n€ {big}\n"],
+    )
+    def test_a_numeric_cell_over_the_int_digit_limit_is_cell_too_long(self, shape: str) -> None:
+        """The length check runs before typing: `int()` refuses more than 4,300 digits with a ValueError of its own."""
+        big = "1" * (sys.get_int_max_str_digits() + 1)
+
+        with pytest.raises(ParseError) as caught:
+            parse_dataset(shape.format(big=big))
+        assert caught.value.code == "cell_too_long"
+        assert "111" not in caught.value.message
+
+    @pytest.mark.parametrize(
+        ("text", "named"),
+        [
+            (",b\n" + "x" * 201 + ",1\n", "column_1"),
+            ('"a\nb"\n' + "x" * 201 + "\n", "a b"),
+            ("v\n" + "x" * 201 + " %\n", "v"),
+        ],
+    )
+    def test_a_cell_too_long_names_the_column_by_its_cleaned_header(self, text: str, named: str) -> None:
+        with pytest.raises(ParseError) as caught:
+            parse_dataset(text)
+
+        assert caught.value.code == "cell_too_long"
+        assert f"column '{named}'" in caught.value.message
+
+    @pytest.mark.parametrize(
         "text",
         [
             "",
@@ -423,6 +452,45 @@ class TestFormats:
         assert error_code(json.dumps([["k", 1]] * (MAX_ROWS + 1), **compact)) == "too_many_rows"
         assert parse_dataset(json.dumps([["k", 1]] * MAX_ROWS, **compact)).profile.rows == MAX_ROWS
 
+    @pytest.mark.parametrize(
+        "text", ['{"2023": 65, "2024": 12}', '{"2024-01-01": 65, "2024-02-01": 12}', "{1: 5, 2: 7}", '{"true": 1}']
+    )
+    def test_the_keys_of_a_pairs_table_stay_text(self, text: str) -> None:
+        """The keys are names, so `category` is text whatever they look like; `value` is typed as usual."""
+        parsed = parse_dataset(text)
+
+        assert parsed.column_dtypes == {"category": "text", "value": "integer"}
+        assert column(parsed, "category").top
+        assert column(parsed, "category").min is None
+
+    def test_a_repeated_key_keeps_its_last_value_with_a_warning(self) -> None:
+        as_json = parse_dataset('{"Jan": 5, "Feb": 3, "Jan": 7}')
+        as_literal = parse_dataset("x = {'Jan': 5, 'Feb': 3, 'Jan': 7, 'Feb': 1}")
+        as_pairs = parse_dataset('[["Jan", 5], ["Feb", 3], ["Jan", 7]]')
+        in_records = parse_dataset('[{"a": 1, "a": 2}, {"a": 3}]')
+
+        assert as_json.csv == "category,value\nJan,7\nFeb,3\n"
+        assert as_json.warnings == ["1 key repeated; only the last value of a repeated key is kept"]
+        assert as_literal.csv == "category,value\nJan,7\nFeb,1\n"
+        assert as_literal.warnings == ["2 keys repeated; only the last value of a repeated key is kept"]
+        assert as_pairs.csv == "category,value\nJan,5\nFeb,3\nJan,7\n"
+        assert not as_pairs.warnings
+        assert in_records.csv == "a\n2\n3\n"
+        assert warned(in_records, "1 key repeated")
+
+    def test_brackets_inside_strings_and_comments_are_not_nesting(self) -> None:
+        """Main parsed these; the first depth guard counted every bracket character."""
+        records = parse_dataset(json.dumps([{"name": f"n{i}", "mood": ":("} for i in range(51)]))
+        note = parse_dataset(json.dumps([{"note": "(" * 51}]))
+        commented = parse_dataset("{ # " + "(" * 60 + "\n 'a': 1}")
+        escaped = parse_dataset('[{"a": "\\"[", "b": "it\'s ["}]')
+
+        assert records.profile.rows == 51
+        assert column(records, "mood").top == [":("]
+        assert note.csv == "note\n" + "(" * 51 + "\n"
+        assert commented.csv == "category,value\na,1\n"
+        assert escaped.csv == 'a,b\n"""[",it\'s [\n'
+
 
 OWNER_DICT_LITERAL = """cat_day = {
     "Schlafen & Dösen": 65,
@@ -498,10 +566,40 @@ class TestPythonLiterals:
         assert error_code("[" * depth + "]" * depth) == "unparseable"
         assert time.perf_counter() - started < 1.0
 
+    @pytest.mark.parametrize("depth", [2_000, 20_000])
+    def test_closing_brackets_inside_a_string_cannot_hide_the_nesting(self, depth: int) -> None:
+        """A string of `]` drove the first guard's count negative; the readers then recursed to a RecursionError."""
+        started = time.perf_counter()
+        evasion = '["' + "]" * depth + '", ' + "[" * depth + "]" * depth + "]"
+
+        with pytest.raises(ParseError) as caught:
+            parse_dataset(evasion)
+        assert caught.value.code == "unparseable"
+        assert "50 levels" in caught.value.message
+        assert time.perf_counter() - started < 1.0
+
     def test_an_assignment_without_a_literal_is_delimited_text(self) -> None:
         # `x = 5` is a header line without rows, so the route hands it to the transcriber.
         assert error_code("x = 5") == "no_table"
         assert parse_dataset("x = 5,y\n1,2\n").csv == "x = 5,y\n1,2\n"
+
+    def test_a_bare_parenthesis_that_is_no_literal_is_delimited_text(self) -> None:
+        """A header such as `(in %) Land` and prose in parentheses keep the path they had before literals."""
+        header = parse_dataset("(in %) Land;Wert\nA;1\nB;2\n")
+        table = parse_dataset("(a),b\n1,2\n")
+        stand = parse_dataset("(Stand: 2024)\nLand;Wert\nA;1\nB;2\n")
+
+        assert header.column_dtypes == {"(in %) Land": "text", "Wert": "integer"}
+        assert table.csv == "(a),b\n1,2\n"
+        assert stand.csv == "(Stand: 2024)\nLand;Wert\nA;1\nB;2\n"
+        assert error_code("(siehe Anhang) Die Werte sind 3, 4 und 5") == "no_table"
+        assert parse_dataset("(x) Katze 3\n(y) Hund 7\n").csv == "(x) Katze 3\n(y) Hund 7\n"
+
+    def test_a_parenthesis_behind_an_assignment_or_a_bracket_stays_a_literal(self) -> None:
+        # The assignment and `[` / `{` say "literal"; only a bare `(` is ambiguous enough to fall back.
+        assert error_code("x = (foo)") == "unparseable"
+        assert error_code("(1, 2)") == "unparseable"
+        assert error_code("[a],b\n1,2\n") == "unparseable"
 
 
 class TestUnits:
@@ -613,6 +711,77 @@ class TestUnits:
         assert again.csv == parsed.csv
         assert again.column_dtypes == parsed.column_dtypes
         assert not again.warnings
+
+    @pytest.mark.parametrize("space", ["\N{NO-BREAK SPACE}", "\N{NARROW NO-BREAK SPACE}", "\N{THIN SPACE}"])
+    def test_a_no_break_or_thin_space_between_number_and_unit(self, space: str) -> None:
+        """What the CLDR formats for de and fr write, and what a copy from a spreadsheet or a web table carries."""
+        percent = parse_dataset(f"v\n65{space}%\n12{space}%\n")
+        euro = parse_dataset(f"v\n1.234,56{space}€\n7,50{space}€\n")
+        leading = parse_dataset(f"v\n€{space}5\n€{space}7\n")
+
+        assert percent.column_dtypes == {"v (%)": "integer"}
+        assert percent.csv == "v (%)\n65\n12\n"
+        assert euro.column_dtypes == {"v (€)": "number"}
+        assert euro.csv.splitlines()[1:] == ["1234.56", "7.5"]
+        assert leading.csv == "v (€)\n5\n7\n"
+
+    def test_a_line_break_between_number_and_unit_is_no_unit(self) -> None:
+        assert parse_dataset('v\n"65\n%"\n"12\n%"\n').column_dtypes == {"v": "text"}
+
+    def test_a_header_that_already_names_the_unit_keeps_its_name(self) -> None:
+        parenthesised = parse_dataset("Anteil (%)\n65 %\n12 %\n")
+        worded = parse_dataset("Preis in €\n5 €\n7 €\n")
+        other_unit = parse_dataset("Umsatz (Tsd. €)\n5 %\n7 %\n")
+
+        assert parenthesised.column_dtypes == {"Anteil (%)": "integer"}
+        assert parenthesised.csv == "Anteil (%)\n65\n12\n"
+        assert parenthesised.warnings == [
+            "column 'Anteil (%)': unit '%' removed from the values; the name already carries it"
+        ]
+        assert worded.column_dtypes == {"Preis in €": "integer"}
+        assert other_unit.column_dtypes == {"Umsatz (Tsd. €) (%)": "integer"}
+
+    @pytest.mark.parametrize(
+        "cells",
+        [
+            ["5 Jan", "12 Jan"],
+            ["5 true", "6 true"],
+            ["1st", "21st"],
+            ["5 NA", "6 NA"],
+            ["5 pm", "11 pm"],
+            ["3 Dez.", "4 dez"],
+        ],
+    )
+    def test_letters_that_are_a_month_a_boolean_or_an_ordinal_are_no_unit(self, cells: list[str]) -> None:
+        parsed = parse_dataset("v\n" + "\n".join(cells) + "\n")
+
+        assert parsed.column_dtypes == {"v": "text"}
+        assert not parsed.warnings
+
+    @pytest.mark.parametrize(
+        ("cells", "name", "canonical"),
+        [
+            (["5 Std.", "3 Std."], "v (Std.)", ["5", "3"]),
+            (["5 Mio.", "3,5 Mio."], "v (Mio.)", ["5.0", "3.5"]),
+            (["100 m²", "80 m²"], "v (m²)", ["100", "80"]),
+            (["2 m³"], "v (m³)", ["2"]),
+        ],
+    )
+    def test_dotted_abbreviations_and_superscripts_are_units(
+        self, cells: list[str], name: str, canonical: list[str]
+    ) -> None:
+        parsed = parse_dataset("v\n" + "\n".join(cells) + "\n")
+
+        assert list(parsed.column_dtypes) == [name]
+        assert parsed.csv.splitlines()[1:] == canonical
+
+    def test_a_unit_suffix_that_pushes_a_header_over_the_cap_names_the_cause(self) -> None:
+        parsed = parse_dataset("x" * (MAX_COLUMN_NAME_CHARS - 2) + "\n5 %\n6 %\n")
+
+        assert [c.name for c in parsed.profile.columns] == ["x" * (MAX_COLUMN_NAME_CHARS - 4) + " (%)"]
+        assert warned(parsed, "column 1: header shortened to")
+        assert warned(parsed, f"so the unit fits within {MAX_COLUMN_NAME_CHARS} characters")
+        assert not warned(parsed, f"longer than {MAX_COLUMN_NAME_CHARS} characters")
 
 
 class TestTyping:

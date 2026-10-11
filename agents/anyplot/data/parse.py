@@ -15,13 +15,18 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    `[`, `{` or `(`, also behind a Python assignment (`cat_day = {`), which is
    stripped: `json.loads` first, then `ast.literal_eval` for a Python literal
    (single quotes, trailing commas, tuples, `True` / `False` / `None`; a name or
-   a call is refused, and a bracket count refuses more than `MAX_NESTING` levels
-   before anything is evaluated). Both give one of four shapes: an array of flat
-   records (`json_records`), an object of equally long column lists
-   (`json_columns`), or an object of scalars or an array of `[category, value]`
-   pairs (`json_pairs`: the columns `category` and `value`, one row per entry,
-   in the pasted order); nesting depth at most 2; `null`, `NaN` and `Infinity`
-   are missing. Anything else is delimited text, see `sniff_delimiter`.
+   a call is refused, and a bracket count that skips quoted strings and `#`
+   comments refuses more than `MAX_NESTING` levels before anything is
+   evaluated). Both give one of four shapes: an array of flat records
+   (`json_records`), an object of equally long column lists (`json_columns`),
+   or an object of scalars or an array of `[category, value]` pairs
+   (`json_pairs`: the columns `category` and `value`, one row per entry, in the
+   pasted order; the keys stay text, the values are typed); nesting depth at
+   most 2; `null`, `NaN` and `Infinity` are missing; a key repeated in an object
+   keeps its last value, with a warning. Text that starts with a bare `(` and is
+   neither JSON nor a Python literal (a header such as `(in %) Land`, or prose
+   in parentheses) is delimited text instead, like everything that starts
+   otherwise, see `sniff_delimiter`.
    Fully blank lines (also `;;;`-style lines of empty fields) are skipped; a row
    with fewer fields than the header is padded with missing cells (one warning);
    a row with more non-empty fields than the header is `unparseable`.
@@ -31,15 +36,18 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    turn CRLF and CR inside a quoted cell into LF, strip surrounding whitespace,
    and map `MISSING_VALUES` to an empty cell. One warning per column that lost
    invisible characters. A cell (header or value) longer than
-   `MAX_INPUT_CELL_CHARS` after cleaning is `cell_too_long`. A column without a
-   header whose cells are all missing (the trailing-delimiter column of many
-   spreadsheet exports) is dropped with a warning before the 50-column check.
+   `MAX_INPUT_CELL_CHARS` after cleaning is `cell_too_long`, checked before any
+   typing reads the cell. A column without a header whose cells are all missing
+   (the trailing-delimiter column of many spreadsheet exports) is dropped with a
+   warning before the 50-column check.
 5. **Type each column**, see `_type_column`: dates, then booleans, integers,
    numbers, then the same numbers behind one unit shared by every cell (`65 %`,
-   `15,6 h`, `€ 5`; the unit leaves the cells), otherwise text.
+   `15,6 h`, `€ 5`, also with a no-break space; the unit leaves the cells),
+   otherwise text.
 6. **Canonicalise the headers**, see `canonical_headers`. A column whose cells
    carried a unit is named `<name> (<unit>)` there, so the duplicate suffixes and
-   the 64-character cap cover the new name too (one warning per such column).
+   the 64-character cap cover the new name too (one warning per such column); a
+   header that already names the unit (`Anteil (%)`, `Preis in €`) keeps its name.
 7. **Write the canonical `data.csv`** (comma, dot decimal, ISO dates, canonical
    headers, missing as an empty cell, `\\n` line ends) and profile it.
 
@@ -145,14 +153,36 @@ _THOUSANDS_DOT = re.compile(r"[+-]?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3})+|[0-9]+)")
 _AMBIGUOUS_COMMA = re.compile(r"[+-]?[0-9]{1,3},[0-9]{3}")
 
 # A number with one unit. The number part only has to look like one here: the rules above
-# then type it. A trailing unit (`65 %`, `15,6 h`, `20°C`, `3 Std`, `12 CHF`, `5 €`) is
-# `%`, `‰`, `°`, `°C`, `°F`, a currency sign or one to four letters (ASCII plus the micro
-# sign in both its code points); a leading unit (`€ 5`, `-$ 3,50`, `CHF 1.200`) is a
-# currency sign or code, with the number's sign allowed before it. The space is optional.
+# then type it. A trailing unit (`65 %`, `15,6 h`, `20°C`, `3 Std.`, `100 m²`, `12 CHF`,
+# `5 €`) is `%`, `‰`, `°`, `°C`, `°F`, a currency sign or one to four letters (ASCII plus
+# the micro sign in both its code points) with an optional `²` or `³` and an optional
+# abbreviating dot; a leading unit (`€ 5`, `-$ 3,50`, `CHF 1.200`) is a currency sign or
+# code, with the number's sign allowed before it. The space between is optional and may
+# be a no-break or thin space (U+00A0, U+202F, U+2009), which localised spreadsheets and
+# web tables write; a line break or a tab is not a space here.
 _NUMBER_PART = r"[+-]?(?:[0-9][0-9.,]*|\.[0-9]+)(?:[eE][+-]?[0-9]+)?"
+_UNIT_SPACE = r"[^\S\r\n\t]?"
 _CURRENCY = r"[€$£]|CHF|EUR|USD|GBP"
-_TRAILING_UNIT = re.compile(rf"(?P<number>{_NUMBER_PART}) ?(?P<unit>%|‰|°[CF]?|[€$£]|[A-Za-zµμ]{{1,4}})")
-_LEADING_UNIT = re.compile(rf"(?P<sign>[+-])?(?P<unit>{_CURRENCY}) ?(?P<number>{_NUMBER_PART})")
+_TRAILING_UNIT = re.compile(
+    rf"(?P<number>{_NUMBER_PART}){_UNIT_SPACE}(?P<unit>%|‰|°[CF]?|[€$£]|[A-Za-zµμ]{{1,4}}[²³]?\.?)"
+)
+_LEADING_UNIT = re.compile(rf"(?P<sign>[+-])?(?P<unit>{_CURRENCY}){_UNIT_SPACE}(?P<number>{_NUMBER_PART})")
+
+# Letters after a number that are no unit: a month (`5 Jan` is a date fragment), a boolean,
+# a missing-value token, an ordinal suffix (`1st`) or a meridiem (`5 pm`). Compared without
+# case and without the abbreviating dot; such a column stays text.
+_UNIT_STOP_WORDS: frozenset[str] = frozenset(
+    word.casefold()
+    for word in (
+        *("Jan", "Feb", "Mar", "Apr", "May", "Mai", "Jun", "June", "Juni", "Jul", "July", "Juli"),
+        *("Aug", "Sep", "Sept", "Oct", "Okt", "Nov", "Dec", "Dez"),
+        *("true", "false", "st", "nd", "rd", "th", "am", "pm"),
+        *MISSING_VALUES,
+    )
+)
+
+# The tokens of a header, for whether it already names a unit (`Anteil (%)`, `Preis in €`).
+_HEADER_TOKENS = re.compile(r"[^\s()\[\]{},;:]+")
 
 # Text that is a literal: an optional Python assignment, then `[`, `{` or `(`.
 _LITERAL_START = re.compile(r"(?:[^\W\d]\w*\s*=\s*)?(?=[\[{(])")
@@ -203,6 +233,7 @@ class _Column:
     source: list[str]  # cleaned cells, as pasted
     cells: list[str]  # canonical cells for data.csv, set by the typing step
     invisible: bool = False
+    text_only: bool = False  # the `category` column of `json_pairs`: keys are names, never typed
     dtype: ColumnDtype = "text"
     unit: str | None = None  # the unit every cell carried, now part of the name
     bare: list[str] = field(default_factory=list)  # the cells the number typing read: `source`, or the number parts
@@ -229,11 +260,17 @@ def parse_dataset(text: str) -> ParsedDataset:
         raise ParseError("unparseable", "the data is empty")
 
     warnings: list[str] = []
+    table: tuple[list[str], list[list[str]], SourceFormat] | None = None
     literal = _LITERAL_START.match(stripped)
     if literal:
-        headers, rows, source_format = _read_literal(stripped[literal.end() :], warnings)
-    else:
-        headers, rows, source_format = _read_delimited(text, warnings)
+        assignment, body = literal.group(), stripped[literal.end() :]
+        table = _read_literal(body, warnings)
+        if table is None and (assignment or not body.startswith("(")):
+            raise ParseError("unparseable", "the data starts like JSON or a Python literal but is neither")
+        # A bare `(` that neither reader accepts is delimited text: `(in %) Land;Wert`, prose in parentheses.
+    if table is None:
+        table = _read_delimited(text, warnings)
+    headers, rows, source_format = table
     return _build(headers, rows, source_format, warnings)
 
 
@@ -325,36 +362,91 @@ def _read_delimited(text: str, warnings: list[str]) -> tuple[list[str], list[lis
     return header, rows, source_format
 
 
-def _read_literal(text: str, warnings: list[str]) -> tuple[list[str], list[list[str]], SourceFormat]:
-    """JSON, or a Python literal when the JSON reader refuses the text; both are tabulated alike."""
+def _read_literal(text: str, warnings: list[str]) -> tuple[list[str], list[list[str]], SourceFormat] | None:
+    """JSON, or a Python literal when the JSON reader refuses the text, tabulated alike; None when it is neither."""
     if _too_deep(text):
         raise ParseError("unparseable", f"the data is nested more than {MAX_NESTING} levels deep")
-    try:
-        data = json.loads(text, parse_constant=lambda _: None)
-    except ValueError:
-        data = _python_literal(text)
+    decoded = _decode_literal(text)
+    if decoded is None:
+        return None
+    data, repeated = decoded
+    if repeated:
+        warnings.append(f"{_count(repeated, 'key')} repeated; only the last value of a repeated key is kept")
     return _tabulate(data, warnings)
 
 
 def _too_deep(text: str) -> bool:
-    """Whether the brackets open more than `MAX_NESTING` levels; a plain count, so it costs nothing."""
+    """Whether the brackets open more than `MAX_NESTING` levels, counted in one linear pass.
+
+    Brackets inside a quoted string (`"…"` or `'…'`, a backslash escaping the next
+    character) and behind a `#` up to the end of its line do not count, so a cell such
+    as `:(` or a comment in a Python literal never trips the guard, and a string full of
+    closing brackets cannot hide real nesting behind it (a closer never takes the count
+    below zero either). It is a guard, not a parser: a triple-quoted string reads as
+    three strings, which only matters when it holds a quote, and the readers' own
+    limits (`RecursionError`, the tokenizer's nesting cap) are caught behind it.
+    """
     depth = 0
+    quote = ""
+    escaped = False
+    comment = False
     for char in text:
-        if char in "[{(":
+        if quote:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == quote:
+                quote = ""
+        elif comment:
+            comment = char != "\n"
+        elif char in "\"'":
+            quote = char
+        elif char == "#":
+            comment = True
+        elif char in "[{(":
             depth += 1
             if depth > MAX_NESTING:
                 return True
-        elif char in "]})":
+        elif char in "]})" and depth:
             depth -= 1
     return False
 
 
-def _python_literal(text: str) -> Any:
-    """`ast.literal_eval`, which evaluates literals only: a name or a call is a ValueError, never run."""
+def _decode_literal(text: str) -> tuple[Any, int] | None:
+    """The decoded value and the number of repeated object keys; None when neither reader accepts the text.
+
+    `json.loads` first, then `ast.literal_eval`, which evaluates literals only: a name
+    or a call is a ValueError, never run. Both keep the last value of a repeated key,
+    so the count lets the caller say that rows went missing.
+    """
+    repeated = 0
+
+    def objects(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        nonlocal repeated
+        repeated += len(pairs) - len({key for key, _ in pairs})
+        return dict(pairs)
+
     try:
-        return ast.literal_eval(text)
+        return json.loads(text, parse_constant=lambda _: None, object_pairs_hook=objects), repeated
+    except (ValueError, RecursionError):
+        pass
+    try:
+        tree = ast.parse(text, mode="eval")
+        value = ast.literal_eval(tree)
     except (ValueError, SyntaxError, TypeError, RecursionError, MemoryError):
-        raise ParseError("unparseable", "the data starts like JSON or a Python literal but is neither") from None
+        return None
+    return value, _repeated_keys(tree)
+
+
+def _repeated_keys(tree: ast.AST) -> int:
+    """How many dict keys of an evaluated literal repeat an earlier key of the same dict."""
+    repeated = 0
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Dict):
+            keys = [ast.literal_eval(key) for key in node.keys if key is not None]
+            repeated += len(keys) - len(set(keys))
+    return repeated
 
 
 def _tabulate(data: Any, warnings: list[str]) -> tuple[list[str], list[list[str]], SourceFormat]:
@@ -527,11 +619,17 @@ def canonical_headers(headers: Sequence[str], units: Sequence[str | None] | None
         if not name:
             name = f"column_{position}"
             warnings.append(f"column {position}: empty header named '{name}'")
-        elif len(name) + len(unit_suffix) > MAX_COLUMN_NAME_CHARS:
+        elif len(name) > MAX_COLUMN_NAME_CHARS:
             name = name[: MAX_COLUMN_NAME_CHARS - len(unit_suffix)].rstrip()
             warnings.append(
                 f"column {position}: header longer than {MAX_COLUMN_NAME_CHARS} characters "
                 f"shortened to '{name}{unit_suffix}'"
+            )
+        elif len(name) + len(unit_suffix) > MAX_COLUMN_NAME_CHARS:
+            name = name[: MAX_COLUMN_NAME_CHARS - len(unit_suffix)].rstrip()
+            warnings.append(
+                f"column {position}: header shortened to '{name}{unit_suffix}' "
+                f"so the unit fits within {MAX_COLUMN_NAME_CHARS} characters"
             )
         name += unit_suffix
         if name in used:
@@ -570,12 +668,13 @@ def _type_column(column: _Column) -> None:
        that all cells share (`65 %`, `15,6 h`, `€ 5`, see `_split_units`), and the
        number parts pass rules 3 and 4 (so `007 kg` keeps its text). The cells keep
        the number; the unit goes into the column name, see `canonical_headers`.
-    6. **text**: everything else, and every column without a non-missing cell.
+    6. **text**: everything else, every column without a non-missing cell, and the
+       `category` column of `json_pairs`, whose cells are the keys (`text_only`).
     """
     column.cells = list(column.source)
     column.bare = column.source
     present = [cell for cell in column.source if cell]
-    if not present:
+    if not present or column.text_only:
         return
     if _as_dates(column, present):
         return
@@ -620,7 +719,9 @@ def _split_units(present: list[str]) -> tuple[str, dict[str, str]] | None:
 
     A unit is read exactly (`kg` and `Kg` differ); the same unit before and after the
     number is one unit. A sign before a leading currency belongs to the number (`-€ 5`
-    is -5), and a cell with a sign in both places is no number.
+    is -5), and a cell with a sign in both places is no number. Letters that are a
+    month, a boolean, a missing-value token, an ordinal suffix or a meridiem are no
+    unit (`_UNIT_STOP_WORDS`): `5 Jan` and `1st` keep their text.
     """
     unit: str | None = None
     numbers: dict[str, str] = {}
@@ -637,7 +738,10 @@ def _split_units(present: list[str]) -> tuple[str, dict[str, str]] | None:
 def _split_unit(cell: str) -> tuple[str, str] | None:
     match = _TRAILING_UNIT.fullmatch(cell)
     if match:
-        return match["number"], match["unit"]
+        unit = match["unit"]
+        if unit.rstrip(".").casefold() in _UNIT_STOP_WORDS:
+            return None
+        return match["number"], unit
     match = _LEADING_UNIT.fullmatch(cell)
     if match is None:
         return None
@@ -755,7 +859,8 @@ def _build(
         if broken:
             renamed_by_breaks.append(len(headers))
         headers.append(header)
-        columns.append(_Column(name="", source=cells, cells=[], invisible=invisible))
+        text_only = source_format == "json_pairs" and position == 0  # the keys of an object are names
+        columns.append(_Column(name="", source=cells, cells=[], invisible=invisible, text_only=text_only))
 
     dropped = len(raw_headers) - len(headers)
     if dropped:
@@ -768,10 +873,17 @@ def _build(
         )
     if not raw_rows:
         raise ParseError("no_table", "the data has a header but no rows")
-    for position, header in enumerate(headers, start=1):
+    # The length checks come before typing: `int()` on a cell of thousands of digits raises
+    # a ValueError of its own, which this limit exists to keep from the route.
+    for position, (header, column) in enumerate(zip(headers, columns, strict=True), start=1):
         if len(header) > MAX_INPUT_CELL_CHARS:
             raise ParseError(
                 "cell_too_long", f"the header of column {position} has more than {MAX_INPUT_CELL_CHARS} characters"
+            )
+        if any(len(cell) > MAX_INPUT_CELL_CHARS for cell in column.source):
+            named = _clip(header, MAX_COLUMN_NAME_CHARS) if header else f"column_{position}"
+            raise ParseError(
+                "cell_too_long", f"a cell in column '{named}' has more than {MAX_INPUT_CELL_CHARS} characters"
             )
 
     # Typing comes before naming: a column whose cells carried a unit is named after it.
@@ -782,24 +894,29 @@ def _build(
             if column.dtype == "number" and not column.decimal_comma:
                 _retype_thousands_dots(column)
 
-    names, header_warnings = canonical_headers(headers, [column.unit for column in columns])
+    # A header that already names the unit (`Anteil (%)`, `Preis in €`) gets no suffix.
+    units = [
+        column.unit if column.unit and column.unit not in _HEADER_TOKENS.findall(header) else None
+        for header, column in zip(headers, columns, strict=True)
+    ]
+    names, header_warnings = canonical_headers(headers, units)
     for index in renamed_by_breaks:
         warnings.append(f"column '{names[index]}': tabs or line breaks in the header replaced with spaces")
     warnings.extend(header_warnings)
     if all(_looks_like_value(name) for name in names):
         warnings.append("every header looks like a value; the first row may be data rather than column names")
 
-    for position, (header, name, column) in enumerate(zip(headers, names, columns, strict=True), start=1):
+    for position, (header, name, unit, column) in enumerate(zip(headers, names, units, columns, strict=True), start=1):
         column.name = name
-        if any(len(cell) > MAX_INPUT_CELL_CHARS for cell in column.source):
-            raise ParseError(
-                "cell_too_long", f"a cell in column '{name}' has more than {MAX_INPUT_CELL_CHARS} characters"
-            )
         if column.invisible:
             warnings.append(f"column '{name}': invisible formatting characters (zero-width or bidi) removed")
-        if column.unit:
+        if unit:
             before = header or f"column_{position}"
-            warnings.append(f"column '{before}': unit '{column.unit}' moved from the values into the name '{name}'")
+            warnings.append(f"column '{before}': unit '{unit}' moved from the values into the name '{name}'")
+        elif column.unit:
+            warnings.append(
+                f"column '{name}': unit '{column.unit}' removed from the values; the name already carries it"
+            )
         warnings.extend(f"column '{name}': {note}" for note in column.notes)
 
     rows = [list(row) for row in zip(*(column.cells for column in columns), strict=True)]
