@@ -533,6 +533,25 @@ describe('useAgentSession: confirming the data (step 1)', () => {
     expect(result.current.state.dataConfirmed).toBe(false);
   });
 
+  it('keeps the confirmation while a table read from text waits, so .discard() returns to it', async () => {
+    const routes = baseRoutes();
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    await act(() => result.current.confirmData());
+    expect(result.current.state.dataConfirmed).toBe(true);
+
+    // The transcription stores nothing, and the server keeps the confirmation with it.
+    routes['POST /sessions/S1/dataset'] = () => json(200, TRANSCRIBED);
+    await act(() => result.current.parseData(FREE_TEXT));
+    expect(result.current.state.transcription).not.toBeNull();
+    expect(result.current.state.dataConfirmed).toBe(true);
+
+    act(() => result.current.discardTranscription());
+    expect(result.current.state.transcription).toBeNull();
+    expect(result.current.state.dataConfirmed).toBe(true);
+    expect(confirmCalls()).toHaveLength(1);
+  });
+
   it('keeps the reason of a refused confirmation and stays at step 1', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/dataset/confirm'] = () =>
@@ -1416,7 +1435,8 @@ describe('agentReducer', () => {
       note: '',
       bytes: 26,
     };
-    dropped(agentReducer(state, { type: 'transcribed', transcription }));
+    // A table read from text stores nothing: the confirmation stays until the user decides.
+    kept(agentReducer(state, { type: 'transcribed', transcription }));
     dropped(
       agentReducer(state, {
         type: 'bindings_done',

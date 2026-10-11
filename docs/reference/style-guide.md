@@ -828,7 +828,7 @@ Pluralisation: prefer the natural plural for collections (`plots.browse()`, `lib
 
 **Accessibility**: the pseudo-function style is a *visual* convention — it belongs on visible labels, tooltip titles, and placeholder text. `aria-label` and any hidden `<label>` fallback for assistive tech must stay in readable human language (`"Copy code"`, `"Browse plots"`, `"Zoom in"`), because screen readers announce punctuation literally (`.copy()` → "dot copy open close paren"). Icon-only controls should always carry a descriptive `aria-label` even when their tooltip uses the method-call style.
 
-**Hero CTA (filled, only on landing hero)**
+**Hero CTA (filled — only on landing hero, plus the agent chat's step-2 `.create_plot()`)**
 
 ```css
 .btn-cta {
@@ -850,7 +850,7 @@ Pluralisation: prefer the natural plural for collections (`plots.browse()`, `lib
 .btn-cta:hover::before { opacity: 1; }
 ```
 
-Used for `[.start()]` and `[.browse()]` in the hero box. Pill shape replaced with a more terminal-native rectangle (4px radius). Dark-to-green hover transition stays as the signature moment.
+Used for `[.start()]` and `[.browse()]` in the hero box. The one other use is `.create_plot()` in the admin-only agent chat (`/debug/agent`), the action that page leads to once the data is confirmed (`app/src/sections/agent-chat/styles.ts`, `ctaButtonSx`); that variant hovers with the light theme's ink (`#1A1A17`) as the foreground in both themes, because 14 px white text on the green reads 3.4:1 and the dark theme's ink 3.0:1, under the 4.5:1 of WCAG AA, while the dark ink on it reads 5.1:1. Pill shape replaced with a more terminal-native rectangle (4px radius). Dark-to-green hover transition stays as the signature moment.
 
 **Ghost (rare — only when a primary already occupies visual space)**
 

@@ -1,15 +1,22 @@
 /**
  * "Use with my data": the admin-only agent chat at `/debug/agent?spec=&library=&language=`.
  *
- * Two steps, data first: paste data (or ask in the chat for a curve, whose
- * table the assistant computes), read the assistant's summary of it, fix it
- * in plain words if needed (each change shows in the data panel with
- * `.undo()`), check the preview and the role bindings and `.confirm()` them
- * (step 1), then `.create_plot()` and refine in plain words (step 2); every
- * shipped version gets a result card with the image, the code and the
- * downloads. A line above the panels names the current step. The page talks
- * only to the BFF under `/debug/agent/*` (`src/lib/agent.ts`,
- * `src/hooks/useAgentSession.ts`).
+ * One column, chat first, two steps, data first. The data card is the first
+ * turn of the thread: paste data (or ask in the chat for a curve, whose table
+ * the assistant computes), read the assistant's summary of it in the next
+ * turn, fix it in plain words if needed (each change updates the card in
+ * place, with `.undo()`), check the preview and the role bindings and
+ * `.confirm()` them at the card's foot (step 1). The card then collapses into
+ * a pinned header at the top of the thread, `.show()` opens it again, and any
+ * change to the data takes the page back to step 1 with the card open; the
+ * header then stays as `! confirm again` and leads back to the card. In step
+ * 2 the composer's action is `.create_plot()`: with an empty box it starts the
+ * first plot as it is, with text the text goes as a turn and the assistant
+ * makes the first plot with that change. Once the library has a plot, the
+ * composer refines in plain words; every shipped version gets a result card
+ * with the image, the code and the downloads. A line above the column names
+ * the current step. The page talks only to the BFF under `/debug/agent/*`
+ * (`src/lib/agent.ts`, `src/hooks/useAgentSession.ts`).
  *
  * Gates, outermost first:
  * 1. `CONFIG.features.agentChat` (build-time `VITE_ENABLE_AGENT_CHAT`): off, the
@@ -22,7 +29,7 @@
  * Design: docs/concepts/agent-network.md ("Frontend", "Request flow").
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
@@ -40,14 +47,16 @@ import { apiGet, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
 import { paths, specPath } from 'src/routes/paths';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
-import { DataPanel } from 'src/sections/agent-chat/DataPanel';
+import { DATA_SUMMARY_ID, DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { ERROR_TEXT } from 'src/sections/agent-chat/messages';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { StepHeader } from 'src/sections/agent-chat/StepHeader';
+import { inStep2 } from 'src/sections/agent-chat/steps';
 import {
   actionButtonSx,
   bodyTextSx,
+  ctaButtonSx,
   ghostButtonSx,
   labelSx,
   nativeControlSx,
@@ -59,6 +68,8 @@ import { readAdminHint, readAdminToken, setAdminHint } from 'src/utils/adminAuth
 
 const SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
 const OPEN_SOURCES = new Set(['plot_page']);
+/** The chat column's width: a thread to read, and a plot that fits the screen with its composer. */
+const COLUMN_MAX_WIDTH = 960;
 
 function Notice({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -166,7 +177,12 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   const [draft, setDraft] = useState('');
   const [title, setTitle] = useState<string | null>(null);
   const [libraries, setLibraries] = useState<string[]>([...DEFAULT_AGENT_LIBRARIES]);
-  const chatRef = useRef<HTMLDivElement>(null);
+  const tailRef = useRef<HTMLDivElement>(null);
+  const messageRef = useRef<HTMLTextAreaElement>(null);
+  const createRef = useRef<HTMLButtonElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  // Set by the user's own `.confirm()`: the step change it brings moves the focus, once.
+  const confirmFocus = useRef(false);
 
   // The spec's title and implemented libraries come from the public catalogue
   // API; the enabled libraries from the agents service. Both are best effort.
@@ -205,11 +221,11 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
     if (state.phase === 'unauthorized') setAdminHint(false);
   }, [state.phase]);
 
-  // On a phone the chat sits below the data panel: bring it into view when a
-  // turn starts, so the progress is visible.
+  // The progress and the replies arrive at the foot of the thread, below the
+  // data card: bring the foot into view when a turn starts.
   const running = !!state.run;
   useEffect(() => {
-    if (running) chatRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    if (running) tailRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
   }, [running]);
 
   // A turn, a theme render, a parse, an undo or a binding change in flight: the
@@ -217,16 +233,61 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   const busy = sessionBusy(state);
   // The session could not open for this pair: other libraries are links instead.
   const reopen = state.phase === 'ineligible' || state.phase === 'error';
+  // Step 2: the data and its bindings are confirmed, and no table read from text waits.
+  const step2 = inStep2(state);
+  const canCreate =
+    state.phase === 'ready' && step2 && state.bindingsComplete && !state.transcription && !busy;
+  // Until this library has a plot, `.create_plot()` is the composer's action and
+  // text in the box goes with it; the pipeline counts versions per library too.
+  const firstPlot =
+    step2 && !Object.values(state.versions).some(version => version.library === state.library);
 
+  // The user's own `.confirm()` collapsed the card and took its focused button
+  // away. Before the first plot the keyboard continues at `.create_plot()`, the
+  // step's next action (a button, so a phone opens no keyboard); after it at the
+  // pinned header's toggle, since a fresh run must not be one key press away by
+  // accident; it is in view where it sticks, so the focus scrolls nothing. Only
+  // for that confirmation, and only while nothing else holds the focus: a step 2
+  // that a turn's sync brings back never takes it from the composer. A layout
+  // effect, so the focus has moved by the time the button shows.
+  useLayoutEffect(() => {
+    if (!confirmFocus.current || state.confirmBusy) return;
+    confirmFocus.current = false;
+    const active = document.activeElement;
+    if (!step2 || (active && active !== document.body)) return;
+    if (firstPlot) createRef.current?.focus();
+    else toggleRef.current?.focus({ preventScroll: true });
+  }, [state.confirmBusy, step2, firstPlot]);
+
+  /**
+   * A key press on a composer button that a run replaces with `.stop()` (Enter
+   * and Space fire a click with `detail` 0): the focus continues in the message
+   * box, where a second press sends nothing, and stays there when the run ends.
+   * A pointer click moves no focus, so a phone opens no keyboard.
+   */
+  const keepKeyboardFocus = (event: React.MouseEvent) => {
+    if (event.detail === 0) messageRef.current?.focus();
+  };
+
+  /**
+   * The composer's action. The first plot: an empty box starts it as it is
+   * (`create_plot`), text goes as the user's turn, and the assistant makes the
+   * plot with that change. Otherwise the text is a turn about the data or the plot.
+   */
   const handleSend = useCallback(
     (event?: React.FormEvent) => {
       event?.preventDefault();
       const text = draft.trim();
-      if (!text || busy) return;
+      if (busy) return;
+      if (firstPlot && !text) {
+        if (canCreate) void session.createPlot();
+        return;
+      }
+      if (!text || (firstPlot && !canCreate)) return;
       void session.sendMessage(text);
       setDraft('');
     },
-    [draft, busy, session]
+    [draft, busy, firstPlot, canCreate, session]
   );
 
   const handleLibrary = useCallback(
@@ -327,7 +388,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
 
   if (state.phase === 'opening' || state.phase === 'ineligible' || state.phase === 'error') {
     return (
-      <Box sx={{ py: 2 }}>
+      <Box sx={{ py: 2, maxWidth: COLUMN_MAX_WIDTH, mx: 'auto' }}>
         {header}
         {state.phase === 'opening' ? (
           <Box sx={labelSx}>opening a session…</Box>
@@ -358,17 +419,25 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       {/* `colorScheme` gives the native controls (scrollbars, select menus) the site theme. */}
-      <Box sx={{ py: 2, maxWidth: 1480, mx: 'auto', colorScheme: isDark ? 'dark' : 'light' }}>
+      <Box
+        sx={{
+          py: 2,
+          maxWidth: COLUMN_MAX_WIDTH,
+          mx: 'auto',
+          colorScheme: isDark ? 'dark' : 'light',
+        }}
+      >
         {header}
-        <StepHeader current={state.dataConfirmed ? 2 : 1} />
+        <StepHeader current={step2 ? 2 : 1} />
         <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 5fr) minmax(0, 7fr)' },
-            gap: { xs: 2, md: 3 },
-            alignItems: 'start',
-          }}
+          component="section"
+          aria-label="Chat"
+          sx={{ ...panelSx, display: 'flex', flexDirection: 'column', gap: 2 }}
         >
+          <Box sx={{ ...labelSx, mb: -0.5 }}># chat</Box>
+
+          {/* The first turn: the data card, once confirmed the pinned header. A sibling of
+              the thread, so the header sticks over all of it. */}
           <DataPanel
             state={state}
             onParse={text => void session.parseData(text)}
@@ -376,75 +445,73 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             onDiscardTranscription={session.discardTranscription}
             onSendFormula={() => void session.sendFormula()}
             onBind={session.setBinding}
-            onConfirmData={() => void session.confirmData()}
+            onConfirmData={() => {
+              confirmFocus.current = true;
+              void session.confirmData();
+            }}
             onUndo={() => void session.undoData()}
-            onCreatePlot={() => void session.createPlot()}
+            toggleRef={toggleRef}
+          />
+
+          {state.items.length === 0 && !state.run && (
+            <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
+              paste your data above, or ask here for a curve: &quot;y = sin(x), x from{' '}
+              <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
+                -pi
+              </Box>{' '}
+              to pi&quot;, and the assistant computes the table. it sums your data up here, and you
+              can ask it to fix the data in plain words, such as &quot;read Anteil as numbers&quot;
+              or &quot;sum per month&quot;. check the preview and the bindings, confirm, then{' '}
+              <code>.create_plot()</code>, with a note first if the plot should do something
+              differently. afterwards, ask for changes to the plot: &quot;log scale on y&quot;,
+              &quot;dark version&quot;, &quot;label the outliers&quot;.
+            </Box>
+          )}
+
+          <ChatThread
+            state={state}
+            specId={specId}
+            language={language}
+            onRequestTheme={(version, theme) => void session.requestTheme(version, theme)}
+            onFetchArtifact={session.fetchArtifact}
+            onRefine={text => void session.sendMessage(text)}
+            onTrack={trackEvent}
           />
 
           <Box
-            component="section"
-            aria-label="Chat"
-            ref={chatRef}
-            sx={{
-              ...panelSx,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2,
-              scrollMarginTop: 16,
-            }}
+            ref={tailRef}
+            sx={{ display: 'flex', flexDirection: 'column', gap: 2, scrollMarginBottom: 16 }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minHeight: 28 }}>
-              <Box sx={labelSx}># chat</Box>
-              {state.run?.queue && (
-                <Box
-                  role="status"
-                  data-testid="queue-counter"
-                  aria-label={`Queued: position ${state.run.queue.position}, ${state.run.queue.waiting} waiting`}
-                  sx={{
-                    ml: 'auto',
-                    fontFamily: typography.mono,
-                    fontSize: smallText,
-                    color: 'var(--ink)',
-                    bgcolor: 'var(--bg-elevated)',
-                    border: '1px solid var(--rule)',
-                    borderRadius: 1,
-                    px: 1,
-                    py: 0.25,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  queue {state.run.queue.position}/{state.run.queue.waiting}
-                </Box>
-              )}
-            </Box>
-
-            {state.items.length === 0 && !state.run && (
-              <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
-                paste your data, or ask here for a curve: &quot;y = sin(x), x from{' '}
-                <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
-                  -pi
-                </Box>{' '}
-                to pi&quot;, and the assistant computes the table. it sums your data up here, and
-                you can ask it to fix the data in plain words, such as &quot;read Anteil as
-                numbers&quot; or &quot;sum per month&quot;. check the preview and the bindings,
-                confirm, then <code>.create_plot()</code>. afterwards, ask for changes to the plot:
-                &quot;log scale on y&quot;, &quot;dark version&quot;, &quot;label the
-                outliers&quot;.
+            {/* At the foot with the progress, where a long thread keeps it in view. */}
+            {state.run?.queue && (
+              <Box
+                role="status"
+                data-testid="queue-counter"
+                aria-label={`Queued: position ${state.run.queue.position}, ${state.run.queue.waiting} waiting`}
+                sx={{
+                  alignSelf: 'flex-end',
+                  mb: -1,
+                  fontFamily: typography.mono,
+                  fontSize: smallText,
+                  color: 'var(--ink)',
+                  bgcolor: 'var(--bg-elevated)',
+                  border: '1px solid var(--rule)',
+                  borderRadius: 1,
+                  px: 1,
+                  py: 0.25,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                queue {state.run.queue.position}/{state.run.queue.waiting}
               </Box>
             )}
-
-            <ChatThread
-              state={state}
-              specId={specId}
-              language={language}
-              onRequestTheme={(version, theme) => void session.requestTheme(version, theme)}
-              onFetchArtifact={session.fetchArtifact}
-              onRefine={text => void session.sendMessage(text)}
-              onTrack={trackEvent}
-            />
-
             {state.run && <ProgressTimeline run={state.run} />}
 
+            {firstPlot && (
+              <Box id="agent-create-line" sx={{ ...labelSx, color: 'var(--ink-soft)', mb: -1 }}>
+                # step 2 — create the plot as it is, or say first what it should do differently
+              </Box>
+            )}
             <Box
               component="form"
               onSubmit={handleSend}
@@ -452,15 +519,18 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             >
               <Box
                 component="textarea"
+                ref={messageRef}
                 aria-label="Message"
                 placeholder={
                   // Step 1 talks about the data, step 2 about the plot. Without
                   // data, the chat is the other way to get some: a formula.
                   !state.dataset
                     ? 'ask for a curve: "y = sin(x), x from -pi to pi"'
-                    : !state.dataConfirmed
+                    : !step2
                       ? 'ask about your data, or for a fix: "sum per month"'
-                      : 'ask about this plot, or ask for a change'
+                      : firstPlot
+                        ? 'optional: what the first plot should do differently'
+                        : 'ask about this plot, or ask for a change'
                 }
                 value={draft}
                 maxLength={MAX_MESSAGE_CHARS}
@@ -470,18 +540,25 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                   setDraft(event.target.value)
                 }
                 onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+                  // Enter sends text; an empty box creates nothing by accident.
                   if (event.key === 'Enter' && !event.shiftKey) {
                     event.preventDefault();
-                    handleSend();
+                    if (draft.trim()) handleSend();
                   }
                 }}
                 sx={{ ...nativeControlSx, flex: '1 1 240px', resize: 'vertical' }}
               />
+              {/* Own keys: the button a run replaces never turns into `.stop()` in place,
+                  with a focus that a second key press would spend on stopping the run. */}
               {running ? (
                 <Box
+                  key="stop"
                   component="button"
                   type="button"
-                  onClick={() => void session.stop()}
+                  onClick={(event: React.MouseEvent) => {
+                    keepKeyboardFocus(event);
+                    void session.stop();
+                  }}
                   disabled={state.run?.stopping}
                   aria-label="Stop"
                   sx={{
@@ -492,15 +569,50 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 >
                   {state.run?.stopping ? '.stop() …' : '.stop()'}
                 </Box>
-              ) : (
+              ) : firstPlot ? (
                 <Box
+                  key="create"
                   component="button"
                   type="submit"
-                  disabled={!draft.trim() || state.phase !== 'ready' || busy}
-                  sx={ghostButtonSx}
+                  ref={createRef}
+                  onClick={keepKeyboardFocus}
+                  disabled={!canCreate}
+                  aria-label="Create plot"
+                  aria-describedby={`${DATA_SUMMARY_ID} agent-create-line`}
+                  sx={ctaButtonSx}
                 >
-                  .send()
+                  .create_plot()
                 </Box>
+              ) : (
+                <>
+                  {/* Step 2 after a plot: start over from the catalogue plot with this data. */}
+                  {step2 && (
+                    <Box
+                      component="button"
+                      type="button"
+                      ref={createRef}
+                      onClick={(event: React.MouseEvent) => {
+                        keepKeyboardFocus(event);
+                        void session.createPlot();
+                      }}
+                      disabled={!canCreate}
+                      aria-label="Create plot"
+                      aria-describedby={DATA_SUMMARY_ID}
+                      sx={actionButtonSx}
+                    >
+                      .create_plot()
+                    </Box>
+                  )}
+                  <Box
+                    component="button"
+                    type="submit"
+                    onClick={keepKeyboardFocus}
+                    disabled={!draft.trim() || state.phase !== 'ready' || busy}
+                    sx={ghostButtonSx}
+                  >
+                    .send()
+                  </Box>
+                </>
               )}
             </Box>
             {draft.length > MAX_MESSAGE_CHARS * 0.9 && (
