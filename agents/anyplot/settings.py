@@ -204,7 +204,8 @@ class AgentSettings(BaseSettings):
     it is the lever behind the pass rate (without it the structured answer misses its edit anchors
     in a third of the runs). The adapter is single-turn, so nothing is replayed; its structured
     answer (`output_config.format`) lets it think first. Both budgets are ignored on Gemini, which
-    thinks by a level per agent kind; setting one explicitly there is refused."""
+    thinks by a level per agent kind; a non-zero budget set explicitly there is refused, an
+    explicit 0 (`--thinking-budget 0,0`) is accepted."""
 
     max_llm_calls: PositiveInt = 12
     """LLM calls per request (`AGENT_MAX_LLM_CALLS`), the `RunConfig` cap."""
