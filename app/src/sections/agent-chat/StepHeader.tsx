@@ -1,9 +1,10 @@
 /**
- * The two steps of "Use with my data" as one quiet mono line above the panels:
+ * The two steps of "Use with my data" as one quiet mono line above the chat:
  * `1 data · 2 plot`, the current step emphasised. Step 1 lasts until the user
  * confirms the data with `.confirm()`; a new parse, a binding change, a change
  * the assistant made to the data and an undo go back to it. It stays one line
- * at phone width.
+ * at phone width, and it stays apart from the pinned data header of step 2,
+ * which names the data rather than the step.
  */
 
 import Box from '@mui/material/Box';

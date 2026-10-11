@@ -542,13 +542,13 @@ export function agentReducer(state: AgentSessionState, action: Action): AgentSes
     case 'formula_sent':
       return { ...state, formula: null };
     case 'transcribed':
-      // Nothing is stored yet: the dataset and its bindings stay until the user decides,
-      // but the user is back at the data step, so the confirmation goes as well.
+      // Nothing is stored yet: the dataset, its bindings and their confirmation stay until
+      // the user decides (the server kept them too); the page holds step 1 while the
+      // transcription waits (`inStep2`), and `.discard()` returns to where the user was.
       return {
         ...state,
         parsing: false,
         transcription: action.transcription,
-        dataConfirmed: false,
       };
     case 'transcription_clear':
       return { ...state, transcription: null };
