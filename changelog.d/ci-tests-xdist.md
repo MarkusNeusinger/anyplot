@@ -8,7 +8,11 @@
   3.13. Pinned to four CPUs, the CI-equivalent run took 68.9 s instead of
   300.8 s, with the same 9,162 passed and 21 skipped tests and the same
   coverage total (10,723 statements, 92 %); the job should take about 165 to
-  215 s. `--durations=25` lists the slowest tests, which the interleaved
+  215 s. The coverage now includes `agents/`, which half of the tests target
+  and which was never measured (23,433 statements at 93 % in the pinned run,
+  81 s), and the job also runs when `uv.lock`, a workflow or action under
+  `.github/`, or a file under `prompts/` changes, because the workflow and
+  prompt tests read exactly those files. `--durations=25` lists the slowest tests, which the interleaved
   output of four workers no longer shows by timestamp, and the Cloud SQL proxy
   step polls its port every 0.2 s instead of sleeping 5 s. The turn-cap test
   of the agent stream tolerates about 0.5 s of slow start on a busy runner

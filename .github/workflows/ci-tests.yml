@@ -70,8 +70,10 @@ jobs:
         # Plot implementations don't have unit tests
         TESTABLE_CHANGES=$(echo "$CHANGED_FILES" | grep '\.py$' | grep -v '^plots/' || true)
 
-        # Also run tests if test configuration files change
-        CONFIG_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(pyproject\.toml|pytest\.ini|conftest\.py)$' || true)
+        # Also run tests when the test configuration, the lock file, a workflow or action,
+        # or a prompt changes: tests/unit/workflows parses every workflow YAML and
+        # tests/unit/prompts reads the prompt files, so those changes are testable too.
+        CONFIG_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(pyproject\.toml|pytest\.ini|conftest\.py|uv\.lock)$|^(\.github/workflows/|\.github/actions/|prompts/)' || true)
 
         # Force run on workflow_dispatch with force_run=true
         if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.force_run }}" == "true" ]]; then
@@ -161,7 +163,7 @@ jobs:
         uv run pytest tests/unit tests/integration tests/e2e \
           -v --tb=short \
           -n 4 --dist worksteal --durations=25 \
-          --cov=core --cov=api --cov=automation --cov=agentic/workflows/modules \
+          --cov=core --cov=api --cov=automation --cov=agentic/workflows/modules --cov=agents \
           --cov-report=term-missing \
           --cov-report=xml
       # Tests include:

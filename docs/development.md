@@ -86,7 +86,7 @@ four CPUs of the hosted runner:
 
 ```bash
 uv run pytest tests/unit tests/integration tests/e2e -n 4 --dist worksteal --durations=25 \
-  --cov=core --cov=api --cov=automation --cov=agentic/workflows/modules
+  --cov=core --cov=api --cov=automation --cov=agentic/workflows/modules --cov=agents
 ```
 
 `-n` is not in the pytest defaults, so a single file or test still runs in one
