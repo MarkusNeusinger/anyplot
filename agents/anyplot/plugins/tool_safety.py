@@ -1,7 +1,8 @@
 """ToolSafety: which agent may call which tool, with which arguments, and what comes back.
 
-* `before_tool_callback`: a per-agent allowlist (the root's seven session tools; none
-  for the adapters and the reviewer); Pydantic validation of the arguments (ADK
+* `before_tool_callback`: a per-agent allowlist (the root's six session tools and its
+  `plot_pipeline` workflow; none for the adapters and the reviewer); Pydantic
+  validation of the arguments (ADK
   leaves `FUNCTION_TOOL_ARG_VALIDATION` off; `prepare_data` takes at most five
   operations of the `Operation` union and `generate_data` the `generate.Generate`
   spec, and the `invalid_arguments` refusal of either carries the validation lines

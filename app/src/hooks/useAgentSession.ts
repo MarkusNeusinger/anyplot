@@ -1280,7 +1280,8 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
    * `.send()` next to a refused formula: the text goes to the chat as the
    * user's turn, where the assistant's `generate_data` computes the table. The
    * returned promise ends with that turn. While anything else is in flight
-   * nothing starts and the offer stays.
+   * nothing starts and the offer stays. The text always fits a turn: the
+   * dataset route refuses only text within the chat's cap as a formula.
    */
   const sendFormula = useCallback(() => {
     const current = stateRef.current;

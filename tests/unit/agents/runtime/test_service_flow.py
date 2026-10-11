@@ -22,6 +22,7 @@ import pytest
 from google.genai import types
 
 from agents.anyplot import pipeline
+from agents.anyplot.data.generate import looks_like_formula
 from agents.anyplot.data.transcribe import MAX_TRANSCRIBE_CHARS, TranscribedTable
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.models import (
@@ -44,7 +45,7 @@ from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import read_session
 from agents.anyplot.settings import get_settings
 from agents.anyplot.sub_agents.adapter import ADAPTERS
-from agents.main import DATASET_JUDGE_CONCURRENCY, Runtime, app, get_runtime
+from agents.main import DATASET_JUDGE_CONCURRENCY, MAX_MESSAGE_CHARS, Runtime, app, get_runtime
 
 from .conftest import CASES
 from .fakes import (
@@ -2271,6 +2272,16 @@ async def test_a_formula_in_the_data_field_is_refused_and_never_transcribed(
     )
     assert literal.status_code == 200 and "transcribed" not in literal.json()
     assert literal.json()["profile"]["rows"] == 2 and len(judge.transcribe_calls) == len(data)
+
+    # A formula the chat could not take (over `MAX_MESSAGE_CHARS`) is the transcriber's after
+    # all: the page's offer sends the refused text to the chat, so only text that fits a turn
+    # is refused, and the transcriber's rubric computes nothing.
+    long_formula = "y = sin(x) from -pi to pi\n" + "note: the curve is drawn for the quarterly report\n" * 45
+    assert MAX_MESSAGE_CHARS < len(long_formula) <= MAX_TRANSCRIBE_CHARS and looks_like_formula(long_formula)
+    judge.transcriptions = [_reading(["Name", "Wert"], [["a", "1"], ["b", "2"]])]  # the fake reader's table
+    read = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": long_formula})
+    assert read.status_code == 200 and read.json()["transcribed"] is True
+    assert [line["outcome"] for line in attribution_lines(caplog, "data_transcribe")].count("formula") == len(formulas)
 
 
 async def test_a_dataset_with_personal_data_is_stored(client: httpx.AsyncClient, judge) -> None:

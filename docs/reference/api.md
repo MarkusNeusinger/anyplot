@@ -577,7 +577,9 @@ x from -3.1416 to 3.1416, y = sin(x)`, plus one line per series with values
 the formula does not define (they stay empty). The generated table starts
 from the default bindings for its columns. A formula pasted into the data
 field answers `422 formula` instead, because the free-text reader is a model
-and would write the rows itself. Text that holds its own values is data, not
+and would write the rows itself; only text within the chat's 2,000-character
+cap is refused this way, because the page's offer sends it to the chat as a
+turn. Text that holds its own values is data, not
 a formula: with three numbers or more besides a range, such as `Umsatz von
 2020 bis 2024: 10 12 15 18`, the free-text reader reads it as a table.
 

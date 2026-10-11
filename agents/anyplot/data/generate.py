@@ -523,7 +523,11 @@ _BARE_CALL = re.compile(rf"(?i)(?<![\w.])(?P<name>{_BARE_FUNCTIONS})\s+(?P<arg>[
 """A call written without parentheses, of one one-letter variable: `sin x`, `log x`, `ln t`."""
 _ROOT_SIGN = re.compile(r"√\s*(?:(?P<paren>\()|(?P<arg>[A-Za-z_]\w*|[0-9]+(?:\.[0-9]+)?))")
 _LN = re.compile(r"(?i)(?<![\w.])ln\s*\(")
-_IMPLICIT_PRODUCT = re.compile(r"(?<![\w.])([0-9]+(?:\.[0-9]+)?)(?![eE][+-]?[0-9])(?=[A-Za-z_(])")
+_IMPLICIT_PRODUCT = re.compile(
+    # The boundary before the number is consumed (and written back), not a lookbehind, so the digit
+    # loop can start only after it: linear on any input, which a lookbehind does not make evident.
+    r"(?P<before>^|[^\w.])(?P<number>[0-9]+(?:\.[0-9]+)?)(?![eE][+-]?[0-9])(?=[A-Za-z_(])"
+)
 _ASSIGNMENT = re.compile(
     # A lookahead, so that assignments in a row ("a = 2, y = x**2") are each found.
     r"(?<![\w.=<>!])(?=(?P<lhs>[^\W\d]\w{0,30}(?:\s*\(\s*[^\W\d]\w{0,10}(?:\s*,\s*[^\W\d]\w{0,10})?\s*\))?)"
@@ -556,14 +560,14 @@ _SHAPES = re.compile(
     r"(?i)\b(?:sine|sinus\w*|cosine|[ck]osinus\w*|tangens\w*|parab\w*|hyperb\w*|squared|cubed|quadratic"
     r"|quadratisch\w*|cubic|kubisch\w*|polynom\w*|logarithm\w*|exponential(?:funktion|kurve)\w*"
     r"|exponential\s+(?:function|curve)|wurzelfunktion\w*|square\s+root|quadratwurzel\w*"
-    r"|gau(?:ss|ß)(?:\s*-?\s*kurve|sche\w*|ian|verteilung)\w*|gaussian|normalverteilung\w*"
+    r"|gau(?:ss|ß)(?:\s*(?:-\s*)?kurve\w*|sche\w*|ian\w*|verteilung\w*)|gaussian|normalverteilung\w*"
     r"|normal\s+(?:distribution|curve)|bell\s+curve|glockenkurve\w*|spiralen?|spirals?)\b"
 )
 """The names of a curve. Words that data has as well (`curve`, `Kurve`, `function`, `exp`, `exponential growth`,
 `Quadratmeter`) are none: a formula request needs more than they say."""
 _COUNT = re.compile(
-    r"(?i)(?<![\w.])[0-9]+\s*(?:points?|punkte?n?|werte?n?|values?|samples?|stützstellen|steps?|schritte?n?)\b"
-    r"|\b(?:in\s+steps\s+of|step(?:\s+size)?|schrittweite|(?:in\s+)?schritten\s+von|abstand)\s*[:=]?\s*"
+    r"(?i)(?:^|[^\w.])[0-9]+\s*(?:points?|punkte?n?|werte?n?|values?|samples?|stützstellen|steps?|schritte?n?)\b"
+    r"|\b(?:in\s+steps\s+of|step(?:\s+size)?|schrittweite|(?:in\s+)?schritten\s+von|abstand)\s*(?:[:=]\s*)?"
     r"[-+−]?[0-9]+(?:[.,][0-9]+)?"
 )
 """A point count or a step (`30 points`, `mit 50 Punkten`, `in Schritten von 0.5`): part of a formula request."""
@@ -737,7 +741,7 @@ def _parse_formula(text: str, *, implicit_product: bool) -> ast.expr | None:
     normalised = _ROOT_SIGN.sub(lambda m: "sqrt(" if m.group("paren") else f"sqrt({m.group('arg')})", normalised)
     normalised = _BARE_CALL.sub(lambda m: f"{_bare_name(m.group('name'))}({m.group('arg')})", normalised)
     if implicit_product:
-        normalised = _IMPLICIT_PRODUCT.sub(r"\1*", normalised)
+        normalised = _IMPLICIT_PRODUCT.sub(r"\g<before>\g<number>*", normalised)
     if not normalised:
         return None
     try:

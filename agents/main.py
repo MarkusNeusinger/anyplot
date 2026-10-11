@@ -12,7 +12,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, roles, version}`, stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips only that fallback) | `413 too_long`, `422 unparseable`, `422 formula` (text that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, roles, version}`, stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips only that fallback) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `503 guard_unavailable` |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles}` | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
 | `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, roles, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
@@ -656,10 +656,12 @@ def _refuse_formula(ledger: RequestLedger, text: str) -> None:
 
     The transcriber would compute such text into rows, which is the one thing no model
     may do: a formula is the root's `generate_data`, asked for in the chat, where the
-    server computes the table. Writes a `data_transcribe` attribution line with the
-    outcome `formula` (no text, no tokens).
+    server computes the table. Only text the chat takes (`MAX_MESSAGE_CHARS`) is
+    refused, because the page's offer sends the refused text to the chat as a turn;
+    longer text goes on to the transcriber, whose rubric computes nothing. Writes a
+    `data_transcribe` attribution line with the outcome `formula` (no text, no tokens).
     """
-    if looks_like_formula(text):
+    if len(text) <= MAX_MESSAGE_CHARS and looks_like_formula(text):
         attribution("data_transcribe", ledger, outcome="formula")
         raise AgentsError(422, "formula")
 
