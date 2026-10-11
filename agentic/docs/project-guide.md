@@ -66,6 +66,10 @@ uv run pytest tests/e2e
 # Run with coverage (sources configured in pyproject.toml)
 uv run pytest tests/unit tests/integration --cov --cov-report=html
 
+# Run the unit and integration suites on one worker per CPU (pytest-xdist; CI runs
+# unit, integration and E2E with -n 4 --dist worksteal)
+uv run pytest tests/unit tests/integration -n auto
+
 # Run specific test file
 uv run pytest tests/unit/api/test_routers.py
 
@@ -749,7 +753,7 @@ Issue ready for maintainer review
 | Workflow | Purpose |
 |----------|---------|
 | **ci-lint.yml** | Ruff linting on PR |
-| **ci-tests.yml** | Unit tests on PR, plus the characteristic-section lint on every run (contract over every spec, blocking; style of changed specs, warnings) |
+| **ci-tests.yml** | Unit, integration and E2E tests on PR (E2E against the Cloud SQL `test` database through the proxy), on four pytest-xdist workers (`-n 4 --dist worksteal`) with coverage, plus the characteristic-section lint on every run (contract over every spec, blocking; style of changed specs, warnings) |
 | **ci-image.yml** | Builds `api/Dockerfile` and smoke-tests the container on PR (health, reported version vs `pyproject.toml`, the runtime stage's COPY payload, non-root uid) plus hadolint on both Dockerfiles; skips when only `plots/**` or frontend sources changed. Two more jobs build the agent network's images: `agents/renderer/Dockerfile` (a seaborn render through the harness) and `agents/Dockerfile` (`/v1/status` reports its configured model and libraries, the production default refuses an anonymous caller, the prompts and fonts are in the image) |
 | **sync-postgres.yml** | Syncs plots/ to database on push to main |
 | **sync-labels.yml** | Auto-syncs labels after manual PR merges (spec-ready, impl:*:done) |

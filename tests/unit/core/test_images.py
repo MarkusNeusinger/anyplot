@@ -872,6 +872,7 @@ class TestGetMonolisaFontPath:
         ):
             assert core.images._get_monolisa_font_path() is None
             assert not target.exists()
+            assert not list(tmp_path.glob("*.part"))
             assert core.images._get_monolisa_font_path() is None
 
         assert client_cls.call_count == 1
@@ -917,7 +918,38 @@ class TestGetMonolisaFontPath:
         mock_blob.download_to_filename.assert_called_once()
         assert result == tmp_path / "MonoLisaCodeUpright.ttf"
         assert result.read_bytes() == b"font bytes"
-        assert not (tmp_path / "MonoLisaCodeUpright.ttf.part").exists()
+        assert not list(tmp_path.glob("*.part"))
+
+    def test_each_process_downloads_into_its_own_partial_file(self, tmp_path: Path) -> None:
+        """The lock serializes one process's threads only, and the cache directory
+        is shared by every process on the host (pytest-xdist workers in CI). A
+        `.part` named after the process keeps a peer's download from truncating
+        this one's file, and this process never touches the peer's."""
+        import os
+        from unittest.mock import MagicMock, patch
+
+        import core.images
+
+        peer = tmp_path / f"MonoLisaCodeUpright.ttf.{os.getpid() + 1}.part"
+        peer.write_bytes(b"half of a peer's download")
+        written: list[str] = []
+
+        def download(filename: str) -> None:
+            written.append(Path(filename).name)
+            Path(filename).write_bytes(b"font bytes")
+
+        mock_client = MagicMock()
+        mock_client.bucket.return_value.blob.return_value.download_to_filename.side_effect = download
+
+        with (
+            patch("core.images.FONT_CACHE_DIR", tmp_path),
+            patch("google.cloud.storage.Client", return_value=mock_client),
+        ):
+            assert core.images._get_monolisa_font_path() == tmp_path / "MonoLisaCodeUpright.ttf"
+
+        assert written == [f"MonoLisaCodeUpright.ttf.{os.getpid()}.part"]
+        assert (tmp_path / "MonoLisaCodeUpright.ttf").read_bytes() == b"font bytes"
+        assert peer.read_bytes() == b"half of a peer's download"
 
     def test_concurrent_misses_download_once_and_never_lose_the_font(self, tmp_path: Path) -> None:
         """Renders run in worker threads, two at a time. Two threads that miss the
@@ -975,7 +1007,7 @@ class TestGetMonolisaFontPath:
             assert core.images._get_monolisa_font_path() is None
 
         assert (tmp_path / "MonoLisaCodeItalic.ttf").read_bytes() == b"italic bytes"
-        assert not (tmp_path / "MonoLisaCodeUpright.ttf.part").exists()
+        assert not list(tmp_path.glob("*.part"))
 
     def test_returns_none_on_gcs_exception(self, tmp_path: Path) -> None:
         """Should return None gracefully when GCS download fails."""

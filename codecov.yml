@@ -37,6 +37,7 @@ flags:
       - api/
       - automation/
       - agentic/workflows/modules/
+      - agents/
     carryforward: true
   frontend:
     paths:
