@@ -7,9 +7,9 @@
   version's theme, so a change keeps it), which ADK sends
   as a marked instruction block after the static prefix. Catalogue text such as the
   spec title started as a public issue, so it never enters that block: the root reads
-  it fenced as `<spec_text>` through `get_spec_brief`. Its tools are the five session
-  tools (`prepare_data` among them, the step-1 data operations) and the `plot_pipeline`
-  NodeTool.
+  it fenced as `<spec_text>` through `get_spec_brief`. Its tools are the six session
+  tools (`prepare_data` and `generate_data` among them, the step-1 data operations and
+  the formula source) and the `plot_pipeline` NodeTool.
 * The adapters (one per enabled library) and the reviewer run only inside the
   pipeline through `ctx.run_node`, so a walk from the root would miss them;
   `ALL_AGENTS` lists every agent for the registry test.
@@ -76,7 +76,9 @@ async def session_context(context: ReadonlyContext) -> str:
     ]
     dataset = services.datasets.get(view.dataset_id, session_id) if view.dataset_id else None
     if dataset is None:
-        lines.append("- Dataset: none yet; the user pastes it in the data panel")
+        lines.append(
+            "- Dataset: none yet; the user pastes it in the data panel, or generate_data computes it from a formula"
+        )
     else:
         profile = dataset.profile
         lines.append(f"- Dataset: {profile.rows} rows, {len(profile.columns)} columns")

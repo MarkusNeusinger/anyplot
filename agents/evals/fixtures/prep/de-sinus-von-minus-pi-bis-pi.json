@@ -1,0 +1,12 @@
+{
+  "message": "zeichne sin(x) von -pi bis pi",
+  "expected_operations": [
+    {
+      "op": "generate_data",
+      "variables": [{"name": "x", "start": "-pi", "stop": "pi", "points": 200}],
+      "series": [{"name": "y", "expression": "sin(x)"}]
+    }
+  ],
+  "locale": "de",
+  "tags": ["generate_data", "formula", "no_dataset"]
+}

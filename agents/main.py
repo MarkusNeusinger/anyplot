@@ -12,11 +12,11 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, roles, version}`, stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips only that fallback) | `413 too_long`, `422 unparseable`, `403 data_refused`, `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, roles, version}`, stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips only that fallback) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `503 guard_unavailable` |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles}` | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
-| `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, roles, version}`: the dataset version before the root's last `prepare_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
-| `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` (`create_plot`, `summarize_data`) | SSE `anyplot/1`; the `done` event carries `dataset` after a turn whose `prepare_data` changed the data | `413 too_long`, `409 run_active`, `503 capacity` |
+| `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, roles, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
+| `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` (`create_plot`, `summarize_data`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data | `413 too_long`, `409 run_active`, `503 capacity` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
 | `GET /v1/sessions/{sid}/artifacts/{name}?v=` | | the file | `404` |
@@ -98,6 +98,7 @@ from starlette.background import BackgroundTask
 
 from agents.anyplot import agent as agent_module
 from agents.anyplot.code.readiness import MAP_SPECS
+from agents.anyplot.data.generate import looks_like_formula
 from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParseError, parse_dataset
 from agents.anyplot.data.roles import DataRole
 from agents.anyplot.data.store import StoreFull
@@ -133,7 +134,7 @@ from agents.anyplot.session_state import (
 )
 from agents.anyplot.settings import AgentSettings, get_settings
 from agents.anyplot.theme_render import RenderGone, render_theme
-from agents.stream import Translator
+from agents.stream import MAX_DONE_ROLES, Translator
 from core.constants import SUPPORTED_LIBRARIES
 
 
@@ -614,12 +615,15 @@ async def upload_dataset(
     except ParseError as exc:
         if exc.code == "too_long":
             raise AgentsError(413, "too_long") from None
+        if exc.code in ("no_table", "unparseable"):
+            _refuse_formula(ledger, body.text)
         # Text with no table in it (prose, a list on one line) is the transcriber's; a broken
         # table (ragged rows, bad quoting, an over-long cell, invalid JSON) stays the parser's refusal.
         if exc.code == "no_table" and transcribable(body.text):
             return await _transcribe(services, ledger, body.text)
         raise AgentsError(422, "unparseable") from None
     if not body.confirmed and looks_like_free_text(parsed) and transcribable(body.text):
+        _refuse_formula(ledger, body.text)
         return await _transcribe(services, ledger, body.text)
     if not services.usage.daily_ok(user, get_settings()):
         raise AgentsError(429, "rate_limited")
@@ -645,6 +649,21 @@ async def upload_dataset(
         },
         headers=_NO_STORE,
     )
+
+
+def _refuse_formula(ledger: RequestLedger, text: str) -> None:
+    """`422 formula` for pasted text that asks for a formula (`generate.looks_like_formula`), before any model reads it.
+
+    The transcriber would compute such text into rows, which is the one thing no model
+    may do: a formula is the root's `generate_data`, asked for in the chat, where the
+    server computes the table. Only text the chat takes (`MAX_MESSAGE_CHARS`) is
+    refused, because the page's offer sends the refused text to the chat as a turn;
+    longer text goes on to the transcriber, whose rubric computes nothing. Writes a
+    `data_transcribe` attribution line with the outcome `formula` (no text, no tokens).
+    """
+    if len(text) <= MAX_MESSAGE_CHARS and looks_like_formula(text):
+        attribution("data_transcribe", ledger, outcome="formula")
+        raise AgentsError(422, "formula")
 
 
 async def _transcribe(services: Services, ledger: RequestLedger, text: str) -> JSONResponse:
@@ -832,12 +851,13 @@ async def confirm_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
 
 @app.post("/v1/sessions/{sid}/dataset/undo", dependencies=v1_dependencies)
 async def undo_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JSONResponse:
-    """The user's undo of the root's last `prepare_data`: the version before it is the current dataset again.
+    """The user's undo of the root's last `prepare_data` or `generate_data`: the version before it is current again.
 
     The session keeps the last five versions (`dataset_versions.MAX_DATASET_HISTORY`);
     the bindings are carried over like after a `prepare_data`, and the restored version
     is unconfirmed, because the user confirms every version they see. `422
-    nothing_to_undo` for a paste that was never prepared (or whose history is spent).
+    nothing_to_undo` for a paste that was never prepared (or whose history is spent),
+    and for data that `generate_data` made in a session without data (its version 1).
     """
     services = get_services()
     session = await runtime.session(user, sid)
@@ -860,11 +880,13 @@ async def _session_sync(
     """The `done` event's sync fields after a turn: the bindings, whether the data is confirmed, a changed dataset.
 
     The root's `set_bindings` tool may have changed the bindings (and dropped the
-    confirmation) during the turn, and its `prepare_data` tool the dataset itself: when
-    the dataset id differs from `dataset_before`, `dataset` carries the new version as
-    the dataset route would answer it, plus the turn's change lines from the ledger. The
-    page learns both from `done`. Empty when the session is gone, so the stream still
-    closes.
+    confirmation) during the turn, and its `prepare_data` or `generate_data` tool the
+    dataset itself: when the dataset id differs from `dataset_before`, `dataset` carries
+    the new version as the dataset route would answer it (`roles` included, because a
+    `generate_data` in a session without data stores its first version, and the page
+    learns the spec's roles only from a dataset answer), plus the turn's change lines
+    from the ledger. The page learns both from `done`. Empty when the session is gone,
+    so the stream still closes.
     """
     try:
         session = await runtime.session(user, sid)
@@ -881,7 +903,11 @@ async def _session_sync(
         stored = get_services().datasets.get(view.dataset_id, sid)
         if stored is not None:
             changes = list(ledger.dataset_changes) if ledger is not None else []
-            payload["dataset"] = {**dataset_payload(stored, view.bindings, view.dataset_version), "changes": changes}
+            payload["dataset"] = {
+                **dataset_payload(stored, view.bindings, view.dataset_version),
+                "roles": [_role_body(role) for role in view.snapshot.roles()[:MAX_DONE_ROLES]],
+                "changes": changes,
+            }
     return payload
 
 

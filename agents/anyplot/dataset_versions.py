@@ -1,4 +1,4 @@
-"""Dataset versions of a session: `prepare_data` stores the next one, `undo` restores the previous one.
+"""Dataset versions of a session: `prepare_data` or `generate_data` stores the next, `undo` restores the previous.
 
 The design is docs/concepts/agent-network.md, "Two steps: data first, then the plot":
 the model never writes data rows; the server applies the operations it chose to the
@@ -11,7 +11,9 @@ with a change list, and the user can undo. The state keys (`session_state.py`):
   (1 for a paste, one more per `prepare_data`, one less per undo), so a number above
   1 means there is a version to undo. A new paste starts over (`IngestedDataset`).
 * The bindings follow the data through `carry_bindings`: the ones still valid for the
-  new profile stay, the roles left without one get the defaults. The confirmation
+  new profile stay, the roles left without one get the defaults. A generated table
+  (`generate_data`) replaces the data rather than changing it, so its version starts
+  from the defaults (`push_version(rebind=True)`). The confirmation
   (`CONFIRMED`) names the dataset id, so a new version is unconfirmed by itself; an
   undo clears it, because the restored version's id could match a confirmation given
   before the change.
@@ -24,7 +26,7 @@ with a change list, and the user can undo. The state keys (`session_state.py`):
 from dataclasses import dataclass
 from typing import Any
 
-from .data.bindings import carry_bindings
+from .data.bindings import carry_bindings, default_bindings
 from .data.parse import ParsedDataset
 from .data.store import DatasetStore, StoredDataset
 from .schemas import Binding
@@ -69,12 +71,22 @@ def dataset_payload(stored: StoredDataset, bindings: list[Binding], version: int
 
 
 def push_version(
-    store: DatasetStore, session_id: str, view: SessionView, parsed: ParsedDataset, snapshot: CatalogueSnapshot
+    store: DatasetStore,
+    session_id: str,
+    view: SessionView,
+    parsed: ParsedDataset,
+    snapshot: CatalogueSnapshot,
+    *,
+    rebind: bool = False,
 ) -> DatasetVersion:
     """Store `parsed` as the session's next dataset version; raises `StoreFull` (nothing changes then).
 
     The current dataset joins the history; the oldest entries past `MAX_DATASET_HISTORY`
-    leave the store. The bindings are carried over (`carry_bindings`).
+    leave the store. The bindings are carried over (`carry_bindings`) for a change of the
+    data (`prepare_data`); `rebind` gives the defaults for the new profile instead
+    (`default_bindings`), for a table that replaces the data (`generate_data`), where a
+    choice made for the old columns says nothing about the new ones even when a name
+    such as `x` returns.
     """
     dataset_id = store.put(session_id, parsed)
     history = [*view.dataset_history, view.dataset_id] if view.dataset_id else list(view.dataset_history)
@@ -83,7 +95,10 @@ def push_version(
     history = history[-MAX_DATASET_HISTORY:]
     stored = store.get(dataset_id, session_id)
     assert stored is not None  # just stored for this session
-    bindings = carry_bindings(view.bindings, snapshot.roles(), stored.profile)
+    roles = snapshot.roles()
+    bindings = (
+        default_bindings(roles, stored.profile) if rebind else carry_bindings(view.bindings, roles, stored.profile)
+    )
     version = view.dataset_version + 1
     return DatasetVersion(dataset_id, stored, bindings, version, _delta(dataset_id, bindings, history, version))
 

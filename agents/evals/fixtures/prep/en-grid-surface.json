@@ -1,0 +1,15 @@
+{
+  "message": "z = sin(x)*cos(y) for x and y from -2 to 2, 30 points each",
+  "expected_operations": [
+    {
+      "op": "generate_data",
+      "variables": [
+        {"name": "x", "start": "-2", "stop": "2", "points": 30},
+        {"name": "y", "start": "-2", "stop": "2", "points": 30}
+      ],
+      "series": [{"name": "z", "expression": "sin(x)*cos(y)"}]
+    }
+  ],
+  "locale": "en",
+  "tags": ["generate_data", "formula", "grid", "no_dataset"]
+}

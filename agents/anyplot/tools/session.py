@@ -23,6 +23,17 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   answers its code and its message (which names columns at most, fenced too).
   Refused while the pipeline runs. The model never writes data rows: the operations
   only move, type or aggregate the cells that are there.
+* `generate_data(variables, series)`: a table computed by the server from formulas
+  (`data/generate.py`): one or two variables, each a range of evenly spaced points,
+  and one to ten series, each an expression over them. The table is parsed like a
+  paste and stored as the session's next dataset version (`push_version`, the
+  previous data kept for undo) or, in a session without data, as version 1 the way
+  the dataset route stores a paste. Either way the confirmation drops by itself, the
+  bindings are the defaults for the new columns (`push_version(rebind=True)`: a
+  binding made for the old data is not carried over, even where a column name such as
+  `x` returns), and the turn's `done` carries the version with its change line. The result has `prepare_data`'s shape; a
+  `GenerateError` answers its code and its message (fenced). Refused while the
+  pipeline runs. The model writes no rows: it chooses the spec, NumPy computes it.
 * `plot_pipeline`: the `Workflow` around `pipeline.run_pipeline`, which ADK exposes as
   a NodeTool with the input schema `PipelineArgs` (`change_request`, `base`, `theme`).
   The tool name is the workflow name, so it stays stable.
@@ -36,10 +47,12 @@ from google.adk.tools.tool_context import ToolContext
 from pydantic import TypeAdapter, ValidationError
 
 from ..briefs import spec_brief, trimmed_profiles
-from ..data.parse import ParseError, parse_dataset
+from ..data.generate import Generate, GenerateError, generate
+from ..data.parse import ParsedDataset, ParseError, parse_dataset
 from ..data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations, validation_lines
 from ..data.store import StoreFull
 from ..dataset_versions import push_version
+from ..opening import store_dataset
 from ..pipeline import run_pipeline
 from ..plugins.ledger import ledger_for
 from ..plugins.tool_safety import result_limit, result_size
@@ -201,6 +214,73 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     return _with_profile(base, parsed.profile, "prepare_data")
 
 
+async def generate_data(
+    variables: list[dict[str, Any]], series: list[dict[str, Any]], tool_context: ToolContext
+) -> dict[str, Any]:
+    """Compute the user's data from formulas, for a function or a curve instead of a pasted table; the server computes the rows and stores them as the next version of the data, which the user then checks and confirms.
+
+    variables: one or two ranges {"name": "x", "start": "-pi", "stop": "pi", "points": 200}; start and stop are
+    numbers or expressions over the constants pi, e and tau; points is 2 to 5000 (default 200); two variables make a
+    grid (every pair, at most 10000 rows: set points on both, such as 50). The table holds at most 200 KB, about 6000
+    rows of three columns of 8-digit numbers. series: one to ten {"name": "y",
+    "expression": "sin(x)"}, each an expression over the variables with numbers, pi, e, tau, + - * / ** % //,
+    parentheses and the functions sin cos tan asin acos atan sinh cosh tanh exp log log10 log2 sqrt abs floor ceil
+    round sign atan2 min max. Returns the change lines and the new profile, or an error with a code and a message.
+    """
+    view = _view(tool_context)
+    if view is None:
+        return _error("session_not_open")
+    ledger = ledger_for(tool_context.invocation_id)
+    if ledger.pipeline_active:
+        return _error("run_active")
+    try:
+        spec = Generate.model_validate({"variables": variables, "series": series})
+    except ValidationError as exc:
+        return {"status": "error", "code": "invalid_arguments", "errors": _fenced_lines(validation_lines(exc))}
+    try:
+        generated = generate(spec)
+        parsed = parse_dataset(generated.csv)
+    except GenerateError as exc:
+        # The message names variables and series and quotes the model's own expression at most; fenced all the same.
+        return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
+    except ParseError:  # the generator keeps the parser's caps (size, rows, columns), so a refusal here is a bug
+        return _error("internal")
+    try:
+        delta, number = _store_generated(tool_context.session.id, view, parsed)
+    except StoreFull:
+        return _error("capacity")
+    # A new dataset id leaves the confirmation's fingerprint behind: the user confirms the generated data.
+    for key, value in delta.items():
+        tool_context.state[key] = value
+    changes = [*generated.changes, *generated.warnings]
+    ledger.dataset_changes.extend(changes)
+    base = {
+        "status": "ok",
+        "rows": parsed.profile.rows,
+        "columns": len(parsed.profile.columns),
+        "version": number,
+        "changes": DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(changes, ensure_ascii=False)),
+    }
+    return _with_profile(base, parsed.profile, "generate_data")
+
+
+def _store_generated(session_id: str, view: SessionView, parsed: ParsedDataset) -> tuple[dict[str, Any], int]:
+    """Store a generated table: the next version of the session's data, or version 1 when it has none; raises `StoreFull`.
+
+    A session whose dataset left the store (a restart keeps neither) counts as one
+    without data, so the stale ids are dropped with the history, as a paste drops them.
+    """
+    store = get_services().datasets
+    current = store.get(view.dataset_id, session_id) if view.dataset_id else None
+    if current is not None:
+        version = push_version(store, session_id, view, parsed, view.snapshot, rebind=True)
+        return version.delta, version.version
+    ingested = store_dataset(
+        store, session_id, parsed, view.snapshot, previous_id=view.dataset_id, history=view.dataset_history
+    )
+    return ingested.state_delta(), 1
+
+
 def _fenced_lines(lines: list[str]) -> str:
     """Lines that quote the user's column names (or the model's own values), fenced as data."""
     return DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(lines, ensure_ascii=False))
@@ -219,5 +299,5 @@ plot_pipeline = Workflow(
     edges=[("START", run_pipeline)],
 )
 
-SESSION_TOOLS = (get_dataset_profile, get_spec_brief, get_current_code, set_bindings, prepare_data)
+SESSION_TOOLS = (get_dataset_profile, get_spec_brief, get_current_code, set_bindings, prepare_data, generate_data)
 ROOT_TOOL_NAMES = frozenset({*(tool.__name__ for tool in SESSION_TOOLS), PLOT_PIPELINE})

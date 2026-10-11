@@ -1,7 +1,8 @@
 /**
  * "Use with my data": the admin-only agent chat at `/debug/agent?spec=&library=&language=`.
  *
- * Two steps, data first: paste data, read the assistant's summary of it, fix it
+ * Two steps, data first: paste data (or ask in the chat for a curve, whose
+ * table the assistant computes), read the assistant's summary of it, fix it
  * in plain words if needed (each change shows in the data panel with
  * `.undo()`), check the preview and the role bindings and `.confirm()` them
  * (step 1), then `.create_plot()` and refine in plain words (step 2); every
@@ -373,6 +374,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             onParse={text => void session.parseData(text)}
             onConfirmTranscription={() => void session.confirmTranscription()}
             onDiscardTranscription={session.discardTranscription}
+            onSendFormula={() => void session.sendFormula()}
             onBind={session.setBinding}
             onConfirmData={() => void session.confirmData()}
             onUndo={() => void session.undoData()}
@@ -418,11 +420,16 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
 
             {state.items.length === 0 && !state.run && (
               <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
-                paste your data: the assistant sums it up here, and you can ask it to fix the data
-                in plain words, such as &quot;read Anteil as numbers&quot; or &quot;sum per
-                month&quot;. check the preview and the bindings, confirm, then{' '}
-                <code>.create_plot()</code>. afterwards, ask for changes to the plot: &quot;log
-                scale on y&quot;, &quot;dark version&quot;, &quot;label the outliers&quot;.
+                paste your data, or ask here for a curve: &quot;y = sin(x), x from{' '}
+                <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
+                  -pi
+                </Box>{' '}
+                to pi&quot;, and the assistant computes the table. it sums your data up here, and
+                you can ask it to fix the data in plain words, such as &quot;read Anteil as
+                numbers&quot; or &quot;sum per month&quot;. check the preview and the bindings,
+                confirm, then <code>.create_plot()</code>. afterwards, ask for changes to the plot:
+                &quot;log scale on y&quot;, &quot;dark version&quot;, &quot;label the
+                outliers&quot;.
               </Box>
             )}
 
@@ -447,10 +454,13 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 component="textarea"
                 aria-label="Message"
                 placeholder={
-                  // Step 1 talks about the data, step 2 about the plot.
-                  state.dataset && !state.dataConfirmed
-                    ? 'ask about your data, or for a fix: "sum per month"'
-                    : 'ask about this plot, or ask for a change'
+                  // Step 1 talks about the data, step 2 about the plot. Without
+                  // data, the chat is the other way to get some: a formula.
+                  !state.dataset
+                    ? 'ask for a curve: "y = sin(x), x from -pi to pi"'
+                    : !state.dataConfirmed
+                      ? 'ask about your data, or for a fix: "sum per month"'
+                      : 'ask about this plot, or ask for a change'
                 }
                 value={draft}
                 maxLength={MAX_MESSAGE_CHARS}

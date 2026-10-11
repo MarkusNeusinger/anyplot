@@ -1,0 +1,15 @@
+{
+  "message": "a circle: x = cos(t), y = sin(t) for t from 0 to 2 pi",
+  "expected_operations": [
+    {
+      "op": "generate_data",
+      "variables": [{"name": "t", "start": "0", "stop": "2*pi"}],
+      "series": [
+        {"name": "x", "expression": "cos(t)"},
+        {"name": "y", "expression": "sin(t)"}
+      ]
+    }
+  ],
+  "locale": "en",
+  "tags": ["generate_data", "formula", "parametric", "no_dataset"]
+}

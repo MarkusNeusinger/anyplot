@@ -912,6 +912,7 @@ class TestUpstreamMapping:
             (503, {"detail": "capacity"}, 503, "capacity"),
             (422, {"detail": "no_dataset"}, 422, "no_dataset"),
             (422, {"detail": "nothing_to_undo"}, 422, "nothing_to_undo"),
+            (422, {"detail": "formula"}, 422, "formula"),
             (429, {"detail": "rate_limited"}, 429, "rate_limited"),
             (422, {"detail": "Traceback: KeyError in /app/agents/x.py"}, 422, "invalid"),
             (409, {"detail": ["run_active"]}, 409, "conflict"),

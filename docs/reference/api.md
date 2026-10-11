@@ -477,10 +477,10 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 | `GET /eligibility?spec=&library=` | Spec id and library id | The agents service's answer, passed through |
 | `POST /sessions` | `{spec_id, library, locale}` | `{session_id, eligibility}`; `404 not_found` when the spec has no implementation for the library |
 | `POST /sessions/{sid}/library` | `{spec_id, library}` | Switches the library; the dataset and bindings stay |
-| `POST /sessions/{sid}/dataset` | `{text, confirmed?}`, at most 200 KB (204,800 bytes) of UTF-8 | `{preview, profile, bindings, warnings, roles, version}` for a table, stored as version 1 of the data (an earlier paste's undo history is dropped): CSV, TSV, semicolon or pipe text; JSON as an array of records, an object of column lists, an object of values or an array of `[category, value]` pairs (the last two become the columns `category`, the keys kept as text, and `value`; a repeated key keeps its last value with a warning); the same shapes as a Python literal, also behind an assignment such as `cat_day = {...}`, with single quotes, trailing commas and tuples (text that starts with a bare `(` and is no literal is read as delimited text); a column whose every cell carries the same unit (`65 %`, `15,6 h`, `€ 5`, also with a no-break space) is read as numbers and named `<name> (<unit>)` with a warning, unless the header already names the unit. For text that is no table (prose, a list typed one value per line) of at most 4,000 characters, `{transcribed: true, text, preview, profile, warnings, note}`, the table the judge model read, with its CSV in `text` and nothing stored: the page shows it for confirmation, and confirming posts that CSV through this route again with `confirmed: true`, which skips only the free-text fallback (a one-column table would otherwise be read again), never the parse, the pre-filter, the judge or the store. `413 too_long` above the limit, `422 unparseable` when neither the parser nor the model finds a table, `403 data_refused` when a header, a cell or the raw text addresses an AI (personal data such as names, addresses, e-mail addresses, phone numbers and web addresses is allowed), `503 guard_unavailable` when the judge model does not answer |
+| `POST /sessions/{sid}/dataset` | `{text, confirmed?}`, at most 200 KB (204,800 bytes) of UTF-8 | `{preview, profile, bindings, warnings, roles, version}` for a table, stored as version 1 of the data (an earlier paste's undo history is dropped): CSV, TSV, semicolon or pipe text; JSON as an array of records, an object of column lists, an object of values or an array of `[category, value]` pairs (the last two become the columns `category`, the keys kept as text, and `value`; a repeated key keeps its last value with a warning); the same shapes as a Python literal, also behind an assignment such as `cat_day = {...}`, with single quotes, trailing commas and tuples (text that starts with a bare `(` and is no literal is read as delimited text); a column whose every cell carries the same unit (`65 %`, `15,6 h`, `€ 5`, also with a no-break space) is read as numbers and named `<name> (<unit>)` with a warning, unless the header already names the unit. For text that is no table (prose, a list typed one value per line) of at most 4,000 characters, `{transcribed: true, text, preview, profile, warnings, note}`, the table the judge model read, with its CSV in `text` and nothing stored: the page shows it for confirmation, and confirming posts that CSV through this route again with `confirmed: true`, which skips only the free-text fallback (a one-column table would otherwise be read again), never the parse, the pre-filter, the judge or the store. `413 too_long` above the limit, `422 unparseable` when neither the parser nor the model finds a table, `422 formula` when the text asks for a formula such as `sin(x) von -pi bis pi` or `y = x**2` (no model reads it; ask for the formula in the chat, where the assistant computes the table, see [Data changes](#data-changes)), `403 data_refused` when a header, a cell or the raw text addresses an AI (personal data such as names, addresses, e-mail addresses, phone numbers and web addresses is allowed), `503 guard_unavailable` when the judge model does not answer |
 | `PUT /sessions/{sid}/bindings` | `[{role, column}]`, at most 50 | The agents service's `{bindings, complete, missing_roles}`; `422 no_dataset` before a parse, `422 invalid` with the check's `errors` lines for a binding the spec roles or the columns refuse. A change of the bindings drops the data confirmation below |
 | `POST /sessions/{sid}/dataset/confirm` | none | Step 1 of two: you confirm that the stored dataset and its bindings fit; `{confirmed: true, rows, columns}`. The plot pipeline runs only on confirmed data (`create_plot` before it answers `plot{status: "not_ready", reason: "data_unconfirmed"}`); a new paste, a transcription's `.use()`, a binding change, a change of the data by the assistant or an undo drops the confirmation, a library switch keeps it. `422 no_dataset` before a parse, `409 run_active` while a turn or a render is in flight |
-| `POST /sessions/{sid}/dataset/undo` | none | Undo the assistant's last change to the data (see [Data changes](#data-changes)): the version before it is the current dataset again, `{preview, profile, bindings, warnings, roles, version}` like the dataset route, unconfirmed. The service keeps the last five versions. `422 nothing_to_undo` when the paste was never changed, `409 run_active` while a turn or a render is in flight |
+| `POST /sessions/{sid}/dataset/undo` | none | Undo the assistant's last change to the data (see [Data changes](#data-changes)): the version before it is the current dataset again, `{preview, profile, bindings, warnings, roles, version}` like the dataset route, unconfirmed. The service keeps the last five versions. `422 nothing_to_undo` when the paste was never changed or the first data came from a formula, `409 run_active` while a turn or a render is in flight |
 | `POST /sessions/{sid}/messages` | `{text}` (at most 2,000 characters), `{"action": "create_plot"}` or `{"action": "summarize_data"}` | An SSE stream in protocol `anyplot/1`; `413 too_long` above the limit, `409 run_active` while you have a queued or running turn or a theme render in any session, `503 capacity` when the run queue is full. `summarize_data` asks the assistant for the step-1 summary of the data (rows, columns with types and units, missing values, percentages, the proposed bindings, one question when something is ambiguous) without the scope judge, like `create_plot` |
 | `POST /sessions/{sid}/cancel` | None | `204`; a turn that still waits leaves the run queue |
 | `POST /sessions/{sid}/versions/{version}/render` | `{"theme": "light"}` or `{"theme": "dark"}`; `version` is 0 to 999, where 0 is the latest version | `{status, reason?, artifacts}` once the render is done (see [Theme toggle](#theme-toggle)) |
@@ -562,6 +562,27 @@ current one, so after more than five changes the history ends above version 1,
 and an undo with nothing left answers `422 nothing_to_undo`. A new paste
 starts over at version 1 and drops the history.
 
+You can also ask for a mathematical function or curve instead of your data,
+such as `sin(x)` from -pi to pi, a parabola or a parametric circle. The
+assistant's `generate_data` tool then chooses a spec, never rows: one or two
+variables, each a range of evenly spaced points (200 by default, at most
+5,000; two variables make a grid of at most 10,000 rows), and one to ten
+series, each an expression over the variables with numbers, `pi`, `e`, `tau`,
+`+ - * / ** % //`, parentheses and a fixed set of functions (`sin`, `cos`,
+`exp`, `log`, `sqrt`, `atan2`, `min`, `max` and others). The agents service
+computes the table and stores it like a change: as the next version when the
+session has data, which you can undo, or as version 1 when it has none. The
+turn's `done` event carries it with a change line such as `generated 200 rows:
+x from -3.1416 to 3.1416, y = sin(x)`, plus one line per series with values
+the formula does not define (they stay empty). The generated table starts
+from the default bindings for its columns. A formula pasted into the data
+field answers `422 formula` instead, because the free-text reader is a model
+and would write the rows itself; only text within the chat's 2,000-character
+cap is refused this way, because the page's offer sends it to the chat as a
+turn. Text that holds its own values is data, not
+a formula: with three numbers or more besides a range, such as `Umsatz von
+2020 bis 2024: 10 12 15 18`, the free-text reader reads it as a table.
+
 ### Theme toggle
 
 A chat turn renders the plot in one theme: light, unless you ask for a dark
@@ -614,7 +635,7 @@ is in [Agent network design](../concepts/agent-network.md#footer-strip).
 | `plot` | `{status, reason, attempts, artifacts, changes, residual_defects, version}`; `version` only on `ok` and `needs_attention` |
 | `refusal` | `{code, text}`; `code` is `out_of_scope`, `needs_data` (the request needs data the service would have to fetch), `unsupported_content` or `budget`, and `text` is the fixed reply for it in the language the scope judge detects in your message, or in the session's locale for a refusal sent before the judge runs (`budget`, `unsupported_content`): English, German, French, Spanish, Italian, Portuguese, Dutch or Polish, and English for any other language |
 | `error` | `{code, ref}`; `code` is `capacity` (also when the turn waited the run queue's maximum of 600 seconds, or the BFF's turn cap ran out while it waited), `deadline`, `guard_unavailable`, `upstream`, or `internal`; `ref` is the request id |
-| `done` | `{llm_calls, tokens, bindings?, data_confirmed?, dataset?}`: after a run, the session's bindings and whether the data is confirmed, so the page syncs its dropdowns and its step after a turn in which the root's `set_bindings` changed them; `dataset` only after a turn in which the assistant changed the data (see [Data changes](#data-changes)): `{preview, profile, bindings, warnings, changes, version}`, the dataset route's shape plus the turn's change lines, for the page's preview table |
+| `done` | `{llm_calls, tokens, bindings?, data_confirmed?, dataset?}`: after a run, the session's bindings and whether the data is confirmed, so the page syncs its dropdowns and its step after a turn in which the root's `set_bindings` changed them; `dataset` only after a turn in which the assistant changed the data or computed it from a formula (see [Data changes](#data-changes)): `{preview, profile, bindings, warnings, roles, changes, version}`, the dataset route's shape (`roles` at most 50) plus the turn's change lines, for the page's preview table; `version` is 1 when a formula made the session's first data |
 
 The BFF re-frames the upstream stream instead of forwarding it. It assembles
 each complete event and drops events of any other type, events without a type,
@@ -660,7 +681,7 @@ the kill switch, the CSRF guard, and the `invalid_text` check leave out `ref`,
 and the admin gate and FastAPI's own `422` keep the API-wide shapes. An
 upstream `4xx` or `5xx`
 keeps its status. Its code is one the agents service documents (`not_eligible`,
-`run_active`, `too_long`, `unparseable`, `data_refused`, `session_expired`,
+`run_active`, `too_long`, `unparseable`, `formula`, `data_refused`, `session_expired`,
 `guard_unavailable` and `capacity` (both `503`, worth a retry), `no_dataset`,
 `nothing_to_undo`, `rate_limited`) or
 a generic one for the status (`bad_request`, `not_found`, `conflict`,

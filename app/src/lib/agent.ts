@@ -115,22 +115,37 @@ export interface DatasetParsed {
 }
 
 /**
- * A data version the assistant made in step 1 (`done.dataset`, after its
- * `prepare_data` changed the data): the dataset route's shape without the
- * roles, plus one English line per operation. The data is unconfirmed again.
+ * A data version the assistant made in step 1 (`done.dataset`): its
+ * `prepare_data` changed the data, or its `generate_data` computed a table from
+ * a formula. The dataset route's shape plus one English line per operation.
+ * The data is unconfirmed again.
  */
 export interface DatasetChanged {
   /** Up to 20 data rows (the header is `profile.columns[].name`). */
   preview: string[][];
   profile: DatasetProfile;
-  /** The bindings carried over to the new version. */
+  /** The bindings carried over to the new version, or a generated table's defaults. */
   bindings: Binding[];
   warnings: string[];
-  /** What changed, one line per operation, such as `dropped 1 row where Tier = 'Gesamt'`. */
+  /**
+   * Every role of the spec, at most `MAX_DONE_ROLES`; absent from an agents
+   * service older than this field, and dropped whole when one entry is malformed.
+   */
+  roles?: RoleSpec[];
+  /**
+   * What changed, one line per operation, such as `dropped 1 row where Tier =
+   * 'Gesamt'` or `generated 200 rows: x from -3.1416 to 3.1416, y = sin(x)`.
+   */
   changes: string[];
-  /** 2 or more: the paste is version 1. */
+  /**
+   * The next version after a change (2 or more), or 1 when `generate_data`
+   * made the session's first data, which has nothing to undo.
+   */
   version: number;
 }
+
+/** The spec roles a `done` event's `dataset` lists at most (the service's `MAX_DONE_ROLES`). */
+export const MAX_DONE_ROLES = 50;
 
 /**
  * The other answer of `POST .../dataset`: the pasted text was not a table, so
@@ -349,6 +364,8 @@ export const agentApi = {
    * `confirmed` marks the table the user accepted with `.use()`: the server then never
    * hands the text to its transcriber again (a one-column table would otherwise be read
    * again), while the parse, the pre-filter, the judge and the store run as usual.
+   * Text that asks for a formula (`sin(x) von -pi bis pi`) answers `422 formula` and
+   * stores nothing: the chat's `generate_data` computes such a table.
    */
   uploadDataset: (token: string, sid: string, text: string, confirmed = false) =>
     agentJson<DatasetAnswer>(
@@ -439,8 +456,9 @@ export type AgentEvent =
       /** The server's step state after the run; `null` when it sent none. */
       dataConfirmed: boolean | null;
       /**
-       * The data version the turn made (the assistant's `prepare_data`), which
-       * replaces the page's preview; `null` when the data did not change.
+       * The data version the turn made (the assistant's `prepare_data` or
+       * `generate_data`), which replaces the page's preview or is its first
+       * data; `null` when the data did not change.
        */
       dataset: DatasetChanged | null;
     };
@@ -510,9 +528,31 @@ function datasetProfile(value: unknown): DatasetProfile | null {
 }
 
 /**
+ * The spec roles of a `done` dataset, at most `MAX_DONE_ROLES`, or `undefined`
+ * when the field is absent or any entry lacks a name: the page then keeps the
+ * roles it has, as against an older server.
+ */
+function roleList(value: unknown): RoleSpec[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const roles: RoleSpec[] = [];
+  for (const entry of value.slice(0, MAX_DONE_ROLES)) {
+    if (!isRecord(entry) || typeof entry.name !== 'string' || !entry.name) return undefined;
+    roles.push({
+      name: entry.name,
+      kinds: strings(entry.kinds),
+      required: entry.required === true,
+      variadic: entry.variadic === true,
+      description: typeof entry.description === 'string' ? entry.description : '',
+    });
+  }
+  return roles;
+}
+
+/**
  * The data version of a `done` event, or `null`. It replaces the page's
  * preview, bindings and step as a whole, so anything malformed drops all of it
- * rather than putting a table on screen that is not the server's.
+ * rather than putting a table on screen that is not the server's. Version 1 is
+ * a generated first dataset (`generate_data` in a session without data).
  */
 function datasetChanged(value: unknown): DatasetChanged | null {
   if (!isRecord(value) || !isInt(value.version) || value.version < 1) return null;
@@ -520,11 +560,13 @@ function datasetChanged(value: unknown): DatasetChanged | null {
   const bindings = bindingList(value.bindings);
   if (!profile || !bindings) return null;
   if (!Array.isArray(value.preview) || !value.preview.every(isRow)) return null;
+  const roles = roleList(value.roles);
   return {
     preview: value.preview,
     profile,
     bindings,
     warnings: strings(value.warnings),
+    ...(roles ? { roles } : {}),
     changes: strings(value.changes),
     version: value.version,
   };

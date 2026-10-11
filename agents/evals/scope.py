@@ -9,8 +9,9 @@ No ADK runner, no render and no session: each case's `last_turns` become the jud
 context through the same functions the ScopeGuard plugin uses
 (`plugins/scope_guard.judge_context` and `judge_input`), and the judge is the one
 `models.make_judge_client` builds, with the rubric `scope_judge.md`. A run of the
-176 cases makes 176 judge calls of about 2,500 input and 60 output tokens, about
-$0.05 at Claude Haiku 5.5's eu list price (the first run, on 2026-10-10: $0.054).
+182 cases makes 182 judge calls of about 2,500 input and 60 output tokens, about
+$0.05 at Claude Haiku 5.5's eu list price (the first run, on 2026-10-10, of the 176
+cases the file held then: $0.054).
 
 The calls are paced: `--calls-per-minute` (25 by default, 0 turns it off) spaces the
 starts of the judge calls at least 60/N seconds apart across every concurrent case,
@@ -23,7 +24,9 @@ the judge could not answer keeps the cause, the `JudgeUnavailable` message, whic
 names the failure's exception type (for example `RateLimitError`) and never the case
 text.
 
-The case file holds three groups, named by a tag: `inscope` (must pass), `offtopic`
+The case file holds three groups, named by a tag: `inscope` (must pass; the tag
+`formula` marks the requests for a function or curve to draw, which the assistant
+computes and never fetches), `offtopic`
 (good-faith out-of-scope requests) and `adversarial` (jailbreaks, German, role play,
 base64, multi-turn drift, plot-framed and mixed requests, and requests for data the
 service would have to fetch). A case's `expected` is the verdict the rubric gives;

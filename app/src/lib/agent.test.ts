@@ -250,6 +250,74 @@ describe('parseAgentEvent', () => {
       dataset: { changes: [], warnings: [], version: 2 },
     });
   });
+
+  // `done.dataset` after `generate_data` in a session without data: version 1, with the roles.
+  const GENERATED = {
+    preview: [
+      ['-3.1415927', '-1.2246468e-16'],
+      ['-3.1100183', ''],
+    ],
+    profile: {
+      rows: 200,
+      columns: [
+        { name: 'x', dtype: 'number', missing: 0, unique: 200 },
+        { name: 'y', dtype: 'number', missing: 3, unique: 197 },
+      ],
+      source_format: 'csv',
+      decimal: '.',
+      warnings: [],
+    },
+    bindings: [
+      { role: 'x', column: 'x' },
+      { role: 'y', column: 'y' },
+    ],
+    warnings: [],
+    roles: [
+      { name: 'x', kinds: ['numeric'], required: true, variadic: false, description: 'x values' },
+      { name: 'y', kinds: ['numeric'], required: true, variadic: false, description: 'y values' },
+    ],
+    changes: [
+      'generated 200 rows: x from -3.1416 to 3.1416, y = sin(x)',
+      'y: 3 of 200 values are undefined and left empty',
+    ],
+    version: 1,
+  };
+
+  it('reads a first dataset the assistant generated: version 1, with the roles', () => {
+    const event = parseAgentEvent(
+      raw('done', { data_confirmed: false, bindings: GENERATED.bindings, dataset: GENERATED })
+    );
+    const dataset = event?.type === 'done' ? event.dataset : null;
+    expect(dataset).toMatchObject({
+      version: 1,
+      roles: GENERATED.roles,
+      changes: GENERATED.changes,
+      bindings: GENERATED.bindings,
+      preview: GENERATED.preview,
+    });
+    expect(dataset?.profile.columns.map(column => column.dtype)).toEqual(['number', 'number']);
+  });
+
+  it('keeps the documented role fields, caps the roles and drops a malformed list whole', () => {
+    const roles = (value: unknown) => {
+      const event = parseAgentEvent(raw('done', { dataset: { ...GENERATED, roles: value } }));
+      return event?.type === 'done' ? event.dataset?.roles : 'no dataset';
+    };
+    expect(
+      roles([{ name: 'x', kinds: ['numeric', 3], required: 'yes', internal: 1, description: 2 }])
+    ).toEqual([
+      { name: 'x', kinds: ['numeric'], required: false, variadic: false, description: '' },
+    ]);
+    const many = Array.from({ length: 60 }, (_, index) => ({
+      ...GENERATED.roles[0],
+      name: `r${index}`,
+    }));
+    expect(roles(many)).toHaveLength(50);
+    // A malformed entry or list leaves the page's own roles in place; the data still arrives.
+    expect(roles([GENERATED.roles[0], { kinds: ['numeric'] }])).toBeUndefined();
+    expect(roles('x, y')).toBeUndefined();
+    expect(roles(undefined)).toBeUndefined();
+  });
 });
 
 describe('toAgentApiError', () => {
