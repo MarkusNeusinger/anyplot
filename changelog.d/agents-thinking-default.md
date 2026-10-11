@@ -9,4 +9,6 @@
   structured answer then misses its edit anchors in a third of the runs), for a
   median of $0.0063 instead of $0.0038 per plot and a p50 of 31.5 s instead of
   13.6 s. The thinking run is the new Claude baseline
-  (`agents/evals/baselines/claude-haiku-5-5.json`).
+  (`agents/evals/baselines/claude-haiku-5-5.json`). A replayed root thinking block
+  whose signature no longer matches the conversation is dropped by the API instead
+  of failing the call. (#12129)
