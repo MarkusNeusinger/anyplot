@@ -974,3 +974,37 @@ class TestRoundTrip:
         assert again.csv == parsed.csv
         assert again.column_dtypes == parsed.column_dtypes
         assert again.profile.decimal == "."
+
+
+class TestReviewRegressions:
+    """Copilot's findings on #12132: the depth guard, pair keys that look missing, a long header with its unit."""
+
+    def test_a_triple_quoted_string_with_a_quote_cannot_hide_the_nesting(self) -> None:
+        # The first guard read a triple quote as three strings and lost its alignment at the inner quote.
+        evasion = '["""a"b""", ' + "[" * 60 + "]" * 60 + "]"
+        with pytest.raises(ParseError) as caught:
+            parse_dataset(evasion)
+        assert caught.value.code == "unparseable" and "50 levels" in caught.value.message
+
+        # The same shape within the limit still reads: the string is one token, the lists nest 10 deep.
+        fine = '[["""a"b""", 1], ' + "[" * 10 + "2" + "]" * 10 + "]"
+        with pytest.raises(ParseError) as refused:  # a nested value is no table, but it is not "too deep"
+            parse_dataset(fine)
+        assert "50 levels" not in refused.value.message
+
+    def test_pair_keys_that_look_like_missing_values_stay_text(self) -> None:
+        parsed = parse_dataset('{"NA": 1, "null": 2, "-": 3}')
+        assert [column.name for column in parsed.profile.columns] == ["category", "value"]
+        assert parsed.preview == [["NA", "1"], ["null", "2"], ["-", "3"]]
+        assert parsed.profile.columns[0].missing == 0
+
+        pairs = parse_dataset('[["null", 1], ["x", 2]]')
+        assert pairs.preview[0] == ["null", "1"]
+
+    def test_a_long_header_that_names_the_unit_keeps_it_after_the_cut(self) -> None:
+        header = "x" * 64 + " (%)"
+        parsed = parse_dataset(f"{header}\n65 %\n12 %\n")
+        (column,) = parsed.profile.columns
+        assert column.name.endswith(" (%)") and len(column.name) <= 64
+        assert column.dtype == "integer" and parsed.preview == [["65"], ["12"]]
+        assert any("already carries it" in warning for warning in parsed.warnings)

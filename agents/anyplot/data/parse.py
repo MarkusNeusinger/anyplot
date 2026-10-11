@@ -65,6 +65,7 @@ import io
 import json
 import math
 import re
+import tokenize
 import unicodedata
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
@@ -376,40 +377,29 @@ def _read_literal(text: str, warnings: list[str]) -> tuple[list[str], list[list[
 
 
 def _too_deep(text: str) -> bool:
-    """Whether the brackets open more than `MAX_NESTING` levels, counted in one linear pass.
+    """Whether the brackets open more than `MAX_NESTING` levels, counted over Python's tokens.
 
-    Brackets inside a quoted string (`"…"` or `'…'`, a backslash escaping the next
-    character) and behind a `#` up to the end of its line do not count, so a cell such
-    as `:(` or a comment in a Python literal never trips the guard, and a string full of
-    closing brackets cannot hide real nesting behind it (a closer never takes the count
-    below zero either). It is a guard, not a parser: a triple-quoted string reads as
-    three strings, which only matters when it holds a quote, and the readers' own
-    limits (`RecursionError`, the tokenizer's nesting cap) are caught behind it.
+    `tokenize` reads the text the way `ast.literal_eval` will (strings with any quoting,
+    triple quotes and prefixes included, comments, line continuations), without
+    evaluating or nesting anything, so a bracket inside a string or a comment never
+    counts and a string cannot hide real nesting (a closer never takes the count below
+    zero). JSON tokenizes the same way. Text the tokenizer refuses (an unclosed string,
+    a stray character) is left to the readers, which refuse it on their own terms behind
+    their `RecursionError` guard.
     """
     depth = 0
-    quote = ""
-    escaped = False
-    comment = False
-    for char in text:
-        if quote:
-            if escaped:
-                escaped = False
-            elif char == "\\":
-                escaped = True
-            elif char == quote:
-                quote = ""
-        elif comment:
-            comment = char != "\n"
-        elif char in "\"'":
-            quote = char
-        elif char == "#":
-            comment = True
-        elif char in "[{(":
-            depth += 1
-            if depth > MAX_NESTING:
-                return True
-        elif char in "]})" and depth:
-            depth -= 1
+    try:
+        for token in tokenize.generate_tokens(io.StringIO(text).readline):
+            if token.type != tokenize.OP:
+                continue
+            if token.string in ("[", "{", "("):
+                depth += 1
+                if depth > MAX_NESTING:
+                    return True
+            elif token.string in ("]", "}", ")") and depth:
+                depth -= 1
+    except (tokenize.TokenError, SyntaxError, ValueError):
+        return False
     return False
 
 
@@ -588,6 +578,12 @@ def _clean_cell(raw: str) -> tuple[str, bool]:
     text, invisible = _strip_invisible(raw)
     text = text.replace("\r\n", "\n").replace("\r", "\n").strip()
     return ("" if text in MISSING_VALUES else text), invisible
+
+
+def _clean_key(raw: str) -> tuple[str, bool]:
+    """A pair key (`json_pairs` category) is a name: cleaned like a cell, but `NA` or `null` stays text."""
+    text, invisible = _strip_invisible(raw)
+    return text.replace("\r\n", "\n").replace("\r", "\n").strip(), invisible
 
 
 def _clean_header(raw: str) -> tuple[str, bool, bool]:
@@ -849,9 +845,10 @@ def _build(
     renamed_by_breaks: list[int] = []
     for position, raw in enumerate(raw_headers):
         header, invisible, broken = _clean_header(raw)
+        text_only = source_format == "json_pairs" and position == 0  # the keys of an object are names
         cells: list[str] = []
         for row in raw_rows:
-            cell, cell_invisible = _clean_cell(row[position])
+            cell, cell_invisible = (_clean_key if text_only else _clean_cell)(row[position])
             cells.append(cell)
             invisible = invisible or cell_invisible
         if not header and not any(cells):
@@ -859,7 +856,6 @@ def _build(
         if broken:
             renamed_by_breaks.append(len(headers))
         headers.append(header)
-        text_only = source_format == "json_pairs" and position == 0  # the keys of an object are names
         columns.append(_Column(name="", source=cells, cells=[], invisible=invisible, text_only=text_only))
 
     dropped = len(raw_headers) - len(headers)
@@ -894,10 +890,15 @@ def _build(
             if column.dtype == "number" and not column.decimal_comma:
                 _retype_thousands_dots(column)
 
-    # A header that already names the unit (`Anteil (%)`, `Preis in €`) gets no suffix.
-    units = [
-        column.unit if column.unit and column.unit not in _HEADER_TOKENS.findall(header) else None
+    # A header that already names the unit (`Anteil (%)`, `Preis in €`) gets no suffix, unless it is
+    # longer than a name may be: then the suffix is passed so the cut keeps the unit at the end.
+    carried = [
+        bool(column.unit) and column.unit in _HEADER_TOKENS.findall(header)
         for header, column in zip(headers, columns, strict=True)
+    ]
+    units = [
+        column.unit if column.unit and (not carries or len(header) > MAX_COLUMN_NAME_CHARS) else None
+        for header, column, carries in zip(headers, columns, carried, strict=True)
     ]
     names, header_warnings = canonical_headers(headers, units)
     for index in renamed_by_breaks:
@@ -906,17 +907,19 @@ def _build(
     if all(_looks_like_value(name) for name in names):
         warnings.append("every header looks like a value; the first row may be data rather than column names")
 
-    for position, (header, name, unit, column) in enumerate(zip(headers, names, units, columns, strict=True), start=1):
+    for position, (header, name, carries, column) in enumerate(
+        zip(headers, names, carried, columns, strict=True), start=1
+    ):
         column.name = name
         if column.invisible:
             warnings.append(f"column '{name}': invisible formatting characters (zero-width or bidi) removed")
-        if unit:
-            before = header or f"column_{position}"
-            warnings.append(f"column '{before}': unit '{unit}' moved from the values into the name '{name}'")
-        elif column.unit:
+        if column.unit and carries:
             warnings.append(
                 f"column '{name}': unit '{column.unit}' removed from the values; the name already carries it"
             )
+        elif column.unit:
+            before = header or f"column_{position}"
+            warnings.append(f"column '{before}': unit '{column.unit}' moved from the values into the name '{name}'")
         warnings.extend(f"column '{name}': {note}" for note in column.notes)
 
     rows = [list(row) for row in zip(*(column.cells for column in columns), strict=True)]
