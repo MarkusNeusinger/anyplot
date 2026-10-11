@@ -1,0 +1,7 @@
+{
+  "dataset_text": "Produkt,Umsatz\nHüte,10\nSchuhe,\nTaschen,15\nGürtel,\nMützen,8\n",
+  "message": "Lass die Zeilen ohne Umsatz weg.",
+  "expected_operations": [{"op": "drop_rows", "where": [{"column": "Umsatz", "test": "is_missing"}]}],
+  "locale": "de",
+  "tags": ["drop_rows", "is_missing"]
+}

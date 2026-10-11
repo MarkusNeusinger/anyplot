@@ -1,0 +1,7 @@
+{
+  "dataset_text": "date,visits\n03/04/2024,10\n05/06/2024,12\n07/08/2024,9\n09/10/2024,14\n11/12/2024,11\n",
+  "message": "The dates are in month/day/year order, not day first.",
+  "expected_operations": [{"op": "set_type", "column": "date", "type": "datetime", "date_format": "MM/DD/YYYY"}],
+  "locale": "en",
+  "tags": ["set_type", "datetime", "date_order"]
+}

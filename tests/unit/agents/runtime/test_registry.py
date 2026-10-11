@@ -59,6 +59,14 @@ class TestRegistry:
         names = {tool_name(tool) for tool in root.tools}
 
         assert names == ROOT_TOOL_NAMES == ALLOWED_TOOLS["anyplot"]
+        assert names == {
+            "get_dataset_profile",
+            "get_spec_brief",
+            "get_current_code",
+            "set_bindings",
+            "prepare_data",
+            "plot_pipeline",
+        }
         # ADK wraps the Workflow in a NodeTool when the agent is built.
         pipeline = next(tool for tool in root.tools if tool_name(tool) == "plot_pipeline")
         assert isinstance(pipeline.node, Workflow)

@@ -5,6 +5,7 @@ import pytest
 from agents.anyplot.data.bindings import (
     MAX_VARIADIC_DEFAULT,
     accepts,
+    carry_bindings,
     check_bindings,
     default_bindings,
     name_similarity,
@@ -152,6 +153,59 @@ class TestDefaultBindings:
 
         assert check.errors == []
         assert check.complete
+
+
+class TestCarryBindings:
+    """The bindings after `prepare_data` or undo changed the dataset under them."""
+
+    ROLES = [role("x", "numeric"), role("y", "numeric", variadic=True), role("group", "categorical", required=False)]
+
+    def test_nothing_changes_while_every_binding_stays_valid(self) -> None:
+        data = profile("a,b,team\n1,2,red\n")
+        chosen = bind(("x", "b"), ("y1", "a"))  # the user's own choice, and `group` left unbound on purpose
+
+        assert carry_bindings(chosen, self.ROLES, data) == chosen
+
+    def test_a_renamed_column_drops_its_binding_and_the_role_is_bound_again_by_default(self) -> None:
+        data = profile("hours,b,team\n1,2,red\n")  # `a` became `hours`
+        carried = carry_bindings(bind(("x", "a"), ("y1", "b")), self.ROLES, data)
+
+        assert as_pairs(carried) == [("x", "hours"), ("y1", "b"), ("group", "team")]
+        assert check_bindings(carried, self.ROLES, data).complete
+
+    def test_a_retyped_column_drops_its_binding(self) -> None:
+        data = profile("a,b\nx,2\n")  # `a` is text now
+        carried = carry_bindings(bind(("x", "a"), ("y1", "b")), self.ROLES, data)
+
+        assert as_pairs(carried) == [("y1", "b"), ("group", "a")]
+        assert check_bindings(carried, self.ROLES, data).missing_roles == ["x"]
+
+    def test_an_open_role_takes_the_next_free_column_past_a_kept_binding(self) -> None:
+        """The defaults alone would give `x` the column `y1` keeps; on the free columns `x` gets `c`."""
+        data = profile("a,b,c\nx,2,3\n")  # `a` is text now; `b` stays with y1
+        carried = carry_bindings(bind(("x", "a"), ("y1", "b")), self.ROLES, data)
+
+        assert as_pairs(carried) == [("x", "c"), ("y1", "b"), ("group", "a")]
+        assert check_bindings(carried, self.ROLES, data).complete
+
+    def test_a_family_keeps_its_members_and_gains_the_defaults_under_the_next_numbers(self) -> None:
+        data = profile("a,b,c\n1,2,3\n")  # `gone` was dropped; y1 stays, the defaults' y1 becomes y2
+        carried = carry_bindings(bind(("x", "gone"), ("y1", "b")), self.ROLES, data)
+
+        assert as_pairs(carried) == [("x", "a"), ("y1", "b"), ("y2", "c")]
+        assert check_bindings(carried, self.ROLES, data).complete
+
+    def test_an_aggregate_replaces_every_column(self) -> None:
+        data = profile("month,Umsatz\n2024-01,10\n")
+        carried = carry_bindings(bind(("x", "a"), ("y1", "b"), ("y2", "c")), self.ROLES, data)
+
+        assert as_pairs(carried) == as_pairs(default_bindings(self.ROLES, data))
+
+    def test_the_kept_bindings_keep_their_places_in_the_spec_order(self) -> None:
+        data = profile("a,b,c\n1,2,3\n")
+        carried = carry_bindings(bind(("y2", "c"), ("x", "gone")), self.ROLES, data)
+
+        assert as_pairs(carried) == [("x", "a"), ("y1", "b"), ("y2", "c")]
 
 
 class TestCheckBindings:

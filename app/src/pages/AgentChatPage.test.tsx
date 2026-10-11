@@ -71,7 +71,72 @@ const DATASET = {
     variadic: false,
     description: `${name} values`,
   })),
+  version: 1,
 };
+
+/** `done.dataset`: the assistant read `score` anew, as the next version. */
+const PREPARED = {
+  preview: [
+    ['1.5', '0.52'],
+    ['2.0', '0.58'],
+  ],
+  profile: {
+    ...DATASET.profile,
+    columns: [
+      { name: 'hours', dtype: 'number', missing: 0, unique: 2 },
+      { name: 'score', dtype: 'number', missing: 0, unique: 2 },
+    ],
+  },
+  bindings: DATASET.bindings,
+  warnings: [],
+  changes: ["score: 2 cells read as numbers, unit '%' removed"],
+  version: 2,
+};
+
+const SUMMARY = '2 rows: hours and score, both numbers. Is hours the x axis?';
+
+/** A turn's stream as the BFF sends it. */
+function sse(events: [string, unknown][]) {
+  return new Response(
+    events.map(([event, data]) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`).join(''),
+    { status: 200, headers: { 'Content-Type': 'text/event-stream' } }
+  );
+}
+
+function turnEvents(body: { text?: string; action?: string }): [string, unknown][] {
+  // After every stored parse the page asks for the step-1 summary.
+  if (body.action === 'summarize_data') {
+    return [
+      ['message', { text: SUMMARY }],
+      ['done', { llm_calls: 1 }],
+    ];
+  }
+  // The assistant's `prepare_data` changed the data; `done` carries the new version.
+  if (body.text?.includes('prozent')) {
+    return [
+      ['message', { text: 'I read score as numbers.' }],
+      [
+        'done',
+        { llm_calls: 2, bindings: PREPARED.bindings, data_confirmed: false, dataset: PREPARED },
+      ],
+    ];
+  }
+  // The root swapped the columns during the turn; `done` syncs the result.
+  return [
+    ['message', { text: 'Swapped.' }],
+    [
+      'done',
+      {
+        llm_calls: 2,
+        bindings: [
+          { role: 'x', column: 'score' },
+          { role: 'y', column: 'hours' },
+        ],
+        data_confirmed: false,
+      },
+    ],
+  ];
+}
 
 function stubFetch(
   openStatus = 200,
@@ -104,20 +169,11 @@ function stubFetch(
     if (url.pathname.endsWith('/sessions/S1/dataset/confirm') && method === 'POST') {
       return json(200, { confirmed: true, rows: 2, columns: 2 });
     }
+    if (url.pathname.endsWith('/sessions/S1/dataset/undo') && method === 'POST') {
+      return json(200, DATASET);
+    }
     if (url.pathname.endsWith('/sessions/S1/messages') && method === 'POST') {
-      // The root swapped the columns during the turn; `done` syncs the result.
-      const done = {
-        llm_calls: 2,
-        bindings: [
-          { role: 'x', column: 'score' },
-          { role: 'y', column: 'hours' },
-        ],
-        data_confirmed: false,
-      };
-      return new Response(
-        `event: message\ndata: {"text":"Swapped."}\n\nevent: done\ndata: ${JSON.stringify(done)}\n\n`,
-        { status: 200, headers: { 'Content-Type': 'text/event-stream' } }
-      );
+      return sse(turnEvents(JSON.parse(String(init.body))));
     }
     if (url.pathname.endsWith('/specs/scatter-basic')) {
       return json(200, {
@@ -298,6 +354,47 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByLabelText(/^x/)).toHaveValue('score');
     expect(screen.getByLabelText(/^y/)).toHaveValue('hours');
     expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
+  });
+
+  it('summarizes the data first, then shows a change to it with .undo()', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    fireEvent.change(await screen.findByLabelText(/# your data/), {
+      target: { value: 'hours,score\n1.5,52 %\n2.0,58 %\n' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
+    const thread = screen.getByRole('log', { name: 'Conversation' });
+    expect(thread.firstElementChild).toHaveTextContent('.summarize_data()');
+    expect(screen.getByLabelText('Message')).toHaveAttribute(
+      'placeholder',
+      'ask about your data, or for a fix: "sum per month"'
+    );
+    const confirm = screen.getByRole('button', { name: '.confirm()' });
+    await waitFor(() => expect(confirm).toBeEnabled());
+    fireEvent.click(confirm);
+    expect(await screen.findByRole('button', { name: '.create_plot()' })).toBeEnabled();
+
+    fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'das ist prozent' } });
+    fireEvent.click(screen.getByRole('button', { name: '.send()' }));
+    const change = await screen.findByTestId('data-change');
+    expect(within(change).getByText('# changed · version 2')).toBeInTheDocument();
+    expect(within(change).getByText(PREPARED.changes[0])).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: '0.52' })).toBeInTheDocument();
+    expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
+    expect(screen.queryByRole('button', { name: '.create_plot()' })).not.toBeInTheDocument();
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_prepared', { changes: '1' });
+
+    const undo = screen.getByRole('button', { name: '.undo()' });
+    await waitFor(() => expect(undo).toBeEnabled());
+    fireEvent.click(undo);
+    expect(await screen.findByText('# undone · back to version 1')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '.undo()' })).toBeDisabled();
+    expect(screen.getByRole('cell', { name: '52' })).toBeInTheDocument();
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_undo', { version: '1' });
+    // An undo asks for no new summary.
+    const turns = agentCalls().filter(([input]) => String(input).endsWith('/messages'));
+    expect(turns).toHaveLength(2);
   });
 
   it('offers a reload when the session open got no answer', async () => {

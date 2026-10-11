@@ -2,7 +2,9 @@
 
 No ADK import. `bindings.apply`, which writes validated bindings into session
 state and answers `409 run_active` during a run, belongs to the ADK session layer;
-it calls `check_bindings`.
+it calls `check_bindings`. `carry_bindings` is what a dataset version change
+(`prepare_data`, undo) does to the bindings: the ones still valid stay, the roles
+left without one get the defaults.
 
 Compatibility of a role kind with a column dtype (`ACCEPTS`), with the tier that
 ranks candidate columns for the default:
@@ -22,6 +24,7 @@ column instead of the first number. A role without kinds accepts any column in
 `check_bindings` but is never bound by default.
 """
 
+import itertools
 import re
 from dataclasses import dataclass
 from difflib import SequenceMatcher
@@ -143,6 +146,44 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
         elif role.name in single:
             bindings.append(Binding(role=role.name, column=single[role.name]))
     return bindings
+
+
+def carry_bindings(bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile) -> list[Binding]:
+    """The bindings after the dataset changed under them (`prepare_data`, undo): the valid ones stay.
+
+    A binding stays when its column is still in `profile` with a dtype its role accepts
+    (`check_bindings` on it alone finds no error). When every binding stayed, nothing
+    changes, so a role the user left unbound stays unbound. When one went (its column
+    dropped, renamed or re-typed), the roles without a binding are bound as
+    `default_bindings` would bind them on the columns no kept binding uses: the
+    defaults are computed on that reduced view, so a role whose first choice a kept
+    binding holds takes its next candidate rather than staying open. A family keeps
+    its members and gains the defaults' members under the next free numbers. The
+    result is in the order the defaults list them.
+    """
+    kept = [binding for binding in bindings if not check_bindings([binding], roles, profile).errors]
+    if len(kept) == len(bindings):
+        return list(bindings)
+    used = {binding.column for binding in kept}
+    taken = {binding.role for binding in kept}
+    open_roles = [role for role in roles if role.variadic or role.name not in taken]
+    free = profile.model_copy(update={"columns": [column for column in profile.columns if column.name not in used]})
+    for binding in default_bindings(open_roles, free):
+        role = resolve_role(binding.role, roles)
+        if role is not None and role.variadic:
+            number = next(n for n in itertools.count(1) if role.member(n) not in taken)
+            binding = Binding(role=role.member(number), column=binding.column)
+        taken.add(binding.role)
+        kept.append(binding)
+    # In the order the defaults list them: the spec's roles, a family's members by column position.
+    role_order = {role.name: position for position, role in enumerate(roles)}
+    column_order = {column.name: position for position, column in enumerate(profile.columns)}
+
+    def place(binding: Binding) -> tuple[int, int]:
+        role = resolve_role(binding.role, roles)
+        return role_order.get(role.name if role else "", len(roles)), column_order.get(binding.column, 0)
+
+    return sorted(kept, key=place)
 
 
 def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile) -> BindingCheck:

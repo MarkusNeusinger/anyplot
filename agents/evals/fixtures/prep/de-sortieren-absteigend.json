@@ -1,0 +1,7 @@
+{
+  "dataset_text": "Produkt,Umsatz\nHüte,10\nSchuhe,20\nTaschen,15\nGürtel,5\n",
+  "message": "Sortiere nach Umsatz, absteigend.",
+  "expected_operations": [{"op": "sort", "column": "Umsatz", "descending": true}],
+  "locale": "de",
+  "tags": ["sort"]
+}

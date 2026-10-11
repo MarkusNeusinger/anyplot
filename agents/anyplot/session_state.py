@@ -1,10 +1,12 @@
 """Server-set session state: the catalogue snapshot, the dataset reference and the bindings.
 
 Only the service writes these keys: the `/v1` routes through
-`session_service.append_event` with a `state_delta`, and the `set_bindings` tool
-after `apply_bindings` accepted the bindings. No model output and no client body
-ever becomes a state value unchecked, and `plot_pipeline` reads spec, library,
-dataset and bindings from here, never from its arguments.
+`session_service.append_event` with a `state_delta`, the `set_bindings` tool
+after `apply_bindings` accepted the bindings, and the `prepare_data` tool after
+`apply_operations` produced the next dataset version (`dataset_versions.py`). No
+model output and no client body ever becomes a state value unchecked, and
+`plot_pipeline` reads spec, library, dataset and bindings from here, never from its
+arguments.
 
 `CatalogueSnapshot` mirrors the body the BFF sends (`api/routers/agent.py`): what the
 agents service knows about the catalogue pair, since it has no database access.
@@ -31,6 +33,13 @@ NORMALISED = PREFIX + "normalised"
 HINTS = PREFIX + "hints"
 READINESS = PREFIX + "readiness"
 DATASET_ID = PREFIX + "dataset_id"
+DATASET_HISTORY = PREFIX + "dataset_history"
+"""The ids of the dataset versions before the current one, oldest first, at most
+`dataset_versions.MAX_DATASET_HISTORY`: what `POST .../dataset/undo` restores, newest first.
+A new paste empties it."""
+DATASET_VERSION = PREFIX + "dataset_version"
+"""The number of the current dataset version: 1 for a paste, one more for every
+`prepare_data`, one less for every undo. Above 1 there is a version to undo."""
 BINDINGS = PREFIX + "bindings"
 CONFIRMED = PREFIX + "confirmed"
 """The fingerprint of what the user confirmed (`.confirm()` in the data panel): the dataset
@@ -83,6 +92,10 @@ class SessionView:
     last_status: str | None = None
     confirmed: str | None = None
     """The confirmation fingerprint the state holds, if any (`CONFIRMED`)."""
+    dataset_history: list[str] = field(default_factory=list)
+    """The ids of the dataset versions before the current one, oldest first (`DATASET_HISTORY`)."""
+    dataset_version: int = 1
+    """The current dataset version's number (`DATASET_VERSION`); 1 without a dataset or for a paste."""
 
     @property
     def lang(self) -> str:
@@ -146,6 +159,8 @@ def read_session(state: Any) -> SessionView | None:
         versions=int(state.get(VERSIONS) or 0),
         last_status=state.get(LAST_STATUS),
         confirmed=state.get(CONFIRMED),
+        dataset_history=[str(item) for item in state.get(DATASET_HISTORY) or []],
+        dataset_version=max(1, int(state.get(DATASET_VERSION) or 1)),
     )
 
 

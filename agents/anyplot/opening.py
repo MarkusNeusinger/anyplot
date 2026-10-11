@@ -5,7 +5,8 @@
   (`blocked`, `coupled` or `clean` with its reasons) and the normalised working base.
 * `opening_state(...)` is the state delta that opens a session or switches its library.
 * `ingest_dataset(...)` parses pasted text, stores it in the session's dataset store
-  (replacing an older dataset of the session), and proposes default bindings.
+  (replacing an older dataset of the session and the versions kept for undo), and
+  proposes default bindings; a paste is version 1 of the data (`dataset_versions.py`).
 * `instruction_like(parsed)` and `dataset_judge_inputs(parsed)` are what the
   `/dataset` route checks before it stores a dataset: a deterministic pre-filter over
   every header and cell for text addressed to an AI, then the dataset judge on every
@@ -22,6 +23,7 @@ import io
 import json
 import re
 from collections import Counter
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -32,7 +34,7 @@ from .data.bindings import default_bindings
 from .data.parse import ParsedDataset, display_copy, parse_dataset
 from .data.store import DatasetStore
 from .schemas import MAX_SAMPLE_ROWS, MAX_TOP_VALUES, Binding
-from .session_state import BINDINGS, DATASET_ID, CatalogueSnapshot, initial_state
+from .session_state import BINDINGS, DATASET_HISTORY, DATASET_ID, DATASET_VERSION, CatalogueSnapshot, initial_state
 from .settings import AgentSettings
 
 
@@ -87,7 +89,13 @@ class IngestedDataset:
     bindings: list[Binding]
 
     def state_delta(self) -> dict[str, Any]:
-        return {DATASET_ID: self.dataset_id, BINDINGS: [binding.model_dump() for binding in self.bindings]}
+        """The delta of a paste: version 1 of the data, with no history to undo."""
+        return {
+            DATASET_ID: self.dataset_id,
+            BINDINGS: [binding.model_dump() for binding in self.bindings],
+            DATASET_HISTORY: [],
+            DATASET_VERSION: 1,
+        }
 
 
 def store_dataset(
@@ -96,19 +104,26 @@ def store_dataset(
     parsed: ParsedDataset,
     snapshot: CatalogueSnapshot,
     previous_id: str | None = None,
+    history: Sequence[str] = (),
 ) -> IngestedDataset:
-    """Store a parsed dataset for a session, replacing its previous one; raises `StoreFull`."""
+    """Store a parsed dataset for a session, replacing its previous one and its history; raises `StoreFull`."""
     dataset_id = store.put(session_id, parsed)
-    if previous_id and previous_id != dataset_id:
-        store.delete(previous_id, session_id)
+    for old in (previous_id, *history):
+        if old and old != dataset_id:
+            store.delete(old, session_id)
     return IngestedDataset(dataset_id, parsed, default_bindings(snapshot.roles(), parsed.profile))
 
 
 def ingest_dataset(
-    store: DatasetStore, session_id: str, text: str, snapshot: CatalogueSnapshot, previous_id: str | None = None
+    store: DatasetStore,
+    session_id: str,
+    text: str,
+    snapshot: CatalogueSnapshot,
+    previous_id: str | None = None,
+    history: Sequence[str] = (),
 ) -> IngestedDataset:
     """Parse and store pasted data for a session; raises `ParseError` or `StoreFull`."""
-    return store_dataset(store, session_id, parse_dataset(text), snapshot, previous_id)
+    return store_dataset(store, session_id, parse_dataset(text), snapshot, previous_id, history)
 
 
 MAX_JUDGE_CHUNK_CHARS = 4_000

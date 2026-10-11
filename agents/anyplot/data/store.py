@@ -4,7 +4,11 @@ Parsed datasets live here, never in ADK state and never as a `user:` artifact,
 which would outlive the session and be listable by the model. Nothing is
 persisted: a restart or scale-to-zero empties the store, and the session then
 answers `session_expired`. Entries leave through `delete` (a replaced dataset),
-`delete_session` (the DELETE route) and `sweep` (the idle sweeper).
+`delete_session` (the DELETE route) and `sweep` (the idle sweeper). The sweep
+counts idleness per session, not per entry: a session's datasets are its current
+version and the versions its undo history keeps (`dataset_versions.py`), and only
+the current one is read by the routes and the tools, so the history lives exactly as
+long as the current version does.
 
 Every method is synchronous and never awaits, so a call runs to completion on the
 one asyncio loop that serves the app; there are no threads and no locks. Times
@@ -38,10 +42,23 @@ class StoredDataset:
     profile: DatasetProfile
     column_dtypes: dict[str, ColumnDtype]
     parse_dates: list[str]
+    text_columns: list[str]
     preview: list[list[str]]
     created_at: float
     last_used_at: float
     size_bytes: int
+
+    def as_parsed(self) -> ParsedDataset:
+        """The dataset as `parse_dataset` returned it (the profile's warnings are the parse's), for `apply_operations`."""
+        return ParsedDataset(
+            profile=self.profile.model_copy(deep=True),
+            csv=self.csv,
+            preview=[list(row) for row in self.preview],
+            column_dtypes=dict(self.column_dtypes),
+            parse_dates=list(self.parse_dates),
+            warnings=list(self.profile.warnings),
+            text_columns=list(self.text_columns),
+        )
 
 
 def dataset_size(parsed: ParsedDataset) -> int:
@@ -82,6 +99,7 @@ class DatasetStore:
             profile=parsed.profile.model_copy(deep=True),
             column_dtypes=dict(parsed.column_dtypes),
             parse_dates=list(parsed.parse_dates),
+            text_columns=list(parsed.text_columns),
             preview=[list(row) for row in parsed.preview],
             created_at=now,
             last_used_at=now,
@@ -114,10 +132,20 @@ class DatasetStore:
         return removed
 
     def sweep(self, idle_seconds: float, now: float | None = None) -> list[str]:
-        """Remove every dataset unused for more than `idle_seconds` and return their ids."""
+        """Remove the datasets of every session none of whose datasets was used within `idle_seconds`; their ids.
+
+        A session's history entries are never read while they wait for an undo, so a
+        session counts as idle only when its most recently used dataset is: the history
+        then leaves together with the current version, never before it.
+        """
         current = self._clock() if now is None else now
+        latest: dict[str, float] = {}
+        for stored in self._datasets.values():
+            latest[stored.session_id] = max(latest.get(stored.session_id, stored.last_used_at), stored.last_used_at)
         removed = [
-            dataset_id for dataset_id, stored in self._datasets.items() if current - stored.last_used_at > idle_seconds
+            dataset_id
+            for dataset_id, stored in self._datasets.items()
+            if current - latest[stored.session_id] > idle_seconds
         ]
         for dataset_id in removed:
             self._remove(dataset_id)

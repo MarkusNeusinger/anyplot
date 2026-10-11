@@ -880,6 +880,24 @@ class TestProfile:
         assert len(profile.sample) == MAX_SAMPLE_ROWS
         assert profile.sample[0] == ["2024-01-01", "1", "0.5", "b", "True"]
 
+    def test_numeric_columns_carry_mean_and_median(self) -> None:
+        """The root's step-1 summary names what a column holds; a text or date column has no statistics."""
+        parsed = parse_dataset("when,n,share,label\n2024-01-01,1,0.1,a\n2024-01-02,2,0.2,b\n2024-01-03,6,0.3,c\n")
+
+        assert (column(parsed, "n").mean, column(parsed, "n").median) == (3.0, 2.0)
+        assert (column(parsed, "share").mean, column(parsed, "share").median) == (0.2, 0.2)  # six digits, no noise
+        assert column(parsed, "when").mean is None and column(parsed, "label").median is None
+
+    def test_statistics_that_no_float_holds_are_left_out_not_an_error(self) -> None:
+        """`fsum` of two `1e308` overflows; the parse must not fail on finite values."""
+        parsed = parse_dataset("v\n1e308\n1e308\n")
+
+        assert column(parsed, "v").dtype == "number"
+        assert column(parsed, "v").mean is None and column(parsed, "v").median == 1e308
+        assert column(parse_dataset("v\n1e308\n-1e308\n"), "v").median == 0.0
+        assert parse_dataset("v\n1\n").profile.columns[0].mean == 1.0
+        assert "mean" not in parsed.profile.sample[0]  # statistics are column facts, never sample cells
+
     def test_top_values_are_capped_and_clipped(self) -> None:
         values = [f"value-{i}-" + "z" * 60 for i in range(8)]
         parsed = parse_dataset("t\n" + "\n".join(values) + "\n")
@@ -975,6 +993,19 @@ class TestRoundTrip:
         assert again.csv == parsed.csv
         assert again.column_dtypes == parsed.column_dtypes
         assert again.profile.decimal == "."
+
+    def test_a_column_named_in_text_columns_stays_text(self) -> None:
+        """`set_type text` of the data operations survives the re-parse through this hint; unknown names are ignored."""
+        parsed = parse_dataset(
+            "year,when,v\n2023,2024-01-05,1\n2024,2024-01-06,2\n", text_columns=["year", "when", "x"]
+        )
+
+        assert parsed.column_dtypes == {"year": "text", "when": "text", "v": "integer"}
+        assert parsed.text_columns == ["year", "when"] and parsed.parse_dates == []
+        assert parsed.csv == "year,when,v\n2023,2024-01-05,1\n2024,2024-01-06,2\n"
+        assert column(parsed, "year").min is None and column(parsed, "year").top == ["2023", "2024"]
+        assert pd.api.types.is_string_dtype(read_back(parsed)["year"])
+        assert parse_dataset(parsed.csv).column_dtypes["year"] == "integer"  # without the hint: by content again
 
 
 class TestReviewRegressions:

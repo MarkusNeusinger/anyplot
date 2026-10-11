@@ -114,6 +114,44 @@ class TestRate:
         assert b.waiting and queue.in_flight == 0
         assert queue.next_change_at(clock()) == clock() + 60
 
+    def test_an_unrated_run_takes_no_start_in_the_window(self, clock: Clock) -> None:
+        """A turn that cannot render (the data unconfirmed) waits for the slot only, never for the minute."""
+        queue = make(clock, per_minute=1)
+        summary = queue.submit("a", "s-a", rated=False)
+        assert summary.running
+        queue.release(summary)
+
+        request = queue.submit("a", "s-a", rated=False)
+        assert request.running  # no start was spent: the window is still open
+        queue.release(request)
+
+        plot = queue.submit("a", "s-a")
+        assert plot.running  # the first rated start
+        queue.release(plot)
+        assert queue.submit("a", "s-a").waiting  # the second rated run waits for the window
+
+    def test_an_unrated_run_waits_for_the_slot(self, clock: Clock) -> None:
+        queue = make(clock, per_minute=1)
+        running = queue.submit("a", "s-a")
+        summary = queue.submit("b", "s-b", rated=False)
+
+        assert summary.waiting and queue.position(summary) == QueuePosition(position=1, waiting=1)
+        assert queue.next_change_at(clock()) == clock() + 600  # its expiry; the window does not bind it
+        queue.release(running)
+        assert summary.running  # at once, although a run started within the last 60 s
+
+    def test_an_unrated_run_never_passes_a_rated_one_that_waits_for_the_window(self, clock: Clock) -> None:
+        queue = make(clock, concurrency=2, per_minute=1)
+        queue.submit("a", "s-a")
+        plot = queue.submit("b", "s-b")  # a slot is free; the window is not
+        summary = queue.submit("c", "s-c", rated=False)
+
+        assert plot.waiting and summary.waiting
+        assert queue.next_change_at(clock()) == clock() + 60
+        clock.advance(60)
+        queue.pump()
+        assert plot.running and summary.waiting  # first come first served: both slots are taken now
+
     def test_next_change_at_without_a_time_bound(self, clock: Clock) -> None:
         queue = make(clock, max_wait_s=600)
         assert queue.next_change_at(clock()) == float("inf")

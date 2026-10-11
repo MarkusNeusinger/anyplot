@@ -92,13 +92,20 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
     "plot": frozenset({"status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version"}),
     "refusal": frozenset({"code", "text"}),
     "error": frozenset({"code", "ref"}),
-    # `bindings` and `data_confirmed` sync the page after a turn in which the root changed the bindings.
-    "done": frozenset({"llm_calls", "tokens", "bindings", "data_confirmed"}),
+    # `bindings` and `data_confirmed` sync the page after a turn in which the root changed the bindings;
+    # `dataset` carries the new data version after a turn in which the root's `prepare_data` changed the data.
+    "done": frozenset({"llm_calls", "tokens", "bindings", "data_confirmed", "dataset"}),
 }
 _ERROR_CODES = frozenset({"capacity", "deadline", "guard_unavailable", "upstream", "internal"})
 _MAX_BINDING_ERRORS = 20
 _MAX_BINDING_ERROR_CHARS = 300
 _MAX_EVENT_CHARS = 64 * 1024
+_MAX_DONE_EVENT_CHARS = 512 * 1024
+"""The cap of a `done` event: after a turn in which the assistant changed the data it carries
+`dataset` (20 preview rows, the profile of up to 50 columns, the bindings and the change
+lines), which at every schema maximum is about 300,000 characters. The agents service proves
+that its largest `done` fits (`agents/stream.py`, `MAX_DONE_EVENT_CHARS`, the same number;
+copied, because the API image does not ship the agents package)."""
 _QUEUED_STEP = "queued"
 """The status step of a run that waits in the agents service's run queue."""
 _QUEUED_HEARTBEAT_S = 15.0
@@ -118,6 +125,7 @@ _UPSTREAM_CODES = frozenset(
         "guard_unavailable",
         "capacity",
         "no_dataset",
+        "nothing_to_undo",
         "rate_limited",
     }
 )
@@ -355,7 +363,8 @@ class Binding(_StrictBody):
 
 class MessageBody(_StrictBody):
     text: Text | None = None
-    action: Literal["create_plot"] | None = None
+    # `create_plot` starts step 2; `summarize_data` asks the assistant for the step-1 summary of the data.
+    action: Literal["create_plot", "summarize_data"] | None = None
 
     @model_validator(mode="after")
     def _exactly_one(self) -> MessageBody:
@@ -598,7 +607,10 @@ async def _read_events(
     Comments (the upstream's own keep-alive pings) and the `id` and `retry`
     fields are dropped; the browser gets FastAPI's pings from this route.
     Raises TimeoutError when the deadline passes. The deadline is read before
-    every line, so the caller may move it between events.
+    every line, so the caller may move it between events. An event over its
+    cap (`_MAX_EVENT_CHARS`, or `_MAX_DONE_EVENT_CHARS` for `done`) is dropped
+    whole; the data lines are kept up to the larger cap, because the type may
+    only be known once the event is complete.
     """
     event_type: str | None = None
     data: list[str] = []
@@ -611,7 +623,7 @@ async def _read_events(
             except StopAsyncIteration:
                 return
         if not line:
-            if (event_type is not None or data) and size <= _MAX_EVENT_CHARS:
+            if (event_type is not None or data) and size <= _event_cap(event_type):
                 yield event_type, "\n".join(data)
             event_type, data, size = None, [], 0
             continue
@@ -623,8 +635,13 @@ async def _read_events(
             event_type = value
         elif field == "data":
             size += len(value) + 1
-            if size <= _MAX_EVENT_CHARS:
+            if size <= _MAX_DONE_EVENT_CHARS:
                 data.append(value)
+
+
+def _event_cap(event_type: str | None) -> int:
+    """The size cap of one upstream event in characters of its data lines."""
+    return _MAX_DONE_EVENT_CHARS if event_type == "done" else _MAX_EVENT_CHARS
 
 
 def _translate(event_type: str | None, data: str, ref: str) -> ServerSentEvent | None:
@@ -776,6 +793,17 @@ async def confirm_dataset(sid: SessionId, ctx: Ctx, client: Client) -> Any:
     a turn or a render is in flight.
     """
     return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset/confirm")
+
+
+@router.post("/sessions/{sid}/dataset/undo")
+async def undo_dataset(sid: SessionId, ctx: Ctx, client: Client) -> Any:
+    """Undo the assistant's last change to the data: the version before it becomes the current dataset.
+
+    The agents service answers `{preview, profile, bindings, warnings, roles, version}` like
+    the dataset route, unconfirmed; `422 nothing_to_undo` when the paste was never changed,
+    `409 run_active` while a turn or a render is in flight.
+    """
+    return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset/undo")
 
 
 @router.post("/sessions/{sid}/messages", response_class=EventSourceResponse)

@@ -26,7 +26,7 @@ from agents.main import Runtime, app, get_runtime
 
 from .fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK
 from .test_run_queue import Clock
-from .test_service_flow import HEADERS, USER, create_plot, headers_for, open_session, render_theme
+from .test_service_flow import CASES, HEADERS, USER, create_plot, headers_for, open_session, parse_sse, render_theme
 
 
 OTHER = "adm_fedcba9876543210"
@@ -124,6 +124,50 @@ async def test_the_second_user_waits_in_the_queue_then_runs(
     assert next(data for name, data in second_events if name == "plot")["status"] == "ok"
     assert second_events[-1][0] == "done"
     assert runtime.active == {} and (queue.waiting_count, queue.in_flight) == (0, 0)
+
+
+async def test_turns_while_the_data_is_unconfirmed_take_no_start_in_the_window(
+    client: httpx.AsyncClient, runtime: Runtime, clock: Clock, backend: GatedBackend, swap_models
+) -> None:
+    """The summary after a paste and a data request cannot render, so they never wait a minute for each other."""
+    runs = two_runs()
+    swap_models(
+        "gemini",
+        {
+            "root": [{"text": "24 rows, 3 columns."}, {"text": "Done."}, *runs["root"]],
+            "adapter": runs["adapter"],
+            "reviewer": runs["reviewer"],
+        },
+    )
+    sid = await open_session(client, with_data=False)
+    data = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text()
+    pasted = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": data})
+    assert pasted.status_code == 200, pasted.text
+    queue = runtime.run_queue()
+
+    summary = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "summarize_data"})
+    request = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "rename Study Hours"})
+    for response in (summary, request):
+        assert response.status_code == 200, response.text
+        events = parse_sse(response.text)
+        assert not any(data["step"] == "queued" for data in statuses(events))  # no wait, and no start spent
+        assert events[-1][0] == "done"
+    assert (queue.waiting_count, queue.in_flight) == (0, 0)
+
+    confirmed = await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)
+    assert confirmed.status_code == 200, confirmed.text
+    backend.gate.set()
+    first = await create_plot(client, sid)  # the minute's first rated start: at once
+    assert not any(data["step"] == "queued" for data in statuses(first))
+    assert next(data for name, data in first if name == "plot")["status"] == "ok"
+
+    second_run = asyncio.create_task(create_plot(client, sid))
+    await until(lambda: queue.waiting_count == 1, "the second plot to queue")
+    clock.advance(60)
+    queue.pump()
+    second = await asyncio.wait_for(second_run, 10)
+    assert [data["step"] for data in statuses(second)][0] == "queued"  # whole pipeline runs keep the minute rule
+    assert next(data for name, data in second if name == "plot")["status"] == "ok"
 
 
 async def test_a_full_queue_answers_503_before_the_stream(client: httpx.AsyncClient, runtime: Runtime) -> None:

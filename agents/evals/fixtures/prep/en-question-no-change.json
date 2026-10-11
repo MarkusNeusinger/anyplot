@@ -1,0 +1,7 @@
+{
+  "dataset_text": "Study Hours,Exam Score\n2,55\n5,70\n8,85\n3,60\n",
+  "message": "Which column is on the x axis?",
+  "expected_operations": [],
+  "locale": "en",
+  "tags": ["in_scope", "no_tool"]
+}

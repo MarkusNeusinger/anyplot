@@ -216,7 +216,7 @@ async def test_the_whole_stress_set_holds_offline(tmp_path: Path, stress_cases: 
     ]
     assert json.loads(result.report_path.read_text())["kind"] == "static"
     table = result.summary_path.read_text()
-    assert "| `stress-cap-profile` | ready | prompt | yes |" in table and "(of 27,907)" in table
+    assert "| `stress-cap-profile` | ready | prompt | yes |" in table and "(of 26,911)" in table
 
 
 def test_static_defaults_to_the_fake_renderer(tmp_path: Path) -> None:

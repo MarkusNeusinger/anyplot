@@ -56,6 +56,11 @@ The loader reads the result with
 and gets the typed frame back: `MISSING_VALUES` contains every token pandas reads
 as missing by default, so no such token survives into `data.csv` as text.
 
+`text_columns` names columns that skip step 6 and stay text whatever their cells
+hold: the `prepare_data` operation `set_type text` keeps a column of years or ids as
+a category through the re-parse of every later version (`prepare.py`), and the
+result records them in `ParsedDataset.text_columns`, so the store carries them on.
+
 Error messages never quote the user's data; at most they name a column.
 """
 
@@ -65,10 +70,11 @@ import io
 import json
 import math
 import re
+import statistics
 import tokenize
 import unicodedata
 from collections import Counter
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Literal
@@ -201,6 +207,8 @@ _DATE_FORMATS: tuple[tuple[re.Pattern[str], str], ...] = (
 )
 
 _INT64_MIN, _INT64_MAX = -(2**63), 2**63 - 1
+AMBIGUOUS_DATE_ORDER = "day and month order is ambiguous; read as DD/MM/YYYY"
+"""The note of a slash date column read day first by guess; `prepare.py` finds those columns by it."""
 _BOM = "\N{ZERO WIDTH NO-BREAK SPACE}"
 _NO_DELIMITER = "\x00"  # NUL never survives the control-character check, so it never splits a line
 
@@ -224,6 +232,8 @@ class ParsedDataset:
     column_dtypes: dict[str, ColumnDtype]
     parse_dates: list[str]
     warnings: list[str]
+    text_columns: list[str] = field(default_factory=list)
+    """The columns kept text by request (`parse_dataset(text_columns=...)`), in column order."""
 
 
 @dataclass
@@ -250,8 +260,12 @@ def pandas_dtypes(column_dtypes: Mapping[str, ColumnDtype]) -> dict[str, str]:
     return {name: PANDAS_DTYPES[dtype] for name, dtype in column_dtypes.items() if dtype != "datetime"}
 
 
-def parse_dataset(text: str) -> ParsedDataset:
-    """Parse pasted CSV, TSV, semicolon or pipe text, JSON or a Python literal into the canonical dataset."""
+def parse_dataset(text: str, *, text_columns: Collection[str] = ()) -> ParsedDataset:
+    """Parse pasted CSV, TSV, semicolon or pipe text, JSON or a Python literal into the canonical dataset.
+
+    `text_columns` names (canonical) columns that stay text instead of being typed by
+    their cells; a name that is no column is ignored.
+    """
     _check_size(text)
     text = text.removeprefix(_BOM)
     _check_controls(text)
@@ -272,7 +286,7 @@ def parse_dataset(text: str) -> ParsedDataset:
     if table is None:
         table = _read_delimited(text, warnings)
     headers, rows, source_format = table
-    return _build(headers, rows, source_format, warnings)
+    return _build(headers, rows, source_format, warnings, frozenset(text_columns))
 
 
 # --- Limits ------------------------------------------------------------------------------
@@ -586,6 +600,16 @@ def _clean_key(raw: str) -> tuple[str, bool]:
     return text.replace("\r\n", "\n").replace("\r", "\n").strip(), invisible
 
 
+def canonical_names(headers: Sequence[str]) -> list[str]:
+    """The column names `parse_dataset` gives these raw headers when no cell carries a unit.
+
+    The same cleaning and canonicalisation as the parse (`_clean_header`, then
+    `canonical_headers`), for a caller that writes a CSV and must name its columns as
+    the re-parse will: `prepare.py` keeps `text_columns` by those names.
+    """
+    return canonical_headers([_clean_header(raw)[0] for raw in headers])[0]
+
+
 def _clean_header(raw: str) -> tuple[str, bool, bool]:
     """The header text, whether invisible characters went, and whether tabs or line breaks became spaces."""
     text, invisible = _strip_invisible(raw)
@@ -812,7 +836,7 @@ def _as_dates(column: _Column, present: list[str]) -> bool:
             return False
         day_first = not second_big
         if not first_big and not second_big and any(parts[0] != parts[1] for parts in fields.values()):
-            column.notes.append("day and month order is ambiguous; read as DD/MM/YYYY")
+            column.notes.append(AMBIGUOUS_DATE_ORDER)
 
     parsed: dict[str, datetime] = {}
     for cell, parts in fields.items():
@@ -841,7 +865,11 @@ def _iso(value: datetime, with_time: bool) -> str:
 
 
 def _build(
-    raw_headers: list[str], raw_rows: list[list[str]], source_format: SourceFormat, warnings: list[str]
+    raw_headers: list[str],
+    raw_rows: list[list[str]],
+    source_format: SourceFormat,
+    warnings: list[str],
+    text_columns: frozenset[str] = frozenset(),
 ) -> ParsedDataset:
     headers: list[str] = []
     columns: list[_Column] = []
@@ -885,9 +913,16 @@ def _build(
                 "cell_too_long", f"a cell in column '{named}' has more than {MAX_INPUT_CELL_CHARS} characters"
             )
 
-    # Typing comes before naming: a column whose cells carried a unit is named after it.
-    for column in columns:
-        _type_column(column)
+    # Typing comes before naming: a column whose cells carried a unit is named after it. A
+    # column kept text by request is found by its name without a unit: it gets none, since it
+    # is never typed, and the only text that carries such a request is the canonical CSV of an
+    # earlier version, whose headers are unique already, so that name is its final name.
+    plain_names, _ = canonical_headers(headers) if text_columns else ([], [])
+    for index, column in enumerate(columns):
+        if text_columns and plain_names[index] in text_columns:
+            column.cells = list(column.source)  # kept text by request: the cells as cleaned, never typed
+        else:
+            _type_column(column)
     if any(column.decimal_comma for column in columns):
         for column in columns:
             if column.dtype == "number" and not column.decimal_comma:
@@ -942,6 +977,7 @@ def _build(
         column_dtypes={column.name: column.dtype for column in columns},
         parse_dates=[column.name for column in columns if column.dtype == "datetime"],
         warnings=capped,
+        text_columns=[column.name for column in columns if column.name in text_columns],
     )
 
 
@@ -949,9 +985,12 @@ def _profile_column(column: _Column) -> ColumnProfile:
     present = [cell for cell in column.cells if cell]
     minimum: float | str | None = None
     maximum: float | str | None = None
+    mean: float | None = None
+    median: float | None = None
     top: list[str] = []
     if column.dtype in ("integer", "number") and column.numbers:
         minimum, maximum = min(column.numbers), max(column.numbers)
+        mean, median = _statistics(column.numbers)
     elif column.dtype == "datetime" and column.dates:
         minimum, maximum = _iso(min(column.dates), column.with_time), _iso(max(column.dates), column.with_time)
     elif column.dtype in ("text", "boolean"):
@@ -968,8 +1007,35 @@ def _profile_column(column: _Column) -> ColumnProfile:
         unique=len(set(present)),
         min=minimum,
         max=maximum,
+        mean=mean,
+        median=median,
         top=top,
     )
+
+
+def _statistics(numbers: Sequence[float]) -> tuple[float | None, float | None]:
+    """The mean and the median at six significant digits; None for one that no float holds.
+
+    `fsum` of two `1e308` values raises `OverflowError`, and the sum of the two middle
+    values can be infinite, so each is computed within the float range or left out
+    rather than failing the parse of a dataset whose values are all finite.
+    """
+    try:
+        mean: float | None = statistics.fmean(numbers)
+    except OverflowError:
+        mean = None
+    ordered = sorted(numbers)
+    middle = len(ordered) // 2
+    median = ordered[middle] if len(ordered) % 2 else ordered[middle - 1] / 2 + ordered[middle] / 2
+    return (
+        _rounded(mean) if mean is not None and math.isfinite(mean) else None,
+        _rounded(median) if math.isfinite(median) else None,
+    )
+
+
+def _rounded(value: float) -> float:
+    """A statistic at six significant digits, so a mean never carries float noise into the profile."""
+    return float(f"{value:.6g}")
 
 
 def _write_csv(names: list[str], rows: list[list[str]]) -> str:

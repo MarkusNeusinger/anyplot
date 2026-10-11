@@ -94,6 +94,8 @@ class RequestLedger:
     error: str | None = None
     model_versions: set[str] = field(default_factory=set)
     last_calls: dict[str, CallFacts] = field(default_factory=dict)
+    dataset_changes: list[str] = field(default_factory=list)
+    """The change lines of every `prepare_data` call of the turn, in order: the `done` event's `dataset.changes`."""
 
     def refuse(self, code: str, text: str) -> None:
         if self.refusal is None and self.error is None:

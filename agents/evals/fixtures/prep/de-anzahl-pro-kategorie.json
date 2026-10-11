@@ -1,0 +1,7 @@
+{
+  "dataset_text": "Datum,Kategorie,Betrag\n2024-01-05,Miete,1200\n2024-01-20,Essen,80.5\n2024-02-14,Essen,30.25\n2024-02-28,Miete,1200\n2024-03-15,Essen,99.75\n2024-03-31,Freizeit,45\n",
+  "message": "Zähle die Buchungen (Spalte Betrag) pro Kategorie.",
+  "expected_operations": [{"op": "aggregate", "by": ["Kategorie"], "column": "Betrag", "how": "count"}],
+  "locale": "de",
+  "tags": ["aggregate", "count"]
+}

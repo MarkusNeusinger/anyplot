@@ -715,6 +715,70 @@ class TestToolSafety:
     async def test_ordinary_change_requests_pass(self, change: str) -> None:
         assert ToolSafetyPlugin.check("plot_pipeline", {"change_request": change}, "anyplot") is None
 
+    async def test_prepare_data_takes_at_most_five_valid_operations(self, ledger: RequestLedger) -> None:
+        """A refused list carries the validation lines, fenced, so the model can fix the one field that was wrong."""
+        rename = {"op": "rename", "column": "Tier", "name": "Segment"}
+        assert await self.check("prepare_data", {"operations": [rename] * 5}) is None
+        for operations, location in (
+            ([rename] * 6, "operations: "),
+            ([], "operations: "),
+            ([{"op": "explode", "column": "Tier"}], "operations[0]: "),
+            ([{"op": "rename", "column": "Tier"}], "operations[0].rename.name: "),
+            (
+                [{"op": "drop_rows", "where": [{"column": "x", "test": "eq", "value": "a", "extra": 1}]}],
+                "operations[0].drop_rows.where[0].extra: ",
+            ),
+        ):
+            refused = await self.check("prepare_data", {"operations": operations})
+            assert refused is not None and (refused["status"], refused["code"]) == ("error", "invalid_arguments")
+            assert set(refused) == {"status", "code", "errors"} and "<user_data>" in refused["errors"], operations
+            assert location in refused["errors"], operations
+        # Other tools keep the bare refusal: their arguments are not a list the model assembles field by field.
+        assert await self.check("get_current_code", {"version": -1}) == {"status": "error", "code": "invalid_arguments"}
+
+    async def test_prepare_data_takes_a_number_as_a_condition_value(self, ledger: RequestLedger) -> None:
+        """`{"test": "gt", "value": 100}` is how the model writes a numeric comparison (one live eval miss)."""
+        for value in (100, 100.0, -3):
+            condition = {"column": "score", "test": "gt", "value": value}
+            assert await self.check("prepare_data", {"operations": [{"op": "drop_rows", "where": [condition]}]}) is None
+        boolean = {"column": "flag", "test": "eq", "value": True}
+        refused = await self.check("prepare_data", {"operations": [{"op": "drop_rows", "where": [boolean]}]})
+        assert refused is not None and refused["code"] == "invalid_arguments"
+
+    async def test_prepare_data_links_in_data_values_pass_but_not_in_column_references(
+        self, ledger: RequestLedger
+    ) -> None:
+        """A condition value is compared with cells and a rename's name becomes a header: data, never followed."""
+        link = "https://jana-novak.de/finanzen"
+        value = {"op": "drop_rows", "where": [{"column": "Payee", "test": "contains", "value": link}]}
+        name = {"op": "rename", "column": "Payee", "name": link}
+        assert await self.check("prepare_data", {"operations": [value, name]}) is None
+
+        for operation in (
+            {"op": "rename", "column": link, "name": "Payee"},
+            {"op": "drop_columns", "columns": [link]},
+            {"op": "pivot_longer", "columns": ["a", "b"], "names_to": link},
+            {"op": "aggregate", "by": [link], "column": "v", "how": "sum"},
+        ):
+            refused = await self.check("prepare_data", {"operations": [operation]})
+            assert refused == {"status": "error", "code": "url_or_path_not_allowed"}, operation
+        assert not has_url_or_path({"value": link, "name": link}, frozenset({"value", "name"}))
+        assert has_url_or_path({"where": [{"value": link}], "column": "x"}, frozenset({"name"}))
+
+    async def test_prepare_data_result_keys(self, ledger: RequestLedger) -> None:
+        plugin = ToolSafetyPlugin()
+        result = {"status": "ok", "rows": 3, "columns": 2, "version": 2, "changes": "x", "profile": "y"}
+
+        assert (
+            await plugin.after_tool_callback(
+                tool=FakeTool("prepare_data"), tool_args={}, tool_context=FakeContext(), result=result
+            )
+            is None
+        )
+        assert await plugin.after_tool_callback(
+            tool=FakeTool("prepare_data"), tool_args={}, tool_context=FakeContext(), result={**result, "csv": "a,b"}
+        ) == {"status": "error", "code": "invalid_result"}
+
     async def test_one_pipeline_per_invocation(self, ledger: RequestLedger) -> None:
         assert await self.check("plot_pipeline", {}) is None
         assert await self.check("plot_pipeline", {"change_request": "again"}) == {

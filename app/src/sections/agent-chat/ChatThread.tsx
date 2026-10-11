@@ -1,5 +1,6 @@
 /**
- * The chat thread: the user's turns, the assistant's replies, the fixed
+ * The chat thread: the user's turns and the page's own (`.summarize_data()`
+ * after a parse, `.create_plot()`), the assistant's replies, the fixed
  * refusal, errors with their code and request id, and a result card per plot
  * version. Earlier versions stay in the thread, collapsed, each with its own
  * image and code.
@@ -56,15 +57,18 @@ function Item({
         </Box>
       );
     case 'action':
+      // The page's own turns: `.summarize_data()` after a parse, `.create_plot()` in step 2.
       return (
         <Box sx={{ ...promptSx, fontFamily: typography.mono }}>
           <Box component="span" aria-hidden sx={{ color: 'var(--ink-muted)', mr: 1 }}>
             ❯
           </Box>
-          .create_plot()
-          <Box component="span" sx={{ color: 'var(--ink-muted)', ml: 1 }}>
-            # {item.library}
-          </Box>
+          .{item.action}()
+          {item.action === 'create_plot' && (
+            <Box component="span" sx={{ color: 'var(--ink-muted)', ml: 1 }}>
+              # {item.library}
+            </Box>
+          )}
         </Box>
       );
     case 'assistant':

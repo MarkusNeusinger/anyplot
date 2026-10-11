@@ -1,0 +1,7 @@
+{
+  "dataset_text": "Study Hours,Exam Score\n2,55\n5,70\n8,85\n3,60\n",
+  "message": "Rename Study Hours to Hours.",
+  "expected_operations": [{"op": "rename", "column": "Study Hours", "name": "Hours"}],
+  "locale": "en",
+  "tags": ["rename"]
+}

@@ -4,6 +4,7 @@ import {
   agentApi,
   agentFetch,
   browserLocale,
+  countBucket,
   parseAgentEvent,
   renderedThemes,
   sizeBucket,
@@ -101,6 +102,7 @@ describe('parseAgentEvent', () => {
       tokens: null,
       bindings: null,
       dataConfirmed: null,
+      dataset: null,
     });
   });
 
@@ -126,6 +128,7 @@ describe('parseAgentEvent', () => {
         { role: 'y', column: null },
       ],
       dataConfirmed: false,
+      dataset: null,
     });
     expect(parseAgentEvent(raw('done', { bindings: [], data_confirmed: true }))).toMatchObject({
       bindings: [],
@@ -148,6 +151,104 @@ describe('parseAgentEvent', () => {
     expect(sync({ bindings: [{ column: 'score' }] })).toMatchObject({ bindings: null });
     expect(sync({ bindings: 'x=score' })).toMatchObject({ bindings: null });
     expect(sync({ data_confirmed: 'yes' })).toMatchObject({ dataConfirmed: null });
+  });
+
+  // `done.dataset` after the assistant's `prepare_data` changed the data.
+  const DATASET = {
+    preview: [
+      ['2026-01', '12.5'],
+      ['2026-02', '13'],
+    ],
+    profile: {
+      rows: 2,
+      columns: [
+        { name: 'Monat', dtype: 'datetime', missing: 0, unique: 2, min: '2026-01', max: '2026-02' },
+        {
+          name: 'Anteil',
+          dtype: 'number',
+          missing: 0,
+          unique: 2,
+          min: 12.5,
+          max: 13,
+          top: ['12.5', '13'],
+          mean: 12.75,
+          median: 12.75,
+        },
+      ],
+      source_format: 'csv',
+      decimal: '.',
+      warnings: [],
+    },
+    bindings: [
+      { role: 'x', column: 'Monat' },
+      { role: 'y', column: 'Anteil' },
+    ],
+    warnings: ['column Anteil: 1 cell could not be read'],
+    changes: ["Anteil: 2 cells read as numbers, unit '%' removed"],
+    version: 2,
+  };
+
+  it('reads the data version a done carries, with the documented fields only', () => {
+    const event = parseAgentEvent(
+      raw('done', {
+        llm_calls: 2,
+        data_confirmed: false,
+        bindings: DATASET.bindings,
+        dataset: {
+          ...DATASET,
+          dataset_id: 'ds_secret',
+          profile: {
+            ...DATASET.profile,
+            sample: [['2026-01', '12,5 %']],
+            columns: DATASET.profile.columns.map(column => ({ ...column, internal: 1 })),
+          },
+        },
+      })
+    );
+    expect(event).toMatchObject({ type: 'done', dataConfirmed: false });
+    const dataset = event?.type === 'done' ? event.dataset : null;
+    expect(dataset).toEqual({
+      ...DATASET,
+      profile: {
+        ...DATASET.profile,
+        columns: [
+          {
+            ...DATASET.profile.columns[0],
+            top: [],
+            mean: null,
+            median: null,
+          },
+          DATASET.profile.columns[1],
+        ],
+      },
+    });
+    expect(JSON.stringify(dataset)).not.toMatch(/ds_secret|sample|internal/);
+  });
+
+  it('drops a malformed data version whole and keeps the rest of done', () => {
+    const sync = (dataset: unknown) =>
+      parseAgentEvent(raw('done', { data_confirmed: false, dataset }));
+    for (const malformed of [
+      { ...DATASET, version: 0 },
+      { ...DATASET, version: '2' },
+      { ...DATASET, preview: [['2026-01', 12.5]] },
+      { ...DATASET, preview: 'Monat,Anteil' },
+      { ...DATASET, bindings: [{ role: 'x', column: 3 }] },
+      { ...DATASET, profile: { ...DATASET.profile, rows: -1 } },
+      {
+        ...DATASET,
+        profile: { ...DATASET.profile, columns: [{ name: 'Monat', dtype: 'timestamp' }] },
+      },
+      { ...DATASET, profile: undefined },
+      [DATASET],
+      'version 2',
+    ]) {
+      expect(sync(malformed)).toMatchObject({ dataset: null, dataConfirmed: false });
+    }
+    // Absent lists read as empty: a version without change lines still replaces the preview.
+    expect(sync({ ...DATASET, changes: undefined, warnings: 'x' })).toMatchObject({
+      dataset: { changes: [], warnings: [], version: 2 },
+    });
   });
 });
 
@@ -213,6 +314,40 @@ describe('agentFetch', () => {
     expect(sessionStorage.getItem(ACCESS_RELOAD_KEY)).toBeNull();
   });
 
+  it('posts .undo() to the undo route with the CSRF header and no body', async () => {
+    const answer = {
+      preview: [['1', '2']],
+      profile: { rows: 1, columns: [], source_format: 'csv', decimal: '.', warnings: [] },
+      bindings: [],
+      warnings: [],
+      roles: [],
+      version: 1,
+    };
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify(answer), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(agentApi.undoDataset('', 'S/1')).resolves.toEqual(answer);
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toMatch(/\/debug\/agent\/sessions\/S%2F1\/dataset\/undo$/);
+    expect(init).toMatchObject({ method: 'POST' });
+    expect(init.body).toBeUndefined();
+    expect((init.headers as Record<string, string>)['X-Anyplot-Client']).toBe('agent-chat/1');
+  });
+
+  it('reads an undo at the paste as nothing_to_undo', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ detail: 'nothing_to_undo', ref: 'r-u' }), { status: 422 })
+      )
+    );
+    await expect(agentApi.undoDataset('', 'S1')).rejects.toMatchObject({
+      status: 422,
+      code: 'nothing_to_undo',
+      ref: 'r-u',
+    });
+  });
+
   it('sends the delete with keepalive when the page goes away', async () => {
     const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
     vi.stubGlobal('fetch', fetchMock);
@@ -230,6 +365,10 @@ describe('helpers', () => {
     expect(sizeBucket(20 * 1024)).toBe('10_50kb');
     expect(sizeBucket(200 * 1024)).toBe('50_200kb');
     expect(sizeBucket(200 * 1024 + 1)).toBe('over_200kb');
+  });
+
+  it('buckets counts without exposing them', () => {
+    expect([0, 1, 2, 3, 12].map(countBucket)).toEqual(['1', '1', '2', '3+', '3+']);
   });
 
   it('names the rendered themes from the artifacts', () => {
