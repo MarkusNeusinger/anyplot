@@ -310,8 +310,10 @@ DEFECT_TEXT_FIELDS = ("observed", "target", "likely_cause")
 def _json_list(value: Any) -> Any:
     """A list the model sent as JSON text, parsed; anything else unchanged.
 
-    A forced tool call sometimes carries a nested array as a string; the items are
-    the model's own, only their wrapping differs.
+    An answer without constrained decoding (Claude's forced tool call before the
+    answers moved to `output_config.format`, which now rules this out on Claude)
+    sometimes carried a nested array as a string; the items are the model's own,
+    only their wrapping differs.
     """
     if isinstance(value, str):
         try:

@@ -5,7 +5,7 @@ import os
 import pytest
 from pydantic import ValidationError
 
-from agents.anyplot.settings import AgentSettings, get_settings
+from agents.anyplot.settings import MAX_THINKING_BUDGET, AgentSettings, get_settings
 
 
 @pytest.fixture(autouse=True)
@@ -63,9 +63,23 @@ class TestDefaults:
             AgentSettings()
 
     @pytest.mark.parametrize("model", ["claude-opus-5-5", "claude-sonnet-5-5", "claude-fable-5-1"])
-    def test_claude_models_without_forced_tool_use_are_refused(self, model: str) -> None:
+    def test_claude_models_that_refuse_disabled_thinking_are_refused(self, model: str) -> None:
         with pytest.raises(ValidationError, match="not a supported Claude model"):
             AgentSettings(model=model)
+
+    def test_thinking_budgets_are_off_bounded_and_claude_only(self) -> None:
+        assert (AgentSettings().root_thinking_budget, AgentSettings().adapter_thinking_budget) == (0, 0)
+        assert AgentSettings(adapter_thinking_budget=MAX_THINKING_BUDGET).adapter_thinking_budget == 4096
+        for field_name, value in (("adapter_thinking_budget", 4097), ("root_thinking_budget", -1)):
+            with pytest.raises(ValidationError):
+                AgentSettings(**{field_name: value})
+        with pytest.raises(ValidationError, match="apply to Claude only"):
+            AgentSettings(
+                provider="gemini",
+                model="gemini-3.8-flash",
+                judge_model="gemini-3.5-flash-lite",
+                root_thinking_budget=1024,
+            )
 
     def test_get_settings_is_cached(self) -> None:
         assert get_settings() is get_settings()

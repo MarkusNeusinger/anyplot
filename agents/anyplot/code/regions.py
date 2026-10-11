@@ -4,9 +4,15 @@ A catalogue implementation (`plots/*/implementations/python/{matplotlib,seaborn}
 follows conventions that the adapter must keep and the normaliser rewrites:
 
 * the theme block: `THEME = os.getenv("ANYPLOT_THEME", "light")`, then module-level
-  tokens whose value tests the theme, such as
+  tokens that pick a fixed value per theme, such as
   `PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"` (`PAGE_BG`, `ELEVATED_BG`,
-  `INK`, `INK_SOFT`, `INK_MUTED`, `GRID`, `BRAND`, ...);
+  `INK`, `INK_SOFT`, `INK_MUTED`, `GRID`, `BRAND`, ...). A token's value tests the
+  theme and is built only from literals, `THEME` and earlier tokens
+  (`EDGE = INK_SOFT if THEME == "light" else PAGE_BG` is one). An assignment whose
+  branch reads anything else, such as box-basic's
+  `_tight_text_color = INK if THEME == "dark" else IMPRINT_PALETTE[tightest_idx]`, is
+  plot code that follows the data, not a token: the adapter must be able to rewrite it
+  (in the 650 matplotlib and seaborn files it is the only one of 2,745);
 * the Imprint palette list, `IMPRINT = [...]` (124 files) or `IMPRINT_PALETTE = [...]`
   (89 files);
 * one final `plt.savefig(f"plot-{THEME}.png", dpi=..., facecolor=PAGE_BG)` statement
@@ -269,6 +275,22 @@ def tests_theme(value: ast.expr) -> bool:
     )
 
 
+def is_theme_constant(value: ast.expr, known: set[str]) -> bool:
+    """Whether `value` is built only from literals and the names in `known` (THEME and earlier tokens).
+
+    A conditional expression and a comparison are walked part by part; any other node
+    must be a literal (`ast.literal_eval` accepts it: strings, numbers, and lists,
+    tuples or dicts of them).
+    """
+    if isinstance(value, ast.IfExp):
+        return all(is_theme_constant(part, known) for part in (value.test, value.body, value.orelse))
+    if isinstance(value, ast.Compare):
+        return all(is_theme_constant(part, known) for part in (value.left, *value.comparators))
+    if isinstance(value, ast.Name):
+        return value.id in known
+    return _literal(value)[1]
+
+
 def is_placeholder(node: ast.AST) -> bool:
     """The statement `df = load_user_data()`."""
     return (
@@ -409,6 +431,7 @@ def find_regions(code: str, tree: ast.Module | None = None) -> Regions:
 
     theme: Region | None = None
     tokens: list[Region] = []
+    known = {THEME_NAME}  # the names a token's value may read: THEME and the tokens above it
     palettes: list[Palette] = []
     imprint: Palette | None = None
     module_savefig: dict[int, Span] = {}  # id(call) -> statement lines, for module-level savefig statements
@@ -418,8 +441,10 @@ def find_regions(code: str, tree: ast.Module | None = None) -> Regions:
             continue
         names = _assigned_names(stmt)
         if names is not None and isinstance(stmt, ast.Assign | ast.AnnAssign) and stmt.value is not None:
-            if THEME_NAME not in names and tests_theme(stmt.value):
+            value = stmt.value
+            if THEME_NAME not in names and tests_theme(value) and is_theme_constant(value, known):
                 tokens.append(Region("theme_token", ", ".join(names), index.lines_span(stmt)))
+                known.update(names)
             palette = _palette(index, stmt, names)
             if palette is not None:
                 if imprint is None and palette.name in IMPRINT_NAMES:

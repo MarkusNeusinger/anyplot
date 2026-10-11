@@ -13,7 +13,9 @@ record is one case and repeat (see `matrix.base_record` for its fields).
 `edit_failure_kinds`), splits the adapter outcome `truncated` (an answer cut off at
 the output limit) from `schema`, and counts an unparseable file as one `syntax`
 validator rejection instead of two; later schema-2 runs also count the answers that
-failed their schema (`answer_outcomes`, `answer_rules`). Every reader here takes a schema-1 report too:
+failed their schema (`answer_outcomes`, `answer_rules`), the edits a tolerant
+matching tier applied (`edit_tolerant`) and the module labels of banned imports
+(`banned_imports`). Every reader here takes a schema-1 report too:
 a field it lacks reads as empty, so a schema-1 baseline still diffs against a
 schema-2 run (`SUPPORTED_SCHEMAS`).
 
@@ -174,10 +176,12 @@ def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
         "tokens": dict(sorted(tokens.items())),
         "gate_failures": _counter(runs, "gate_failures"),
         "validator_rejections": _counter(runs, "validator_rejections"),
+        "banned_imports": _counter(runs, "banned_imports"),
         "adapter_outcomes": _counter(runs, "adapter_outcomes"),
         "adapter_outcomes_by_attempt": _adapter_by_attempt(runs),
         "edit_apply_failures": sum(int(run.get("edit_apply_failures") or 0) for run in runs),
         "edit_failure_kinds": _counter(runs, "edit_failure_kinds"),
+        "edit_tolerant": _counter(runs, "edit_tolerant"),
         "answer_outcomes": _counter(runs, "answer_outcomes"),
         "answer_rules": _counter(runs, "answer_rules"),
         "finish_reasons": _finish_reasons(runs),
@@ -412,6 +416,13 @@ def summary_markdown(report: dict[str, Any], diff: Diff | None = None) -> str:
         f"commit `{str(stamp.get('git_sha') or '')[:12]}`.",
         "",
     ]
+    thinking = stamp.get("thinking_budget") or {}
+    if any(thinking.values()):
+        lines += [
+            f"**Thinking measurement:** adaptive Claude thinking with {thinking.get('root', 0):,} extra output tokens "
+            f"for the root and {thinking.get('adapter', 0):,} for the adapter (0 is off).",
+            "",
+        ]
     if report.get("stopped"):
         lines += [f"**Stopped early** ({report['stopped']}): the rates cover the runs that finished.", ""]
     lines += ["## Results", ""]
@@ -449,6 +460,10 @@ def summary_markdown(report: dict[str, Any], diff: Diff | None = None) -> str:
     counts = [
         *(["Gate " + name, str(count)] for name, count in (summary.get("gate_failures") or {}).items()),
         *(["Validator " + name, str(count)] for name, count in (summary.get("validator_rejections") or {}).items()),
+        *(
+            ["Validator banned import, " + name, str(count)]
+            for name, count in (summary.get("banned_imports") or {}).items()
+        ),
         *(["Adapter " + name, str(count)] for name, count in (summary.get("adapter_outcomes") or {}).items()),
         *(
             [f"Adapter, attempt {attempt}, {name}", str(count)]
@@ -459,6 +474,10 @@ def summary_markdown(report: dict[str, Any], diff: Diff | None = None) -> str:
         *(
             ["Edit-apply failure " + name, str(count)]
             for name, count in (summary.get("edit_failure_kinds") or {}).items()
+        ),
+        *(
+            ["Edit applied by tolerant match, " + name, str(count)]
+            for name, count in (summary.get("edit_tolerant") or {}).items()
         ),
         *(["Reviewer " + name, str(count)] for name, count in (summary.get("reviewer") or {}).items()),
         *(["Answer " + name, str(count)] for name, count in (summary.get("answer_outcomes") or {}).items()),

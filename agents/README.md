@@ -58,7 +58,7 @@ Three rules hold for everything here:
 | Variable | Default | Meaning |
 |---|---|---|
 | `AGENT_PROVIDER` | `anthropic-vertex` | `anthropic-vertex` (Claude on Vertex AI) or `gemini` |
-| `AGENT_MODEL` | `claude-haiku-5-5` | Model of every agent; a `gemini-` id, or for `anthropic-vertex` a model in `CLAUDE_MODELS` (forced tool use with thinking disabled) |
+| `AGENT_MODEL` | `claude-haiku-5-5` | Model of every agent; a `gemini-` id, or for `anthropic-vertex` a model in `CLAUDE_MODELS` (accepts disabled thinking) |
 | `AGENT_JUDGE_MODEL` | `claude-haiku-5-5` | Model of the scope and dataset judge; same rule |
 | `AGENT_LOCATION` | `eu` | Vertex AI location: `eu`, `us` or `global` |
 | `AGENT_PROJECT`, else `GOOGLE_CLOUD_PROJECT` | `anyplot` | Project that serves and bills the model calls |
@@ -73,6 +73,8 @@ Three rules hold for everything here:
 | `AGENT_RUNS_PER_MINUTE` | `1` | Runs that may start within any 60 seconds (a sliding window) |
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue, after which the run ends with `capacity`; the queue holds rate x wait / 60 entries (10) and answers `503 capacity` beyond that. Through the BFF the whole turn, this wait included, ends by `AGENT_TURN_MAX_S` (890 s, see `docs/reference/api.md`), which the full wait plus the 180 s run fits into |
 | `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 (`--max-attempts`) to measure no repair or a second repair round |
+| `AGENT_ROOT_THINKING_BUDGET` | `0` | For measurements, Claude only: 0 keeps the root's thinking off; 1 to 4,096 turns on adaptive thinking and adds that many tokens to the root's output cap |
+| `AGENT_ADAPTER_THINKING_BUDGET` | `0` | The same for the adapter; the eval harness sets both with `--thinking-budget ROOT,ADAPTER` |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `160000` | Cost-weighted tokens per request (see [Token budgets and output caps](#token-budgets-and-output-caps)) |
 | `AGENT_DAILY_TOKEN_BUDGET` | `2000000` | Cost-weighted tokens per user and day |
@@ -116,6 +118,8 @@ The output caps per model call are constants in `anyplot/models.py`, set with am
 | Scope and dataset judge | 256 | 256 | 59 |
 
 On Gemini, thinking tokens count toward the cap, and the soft deadline bounds the adapter's caps: at spike X's fitted rate, a call that uses all 8,192 tokens still leaves the repair attempt its 75 s. Gemini's answers are larger: its plan calls in spike X needed a median of about 4,700 output tokens, and 11 of 112 needed more than 8,192. Claude Haiku 5.5 runs at about 0.0029 s per output token, so a call that uses all 16,384 takes about 49 s, inside the 60 s the deadline check reserves for an adapter call.
+
+Claude runs with thinking off. A thinking measurement (`AGENT_ROOT_THINKING_BUDGET`, `AGENT_ADAPTER_THINKING_BUDGET`) turns on adaptive thinking for the root or the adapter and adds its budget to that agent's caps in this table, so the answer keeps its whole headroom however much the thinking uses. Haiku 5.5 takes no thinking budget of its own, so the value is room, not a limit the model sees, and its depth follows the agent's effort. The largest budget, 4,096, keeps the adapter's full-file cap at 20,480, below the Anthropic SDK's limit for a request that does not stream (about 21,300).
 
 ## Run it locally
 
@@ -365,6 +369,7 @@ Before the first case the harness renders the catalogue file of the first case o
 | `--static` | Run only the model-free static stage and write `<date>-static.json` instead of a matrix report (see [Run the stress cases](#run-the-stress-cases)); the renderer is `fake` unless `--renderer` or `AGENT_RENDERER` names another |
 | `--repeats N` | Runs per case, to see how stable a result is |
 | `--max-attempts N` | Adapter attempts per run, 1 to 3 (`AGENT_MAX_ATTEMPTS`, 2 by default), so 1 measures the first attempt alone and 3 a second repair round; the report's stamp records the value as `max_attempts` |
+| `--thinking-budget ROOT,ADAPTER` | Claude only: adaptive thinking for the root and the adapter, each value (0 to 4,096, 0 off) added to that agent's output cap (`AGENT_ROOT_THINKING_BUDGET`, `AGENT_ADAPTER_THINKING_BUDGET`); the stamp records it as `thinking_budget`, the summary names it, and the thinking tokens are priced as output |
 | `--budget-usd X` | Stop before a case that could take the estimated list-price cost past X (the spend so far plus the costliest case so far), or once the cost has passed X (exit code 3) |
 | `--out DIR` | Output directory, `agents/evals/reports/` by default (git-ignored) |
 | `--baseline FILE`, `--no-baseline` | The report to compare with; by default `evals/baselines/claude-haiku-5-5.json` when it exists |
@@ -379,7 +384,7 @@ For its own process the harness lifts the run queue's start rate and the service
 
 A run writes to `--out`:
 
-- `<date>-<model>.json`: the report. It holds the stamp (provider, models, location, attempt bound, renderer, ADK version, commit, prompt hashes, prices), the summary, and one record per case and repeat: status and reason, the exception class when the pipeline ended in an error, attempts, gate failures by gate, validator rejections, edit-apply failures, the reviewer's verdict, LLM calls by agent, tokens by kind, `model_version`, the cost at list price, time to the first event, end-to-end time and render times. Since report schema 2, each record also says where the run stopped (`stage`, such as `adapter_truncated`, `edit_apply` or `reviewer_defects`, and `stages` per attempt), which attempt shipped and which the reviewer saw last, an `attempt_log` with each attempt's adapter outcome, finish reason and plan shape, every model call's finish reason and tokens, and the answers that failed their schema, by agent kind and outcome (`answer_outcomes`: `repaired` or `refused`) and by broken rule (`answer_rules`, such as `defects.*.observed:string_too_long`); a schema-1 baseline still loads, and a report without the answer counts reads as none. The date is the UTC date.
+- `<date>-<model>.json`: the report. It holds the stamp (provider, models, location, attempt bound, thinking budgets, renderer, ADK version, commit, prompt hashes, prices), the summary, and one record per case and repeat: status and reason, the exception class when the pipeline ended in an error, attempts, gate failures by gate, validator rejections, edit-apply failures, the reviewer's verdict, LLM calls by agent, tokens by kind, `model_version`, the cost at list price, time to the first event, end-to-end time and render times. Since report schema 2, each record also says where the run stopped (`stage`, such as `adapter_truncated`, `edit_apply` or `reviewer_defects`, and `stages` per attempt), which attempt shipped and which the reviewer saw last, an `attempt_log` with each attempt's adapter outcome, finish reason and plan shape, every model call's finish reason and tokens, and the answers that failed their schema, by agent kind and outcome (`answer_outcomes`: `repaired` or `refused`) and by broken rule (`answer_rules`, such as `defects.*.observed:string_too_long`), the edits each tolerant matching tier applied (`edit_tolerant`), and the labels of the imports the validator banned (`banned_imports`, such as `io` or `pandas.io`: the longest prefix of the path in a closed vocabulary of module names, anything else `?`, so no word the model writes as an import reaches the log); a schema-1 baseline still loads, and a report without these counts reads as none. The date is the UTC date.
 - `<date>-<model>.md`: the Markdown summary, with pass rates by perturbation, library and spec, and the diff against the baseline.
 - `renders/`, `gallery.html` and `gallery-all.html`: the shipped PNG of every run, a review page with 30 renders sampled at random from the runs that passed, and a list of every run. On the review page, tick **Accept** or **Reject** for each plot and select **Export judgements as JSON**; the export counts your accepts and rejects. The page never names the model, but its folder may, so compare two arms with the blind gallery instead (see [Run spike X](#run-spike-x)). The next run in the same directory rewrites both pages, so give each run its own `--out` when you want to keep its gallery.
 

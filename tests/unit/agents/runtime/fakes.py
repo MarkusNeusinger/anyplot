@@ -3,7 +3,7 @@
 `ScriptedLlm` stands in for any ADK model and answers from a per-kind queue (the kind
 comes from the `agent_kind` label every generation config carries). `FakeAnthropic`
 stands in for the `AsyncAnthropicVertex` client behind the real `VertexClaude`, so
-the Claude arm exercises the forced-tool structured output end to end.
+the Claude arm exercises the structured output (`output_config.format`) end to end.
 """
 
 import json
@@ -144,20 +144,26 @@ class FakeAnthropic:
         return "unknown"
 
     def respond(self, kwargs: dict[str, Any]) -> Message:
-        """The next scripted answer; `stop` overrides its stop reason (`max_tokens` marks a cut-off answer)."""
+        """The next scripted answer; `stop` overrides its stop reason (`max_tokens` marks a cut-off answer).
+
+        A structured answer (`json`) is JSON text, as `output_config.format` returns it. Cut
+        off at `max_tokens`, it is that text without its closing quotes and brackets, the
+        truncated JSON constrained decoding leaves at the limit: `{"edits": [{"find": "a`
+        for an edit, `{` for an empty object. `thought` puts a summarized thinking block
+        before the answer, as adaptive thinking returns one.
+        """
         kind = self.kind(kwargs)
         queue = self.script.get(kind, [])
         item = queue.pop(0) if queue else {"text": "fallback"}
         if "json" in item:
-            choice = kwargs.get("tool_choice") or {}
-            assert choice.get("type") == "tool", "a structured answer must be a forced tool call"
-            block = {
-                "type": "tool_use",
-                "id": f"toolu_{len(self.calls)}",
-                "name": choice["name"],
-                "input": item["json"],
-            }
-            stop = "tool_use"
+            output_format = (kwargs.get("output_config") or {}).get("format") or {}
+            assert output_format.get("type") == "json_schema", "a structured answer must be constrained by a format"
+            assert "tool_choice" not in kwargs or not isinstance(kwargs["tool_choice"], dict), "no forced tool call"
+            text = json.dumps(item["json"], ensure_ascii=False)
+            if item.get("stop") == "max_tokens":
+                text = text.rstrip('"]}')
+            block = {"type": "text", "text": text}
+            stop = "end_turn"
         elif "call" in item:
             block = {
                 "type": "tool_use",
@@ -170,13 +176,14 @@ class FakeAnthropic:
             block = {"type": "text", "text": item["text"]}
             stop = "end_turn"
         stop = item.get("stop", stop)
+        thinking = [{"type": "thinking", "thinking": item["thought"], "signature": "c2ln"}] if "thought" in item else []
         return Message.model_validate(
             {
                 "id": f"msg_{len(self.calls)}",
                 "type": "message",
                 "role": "assistant",
                 "model": "claude-haiku-5-5",
-                "content": [block],
+                "content": [*thinking, block],
                 "stop_reason": stop,
                 "stop_sequence": None,
                 "usage": {"input_tokens": 100, "output_tokens": 20},

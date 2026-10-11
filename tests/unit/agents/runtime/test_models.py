@@ -17,7 +17,6 @@ from agents.anyplot.models import (
     GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS,
     GEMINI_ADAPTER_MAX_OUTPUT_TOKENS,
     JUDGE_MAX_OUTPUT_TOKENS,
-    STRUCTURED_TOOL,
     AnthropicJudge,
     FakeJudge,
     GeminiJudge,
@@ -29,9 +28,11 @@ from agents.anyplot.models import (
     make_judge_client,
     make_model,
     response_json_schema,
+    structured_output_format,
+    thinking_budget,
 )
 from agents.anyplot.schemas import MAX_FULL_CODE_CHARS, AdaptPlan, Verdict
-from agents.anyplot.settings import AgentSettings
+from agents.anyplot.settings import MAX_THINKING_BUDGET, AgentSettings
 
 from .fakes import SCATTER_PLAN, FakeAnthropic
 
@@ -170,19 +171,27 @@ class TestClaudeStructuredOutput:
         responses = [response async for response in model.generate_content_async(request, stream=True)]
         return responses, client
 
-    async def test_schema_becomes_a_forced_tool_and_the_answer_json_text(self) -> None:
+    async def test_schema_becomes_an_output_format_next_to_the_effort(self) -> None:
         responses, client = await self.run(self.request(AdaptPlan), SCATTER_PLAN)
 
         call = client.calls[0]
-        assert call["tool_choice"] == {"type": "tool", "name": STRUCTURED_TOOL}
-        assert call["tools"][0]["input_schema"] == response_json_schema(AdaptPlan)
-        assert "$ref" not in json.dumps(call["tools"][0]["input_schema"])
-        assert call["output_config"] == {"effort": "medium"}
+        assert call["output_config"] == {"effort": "medium", "format": structured_output_format(AdaptPlan)}
+        assert not isinstance(call.get("tools"), list) and not isinstance(call.get("tool_choice"), dict)
         assert "thinking" not in call or call["thinking"] is None or not isinstance(call["thinking"], dict)
         assert len(responses) == 1
         parts = responses[0].content.parts
         assert [part.function_call for part in parts] == [None]
         assert AdaptPlan.model_validate_json(parts[0].text).title == SCATTER_PLAN["title"]
+
+    async def test_a_request_with_tools_gets_no_format(self) -> None:
+        client = FakeAnthropic({"unknown": [{"text": "chat"}]})
+        model = make_model("root", CLAUDE)
+        model.__dict__["_anthropic_client"] = client
+
+        responses = [response async for response in model.generate_content_async(self.request(AdaptPlan, tools=True))]
+
+        assert responses[0].content.parts[0].text == "chat"
+        assert "format" not in (client.calls[0].get("output_config") or {})
 
     async def test_verdict_schema_round_trip(self) -> None:
         responses, _ = await self.run(self.request(Verdict), {"ok": True, "defects": []})
@@ -194,6 +203,90 @@ class TestClaudeStructuredOutput:
 
         assert "$defs" not in schema
         assert schema["properties"]["defects"]["items"]["properties"]["id"]["enum"][0] == "VQ-01"
+
+    @pytest.mark.parametrize("schema", [AdaptPlan, Verdict])
+    def test_the_format_is_strict_and_keeps_the_limits_as_hints(self, schema: type) -> None:
+        """Constrained decoding needs `additionalProperties: false` and refuses length and count keywords."""
+        output_format = structured_output_format(schema)
+        text = json.dumps(output_format)
+
+        assert output_format["type"] == "json_schema"
+        assert "$ref" not in text and "$defs" not in text
+
+        def objects(node: object) -> list[dict]:
+            if isinstance(node, dict):
+                found = [node] if node.get("type") == "object" else []
+                return found + [item for value in node.values() for item in objects(value)]
+            if isinstance(node, list):
+                return [item for value in node for item in objects(value)]
+            return []
+
+        assert all(item["additionalProperties"] is False for item in objects(output_format["schema"]))
+        for keyword in ("minLength", "maxLength", "maxItems", "minimum", "maximum"):
+            assert f'"{keyword}"' not in text
+        assert "maxItems: 5" in text  # the limit stays as a hint in the description
+
+
+THINKING = AgentSettings(
+    location="global", project="anyplot-eval", root_thinking_budget=2048, adapter_thinking_budget=4096
+)
+NON_STREAMING_LIMIT = 128_000 * 600 // 3600
+"""The largest `max_tokens` the Anthropic SDK sends without streaming (`_calculate_nonstreaming_timeout`)."""
+
+
+class TestThinkingMeasurement:
+    """`AGENT_*_THINKING_BUDGET`: adaptive Claude thinking with its room added to the cap, off by default."""
+
+    def test_off_by_default(self) -> None:
+        assert [thinking_budget(kind, CLAUDE) for kind in ("root", "adapter", "reviewer")] == [0, 0, 0]
+        assert thinking_budget("adapter", GEMINI) == 0
+
+    def test_a_budget_turns_on_adaptive_thinking_and_adds_its_room_to_the_cap(self) -> None:
+        configs = {kind: make_content_config(kind, THINKING) for kind in ("root", "adapter", "reviewer")}
+
+        assert {kind: config.max_output_tokens for kind, config in configs.items()} == {
+            "root": 4096 + 2048,
+            "adapter": 8192 + 4096,
+            "reviewer": 4096,
+        }
+        assert {kind: config.thinking_config.thinking_budget for kind, config in configs.items()} == {
+            "root": -1,
+            "adapter": -1,
+            "reviewer": 0,
+        }
+        assert make_model("adapter", THINKING).max_tokens == 8192 + 4096
+
+    def test_a_full_file_keeps_the_thinking_room_below_the_sdk_limit(self) -> None:
+        request = LlmRequest(config=make_content_config("adapter", THINKING).model_copy())
+
+        allow_full_file(request.config, THINKING)
+
+        assert request.config.max_output_tokens == ADAPTER_FULL_MAX_OUTPUT_TOKENS + 4096
+        assert request.config.thinking_config is not None and request.config.thinking_config.thinking_budget == -1
+        assert ADAPTER_FULL_MAX_OUTPUT_TOKENS + MAX_THINKING_BUDGET < NON_STREAMING_LIMIT
+
+    async def test_the_adapter_thinks_before_its_structured_answer(self) -> None:
+        client = FakeAnthropic({"unknown": [{"thought": "plan the edits first", "json": SCATTER_PLAN}]})
+        model = make_model("adapter", THINKING)
+        model.__dict__["_anthropic_client"] = client
+        config = make_content_config("adapter", THINKING)
+        config.response_schema = AdaptPlan
+        request = LlmRequest(
+            model="claude-haiku-5-5",
+            contents=[types.Content(role="user", parts=[types.Part(text="adapt this")])],
+            config=config,
+        )
+
+        responses = [response async for response in model.generate_content_async(request)]
+
+        call = client.calls[0]
+        assert call["thinking"] == {"type": "adaptive", "display": "summarized"}
+        assert call["max_tokens"] == 8192 + 4096
+        assert call["output_config"]["effort"] == "medium" and call["output_config"]["format"]["type"] == "json_schema"
+        parts = responses[0].content.parts
+        assert parts[0].thought and parts[0].text == "plan the edits first"
+        answer = "".join(part.text for part in parts if part.text and not part.thought)
+        assert AdaptPlan.model_validate_json(answer).title == SCATTER_PLAN["title"]
 
 
 class TestJudge:
@@ -267,7 +360,7 @@ class TestJudge:
         assert isinstance(gemini, GeminiJudge)
         assert (gemini.model, gemini.location) == ("gemini-3.5-flash-lite", "eu")
 
-    async def test_anthropic_judge_parses_the_forced_tool(self) -> None:
+    async def test_anthropic_judge_answers_under_the_format(self) -> None:
         judge = make_judge_client(CLAUDE)
         assert isinstance(judge, AnthropicJudge)
         client = FakeAnthropic({"unknown": [{"json": {"verdict": "out_of_scope", "lang": "en"}}]})
@@ -278,7 +371,23 @@ class TestJudge:
         assert verdict.verdict == "out_of_scope"
         assert verdict.tokens == 120
         assert (verdict.input_tokens, verdict.output_tokens) == (100, 20)  # the split the eval harness prices
-        assert client.calls[0]["tool_choice"]["type"] == "tool"
+        call = client.calls[0]
+        schema = call["output_config"]["format"]["schema"]
+        assert schema["properties"]["verdict"]["enum"] == ["in_scope", "out_of_scope", "attack", "needs_data"]
+        assert schema["additionalProperties"] is False and schema["required"] == ["verdict", "lang"]
+        assert "tools" not in call and "tool_choice" not in call
+        assert call["thinking"] == {"type": "disabled"}
+
+    async def test_anthropic_judge_retries_a_refusal_then_fails_closed(self) -> None:
+        judge = make_judge_client(CLAUDE)
+        assert isinstance(judge, AnthropicJudge)
+        refusal = {"json": {"verdict": "in_scope", "lang": "en"}, "stop": "refusal"}
+        client = FakeAnthropic({"unknown": [refusal, dict(refusal)]})
+        judge.__dict__["_client"] = client
+
+        with pytest.raises(JudgeUnavailable, match="failed twice"):
+            await judge.judge("<user_message>x</user_message>", "# Scope judge")
+        assert len(client.calls) == 2
 
     def test_adapter_full_cap(self) -> None:
         """Claude's full-file cap holds a plan at the schema's 24 KB limit; Gemini's is bounded by the deadline."""

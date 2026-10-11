@@ -37,11 +37,13 @@ It returns a pandas DataFrame with exactly the loader columns, typed: `integer` 
 
 ## Lines you never touch
 
-The server refuses an edit whose `find` overlaps any of these lines:
+The server refuses an edit whose `find` overlaps any of these lines, and a full file that changes them:
 
-- the `THEME = os.getenv("ANYPLOT_THEME", ...)` line and every theme token computed from `THEME` (`PAGE_BG`, `ELEVATED_BG`, `INK`, `INK_SOFT`, `INK_MUTED`, `GRID`, `BRAND`, ...);
-- the `df = load_user_data()` line once it exists;
+- the `THEME = os.getenv("ANYPLOT_THEME", ...)` line and every theme token, a module-level name set to fixed values per theme, such as `PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"` (`PAGE_BG`, `ELEVATED_BG`, `INK`, `INK_SOFT`, `INK_MUTED`, `GRID`, `BRAND`, ...). A line that picks a value from the data by theme, such as `label_color = INK if THEME == "dark" else IMPRINT[i]`, is ordinary plot code that you may change;
+- the `df = load_user_data()` line once it exists. Keep it out of `find` and `replace`, also to append to it: to transform `df` or add statements after it, use the line below it as `find` and write the new statements in front of that line in `replace`;
 - the final `savefig` statement.
+
+In a full file, copy each of these lines unchanged from the current code.
 
 The canvas is fixed by the server: never change `figsize`, `dpi`, `set_size_inches` or the `savefig` arguments, and never add `bbox_inches`.
 
@@ -61,7 +63,7 @@ These rules replace the catalogue's own rules where they differ:
 - **Callouts and statistics.** A label or callout that states a number must compute it from `df` in an f-string (`f"r = {df[x].corr(df[y]):.2f}"`, written with the column variables of the code). A callout target comes from a rule over `df` (the maximum, the latest row), and a conditional claim is drawn only when `df` meets it. Remove a callout that cannot be derived.
 - **Density.** Adapt marker sizes, line widths and alpha to the user's row count (see the VQ-03 table below).
 - **Dates.** Use `matplotlib.dates.AutoDateLocator` with `ConciseDateFormatter` instead of a fixed locator, unless the change request asks for a specific one.
-- **Safe code.** Use only the imports the code already has, plus `numpy`, `pandas`, `math`, `statistics`, `datetime`, `collections`, `itertools`, `functools`, `textwrap`, `colorsys` and `re` when needed. No file or network access, no `os` beyond the THEME line, no `.format(...)` (use f-strings), no `eval`, `exec`, `getattr` or other reflection, no names with double underscores, no `class` statements, and no string literal longer than 200 characters.
+- **Safe code.** Use only the imports the code already has, plus, when needed, `numpy`, `pandas`, the plotting library, scipy's computing modules (`scipy.stats`, `scipy.interpolate`, `scipy.signal`, `scipy.optimize`, `scipy.fft`, `scipy.linalg`, ...) and these standard modules: `math`, `cmath`, `statistics`, `decimal`, `fractions`, `numbers`, `datetime`, `calendar`, `zoneinfo`, `collections`, `itertools`, `functools`, `operator`, `bisect`, `heapq`, `typing`, `warnings`, `textwrap`, `colorsys` and `re`. Never import `io`, `sys`, `pathlib`, `random`, `locale` or `string`. No file or network access, no `os` beyond the THEME line, no `.format(...)` (use f-strings), no `eval`, `exec`, `getattr`, `operator.attrgetter` or other reflection, no names with double underscores or private names of a module (`module._name`), no `class` statements, and no string literal longer than 200 characters.
 
 ## Change requests
 

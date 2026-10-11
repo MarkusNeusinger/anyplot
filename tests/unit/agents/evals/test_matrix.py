@@ -10,6 +10,7 @@ import base64
 import json
 import os
 import subprocess
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -23,7 +24,7 @@ from agents.anyplot.render.contract import RendererUnavailable, RenderJob, Rende
 from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.schemas import MAX_ATTEMPTS
 from agents.anyplot.services import Services
-from agents.anyplot.settings import AgentSettings, get_settings
+from agents.anyplot.settings import MAX_THINKING_BUDGET, AgentSettings, get_settings
 from agents.evals import matrix
 from agents.evals.cases import EvalCase, load_cases, select_cases
 from agents.evals.matrix import (
@@ -131,7 +132,9 @@ async def test_two_fixtures_through_the_real_flow(
             "full_code": False,
             "check": "ok",
             "edit_failure_kinds": {},
+            "edit_tolerant": {},
             "validator": [],
+            "banned_imports": [],
             "adaptation": [],
             "render": {"passed": True, "canvas_ok": True, "gates": []},
             "review": "ok",
@@ -167,6 +170,7 @@ async def test_two_fixtures_through_the_real_flow(
         2,
         2,
     )
+    assert stamp["thinking_budget"] == {"root": 0, "adapter": 0}  # off unless a measurement asks
     assert result.report_path.name == f"{stamp['date']}-claude-haiku-5-5.json"
     assert json.loads(result.report_path.read_text())["runs"][1]["case_id"] == "scatter-basic-matplotlib"
     assert "## Runs that did not pass" in result.summary_path.read_text()
@@ -378,6 +382,34 @@ def test_configure_writes_the_attempt_bound_only_when_the_flag_names_one() -> No
 
 def test_the_flag_takes_exactly_the_settings_range() -> None:
     assert matrix.MAX_ATTEMPTS_CHOICES == tuple(range(1, MAX_ATTEMPTS + 1))
+    assert matrix.MAX_THINKING_BUDGET == MAX_THINKING_BUDGET
+
+
+def test_configure_writes_the_thinking_budgets_only_when_the_flag_names_them() -> None:
+    measured: dict[str, str] = {}
+    configure(parse_args(["--renderer", "fake", "--thinking-budget", "0,2048"]), measured)
+    assert (measured["AGENT_ROOT_THINKING_BUDGET"], measured["AGENT_ADAPTER_THINKING_BUDGET"]) == ("0", "2048")
+
+    unset: dict[str, str] = {}
+    configure(parse_args(["--renderer", "fake"]), unset)
+    assert "AGENT_ROOT_THINKING_BUDGET" not in unset and "AGENT_ADAPTER_THINKING_BUDGET" not in unset
+
+    for value in ("2048", "1,2,3", "-1,0", "0,4097", "a,b"):
+        with pytest.raises(SystemExit):
+            parse_args(["--thinking-budget", value])
+
+
+def test_the_stamp_and_the_summary_name_a_thinking_measurement(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("AGENT_ADAPTER_THINKING_BUDGET", "2048")
+    settings = AgentSettings()
+
+    stamp = matrix.build_stamp(settings, MatrixConfig(), [], datetime(2026, 10, 10, tzinfo=UTC))
+
+    assert stamp["thinking_budget"] == {"root": 0, "adapter": 2048}
+    page = summary_markdown({"schema": 2, "stamp": stamp, "summary": summarize([]), "runs": []})
+    assert "adaptive Claude thinking with 0 extra output tokens for the root and 2,048 for the adapter" in page
+    plain = summary_markdown({"schema": 2, "stamp": {"thinking_budget": {"root": 0, "adapter": 0}}, "summary": {}})
+    assert "Thinking measurement" not in plain
 
 
 def test_configure_refuses_contradictions() -> None:
@@ -721,6 +753,48 @@ def test_book_attribution_counts_answers_that_failed_their_schema_by_rule() -> N
     assert summary["answer_outcomes"]["reviewer repaired"] == 2
     page = summary_markdown({"schema": 2, "stamp": {}, "summary": summary, "runs": []})
     assert "| Answer rule, reviewer defects.*.observed:string_too_long | 2 |" in page
+
+
+def test_book_attribution_counts_the_edits_a_tolerant_tier_applied() -> None:
+    settings = AgentSettings(provider="gemini", model="gemini-3.8-flash", judge_model="gemini-3.5-flash-lite")
+    record = matrix.base_record(two_fixtures()[1], 1)
+    record["turns"] = 1
+    check = {"hook": "pipeline_check", "outcome": "ok", "edit_failures": 0, "validator": [], "adaptation": []}
+    lines: list[dict[str, Any]] = [
+        {**check, "attempt": 1, "edit_tolerant": {"trailing_whitespace": 1, "whitespace": 2}},
+        {**check, "attempt": 2, "edit_tolerant": {"whitespace": 1}},
+        {**check, "attempt": 3},  # a line from before the field existed
+    ]
+
+    matrix.book_attribution(record, lines, settings)
+
+    assert record["edit_tolerant"] == {"trailing_whitespace": 1, "whitespace": 3}
+    assert [entry["edit_tolerant"] for entry in record["attempt_log"]] == [
+        {"trailing_whitespace": 1, "whitespace": 2},
+        {"whitespace": 1},
+        {},
+    ]
+    page = summary_markdown({"schema": 2, "stamp": {}, "summary": summarize([record]), "runs": []})
+    assert "| Edit applied by tolerant match, whitespace | 3 |" in page
+
+
+def test_book_attribution_names_the_banned_modules_content_free() -> None:
+    """The next run shows which modules the adapter reaches for; a value outside the validator's vocabulary is `?`."""
+    settings = AgentSettings(provider="gemini", model="gemini-3.8-flash", judge_model="gemini-3.5-flash-lite")
+    record = matrix.base_record(two_fixtures()[1], 1)
+    record["turns"] = 1
+    check = {"hook": "pipeline_check", "outcome": "rejected", "edit_failures": 0, "adaptation": []}
+    lines: list[dict[str, Any]] = [
+        {**check, "attempt": 1, "validator": ["banned-import", "banned-call"], "banned_imports": ["io"]},
+        {**check, "attempt": 2, "validator": ["banned-import"], "banned_imports": ["io", "x y", "jane_doe_1984"]},
+    ]
+
+    matrix.book_attribution(record, lines, settings)
+
+    assert record["banned_imports"] == {"?": 2, "io": 2}
+    assert [entry["banned_imports"] for entry in record["attempt_log"]] == [["io"], ["io", "?", "?"]]
+    page = summary_markdown({"schema": 2, "stamp": {}, "summary": summarize([record]), "runs": []})
+    assert "| Validator banned import, io | 2 |" in page
 
 
 def test_a_baseline_is_refused_for_runs_that_ended_in_an_error(tmp_path: Path) -> None:

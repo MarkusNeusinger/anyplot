@@ -155,7 +155,6 @@ def test_overlapping_occurrences_count() -> None:
         ('THEME = os.getenv("ANYPLOT_THEME", "light")', "THEME assignment"),
         ('PAGE_BG = "#FAF8F1"', "theme token PAGE_BG"),
         ('else "#F0EFE8"\nIMPRINT', "theme token INK"),
-        ("df = load_user_data()", "placeholder line"),
         ("dpi=400, facecolor=PAGE_BG)", "final savefig statement"),
         ("ax.set_ylim(0, 100)\nplt.savefig", "final savefig statement"),
     ],
@@ -166,6 +165,19 @@ def test_protected_regions_refuse_edits(find: str, what: str) -> None:
     assert result.code is None
     assert f"overlaps the protected {what}" in result.failures[0]
     assert "anchor the edit on other lines" in result.failures[0]
+
+
+@pytest.mark.parametrize("find", ["df = load_user_data()", "df = load_user_data()\nfig, ax"])
+def test_placeholder_overlap_names_the_line_to_anchor_on(find: str) -> None:
+    """The rerun's five `protected:placeholder` failures were edits that extended the line; say how to add after it."""
+    result = apply((find, find.replace("load_user_data()", "load_user_data().dropna()")))
+
+    failure = result.failures[0]
+    assert result.kinds == ("protected:placeholder",)
+    assert "overlaps the protected df = load_user_data() line at line 10" in failure
+    assert "keep that line exactly as it is and out of find and replace" in failure
+    assert 'set find to line 11 ("fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)")' in failure
+    assert "write the new statements in front of that line in replace" in failure
 
 
 def test_imprint_is_not_protected_and_neighbours_are_fine() -> None:
@@ -202,7 +214,7 @@ def test_placeholder_introduced_by_an_earlier_edit_is_protected() -> None:
         ("df = load_user_data()\nfig", "df = load_user_data().dropna()\nfig"),
         working=working,
     )
-    assert result.code is None and "placeholder line" in result.failures[0]
+    assert result.code is None and "protected df = load_user_data() line" in result.failures[0]
 
 
 def test_failures_skip_and_report_every_bad_edit() -> None:
@@ -286,3 +298,191 @@ class TestFailureKinds:
 
     def test_a_clean_plan_has_no_kinds(self) -> None:
         assert apply(("ax.set_ylim(0, 100)", "ax.set_ylim(0, 50)")).kinds == ()
+
+
+DATA_THEME_LINE = '_tight_color = INK if THEME == "dark" else IMPRINT[int(df["y"].argmin()) % 2]\n'
+WITH_DATA_THEME_LINE = WORKING.replace("ax.set_ylim(0, 100)\n", "ax.set_ylim(0, 100)\n" + DATA_THEME_LINE)
+
+
+class TestThemeTokenDrift:
+    """The rerun's 13 `drift:theme_token` failures: 12 from box-basic's data-dependent conditional, 1 from a token."""
+
+    def test_a_data_dependent_theme_conditional_is_plot_code(self) -> None:
+        """A full file may rewrite it, as box-basic's repair needs; it reads the data, not just the theme."""
+        rewritten = WITH_DATA_THEME_LINE.replace(
+            DATA_THEME_LINE, '_tight_color = INK if THEME == "dark" else IMPRINT[0]\n'
+        )
+
+        assert protected_drift(WITH_DATA_THEME_LINE, rewritten) == []
+        assert apply_plan(WITH_DATA_THEME_LINE, AdaptPlan(full_code=rewritten)).code == rewritten
+
+    def test_an_edit_may_change_a_data_dependent_theme_conditional(self) -> None:
+        result = apply(("% 2]", "% len(IMPRINT)]"), working=WITH_DATA_THEME_LINE)
+
+        assert result.failures == [] and result.code is not None and "% len(IMPRINT)]" in result.code
+
+    @pytest.mark.parametrize(
+        "restated",
+        [
+            "PAGE_BG = '#FAF8F1' if THEME == 'light' else '#1A1A17'",  # other quotes
+            'PAGE_BG = "#FAF8F1" if THEME=="light" else "#1A1A17"  # page',  # spacing and a comment
+            'PAGE_BG = (\n    "#FAF8F1" if THEME == "light" else "#1A1A17"\n)',  # line breaks
+        ],
+    )
+    def test_a_token_restated_with_the_same_value_is_no_drift(self, restated: str) -> None:
+        full = WORKING.replace('PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"', restated)
+
+        assert protected_drift(WORKING, full) == []
+        assert apply_plan(WORKING, AdaptPlan(full_code=full)).code == full
+
+    def test_a_token_with_another_value_drifts_and_says_to_copy_the_line(self) -> None:
+        full = WORKING.replace('else "#1A1A17"\nINK', 'else "#000000"\nINK')
+
+        result = apply_plan(WORKING, AdaptPlan(full_code=full))
+
+        assert result.kinds == ("drift:theme_token",)
+        assert "theme token PAGE_BG; copy its line unchanged from the current code" in result.failures[0]
+
+
+class TestTolerantMatching:
+    """Exact, then trailing whitespace, then whitespace-normalised whole lines; never fuzzy."""
+
+    def test_exact_matches_need_no_tolerance(self) -> None:
+        assert apply(("ax.set_ylim(0, 100)", "ax.set_ylim(0, 50)")).tolerant == ()
+
+    def test_trailing_blanks_in_find_or_code_are_ignored(self) -> None:
+        working = WORKING.replace("ax.set_ylim(0, 100)\n", "ax.set_ylim(0, 100)   \n")
+
+        result = apply(
+            ('ax.plot(df["x"], df["y"], color=IMPRINT[0])  \nax.set_ylim(0, 100)\n', "ax.grid()\n"), working=working
+        )
+
+        assert result.failures == [] and result.tolerant == ("trailing_whitespace",)
+        assert result.code == WORKING.replace(
+            'ax.plot(df["x"], df["y"], color=IMPRINT[0])\nax.set_ylim(0, 100)\n', "ax.grid()\n"
+        )
+
+    def test_windows_line_breaks_in_find_are_read_as_newlines(self) -> None:
+        result = apply(("color=IMPRINT[0])\r\nax.set_ylim(0, 100)", "color=IMPRINT[0])\nax.set_ylim(0, 50)"))
+
+        assert result.failures == [] and result.tolerant == ("trailing_whitespace",)
+        assert result.code == WORKING.replace("ax.set_ylim(0, 100)", "ax.set_ylim(0, 50)")
+
+    def test_a_block_written_with_less_indentation_is_found_and_the_replacement_indented(self) -> None:
+        working = WORKING.replace(
+            "ax.set_ylim(0, 100)\n", "for low in (0, 10):\n    ax.set_ylim(low, 100)\n    ax.grid(True)\n"
+        )
+
+        result = apply(
+            ("ax.set_ylim(low, 100)\nax.grid(True)\n", "ax.set_ylim(low, 90)\nax.grid(False)\n"), working=working
+        )
+
+        assert result.failures == [] and result.tolerant == ("whitespace",)
+        assert result.code == working.replace(
+            "    ax.set_ylim(low, 100)\n    ax.grid(True)\n", "    ax.set_ylim(low, 90)\n    ax.grid(False)\n"
+        )
+
+    def test_a_block_written_with_more_indentation_is_moved_back(self) -> None:
+        result = apply(
+            ('    ax.plot(df["x"],  df["y"], color=IMPRINT[0])\n    ax.set_ylim(0, 100)\n', "    ax.set_ylim(0, 50)\n")
+        )
+
+        assert result.failures == [] and result.tolerant == ("whitespace",)
+        assert result.code == WORKING.replace(
+            'ax.plot(df["x"], df["y"], color=IMPRINT[0])\nax.set_ylim(0, 100)\n', "ax.set_ylim(0, 50)\n"
+        )
+
+    def test_lines_without_one_shared_indentation_shift_do_not_match(self) -> None:
+        working = WORKING.replace("ax.set_ylim(0, 100)\n", "for low in (0, 10):\n    ax.set_ylim(low, 100)\n")
+
+        result = apply(("    for low in (0, 10):\n    ax.set_ylim(low, 100)\n", "pass\n"), working=working)
+
+        assert result.kinds == ("zero_match",) and result.tolerant == ()
+
+    def test_words_must_agree_exactly(self) -> None:
+        """Never fuzzy: one changed character is no match, however close."""
+        assert apply(("ax.set_ylim(0, 10)\n", "x\n")).kinds == ("zero_match",)
+        assert apply(("ax.set_ylim(0,100)\n", "x\n")).kinds == ("zero_match",)
+
+    def test_several_tolerant_matches_are_a_multi_match(self) -> None:
+        """The first tier that finds anything decides; two candidates there are never resolved by guessing."""
+        grid = "ax.grid(True, alpha=0.3)"
+        working = WORKING.replace("ax.set_ylim(0, 100)\n", f"if df.empty:\n    {grid}\nelse:\n    {grid}\n")
+
+        trailing = apply((f"{grid}  \n", "x\n"), working=working)
+        spaced = apply(("ax.grid(True,  alpha=0.3)\n", "ax.grid(False)\n"), working=working)
+
+        assert trailing.kinds == ("multi_match",) and spaced.kinds == ("multi_match",)
+        assert trailing.failures[0].startswith("edit 1/1: find matches 2 times")
+
+    def test_a_tolerant_match_still_respects_the_protected_regions(self) -> None:
+        result = apply(
+            ('    ax.set_ylim(0, 100)\n    plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)', "    x")
+        )
+
+        assert result.kinds == ("protected:savefig",)
+
+    def test_a_replacement_that_lacks_the_indentation_to_remove_is_no_match(self) -> None:
+        """Moving `replace` back by four spaces is impossible when a line of it has none: no safe placement."""
+        assert apply(("    ax.set_ylim(0, 100)\n", "ax.set_ylim(0, 50)\n")).kinds == ("zero_match",)
+
+    @pytest.mark.parametrize(
+        ("code", "find"),
+        [
+            ('ax.set_title("North America")\n', 'ax.set_title("North  America")\n'),
+            ('ax.set_title("North  America")\n', 'ax.set_title("North America")\n'),
+            ("ax.text(0, 0, '# of  runs')\n", "ax.text(0, 0, '# of runs')\n"),
+            ('ax.text(0, 0, "say \\"a  b\\"")\n', 'ax.text(0, 0, "say \\"a b\\"")\n'),
+        ],
+    )
+    def test_blanks_inside_a_string_literal_must_agree(self, code: str, find: str) -> None:
+        """A literal's text is the plot's text: other blanks inside it are other code, not a tolerable typo."""
+        working = WORKING.replace("ax.set_ylim(0, 100)\n", code)
+
+        assert apply((find, "x\n"), working=working).kinds == ("zero_match",)
+
+    def test_blanks_between_tokens_still_vary_next_to_a_string_literal(self) -> None:
+        working = WORKING.replace("ax.set_ylim(0, 100)\n", 'ax.set_title("North  America", fontsize=12)  # top\n')
+
+        result = apply(
+            ('ax.set_title("North  America",   fontsize=12) #  top\n', 'ax.set_title("Europe")\n'), working=working
+        )
+
+        assert result.failures == [] and result.tolerant == ("whitespace",)
+        assert result.code == working.replace(
+            'ax.set_title("North  America", fontsize=12)  # top\n', 'ax.set_title("Europe")\n'
+        )
+
+    def test_a_failed_plan_still_names_the_tiers_its_other_edits_matched_in(self) -> None:
+        """The log counts every tolerant match, also in a plan that a sibling edit or a drift fails."""
+        sibling_failed = apply(("ax.set_ylim(0,  100)\n", "ax.set_ylim(0, 50)\n"), ("not in the code", "x"))
+        drifted = apply(("ax.set_ylim(0,  100)\n", 'ax.set_ylim(0, 50)\nINK = "#000000"\n'))
+
+        assert (sibling_failed.code, sibling_failed.kinds, sibling_failed.tolerant) == (
+            None,
+            ("zero_match",),
+            ("whitespace",),
+        )
+        assert (drifted.code, drifted.kinds, drifted.tolerant) == (None, ("drift:rebind",), ("whitespace",))
+
+    def test_a_line_inside_a_multi_line_string_literal_is_never_matched_by_its_words(self) -> None:
+        working = WORKING.replace("ax.set_ylim(0, 100)\n", 'note = """first\n    second  line\n"""\n')
+
+        assert apply(("second line\n", "x\n"), working=working).kinds == ("zero_match",)
+
+
+def test_a_find_that_an_earlier_edit_already_changed_is_a_stale_match() -> None:
+    result = apply(
+        ("ax.set_ylim(0, 100)", "ax.set_ylim(0, 50)"), ("ax.set_ylim(0, 100)\nplt", "ax.set_ylim(0, 90)\nplt")
+    )
+
+    assert result.kinds == ("stale_match",) and set(result.kinds) <= FAILURE_KINDS
+    assert result.failures[0].startswith("edit 2/2: find matches the code only as it was before an earlier edit")
+    assert "merge the two edits into one" in result.failures[0]
+
+
+def test_a_stale_find_is_recognised_in_a_tolerant_tier_too() -> None:
+    """A stale find written with other blanks than the code gets the stale-match line, not the zero-match one."""
+    result = apply(("ax.set_ylim(0, 100)", "ax.set_ylim(0, 50)"), ("ax.set_ylim(0,  100)\n", "ax.set_ylim(0, 90)\n"))
+
+    assert result.kinds == ("stale_match",)

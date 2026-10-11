@@ -29,7 +29,12 @@ stopped (`stage`, the pipeline's `Stage`, and `stages` per attempt), the shipped
 the reviewed attempt, an `attempt_log` (per attempt: the adapter's outcome, finish
 reason, output tokens and plan shape, the check with its edit-failure kinds, the
 render gates and the review verdict), every model call's finish reason and tokens
-(`calls`, counted per agent kind in `finish_reasons`), and the edit-failure kinds.
+(`calls`, counted per agent kind in `finish_reasons`), the edit-failure kinds, how
+many edits a tolerant matching tier applied (`edit_tolerant`, by tier, also in a plan
+that another edit failed), and the module
+labels of the banned imports the validator refused (`banned_imports`: the longest
+prefix of the path in the validator's closed vocabulary, such as `io` or `pandas.io`,
+anything else `?`), so a run shows which modules the adapter reaches for.
 Answers that failed their schema are counted by agent kind and outcome
 (`answer_outcomes`: `repaired` or `refused`) and by broken rule (`answer_rules`, list
 indices written `*`), from the guard's `answer_schema` lines.
@@ -78,7 +83,11 @@ the deadlines) stay at their production values. `--max-attempts` sets the pipeli
 attempt bound (`AGENT_MAX_ATTEMPTS`, 2 by default, recorded in the stamp as
 `max_attempts`); a three-attempt run fits the request budget too, at about 117k
 weighted tokens for the costliest run simulated on a cold prompt cache with a second
-review.
+review. `--thinking-budget ROOT,ADAPTER` measures Claude's adaptive thinking for the
+root and the adapter: each value (0 to 4,096, 0 off) is added to that agent's output
+cap (`AGENT_ROOT_THINKING_BUDGET`, `AGENT_ADAPTER_THINKING_BUDGET`, recorded in the stamp
+as `thinking_budget`), and the thinking tokens are priced as output; the defaults
+change no request.
 
 The harness sets `ENVIRONMENT=development` for the `remote` and `local` renderers unless
 it runs on Cloud Run (`K_SERVICE`), because a developer's renderer token is accepted
@@ -154,6 +163,9 @@ EVAL_GLOBAL_DAILY_TOKENS = 1_000_000_000
 MAX_ATTEMPTS_CHOICES: tuple[int, ...] = (1, 2, 3)
 """The values `--max-attempts` takes: 1 to `agents.anyplot.schemas.MAX_ATTEMPTS`, written out because
 importing that module builds the agents before `configure` has set the environment (a test keeps them equal)."""
+MAX_THINKING_BUDGET = 4_096
+"""The largest `--thinking-budget` value: `agents.anyplot.settings.MAX_THINKING_BUDGET`, written out for the
+same reason (a test keeps them equal)."""
 ATTRIBUTION_LOGGER = "anyplot.agents.attribution"
 MODEL_TOKEN_KINDS: tuple[str, ...] = ("prompt", "candidates", "thoughts", "cached", "cache_write", "tool_use_prompt")
 EXIT_OK, EXIT_REGRESSION, EXIT_SETUP, EXIT_STOPPED, EXIT_OUTAGE = 0, 1, 2, 3, 4
@@ -217,6 +229,15 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         help="adapter attempts per pipeline run, AGENT_MAX_ATTEMPTS (default: the settings, 2)",
     )
     parser.add_argument(
+        "--thinking-budget",
+        type=thinking_budgets,
+        metavar="ROOT,ADAPTER",
+        help=(
+            "Claude only, for measurements: extra output tokens for adaptive thinking of the root and the adapter, "
+            f"0 to {MAX_THINKING_BUDGET} each, 0 off (AGENT_ROOT_THINKING_BUDGET, AGENT_ADAPTER_THINKING_BUDGET)"
+        ),
+    )
+    parser.add_argument(
         "--budget-usd",
         type=float,
         help="stop before a case that could take the estimated list-price cost past this (spent + costliest case)",
@@ -243,11 +264,23 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     return args
 
 
+def thinking_budgets(value: str) -> tuple[int, int]:
+    """`--thinking-budget ROOT,ADAPTER`: two whole numbers from 0 to `MAX_THINKING_BUDGET`."""
+    parts = value.split(",")
+    if len(parts) != 2 or not all(part.strip().isdigit() for part in parts):
+        raise argparse.ArgumentTypeError("expected ROOT,ADAPTER, two whole numbers such as 0,2048")
+    root, adapter = (int(part) for part in parts)
+    if root > MAX_THINKING_BUDGET or adapter > MAX_THINKING_BUDGET:
+        raise argparse.ArgumentTypeError(f"each budget is at most {MAX_THINKING_BUDGET}")
+    return root, adapter
+
+
 def configure(args: argparse.Namespace, environ: MutableMapping[str, str]) -> None:
     """Write the flags into the `AGENT_*` environment the settings read; runs before any `agents.anyplot` import.
 
     `--provider` alone selects that provider's default model and judge; `--model` alone
-    implies its provider; `--max-attempts` sets `AGENT_MAX_ATTEMPTS`. The environment's
+    implies its provider; `--max-attempts` sets `AGENT_MAX_ATTEMPTS`; `--thinking-budget`
+    sets `AGENT_ROOT_THINKING_BUDGET` and `AGENT_ADAPTER_THINKING_BUDGET`. The environment's
     own `AGENT_*` values stay for everything no flag names. With the `remote` or `local`
     renderer the process runs as `ENVIRONMENT=development` (outside Cloud Run), whatever
     the shell exported: only development accepts a developer's renderer token and the
@@ -275,6 +308,10 @@ def configure(args: argparse.Namespace, environ: MutableMapping[str, str]) -> No
         environ["AGENT_LOCATION"] = args.location
     if args.max_attempts is not None:
         environ["AGENT_MAX_ATTEMPTS"] = str(args.max_attempts)
+    if args.thinking_budget is not None:
+        root, adapter = args.thinking_budget
+        environ["AGENT_ROOT_THINKING_BUDGET"] = str(root)
+        environ["AGENT_ADAPTER_THINKING_BUDGET"] = str(adapter)
     configured = environ.get("AGENT_RENDERER")
     fallback = "fake" if getattr(args, "static", False) else "remote"
     renderer = args.renderer or (configured if configured in RENDERERS else fallback)
@@ -561,9 +598,18 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
         "calls": [],
         "finish_reasons": {},
         "edit_failure_kinds": {},
+        "edit_tolerant": {},
+        "banned_imports": {},
         "answer_outcomes": {},
         "answer_rules": {},
     }
+
+
+def module_path(value: Any) -> str:
+    """A logged banned-import label, re-checked against the validator's closed vocabulary, else `?`."""
+    from agents.anyplot.code.validate import module_label
+
+    return module_label(str(value))
 
 
 def _int(value: Any) -> int:
@@ -619,7 +665,9 @@ def _book_attempt(record: dict[str, Any], hook: str, line: dict[str, Any]) -> No
     elif hook == "pipeline_check":
         entry["check"] = str(line.get("outcome"))
         entry["edit_failure_kinds"] = dict(line.get("edit_failure_kinds") or {})
+        entry["edit_tolerant"] = dict(line.get("edit_tolerant") or {})
         entry["validator"] = [str(rule) for rule in line.get("validator") or []]
+        entry["banned_imports"] = [module_path(module) for module in line.get("banned_imports") or []]
         entry["adaptation"] = [str(rule) for rule in line.get("adaptation") or []]
     elif hook == "pipeline_render":
         entry["render"] = {
@@ -650,6 +698,8 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
     adapter: Counter[str] = Counter(record["adapter_outcomes"])
     agents: Counter[str] = Counter(record["llm_calls_by_agent"])
     kinds: Counter[str] = Counter(record["edit_failure_kinds"])
+    tolerant: Counter[str] = Counter(record["edit_tolerant"])
+    modules: Counter[str] = Counter(record["banned_imports"])
     answers: Counter[str] = Counter(record["answer_outcomes"])
     rules: Counter[str] = Counter(record["answer_rules"])
     finishes = {kind: Counter[str](reasons) for kind, reasons in record["finish_reasons"].items()}
@@ -688,7 +738,9 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
         elif hook == "pipeline_check":
             record["edit_apply_failures"] += _int(line.get("edit_failures"))
             kinds.update({str(kind): _int(count) for kind, count in (line.get("edit_failure_kinds") or {}).items()})
+            tolerant.update({str(tier): _int(count) for tier, count in (line.get("edit_tolerant") or {}).items()})
             validator.update(str(rule) for rule in line.get("validator") or [])
+            modules.update(module_path(module) for module in line.get("banned_imports") or [])
             if line.get("outcome") == "loader_failed":
                 validator["loader"] += 1
             _book_attempt(record, hook, line)
@@ -720,6 +772,8 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
     record["adapter_outcomes"] = dict(sorted(adapter.items()))
     record["llm_calls_by_agent"] = dict(sorted(agents.items()))
     record["edit_failure_kinds"] = dict(sorted((kind, count) for kind, count in kinds.items() if count))
+    record["edit_tolerant"] = dict(sorted((tier, count) for tier, count in tolerant.items() if count))
+    record["banned_imports"] = dict(sorted(modules.items()))
     record["answer_outcomes"] = dict(sorted(answers.items()))
     record["answer_rules"] = dict(sorted(rules.items()))
     record["finish_reasons"] = {kind: dict(sorted(reasons.items())) for kind, reasons in sorted(finishes.items())}
@@ -999,6 +1053,7 @@ def build_stamp(
         "judge_model": settings.judge_model,
         "location": settings.location,
         "max_attempts": settings.max_attempts,
+        "thinking_budget": {"root": settings.root_thinking_budget, "adapter": settings.adapter_thinking_budget},
         "renderer": settings.renderer,
         "render_url": getattr(settings, "render_url", None),
         "adk_version": _version("google-adk"),

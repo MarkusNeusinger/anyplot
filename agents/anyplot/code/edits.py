@@ -1,15 +1,40 @@
 """The edit applier: an `AdaptPlan` applied to the working form, or the reasons it cannot be.
 
 Edits apply in order, each to the text the previous ones produced. An edit's `find`
-must occur exactly once in that text (overlapping occurrences count, so `"aa"` in
-`"aaa"` is two) and may not overlap a protected region:
+must match exactly once in that text and may not overlap a protected region:
 
 * the `THEME = os.getenv("ANYPLOT_THEME", ...)` assignment,
-* every module-level assignment whose value tests `THEME == ...` or `THEME != ...`
-  (`PAGE_BG`, `ELEVATED_BG`, `INK*`, `GRID`, `BRAND`, ...),
+* every theme token: a module-level assignment that picks a fixed value per theme
+  (`PAGE_BG`, `ELEVATED_BG`, `INK*`, `GRID`, `BRAND`, ...; see `regions.py` for the
+  exact rule, which leaves a data-dependent `x = INK if THEME == "dark" else ...` to
+  the adapter),
 * the placeholder line `df = load_user_data()` once it is present, including one an
   earlier edit of the same plan introduced,
 * the final savefig statement.
+
+**Matching** goes from strict to tolerant, Aider style, and never fuzzy: the first
+tier that finds `find` at all decides, and more than one match there is a failure, so
+a looser tier never picks among the candidates of a stricter one.
+
+1. `exact`: `find` as a substring (overlapping occurrences count, so `"aa"` in
+   `"aaa"` is two).
+2. `trailing_whitespace`: spaces and tabs before each line break ignored on both
+   sides, and `\\r\\n` or `\\r` read as `\\n`; a `find` may still start or end inside
+   a line.
+3. `whitespace`: whole lines whose words agree once indentation and runs of blanks
+   outside string literals are ignored. A literal's text must agree exactly, so
+   `"North  America"` never matches `"North America"`, and a line that starts inside a
+   multi-line literal is never matched this way. The replacement is re-indented by
+   the one indentation the code has over `find` (or `find` over the code); when the
+   lines do not share one such shift, the tier finds nothing, because Python's
+   indentation is meaning.
+
+A `find` that matches nothing now but exactly once in the code before the plan, in
+any tier, failed because an earlier edit of the same plan changed that code
+(`stale_match`), and its repair line says so.
+
+`AppliedPlan.tolerant` names the tier of every edit a tolerant tier applied, so the
+attribution log shows how often they help.
 
 A protected region covers the whole lines of its statement, so an edit that only
 appends a comment to such a line is refused too; an edit may end right before one or
@@ -19,9 +44,10 @@ order. A failing edit is skipped and the rest still run, so one round reports ev
 problem; the plan as a whole then yields no code. `full_code` replaces everything; the
 caller decides whether a full file is allowed (from attempt 2 on), the applier only
 applies it. After either kind of plan, `protected_drift` compares the result with the
-base: the protected statements must keep their exact text, and THEME and the theme
-tokens may not be bound again anywhere (a later `PAGE_BG = ...` passes the overlap
-check above but would recolour the plot).
+base: the protected statements must keep their meaning (their syntax tree, so a
+re-stated token with the same value in other quotes, spacing or comment passes), and
+THEME and the theme tokens may not be bound again anywhere (a later `PAGE_BG = ...`
+passes the overlap check above but would recolour the plot).
 
 Failure lines are repair feedback (`Line`): one line each, at most `MAX_LINE_CHARS`
 characters, quoting at most `MAX_QUOTE_CHARS` characters of code. Next to them,
@@ -33,9 +59,10 @@ import ast
 import re
 from collections import Counter
 from dataclasses import dataclass, field
+from typing import Literal
 
 from ..schemas import MAX_FEEDBACK, MAX_LINE_CHARS, AdaptPlan
-from .regions import PLACEHOLDER_FUNC, THEME_NAME, Region, SourceIndex, Span, find_regions
+from .regions import PLACEHOLDER, PLACEHOLDER_FUNC, THEME_NAME, Region, SourceIndex, Span, find_regions
 
 
 MAX_QUOTE_CHARS = 80
@@ -53,6 +80,8 @@ new literals of every version against the catalogue code, so text cannot pile up
 _PLACEHOLDER_LINE = re.compile(
     rf"^[ \t]*df[ \t]*=[ \t]*{PLACEHOLDER_FUNC}\(\)[ \t]*(?:#[^\r\n]*)?(?:\r\n|\r|\n|$)", re.M
 )
+_NEWLINE = re.compile(r"\r\n|\r|\n")
+_LINE_END_BLANKS = " \t"
 
 _KIND_NAMES = {
     "theme": "THEME assignment",
@@ -63,6 +92,7 @@ _KIND_NAMES = {
 FAILURE_KINDS: frozenset[str] = frozenset(
     {
         "zero_match",
+        "stale_match",
         "multi_match",
         *(f"protected:{kind}" for kind in _KIND_NAMES),
         "drift:theme",
@@ -72,9 +102,14 @@ FAILURE_KINDS: frozenset[str] = frozenset(
         "working_unparseable",
     }
 )
-"""The content-free kind of every failure line: no match, several matches, an overlap with
-a protected region (by region kind), a protected statement changed or a theme name bound
-again after the plan applied (`drift:*`), or a working form that does not parse."""
+"""The content-free kind of every failure line: no match, a match only in the code before an
+earlier edit of the same plan changed it (`stale_match`), several matches, an overlap with a
+protected region (by region kind), a protected statement changed or a theme name bound again
+after the plan applied (`drift:*`), or a working form that does not parse."""
+
+MatchTier = Literal["exact", "trailing_whitespace", "whitespace"]
+TOLERANT_TIERS: tuple[MatchTier, ...] = ("trailing_whitespace", "whitespace")
+"""The tiers after `exact`, in the order they are tried (the module docstring, "Matching")."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,12 +118,15 @@ class AppliedPlan:
 
     `kinds` holds the `FAILURE_KINDS` entry of every failure, the ones past the
     `MAX_FEEDBACK` lines included; trailer lines (the drift reminder, the overflow
-    count) have none.
+    count) have none. `tolerant` names the `TOLERANT_TIERS` entry of every edit that
+    applied through a tolerant tier, in plan order, also when another edit of the
+    plan failed or the plan drifted, so the log counts every match a tier found.
     """
 
     code: str | None
     failures: list[str] = field(default_factory=list)
     kinds: tuple[str, ...] = ()
+    tolerant: tuple[str, ...] = ()
 
 
 def apply_plan(working: str, plan: AdaptPlan) -> AppliedPlan:
@@ -100,7 +138,7 @@ def apply_plan(working: str, plan: AdaptPlan) -> AppliedPlan:
     if not drift:
         return applied
     lines = _with_drift_reminder([line for _, line in drift])
-    return AppliedPlan(None, lines[:MAX_FEEDBACK], tuple(kind for kind, _ in drift))
+    return AppliedPlan(None, lines[:MAX_FEEDBACK], tuple(kind for kind, _ in drift), applied.tolerant)
 
 
 def protected_drift(base: str, code: str) -> list[str]:
@@ -108,11 +146,13 @@ def protected_drift(base: str, code: str) -> list[str]:
 
     The text checks per edit cannot see a `full_code` plan, nor an edit that adds
     `PAGE_BG = "#FF00FF"` further down. So after every plan the THEME assignment, each
-    theme token assignment and the final savefig statement must keep their exact
-    source text, and THEME and the token names may be bound no more often than in
-    `base` (assignment, augmented assignment, `del`, `global`, import alias, function,
-    class, parameter, loop or `with` target, walrus, `except ... as`, match capture).
-    A `code` that does not parse is left to the validator.
+    theme token assignment and the final savefig statement must keep their meaning,
+    compared as syntax trees: a full file that re-states a token with the same value
+    in other quotes, spacing, line breaks or comment passes, any other value does not.
+    THEME and the token names may be bound no more often than in `base` (assignment,
+    augmented assignment, `del`, `global`, import alias, function, class, parameter,
+    loop or `with` target, walrus, `except ... as`, match capture). A `code` that does
+    not parse is left to the validator.
     """
     return _with_drift_reminder([line for _, line in _drift(base, code)])
 
@@ -134,22 +174,23 @@ def _drift(base: str, code: str) -> list[tuple[str, str]]:
     before, after = find_regions(base, before_tree), find_regions(code, after_tree)
     failures: list[tuple[str, str]] = []
 
-    def text(source: str, span: Span) -> str:
-        return source[span.start : span.end].strip()
-
     if before.theme is not None and (
-        after.theme is None or text(base, before.theme.span) != text(code, after.theme.span)
+        after.theme is None or _meaning(base, before.theme.span) != _meaning(code, after.theme.span)
     ):
         failures.append(("drift:theme", "the plan changes or removes the protected THEME assignment"))
-    after_tokens = {region.name: text(code, region.span) for region in after.theme_tokens}
+    after_tokens = {region.name: _meaning(code, region.span) for region in after.theme_tokens}
     for region in before.theme_tokens:
-        if after_tokens.get(region.name) != text(base, region.span):
+        if after_tokens.get(region.name) != _meaning(base, region.span):
             failures.append(
-                ("drift:theme_token", f"the plan changes or removes the protected theme token {region.name}")
+                (
+                    "drift:theme_token",
+                    f"the plan changes or removes the protected theme token {region.name}; "
+                    "copy its line unchanged from the current code",
+                )
             )
     if before.savefig is not None and before.savefig.statement is not None:
         after_savefig = after.savefig.statement if after.savefig is not None else None
-        if after_savefig is None or text(base, before.savefig.statement) != text(code, after_savefig):
+        if after_savefig is None or _meaning(base, before.savefig.statement) != _meaning(code, after_savefig):
             failures.append(("drift:savefig", "the plan changes or removes the protected final savefig statement"))
 
     names = {THEME_NAME, *(name for region in before.theme_tokens for name in region.name.split(", "))}
@@ -159,6 +200,19 @@ def _drift(base: str, code: str) -> list[tuple[str, str]]:
             line = f"the plan binds {name} a second time; the theme names are set once, on their protected line"
             failures.append(("drift:rebind", line))
     return [(kind, _line(failure)) for kind, failure in failures]
+
+
+def _meaning(source: str, span: Span) -> str:
+    """A protected statement as its syntax tree without positions: comments, spacing and quotes do not count.
+
+    Every protected region is a whole module-level statement, so its lines parse on
+    their own; the stripped text stands in should they ever not.
+    """
+    text = source[span.start : span.end]
+    try:
+        return ast.dump(ast.parse(text))
+    except SyntaxError:
+        return text.strip()
 
 
 def _bindings(tree: ast.Module, names: set[str]) -> Counter[str]:
@@ -231,23 +285,29 @@ def _apply(working: str, plan: AdaptPlan) -> AppliedPlan:
     text = working
     failures: list[str] = []
     kinds: list[str] = []
+    tolerant: list[str] = []
     total = len(plan.edits)
     for number, edit in enumerate(plan.edits, start=1):
         label = f"edit {number}/{total}"
-        matches = _occurrences(text, edit.find)
+        tier, matches = _locate(text, edit.find, edit.replace)
+        if not matches and text != working and len(_locate(working, edit.find, edit.replace)[1]) == 1:
+            failures.append(_stale_failure(label, edit.find))
+            kinds.append("stale_match")
+            continue
         if len(matches) != 1:
             failures.append(_count_failure(label, len(matches), edit.find))
             kinds.append("zero_match" if not matches else "multi_match")
             continue
-        start = matches[0]
-        end = start + len(edit.find)
+        start, end, replace = matches[0]
         hit = next((r for r in [*protected, *_placeholders(text)] if r.span.overlaps(start, end)), None)
         if hit is not None:
             failures.append(_protected_failure(label, text, start, end, hit))
             kinds.append(f"protected:{hit.kind}")
             continue
-        text = text[:start] + edit.replace + text[end:]
-        protected = _shift(protected, end, len(edit.replace) - (end - start))
+        text = text[:start] + replace + text[end:]
+        protected = _shift(protected, end, len(replace) - (end - start))
+        if tier != "exact":
+            tolerant.append(tier)
 
     if len(failures) > MAX_FEEDBACK:
         hidden = len(failures) - (MAX_FEEDBACK - 1)
@@ -255,7 +315,22 @@ def _apply(working: str, plan: AdaptPlan) -> AppliedPlan:
             *failures[: MAX_FEEDBACK - 1],
             f"{hidden} more edits failed in the same way; fix the ones above first",
         ]
-    return AppliedPlan(None if failures else text, failures, tuple(kinds))
+    return AppliedPlan(None if failures else text, failures, tuple(kinds), tuple(tolerant))
+
+
+Match = tuple[int, int, str]
+"""One place `find` matched: its start and end in the text, and the replacement to put there."""
+
+
+def _locate(text: str, find: str, replace: str) -> tuple[MatchTier, list[Match]]:
+    """The matches of `find` in the first tier that has any (module docstring, "Matching"), with that tier."""
+    exact = [(start, start + len(find), replace) for start in _occurrences(text, find)]
+    if exact:
+        return "exact", exact
+    trailing = _trailing_whitespace_matches(text, find, replace)
+    if trailing:
+        return "trailing_whitespace", trailing
+    return "whitespace", _whitespace_matches(text, find, replace)
 
 
 def _occurrences(text: str, find: str) -> list[int]:
@@ -266,6 +341,180 @@ def _occurrences(text: str, find: str) -> list[int]:
         found.append(position)
         position = text.find(find, position + 1)
     return found
+
+
+def _line_spans(source: str) -> list[tuple[int, int, int]]:
+    """Each line as `(start, content_end, end)`: `content_end` before its line break, `end` after it."""
+    spans: list[tuple[int, int, int]] = []
+    start = 0
+    for match in _NEWLINE.finditer(source):
+        spans.append((start, match.start(), match.end()))
+        start = match.end()
+    spans.append((start, len(source), len(source)))
+    return spans
+
+
+def _without_line_end_blanks(source: str) -> tuple[str, list[int], list[int]]:
+    """`source` without the spaces and tabs before each line break and with every break written `\\n`.
+
+    Also returns, per kept character, its start and end offset in `source`, so a match
+    in the result maps back to the exact span it covers there (a `\\r\\n` is one kept
+    character two source characters wide).
+    """
+    kept: list[str] = []
+    starts: list[int] = []
+    ends: list[int] = []
+    for start, content_end, end in _line_spans(source):
+        content = source[start:content_end].rstrip(_LINE_END_BLANKS)
+        kept.append(content)
+        starts.extend(range(start, start + len(content)))
+        ends.extend(range(start + 1, start + len(content) + 1))
+        if end > content_end:
+            kept.append("\n")
+            starts.append(content_end)
+            ends.append(end)
+    return "".join(kept), starts, ends
+
+
+def _trailing_whitespace_matches(text: str, find: str, replace: str) -> list[Match]:
+    """Tier 2: the matches once blanks before line breaks are gone and line breaks are `\\n` on both sides."""
+    normal_find = _without_line_end_blanks(find)[0]
+    if not normal_find.strip():
+        return []
+    normal_text, starts, ends = _without_line_end_blanks(text)
+    return [
+        (starts[position], ends[position + len(normal_find) - 1], replace)
+        for position in _occurrences(normal_text, normal_find)
+    ]
+
+
+def _whitespace_matches(text: str, find: str, replace: str) -> list[Match]:
+    """Tier 3: whole lines whose words agree, with `replace` moved by the one indentation shift between them."""
+    find_lines = _NEWLINE.split(find)
+    ends_with_break = len(find_lines) > 1 and find_lines[-1] == ""
+    if ends_with_break:
+        find_lines.pop()
+    find_words, _ = _line_words(find_lines)
+    if not any(find_words):
+        return []
+    text_lines = _line_spans(text)
+    text_words, in_literal = _line_words([text[start:content_end] for start, content_end, _ in text_lines])
+    count = len(find_lines)
+    matches: list[Match] = []
+    for first in range(len(text_lines) - count + 1):
+        if text_words[first : first + count] != find_words or any(in_literal[first : first + count]):
+            continue
+        window = text_lines[first : first + count]
+        indents = [
+            (_indent(text[start:content_end]), _indent(line))
+            for (start, content_end, _), line, words in zip(window, find_lines, find_words, strict=True)
+            if words
+        ]
+        moved = _reindent(replace, indents)
+        if moved is None:
+            continue
+        last_start, last_content_end, last_end = window[-1]
+        end = last_end if ends_with_break else last_content_end
+        if ends_with_break and last_end == last_content_end:
+            continue  # find ends with a line break that the code's last line does not have
+        matches.append((window[0][0], end, moved))
+        if len(matches) >= MAX_COUNTED_MATCHES:
+            break
+    return matches
+
+
+def _line_words(lines: list[str]) -> tuple[list[str], list[bool]]:
+    """Each line's words for the whitespace tier, and whether the line starts inside a string literal.
+
+    Outside string literals, indentation and trailing blanks go and every run of blanks
+    becomes one space, as `" ".join(line.split())` would; a comment collapses the same
+    way. A literal's text, quotes included, stays verbatim, so two lines that differ in
+    the blanks inside a string do not agree. The scan carries an open literal from one
+    line to the next (a triple-quoted one, or a quoted one continued by a backslash),
+    which marks the lines that start inside it.
+    """
+    words: list[str] = []
+    starts_inside: list[bool] = []
+    quote: str | None = None  # the open literal's delimiter: ', ", ''' or """
+    for line in lines:
+        starts_inside.append(quote is not None)
+        kept: list[str] = []
+        blank = False
+        position = 0
+        while position < len(line):
+            char = line[position]
+            if quote is not None:
+                if char == "\\":
+                    kept.append(line[position : position + 2])
+                    position += 2
+                elif line.startswith(quote, position):
+                    kept.append(quote)
+                    position += len(quote)
+                    quote = None
+                else:
+                    kept.append(char)
+                    position += 1
+                continue
+            if char.isspace():
+                blank = True
+                position += 1
+                continue
+            if blank and kept:
+                kept.append(" ")
+            blank = False
+            if char == "#":
+                kept.append(" ".join(line[position:].split()))
+                break
+            if char in "'\"":
+                quote = char * 3 if line.startswith(char * 3, position) else char
+                kept.append(quote)
+                position += len(quote)
+                continue
+            kept.append(char)
+            position += 1
+        if quote is not None and len(quote) == 1 and not line.endswith("\\"):
+            quote = None  # a one-quote literal ends with its line unless a backslash continues it
+        words.append("".join(kept))
+    return words, starts_inside
+
+
+def _indent(line: str) -> str:
+    return line[: len(line) - len(line.lstrip(" \t"))]
+
+
+def _reindent(replace: str, indents: list[tuple[str, str]]) -> str | None:
+    """`replace` shifted by the indentation the code has over `find` (or `find` over the code).
+
+    `indents` pairs each non-blank matched line's indentation in the code with its
+    indentation in `find`. They must share one shift (the code's indentation is a
+    prefix plus `find`'s, or `find`'s a prefix plus the code's, with the same prefix
+    on every line); otherwise, or when a line of `replace` lacks the indentation a
+    shift would remove, there is no safe placement and the match is not used.
+    """
+    shifts: set[tuple[str, str]] = set()
+    for code_indent, find_indent in indents:
+        if code_indent.endswith(find_indent):
+            shifts.add(("add", code_indent[: len(code_indent) - len(find_indent)]))
+        elif find_indent.endswith(code_indent):
+            shifts.add(("remove", find_indent[: len(find_indent) - len(code_indent)]))
+        else:
+            return None
+    if len(shifts) != 1:
+        return None
+    direction, prefix = shifts.pop()
+    if not prefix:
+        return replace
+    moved: list[str] = []
+    for line in (replace[start:end] for start, _, end in _line_spans(replace) if end > start):
+        if not line.strip():
+            moved.append(line)
+        elif direction == "add":
+            moved.append(prefix + line)
+        elif line.startswith(prefix):
+            moved.append(line[len(prefix) :])
+        else:
+            return None
+    return "".join(moved)
 
 
 def _placeholders(text: str) -> list[Region]:
@@ -308,17 +557,45 @@ def _count_failure(label: str, count: int, find: str) -> str:
     )
 
 
+def _stale_failure(label: str, find: str) -> str:
+    return _line(
+        f"{label}: find matches the code only as it was before an earlier edit of this plan changed it; "
+        "write each find against the code after the edits before it, or merge the two edits into one. "
+        f"find = {_quote(find)}"
+    )
+
+
 def _protected_failure(label: str, text: str, start: int, end: int, region: Region) -> str:
     index = SourceIndex(text)
     first, last = index.line_of(start), index.line_of(max(start, end - 1))
     where = f"line {first}" if first == last else f"lines {first}-{last}"
-    what = _KIND_NAMES[region.kind]
-    name = "" if region.kind in ("placeholder", "theme") else f" {region.name}"
     region_line = index.line_of(region.span.start)
+    if region.kind == "placeholder":
+        return _line(
+            f"{label}: find ({where}) overlaps {_placeholder_advice(index, region)} find = {_quote(text[start:end])}"
+        )
+    what = _KIND_NAMES[region.kind]
+    name = "" if region.kind == "theme" else f" {region.name}"
     return _line(
         f"{label}: find ({where}) overlaps the protected {what}{name} at line {region_line}; "
         "the THEME assignment, the theme tokens, the df = load_user_data() line and the final savefig "
         f"stay unchanged, so anchor the edit on other lines. find = {_quote(text[start:end])}"
+    )
+
+
+def _placeholder_advice(index: SourceIndex, region: Region) -> str:
+    """How to work around the placeholder: name the line below it, which an insertion anchors on."""
+    line = index.line_of(region.span.start)
+    below = next((number for number in range(line + 1, index.line_count + 1) if index.line_text(number).strip()), None)
+    head = (
+        f"the protected {PLACEHOLDER} line at line {line}; keep that line exactly as it is and out of find and replace"
+    )
+    if below is None:  # never in a working form, where the final savefig follows
+        return f"{head}."
+    anchor = _quote(index.line_text(below).rstrip("\r\n"))
+    return (
+        f"{head}; to change df or add statements after it, set find to line {below} ({anchor}) "
+        "and write the new statements in front of that line in replace."
     )
 
 

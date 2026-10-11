@@ -24,6 +24,8 @@ another provider, model or location.
 | `AGENT_RUNS_PER_MINUTE` | `1` | Runs that may start within any 60 seconds (a sliding window) |
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue; it also sizes the queue (`AGENT_RUNS_PER_MINUTE` x this / 60 entries) |
 | `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 to measure no repair or a second repair round |
+| `AGENT_ROOT_THINKING_BUDGET` | `0` | For measurements, Claude only: 0 keeps the root's thinking off; 1 to 4,096 turns on adaptive thinking and adds that many tokens to its output cap |
+| `AGENT_ADAPTER_THINKING_BUDGET` | `0` | The same for the adapter; the eval harness sets both with `--thinking-budget ROOT,ADAPTER` |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request (the `RunConfig` cap) |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `160000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
 | `AGENT_DAILY_TOKEN_BUDGET` | `2000000` | Cost-weighted tokens per user and day, weighted the same way: about 54 median runs on a warm cache, where the run cap binds first, and about 26 for a user whose every request starts cold |
@@ -44,7 +46,8 @@ another provider, model or location.
 The output caps of the model calls are constants in `models.py`, not settings, each with
 ample headroom above the measured answers: root and reviewer 4,096 tokens, the adapter
 8,192 for an edit-only call and 16,384 when a full file is allowed (12,288 on Gemini,
-which the soft deadline bounds), and the judge 256.
+which the soft deadline bounds), and the judge 256. A thinking measurement on Claude adds
+its `AGENT_*_THINKING_BUDGET` to the cap of its kind.
 
 No `.env` file is read here: the service runs on Cloud Run environment variables only,
 and the tests stay hermetic. `adk web` is different: it walks up from the agent
@@ -88,9 +91,16 @@ RENDER_URL_PATTERN = r"^https?://[A-Za-z0-9.-]{1,253}(:[0-9]{1,5})?/?$"
 LOCATIONS: tuple[str, ...] = ("eu", "us", "global")
 MODEL_PREFIXES: dict[str, str] = {"anthropic-vertex": "claude-", "gemini": "gemini-"}
 CLAUDE_MODELS: tuple[str, ...] = ("claude-haiku-5-5",)
-"""Claude models that accept a forced `tool_choice` with thinking disabled at effort low and
-medium (`models.VertexClaude`); Claude Opus 5.5, Sonnet 5.5 and Fable 5.1 answer both with a 400."""
+"""Claude models that accept disabled thinking at effort low and medium (`models.make_content_config`);
+Claude Opus 5.5, Sonnet 5.5 and Fable 5.1 answer disabled thinking with a 400. The structured
+answers (`output_config.format`) would work on all of them."""
 FIXTURE_PATTERN = r"^[a-z0-9][a-z0-9-]{0,79}$"
+MAX_THINKING_BUDGET = 4_096
+"""The most output room a thinking measurement may add to a Claude cap (`AGENT_*_THINKING_BUDGET`).
+
+It keeps the adapter's full-file cap (16,384 plus 4,096) below the Anthropic SDK's limit
+for a request that does not stream (about 21,300 tokens), and a full-file call that uses
+all of it at about 60 s, the `pipeline.ADAPTER_P95_S` the deadline reserves."""
 
 
 def _split_list(value: Any) -> Any:
@@ -176,6 +186,19 @@ class AgentSettings(BaseSettings):
     in `pipeline.py`. The default 2 is the design's "at most one repair round"; the eval harness
     (`--max-attempts`) sets 1 to measure no repair and 3 to measure a second repair round. Every
     attempt after the first needs `ADAPTER_P95_S` plus `RENDER_P95_S` left of the soft deadline."""
+
+    root_thinking_budget: int = Field(default=0, ge=0, le=MAX_THINKING_BUDGET)
+    """Claude thinking of the root, for measurements (`AGENT_ROOT_THINKING_BUDGET`): 0 (the default)
+    keeps it off. Above 0 the root thinks adaptively at its effort and its output cap grows by this
+    many tokens, so the reply keeps the whole measured headroom (`models.make_content_config`).
+    Claude Haiku 5.5 takes no thinking budget of its own (`budget_tokens` is a 400), so this is the
+    room thinking may use, not a limit the model sees. The root replays its thinking blocks after a
+    tool result; an account that enforces the history-editing check of preserved thinking may refuse
+    that call, which a measurement run shows as pipeline errors."""
+
+    adapter_thinking_budget: int = Field(default=0, ge=0, le=MAX_THINKING_BUDGET)
+    """The same for the adapter (`AGENT_ADAPTER_THINKING_BUDGET`). The adapter is single-turn, so
+    nothing is replayed; its structured answer (`output_config.format`) lets it think first."""
 
     max_llm_calls: PositiveInt = 12
     """LLM calls per request (`AGENT_MAX_LLM_CALLS`), the `RunConfig` cap."""
@@ -337,9 +360,13 @@ class AgentSettings(BaseSettings):
             if self.provider == "anthropic-vertex" and value not in CLAUDE_MODELS:
                 raise ValueError(
                     f"{name}={value!r} is not a supported Claude model ({', '.join(CLAUDE_MODELS)}): "
-                    "structured answers use a forced tool call with thinking disabled, which newer "
-                    "Claude models refuse with a 400"
+                    "the agents run with thinking disabled, which newer Claude models refuse with a 400"
                 )
+        if self.provider != "anthropic-vertex" and (self.root_thinking_budget or self.adapter_thinking_budget):
+            raise ValueError(
+                "AGENT_ROOT_THINKING_BUDGET and AGENT_ADAPTER_THINKING_BUDGET apply to Claude only; "
+                "Gemini thinks by a level per agent kind"
+            )
         if self.is_development and self.cloud_run_service:
             raise ValueError(
                 "ENVIRONMENT=development is refused on Cloud Run (K_SERVICE is set): it would skip the caller check"

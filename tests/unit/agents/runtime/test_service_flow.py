@@ -3,7 +3,8 @@
 The renderer is the fake backend, the judge is scripted, and every agent's model is
 replaced: `ScriptedLlm` for the Gemini arm (ADK sends the response schema natively),
 the real `VertexClaude` over a fake Anthropic client for the Claude arm (the
-structured answer is a forced tool call). Both arms must produce the same stream.
+structured answer is JSON text under `output_config.format`). Both arms must produce
+the same stream.
 
 The runtime's run queue here allows 1,000 starts a minute, so back-to-back turns in
 one test never wait for the rate window; `test_run_queue_flow.py` drives the queue
@@ -177,8 +178,9 @@ async def test_create_plot_streams_to_an_ok_plot_result(
     else:
         assert isinstance(fake, FakeAnthropic)
         choices = [call.get("tool_choice") for call in fake.calls]
-        forced = [choice for choice in choices if isinstance(choice, dict) and choice.get("type") == "tool"]
-        assert len(forced) == 2  # the adapter and the reviewer answered through the forced tool
+        formats = [call for call in fake.calls if "format" in (call.get("output_config") or {})]
+        assert len(formats) == 2  # the adapter and the reviewer answered under a structured-output format
+        assert not any(isinstance(choice, dict) and choice.get("type") == "tool" for choice in choices)
         # The root's closing reply after the shipped plot is the budget-exempt call: it carries no tools.
         assert not isinstance(choices[-1], dict) and not fake.calls[-1].get("tools")
         assert all(call.get("thinking") == {"type": "disabled"} for call in fake.calls)
@@ -405,7 +407,8 @@ async def test_gate_feedback_goes_to_the_next_attempt_and_the_last_one_is_review
     assert len(backend.jobs) == attempts
 
 
-# A plan cut off mid-string: Gemini's text stops, Claude's forced tool input stops before a required field.
+# A plan cut off mid-string: both providers send the truncated JSON text (FakeAnthropic cuts Claude's
+# answer before its closing quotes and brackets, so it stops after `study_ho` as Gemini's does).
 CUT_OFF = {
     "gemini": {"text": '{"edits": [{"find": "np.random.seed(42)\\nstudy_ho', "finish_reason": "MAX_TOKENS"},
     "anthropic-vertex": {"json": {"edits": [{"find": "np.random.seed(42)\nstudy_ho"}]}, "stop": "max_tokens"},
@@ -442,7 +445,7 @@ async def test_the_attribution_log_names_the_stage_of_every_attempt(
     assert not any("study_ho" in record.getMessage() for record in caplog.records)
 
 
-# Claude's forced tool input cut off to `{}`: schema-valid (every AdaptPlan field has a default), still not a plan.
+# An answer cut off before its first field: Gemini's text is empty, Claude's is `{` (FakeAnthropic cuts `{}`).
 CUT_OFF_EMPTY = {
     "gemini": {"text": "", "finish_reason": "MAX_TOKENS"},
     "anthropic-vertex": {"json": {}, "stop": "max_tokens"},
@@ -630,10 +633,11 @@ async def test_failed_edits_are_logged_by_kind_without_their_text(
 
     assert (plot["status"], plot["attempts"]) == ("ok", 2)
     check = attribution_lines(caplog, "pipeline_check")[0]
-    assert (check["outcome"], check["edit_failures"], check["edit_failure_kinds"]) == (
+    assert (check["outcome"], check["edit_failures"], check["edit_failure_kinds"], check["edit_tolerant"]) == (
         "edits_failed",
         1,
         {"zero_match": 1},
+        {},
     )
     (result,) = attribution_lines(caplog, "pipeline_result")
     assert result["stages"] == ["edit_apply", "reviewer_ok"]
