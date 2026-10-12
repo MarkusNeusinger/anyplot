@@ -38,7 +38,10 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    labels for locator positions outside the view interval and for hidden axes
    (`axis("off")`, a twin's), which report themselves visible but are never drawn,
    and an edge label one tick step past the view sat beyond the canvas in every
-   line plot of spike X (a false G3);
+   line plot of spike X (a false G3); for a figure with polar axes, `polar` adds each
+   one's radial-label angle, its visible theta span and a histogram of the plotted
+   points by angle and radius (`polar_report`), from which the host computes the free direction for the
+   radial labels (`agents/anyplot/render/polar.py`);
 5. runs the plot file with `runpy.run_path` as `__main__`;
 6. prints `HARNESS {"event": "end", "max_rss_mb": ..., "cpu_s": ...}` when the plot
    file returns or raises; an exception still propagates, so its traceback reaches
@@ -106,6 +109,9 @@ installed where the harness runs (a developer machine) is skipped without a `fin
 One CJK face is enough: the five regional faces share one character map and differ only in the
 default forms of shared Han characters; JP is the TTC's first face, and the forms follow
 `text.language` once a caller sets it (not yet: see the agent-network doc)."""
+POLAR_BIN_DEG = 5  # width of one angle bin of the plotted points in the probe's `polar` field
+POLAR_RINGS = 10  # radius bins: tenths of the visible radius range, centre to edge
+POLAR_AXES_LIMIT = 4  # polar axes the probe describes per figure
 GLYPH_SAMPLE_LIMIT = 16  # code points the probe lists; the host shows a few of them
 MISSING_GLYPHS: set[int] = set()  # code points reported by matplotlib's text layout, this process
 MISSING_MATH_GLYPHS: set[int] = set()  # code points reported by mathtext (no fallback inside `$…$`)
@@ -376,6 +382,66 @@ def probe(figure, dpi):
     }
 
 
+def polar_report(figure):
+    """Every polar axes of the figure (at most `POLAR_AXES_LIMIT`): where its radial tick labels sit and its data lies.
+
+    All angles are in degrees in the axes' own theta coordinates, the ones
+    `set_rlabel_position` takes, so the theta offset and direction need no
+    conversion: `rlabel` is the radial labels' angle and `thetamin` and `thetamax`
+    the visible span. `bins` counts the plotted points (scatter offsets and the
+    vertices of visible lines) per `POLAR_BIN_DEG` bin of their angle modulo 360
+    (the outer list) and per `POLAR_RINGS` bin of their radius as a share of the
+    visible radius range, centre first (the inner lists); points outside that range
+    are left out.
+    """
+    import numpy as np
+
+    report = []
+    for axes in figure.get_axes():
+        if getattr(axes, "name", "") != "polar" or len(report) >= POLAR_AXES_LIMIT:
+            continue
+        thetas, radii = [], []
+        for collection in axes.collections:
+            if type(collection).__name__ != "PathCollection":
+                continue
+            try:
+                offsets = np.asarray(collection.get_offsets(), dtype=float).reshape(-1, 2)
+            except Exception:
+                continue
+            thetas.append(offsets[:, 0])
+            radii.append(offsets[:, 1])
+        for line in axes.get_lines():
+            try:
+                if line.get_visible():
+                    xy = np.asarray(line.get_xydata(), dtype=float).reshape(-1, 2)
+                    thetas.append(xy[:, 0])
+                    radii.append(xy[:, 1])
+            except Exception:
+                continue
+        try:
+            rmin, rmax = float(axes.get_rmin()), float(axes.get_rmax())
+            entry = {
+                "rlabel": float(axes.get_rlabel_position()),
+                "thetamin": float(axes.get_thetamin()),
+                "thetamax": float(axes.get_thetamax()),
+            }
+        except Exception:
+            continue
+        theta = np.concatenate(thetas) if thetas else np.empty(0)
+        radius = np.concatenate(radii) if radii else np.empty(0)
+        share = (radius - rmin) / (rmax - rmin) if rmax != rmin else np.full_like(radius, np.nan)
+        keep = np.isfinite(theta) & np.isfinite(share) & (share >= 0) & (share <= 1)
+        counts, _, _ = np.histogram2d(
+            np.mod(np.degrees(theta[keep]), 360.0),
+            share[keep],
+            bins=[360 // POLAR_BIN_DEG, POLAR_RINGS],
+            range=[[0.0, 360.0], [0.0, 1.0]],
+        )
+        entry["bins"] = [[int(count) for count in row] for row in counts]
+        report.append(entry)
+    return report
+
+
 def install_probe(theme):
     try:
         from matplotlib.figure import Figure
@@ -390,6 +456,12 @@ def install_probe(theme):
             report = {"error": type(exc).__name__}
         result = original(self, *args, **kwargs)
         report["missing_glyphs"] = glyph_report()  # independent of the geometric probe, so also next to {"error": ...}
+        try:
+            polar = polar_report(self)
+        except Exception:  # the polar report never breaks a render either
+            polar = []
+        if polar:
+            report["polar"] = polar
         try:
             text = json.dumps(report, allow_nan=False)  # NaN or Infinity (a text at an infinite coordinate)
         except (TypeError, ValueError) as exc:

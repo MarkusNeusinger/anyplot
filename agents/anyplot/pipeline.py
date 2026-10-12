@@ -336,6 +336,9 @@ class Run:
     """How each attempt ended, in the page's vocabulary (`ROUND_OUTCOMES`), for `PlotResult.rounds`."""
     step: RoundStep | None = None
     """The progress step the current attempt is in, the last one `_status` reported."""
+    repair_hints: list[str] = field(default_factory=list)
+    """The latest render's measured targets for a repair (`GateReport.repair_hints`), added to
+    the hints of every repair attempt after it; they never start a repair themselves."""
 
 
 ROUND_OUTCOMES: dict[Stage, RoundOutcome] = {
@@ -500,6 +503,12 @@ def _columns_json(bindings: list[Binding], loader_columns: list[str] | None = No
     if loader_columns is not None:
         payload["loader_columns"] = loader_columns
     return json.dumps(payload, ensure_ascii=False)
+
+
+def _repair_hints(hints: list[str], run: Run) -> list[str]:
+    """A repair attempt's hints: the latest render's measured targets first, then the base hints, within `MAX_NOTES`."""
+    extra = [_note(line) for line in run.repair_hints if line not in hints]
+    return [*extra, *hints][:MAX_NOTES]
 
 
 def _clip_feedback(lines: list[str]) -> list[str]:
@@ -866,7 +875,7 @@ async def _attempts(
             profile=dataset.profile,
             bindings=view.bindings,
             loader_columns=columns,
-            hints=hints,
+            hints=_repair_hints(hints, run) if attempt > 1 else hints,
             change_request=args.change_request,
             feedback=_clip_feedback(feedback),
             previous_plan=previous_plan,
@@ -967,6 +976,8 @@ async def _attempts(
         rendered = await services.backend.render(job)
         render_s = time.monotonic() - started
         report = evaluate(rendered, themes=job.themes, library=view.library, rows=rows)
+        if report.passed_host_gates:
+            run.repair_hints = list(report.repair_hints)
         attribution(
             "pipeline_render",
             ledger,
