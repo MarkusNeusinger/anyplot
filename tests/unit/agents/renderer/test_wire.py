@@ -63,6 +63,12 @@ class TestCleanProbe:
     def test_anything_the_wire_cannot_carry_is_dropped(self, raw: bytes | None) -> None:
         assert wire.clean_probe(raw) is None
 
+    def test_a_missing_glyphs_object_passes_clean_probe(self) -> None:
+        """The harness's G10 field crosses the wire unchanged."""
+        raw = b'{"missing_glyphs": {"count": 3, "math": 1, "sample": [38144, 57344]}}'
+
+        assert wire.clean_probe(raw) == {"missing_glyphs": {"count": 3, "math": 1, "sample": [38144, 57344]}}
+
     def test_the_depth_limit_counts_the_object_itself(self) -> None:
         nested = b'{"a": ' + b"[" * 15 + b"]" * 15 + b"}"
 

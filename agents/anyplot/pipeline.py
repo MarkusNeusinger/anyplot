@@ -48,7 +48,9 @@ Every path that is not cancelled yields exactly one `Event(output=PlotResult)` a
 JSON dict. `ok` means the shipped render passed the host gates on the exact canvas
 and the reviewer passed exactly that render; `needs_attention` ships a render with
 residual defect lines (reviewer lines that no reviewed render fixed, adaptation
-findings, a padded canvas, or no review because the budget or the deadline ran out);
+findings, the G10 line of a render whose text has characters without a glyph, which a
+reviewer `ok` does not erase, a padded canvas, or no review because the budget or the
+deadline ran out);
 `failed` names its reason; `not_ready` comes before any model call. An `ok` or
 `needs_attention` result is stored as the session's next version before it is
 yielded, and carries that number as `version`. Progress goes out
@@ -100,7 +102,7 @@ from .data.store import StoredDataset
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, fence
 from .render.contract import RendererUnavailable, RenderJob, Theme
-from .render.gates import data_rows, evaluate
+from .render.gates import GLYPH_LINE_PREFIX, data_rows, evaluate
 from .render.runtimes.python import PythonRuntime
 from .schemas import (
     MAX_CHANGE_CHARS,
@@ -283,7 +285,7 @@ class Candidate:
     adaptation_rules: list[str] = field(default_factory=list)
     """The ADAPTATION validator rule ids behind `adaptation_lines`, for the attribution log."""
     advisory_gates: list[str] = field(default_factory=list)
-    """The advisory probe gate ids (`G3`, `G5`, `G7`, `G8`) behind `advisory_lines`, for the attribution log."""
+    """The advisory probe gate ids (`G3`, `G5`, `G7`, `G8`, `G9`, `G10`) behind `advisory_lines`, for the attribution log."""
 
 
 @dataclass
@@ -537,6 +539,8 @@ def finish(run: Run) -> PlotResult:
         if shipped.canvas_line:
             residual.append(shipped.canvas_line)
     residual += shipped.adaptation_lines
+    # A measured missing glyph is a fact of the shipped render, reviewed or not (G10).
+    residual += [line for line in shipped.advisory_lines if line.startswith(GLYPH_LINE_PREFIX)]
     if shipped.reviewed_ok is not True:
         residual += shipped.advisory_lines
         if run.review_lines:
