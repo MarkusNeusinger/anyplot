@@ -133,8 +133,9 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
     "error": frozenset({"code", "ref"}),
     # `bindings` and `data_confirmed` sync the page after a turn in which the root changed the bindings;
     # `dataset` carries the new data version after a turn in which the root's `prepare_data` or
-    # `generate_data` changed the data (version 1 when `generate_data` made the session's first data).
-    "done": frozenset({"llm_calls", "tokens", "bindings", "data_confirmed", "dataset"}),
+    # `generate_data` changed the data (version 1 when `generate_data` made the session's first data);
+    # `language` carries the session language `{language, source}` after every run, so the page syncs its chip.
+    "done": frozenset({"llm_calls", "tokens", "bindings", "data_confirmed", "dataset", "language"}),
 }
 _ERROR_CODES = frozenset({"capacity", "deadline", "guard_unavailable", "upstream", "internal"})
 _MAX_BINDING_ERRORS = 20
@@ -174,6 +175,10 @@ _UPSTREAM_CODES = frozenset(
 # `ROLE_PATTERN`; copied, because the API image does not ship the agents package).
 # Specs name roles such as `temperature_K`, `X1` or `lead_aVR`.
 ROLE_PATTERN = r"^[A-Za-z_][A-Za-z0-9_]{0,31}$"
+# A session language, a short name or code such as `de`, `Deutsch` or `Klingon`, as the
+# agents service defines it (`agents/anyplot/language.py`, `LANGUAGE_PATTERN`; copied,
+# because the API image does not ship the agents package).
+LANGUAGE_PATTERN = r"^[A-Za-z][A-Za-z -]{0,39}$"
 _GENERIC_CODES: dict[int, str] = {
     400: "bad_request",
     404: "not_found",
@@ -410,6 +415,13 @@ class SwitchLibraryBody(_StrictBody):
     # state; the agents service checks it against the session's spec.
     spec_id: SpecId
     library: LibraryId
+
+
+class LanguageBody(_StrictBody):
+    # The chat header's language chip. The pattern runs on the value as sent, which is
+    # forwarded untrimmed: a leading space is a 422 here as at the agents service, which
+    # stores the normalised form and answers it.
+    language: Annotated[str, Field(min_length=1, max_length=40, pattern=LANGUAGE_PATTERN)]
 
 
 class DatasetBody(_StrictBody):
@@ -943,6 +955,18 @@ async def put_bindings(
     payload = [binding.model_dump() for binding in bindings]
     path = f"/sessions/{sid}/bindings"
     return await _call_upstream(client, ctx, "PUT", path, json_body=payload, binding_errors=True)
+
+
+@router.put("/sessions/{sid}/language")
+async def put_language(sid: SessionId, body: LanguageBody, ctx: Ctx, client: Client) -> Any:
+    """Set the session language for the replies and the plot text (the chat header's chip).
+
+    The agents service answers `{language, source}`: the stored form (`English` comes back
+    as `en`, `Klingon` as typed) and the source `chosen`, which detection never overrides.
+    `409 run_active` while a turn or a render is in flight, `422 invalid` for a value the
+    agents service refuses.
+    """
+    return await _call_upstream(client, ctx, "PUT", f"/sessions/{sid}/language", json_body={"language": body.language})
 
 
 @router.post("/sessions/{sid}/dataset/confirm")
