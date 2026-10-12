@@ -1,0 +1,12 @@
+{
+  "spec_id": "scatter-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {"role": "x", "column": "Lernstunden"},
+    {"role": "y", "column": "Prüfungspunkte"}
+  ],
+  "expected": "accepted",
+  "tags": ["numeric", "de", "language", "german-message", "small"],
+  "source": "hand-written synthetic data"
+}

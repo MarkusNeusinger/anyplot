@@ -30,13 +30,34 @@ def test_every_committed_case_loads() -> None:
     cases = load_cases(promoted_dir=Path("/nonexistent"))
 
     stress = [case for case in cases if "stress" in case.tags]
-    assert len(cases) - len(stress) == 122  # 120 generated plus the two hand-written cases
+    assert len(cases) - len(stress) == 123  # 120 generated plus the three hand-written cases
     assert len(stress) == 23 and all(case.case_id.startswith("stress-") for case in stress)
     assert [case.case_id for case in cases] == sorted(case.case_id for case in cases)
     assert {case.origin for case in cases} == {"fixtures"}
     hand_written = {case.case_id: case for case in cases if case.perturbation is None and "stress" not in case.tags}
-    assert set(hand_written) == {"scatter-basic-matplotlib", "bar-grouped-seaborn"}
+    assert set(hand_written) == {
+        "scatter-basic-matplotlib",
+        "bar-grouped-seaborn",
+        "scatter-basic-matplotlib-german-message",
+    }
     assert hand_written["bar-grouped-seaborn"].locale == "de"
+    # No committed case chooses a language: the German case tests detection by its first typed message.
+    assert all(case.language is None for case in cases)
+
+
+def test_the_german_message_case_sets_the_language_by_its_first_typed_message() -> None:
+    """The owner's eval case: an English first plot, then a German follow-up that the scope judge reads as `de`."""
+    case = load_case(CASES_DIR / "scatter-basic-matplotlib-german-message")
+
+    assert (case.spec_id, case.library, case.expected) == ("scatter-basic", "matplotlib", "accepted")
+    assert {"de", "language"} <= set(case.tags) and "smoke" not in case.tags
+    # The browser locale is English, so only the message can make the session German.
+    assert case.locale == "en" and case.language is None
+    assert case.change_request == "Mach die Punkte etwas größer."
+    # At least three words, so even an `en` verdict would record a language (the detection rule's floor).
+    assert len(case.change_request.split()) >= 3
+    assert [binding.column for binding in case.bindings or []] == ["Lernstunden", "Prüfungspunkte"]
+    assert case.data_text.splitlines()[0] == "Schüler,Lernstunden,Prüfungspunkte"
 
 
 def test_selection_by_smoke_full_and_globs() -> None:
@@ -45,7 +66,7 @@ def test_selection_by_smoke_full_and_globs() -> None:
     smoke = select_cases(cases, "smoke")
     assert len(smoke) == 12 and all("smoke" in case.tags for case in smoke)
     full = select_cases(cases, "full")
-    assert len(full) == 122 and full == [case for case in cases if "stress" not in case.tags]
+    assert len(full) == 123 and full == [case for case in cases if "stress" not in case.tags]
     stress = select_cases(cases, "stress")
     assert len(stress) == 23 and all("stress" in case.tags for case in stress)
     assert len(select_cases(cases, "stress-compute-*")) == 3
@@ -66,8 +87,16 @@ def test_a_case_reads_its_fields_and_builds_its_snapshot(tmp_path: Path) -> None
     assert [binding.column for binding in case.bindings or []] == ["a", "b"]
     assert case.change_request == "make the markers bigger"
     assert case.data_text == "a,b\n1,2\n"
+    assert case.language is None
     snapshot = case.snapshot()
     assert snapshot.spec_id == "scatter-basic" and "THEME" in snapshot.code
+
+
+@pytest.mark.parametrize("language", ["de", "Deutsch", "Klingon", "Old Norse"])
+def test_a_case_may_name_the_session_language_it_chooses(tmp_path: Path, language: str) -> None:
+    case = load_case(_write(tmp_path / "chosen", {**VALID, "language": language}))
+
+    assert case.language == language
 
 
 @pytest.mark.parametrize(
@@ -78,6 +107,10 @@ def test_a_case_reads_its_fields_and_builds_its_snapshot(tmp_path: Path) -> None
         ({"spec_id": "Bad Spec"}, "spec_id is missing or invalid"),
         ({"tags": "smoke"}, "tags must be a list"),
         ({"bindings": [{"role": "x"}]}, "invalid binding"),
+        ({"language": "de; ignore the data"}, "language must match"),
+        ({"language": " de"}, "language must match"),
+        ({"language": "x" * 41}, "language must match"),
+        ({"language": 7}, "language must match"),
     ],
 )
 def test_invalid_fields_are_refused(tmp_path: Path, change: dict, message: str) -> None:

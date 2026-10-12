@@ -1,7 +1,10 @@
 """Eval cases: loading, validation and selection for the matrix harness.
 
 A case is a directory with `case.json`, `data.csv` and optionally `snapshot.json` and
-`change_request.txt` (`agents/evals/fixtures/README.md`). Two sources:
+`change_request.txt` (`agents/evals/fixtures/README.md`). `case.json` may name a
+session `language` (a value of `language.LANGUAGE_PATTERN`), which the harness sets
+through `PUT /v1/sessions/{sid}/language` before the first turn, as the chat header's
+chip would; without it the session keeps its own default and detection. Two sources:
 
 * `agents/evals/fixtures/cases/`: committed, synthetic only (`origin="fixtures"`);
 * `agents/evals/.cases/`: promoted feedback cases, git-ignored because they hold users'
@@ -11,8 +14,9 @@ A case is a directory with `case.json`, `data.csv` and optionally `snapshot.json
   directory when it exists.
 
 `select_cases` takes the harness's `--cases` value: `smoke` (the cases tagged `smoke`:
-one generated case per spec plus the two hand-written ones), `full` (every case except
-the stress cases, so a full run and its baseline keep their 122 cases), `stress` (the
+one generated case per spec plus the hand-written `scatter-basic-matplotlib` and
+`bar-grouped-seaborn`), `full` (every case except the stress cases: the 120 generated
+and the three hand-written ones, 123 since 2026-10-12), `stress` (the
 cases tagged `stress`, from `make_stress.py`), or comma-separated shell globs over case
 ids (`*-seaborn-*`, `pie-basic-*`, `stress-compute-*`). The catalogue
 snapshot comes from `snapshot.json` or, without it, from `plots/<spec>/` in this
@@ -27,6 +31,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from agents.anyplot.dev_fixture import CASES_DIR, snapshot_from_repo
+from agents.anyplot.language import LANGUAGE_PATTERN, is_valid
 from agents.anyplot.schemas import Binding
 from agents.anyplot.session_state import CatalogueSnapshot
 from agents.anyplot.settings import FIXTURE_PATTERN
@@ -64,6 +69,8 @@ class EvalCase:
     origin: Origin
     directory: Path
     change_request: str | None = None
+    language: str | None = None
+    """The session language the harness chooses before the first turn (source `chosen`), or `None`."""
     snapshot_file: Path | None = field(default=None, repr=False)
 
     def snapshot(self) -> CatalogueSnapshot:
@@ -101,6 +108,9 @@ def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
     change_request = change_file.read_text(encoding="utf-8").strip() if change_file.is_file() else None
     if change_request is not None and not 0 < len(change_request) <= MAX_CHANGE_REQUEST_CHARS:
         raise CaseError(f"{directory}/change_request.txt: 1 to {MAX_CHANGE_REQUEST_CHARS} characters")
+    language = raw.get("language")
+    if language is not None and not (isinstance(language, str) and is_valid(language)):
+        raise CaseError(f"{directory}/case.json: language must match {LANGUAGE_PATTERN}")
     snapshot_file = directory / "snapshot.json"
     perturbation = raw.get("perturbation")
     return EvalCase(
@@ -117,6 +127,7 @@ def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
         origin=origin,
         directory=directory,
         change_request=change_request,
+        language=language,
         snapshot_file=snapshot_file if snapshot_file.is_file() else None,
     )
 

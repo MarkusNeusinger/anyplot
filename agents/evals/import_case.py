@@ -28,7 +28,9 @@ else: a feedback case holds a user's data, and everything under
 `--save-baseline` refuses a run that holds promoted cases. Run the case with
 `python -m agents.evals.matrix --cases <id>`. The directory holds:
 
-* `case.json`: the spec, library, locale and bindings of the session; `expected` from
+* `case.json`: the spec, library, locale and bindings of the session, and its
+  `language` when the session's language was detected or chosen (the version's own,
+  which the harness then chooses before the first turn); `expected` from
   `--expected`, else from the manifest's reaction by the triage's rule (`thumbs_up` →
   `accepted`, `thumbs_down` → `rejected`; `bug` and `idea` imply no outcome, so they
   need `--expected`; a bundle without a manifest → `unknown`);
@@ -271,6 +273,26 @@ def _bindings(bundle: dict[str, Any]) -> list[dict[str, Any]]:
     ]
 
 
+def session_language(session: dict[str, Any], version: dict[str, Any]) -> str | None:
+    """The session language the case chooses before its first turn, or `None` to keep the default and detection.
+
+    A session whose language source is still `default` never changed its language, so
+    its versions are English and the replay's own detection repeats that. Otherwise the
+    case takes the language the version's plot text was written in (the session's for a
+    version without one): the replay sends its first plot as `create_plot`, which
+    detects nothing, so without the choice it would draw English text where the
+    reported plot had another language.
+    """
+    from agents.anyplot.language import is_valid
+
+    if session.get("plot_language_source") not in ("detected", "chosen"):
+        return None
+    value = version.get("language")
+    if not isinstance(value, str):
+        value = session.get("plot_language")
+    return value if isinstance(value, str) and is_valid(value) else None
+
+
 def _header(data_csv: str) -> set[str]:
     """The column names in the first row of `data_csv`."""
     try:
@@ -352,10 +374,12 @@ def build_case(
             notes.append(f"left out a change request of {len(request)} characters (at most {MAX_CHANGE_REQUEST_CHARS})")
             request = None
     locale = session.get("locale")
+    language = session_language(session, source.version)
     case = {
         "spec_id": spec_id,
         "library": library,
         "locale": locale if isinstance(locale, str) and locale else "en",
+        **({"language": language} if language is not None else {}),
         "bindings": bindings,
         "expected": expected,
         "tags": [IMPORTED_TAG, reaction] if reaction else [IMPORTED_TAG],

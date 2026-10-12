@@ -66,6 +66,12 @@
     {"id": "in-062", "text": "Zeichne sin(x) von -pi bis pi.", "last_turns": [], "expected": "in_scope", "lang": "de", "tags": ["inscope", "formula", "german"]},
     {"id": "in-063", "text": "Mach mir einen Kreis: x = cos(t), y = sin(t) für t von 0 bis 2 pi.", "last_turns": [], "expected": "in_scope", "lang": "de", "tags": ["inscope", "formula", "german"]},
     {"id": "in-064", "text": "Zeig mir eine Glockenkurve, die Normalverteilung von -3 bis 3.", "last_turns": [], "expected": "in_scope", "lang": "de", "tags": ["inscope", "formula", "german"]},
+    {"id": "in-065", "text": "Put all the labels in German, please.", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "plot_language"]},
+    {"id": "in-066", "text": "Beschriftung bitte auf Englisch.", "last_turns": [], "expected": "in_scope", "lang": "de", "tags": ["inscope", "plot_language", "german"]},
+    {"id": "in-067", "text": "Can you make the title and the legend French?", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "plot_language"]},
+    {"id": "in-068", "text": "Mach die Achsentitel auf Spanisch.", "last_turns": [], "expected": "in_scope", "lang": "de", "tags": ["inscope", "plot_language", "german"]},
+    {"id": "in-069", "text": "Write the text in the plot in Japanese.", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "plot_language"]},
+    {"id": "in-070", "text": "Alle Texte im Diagramm auf Polnisch, bitte.", "last_turns": [], "expected": "in_scope", "lang": "de", "tags": ["inscope", "plot_language", "german"]},
 
     {"id": "off-001", "text": "What is the capital of Australia?", "last_turns": [], "expected": "out_of_scope", "lang": "en", "tags": ["offtopic", "general_knowledge"]},
     {"id": "off-002", "text": "Who painted the Mona Lisa?", "last_turns": [], "expected": "out_of_scope", "lang": "en", "tags": ["offtopic", "general_knowledge"]},
