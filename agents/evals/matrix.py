@@ -12,10 +12,12 @@ renderer is `fake` unless `--renderer` or `AGENT_RENDERER` names another. `--cas
 stress` selects the 23 stress cases of `make_stress.py`, which `full` leaves out.
 
 Each case opens a session on `agents.main:app` through httpx's `ASGITransport`
-(`POST /v1/sessions` with the catalogue snapshot, `/dataset` with `data.csv`, `PUT
-/bindings` with the case's bindings, `POST /dataset/confirm` as the user's step-1
-confirmation, then `POST /messages {"action": "create_plot"}`,
-and a free-text turn when the case has a `change_request.txt`), so the run takes the
+(`POST /v1/sessions` with the catalogue snapshot, `PUT /language` when the case names
+a session language, `/dataset` with `data.csv`, `PUT /bindings` with the case's
+bindings, `POST /dataset/confirm` as the user's step-1 confirmation, then `POST
+/messages {"action": "create_plot"}`, and a free-text turn when the case has a
+`change_request.txt`, the session's first typed message, which sets its language
+unless the case chose one), so the run takes the
 same path as a user's: the ScopeGuard, Budget and ToolSafety plugins, the run queue,
 the data judge, the pipeline and its gates. The models come from the settings, the
 render backend from `AGENT_RENDERER`: `remote` renders on a deployed renderer, `local`
@@ -38,7 +40,9 @@ prefix of the path in the validator's closed vocabulary, such as `io` or `pandas
 anything else `?`), so a run shows which modules the adapter reaches for.
 Answers that failed their schema are counted by agent kind and outcome
 (`answer_outcomes`: `repaired` or `refused`) and by broken rule (`answer_rules`, list
-indices written `*`), from the guard's `answer_schema` lines.
+indices written `*`), from the guard's `answer_schema` lines. `language` is the last
+`done` event's session language, `{language, source}`, so a report shows which
+language each run ended in; it is recorded, never scored.
 
 Outputs, under `--out` (default `agents/evals/reports/`, git-ignored):
 
@@ -603,6 +607,7 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
         "banned_imports": {},
         "answer_outcomes": {},
         "answer_rules": {},
+        "language": None,
     }
 
 
@@ -819,6 +824,9 @@ def book_turn(record: dict[str, Any], turn: Turn) -> dict[str, Any] | None:
             error = data
         elif name == "done":
             done = at
+            if isinstance(data.get("language"), dict):
+                # A `done` without it (a turn refused before the queue) keeps the earlier turn's value.
+                record["language"] = data["language"]
     if record["turns"] == 1:
         record["ttfe_s"] = first
     elapsed = done if done is not None else last
@@ -882,7 +890,7 @@ class CaseRunner:
                     await self.client.delete(f"/v1/sessions/{sid}", headers=headers("x"))
                 except Exception as exc:
                     logger.warning("deleting the session of %s failed: %s", case.case_id, type(exc).__name__)
-            for step in ("s", "d", "b", "m1", "m2", "a", "x"):
+            for step in ("s", "l", "d", "b", "m1", "m2", "a", "x"):
                 self.collector.take(f"{tag}-{step}")
         finish_record(record)
         return record
@@ -900,6 +908,8 @@ class CaseRunner:
         if sid is None:
             return
         opened.append(sid)
+        if case.language is not None and not await self._language(record, case, sid, headers("l")):
+            return
         if not await self._dataset(record, case, sid, headers("d")):
             return
         if not await self._bindings(record, case, sid, headers("b")):
@@ -928,6 +938,17 @@ class CaseRunner:
             return None
         session_id: str = response.json()["session_id"]
         return session_id
+
+    async def _language(self, record: dict[str, Any], case: "EvalCase", sid: str, headers: dict[str, str]) -> bool:
+        """The case's session language, chosen as the chat header's chip would (source `chosen`)."""
+        response = await self.client.put(
+            f"/v1/sessions/{sid}/language", headers=headers, json={"language": case.language}
+        )
+        if response.status_code != 200:
+            # `load_case` checked the value against the route's pattern, so any refusal is the service's error.
+            record["status"], record["reason"] = "error", _detail(response)
+            return False
+        return True
 
     async def _dataset(self, record: dict[str, Any], case: "EvalCase", sid: str, headers: dict[str, str]) -> bool:
         response = await self.client.post(f"/v1/sessions/{sid}/dataset", headers=headers, json={"text": case.data_text})

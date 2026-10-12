@@ -7,6 +7,7 @@ the same attribution lines a real run writes. Nothing here calls a model or a re
 
 import asyncio
 import base64
+import dataclasses
 import json
 import os
 import subprocess
@@ -43,7 +44,7 @@ from agents.evals.matrix import (
 from agents.evals.report import Flip, summarize, summary_markdown
 from agents.main import Runtime
 
-from ..runtime.fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK
+from ..runtime.fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK, FakeAnthropic
 from .conftest import check_html
 
 
@@ -116,6 +117,8 @@ async def test_two_fixtures_through_the_real_flow(
     assert bar["edit_apply_failures"] >= 2 and bar["adapter_outcomes"] == {"plan": 2}
     assert bar["llm_calls"] == 4 and bar["cost_usd"] == pytest.approx(4 * CALL_COST)
     assert bar["png"] is None and bar["render_s"] == []
+    # Only `create_plot`, which the judge never reads: both stay English whatever their locale (bar-grouped: `de`).
+    assert bar["language"] == scatter["language"] == {"language": "en", "source": "default"}
 
     # Schema 2: where each run stopped, per attempt and per call, all content-free.
     assert (scatter["stage"], scatter["stages"]) == ("reviewer_ok", ["reviewer_ok"])
@@ -174,6 +177,54 @@ async def test_two_fixtures_through_the_real_flow(
     assert result.report_path.name == f"{stamp['date']}-claude-haiku-5-5.json"
     assert json.loads(result.report_path.read_text())["runs"][1]["case_id"] == "scatter-basic-matplotlib"
     assert "## Runs that did not pass" in result.summary_path.read_text()
+
+
+async def test_a_case_that_names_a_language_chooses_it_before_the_first_turn(
+    tmp_path: Path, services: Services, swap_models
+) -> None:
+    """`case.json`'s `language` goes through the language route, so the first plot's text is already in it."""
+    fake = swap_models(
+        "anthropic-vertex",
+        {
+            "root": [{"call": "plot_pipeline", "args": {}}, {"text": ROOT_REPLY}],
+            "adapter": [{"json": SCATTER_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}],
+        },
+    )
+    case = dataclasses.replace(two_fixtures()[1], language="Deutsch")
+
+    result = await run_matrix(
+        [case], config(tmp_path, cases=case.case_id), services=services, runtime=runtime(), echo=lambda _: None
+    )
+
+    (run,) = result.report["runs"]
+    assert (run["status"], run["passed"]) == ("ok", True)
+    # The route stores a known name as its code, and a choice is final.
+    assert run["language"] == {"language": "de", "source": "chosen"}
+    adapter_calls = [call for call in fake.calls if FakeAnthropic.kind(call) == "adapter"]
+    assert len(adapter_calls) == 1
+    assert "<plot_language>\\nde\\n</plot_language>" in json.dumps(adapter_calls[0]["messages"], ensure_ascii=False)
+
+
+async def test_a_refused_language_is_the_services_error(tmp_path: Path) -> None:
+    """`load_case` checked the value against the route's pattern, so a refusal there is no outcome of the case."""
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(409, json={"detail": "run_active"})
+
+    runner = runner_over(handler, tmp_path)
+    case = dataclasses.replace(two_fixtures()[1], language="de")
+    record = matrix.base_record(case, 1)
+
+    went_on = await runner._language(record, case, "sid", {"X-Anyplot-User": "u", "X-Request-Id": "r-l"})
+
+    assert not went_on and matrix.is_error(record)
+    assert (record["status"], record["reason"]) == ("error", "run_active")
+    assert [(request.method, request.url.path, json.loads(request.content)) for request in requests] == [
+        ("PUT", "/v1/sessions/sid/language", {"language": "de"})
+    ]
 
 
 async def test_the_attempt_bound_reaches_the_pipeline_and_the_stamp(

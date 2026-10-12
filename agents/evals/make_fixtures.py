@@ -7,10 +7,11 @@ byte-identical files. Run it from the repository root:
     uv run --extra agents python -m agents.evals.make_fixtures --check  # exit 1 when a file is stale
 
 It writes `agents/evals/fixtures/cases/<spec>-<library>-<perturbation>/` with
-`case.json` and `data.csv` and leaves every other case directory alone (the two
-hand-written cases `scatter-basic-matplotlib` and `bar-grouped-seaborn` stay as they
-are). A NumPy upgrade that changes a random stream makes `--check` and the unit test
-fail; rerun the generator and commit the result.
+`case.json` and `data.csv` and leaves every other case directory alone (the three
+hand-written cases `scatter-basic-matplotlib`, `bar-grouped-seaborn` and
+`scatter-basic-matplotlib-german-message` stay as they are). A NumPy upgrade that
+changes a random stream makes `--check` and the unit test fail; rerun the generator
+and commit the result.
 
 **The ten specs.** Each covers another plot family, and the readiness scan
 (`agents/anyplot/code/readiness.py`) marks both its matplotlib and its seaborn file

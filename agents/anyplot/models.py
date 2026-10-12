@@ -412,7 +412,7 @@ _LANG = re.compile(r"^[a-z]{2}$")
 
 
 class JudgeVerdict(BaseModel):
-    """What the judge decided, the reply language it saw, and the tokens it cost.
+    """What the judge decided, the language of what it read (for the scope judge, the message's), and the tokens.
 
     `tokens` is the plain total, which the `done` event and the attribution line report;
     `input_tokens` and `output_tokens` split it, so the eval harness can price the judge

@@ -18,11 +18,21 @@
 * `out_of_scope` and `attack` withhold the message with the fixed `out_of_scope`
   refusal, and `needs_data` (a request for data the service would have to fetch) with
   the fixed `needs_data` refusal, each in the language the judge names (`policy.refusal`:
-  English, German, French, Spanish, Italian, Portuguese, Dutch and Polish, English for
-  every other language); the run ends there, at the first turn;
+  English, German, French, Spanish, Italian, Portuguese, Dutch, Polish, Chinese,
+  Vietnamese and Russian, English for every other language); the run ends there, at
+  the first turn;
 * an `attack` verdict is a strike against the user (`UsageBook.add_strike`), once
   per distinct message text: from `AGENT_ATTACK_STRIKES` strikes on, the daily check
   above refuses the user with the budget refusal for the rest of the day;
+* the judge's `lang` for the session's first in-scope typed message becomes the
+  session language with the source `detected` (`session_state.LANGUAGE`), unless one
+  is set: a later message never changes it, a choice (`chosen`) never yields to it, a
+  refused message never sets it, and an `en` verdict counts only for a message of at
+  least three words, because the judge also answers `en` for a message without a clear
+  language (`sin x` keeps the default, and the next typed message is judged again). The
+  write is a content-free state event appended after the judge's line and the refusal
+  branch; it never raises, so a failed write is one `language_write_failed` line and the
+  accepted message still goes through;
 * with `AGENT_KEEP_REFUSALS`, a refused message's text and verdict go into the
   session's bounded refusal ring (`services.RefusalStore`), which only the feedback
   bundle shows; the attribution line never carries the text.
@@ -58,14 +68,16 @@ from typing import Literal
 
 from google.adk.agents.invocation_context import InvocationContext
 from google.adk.events.event import Event
+from google.adk.events.event_actions import EventActions
 from google.adk.plugins.base_plugin import BasePlugin
 from google.genai import types
 
-from ..models import JudgeUnavailable
+from ..language import DEFAULT_LANGUAGE
+from ..models import JudgeUnavailable, JudgeVerdict
 from ..output_guard import reply_length, reply_too_long, sanitize
 from ..policy import fence, refusal, scope_rubric
 from ..services import KeptRefusal, get_services
-from ..session_state import SPEC_ID
+from ..session_state import LANGUAGE_SOURCE, SPEC_ID, language_delta
 from ..settings import get_settings
 from .ledger import RequestLedger, attribution, judge_budget_tokens, ledger_for
 
@@ -82,6 +94,9 @@ MAX_USER_CONTEXT_CHARS = 1_500
 """The earlier user turns the judge sees: the last three, 500 characters each, 1,500 in all (about 400 tokens)."""
 ROOT_AGENT = "anyplot"
 USER_AUTHOR = "user"
+MIN_ENGLISH_DETECTION_WORDS = 3
+"""An `en` verdict records the session language only for a message of at least this many words:
+the judge also answers `en` for a message without a clear language, such as `sin x`."""
 HALT_AUTHOR = "model"
 """ADK's author of the event a `before_run_callback` halt emits: the fixed refusal or the outage text."""
 
@@ -220,7 +235,39 @@ class ScopeGuardPlugin(BasePlugin):
             code = refusal_code(verdict.verdict)
             ledger.refuse(code, refusal(code, verdict.lang))
             return _withheld()
+        await self._detect(invocation_context, ledger, verdict, text)
         return None
+
+    @staticmethod
+    async def _detect(
+        invocation_context: InvocationContext, ledger: RequestLedger, verdict: JudgeVerdict, text: str
+    ) -> bool:
+        """The session's first in-scope typed message sets the session language, once (`detected`).
+
+        Called only for an accepted message, after the judge's attribution line, so the
+        attack strike and the refusal never depend on it. Never raises: the message is
+        already accepted and booked, so a failed state write (a DELETE racing the turn, a
+        store outage) is a log line, not a refusal. ADK applies the delta to the session's
+        state in place, so the root's session block of this very turn names the language.
+        """
+        session = invocation_context.session
+        if session.state.get(LANGUAGE_SOURCE) in ("detected", "chosen"):
+            return False
+        if verdict.lang == DEFAULT_LANGUAGE and len(text.split()) < MIN_ENGLISH_DETECTION_WORDS:
+            return False  # "English or unclear": the next typed message gets its chance
+        event = Event(
+            invocation_id=invocation_context.invocation_id,
+            author=USER_AUTHOR,
+            actions=EventActions(state_delta=language_delta(verdict.lang, "detected")),
+        )
+        try:
+            await invocation_context.session_service.append_event(session=session, event=event)
+        except Exception as exc:
+            logger.warning("language detection failed: %s", type(exc).__name__)
+            attribution("scope_guard", ledger, verdict="language_write_failed")
+            return False
+        attribution("scope_guard", ledger, verdict="language_detected", lang=verdict.lang)
+        return True
 
     async def on_event_callback(self, *, invocation_context: InvocationContext, event: Event) -> Event | None:
         try:

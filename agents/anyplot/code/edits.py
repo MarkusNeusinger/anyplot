@@ -74,6 +74,11 @@ MAX_CHANGE_LITERAL_CHARS = 300
 a subtitle or a few labels fit, a paragraph of text does not. The first adaptation of the catalogue
 code renames many titles and labels at once and keeps `MAX_NEW_LITERAL_CHARS`, which also bounds the
 new literals of every version against the catalogue code, so text cannot pile up across turns."""
+REWRITE_LITERAL_FACTOR = 1.5
+"""On a change that rewrites the plot's text in another language, every character of string-literal text
+the plan drops from the base raises the change's budget by this much (up to `MAX_NEW_LITERAL_CHARS`): a
+translation may run longer than its source, but the budget grows only by the text the plan replaces, so
+switching the language does not let a paragraph of new text in with it."""
 
 # The placeholder statement as a line of text, so one that an earlier edit of the same
 # plan introduced is protected before the code parses again.

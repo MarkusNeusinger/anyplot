@@ -90,6 +90,8 @@ class RequestLedger:
     adapter_allow_full: bool = False
     review_render_id: str | None = None
     lang: str = "en"
+    """The ISO 639-1 code of the fixed refusals: the session language's (`language.refusal_lang`) until the
+    scope judge answers, then the language the judged message is written in."""
     refusal: tuple[str, str] | None = None
     error: str | None = None
     model_versions: set[str] = field(default_factory=set)

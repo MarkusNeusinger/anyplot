@@ -421,7 +421,9 @@ Used to load interactive plots (plotly, bokeh, altair) in iframes with dynamic s
 > built only with `VITE_ENABLE_AGENT_CHAT=true`, which the deploy-app trigger
 > sets since the same day. The feedback triage routes under
 > `/debug/agent/cases` and the `agent_feedback` table behind them are built
-> since 2026-10-12 (see [Feedback triage](#feedback-triage)). Design:
+> since 2026-10-12 (see [Feedback triage](#feedback-triage)), and so is the
+> session language, `PUT /sessions/{sid}/language` (see
+> [Session language](#session-language)). Design:
 > [Agent network design](../concepts/agent-network.md).
 
 The `/debug/agent/*` routes (`api/routers/agent.py`) are a backend for the
@@ -485,7 +487,8 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 | `POST /sessions` | `{spec_id, library, locale}` | `{session_id, eligibility}`; `404 not_found` when the spec has no implementation for the library |
 | `POST /sessions/{sid}/library` | `{spec_id, library}` | Switches the library; the dataset and bindings stay |
 | `POST /sessions/{sid}/dataset` | `{text, confirmed?}`, at most 200 KB (204,800 bytes) of UTF-8 | `{preview, profile, bindings, warnings, roles, version}` for a table, stored as version 1 of the data (an earlier paste's undo history is dropped): CSV, TSV, semicolon or pipe text; JSON as an array of records, an object of column lists, an object of values or an array of `[category, value]` pairs (the last two become the columns `category`, the keys kept as text, and `value`; a repeated key keeps its last value with a warning); the same shapes as a Python literal, also behind an assignment such as `cat_day = {...}`, with single quotes, trailing commas and tuples (text that starts with a bare `(` and is no literal is read as delimited text); a column whose every cell carries the same unit (`65 %`, `15,6 h`, `€ 5`, also with a no-break space) is read as numbers and named `<name> (<unit>)` with a warning, unless the header already names the unit. For text that is no table (prose, a list typed one value per line) of at most 4,000 characters, `{transcribed: true, text, preview, profile, warnings, note}`, the table the judge model read, with its CSV in `text` and nothing stored: the page shows it for confirmation, and confirming posts that CSV through this route again with `confirmed: true`, which skips only the free-text fallback (a one-column table would otherwise be read again), never the parse, the pre-filter, the judge or the store. `413 too_long` above the limit, `422 unparseable` when neither the parser nor the model finds a table, `422 formula` when the text asks for a formula such as `sin(x) von -pi bis pi` or `y = x**2` (no model reads it; ask for the formula in the chat, where the assistant computes the table, see [Data changes](#data-changes)), `403 data_refused` when a header, a cell or the raw text addresses an AI (personal data such as names, addresses, e-mail addresses, phone numbers and web addresses is allowed), `503 guard_unavailable` when the judge model does not answer |
-| `PUT /sessions/{sid}/bindings` | `[{role, column}]`, at most 50 | The agents service's `{bindings, complete, missing_roles}`; `422 no_dataset` before a parse, `422 invalid` with the check's `errors` lines for a binding the spec roles or the columns refuse. A change of the bindings drops the data confirmation below |
+| `PUT /sessions/{sid}/bindings` | `[{role, column}]`, at most 50 | The agents service's `{bindings, complete, missing_roles}`; `422 no_dataset` before a parse, `422 invalid` with the check's `errors` lines for a binding the spec roles or the columns refuse, `409 run_active` while a turn or a render is in flight. A change of the bindings drops the data confirmation below |
+| `PUT /sessions/{sid}/language` | `{language}`: a short language name or code such as `de`, `Deutsch` or `Klingon`, 1 to 40 characters that match `^[A-Za-z][A-Za-z -]{0,39}$` | The agents service's `{language, source}`, the stored form (`English` comes back as `en`, `Klingon` as typed) with the source now `chosen`: the replies and the plot text of the next version follow it, and the language a typed message implies never replaces it (see [Session language](#session-language)). Versions made before keep their text. `422` for a value outside the pattern, `409 run_active` while a turn or a render is in flight |
 | `POST /sessions/{sid}/dataset/confirm` | none | Step 1 of two: you confirm that the stored dataset and its bindings fit; `{confirmed: true, rows, columns}`. The plot pipeline runs only on confirmed data (`create_plot` before it answers `plot{status: "not_ready", reason: "data_unconfirmed"}`); a new paste, a transcription's `.use()`, a binding change, a change of the data by the assistant or an undo drops the confirmation, a library switch keeps it. `422 no_dataset` before a parse, `409 run_active` while a turn or a render is in flight |
 | `POST /sessions/{sid}/dataset/undo` | none | Undo the assistant's last change to the data (see [Data changes](#data-changes)): the version before it is the current dataset again, `{preview, profile, bindings, warnings, roles, version}` like the dataset route, unconfirmed. The service keeps the last five versions. `422 nothing_to_undo` when the paste was never changed or the first data came from a formula, `409 run_active` while a turn or a render is in flight |
 | `POST /sessions/{sid}/messages` | `{text}` (at most 2,000 characters), `{"action": "create_plot"}` or `{"action": "summarize_data"}` | An SSE stream in protocol `anyplot/1`; `413 too_long` above the limit, `409 run_active` while you have a queued or running turn or a theme render in any session, `503 capacity` when the run queue is full. `summarize_data` asks the assistant for the step-1 summary of the data (rows, columns with types and units, missing values, percentages, the proposed bindings, one question when something is ambiguous) without the scope judge, like `create_plot` |
@@ -502,7 +505,9 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 
 Validation: `spec_id` matches `^[a-z0-9-]{1,100}$`; `library` is one of the 15
 supported library ids; `locale` is a language tag of at most 16 characters such
-as `de` or `de-CH`; the session id matches `^[A-Za-z0-9_-]{1,128}$`; a binding
+as `de` or `de-CH`, the browser's, recorded with a feedback case and never used
+as the session language; `language` matches `^[A-Za-z][A-Za-z -]{0,39}$`; the
+session id matches `^[A-Za-z0-9_-]{1,128}$`; a binding
 `role` matches `^[A-Za-z_][A-Za-z0-9_]{0,31}$` (the agents contract, so roles
 such as `temperature_K` or `X1` pass) and its `column` has at most 64 characters. An
 unknown field in a body is a `422`, and so is a body with a lone surrogate
@@ -605,6 +610,26 @@ turn. Text that holds its own values is data, not
 a formula: with three numbers or more besides a range, such as `Umsatz von
 2020 bis 2024: 10 12 15 18`, the free-text reader reads it as a table.
 
+### Session language
+
+Every session has one language for the assistant's replies and for the text in
+the plot: the title, the axis titles, the legend entries and the annotations.
+It starts as English (`en`, source `default`), also when your browser is set to
+another language. Your first typed message that the assistant answers sets it
+to the language you write in (source `detected`): a refused message and the
+`create_plot` and `summarize_data` actions set nothing, and later messages do
+not change it again; a very short
+English message, such as a formula, leaves the default in place, and the next
+message is read for its language again. To set it yourself, pick a language
+from the `lang:` chip in the chat header, type any language name in Latin
+letters into its field, or ask in the chat ("labels in English"). Both make the
+same change (source `chosen`), which detection never overrides; when you
+already have a plot, a request in the chat also makes the next version in the
+new language. The code, its comments, column names and labels from your data
+are not translated. A plot you already have keeps its text; the next version
+uses the new language. After each turn, the `done` event carries the language
+as `{language, source}`.
+
 ### Theme toggle
 
 A chat turn renders the plot in one theme: light, unless you ask for a dark
@@ -658,7 +683,9 @@ config stamp (provider, model, judge model, location, ADK and service versions,
 prompt hashes); each version's `data.csv` only with `include_data=true`. The
 top-level keys are `session`, `snapshot`, `transcript`, `versions`, `profile`,
 `bindings` and `config`, plus `refusals` when the agents service runs with
-`AGENT_KEEP_REFUSALS`.
+`AGENT_KEEP_REFUSALS`. `session` names the spec, the library, the browser's
+locale and the session language (`plot_language`, `plot_language_source`), and
+each version carries the `language` its text was written in.
 
 A bundle over 32 MiB can't be saved: that is Cloud Run's limit on an HTTP/1
 response that is not streamed, and the agents service answers the bundle in one
@@ -795,9 +822,9 @@ Until it has run, the feedback route stores the case and answers
 | `status` | `{step, attempt}` for a pipeline step: `adapting`, `checking`, `rendering`, `reviewing`, or `repairing` |
 | `message` | `{text}`: the assistant's reply as plain text, at most 1,200 characters; a longer reply arrives cut to 1,200 characters when the turn ran the plot pipeline, and as the `out_of_scope` refusal otherwise |
 | `plot` | `{status, reason, attempts, artifacts, changes, residual_defects, version}`; `version` only on `ok` and `needs_attention` |
-| `refusal` | `{code, text}`; `code` is `out_of_scope`, `needs_data` (the request needs data the service would have to fetch), `unsupported_content` or `budget`, and `text` is the fixed reply for it in the language the scope judge detects in your message, or in the session's locale for a refusal sent before the judge runs (`budget`, `unsupported_content`): English, German, French, Spanish, Italian, Portuguese, Dutch or Polish, and English for any other language |
+| `refusal` | `{code, text}`; `code` is `out_of_scope`, `needs_data` (the request needs data the service would have to fetch), `unsupported_content` or `budget`, and `text` is the fixed reply for it in the language the scope judge detects in your message, or in the session language for a refusal sent before the judge runs (`budget`, `unsupported_content`), which is English until your first message or your choice sets another (see [Session language](#session-language)): English, German, French, Spanish, Italian, Portuguese, Dutch, Polish, Chinese, Vietnamese or Russian, and English for any other language |
 | `error` | `{code, ref}`; `code` is `capacity` (also when the turn waited the run queue's maximum of 600 seconds, or the BFF's turn cap ran out while it waited), `deadline`, `guard_unavailable`, `upstream`, or `internal`; `ref` is the request id |
-| `done` | `{llm_calls, tokens, bindings?, data_confirmed?, dataset?}`: after a run, the session's bindings and whether the data is confirmed, so the page syncs its dropdowns and its step after a turn in which the root's `set_bindings` changed them; `dataset` only after a turn in which the assistant changed the data or computed it from a formula (see [Data changes](#data-changes)): `{preview, profile, bindings, warnings, roles, changes, version}`, the dataset route's shape (`roles` at most 50) plus the turn's change lines, for the page's preview table; `version` is 1 when a formula made the session's first data |
+| `done` | `{llm_calls, tokens, bindings?, data_confirmed?, dataset?, language?}`: after a run, the session's bindings and whether the data is confirmed, so the page syncs its dropdowns and its step after a turn in which the root's `set_bindings` changed them; `dataset` only after a turn in which the assistant changed the data or computed it from a formula (see [Data changes](#data-changes)): `{preview, profile, bindings, warnings, roles, changes, version}`, the dataset route's shape (`roles` at most 50) plus the turn's change lines, for the page's preview table; `version` is 1 when a formula made the session's first data; `language` after every run: `{language, source}`, the session language and how it was set (`default`, `detected` or `chosen`), so the page syncs its chip |
 
 The BFF re-frames the upstream stream instead of forwarding it. It assembles
 each complete event and drops events of any other type, events without a type,

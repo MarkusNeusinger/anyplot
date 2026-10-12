@@ -15,7 +15,10 @@
  * with text the text goes as a turn and the assistant makes the first plot
  * with that change. Once the library has a plot, the composer refines in plain
  * words; every shipped version gets a result card with the image, the code and
- * the downloads. A line above the column names the current step. The page
+ * the downloads. A line above the column names the current step. The header
+ * carries, next to the library pills, the session language chip
+ * (`LanguageChip`): the language of the replies and of the text in the plot,
+ * English until the first typed message or a choice sets another. The page
  * talks only to the BFF under `/debug/agent/*` (`src/lib/agent.ts`,
  * `src/hooks/useAgentSession.ts`).
  *
@@ -63,6 +66,7 @@ import { NotFoundPage } from 'src/pages/NotFoundPage';
 import { paths, specPath } from 'src/routes/paths';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
 import { DATA_SUMMARY_ID, DataPanel } from 'src/sections/agent-chat/DataPanel';
+import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
 import { ERROR_TEXT } from 'src/sections/agent-chat/messages';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
@@ -468,6 +472,14 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             );
           })}
         </Box>
+        {/* The session language of the replies and the plot text; without a session there is none. */}
+        {!reopen && (
+          <LanguageChip
+            value={state.plotLanguage}
+            disabled={state.phase !== 'ready' || !state.sessionId || busy}
+            onSet={session.setLanguage}
+          />
+        )}
         {/* `.save()` downloads the session; without one (ineligible, error) there is nothing to save. */}
         {!reopen && (
           <SaveButton

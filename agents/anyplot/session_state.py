@@ -1,12 +1,13 @@
-"""Server-set session state: the catalogue snapshot, the dataset reference and the bindings.
+"""Server-set session state: the catalogue snapshot, the dataset reference, the bindings and the language.
 
 Only the service writes these keys: the `/v1` routes through
 `session_service.append_event` with a `state_delta`, the `set_bindings` tool
-after `apply_bindings` accepted the bindings, and the `prepare_data` tool after
-`apply_operations` produced the next dataset version (`dataset_versions.py`). No
-model output and no client body ever becomes a state value unchecked, and
-`plot_pipeline` reads spec, library, dataset and bindings from here, never from its
-arguments.
+after `apply_bindings` accepted the bindings, the `prepare_data` tool after
+`apply_operations` produced the next dataset version (`dataset_versions.py`), the
+scope guard, which records the detected session language once (`LANGUAGE`,
+`LANGUAGE_SOURCE`), and the `set_language` tool. No model output and no client body
+ever becomes a state value unchecked, and `plot_pipeline` reads spec, library,
+dataset, bindings and language from here, never from its arguments.
 
 `CatalogueSnapshot` mirrors the body the BFF sends (`api/routers/agent.py`): what the
 agents service knows about the catalogue pair, since it has no database access.
@@ -21,6 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .data.bindings import BindingCheck, check_bindings
 from .data.roles import DataRole, parse_roles
+from .language import DEFAULT_LANGUAGE, SOURCES, LanguageSource, is_valid
 from .schemas import MAX_CODE_CHARS, Binding, DatasetProfile
 
 
@@ -28,6 +30,14 @@ PREFIX = "anyplot."
 SPEC_ID = PREFIX + "spec_id"
 LIBRARY = PREFIX + "library"
 LOCALE = PREFIX + "locale"
+"""The browser's locale the session opened with: metadata for the feedback case, never the session language."""
+LANGUAGE = PREFIX + "language"
+"""The session language: the replies and every text in the plot. A short language name or
+code that matches `language.LANGUAGE_PATTERN` (`de`, `English`, `Klingon`). Absent means `en`."""
+LANGUAGE_SOURCE = PREFIX + "language_source"
+"""How it was set: `default` (nobody yet), `detected` (the scope judge's code for the session's
+first in-scope typed message), `chosen` (the language route or the root's `set_language`). Absent
+means `default`. Only `chosen` is final: detection writes only over `default`."""
 SNAPSHOT = PREFIX + "snapshot"
 NORMALISED = PREFIX + "normalised"
 HINTS = PREFIX + "hints"
@@ -96,10 +106,10 @@ class SessionView:
     """The ids of the dataset versions before the current one, oldest first (`DATASET_HISTORY`)."""
     dataset_version: int = 1
     """The current dataset version's number (`DATASET_VERSION`); 1 without a dataset or for a paste."""
-
-    @property
-    def lang(self) -> str:
-        return self.locale.lower()[:2] if self.locale else "en"
+    language: str = DEFAULT_LANGUAGE
+    """The session language (`LANGUAGE`), validated: a value outside the pattern reads as `en`."""
+    language_source: LanguageSource = "default"
+    """How the session language was set (`LANGUAGE_SOURCE`): `default`, `detected` or `chosen`."""
 
     @property
     def data_confirmed(self) -> bool:
@@ -124,10 +134,20 @@ def confirm_delta(view: SessionView) -> dict[str, Any]:
     return {CONFIRMED: confirmation_fingerprint(view.dataset_id, view.bindings)}
 
 
+def language_delta(language: str, source: LanguageSource) -> dict[str, Any]:
+    """The state delta that sets the session language (the language route, `set_language`, detection)."""
+    return {LANGUAGE: language, LANGUAGE_SOURCE: source}
+
+
 def initial_state(
     *, spec_id: str, library: str, locale: str, snapshot: CatalogueSnapshot, normalised: str, readiness: dict[str, Any]
 ) -> dict[str, Any]:
-    """The state delta that opens a session (or switches its library)."""
+    """The state delta that opens a session (or switches its library).
+
+    The session language is not part of it: ADK applies a delta key by key, so a library
+    switch keeps `LANGUAGE` and `LANGUAGE_SOURCE`, and a new session reads them as `en`
+    and `default` (`read_session`).
+    """
     return {
         SPEC_ID: spec_id,
         LIBRARY: library,
@@ -147,6 +167,13 @@ def read_session(state: Any) -> SessionView | None:
     if not snapshot or not spec_id or not library:
         return None
     raw_bindings = state.get(BINDINGS) or []
+    # Validated on every read, so a corrupt value can never reach a prompt.
+    raw_language = state.get(LANGUAGE)
+    language = raw_language if isinstance(raw_language, str) and is_valid(raw_language) else DEFAULT_LANGUAGE
+    raw_source = state.get(LANGUAGE_SOURCE)
+    language_source: LanguageSource = "default"
+    if raw_source in SOURCES and language == raw_language:
+        language_source = raw_source
     return SessionView(
         spec_id=str(spec_id),
         library=str(library),
@@ -161,6 +188,8 @@ def read_session(state: Any) -> SessionView | None:
         confirmed=state.get(CONFIRMED),
         dataset_history=[str(item) for item in state.get(DATASET_HISTORY) or []],
         dataset_version=max(1, int(state.get(DATASET_VERSION) or 1)),
+        language=language,
+        language_source=language_source,
     )
 
 

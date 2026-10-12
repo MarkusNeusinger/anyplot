@@ -14,6 +14,13 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   or the normalised catalogue code before the first version, fenced as `<catalogue_code>`.
 * `set_bindings(bindings)`: `apply_bindings` plus a state write; refused while the
   pipeline runs.
+* `set_language(language)`: the session language with the source `chosen`
+  (`session_state.LANGUAGE`), validated like the language route (`language.py`);
+  refused while the pipeline runs. Its result carries no value, only whether the
+  session language `changed` (`de` against `Deutsch` is no change), for the reply,
+  and whether the plot is `plot_outdated`: this library's latest rendered version has
+  its text in another language, so a rewrite of the plot's text is due. The two can
+  differ, because a plot made before detection recorded the language keeps English.
 * `prepare_data(operations)`: at most five operations of the fixed set
   (`data/prepare.py`), applied by the server to the session's current dataset and
   stored as its next version (`dataset_versions.py`): the previous version stays for
@@ -52,6 +59,7 @@ from ..data.parse import ParsedDataset, ParseError, parse_dataset
 from ..data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations, validation_lines
 from ..data.store import StoreFull
 from ..dataset_versions import push_version
+from ..language import is_valid, normalise, same_language
 from ..opening import store_dataset
 from ..pipeline import run_pipeline
 from ..plugins.ledger import ledger_for
@@ -59,7 +67,7 @@ from ..plugins.tool_safety import result_limit, result_size
 from ..policy import DATA_PREAMBLE, fence
 from ..schemas import Binding, DatasetProfile, PipelineArgs
 from ..services import get_services
-from ..session_state import SessionView, apply_bindings, read_session
+from ..session_state import SessionView, apply_bindings, language_delta, read_session
 
 
 PLOT_PIPELINE = "plot_pipeline"
@@ -156,6 +164,29 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
     for key, value in delta.items():
         tool_context.state[key] = value
     return {"status": "ok", "complete": check.complete, "missing_roles": check.missing_roles}
+
+
+async def set_language(language: str, tool_context: ToolContext) -> dict[str, Any]:
+    """Set the session language: the language of your replies and of every text in the plot (title, axis titles, legend entries, annotations). `language` is a short language name or code such as "de", "English" or "Klingon". The next plot version uses it; code, comments and column names stay as they are."""
+    view = _view(tool_context)
+    if view is None:
+        return _error("session_not_open")
+    if ledger_for(tool_context.invocation_id).pipeline_active:
+        return _error("run_active")
+    if not isinstance(language, str):
+        return _error("invalid_language")
+    value = normalise(language)
+    if not is_valid(value):
+        return _error("invalid_language")
+    changed = not same_language(view.language, value)
+    # The plot the user sees is this library's latest render; its text may be in another language than the
+    # session's (a plot made before detection recorded the language), so the rewrite is decided against it.
+    latest = get_services().versions.latest_rendered(tool_context.session.id, library=view.library)
+    plot_outdated = latest is not None and not same_language(latest.language, value)
+    # A choice is final either way: detection never writes over `chosen`.
+    for key, item in language_delta(value, "chosen").items():
+        tool_context.state[key] = item
+    return {"status": "ok", "source": "chosen", "changed": changed, "plot_outdated": plot_outdated}
 
 
 async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolContext) -> dict[str, Any]:
@@ -299,5 +330,13 @@ plot_pipeline = Workflow(
     edges=[("START", run_pipeline)],
 )
 
-SESSION_TOOLS = (get_dataset_profile, get_spec_brief, get_current_code, set_bindings, prepare_data, generate_data)
+SESSION_TOOLS = (
+    get_dataset_profile,
+    get_spec_brief,
+    get_current_code,
+    set_bindings,
+    set_language,
+    prepare_data,
+    generate_data,
+)
 ROOT_TOOL_NAMES = frozenset({*(tool.__name__ for tool in SESSION_TOOLS), PLOT_PIPELINE})

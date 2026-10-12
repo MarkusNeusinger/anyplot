@@ -68,6 +68,24 @@ export const CONFIRM_LOST_TEXT: Record<ConfirmLoss, string> = {
   server: 'not confirmed on the server · confirm the data again',
 };
 
+/**
+ * The thread's one quiet line when the session's first typed message set the
+ * session language (`detected`); a choice from the chip or the chat says nothing.
+ */
+export const LANGUAGE_DETECTED_TEXT = (language: string) =>
+  `language: ${language} · detected from your message · the lang chip in the header changes it`;
+
+/** Failures only the language chip meets; any other code reads as the page's turn errors do. */
+export const LANGUAGE_FAILURE: Record<string, string> = {
+  invalid: 'the server refused this language name',
+  session_expired: 'the session expired',
+};
+
+export function describeLanguageFailure(code: string, ref: string | null): string {
+  const text = LANGUAGE_FAILURE[code] ?? ERROR_TEXT[code] ?? `request failed (${code})`;
+  return ref ? `${text} · ref ${ref}` : text;
+}
+
 /** Failures of a theme render or an image fetch on the result card. */
 export const IMAGE_FAILURE: Record<string, string> = {
   render: 'this theme failed the render checks',

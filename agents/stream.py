@@ -12,7 +12,7 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 | `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects`, `version` | the pipeline's `PlotResult` output event; `version`, the stored version's number, only on `ok` and `needs_attention` |
 | `refusal` | `code`, `text` | the request ledger's refusal, in place of the message: `out_of_scope`, `needs_data` (data that would have to be fetched) and `unsupported_content` from the scope guard, `budget` from the budgets; a user already over the daily budget gets it right after `ready`, without waiting in the queue |
 | `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when the run waited the queue's maximum), `deadline` or `internal` |
-| `done` | `llm_calls`, `tokens`, and after a run `bindings`, `data_confirmed` and, when the turn changed the data (`prepare_data`, `generate_data`), `dataset` | the end of every run, always last; the route adds the session's sync fields (`_session_sync` in `agents/main.py`) |
+| `done` | `llm_calls`, `tokens`, and after a run `bindings`, `data_confirmed`, `language` (`{language, source}`, the session language and how it was set) and, when the turn changed the data (`prepare_data`, `generate_data`), `dataset` | the end of every run, always last; the route adds the session's sync fields (`_session_sync` in `agents/main.py`) |
 
 Function calls and responses, tool outputs, thoughts, partial chunks, adapter and
 reviewer answers, and `error_details` are dropped. A message goes through the
@@ -43,8 +43,8 @@ MAX_DONE_EVENT_CHARS = 512 * 1024
 """The BFF relays a `done` event of at most this many characters (`api/routers/agent.py`,
 `_MAX_DONE_EVENT_CHARS`; 64 KiB for every other event). A `done` that carries `dataset` holds
 20 preview rows and the profile of up to 50 columns with their names, top values, sample rows
-and warnings, the bindings twice, the change lines and up to `MAX_DONE_ROLES` spec roles,
-every string at its schema maximum and JSON-escaped at its worst about 393,000 characters;
+and warnings, the bindings twice, the change lines, up to `MAX_DONE_ROLES` spec roles and
+the session language, every string at its schema maximum and JSON-escaped at its worst about 393,000 characters;
 the bound is proven by `tests/unit/agents/runtime/test_stream.py`, so a changed dataset
 always reaches the page."""
 MAX_DONE_ROLES = 50
@@ -153,6 +153,7 @@ class Translator:
         bindings: list[dict[str, Any]] | None = None,
         data_confirmed: bool | None = None,
         dataset: dict[str, Any] | None = None,
+        language: dict[str, Any] | None = None,
     ) -> str:
         """The closing event; with the session's bindings, confirmation state and a changed dataset when the route has them.
 
@@ -163,7 +164,10 @@ class Translator:
         seen. `dataset` is `{preview, profile, bindings, warnings, roles, changes,
         version}`, the dataset route's shape plus the change lines of the turn, only after
         a turn that changed the data; `version` is 1 when `generate_data` made the
-        session's first data.
+        session's first data. `language` is the session language as `{language, source}`
+        (`source` one of `default`, `detected` and `chosen`), which the scope guard's
+        detection or the root's `set_language` may have set during the turn; the page's
+        chip follows it.
         """
         payload: dict[str, Any] = {
             "llm_calls": self.ledger.llm_calls,
@@ -175,4 +179,6 @@ class Translator:
             payload["data_confirmed"] = data_confirmed
         if dataset is not None:
             payload["dataset"] = dataset
+        if language is not None:
+            payload["language"] = language
         return sse("done", payload)

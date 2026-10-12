@@ -92,6 +92,18 @@
  * as one JSON file. It only reads the session and starts no run, so no state
  * tracks it: the button keeps its own saving flag and failure line.
  *
+ * Session language: one per session, for the assistant's replies and every
+ * text in the plot, held as `plotLanguage` (`language` is the programming
+ * language on this page). It starts as `en` with the source `default`,
+ * whatever the browser's locale, as the server's does. The `done` of the
+ * session's first typed message brings `detected` (`language_sync`), which
+ * appends one quiet notice to the thread; a choice from the header's chip
+ * (`setLanguage`, `PUT .../language`) or the assistant's `set_language` brings
+ * `chosen`, which is final. Only the server's answers set it, and a `done` never
+ * moves it down from `chosen` (a choice from another tab can land between the
+ * server's finish and this page's `run_end`). It is no data change: it never
+ * touches the confirmation.
+ *
  * Quick feedback: `sendFeedback` (`.send()` on a result card) has the BFF store
  * the case of one version in the private case bucket. It starts no run and
  * waits for nothing else in flight, so it never blocks the flow, and a turn
@@ -126,11 +138,13 @@ import {
   type Eligibility,
   type FeedbackReaction,
   isTranscribed,
+  type LanguageSource,
   MAX_DATASET_BYTES,
   MAX_FEEDBACK_CHARS,
   MAX_MESSAGE_CHARS,
   parseAgentEvent,
   type PipelineStep,
+  type PlotLanguage,
   type PlotResult,
   PNG_ARTIFACT,
   renderedThemes,
@@ -143,7 +157,7 @@ import {
 } from 'src/lib/agent';
 import { readSseEvents } from 'src/lib/sse';
 import { downloadBlob } from 'src/sections/agent-chat/files';
-import { CONFIRM_LOST_TEXT } from 'src/sections/agent-chat/messages';
+import { CONFIRM_LOST_TEXT, LANGUAGE_DETECTED_TEXT } from 'src/sections/agent-chat/messages';
 import { reloadOnceForAccess } from 'src/utils/adminAuth';
 
 /** How long Stop waits for the server's `done` before it lets go of the stream. */
@@ -313,6 +327,10 @@ export interface AgentSessionState {
   libraryBusy: boolean;
   /** A theme toggle render is in flight. */
   themeBusy: boolean;
+  /** The session language and how it was set; the header's chip shows it. */
+  plotLanguage: PlotLanguage;
+  /** The chip's language call is in flight. */
+  languageBusy: boolean;
   items: ChatItem[];
   /** The id the next thread item gets; the reducer numbers the items. */
   nextItemId: number;
@@ -351,6 +369,12 @@ type Action =
   | { type: 'library_done'; library: string; eligibility: Eligibility }
   | { type: 'library_failed'; failure: Failure }
   | { type: 'theme_busy'; busy: boolean }
+  | { type: 'language_start' }
+  /** The language route's answer: the stored form, source `chosen`. */
+  | { type: 'language_done'; plotLanguage: PlotLanguage }
+  | { type: 'language_failed' }
+  /** A turn's `done` named the session language. */
+  | { type: 'language_sync'; plotLanguage: PlotLanguage }
   /** Append a thread item; the reducer gives it the next id. */
   | { type: 'item'; item: NewChatItem }
   | { type: 'run_start'; kind: RunState['kind'] }
@@ -391,6 +415,9 @@ export function initialAgentState(library: string): AgentSessionState {
     undoError: null,
     libraryBusy: false,
     themeBusy: false,
+    // The server's default too, whatever the browser's locale: no answer needed to start.
+    plotLanguage: { language: 'en', source: 'default' },
+    languageBusy: false,
     items: [],
     nextItemId: 1,
     versions: {},
@@ -564,6 +591,9 @@ function appendItem(state: AgentSessionState, item: NewChatItem): AgentSessionSt
     nextItemId: state.nextItemId + 1,
   };
 }
+
+/** The ladder of the language sources: the server only ever climbs it within a session. */
+const SOURCE_RANK: Record<LanguageSource, number> = { default: 0, detected: 1, chosen: 2 };
 
 function sameBindings(a: BindingMap, b: BindingMap): boolean {
   const names = Object.keys(a);
@@ -763,6 +793,29 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
       return { ...state, libraryBusy: false };
     case 'theme_busy':
       return { ...state, themeBusy: action.busy };
+    case 'language_start':
+      return { ...state, languageBusy: true };
+    case 'language_done':
+      return { ...state, languageBusy: false, plotLanguage: action.plotLanguage };
+    case 'language_failed':
+      return { ...state, languageBusy: false };
+    case 'language_sync': {
+      // A `done` never moves the chip down the ladder (the server never does either): a
+      // choice that landed from another tab between the server's finish and this page's
+      // `run_end` keeps `chosen`. A `chosen` over `chosen` (the assistant's `set_language`
+      // during the turn) applies.
+      if (SOURCE_RANK[action.plotLanguage.source] < SOURCE_RANK[state.plotLanguage.source]) {
+        return state;
+      }
+      const next = { ...state, plotLanguage: action.plotLanguage };
+      // The first typed message set it: one quiet line names the chip that changes it.
+      return state.plotLanguage.source === 'default' && action.plotLanguage.source === 'detected'
+        ? appendItem(next, {
+            kind: 'notice',
+            text: LANGUAGE_DETECTED_TEXT(action.plotLanguage.language),
+          })
+        : next;
+    }
     case 'item':
       return appendItem(state, action.item);
     case 'run_start':
@@ -860,6 +913,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   // sooner than the state can say so.
   const bindingsRef = useRef(false);
   const saveRef = useRef(false);
+  const languageRef = useRef(false);
   // The feedback send in flight per version: a second `.send()` for it joins the first.
   const feedbackRef = useRef<Map<number, Promise<void>>>(new Map());
   const versionCounter = useRef(0);
@@ -886,7 +940,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
 
   /**
    * Whether a turn, a theme render, a parse, a binding change, a confirmation,
-   * an undo or a library switch is in flight.
+   * an undo, a library switch or a language choice is in flight.
    */
   const busy = useCallback(
     () =>
@@ -896,6 +950,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
       confirmRef.current ||
       undoRef.current ||
       bindingsRef.current ||
+      languageRef.current ||
       stateRef.current.libraryBusy,
     []
   );
@@ -1261,6 +1316,11 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
               dataConfirmed: event.dataConfirmed,
             });
           }
+          // The first typed message (`detected`) or the assistant's `set_language`
+          // (`chosen`) may have set the session language: the chip follows the server.
+          if (event.language) {
+            safeDispatch({ type: 'language_sync', plotLanguage: event.language });
+          }
           break;
         default:
           break;
@@ -1506,6 +1566,38 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     [token, handleFailure, trackEvent, busy]
   );
 
+  // ---------------------------------------------------------------- language
+
+  /**
+   * The chip's choice: `PUT .../language` with the value as given (the chip
+   * trims it). The answer is the new state, source `chosen`, in the server's
+   * stored form (`English` comes back as `en`). Nothing starts without a
+   * session or while anything else is in flight, which the server would refuse
+   * with `409 run_active`. A failure keeps the old value and rejects with an
+   * `AgentApiError` for the chip's failure line; a 401 or 403 also shows the
+   * sign-in notice.
+   */
+  const setLanguage = useCallback(
+    async (language: string): Promise<void> => {
+      const current = stateRef.current;
+      const sid = current.sessionId;
+      if (!sid || current.run || busy()) return;
+      languageRef.current = true;
+      safeDispatch({ type: 'language_start' });
+      try {
+        const applied = await agentApi.setLanguage(token, sid, language);
+        safeDispatch({ type: 'language_done', plotLanguage: applied });
+      } catch (err) {
+        const failure = handleFailure(err);
+        safeDispatch({ type: 'language_failed' });
+        throw err instanceof AgentApiError ? err : new AgentApiError(0, failure.code);
+      } finally {
+        languageRef.current = false;
+      }
+    },
+    [token, safeDispatch, handleFailure, busy]
+  );
+
   // ---------------------------------------------------------------- feedback
 
   /**
@@ -1601,6 +1693,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     requestTheme,
     fetchArtifact,
     saveSession,
+    setLanguage,
     sendFeedback,
   };
 }
@@ -1616,6 +1709,7 @@ export function sessionBusy(state: AgentSessionState): boolean {
     state.confirmBusy ||
     state.undoBusy ||
     state.libraryBusy ||
-    state.themeBusy
+    state.themeBusy ||
+    state.languageBusy
   );
 }

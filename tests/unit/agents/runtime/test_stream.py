@@ -13,6 +13,7 @@ from agents.anyplot.data.prepare import MAX_OPERATIONS
 from agents.anyplot.data.roles import TYPE_WORDS, DataRole
 from agents.anyplot.data.store import StoredDataset
 from agents.anyplot.dataset_versions import dataset_payload
+from agents.anyplot.language import MAX_LANGUAGE_CHARS
 from agents.anyplot.output_guard import CODE_OMITTED, MAX_MESSAGE_CHARS, sanitize
 from agents.anyplot.plugins.ledger import RequestLedger
 from agents.anyplot.schemas import (
@@ -80,6 +81,15 @@ class TestTranslator:
 
         assert payload["dataset"] == dataset
         assert "dataset" not in parse(translator.done(bindings=[], data_confirmed=True))[1]
+
+    def test_done_carries_the_session_language(self, translator: Translator) -> None:
+        """After a run the route adds the session language, so the page's chip follows detection and `set_language`."""
+        language = {"language": "de", "source": "detected"}
+
+        _, payload = parse(translator.done(bindings=[], data_confirmed=True, language=language))
+
+        assert payload["language"] == language
+        assert "language" not in parse(translator.done())[1]  # a turn refused before the queue: the chip stays
 
     def test_the_largest_done_event_fits_the_bff_cap(self) -> None:
         """`done` with `dataset` at every schema maximum, JSON-escaped at its worst, stays within the BFF's cap for `done`.
@@ -150,6 +160,8 @@ class TestTranslator:
             "bindings": [binding.model_dump() for binding in bindings],
             "data_confirmed": False,
             "dataset": dataset,
+            # The longest language the pattern admits, with the longest source word.
+            "language": {"language": "x" * MAX_LANGUAGE_CHARS, "source": "detected"},
         }
 
         event = sse("done", payload)

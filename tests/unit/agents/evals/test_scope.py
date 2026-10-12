@@ -72,6 +72,17 @@ class TestCaseFile:
         assert Counter(item.lang for item in cases) == {"en": 3, "de": 3}
         assert all(item.expected == "in_scope" and item.group == "inscope" for item in cases)
 
+    def test_a_plot_language_request_is_in_scope(self) -> None:
+        """Writing the plot's own text in another language is a plot setting, unlike a translation for use elsewhere."""
+        cases = load_cases(DEFAULT_CASES)
+        language = [item for item in cases if "plot_language" in item.tags]
+
+        # `lang` is the language the message is written in, never the one it asks for.
+        assert Counter(item.lang for item in language) == {"en": 3, "de": 3}
+        assert all(item.expected == "in_scope" and item.group == "inscope" for item in language)
+        translation = next(item for item in cases if item.id == "off-018")
+        assert translation.expected == "out_of_scope" and "Translate" in translation.text
+
     def test_multi_turn_cases_carry_their_turns(self) -> None:
         cases = [item for item in load_cases(DEFAULT_CASES) if "multi_turn" in item.tags]
 

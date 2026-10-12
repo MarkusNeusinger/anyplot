@@ -103,7 +103,7 @@ class TestFromABundleFile:
             "expected": "unknown",
             "tags": ["imported"],
             "source": "saved session anyplot-session-AbCdEf12.json, version 2",
-        }
+        }  # no `language`: the bundle predates the session language, so the replay keeps the default
         assert files["data.csv"] == DATA
         assert files["change_request.txt"] == "log scale on y\n"
         case = load_case(target, "promoted")
@@ -139,6 +139,45 @@ class TestFromABundleFile:
         bundle["session"]["library"] = "seaborn"
         source = read_bundle_file(_bundle_file(tmp_path, bundle), 2)
         assert build_case(source, None).case["library"] == "matplotlib"
+
+    def test_a_detected_session_language_is_chosen_by_the_case(self, tmp_path, promoted) -> None:
+        """The replay sends its first plot as `create_plot`, which detects nothing, so the case chooses the language."""
+        bundle = _bundle()
+        bundle["session"].update(plot_language="de", plot_language_source="detected")
+        for item in bundle["versions"]:
+            item["language"] = "de"
+
+        assert main([str(_bundle_file(tmp_path, bundle)), "--id", "german"]) == 0
+
+        case_json = json.loads(_written(promoted / "german")["case.json"])
+        assert case_json["language"] == "de" and case_json["locale"] == "de"
+        assert load_case(promoted / "german", "promoted").language == "de"
+
+    def test_the_case_takes_the_language_its_version_was_written_in(self, tmp_path) -> None:
+        """A version made before the user chose another language keeps its own, and so does its replay."""
+        bundle = _bundle()
+        bundle["session"].update(plot_language="Klingon", plot_language_source="chosen")
+        bundle["versions"][0]["language"] = "en"
+        bundle["versions"][1]["language"] = "Klingon"
+
+        first = build_case(read_bundle_file(_bundle_file(tmp_path, bundle), 1), None, no_request=True)
+        second = build_case(read_bundle_file(_bundle_file(tmp_path, bundle), 2), None)
+
+        assert (first.case["language"], second.case["language"]) == ("en", "Klingon")
+
+    @pytest.mark.parametrize(
+        ("session", "version", "expected"),
+        [
+            ({}, {}, None),  # a bundle saved before the session language existed
+            ({"plot_language": "de", "plot_language_source": "default"}, {"language": "de"}, None),
+            ({"plot_language": "de", "plot_language_source": "chosen"}, {}, "de"),
+            ({"plot_language": "de", "plot_language_source": "guessed"}, {"language": "de"}, None),
+            ({"plot_language": "de", "plot_language_source": "chosen"}, {"language": "de; drop"}, None),
+            ({"plot_language": "a/b", "plot_language_source": "detected"}, {}, None),
+        ],
+    )
+    def test_the_language_needs_a_set_source_and_a_valid_value(self, session, version, expected) -> None:
+        assert import_case.session_language(session, version) == expected
 
     def test_a_first_plot_from_a_typed_note_makes_the_note_version_ones_request(self, tmp_path, promoted) -> None:
         """Step 2's composer sends a note as a typed message, so the session never holds `create_plot`."""
