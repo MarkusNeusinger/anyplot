@@ -53,6 +53,9 @@ NON_NEGATIVE_ROLES: frozenset[str] = frozenset(
         "cohort_size",
         "segment_size",
         "set_sizes",
+        "flow",  # alluvial-basic, flowmap-origin-destination: a magnitude
+        "risk",  # frontier-efficient: a standard deviation
+        "total",  # dot-matrix-proportional: the grid size
     }
 )
 VALUE_ROLES: frozenset[str] = frozenset({"value"})

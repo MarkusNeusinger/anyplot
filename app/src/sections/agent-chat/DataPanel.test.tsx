@@ -141,6 +141,37 @@ describe('DataPanel bindings', () => {
     expect(onBind).toHaveBeenCalledWith('y2', 'hats');
   });
 
+  it('warns under the dropdown when a role that needs values of 0 or more gets a negative column', () => {
+    const radius = role('radius', { non_negative: true });
+    const columns = [
+      { name: 'angle', dtype: 'number' as const, missing: 0, unique: 3, min: 0 },
+      { name: 'y', dtype: 'number' as const, missing: 0, unique: 3, min: -0.9996 },
+    ];
+    const base = stateWith({ radius: 'y' }, { roles: [radius], missingRoles: [] });
+    const state = {
+      ...base,
+      dataset: base.dataset && {
+        ...base.dataset,
+        parsed: { ...base.dataset.parsed, profile: { ...base.dataset.parsed.profile, columns } },
+      },
+    };
+    render(
+      <DataPanel
+        state={state}
+        onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
+        onBind={vi.fn()}
+        onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
+      />
+    );
+    const hint = 'has negative values (down to -0.9996); radius needs values of 0 or more';
+    expect(screen.getByTestId('sign-hint')).toHaveTextContent(hint);
+    expect(screen.getByLabelText(/^radius/)).toHaveAccessibleDescription(hint);
+  });
+
   it('lists the lines of a refused binding set', () => {
     render(
       <DataPanel

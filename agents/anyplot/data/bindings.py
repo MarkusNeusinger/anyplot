@@ -207,7 +207,7 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
     `ACCEPTS`). `missing_roles` lists the required roles without a binding; a
     required variadic family needs at least one member. `warnings`: a valid binding of
     a non-negative role to a column with a negative value (`signs.sign_line`), and an
-    unbound non-negative role whose every fitting column has one.
+    unbound non-negative role whose every fitting column that no other role holds has one.
     """
     columns = {column.name: column for column in profile.columns}
     errors: list[str] = []
@@ -241,11 +241,16 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
         bound.add(role.name)
         if role.non_negative and has_negative(column):
             warnings.append(sign_line(binding.role, column))
-    # An open non-negative role whose only fitting columns are negative says why it stayed open.
+    # An open non-negative role whose only fitting free columns are negative says why it stayed open;
+    # a column another role holds is no candidate, as in `default_bindings`.
     for role in roles:
         if not role.non_negative or role.variadic or role.name in seen_roles:
             continue
-        fitting = [column for column in profile.columns if role.kinds and accepts(role, column.dtype)]
+        fitting = [
+            column
+            for column in profile.columns
+            if column.name not in seen_columns and role.kinds and accepts(role, column.dtype)
+        ]
         if fitting and all(has_negative(column) for column in fitting):
             names = ", ".join(f"'{column.name}'" for column in fitting[:3])
             warnings.append(

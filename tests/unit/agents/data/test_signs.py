@@ -92,9 +92,29 @@ class TestDefaults:
         check = check_bindings(bindings, roles, profile(SINE))
         assert check.missing_roles == ["radius"]
         assert check.warnings == [
-            "radius: not bound, because every column that fits it ('x', 'y') has negative values; "
+            "radius: not bound, because every column that fits it ('y') has negative values; "
             "this role needs values of 0 or more"
         ]
+
+    def test_the_reason_names_only_the_columns_still_free(self) -> None:
+        """theta holds the only non-negative column; radius is left with the signed one and says so."""
+        roles = spec_roles("polar-scatter")
+        data = profile("angle,y\n0,-1\n90,1\n180,0.5\n")
+
+        bindings = default_bindings(roles, data)
+
+        assert pairs(bindings) == [("theta", "angle")]
+        assert check_bindings(bindings, roles, data).warnings == [
+            "radius: not bound, because every column that fits it ('y') has negative values; "
+            "this role needs values of 0 or more"
+        ]
+
+    @pytest.mark.parametrize(
+        ("spec", "role"),
+        [("alluvial-basic", "flow"), ("frontier-efficient", "risk"), ("dot-matrix-proportional", "total")],
+    )
+    def test_magnitudes_of_the_catalogue_are_marked(self, spec: str, role: str) -> None:
+        assert any(item.name == role and item.non_negative for item in spec_roles(spec))
 
     def test_a_non_negative_column_still_takes_the_role(self) -> None:
         roles = spec_roles("polar-scatter")
