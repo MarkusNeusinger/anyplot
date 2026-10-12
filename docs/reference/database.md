@@ -204,7 +204,7 @@ CREATE TABLE agent_feedback
     message         VARCHAR(500),
     include_data    BOOLEAN NOT NULL,           -- the case holds data.csv
     status          VARCHAR(20) NOT NULL,       -- new, in_progress, done, wont_solve
-    result_version  INTEGER NOT NULL,           -- the rated version, 1 to 999
+    result_version  INTEGER NOT NULL,           -- the rated version, 1 to 999; 0 is the chat itself
     replaces        VARCHAR(25),                -- the case id an edit names
     model           VARCHAR(100),
     model_version   VARCHAR(100),
@@ -334,7 +334,7 @@ INSERT INTO libraries (id, name, version, documentation_url) VALUES
 
 **Key Fields**:
 - `id` - The bucket's case id: the UTC time in ISO 8601 basic format and eight random hex digits, so ids sort by time and link a row to its files under `cases/<id>/`
-- `reaction`, `message`, `include_data`, `result_version`, `replaces` - What the admin sent; `include_data` says whether the case holds `data.csv`
+- `reaction`, `message`, `include_data`, `result_version`, `replaces` - What the admin sent; `include_data` says whether the case holds `data.csv`. `result_version` 0 (since 2026-10-12) is feedback on the chat itself, from a session that made no plot: such a case has no image and no `plot.py`, no pipeline status, and cannot be promoted
 - `user_hash`, `session_hash` - Hashed ids; the table holds no email address and no session id
 - `locale` - The session's UI locale, the manifest's `language`; unlike `feedback.language`, which holds a programming language
 - `model`, `model_version`, `judge_model`, `prompt_hash`, `pipeline_status`, `attempts`, `tokens`, `cost_estimate` - The run's metadata from the case manifest; `model_version`, `tokens` and `cost_estimate` are `null` until the agents service stamps them

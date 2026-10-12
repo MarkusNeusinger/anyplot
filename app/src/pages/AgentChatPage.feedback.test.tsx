@@ -59,6 +59,8 @@ let feedbackBodies: unknown[];
 let feedbackAnswer: () => Response;
 /** A turn that answers in words only: the session keeps no plot. */
 let wordsOnly: boolean;
+/** Set to hold the next turn's answer until the test resolves it. */
+let hold: Promise<void> | null;
 
 function stubFetch() {
   feedbackBodies = [];
@@ -74,6 +76,7 @@ function stubFetch() {
         });
       }
       if (url.pathname.endsWith('/sessions/S1/messages') && method === 'POST') {
+        if (hold) await hold;
         if (wordsOnly) {
           return sse([
             ['message', { text: 'The feature role needs names, not numbers.' }],
@@ -128,6 +131,7 @@ beforeEach(() => {
   localStorage.setItem(ADMIN_HINT_KEY, '1');
   analytics.trackEvent.mockClear();
   wordsOnly = false;
+  hold = null;
   feedbackAnswer = () =>
     json(201, {
       case_id: `20261012T14300${feedbackBodies.length}Z-1a2b3c4d`,
@@ -148,11 +152,19 @@ describe('AgentChatPage quick feedback', () => {
     // The owner's case of 2026-10-12: a chat that never made a plot had nothing to report on.
     const user = userEvent.setup();
     wordsOnly = true;
+    let release!: () => void;
+    hold = new Promise<void>(resolve => {
+      release = resolve;
+    });
     renderPage();
     expect(screen.queryByTestId('chat-feedback')).not.toBeInTheDocument();
     const box = await screen.findByLabelText('Message');
     fireEvent.change(box, { target: { value: 'use y as the feature column' } });
     fireEvent.keyDown(box, { key: 'Enter' });
+    // While the turn runs it may still bring the plot: no offer yet.
+    await screen.findByText('use y as the feature column');
+    expect(screen.queryByTestId('chat-feedback')).not.toBeInTheDocument();
+    release();
     await screen.findByText('The feature role needs names, not numbers.');
 
     await user.click(await screen.findByRole('button', { name: 'Give feedback on this chat' }));

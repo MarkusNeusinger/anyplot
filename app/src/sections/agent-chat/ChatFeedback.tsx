@@ -8,8 +8,9 @@
  * Collapsed to one line until opened (`.feedback()`), so it never crowds the
  * composer; once a case is stored it shows `ResultFeedback`'s `sent` line with
  * `.edit()`, and a later send replaces the case, as on a result card. The page
- * mounts it while the thread has a turn and the session has no plot, and keeps
- * it while a sent record exists.
+ * mounts it while the thread has a turn, no turn is running (a running one may
+ * still bring the plot) and the session has no plot, and keeps it while a sent
+ * record exists.
  */
 
 import { useState } from 'react';

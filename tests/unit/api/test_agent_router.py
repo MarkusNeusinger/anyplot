@@ -1309,7 +1309,8 @@ class TestBundle:
             ("other=1", {"include_data": "false"}),
             ("include_data=true&other=1", {"include_data": "true"}),
             ("include_data=1&version=2", {"include_data": "true", "version": "2"}),
-            ("include_data=false&version=0", {"include_data": "false", "version": "0"}),
+            # `.save()`'s 0 means every version; upstream 0 is the chat's feedback case, so it is left out.
+            ("include_data=false&version=0", {"include_data": "false"}),
         ],
     )
     def test_forwards_only_the_validated_query(self, client, upstream, query, forwarded) -> None:

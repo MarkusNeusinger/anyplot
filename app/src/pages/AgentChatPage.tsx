@@ -767,15 +767,18 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 {draft.length} / {MAX_MESSAGE_CHARS}
               </Box>
             )}
-            {/* A chat without a plot has no result card to report on: its own control. */}
-            {state.items.length > 0 &&
-              (Object.keys(state.versions).length === 0 || state.chatFeedback) && (
-                <ChatFeedback
-                  sent={state.chatFeedback}
-                  dataAvailable={!!state.dataset}
-                  onSend={session.sendFeedback}
-                />
-              )}
+            {/* A chat without a plot has no result card to report on: its own control. Not while a
+                turn runs, which may still bring the plot; a sent record stays in view. */}
+            {(state.chatFeedback ||
+              (state.items.length > 0 &&
+                !state.run &&
+                Object.keys(state.versions).length === 0)) && (
+              <ChatFeedback
+                sent={state.chatFeedback}
+                dataAvailable={!!state.dataset}
+                onSend={session.sendFeedback}
+              />
+            )}
           </Box>
         </Box>
       </Box>

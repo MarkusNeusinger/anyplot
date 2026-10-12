@@ -1099,9 +1099,12 @@ async def get_bundle(
     config stamp; each version's `data.csv` only with `include_data`, and only `version` when
     one above 0 is given. The BFF reads it whole up to `MAX_BUNDLE_BYTES` (`502 too_large`
     above), checks that it is a JSON object and compresses it in a worker thread
-    (`_prepare_bundle`), and answers it as an attachment.
+    (`_prepare_bundle`), and answers it as an attachment. Here `version=0` keeps its
+    documented meaning, every version: the agents service reads 0 as the chat's feedback
+    case, so the BFF leaves the parameter out instead of forwarding it.
     """
-    body = await _fetch_bundle(client, ctx, sid, version=version, include_data=include_data)
+    upstream_version = version if version else None
+    body = await _fetch_bundle(client, ctx, sid, version=upstream_version, include_data=include_data)
     # The middleware's own test for whether the client takes gzip.
     compress = "gzip" in request.headers.get("Accept-Encoding", "")
     content = await run_in_threadpool(_prepare_bundle, body, compress)
