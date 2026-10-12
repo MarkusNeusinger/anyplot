@@ -11,7 +11,7 @@
   image build fails when a fallback family is missing from the cache. Arabic
   and Hebrew already rendered shaped and right to left through the pinned
   matplotlib's libraqm; the documented limits are `$…$` math text, the Han
-  regional forms and the scripts outside the installed set.
+  regional forms and the scripts outside the installed set. (#12144)
 - **G10, the glyph gate.** The harness records every code point matplotlib
   reports as having no glyph in any font of its text, plain text and `$…$`
   math alike, as `missing_glyphs` in the probe; the host turns it into a
@@ -20,4 +20,4 @@
   stays in the result's residual lines even after a reviewer `ok`, because a
   measured missing glyph is not a judgement. The CI image job renders a
   seven-script fixture through the image and a DejaVu-only control, and
-  asserts the probe on both.
+  asserts the probe on both. (#12144)
