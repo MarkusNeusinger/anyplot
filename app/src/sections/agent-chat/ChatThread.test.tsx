@@ -34,7 +34,6 @@ function renderThread(state: AgentSessionState) {
       language="python"
       onRequestTheme={vi.fn()}
       onFetchArtifact={vi.fn()}
-      onRefine={vi.fn()}
       onTrack={vi.fn()}
     />
   );
