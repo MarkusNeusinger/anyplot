@@ -388,7 +388,8 @@ def polar_report(figure):
     All angles are in degrees in the axes' own theta coordinates, the ones
     `set_rlabel_position` takes, so the theta offset and direction need no
     conversion: `rlabel` is the radial labels' angle and `thetamin` and `thetamax`
-    the visible span. `bins` counts the plotted points (scatter offsets and the
+    the visible span. Axes without drawn radial tick labels are left out. `bins`
+    counts the plotted points (offsets of visible scatter collections and the
     vertices of visible lines) per `POLAR_BIN_DEG` bin of their angle modulo 360
     (the outer list) and per `POLAR_RINGS` bin of their radius as a share of the
     visible radius range, centre first (the inner lists); points outside that range
@@ -400,9 +401,21 @@ def polar_report(figure):
     for axes in figure.get_axes():
         if getattr(axes, "name", "") != "polar" or len(report) >= POLAR_AXES_LIMIT:
             continue
+        try:
+            # Only axes that show radial tick labels can have them on the data: none for a hidden
+            # axes, a hidden radial axis, or ticks set empty (`set_yticks([])`, blank labels).
+            labelled = (
+                axes.get_visible()
+                and axes.yaxis.get_visible()
+                and any(label.get_visible() and label.get_text().strip() for label in axes.yaxis.get_ticklabels())
+            )
+        except Exception:
+            labelled = False
+        if not labelled:
+            continue
         thetas, radii = [], []
         for collection in axes.collections:
-            if type(collection).__name__ != "PathCollection":
+            if type(collection).__name__ != "PathCollection" or not collection.get_visible():
                 continue
             try:
                 offsets = np.asarray(collection.get_offsets(), dtype=float).reshape(-1, 2)

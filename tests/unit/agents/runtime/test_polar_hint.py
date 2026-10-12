@@ -70,6 +70,26 @@ class TestProbe:
 
         assert harness.polar_report(figure) == []
 
+    def test_axes_without_drawn_radial_labels_are_left_out(self) -> None:
+        """No labels in the image, nothing to move: a hidden axes, a hidden radial axis, empty radial ticks."""
+        hidden = sine(rlabel=67.5)
+        hidden.axes[0].set_visible(False)
+        no_axis = sine(rlabel=67.5)
+        no_axis.axes[0].yaxis.set_visible(False)
+        no_ticks = sine(rlabel=67.5)
+        no_ticks.axes[0].set_yticks([])
+        for figure in (hidden, no_axis, no_ticks):
+            figure.canvas.draw()
+
+            assert harness.polar_report(figure) == []
+
+    def test_hidden_scatter_points_do_not_count(self) -> None:
+        figure = sine(rlabel=67.5)
+        figure.axes[0].scatter([np.radians(270)] * 50, [0.5] * 50).set_visible(False)
+
+        (entry,) = harness.polar_report(figure)
+        assert sum(map(sum, entry["bins"])) == 200
+
     def test_points_outside_the_visible_radius_are_left_out(self) -> None:
         """With the radius from 0, the negative half of sin(x) is outside the view."""
         (entry,) = harness.polar_report(sine(rlim=(0, 1)))
