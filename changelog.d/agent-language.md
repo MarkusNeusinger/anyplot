@@ -12,7 +12,7 @@
   "sin x" gets an English plot; the browser locale is only recorded with a
   feedback case. The `done` event carries `language: {language, source}` so
   the chip follows the chat, and the feedback bundle carries the session's
-  language and each version's.
+  language and each version's. (#12145)
 - **An eval case and scope cases for the session language.** The hand-written
   case `scatter-basic-matplotlib-german-message` has German column names and a
   German follow-up with no word about the language, so its first plot is
@@ -23,11 +23,11 @@
   detected or chosen, and every run records the
   last `done` event's language. Six in-scope scope-eval cases (`plot_language`,
   three English, three German) guard the rubric's new line that a request for
-  the plot's own text in another language is no translation.
+  the plot's own text in another language is no translation. (#12145)
 - **Fixed refusals in Chinese, Vietnamese and Russian.** Every chip language
   now has its own hand-written refusals; the Portuguese and Polish lines were
   revised. Without a native speaker at hand, each text passed a
-  back-translation review and a separate naturalness review.
+  back-translation review and a separate naturalness review. (#12145)
 
 ### Changed
 
@@ -43,4 +43,4 @@
   prompt that carries it, the root's session block included, fences it as
   `<plot_language>`. The refusals sent before the scope judge runs follow the
   session language instead of the browser locale. Prompts changed: `root.md`,
-  `adapter.md`, `reviewer.md` and `scope_judge.md`.
+  `adapter.md`, `reviewer.md` and `scope_judge.md`. (#12145)
