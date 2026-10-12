@@ -23,16 +23,8 @@
  *   is announced to screen readers.
  */
 
-import { type ComponentType, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import BugReportIcon from '@mui/icons-material/BugReport';
-import BugReportOutlinedIcon from '@mui/icons-material/BugReportOutlined';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
-import ThumbDownIcon from '@mui/icons-material/ThumbDown';
-import ThumbDownOutlinedIcon from '@mui/icons-material/ThumbDownOutlined';
-import ThumbUpIcon from '@mui/icons-material/ThumbUp';
-import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
@@ -40,6 +32,7 @@ import Tooltip from '@mui/material/Tooltip';
 import type { FeedbackInput, FeedbackRecord } from 'src/hooks/useAgentSession';
 import { AgentApiError, type FeedbackReaction, MAX_FEEDBACK_CHARS } from 'src/lib/agent';
 import { ERROR_TEXT } from 'src/sections/agent-chat/messages';
+import { REACTION_TEXT, REACTIONS } from 'src/sections/agent-chat/reactions';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import {
   actionButtonSx,
@@ -51,60 +44,6 @@ import {
 } from 'src/sections/agent-chat/styles';
 import { colors, typography } from 'src/theme';
 
-interface ReactionOption {
-  value: FeedbackReaction;
-  /** The accessible name, in words. */
-  label: string;
-  /** The tooltip, a method call like the plot page's `.like()`. */
-  verb: string;
-  color: string;
-  Outlined: ComponentType<{ fontSize?: 'small' }>;
-  Filled: ComponentType<{ fontSize?: 'small' }>;
-}
-
-/** The site feedback's reaction set, in the order of the plot page and the feedback widget. */
-const REACTIONS: readonly ReactionOption[] = [
-  {
-    value: 'thumbs_up',
-    label: 'Thumbs up',
-    verb: '.like()',
-    color: colors.primary,
-    Outlined: ThumbUpOutlinedIcon,
-    Filled: ThumbUpIcon,
-  },
-  {
-    value: 'thumbs_down',
-    label: 'Thumbs down',
-    verb: '.dislike()',
-    color: colors.error,
-    Outlined: ThumbDownOutlinedIcon,
-    Filled: ThumbDownIcon,
-  },
-  {
-    value: 'idea',
-    label: 'Idea',
-    verb: '.idea()',
-    color: colors.accent,
-    Outlined: LightbulbOutlinedIcon,
-    Filled: LightbulbIcon,
-  },
-  {
-    value: 'bug',
-    label: 'Bug',
-    verb: '.bug()',
-    color: colors.error,
-    Outlined: BugReportOutlinedIcon,
-    Filled: BugReportIcon,
-  },
-];
-
-const REACTION_TEXT: Record<FeedbackReaction, string> = {
-  thumbs_up: 'thumbs up',
-  thumbs_down: 'thumbs down',
-  idea: 'idea',
-  bug: 'bug',
-};
-
 /** Failures only a feedback send meets; any other code reads as the page's turn errors do. */
 const FEEDBACK_FAILURE: Record<string, string> = {
   storage: 'the case could not be stored; try again',
@@ -114,6 +53,10 @@ const FEEDBACK_FAILURE: Record<string, string> = {
   session_expired: 'the session expired',
   too_long: `the text is longer than ${MAX_FEEDBACK_CHARS} characters`,
   invalid: 'the server refused this feedback',
+  // The files are in the bucket; the page recorded the case, so `.send()` again replaces it.
+  row_missing: 'the case is stored but not yet listed for triage; edit or resend names it',
+  // Any body-less 503: an API without a database, or the admin gate not configured.
+  unavailable: 'the server is not ready; the case was not stored',
 };
 
 function describeFailure(code: string, ref: string | null): string {

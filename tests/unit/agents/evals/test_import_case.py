@@ -304,7 +304,9 @@ class TestWhereItWrites:
         with pytest.raises(SystemExit) as exit_info:
             main(["gs://anyplot-agent-cases/cases/x"])
         assert exit_info.value.code == 2
-        assert "gs:// source is not supported" in capsys.readouterr().err
+        err = capsys.readouterr().err
+        assert "gs:// source is not supported here" in err
+        assert "python -m agents.evals.sync_cases" in err
 
     def test_writes_into_the_git_ignored_promoted_directory_by_default(self) -> None:
         assert import_case.PROMOTED_DIR == Path(import_case.__file__).parent / ".cases"

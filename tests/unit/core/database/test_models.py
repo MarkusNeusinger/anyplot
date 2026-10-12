@@ -4,10 +4,82 @@ Tests for database ORM models.
 Tests model instantiation, defaults, and constraints.
 """
 
+import re
+from datetime import datetime
+from typing import Any
+
 import pytest
+from sqlalchemy import CheckConstraint
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.database.models import MAX_LIBRARY_ID_LENGTH, MAX_SPEC_ID_LENGTH, REVIEW_VERDICTS, Impl, Library, Spec
+from core.database.models import (
+    AGENT_CASE_EXPECTED,
+    FEEDBACK_REACTIONS,
+    FEEDBACK_STATUSES,
+    MAX_LIBRARY_ID_LENGTH,
+    MAX_SPEC_ID_LENGTH,
+    REVIEW_VERDICTS,
+    AgentFeedback,
+    Feedback,
+    Impl,
+    Library,
+    Spec,
+)
+
+
+def _check_literals(model: Any, name: str) -> list[str]:
+    """The quoted values a named CHECK constraint of `model` allows, in order."""
+    constraint = next(
+        item for item in model.__table__.constraints if isinstance(item, CheckConstraint) and item.name == name
+    )
+    return re.findall(r"'([^']*)'", str(constraint.sqltext))
+
+
+class TestCheckConstraintParity:
+    """The CHECK texts and the module tuples are written by hand; these keep each pair equal."""
+
+    @pytest.mark.parametrize(
+        ("model", "name", "values"),
+        [
+            (AgentFeedback, "ck_agent_feedback_reaction_valid", FEEDBACK_REACTIONS),
+            (AgentFeedback, "ck_agent_feedback_status_valid", FEEDBACK_STATUSES),
+            (AgentFeedback, "ck_agent_feedback_expected_valid", AGENT_CASE_EXPECTED),
+            (Feedback, "ck_feedback_reaction_valid", FEEDBACK_REACTIONS),
+            (Feedback, "ck_feedback_status_valid", FEEDBACK_STATUSES),
+        ],
+    )
+    def test_check_lists_the_tuple(self, model, name, values) -> None:
+        assert tuple(_check_literals(model, name)) == values
+
+
+class TestAgentFeedbackModel:
+    """Tests for the AgentFeedback model (the agent chat's feedback cases)."""
+
+    @pytest.mark.asyncio
+    async def test_persist_applies_the_orm_defaults(self, test_session: AsyncSession) -> None:
+        row = AgentFeedback(
+            id="20261012T143005Z-1a2b3c4d",
+            manifest_schema=1,
+            created_at=datetime(2026, 10, 12, 14, 30, 5),
+            case_uri="gs://anyplot-agent-cases/cases/20261012T143005Z-1a2b3c4d/",
+            user_hash="adm_0123456789abcdef",
+            session_hash="fedcba9876543210",
+            reaction="bug",
+            include_data=False,
+            result_version=1,
+            files=["plot.py", "manifest.json"],
+        )
+        test_session.add(row)
+        await test_session.commit()
+        await test_session.refresh(row)
+
+        assert row.status == "new"
+        assert row.tags == []
+        assert row.files == ["plot.py", "manifest.json"]
+        assert row.include_data is False
+        assert row.updated_at is not None
+        assert row.promoted_at is None
+        assert row.superseded_by is None
 
 
 class TestModelConstants:

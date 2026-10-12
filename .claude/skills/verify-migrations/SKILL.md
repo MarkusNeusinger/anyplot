@@ -5,20 +5,28 @@ description: Verify Alembic schema migrations locally against a throwaway Postgr
 
 # Verify migrations against a throwaway Postgres
 
-The shared Cloud SQL DB must never see an untested revision. **No CI
-job runs migrations at PR time** — only `sync-postgres.yml` runs
-`alembic upgrade head` against production after a merge — so this
-skill is the ONLY pre-merge loop for `alembic/` diffs. A dual-heads
-state once stalled the production sync (#7285); the checks below
-catch that class before the push. First full run 2026-08-17: all four
+The shared Cloud SQL DB must never see an untested revision. CI runs
+the same checks on every PR that touches `alembic/`, `alembic.ini`,
+`core/database/`, `pyproject.toml` or `uv.lock`: the job
+`Verify Migrations` (`.github/workflows/ci-migrations.yml`, since
+2026-10-12) runs them on a PostgreSQL 18 service container, adds a
+CHECK-constraint parity query, and downgrades to the base commit's
+head instead of `-1`. This skill stays the local loop BEFORE the push,
+so a broken revision never costs a CI round. After the merge,
+`sync-postgres.yml` runs `alembic upgrade head` against production. A
+dual-heads state once stalled the production sync (#7285); the checks
+below catch that class before the push, and CI catches it at the PR's
+last push (not a sibling PR merged after it; ruleset `main` does not
+require up-to-date branches). First full run 2026-08-17: all four
 checks green — after `alembic check` caught seven migration-created
 indexes missing from the ORM models (fixed in the same PR).
 
 ## 0 · The `.env` trap (read first)
 
-`alembic/env.py` calls `load_dotenv()` (and can alternatively connect
-via `INSTANCE_CONNECTION_NAME`): any alembic command run WITHOUT
-`DATABASE_URL` exported silently falls back to whatever `.env`
+`alembic/env.py` loads the checkout's own `.env` by explicit path
+(#12105; a worktree without one loads nothing) and can alternatively
+connect via `INSTANCE_CONNECTION_NAME`: any alembic command run
+WITHOUT `DATABASE_URL` exported silently falls back to whatever `.env`
 holds — and in this repo's local-dev setup that is the shared
 production Cloud SQL (there is no separate local DB; see
 `/verify-api` §3). Exported env vars win over `.env`, so ALWAYS run

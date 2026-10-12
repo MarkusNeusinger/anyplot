@@ -45,19 +45,31 @@ from starlette.background import BackgroundTask
 
 from api.agent_cases import (
     CASE_ID_PATTERN,
+    CASE_MEDIA_TYPES,
     BundleError,
     CaseBucket,
     GcsCaseBucket,
     Submission,
     build_case,
+    code_diff,
+    manifest_detail,
     new_case_id,
+    read_manifest,
     write_case,
 )
 from api.dependencies import require_db
 from api.routers.debug import AdminIdentity, require_admin, require_admin_identity
+from core.agent_cases import (
+    CASE_FILE_NAMES,
+    EXPECTED_BY_REACTION,
+    MAX_TAGS,
+    TAG_PATTERN,
+    case_object,
+    row_from_manifest,
+)
 from core.config import settings
 from core.constants import SUPPORTED_LIBRARIES
-from core.database import FEEDBACK_REACTIONS, SpecRepository
+from core.database import FEEDBACK_REACTIONS, AgentFeedback, AgentFeedbackRepository, ImplRepository, SpecRepository
 from core.utils import strip_noqa_comments
 
 
@@ -65,8 +77,8 @@ logger = logging.getLogger(__name__)
 
 NOT_ENABLED = "agent chat is not enabled"
 CLIENT_HEADER_VALUE = "agent-chat/1"
-"""Required `X-Anyplot-Client` value on every POST, PUT and DELETE. A custom
-header forces a CORS preflight, which a foreign origin cannot pass."""
+"""Required `X-Anyplot-Client` value on every method but GET, HEAD and OPTIONS (so
+PATCH too). A custom header forces a CORS preflight, which a foreign origin cannot pass."""
 
 MAX_DATASET_BYTES = 200 * 1024
 MAX_MESSAGE_CHARS = 2000
@@ -185,15 +197,26 @@ class AgentHTTPError(Exception):
 
     Not an `HTTPException` on purpose: the API-wide handler reshapes those into
     `{"status", "message", "path"}` and drops their headers, while the chat
-    page needs a stable code and the request id to quote.
+    page needs a stable code and the request id to quote. `errors` carries the
+    binding check lines of a `422 invalid`; `case_id` the stored case of a
+    `502 row_missing`, so the page can chain its next edit to it.
     """
 
-    def __init__(self, status_code: int, detail: str, ref: str | None = None, errors: list[str] | None = None) -> None:
+    def __init__(
+        self,
+        status_code: int,
+        detail: str,
+        ref: str | None = None,
+        errors: list[str] | None = None,
+        *,
+        case_id: str | None = None,
+    ) -> None:
         super().__init__(detail)
         self.status_code = status_code
         self.detail = detail
         self.ref = ref
         self.errors = errors
+        self.case_id = case_id
 
 
 async def agent_http_error_handler(request: Request, exc: AgentHTTPError) -> JSONResponse:
@@ -205,6 +228,8 @@ async def agent_http_error_handler(request: Request, exc: AgentHTTPError) -> JSO
         headers["X-Request-Id"] = exc.ref
     if exc.errors:
         content["errors"] = exc.errors
+    if exc.case_id:
+        content["case_id"] = exc.case_id
     return JSONResponse(status_code=exc.status_code, content=content, headers=headers)
 
 
@@ -246,7 +271,7 @@ def require_same_site_client(request: Request) -> None:
     """CSRF guard for every state-changing method.
 
     The admin gate accepts a Cloudflare Access cookie, which a browser attaches
-    to cross-site requests too. So a POST, PUT or DELETE also needs the
+    to cross-site requests too. So a POST, PUT, PATCH or DELETE also needs the
     `X-Anyplot-Client` header, an allowed `Origin` when the browser sends one,
     and a JSON content type when it carries a body (the body-less cancel and
     delete calls need none). Each of those defeats a different forged "simple"
@@ -347,7 +372,10 @@ router = APIRouter(
 Ctx = Annotated[AgentContext, Depends(agent_context)]
 Client = Annotated[httpx.AsyncClient, Depends(get_agent_client)]
 Cases = Annotated[CaseBucket, Depends(get_case_bucket)]
+Db = Annotated[AsyncSession, Depends(require_db)]
 SessionId = Annotated[str, Path(pattern=SESSION_ID_PATTERN)]
+CaseId = Annotated[str, Path(pattern=CASE_ID_PATTERN)]
+CaseFileName = Annotated[str, Path(pattern="^(" + "|".join(re.escape(name) for name in CASE_FILE_NAMES) + ")$")]
 
 
 # ============================================================================
@@ -1063,17 +1091,22 @@ async def get_bundle(
 
 
 @router.post("/sessions/{sid}/feedback", status_code=201)
-async def submit_feedback(sid: SessionId, body: FeedbackBody, ctx: Ctx, client: Client, cases: Cases) -> dict[str, Any]:
+async def submit_feedback(
+    sid: SessionId, body: FeedbackBody, ctx: Ctx, client: Client, cases: Cases, db: Db
+) -> dict[str, Any]:
     """Quick feedback on one result version: store its case in the private bucket, `201 {case_id, stored}`.
 
     The agents service assembles the version's bundle (`version=result_version`, its
     `data.csv` only with `include_data`); `api/agent_cases.py` splits it into the case
     files and the manifest, which it uploads last, all in a worker thread. A later
     submission for the same version is a new case that names the earlier one in
-    `replaces`; the newest one counts. Upstream
-    errors map as for `.save()`, a bundle that is not the documented shape is
-    `502 upstream`, and a failed upload is `502 storage`, which leaves no manifest:
-    files without one are an aborted case, never a case.
+    `replaces`, which supersedes that case's row for the same session hash and result
+    version; the row is inserted after the last upload, and `502 row_missing` with the
+    `case_id` says the files are stored but the row is not. An API without a configured
+    database answers `503` before the bundle fetch, so it never stores a case it cannot
+    index. Upstream errors map as for `.save()`, a bundle that is not the documented
+    shape is `502 upstream`, and a failed upload is `502 storage`, which leaves no
+    manifest: files without one are an aborted case, never a case.
     """
     content = await _fetch_bundle(client, ctx, sid, version=body.result_version, include_data=body.include_data)
     created_at = datetime.now(UTC)
@@ -1106,6 +1139,16 @@ async def submit_feedback(sid: SessionId, body: FeedbackBody, ctx: Ctx, client: 
             "agent feedback case %s not stored (ref %s): %s", case.case_id, ctx.request_id, type(exc).__name__
         )
         raise AgentHTTPError(502, "storage", ctx.request_id) from exc
+    try:
+        await AgentFeedbackRepository(db).create_case(row_from_manifest(case.manifest))
+    except Exception as exc:  # the driver, the pool or a constraint: the case is in the bucket already
+        logger.warning(
+            "agent feedback case %s stored but not indexed (ref %s): %s",
+            case.case_id,
+            ctx.request_id,
+            type(exc).__name__,
+        )
+        raise AgentHTTPError(502, "row_missing", ctx.request_id, case_id=case.case_id) from exc
     logger.info("agent feedback case %s stored with %d files (ref %s)", case.case_id, len(case.files), ctx.request_id)
     return {"case_id": case.case_id, "stored": case.stored}
 
@@ -1115,3 +1158,319 @@ async def delete_session(sid: SessionId, ctx: Ctx, client: Client) -> Response:
     """Purge the session, its dataset and its renders."""
     await _call_upstream(client, ctx, "DELETE", f"/sessions/{sid}")
     return _no_content(ctx)
+
+
+# ============================================================================
+# Feedback triage: the "Agent cases" section of /debug
+# ============================================================================
+#
+# The `agent_feedback` row is the source of truth for status, tags, the expected outcome and
+# the promotion; the bucket holds the files until its lifecycle rule deletes them. These
+# routes never call the agents service.
+
+# `core.database.FEEDBACK_STATUSES`, `FEEDBACK_REACTIONS` and `AGENT_CASE_EXPECTED` as types;
+# a test keeps each pair equal.
+CaseStatus = Literal["new", "in_progress", "done", "wont_solve"]
+Reaction = Literal["thumbs_up", "thumbs_down", "bug", "idea"]
+Expected = Literal["accepted", "rejected"]
+StatusFilter = Literal["new", "in_progress", "done", "wont_solve", "open"]
+"""A status, or `open` for the two unresolved ones (`new`, `in_progress`), as on /debug's feedback list."""
+OPEN_STATUSES = ("new", "in_progress")
+LIBRARY_FILTER_PATTERN = r"^[a-z0-9]{1,50}$"
+Tag = Annotated[str, Field(pattern=TAG_PATTERN)]
+
+
+class CaseItem(BaseModel):
+    """One `agent_feedback` row as the triage list shows it; timestamps are UTC ISO 8601 with `Z`."""
+
+    id: str
+    created_at: str
+    reaction: str
+    message: str | None
+    include_data: bool
+    status: str
+    tags: list[str]
+    spec_id: str | None
+    library_id: str | None
+    locale: str | None
+    result_version: int
+    replaces: str | None
+    superseded_by: str | None
+    promoted_at: str | None
+    expected: str | None
+    model: str | None
+    model_version: str | None
+    judge_model: str | None
+    prompt_hash: str | None
+    pipeline_status: str | None
+    attempts: int | None
+    tokens: int | None
+    cost_estimate: float | None
+    files: list[str]
+    user_hash: str
+    session_hash: str
+    case_uri: str
+    manifest_schema: int
+    updated_at: str
+
+
+class CasePage(BaseModel):
+    """One page of the list; `has_more` says a further page exists (pass the last item's id as `before`)."""
+
+    items: list[CaseItem]
+    has_more: bool
+
+
+class TranscriptTurn(BaseModel):
+    role: Literal["user", "assistant"]
+    text: str
+
+
+class CaseDetail(CaseItem):
+    """The row plus what the case's `manifest.json` in the bucket adds.
+
+    `expired` when the lifecycle rule has deleted the manifest: then every field read from it
+    is null or empty, and the row and `siblings` remain. `diff` and `catalogue_library_version`
+    come from the catalogue at triage time, which may differ from the one the session adapted
+    (`snapshot_library_version`).
+    """
+
+    expired: bool
+    transcript: list[TranscriptTurn] | None
+    code: str | None
+    diff: str | None
+    catalogue_library_version: str | None
+    snapshot_library_version: str | None
+    residual_defects: list[str]
+    changes: list[str]
+    result_reason: str | None
+    config: dict[str, Any] | None
+    bindings: list[dict[str, str]]
+    siblings: list[str]
+
+
+class CasePatch(_StrictBody):
+    """The triage's changes to one row; at least one field.
+
+    `tags` replaces the whole list (unique slugs, stored sorted); `promoted: true` sets
+    `promoted_at` once and `false` clears it; `expected` is the outcome the regression
+    harness checks once the case is promoted.
+    """
+
+    status: CaseStatus | None = None
+    tags: Annotated[list[Tag], Field(max_length=MAX_TAGS)] | None = None
+    promoted: Annotated[bool, Field(strict=True)] | None = None
+    expected: Expected | None = None
+
+    @model_validator(mode="after")
+    def _check(self) -> CasePatch:
+        if self.status is None and self.tags is None and self.promoted is None and self.expected is None:
+            raise ValueError("send at least one of status, tags, promoted or expected")
+        if self.tags is not None and len(set(self.tags)) != len(self.tags):
+            raise ValueError("tags must be unique")
+        return self
+
+
+def _utc(value: datetime) -> str:
+    """A naive UTC timestamp from the table as ISO 8601 with `Z`, so the browser does not read it as local time."""
+    return value.replace(tzinfo=UTC).isoformat().replace("+00:00", "Z")
+
+
+def _case_fields(row: AgentFeedback) -> dict[str, Any]:
+    return {
+        "id": row.id,
+        "created_at": _utc(row.created_at),
+        "reaction": row.reaction,
+        "message": row.message,
+        "include_data": row.include_data,
+        "status": row.status,
+        "tags": list(row.tags or []),
+        "spec_id": row.spec_id,
+        "library_id": row.library_id,
+        "locale": row.locale,
+        "result_version": row.result_version,
+        "replaces": row.replaces,
+        "superseded_by": row.superseded_by,
+        "promoted_at": _utc(row.promoted_at) if row.promoted_at is not None else None,
+        "expected": row.expected,
+        "model": row.model,
+        "model_version": row.model_version,
+        "judge_model": row.judge_model,
+        "prompt_hash": row.prompt_hash,
+        "pipeline_status": row.pipeline_status,
+        "attempts": row.attempts,
+        "tokens": row.tokens,
+        "cost_estimate": row.cost_estimate,
+        "files": list(row.files or []),
+        "user_hash": row.user_hash,
+        "session_hash": row.session_hash,
+        "case_uri": row.case_uri,
+        "manifest_schema": row.manifest_schema,
+        "updated_at": _utc(row.updated_at),
+    }
+
+
+async def _case_or_404(repo: AgentFeedbackRepository, case_id: str, ctx: AgentContext) -> AgentFeedback:
+    row = await repo.get_by_id(case_id)
+    if row is None:
+        raise AgentHTTPError(404, "not_found", ctx.request_id)
+    return row
+
+
+def _storage_failed(case_id: str, ctx: AgentContext, exc: BaseException) -> AgentHTTPError:
+    # The exception class only, as for the upload: a storage error's message can carry URLs.
+    logger.warning("agent case %s not read (ref %s): %s", case_id, ctx.request_id, type(exc).__name__)
+    return AgentHTTPError(502, "storage", ctx.request_id)
+
+
+@router.get("/cases", response_model=CasePage)
+async def list_agent_cases(
+    ctx: Ctx,
+    db: Db,
+    reaction: Reaction | None = None,
+    status: StatusFilter | None = None,
+    spec: Annotated[str | None, Query(pattern=SPEC_ID_PATTERN)] = None,
+    library: Annotated[str | None, Query(pattern=LIBRARY_FILTER_PATTERN)] = None,
+    model_version: Annotated[str | None, Query(min_length=1, max_length=100)] = None,
+    tag: Annotated[str | None, Query(pattern=TAG_PATTERN)] = None,
+    include_superseded: bool = False,
+    before: Annotated[str | None, Query(pattern=CASE_ID_PATTERN)] = None,
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+) -> CasePage:
+    """The feedback cases, newest first, `limit` per page; superseded ones only with `include_superseded`.
+
+    `status=open` is `new` and `in_progress`. `before` is the exclusive cursor: the last
+    item's id of the page before.
+    """
+    rows = await AgentFeedbackRepository(db).list_cases(
+        reaction=reaction,
+        status=OPEN_STATUSES if status == "open" else status,
+        spec_id=spec,
+        library_id=library,
+        model_version=model_version,
+        tag=tag,
+        include_superseded=include_superseded,
+        before=before,
+        limit=limit + 1,
+    )
+    return CasePage(items=[CaseItem(**_case_fields(row)) for row in rows[:limit]], has_more=len(rows) > limit)
+
+
+@router.get("/cases/{case_id}", response_model=CaseDetail)
+async def get_agent_case(case_id: CaseId, ctx: Ctx, cases: Cases, db: Db) -> CaseDetail:
+    """One case: the row, what its manifest adds, the diff against the catalogue, and its siblings.
+
+    `404 not_found` without a row (a case in the bucket is not a row until the backfill
+    indexes it), `502 storage` when the bucket could not be read; a manifest the lifecycle
+    rule deleted is `expired`, not an error.
+    """
+    repo = AgentFeedbackRepository(db)
+    row = await _case_or_404(repo, case_id, ctx)
+    try:
+        manifest = await run_in_threadpool(read_manifest, cases, case_id)
+    except Exception as exc:  # any client, auth or transport error of the storage library, or a manifest no JSON
+        raise _storage_failed(case_id, ctx, exc) from exc
+    siblings = await repo.siblings(row.session_hash, row.result_version, row.id)
+    impl = None
+    if row.spec_id and row.library_id:
+        impl = await ImplRepository(db).get_code(row.spec_id, row.library_id)
+    original = strip_noqa_comments(impl.code) if impl is not None else None
+    catalogue_version = impl.library_version if impl is not None else None
+    if manifest is None:
+        return CaseDetail(
+            **_case_fields(row),
+            catalogue_library_version=catalogue_version,
+            expired=True,
+            transcript=None,
+            code=None,
+            diff=None,
+            snapshot_library_version=None,
+            residual_defects=[],
+            changes=[],
+            result_reason=None,
+            config=None,
+            bindings=[],
+            siblings=siblings,
+        )
+    detail = manifest_detail(manifest, row.result_version)
+    diff = None
+    if original and detail.code and row.spec_id and row.library_id:
+        diff = code_diff(original, detail.code, spec_id=row.spec_id, library_id=row.library_id)
+    return CaseDetail(
+        **_case_fields(row),
+        catalogue_library_version=catalogue_version,
+        expired=False,
+        transcript=[TranscriptTurn(role=role, text=text) for role, text in detail.transcript],
+        code=detail.code,
+        diff=diff,
+        snapshot_library_version=detail.snapshot_library_version,
+        residual_defects=list(detail.residual_defects),
+        changes=list(detail.changes),
+        result_reason=detail.result_reason,
+        config=detail.config,
+        bindings=[{"role": role, "column": column} for role, column in detail.bindings],
+        siblings=siblings,
+    )
+
+
+@router.get("/cases/{case_id}/files/{name}")
+async def get_agent_case_file(case_id: CaseId, name: CaseFileName, ctx: Ctx, cases: Cases, db: Db) -> Response:
+    """One file of a case as stored, with its stored content type; never cached.
+
+    `404 not_found` for an unknown id, a file the case does not hold, or one the lifecycle
+    rule deleted; `502 storage` for any other bucket error.
+    """
+    row = await _case_or_404(AgentFeedbackRepository(db), case_id, ctx)
+    if name not in row.files:
+        raise AgentHTTPError(404, "not_found", ctx.request_id)
+    try:
+        data = await run_in_threadpool(cases.download, case_object(case_id, name))
+    except Exception as exc:  # any client, auth or transport error of the storage library
+        raise _storage_failed(case_id, ctx, exc) from exc
+    if data is None:
+        raise AgentHTTPError(404, "not_found", ctx.request_id)
+    # A returned Response skips the headers `agent_context` set, so repeat them.
+    headers = {
+        "Cache-Control": _NO_STORE,
+        "Content-Disposition": f'inline; filename="{name}"',
+        "X-Content-Type-Options": "nosniff",
+        "X-Request-Id": ctx.request_id,
+    }
+    return Response(data, media_type=CASE_MEDIA_TYPES[name], headers=headers)
+
+
+@router.patch("/cases/{case_id}", response_model=CaseItem)
+async def update_agent_case(case_id: CaseId, body: CasePatch, ctx: Ctx, db: Db) -> CaseItem:
+    """Change a case's triage state: status, tags, expected outcome, promotion; answers the whole row.
+
+    Promoting needs the case's data (`422 no_data` otherwise: the regression harness cannot
+    run a case without its `data.csv`) and an expected outcome: the one in the body or on the
+    row, else the reaction rule (`thumbs_up` accepted, `thumbs_down` rejected), and
+    `422 expected_required` for a `bug` or `idea` without one. A superseded or retired case
+    can still be changed.
+    """
+    repo = AgentFeedbackRepository(db)
+    row = await _case_or_404(repo, case_id, ctx)
+    updates: dict[str, Any] = {}
+    if body.status is not None:
+        updates["status"] = body.status
+    if body.tags is not None:
+        updates["tags"] = sorted(body.tags)
+    if body.expected is not None:
+        updates["expected"] = body.expected
+    if body.promoted is True:
+        if not row.include_data:
+            raise AgentHTTPError(422, "no_data", ctx.request_id)
+        if body.expected is None and row.expected is None:
+            rule = EXPECTED_BY_REACTION.get(row.reaction)
+            if rule is None:
+                raise AgentHTTPError(422, "expected_required", ctx.request_id)
+            updates["expected"] = rule
+        if row.promoted_at is None:
+            updates["promoted_at"] = datetime.now(UTC).replace(tzinfo=None)
+    elif body.promoted is False:
+        updates["promoted_at"] = None
+    updated = await repo.update(case_id, updates)
+    if updated is None:
+        raise AgentHTTPError(404, "not_found", ctx.request_id)
+    return CaseItem(**_case_fields(updated))

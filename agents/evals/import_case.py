@@ -18,9 +18,8 @@ Run it from the repository root:
   copied to this machine by hand. Its manifest names the version, the reaction and
   the library.
 
-A `gs://` source is out of scope: reading cases from the bucket comes with the triage
-change that also adds the `agent_feedback` table and the "Agent cases" section of the
-debug page (`docs/concepts/agent-network.md`, "Feedback capture").
+A `gs://` source is `sync_cases.py`'s job (`agents/README.md`, "Sync promoted cases from
+the bucket"); this tool reads files on this machine.
 
 The case goes to `agents/evals/.cases/<id>/`, the git-ignored directory the harness
 reads as promoted cases (`agents/evals/cases.py`, origin `promoted`), and nowhere
@@ -461,7 +460,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     if str(args.source).startswith("gs:/"):
-        parser.error("a gs:// source is not supported yet; copy the case directory down first")
+        parser.error(
+            "a gs:// source is not supported here; run `python -m agents.evals.sync_cases`, "
+            "or copy the case directory down first"
+        )
     os.environ["PYTHON_DOTENV_DISABLED"] = "1"  # importing agents.anyplot reads settings; never from a .env file
     os.environ["ADK_DISABLE_LOAD_DOTENV"] = "1"
     try:

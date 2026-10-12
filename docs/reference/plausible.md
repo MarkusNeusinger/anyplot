@@ -98,7 +98,7 @@ counts as a boundary because OR-filtered gallery views record
 | `/mcp` | MCP server documentation (AI assistant integration) |
 | `/stats` | Platform statistics (library scores, coverage, tags, top implementations) |
 | `/map` | Network map of specs clustered by visual similarity |
-| `/debug` | Pipeline status dashboard (spec coverage, feedback, ping) |
+| `/debug` | Pipeline status dashboard (spec coverage, feedback, agent cases, ping); the agent cases section sends no event of its own |
 | `/debug/agent` | Admin-only "Use with my data" agent chat; recorded without its query string, and only in builds with `VITE_ENABLE_AGENT_CHAT=true` |
 | `/{spec_id}` | Cross-language spec hub (all implementations across all languages) |
 | `/{spec_id}/{language}` | Language overview (all libraries for that language) |

@@ -535,6 +535,8 @@ uv run alembic upgrade head
 uv run alembic current
 ```
 
+A new revision is verified before merge by the CI job `Verify Migrations` (`.github/workflows/ci-migrations.yml`) on a throwaway PostgreSQL 18, and locally with `/verify-migrations`; production gets it only through `sync-postgres.yml` after the merge (`docs/reference/database.md`, "Database migrations").
+
 ## Prompts System
 
 The `prompts/` directory contains AI agent prompts for code generation, quality evaluation, and tagging.
@@ -755,7 +757,8 @@ Issue ready for maintainer review
 | **ci-lint.yml** | Ruff linting on PR |
 | **ci-tests.yml** | Unit, integration and E2E tests on PR (E2E against the Cloud SQL `test` database through the proxy), on four pytest-xdist workers (`-n 4 --dist worksteal`) with coverage, plus the characteristic-section lint on every run (contract over every spec, blocking; style of changed specs, warnings) |
 | **ci-image.yml** | Builds `api/Dockerfile` and smoke-tests the container on PR (health, reported version vs `pyproject.toml`, the runtime stage's COPY payload, non-root uid) plus hadolint on both Dockerfiles; skips when only `plots/**` or frontend sources changed. Two more jobs build the agent network's images: `agents/renderer/Dockerfile` (a seaborn render through the harness) and `agents/Dockerfile` (`/v1/status` reports its configured model and libraries, the production default refuses an anonymous caller, the prompts and fonts are in the image) |
-| **sync-postgres.yml** | Syncs plots/ to database on push to main |
+| **ci-migrations.yml** | `Verify Migrations` on PR: one head, `alembic upgrade head`, `alembic check`, CHECK-constraint parity, and a downgrade to the base commit's head and back, on a throwaway PostgreSQL 18 service container; runs the checks only when `alembic/`, `alembic.ini`, `core/database/`, `pyproject.toml` or `uv.lock` changed |
+| **sync-postgres.yml** | Syncs plots/ to database on push to main, after `alembic upgrade head` against Cloud SQL |
 | **sync-labels.yml** | Auto-syncs labels after manual PR merges (spec-ready, impl:*:done) |
 | **notify-deployment.yml** | Deployment notifications |
 | **util-claude.yml** | Claude utility workflow |

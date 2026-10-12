@@ -1,0 +1,307 @@
+# Verify every Alembic revision against a throwaway PostgreSQL, before merge.
+#
+# Until this workflow existed, no CI job ran a migration at PR time: the first
+# database that ever saw a new revision was the shared production Cloud SQL,
+# when sync-postgres.yml ran `alembic upgrade head` after the merge. A dual-heads
+# state once stalled that sync (#7285), and the only pre-merge loop was the
+# /verify-migrations skill, which needs Docker or a pgserver wheel on the
+# developer's machine. This job runs the skill's four checks
+# (.claude/skills/verify-migrations/SKILL.md) on a PostgreSQL 18 service
+# container, the major version production runs (Cloud SQL POSTGRES_18), widens
+# the roundtrip to every revision the change adds, and compares the CHECK
+# constraints by name and quoted literals, which `alembic check` does not
+# (f4b8d2c6a9e1).
+#
+# What it cannot catch: the #7285 race itself, two migration PRs forked from
+# the same head and merged one after the other. A pull_request run tests the
+# merge commit of the PR's LAST PUSH; when the sibling merges afterwards,
+# GitHub re-runs nothing (ruleset main does not require branches to be up to
+# date), so the two heads show up first in the push run on main and in
+# sync-postgres.yml, as before. For that race this job is a report, not a
+# gate, until the ruleset requires up-to-date branches or a merge queue
+# (merge_group below) re-tests the combined state.
+#
+# Conventions shared with the sibling ci-* workflows (see ci-image.yml):
+# SHA-pinned actions, change detection over `paths:` filters (a job that always
+# reports is easier to read than a check that never appears), event payload
+# through env rather than `${{ }}` inside scripts, and `timeout-minutes`.
+
+name: "CI: Migrations"
+run-name: "Migrations: ${{ github.ref_name }}"
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+      - 'specification/**'
+      - 'implementation/**'
+  merge_group:
+  workflow_dispatch:
+    inputs:
+      force_run:
+        description: 'Force the migration checks (ignore change detection)'
+        type: boolean
+        default: true
+
+concurrency:
+  group: ci-migrations-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  migrations:
+    name: Verify Migrations
+    runs-on: ubuntu-latest
+    # uv sync of the core dependency set plus a handful of alembic commands on an
+    # empty database: about two minutes warm. 15 fails loudly instead of hanging.
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    # A service cannot be made conditional on a step output, so the container
+    # starts on every event, also when the change detection skips the checks.
+    # No volume and no secrets: the database lives and dies with the job.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          # Unquoted on purpose: tests/unit/workflows/test_workflows.py flags a
+          # quoted literal after any key ending in "password" as a hardcoded
+          # secret (its regex is case-insensitive).
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: anyplot
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d anyplot"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+
+    env:
+      # alembic/env.py runs the async engine whenever DATABASE_URL is set, so the
+      # URL keeps the +asyncpg driver. Set for the whole job, so no alembic
+      # command can fall back to INSTANCE_CONNECTION_NAME or a .env file.
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/anyplot
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # The change detection and the base revision below read the base
+          # commit, which a shallow checkout lacks.
+          fetch-depth: 0
+
+      - name: Check for schema changes
+        id: check
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          MG_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          FORCE_RUN: ${{ inputs.force_run }}
+        run: |
+          set -uo pipefail
+          # BASE is the commit this change lands on. On a pull_request the
+          # checkout is GitHub's merge commit (refs/pull/N/merge), so its first
+          # parent is exactly the base it was merged into, and the tree under
+          # test already contains every revision main has: a PR whose revision
+          # forks from an older head shows up below as two heads.
+          case "$EVENT_NAME" in
+            pull_request) BASE=$(git rev-parse HEAD^1) ;;
+            merge_group)  BASE="$MG_BASE_SHA" ;;
+            push)
+              if [[ "$PUSH_BEFORE" =~ ^0+$ ]]; then BASE=""; else BASE="$PUSH_BEFORE"; fi ;;
+            *)            BASE=$(git rev-parse HEAD~1 2>/dev/null || true) ;;
+          esac
+
+          # A diff that cannot be computed says nothing about the schema, so it
+          # must never read as "nothing changed": run the checks instead.
+          if [[ -z "$BASE" ]] || ! CHANGED_FILES=$(git diff --name-only "$BASE" HEAD); then
+            echo "::warning::no diffable base for this $EVENT_NAME - running the migration checks rather than skipping them"
+            echo "should_check=true" >> "$GITHUB_OUTPUT"
+            echo "base=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          # What can change the migration chain or what `alembic check` compares
+          # it with: the revisions and env.py, alembic.ini, the ORM models and
+          # their column types (core/database/), and the alembic and SQLAlchemy
+          # versions (the lock; a SQLAlchemy bump can change how a type renders).
+          SCHEMA_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(alembic/|alembic\.ini$|core/database/|pyproject\.toml$|uv\.lock$|\.github/workflows/ci-migrations\.yml$)' || true)
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && "$FORCE_RUN" == "true" ]]; then
+            echo "Manual trigger with force_run=true, will run the migration checks"
+            echo "should_check=true" >> "$GITHUB_OUTPUT"
+          elif [[ -n "$SCHEMA_CHANGES" ]]; then
+            echo "Found schema-relevant changes, will run the migration checks"
+            echo "should_check=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No schema-relevant changes, skipping the migration checks"
+            echo "should_check=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Python
+        if: steps.check.outputs.should_check == 'true'
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        if: steps.check.outputs.should_check == 'true'
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
+
+      # alembic, SQLAlchemy and asyncpg are core dependencies; no extra is
+      # needed, the same install sync-postgres.yml runs before it migrates prod.
+      - name: Install dependencies
+        if: steps.check.outputs.should_check == 'true'
+        run: uv sync
+
+      # The newest revision on the base commit: the roundtrip below downgrades
+      # to it, so it exercises every revision this change adds (not just the
+      # newest one, which is all `downgrade -1` reaches). Read from the base
+      # commit's own files; ScriptDirectory never runs env.py and needs no DB.
+      # `python -I` keeps the checkout's own alembic/ directory (a package with
+      # an __init__.py) off sys.path, so the import finds the installed library.
+      - name: Find the base head revision
+        id: base
+        if: steps.check.outputs.should_check == 'true'
+        env:
+          BASE: ${{ steps.check.outputs.base }}
+        run: |
+          set -euo pipefail
+          BASE_HEAD=""
+          if [[ -n "$BASE" ]]; then
+            mkdir -p "$RUNNER_TEMP/base"
+            git archive "$BASE" alembic | tar -x -C "$RUNNER_TEMP/base"
+            BASE_HEAD=$(uv run --no-sync python -I -c 'import sys; from alembic.script import ScriptDirectory; h = ScriptDirectory(sys.argv[1]).get_heads(); print(h[0] if len(h) == 1 else "")' "$RUNNER_TEMP/base/alembic")
+          fi
+          echo "Base head: ${BASE_HEAD:-<none>}"
+          echo "base_head=$BASE_HEAD" >> "$GITHUB_OUTPUT"
+
+      - name: Exactly one head
+        if: steps.check.outputs.should_check == 'true'
+        run: |
+          set -euo pipefail
+          heads=$(uv run alembic heads)
+          echo "$heads"
+          if [[ $(grep -c . <<< "$heads") -ne 1 ]]; then
+            echo "::error::the revision graph has more than one head; add a merge revision (the #7285 class)"
+            exit 1
+          fi
+
+      - name: Upgrade the full chain
+        if: steps.check.outputs.should_check == 'true'
+        run: uv run alembic upgrade head
+
+      # Autogenerate diff between the migrated schema and core/database/models.py.
+      # Blind spots (alembic's own): CHECK constraints (next step) and server
+      # defaults (env.py leaves compare_server_default at False).
+      - name: Model and migration drift
+        if: steps.check.outputs.should_check == 'true'
+        run: uv run alembic check
+
+      # `alembic check` does not compare CHECK constraints, which is how
+      # ck_quality_score_range and ck_review_verdict_valid were declared in the
+      # model and missing in production for months (f4b8d2c6a9e1). Compare the
+      # named CHECKs of the migrated schema with the models' by table and name,
+      # and their expressions by the set of quoted string literals: a migration
+      # that creates the right name over a status list missing one value (the
+      # three lists are duplicated by hand in the revision) must fail here, and
+      # PostgreSQL re-renders `x IN ('a','b')` as `x = ANY (ARRAY['a'::character
+      # varying, ...])`, so the raw text cannot be compared. A CHECK without
+      # string literals (ck_quality_score_range's numeric bounds) is compared by
+      # name only. contype 'c' only: PostgreSQL 18 also lists NOT NULL
+      # constraints ('n').
+      - name: CHECK constraint parity
+        if: steps.check.outputs.should_check == 'true'
+        run: |
+          uv run python - <<'EOF'
+          import asyncio
+          import os
+          import re
+          import sys
+
+          from sqlalchemy import CheckConstraint, text
+          from sqlalchemy.ext.asyncio import create_async_engine
+
+          from core.database import Base
+
+          LITERAL = re.compile(r"'((?:[^']|'')*)'")
+
+
+          def literals(expression: str) -> frozenset[str]:
+              """The quoted string literals of a CHECK expression; casts sit outside the quotes."""
+              return frozenset(LITERAL.findall(expression))
+
+
+          declared = {
+              (table.name, constraint.name): literals(str(constraint.sqltext))
+              for table in Base.metadata.tables.values()
+              for constraint in table.constraints
+              if isinstance(constraint, CheckConstraint) and constraint.name
+          }
+
+
+          async def main() -> int:
+              engine = create_async_engine(os.environ["DATABASE_URL"])
+              async with engine.connect() as conn:
+                  rows = await conn.execute(
+                      text(
+                          "SELECT c.conrelid::regclass::text, c.conname, pg_get_constraintdef(c.oid) "
+                          "FROM pg_constraint c "
+                          "WHERE c.contype = 'c' AND c.connamespace = 'public'::regnamespace"
+                      )
+                  )
+                  actual = {(table, name): literals(definition) for table, name, definition in rows}
+              await engine.dispose()
+              missing = sorted(declared.keys() - actual.keys())
+              extra = sorted(actual.keys() - declared.keys())
+              differ = sorted(key for key in declared.keys() & actual.keys() if declared[key] != actual[key])
+              for table, name in missing:
+                  print(f"::error::CHECK {name} on {table} is declared in the model but missing from the schema")
+              for table, name in extra:
+                  print(f"::error::CHECK {name} on {table} is in the schema but not declared in the model")
+              for table, name in differ:
+                  print(
+                      f"::error::CHECK {name} on {table} lists {sorted(actual[(table, name)])} in the schema "
+                      f"but {sorted(declared[(table, name)])} in the model"
+                  )
+              print(f"{len(declared)} CHECK constraints declared, {len(actual)} in the schema")
+              return 1 if missing or extra or differ else 0
+
+
+          sys.exit(asyncio.run(main()))
+          EOF
+
+      - name: Downgrade and upgrade roundtrip
+        if: steps.check.outputs.should_check == 'true'
+        env:
+          BASE_HEAD: ${{ steps.base.outputs.base_head }}
+        run: |
+          set -euo pipefail
+          HEAD_REV=$(uv run alembic heads | awk '{print $1}')
+          if [[ -n "$BASE_HEAD" && "$BASE_HEAD" != "$HEAD_REV" ]]; then
+            target="$BASE_HEAD"
+          else
+            # No new revision (a models-only or env.py change) or no base:
+            # roundtrip the newest revision, as /verify-migrations does.
+            target=-1
+          fi
+          echo "Downgrading $HEAD_REV to $target"
+          uv run alembic downgrade "$target"
+          uv run alembic upgrade head
+          # The re-upgraded schema must still match the models.
+          uv run alembic check
+
+      - name: Skip notice
+        if: steps.check.outputs.should_check == 'false'
+        run: echo "::notice::Migration checks skipped - no alembic/, core/database/ or dependency-lock changes"

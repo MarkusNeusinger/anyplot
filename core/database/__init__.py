@@ -15,10 +15,13 @@ from core.database.connection import (
     is_db_configured,
 )
 from core.database.models import (
+    AGENT_CASE_EXPECTED,
+    CASE_ID_LENGTH,
     FEEDBACK_REACTIONS,
     FEEDBACK_STATUSES,
     LANGUAGES_SEED,
     LIBRARIES_SEED,
+    AgentFeedback,
     Feedback,
     Impl,
     Language,
@@ -26,6 +29,7 @@ from core.database.models import (
     Spec,
 )
 from core.database.repositories import (
+    AgentFeedbackRepository,
     BaseRepository,
     FeedbackRepository,
     ImplRepository,
@@ -53,6 +57,9 @@ __all__ = [
     "Feedback",
     "FEEDBACK_REACTIONS",
     "FEEDBACK_STATUSES",
+    "AgentFeedback",
+    "AGENT_CASE_EXPECTED",
+    "CASE_ID_LENGTH",
     "LIBRARIES_SEED",
     "LANGUAGES_SEED",
     # Repositories
@@ -62,4 +69,5 @@ __all__ = [
     "LanguageRepository",
     "ImplRepository",
     "FeedbackRepository",
+    "AgentFeedbackRepository",
 ]
