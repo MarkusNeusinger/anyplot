@@ -32,7 +32,10 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    boxes in display pixels of the texts the probe's own draw rendered (it measures
    the first `PROBE_MEASURE_LIMIT` in draw order and keeps at most `PROBE_LIMIT`,
    the ones past a canvas edge first; `texts_total` counts every drawn text), overlaps
-   between the measured tick labels per axis, annotations outside their axes, the
+   between the measured tick labels per axis, overlaps of every other measured text
+   (axis labels, titles, legend texts, annotations) with any measured text by more
+   than `TEXT_OVERLAP_TOLERANCE_PX` (`text_overlaps`, the deepest pairs by role, and
+   `text_overlaps_total`), annotations outside their axes, the
    number of drawn point marks (scatter offsets) and the number of vertices of the
    visible `plot()` lines (`line_points`). Only rendered text counts: matplotlib keeps tick
    labels for locator positions outside the view interval and for hidden axes
@@ -45,7 +48,7 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    stderr and the exit code stays non-zero.
 
 The probe feeds the advisory gates G3 (clipped text), G5 (annotation outside its
-axes), G7 (tick-label overlap), G8 (more point marks than data rows), G9 (more
+axes), G7 (overlapping text: tick labels among themselves, any other text with any), G8 (more point marks than data rows), G9 (more
 plotted points than any dataset within the parser's caps can hold) and G10
 (characters without a glyph in any font of the text). It is
 advisory because the code under test could tamper with it; the host never fails a
@@ -76,6 +79,13 @@ text drawn after the first 2,000 is not seen by G3, nor a tick label by G7: G7 r
 extents and measures none of its own. G5 reuses them too and measures the annotations
 missing from them, at most this many again: matplotlib draws no annotation whose point
 lies outside the view, which is the case G5 is there for."""
+TEXT_OVERLAP_TOLERANCE_PX = 3.0
+"""How deep (in the saved image's pixels, on a 3200 x 1800 canvas) two texts must overlap before
+G7 names them: the ink of a glyph sits inside its box, so boxes that share a few pixels at a
+corner or an edge (a title on its axes' top tick label, an axis label beside its ticks) do not
+touch on the canvas. The owner's polar case overlapped by far more than this."""
+TEXT_OVERLAP_CANDIDATES = 200  # texts other than tick labels compared with every measured text
+TEXT_OVERLAP_LIMIT = 5  # the deepest pairs the probe reports
 THEME_ENV = "ANYPLOT_THEME"
 MARKER = "HARNESS"
 FALLBACK_FAMILIES = (
@@ -269,6 +279,83 @@ def _overlaps(a, b):
     return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
 
 
+def _overlap_px(a, b):
+    """How deep two boxes overlap: the smaller of the shared width and height, 0 when they do not touch."""
+    return max(0.0, min(min(a[2], b[2]) - max(a[0], b[0]), min(a[3], b[3]) - max(a[1], b[1])))
+
+
+def _text_kinds(figure):
+    """The role of every text artist of the figure, by id: tick labels, axis labels, titles, legends, annotations.
+
+    A polar axes names its axis labels by what they label (the angular and the radial
+    axis), and its ids are collected in the second set, so a line can name the cause.
+    """
+    kinds = {}
+    polar = set()
+    for axes in figure.get_axes():
+        is_polar = getattr(axes, "name", "") == "polar"
+        axis_names = (("x", "angular"), ("y", "radial"), ("z", "z"))
+        for attribute, polar_name in axis_names:
+            axis = getattr(axes, f"{attribute}axis", None)
+            if axis is None:
+                continue
+            for label in axis.get_ticklabels():
+                kinds[id(label)] = "tick label"
+            name = polar_name if is_polar else attribute
+            kinds[id(axis.label)] = f"{name} axis label"
+            if is_polar:
+                polar.add(id(axis.label))
+        for title in (getattr(axes, name, None) for name in ("title", "_left_title", "_right_title")):
+            if title is not None:
+                kinds[id(title)] = "title"
+        for child in axes.texts:
+            kinds[id(child)] = "annotation" if type(child).__name__ == "Annotation" else "text"
+        legend = axes.get_legend()
+        if legend is not None:
+            for text in [*legend.get_texts(), legend.get_title()]:
+                kinds[id(text)] = "legend text"
+    for legend in getattr(figure, "legends", []):
+        for text in [*legend.get_texts(), legend.get_title()]:
+            kinds[id(text)] = "legend text"
+    for text in getattr(figure, "texts", []):
+        kinds[id(text)] = "text"
+    for name in ("_suptitle", "_supxlabel", "_supylabel"):
+        text = getattr(figure, name, None)
+        if text is not None:
+            kinds[id(text)] = "suptitle" if name == "_suptitle" else "figure axis label"
+    return kinds, polar
+
+
+def text_overlaps(figure, extents, scale):
+    """Pairs of measured texts that overlap by more than `TEXT_OVERLAP_TOLERANCE_PX`, one of them no tick label.
+
+    Tick label against tick label stays `tick_overlaps`. Two texts of one legend are
+    laid out by the legend and never compared. At most `TEXT_OVERLAP_CANDIDATES`
+    texts that are no tick label are compared with every measured text; the deepest
+    `TEXT_OVERLAP_LIMIT` pairs are returned with the total count. Depths are in the
+    saved image's pixels.
+    """
+    kinds, polar = _text_kinds(figure)
+    known = [(key, kinds[key], box) for key, box in extents.items() if key in kinds]
+    others = [item for item in known if item[1] != "tick label"][:TEXT_OVERLAP_CANDIDATES]
+    pairs = []
+    seen = set()
+    for key, kind, box in others:
+        for other_key, other_kind, other_box in known:
+            if other_key == key or frozenset((key, other_key)) in seen:
+                continue
+            if kind == other_kind == "legend text":
+                continue
+            depth = float(_overlap_px(box, other_box) * scale)
+            if depth > TEXT_OVERLAP_TOLERANCE_PX and math.isfinite(depth):
+                seen.add(frozenset((key, other_key)))
+                pairs.append(
+                    {"a": kind, "b": other_kind, "px": round(depth, 1), "polar": key in polar or other_key in polar}
+                )
+    pairs.sort(key=lambda pair: -pair["px"])
+    return pairs[:TEXT_OVERLAP_LIMIT], len(pairs)
+
+
 def _beyond(box, width, height):
     """Whether a text box reaches past an edge of the `width` x `height` canvas."""
     return box[0] < 0 or box[1] < 0 or box[2] > width or box[3] > height
@@ -360,6 +447,7 @@ def probe(figure, dpi):
                     line_points += len(line.get_xydata())
             except Exception:
                 continue
+    overlaps, overlaps_total = text_overlaps(figure, extents, scale)
     return {
         "figsize": [float(width_in), float(height_in)],
         "dpi": float(dpi or figure.dpi),
@@ -370,6 +458,8 @@ def probe(figure, dpi):
         "texts": texts,
         "texts_total": len(drawn),
         "tick_overlaps": tick_overlaps,
+        "text_overlaps": overlaps,
+        "text_overlaps_total": overlaps_total,
         "annotations_outside": annotations_outside,
         "points": points,
         "line_points": line_points,
