@@ -472,8 +472,10 @@ jobs:
   # bootstrap deploy, after the merge. `sandbox do` exists only on Cloud Run, so
   # the job checks the image the way the local backend uses it: the harness
   # renders a seaborn plot under the deployed rlimits, with no network and a
-  # read-only root filesystem, and the service boots and reports itself. The
-  # event-shape handling is the API job's in short form.
+  # read-only root filesystem, then a multi-script fixture whose probe must
+  # report no missing glyph (and a DejaVu-only control whose probe must), and
+  # the service boots and reports itself. The event-shape handling is the API
+  # job's in short form.
   renderer-image:
     name: Build renderer image and render through the harness
     runs-on: ubuntu-latest
@@ -607,6 +609,96 @@ jobs:
           print(f"OK: plot-light.png {width}x{height}, {len(png)} bytes; probe written")
           EOF
           tail -n 1 harness.out
+
+      # The fallback fonts: the harness appends them after the font the code chose,
+      # so this fixture does what catalogue code does to the font setup (seaborn's
+      # rcParams reset, a bold title, a monospace text) and draws every script the
+      # image is meant to cover. The probe's missing_glyphs is the assert; the PNG
+      # is uploaded for an eyeball check of the shaping. The DejaVu-only control
+      # below proves the assert can fail.
+      - name: Render multi-script text through the harness
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p work-i18n
+          printf 'x,y\na,1\nb,3\nc,2\nd,4\ne,2\n' > work-i18n/data.csv
+          cat > work-i18n/plot.py <<'EOF'
+          import os
+
+          import matplotlib.pyplot as plt
+          import pandas as pd
+          import seaborn as sns
+
+          THEME = os.environ["ANYPLOT_THEME"]
+          df = pd.read_csv("data.csv")
+          sns.set_theme(style="whitegrid")  # rewrites font.family, as 306 catalogue seaborn files do
+          fig, ax = plt.subplots(figsize=(16, 9), dpi=200)
+          sns.barplot(data=df, x="x", y="y", ax=ax)
+          ax.set_title("销售额（万元） · 東京の売上 · 월간 매출", fontsize=26, fontweight="bold")
+          ax.set_xlabel("月間売上高（千円） · שווקים", fontsize=18)
+          ax.set_ylabel("المبيعات الشهرية · मासिक बिक्री", fontsize=18)
+          ax.set_xticks(range(len(df)), ["ยอดขาย", "한국어", "दिल्ली", "القاهرة", "東京"])
+          ax.text(0.02, 0.92, "monospace: 等幅 ไทย", family="monospace", transform=ax.transAxes, fontsize=16)
+          fig.savefig(f"plot-{THEME}.png")
+          EOF
+          render() {  # $1: work dir; the rest: extra docker -e flags
+            local work=$1; shift
+            docker run --rm --network none --read-only --tmpfs /tmp \
+              --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+              -v "$PWD/$work:/work" -w /work \
+              -e ANYPLOT_THEME=light -e MPLBACKEND=Agg -e MPLCONFIGDIR=/tmp/mpl \
+              -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+              -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_RLIMIT_AS_MB=1024 \
+              "$@" anyplot-renderer:ci /app/.venv/bin/python -I /opt/anyplot/harness.py plot.py > "$work/harness.out"
+            grep -q '^HARNESS {"event": "end"' "$work/harness.out" || { echo "::error::no HARNESS end line in $work"; cat "$work/harness.out"; exit 1; }
+          }
+          render work-i18n -e ANYPLOT_MPL_SEED=/opt/mplconfig
+          python3 - <<'EOF'
+          import json, struct
+          png = open("work-i18n/plot-light.png", "rb").read()
+          assert png[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
+          assert struct.unpack(">II", png[16:24]) == (3200, 1800)
+          probe = json.load(open("work-i18n/probe-light.json"))
+          assert probe["canvas"] == [3200, 1800], probe.get("canvas")
+          assert probe["missing_glyphs"] == {"count": 0, "math": 0, "sample": []}, probe["missing_glyphs"]
+          print("OK: every script drew with a glyph; probe", probe["missing_glyphs"])
+          EOF
+          tail -n 1 work-i18n/harness.out
+
+          # The control: the same code with matplotlib's bundled fonts only. No seed, so the
+          # cache is rebuilt in /tmp/mpl without /usr/share/fonts, the harness finds none of
+          # its fallback families installed, and the same probe must report missing glyphs.
+          cp -r work-i18n work-dejavu && rm -f work-dejavu/plot-light.png work-dejavu/probe-light.json
+          render work-dejavu -e MPL_IGNORE_SYSTEM_FONTS=1
+          python3 - <<'EOF'
+          import json
+          glyphs = json.load(open("work-dejavu/probe-light.json"))["missing_glyphs"]
+          assert glyphs["count"] > 0 and glyphs["sample"], glyphs
+          assert all(isinstance(c, int) and c > 0x7F for c in glyphs["sample"]), glyphs
+          assert any(0x0900 <= c <= 0x0E7F for c in glyphs["sample"]), glyphs  # Devanagari or Thai, which DejaVu lacks
+          print("OK: the DejaVu-only control reports", glyphs["count"], "missing code points")
+          EOF
+
+      # The numbers the font set costs, for the PR and the deploy notes: the image
+      # size, the base release, the installed files and their package versions.
+      - name: Image size, base release and installed fonts
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          echo "image size: $(docker image inspect --format '{{.Size}}' anyplot-renderer:ci) bytes"
+          docker run --rm anyplot-renderer:ci sh -c 'grep PRETTY_NAME /etc/os-release; cat /usr/share/doc/fonts-noto/versions.txt; ls -l /usr/share/fonts/noto; du -sh /usr/share/fonts/noto; head -n 5 /usr/share/doc/fonts-noto/fonts-noto-core.copyright'
+
+      # Also after a failed assert, so the PNGs show what went wrong.
+      - name: Upload the multi-script render
+        if: ${{ !cancelled() && steps.check.outputs.should_build == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        with:
+          name: renderer-i18n-render
+          path: |
+            work-i18n/plot-light.png
+            work-dejavu/plot-light.png
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: The image carries no ADK and the version it reports
         if: steps.check.outputs.should_build == 'true'
