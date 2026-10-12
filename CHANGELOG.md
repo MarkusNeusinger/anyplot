@@ -36,11 +36,11 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [3.4.0] — 2026-10-12 — Earned, not assumed
 
-anyplot 3.4 makes a score something a plot has to earn. Every quality review runs on Opus,
-judges the plot against its own plot type's "What a good version looks like" bullets, scores
+anyplot 3.4 makes a score something a plot has to earn. A quality review runs on Opus by
+default, judges the plot against its own plot type's "What a good version looks like" bullets, scores
 without the approval bar or the previous score in view, and names the defect behind each
 deduction. A regeneration replaces a live implementation only when it is visibly better, and
-the regen gate records why. A retest harness with three hand-labelled sets checks every
+the regen gate records why. A retest harness with three hand-labeled sets checks every
 rubric change before it ships, and a weekly skill reviews what `daily-regen` changed.
 Behind that: a pipeline that no longer strands a PR when a review fails after scoring, MCP
 tools that return what an assistant needs, and a `.env` that is read only from the checkout
@@ -241,7 +241,7 @@ root.
 - **Agent network design records the licensing decision.** The open question
   of where the agent code lives is settled in the decisions table: everything
   stays MIT in this repository, paid AI credits remain a later option, and the
-  Highcharts licence must be settled before the first paid credit. (#12100)
+  Highcharts license must be settled before the first paid credit. (#12100)
 - **Weekly regen review opens at most 15 renders.** `collect_week.py` now ranks suspicious regenerations
   (merges carried only by `P` or `new` defects, then big re-score drops on keeps, then gate oddities,
   then scores of 90 or more), fills the sample at random up to 15, and lists the suspicious PRs over the
@@ -473,7 +473,7 @@ root.
   implementation on main, such as every `daily-regen` pick) now gets one review
   and no repair loop. The review scores the new render blind, re-scores the
   predecessor's production renders against the same criteria, and writes a
-  before/after judgement to `review_regen.json`; `automation/scripts/regen_gate.py`
+  before/after judgment to `review_regen.json`; `automation/scripts/regen_gate.py`
   merges only when the new score is at least the re-scored predecessor minus one,
   at least one improvement is visible, and nothing regressed (a replaced data
   scenario or added encodings on a `*-basic` spec count as regressions).
@@ -582,7 +582,7 @@ root.
 - **Repair exhaustion no longer pushes to main.** After four failed repairs,
   `impl-review.yml` ran `git push origin main` to delete the pair's
   implementation, which the main ruleset refuses, so the step died after
-  closing the PR and before labelling the issue. Only a forced regeneration
+  closing the PR and before labeling the issue. Only a forced regeneration
   reaches that point with an implementation on main, and that live
   implementation now stays: the issue gets `impl:{library}:done` back. A
   fresh pair is marked `impl:{library}:failed` as before. A stale
