@@ -38,6 +38,7 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 | `anyplot/schemas.py` | The pipeline contracts with their size limits |
 | `anyplot/data/`, `anyplot/code/` | The deterministic data and code layers, without ADK |
 | `evals/matrix.py` | The regression harness: runs eval cases through `/v1` in process and writes the report, the Markdown summary, the diff against a baseline and the review galleries |
+| `evals/score.py`, `anyplot/scoring.py`, `anyplot/prompts/scorer.md` | Scores a harness run's renders with the catalogue rubric on Claude Opus: the measurement behind the quality ladder ([Score the renders with the catalogue rubric](#score-the-renders-with-the-catalogue-rubric)) |
 | `evals/make_fixtures.py` | The seeded generator of the 120 synthetic spike-X cases |
 | `evals/make_stress.py`, `evals/stress.py` | The seeded generator of the 23 stress cases, and the model-free static stage that `--static` runs over them ([Run the stress cases](#run-the-stress-cases)) |
 | `evals/cases.py`, `evals/pricing.py`, `evals/report.py` | Case loading and selection, list prices, and the summary, diff and gallery code; `report.py` also merges two runs into one blind gallery and scores its export |
@@ -433,6 +434,39 @@ The exit code is one of the following:
 | 4 | An outage stopped the run: the renderer became unavailable (the pipeline's `RendererUnavailable`), or 3 runs in a row ended in an error |
 
 Ctrl-C, exit codes 3 and 4 all write the partial report before the harness stops.
+
+### Score the renders with the catalogue rubric
+
+The owner's quality ladder (2026-10-12) lets a result ship only once it reaches a score threshold, scored like the pipeline scores catalogue implementations. `evals/score.py` measures where today's results stand, without changing the agent: it scores a matrix run's renders with `anyplot/scoring.py`, which reads the catalogue rubric verbatim (`prompts/quality-criteria.md` and steps 5c, 5d and 8a of `prompts/workflow-prompts/ai-quality-review.md`) behind `anyplot/prompts/scorer.md`.
+
+The scorer judges the 16 criteria a user sees, 75 points scaled to 100: Visual Quality (30), Design Excellence (20), Spec Compliance (15), and DQ-01 and DQ-03 of Data Quality (10). It leaves out DQ-02 (the realism of the scenario: the data is the user's own), Code Quality (the catalogue's code style, inherited through the edits) and Library Mastery (a catalogue showcase). The model gives points per criterion and defect lines; the code adds up and applies the rubric's caps. Design Excellence starts at the rubric's defaults (8 of 20), so a defect-free plot in the plain house style scores 84: a threshold of 90 asks for design beyond the style guide's baseline.
+
+1. Run the matrix with `--keep-attempts`. The harness then also keeps every render a turn sends to the renderer, with its code and data, under `attempts/` in the output directory, and lists them per run as `attempt_renders`:
+
+   ```bash
+   uv run --extra agents python -m agents.evals.matrix --cases full --keep-attempts --no-baseline \
+     --renderer remote --render-url https://RENDERER_URL --gcloud-token --out agents/evals/reports/<run>
+   ```
+
+2. Estimate, then score the report's first and shipped render of each run:
+
+   ```bash
+   uv run --extra agents python -m agents.evals.score agents/evals/reports/<run>/<date>-claude-haiku-5-5.json --estimate-only
+   uv run --extra agents python -m agents.evals.score agents/evals/reports/<run>/<date>-claude-haiku-5-5.json --budget-usd 20
+   ```
+
+   The scorer is Claude Opus 5.5 on `eu` at high effort (`--model`, `--location`, `--effort`); it probes the model first and stops with exit code 2 when the model is not reachable, and never falls back to another model. Calls start at two a minute (`--calls-per-minute`), because a new model's per-minute token quota can be small; a 429 stops the run and names the quota, and `--budget-usd` stops it before the next call could pass the budget (exit code 3, the partial results written). `--sample N` scores N runs spread evenly over the report. One call costs about $0.07 at list price with the rubric cached.
+
+3. Read `<report>-scores.md` and `<report>-scores.json` next to the report: the score distribution of the first and the shipped renders and their share at or above 90, 85 and 80; what repair 1 gained; how many runs reach each threshold at the first try, after repair 1, or would need an advisor; the points lost by criterion; the runs whose gates were clean but whose score is below 80; and the cost and latency of the agent runs and of the scoring. When the first render also shipped, it is scored once and counts for both.
+
+**First measurement, 2026-10-12 (rough: 18 runs, 16 scored; 7 specs, both libraries; Haiku 5.5, two attempts; scorer Opus 5.5 on `eu`, high effort):**
+
+- Shipped results score a median of 81 (75 to 85): none reaches 90, 2 of 16 reach 85, 14 of 16 reach 80. First renders score the same (median 81).
+- Repair 1 does not move the score: of 13 repaired runs, 3 gained (1 to 4 points), 7 stayed equal and 3 lost (1 to 5 points). Today's repair fixes what the Haiku reviewer names, which the rubric mostly does not deduct.
+- The gap is design, not defects. Visual Quality, Spec Compliance and Data Quality together average 96 % (87 to 100 %); Design Excellence stays at the rubric's defaults (8 or 9 of 20) on every render. On this rubric a defect-free plot in the house style scores 84, so a threshold of 90 sends every run to an advisor that adds design beyond the style guide.
+- The most frequent technical deduction is SC-01 variant creep inherited from the catalogue code: a regression line and confidence band on `scatter-basic`, KDE, rug and mean and median lines on `histogram-basic`, a point strip on `violin-basic`, a donut ring on `pie-basic`. The adapter keeps them, and the agent's reviewer does not flag the catalogue's own layers.
+- No render lost a point for keeping the user's column names as axis titles (VQ-06, SC-04).
+- Cost: an agent run costs a median of $0.008 and takes about 35 s; scoring one render with Opus costs about $0.09 at list price and takes 16 to 19 s. The whole measurement, both harness runs and 32 scoring calls, cost about $3.
 
 ### Run the stress cases
 

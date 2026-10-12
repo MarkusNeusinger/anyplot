@@ -220,6 +220,11 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         help="mint AGENT_RENDER_TOKEN with `gcloud auth print-identity-token` and renew it before it expires",
     )
     parser.add_argument("--no-preflight", action="store_true", help="skip the model-free preflight render")
+    parser.add_argument(
+        "--keep-attempts",
+        action="store_true",
+        help="also keep every attempt's PNG, code and data under attempts/ (for agents.evals.score)",
+    )
     parser.add_argument("--cases", default="smoke", help="smoke, full, stress, or comma-separated globs over case ids")
     parser.add_argument(
         "--static",
@@ -352,7 +357,91 @@ class MatrixConfig:
     baselines_dir: Path = BASELINES_DIR
     preflight: bool = True
     render_token: "RenderToken | None" = None
+    keep_attempts: bool = False
     argv: list[str] = field(default_factory=list)
+
+
+# --- Every attempt's render (--keep-attempts) -------------------------------------------------
+
+
+@dataclass
+class AttemptRecorder:
+    """Keeps the PNG, the code and the data of every render a case's runs make (`--keep-attempts`).
+
+    The pipeline keeps only the shipped version; to score the first attempt next to
+    it, the harness wraps the render backend (`wrap`) and writes each render the
+    pipeline sends while a case runs to `out`, as `<case>-r<repeat>-<turn>-n<k>.png`
+    with its run-form code (`.py.txt`) and, once per run, the data the code reads
+    (`<case>-r<repeat>.csv`).
+    The k-th render of a turn is the k-th attempt that reached the renderer (an
+    attempt that failed its check renders nothing); the record lists them under
+    `attempt_renders`. Renders outside a case (the preflight) are not kept.
+    """
+
+    out: Path
+    label: str | None = None
+    entries: list[dict[str, Any]] | None = None
+    count: int = 0
+
+    def begin(self, label: str, entries: list[dict[str, Any]]) -> None:
+        self.label, self.entries, self.count = label, entries, 0
+
+    def end(self) -> None:
+        self.label, self.entries = None, None
+
+    def wrap(self, backend: Any) -> "RecordingBackend":
+        return RecordingBackend(backend, self)
+
+    def keep(self, job: Any, result: Any) -> None:
+        if self.label is None or self.entries is None:
+            return
+        self.out.mkdir(parents=True, exist_ok=True)
+        run = self.label.rsplit("-", 1)[0]
+        data = self.out / f"{run}.csv"
+        if not data.exists():
+            data.write_text(job.data_csv, encoding="utf-8")
+        for theme, output in result.outputs.items():
+            self.count += 1
+            stem = f"{self.label}-n{self.count}"
+            # `.py.txt`, so that mypy and pytest, which read every `.py` file under the checkout, skip the kept code.
+            (self.out / f"{stem}.py.txt").write_text(job.source, encoding="utf-8")
+            png = None
+            if output.png:
+                (self.out / f"{stem}.png").write_bytes(output.png)
+                png = f"{self.out.name}/{stem}.png"
+            self.entries.append(
+                {
+                    "turn": self.label.rsplit("-", 1)[1],
+                    "render": self.count,
+                    "theme": theme,
+                    "exit_code": output.exit_code,
+                    "png": png,
+                    "code": f"{self.out.name}/{stem}.py.txt",
+                    "data": f"{self.out.name}/{data.name}",
+                }
+            )
+
+
+@dataclass
+class RecordingBackend:
+    """A render backend that hands every result to its `AttemptRecorder` before returning it."""
+
+    backend: Any
+    recorder: AttemptRecorder
+    name: str = ""
+
+    def __post_init__(self) -> None:
+        self.name = str(self.backend.name)
+
+    async def render(self, job: Any) -> Any:
+        result = await self.backend.render(job)
+        self.recorder.keep(job, result)
+        return result
+
+    async def aclose(self) -> None:
+        close = getattr(self.backend, "aclose", None)
+        if close is not None:
+            await close()
 
 
 # --- The renderer: token and preflight -------------------------------------------------------
@@ -867,6 +956,7 @@ class CaseRunner:
     collector: AttributionCollector
     settings: "AgentSettings"
     renders_dir: Path
+    recorder: AttemptRecorder | None = None
 
     async def run(self, case: "EvalCase", repeat: int) -> dict[str, Any]:
         """One case and repeat, from opening the session to deleting it; never raises for a broken case."""
@@ -916,9 +1006,9 @@ class CaseRunner:
             return
         if not await self._confirm(record, sid, headers("c")):
             return
-        plot = await self._turn(record, sid, {"action": "create_plot"}, headers("m1"))
+        plot = await self._kept_turn(record, case, repeat, sid, {"action": "create_plot"}, headers("m1"), "m1")
         if case.change_request and record["status"] in SHIPPED:
-            plot = await self._turn(record, sid, {"text": case.change_request}, headers("m2"))
+            plot = await self._kept_turn(record, case, repeat, sid, {"text": case.change_request}, headers("m2"), "m2")
         if plot is not None and record["status"] in SHIPPED:
             await self._save_png(record, case, repeat, sid, plot, headers("a"))
 
@@ -986,6 +1076,25 @@ class CaseRunner:
             record["status"], record["reason"] = "error", _detail(response)
             return False
         return True
+
+    async def _kept_turn(
+        self,
+        record: dict[str, Any],
+        case: "EvalCase",
+        repeat: int,
+        sid: str,
+        body: dict[str, str],
+        headers: dict[str, str],
+        turn: str,
+    ) -> dict[str, Any] | None:
+        """A turn whose renders the recorder keeps (`--keep-attempts`); a plain turn without one."""
+        if self.recorder is None:
+            return await self._turn(record, sid, body, headers)
+        self.recorder.begin(f"{case.case_id}-r{repeat}-{turn}", record.setdefault("attempt_renders", []))
+        try:
+            return await self._turn(record, sid, body, headers)
+        finally:
+            self.recorder.end()
 
     async def _turn(
         self, record: dict[str, Any], sid: str, body: dict[str, str], headers: dict[str, str]
@@ -1176,6 +1285,13 @@ async def run_matrix(
 
     settings = get_settings()
     services = services or Services()
+    recorder: AttemptRecorder | None = None
+    if config.keep_attempts:
+        # Before the first render: the backend property builds its SerialRenderer from the factory once,
+        # and a token renewal builds the next backend from the same (wrapped) factory.
+        recorder = AttemptRecorder(config.out / "attempts")
+        inner_factory = services.backend_factory
+        services.backend_factory = lambda: recorder.wrap(inner_factory())
     set_services(services)
     if config.render_token is not None:
         await config.render_token.renew(services)
@@ -1202,7 +1318,7 @@ async def run_matrix(
     try:
         transport = httpx.ASGITransport(app=timed)
         async with httpx.AsyncClient(transport=transport, base_url="http://agents", timeout=None) as client:
-            runner = CaseRunner(client, timed, collector, settings, config.out / "renders")
+            runner = CaseRunner(client, timed, collector, settings, config.out / "renders", recorder)
             for index, (case, repeat) in enumerate(plan, start=1):
                 if config.budget_usd is not None and runs and total + costliest > config.budget_usd:
                     stopped = "budget"
@@ -1457,6 +1573,7 @@ def _prepare_and_run(args: argparse.Namespace, settings: "AgentSettings", argv: 
         gallery_size=args.gallery_size,
         save_baseline=args.save_baseline,
         preflight=not args.no_preflight,
+        keep_attempts=args.keep_attempts,
         render_token=RenderToken(os.environ) if args.gcloud_token else None,
         argv=list(sys.argv[1:] if argv is None else argv),
     )
