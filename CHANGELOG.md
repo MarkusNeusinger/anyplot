@@ -34,6 +34,634 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+## [3.4.0] — 2026-10-12 — Earned, not assumed
+
+anyplot 3.4 makes a score something a plot has to earn. A quality review runs on Opus by
+default, judges the plot against its own plot type's "What a good version looks like" bullets, scores
+without the approval bar or the previous score in view, and names the defect behind each
+deduction. A regeneration replaces a live implementation only when it is visibly better, and
+the regen gate records why. A retest harness with three hand-labeled sets checks every
+rubric change before it ships, and a weekly skill reviews what `daily-regen` changed.
+Behind that: a pipeline that no longer strands a PR when a review fails after scoring, MCP
+tools that return what an assistant needs, and a `.env` that is read only from the checkout
+root.
+
+### Added
+
+- **Weekly regen review skill.** The `review-regen-week` project skill turns a week of `daily-regen`
+  regenerations into a dated report: a bundled `collect_week.py` gathers every regen PR's gate record,
+  parsed review, write-back and pair artifact into JSON, flags what needs a look (merges without a
+  carrier, silent deductions, stranded write-backs, big re-score drops, identical review vectors), and
+  picks a render sample. The skill sets targets for each metric, classifies findings by where the fix
+  belongs (spec, rubric, generator, gate, workflow, one-off regen), and ships a lessons file that
+  distills the scoring and gate work so a reviewer can tell expected behavior from real problems (#12055).
+- **Check values.** A spec's Notes may carry a `Check values:` bullet: one
+  to three numbers a correct implementation reproduces from its own
+  computation. The review verifies each one that applies in the render and
+  in the data code, where it must fall out of the computation; a missed
+  value is a DQ-03 defect with the expected value, the observed value and
+  the delta. Without check values a reviewer can't tell a wrong matrix from
+  a right one: a swapped diagonal in `line-tanabe-sugano` scored DQ-03 at
+  4 of 4. The spec template names the bullet. (#12046)
+- **Review retest set v3: the 15 first generations of
+  `line-tanabe-sugano`.** `automation/retest/set-v3.yaml` freezes the first
+  spec whose first generations were all reviewed on Opus (#12019 to #12038),
+  pinned at `cda962dc3` with the spec text their live reviews saw
+  (`ec0619261`). Their live scores sat at 85 to 91, with less spread between
+  the libraries than one reviewer shows between two runs, so the set probes
+  what sets v1 and v2 can't: how a first review behaves where one point
+  decides the verdict. Its 30 renders are frozen under
+  `gs://anyplot-images/retest/sets/v3/`, the workflow's `set` input takes
+  `v3`, and its labels stay drafts until the owner confirms them. A label may
+  carry `spec_source: rules_ref`, which limits it to runs whose reviewer saw
+  the spec text at `rules_ref`: a defect that only a later spec clause makes
+  one doesn't count against an arm on the pinned text. (#12043)
+- **Silent deductions in the retest report.** A technical item (VQ, SC, DQ,
+  or CQ) that a review scores below its maximum without a defect line that
+  names it leaves a repair nothing to act on. The report and the pull request
+  snippet now show the share of such items and the share of runs with at
+  least one. It reads only the records' checklist and weaknesses, so a
+  rebuilt report of an older arm shows it too: 52 of 266 and 45 of 261 on the
+  two arms of the lean-code change. (#12043)
+- **A live report on first reviews.** `review_retest.py first-reviews --since
+  <date>` reads the review comments of every first-generation pull request
+  since a date, read-only and free: the attempt-1 histogram and the share at
+  90 or 91, the spread between the libraries of a spec, the criteria no
+  library differs on, silent deductions, and per repair the gain on technical
+  against judgment items and whether the repair committed anything. The
+  retest measures the reviewer on a frozen set; this shows what it did in
+  production, batch after batch. (#12043)
+- **Review retest set v2: the regen pairs of verification round 1.**
+  `automation/retest/set-v2.yaml` freezes the 12 regenerations the gate
+  merged on 2026-09-27 (#11951 to #11963 without #11955), each predecessor at
+  `0ccb3fec1` and each new version at `28df16aed`, with the spec pinned at
+  `0ccb3fec1`. Set v1 has no pair that a suggestion alone could carry, so it
+  can't show whether a gate change stops such merges; set v2 can. The
+  workflow's new `set` input (`v1` by default, or `v2`) hands the chosen
+  manifest and lock to `plan`, `bundle` and `report`. Its 48 renders are
+  frozen under `gs://anyplot-images/retest/sets/v2/`, and its labels stay
+  drafts until the owner confirms them. (#11966)
+- **Forward merges without a labeled carrier.** Regen items can carry a
+  `fixes` label: the predecessor defects the forward new version fixes, on
+  carrier criteria only (VQ, SC, DQ, CQ), each with a pattern for the
+  improvement's `what` text. The report and the PR snippet show the share of
+  forward merges in which no counted visible improvement matches such a
+  label or cites an affirmative characteristic of the spec
+  (`merges_without_carrier`). It reads only fields every rules version
+  writes, so a baseline and a candidate arm mean the same by it. Round 1
+  replayed through it gives 6 of 12, the number the P3 gate change is
+  measured against. (#11966)
+- **Review retest harness.** A new dispatch-only workflow,
+  `.github/workflows/review-retest.yml`, re-runs the AI quality review on a
+  frozen set of implementations and regeneration pairs, several fresh sessions
+  per item, for one rules version (`rules_ref`), and reports the pooled score
+  spread, verdict flips at 90, weakness-topic agreement, the gate's verdict
+  stability and order bias (regen pairs run in both orders), and — once the
+  labels are confirmed — named-defect misses and false alarms, with a
+  bootstrap comparison against a baseline arm and a snippet for the PR body.
+  A review-rubric change used to be observable only on real pipeline runs;
+  now it can be measured before it merges. The workflow is measurement-only:
+  read-only job tokens without `id-token`, sessions that may not run `gh`,
+  `git push` or `git commit`, and nothing written to a PR, an issue, a label,
+  `plots/` or GCS; it has no effect until someone dispatches it. It refuses
+  while the production pipeline is busy and caps a run at 240 sessions. The
+  harness is `automation/scripts/review_retest.py` (with the pure metrics in
+  `review_retest_metrics.py`). Set v1 is `automation/retest/set-v1.yaml`
+  (15 fresh core items, one per library, and 7 core regen pairs including
+  three identity controls, plus a full tier) and is frozen:
+  `set-v1.lock.json` pins the sha256 of 94 public renders under
+  `gs://anyplot-images/retest/sets/v1/`. The ground-truth labels ship as
+  proposals and count only once the owner sets `labels: confirmed`. Every cell
+  records the resolved model id, or none, and keeps the alias apart as
+  `model_alias`, never in its place. The baseline arm (`rules_ref=0674ab6b5`)
+  runs on today's harness: an overlaid `regen_gate.py` only receives the flags
+  it already had. How to run and read it: `docs/workflows/review-retest.md`.
+  (#11964)
+- **Regen gate report.** `review_retest.py gate-report` aggregates the
+  production regen gate records from the PR-comment markers: merge rate,
+  reason codes, how far re-scored predecessors land from their stored scores
+  (comparable decisions apart), the counted visible improvements, how often a
+  review cites an "Expected, not a defect" bullet as an improvement, and soft
+  alarms. (#11964)
+- **A verification loop for review-rubric changes.** `CLAUDE.md` and the
+  `open-pr` skill send pull requests that change the review rubric
+  (`quality-criteria.md`, `ai-quality-review.md`, `default-style-guide.md`,
+  the review rules in `prompts/library/*.md`, the review model routing) to a
+  candidate arm of the retest, whose snippet goes into the PR body. (#11964)
+- **Review provenance in the metadata.** `impl-review.yml` now stores which
+  model and which rules produced a review: `review.model` (the resolved model
+  ID from the session's execution file, for example `claude-sonnet-5`, not the
+  alias that moves between releases), `review.criteria_version` (the git blob
+  IDs of `prompts/quality-criteria.md`, `ai-quality-review.md`,
+  `default-style-guide.md` and the library prompt, hashed after the prompt
+  overlay, so exactly what the reviewer read), and `review.rendered_at` (the
+  staging render's creation time). A new standard-library helper,
+  `automation/scripts/review_provenance.py`, computes both. A value the run
+  can't determine is left out, never filled with the alias, and a repair
+  review drops what the previous review wrote for it. The keys aren't synced
+  to the database, and every new step is non-gating. (#11950)
+- **Regen gate records.** Every regen gate decision now carries a reason code
+  (`merge`, `below_tolerance`, `no_visible_improvement`, `regression`,
+  `regen_json_invalid`, …) and leaves a one-line JSON record in the PR comment
+  as an invisible `<!-- regen-gate-record:v1 {...} -->` marker: scores,
+  improvement and regression counts, the code, and the model and rules version
+  of both the new review and the stored one. It holds no model-written text.
+  The `::notice::regen_gate` line gains `code=`, `model=` and `criteria=`, and
+  each regeneration's before/after pair (both renders, both sources, the
+  previous review, the review files, the record) is kept as a 60-day
+  `regen-pair-<pr>-<attempt>` artifact — the predecessor's production renders
+  are overwritten on the next merge, so it is the only copy. Run logs expire;
+  PR comments don't, so the gate can now be monitored after the fact. (#11950)
+- **CI checks every spec's "What a good version looks like" section.** The
+  required "Run Tests" job now runs `automation/scripts/spec_characteristics_lint.py`
+  on every PR and push, even when no Python changed: `contract` checks every
+  spec against the shape the regen gate parses (exact heading, last section,
+  column-0 `- ` bullets with a kind prefix, 2-8 of them, no duplicates) and
+  blocks the merge; `style` warns about house style in the changed specs
+  (3-6 one-line bullets, no thresholds, generic ideals or library names, the
+  `-basic` variant bullet, possible contradictions with Notes). Before, a
+  spec-only PR skipped pytest, so a section the gate would misread could merge
+  unchecked. spec-create runs both checks before it commits, and `--strict`
+  makes the style rules blocking for the planned backfill. (#11948)
+
+### Changed
+
+- **The frontend toolchain names Node 24.** `app/.nvmrc` moves from 22 to 24,
+  the version CI has run since the test workflow pinned it, so `nvm use` in
+  `app/` gives the same Node as the pipeline. `engines.node` keeps the build
+  path's floor (22.12); the dev-only test stack reaches higher (jsdom 30.1
+  installs on `^22.22.2 || ^24.15.0 || >=26.0.0`), which the version `.nvmrc`
+  names satisfies. The app image keeps its `node:22-alpine` builder, which
+  tracks the 22 line inside that range. (#12141)
+- **The backend test job runs on four workers.** "Tests / Run Tests" spent a
+  median of 675 s on a PR, 94 % of it in one serial pytest process over 9,183
+  tests. It now runs pytest-xdist with `-n 4 --dist worksteal`, one worker per
+  CPU of the hosted runner, and coverage measures through `sys.monitoring`
+  (`core = "sysmon"`) instead of the C tracer, which cost about 45 % on Python
+  3.13. Pinned to four CPUs, the CI-equivalent run took 68.9 s instead of
+  300.8 s, with the same 9,162 passed and 21 skipped tests and the same
+  coverage total (10,723 statements, 92 %); the PR's first CI run took 245 s
+  for the job and 212 s for the pytest step (the medians before: 675 s and
+  635 s), with the 62-s picker test as the tail that #12135 removes. The coverage now includes `agents/`, which half of the tests target
+  and which was never measured (23,433 statements at 93 % in the pinned run,
+  81 s), and the job also runs when `uv.lock`, a workflow or action under
+  `.github/`, or a file under `prompts/` changes, because the workflow and
+  prompt tests read exactly those files. (#12136) `--durations=25` lists the slowest tests, which the interleaved
+  output of four workers no longer shows by timestamp, and the Cloud SQL proxy
+  step polls its port every 0.2 s instead of sleeping 5 s. The turn-cap test
+  of the agent stream tolerates about 0.5 s of slow start on a busy runner
+  instead of 0.2 s, and the MonoLisa font download writes one `.part` file per
+  process, so two workers that miss the cache at once no longer truncate each
+  other's file.
+- **A bare `/regen` picks its spec in about 2.5 s instead of 30 s.** The picker
+  (`agentic/workflows/modules/regen/picker.py`) now reads the catalogue on
+  `origin/main` with one `git ls-tree` and one `git cat-file --batch`, instead of
+  one `git ls-tree` per spec and one `git show` per metadata file — about 2,900
+  processes per call — and parses the YAML with libyaml's `CSafeLoader` where
+  PyYAML has it (2.0 s instead of 19.8 s for the 2,596 files). The pick is
+  unchanged: on the live tree, all 325 specs and every metadata file gave the
+  same timestamps as before, and `validate-spec` the same answers. The live test
+  `test_pick_oldest_returns_real_spec` drops from 30.3 s to 2.9 s locally (mean
+  of three runs) and from 63.7 s to 5.2 s under coverage, as CI runs it; new
+  fake-git tests pin the listing, batch-parsing and picking rules in
+  milliseconds. (#12135)
+- **MCP tools return what an assistant needs and nothing it does not.**
+  `get_spec_detail` and `get_implementation` entries now carry `spec_id`,
+  strip `# noqa` comments like the REST code endpoint, and leave out the
+  review checklist, the review image description and the legacy single-theme
+  preview fields: pipeline internals of about 10 KB per implementation that
+  made an unfiltered `get_spec_detail` about 0.5 MB. `list_libraries` returns
+  the REST `/libraries` fields (language, framework, version, documentation
+  URL), so an assistant can pick a library by language without a second call.
+  `get_tag_values` returns `{value, count}` pairs, most frequent first, counting
+  specs for spec-level and implementations with code for impl-level
+  categories. Breaking for clients that read the old shapes; the MCP server is
+  not versioned and the old shapes were never what the reference described.
+  (#12100)
+- **Agent network design records the licensing decision.** The open question
+  of where the agent code lives is settled in the decisions table: everything
+  stays MIT in this repository, paid AI credits remain a later option, and the
+  Highcharts license must be settled before the first paid credit. (#12100)
+- **Weekly regen review opens at most 15 renders.** `collect_week.py` now ranks suspicious regenerations
+  (merges carried only by `P` or `new` defects, then big re-score drops on keeps, then gate oddities,
+  then scores of 90 or more), fills the sample at random up to 15, and lists the suspicious PRs over the
+  cap as "not opened". Rows without a pair artifact are never sampled. The skill runs only when the owner asks; there is no schedule (#12056).
+- **Review retest labels confirmed for set v3.** The owner confirmed the
+  ground-truth labels of the 15 `line-tanabe-sugano` first generations on
+  2026-10-07, so `automation/retest/set-v3.yaml` switches to
+  `labels: confirmed` and set v3 reports now fill the named-defect and
+  false-alarm rates. (#12054)
+- **A deduction names its defect.** The 15 first reviews of
+  `line-tanabe-sugano` deducted 27 technical items and wrote a defect line for
+  20 of them; the same gap was a lost point on one library and a
+  `Suggestion:` on another. The 19 technical criteria (VQ, SC, DQ, CQ) now
+  start at their maximum, and every point below it is carried by a defect
+  line; the five judgment criteria (DE, LM) start at their default and rise
+  on named evidence. The review lists defects first, then scores, then adds
+  up: it never picks a total, and the "median 72-78" anchor describes where
+  written-down defects land a typical plot instead of naming a target.
+  `regen_gate.py check-feedback` reports a technical item below its maximum
+  that no defect line names, and the workflow's format notice counts them
+  (`silent=N`). (#12046)
+- **The same gap costs the same criterion on every library.** Each library
+  of a spec is reviewed without seeing the others, so `quality-criteria.md`
+  gains a routing table ("Which criterion a gap belongs to"): a missed Notes
+  bullet is SC-02 when the fix is in the plotting code and DQ-01 when it is
+  in the data, a departure from a Data range, an example or a stated
+  preference costs nothing unless the Notes require it, a conditional
+  requirement whose condition the data doesn't meet costs nothing, and a
+  wrong domain value is DQ-03. It routes; it sets no threshold. (#12046)
+- **The reviewer scores without the approval bar in view.** The cascade
+  (90, 80, 70, 60, 50), what follows from a score, and the expected score
+  distribution left `quality-criteria.md`, `ai-quality-review.md`, and
+  `quality-evaluator.md`; they stay documented for people in
+  `docs/workflows/overview.md`. The reviewer writes no verdict any more (the
+  `### Verdict` line, `review_verdict.txt`, and `review_prev.json`'s
+  `verdict` are gone; the workflow sets it), and is told not to open earlier
+  reviews of the pull request. (#12046)
+- **Compliance is not excellence.** A first review used to credit what the
+  spec or the style guide already requires as design excellence: "spines
+  removed, grid at 15%" raised DE-02 on 15 of 15 reviews. Evidence that
+  raises a DE or LM item is now something beyond what the spec's Notes and
+  the style guide require. In the DE-01 and DE-02 ladders the style-guide
+  baseline no longer earns more than the default, and a forbidden custom
+  palette earns nothing. The complete baseline
+  earns exactly the defaults (DE-01 = 4, DE-02 = 2), so the 75 cap can't fire
+  on a compliant implementation. Scores move down by this change; a score
+  under these rules isn't comparable with one stored before them. (#12046)
+- **CQ-04's hand-roll list is marked as examples.** The score row read as a
+  whitelist ("a KDE, binning, quantiles, ACF/PACF, a fit, a linkage"), and
+  "a fit" still named the closed-form slope and intercept the scoring notes
+  exempt. The row now says the examples aren't a list to match against and
+  narrows the fit to one that takes an iteration or a matrix solve. (#12046)
+- **DQ-02's content policy targets real politics, not every parliament.** The
+  forbidden-topic line in `prompts/quality-criteria.md`, `prompts/quality-evaluator.md`
+  and the workflow reviewer now names real parties, politicians, elections, real
+  legislatures and partisan messaging, and states that a clearly fictional
+  parliament (invented names carrying no real-world ideology) is not political
+  content: it never scores 0 or triggers the cap, invented data the spec asks
+  for is not a deduction, and the fix for flat invented names is better
+  invented names, never real ones. The old
+  blanket "Politics (elections, parties, voting)" read as zeroing
+  `parliament-basic` itself, whose spec now requires invented parties. (#12050)
+- **A review no longer finds the previous one in its working tree.** After a review, the pull request branch
+  carries it in two places: the `Quality: N/100` header and the metadata file
+  with the score and the whole review. The second review of an unchanged file
+  scored four points higher than the first (#12028), all of them on design
+  and library items. `impl-review.yml` now resets the header to
+  `Quality: pending` and moves the metadata file out of the workspace while a
+  reviewer runs, on every review, and puts both back before it stores the new
+  one; the commit that stores a review no longer names the score. A
+  regeneration's re-score already hid its predecessor's review this way. The
+  branch history and the pull request's comments stay reachable. (#12045)
+- **The workflow owns the stored verdict.** `review.verdict` used to be what
+  the reviewer wrote in `review_verdict.txt`, which needed the approval bar in
+  the reviewer's prompt and was wrong at times (`APPROVED` on a review the
+  workflow sent to repair). The metadata step now stores what the workflow
+  decided, and a kept regeneration's write-back stores `APPROVED`, because
+  the kept implementation stays live; `review_prev.json` no longer needs a
+  `verdict`. (#12045)
+- **A review with nothing to repair is approved as it stands.** A first
+  review below 90 used to go to repair even when it named no defect. A
+  repair fixes defect lines, so that cycle bought only a second, noisier
+  score. A review at 80 or more with no defect line, every technical
+  criterion (VQ, SC, DQ, CQ) at its maximum, and a checklist that adds up to
+  its score is now approved, with a comment that says why. Both conditions
+  count: a defect line on a design or library criterion is repairable, and a
+  technical deduction without a defect line still gets its repair. (#12045)
+- **Implementations compute with the runtime's libraries, not by hand.** The
+  generator prompt and the review criteria list what each runtime installs —
+  numpy, pandas, SciPy, scikit-learn and statsmodels for Python, base `stats`
+  and the ggplot2 stat layers for R, Statistics and the Makie recipes for
+  Julia, each JavaScript library's own API — and ask for the shortest version
+  that reads as well. The review deducts one CQ-04 point, never more, for a
+  written-out algorithm an available call provides, or a block a named shorter
+  form replaces, and names the call and the line range. A test keeps the two
+  copies of the list identical and in step with `pyproject.toml`, the R setup,
+  `Project.toml` and the JavaScript render harness. (#12005)
+- **The regen gate has a code-only path.** When no improvement fixes a visible
+  defect, a regeneration still replaces the live implementation if it fixes a
+  `CQ-04 (code)` defect the previous review named, calls the named replacement
+  or removes the named code, is shorter, scores CQ-04 higher, and regresses
+  nothing. The gate reads both sources for it, counts a call only in executable
+  text (a comment, a string literal or a definition of the same name is none),
+  and the record counts it as `improvements.code`. (#12005)
+- **Polish and optional additions no longer carry a regeneration.** Every
+  improvement in a regeneration review now names its kind: a fix, a removal,
+  an addition, or polish. Only a fix or a removal can replace the live
+  implementation; adding an optional feature the spec only allows, or
+  restyling an element the spec's scope excludes, rides along, and an
+  improvement without a kind never carries. Feature coverage (DQ-01) no
+  longer carries a replacement on its own, like the design and
+  library-mastery criteria, and a missing optional feature no longer costs
+  DQ-01 points. A kept regeneration stores a predecessor finding of kind
+  addition or polish as a suggestion, not a defect, and the gate record and
+  `gate-report` count the kinds. (#11977)
+- **A kept regeneration stores its re-score.** When the regen gate keeps the
+  live implementation, the review's re-score of it (score, weaknesses,
+  strengths, image description, checklist and review model) replaces the
+  stored review through a metadata pull request that `impl-merge.yml` merges,
+  so the next regeneration starts from current problems under the current
+  model and rules. The review writes the re-score as `review_prev.json`, its
+  checklist equal to the gate's `prev_checklist`; the new
+  `automation/scripts/regen_writeback.py` checks it, writes the metadata and
+  the `Quality: N/100` header number, and guards the merge (the score, review
+  model and rules version must be the kept PR's gate record's, only the review
+  keys may change, and `main` must still hold the files the re-score judged). The code and the production
+  images stay as they are; the gate record's new `writeback` key and
+  `gate-report` count what happened on every keep. (#11972)
+- **Review retest labels confirmed for sets v1 and v2.** Both manifests switch
+  to `labels: confirmed`, so retest reports now fill the label metrics each
+  set supports: named-defect and false-alarm rates, gate accuracy, and (set v2
+  only) the carrier metric. The owner's corrections:
+  the d3 force-collision pair of set v1 keeps in both orders; in set v2,
+  #11960 merges forward on a fixed VQ-02 defect (the gridline through the
+  value label), #11963 keeps, and #11953's label-clearance fix is dropped as a
+  suggestion. (#11976)
+- **Review weaknesses are defects or suggestions, and only a defect carries a
+  regeneration.** Each weakness either names the criterion it violates, the
+  render and the observed value, or starts with `Suggestion:`; both are stored,
+  so the website and the next regeneration see the class. The regen gate
+  replaces a live implementation only when a visible improvement fixes a
+  visual, spec, data or code defect that scores higher than in the
+  predecessor's re-score, or an `A good version shows:` property; design and
+  library-mastery points, storytelling layers and taste changes ride along but
+  never carry a merge alone. Generation and repair act on defects and decline
+  suggestions. (#11967)
+- **One unasked layer on a `-basic` spec is already variant creep.** The SC-01
+  rule and its mirrors in the review, generation and repair prompts name
+  reference lines, highlights and callouts, and one such addition is enough;
+  the review no longer suggests adding one. (#11967)
+- **Every quality review runs on Opus.** `impl-review.yml` now reviews on Opus
+  whatever model generated the implementation, so a regeneration (generated on
+  Sonnet) is judged, and its predecessor re-scored, on Opus. The `model` input
+  still chooses the generation and repair model; a manual review can pin
+  another model with the new `review_model` input. The retest harness's
+  `models=production` now runs every cell on Opus. (#11968)
+- **An off-canvas predecessor may be frozen for a forward-only pair.**
+  `impl-review.yml` shows the reviewer the predecessor's render as
+  production stores it, and round 1 had two off-canvas ones (4766 × 2670 and
+  4800 × 2700). A regen pair marked `orders: forward` now runs in the forward
+  order only, and its `prev` render may keep its production size; the render
+  under review (`new`) still has to be on a canonical canvas, as the
+  production canvas gate requires. Regen cells also record the spec's characteristic
+  count and permissions (`spec_characteristics`), which the carrier metric
+  reads. (#11966)
+- **`-basic` specs name reference lines, highlights and callouts in their variant bullet.** The 6 seeded
+  and 7 bar-family `-basic` specs now list them, because the review and the regeneration read that list as
+  complete: an unnamed mean line and callout survived a count-basic regeneration while a named cumulative
+  line was removed. Each bullet is edited in place, keeps its `C` id and still names every exclusion it
+  named before. A new style-lint warning (W7) flags a `-basic` variant bullet that leaves one out, and the
+  spec template asks spec-create to name all three. (#11965)
+- **A replaced implementation now gets a PR comment too.** Until now only a
+  kept regeneration explained itself; the merge path posted nothing. The
+  replace path now posts the same summary (stored, re-scored and new score,
+  improvements, regressions, reason) and the gate record before it dispatches
+  the merge. A failed comment only logs a warning and never holds up the merge.
+  (#11950)
+- **Each characteristic bullet states its kind.** Every bullet now opens with
+  `A good version shows:` (an affirmative property; missing it deducts, and
+  only these can be cited as an improvement) or `Expected, not a defect:`
+  (a permission; never penalized, never a target), one kind per bullet. The
+  template and both spec-create prompts ask for 3-6 bullets with at least one
+  of each, and the eight hand-seeded specs are split accordingly
+  (heatmap-basic gains its missing basic-variant bullet). The regen gate no
+  longer counts an improvement that cites a permission, and the review and
+  generation prompts follow suit: a permission is never a weakness, never a
+  DQ-01 aspect and never shaped into the data. The review also scores a
+  related but different form (a donut for a pie) as a partial SC-01 on any
+  spec, deducts spline overshoot under SC-03, and names missed Notes or
+  `A good version shows:` bullets under SC-02. (#11948)
+- **A pair's first implementation now runs on Opus, regenerations stay on
+  Sonnet.** `impl-generate.yml` resolves the model per (spec, library) pair:
+  Opus when the pair has no implementation file on `origin/main` yet, Sonnet
+  when it already has one (Opus again for a forced regeneration with
+  `regen_gate=false`, which takes the fresh-generation path), and threads the
+  result into that PR's review and repairs as before. The `model` input on `impl-generate.yml`,
+  `bulk-generate.yml` and `daily-regen.yml` now defaults to `auto` (the
+  routing); `haiku`, `sonnet` or `opus` still pins one model for every pair.
+  Label-triggered runs, the watchdog's generation retries and the babysit
+  backfill scripts (`MODEL` now defaults to `auto`) follow the same routing,
+  so a full-catalogue backfill now runs on Opus. The resolved model and its
+  reason appear in the run summary and the issue preview comment, and the PR
+  body records it (`**Model:** opus`). Review and repair rescues that arrive
+  without a model (`impl-review-retry.yml`, the watchdog, a manual rerun)
+  read that line back instead of falling back to Sonnet, so an explicit pin
+  survives them. Without a readable `origin/main`, generation fails rather
+  than guessing a first run. (#11947)
+- **`bulk-generate.yml` paces dispatches 180 s apart for Opus runs.** The
+  default pause is 180 s for model `auto` or `opus` and stays 120 s for a
+  pinned `sonnet` or `haiku`; `pace_seconds` still overrides it. (#11947)
+- **The daily-regen spec polish and similarity audit run on Sonnet instead of
+  Haiku.** Both pre-flight steps in `daily-regen.yml` stay pinned regardless of
+  the run's `model` input. (#11947)
+- **The AI review judges each plot against its own plot type.** Specs gain a
+  closing `## What a good version looks like` section with 3-6 observable
+  properties of a good render, including "expected, not a defect" items;
+  spec-create writes it for new specs, spec polish never touches it, and eight
+  central specs (bubble, scatter, line, bar, violin, two heatmaps, force-directed
+  network) are seeded by hand. The quality criteria and the review prompt score
+  against it and add three soft rules from the bubble-basic regen experiment:
+  marks sit at their data values (post-hoc displacement deducts SC-03), legend
+  glyphs must be visible in both themes (VQ-03), and extra encodings on a
+  `-basic` spec count as the wrong variant (SC-01). Regenerations now address
+  only the weaknesses that are real per that section, answer overlap with data,
+  marker size or alpha instead of moving marks, and keep their data scenario.
+  (#11946)
+- **Regenerations only replace a live implementation when they are visibly
+  better.** A regeneration (an implementation PR for a pair that already has an
+  implementation on main, such as every `daily-regen` pick) now gets one review
+  and no repair loop. The review scores the new render blind, re-scores the
+  predecessor's production renders against the same criteria, and writes a
+  before/after judgment to `review_regen.json`; `automation/scripts/regen_gate.py`
+  merges only when the new score is at least the re-scored predecessor minus one,
+  at least one improvement is visible, and nothing regressed (a replaced data
+  scenario or added encodings on a `*-basic` spec count as regressions).
+  Otherwise the PR is closed as `regen:kept` and main, GCS production and the
+  database stay untouched. Anything missing fails closed to keep. The
+  bubble-basic regen experiment showed why: five rounds kept scores flat at
+  89–92 while code grew 35 %, three libraries swapped their data scenario, and
+  two moved data marks off their values. `regen_gate=false` on `impl-generate.yml`
+  and `bulk-generate.yml` forces the old path (`regen:forced`); `daily-regen`
+  now counts kept attempts when picking the oldest spec; the watchdog re-closes
+  open `regen:kept` PRs and never rescues a regeneration into repair; a failed
+  regeneration no longer marks the pair `impl:<lib>:failed`; and the local
+  `/regen` withholds `ai-approved` when the new score falls more than one point
+  below the stored one. (#11945)
+- **Dependencies:** 15 Dependabot PRs. Security updates close 30 advisories, one rated
+  critical and 15 high: `pyjwt` 2.13.0 → 2.15.0 (#12007), `virtualenv` 20.36.1 → 21.7.13, a
+  major version (#12036), `tornado` 6.5.8 → 6.5.9 (#12006), `urllib3` 2.7.0 → 2.8.0
+  (#12009), `multidict` 6.7.0 → 6.9.1 (#12059), `mako` 1.3.12 → 1.4.2 (#12058), and in
+  `app/` `brace-expansion` 5.0.9 → 5.0.12 (#12060) and `source-map-js` 1.2.1 → 1.2.2
+  (#12057). The grouped python-minor bumps (#11842, #11973) carry `anthropic` 1.3.0 → 1.8.0,
+  `mcp` 2.1.1 → 2.2.0, `fastmcp` 4.0.2 → 4.0.7, `alembic` 1.19.2 → 1.20.0 and
+  `matplotlib` 3.11.1 → 3.11.2; `pandas-stubs` follows (#11974). npm in `app/`: React 19.3.0
+  (#11839) and the npm-minor group (#11840). GitHub Actions: `claude-code-action` 1.0.216 →
+  1.0.230 and the Docker, CodeQL and Codecov actions (#11841, #11975).
+
+### Removed
+
+- **`SpecRepository.search_by_tags` and its any-category filter builder.**
+  Nothing outside the MCP search used them, and matching a value in any
+  category is exactly the bug the new filter fixes. (#12100)
+
+### Fixed
+
+- **`.env` is read only from the checkout root.** The API, the Alembic
+  environment, the Postgres sync script, the workflow agent module and the e2e
+  test fixtures called `load_dotenv()` without a path, which walks up the
+  directory tree from the calling file. In a git worktree under
+  `.claude/worktrees/` that walk reaches the main checkout's `.env` and loads the
+  production database credentials into a test run, a local server or a
+  migration that never asked for them. Each call now names its own checkout's
+  `.env`; a missing file is still silently skipped, so Cloud Run and GitHub
+  Actions, which set their variables directly, are unchanged. (#12105)
+- **A lone surrogate in a JSON body no longer turns a 422 into a 500.** FastAPI's
+  default validation handler echoes the offending `input` into the 422 body, and
+  Starlette's `JSONResponse` cannot UTF-8-encode a lone surrogate such as the JSON
+  string `"\ud800"`, so any schema-violating body holding one answered 500. A
+  `RequestValidationError` handler in `api/exceptions.py` now renders the same
+  `{"detail": [...]}` body ASCII-escaped, which can always be encoded. The
+  "Standard error format" section of `docs/reference/api.md` now matches what the
+  API returns, including the 422 shape. (#12104)
+- **`POST /feedback` answers 422 for text that is not valid UTF-8.** A lone
+  surrogate in any field passed the schema, then made the database driver raise on
+  encoding, so the request ended as a 500. `FeedbackRequest` now refuses such
+  text up front, before the router or the database sees it. (#12104)
+- **MCP tag search scopes values to their category and ANDs the categories.**
+  `search_specs_by_tags` flattened every spec-level value into one list and
+  matched it in any category, so `plot_type=["scatter"]` with
+  `domain=["finance"]` returned the union of both and `plot_type=["finance"]`
+  matched finance domains. The new `SpecRepository.search_by_tag_filters`
+  keeps each value in the category it was passed in (JSONB containment on
+  PostgreSQL, `json_extract` on SQLite), ORs the values within a category and
+  ANDs the categories, which is what the MCP reference promised all along.
+  (#12100)
+- **MCP reference and page describe what the tools return.**
+  `docs/reference/mcp.md` and the MCP page carried wrapper objects, limits and
+  library lists the server never produced: `list_specs` defaults to 100 and
+  returns a bare array with `website_url`, `search_specs_by_tags` also takes
+  `patterns`, `dataprep` and `styling`, `get_spec_detail` takes a `libraries`
+  filter, and `get_implementation` covers all 15 libraries. (#12100)
+- **A stale `ai-review-failed` no longer buys a second review.** When GitHub
+  accepted a re-review dispatch but `gh` reported an error, `impl-review.yml`
+  labeled the PR `ai-review-failed` beside the re-review that was already
+  queued, and the watchdog's next scan dispatched another one. Every review
+  run now removes the label when it starts, and the watchdog leaves such a PR
+  alone while a review of it is queued or running, or drops the label when
+  the PR already has a verdict. (#12041)
+- **A verdict label that cannot be added fails the review run.** The early
+  verdict step downgraded a failed `regen:kept` add to a warning, so the step
+  succeeded without a verdict label and switched off the post-score rescue
+  that keys on it. All four verdict labels are now added with three tries and
+  fail the step when they do not land. (#12041)
+- **The no-score review retry hands over to the watchdog when it cannot start.**
+  "Validate review output" posted its retry marker and its dispatch without
+  retries, and a failure there left the PR with no label at all. Both are now
+  retried three times, the dispatch waits for the marker, and a failure ends
+  in `ai-review-failed`. (#12041)
+- **impl-repair's crash retry counts its marker across comment pages.** The
+  budget read took the per-page counts of `gh api --paginate` as one number,
+  so on a PR with more than 100 comments the one-retry cap never held. The
+  pages are now summed, and a count that cannot be read counts as spent.
+  (#12041)
+- **A review that fails after scoring is re-run instead of stranding the PR.**
+  `impl-review.yml` retries every call of "Add quality score label" four times
+  with backoff, and a run that dies after the score but before any verdict
+  label now dispatches one fresh review on its own ref (sharing the existing
+  `review-retry` budget), or labels the PR `ai-review-failed` for the watchdog.
+  The budget marker is written before the dispatch and an unreadable budget
+  counts as spent, so an outage cannot buy a second re-review. The watchdog's
+  never-reviewed case also counts a lone `quality:N` as a marker. Before, an
+  HTTP 502 on the label left PR #11984 without a verdict for about seven
+  hours. (#12004)
+- **impl-generate's auto-retry runs on the ref that dispatched it.** A branch
+  smoke's failed generation used to retry on main (#11969–#11971); the retry
+  now passes `--ref` with the run's own ref, which is `main` for every
+  label-triggered run. (#12004)
+- **Repair exhaustion no longer pushes to main.** After four failed repairs,
+  `impl-review.yml` ran `git push origin main` to delete the pair's
+  implementation, which the main ruleset refuses, so the step died after
+  closing the PR and before labeling the issue. Only a forced regeneration
+  reaches that point with an implementation on main, and that live
+  implementation now stays: the issue gets `impl:{library}:done` back. A
+  fresh pair is marked `impl:{library}:failed` as before. A stale
+  `generate:`/`pending` label that cannot be removed now fails the run
+  instead of passing silently. (#12004)
+- **Ruff lints `automation/scripts/` and its tests again.** The Ruff
+  `exclude` entry `"scripts"` matched every directory of that name, so CI's
+  `ruff check .` and `ruff format --check .` skipped `automation/scripts/` and
+  `tests/unit/automation/scripts/` along with the top-level one-off scripts it
+  was meant for. The entry is now `"./scripts"`, anchored to the project root,
+  and the one import-order and three format errors it had hidden are fixed (#12003).
+- **Two set v2 fix patterns recognize the P3.1 arm's wording.** The #11960
+  gridline fix now also matches "value labels are clear of the grid", and the
+  #11954 axis-title fix matches "the count axis now carries an explicit title".
+  Both are genuine fixes that the P3.1 arm cited in words the patterns did not
+  know, so its forward merges without a labeled carrier drop from 2/18 to 0/18.
+  The v2-baseline and p3-v2 reports don't change. (#11979)
+- **Weaknesses the spec now permits no longer count as regen improvements.**
+  When the review re-scores the predecessor, it marks an older weakness that an
+  `Expected, not a defect:` bullet covers as obsolete, with that bullet's id;
+  the gate never counts it and the generator declines it. (#11967)
+- **Regenerations of 16 implementations with an older review no longer keep
+  on a context error.** Their stored checklists carry scalar keys such as
+  `total_score` next to the six categories, which made the previous-review
+  extraction raise; it now skips them. (#11967)
+- **A regeneration no longer shows the review its predecessor's score.** A
+  regeneration edits the live file, so its header still read
+  `Quality: 92/100` — the stored score, in plain sight of the review that is
+  meant to score the new version blind (seen on #11926). `impl-generate.yml`
+  now resets it to `Quality: pending` before the PR opens, the state a fresh
+  file starts in (`regen_gate.py sanitize-source --pending`); impl-review
+  writes the new score afterwards. (#11950)
+- **The regen gate reads wrapped characteristic bullets whole.** An indented
+  continuation line was dropped, so the gate cited a truncated bullet; it is
+  now joined to the bullet above it. The regeneration comparison in the review
+  prompt also exempts what SC-03 exempts (categorical jitter, layout-positioned
+  types, offsets the spec asks for) from its "marks moved" regression, and no
+  longer counts an element the spec requires as an added encoding. (#11948)
+- **Approved specifications merge on their own again.** Since GitHub's
+  2026-06-11 change, workflow runs on a pull request that `GITHUB_TOKEN` opens
+  sit at `action_required` until a human approves them, so the spec PR that
+  `spec-create.yml` opened never got the required checks and the merge job
+  failed with "the base branch policy prohibits the merge". Claude now opens
+  the spec PR as `claude[bot]` with the Claude GitHub App token, the pattern
+  daily-regen's spec polish already uses, so CI runs without an approval. The
+  merge job acts only on the repository owner's `approved` label and verifies
+  the PR fail-closed — Claude app author, `specification/<id>` into `main`,
+  the issue referenced, and a diff limited to the spec files
+  (`automation/scripts/spec_pr_guard.py`) — before it enables auto-merge
+  pinned to the verified head commit. It waits up to 15 minutes for the merge,
+  then dispatches `sync-postgres.yml`, because a `GITHUB_TOKEN` merge triggers
+  no `push` workflows, and only then labels the issue `spec-ready`. The shared
+  `spec-merge-main` concurrency group, which cancelled queued batch approvals,
+  is gone, and `auto-update-pr-branches.yml` leaves spec PRs alone so its
+  `GITHUB_TOKEN` merge commit cannot stall their checks. (#11868)
+- **OG cards render from the 800px derivative again, so the API's memory stays
+  flat.** `_fetch_image` in `api/routers/og_images.py` only swapped in the
+  800px variant for URLs ending in `/plot.png`, and no preview URL has matched
+  since they became `plot-light.png` on 2026-04-23. Every OG cache miss
+  therefore decoded the full-size original: a median 22 MiB for a branded
+  card, 150-200 MiB for a collage (up to ~430 MiB). The allocator kept those
+  freed blocks in the render threads' arenas, so the API's memory climbed in
+  70-160 MiB steps after large collage misses and never came back down, with
+  a risk of running out when two large collages overlapped. Any full-size
+  `*.png` preview now maps to its `_800` sibling, which exists for all 4,848
+  implementations, and a failed fetch falls back to the original with a
+  logged warning instead of a silent `pass`. In a replay of production
+  traffic, retained memory stays flat at about +45 MiB and the render peak
+  drops to about 157 MiB from 430-580 MiB. (#11867)
+
+*Catalog: 15 new implementations, all for `line-tanabe-sugano`, the spec v3.3.0 added, now at
+all fifteen libraries; 143 regenerations across 9 specs (`bubble-basic` 86, most of them in the
+regen-gate verification round of 2026-09-27, `bar-spine` 15, `scatter-connected-temporal` 11,
+`line-yield-curve` 11, `count-basic` 10, `bar-error` 5, `line-tanabe-sugano` 2, `acf-pacf` 2,
+`parliament-basic` 1) and 14 stored re-scores of kept regenerations; 19 spec-only PRs, mostly
+the characteristics backfill of the "What a good version looks like" sections (#11949 to
+#12049). 315 of
+325 specs now at full 15-library coverage (314 of 324 at v3.3.0).*
+
 ## [3.3.0] — 2026-09-27 — Through the front door
 
 anyplot 3.3 lets requests and releases reach production only through the front door. Both
@@ -2063,7 +2691,8 @@ interactive HTML previews.
   Actions workflows (spec creation, impl generation, AI review, auto-merge); Cloud Run +
   Cloud SQL + GCS; 1,081 unit tests.
 
-[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v3.3.0...HEAD
+[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v3.4.0...HEAD
+[3.4.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.3.0...v3.4.0
 [3.3.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.2.0...v3.3.0
 [3.2.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.0.0...v3.1.0
