@@ -476,7 +476,8 @@ def summarize(scored: list[Scored], records: list[dict[str, Any]], model: str) -
         },
         "scoring_cost_usd": {
             "per_render": round(statistics.fmean([item.cost_usd for item in ok]), 4) if ok else None,
-            "total": round(sum(item.cost_usd for item in ok), 4),
+            # Every billed call, failed scores included; `per_render` stays the successful ones.
+            "total": round(sum(item.cost_usd for item in scored), 4),
         },
         "scoring_latency_s": {"median": round(statistics.median([item.latency_s for item in ok]), 1) if ok else None},
     }

@@ -143,14 +143,18 @@ class ScoreRequest:
 
 
 def user_text(request: ScoreRequest) -> str:
-    """The request's text part, each value fenced as data."""
+    """The request's text part, each value fenced as data by `policy.fence`, which neutralises
+    every fence tag inside the value, so a column name or a code comment cannot close a block."""
+    from .policy import DATA_PREAMBLE, fence
+
     return "\n\n".join(
         [
-            f"<spec_text>\n{request.spec_text}\n</spec_text>",
-            f"<plot_code>\n{request.code}\n</plot_code>",
-            f"<user_data>\n{request.profile_summary}\n</user_data>",
-            f"<user_data>\n{request.bindings_json}\n</user_data>",
-            f"<plot_language>{request.plot_language}</plot_language>",
+            DATA_PREAMBLE,
+            fence("spec_text", request.spec_text),
+            fence("plot_code", request.code),
+            fence("user_data", request.profile_summary),
+            fence("user_data", request.bindings_json),
+            fence("plot_language", request.plot_language),
             f"The render follows: plot-{request.theme}.png",
         ]
     )

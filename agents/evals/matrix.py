@@ -1290,7 +1290,7 @@ async def run_matrix(
         # Before the first render: the backend property builds its SerialRenderer from the factory once,
         # and a token renewal builds the next backend from the same (wrapped) factory. One directory per
         # run, so a second run into the same --out never overwrites what an earlier report points to.
-        recorder = AttemptRecorder(config.out / f"attempts-{datetime.now(UTC):%Y%m%dT%H%M%S}")
+        recorder = AttemptRecorder(_unique(config.out / f"attempts-{datetime.now(UTC):%Y%m%dT%H%M%S}"))
         inner_factory = services.backend_factory
         services.backend_factory = lambda: recorder.wrap(inner_factory())
     set_services(services)

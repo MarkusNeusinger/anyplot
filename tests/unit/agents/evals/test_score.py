@@ -366,6 +366,7 @@ class TestSummary:
             ),
             None,
             "ScoringFailed: no answer",
+            cost_usd=0.2,
         )
         items = [failed, scored("x#r1", "shipped", answer())]
 
@@ -373,6 +374,8 @@ class TestSummary:
 
         assert summary["ladder"]["90"]["runs"] == 0
         assert summary["score_errors"] == ["x#r1 first: ScoringFailed: no answer"]
+        # The failed call's billed cost counts in the total, not in the per-render mean of the scored ones.
+        assert summary["scoring_cost_usd"] == {"per_render": 0.03, "total": 0.23}
 
 
 class TestAttemptRecorder:
