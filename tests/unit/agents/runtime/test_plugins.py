@@ -882,8 +882,13 @@ class TestToolSafety:
         value = {"op": "drop_rows", "where": [{"column": "Payee", "test": "contains", "value": link}]}
         name = {"op": "rename", "column": "Payee", "name": link}
         assert await self.check("prepare_data", {"operations": [value, name]}) is None
+        # A `classify` label becomes a cell, like a value the user's own table holds.
+        rule = {"where": [{"column": "Payee", "test": "contains", "value": "novak"}], "label": link}
+        labelled = {"op": "classify", "name": "Site", "rules": [rule], "otherwise": link}
+        assert await self.check("prepare_data", {"operations": [labelled]}) is None
 
         for operation in (
+            {"op": "classify", "name": "Site", "rules": [{**rule, "where": [{"column": link, "test": "is_missing"}]}]},
             {"op": "rename", "column": link, "name": "Payee"},
             {"op": "drop_columns", "columns": [link]},
             {"op": "pivot_longer", "columns": ["a", "b"], "names_to": link},

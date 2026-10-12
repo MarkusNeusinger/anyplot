@@ -49,8 +49,9 @@ The operations:
 * `classify`: a new text column `name`, appended last, whose cells are labels: each row
   gets the label of the first of 1 to 10 rules whose conditions (1 to 3, as in
   `drop_rows`) all hold, else `otherwise`, or a missing cell when that is left out. A
-  label is at most a cell's length and is new text the model writes from the user's
-  message, as a rename's name is. The column stays text through the re-parse, so
+  label is at most a cell's length, never a token the parser reads as missing (`NA`,
+  `-`), and is new text the model writes from the user's message, as a rename's name
+  is (so ToolSafety exempts it from the link rule, as it exempts a name). The column stays text through the re-parse, so
   labels such as `1` and `2` remain categories. This is how a category is derived from
   the cells that are there ("positive y is class 1, the rest class 2"); a rule that
   matches no row is reported with its count of 0, and a column that would hold no
@@ -94,7 +95,7 @@ from pandas.api.types import is_bool_dtype, is_datetime64_any_dtype, is_numeric_
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
 
 from ..schemas import MAX_CELL_CHARS, MAX_COLUMNS, MAX_NOTE_CHARS, MAX_ROWS, ColumnName
-from .parse import AMBIGUOUS_DATE_ORDER, MAX_INPUT_BYTES, ParsedDataset, canonical_names, pandas_dtypes
+from .parse import AMBIGUOUS_DATE_ORDER, MAX_INPUT_BYTES, MISSING_VALUES, ParsedDataset, canonical_names, pandas_dtypes
 
 
 MAX_OPERATIONS = 5  # per `prepare_data` call, the design's "at most five operations"
@@ -227,11 +228,19 @@ def _clean_name(name: str) -> str:
 
 
 def _clean_label(label: str) -> str:
-    """A `classify` label as a cell keeps it: no surrounding whitespace, breaks or invisible characters."""
+    """A `classify` label that the re-parse keeps exactly as written.
+
+    No surrounding whitespace, breaks, control, invisible or line and paragraph
+    separator characters (the parser drops or turns them into spaces), and no token
+    the parser reads as a missing cell (`NA`, `null`, `-`, ...), which would store an
+    empty cell where the change line reported a label.
+    """
     if label != label.strip() or _HEADER_BREAKS.search(label):
         raise ValueError("a label has no surrounding whitespace, tabs or line breaks")
-    if any(unicodedata.category(char) in ("Cc", "Cf") for char in label):
-        raise ValueError("a label has no control or invisible formatting characters")
+    if any(unicodedata.category(char) in ("Cc", "Cf", "Zl", "Zp") for char in label):
+        raise ValueError("a label has no control, invisible or separator characters")
+    if label in MISSING_VALUES:
+        raise ValueError("a label is not a token the data reads as missing, such as NA, null or -")
     return label
 
 

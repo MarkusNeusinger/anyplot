@@ -964,13 +964,22 @@ class TestClassify:
 
     def test_rows_no_rule_names_stay_missing_without_otherwise(self) -> None:
         prepared = prepare(
-            SINE, classify("sign", (above("y", 0), "+"), ([{"column": "y", "test": "lt", "value": 0}], "-"))
+            SINE, classify("sign", (above("y", 0), "pos"), ([{"column": "y", "test": "lt", "value": 0}], "neg"))
         )
 
-        assert cells(prepared, 2) == ["-", "-", "", "+", "+", ""]
+        assert cells(prepared, 2) == ["neg", "neg", "", "pos", "pos", ""]
         assert prepared.changes == [
-            "added column sign: '+' for 2 rows where y > 0, '-' for 2 rows where y < 0, 2 rows without a label"
+            "added column sign: 'pos' for 2 rows where y > 0, 'neg' for 2 rows where y < 0, 2 rows without a label"
         ]
+
+    @pytest.mark.parametrize("label", ["+", "Klasse 1", "1", "0.5", "true", "2024-01-05", "N/A x", "jana-novak.de"])
+    def test_an_accepted_label_survives_the_reparse(self, label: str) -> None:
+        """The stored version holds the label the change line reports, whatever the parser could read it as."""
+        prepared = prepare(SINE, classify("k", (above("y", 0), label)))
+
+        again = reparse(prepared)
+        assert again.column_dtypes["k"] == "text"
+        assert again.profile.columns[2].top == [label]
 
     def test_conditions_of_a_rule_must_all_hold(self) -> None:
         where = [{"column": "Tier", "test": "eq", "value": "Hund"}, {"column": "Umsatz", "test": "gt", "value": 500}]
@@ -1028,6 +1037,10 @@ class TestClassify:
             classify("k", (above("y", 0), " a")),
             classify("k", (above("y", 0), "a\nb")),
             classify("k", (above("y", 0), "a\x07")),
+            classify("k", (above("y", 0), "a b")),
+            classify("k", (above("y", 0), "-")),
+            classify("k", (above("y", 0), "NA")),
+            classify("k", (above("y", 0), "a"), otherwise="null"),
             classify("k", (above("y", 0), "x" * (MAX_CELL_CHARS + 1))),
             classify("k", (above("y", 0), "a"), otherwise=""),
             classify("k ", (above("y", 0), "a")),
