@@ -217,6 +217,30 @@ export interface DatasetConfirmed {
 
 export type PlotStatus = 'ok' | 'needs_attention' | 'failed' | 'not_ready';
 
+/** How one pipeline round (an attempt) ended; `RoundOutcome` in `agents/anyplot/schemas.py`. */
+export const ROUND_OUTCOMES = [
+  'ok',
+  'review',
+  'measured',
+  'render_failed',
+  'check_failed',
+  'answer_unusable',
+  'unreviewed',
+  'error',
+] as const;
+export type RoundOutcome = (typeof ROUND_OUTCOMES)[number];
+
+export interface Round {
+  attempt: number;
+  outcome: RoundOutcome;
+  /** The findings the round passed on: review lines, measured defects or check failures. */
+  findings: number;
+  /** The pipeline step the round ended in; absent from an older server. */
+  step?: PipelineStep;
+  /** The round whose render the result shipped; not always the last (a repair that failed its check). */
+  shipped?: boolean;
+}
+
 export interface PlotResult {
   status: PlotStatus;
   reason?: string | null;
@@ -226,6 +250,8 @@ export interface PlotResult {
   residual_defects: string[];
   /** The stored version's number (`ok` and `needs_attention`); `null` from an older server. */
   version: number | null;
+  /** How each attempt ended, in order; absent from an older server or a saved session. */
+  rounds?: Round[];
 }
 
 export interface ThemeRendered {
@@ -724,7 +750,13 @@ export type StreamErrorCode = (typeof STREAM_ERROR_CODES)[number];
 export type AgentEvent =
   | { type: 'ready'; runId: string | null }
   | { type: 'queued'; position: number; waiting: number }
-  | { type: 'step'; step: PipelineStep; attempt: number | null }
+  | {
+      type: 'step';
+      step: PipelineStep;
+      attempt: number | null;
+      /** On `repairing`: how the round before it ended. */
+      previous: Round | null;
+    }
   | { type: 'message'; text: string }
   | { type: 'plot'; result: PlotResult }
   | { type: 'refusal'; code: string; text: string }
@@ -756,6 +788,23 @@ export type AgentEvent =
 
 const isInt = (value: unknown): value is number =>
   typeof value === 'number' && Number.isInteger(value) && value >= 0;
+
+/** One round from the stream, or `null` when its attempt, outcome or count is not one the server sends. */
+function toRound(value: unknown): Round | null {
+  if (!value || typeof value !== 'object') return null;
+  const { attempt, outcome, findings, step, shipped } = value as Record<string, unknown>;
+  if (!isInt(attempt) || attempt < 1 || !isInt(findings)) return null;
+  if (!ROUND_OUTCOMES.includes(outcome as RoundOutcome)) return null;
+  // Absent stays absent (an older server); a value of the wrong kind refuses the round.
+  if (shipped !== undefined && typeof shipped !== 'boolean') return null;
+  if (step !== undefined && step !== null && !PIPELINE_STEPS.includes(step as PipelineStep)) {
+    return null;
+  }
+  const round: Round = { attempt, outcome: outcome as RoundOutcome, findings };
+  if (typeof step === 'string') round.step = step as PipelineStep;
+  if (shipped !== undefined) round.shipped = shipped;
+  return round;
+}
 
 /**
  * The binding list of a `done` sync, or `null`. The list replaces the page's
@@ -911,6 +960,10 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
         type: 'step',
         step: d.step as PipelineStep,
         attempt: isInt(d.attempt) ? d.attempt : null,
+        previous:
+          isInt(d.attempt) && d.attempt > 1
+            ? toRound({ attempt: d.attempt - 1, outcome: d.outcome, findings: d.findings })
+            : null,
       };
     case 'message':
       return typeof d.text === 'string' ? { type: 'message', text: d.text } : null;
@@ -928,6 +981,9 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
           changes: strings(d.changes),
           residual_defects: strings(d.residual_defects),
           version: isInt(d.version) && d.version >= 1 ? d.version : null,
+          rounds: Array.isArray(d.rounds)
+            ? d.rounds.map(toRound).filter((round): round is Round => round !== null)
+            : [],
         },
       };
     case 'refusal':

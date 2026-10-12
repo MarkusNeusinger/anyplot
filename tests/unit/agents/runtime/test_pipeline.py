@@ -25,7 +25,16 @@ from agents.anyplot.pipeline import (
     render_review_request,
 )
 from agents.anyplot.policy import DATA_PREAMBLE
-from agents.anyplot.schemas import MAX_LINE_CHARS, AdaptPlan, AdaptRequest, Binding, Edit, PlotResult, ReviewRequest
+from agents.anyplot.schemas import (
+    MAX_LINE_CHARS,
+    AdaptPlan,
+    AdaptRequest,
+    Binding,
+    Edit,
+    PlotResult,
+    ReviewRequest,
+    Round,
+)
 from agents.anyplot.services import CodeVersion, VersionStore
 from agents.anyplot.session_state import SessionView
 from agents.anyplot.settings import AgentSettings
@@ -98,6 +107,23 @@ class TestFinish:
 
         assert light.artifacts == ["plot-light.png", "plot.py", "data.csv"]
         assert finish(dark_run).artifacts == ["plot-dark.png", "plot.py", "data.csv"]
+
+    def test_the_shipped_round_is_marked_even_when_a_later_round_failed(self) -> None:
+        """Attempt 1 rendered and was reviewed with a finding; the repair failed its check, so attempt 1 ships."""
+        run = run_with(reviewed_ok=False)
+        run.attempts, run.review_lines = 2, ["VQ-03 (light): crowded"]
+        run.rounds = [
+            Round(attempt=1, outcome="review", findings=1),
+            Round(attempt=2, outcome="check_failed", findings=2),
+        ]
+
+        result = finish(run)
+
+        assert result.status == "needs_attention"
+        assert [(r.attempt, r.outcome, r.shipped) for r in result.rounds] == [
+            (1, "review", True),
+            (2, "check_failed", False),
+        ]
 
     def test_failed_reasons(self) -> None:
         nothing = run_with(shipped=False)

@@ -435,6 +435,42 @@ def repair_plan(data: Any) -> Any:
 # --- Result ----------------------------------------------------------------------------
 
 
+RoundOutcome = Literal[
+    "ok", "review", "measured", "render_failed", "check_failed", "answer_unusable", "unreviewed", "error"
+]
+"""How one pipeline round (an attempt) ended, in the page's vocabulary.
+
+`ok`: the reviewer passed the render; `review`: it named findings; `measured`: the
+render passed the blocking host gates, but its canvas, probe or adaptation findings
+went to the repair; `render_failed`: the blocking host gates failed; `check_failed`:
+an edit did not apply, the validator refused the code or the loader did not fit;
+`answer_unusable`: the adapter's answer yielded no usable plan; `unreviewed`: the
+render shipped without a review (every review used, the review unreadable, or a
+limit reached); `error`: an exception.
+"""
+
+
+RoundStep = Literal["adapting", "repairing", "checking", "rendering", "reviewing"]
+"""The pipeline steps the progress events name, the ones a round can end in."""
+
+
+class Round(_ServerContract):
+    """One pipeline round for the progress grid: its attempt, how it ended, and how many findings it passed on.
+
+    `step` is the pipeline step the round was in when it ended (an unreadable review
+    ends at `reviewing`, a limit before the review at `rendering`, an error anywhere).
+    `shipped` marks the round whose render the result shipped, which is not always the
+    last one: a repair round that fails its check leaves the earlier render shipped.
+    `findings` counts the lines the round passed on as the next attempt reads them.
+    """
+
+    attempt: int = Field(ge=1, le=MAX_ATTEMPTS)
+    outcome: RoundOutcome
+    findings: int = Field(default=0, ge=0, le=99)
+    step: RoundStep | None = None
+    shipped: bool = False
+
+
 class PlotResult(_ServerContract):
     """The pipeline's final output; every path through `run_pipeline` yields one.
 
@@ -447,6 +483,9 @@ class PlotResult(_ServerContract):
     `version` is the number the session's version store gave the shipped result
     (`ok` or `needs_attention`), the one the artifact and theme toggle routes take;
     it is set once the version is stored, and a `failed` or `not_ready` result has none.
+
+    `rounds` lists how each attempt ended, in order (`Round`), for the page's progress
+    grid; it is content-free (an outcome and a count) and empty for `not_ready`.
     """
 
     status: PlotStatus
@@ -456,6 +495,7 @@ class PlotResult(_ServerContract):
     changes: list[ChangeNote] = Field(default_factory=list, max_length=MAX_CHANGES)
     residual_defects: list[Line] = Field(default_factory=list, max_length=MAX_RESIDUAL_DEFECTS)
     version: int | None = Field(default=None, ge=1)
+    rounds: list[Round] = Field(default_factory=list, max_length=MAX_ATTEMPTS)
 
     @model_validator(mode="after")
     def _status_rules(self) -> Self:

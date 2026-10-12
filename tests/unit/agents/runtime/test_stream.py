@@ -186,6 +186,24 @@ class TestTranslator:
         ]
         assert translator.translate(unknown) == []
 
+    def test_a_repair_step_carries_how_the_round_before_ended(self, translator: Translator) -> None:
+        def repairing(**extra: object) -> Event:
+            status = {"step": "repairing", "attempt": 2, **extra}
+            return Event(author="plot_pipeline", custom_metadata={"anyplot_status": status})
+
+        assert [parse(chunk) for chunk in translator.translate(repairing(outcome="review", findings=3))] == [
+            ("status", {"step": "repairing", "attempt": 2, "outcome": "review", "findings": 3})
+        ]
+        # An outcome outside the vocabulary, or one without its count, is dropped; the step stays.
+        for extra in (
+            {"outcome": "<script>", "findings": 1},
+            {"outcome": "review"},
+            {"outcome": "ok", "findings": "3"},
+        ):
+            assert [parse(chunk) for chunk in translator.translate(repairing(**extra))] == [
+                ("status", {"step": "repairing", "attempt": 2})
+            ]
+
     def test_plot_once_with_allowlisted_fields(self, translator: Translator) -> None:
         output = {"status": "ok", "attempts": 1, "artifacts": [], "changes": [], "residual_defects": [], "secret": 1}
         event = Event(author="plot_pipeline", output=output)

@@ -902,6 +902,7 @@ async function streamTurn(req, res, session, body, ref) {
             ['repairing', 2],
             ['checking', 2],
             ['rendering', 2],
+            ['reviewing', 2],
           ]
         : [
             ['adapting', 1],
@@ -909,9 +910,24 @@ async function streamTurn(req, res, session, body, ref) {
             ['rendering', 1],
             ['reviewing', 1],
           ];
+      // How each round ends, as the service's `PlotResult.rounds`: a refinement's first try has
+      // two review findings, its repair round one that stays open; a first plot passes at once.
+      const rounds = refine
+        ? [
+            { attempt: 1, outcome: 'review', findings: 2, step: 'reviewing', shipped: false },
+            { attempt: 2, outcome: 'review', findings: 1, step: 'reviewing', shipped: true },
+          ]
+        : [{ attempt: 1, outcome: 'ok', findings: 0, step: 'reviewing', shipped: true }];
       for (const [step, attempt] of steps) {
         if (stopped()) return;
-        send('status', { step, attempt });
+        // The step that opens a repair round says how the round before it ended.
+        const before = step === 'repairing' ? rounds[attempt - 2] : null;
+        send(
+          'status',
+          before
+            ? { step, attempt, outcome: before.outcome, findings: before.findings }
+            : { step, attempt }
+        );
         await wait(STEP_MS);
         // A stopped run finishes the step in progress before it ends.
         if (session.cancelled && !closed) await sleep(STOP_MS);
@@ -947,6 +963,7 @@ async function streamTurn(req, res, session, body, ref) {
           : [],
         // The stored version's number, which the artifact and theme routes take.
         version: version.number,
+        rounds,
       };
       send('plot', version.result);
       await sleep(STEP_MS / 2);
