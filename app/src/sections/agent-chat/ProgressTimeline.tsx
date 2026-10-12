@@ -4,6 +4,11 @@
  * rendering, reviewing and, when the review asked for one, repairing. Steps
  * the run has not reached yet show in muted ink without a dot, so the path is
  * visible up front.
+ *
+ * The page mounts it for a `create_plot` run and for any turn that waits in
+ * the queue or reached a pipeline step (`showsTimeline` in `steps.ts`). A turn
+ * without steps, the summary or a question, has the thread's in-progress line
+ * instead, so `starting…` and a step-less `stopping…` belong to plot runs.
  */
 
 import Box from '@mui/material/Box';

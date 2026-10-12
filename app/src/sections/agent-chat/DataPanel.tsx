@@ -15,11 +15,21 @@
  * the assistant made to the data and an undo take the page back to step 1 with
  * the card open, because a plot of the wrong data is wrong however good it
  * looks; the server drops its confirmation for each of them already. The
- * header stays then, in the warning colour (`! confirm again · ...`), and its
+ * header stays then and reads as a warning (`! confirm again · ...`, the
+ * phrase in bold on a surface tinted with the warning token), and its
  * `.show()` leads back to the card from anywhere in the thread, for example
- * after a data request sent from below the plot. A table read from text that
- * waits for its decision holds the page in step 1 as well, whatever a turn's
- * sync says, and the header names that decision.
+ * after a data request sent from below the plot. The step line next to
+ * `.confirm()` names what dropped the confirmation, as the thread's notice
+ * does. A table read from text that waits for its decision holds the page in
+ * step 1 as well, whatever a turn's sync says, and the header names that
+ * decision.
+ *
+ * Work in flight shows on the card: a line under `.parse()` while the data is
+ * parsed, and, while anything runs (the parse, a turn, a theme render, a
+ * binding change, a confirmation, an undo), a line under the bindings label
+ * that says the dropdowns and `.confirm()` wait, because the server runs one
+ * thing per session and would refuse a second. The controls keep their
+ * disabled look; a hidden live region announces the parse and the step.
  *
  * Every role of the spec gets a column choice (`bindingRows` in `bindings.ts`):
  * a single role one dropdown, a variadic family one per member plus one for
@@ -61,7 +71,8 @@ import {
 } from 'src/hooks/useAgentSession';
 import { type ColumnProfile, MAX_DATASET_BYTES, utf8Bytes } from 'src/lib/agent';
 import { bindingRows, kindsHint } from 'src/sections/agent-chat/bindings';
-import { describeDataFailure } from 'src/sections/agent-chat/messages';
+import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
+import { CONFIRM_LOST_TEXT, describeDataFailure } from 'src/sections/agent-chat/messages';
 import { inStep2 } from 'src/sections/agent-chat/steps';
 import {
   actionButtonSx,
@@ -169,10 +180,18 @@ interface TranscriptionCardProps {
   canUse: boolean;
   onUse: () => void;
   onDiscard: () => void;
+  /** The `.use()` button, for the page to bring into view and focus. */
+  decisionRef?: React.Ref<HTMLButtonElement>;
 }
 
 /** A table a model read from free text, for the user to check before it is stored. */
-function TranscriptionCard({ transcription, canUse, onUse, onDiscard }: TranscriptionCardProps) {
+function TranscriptionCard({
+  transcription,
+  canUse,
+  onUse,
+  onDiscard,
+  decisionRef,
+}: TranscriptionCardProps) {
   const { columns, rows } = transcription.profile;
   return (
     <Box
@@ -213,7 +232,14 @@ function TranscriptionCard({ transcription, canUse, onUse, onDiscard }: Transcri
       <PreviewTable columns={columns} rows={transcription.preview} />
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-        <Box component="button" type="button" onClick={onUse} disabled={!canUse} sx={ghostButtonSx}>
+        <Box
+          component="button"
+          type="button"
+          ref={decisionRef}
+          onClick={onUse}
+          disabled={!canUse}
+          sx={ghostButtonSx}
+        >
           .use()
         </Box>
         <Box component="button" type="button" onClick={onDiscard} sx={actionButtonSx}>
@@ -338,6 +364,12 @@ interface DataPanelProps {
   onUndo: () => void;
   /** The pinned header's `.show()` / `.hide()`, for the page to move the keyboard focus to. */
   toggleRef?: React.Ref<HTMLButtonElement>;
+  /**
+   * Step 1's `.confirm()` and a pending table's `.use()`: the composer's notice
+   * before the confirmation brings them into view and focuses them.
+   */
+  confirmRef?: React.Ref<HTMLButtonElement>;
+  decisionRef?: React.Ref<HTMLButtonElement>;
 }
 
 export function DataPanel({
@@ -350,6 +382,8 @@ export function DataPanel({
   onConfirmData,
   onUndo,
   toggleRef,
+  confirmRef,
+  decisionRef,
 }: DataPanelProps) {
   const [text, setText] = useState('');
   // Step 2 only: whether the full card shows below the pinned header.
@@ -502,15 +536,31 @@ export function DataPanel({
           type="button"
           onClick={() => onParse(text)}
           disabled={!ready || !text.trim() || over || busy || !!transcription}
-          aria-describedby={transcription ? 'agent-parse-hint' : undefined}
+          aria-describedby={transcription || state.parsing ? 'agent-parse-hint' : undefined}
           sx={ghostButtonSx}
         >
           {state.parsing ? '.parse() …' : '.parse()'}
         </Box>
       </Box>
-      {transcription && (
-        <Box id="agent-parse-hint" sx={{ ...labelSx, mt: 0.75, textAlign: 'right' }}>
-          decide on the table below first: .use() or .discard()
+      {/* A parse clears a pending table, so the two lines never show together. */}
+      {(transcription || state.parsing) && (
+        <Box
+          id="agent-parse-hint"
+          data-testid="parse-hint"
+          sx={{
+            ...labelSx,
+            mt: 0.75,
+            textAlign: 'right',
+            color: state.parsing ? 'var(--ink-soft)' : 'var(--ink-muted)',
+          }}
+        >
+          {state.parsing ? (
+            <>
+              # parsing your data <Ellipsis />
+            </>
+          ) : (
+            'decide on the table below first: .use() or .discard()'
+          )}
         </Box>
       )}
 
@@ -563,6 +613,7 @@ export function DataPanel({
           canUse={ready && !busy}
           onUse={handleUse}
           onDiscard={onDiscardTranscription}
+          decisionRef={decisionRef}
         />
       )}
 
@@ -594,6 +645,17 @@ export function DataPanel({
 
           <Box>
             <Box sx={{ ...labelSx, mb: 0.75 }}># bindings — which column plays which role</Box>
+            {/* Why the dropdowns and `.confirm()` do not answer: the server runs one thing
+                per session. Not a live region: the thread and the step status announce the work. */}
+            {busy && (
+              <Box
+                data-testid="bindings-lock"
+                sx={{ ...labelSx, color: 'var(--ink-soft)', mt: -0.25, mb: 1 }}
+              >
+                # {confirmed ? 'bindings wait' : 'bindings and .confirm() wait'} while{' '}
+                {state.parsing ? 'the data is parsed' : 'the assistant works'} <Ellipsis />
+              </Box>
+            )}
             {rows.length === 0 && (
               <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
                 {state.bindingsBusy ? 'checking roles…' : 'this plot names no data roles'}
@@ -688,14 +750,18 @@ export function DataPanel({
               <Box
                 id="agent-step-line"
                 data-testid="data-step"
-                // A notch above the `#` labels: this line says what to do next.
+                // A notch above the `#` labels: this line says what to do next, and after a
+                // lost confirmation what lost it, as the thread's notice does.
                 sx={{ ...labelSx, mb: 0.75, color: 'var(--ink-soft)' }}
               >
-                # step 1 — check the preview and the bindings, then confirm
+                {state.confirmLoss
+                  ? `# step 1 again — ${CONFIRM_LOST_TEXT[state.confirmLoss]}`
+                  : '# step 1 — check the preview and the bindings, then confirm'}
               </Box>
               <Box
                 component="button"
                 type="button"
+                ref={confirmRef}
                 onClick={handleConfirm}
                 disabled={!canConfirm}
                 aria-describedby="agent-step-line"
@@ -720,11 +786,13 @@ export function DataPanel({
       {/* Stays mounted, so a screen reader hears the step change: the lines that
           say it on screen come and go with the card. */}
       <Box data-testid="data-step-status" aria-live="polite" sx={visuallyHiddenSx}>
-        {confirmed
-          ? 'step 2: the data is confirmed; create the plot below'
-          : dataset
-            ? 'step 1: check the data, then confirm it'
-            : ''}
+        {state.parsing
+          ? 'parsing your data'
+          : confirmed
+            ? 'step 2: the data is confirmed; create the plot below'
+            : dataset
+              ? 'step 1: check the data, then confirm it'
+              : ''}
       </Box>
 
       {/* While the header sticks, the page's focus and scrolling land below it (WCAG 2.4.11). */}
@@ -741,7 +809,11 @@ export function DataPanel({
             display: 'flex',
             alignItems: 'center',
             gap: 1,
-            bgcolor: 'var(--bg-elevated)',
+            // Back at step 1 the header reads as a warning. The amber token is too light
+            // for text on the light page (1.6:1), so it tints the surface instead.
+            bgcolor: confirmed
+              ? 'var(--bg-elevated)'
+              : `color-mix(in srgb, ${colors.warning} 18%, var(--bg-elevated))`,
             border: '1px solid var(--rule)',
             borderLeft: `3px solid ${confirmed ? colors.primary : colors.warning}`,
             borderRadius: 1,
@@ -769,11 +841,17 @@ export function DataPanel({
             >
               {confirmed ? '✓' : '!'}
             </Box>
-            {confirmed
-              ? `data fits · ${dataShape(dataset)}`
-              : transcription
-                ? 'decide on the table first: .use() or .discard()'
-                : `confirm again · ${dataShape(dataset)}`}
+            {confirmed ? (
+              `data fits · ${dataShape(dataset)}`
+            ) : (
+              <>
+                {/* What to do, in bold: the warning reads in the words, not only the colour. */}
+                <Box component="span" data-tone="warning" sx={{ fontWeight: 600 }}>
+                  {transcription ? 'decide on the table first' : 'confirm again'}
+                </Box>
+                {transcription ? ': .use() or .discard()' : ` · ${dataShape(dataset)}`}
+              </>
+            )}
           </Box>
           <Box
             component="button"

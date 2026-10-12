@@ -91,7 +91,11 @@
  * position of a turn; 0 skips the queue), MOCK_STOP_MS (2000, how long a run
  * stopped during a pipeline step takes to finish that step before `done`,
  * like the real run, which notices the abort only between steps; a turn that
- * still waits in the queue leaves it at once).
+ * still waits in the queue leaves it at once), MOCK_PARSE_MS (400, how long a
+ * parse takes, the dataset judge's call in production; a transcription takes
+ * 900 ms more). Slowed down, the page's working states stay visible:
+ *
+ *   MOCK_PARSE_MS=4000 MOCK_QUEUE=0 MOCK_STEP_MS=3000 node app/scripts/agent-bff-mock.mjs
  */
 
 import http from 'node:http';
@@ -103,6 +107,7 @@ const STEP_MS = Number(process.env.MOCK_STEP_MS || 700);
 const QUEUE_MS = Number(process.env.MOCK_QUEUE_MS || 2500);
 const QUEUE_START = Number(process.env.MOCK_QUEUE ?? 2);
 const STOP_MS = Number(process.env.MOCK_STOP_MS ?? 2000);
+const PARSE_MS = Number(process.env.MOCK_PARSE_MS ?? 400);
 const BASE = `http://localhost:${PORT}`;
 
 const role = (name, kinds, description, { required = true, variadic = false } = {}) => ({
@@ -1436,7 +1441,7 @@ async function route(req, res) {
     const text = typeof body?.text === 'string' ? body.text : '';
     if (Buffer.byteLength(text, 'utf8') > MAX_DATASET_BYTES) return fail(res, 413, 'too_long', ref);
     if (/ignore previous/i.test(text)) return fail(res, 403, 'data_refused', ref);
-    await sleep(400);
+    await sleep(PARSE_MS);
     let parsed;
     try {
       parsed = parseDataset(text);

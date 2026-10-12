@@ -9,14 +9,29 @@
  * `.confirm()` them at the card's foot (step 1). The card then collapses into
  * a pinned header at the top of the thread, `.show()` opens it again, and any
  * change to the data takes the page back to step 1 with the card open; the
- * header then stays as `! confirm again` and leads back to the card. In step
- * 2 the composer's action is `.create_plot()`: with an empty box it starts the
- * first plot as it is, with text the text goes as a turn and the assistant
- * makes the first plot with that change. Once the library has a plot, the
- * composer refines in plain words; every shipped version gets a result card
- * with the image, the code and the downloads. A line above the column names
- * the current step. The page talks only to the BFF under `/debug/agent/*`
- * (`src/lib/agent.ts`, `src/hooks/useAgentSession.ts`).
+ * header then stays as `! confirm again` and leads back to the card, and the
+ * thread names what dropped the confirmation. In step 2 the composer's action
+ * is `.create_plot()`: with an empty box it starts the first plot as it is,
+ * with text the text goes as a turn and the assistant makes the first plot
+ * with that change. Once the library has a plot, the composer refines in plain
+ * words; every shipped version gets a result card with the image, the code and
+ * the downloads. A line above the column names the current step. The page
+ * talks only to the BFF under `/debug/agent/*` (`src/lib/agent.ts`,
+ * `src/hooks/useAgentSession.ts`).
+ *
+ * `.create_plot()` is in the composer as soon as there is data. Before the
+ * confirmation it is the quiet button, and a click calls nothing: a notice
+ * under the composer says to confirm the data first (or to decide on a table
+ * read from text, whichever the data card asks for at the moment), with
+ * `.show()`, which brings `.confirm()` (or `.use()`) into view and focuses it;
+ * a hidden status region announces it. The notice clears once the data is
+ * confirmed or a turn starts. The server's `data_unconfirmed` stays the
+ * backstop.
+ *
+ * Work in flight is never silent: a turn without pipeline steps holds an
+ * in-progress line in the thread (`ChatThread`), the progress timeline below
+ * it shows only what the line does not (a `create_plot` run, a queue position,
+ * pipeline steps), and the data card says why its controls wait.
  *
  * Gates, outermost first:
  * 1. `CONFIG.features.agentChat` (build-time `VITE_ENABLE_AGENT_CHAT`): off, the
@@ -53,7 +68,7 @@ import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { SaveButton } from 'src/sections/agent-chat/SaveButton';
 import { StepHeader } from 'src/sections/agent-chat/StepHeader';
-import { inStep2 } from 'src/sections/agent-chat/steps';
+import { inStep2, showsTimeline } from 'src/sections/agent-chat/steps';
 import {
   actionButtonSx,
   bodyTextSx,
@@ -63,6 +78,7 @@ import {
   nativeControlSx,
   panelSx,
   smallText,
+  visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
 import { colors, fontSize, proseLinkStyle, typography } from 'src/theme';
 import { readAdminHint, readAdminToken, setAdminHint } from 'src/utils/adminAuth';
@@ -71,6 +87,21 @@ const SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
 const OPEN_SOURCES = new Set(['plot_page']);
 /** The chat column's width: a thread to read, and a plot that fits the screen with its composer. */
 const COLUMN_MAX_WIDTH = 960;
+
+/** What a click on `.create_plot()` before the confirmation asks for first. */
+type CreateGate = 'confirm' | 'transcription';
+
+/** The composer's notice after such a click, and where its `.show()` leads. */
+const CREATE_GATE: Record<CreateGate, { text: string; action: string }> = {
+  confirm: {
+    text: 'confirm the data first · .confirm() sits at the foot of the data card',
+    action: 'Go to the confirmation',
+  },
+  transcription: {
+    text: 'decide on the table first · .use() or .discard() sit in the data card',
+    action: 'Go to the table',
+  },
+};
 
 function Notice({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -182,8 +213,14 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   const messageRef = useRef<HTMLTextAreaElement>(null);
   const createRef = useRef<HTMLButtonElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
+  // The data card's `.confirm()` and a pending table's `.use()`, where the notice leads.
+  const confirmRef = useRef<HTMLButtonElement>(null);
+  const decisionRef = useRef<HTMLButtonElement>(null);
   // Set by the user's own `.confirm()`: the step change it brings moves the focus, once.
   const confirmFocus = useRef(false);
+  // Whether the notice a click on `.create_plot()` before the confirmation opens
+  // shows; what it asks for is read from the data card at render (`gate`).
+  const [gateShown, setGateShown] = useState(false);
 
   // The spec's title and implemented libraries come from the public catalogue
   // API; the enabled libraries from the agents service. Both are best effort.
@@ -229,6 +266,15 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
     if (running) tailRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
   }, [running]);
 
+  // The notice before the confirmation opens under the composer, which a turn's
+  // start leaves at the window's lower edge: bring it in, without moving the focus.
+  // Only when it opens: a change of its wording follows a decision in the data
+  // card, where the user is, and must not pull the window to the foot.
+  const gateRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (gateShown) gateRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+  }, [gateShown]);
+
   // A turn, a theme render, a parse, an undo or a binding change in flight: the
   // server runs one at a time and would refuse or race a second.
   const busy = sessionBusy(state);
@@ -242,6 +288,19 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   // text in the box goes with it; the pipeline counts versions per library too.
   const firstPlot =
     step2 && !Object.values(state.versions).some(version => version.library === state.library);
+  // The notice before the confirmation is done once the data is confirmed or a turn starts.
+  // Adjusted while rendering, React's pattern for state that follows other state.
+  if (gateShown && (step2 || running)) setGateShown(false);
+  // What the notice asks for first, from the data card as it is now: a table read
+  // from text waits for `.use()` or `.discard()`, anything else for `.confirm()`. A
+  // table that arrives or is discarded after the click changes the text, the
+  // announcement and the target of `.show()` with it, so none names a button
+  // that is gone or waits.
+  const gate: CreateGate | null = gateShown
+    ? state.transcription
+      ? 'transcription'
+      : 'confirm'
+    : null;
 
   // The user's own `.confirm()` collapsed the card and took its focused button
   // away. Before the first plot the keyboard continues at `.create_plot()`, the
@@ -297,6 +356,32 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
     },
     [session, onLibraryChange]
   );
+
+  /**
+   * The quiet `.create_plot()` before the confirmation: no call, the server
+   * would answer `data_unconfirmed`; the notice under the composer says what
+   * comes first. The click moves no focus.
+   */
+  const handleCreate = (event: React.MouseEvent) => {
+    if (!step2) {
+      setGateShown(true);
+      return;
+    }
+    keepKeyboardFocus(event);
+    void session.createPlot();
+  };
+
+  /**
+   * The notice's `.show()`: bring the button the notice names into view, below
+   * the pinned header (the page's scroll padding), and move the keyboard focus
+   * to it. A disabled button (bindings incomplete, something in flight) cannot
+   * take the focus, so it is only scrolled to.
+   */
+  const goToGate = () => {
+    const target = (gate === 'transcription' ? decisionRef : confirmRef).current;
+    target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+    if (target && !target.disabled) target.focus({ preventScroll: true });
+  };
 
   if (state.phase === 'unauthorized') return <AdminRequired />;
 
@@ -459,6 +544,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             }}
             onUndo={() => void session.undoData()}
             toggleRef={toggleRef}
+            confirmRef={confirmRef}
+            decisionRef={decisionRef}
           />
 
           {state.items.length === 0 && !state.run && (
@@ -513,7 +600,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 queue {state.run.queue.position}/{state.run.queue.waiting}
               </Box>
             )}
-            {state.run && <ProgressTimeline run={state.run} />}
+            {/* A turn without pipeline steps has its in-progress line in the thread instead. */}
+            {state.run && showsTimeline(state) && <ProgressTimeline run={state.run} />}
 
             {firstPlot && (
               <Box id="agent-create-line" sx={{ ...labelSx, color: 'var(--ink-soft)', mb: -1 }}>
@@ -593,19 +681,20 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 </Box>
               ) : (
                 <>
-                  {/* Step 2 after a plot: start over from the catalogue plot with this data. */}
-                  {step2 && (
+                  {/* Step 2 after a plot: start over from the catalogue plot with this data.
+                      Step 1: the step is visible from the foot too, and a click says what
+                      comes first instead of calling the server. */}
+                  {state.dataset && (
                     <Box
                       component="button"
                       type="button"
                       ref={createRef}
-                      onClick={(event: React.MouseEvent) => {
-                        keepKeyboardFocus(event);
-                        void session.createPlot();
-                      }}
-                      disabled={!canCreate}
+                      onClick={handleCreate}
+                      disabled={step2 ? !canCreate : state.phase !== 'ready' || busy}
                       aria-label="Create plot"
-                      aria-describedby={DATA_SUMMARY_ID}
+                      aria-describedby={
+                        step2 ? DATA_SUMMARY_ID : gate ? 'agent-create-gate' : undefined
+                      }
                       sx={actionButtonSx}
                     >
                       .create_plot()
@@ -622,6 +711,43 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                   </Box>
                 </>
               )}
+            </Box>
+            {/* No role on the visible notice: the status box below speaks it, once. */}
+            {gate && (
+              <Box
+                ref={gateRef}
+                data-testid="create-gate"
+                sx={{
+                  mt: -1,
+                  borderLeft: `3px solid ${colors.warning}`,
+                  pl: 1.5,
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  columnGap: 1,
+                  rowGap: 0.75,
+                }}
+              >
+                <Box
+                  id="agent-create-gate"
+                  sx={{ ...labelSx, color: 'var(--ink)', flex: '1 1 220px', lineHeight: 1.6 }}
+                >
+                  # {CREATE_GATE[gate].text}
+                </Box>
+                <Box
+                  component="button"
+                  type="button"
+                  onClick={goToGate}
+                  aria-label={CREATE_GATE[gate].action}
+                  sx={actionButtonSx}
+                >
+                  .show()
+                </Box>
+              </Box>
+            )}
+            <Box role="status" data-testid="composer-status" sx={visuallyHiddenSx}>
+              {gate ? CREATE_GATE[gate].text : ''}
             </Box>
             {draft.length > MAX_MESSAGE_CHARS * 0.9 && (
               <Box sx={{ ...labelSx, mt: -1 }}>
