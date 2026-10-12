@@ -1,0 +1,14 @@
+{
+  "dataset_text": "x,y\n-3,-0.141\n-2,-0.909\n-1,-0.841\n1,0.841\n2,0.909\n3,0.141\n",
+  "message": "Ich brauche eine Feature-Spalte: neue Spalte Klasse, y positiv ist Klasse 1, sonst Klasse 2.",
+  "expected_operations": [
+    {
+      "op": "classify",
+      "name": "Klasse",
+      "rules": [{"where": [{"column": "y", "test": "gt", "value": "0"}], "label": "Klasse 1"}],
+      "otherwise": "Klasse 2"
+    }
+  ],
+  "locale": "de",
+  "tags": ["classify", "derived_category"]
+}

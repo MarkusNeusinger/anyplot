@@ -16,12 +16,14 @@
   Personal data in a `change_request` (a name, an address, an e-mail address, a phone
   number, a web address without a scheme or `www.` such as `jana-novak.de`) passes:
   whether plot text is an advertisement or a message to other people is the scope
-  judge's call, by intent. Two `prepare_data` arguments are exempt from the link rule
-  by key (`DATA_ARGUMENT_KEYS`): a condition's `value` and a rename's `name`. They are
-  data, not an instruction to follow: a value is compared with the cells of a column
-  and a name becomes a column header, neither is resolved, fetched or run, and both
-  may legitimately hold what the user's own table holds, such as a web address in a
-  payee column to drop or a column renamed to one. A column reference (`column`,
+  judge's call, by intent. Four `prepare_data` arguments are exempt from the link rule
+  by key (`DATA_ARGUMENT_KEYS`): a condition's `value`, a rename's or a new column's
+  `name`, and a `classify` rule's `label` and its `otherwise`. They are data, not an
+  instruction to follow: a value is compared with the cells of a column, a name
+  becomes a column header and a label becomes a cell, none is resolved, fetched or
+  run, and each may legitimately hold what the user's own table holds, such as a web
+  address in a payee column to drop, a column renamed to one, or a domain as a
+  category label. A column reference (`column`,
   `columns`, `by`, `index`, ...) and the new names of a pivot stay under the rule, and
   so does every string of `generate_data`: its names and expressions never need a link.
 * `after_tool_callback`: a key allowlist per tool and a size cap of 8 KB (24 KB for
@@ -72,7 +74,7 @@ RESULT_LIMITS: dict[str, int] = {
     # A PlotResult at its schema maximum (16 lines of 640, 5 changes of 200) is about 12 KB.
     PIPELINE_TOOL: 16 * 1024,
 }
-DATA_ARGUMENT_KEYS: dict[str, frozenset[str]] = {PREPARE_TOOL: frozenset({"value", "name"})}
+DATA_ARGUMENT_KEYS: dict[str, frozenset[str]] = {PREPARE_TOOL: frozenset({"value", "name", "label", "otherwise"})}
 """Per tool, the argument keys whose strings the link rule skips: data that is compared or written, never followed."""
 NOTES_KEY = "notes"
 PIPELINE_NOTE_FIELDS = ("changes", "residual_defects")

@@ -40,7 +40,17 @@ from agents.main import Runtime
 from ..runtime.fakes import FakeAnthropic
 
 
-OPERATIONS = ("rename", "drop_columns", "drop_rows", "set_type", "aggregate", "sort", "pivot_longer", "pivot_wider")
+OPERATIONS = (
+    "rename",
+    "drop_columns",
+    "drop_rows",
+    "set_type",
+    "aggregate",
+    "sort",
+    "pivot_longer",
+    "pivot_wider",
+    "classify",
+)
 HOURS = "Study Hours,Exam Score\n2,55\n5,70\n8,85\n3,60\n"
 RENAME = {"op": "rename", "column": "Study Hours", "name": "Hours"}
 GHOST = {"op": "rename", "column": "Ghost", "name": "Spirit"}  # no such column: the tool answers unknown_column
@@ -64,7 +74,7 @@ class TestFixtures:
         locales = Counter(item.locale for item in cases)
         ops = {operation["op"] for item in cases for operation in item.expected_operations}
 
-        assert len(cases) == 21
+        assert len(cases) == 23
         assert locales["de"] >= 5 and locales["en"] >= 5
         assert ops == {*OPERATIONS, "generate_data"}
         assert sum(1 for item in cases if not item.expected_operations) >= 2  # out of scope, and a plain question
@@ -170,16 +180,34 @@ class TestCanonical:
                 {"op": "drop_rows", "where": [{"column": "Tier", "test": "eq", "value": "Gesamt"}]},
                 {"op": "set_type", "column": "share", "type": "number", "decimal": ","},
                 {"op": "pivot_wider", "names_from": "p", "values_from": "v", "index": ["m"]},
+                {
+                    "op": "classify",
+                    "name": "Klasse",
+                    "rules": [{"where": [{"column": "y", "test": "gt", "value": 0}], "label": "Klasse 1"}],
+                    "otherwise": "Klasse 2",
+                },
             ],
             ".",
         )
 
         assert sorted(describe(line) for line in lines) == [
             "aggregate Betrag sum by Datum/month",
+            "classify Klasse: 'Klasse 1' if y gt '0'; else 'Klasse 2'",
             "drop_rows Tier eq 'Gesamt'",
             "pivot_wider p with v by m",
             "set_type share number (,)",
         ]
+
+    def test_classify_keeps_its_rule_order_and_ignores_the_order_of_a_rules_conditions(self) -> None:
+        high = {"column": "y", "test": "gt", "value": "0.5"}
+        named = {"column": "x", "test": "ne", "value": "a"}
+
+        def call(first: list[dict[str, Any]], labels: tuple[str, str]) -> list[str]:
+            rules = [{"where": first, "label": labels[0]}, {"where": [high], "label": labels[1]}]
+            return canonical_operations([{"op": "classify", "name": "k", "rules": rules}], ".")
+
+        assert call([high, named], ("a", "b")) == call([named, high], ("a", "b"))
+        assert call([high, named], ("a", "b")) != call([high, named], ("b", "a"))
 
     def test_a_generate_data_call_is_one_item_with_defaults_and_whitespace_left_out(self) -> None:
         bare = [{"op": "generate_data", "variables": [{"start": "-pi", "stop": "pi"}], "series": [SINE]}]
