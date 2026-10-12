@@ -8,4 +8,5 @@
   is warned about in the session block, the `set_bindings` result, the bindings
   route's new `warnings` and under the page's dropdown. Signed plots such as
   waterfall or diverging bars keep their signed `value`. The fixtures are the owner's
-  cases of 2026-10-12: a sine as a polar radius, and a signed `y` given to `std`.
+  cases of 2026-10-12: a sine as a polar radius, and a signed `y` given to `std`
+  (#12154).
