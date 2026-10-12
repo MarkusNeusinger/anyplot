@@ -612,10 +612,13 @@ jobs:
 
       # The fallback fonts: the harness appends them after the font the code chose,
       # so this fixture does what catalogue code does to the font setup (seaborn's
-      # rcParams reset, a bold title, a monospace text) and draws every script the
-      # image is meant to cover. The probe's missing_glyphs is the assert; the PNG
-      # is uploaded for an eyeball check of the shaping. The DejaVu-only control
-      # below proves the assert can fail.
+      # rcParams reset, a bold title, a monospace text) and draws seven of the
+      # scripts the image covers: Han, kana, Hangul, Hebrew, Arabic, Devanagari and
+      # Thai. The other fallback families (the remaining Indic scripts, Sinhala,
+      # Khmer, Myanmar, Ethiopic and the two Symbols faces) are drawn by nothing
+      # here; `check_fonts` in the image build only proves they are installed. The
+      # probe's missing_glyphs is the assert; the PNG is uploaded for an eyeball
+      # check of the shaping. The DejaVu-only control below proves the assert can fail.
       - name: Render multi-script text through the harness
         if: steps.check.outputs.should_build == 'true'
         run: |
