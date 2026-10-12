@@ -1,7 +1,9 @@
 /**
  * One plot version of the agent chat: the rendered image with its actions,
- * the adapted code with its downloads, what changed, residual notes, and a
- * composer for refinements.
+ * the adapted code with its downloads, what changed, residual notes, and the
+ * quick-feedback control. The card has no composer of its own: a change
+ * request or a question goes through the thread's one composer below it,
+ * which the assistant reads either way (since 2026-10-12).
  *
  * - The image is the blob URL of the theme the run rendered. The light and
  *   dark switch shows the other theme, rendering it first through the theme
@@ -35,18 +37,11 @@ import Tooltip from '@mui/material/Tooltip';
 import type { FeedbackInput, PlotVersion } from 'src/hooks/useAgentSession';
 import { useCopyCode } from 'src/hooks/useCopyCode';
 import { useTheme } from 'src/hooks/useLayoutContext';
-import { type ArtifactName, MAX_MESSAGE_CHARS, type Theme } from 'src/lib/agent';
+import { type ArtifactName, type Theme } from 'src/lib/agent';
 import { copyImage, downloadBlob } from 'src/sections/agent-chat/files';
 import { IMAGE_FAILURE } from 'src/sections/agent-chat/messages';
 import { ResultFeedback } from 'src/sections/agent-chat/ResultFeedback';
-import {
-  actionButtonSx,
-  bodyTextSx,
-  ghostButtonSx,
-  labelSx,
-  nativeControlSx,
-  smallText,
-} from 'src/sections/agent-chat/styles';
+import { actionButtonSx, bodyTextSx, labelSx, smallText } from 'src/sections/agent-chat/styles';
 import { colors, fontSize, overlayButtonSx, typography } from 'src/theme';
 
 const CodeHighlighter = lazy(() => import('src/components/CodeHighlighter'));
@@ -68,17 +63,16 @@ export interface ResultCardProps {
   version: PlotVersion;
   specId: string;
   language: string;
-  /** Whether this is the newest version: only it is expanded and gets the composer. */
+  /** Whether this is the newest version: only it starts expanded. */
   latest: boolean;
   /**
-   * A turn, a theme render, a parse or a binding change is in flight: a
-   * refinement and a theme that still has to render wait for it, since the
-   * server runs one at a time. A theme the version already has stays one click away.
+   * A turn, a theme render, a parse or a binding change is in flight: a theme
+   * that still has to render waits for it, since the server runs one at a
+   * time. A theme the version already has stays one click away.
    */
   busy: boolean;
   onRequestTheme: (version: number, theme: Theme) => void;
   onFetchArtifact: (version: number, name: ArtifactName) => Promise<Blob>;
-  onRefine: (text: string) => void;
   onTrack: (event: string, props?: Record<string, string | undefined>) => void;
   /**
    * Store the version as a feedback case (`.send()` in the quick-feedback
@@ -95,7 +89,6 @@ export function ResultCard({
   busy,
   onRequestTheme,
   onFetchArtifact,
-  onRefine,
   onTrack,
   onSendFeedback,
 }: ResultCardProps) {
@@ -104,7 +97,6 @@ export function ResultCard({
   const [shownTheme, setShownTheme] = useState<Theme>(version.theme);
   const [toast, setToast] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
-  const [draft, setDraft] = useState('');
   const [aspect, setAspect] = useState(PLACEHOLDER_ASPECT);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(null);
 
@@ -187,14 +179,6 @@ export function ResultCard({
     } catch {
       setFileError(`could not download ${name}`);
     }
-  };
-
-  const handleRefine = (event: React.FormEvent) => {
-    event.preventDefault();
-    const text = draft.trim();
-    if (!text || busy) return;
-    onRefine(text);
-    setDraft('');
   };
 
   const overlayBtnSx = overlayButtonSx(isDark);
@@ -566,41 +550,6 @@ export function ResultCard({
               />
             )}
           </Box>
-
-          {latest && (
-            <Box
-              component="form"
-              onSubmit={handleRefine}
-              sx={{ display: 'flex', gap: 1, alignItems: 'flex-end', flexWrap: 'wrap' }}
-            >
-              <Box
-                component="textarea"
-                aria-label="Refine this plot"
-                placeholder="refine: e.g. log scale on y, larger markers"
-                value={draft}
-                maxLength={MAX_MESSAGE_CHARS}
-                rows={2}
-                onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) =>
-                  setDraft(event.target.value)
-                }
-                onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-                  if (event.key === 'Enter' && !event.shiftKey) {
-                    event.preventDefault();
-                    handleRefine(event);
-                  }
-                }}
-                sx={{ ...nativeControlSx, flex: '1 1 220px', resize: 'vertical' }}
-              />
-              <Box
-                component="button"
-                type="submit"
-                disabled={busy || !draft.trim()}
-                sx={ghostButtonSx}
-              >
-                .refine()
-              </Box>
-            </Box>
-          )}
         </Box>
       )}
     </Box>
