@@ -925,6 +925,8 @@ async function streamTurn(req, res, session, body, ref) {
         theme,
         dataset: session.dataset,
         bindings: session.bindings,
+        // The session language the version's text was written in, as the service keeps it.
+        language: session.language,
         pngs: {},
       };
       renderVersion(session, version, theme);
@@ -994,6 +996,8 @@ const LANGUAGE_NAMES = {
   polish: 'pl',
   polski: 'pl',
   chinese: 'zh',
+  vietnamese: 'vi',
+  russian: 'ru',
   japanese: 'ja',
 };
 
@@ -1796,6 +1800,7 @@ function sessionBundle(session, versions, includeData) {
       const code = plotPy(session, version);
       return {
         number: version.number,
+        language: version.language,
         title: SPECS[session.specId].title,
         working: code,
         run_form: code,

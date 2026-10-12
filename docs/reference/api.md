@@ -615,8 +615,10 @@ a formula: with three numbers or more besides a range, such as `Umsatz von
 Every session has one language for the assistant's replies and for the text in
 the plot: the title, the axis titles, the legend entries and the annotations.
 It starts as English (`en`, source `default`), also when your browser is set to
-another language. Your first message sets it to the language you write in
-(source `detected`), and later messages do not change it again; a very short
+another language. Your first typed message that the assistant answers sets it
+to the language you write in (source `detected`): a refused message and the
+`create_plot` and `summarize_data` actions set nothing, and later messages do
+not change it again; a very short
 English message, such as a formula, leaves the default in place, and the next
 message is read for its language again. To set it yourself, pick a language
 from the `lang:` chip in the chat header, type any language name in Latin
