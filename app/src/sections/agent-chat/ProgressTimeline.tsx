@@ -1,9 +1,13 @@
 /**
  * The progress of the running turn, from its `status` events: the wait in the
- * run queue (with the position), then the pipeline steps adapting, checking,
- * rendering, reviewing and, when the review asked for one, repairing. Steps
- * the run has not reached yet show in muted ink without a dot, so the path is
- * visible up front.
+ * run queue (with the position), then the pipeline steps of the current round.
+ * The first try runs adapting, checking, rendering and reviewing; a repair
+ * round, when the checks or the review asked for one, runs repairing,
+ * checking, rendering and reviewing. Steps the round has not reached yet show
+ * in muted ink without a dot, so the path is visible up front.
+ *
+ * A finished round folds into one entry (`first try done`); the entries come
+ * from `timelineItems` in `timeline.ts`.
  *
  * The page mounts it for a `create_plot` run and for any turn that waits in
  * the queue or reached a pipeline step (`showsTimeline` in `steps.ts`). A turn
@@ -13,24 +17,20 @@
 
 import Box from '@mui/material/Box';
 
-import type { RunState, TimelineStep } from 'src/hooks/useAgentSession';
+import type { RunState } from 'src/hooks/useAgentSession';
 import { labelSx } from 'src/sections/agent-chat/styles';
+import { timelineItems } from 'src/sections/agent-chat/timeline';
 import { colors, fontSize, typography } from 'src/theme';
 
-const EXPECTED: TimelineStep[] = ['adapting', 'checking', 'rendering', 'reviewing'];
-
-function stepLabel(step: TimelineStep, attempt: number | null, run: RunState): string {
-  if (step === 'queued') {
-    return run.queue ? `queued · ${run.queue.position} of ${run.queue.waiting}` : 'queued';
-  }
-  return attempt && attempt > 1 ? `${step} · attempt ${attempt}` : step;
-}
+const arrow = (
+  <Box component="span" aria-hidden sx={{ color: 'var(--ink-muted)', ml: 0.5 }}>
+    →
+  </Box>
+);
 
 export function ProgressTimeline({ run }: { run: RunState }) {
-  const reached = run.steps.map(entry => entry.step);
-  const upcoming =
-    run.kind === 'create_plot' ? EXPECTED.filter(step => !reached.includes(step)) : [];
-  const current = run.steps.length - 1;
+  const items = timelineItems(run);
+  const active = items.find(item => item.state === 'active');
 
   return (
     <Box
@@ -50,62 +50,59 @@ export function ProgressTimeline({ run }: { run: RunState }) {
         fontSize: fontSize.md,
       }}
     >
-      {run.steps.length === 0 && (
+      {items.length === 0 && (
         <Box component="li" sx={{ color: 'var(--ink)' }}>
           {run.stopping ? 'stopping…' : 'starting…'}
         </Box>
       )}
-      {run.steps.map((entry, index) => {
-        const active = index === current;
+      {items.map((item, index) => {
+        const more = index < items.length - 1;
+        if (item.state === 'upcoming') {
+          return (
+            <Box component="li" key={item.key} sx={{ ...labelSx, fontSize: fontSize.md }}>
+              {item.label}
+              {more ? arrow : null}
+            </Box>
+          );
+        }
+        const isActive = item === active;
         return (
           <Box
             component="li"
-            key={`${entry.step}-${index}`}
-            aria-current={active ? 'step' : undefined}
+            key={item.key}
+            aria-current={isActive ? 'step' : undefined}
             sx={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: 0.5,
-              color: active ? 'var(--ink)' : 'var(--ink-muted)',
+              color: isActive ? 'var(--ink)' : 'var(--ink-muted)',
             }}
           >
-            <Box
-              component="span"
-              aria-hidden
-              sx={{
-                width: 7,
-                height: 7,
-                borderRadius: '50%',
-                bgcolor: active ? colors.primary : 'var(--ink-muted)',
-                opacity: active ? 1 : 0.5,
-                flexShrink: 0,
-              }}
-            />
-            {stepLabel(entry.step, entry.attempt, run)}
+            {item.state !== 'done' && (
+              <Box
+                component="span"
+                aria-hidden
+                sx={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  bgcolor: isActive ? colors.primary : 'var(--ink-muted)',
+                  opacity: isActive ? 1 : 0.5,
+                  flexShrink: 0,
+                }}
+              />
+            )}
+            {item.label}
             {/* A stopped run ends at its next step boundary; the server's `done` confirms it. */}
-            {active && run.stopping
-              ? entry.step === 'queued'
+            {isActive && run.stopping
+              ? item.key.startsWith('queued')
                 ? ' · leaving the queue…'
                 : ' · stopping after this step…'
               : ''}
-            {index < current || upcoming.length > 0 ? (
-              <Box component="span" aria-hidden sx={{ color: 'var(--ink-muted)', ml: 0.5 }}>
-                →
-              </Box>
-            ) : null}
+            {more ? arrow : null}
           </Box>
         );
       })}
-      {upcoming.map((step, index) => (
-        <Box component="li" key={step} sx={{ ...labelSx, fontSize: fontSize.md }}>
-          {step}
-          {index < upcoming.length - 1 ? (
-            <Box component="span" aria-hidden sx={{ ml: 1 }}>
-              →
-            </Box>
-          ) : null}
-        </Box>
-      ))}
     </Box>
   );
 }

@@ -182,7 +182,9 @@ export function ResultCard({
   };
 
   const overlayBtnSx = overlayButtonSx(isDark);
-  const attempts = `${result.attempts} attempt${result.attempts === 1 ? '' : 's'}`;
+  // Counted as repair rounds, the way the progress timeline names them: "2 attempts" read as many runs.
+  const repairs = result.attempts - 1;
+  const attempts = repairs < 1 ? 'first try' : `${repairs} repair${repairs === 1 ? '' : 's'}`;
   const header = (
     <Box
       component="button"
