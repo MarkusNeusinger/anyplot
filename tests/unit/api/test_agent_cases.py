@@ -16,6 +16,7 @@ from api import agent_cases
 from api.agent_cases import (
     CASE_ID_PATTERN,
     CASE_MEDIA_TYPES,
+    CaseConflict,
     CaseFile,
     FeedbackCase,
     GcsCaseBucket,
@@ -86,12 +87,28 @@ def test_gcs_upload_never_replaces_an_object(monkeypatch) -> None:
 
 
 def test_gcs_upload_takes_its_own_retried_object_as_stored(monkeypatch) -> None:
-    """A retry whose first attempt stored the object but lost the response meets `412`: that is stored."""
+    """A retry whose first attempt stored the object but lost the response meets `412`: stored, the bytes match."""
     client = MagicMock()
-    client.bucket.return_value.blob.return_value.upload_from_string.side_effect = PreconditionFailed("exists")
+    blob = client.bucket.return_value.blob.return_value
+    blob.upload_from_string.side_effect = PreconditionFailed("exists")
+    blob.md5_hash = "mZFLkyvTelC5g8XnyQrpOw=="  # the MD5 of b"{}" as GCS reports it
     monkeypatch.setattr(agent_cases, "_storage_client", lambda: client)
 
     GcsCaseBucket("anyplot-agent-cases").upload("cases/x/manifest.json", b"{}", "application/json")
+
+    blob.reload.assert_called_once_with()
+
+
+def test_gcs_upload_refuses_an_existing_object_with_other_content(monkeypatch) -> None:
+    """A `412` on an object whose bytes differ is a collision or a replay, never this upload's own."""
+    client = MagicMock()
+    blob = client.bucket.return_value.blob.return_value
+    blob.upload_from_string.side_effect = PreconditionFailed("exists")
+    blob.md5_hash = "eV8yArF8trw9S3cdjGyerw=="  # the MD5 of b"other"
+    monkeypatch.setattr(agent_cases, "_storage_client", lambda: client)
+
+    with pytest.raises(CaseConflict, match="cases/x/manifest.json exists with other content"):
+        GcsCaseBucket("anyplot-agent-cases").upload("cases/x/manifest.json", b"{}", "application/json")
 
 
 def test_gcs_upload_raises_any_other_storage_error(monkeypatch) -> None:

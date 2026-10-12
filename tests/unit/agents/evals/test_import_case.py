@@ -213,14 +213,18 @@ class TestFromAStoredCase:
         assert files["data.csv"] == DATA
         assert files["change_request.txt"] == "log scale on y\n"
 
-    @pytest.mark.parametrize(
-        ("reaction", "expected"), [("thumbs_up", "accepted"), ("idea", "accepted"), ("bug", "rejected")]
-    )
-    def test_each_reaction_maps_to_an_outcome(self, tmp_path, promoted, capsys, reaction, expected) -> None:
+    @pytest.mark.parametrize(("reaction", "expected"), [("thumbs_up", "accepted"), ("thumbs_down", "rejected")])
+    def test_the_thumbs_map_to_an_outcome(self, tmp_path, promoted, reaction, expected) -> None:
         assert main([str(_case_dir(tmp_path, reaction=reaction)), "--id", "mapped"]) == 0
-        assert json.loads((promoted / "mapped" / "case.json").read_text())["expected"] == expected
-        noted = "pass --expected to choose" in capsys.readouterr().err
-        assert noted == (reaction in ("bug", "idea"))
+        case = json.loads((promoted / "mapped" / "case.json").read_text())
+        assert (case["expected"], case["tags"]) == (expected, ["imported", reaction])
+
+    @pytest.mark.parametrize("reaction", ["bug", "idea"])
+    def test_bug_and_idea_need_expected(self, tmp_path, promoted, capsys, reaction) -> None:
+        """The triage's rule: those reactions imply no outcome, so the owner chooses."""
+        assert main([str(_case_dir(tmp_path, reaction=reaction)), "--id", "undecided"]) == 1
+        assert f"the reaction {reaction} implies no outcome" in capsys.readouterr().err
+        assert not promoted.exists()
 
     def test_expected_overrides_the_reaction(self, tmp_path, promoted) -> None:
         assert main([str(_case_dir(tmp_path, reaction="bug")), "--id", "chosen", "--expected", "accepted"]) == 0
@@ -256,6 +260,26 @@ class TestWhereItWrites:
         assert "pass --force" in capsys.readouterr().err
         assert main([source, "--id", "again", "--version", "1", "--force"]) == 0
         assert set(_written(promoted / "again")) == {"case.json", "data.csv"}
+
+    def test_a_failed_copy_keeps_the_existing_case_and_leaves_no_partial_directory(
+        self, tmp_path, promoted, capsys, monkeypatch
+    ) -> None:
+        source = str(_bundle_file(tmp_path, _bundle()))
+        assert main([source, "--id", "kept"]) == 0
+        before = _written(promoted / "kept")
+
+        def failing_copytree(src, dst, **kwargs):
+            Path(dst).mkdir()
+            (Path(dst) / "case.json").write_text("partial")
+            raise OSError("disk full")
+
+        monkeypatch.setattr(import_case.shutil, "copytree", failing_copytree)
+
+        assert main([source, "--id", "kept", "--version", "1", "--force"]) == 1
+        assert "could not write" in capsys.readouterr().err
+        assert _written(promoted / "kept") == before
+        assert [path.name for path in promoted.iterdir()] == ["kept"]
+        assert not [path for path in promoted.parent.iterdir() if path.name.startswith(".import-")]
 
     def test_never_takes_a_committed_fixture_id(self, tmp_path, promoted, capsys) -> None:
         source = str(_bundle_file(tmp_path, _bundle()))
@@ -344,4 +368,5 @@ def test_the_copied_constants_match_their_sources() -> None:
     assert all(text.startswith(import_case.ACTION_PREFIX) for text in ACTION_MESSAGES.values())
     assert WITHHELD == import_case.WITHHELD
     assert import_case.MAX_CHANGE_REQUEST_CHARS == MAX_CHANGE_REQUEST_CHARS
-    assert set(EXPECTED_BY_REACTION) == set(FEEDBACK_REACTIONS)
+    assert import_case.REACTIONS == set(FEEDBACK_REACTIONS)
+    assert set(EXPECTED_BY_REACTION) == {"thumbs_up", "thumbs_down"}

@@ -16,7 +16,9 @@ A case is the agents service's bundle of one result version (`GET /v1/sessions/{
 The case id is the UTC time in ISO 8601 basic format plus 8 random hex digits
 (`20261012T143005Z-1a2b3c4d`), so ids sort by time. Every upload carries
 `if_generation_match=0`: a write never replaces an object, so no case can overwrite
-another. Nothing here deletes: a later submission for the same result version is a new
+another; an upload that meets an object under its name (the library retried a request
+whose first attempt stored it) counts as stored only when the stored bytes match, and
+anything else is a `CaseConflict`. Nothing here deletes: a later submission for the same result version is a new
 case whose manifest names the earlier one in `replaces` (the id the page got for it), and
 the triage counts the newest case of a `session_hash` and `result_version`. The bucket's
 lifecycle rule (delete after 180 days) is the retention, also for a replaced case and its
@@ -72,6 +74,15 @@ class BundleError(ValueError):
     """The agents service's bundle is not what its route documents; the BFF answers `502 upstream`."""
 
 
+class CaseConflict(RuntimeError):
+    """An object exists under a case file's name with other content; the BFF answers `502 storage`."""
+
+
+def _md5_base64(data: bytes) -> str:
+    """The MD5 of `data` as GCS reports an object's `md5_hash`: the digest in base64."""
+    return base64.b64encode(hashlib.md5(data, usedforsecurity=False).digest()).decode("ascii")
+
+
 class CaseBucket(Protocol):
     """Where the case files go: the private case bucket in production, a fake in the tests."""
 
@@ -100,11 +111,14 @@ class GcsCaseBucket:
         try:
             # `if_generation_match=0` creates the object only when none exists under that name.
             blob.upload_from_string(data, content_type=content_type, if_generation_match=0)
-        except PreconditionFailed:
-            # The object exists. Every case id is new and its object names are written once,
-            # so this is the upload's own object: the library retried a request whose first
-            # attempt stored it but lost the response, and the retry met the stored object.
-            return
+        except PreconditionFailed as exc:
+            # An object exists under the name. Every case id is new and each name is written
+            # once, so it should be this upload's own first attempt, whose response was lost
+            # before the library retried; only identical bytes prove that, so the stored
+            # object's MD5 decides, and anything else (a replay, an id collision) is a conflict.
+            blob.reload()
+            if blob.md5_hash != _md5_base64(data):
+                raise CaseConflict(f"{name} exists with other content") from exc
 
 
 @dataclass(frozen=True)
@@ -261,8 +275,11 @@ def build_case(
     code = version.get("plot_py")
     if isinstance(code, str) and code:
         files.append(CaseFile("plot.py", _utf8(code, "plot.py")))
-    data_csv = version.get("data_csv")
-    if submission.include_data and isinstance(data_csv, str) and data_csv:
+    if submission.include_data:
+        data_csv = version.get("data_csv")
+        # Asked for and absent is a malformed bundle: a manifest must never claim data the case lacks.
+        if not isinstance(data_csv, str) or not data_csv:
+            raise BundleError("the version has no data.csv although the data was asked for")
         files.append(CaseFile("data.csv", _utf8(data_csv, "data.csv")))
 
     # The bundle as the manifest keeps it: without the PNGs and the data, which are files of their own.

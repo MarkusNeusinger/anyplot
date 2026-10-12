@@ -30,8 +30,9 @@ else: a feedback case holds a user's data, and everything under
 `python -m agents.evals.matrix --cases <id>`. The directory holds:
 
 * `case.json`: the spec, library, locale and bindings of the session; `expected` from
-  `--expected`, else from the manifest's reaction (`thumbs_up` and `idea` → `accepted`,
-  `thumbs_down` and `bug` → `rejected`; a bundle without a manifest → `unknown`);
+  `--expected`, else from the manifest's reaction by the triage's rule (`thumbs_up` →
+  `accepted`, `thumbs_down` → `rejected`; `bug` and `idea` imply no outcome, so they
+  need `--expected`; a bundle without a manifest → `unknown`);
   `tags` `["imported", <reaction>]`; and `source`, where the case came from. The
   bundle holds the session's bindings when it was taken, not each version's, so a
   binding that names a column the version's `data.csv` lacks (a later data change
@@ -56,7 +57,9 @@ The case id is `--id`, or `case-<the case id, lower case>` for a case directory 
 `session-<first 8 hex digits of the file's SHA-256>-v<n>` for a bundle. An existing
 case is refused unless `--force` replaces it; an id the committed fixtures use is
 refused always. The case is written to a temporary directory first and checked with
-the harness's own loader (`load_case`), so a refused import leaves nothing behind.
+the harness's own loader (`load_case`), then copied beside `.cases/` and moved into
+place by one rename, so a refused or failed import leaves nothing behind and a case
+`--force` replaces stays until its replacement is in place.
 Exit codes: 0 written, 1 refused, 2 bad arguments.
 """
 
@@ -79,8 +82,11 @@ EVALS_DIR = Path(__file__).resolve().parent
 PROMOTED_DIR = EVALS_DIR / ".cases"
 FIXTURES_DIR = EVALS_DIR / "fixtures" / "cases"
 MANIFEST_NAME = "manifest.json"
-EXPECTED_BY_REACTION = {"thumbs_up": "accepted", "idea": "accepted", "thumbs_down": "rejected", "bug": "rejected"}
-"""The default outcome per reaction of the site's set; `--expected` overrides it."""
+REACTIONS = frozenset({"thumbs_up", "thumbs_down", "bug", "idea"})
+"""The site feedback's reaction set (`core.database.FEEDBACK_REACTIONS`), the case's second tag."""
+EXPECTED_BY_REACTION = {"thumbs_up": "accepted", "thumbs_down": "rejected"}
+"""The outcome a reaction implies, the triage's rule (`docs/concepts/agent-network.md`, "Triage"):
+bug and idea imply none, so a case with one of them needs `--expected`."""
 IMPORTED_TAG = "imported"
 ACTION_PREFIX = "[action] "
 """How the agents service records the page's actions as user messages (`agents/main.py`, `ACTION_MESSAGES`)."""
@@ -320,11 +326,17 @@ def build_case(
         )
     notes: list[str] = []
     reaction = source.manifest.get("reaction") if source.manifest else None
-    reaction = reaction if isinstance(reaction, str) and reaction in EXPECTED_BY_REACTION else None
+    reaction = reaction if isinstance(reaction, str) and reaction in REACTIONS else None
     if expected is None:
-        expected = EXPECTED_BY_REACTION[reaction] if reaction else "unknown"
-        if reaction in ("bug", "idea"):
-            notes.append(f"expected {expected} from the reaction {reaction}; pass --expected to choose")
+        if reaction is None:
+            expected = "unknown"
+        elif reaction in EXPECTED_BY_REACTION:
+            expected = EXPECTED_BY_REACTION[reaction]
+        else:
+            raise ImportRefused(
+                f"the reaction {reaction} implies no outcome: pass --expected accepted or --expected rejected "
+                "(the triage's rule: thumbs up is accepted, thumbs down rejected, bug and idea are your call)"
+            )
     if no_request:
         request = None
     elif request is not None:
@@ -390,10 +402,42 @@ def write_case(
         except CaseError as exc:
             raise ImportRefused(f"the harness would refuse the case: {exc}") from exc
         promoted_dir.mkdir(parents=True, exist_ok=True)
-        if target.exists():
-            shutil.rmtree(target)
-        shutil.copytree(staging, target)
+        try:
+            _move_into_place(staging, target)
+        except OSError as exc:
+            raise ImportRefused(f"could not write {target} ({exc}); an existing case is unchanged") from exc
     return target
+
+
+def _move_into_place(staging: Path, target: Path) -> None:
+    """Copy `staging` beside `target`'s directory and move it to `target` by one rename.
+
+    `.cases/` never holds a half-copied directory, which the harness would try to load,
+    and a case that `--force` replaces stays until its replacement is in place: it is
+    renamed aside, put back when the swap fails, and deleted only afterwards. The
+    temporary directories sit next to `.cases/` (the same file system, so a rename is
+    atomic) and go on every path.
+    """
+    beside = target.parent.parent
+    incoming = Path(tempfile.mkdtemp(prefix=f".import-{target.name}-", dir=beside))
+    try:
+        copied = incoming / target.name
+        shutil.copytree(staging, copied)
+        if not target.exists():
+            os.rename(copied, target)
+            return
+        retired = Path(tempfile.mkdtemp(prefix=f".import-old-{target.name}-", dir=beside))
+        try:
+            os.rename(target, retired / target.name)
+            try:
+                os.rename(copied, target)
+            except OSError:
+                os.rename(retired / target.name, target)  # the old case back in place
+                raise
+        finally:
+            shutil.rmtree(retired, ignore_errors=True)
+    finally:
+        shutil.rmtree(incoming, ignore_errors=True)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -403,7 +447,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("source", type=Path, help="a bundle JSON file (.save()) or a case directory with manifest.json")
     parser.add_argument("--id", dest="case_id", help="the eval case id (default: derived from the source)")
-    parser.add_argument("--expected", choices=("accepted", "rejected"), help="the outcome the case expects")
+    parser.add_argument(
+        "--expected", choices=("accepted", "rejected"), help="the outcome the case expects (needed for bug and idea)"
+    )
     parser.add_argument("--version", type=int, help="the plot version (default: the case's, or the newest)")
     parser.add_argument("--force", action="store_true", help="replace an imported case of the same id")
     request = parser.add_mutually_exclusive_group()

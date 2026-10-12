@@ -515,7 +515,8 @@ it unless you submit quick feedback (see [Feedback case](#feedback-case)).
 That feedback case always holds the conversation, the code, the images and the dataset profile
 with its column names and sample rows, so it can show your data even without
 the data box; the full data file is in it only when you tick the box. The chat
-page's `.save()` downloads the same case to your computer (see
+page's `.save()` downloads something else, the whole session as one bundle with
+every version and no case manifest, to your computer (see
 [Session bundle](#session-bundle)); anyplot keeps no copy of it.
 
 `POST /sessions` and `POST /sessions/{sid}/library` add the user id and a
@@ -683,20 +684,25 @@ hash over the config stamp's prompt hashes), `pipeline_status`, `attempts`,
 `tokens`, `cost_estimate`, `files` and `bundle`: every column the planned
 `agent_feedback` table has, so the table can be filled from the manifests later.
 A field the bundle does not carry is `null`; today that is `model_version`,
-`tokens` and `cost_estimate`.
+`tokens` and `cost_estimate`. A bundle that lacks the version's data while
+`include_data` is set is refused as `502 upstream`, so no manifest claims data
+the case lacks.
 
 The manifest is uploaded last, and every upload refuses to replace an existing
 object. A case directory without a manifest is an aborted upload, never a case:
 when an upload fails, the route answers `502 storage` with a request id and
-uploads nothing more. A retried upload that meets the object its own first
-attempt stored counts as stored. Sending feedback for the same version again
+uploads nothing more. A retried upload that meets an object under its own name
+counts as stored only when that object's MD5 matches the bytes it carries (its
+own first attempt stored them and lost the response); any other content is a
+conflict and `502 storage`. Sending feedback for the same version again
 stores a new case, and the page sends the earlier case's id as `replaces`, so
 the planned triage can tell which case an edit replaces. The client sends
 `replaces`, so the triage is to honour it only for a case of the same session
 hash and version; without it, the newest such case is the one that counts. The API deletes nothing, so a replaced case keeps its
 files, its `data.csv` too, until the bucket's lifecycle rule deletes them after
 180 days; that rule is the retention for cases and aborted uploads alike. The
-API's runtime identity needs permission to create objects in the bucket.
+API's runtime identity needs permission to create objects in the bucket and to
+read their metadata, which the check of a retried upload uses.
 
 ### SSE protocol `anyplot/1`
 

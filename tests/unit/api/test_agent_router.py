@@ -1302,6 +1302,16 @@ class TestFeedback:
         assert manifest["include_data"] is False
         assert "data_csv" not in manifest["bundle"]["versions"][0]
 
+    def test_refuses_a_bundle_without_the_data_the_box_asked_for(self, client, upstream, cases) -> None:
+        """`include_data` without the version's `data_csv` is a malformed bundle: no manifest may claim data it lacks."""
+        upstream.handler = lambda request: httpx.Response(200, json=_feedback_bundle(3, data_csv=None))
+
+        response = self.post(client, include_data=True)
+
+        assert response.status_code == 502
+        assert response.json()["detail"] == "upstream"
+        assert cases.uploads == []
+
     def test_skips_a_theme_the_version_never_rendered(self, client, upstream, cases) -> None:
         upstream.handler = lambda request: httpx.Response(200, json=_feedback_bundle(3, themes=("dark",)))
         response = self.post(client, include_data=False)
@@ -1481,7 +1491,7 @@ class TestFeedback:
             return httpx.Response(200, json=bundle)
 
         upstream.handler = switched
-        self.post(client)
+        self.post(client, include_data=False)
         assert json.loads(cases.get("manifest.json"))["library_id"] == "matplotlib"
 
     def test_a_later_submission_for_the_same_version_is_a_new_case(self, client, upstream, cases) -> None:
