@@ -18,8 +18,9 @@
 * `out_of_scope` and `attack` withhold the message with the fixed `out_of_scope`
   refusal, and `needs_data` (a request for data the service would have to fetch) with
   the fixed `needs_data` refusal, each in the language the judge names (`policy.refusal`:
-  English, German, French, Spanish, Italian, Portuguese, Dutch and Polish, English for
-  every other language); the run ends there, at the first turn;
+  English, German, French, Spanish, Italian, Portuguese, Dutch, Polish, Chinese,
+  Vietnamese and Russian, English for every other language); the run ends there, at
+  the first turn;
 * an `attack` verdict is a strike against the user (`UsageBook.add_strike`), once
   per distinct message text: from `AGENT_ATTACK_STRIKES` strikes on, the daily check
   above refuses the user with the budget refusal for the rest of the day;

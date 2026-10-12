@@ -17,8 +17,8 @@ at import time. A missing file or heading raises at import, so a renamed section
 breaks the build instead of silently shrinking a prompt.
 
 The root's refusals come from `prompts/refusals.yaml` (English, German, French,
-Spanish, Italian, Portuguese, Dutch and Polish, written by hand; English for every
-other language); the scope guard sends the same texts without any model call. The
+Spanish, Italian, Portuguese, Dutch, Polish, Chinese, Vietnamese and Russian, written
+by hand; English for every other language); the scope guard sends the same texts without any model call. The
 root's instruction lists the two it may send itself, `out_of_scope` and `needs_data`
 (`ROOT_REFUSALS`), in every language, as its backup when a message got past the judge;
 root.md tells it to use the English line for any other language, never a translation

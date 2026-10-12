@@ -93,9 +93,9 @@ class TestValues:
     def test_refusal_lang_is_a_code_never_a_prefix(self, language: str, code: str) -> None:
         assert refusal_lang(language) == code
 
-    def test_the_common_list_covers_every_refusal_language(self) -> None:
+    def test_every_common_language_has_its_own_refusals(self) -> None:
         assert DEFAULT_LANGUAGE == COMMON_LANGUAGES[0] == "en"
-        assert set(refusals()["out_of_scope"]) <= set(COMMON_LANGUAGES)
+        assert set(COMMON_LANGUAGES) <= set(refusals()["out_of_scope"])  # every chip language has its own refusals
         assert all(is_valid(code) and normalise(code) == code for code in COMMON_LANGUAGES)
 
 

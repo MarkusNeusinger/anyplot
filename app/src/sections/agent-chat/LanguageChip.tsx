@@ -233,7 +233,7 @@ export function LanguageChip({ value, disabled, onSet }: LanguageChipProps) {
                 component="button"
                 type="button"
                 aria-pressed={current}
-                aria-label={option.name}
+                aria-label={`${option.code} ${option.endonym} (${option.name})`}
                 onClick={() => pick(option.code)}
                 sx={{
                   ...actionButtonSx,

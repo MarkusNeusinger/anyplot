@@ -26,8 +26,11 @@ MAX_LANGUAGE_CHARS = 40
 LanguageSource = Literal["default", "detected", "chosen"]
 SOURCES: frozenset[str] = frozenset(("default", "detected", "chosen"))
 DEFAULT_LANGUAGE = "en"
-COMMON_LANGUAGES = ("en", "de", "fr", "es", "it", "pt", "nl", "pl", "zh", "ja")
-"""The chip's list: the eight languages `refusals.yaml` has lines for, plus zh and ja (English refusals)."""
+COMMON_LANGUAGES = ("en", "zh", "de", "vi", "es", "fr", "nl", "pt", "ru", "it")
+"""The chip's list: the site's ten most used visitor languages (Plausible, owner's choice of 2026-10-12).
+
+`refusals.yaml` has hand-written lines for each of them, and for Polish besides.
+"""
 _NAMES: dict[str, str] = {
     "english": "en",
     "german": "de",
@@ -45,9 +48,11 @@ _NAMES: dict[str, str] = {
     "polish": "pl",
     "polski": "pl",
     "chinese": "zh",
+    "vietnamese": "vi",
+    "russian": "ru",
     "japanese": "ja",
 }
-"""The English names and the ASCII endonyms of the common languages, by their code."""
+"""The English names and the ASCII endonyms of the refusal languages and Japanese, by their code."""
 
 
 def normalise(value: str) -> str:

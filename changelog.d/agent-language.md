@@ -1,9 +1,9 @@
 ### Added
 
 - **The agent chat has one session language, shown as a chip.** A `lang: en`
-  chip in the chat header, next to the library pills, opens the ten common
-  languages (en, de, fr, es, it, pt, nl, pl, zh, ja) and a field for any other
-  language in Latin letters. The first in-scope typed message sets the language
+  chip in the chat header, next to the library pills, opens the site's ten most
+  used visitor languages in Plausible (en, zh, de, vi, es, fr, nl, pt, ru, it)
+  and a field for any other language in Latin letters. The first in-scope typed message sets the language
   it is written in (`lang: de · detected`, with one quiet line in the thread),
   a later message never changes it, and a choice from the chip or a request
   such as "labels in English" (the root's new `set_language` tool,
@@ -24,6 +24,10 @@
   last `done` event's language. Six in-scope scope-eval cases (`plot_language`,
   three English, three German) guard the rubric's new line that a request for
   the plot's own text in another language is no translation.
+- **Fixed refusals in Chinese, Vietnamese and Russian.** Every chip language
+  now has its own hand-written refusals; the Portuguese and Polish lines were
+  revised. Without a native speaker at hand, each text passed a
+  back-translation review and a separate naturalness review.
 
 ### Changed
 

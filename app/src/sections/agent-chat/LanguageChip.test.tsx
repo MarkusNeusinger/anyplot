@@ -66,22 +66,29 @@ describe('LanguageChip', () => {
     const group = within(dialog()).getByRole('group', { name: 'Common languages' });
     const buttons = within(group).getAllByRole('button');
     expect(buttons.map(button => button.getAttribute('aria-label'))).toEqual([
-      'English',
-      'German',
-      'French',
-      'Spanish',
-      'Italian',
-      'Portuguese',
-      'Dutch',
-      'Polish',
-      'Chinese',
-      'Japanese',
+      'en english (English)',
+      'zh 中文 (Chinese)',
+      'de deutsch (German)',
+      'vi tiếng việt (Vietnamese)',
+      'es español (Spanish)',
+      'fr français (French)',
+      'nl nederlands (Dutch)',
+      'pt português (Portuguese)',
+      'ru русский (Russian)',
+      'it italiano (Italian)',
     ]);
-    expect(within(group).getByRole('button', { name: 'German' })).toHaveAttribute(
+    // label in name: every accessible name starts with the button's visible text (code, endonym)
+    const words = (text: string | null) => (text ?? '').replace(/\s+/g, '');
+    for (const button of buttons) {
+      expect(words(button.getAttribute('aria-label'))).toMatch(
+        new RegExp(`^${words(button.textContent)}`)
+      );
+    }
+    expect(within(group).getByRole('button', { name: /German/ })).toHaveAttribute(
       'aria-pressed',
       'true'
     );
-    expect(within(group).getByRole('button', { name: 'English' })).toHaveAttribute(
+    expect(within(group).getByRole('button', { name: /English/ })).toHaveAttribute(
       'aria-pressed',
       'false'
     );
@@ -98,7 +105,7 @@ describe('LanguageChip', () => {
     render(<LanguageChip value={EN} disabled={false} onSet={onSet} />);
 
     await user.click(chip());
-    await user.click(within(dialog()).getByRole('button', { name: 'German' }));
+    await user.click(within(dialog()).getByRole('button', { name: /German/ }));
     expect(onSet).toHaveBeenCalledWith('de');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
@@ -110,7 +117,7 @@ describe('LanguageChip', () => {
       <LanguageChip value={{ language: 'de', source: 'chosen' }} disabled={false} onSet={onSet} />
     );
     await user.click(chip());
-    await user.click(within(dialog()).getByRole('button', { name: 'German' }));
+    await user.click(within(dialog()).getByRole('button', { name: /German/ }));
     expect(onSet).not.toHaveBeenCalled();
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
@@ -118,7 +125,7 @@ describe('LanguageChip', () => {
       <LanguageChip value={{ language: 'de', source: 'detected' }} disabled={false} onSet={onSet} />
     );
     await user.click(chip());
-    await user.click(within(dialog()).getByRole('button', { name: 'German' }));
+    await user.click(within(dialog()).getByRole('button', { name: /German/ }));
     expect(onSet).toHaveBeenCalledWith('de');
   });
 
@@ -161,7 +168,7 @@ describe('LanguageChip', () => {
     // The page disables the chip while its own call runs (`languageBusy`).
     const { rerender } = render(<LanguageChip value={EN} disabled={false} onSet={onSet} />);
     await user.click(chip());
-    await user.click(within(dialog()).getByRole('button', { name: 'French' }));
+    await user.click(within(dialog()).getByRole('button', { name: /French/ }));
     rerender(<LanguageChip value={EN} disabled onSet={onSet} />);
 
     await waitFor(() => expect(chip()).toHaveFocus());
@@ -201,13 +208,13 @@ describe('LanguageChip', () => {
     );
 
     await user.click(chip());
-    await user.click(within(dialog()).getByRole('button', { name: 'Polish' }));
+    await user.click(within(dialog()).getByRole('button', { name: /Russian/ }));
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent(/still in progress.* · ref ref-busy$/)
     );
 
     await user.click(chip());
-    await user.click(within(dialog()).getByRole('button', { name: 'Dutch' }));
+    await user.click(within(dialog()).getByRole('button', { name: /Dutch/ }));
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent('the session expired · ref ref-gone')
     );

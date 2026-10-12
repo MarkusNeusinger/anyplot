@@ -227,7 +227,7 @@ class TestSessionLanguage:
         assert "</plot_language>" not in fenced and "&lt;/plot_language>" in fenced
 
 
-REFUSAL_LANGS = {"en", "de", "fr", "es", "it", "pt", "nl", "pl"}
+REFUSAL_LANGS = {"en", "de", "fr", "es", "it", "pt", "nl", "pl", "zh", "vi", "ru"}
 
 
 class TestRefusals:
@@ -245,6 +245,9 @@ class TestRefusals:
             ("pt-BR", "Só posso ajudar"),
             ("nl", "Ik kan je alleen"),
             ("pl", "Mogę ci pomóc"),
+            ("zh", "我只能帮你"),
+            ("vi", "Tôi chỉ có thể giúp bạn"),
+            ("ru", "Я могу помочь только"),
             ("ja", "I can only"),
             ("tr", "I can only"),
             ("", "I can only"),

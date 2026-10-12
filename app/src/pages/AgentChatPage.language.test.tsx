@@ -136,7 +136,7 @@ describe('AgentChatPage language chip', () => {
     await waitFor(() => expect(chip()).toBeEnabled());
     await user.click(chip());
     const list = screen.getByRole('dialog', { name: 'Plot language' });
-    await user.click(within(list).getByRole('button', { name: 'German' }));
+    await user.click(within(list).getByRole('button', { name: /German/ }));
 
     await waitFor(() => expect(chip()).toHaveTextContent(/^lang: de · chosen$/));
     expect(puts).toHaveLength(1);
