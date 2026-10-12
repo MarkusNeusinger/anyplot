@@ -28,7 +28,6 @@ function renderCard(props: Partial<ResultCardProps> = {}) {
   const handlers = {
     onRequestTheme: vi.fn(),
     onFetchArtifact: vi.fn(async () => new Blob(['a,b\n1,2\n'], { type: 'text/csv' })),
-    onRefine: vi.fn(),
     onTrack: vi.fn(),
   };
   render(
@@ -184,14 +183,11 @@ describe('ResultCard', () => {
   });
 
   it('holds back a theme that needs a render while the session is busy', async () => {
-    const { onRequestTheme, onRefine } = renderCard({ busy: true });
+    const { onRequestTheme } = renderCard({ busy: true });
     const dark = screen.getByRole('button', { name: 'dark' });
     expect(dark).toBeDisabled();
     await userEvent.click(dark);
     expect(onRequestTheme).not.toHaveBeenCalled();
-    await userEvent.type(screen.getByLabelText('Refine this plot'), 'log scale on y');
-    expect(screen.getByRole('button', { name: '.refine()' })).toBeDisabled();
-    expect(onRefine).not.toHaveBeenCalled();
   });
 
   it('switches to a theme the version already has even while busy', async () => {
@@ -208,19 +204,17 @@ describe('ResultCard', () => {
     expect(screen.getByAltText('Adapted plot, version 2, dark theme')).toBeInTheDocument();
   });
 
-  it('sends a refinement from the composer', async () => {
-    const { onRefine } = renderCard();
-    await userEvent.type(screen.getByLabelText('Refine this plot'), 'log scale on y');
-    await userEvent.click(screen.getByRole('button', { name: '.refine()' }));
-    expect(onRefine).toHaveBeenCalledWith('log scale on y');
+  it('has no composer of its own: follow-ups go through the thread', () => {
+    renderCard();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('form')).not.toBeInTheDocument();
   });
 
-  it('collapses an earlier version and has no composer there', async () => {
+  it('collapses an earlier version and opens it again on request', async () => {
     renderCard({ latest: false });
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /Version 2/ }));
     expect(screen.getByAltText('Adapted plot, version 2, light theme')).toBeInTheDocument();
-    expect(screen.queryByLabelText('Refine this plot')).not.toBeInTheDocument();
   });
 
   it('has no feedback control without onSendFeedback', () => {

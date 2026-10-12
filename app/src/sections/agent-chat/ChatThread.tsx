@@ -27,7 +27,6 @@ interface ChatThreadProps {
   language: string;
   onRequestTheme: (version: number, theme: Theme) => void;
   onFetchArtifact: (version: number, name: ArtifactName) => Promise<Blob>;
-  onRefine: (text: string) => void;
   onTrack: (event: string, props?: Record<string, string | undefined>) => void;
   /** The result cards' quick feedback; without it they show no control. */
   onSendFeedback?: (version: number, input: FeedbackInput) => Promise<void>;
@@ -128,7 +127,6 @@ function Item({
           busy={sessionBusy(props.state)}
           onRequestTheme={props.onRequestTheme}
           onFetchArtifact={props.onFetchArtifact}
-          onRefine={props.onRefine}
           onTrack={props.onTrack}
           onSendFeedback={props.onSendFeedback}
         />
