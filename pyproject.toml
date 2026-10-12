@@ -119,9 +119,11 @@ lib-letsplot = ["lets-plot>=4.11.0", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-l
 # is the Claude backend: google/adk/models/anthropic_llm.py imports
 # `AsyncAnthropicVertex`, whose credentials come from google-auth (the `vertex`
 # extra); the floor is the version this was built and smoke-tested against,
-# whose `output_config` carries the `effort` that module sends.
+# whose `output_config` carries the `effort` that module sends. There is no
+# `google-adk[eval]` extra: the evals under agents/evals/ run on this one, and
+# ADK's eval stack pulled in litellm and nltk, two security alerts for code that
+# nothing here ran.
 agents = ["google-adk==2.11.0", "anthropic[vertex]>=1.8.0"]
-agents-eval = ["google-adk[eval]==2.11.0", "anthropic[vertex]>=1.8.0"]
 all = [
     "anyplot[test,dev,plotting,typecheck]",
 ]
