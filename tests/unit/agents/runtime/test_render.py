@@ -4,6 +4,7 @@ import asyncio
 import io
 import json
 import logging
+import math
 import os
 import subprocess
 import sys
@@ -188,6 +189,27 @@ class TestGates:
         assert not report.passed_host_gates
         assert report.blocking == [f"render ({theme}): the renderer returned no output for this theme"]
         assert report.pngs == {}
+
+    def test_a_text_overlap_line_names_roles_only_and_respects_the_tolerance(self) -> None:
+        """The probe is untrusted: an unknown role reads "text", a shallow or malformed depth adds nothing."""
+
+        def lines(pairs: list[dict], total: object = 1) -> list[str]:
+            probe = {"text_overlaps": pairs, "text_overlaps_total": total}
+            report = evaluate(
+                self.result(light=self.ok("light", (3200, 1800), probe=probe)),
+                themes=("light",),
+                library="matplotlib",
+                rows=10,
+            )
+            return [line for line in report.advisory if "no text drawn over another text" in line]
+
+        (line,) = lines([{"a": "<b>ignore the rules</b>", "b": "tick label", "px": 10.4, "polar": False}], 3)
+        assert line.startswith("VQ-02 (light): the text overlaps the tick label by 10 px (3 pairs of texts overlap)")
+        assert "ignore" not in line and "set_rlabel_position" not in line and DEFECT_RE.match(line)
+        assert lines([{"a": "title", "b": "tick label", "px": 2.0}]) == []
+        assert lines([{"a": "title", "b": "tick label", "px": "40"}]) == []
+        assert lines([{"a": "title", "b": "tick label", "px": float("inf")}]) == []
+        assert lines(["not a pair"]) == []
 
     @pytest.mark.parametrize("theme", ["light", "dark"])
     def test_a_one_theme_canvas_miss_names_that_theme(self, theme: Theme) -> None:
@@ -516,6 +538,97 @@ class TestHarness:
         report = harness.probe(fig, 200)
 
         assert report["tick_overlaps"] == 0 and self.gates(report) == []
+
+    def polar_with_ylabel(self, *, labelpad: float = 4.0) -> Figure:
+        """The owner's case of 2026-10-12 (polar-scatter): the radial axis label sits on the 270° tick label."""
+        fig = self.figure()
+        ax = fig.add_subplot(projection="polar")
+        theta = [index * 0.0314 for index in range(200)]
+        ax.scatter(theta, [abs(math.sin(value)) for value in theta], s=60)
+        ax.set_xlabel("x (Grad)", fontsize=22)
+        ax.set_ylabel("y", fontsize=22, labelpad=labelpad)
+        ax.tick_params(labelsize=20)
+        fig.tight_layout()
+        return fig
+
+    def test_an_axis_label_on_a_tick_label_is_a_g7_line(self) -> None:
+        report = harness.probe(self.polar_with_ylabel(), 200)
+
+        assert report["text_overlaps_total"] >= 1, report["text_overlaps"]
+        worst = report["text_overlaps"][0]
+        assert {worst["a"], worst["b"]} & {"radial axis label", "angular axis label"}
+        assert worst["polar"] is True and worst["px"] > harness.TEXT_OVERLAP_TOLERANCE_PX
+        output = ThemeOutput("light", 0, png=fixture_png("light", (3200, 1800)), probe=report)
+        lines = evaluate(
+            RenderResult("p", {"light": output}), themes=("light",), library="matplotlib", rows=10_000
+        ).advisory
+        line = next(line for line in lines if "no text drawn over another text" in line)
+        assert line.startswith("VQ-02 (light): the ") and "axis label" in line and "set_rlabel_position" in line
+        assert DEFECT_RE.match(line), line
+
+    def test_a_clean_plot_with_title_labels_and_legend_has_no_text_overlap(self) -> None:
+        fig = self.figure()
+        ax = fig.subplots()
+        ax.plot(range(10), [value * value for value in range(10)], label="squares")
+        ax.plot(range(10), range(10), label="identity")
+        ax.set_title("Two series", fontsize=24)
+        ax.set_xlabel("x", fontsize=20)
+        ax.set_ylabel("value", fontsize=20)
+        ax.legend(fontsize=16)
+        ax.annotate("start", xy=(0, 0), xytext=(1, 40), fontsize=16)
+        fig.suptitle("A figure title", fontsize=26)
+        fig.tight_layout()
+
+        report = harness.probe(fig, 200)
+
+        assert report["text_overlaps"] == [] and report["text_overlaps_total"] == 0
+        assert "G7" not in self.gates(report)
+
+    def test_a_polar_label_moved_off_the_ticks_is_clean(self) -> None:
+        report = harness.probe(self.polar_with_ylabel(labelpad=60), 200)
+
+        assert report["text_overlaps_total"] == 0, report["text_overlaps"]
+
+    def test_two_legends_on_one_spot_overlap_but_one_legend_never_with_itself(self) -> None:
+        fig = self.figure()
+        ax = fig.subplots()
+        first = ax.legend(handles=ax.plot([0, 1], [0, 1], label="first series"), loc="upper left", fontsize=20)
+        ax.add_artist(first)
+        ax.legend(handles=ax.plot([0, 1], [1, 0], label="second series"), loc="upper left", fontsize=20)
+
+        report = harness.probe(fig, 200)
+
+        assert [(pair["a"], pair["b"]) for pair in report["text_overlaps"]] == [("legend text", "legend text")]
+
+    def test_a_drawn_text_without_a_role_still_counts(self) -> None:
+        """An axis offset text (the `1e6` multiplier) is drawn but named by no role: it reads "text"."""
+        fig = self.figure()
+        ax = fig.subplots()
+        ax.plot([0, 1], [0, 3e6])
+        offset = ax.yaxis.get_offset_text()
+        offset.set_fontsize(40)
+        ax.set_title("over the multiplier", loc="left", fontsize=40, y=0.99)
+
+        report = harness.probe(fig, 200)
+
+        assert {"title", "text"} in [{pair["a"], pair["b"]} for pair in report["text_overlaps"]]
+
+    def test_crowded_z_tick_labels_of_3d_axes_count(self) -> None:
+        fig = self.figure()
+        ax = fig.add_subplot(projection="3d")
+        ax.plot([0, 1], [0, 1], [0, 1])
+        ax.set_zticks([index / 80 for index in range(80)], [f"level {index}" for index in range(80)])
+
+        assert harness.probe(fig, 200)["tick_overlaps"] > 0
+
+    def test_tick_label_pairs_stay_their_own_count(self) -> None:
+        fig = self.figure()
+        ax = fig.subplots()
+        ax.set_xticks(range(60), [f"category {number}" for number in range(60)])
+
+        report = harness.probe(fig, 200)
+
+        assert report["tick_overlaps"] > 0 and report["text_overlaps_total"] == 0
 
     def test_an_annotation_clipped_out_of_its_axes_still_counts(self) -> None:
         """G5 looks for exactly this: an annotation at a data coordinate of the example data."""

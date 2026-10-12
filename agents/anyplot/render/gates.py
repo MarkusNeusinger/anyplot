@@ -7,7 +7,7 @@
 | R3 | canvas within 16 px of 3200x1800 or 2400x2400 (`core.canvas.check_canvas`) | repair-triggering: the VQ-05 defect line goes to the repair; a padded copy of each missed theme is kept as the fallback |
 | G3 | probe: boxes of drawn text beyond the canvas edge (tick labels outside the view or on a hidden axis are never drawn, so never count) | advisory: an AR-09 line |
 | G5 | probe: annotations outside their axes | advisory: a DQ-03 line |
-| G7 | probe: overlapping drawn tick labels | advisory: a VQ-02 line |
+| G7 | probe: overlapping drawn tick labels, and any other drawn text (axis label, title, legend text, annotation) overlapping a text by more than 3 px | advisory: a VQ-02 line each |
 | G8 | probe: more point marks than data rows (fabricated data) | advisory: a DQ-03 line |
 | G9 | probe: scatter marks plus line vertices over `MAX_PLOTTED_POINTS` (computed mass data) | advisory: a DQ-03 line |
 | G10 | probe: characters without a glyph in any font of their text, plain text and mathtext (the harness records matplotlib's own reports) | advisory: a VQ-01 line |
@@ -43,6 +43,25 @@ from .polar import rlabel_hint
 
 
 CLIP_TOLERANCE_PX = 2
+TEXT_OVERLAP_TOLERANCE_PX = 3.0
+"""The harness's own tolerance (`harness.TEXT_OVERLAP_TOLERANCE_PX`), checked again because the probe is untrusted."""
+TEXT_KINDS = frozenset(
+    {
+        "tick label",
+        "x axis label",
+        "y axis label",
+        "z axis label",
+        "angular axis label",
+        "radial axis label",
+        "figure axis label",
+        "title",
+        "suptitle",
+        "annotation",
+        "legend text",
+        "text",
+    }
+)
+"""The text roles the harness names (`harness._text_kinds`); any other probe value reads "text"."""
 G8_SLACK = 10
 G8_FACTOR = 1.5
 MAX_PLOTTED_POINTS = 200_000
@@ -355,6 +374,44 @@ def _glyph_label(codepoint: int) -> str:
     return f"U+{codepoint:04X}{shown} {text}"
 
 
+def _text_overlap_line(probe: dict[str, Any]) -> str | None:
+    """The G7 line for texts other than two tick labels that overlap: the deepest pair, named by role.
+
+    The probe's roles are untrusted strings, so only the harness's own vocabulary
+    (`TEXT_KINDS`) is named; anything else reads "a text". No text content is ever
+    quoted: a tick label can be a cell of the user's data, and the line reaches the
+    adapter's prompt.
+    """
+    pairs = probe.get("text_overlaps")
+    total = probe.get("text_overlaps_total")
+    if not isinstance(pairs, list) or not pairs or not isinstance(pairs[0], dict):
+        return None
+    first = pairs[0]
+    depth = first.get("px")
+    if isinstance(depth, bool) or not isinstance(depth, int | float) or not math.isfinite(depth):
+        return None
+    if depth <= TEXT_OVERLAP_TOLERANCE_PX:
+        return None
+    a, b = (_text_kind(first.get(key)) for key in ("a", "b"))
+    count = total if isinstance(total, int) and not isinstance(total, bool) and total >= 1 else len(pairs)
+    others = f" ({count} pairs of texts overlap)" if count > 1 else ""
+    if first.get("polar") is True and "axis label" in f"{a} {b}":
+        cause = (
+            "polar axes place the radial axis label beside the angular tick labels; move it "
+            "(ax.set_rlabel_position, labelpad) or name the axis in the title instead"
+        )
+    else:
+        cause = "a label, title, legend or annotation placed over other text, or a font too large for the space"
+    return (
+        f"VQ-02 (THEME): the {a} overlaps the {b} by {round(depth)} px{others} → no text drawn over another text. "
+        f"Likely cause: {cause}."
+    )
+
+
+def _text_kind(value: Any) -> str:
+    return value if isinstance(value, str) and value in TEXT_KINDS else "text"
+
+
 def _probe_lines(probe: dict[str, Any] | None, rows: int) -> list[tuple[str, str]]:
     """Advisory `(gate, line)` pairs from one theme's probe; a malformed probe yields none, never an exception."""
     try:
@@ -396,6 +453,9 @@ def _probe_lines_unchecked(probe: dict[str, Any] | None, rows: int) -> list[tupl
                 "Likely cause: too many ticks for the axis length, or unrotated long labels.",
             )
         )
+    text_line = _text_overlap_line(probe)
+    if text_line is not None:
+        lines.append(("G7", text_line))
     outside = probe.get("annotations_outside")
     if isinstance(outside, int) and outside > 0:
         lines.append(
