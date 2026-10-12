@@ -8,4 +8,4 @@
   report gives the score distributions, what repair 1 gains, the runs each threshold
   would send to an advisor, and the points lost by criterion. The harness keeps every
   attempt's render with `--keep-attempts`. It is the measurement behind the owner's
-  quality ladder; the agent itself is unchanged.
+  quality ladder; the agent itself is unchanged (#12157).
