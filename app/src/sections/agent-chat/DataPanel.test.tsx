@@ -293,9 +293,16 @@ describe('DataPanel steps', () => {
 
       // A binding change, a data change or an undo: the server dropped the confirmation.
       // The header stays and says so, and the line above the card stays in its place.
-      rerender({ ...confirmed, dataConfirmed: false });
-      expect(screen.getByTestId('data-summary')).toHaveTextContent(
-        'confirm again · 1 row · 5 columns · version 1'
+      rerender({ ...confirmed, dataConfirmed: false, confirmLoss: 'bindings' });
+      const summary = screen.getByTestId('data-summary');
+      expect(summary).toHaveTextContent('confirm again · 1 row · 5 columns · version 1');
+      // It reads as a warning: the phrase in bold, not only the colour of the `!`.
+      const phrase = within(summary).getByText('confirm again');
+      expect(phrase).toHaveAttribute('data-tone', 'warning');
+      expect(phrase).toHaveStyle({ fontWeight: '600' });
+      // The row next to `.confirm()` names what dropped it, as the thread's notice does.
+      expect(screen.getByRole('button', { name: '.confirm()' })).toHaveAccessibleDescription(
+        '# step 1 again — bindings changed · confirm the data again'
       );
       expect(
         screen.getByText('# step 1 again: check the data, then confirm it below')
@@ -323,6 +330,13 @@ describe('DataPanel steps', () => {
       expect(screen.getByRole('button', { name: 'Show the data' })).toHaveAttribute(
         'aria-expanded',
         'false'
+      );
+      expect(within(screen.getByTestId('data-summary')).queryByText('confirm again')).toBeNull();
+
+      // Confirmed again, the reason is gone: a later step 1 without one reads as before.
+      rerender({ ...confirmed, dataConfirmed: false, confirmLoss: null });
+      expect(screen.getByTestId('data-step')).toHaveTextContent(
+        '# step 1 — check the preview and the bindings, then confirm'
       );
     } finally {
       restoreScrollIntoView();
@@ -388,6 +402,83 @@ describe('DataPanel steps', () => {
     );
     expect(screen.getByRole('alert')).toHaveTextContent('parse the data first · ref r-c');
     expect(screen.getByRole('button', { name: '.confirm()' })).toBeEnabled();
+  });
+});
+
+describe('DataPanel working states', () => {
+  function renderPanel(state: AgentSessionState) {
+    const panel = (next: AgentSessionState) => (
+      <DataPanel
+        state={next}
+        onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
+        onBind={vi.fn()}
+        onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
+      />
+    );
+    const view = render(panel(state));
+    return { rerender: (next: AgentSessionState) => view.rerender(panel(next)) };
+  }
+
+  const summaryTurn = { kind: 'summarize_data' as const, steps: [], queue: null, stopping: false };
+
+  it('says why the bindings and .confirm() wait, exactly while something runs', () => {
+    const idle = stateWith({ x: 'month', y1: 'shoes' });
+    const { rerender } = renderPanel(idle);
+    expect(screen.queryByTestId('bindings-lock')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('parse-hint')).not.toBeInTheDocument();
+
+    rerender({ ...idle, run: summaryTurn });
+    expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
+      '# bindings and .confirm() wait while the assistant works …'
+    );
+    // The lock stays (the server would refuse the change); the controls keep their look.
+    expect(screen.getByLabelText(/^x/)).toBeDisabled();
+    expect(screen.getByRole('button', { name: '.confirm()' })).toBeDisabled();
+
+    // A binding change, a confirmation or a theme render reads the same: the assistant works.
+    rerender({ ...idle, bindingsBusy: true });
+    expect(screen.getByTestId('bindings-lock')).toHaveTextContent(/while the assistant works/);
+
+    rerender(idle);
+    expect(screen.queryByTestId('bindings-lock')).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^x/)).toBeEnabled();
+  });
+
+  it('says that the data is parsed, under .parse(), on the bindings and to a screen reader', async () => {
+    const { rerender } = renderPanel(stateWith({ x: 'month', y1: 'shoes' }));
+    await userEvent.type(screen.getByLabelText(/# your data/), 'a,b');
+    rerender(stateWith({ x: 'month', y1: 'shoes' }, { parsing: true }));
+
+    expect(screen.getByTestId('parse-hint')).toHaveTextContent('# parsing your data …');
+    const parse = screen.getByRole('button', { name: '.parse() …' });
+    expect(parse).toBeDisabled();
+    expect(parse).toHaveAccessibleDescription('# parsing your data');
+    expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
+      '# bindings and .confirm() wait while the data is parsed …'
+    );
+    expect(screen.getByTestId('data-step-status')).toHaveTextContent('parsing your data');
+
+    // The first parse: no data yet, so no bindings, but the line under `.parse()` shows.
+    rerender({
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+      parsing: true,
+    });
+    expect(screen.getByTestId('parse-hint')).toHaveTextContent('# parsing your data …');
+    expect(screen.queryByTestId('bindings-lock')).not.toBeInTheDocument();
+  });
+
+  it('names only the bindings in step 2, where the card has no .confirm()', async () => {
+    renderPanel(stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true, themeBusy: true }));
+    await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
+      '# bindings wait while the assistant works …'
+    );
   });
 });
 

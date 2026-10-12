@@ -41,6 +41,15 @@
  * A `plot{not_ready, data_unconfirmed}` without that sync still drops the
  * flag, so the panel offers `.confirm()` again.
  *
+ * A confirmation the user had given and then lost is named where it is lost:
+ * the reducer watches the flag go from set to cleared, whatever action did it,
+ * keeps the reason (`confirmLoss`: a binding change, new data, or the server's
+ * word) for the data card's step line, and appends a warning notice to the
+ * thread. The parse's own default bindings land while the flag is already
+ * clear, so a first setup after a paste says nothing. The reducer numbers the
+ * thread items itself (`nextItemId`), so it can append that notice in the one
+ * place every loss passes through.
+ *
  * Step 1 talks about the data. Every parse that stores a dataset (a table, or
  * a transcription's `.use()`) is followed at once by the turn
  * `{action: "summarize_data"}`, so the assistant's summary of the data is the
@@ -132,6 +141,7 @@ import {
 } from 'src/lib/agent';
 import { readSseEvents } from 'src/lib/sse';
 import { downloadBlob } from 'src/sections/agent-chat/files';
+import { CONFIRM_LOST_TEXT } from 'src/sections/agent-chat/messages';
 import { reloadOnceForAccess } from 'src/utils/adminAuth';
 
 /** How long Stop waits for the server's `done` before it lets go of the stream. */
@@ -207,7 +217,8 @@ export type ChatItem =
   | { id: number; kind: 'error'; code: string; ref: string | null }
   | { id: number; kind: 'plot'; version: number }
   | { id: number; kind: 'plot_failed'; result: PlotResult }
-  | { id: number; kind: 'notice'; text: string };
+  /** A line from the page itself; `warning` marks a lost confirmation. */
+  | { id: number; kind: 'notice'; text: string; tone?: 'warning' };
 
 /** Distributes `Omit` over the union, so each member keeps its own fields. */
 type WithoutId<T> = T extends unknown ? Omit<T, 'id'> : never;
@@ -245,6 +256,14 @@ export interface TranscriptionState {
 /** Binding name (`x`, `y1`) to column; only bound names are present. */
 export type BindingMap = Record<string, string>;
 
+/**
+ * What dropped a confirmation the user had given: a binding change (the
+ * dropdowns, or the root's `set_bindings` reported by a turn), new data (a
+ * paste, a data change of the assistant, an undo), or the server's word alone
+ * (`data_unconfirmed`, or a turn's sync without a binding change).
+ */
+export type ConfirmLoss = 'bindings' | 'data' | 'server';
+
 export interface AgentSessionState {
   phase: SessionPhase;
   failure: Failure | null;
@@ -275,6 +294,12 @@ export interface AgentSessionState {
    * fit. A stored parse, a transcription and an applied binding change clear it.
    */
   dataConfirmed: boolean;
+  /**
+   * Why a confirmation the user had given dropped; `null` until one did, and
+   * again once the data is confirmed. Set only on the step from confirmed to
+   * not confirmed, never for data that was not confirmed yet.
+   */
+  confirmLoss: ConfirmLoss | null;
   /** The confirmation call is in flight. */
   confirmBusy: boolean;
   confirmError: Failure | null;
@@ -287,6 +312,8 @@ export interface AgentSessionState {
   /** A theme toggle render is in flight. */
   themeBusy: boolean;
   items: ChatItem[];
+  /** The id the next thread item gets; the reducer numbers the items. */
+  nextItemId: number;
   versions: Record<number, PlotVersion>;
   run: RunState | null;
 }
@@ -322,7 +349,8 @@ type Action =
   | { type: 'library_done'; library: string; eligibility: Eligibility }
   | { type: 'library_failed'; failure: Failure }
   | { type: 'theme_busy'; busy: boolean }
-  | { type: 'item'; item: ChatItem }
+  /** Append a thread item; the reducer gives it the next id. */
+  | { type: 'item'; item: NewChatItem }
   | { type: 'run_start'; kind: RunState['kind'] }
   | { type: 'run_queued'; position: number; waiting: number }
   | { type: 'run_step'; step: PipelineStep; attempt: number | null }
@@ -353,6 +381,7 @@ export function initialAgentState(library: string): AgentSessionState {
     bindingsBusy: false,
     bindingsError: null,
     dataConfirmed: false,
+    confirmLoss: null,
     confirmBusy: false,
     confirmError: null,
     dataChange: null,
@@ -361,6 +390,7 @@ export function initialAgentState(library: string): AgentSessionState {
     libraryBusy: false,
     themeBusy: false,
     items: [],
+    nextItemId: 1,
     versions: {},
     run: null,
   };
@@ -519,7 +549,60 @@ function patchVersion(
   return { ...state, versions: { ...state.versions, [number]: patch(version) } };
 }
 
+/** Append a thread item under the next id. */
+function appendItem(state: AgentSessionState, item: NewChatItem): AgentSessionState {
+  return {
+    ...state,
+    items: [...state.items, { ...item, id: state.nextItemId } as ChatItem],
+    nextItemId: state.nextItemId + 1,
+  };
+}
+
+function sameBindings(a: BindingMap, b: BindingMap): boolean {
+  const names = Object.keys(a);
+  return names.length === Object.keys(b).length && names.every(name => a[name] === b[name]);
+}
+
+/** What dropped the confirmation, from the action that dropped it. */
+function lossOf(state: AgentSessionState, action: Action): ConfirmLoss {
+  switch (action.type) {
+    case 'bindings_done':
+      return 'bindings';
+    case 'parse_done':
+    case 'data_prepared':
+    case 'undo_done':
+      return 'data';
+    case 'server_sync':
+      // The root's `set_bindings`, reported by the turn's `done`, is a binding change.
+      return action.bindings && state.dataset && !sameBindings(action.bindings, state.bindings)
+        ? 'bindings'
+        : 'server';
+    default:
+      return 'server';
+  }
+}
+
+/**
+ * Every action, plus one rule on top: when a confirmation the user had given
+ * drops, whatever action dropped it, the reducer keeps the reason and appends
+ * a warning notice to the thread, where the loss happened. A confirmation
+ * clears the reason. A first binding setup after a paste lands while the flag
+ * is already clear, so it says nothing.
+ */
 export function agentReducer(state: AgentSessionState, action: Action): AgentSessionState {
+  const next = reduce(state, action);
+  if (state.dataConfirmed && !next.dataConfirmed) {
+    const reason = lossOf(state, action);
+    return appendItem(
+      { ...next, confirmLoss: reason },
+      { kind: 'notice', tone: 'warning', text: CONFIRM_LOST_TEXT[reason] }
+    );
+  }
+  if (!state.dataConfirmed && next.dataConfirmed) return { ...next, confirmLoss: null };
+  return next;
+}
+
+function reduce(state: AgentSessionState, action: Action): AgentSessionState {
   switch (action.type) {
     case 'opened':
       return {
@@ -669,7 +752,7 @@ export function agentReducer(state: AgentSessionState, action: Action): AgentSes
     case 'theme_busy':
       return { ...state, themeBusy: action.busy };
     case 'item':
-      return { ...state, items: [...state.items, action.item] };
+      return appendItem(state, action.item);
     case 'run_start':
       return { ...state, run: { kind: action.kind, steps: [], queue: null, stopping: false } };
     case 'run_queued': {
@@ -771,18 +854,13 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   const blobUrls = useRef<Set<string>>(new Set());
   const mounted = useRef(true);
 
-  const itemId = useRef(0);
-
   const safeDispatch = useCallback((action: Action) => {
     if (mounted.current) dispatch(action);
   }, []);
 
-  /** Append a thread item; ids are assigned here so the reducer stays pure. */
+  /** Append a thread item; the reducer numbers it. */
   const addItem = useCallback(
-    (item: NewChatItem) => {
-      itemId.current += 1;
-      safeDispatch({ type: 'item', item: { ...item, id: itemId.current } as ChatItem });
-    },
+    (item: NewChatItem) => safeDispatch({ type: 'item', item }),
     [safeDispatch]
   );
 

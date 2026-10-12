@@ -4,6 +4,8 @@
  * Codes: docs/reference/api.md ("Agent error responses", "SSE protocol").
  */
 
+import type { ConfirmLoss } from 'src/hooks/useAgentSession';
+
 /** Errors of a turn (stream `error` events and failed requests). */
 export const ERROR_TEXT: Record<string, string> = {
   capacity: 'the run queue is full or the wait ran out; try again in a few minutes',
@@ -54,6 +56,16 @@ export const DATA_FAILURE: Record<string, string> = {
   unreachable:
     'no answer: your sign-in may have expired (reload the page), or the connection dropped',
   network: 'the server did not answer; check your connection',
+};
+
+/**
+ * What dropped a confirmation the user had given: the thread's warning notice
+ * and the data card's step line next to `.confirm()` say it in these words.
+ */
+export const CONFIRM_LOST_TEXT: Record<ConfirmLoss, string> = {
+  bindings: 'bindings changed · confirm the data again',
+  data: 'the data changed · confirm it again',
+  server: 'not confirmed on the server · confirm the data again',
 };
 
 /** Failures of a theme render or an image fetch on the result card. */

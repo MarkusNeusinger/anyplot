@@ -3,7 +3,11 @@
  * after a parse, `.create_plot()`), the assistant's replies, the fixed
  * refusal, errors with their code and request id, and a result card per plot
  * version. Earlier versions stay in the thread, collapsed, each with its own
- * image and code.
+ * image and code. A lost confirmation shows as a warning notice where it was
+ * lost. While a turn without pipeline steps waits for its reply, an
+ * in-progress line holds the assistant's slot (`pendingReply` in `steps.ts`);
+ * the log's own polite live region announces it once, and the reply takes its
+ * place.
  */
 
 import Box from '@mui/material/Box';
@@ -15,11 +19,20 @@ import {
   sessionBusy,
 } from 'src/hooks/useAgentSession';
 import type { ArtifactName, Theme } from 'src/lib/agent';
+import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import { ERROR_TEXT, PLOT_FAILED_TEXT } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { ResultCard } from 'src/sections/agent-chat/ResultCard';
+import { type PendingReply, pendingReply } from 'src/sections/agent-chat/steps';
 import { bodyTextSx, labelSx } from 'src/sections/agent-chat/styles';
 import { colors, typography } from 'src/theme';
+
+/** The in-progress line's words; the pulsing `…` follows them. */
+const PENDING_TEXT: Record<PendingReply, string> = {
+  summarize_data: 'summarizing your data',
+  message: 'working on your message',
+  stopping: 'stopping',
+};
 
 interface ChatThreadProps {
   state: AgentSessionState;
@@ -102,7 +115,22 @@ function Item({
         </Box>
       );
     case 'notice':
-      return <Box sx={labelSx}># {item.text}</Box>;
+      // A lost confirmation reads as the result card's residual notes do: a warning border.
+      return item.tone === 'warning' ? (
+        <Box
+          data-testid="confirm-lost"
+          sx={{
+            ...labelSx,
+            color: 'var(--ink)',
+            borderLeft: `3px solid ${colors.warning}`,
+            pl: 1.5,
+          }}
+        >
+          # {item.text}
+        </Box>
+      ) : (
+        <Box sx={labelSx}># {item.text}</Box>
+      );
     case 'plot_failed':
       return (
         <Box sx={{ borderLeft: `2px solid ${colors.error}`, pl: 1.5 }}>
@@ -141,6 +169,7 @@ export function ChatThread(props: ChatThreadProps) {
   const { items, versions } = props.state;
   const numbers = Object.keys(versions).map(Number);
   const latestVersion = numbers.length ? Math.max(...numbers) : 0;
+  const pending = pendingReply(props.state);
   return (
     <Box
       role="log"
@@ -150,6 +179,20 @@ export function ChatThread(props: ChatThreadProps) {
       {items.map(item => (
         <Item key={item.id} item={item} props={props} latestVersion={latestVersion} />
       ))}
+      {/* The assistant's slot, in its style, in softer ink: provisional until the reply. */}
+      {pending && (
+        <Box
+          data-testid="pending-reply"
+          sx={{
+            ...bodyTextSx,
+            color: 'var(--ink-soft)',
+            borderLeft: '2px solid var(--rule)',
+            pl: 1.5,
+          }}
+        >
+          {PENDING_TEXT[pending]} <Ellipsis />
+        </Box>
+      )}
     </Box>
   );
 }

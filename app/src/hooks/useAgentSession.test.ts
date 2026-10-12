@@ -15,6 +15,7 @@ import {
   type UseAgentSessionOptions,
 } from 'src/hooks/useAgentSession';
 import type { DatasetChanged, DatasetParsed, RoleSpec } from 'src/lib/agent';
+import { pendingReply } from 'src/sections/agent-chat/steps';
 
 const lastItem = (items: ChatItem[]) => items[items.length - 1];
 
@@ -707,6 +708,35 @@ describe('useAgentSession: the step-1 summary and data changes', () => {
     expect(result.current.state.run).toBeNull();
     expect(result.current.state.dataset?.parsed.version).toBe(1);
     expect(result.current.state.dataChange).toBeNull();
+  });
+
+  it('holds an in-progress line while the summary is written, until its reply', async () => {
+    const routes = baseRoutes();
+    const stream = liveSse([['ready', { v: 'anyplot/1', run_id: 'sum' }]]);
+    routes['POST /sessions/S1/messages'] = () => stream.response;
+    const { result } = await openSession(routes);
+    let parse: Promise<void> = Promise.resolve();
+    act(() => {
+      parse = result.current.parseData('Student,Study Hours,Exam Score\nS01,1.5,52\n');
+    });
+    await waitFor(() => expect(result.current.state.run?.kind).toBe('summarize_data'));
+    expect(pendingReply(result.current.state)).toBe('summarize_data');
+    expect(lastItem(result.current.state.items)).toMatchObject({
+      kind: 'action',
+      action: 'summarize_data',
+    });
+
+    act(() => stream.push('message', { text: SUMMARY_TEXT }));
+    await waitFor(() =>
+      expect(lastItem(result.current.state.items)).toMatchObject({ kind: 'assistant' })
+    );
+    expect(pendingReply(result.current.state)).toBeNull();
+    act(() => {
+      stream.push('done', { llm_calls: 1 });
+      stream.close();
+    });
+    await act(() => parse);
+    expect(result.current.state.run).toBeNull();
   });
 
   it('asks for the summary after .use() of a transcription, not for the transcription itself', async () => {
@@ -1460,6 +1490,115 @@ describe('agentReducer', () => {
       confirmError: { code: 'run_active', ref: 'r' },
     });
     expect(agentReducer(refused, { type: 'confirm_start' }).confirmError).toBeNull();
+  });
+
+  it('numbers the thread items itself', () => {
+    let state: AgentSessionState = initialAgentState('matplotlib');
+    state = agentReducer(state, { type: 'item', item: { kind: 'user', text: 'hi' } });
+    state = agentReducer(state, { type: 'item', item: { kind: 'assistant', text: 'hello' } });
+    expect(state.items.map(item => item.id)).toEqual([1, 2]);
+    expect(state.nextItemId).toBe(3);
+  });
+
+  it('names a lost confirmation once, with its reason, and only one the user had given', () => {
+    const profile = { ...DATASET.profile, columns: [] };
+    const parsed = { ...DATASET, profile } as DatasetParsed;
+    // A paste and its first binding setup: nothing was confirmed, nothing is lost.
+    let state: AgentSessionState = {
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+    };
+    state = agentReducer(state, { type: 'parse_done', parsed, bytes: 10 });
+    state = agentReducer(state, {
+      type: 'bindings_done',
+      bindings: { x: 'Study Hours', y: 'Exam Score' },
+      complete: true,
+      missingRoles: [],
+    });
+    expect(state.items).toEqual([]);
+    expect(state.confirmLoss).toBeNull();
+
+    const confirmed = agentReducer(state, { type: 'confirm_done' });
+    expect(confirmed).toMatchObject({ dataConfirmed: true, confirmLoss: null });
+
+    // A binding change after the confirmation: the reason, and one warning notice.
+    const bindingsDone = {
+      type: 'bindings_done' as const,
+      bindings: { x: 'Exam Score', y: 'Study Hours' },
+      complete: true,
+      missingRoles: [],
+    };
+    let lost = agentReducer(confirmed, bindingsDone);
+    expect(lost).toMatchObject({ dataConfirmed: false, confirmLoss: 'bindings' });
+    expect(lost.items).toEqual([
+      {
+        id: 1,
+        kind: 'notice',
+        tone: 'warning',
+        text: 'bindings changed · confirm the data again',
+      },
+    ]);
+    // Back and forth: the confirmation is gone already, so no second notice.
+    lost = agentReducer(lost, { ...bindingsDone, bindings: { x: 'Study Hours', y: 'Exam Score' } });
+    expect(lost.items).toHaveLength(1);
+    expect(lost.confirmLoss).toBe('bindings');
+    // Confirmed again, the reason is gone; the notice stays in the thread.
+    const again = agentReducer(lost, { type: 'confirm_done' });
+    expect(again).toMatchObject({ dataConfirmed: true, confirmLoss: null });
+    expect(again.items).toHaveLength(1);
+
+    const reasonOf = (next: AgentSessionState) => ({
+      reason: next.confirmLoss,
+      notice: lastItem(next.items),
+    });
+    const notice = (text: string) => ({ kind: 'notice', tone: 'warning', text });
+    const changed = notice('the data changed · confirm it again');
+    for (const next of [
+      agentReducer(confirmed, { type: 'parse_done', parsed, bytes: 10 }),
+      agentReducer(confirmed, { type: 'data_prepared', dataset: PREPARED as DatasetChanged }),
+      agentReducer(confirmed, { type: 'undo_done', parsed }),
+    ]) {
+      expect(reasonOf(next)).toMatchObject({ reason: 'data', notice: changed });
+    }
+    const server = notice('not confirmed on the server · confirm the data again');
+    expect(reasonOf(agentReducer(confirmed, { type: 'confirm_lost' }))).toMatchObject({
+      reason: 'server',
+      notice: server,
+    });
+    // A turn's sync: a binding change of the root's, or the server's word alone.
+    expect(
+      reasonOf(
+        agentReducer(confirmed, {
+          type: 'server_sync',
+          bindings: { x: 'Study Hours', y: 'Exam Score' },
+          dataConfirmed: false,
+        })
+      )
+    ).toMatchObject({ reason: 'server', notice: server });
+    expect(
+      reasonOf(
+        agentReducer(confirmed, {
+          type: 'server_sync',
+          bindings: { x: 'Exam Score', y: 'Study Hours' },
+          dataConfirmed: false,
+        })
+      )
+    ).toMatchObject({
+      reason: 'bindings',
+      notice: notice('bindings changed · confirm the data again'),
+    });
+
+    // A table read from text keeps the confirmation until the user decides: no notice.
+    const transcription: TranscriptionState = {
+      text: TRANSCRIBED.text,
+      preview: TRANSCRIBED.preview,
+      profile,
+      warnings: [],
+      note: '',
+      bytes: 26,
+    };
+    expect(agentReducer(confirmed, { type: 'transcribed', transcription }).items).toEqual([]);
   });
 
   it('numbers the data versions and keeps what changed until the next parse', () => {

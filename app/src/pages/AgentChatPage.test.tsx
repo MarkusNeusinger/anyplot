@@ -45,6 +45,9 @@ const json = (status: number, body: unknown) =>
 let fetchMock: ReturnType<typeof vi.fn>;
 /** Answers a parse held back with `slow` in its text; set while it is pending. */
 let releaseParse: (() => void) | null = null;
+/** Set to hold the next turn's stream back until `releaseTurn` answers it. */
+let holdNextTurn = false;
+let releaseTurn: (() => void) | null = null;
 
 const DATASET = {
   preview: [
@@ -183,6 +186,13 @@ function turnEvents(body: { text?: string; action?: string }): [string, unknown]
       ['done', { llm_calls: 2, data_confirmed: true }],
     ];
   }
+  // A question the assistant answers without touching the data or the bindings.
+  if (body.text?.includes('mean')) {
+    return [
+      ['message', { text: 'The mean score is 55.' }],
+      ['done', { llm_calls: 1 }],
+    ];
+  }
   // A question about the data: the server reports the confirmation it holds, which a
   // table read from text and then discarded left in place.
   if (body.text?.includes('columns')) {
@@ -272,7 +282,12 @@ function stubFetch(
       return json(200, DATASET);
     }
     if (url.pathname.endsWith('/sessions/S1/messages') && method === 'POST') {
-      return sse(turnEvents(JSON.parse(String(init.body))));
+      const response = sse(turnEvents(JSON.parse(String(init.body))));
+      if (!holdNextTurn) return response;
+      holdNextTurn = false;
+      return new Promise<Response>(resolve => {
+        releaseTurn = () => resolve(response);
+      });
     }
     if (url.pathname.endsWith('/specs/scatter-basic')) {
       return json(200, {
@@ -351,6 +366,34 @@ async function transcribeInStep2() {
   await screen.findByTestId('transcription-card');
 }
 
+/**
+ * The composer's quiet `.create_plot()`, which shows in step 1 too: a plain button, not
+ * step 2's submitting CTA.
+ */
+function quietCreate() {
+  const create = screen.getByRole('button', { name: 'Create plot' });
+  expect(create).toHaveAttribute('type', 'button');
+  return create;
+}
+
+/** The thread's last entry. */
+const lastInThread = () => screen.getByRole('log', { name: 'Conversation' }).lastElementChild;
+
+/** `scrollIntoView` as a spy: jsdom has none. Restore with `restoreScrollIntoView`. */
+function stubScrollIntoView() {
+  const scroll = vi.fn();
+  Object.defineProperty(Element.prototype, 'scrollIntoView', {
+    value: scroll,
+    configurable: true,
+    writable: true,
+  });
+  return scroll;
+}
+
+function restoreScrollIntoView() {
+  delete (Element.prototype as Partial<Element>).scrollIntoView;
+}
+
 /** The step the step header marks as current. */
 const currentStep = () =>
   within(screen.getByRole('list', { name: 'Steps' }))
@@ -363,6 +406,8 @@ beforeEach(() => {
   flags.isDev = false;
   localStorage.clear();
   releaseParse = null;
+  holdNextTurn = false;
+  releaseTurn = null;
   analytics.trackEvent.mockClear();
   analytics.trackPageview.mockClear();
   stubFetch();
@@ -458,14 +503,22 @@ describe('AgentChatPage gating', () => {
     fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
     const confirm = await screen.findByRole('button', { name: '.confirm()' });
     await waitFor(() => expect(confirm).toBeEnabled());
-    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
+    // Step 1 shows `.create_plot()` too, the quiet one, which waits for the confirmation.
+    expect(quietCreate()).toBeEnabled();
     // The data card is the thread's first turn; the summary follows it.
     const card = screen.getByTestId('data-card');
     const thread = screen.getByRole('log', { name: 'Conversation' });
     expect(card.compareDocumentPosition(thread) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // The first binding setup after a paste dropped no confirmation: nothing to name.
+    expect(screen.queryByTestId('confirm-lost')).not.toBeInTheDocument();
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      '# step 1 — check the preview and the bindings, then confirm'
+    );
 
     fireEvent.click(confirm);
-    const create = await screen.findByRole('button', { name: 'Create plot' });
+    await screen.findByTestId('data-pinned');
+    const create = screen.getByRole('button', { name: 'Create plot' });
+    expect(create).toHaveAttribute('type', 'submit');
     expect(create).toBeEnabled();
     expect(currentStep()).toEqual(['·2 plot']);
     expect(screen.getByTestId('data-summary')).toHaveTextContent(
@@ -498,9 +551,14 @@ describe('AgentChatPage gating', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
     expect(await screen.findByText('Swapped.')).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: '.confirm()' })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
+    expect(quietCreate()).toBeEnabled();
     expect(screen.getByTestId('data-summary')).toHaveTextContent(
       'confirm again · 2 rows · 2 columns · version 1'
+    );
+    // The root's binding change dropped the confirmation: the thread says so after the reply.
+    expect(lastInThread()).toHaveTextContent('# bindings changed · confirm the data again');
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      '# step 1 again — bindings changed · confirm the data again'
     );
     expect(screen.getByLabelText(/^x/)).toHaveValue('score');
     expect(screen.getByLabelText(/^y/)).toHaveValue('hours');
@@ -529,11 +587,14 @@ describe('AgentChatPage gating', () => {
     await waitFor(() => expect(send).toBeEnabled());
     fireEvent.click(send);
     const change = await screen.findByTestId('data-change');
+    await turnEnded();
     expect(within(change).getByText('# changed · version 2')).toBeInTheDocument();
     expect(within(change).getByText(PREPARED.changes[0])).toBeInTheDocument();
     expect(screen.getByRole('cell', { name: '0.52' })).toBeInTheDocument();
     expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
-    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
+    expect(quietCreate()).toBeEnabled();
+    // Nothing was confirmed yet, so nothing was lost.
+    expect(screen.queryByTestId('confirm-lost')).not.toBeInTheDocument();
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_prepared', { changes: '1' });
 
     const confirm = screen.getByRole('button', { name: '.confirm()' });
@@ -549,6 +610,7 @@ describe('AgentChatPage gating', () => {
     fireEvent.click(undo);
     expect(await screen.findByText('# undone · back to version 1')).toBeInTheDocument();
     expect(screen.getByTestId('data-summary')).toHaveTextContent('confirm again');
+    expect(lastInThread()).toHaveTextContent('# the data changed · confirm it again');
     expect(screen.getByTestId('data-card')).toBeInTheDocument();
     expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
     expect(screen.getByRole('button', { name: '.confirm()' })).toBeInTheDocument();
@@ -599,7 +661,8 @@ describe('AgentChatPage gating', () => {
     const confirm = screen.getByRole('button', { name: '.confirm()' });
     await waitFor(() => expect(confirm).toBeEnabled());
     fireEvent.click(confirm);
-    expect(await screen.findByRole('button', { name: 'Create plot' })).toBeEnabled();
+    await screen.findByTestId('data-pinned');
+    expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
   });
 
   it('collapses the confirmed data into a pinned header that .show() opens and .hide() closes', async () => {
@@ -646,17 +709,31 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByRole('button', { name: 'Go to the data' })).toBeInTheDocument();
     expect(screen.getByTestId('data-card')).toBeInTheDocument();
     expect(currentStep()).toEqual(['1 data']);
-    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
+    expect(quietCreate()).toBeEnabled();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
       'ask about your data, or for a fix: "sum per month"'
     );
+    // The loss is named where it happened, right after the change, and next to `.confirm()`.
+    expect(lastInThread()).toHaveTextContent('# bindings changed · confirm the data again');
+    expect(screen.getByTestId('confirm-lost')).toBe(lastInThread());
+    expect(confirm).toHaveAccessibleDescription(
+      '# step 1 again — bindings changed · confirm the data again'
+    );
 
-    // Confirmed again, the card collapses again.
+    // Back and forth: the confirmation is gone already, so one notice says it.
+    fireEvent.change(screen.getByLabelText(/^y/), { target: { value: 'score' } });
+    await waitFor(() => expect(screen.getByLabelText(/^y/)).toBeEnabled());
+    expect(screen.getAllByTestId('confirm-lost')).toHaveLength(1);
+
+    // Confirmed again, the card collapses again, and the row's reason goes with the step.
     await waitFor(() => expect(confirm).toBeEnabled());
     fireEvent.click(confirm);
     expect(await screen.findByTestId('data-pinned')).toBeInTheDocument();
     expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
+    expect(screen.getByTestId('data-summary')).toHaveTextContent('data fits');
+    fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    expect(screen.queryByTestId('data-step')).not.toBeInTheDocument();
   });
 
   it('starts the first plot from an empty box with .create_plot(), never on Enter', async () => {
@@ -728,7 +805,8 @@ describe('AgentChatPage gating', () => {
       expect(within(change).getByRole('button', { name: '.undo()' })).toBeEnabled();
       expect(screen.getByRole('cell', { name: '0.52' })).toBeInTheDocument();
       expect(currentStep()).toEqual(['1 data']);
-      expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
+      expect(quietCreate()).toBeEnabled();
+      expect(lastInThread()).toHaveTextContent('# the data changed · confirm it again');
       // The header stays pinned in view and leads to the card's top, far above.
       expect(screen.getByTestId('data-summary')).toHaveTextContent(
         'confirm again · 2 rows · 2 columns · version 2'
@@ -770,7 +848,7 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByTestId('data-summary')).toHaveTextContent(
       'decide on the table first: .use() or .discard()'
     );
-    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
+    expect(quietCreate()).toBeEnabled();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
       'ask about your data, or for a fix: "sum per month"'
@@ -882,5 +960,177 @@ describe('AgentChatPage gating', () => {
     expect(await screen.findByText('error · unreachable')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'reload to sign in again' })).toBeInTheDocument();
     sessionStorage.clear();
+  });
+});
+
+describe('AgentChatPage working states', () => {
+  it('says that the data is being parsed, under .parse() and to a screen reader', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    fireEvent.change(await screen.findByLabelText(/# your data/), {
+      target: { value: 'slow,data\n1,2\n' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    await waitFor(() => expect(releaseParse).not.toBeNull());
+
+    expect(screen.getByTestId('parse-hint')).toHaveTextContent('# parsing your data …');
+    const parse = screen.getByRole('button', { name: '.parse() …' });
+    expect(parse).toBeDisabled();
+    expect(parse).toHaveAccessibleDescription('# parsing your data');
+    expect(screen.getByTestId('data-step-status')).toHaveTextContent('parsing your data');
+
+    releaseParse?.();
+    await waitFor(() =>
+      expect(screen.getByTestId('data-step-status')).toHaveTextContent(
+        'step 1: check the data, then confirm it'
+      )
+    );
+    expect(screen.queryByTestId('parse-hint')).not.toBeInTheDocument();
+  });
+
+  it('holds the summary turn in the thread and says why the bindings wait', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    fireEvent.change(await screen.findByLabelText(/# your data/), {
+      target: { value: 'hours,score\n1.5,52\n2.0,58\n' },
+    });
+    holdNextTurn = true;
+    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+
+    const pending = await screen.findByTestId('pending-reply');
+    expect(pending).toHaveTextContent('summarizing your data …');
+    expect(lastInThread()).toBe(pending);
+    expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
+      '# bindings and .confirm() wait while the assistant works …'
+    );
+    expect(screen.getByLabelText(/^x/)).toBeDisabled();
+    expect(screen.getByRole('button', { name: '.confirm()' })).toBeDisabled();
+    // One indicator: a turn without pipeline steps mounts no progress timeline.
+    expect(screen.queryByRole('list', { name: 'Progress' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
+
+    releaseTurn?.();
+    expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
+    await turnEnded();
+    expect(screen.queryByTestId('pending-reply')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('bindings-lock')).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^x/)).toBeEnabled();
+  });
+
+  it('puts an in-progress line in the thread for a question, and leaves a plot run to the timeline', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+
+    holdNextTurn = true;
+    sendFromComposer('what is the mean score?');
+    const pending = await screen.findByTestId('pending-reply');
+    expect(pending).toHaveTextContent('working on your message …');
+    expect(screen.queryByRole('list', { name: 'Progress' })).not.toBeInTheDocument();
+    releaseTurn?.();
+    expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
+    expect(screen.queryByTestId('pending-reply')).not.toBeInTheDocument();
+    await turnEnded();
+
+    // `.create_plot()` shows its path in the timeline from the start; the thread adds nothing.
+    holdNextTurn = true;
+    fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
+    expect(await screen.findByRole('list', { name: 'Progress' })).toBeInTheDocument();
+    expect(screen.queryByTestId('pending-reply')).not.toBeInTheDocument();
+    releaseTurn?.();
+    expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+  });
+
+  it('keeps .create_plot() in the composer before the confirmation and leads to .confirm()', async () => {
+    const scroll = stubScrollIntoView();
+    try {
+      localStorage.setItem(ADMIN_HINT_KEY, '1');
+      renderAt(PAGE);
+      fireEvent.change(await screen.findByLabelText(/# your data/), {
+        target: { value: 'hours,score\n1.5,52\n2.0,58\n' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+      expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
+      await turnEnded();
+      const box = screen.getByLabelText('Message');
+      box.focus();
+
+      const create = quietCreate();
+      expect(create).toBeEnabled();
+      expect(screen.getByRole('button', { name: '.send()' })).toBeInTheDocument();
+      expect(screen.getByTestId('composer-status')).toBeEmptyDOMElement();
+      scroll.mockClear();
+      fireEvent.click(create);
+
+      const notice = screen.getByTestId('create-gate');
+      // It opens under the composer, which can sit at the window's edge: it is brought in.
+      expect(scroll.mock.contexts).toEqual([notice]);
+      expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'nearest' });
+      const text = 'confirm the data first · .confirm() sits at the foot of the data card';
+      expect(notice).toHaveTextContent(`# ${text}`);
+      expect(screen.getByTestId('composer-status')).toHaveTextContent(text);
+      expect(create).toHaveAccessibleDescription(`# ${text}`);
+      // No call: the server would answer data_unconfirmed. No focus taken either.
+      expect(turnBodies()).toEqual([{ action: 'summarize_data' }]);
+      expect(box).toHaveFocus();
+
+      scroll.mockClear();
+      fireEvent.click(within(notice).getByRole('button', { name: 'Go to the confirmation' }));
+      const confirm = screen.getByRole('button', { name: '.confirm()' });
+      expect(scroll.mock.contexts).toEqual([confirm]);
+      expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' });
+      expect(confirm).toHaveFocus();
+
+      fireEvent.click(confirm);
+      await screen.findByTestId('data-pinned');
+      expect(screen.queryByTestId('create-gate')).not.toBeInTheDocument();
+      expect(screen.getByTestId('composer-status')).toBeEmptyDOMElement();
+      expect(screen.getByRole('button', { name: 'Create plot' })).toHaveAttribute('type', 'submit');
+    } finally {
+      restoreScrollIntoView();
+    }
+  });
+
+  it('clears the notice before the confirmation when a turn starts', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    fireEvent.change(await screen.findByLabelText(/# your data/), {
+      target: { value: 'hours,score\n1.5,52\n2.0,58\n' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
+    await turnEnded();
+    fireEvent.click(quietCreate());
+    expect(screen.getByTestId('create-gate')).toBeInTheDocument();
+
+    sendFromComposer('what is the mean score?');
+    expect(screen.queryByTestId('create-gate')).not.toBeInTheDocument();
+    expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
+    await turnEnded();
+    expect(currentStep()).toEqual(['1 data']);
+    expect(screen.queryByTestId('create-gate')).not.toBeInTheDocument();
+  });
+
+  it('leads to .use() while a table read from text waits', async () => {
+    const scroll = stubScrollIntoView();
+    try {
+      localStorage.setItem(ADMIN_HINT_KEY, '1');
+      renderAt(PAGE);
+      await parseAndConfirm();
+      await transcribeInStep2();
+
+      fireEvent.click(quietCreate());
+      const notice = screen.getByTestId('create-gate');
+      expect(notice).toHaveTextContent(
+        '# decide on the table first · .use() or .discard() sit in the data card'
+      );
+      fireEvent.click(within(notice).getByRole('button', { name: 'Go to the table' }));
+      const use = screen.getByRole('button', { name: '.use()' });
+      expect(scroll.mock.contexts).toContain(use);
+      expect(use).toHaveFocus();
+      expect(turnBodies()).toEqual([{ action: 'summarize_data' }]);
+    } finally {
+      restoreScrollIntoView();
+    }
   });
 });
