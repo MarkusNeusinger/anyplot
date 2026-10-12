@@ -18,6 +18,7 @@ from agents.anyplot.data.prepare import (
     MAX_DROP_COLUMNS,
     MAX_LONGER_COLUMNS,
     MAX_OPERATIONS,
+    MAX_RULES,
     MAX_VALIDATION_LINES,
     MAX_VALUE_CHARS,
     MAX_WIDER_COLUMNS,
@@ -31,7 +32,7 @@ from agents.anyplot.data.prepare import (
     apply_operations,
     validation_lines,
 )
-from agents.anyplot.schemas import MAX_COLUMN_NAME_CHARS, MAX_NOTE_CHARS, MAX_ROWS
+from agents.anyplot.schemas import MAX_CELL_CHARS, MAX_COLUMN_NAME_CHARS, MAX_COLUMNS, MAX_NOTE_CHARS, MAX_ROWS
 
 
 OPERATIONS = TypeAdapter(list[Operation])
@@ -922,6 +923,122 @@ class TestPivotWider:
 
         assert code == "invalid_operation"
         assert "named like an index column" in message
+
+
+# The owner's case of 2026-10-12: a sine table and "positive class 1, negative class 2" as a feature column.
+SINE = "x,y\n-2,-0.909\n-1,-0.841\n0,0\n1,0.841\n2,0.909\n3,\n"
+
+
+def classify(name: str, *rules: tuple[list[dict[str, Any]], str], otherwise: str | None = None) -> dict[str, Any]:
+    listed = [{"where": where, "label": label} for where, label in rules]
+    operation: dict[str, Any] = {"op": "classify", "name": name, "rules": listed}
+    if otherwise is not None:
+        operation["otherwise"] = otherwise
+    return operation
+
+
+def above(column: str, value: object) -> list[dict[str, Any]]:
+    return [{"column": column, "test": "gt", "value": value}]
+
+
+class TestClassify:
+    def test_labels_rows_by_the_first_rule_and_otherwise(self) -> None:
+        prepared = prepare(SINE, classify("Klasse", (above("y", 0), "Klasse 1"), otherwise="Klasse 2"))
+
+        assert rows(prepared)[0] == "x,y,Klasse"
+        assert cells(prepared, 2) == ["Klasse 2", "Klasse 2", "Klasse 2", "Klasse 1", "Klasse 1", "Klasse 2"]
+        assert prepared.changes == [
+            "added column Klasse: 'Klasse 1' for 2 rows where y > 0, 'Klasse 2' for the other 4 rows"
+        ]
+        assert dtypes(prepared)["Klasse"] == "text"
+
+    def test_an_earlier_rule_wins(self) -> None:
+        prepared = prepare(
+            SINE, classify("Stufe", (above("y", 0.9), "hoch"), (above("y", 0), "mittel"), otherwise="tief")
+        )
+
+        assert cells(prepared, 2) == ["tief", "tief", "tief", "mittel", "hoch", "tief"]
+        assert prepared.changes == [
+            "added column Stufe: 'hoch' for 1 row where y > 0.9, 'mittel' for 1 row where y > 0, 'tief' for the other 4 rows"
+        ]
+
+    def test_rows_no_rule_names_stay_missing_without_otherwise(self) -> None:
+        prepared = prepare(
+            SINE, classify("sign", (above("y", 0), "+"), ([{"column": "y", "test": "lt", "value": 0}], "-"))
+        )
+
+        assert cells(prepared, 2) == ["-", "-", "", "+", "+", ""]
+        assert prepared.changes == [
+            "added column sign: '+' for 2 rows where y > 0, '-' for 2 rows where y < 0, 2 rows without a label"
+        ]
+
+    def test_conditions_of_a_rule_must_all_hold(self) -> None:
+        where = [{"column": "Tier", "test": "eq", "value": "Hund"}, {"column": "Umsatz", "test": "gt", "value": 500}]
+        prepared = prepare(SALES, classify("Gruppe", (where, "grosser Hund"), otherwise="andere"))
+
+        assert cells(prepared, 4) == ["grosser Hund", "andere", "andere", "andere", "grosser Hund", "andere"]
+
+    def test_number_labels_stay_categories_in_later_versions(self) -> None:
+        """Labels `1` and `2` would re-parse as numbers; the column is kept text, as `set_type text` keeps it."""
+        prepared = prepare(SINE, classify("class", (above("y", 0), "1"), otherwise="2"))
+
+        assert prepared.text_columns == ["class"]
+        again = reparse(prepared)
+        assert again.column_dtypes["class"] == "text"
+        renamed = apply_operations(
+            again, OPERATIONS.validate_python([{"op": "rename", "column": "class", "name": "k"}])
+        )
+        assert reparse(renamed).column_dtypes["k"] == "text"
+
+    def test_a_derived_category_feeds_an_aggregate(self) -> None:
+        prepared = prepare(
+            SINE,
+            classify("Klasse", (above("y", 0), "Klasse 1"), otherwise="Klasse 2"),
+            {"op": "aggregate", "by": ["Klasse"], "column": "y", "how": "count"},
+        )
+
+        assert rows(prepared) == ["Klasse,count", "Klasse 1,2", "Klasse 2,3"]
+
+    def test_an_existing_name_is_refused(self) -> None:
+        code, message = failure(SINE, classify("y", (above("y", 0), "a")))
+
+        assert (code, message) == ("invalid_operation", "a column named 'y' already exists")
+
+    def test_an_unknown_column_in_a_rule(self) -> None:
+        assert failure(SINE, classify("k", (above("z", 0), "a")))[0] == "unknown_column"
+
+    def test_a_column_without_any_label_is_refused(self) -> None:
+        code, message = failure(SINE, classify("k", (above("y", 5), "a")))
+
+        assert code == "invalid_operation"
+        assert message == "no row matches a rule, so column 'k' would hold no label"
+
+    def test_a_full_table_is_too_wide(self) -> None:
+        header = ",".join(f"c{i}" for i in range(MAX_COLUMNS))
+        text = f"{header}\n{','.join('1' for _ in range(MAX_COLUMNS))}\n"
+
+        assert failure(text, classify("k", (above("c0", 0), "a")))[0] == "too_wide"
+
+    @pytest.mark.parametrize(
+        "operation",
+        [
+            classify("k"),
+            {"op": "classify", "name": "k", "rules": [{"where": [], "label": "a"}]},
+            classify("k", (above("y", 0), "")),
+            classify("k", (above("y", 0), " a")),
+            classify("k", (above("y", 0), "a\nb")),
+            classify("k", (above("y", 0), "a\x07")),
+            classify("k", (above("y", 0), "x" * (MAX_CELL_CHARS + 1))),
+            classify("k", (above("y", 0), "a"), otherwise=""),
+            classify("k ", (above("y", 0), "a")),
+            classify("k", *[(above("y", 0), "a")] * (MAX_RULES + 1)),
+            classify("k", (above("y", 0) * (MAX_CONDITIONS + 1), "a")),
+            {"op": "classify", "name": "k", "rules": [{"where": above("y", 0), "label": "a", "else": "b"}]},
+        ],
+    )
+    def test_malformed_classify_fails_validation(self, operation: dict[str, Any]) -> None:
+        with pytest.raises(ValidationError):
+            OPERATIONS.validate_python([operation])
 
 
 class TestSequences:

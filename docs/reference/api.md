@@ -573,10 +573,11 @@ family by its name. A refused set answers
 
 In step 1 you can ask the assistant in words to change the data: read a column
 as numbers or dates, drop a total row, sum or average per month or category,
-rename a column, sort, turn columns into rows or rows into columns. The
+rename a column, sort, turn columns into rows or rows into columns, add a
+category column derived from other columns. The
 assistant never writes data rows: it chooses from a fixed set of operations
 (`rename`, `drop_columns`, `drop_rows`, `set_type`, `aggregate`, `sort`,
-`pivot_longer`, `pivot_wider`, at most five per call), the agents service
+`pivot_longer`, `pivot_wider`, `classify`, at most five per call), the agents service
 applies them to the stored data and stores the result as the next version,
 numbered from the paste's 1. The turn's `done` event then carries `dataset`,
 the new version as the dataset route would answer it plus `changes`, one line

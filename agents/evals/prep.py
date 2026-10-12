@@ -171,11 +171,18 @@ def canonical_operations(operations: Sequence[dict[str, Any]], decimal: str) -> 
         if data["op"] == "set_type" and data.get("decimal") == decimal:
             data.pop("decimal")
         if data["op"] == "drop_rows":
-            data["where"] = sorted(data["where"], key=lambda item: json.dumps(item, sort_keys=True, ensure_ascii=False))
+            data["where"] = _sorted_conditions(data["where"])
+        elif data["op"] == "classify":  # the rules keep their order (the first that holds wins), their conditions not
+            for rule in data["rules"]:
+                rule["where"] = _sorted_conditions(rule["where"])
         elif data["op"] in SET_OPERATIONS:
             data[SET_OPERATIONS[data["op"]]] = sorted(data[SET_OPERATIONS[data["op"]]])
         lines.append(json.dumps(data, sort_keys=True, ensure_ascii=False))
     return sorted(lines)
+
+
+def _sorted_conditions(conditions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return sorted(conditions, key=lambda item: json.dumps(item, sort_keys=True, ensure_ascii=False))
 
 
 def canonical_generate(item: dict[str, Any]) -> str:
@@ -246,9 +253,11 @@ def describe(line: str) -> str:
     if op == "drop_columns":
         return "drop_columns " + ", ".join(data["columns"])
     if op == "drop_rows":
-        return "drop_rows " + " and ".join(
-            f"{c['column']} {c['test']}" + (f" {c['value']!r}" if "value" in c else "") for c in data["where"]
-        )
+        return "drop_rows " + _conditions(data["where"])
+    if op == "classify":
+        rules = "; ".join(f"{rule['label']!r} if {_conditions(rule['where'])}" for rule in data["rules"])
+        otherwise = f"; else {data['otherwise']!r}" if "otherwise" in data else ""
+        return f"classify {data['name']}: {rules}{otherwise}"
     if op == "set_type":
         extra = [data[key] for key in ("date_format", "decimal") if key in data]
         return f"set_type {data['column']} {data['type']}" + (f" ({', '.join(extra)})" if extra else "")
@@ -260,6 +269,10 @@ def describe(line: str) -> str:
     if op == "pivot_longer":
         return f"pivot_longer {', '.join(data['columns'])} into {data['names_to']}/{data['values_to']}"
     return f"pivot_wider {data['names_from']} with {data['values_from']} by {', '.join(data['index'])}"
+
+
+def _conditions(conditions: list[dict[str, Any]]) -> str:
+    return " and ".join(f"{c['column']} {c['test']}" + (f" {c['value']!r}" if "value" in c else "") for c in conditions)
 
 
 @dataclass

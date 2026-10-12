@@ -46,6 +46,15 @@ The operations:
   values of `names_from` become new columns (at most 50, and at most 50 columns in all,
   else `too_wide`) holding `values_from`, one row per distinct index; duplicate index
   and name pairs are refused rather than aggregated.
+* `classify`: a new text column `name`, appended last, whose cells are labels: each row
+  gets the label of the first of 1 to 10 rules whose conditions (1 to 3, as in
+  `drop_rows`) all hold, else `otherwise`, or a missing cell when that is left out. A
+  label is at most a cell's length and is new text the model writes from the user's
+  message, as a rename's name is. The column stays text through the re-parse, so
+  labels such as `1` and `2` remain categories. This is how a category is derived from
+  the cells that are there ("positive y is class 1, the rest class 2"); a rule that
+  matches no row is reported with its count of 0, and a column that would hold no
+  label at all is an `invalid_operation`.
 
 Values in conditions are never evaluated: a condition compares text with text for a
 text column, numbers for a numeric column (the value is a dot-decimal number, which
@@ -92,6 +101,7 @@ MAX_OPERATIONS = 5  # per `prepare_data` call, the design's "at most five operat
 MAX_VALUE_CHARS = 200  # a condition value, as long as a parsed cell can be
 MAX_DROP_COLUMNS = 10
 MAX_CONDITIONS = 3
+MAX_RULES = 10  # of one `classify`
 MAX_KEYS = 2
 MAX_LONGER_COLUMNS = 20
 MAX_WIDER_COLUMNS = 50
@@ -216,8 +226,18 @@ def _clean_name(name: str) -> str:
     return name
 
 
+def _clean_label(label: str) -> str:
+    """A `classify` label as a cell keeps it: no surrounding whitespace, breaks or invisible characters."""
+    if label != label.strip() or _HEADER_BREAKS.search(label):
+        raise ValueError("a label has no surrounding whitespace, tabs or line breaks")
+    if any(unicodedata.category(char) in ("Cc", "Cf") for char in label):
+        raise ValueError("a label has no control or invisible formatting characters")
+    return label
+
+
 NewName = Annotated[ColumnName, AfterValidator(_clean_name)]
 Value = Annotated[str, Field(max_length=MAX_VALUE_CHARS)]
+Label = Annotated[str, Field(min_length=1, max_length=MAX_CELL_CHARS), AfterValidator(_clean_label)]
 
 
 class _Strict(BaseModel):
@@ -294,8 +314,25 @@ class PivotWider(_Strict):
     index: list[ColumnName] = Field(min_length=1, max_length=MAX_KEYS)
 
 
+class Rule(_Strict):
+    """The rows for which all conditions hold get `label`, unless an earlier rule labelled them."""
+
+    where: list[Condition] = Field(min_length=1, max_length=MAX_CONDITIONS)
+    label: Label
+
+
+class Classify(_Strict):
+    """A new text column of labels: the first rule that holds names a row, else `otherwise` (missing when left out)."""
+
+    op: Literal["classify"]
+    name: NewName
+    rules: list[Rule] = Field(min_length=1, max_length=MAX_RULES)
+    otherwise: Label | None = None
+
+
 Operation = Annotated[
-    Rename | DropColumns | DropRows | SetType | Aggregate | Sort | PivotLonger | PivotWider, Field(discriminator="op")
+    Rename | DropColumns | DropRows | SetType | Aggregate | Sort | PivotLonger | PivotWider | Classify,
+    Field(discriminator="op"),
 ]
 
 
@@ -329,6 +366,8 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation]) -> Prep
                 frame, change = _pivot_longer(frame, operation, carried)
             case PivotWider():
                 frame, change = _pivot_wider(frame, operation, carried)
+            case Classify():
+                frame, change = _classify(frame, operation, carried)
         if not frame.shape[1]:
             raise PrepareError("empty_result", "no column would remain")
         if not len(frame):
@@ -613,6 +652,39 @@ def _pivot_wider(frame: pd.DataFrame, op: PivotWider, carried: _Carried) -> tupl
     if other:
         change += f", {_count(other, 'other column')} dropped"
     return wide, change
+
+
+def _classify(frame: pd.DataFrame, op: Classify, carried: _Carried) -> tuple[pd.DataFrame, str]:
+    if op.name in frame.columns:
+        raise PrepareError("invalid_operation", f"a column named '{op.name}' already exists")
+    if frame.shape[1] >= MAX_COLUMNS:
+        raise PrepareError("too_wide", f"the data already has {frame.shape[1]} columns; at most {MAX_COLUMNS} fit")
+    labels = pd.Series(None, index=frame.index, dtype="object")
+    open_rows = pd.Series(True, index=frame.index)
+    parts: list[str] = []
+    for rule in op.rules:
+        mask = pd.Series(True, index=frame.index)
+        clauses: list[str] = []
+        for condition in rule.where:
+            _require(frame, condition.column)
+            series = frame[condition.column]
+            mask &= _matches(series, condition, _with_time(series, carried))
+            clauses.append(_describe(condition, _kind(series)))
+        hit = mask & open_rows  # the first rule that holds names a row
+        labels[hit] = rule.label
+        open_rows &= ~hit
+        parts.append(f"'{rule.label}' for {_count(int(hit.sum()), 'row')} where {' and '.join(clauses)}")
+    rest = int(open_rows.sum())
+    if rest and op.otherwise is not None:
+        labels[open_rows] = op.otherwise
+        parts.append(f"'{op.otherwise}' for the other {_count(rest, 'row')}")
+    elif rest:
+        parts.append(f"{_count(rest, 'row')} without a label")
+    if not labels.notna().any():
+        raise PrepareError("invalid_operation", f"no row matches a rule, so column '{op.name}' would hold no label")
+    # Kept text through the re-parse: labels such as `1` and `2` are categories, not numbers.
+    carried.text_columns.add(op.name)
+    return frame.assign(**{op.name: labels}), f"added column {op.name}: {', '.join(parts)}"
 
 
 # --- Conditions ------------------------------------------------------------------------------

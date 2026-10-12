@@ -1,0 +1,17 @@
+{
+  "dataset_text": "sensor,reading\nA,12\nB,47\nC,81\nD,65\nE,30\nF,92\n",
+  "message": "Add a column level: readings above 70 are high, above 40 medium, everything else low.",
+  "expected_operations": [
+    {
+      "op": "classify",
+      "name": "level",
+      "rules": [
+        {"where": [{"column": "reading", "test": "gt", "value": "70"}], "label": "high"},
+        {"where": [{"column": "reading", "test": "gt", "value": "40"}], "label": "medium"}
+      ],
+      "otherwise": "low"
+    }
+  ],
+  "locale": "en",
+  "tags": ["classify", "levels"]
+}
