@@ -10,7 +10,7 @@
   anything is in flight the bindings block says `# bindings and .confirm() wait
   while the assistant works …` instead of leaving the dropdowns silently
   disabled. The lock itself stays, because the server runs one thing per
-  session.
+  session. (#12143)
 - **`.create_plot()` is always in the composer once there is data.** Before the
   confirmation it is the quiet button next to `.send()`, and a click calls
   nothing: a notice under the composer says `# confirm the data first ·
@@ -18,7 +18,7 @@
   the button and focuses it (to `.use()` while a table read from text waits;
   the notice follows the card when such a table arrives or is discarded after
   the click). Someone who scrolled to the foot no longer meets a composer that
-  hides the step. The server's `data_unconfirmed` stays the backstop.
+  hides the step. The server's `data_unconfirmed` stays the backstop. (#12143)
 - **A lost confirmation is named where it happens.** When a binding change, a
   data request, an undo or a new paste drops a confirmation the user had given,
   the thread gets a warning notice (`# bindings changed · confirm the data
@@ -28,4 +28,4 @@
   the data the card shows: a later data request or undo names the changed
   data, and a later paste, which nobody has confirmed yet, names no loss. The
   first binding setup after a paste, where nothing was confirmed yet, says
-  nothing.
+  nothing. (#12143)
