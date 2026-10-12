@@ -428,7 +428,9 @@ def probe(figure, dpi):
     line_points = 0
     annotation_budget = PROBE_MEASURE_LIMIT
     for axes in figure.get_axes():
-        for axis in (axes.xaxis, axes.yaxis):
+        for axis in (axes.xaxis, axes.yaxis, getattr(axes, "zaxis", None)):  # zaxis: 3-D axes only
+            if axis is None:
+                continue
             boxes = [extents[id(label)] for label in axis.get_ticklabels() if id(label) in extents]
             tick_overlaps += sum(1 for left, right in zip(boxes, boxes[1:], strict=False) if _overlaps(left, right))
         axes_box = _box(axes.get_window_extent(renderer))

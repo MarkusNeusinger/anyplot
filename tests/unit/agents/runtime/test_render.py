@@ -613,6 +613,14 @@ class TestHarness:
 
         assert {"title", "text"} in [{pair["a"], pair["b"]} for pair in report["text_overlaps"]]
 
+    def test_crowded_z_tick_labels_of_3d_axes_count(self) -> None:
+        fig = self.figure()
+        ax = fig.add_subplot(projection="3d")
+        ax.plot([0, 1], [0, 1], [0, 1])
+        ax.set_zticks([index / 80 for index in range(80)], [f"level {index}" for index in range(80)])
+
+        assert harness.probe(fig, 200)["tick_overlaps"] > 0
+
     def test_tick_label_pairs_stay_their_own_count(self) -> None:
         fig = self.figure()
         ax = fig.subplots()
