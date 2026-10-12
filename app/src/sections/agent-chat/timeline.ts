@@ -4,8 +4,8 @@
  * reviewing; a repair round runs repairing, checking, rendering and reviewing.
  * A finished round folds into one entry (`first try done`, `repair 1 done`), so
  * a repair reads as one more round, not as every step again with its attempt
- * number (the owner's feedback of 2026-10-12: "die Darstellung mit den attempts
- * ist komisch").
+ * number (the owner's feedback of 2026-10-12: the way the attempts were shown
+ * looked odd, as if the run tried many times).
  */
 
 import type { RunState, TimelineStep } from 'src/hooks/useAgentSession';
