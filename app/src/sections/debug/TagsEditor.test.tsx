@@ -22,6 +22,22 @@ describe('TagsEditor', () => {
     const { onChange, input } = setup([]);
     fireEvent.change(input, { target: { value: 'overlap,' } });
     expect(onChange).toHaveBeenCalledWith(['overlap']);
+    expect(input).toHaveValue('');
+  });
+
+  it('keeps the text after the comma as the next draft', () => {
+    const { onChange, input } = setup([]);
+    fireEvent.change(input, { target: { value: 'legend,overlap' } });
+    expect(onChange).toHaveBeenCalledWith(['legend']);
+    expect(input).toHaveValue('overlap');
+  });
+
+  it('keeps the whole entry when the part before the comma is refused', () => {
+    const { onChange, input } = setup(['legend']);
+    fireEvent.change(input, { target: { value: 'legend,overlap' } });
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert')).toHaveTextContent('already there');
+    expect(input).toHaveValue('legend,overlap');
   });
 
   it('refuses a tag that is not a slug', async () => {

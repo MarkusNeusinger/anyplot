@@ -34,17 +34,19 @@ export function TagsEditor({ tags, disabled, onChange }: TagsEditorProps) {
   const [draft, setDraft] = useState('');
   const [problem, setProblem] = useState<string | null>(null);
 
-  const add = (raw: string) => {
+  /** Adds `raw` as a tag; `false` when it was refused (an empty entry is consumed, not refused). */
+  const add = (raw: string): boolean => {
     const tag = raw.trim();
-    if (!tag) return;
+    if (!tag) return true;
     const why = refusal(tag, tags);
     if (why) {
       setProblem(why);
-      return;
+      return false;
     }
     setProblem(null);
     setDraft('');
     onChange([...tags, tag]);
+    return true;
   };
 
   const remove = (tag: string) => {
@@ -106,8 +108,10 @@ export function TagsEditor({ tags, disabled, onChange }: TagsEditorProps) {
             const value = event.target.value.toLowerCase();
             const comma = value.indexOf(',');
             if (comma >= 0) {
-              // A comma ends the tag: add what came before it, keep typing after it.
-              add(value.slice(0, comma));
+              // A comma ends the tag: add what came before it and keep what came
+              // after it (a paste such as `legend,overlap`) as the next draft. A
+              // refused entry stays in the box, comma included, next to its line.
+              setDraft(add(value.slice(0, comma)) ? value.slice(comma + 1) : value);
               return;
             }
             setProblem(null);
