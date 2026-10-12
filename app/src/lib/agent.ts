@@ -234,6 +234,137 @@ export interface FeedbackStored {
   stored: string[];
 }
 
+// The triage of the stored cases: the "agent cases" section of /debug
+// (`GET|PATCH /debug/agent/cases...`). The `agent_feedback` row is the source of
+// truth for status, tags, the expected outcome and the promotion; the bucket
+// holds the files until its lifecycle rule deletes them.
+
+/** The site feedback's statuses; `done` and `wont_solve` retire a case. */
+export const CASE_STATUSES = ['new', 'in_progress', 'done', 'wont_solve'] as const;
+export type CaseStatus = (typeof CASE_STATUSES)[number];
+/** The outcome a promoted case carries into the regression harness. */
+export type CaseExpected = 'accepted' | 'rejected';
+export type CaseFileName =
+  'plot-light.png' | 'plot-dark.png' | 'plot.py' | 'data.csv' | 'manifest.json';
+/** A tag is a lowercase slug; a case has at most `MAX_TAGS`. */
+export const TAG_PATTERN = /^[a-z0-9-]{1,40}$/;
+export const MAX_TAGS = 10;
+
+/** One `agent_feedback` row; timestamps are UTC ISO 8601 with `Z`. */
+export interface AgentCase {
+  id: string;
+  created_at: string;
+  reaction: FeedbackReaction;
+  message: string | null;
+  include_data: boolean;
+  status: CaseStatus;
+  tags: string[];
+  spec_id: string | null;
+  library_id: string | null;
+  /** The session's UI locale (`de-CH`). */
+  locale: string | null;
+  result_version: number;
+  /** The case an edit replaced, as sent; it supersedes that row only for the same session and version. */
+  replaces: string | null;
+  superseded_by: string | null;
+  promoted_at: string | null;
+  expected: CaseExpected | null;
+  model: string | null;
+  model_version: string | null;
+  judge_model: string | null;
+  prompt_hash: string | null;
+  /** The agents service's outcome: `ok`, `needs_attention`, `failed`, `not_ready`. */
+  pipeline_status: string | null;
+  attempts: number | null;
+  tokens: number | null;
+  cost_estimate: number | null;
+  /** The objects the case holds in the bucket. */
+  files: string[];
+  user_hash: string;
+  session_hash: string;
+  case_uri: string;
+  manifest_schema: number;
+  updated_at: string;
+}
+
+export interface AgentCasePage {
+  items: AgentCase[];
+  /** A further page exists: pass the last item's id as `before`. */
+  has_more: boolean;
+}
+
+export interface TranscriptTurn {
+  role: 'user' | 'assistant';
+  text: string;
+}
+
+/**
+ * One case: the row plus what its `manifest.json` adds. With `expired` the
+ * lifecycle rule has deleted the files: every field read from the manifest is
+ * `null` or empty, the row and `siblings` remain.
+ */
+export interface AgentCaseDetail extends AgentCase {
+  expired: boolean;
+  transcript: TranscriptTurn[] | null;
+  /** The version's `plot.py` as exported. */
+  code: string | null;
+  /** Unified diff from the catalogue's implementation (at triage time) to `code`. */
+  diff: string | null;
+  catalogue_library_version: string | null;
+  snapshot_library_version: string | null;
+  residual_defects: string[];
+  changes: string[];
+  result_reason: string | null;
+  /** The config stamp: provider, model, judge_model, location, versions, prompt_hashes. */
+  config: Record<string, unknown> | null;
+  bindings: { role: string; column: string }[];
+  /** Other rows of the same session hash and result version, oldest first. */
+  siblings: string[];
+}
+
+/** The list's filters; an unset key is left out of the query string. */
+export interface CaseListQuery {
+  reaction?: FeedbackReaction;
+  /** A status, or `open` for `new` and `in_progress`. */
+  status?: CaseStatus | 'open';
+  spec?: string;
+  library?: string;
+  model_version?: string;
+  tag?: string;
+  /** Show the rows an edit superseded (hidden by default). */
+  include_superseded?: boolean;
+  /** The exclusive cursor: the last item's id of the page before. */
+  before?: string;
+  limit?: number;
+}
+
+/** A triage change; `tags` replaces the whole list, `promoted` sets or clears `promoted_at`. */
+export interface CasePatch {
+  status?: CaseStatus;
+  tags?: string[];
+  promoted?: boolean;
+  expected?: CaseExpected;
+}
+
+/** The query string of a case list: only the keys that are set, `include_superseded` only when true. */
+export function caseListQuery(query: CaseListQuery): string {
+  const params = new URLSearchParams();
+  const text = (key: string, value: string | undefined) => {
+    if (value) params.set(key, value);
+  };
+  text('reaction', query.reaction);
+  text('status', query.status);
+  text('spec', query.spec);
+  text('library', query.library);
+  text('model_version', query.model_version);
+  text('tag', query.tag);
+  if (query.include_superseded) params.set('include_superseded', 'true');
+  text('before', query.before);
+  if (query.limit !== undefined) params.set('limit', String(query.limit));
+  const qs = params.toString();
+  return qs ? `?${qs}` : '';
+}
+
 /**
  * The page's own chat turns: `summarize_data` asks the assistant for the step-1
  * summary of the stored data, `create_plot` starts step 2. Neither passes the
@@ -263,14 +394,26 @@ export class AgentApiError extends Error {
   readonly ref: string | null;
   /** The binding check's lines of a refused `PUT /bindings` (`422 invalid`); empty otherwise. */
   readonly errors: string[];
+  /**
+   * The case a `502 row_missing` stored in the bucket although its table row is
+   * missing, so the page can name it in the next edit's `replaces`; `null` otherwise.
+   */
+  readonly caseId: string | null;
 
-  constructor(status: number, code: string, ref: string | null = null, errors: string[] = []) {
+  constructor(
+    status: number,
+    code: string,
+    ref: string | null = null,
+    errors: string[] = [],
+    caseId: string | null = null
+  ) {
     super(`agent request failed: ${status} ${code}`);
     this.name = 'AgentApiError';
     this.status = status;
     this.code = code;
     this.ref = ref;
     this.errors = errors;
+    this.caseId = caseId;
   }
 
   /** 401 and 403 from the admin gate: the browser is not (or no longer) signed in as an admin. */
@@ -297,6 +440,7 @@ export async function toAgentApiError(response: Response): Promise<AgentApiError
   let code: string | null = null;
   let ref: string | null = response.headers.get('X-Request-Id');
   let errors: string[] = [];
+  let caseId: string | null = null;
   try {
     const body: unknown = await response.json();
     if (body && typeof body === 'object') {
@@ -304,6 +448,7 @@ export async function toAgentApiError(response: Response): Promise<AgentApiError
       if (typeof record.detail === 'string') code = record.detail;
       if (typeof record.ref === 'string') ref = record.ref;
       errors = strings(record.errors).slice(0, MAX_BINDING_ERRORS);
+      if (typeof record.case_id === 'string') caseId = record.case_id;
     }
   } catch {
     /* not JSON: the status decides */
@@ -315,7 +460,8 @@ export async function toAgentApiError(response: Response): Promise<AgentApiError
     response.status,
     code ?? FALLBACK_CODES[response.status] ?? `http_${response.status}`,
     ref,
-    errors
+    errors,
+    caseId
   );
 }
 
@@ -467,13 +613,47 @@ export const agentApi = {
   /**
    * Quick feedback on a result version (`POST .../feedback`): the BFF stores the
    * version's case (conversation, code, PNGs, config, `data.csv` with
-   * `include_data`) in the private case bucket and answers `201 {case_id,
-   * stored}`. A later call for the same version stores a new case, which
-   * names the earlier one in `replaces` for the triage. `502 storage` when the bucket
-   * refused the case; upstream errors as for `.save()`.
+   * `include_data`) in the private case bucket, indexes it in the triage table
+   * and answers `201 {case_id, stored}`. A later call for the same version
+   * stores a new case, which names the earlier one in `replaces`. `502 storage`
+   * when the bucket refused the case; `502 row_missing` with the stored
+   * `case_id` (`AgentApiError.caseId`) when the files are stored but the row is
+   * not; upstream errors as for `.save()`.
    */
   sendFeedback: (token: string, sid: string, body: FeedbackBody) =>
     agentJson<FeedbackStored>(`${sessionPath(sid)}/feedback`, token, post(body)),
+  /**
+   * The feedback cases, newest first (`GET /cases`). An answer without an
+   * `items` list reads as an empty page.
+   */
+  listCases: async (token: string, query: CaseListQuery): Promise<AgentCasePage> => {
+    const page = await agentJson<Partial<AgentCasePage> | null>(
+      `/cases${caseListQuery(query)}`,
+      token
+    );
+    return {
+      items: Array.isArray(page?.items) ? page.items : [],
+      has_more: page?.has_more === true,
+    };
+  },
+  /** One case with what its manifest adds (`404 not_found` without a row, `502 storage`). */
+  getCase: (token: string, id: string) =>
+    agentJson<AgentCaseDetail>(`/cases/${encodeURIComponent(id)}`, token),
+  /** One file of a case through the BFF's proxy; the bucket is private. */
+  caseFile: async (token: string, id: string, name: CaseFileName) => {
+    const response = await agentFetch(`/cases/${encodeURIComponent(id)}/files/${name}`, token);
+    return response.blob();
+  },
+  /**
+   * Change a case's triage state; answers the whole row. `422 no_data` promotes
+   * a case without its `data.csv`, `422 expected_required` a bug or idea
+   * without an expected outcome.
+   */
+  patchCase: (token: string, id: string, patch: CasePatch) =>
+    agentJson<AgentCase>(`/cases/${encodeURIComponent(id)}`, token, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
   /** `keepalive` lets the purge outlive the page (`pagehide`); best effort either way. */
   deleteSession: async (token: string, sid: string, { keepalive = false } = {}) => {
     await agentFetch(sessionPath(sid), token, { method: 'DELETE', keepalive });

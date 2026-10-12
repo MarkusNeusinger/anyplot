@@ -15,6 +15,9 @@ import { DEBUG_API_URL, LIB_ABBREV, LIB_TO_LANG, LIBRARIES } from 'src/constants
 import { useAnalytics, useCopyCode } from 'src/hooks';
 import { fetchWithAuth } from 'src/lib/api';
 import { specPath } from 'src/routes/paths';
+import { AgentCasesSection } from 'src/sections/debug/AgentCasesSection';
+import { timeAgo } from 'src/sections/debug/format';
+import { debugControlSx } from 'src/sections/debug/styles';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import {
   clearAccessReloadGuard,
@@ -163,41 +166,11 @@ function formatNum(n: number): string {
   return n.toLocaleString();
 }
 
-function timeAgo(iso: string): string {
-  const then = new Date(iso).getTime();
-  if (Number.isNaN(then)) return '—';
-  const diffSec = Math.max(0, (Date.now() - then) / 1000);
-  if (diffSec < 60) return `${Math.floor(diffSec)}s ago`;
-  const diffMin = diffSec / 60;
-  if (diffMin < 60) return `${Math.floor(diffMin)}m ago`;
-  const diffHr = diffMin / 60;
-  if (diffHr < 24) return `${Math.floor(diffHr)}h ago`;
-  const diffDay = diffHr / 24;
-  if (diffDay < 30) return `${Math.floor(diffDay)}d ago`;
-  const diffMon = diffDay / 30;
-  if (diffMon < 12) return `${Math.floor(diffMon)}mo ago`;
-  return `${Math.floor(diffMon / 12)}y ago`;
-}
-
 function formatDateShort(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
-
-// Styled native input / select / button using CSS vars
-const nativeControlSx = {
-  fontFamily: typography.fontFamily,
-  fontSize: fontSize.xs,
-  color: 'var(--ink)',
-  bgcolor: 'var(--bg-surface)',
-  border: '1px solid var(--rule)',
-  borderRadius: '4px',
-  px: 1,
-  py: 0.75,
-  outline: 'none',
-  '&:focus': { borderColor: colors.primary },
-} as const;
 
 // ============================================================================
 // Component
@@ -475,14 +448,14 @@ export function DebugPage() {
             placeholder="Admin token (fallback)"
             value={tokenInput}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTokenInput(e.target.value)}
-            sx={nativeControlSx}
+            sx={debugControlSx}
           />
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Box
               component="button"
               type="submit"
               sx={{
-                ...nativeControlSx,
+                ...debugControlSx,
                 cursor: 'pointer',
                 bgcolor: colors.primary,
                 color: 'var(--bg-page)',
@@ -497,7 +470,7 @@ export function DebugPage() {
                 component="button"
                 type="button"
                 onClick={handleTokenClear}
-                sx={{ ...nativeControlSx, cursor: 'pointer' }}
+                sx={{ ...debugControlSx, cursor: 'pointer' }}
               >
                 clear stored token
               </Box>
@@ -1189,7 +1162,7 @@ export function DebugPage() {
           onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
             setFeedbackStatusFilter(e.target.value as FeedbackMessageFilter)
           }
-          sx={{ ...nativeControlSx, cursor: 'pointer', ml: 'auto' }}
+          sx={{ ...debugControlSx, cursor: 'pointer', ml: 'auto' }}
         >
           <option value="open">open (new + in progress)</option>
           <option value="">all statuses</option>
@@ -1305,7 +1278,7 @@ export function DebugPage() {
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                     updateFeedbackStatus(m.id, e.target.value as FeedbackStatus)
                   }
-                  sx={{ ...nativeControlSx, cursor: 'pointer', alignSelf: 'start' }}
+                  sx={{ ...debugControlSx, cursor: 'pointer', alignSelf: 'start' }}
                 >
                   {FEEDBACK_STATUS_OPTIONS.map(s => (
                     <option key={s} value={s}>
@@ -1318,6 +1291,9 @@ export function DebugPage() {
           ))}
         </Box>
       )}
+
+      {/* Agent cases: the triage of the agent chat's quick feedback */}
+      <AgentCasesSection token={adminToken} reloadCounter={reloadCounter} />
 
       {/* Spec Matrix */}
       <Box sx={{ mt: 4 }}>
@@ -1341,14 +1317,14 @@ export function DebugPage() {
           placeholder="search spec id or title..."
           value={searchText}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchText(e.target.value)}
-          sx={{ ...nativeControlSx, flex: { xs: '0 0 180px', sm: '1 1 220px' } }}
+          sx={{ ...debugControlSx, flex: { xs: '0 0 180px', sm: '1 1 220px' } }}
         />
         <Box
           component="button"
           type="button"
           onClick={() => setShowIncomplete(v => !v)}
           sx={{
-            ...nativeControlSx,
+            ...debugControlSx,
             cursor: 'pointer',
             flexShrink: 0,
             bgcolor: showIncomplete ? colors.highlight.bg : 'var(--bg-surface)',
@@ -1364,7 +1340,7 @@ export function DebugPage() {
           type="button"
           onClick={() => setShowLowScores(v => !v)}
           sx={{
-            ...nativeControlSx,
+            ...debugControlSx,
             cursor: 'pointer',
             flexShrink: 0,
             bgcolor: showLowScores ? colors.highlight.bg : 'var(--bg-surface)',
@@ -1378,7 +1354,7 @@ export function DebugPage() {
           component="select"
           value={missingLibrary}
           onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setMissingLibrary(e.target.value)}
-          sx={{ ...nativeControlSx, cursor: 'pointer', flexShrink: 0 }}
+          sx={{ ...debugControlSx, cursor: 'pointer', flexShrink: 0 }}
         >
           <option value="">missing library: any</option>
           {LIBRARIES.map(lib => (

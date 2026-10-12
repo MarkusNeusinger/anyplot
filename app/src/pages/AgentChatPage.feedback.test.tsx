@@ -198,4 +198,43 @@ describe('AgentChatPage quick feedback', () => {
       expect.anything()
     );
   });
+
+  it('records a case stored without its row and names it in the next send', async () => {
+    const user = userEvent.setup();
+    const orphan = '20261012T150000Z-0badc0de';
+    let answers = 0;
+    feedbackAnswer = () =>
+      answers++ === 0
+        ? json(502, { detail: 'row_missing', ref: 'r-1', case_id: orphan })
+        : json(201, { case_id: '20261012T150100Z-1a2b3c4d', stored: ['manifest.json'] });
+    renderPage();
+    const form = await plotVersionOne();
+
+    await user.click(within(form).getByRole('button', { name: 'Thumbs up' }));
+    await user.click(within(form).getByRole('button', { name: 'Send feedback' }));
+
+    expect(await within(form).findByRole('alert')).toHaveTextContent(
+      'the case is stored but not yet listed for triage; edit or resend names it · ref r-1'
+    );
+    // The form stays open; sending again replaces the stored case.
+    await user.click(within(form).getByRole('button', { name: 'Send feedback' }));
+    expect(await screen.findByText(/sent · v1/)).toHaveTextContent('sent · v1 · thumbs up');
+    expect(feedbackBodies).toHaveLength(2);
+    expect(feedbackBodies[0]).not.toHaveProperty('replaces');
+    expect(feedbackBodies[1]).toMatchObject({ reaction: 'thumbs_up', replaces: orphan });
+  });
+
+  it('says that nothing was stored when the server is not ready', async () => {
+    const user = userEvent.setup();
+    feedbackAnswer = () => new Response(null, { status: 503 });
+    renderPage();
+    const form = await plotVersionOne();
+
+    await user.click(within(form).getByRole('button', { name: 'Idea' }));
+    await user.click(within(form).getByRole('button', { name: 'Send feedback' }));
+
+    expect(await within(form).findByRole('alert')).toHaveTextContent(
+      'the server is not ready; the case was not stored'
+    );
+  });
 });
