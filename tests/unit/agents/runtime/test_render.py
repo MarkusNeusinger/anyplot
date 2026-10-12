@@ -3,15 +3,23 @@
 import asyncio
 import io
 import json
+import logging
 import os
 import subprocess
 import sys
 import tracemalloc
+import warnings
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
+import matplotlib
+import matplotlib._text_helpers as text_helpers
 import pytest
+from matplotlib import font_manager
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
+from matplotlib.font_manager import FontProperties
+from matplotlib.ft2font import FT2Font
 from matplotlib.text import Text
 from PIL import Image, PngImagePlugin
 
@@ -30,14 +38,48 @@ from agents.anyplot.render.gates import data_rows, error_summary, evaluate
 from agents.anyplot.render.png import PngRejected, harden, pad_to, read_output, size_of
 from agents.anyplot.render.runtimes.python import HARNESS_SOURCE, PythonRuntime
 from agents.anyplot.render.store import RenderStore, RenderStoreFull
-from agents.anyplot.schemas import AdaptPlan
+from agents.anyplot.schemas import MAX_NOTE_CHARS, AdaptPlan
 from agents.anyplot.settings import AgentSettings
+from core.defects import DEFECT_RE
 
 from .conftest import CASES
 from .fakes import SCATTER_PLAN
 
 
 BOTH: tuple[Theme, ...] = THEMES
+
+SEABORN_FONT_RC = {
+    "font.family": ["sans-serif"],
+    "font.sans-serif": ["Arial", "DejaVu Sans", "Liberation Sans", "Bitstream Vera Sans", "sans-serif"],
+}
+"""The font rcParams seaborn's `set_theme` writes (seaborn/rcmod.py), which 306 catalogue files call. The unit
+tests run without seaborn installed (CI syncs the `test` and `agents` extras only), so they set these directly;
+the CI image job renders through real seaborn."""
+
+
+@pytest.fixture
+def glyph_capture(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """The harness's glyph capture on fresh sets, undone afterwards: the wrapper, the sets and the mathtext handler."""
+    monkeypatch.setattr(harness, "MISSING_GLYPHS", set())
+    monkeypatch.setattr(harness, "MISSING_MATH_GLYPHS", set())
+    monkeypatch.setattr(text_helpers, "warn_on_missing_glyph", text_helpers.warn_on_missing_glyph)
+    logger = logging.getLogger("matplotlib.mathtext")
+    handlers, level = list(logger.handlers), logger.level
+    try:
+        harness.install_glyph_capture()
+        yield
+    finally:
+        for handler in [handler for handler in logger.handlers if handler not in handlers]:
+            logger.removeHandler(handler)
+        logger.setLevel(level)
+
+
+@pytest.fixture
+def font_lookup(monkeypatch: pytest.MonkeyPatch) -> Callable[..., object]:
+    """matplotlib's own `_find_fonts_by_props`, restored after the test whatever the harness wrapped it with."""
+    original = font_manager.FontManager._find_fonts_by_props
+    monkeypatch.setattr(font_manager.FontManager, "_find_fonts_by_props", original)
+    return original
 
 
 def png_bytes(size: tuple[int, int], colour: str = "#FAF8F1", draw: bool = True, text: str | None = None) -> bytes:
@@ -303,6 +345,84 @@ class TestGates:
         assert report.passed_host_gates
         assert all(not line.startswith("AR-09") or "px" in line for line in report.advisory)
 
+    def glyph_lines(self, missing: object) -> tuple[list[str], list[str]]:
+        """The failed gates and advisory lines of a two-theme render whose probes carry `missing_glyphs`."""
+        probe = {"canvas": [3200, 1800], "missing_glyphs": missing}
+        report = evaluate(
+            self.result(light=self.ok("light", probe=probe), dark=self.ok("dark", probe=probe)),
+            themes=BOTH,
+            library="matplotlib",
+            rows=24,
+        )
+        assert report.passed_host_gates  # G10 advises, it never fails a render
+        return report.failed_gates, report.advisory
+
+    def test_g10_names_the_count_and_a_labelled_sample(self) -> None:
+        failed, advisory = self.glyph_lines({"count": 7, "math": 0, "sample": [0x41, 0x9500, 0xD55C, 0x1F525, 0xE000]})
+
+        assert failed == ["G10", "G10"]
+        assert len(advisory) == 1
+        line = advisory[0]
+        assert line.startswith("VQ-01 (both): 7 characters have no glyph, drawn as boxes")
+        assert "U+9500 销 cjk unified, U+D55C 한 hangul syllable, U+1F525 🔥 fire, …" in line
+        assert "a user's column name stays" in line
+        assert "U+0041" not in line  # printable ASCII is in every font: a tampered sample
+        assert "U+E000" not in line  # the fourth valid code point; the line names three
+        assert line.endswith("Likely cause: an emoji, a flag or a script the fonts lack.")
+        assert DEFECT_RE.match(line) and len(line) <= MAX_NOTE_CHARS
+
+        _, capped = self.glyph_lines({"count": 2, "math": 0, "sample": [0x0924, 0x10140]})
+        # "devanagari letter" and "greek acrophonic" exceed the 15-character name cap: the first word stays.
+        assert "(U+0924 त devanagari, U+10140 𐅀 greek)" in capped[0]
+
+    def test_g10_blames_mathtext_when_math_is_positive(self) -> None:
+        _, advisory = self.glyph_lines({"count": 1, "math": 1, "sample": [0xD55C]})
+
+        line = advisory[0]
+        assert line.startswith(
+            "VQ-01 (both): 1 character has no glyph, drawn as boxes or ¤ (U+D55C 한 hangul syllable)"
+        )
+        assert "…" not in line.split("→")[0]
+        assert "→ keep non-Latin text outside $…$ math strings; a user's column name stays." in line
+        assert line.endswith("Likely cause: a $…$ math string, which has no font fallback.")
+        assert DEFECT_RE.match(line)
+
+    def test_g10_never_echoes_a_control_or_format_character(self) -> None:
+        _, advisory = self.glyph_lines({"count": 3, "sample": [0x202E, 0x200B, 0x09, 0x20, 0x41]})
+
+        line = advisory[0]
+        assert "(U+202E right-to-left, U+200B zero width, U+0009 control)" in line
+        assert line.endswith("Likely cause: a tab or carriage return in a label.")
+        assert "‮" not in line and "​" not in line and "\t" not in line
+        assert "U+0020" not in line and "U+0041" not in line  # printable ASCII is dropped
+
+    @pytest.mark.parametrize(
+        ("missing", "names_a_line"),
+        [
+            ({"count": True}, False),
+            ({"count": -1}, False),
+            ({"count": "7"}, False),
+            ({"count": 0}, False),
+            ({"count": 10**12}, False),  # more distinct code points than Unicode has
+            ([1, 2], False),
+            ("text", False),
+            ({"count": 3, "sample": "abc"}, True),
+            ({"count": 3, "sample": [0x110000, -1, 0xD800, 1.5, None, True]}, True),
+        ],
+    )
+    def test_a_malformed_glyph_report_never_raises(self, missing: object, names_a_line: bool) -> None:
+        failed, advisory = self.glyph_lines(missing)
+
+        assert ("G10" in failed) is names_a_line
+        if names_a_line:  # a valid count with an unusable sample: the line names no characters
+            assert advisory == [
+                "VQ-01 (both): 3 characters have no glyph, drawn as boxes → in text the code writes, use characters "
+                "the fonts cover; a user's column name stays. Likely cause: an emoji, a flag or a script the fonts "
+                "lack."
+            ]
+        else:
+            assert advisory == []
+
     def test_helpers(self) -> None:
         assert data_rows("a,b\n1,2\n3,4\n") == 2
         assert error_summary("") == "no error output"
@@ -346,6 +466,10 @@ class TestHarness:
         probe = json.loads((tmp_path / "probe-light.json").read_text())
         assert probe["canvas"] == [3200, 1800]
         assert probe["points"] == 24
+        assert probe["missing_glyphs"] == {"count": 0, "math": 0, "sample": []}
+        # The catalogue file sets `font.family` itself; the normaliser leaves it, and the harness's
+        # lookup hook appends its fallbacks after it instead of rewriting it.
+        assert '"font.family": "DejaVu Sans"' in run_form
 
     @staticmethod
     def figure() -> Figure:
@@ -419,6 +543,148 @@ class TestHarness:
         with pytest.raises(RuntimeError):
             harness.probe(broken, 200)
         assert Text.draw is original
+
+    def test_glyph_capture_records_plain_and_math_code_points_under_silenced_warnings(
+        self, glyph_capture: None
+    ) -> None:
+        """Brief item 5: with DejaVu alone the report fires and is captured, whatever the plot code silences."""
+        parent = logging.getLogger("matplotlib")
+        level = parent.level
+        with warnings.catch_warnings(), matplotlib.rc_context({"font.family": ["DejaVu Sans"]}):
+            warnings.simplefilter("ignore")
+            # The level `matplotlib.set_loglevel("error")` sets; the function itself would also attach
+            # a stream handler for the rest of the test process.
+            parent.setLevel(logging.ERROR)
+            try:
+                fig = self.figure()
+                ax = fig.subplots()
+                ax.set_title("销售" + chr(0xE000))  # a private-use character no font maps
+                ax.text(0.2, 0.5, "한 $x^2$")  # a string with `$…$` is laid out by mathtext as a whole
+                fig.canvas.draw()
+            finally:
+                parent.setLevel(level)
+
+        assert {0x9500, 0x552E, 0xE000} <= harness.MISSING_GLYPHS
+        assert harness.MISSING_MATH_GLYPHS == {0xD55C}
+        assert harness.glyph_report() == {"count": 4, "math": 1, "sample": [0x552E, 0x9500, 0xD55C, 0xE000]}
+
+    def test_glyph_report_caps_the_sample(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(harness, "MISSING_GLYPHS", set(range(0x4E00 + 39, 0x4E00 - 1, -1)))
+        monkeypatch.setattr(harness, "MISSING_MATH_GLYPHS", set())
+
+        report = harness.glyph_report()
+
+        assert report["count"] == 40 and report["math"] == 0
+        assert report["sample"] == list(range(0x4E00, 0x4E00 + harness.GLYPH_SAMPLE_LIMIT))
+
+    def test_fallback_hook_keeps_the_codes_choice_first_and_skips_uninstalled_families(
+        self, font_lookup: Callable[..., object], monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        manager = font_manager.fontManager
+        bold = FontProperties(family="DejaVu Sans Mono", weight="bold")
+
+        def names(prop: FontProperties) -> list[str]:
+            return [Path(path).name for path in manager._find_fonts_by_props(prop)]
+
+        monkeypatch.setattr(harness, "FALLBACK_FAMILIES", ("No Such Family", "DejaVu Serif"))
+        harness.install_fallback_fonts()
+        with caplog.at_level(logging.WARNING, logger="matplotlib.font_manager"):
+            assert names(FontProperties(family="DejaVu Sans Mono")) == ["DejaVuSansMono.ttf", "DejaVuSerif.ttf"]
+            assert names(FontProperties(family="DejaVu Serif")) == ["DejaVuSerif.ttf"]  # no duplicate entry
+            assert names(bold) == ["DejaVuSansMono-Bold.ttf", "DejaVuSerif-Bold.ttf"]  # the nearest weight
+        # The uninstalled family was dropped at install, so no lookup ever asked for it.
+        assert not [record for record in caplog.records if "not found" in record.getMessage()]
+
+        monkeypatch.setattr(font_manager.FontManager, "_find_fonts_by_props", font_lookup)
+        monkeypatch.setattr(harness, "FALLBACK_FAMILIES", ("DejaVu Sans Display",))  # one file, weight 400
+        harness.install_fallback_fonts()
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="matplotlib.font_manager"):
+            assert names(bold) == ["DejaVuSansMono-Bold.ttf", "DejaVuSansDisplay.ttf"]
+        # Asked for weight 400, the only one it has; asking for bold would log one record per lookup key.
+        assert not [record for record in caplog.records if "Failed to find font weight" in record.getMessage()]
+
+    def test_fallback_hook_survives_a_font_family_reset_and_a_per_text_family(
+        self, glyph_capture: None, font_lookup: Callable[..., object], monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The rcParams seaborn's `set_theme` writes and a per-text `monospace` both leave the hook's fallback in place."""
+        manager = font_manager.fontManager
+
+        def draw(text: str) -> None:
+            with matplotlib.rc_context(SEABORN_FONT_RC):
+                fig = self.figure()
+                ax = fig.subplots()
+                ax.set_xticks([0.5], [text])  # a tick label: the rc family
+                ax.text(0.2, 0.5, text, family="monospace")  # a family set on the text bypasses the rc list
+                fig.canvas.draw()
+
+        # A code point the stand-in fallback has and that neither text's own fonts cover, read from
+        # the files these lookups resolve to (a runner may serve a system DejaVu).
+        with matplotlib.rc_context(SEABORN_FONT_RC):
+            tick, mono = FontProperties(), FontProperties(family="monospace")
+            own = {*manager._find_fonts_by_props(tick), *manager._find_fonts_by_props(mono)}
+        covered = set().union(*(FT2Font(str(path)).get_charmap() for path in own))
+        serif = manager.findfont(FontProperties(family="DejaVu Serif"), fallback_to_default=False)
+        candidates = sorted(code for code in FT2Font(str(serif)).get_charmap() if code not in covered)
+        codepoint = next(code for code in candidates if chr(code).isprintable())
+
+        monkeypatch.setattr(harness, "FALLBACK_FAMILIES", ("DejaVu Serif",))
+        harness.install_fallback_fonts()
+        draw(chr(codepoint))
+        assert harness.MISSING_GLYPHS == set()
+
+        monkeypatch.setattr(font_manager.FontManager, "_find_fonts_by_props", font_lookup)
+        with pytest.warns(UserWarning, match="missing from font"):  # the capture calls matplotlib's report through
+            draw(chr(codepoint))
+        assert codepoint in harness.MISSING_GLYPHS  # without the hook the same code point has no glyph
+
+    def test_the_dejavu_only_control_reports_g10_through_the_whole_chain(self, tmp_path: Path) -> None:
+        """matplotlib's bundled fonts only (as the CI image job's control): the harness, the probe and the gate."""
+        (tmp_path / "plot.py").write_text(
+            "import os\n"
+            "import matplotlib.pyplot as plt\n"
+            'THEME = os.environ["ANYPLOT_THEME"]\n'
+            'plt.rcParams.update({"font.family": ["sans-serif"]})\n'
+            "fig, ax = plt.subplots(figsize=(16, 9), dpi=200)\n"
+            "ax.bar([0, 1, 2], [3, 1, 2])  # enough ink for R2, which a near-blank PNG fails before any probe gate\n"
+            'ax.set_title("销售額 नमस्ते")\n'
+            'fig.savefig(f"plot-{THEME}.png")\n',
+            encoding="utf-8",
+        )
+        runtime = PythonRuntime(python=sys.executable, harness=str(HARNESS_SOURCE), mplconfig=str(tmp_path / "mpl"))
+        env = {**runtime.env("light"), "MPLCONFIGDIR": str(tmp_path / "mpl"), "HOME": str(tmp_path)}
+        env.update({"MPL_IGNORE_SYSTEM_FONTS": "1", "PATH": os.environ.get("PATH", "")})
+        del env["ANYPLOT_MPL_SEED"]
+        done = subprocess.run(
+            runtime.command("light"), cwd=tmp_path, env=env, capture_output=True, text=True, timeout=120
+        )
+        assert done.returncode == 0, done.stderr[-2000:]
+        png, probe = runtime.collect(tmp_path, "light")
+
+        report = evaluate(
+            RenderResult("g10", {"light": ThemeOutput("light", 0, png=png, probe=probe)}),
+            themes=("light",),
+            library="matplotlib",
+            rows=2,
+        )
+
+        assert probe is not None and probe["missing_glyphs"]["count"] >= 6  # three Han, four Devanagari
+        assert "G10" in report.failed_gates
+        lines = [line for line in report.advisory if line.startswith("VQ-01 (light):")]
+        assert len(lines) == 1 and DEFECT_RE.match(lines[0])
+        # The harness sorts the sample ascending and the host names the first three: Devanagari before Han.
+        assert "U+0924 त devanagari" in lines[0] and "U+9500" not in lines[0]
+
+    def test_check_fonts_names_the_missing_family(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.setattr(harness, "FALLBACK_FAMILIES", ("No Such Family",))
+        with pytest.raises(SystemExit, match="No Such Family"):
+            harness.check_fonts()
+
+        monkeypatch.setattr(harness, "FALLBACK_FAMILIES", ("DejaVu Serif",))
+        harness.check_fonts()
+        assert capsys.readouterr().out.startswith("font cache:")
 
     def test_harness_refuses_an_unknown_theme(self, tmp_path: Path) -> None:
         (tmp_path / "plot.py").write_text("print('never')\n")

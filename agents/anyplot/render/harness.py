@@ -22,7 +22,11 @@ copies it to `/opt/anyplot/harness.py`. In order it:
 3. when `ANYPLOT_MPL_SEED` names a directory, copies it into `MPLCONFIGDIR`, so
    matplotlib starts from the font cache baked into the image instead of
    rebuilding it in the sandbox's empty private `/tmp` (spike S measured the copy
-   as the faster variant);
+   as the faster variant); then appends the installed fallback families
+   (`FALLBACK_FAMILIES`) to every font lookup after the font the code chose, so
+   text in any script draws without changing the catalogue's first font, and
+   records every code point matplotlib reports as having no glyph
+   (`missing_glyphs` in the probe);
 4. wraps `matplotlib.figure.Figure.savefig` so that every save also writes
    `probe-<theme>.json` next to the plot: the figure size and dpi, the bounding
    boxes in display pixels of the texts the probe's own draw rendered (it measures
@@ -41,8 +45,9 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    stderr and the exit code stays non-zero.
 
 The probe feeds the advisory gates G3 (clipped text), G5 (annotation outside its
-axes), G7 (tick-label overlap), G8 (more point marks than data rows) and G9 (more
-plotted points than any dataset within the parser's caps can hold). It is
+axes), G7 (tick-label overlap), G8 (more point marks than data rows), G9 (more
+plotted points than any dataset within the parser's caps can hold) and G10
+(characters without a glyph in any font of the text). It is
 advisory because the code under test could tamper with it; the host never fails a
 render on it. The same holds for the `HARNESS` lines: the code under test shares
 stdout, so the host reads them as hints (a retry decision, a memory figure), never
@@ -52,6 +57,7 @@ as a verdict.
 import functools
 import itertools
 import json
+import logging
 import math
 import os
 import resource
@@ -72,6 +78,37 @@ missing from them, at most this many again: matplotlib draws no annotation whose
 lies outside the view, which is the case G5 is there for."""
 THEME_ENV = "ANYPLOT_THEME"
 MARKER = "HARNESS"
+FALLBACK_FAMILIES = (
+    "Noto Sans",  # Latin, Greek and Cyrillic the code's serif or monospace choice may lack
+    "Noto Sans CJK JP",  # Chinese, Japanese, Korean: every CJK code point in one face (the TTC's first)
+    "Noto Sans Arabic",  # Arabic, Persian, Urdu (DejaVu Sans lacks the Urdu letters)
+    "Noto Sans Hebrew",
+    "Noto Sans Devanagari",
+    "Noto Sans Bengali",
+    "Noto Sans Tamil",
+    "Noto Sans Telugu",
+    "Noto Sans Gujarati",
+    "Noto Sans Gurmukhi",
+    "Noto Sans Kannada",
+    "Noto Sans Malayalam",
+    "Noto Sans Sinhala",
+    "Noto Sans Thai",
+    "Noto Sans Khmer",
+    "Noto Sans Myanmar",
+    "Noto Sans Ethiopic",
+    "Noto Sans Symbols",
+    "Noto Sans Symbols2",
+)
+"""The families appended to every font lookup, after the font the code chose, in this order. Each
+name is the name-table family of a file the renderer image installs (agents/renderer/Dockerfile,
+stage `fonts`); `check_fonts` fails the image build when one is missing, and a family that is not
+installed where the harness runs (a developer machine) is skipped without a `findfont` warning.
+One CJK face is enough: the five regional faces share one character map and differ only in the
+default forms of shared Han characters; JP is the TTC's first face, and the forms follow
+`text.language` once a caller sets it (not yet: see the agent-network doc)."""
+GLYPH_SAMPLE_LIMIT = 16  # code points the probe lists; the host shows a few of them
+MISSING_GLYPHS: set[int] = set()  # code points reported by matplotlib's text layout, this process
+MISSING_MATH_GLYPHS: set[int] = set()  # code points reported by mathtext (no fallback inside `$…$`)
 
 
 def _limit(kind: int, value: int) -> None:
@@ -107,6 +144,112 @@ def seed_mplconfig() -> None:
         shutil.copytree(seed, target, dirs_exist_ok=True)
     except OSError:
         pass  # matplotlib rebuilds a missing cache itself, only slower
+
+
+def install_fallback_fonts():
+    """Append the installed fallback families to every font lookup, after the font the code chose.
+
+    matplotlib falls back per glyph across the list `FontManager._find_fonts_by_props` returns
+    (every Agg text path calls it: `RendererAgg._prepare_font`, `Text`, `TextPath`), and it builds
+    that list from `font.family` only: a list in `font.sans-serif` resolves to one font, seaborn's
+    `set_theme` rewrites `font.family` (306 catalogue files call it) and `fontfamily="monospace"`
+    on a text bypasses the rc list. Wrapping the lookup keeps whatever the code chose first, so the
+    catalogue look is unchanged, and cannot be undone by rcParams. Each fallback family is asked for
+    the nearest weight it has (a bold title gets the bold CJK face; Noto Sans Symbols2 has only
+    Regular), because `findfont` does not raise for a weight a family lacks: it takes the nearest
+    and logs a WARNING once per lookup key, size included. `_find_fonts_by_props` is private API,
+    pinned by uv.lock; a unit test and the CI image job catch a rename.
+    """
+    try:
+        import matplotlib.font_manager as fm
+    except ImportError:
+        return
+    weights = {}  # family → the weights its installed files have, such as {400, 700}
+    for entry in fm.fontManager.ttflist:
+        if entry.name in FALLBACK_FAMILIES and isinstance(entry.weight, int):
+            weights.setdefault(entry.name, set()).add(entry.weight)
+    families = [name for name in FALLBACK_FAMILIES if name in weights]
+    if not families:
+        return
+    original = fm.FontManager._find_fonts_by_props
+
+    @functools.wraps(original)
+    def with_fallbacks(self, prop, fontext="ttf", directory=None, fallback_to_default=True, rebuild_if_missing=True):
+        paths = list(original(self, prop, fontext, directory, fallback_to_default, rebuild_if_missing))
+        base = fm.FontProperties._from_any(prop)
+        wanted = base.get_weight()
+        if not isinstance(wanted, int):
+            wanted = fm.weight_dict.get(wanted, 400)  # "bold" → 700, the names matplotlib accepts
+        for family in families:
+            fallback = base.copy()
+            fallback.set_family(family)
+            fallback.set_weight(min(weights[family], key=lambda weight: abs(weight - wanted)))
+            try:
+                path = self.findfont(fallback, fontext, directory, fallback_to_default=False, rebuild_if_missing=False)
+            except ValueError:
+                continue  # the family is in no file of the cache any more, or its file is gone from disk
+            if path not in paths:  # FontPath compares path and face index, so a TTC face is one entry
+                paths.append(path)
+        return paths
+
+    fm.FontManager._find_fonts_by_props = with_fallbacks
+
+
+def check_fonts():
+    """Build the font cache into `MPLCONFIGDIR` and fail when a fallback family is not installed (the image build)."""
+    import matplotlib.font_manager as fm
+
+    installed = {entry.name for entry in fm.fontManager.ttflist}
+    missing = [name for name in ("DejaVu Sans", *FALLBACK_FAMILIES) if name not in installed]
+    if missing:
+        raise SystemExit(f"fonts missing from the image: {', '.join(missing)}")
+    print(f"font cache: {len(fm.fontManager.ttflist)} faces; fallback families: {', '.join(FALLBACK_FAMILIES)}")
+
+
+def install_glyph_capture():
+    """Record every code point matplotlib reports as having no glyph in the fonts of a text.
+
+    matplotlib reports a missing glyph of plain text as a `UserWarning` from
+    `_text_helpers.warn_on_missing_glyph`, which `ft2font` looks up by name at call time, so
+    replacing the attribute sees every report even when the plot code ignores warnings; the
+    original still runs, so stderr keeps matplotlib's message. Mathtext reports through the
+    `matplotlib.mathtext` logger instead, with the code point as the record's third argument;
+    the logger's own level is pinned, because `matplotlib.set_loglevel("error")` sets the parent.
+    """
+    try:
+        import matplotlib._text_helpers as text_helpers
+    except ImportError:
+        return
+    original = text_helpers.warn_on_missing_glyph
+
+    @functools.wraps(original)
+    def recording(codepoint, fontnames):
+        if isinstance(codepoint, int) and not isinstance(codepoint, bool):
+            MISSING_GLYPHS.add(codepoint)
+        return original(codepoint, fontnames)
+
+    text_helpers.warn_on_missing_glyph = recording
+
+    class MathGlyphs(logging.Handler):
+        def emit(self, record):
+            args = record.args
+            if (
+                isinstance(args, tuple)
+                and len(args) == 3
+                and isinstance(args[2], int)
+                and "does not have a glyph" in str(record.msg)
+            ):
+                MISSING_MATH_GLYPHS.add(args[2])
+
+    logger = logging.getLogger("matplotlib.mathtext")
+    logger.addHandler(MathGlyphs())
+    logger.setLevel(logging.WARNING)
+
+
+def glyph_report():
+    """The probe's `missing_glyphs` field: distinct code points without a glyph so far in this process."""
+    every = MISSING_GLYPHS | MISSING_MATH_GLYPHS
+    return {"count": len(every), "math": len(MISSING_MATH_GLYPHS), "sample": sorted(every)[:GLYPH_SAMPLE_LIMIT]}
 
 
 def _report(event, **fields):
@@ -246,6 +389,7 @@ def install_probe(theme):
         except Exception as exc:  # the probe never breaks a render
             report = {"error": type(exc).__name__}
         result = original(self, *args, **kwargs)
+        report["missing_glyphs"] = glyph_report()  # independent of the geometric probe, so also next to {"error": ...}
         try:
             text = json.dumps(report, allow_nan=False)  # NaN or Infinity (a text at an infinite coordinate)
         except (TypeError, ValueError) as exc:
@@ -271,6 +415,8 @@ def main(argv):
         return 2
     set_limits()
     seed_mplconfig()
+    install_fallback_fonts()
+    install_glyph_capture()
     install_probe(theme)
     try:
         runpy.run_path(argv[1], run_name="__main__")
