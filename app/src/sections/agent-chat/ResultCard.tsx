@@ -14,12 +14,13 @@
  *   theme on screen.
  * - The code is the exported `plot.py`, byte-identical to what rendered; it
  *   runs unchanged next to `data.csv`, so both download under those names.
- * - `feedbackSlot` is where the quick-feedback control goes (a later change).
+ * - Below the code, the quick-feedback control (`ResultFeedback`) stores the
+ *   version as a feedback case; it shows when the page passes `onSendFeedback`.
  *
  * The card is self-contained, so the public phase can reuse it unchanged.
  */
 
-import { lazy, type ReactNode, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 
 import CheckIcon from '@mui/icons-material/Check';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -31,12 +32,13 @@ import IconButton from '@mui/material/IconButton';
 import Skeleton from '@mui/material/Skeleton';
 import Tooltip from '@mui/material/Tooltip';
 
-import type { PlotVersion } from 'src/hooks/useAgentSession';
+import type { FeedbackInput, PlotVersion } from 'src/hooks/useAgentSession';
 import { useCopyCode } from 'src/hooks/useCopyCode';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { type ArtifactName, MAX_MESSAGE_CHARS, type Theme } from 'src/lib/agent';
 import { copyImage, downloadBlob } from 'src/sections/agent-chat/files';
 import { IMAGE_FAILURE } from 'src/sections/agent-chat/messages';
+import { ResultFeedback } from 'src/sections/agent-chat/ResultFeedback';
 import {
   actionButtonSx,
   bodyTextSx,
@@ -78,8 +80,11 @@ export interface ResultCardProps {
   onFetchArtifact: (version: number, name: ArtifactName) => Promise<Blob>;
   onRefine: (text: string) => void;
   onTrack: (event: string, props?: Record<string, string | undefined>) => void;
-  /** The quick-feedback control, once it exists. */
-  feedbackSlot?: ReactNode;
+  /**
+   * Store the version as a feedback case (`.send()` in the quick-feedback
+   * control); without it the card shows no control. Never held back by `busy`.
+   */
+  onSendFeedback?: (version: number, input: FeedbackInput) => Promise<void>;
 }
 
 export function ResultCard({
@@ -92,7 +97,7 @@ export function ResultCard({
   onFetchArtifact,
   onRefine,
   onTrack,
-  feedbackSlot,
+  onSendFeedback,
 }: ResultCardProps) {
   const { isDark } = useTheme();
   const [expanded, setExpanded] = useState(latest);
@@ -551,9 +556,15 @@ export function ResultCard({
             </Box>
           </Box>
 
-          {/* The quick-feedback control lands here (a later change). */}
+          {/* Quick feedback: this version as a case for tuning the assistant. */}
           <Box data-testid="result-feedback-slot" sx={{ '&:empty': { display: 'none' } }}>
-            {feedbackSlot}
+            {onSendFeedback && (
+              <ResultFeedback
+                version={number}
+                sent={version.feedback ?? null}
+                onSend={onSendFeedback}
+              />
+            )}
           </Box>
 
           {latest && (

@@ -486,6 +486,7 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 | `POST /sessions/{sid}/versions/{version}/render` | `{"theme": "light"}` or `{"theme": "dark"}`; `version` is 0 to 999, where 0 is the latest version | `{status, reason?, artifacts}` once the render is done (see [Theme toggle](#theme-toggle)) |
 | `GET /sessions/{sid}/artifacts/{name}?v=` | `name` is one of `plot-light.png`, `plot-dark.png`, `plot.py`, `data.csv` | The file, with `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`; any other name is `404`, and so is the PNG of a theme the version has not rendered. A PNG carries the footer strip (see [Footer strip](#footer-strip)) |
 | `GET /sessions/{sid}/bundle?include_data=&version=` | `include_data` is `true` or `false` (the default); `version` is 0 to 999, where 0 or none means every version | The session as one JSON file to save (the chat page's `.save()`), with `Content-Disposition: attachment; filename="anyplot-session-<first 8 characters of the session id>.json"`, `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`. `404 not_found` for a version the session does not have; a bundle over 32 MiB can't be saved (see [Session bundle](#session-bundle)) |
+| `POST /sessions/{sid}/feedback` | `{reaction, message?, include_data, result_version, replaces?}`: `reaction` is `thumbs_up`, `thumbs_down`, `bug` or `idea`; `message` has at most 500 characters after the strip; `include_data` is a JSON boolean and `result_version` a JSON integer from 1 to 999, neither coerced from another type; `replaces` is the case id of the earlier submission for the same version, when this one is an edit of it | `201 {case_id, stored}`: the version is stored as a feedback case in the private case bucket, and `stored` lists its file names (see [Feedback case](#feedback-case)). `404 not_found` for a version the session does not have, `502 storage` when the bucket refused the case, otherwise the errors of the bundle route |
 | `DELETE /sessions/{sid}` | None | `204` |
 
 Validation: `spec_id` matches `^[a-z0-9-]{1,100}$`; `library` is one of the 15
@@ -510,11 +511,12 @@ with a link plots as it is.
 
 The agents service keeps a session's data, code and images in memory for the
 session's lifetime and writes no content to its logs. anyplot stores none of
-it unless you submit quick feedback (not built yet). That feedback case
-always holds the conversation, the code, the images and the dataset profile
+it unless you submit quick feedback (see [Feedback case](#feedback-case)).
+That feedback case always holds the conversation, the code, the images and the dataset profile
 with its column names and sample rows, so it can show your data even without
 the data box; the full data file is in it only when you tick the box. The chat
-page's `.save()` downloads the same case to your computer (see
+page's `.save()` downloads something else, the whole session as one bundle with
+every version and no case manifest, to your computer (see
 [Session bundle](#session-bundle)); anyplot keeps no copy of it.
 
 `POST /sessions` and `POST /sessions/{sid}/library` add the user id and a
@@ -654,6 +656,54 @@ The BFF compresses the bundle with gzip in a worker thread when the browser
 accepts gzip, so the API's compression middleware doesn't hold the event loop
 for a large file.
 
+### Feedback case
+
+`POST /sessions/{sid}/feedback` is the result card's quick feedback. In phase 1
+only admins can send it, like every route here. The BFF fetches the bundle of
+the one version you rate (`GET /v1/sessions/{sid}/bundle?version=<result_version>`,
+with `data.csv` only when `include_data` is `true`; the same fetch and the same
+32 MiB cap as `.save()`), splits it into files in a worker thread, and uploads
+them to the private bucket `AGENT_CASES_BUCKET` under `cases/<case_id>/`:
+
+| File | Content type | Contents |
+|---|---|---|
+| `plot-light.png`, `plot-dark.png` | `image/png` | The version's PNG of each theme it rendered, with the footer strip, as you saw it; a theme it never rendered has none |
+| `plot.py` | `text/x-python; charset=utf-8` | The exported code |
+| `data.csv` | `text/csv; charset=utf-8` | The version's data, only with `include_data` |
+| `manifest.json` | `application/json` | The case record, and the whole bundle without the PNGs and the data, which are the files above |
+
+The case id is the UTC time in ISO 8601 basic format and eight random hex
+digits, such as `20261012T143005Z-1a2b3c4d`, so case ids sort by time. The
+manifest holds `id`, `created_at`, `case_uri`, `user_hash` (the HMAC user id the
+agents service sees), `session_hash` (the first 16 hex digits of the session
+id's SHA-256), `spec_id`, `library_id` (the version's library), `language` (the
+session's locale), `reaction`, `message`, `include_data`, `status` (`new`),
+`result_version`, `replaces` (as the page sent it, or `null`), `model`,
+`model_version`, `judge_model`, `prompt_hash` (one
+hash over the config stamp's prompt hashes), `pipeline_status`, `attempts`,
+`tokens`, `cost_estimate`, `files` and `bundle`: every column the planned
+`agent_feedback` table has, so the table can be filled from the manifests later.
+A field the bundle does not carry is `null`; today that is `model_version`,
+`tokens` and `cost_estimate`. A bundle that lacks the version's data while
+`include_data` is set is refused as `502 upstream`, so no manifest claims data
+the case lacks.
+
+The manifest is uploaded last, and every upload refuses to replace an existing
+object. A case directory without a manifest is an aborted upload, never a case:
+when an upload fails, the route answers `502 storage` with a request id and
+uploads nothing more. A retried upload that meets an object under its own name
+counts as stored only when that object's MD5 matches the bytes it carries (its
+own first attempt stored them and lost the response); any other content is a
+conflict and `502 storage`. Sending feedback for the same version again
+stores a new case, and the page sends the earlier case's id as `replaces`, so
+the planned triage can tell which case an edit replaces. The client sends
+`replaces`, so the triage is to honour it only for a case of the same session
+hash and version; without it, the newest such case is the one that counts. The API deletes nothing, so a replaced case keeps its
+files, its `data.csv` too, until the bucket's lifecycle rule deletes them after
+180 days; that rule is the retention for cases and aborted uploads alike. The
+API's runtime identity needs permission to create objects in the bucket and to
+read their metadata, which the check of a retried upload uses.
+
 ### SSE protocol `anyplot/1`
 
 | Event | Data |
@@ -728,7 +778,9 @@ characters. Two cases answer `502` instead:
 
 A session bundle over 32 MiB answers `500 upstream` on Cloud Run and
 `502 too_large` where the BFF reads it itself (see
-[Session bundle](#session-bundle)).
+[Session bundle](#session-bundle)). The feedback route answers `502 storage`
+when the case bucket refused an upload, and `502 upstream` when the bundle is
+not the shape the agents service documents (see [Feedback case](#feedback-case)).
 
 ### Configuration
 
@@ -739,6 +791,7 @@ A session bundle over 32 MiB answers `500 upstream` on Cloud Run and
 | `AGENT_USER_ID_KEY` | Unset | HMAC key for the user id; from Secret Manager in production |
 | `AGENT_REQUEST_TIMEOUT_S` | `190` | Upstream timeout, and the cap on one chat stream outside the run queue; above the agents service's 180-second deadline |
 | `AGENT_TURN_MAX_S` | `890` | Hard cap on one chat turn, queue wait included; keep it below anyplot-api's Cloud Run `--timeout` (900 seconds in `api/cloudbuild.yaml`) |
+| `AGENT_CASES_BUCKET` | `anyplot-agent-cases` | The private EU bucket the feedback cases go to (see [Feedback case](#feedback-case)); never the public image bucket. The default is the production bucket, so a local API with Application Default Credentials stores its cases there too; set a bucket of your own for local runs |
 
 In production, `AGENT_ENABLED` and `AGENT_SERVICE_URL` come from the
 `_AGENT_ENABLED` and `_AGENT_SERVICE_URL` substitutions in `api/cloudbuild.yaml`.

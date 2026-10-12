@@ -45,4 +45,4 @@ Measured with the static stage on 2026-10-10 (WSL2, 32 cores; the stand-ins rend
 
 The other degenerate cases (`single-row`, `constant-series`, `duplicate-headers`, `empty-strings`) parse, bind and load. For `single-row` and `constant-series` only a model run shows how the plot copes, so they are marked `needs_model`; `duplicate-headers` and `empty-strings` claim only what the static stage checks.
 
-Fixture data is invented. Never commit a user's data here: everything under `fixtures/` ships under the repository's MIT licence. Promoted feedback cases live in the private case bucket and are synced into the git-ignored `agents/evals/.cases/`, which the image build also excludes.
+Fixture data is invented. Never commit a user's data here: everything under `fixtures/` ships under the repository's MIT licence. Promoted feedback cases live in the private case bucket and are synced into the git-ignored `agents/evals/.cases/`, which the image build also excludes; until the sync exists, `python -m agents.evals.import_case` writes one saved session or stored case at a time into that directory, never into `fixtures/`.

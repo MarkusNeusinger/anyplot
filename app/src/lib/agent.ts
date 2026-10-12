@@ -209,6 +209,31 @@ export interface ThemeRendered {
   artifacts: ArtifactName[];
 }
 
+/** The site feedback's reaction set (api/routers/feedback.py, `FEEDBACK_REACTIONS`). */
+export const FEEDBACK_REACTIONS = ['thumbs_up', 'thumbs_down', 'bug', 'idea'] as const;
+export type FeedbackReaction = (typeof FEEDBACK_REACTIONS)[number];
+/** The BFF's limit on a feedback message, after the strip; the site feedback's own. */
+export const MAX_FEEDBACK_CHARS = 500;
+
+/** The body of `POST .../feedback`: quick feedback on one result version. */
+export interface FeedbackBody {
+  reaction: FeedbackReaction;
+  /** `null` without a text. */
+  message: string | null;
+  /** Store the version's `data.csv` with the case. */
+  include_data: boolean;
+  /** The version's number, 1 to 999. */
+  result_version: number;
+  /** The case id of the earlier submission for this version, when this one is an edit of it. */
+  replaces?: string;
+}
+
+/** The answer of `POST .../feedback`: the stored case and its file names. */
+export interface FeedbackStored {
+  case_id: string;
+  stored: string[];
+}
+
 /**
  * The page's own chat turns: `summarize_data` asks the assistant for the step-1
  * summary of the stored data, `create_plot` starts step 2. Neither passes the
@@ -439,6 +464,16 @@ export const agentApi = {
       attachmentFilename(response.headers.get('Content-Disposition')) ?? bundleFilename(sid);
     return { blob: await response.blob(), filename };
   },
+  /**
+   * Quick feedback on a result version (`POST .../feedback`): the BFF stores the
+   * version's case (conversation, code, PNGs, config, `data.csv` with
+   * `include_data`) in the private case bucket and answers `201 {case_id,
+   * stored}`. A later call for the same version stores a new case, which
+   * names the earlier one in `replaces` for the triage. `502 storage` when the bucket
+   * refused the case; upstream errors as for `.save()`.
+   */
+  sendFeedback: (token: string, sid: string, body: FeedbackBody) =>
+    agentJson<FeedbackStored>(`${sessionPath(sid)}/feedback`, token, post(body)),
   /** `keepalive` lets the purge outlive the page (`pagehide`); best effort either way. */
   deleteSession: async (token: string, sid: string, { keepalive = false } = {}) => {
     await agentFetch(sessionPath(sid), token, { method: 'DELETE', keepalive });

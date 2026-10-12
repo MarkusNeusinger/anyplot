@@ -11,6 +11,7 @@ import gzip
 import hashlib
 import hmac
 import json
+import re
 from collections.abc import AsyncIterator, Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -19,6 +20,7 @@ import pytest
 from fastapi.concurrency import run_in_threadpool
 from fastapi.testclient import TestClient
 
+from api.agent_cases import prompt_hash
 from api.dependencies import require_db
 from api.main import app, fastapi_app
 from api.routers.agent import (
@@ -28,6 +30,7 @@ from api.routers.agent import (
     _bundle_filename,
     derive_user_id,
     get_agent_client,
+    get_case_bucket,
     load_catalogue_snapshot,
 )
 from api.routers.debug import AdminIdentity, require_admin_identity
@@ -76,6 +79,35 @@ def upstream():
     fastapi_app.dependency_overrides[get_agent_client] = mock_client
     yield fake
     fastapi_app.dependency_overrides.pop(get_agent_client, None)
+
+
+class FakeBucket:
+    """The case bucket: records every upload, and fails on the object whose name ends with `fail_on`."""
+
+    def __init__(self) -> None:
+        self.uploads: list[tuple[str, bytes, str]] = []
+        self.fail_on: str | None = None
+
+    def upload(self, name: str, data: bytes, content_type: str) -> None:
+        if self.fail_on and name.endswith(self.fail_on):
+            raise OSError("bucket refused")
+        self.uploads.append((name, data, content_type))
+
+    @property
+    def names(self) -> list[str]:
+        return [name.rsplit("/", 1)[1] for name, _, _ in self.uploads]
+
+    def get(self, file_name: str) -> bytes:
+        return next(data for name, data, _ in self.uploads if name.endswith(f"/{file_name}"))
+
+
+@pytest.fixture(autouse=True)
+def cases():
+    """Every test stores feedback cases in a fake: no test ever reaches a real bucket."""
+    fake = FakeBucket()
+    fastapi_app.dependency_overrides[get_case_bucket] = lambda: fake
+    yield fake
+    fastapi_app.dependency_overrides.pop(get_case_bucket, None)
 
 
 @pytest.fixture
@@ -144,6 +176,7 @@ ALL_ROUTES = [
     ("POST", "/debug/agent/sessions/s1/versions/1/render", {"theme": "dark"}),
     ("GET", "/debug/agent/sessions/s1/artifacts/plot-light.png", None),
     ("GET", "/debug/agent/sessions/s1/bundle?include_data=true", None),
+    ("POST", "/debug/agent/sessions/s1/feedback", {"reaction": "bug", "include_data": True, "result_version": 1}),
     ("DELETE", "/debug/agent/sessions/s1", None),
 ]
 
@@ -1109,6 +1142,369 @@ class TestBundle:
         assert _bundle_filename("ab_-") == "anyplot-session-ab_-.json"
         assert _bundle_filename('a"b/c\r\nd') == "anyplot-session-abcd.json"
         assert _bundle_filename("..") == "anyplot-session-session.json"
+
+
+PNG_LIGHT = b"\x89PNG\r\n\x1a\n" + b"light" * 8
+PNG_DARK = b"\x89PNG\r\n\x1a\n" + b"dark" * 8
+PLOT_PY = (
+    "# Adapted by anyplot.ai from scatter-basic (matplotlib 3.10.0) for your data.csv;\n"
+    "# run: ANYPLOT_THEME=light python plot.py\n\nimport pandas as pd\n"
+)
+PROMPT_HASHES = {"root": "a" * 16, "reviewer": "b" * 16, "adapter_matplotlib": "c" * 16}
+
+
+def _feedback_bundle(number: int = 3, *, themes: tuple[str, ...] = ("light", "dark"), data_csv: str | None = None):
+    """The agents service's bundle of one version, as `?version=<number>` answers it."""
+    pngs = {"light": PNG_LIGHT, "dark": PNG_DARK}
+    return {
+        "session": {"spec_id": "scatter-basic", "library": "matplotlib", "locale": "de-CH"},
+        "snapshot": {"spec_id": "scatter-basic", "library_version": "3.10.0"},
+        "transcript": [
+            {"role": "user", "text": "[action] Create the plot from my dataset and bindings."},
+            {"role": "user", "text": "log scale on y"},
+            {"role": "assistant", "text": "Done."},
+        ],
+        "versions": [
+            {
+                "number": number,
+                "title": "Scatter",
+                "working": "w",
+                "run_form": "r",
+                "plot_py": PLOT_PY,
+                "plan": None,
+                "result": {
+                    "status": "needs_attention",
+                    "reason": None,
+                    "attempts": 2,
+                    "artifacts": ["plot-light.png", "plot.py", "data.csv"],
+                    "changes": ["log scale"],
+                    "residual_defects": ["VQ-03 light: overlap"],
+                    "version": number,
+                },
+                "theme": "light",
+                "themes": {theme: {"status": "ok", "reason": None} for theme in themes},
+                "images": {theme: base64.b64encode(pngs[theme]).decode() for theme in themes},
+                "data_csv": data_csv,
+            }
+        ],
+        "profile": {"rows": 2, "columns": []},
+        "bindings": [{"role": "x", "column": "hours"}],
+        "config": {
+            "provider": "anthropic-vertex",
+            "model": "claude-haiku-5-5",
+            "judge_model": "claude-haiku-5-5",
+            "location": "eu",
+            "adk_version": "2.11.0",
+            "service_version": "abc123",
+            "prompt_hashes": PROMPT_HASHES,
+        },
+    }
+
+
+def _answer_bundle(request: httpx.Request) -> httpx.Response:
+    """The upstream bundle route: the version asked for, its data only when asked for."""
+    number = int(request.url.params["version"])
+    with_data = request.url.params["include_data"] == "true"
+    return httpx.Response(200, json=_feedback_bundle(number, data_csv="hours,score\n1.5,52\n" if with_data else None))
+
+
+class TestFeedback:
+    SID = "abcdefghijk"
+    PATH = f"/debug/agent/sessions/{SID}/feedback"
+    BODY = {"reaction": "thumbs_down", "message": "  the legend hides the points  ", "include_data": True}
+
+    def post(self, client, body: dict | None = None, **overrides):
+        return client.post(
+            self.PATH, json={**self.BODY, "result_version": 3, **(body or {}), **overrides}, headers=CLIENT_HEADERS
+        )
+
+    def test_stores_every_file_with_its_content_type_and_the_manifest_last(self, client, upstream, cases) -> None:
+        upstream.handler = _answer_bundle
+
+        response = self.post(client)
+
+        assert response.status_code == 201
+        case_id = response.json()["case_id"]
+        assert re.fullmatch(r"\d{8}T\d{6}Z-[0-9a-f]{8}", case_id)
+        stored = ["plot-light.png", "plot-dark.png", "plot.py", "data.csv", "manifest.json"]
+        assert response.json() == {"case_id": case_id, "stored": stored}
+        assert response.headers["Cache-Control"] == "private, no-store"
+        assert response.headers["X-Request-Id"] == upstream.requests[0].headers["X-Request-Id"]
+        sent = upstream.requests[0]
+        assert (sent.method, sent.url.path) == ("GET", f"/v1/sessions/{self.SID}/bundle")
+        assert dict(sent.url.params) == {"include_data": "true", "version": "3"}
+        assert sent.headers["X-Anyplot-User"] == derive_user_id(KEY.encode(), ADMIN)
+        assert [name for name, _, _ in cases.uploads] == [f"cases/{case_id}/{name}" for name in stored]
+        assert [content_type for _, _, content_type in cases.uploads] == [
+            "image/png",
+            "image/png",
+            "text/x-python; charset=utf-8",
+            "text/csv; charset=utf-8",
+            "application/json",
+        ]
+        assert cases.get("plot-light.png") == PNG_LIGHT
+        assert cases.get("plot-dark.png") == PNG_DARK
+        assert cases.get("plot.py") == PLOT_PY.encode()
+        assert cases.get("data.csv") == b"hours,score\n1.5,52\n"
+
+    def test_the_manifest_holds_the_row_and_the_bundle_without_the_files(self, client, upstream, cases) -> None:
+        upstream.handler = _answer_bundle
+
+        case_id = self.post(client).json()["case_id"]
+        manifest = json.loads(cases.get("manifest.json"))
+
+        bundle = manifest.pop("bundle")
+        created_at = manifest.pop("created_at")
+        assert re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", created_at)
+        assert manifest == {
+            "schema": 1,
+            "id": case_id,
+            "case_uri": f"gs://anyplot-agent-cases/cases/{case_id}/",
+            "user_hash": derive_user_id(KEY.encode(), ADMIN),
+            "session_hash": hashlib.sha256(self.SID.encode()).hexdigest()[:16],
+            "spec_id": "scatter-basic",
+            "library_id": "matplotlib",
+            "language": "de-CH",
+            "reaction": "thumbs_down",
+            "message": "the legend hides the points",
+            "include_data": True,
+            "status": "new",
+            "result_version": 3,
+            "replaces": None,
+            "model": "claude-haiku-5-5",
+            "model_version": None,
+            "judge_model": "claude-haiku-5-5",
+            "prompt_hash": prompt_hash(PROMPT_HASHES),
+            "pipeline_status": "needs_attention",
+            "attempts": 2,
+            "tokens": None,
+            "cost_estimate": None,
+            "files": ["plot-light.png", "plot-dark.png", "plot.py", "data.csv", "manifest.json"],
+        }
+        expected = _feedback_bundle(3)
+        for version in expected["versions"]:
+            del version["images"], version["data_csv"]
+        assert bundle == expected
+        # The session id itself is nowhere in the case.
+        assert self.SID not in cases.get("manifest.json").decode()
+
+    def test_data_csv_only_with_include_data(self, client, upstream, cases) -> None:
+        # Even a bundle that carries the data anyway stores none without the box ticked.
+        upstream.handler = lambda request: httpx.Response(200, json=_feedback_bundle(3, data_csv="a,b\n1,2\n"))
+
+        response = self.post(client, include_data=False)
+
+        assert response.status_code == 201
+        assert dict(upstream.requests[0].url.params) == {"include_data": "false", "version": "3"}
+        assert response.json()["stored"] == ["plot-light.png", "plot-dark.png", "plot.py", "manifest.json"]
+        assert "data.csv" not in cases.names
+        manifest = json.loads(cases.get("manifest.json"))
+        assert manifest["include_data"] is False
+        assert "data_csv" not in manifest["bundle"]["versions"][0]
+
+    def test_refuses_a_bundle_without_the_data_the_box_asked_for(self, client, upstream, cases) -> None:
+        """`include_data` without the version's `data_csv` is a malformed bundle: no manifest may claim data it lacks."""
+        upstream.handler = lambda request: httpx.Response(200, json=_feedback_bundle(3, data_csv=None))
+
+        response = self.post(client, include_data=True)
+
+        assert response.status_code == 502
+        assert response.json()["detail"] == "upstream"
+        assert cases.uploads == []
+
+    def test_skips_a_theme_the_version_never_rendered(self, client, upstream, cases) -> None:
+        upstream.handler = lambda request: httpx.Response(200, json=_feedback_bundle(3, themes=("dark",)))
+        response = self.post(client, include_data=False)
+        assert response.json()["stored"] == ["plot-dark.png", "plot.py", "manifest.json"]
+
+    def test_an_empty_message_is_none_and_the_reaction_set_is_the_sites(self, client, upstream, cases) -> None:
+        upstream.handler = _answer_bundle
+        for reaction in ("thumbs_up", "thumbs_down", "bug", "idea"):
+            assert self.post(client, reaction=reaction, message="   ").status_code == 201
+            assert json.loads(cases.get("manifest.json"))["reaction"] == reaction
+            assert json.loads(cases.get("manifest.json"))["message"] is None
+            cases.uploads.clear()
+        assert self.post(client, {"message": None}).status_code == 201
+        body = {key: value for key, value in self.BODY.items() if key != "message"}
+        response = client.post(self.PATH, json={**body, "result_version": 1}, headers=CLIENT_HEADERS)
+        assert response.status_code == 201
+
+    def test_a_message_of_500_characters_after_the_strip_passes(self, client, upstream, cases) -> None:
+        upstream.handler = _answer_bundle
+        assert self.post(client, message="  " + "x" * 500 + "\n").status_code == 201
+        assert json.loads(cases.get("manifest.json"))["message"] == "x" * 500
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            {"reaction": "love"},
+            {"reaction": None},
+            {"message": "x" * 501},
+            {"result_version": 0},
+            {"result_version": 1000},
+            {"result_version": "three"},
+            {"include_data": "maybe"},
+            {"case_id": "mine"},
+            # Strict types: no coercion of a boolean, a string or a float into a version,
+            # nor of a string or a number into the data choice.
+            {"result_version": True},
+            {"result_version": "3"},
+            {"result_version": 3.0},
+            {"include_data": "yes"},
+            {"include_data": "true"},
+            {"include_data": 1},
+            {"include_data": 0},
+            # `replaces` is a case id or nothing.
+            {"replaces": "mine"},
+            {"replaces": "../20261012T143005Z-1a2b3c4d"},
+            {"replaces": "20261012T143005Z-1A2B3C4D"},
+            {"replaces": 20261012},
+        ],
+    )
+    def test_422_for_an_invalid_body(self, client, upstream, cases, change) -> None:
+        assert self.post(client, change).status_code == 422
+        assert upstream.requests == []
+        assert cases.uploads == []
+
+    def test_422_without_include_data_or_result_version(self, client, upstream, cases) -> None:
+        for missing in ("include_data", "result_version"):
+            body = {"reaction": "bug", "include_data": True, "result_version": 1}
+            del body[missing]
+            assert client.post(self.PATH, json=body, headers=CLIENT_HEADERS).status_code == 422
+        body = {**self.BODY, "result_version": 1}
+        response = client.post("/debug/agent/sessions/a.b/feedback", json=body, headers=CLIENT_HEADERS)
+        assert response.status_code == 422
+        assert upstream.requests == []
+
+    def test_needs_the_client_header(self, client, upstream, cases) -> None:
+        response = client.post(self.PATH, json={**self.BODY, "result_version": 3})
+        assert response.status_code == 403
+        assert response.json() == {"detail": "client_header_required"}
+        assert upstream.requests == []
+
+    @pytest.mark.parametrize("code", ["not_found", "session_expired"])
+    def test_upstream_404_keeps_its_code_and_stores_nothing(self, client, upstream, cases, code) -> None:
+        upstream.handler = lambda request: httpx.Response(404, json={"detail": code})
+        response = self.post(client)
+        assert response.status_code == 404
+        assert response.json() == {"detail": code, "ref": response.headers["X-Request-Id"]}
+        assert cases.uploads == []
+
+    def test_another_admins_session_is_session_expired(self, client, upstream, cases) -> None:
+        """Ownership is the agents service's, as for every session route: it checks `X-Anyplot-User`."""
+        owner = derive_user_id(KEY.encode(), ADMIN)
+        upstream.handler = lambda request: (
+            _answer_bundle(request)
+            if request.headers["X-Anyplot-User"] == owner
+            else httpx.Response(404, json={"detail": "session_expired"})
+        )
+        assert self.post(client).status_code == 201
+        cases.uploads.clear()
+
+        other = AdminIdentity(email="other@example.com", via="cf_access")
+        fastapi_app.dependency_overrides[require_admin_identity] = lambda: other
+        response = self.post(client)
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "session_expired"
+        assert cases.uploads == []
+
+    def test_a_storage_failure_is_502_storage_and_leaves_no_manifest(self, client, upstream, cases) -> None:
+        upstream.handler = _answer_bundle
+        cases.fail_on = "/plot.py"
+
+        response = self.post(client)
+
+        assert response.status_code == 502
+        assert response.json() == {"detail": "storage", "ref": response.headers["X-Request-Id"]}
+        assert cases.names == ["plot-light.png", "plot-dark.png"]
+
+    def test_a_failed_manifest_upload_is_502_storage(self, client, upstream, cases) -> None:
+        upstream.handler = _answer_bundle
+        cases.fail_on = "/manifest.json"
+        response = self.post(client)
+        assert response.status_code == 502
+        assert response.json()["detail"] == "storage"
+        assert "manifest.json" not in cases.names
+
+    def test_a_bundle_over_the_cap_is_too_large(self, client, upstream, cases, monkeypatch) -> None:
+        monkeypatch.setattr("api.routers.agent.MAX_BUNDLE_BYTES", 1000)
+        upstream.handler = lambda request: httpx.Response(200, json=_feedback_bundle(3, data_csv="x" * 2000))
+        response = self.post(client)
+        assert response.status_code == 502
+        assert response.json() == {"detail": "too_large", "ref": response.headers["X-Request-Id"]}
+        assert cases.uploads == []
+
+    @pytest.mark.parametrize(
+        "bundle",
+        [
+            b"<html>ok</html>",
+            b"[1, 2]",
+            json.dumps({**_feedback_bundle(2)}).encode(),  # not the version asked for
+            json.dumps({"versions": "none"}).encode(),
+            json.dumps(
+                {**_feedback_bundle(3), "versions": [{**_feedback_bundle(3)["versions"][0], "images": {"light": "%%"}}]}
+            ).encode(),
+            json.dumps(
+                {
+                    **_feedback_bundle(3),
+                    "versions": [{**_feedback_bundle(3)["versions"][0], "images": {"light": "aGVsbG8="}}],
+                }
+            ).encode(),
+        ],
+    )
+    def test_a_bundle_that_is_not_the_documented_shape_is_502_upstream(self, client, upstream, cases, bundle) -> None:
+        upstream.handler = lambda request: httpx.Response(200, content=bundle)
+        response = self.post(client)
+        assert response.status_code == 502
+        assert response.json()["detail"] == "upstream"
+        assert cases.uploads == []
+
+    def test_unreachable_is_502_upstream(self, client, upstream, cases) -> None:
+        def refuse(request):
+            raise httpx.ConnectError("refused")
+
+        upstream.handler = refuse
+        response = self.post(client)
+        assert response.status_code == 502
+        assert response.json()["detail"] == "upstream"
+        assert cases.uploads == []
+
+    def test_builds_and_uploads_the_case_in_a_worker_thread(self, client, upstream, cases, monkeypatch) -> None:
+        upstream.handler = _answer_bundle
+        in_thread: list[str] = []
+
+        async def recording(func, *args, **kwargs):
+            in_thread.append(func.__name__)
+            return await run_in_threadpool(func, *args, **kwargs)
+
+        monkeypatch.setattr("api.routers.agent.run_in_threadpool", recording)
+        assert self.post(client).status_code == 201
+        assert in_thread == ["build_case", "write_case"]
+
+    def test_the_library_is_the_versions_after_a_library_switch(self, client, upstream, cases) -> None:
+        """The session's library is the one at submission; the exported code names the version's own."""
+
+        def switched(request: httpx.Request) -> httpx.Response:
+            bundle = _feedback_bundle(3)
+            bundle["session"]["library"] = "seaborn"
+            return httpx.Response(200, json=bundle)
+
+        upstream.handler = switched
+        self.post(client, include_data=False)
+        assert json.loads(cases.get("manifest.json"))["library_id"] == "matplotlib"
+
+    def test_a_later_submission_for_the_same_version_is_a_new_case(self, client, upstream, cases) -> None:
+        upstream.handler = _answer_bundle
+        first = self.post(client).json()["case_id"]
+        second = self.post(client, reaction="thumbs_up", message=None, replaces=first).json()["case_id"]
+        assert first != second
+        manifests = [json.loads(data) for name, data, _ in cases.uploads if name.endswith("/manifest.json")]
+        # The edit names the case it replaces, so the triage need not guess from the times.
+        assert [(item["id"], item["session_hash"], item["result_version"], item["replaces"]) for item in manifests] == [
+            (first, manifests[0]["session_hash"], 3, None),
+            (second, manifests[0]["session_hash"], 3, first),
+        ]
 
 
 class TestUpstreamMapping:

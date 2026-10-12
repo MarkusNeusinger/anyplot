@@ -38,6 +38,15 @@
  * top-level keys (the transcript of the turns, every version's code, result and
  * PNGs as base64, the profile, the bindings, a config stamp; each version's
  * `data.csv` only with `include_data`) and the BFF's attachment headers.
+ * `POST .../feedback` (the result card's quick feedback) validates the body
+ * like the BFF (`reaction` from the site's set, `message` at most 500
+ * characters after the strip, `include_data` a boolean, `result_version` 1 to
+ * 999, `replaces` a case id or absent, no other field), answers `404
+ * not_found` for a version the session does not have, records the submission
+ * on the session per version (a later one replaces it and keeps the `replaces`
+ * it named; `GET /mock/feedback` lists them) and answers `201 {case_id,
+ * stored}` with the file names the BFF would store. A message containing "502"
+ * answers `502 storage` instead, so the failure line can be driven.
  *
  * The step-1 data changes (the service's `prepare_data` tool) in miniature:
  * the action `{action: "summarize_data"}` answers a scripted summary of the
@@ -1311,6 +1320,14 @@ async function route(req, res) {
     return;
   }
 
+  // The recorded quick feedback of every open session, per result version (a mock-only route).
+  if (method === 'GET' && path === '/mock/feedback')
+    return json(
+      res,
+      200,
+      Object.fromEntries([...sessions].map(([sid, session]) => [sid, session.feedback]))
+    );
+
   if (!path.startsWith('/debug/agent')) return fail(res, 404, 'not_found');
 
   // The BFF's CSRF guard.
@@ -1378,6 +1395,8 @@ async function route(req, res) {
       versions: [],
       // `{role, text}` per user message or action and per assistant reply, for the bundle.
       transcript: [],
+      // The quick feedback per result version: the latest submission, with its case id.
+      feedback: {},
       active: false,
       cancelled: false,
     });
@@ -1565,7 +1584,65 @@ async function route(req, res) {
     res.end(JSON.stringify(sessionBundle(session, versions, includeData)));
     return;
   }
+  if (method === 'POST' && rest === '/feedback') {
+    // The quick feedback: the BFF stores the version's case in the private bucket.
+    const problem = feedbackProblem(body);
+    if (problem) return json(res, 422, { detail: [{ msg: problem }] }, ref);
+    const version = session.versions.find(v => v.number === body.result_version);
+    if (!version) return fail(res, 404, 'not_found', ref);
+    const message = typeof body.message === 'string' ? body.message.trim() || null : null;
+    await sleep(600);
+    if (message?.includes('502')) return fail(res, 502, 'storage', ref);
+    const caseId = `${new Date()
+      .toISOString()
+      .replace(/[-:]/g, '')
+      .replace(/\.\d+Z$/, 'Z')}-${randomBytes(4).toString('hex')}`;
+    const stored = [
+      ...['light', 'dark'].filter(theme => version.pngs[theme]).map(theme => `plot-${theme}.png`),
+      'plot.py',
+      ...(body.include_data ? ['data.csv'] : []),
+      'manifest.json',
+    ];
+    session.feedback[version.number] = {
+      case_id: caseId,
+      reaction: body.reaction,
+      message,
+      include_data: body.include_data,
+      replaces: body.replaces ?? null,
+    };
+    return json(res, 201, { case_id: caseId, stored }, ref);
+  }
   return fail(res, 404, 'not_found', ref);
+}
+
+const FEEDBACK_REACTIONS = ['thumbs_up', 'thumbs_down', 'bug', 'idea'];
+const FEEDBACK_FIELDS = new Set([
+  'reaction',
+  'message',
+  'include_data',
+  'result_version',
+  'replaces',
+]);
+/** The BFF's case id: the UTC time in ISO 8601 basic format and 8 random hex digits. */
+const CASE_ID = /^[0-9]{8}T[0-9]{6}Z-[0-9a-f]{8}$/;
+
+/** Why the BFF would refuse a feedback body with a 422, or `null` when it takes it. */
+function feedbackProblem(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return 'a JSON object is required';
+  const extra = Object.keys(body).filter(key => !FEEDBACK_FIELDS.has(key));
+  if (extra.length) return `unknown field ${extra[0]}`;
+  if (!FEEDBACK_REACTIONS.includes(body.reaction)) return 'reaction must be one of the set';
+  if (body.message != null && typeof body.message !== 'string') return 'message must be text';
+  // Code points, as the BFF counts them, not UTF-16 units.
+  if (typeof body.message === 'string' && [...body.message.trim()].length > 500)
+    return 'message must be 500 characters or fewer';
+  if (typeof body.include_data !== 'boolean') return 'include_data is required';
+  const version = body.result_version;
+  if (!Number.isInteger(version) || version < 1 || version > 999)
+    return 'result_version must be 1 to 999';
+  if (body.replaces != null && (typeof body.replaces !== 'string' || !CASE_ID.test(body.replaces)))
+    return 'replaces must be a case id';
+  return null;
 }
 
 /**

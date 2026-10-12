@@ -1,0 +1,51 @@
+{
+  "session": {"spec_id": "scatter-basic", "library": "matplotlib", "locale": "de"},
+  "snapshot": {"spec_id": "scatter-basic", "library_version": "3.10.0"},
+  "transcript": [
+    {"role": "user", "text": "[action] Summarize the dataset for the user."},
+    {"role": "assistant", "text": "2 Zeilen: Stunden und Punkte, beide Zahlen."},
+    {"role": "user", "text": "[action] Create the plot from my dataset and bindings."},
+    {"role": "assistant", "text": "Hier ist dein Plot."},
+    {"role": "user", "text": "log scale on y"},
+    {"role": "assistant", "text": "Done."}
+  ],
+  "versions": [
+    {
+      "number": 1,
+      "title": "Study hours against exam score",
+      "working": "x = df['Stunden']\n",
+      "run_form": "x = df['Stunden']\n",
+      "plot_py": "# Adapted by anyplot.ai from scatter-basic (matplotlib 3.10.0) for your data.csv;\n# run: ANYPLOT_THEME=light python plot.py\n\nx = df['Stunden']\n",
+      "plan": null,
+      "result": {"status": "ok", "reason": null, "attempts": 1, "artifacts": ["plot-light.png", "plot.py", "data.csv"], "changes": [], "residual_defects": [], "version": 1},
+      "theme": "light",
+      "themes": {"light": {"status": "ok", "reason": null}},
+      "images": {"light": "iVBORw0KGgpzeW50aGV0aWMtbGlnaHQ="},
+      "data_csv": "Stunden,Punkte\n1.5,52\n2.0,58\n3.5,71\n"
+    },
+    {
+      "number": 2,
+      "title": "Study hours against exam score, log y",
+      "working": "x = df['Stunden']\nax.set_yscale('log')\n",
+      "run_form": "x = df['Stunden']\nax.set_yscale('log')\n",
+      "plot_py": "# Adapted by anyplot.ai from scatter-basic (matplotlib 3.10.0) for your data.csv;\n# run: ANYPLOT_THEME=light python plot.py\n\nx = df['Stunden']\nax.set_yscale('log')\n",
+      "plan": null,
+      "result": {"status": "needs_attention", "reason": null, "attempts": 2, "artifacts": ["plot-light.png", "plot-dark.png", "plot.py", "data.csv"], "changes": ["log scale on y"], "residual_defects": ["VQ-03 light: markers overlap the label"], "version": 2},
+      "theme": "light",
+      "themes": {"light": {"status": "ok", "reason": null}, "dark": {"status": "ok", "reason": null}},
+      "images": {"light": "iVBORw0KGgpzeW50aGV0aWMtbGlnaHQ=", "dark": "iVBORw0KGgpzeW50aGV0aWMtZGFyaw=="},
+      "data_csv": "Stunden,Punkte\n1.5,52\n2.0,58\n3.5,71\n"
+    }
+  ],
+  "profile": {"rows": 3, "columns": [{"name": "Stunden", "dtype": "number"}, {"name": "Punkte", "dtype": "integer"}]},
+  "bindings": [{"role": "x", "column": "Stunden"}, {"role": "y", "column": "Punkte"}],
+  "config": {
+    "provider": "anthropic-vertex",
+    "model": "claude-haiku-5-5",
+    "judge_model": "claude-haiku-5-5",
+    "location": "eu",
+    "adk_version": "2.11.0",
+    "service_version": "test",
+    "prompt_hashes": {"root": "0123456789abcdef", "reviewer": "fedcba9876543210"}
+  }
+}

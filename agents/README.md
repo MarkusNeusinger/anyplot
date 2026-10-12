@@ -496,6 +496,21 @@ Spike X is the go or no-go for phase 1: 10 specs times matplotlib and seaborn ti
 7. Check the exit criteria in the design: at least 80 % pass after at most one repair, an owner acceptance of at least 75 % on the sample, and a median cost of at most $0.05 per successful plot.
 8. Commit `agents/evals/baselines/claude-haiku-5-5.json` and `gemini-3.8-flash.json` once you accept the runs. From then on, `tests/unit/agents/evals/test_baselines.py` requires a baseline for the pinned model. If `--save-baseline` refused a run because a case ended in an error, fix the cause and rerun that arm.
 
+### Import a feedback case
+
+`evals/import_case.py` turns a real session into an eval case: a bundle the chat page's `.save()` downloaded, or a case directory that the result card's quick feedback stored in the private case bucket and that you copied to this machine. Reading straight from `gs://` comes with the triage change.
+
+1. Run the import from the repository root:
+
+   ```bash
+   uv run --extra agents python -m agents.evals.import_case anyplot-session-AbCdEf12.json
+   uv run --extra agents python -m agents.evals.import_case cases/20261012T143005Z-1a2b3c4d --expected rejected
+   ```
+
+   The case goes to the git-ignored `evals/.cases/<id>/`, never to `evals/fixtures/`, because it holds a user's data. It needs the version's `data.csv`, so save the session or send the feedback with `# include data.csv` ticked. `--version N` picks a version of a bundle (the newest by default), `--id` names the case (by default `session-<hash>-v<n>` or `case-<case id>`), `--expected` sets the outcome (by default from the reaction, the triage's rule: thumbs up is `accepted` and thumbs down `rejected`; bug and idea imply no outcome, so they need the flag; a bundle without a reaction is `unknown`), and `--force` replaces an imported case of the same id.
+2. If the tool refuses with `cannot tell which message made version N`, pass the request yourself. The transcript has no version markers, so the tool takes the `n`-th plot turn (each `create_plot` and every message typed after the first one, or every typed message in a session without `create_plot`) as the request of version `n`, and only when the plot turns and the versions agree in number. A question or a failed run in between breaks that, and so does a stored case on a version that was not the newest. The refusal lists the plot turns; rerun with `--change-request "<the request>"`, or with `--no-change-request` when the version came from `.create_plot()`. The tool also refuses a case whose bindings name a column the version's `data.csv` lacks, because the bundle holds the session's latest bindings, not each version's.
+3. Run the case with `--cases <id>` (see [Run the smoke set or the full matrix](#run-the-smoke-set-or-the-full-matrix)). A run that holds promoted cases can't be saved as a baseline.
+
 ### Regenerate the fixtures
 
 The 120 generated cases come from `evals/make_fixtures.py`. After you change it, or when a NumPy upgrade changes a random stream, rerun it and commit the result:

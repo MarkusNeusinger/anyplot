@@ -27,6 +27,7 @@ import uuid
 from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import aclosing
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Annotated, Any, Literal
 from urllib.parse import urlsplit
 
@@ -42,11 +43,21 @@ from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validat
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.background import BackgroundTask
 
+from api.agent_cases import (
+    CASE_ID_PATTERN,
+    BundleError,
+    CaseBucket,
+    GcsCaseBucket,
+    Submission,
+    build_case,
+    new_case_id,
+    write_case,
+)
 from api.dependencies import require_db
 from api.routers.debug import AdminIdentity, require_admin, require_admin_identity
 from core.config import settings
 from core.constants import SUPPORTED_LIBRARIES
-from core.database import SpecRepository
+from core.database import FEEDBACK_REACTIONS, SpecRepository
 from core.utils import strip_noqa_comments
 
 
@@ -59,6 +70,8 @@ header forces a CORS preflight, which a foreign origin cannot pass."""
 
 MAX_DATASET_BYTES = 200 * 1024
 MAX_MESSAGE_CHARS = 2000
+MAX_FEEDBACK_CHARS = 500
+"""The cap of a feedback message after the strip, the site feedback's own (`api/routers/feedback.py`)."""
 SPEC_ID_PATTERN = r"^[a-z0-9-]{1,100}$"
 SESSION_ID_PATTERN = r"^[A-Za-z0-9_-]{1,128}$"
 
@@ -312,6 +325,11 @@ async def get_agent_client() -> AsyncIterator[httpx.AsyncClient]:
         yield client
 
 
+def get_case_bucket() -> CaseBucket:
+    """The private bucket the feedback cases go to; tests override it with a fake."""
+    return GcsCaseBucket(settings.agent_cases_bucket)
+
+
 router = APIRouter(
     prefix="/debug/agent",
     tags=["agent"],
@@ -328,6 +346,7 @@ router = APIRouter(
 
 Ctx = Annotated[AgentContext, Depends(agent_context)]
 Client = Annotated[httpx.AsyncClient, Depends(get_agent_client)]
+Cases = Annotated[CaseBucket, Depends(get_case_bucket)]
 SessionId = Annotated[str, Path(pattern=SESSION_ID_PATTERN)]
 
 
@@ -391,6 +410,34 @@ class MessageBody(_StrictBody):
 
 class RenderThemeBody(_StrictBody):
     theme: Literal["light", "dark"]
+
+
+def _check_reaction(value: str) -> str:
+    if value not in FEEDBACK_REACTIONS:
+        raise ValueError(f"reaction must be one of {', '.join(FEEDBACK_REACTIONS)}")
+    return value
+
+
+def _feedback_message(value: str | None) -> str | None:
+    """The message stripped, None when nothing is left; over `MAX_FEEDBACK_CHARS` after the strip is refused."""
+    if value is None:
+        return None
+    text = value.strip()
+    if len(text) > MAX_FEEDBACK_CHARS:
+        raise ValueError(f"message must be {MAX_FEEDBACK_CHARS} characters or fewer")
+    return text or None
+
+
+class FeedbackBody(_StrictBody):
+    # The site feedback's reaction set (`core.database.FEEDBACK_REACTIONS`).
+    reaction: Annotated[str, AfterValidator(_check_reaction)]
+    message: Annotated[str | None, AfterValidator(_feedback_message)] = None
+    # Strict: a JSON boolean and a JSON integer only. A lax `"yes"` or `true` would
+    # store a case the client never meant (`true` is version 1).
+    include_data: Annotated[bool, Field(strict=True)]
+    result_version: Annotated[int, Field(ge=1, le=999, strict=True)]
+    # The case id of the earlier submission for this version, when this one is an edit of it.
+    replaces: Annotated[str | None, Field(pattern=CASE_ID_PATTERN)] = None
 
 
 # ============================================================================
@@ -585,6 +632,36 @@ async def _read_capped(response: httpx.Response, max_bytes: int) -> bytes | None
         if len(body) > max_bytes:
             return None
     return bytes(body)
+
+
+async def _fetch_bundle(
+    client: httpx.AsyncClient, ctx: AgentContext, sid: str, *, version: int | None, include_data: bool
+) -> bytes:
+    """The agents service's bundle of the session (`GET /v1/sessions/{sid}/bundle`), read whole.
+
+    `version` above 0 asks for that version only. Shared by `.save()` and the feedback
+    route: an upstream error keeps its status and code (`404 session_expired` for
+    another user's session, `404 not_found` for a version the session lacks),
+    `502 upstream` when the service cannot be reached, and `502 too_large` above
+    `MAX_BUNDLE_BYTES`.
+    """
+    path = f"/sessions/{sid}/bundle"
+    params: dict[str, str | int] = {"include_data": "true" if include_data else "false"}
+    if version is not None:
+        params["version"] = version
+    try:
+        response = await _open_stream(client, ctx, "GET", path, params=params)
+        try:
+            body = await _read_capped(response, MAX_BUNDLE_BYTES)
+        finally:
+            await response.aclose()
+    except _UNREACHABLE as exc:
+        _log_unreachable(ctx, "GET", path, exc)
+        raise AgentHTTPError(502, "upstream", ctx.request_id) from exc
+    if body is None:
+        logger.warning("agent bundle over %d bytes refused (ref %s)", MAX_BUNDLE_BYTES, ctx.request_id)
+        raise AgentHTTPError(502, "too_large", ctx.request_id)
+    return body
 
 
 def _prepare_bundle(content: bytes, compress: bool) -> bytes | None:
@@ -966,22 +1043,7 @@ async def get_bundle(
     above), checks that it is a JSON object and compresses it in a worker thread
     (`_prepare_bundle`), and answers it as an attachment.
     """
-    path = f"/sessions/{sid}/bundle"
-    params: dict[str, str | int] = {"include_data": "true" if include_data else "false"}
-    if version is not None:
-        params["version"] = version
-    try:
-        response = await _open_stream(client, ctx, "GET", path, params=params)
-        try:
-            body = await _read_capped(response, MAX_BUNDLE_BYTES)
-        finally:
-            await response.aclose()
-    except _UNREACHABLE as exc:
-        _log_unreachable(ctx, "GET", path, exc)
-        raise AgentHTTPError(502, "upstream", ctx.request_id) from exc
-    if body is None:
-        logger.warning("agent bundle over %d bytes refused (ref %s)", MAX_BUNDLE_BYTES, ctx.request_id)
-        raise AgentHTTPError(502, "too_large", ctx.request_id)
+    body = await _fetch_bundle(client, ctx, sid, version=version, include_data=include_data)
     # The middleware's own test for whether the client takes gzip.
     compress = "gzip" in request.headers.get("Accept-Encoding", "")
     content = await run_in_threadpool(_prepare_bundle, body, compress)
@@ -998,6 +1060,54 @@ async def get_bundle(
         headers["Content-Encoding"] = "gzip"
         headers["Vary"] = "Accept-Encoding"
     return Response(content, media_type="application/json", headers=headers)
+
+
+@router.post("/sessions/{sid}/feedback", status_code=201)
+async def submit_feedback(sid: SessionId, body: FeedbackBody, ctx: Ctx, client: Client, cases: Cases) -> dict[str, Any]:
+    """Quick feedback on one result version: store its case in the private bucket, `201 {case_id, stored}`.
+
+    The agents service assembles the version's bundle (`version=result_version`, its
+    `data.csv` only with `include_data`); `api/agent_cases.py` splits it into the case
+    files and the manifest, which it uploads last, all in a worker thread. A later
+    submission for the same version is a new case that names the earlier one in
+    `replaces`; the newest one counts. Upstream
+    errors map as for `.save()`, a bundle that is not the documented shape is
+    `502 upstream`, and a failed upload is `502 storage`, which leaves no manifest:
+    files without one are an aborted case, never a case.
+    """
+    content = await _fetch_bundle(client, ctx, sid, version=body.result_version, include_data=body.include_data)
+    created_at = datetime.now(UTC)
+    submission = Submission(
+        reaction=body.reaction,
+        message=body.message,
+        include_data=body.include_data,
+        result_version=body.result_version,
+        replaces=body.replaces,
+    )
+    try:
+        case = await run_in_threadpool(
+            build_case,
+            content,
+            submission,
+            case_id=new_case_id(created_at),
+            created_at=created_at,
+            bucket=settings.agent_cases_bucket,
+            user_hash=ctx.user_id,
+            session_id=sid,
+        )
+    except BundleError as exc:
+        # The reason names a field of the bundle, never its content.
+        logger.warning("agent feedback bundle refused (ref %s): %s", ctx.request_id, exc)
+        raise AgentHTTPError(502, "upstream", ctx.request_id) from exc
+    try:
+        await run_in_threadpool(write_case, cases, case)
+    except Exception as exc:  # any client, auth or transport error of the storage library
+        logger.warning(
+            "agent feedback case %s not stored (ref %s): %s", case.case_id, ctx.request_id, type(exc).__name__
+        )
+        raise AgentHTTPError(502, "storage", ctx.request_id) from exc
+    logger.info("agent feedback case %s stored with %d files (ref %s)", case.case_id, len(case.files), ctx.request_id)
+    return {"case_id": case.case_id, "stored": case.stored}
 
 
 @router.delete("/sessions/{sid}", status_code=204)

@@ -146,11 +146,10 @@ with `VITE_ENABLE_AGENT_CHAT=true`, and like every event they fire only on
 | `agent_plot_rendered` | `library`, `status`, `repaired`, `spec` | useAgentSession.ts | A turn's `plot` event arrived. `status` ∈ `ok`, `needs_attention`, `failed`, `not_ready`; `repaired` is `yes` when the run needed its repair round (two attempts), else `no` |
 | `agent_guardrail_block` | `reason` | useAgentSession.ts | A guardrail stopped a request. `reason` ∈ `out_of_scope`, `needs_data` (the request needs data the service would have to fetch), `budget`, `unsupported_content` (the stream's fixed refusals), `data_refused` (the pre-filter or the dataset judge refused the pasted data: text addressed to an AI, or the judge's verdict; personal data is never a reason), `guard_unavailable` (the scope check could not answer and failed closed), `other` (a refusal code the page does not know yet) |
 | `agent_session_saved` | `include_data` | useAgentSession.ts | The user saved the session as a JSON file with `.save()` in the chat header, and the download started. `include_data` is `yes` when the `# include data.csv` box was ticked (the default), so the file holds each version's data file, else `no`. A failed save fires nothing |
+| `agent_result_feedback` | `reaction`, `include_data` | useAgentSession.ts | The user sent quick feedback on a result version with `.send()` on its result card, and the BFF stored the version as a feedback case. `reaction` ∈ `thumbs_up`, `thumbs_down`, `bug`, `idea`, the site feedback's set; `include_data` is `yes` when the card's `# include data.csv` box was ticked (the default), so the case holds the version's data file, else `no`. An edit that replaces a sent case fires again. A failed send fires nothing; the text never travels |
 
 `copy_code` on a result card carries `method: agent` and `page: agent_chat`
-plus the `spec` and `library` of the version. The quick-feedback control on the
-result card adds `agent_result_feedback{reaction, include_data}` in a later
-change.
+plus the `spec` and `library` of the version.
 
 ### Discovery
 
@@ -506,7 +505,8 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `version` | The data version an undo restored (`1` is the paste, `2`, `3+`) | `agent_data_undo` |
 | `repaired` | Whether an agent run needed its repair round (`yes` / `no`) | `agent_plot_rendered` |
 | `reason` | Why a guardrail stopped an agent chat request (`out_of_scope`, `needs_data`, `budget`, `unsupported_content`, `data_refused`, `guard_unavailable`, `other`) | `agent_guardrail_block` |
-| `include_data` | Whether a saved agent chat session carries each version's data file (`yes` / `no`) | `agent_session_saved` |
+| `include_data` | Whether a saved agent chat session, or a feedback case, carries the data file (`yes` / `no`) | `agent_session_saved`, `agent_result_feedback` |
+| `reaction` | The reaction of a feedback entry or of an agent result's quick feedback (`thumbs_up`, `thumbs_down`, `bug`, `idea`) | `feedback_submitted`, `agent_result_feedback` |
 | `platform` | Bot/platform name (twitter, whatsapp, teams, etc.) | `og_image_view` |
 | `category` | Filter category (lib, spec, plot, data, dom, feat, dep, tech, pat, prep, style) | `search`, `random_filter`, `filter_remove` |
 | `value` | Filter value | `random_filter`, `filter_remove`, `tag_click` |
@@ -576,6 +576,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `agent_plot_rendered` | Custom Event | Track agent chat plot outcomes and repair rounds |
 | `agent_guardrail_block` | Custom Event | Track agent chat refusals and failed-closed guard checks |
 | `agent_session_saved` | Custom Event | Track how often admins save an agent chat session as a file, and with the data or without |
+| `agent_result_feedback` | Custom Event | Track quick feedback on agent chat results by reaction, and how often the case holds the data |
 | `LCP` | Custom Event | Largest Contentful Paint (Core Web Vital) |
 | `CLS` | Custom Event | Cumulative Layout Shift (Core Web Vital) |
 | `INP` | Custom Event | Interaction to Next Paint (Core Web Vital) |
@@ -657,6 +658,7 @@ User lands on anyplot.ai
 | `agent_plot_rendered` | `library`, `status`, `repaired`, `spec` | useAgentSession.ts |
 | `agent_guardrail_block` | `reason` | useAgentSession.ts |
 | `agent_session_saved` | `include_data` | useAgentSession.ts |
+| `agent_result_feedback` | `reaction`, `include_data` | useAgentSession.ts |
 | `search` | `query`, `category` | FilterBar.tsx |
 | `search_no_results` | `query` | FilterBar.tsx |
 | `random_filter` | `category`, `value`, `method` | useFilterState.ts |
@@ -686,7 +688,7 @@ User lands on anyplot.ai
 | `TTFB` | `value`, `rating` | reportWebVitals.ts |
 | `og_image_view` | `page`, `platform`, `spec`?, `language`?, `library`?, `filter_*`? | api/analytics.py (server-side) |
 
-**Total: 38 client-side + 1 server-side = 39 events** (the eight `agent_*`
+**Total: 39 client-side + 1 server-side = 40 events** (the nine `agent_*`
 events exist only in builds with `VITE_ENABLE_AGENT_CHAT=true`)
 
 > Removed events: `potd_dismiss` (and the `nav_click` sources `potd_image` /
@@ -882,11 +884,11 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 - [x] Landing-page navigation tracking (`nav_click`)
 - [x] Theme tracking (`theme_toggle` event + `theme` ambient pageview prop)
 - [x] Agent chat events (`agent_open`, `agent_data_parsed`, `agent_data_confirmed`, `agent_data_prepared`, `agent_data_undo`, `agent_plot_rendered`, `agent_guardrail_block`, `agent_session_saved`), enum properties only
-- [ ] Agent chat quick feedback (`agent_result_feedback`), with the feedback control
+- [x] Agent chat quick feedback (`agent_result_feedback`), with the feedback control
 
 ### Plausible dashboard checklist
 
-- [ ] Register all custom properties (see table above, including `rating`, `action`, `param`, `source`, `platform`, `filter_*`, and for the agent chat `status`, `size_bucket`, `changes`, `version`, `repaired`, `reason`, `include_data`)
+- [ ] Register all custom properties (see table above, including `rating`, `action`, `param`, `source`, `platform`, `filter_*`, and for the agent chat `status`, `size_bucket`, `changes`, `version`, `repaired`, `reason`, `include_data`, `reaction`)
 - [ ] Create goals for key events (including `LCP`, `CLS`, `INP`)
 - [ ] Set up funnels (optional)
 - [ ] Create custom dashboard widgets (optional)
