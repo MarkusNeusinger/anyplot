@@ -7,4 +7,4 @@
   low"), so a table of numbers gets a column for a text role such as a
   feature or a category. The conditions are the ones `drop_rows` uses, compared and
   never evaluated; labels are at most 40 characters and stay text in every later
-  version. The prep eval gains a case for each.
+  version. The prep eval gains a case for each (#12148).
