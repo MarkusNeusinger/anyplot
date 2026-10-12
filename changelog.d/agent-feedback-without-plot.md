@@ -7,4 +7,4 @@
   the session's current data, but no image and no `plot.py` (`422 no_data` when the
   data is asked for before there is any). The triage labels it `chat, no plot`,
   shows no renders and refuses its promotion (`422 no_plot`), and `import_case`
-  refuses it. No migration: `result_version` had no constraint.
+  refuses it. No migration: `result_version` had no constraint (#12155).
