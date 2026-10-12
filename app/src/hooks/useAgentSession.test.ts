@@ -1304,6 +1304,69 @@ describe('useAgentSession: turns', () => {
     expect(result.current.state.run).toBeNull();
     expect(lastItem(result.current.state.items)).toMatchObject({ kind: 'notice', text: 'stopped' });
   });
+
+  describe('the in-progress line of a question', () => {
+    /** A question whose stream the test feeds: the line shows until something answers it. */
+    async function heldQuestion() {
+      const routes = baseRoutes();
+      const stream = liveSse([['ready', { v: 'anyplot/1', run_id: 'q' }]]);
+      routes['POST /sessions/S1/messages'] = () => stream.response;
+      const { result } = await openSession(routes);
+      let turn: Promise<void> = Promise.resolve();
+      act(() => {
+        turn = result.current.sendMessage('what is the mean score?');
+      });
+      await waitFor(() => expect(result.current.state.run?.kind).toBe('message'));
+      expect(pendingReply(result.current.state)).toBe('message');
+      const end = async () => {
+        act(() => {
+          stream.push('done', {});
+          stream.close();
+        });
+        await act(() => turn);
+        expect(result.current.state.run).toBeNull();
+        expect(pendingReply(result.current.state)).toBeNull();
+      };
+      return { result, stream, end };
+    }
+
+    it('gives way to a refusal while the turn still runs', async () => {
+      const { result, stream, end } = await heldQuestion();
+      act(() => stream.push('refusal', { code: 'out_of_scope', text: 'Only this plot.' }));
+      await waitFor(() =>
+        expect(lastItem(result.current.state.items)).toMatchObject({ kind: 'refusal' })
+      );
+      // The run is not over yet: the reply itself ends the line, not the run's end.
+      expect(result.current.state.run).not.toBeNull();
+      expect(pendingReply(result.current.state)).toBeNull();
+      await end();
+    });
+
+    it('gives way to an error event while the turn still runs', async () => {
+      const { result, stream, end } = await heldQuestion();
+      act(() => stream.push('error', { code: 'capacity', ref: 'rq' }));
+      await waitFor(() =>
+        expect(lastItem(result.current.state.items)).toMatchObject({ kind: 'error' })
+      );
+      expect(result.current.state.run).not.toBeNull();
+      expect(pendingReply(result.current.state)).toBeNull();
+      await end();
+    });
+
+    it('says it stops, then gives way to the stopped notice', async () => {
+      const { result, end } = await heldQuestion();
+      await act(() => result.current.stop());
+      expect(calls.some(call => call.path === '/sessions/S1/cancel')).toBe(true);
+      expect(result.current.state.run?.stopping).toBe(true);
+      expect(pendingReply(result.current.state)).toBe('stopping');
+      await end();
+      expect(result.current.state.items.map(item => item.kind)).toEqual(['user', 'notice']);
+      expect(lastItem(result.current.state.items)).toMatchObject({
+        kind: 'notice',
+        text: 'stopped',
+      });
+    });
+  });
 });
 
 describe('useAgentSession: versions and library', () => {
@@ -1599,6 +1662,56 @@ describe('agentReducer', () => {
       bytes: 26,
     };
     expect(agentReducer(confirmed, { type: 'transcribed', transcription }).items).toEqual([]);
+  });
+
+  it('keeps the reason of a lost confirmation with the data the card shows', () => {
+    const profile = { ...DATASET.profile, columns: [] };
+    const parsed = { ...DATASET, profile } as DatasetParsed;
+    let state: AgentSessionState = {
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+    };
+    state = agentReducer(state, { type: 'parse_done', parsed, bytes: 10 });
+    // Data never confirmed has no loss to name, whatever changes it.
+    for (const next of [
+      agentReducer(state, { type: 'data_prepared', dataset: PREPARED as DatasetChanged }),
+      agentReducer(state, { type: 'undo_done', parsed }),
+    ]) {
+      expect(next).toMatchObject({ confirmLoss: null, items: [] });
+    }
+
+    const lost = agentReducer(agentReducer(state, { type: 'confirm_done' }), {
+      type: 'bindings_done',
+      bindings: { x: 'Exam Score', y: 'Study Hours' },
+      complete: true,
+      missingRoles: [],
+    });
+    expect(lost.confirmLoss).toBe('bindings');
+    expect(lost.items).toHaveLength(1);
+
+    // A new paste is data nobody confirmed: its card names no loss, and the thread
+    // keeps the one notice it has.
+    const pasted = agentReducer(lost, { type: 'parse_done', parsed, bytes: 12 });
+    expect(pasted).toMatchObject({ dataConfirmed: false, confirmLoss: null });
+    expect(pasted.items).toEqual(lost.items);
+    // Its first binding setup says nothing either.
+    const setUp = agentReducer(pasted, {
+      type: 'bindings_done',
+      bindings: { x: 'Study Hours', y: 'Exam Score' },
+      complete: true,
+      missingRoles: [],
+    });
+    expect(setUp).toMatchObject({ confirmLoss: null, items: lost.items });
+
+    // A data change or an undo after the loss: the step line names the data, still one notice.
+    for (const next of [
+      agentReducer(lost, { type: 'data_prepared', dataset: PREPARED as DatasetChanged }),
+      agentReducer(lost, { type: 'undo_done', parsed }),
+    ]) {
+      expect(next).toMatchObject({ dataConfirmed: false, confirmLoss: 'data' });
+      expect(next.items).toEqual(lost.items);
+    }
   });
 
   it('numbers the data versions and keeps what changed until the next parse', () => {

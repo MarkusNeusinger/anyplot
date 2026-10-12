@@ -736,6 +736,38 @@ describe('AgentChatPage gating', () => {
     expect(screen.queryByTestId('data-step')).not.toBeInTheDocument();
   });
 
+  it('names the loss for the data the card shows after it, never for a new paste', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    fireEvent.change(screen.getByLabelText(/^y/), { target: { value: 'hours' } });
+    await waitFor(() => expect(screen.getByLabelText(/^y/)).toBeEnabled());
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      '# step 1 again — bindings changed · confirm the data again'
+    );
+
+    // A data request after the loss: the step line names the change the preview shows.
+    sendFromComposer('read score as prozent');
+    expect(await screen.findByText('I read score as numbers.')).toBeInTheDocument();
+    await turnEnded();
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      '# step 1 again — the data changed · confirm it again'
+    );
+
+    // A new paste is data nobody confirmed: plain step 1, and the thread keeps one notice.
+    fireEvent.change(screen.getByLabelText(/# your data/), {
+      target: { value: 'hours,score\n3,70\n4,80\n' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    await waitFor(() => expect(screen.getAllByText(SUMMARY)).toHaveLength(2));
+    await turnEnded();
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      '# step 1 — check the preview and the bindings, then confirm'
+    );
+    expect(screen.getAllByTestId('confirm-lost')).toHaveLength(1);
+  });
+
   it('starts the first plot from an empty box with .create_plot(), never on Enter', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
@@ -1128,6 +1160,57 @@ describe('AgentChatPage working states', () => {
       const use = screen.getByRole('button', { name: '.use()' });
       expect(scroll.mock.contexts).toContain(use);
       expect(use).toHaveFocus();
+      expect(turnBodies()).toEqual([{ action: 'summarize_data' }]);
+    } finally {
+      restoreScrollIntoView();
+    }
+  });
+
+  it('names what the data card asks for now when a table read from text comes or goes', async () => {
+    const scroll = stubScrollIntoView();
+    try {
+      localStorage.setItem(ADMIN_HINT_KEY, '1');
+      renderAt(PAGE);
+      fireEvent.change(await screen.findByLabelText(/# your data/), {
+        target: { value: 'hours,score\n1.5,52\n2.0,58\n' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+      expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
+      await turnEnded();
+      const confirmText = 'confirm the data first · .confirm() sits at the foot of the data card';
+      const tableText = 'decide on the table first · .use() or .discard() sit in the data card';
+      fireEvent.click(quietCreate());
+      expect(screen.getByTestId('create-gate')).toHaveTextContent(`# ${confirmText}`);
+
+      // Free text pasted in step 1 comes back as a table to decide on, and no turn starts:
+      // the notice now leads to `.use()`, since `.confirm()` waits for that decision.
+      scroll.mockClear();
+      fireEvent.change(screen.getByLabelText(/# your data/), { target: { value: FREE_TEXT } });
+      fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+      await screen.findByTestId('transcription-card');
+      const notice = screen.getByTestId('create-gate');
+      expect(notice).toHaveTextContent(`# ${tableText}`);
+      expect(screen.getByTestId('composer-status')).toHaveTextContent(tableText);
+      // The user works in the data card: a change of the wording leaves the window there.
+      expect(scroll.mock.contexts).not.toContain(notice);
+      fireEvent.click(within(notice).getByRole('button', { name: 'Go to the table' }));
+      const use = screen.getByRole('button', { name: '.use()' });
+      expect(scroll.mock.contexts).toContain(use);
+      expect(use).toHaveFocus();
+
+      // Discarded, the card asks for `.confirm()` again, and so does the notice's `.show()`.
+      fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
+      expect(screen.getByTestId('create-gate')).toHaveTextContent(`# ${confirmText}`);
+      expect(screen.getByTestId('composer-status')).toHaveTextContent(confirmText);
+      scroll.mockClear();
+      fireEvent.click(
+        within(screen.getByTestId('create-gate')).getByRole('button', {
+          name: 'Go to the confirmation',
+        })
+      );
+      const confirm = screen.getByRole('button', { name: '.confirm()' });
+      expect(scroll.mock.contexts).toEqual([confirm]);
+      expect(confirm).toHaveFocus();
       expect(turnBodies()).toEqual([{ action: 'summarize_data' }]);
     } finally {
       restoreScrollIntoView();

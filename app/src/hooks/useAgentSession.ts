@@ -46,9 +46,11 @@
  * keeps the reason (`confirmLoss`: a binding change, new data, or the server's
  * word) for the data card's step line, and appends a warning notice to the
  * thread. The parse's own default bindings land while the flag is already
- * clear, so a first setup after a paste says nothing. The reducer numbers the
- * thread items itself (`nextItemId`), so it can append that notice in the one
- * place every loss passes through.
+ * clear, so a first setup after a paste says nothing. The reason follows the
+ * data the card shows: a later paste clears it, a later data change or undo
+ * makes it a change of the data. The reducer numbers the thread items itself
+ * (`nextItemId`), so it can append that notice in the one place every loss
+ * passes through.
  *
  * Step 1 talks about the data. Every parse that stores a dataset (a table, or
  * a transcription's `.use()`) is followed at once by the turn
@@ -503,6 +505,10 @@ function versionOf(value: unknown): number {
  * data: there is no stored dataset to keep the pasted size of (0 stands in),
  * and the roles come with the version; from a server that names none, the
  * bindings stand in for them, as for a paste.
+ *
+ * A confirmation lost earlier (a binding change, say) is now lost to the data:
+ * the card's step line names the change it shows. Data that was never
+ * confirmed has no loss to name.
  */
 function withDataVersion(
   state: AgentSessionState,
@@ -529,6 +535,7 @@ function withDataVersion(
     bindingsError: null,
     dataConfirmed: false,
     confirmError: null,
+    confirmLoss: state.confirmLoss === null ? null : 'data',
     dataChange,
     undoBusy: false,
     undoError: null,
@@ -587,7 +594,9 @@ function lossOf(state: AgentSessionState, action: Action): ConfirmLoss {
  * drops, whatever action dropped it, the reducer keeps the reason and appends
  * a warning notice to the thread, where the loss happened. A confirmation
  * clears the reason. A first binding setup after a paste lands while the flag
- * is already clear, so it says nothing.
+ * is already clear, so it says nothing. While the flag stays clear the reason
+ * follows the data (`reduce`): a new paste clears it, a data change or an undo
+ * makes it `data`, with no second notice.
  */
 export function agentReducer(state: AgentSessionState, action: Action): AgentSessionState {
   const next = reduce(state, action);
@@ -646,6 +655,9 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         // A new dataset is unchecked: the server dropped its confirmation when it stored it.
         dataConfirmed: false,
         confirmError: null,
+        // And it starts over: a loss named for the data before it is not its own. A paste
+        // that drops a confirmation the user had given is named by `agentReducer`.
+        confirmLoss: null,
       };
     case 'parse_failed':
       // A formula is no failure of the data: the panel offers the chat instead.

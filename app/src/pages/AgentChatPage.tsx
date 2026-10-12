@@ -22,10 +22,11 @@
  * `.create_plot()` is in the composer as soon as there is data. Before the
  * confirmation it is the quiet button, and a click calls nothing: a notice
  * under the composer says to confirm the data first (or to decide on a table
- * read from text), with `.show()`, which brings `.confirm()` (or `.use()`)
- * into view and focuses it; a hidden status region announces it. The notice
- * clears once the data is confirmed or a turn starts. The server's
- * `data_unconfirmed` stays the backstop.
+ * read from text, whichever the data card asks for at the moment), with
+ * `.show()`, which brings `.confirm()` (or `.use()`) into view and focuses it;
+ * a hidden status region announces it. The notice clears once the data is
+ * confirmed or a turn starts. The server's `data_unconfirmed` stays the
+ * backstop.
  *
  * Work in flight is never silent: a turn without pipeline steps holds an
  * in-progress line in the thread (`ChatThread`), the progress timeline below
@@ -217,8 +218,9 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   const decisionRef = useRef<HTMLButtonElement>(null);
   // Set by the user's own `.confirm()`: the step change it brings moves the focus, once.
   const confirmFocus = useRef(false);
-  // The notice a click on `.create_plot()` before the confirmation shows.
-  const [gate, setGate] = useState<CreateGate | null>(null);
+  // Whether the notice a click on `.create_plot()` before the confirmation opens
+  // shows; what it asks for is read from the data card at render (`gate`).
+  const [gateShown, setGateShown] = useState(false);
 
   // The spec's title and implemented libraries come from the public catalogue
   // API; the enabled libraries from the agents service. Both are best effort.
@@ -266,10 +268,12 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
 
   // The notice before the confirmation opens under the composer, which a turn's
   // start leaves at the window's lower edge: bring it in, without moving the focus.
+  // Only when it opens: a change of its wording follows a decision in the data
+  // card, where the user is, and must not pull the window to the foot.
   const gateRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (gate) gateRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
-  }, [gate]);
+    if (gateShown) gateRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+  }, [gateShown]);
 
   // A turn, a theme render, a parse, an undo or a binding change in flight: the
   // server runs one at a time and would refuse or race a second.
@@ -286,7 +290,17 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
     step2 && !Object.values(state.versions).some(version => version.library === state.library);
   // The notice before the confirmation is done once the data is confirmed or a turn starts.
   // Adjusted while rendering, React's pattern for state that follows other state.
-  if (gate && (step2 || running)) setGate(null);
+  if (gateShown && (step2 || running)) setGateShown(false);
+  // What the notice asks for first, from the data card as it is now: a table read
+  // from text waits for `.use()` or `.discard()`, anything else for `.confirm()`. A
+  // table that arrives or is discarded after the click changes the text, the
+  // announcement and the target of `.show()` with it, so none names a button
+  // that is gone or waits.
+  const gate: CreateGate | null = gateShown
+    ? state.transcription
+      ? 'transcription'
+      : 'confirm'
+    : null;
 
   // The user's own `.confirm()` collapsed the card and took its focused button
   // away. Before the first plot the keyboard continues at `.create_plot()`, the
@@ -350,7 +364,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
    */
   const handleCreate = (event: React.MouseEvent) => {
     if (!step2) {
-      setGate(state.transcription ? 'transcription' : 'confirm');
+      setGateShown(true);
       return;
     }
     keepKeyboardFocus(event);
