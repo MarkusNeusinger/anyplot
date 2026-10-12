@@ -399,6 +399,50 @@ OVERLAPPING_TICKS: dict[str, Any] = {"canvas": [3200, 1800], "texts": [], "tick_
 """A probe whose only finding is G7: advisory feedback on an exact canvas."""
 
 
+def crowded_polar(rlabel: float = 67.5) -> list[dict[str, Any]]:
+    """A probe `polar` field: 30 points at the edge from 60° to 75°, the radial labels at `rlabel`.
+
+    Only the 10 in the 65° to 70° bin lie within the labels' half width of the 67.5° ray.
+    """
+    bins = [[0] * 10 for _ in range(72)]
+    for index in (12, 13, 14):
+        bins[index][9] = 10
+    return [{"rlabel": rlabel, "thetamin": 0.0, "thetamax": 360.0, "bins": bins}]
+
+
+async def test_a_repair_gets_the_measured_angle_for_crowded_polar_labels(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """The owner's case: the repair takes the free direction the probe measured instead of guessing one."""
+    backend.script = lambda job, theme: FakeOutcome(probe={**OVERLAPPING_TICKS, "polar": crowded_polar()})
+    fake = swap_models("gemini", default_script(plans=[SCATTER_PLAN, {"edits": [], "changes": []}]))
+    sid = await open_session(client)
+
+    await create_plot(client, sid)
+
+    first, repair = adapter_inputs(fake)[:2]
+    assert "set_rlabel_position" not in first  # no render yet, nothing measured
+    assert "polar radial tick labels: at 67.5° they sit on 10 plotted points" in repair
+    assert "ax.set_rlabel_position(45)" in repair
+
+
+async def test_crowded_polar_labels_alone_start_no_repair(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """The hint is a target for a repair that runs anyway, never a finding of its own."""
+    backend.script = lambda job, theme: FakeOutcome(
+        probe={"canvas": [3200, 1800], "texts": [], "polar": crowded_polar()}
+    )
+    swap_models("gemini", default_script(plans=[SCATTER_PLAN]))
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["attempts"]) == ("ok", 1)
+    assert len(backend.jobs) == 1
+
+
 @pytest.mark.parametrize(("max_attempts", "attempts"), [("1", 1), (None, 2), ("3", 3)], ids=["one", "default", "three"])
 async def test_gate_feedback_goes_to_the_next_attempt_and_the_last_one_is_reviewed(
     client: httpx.AsyncClient,
@@ -2457,6 +2501,7 @@ async def test_bindings_route_validates(client: httpx.AsyncClient) -> None:
     )
     assert partial.status_code == 200
     assert partial.json()["complete"] is False and partial.json()["missing_roles"] == ["y"]
+    assert partial.json()["warnings"] == []  # scatter-basic has no role that needs values of 0 or more
 
 
 async def test_status_and_user_header(client: httpx.AsyncClient) -> None:

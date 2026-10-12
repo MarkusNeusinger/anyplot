@@ -163,7 +163,10 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
     # Other bindings than the user confirmed leave the confirmation's fingerprint behind; the panel asks again.
     for key, value in delta.items():
         tool_context.state[key] = value
-    return {"status": "ok", "complete": check.complete, "missing_roles": check.missing_roles}
+    result: dict[str, Any] = {"status": "ok", "complete": check.complete, "missing_roles": check.missing_roles}
+    if check.warnings:  # valid, but a role that needs values of 0 or more got negative ones; they name columns
+        result["warnings"] = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(check.warnings, ensure_ascii=False))
+    return result
 
 
 async def set_language(language: str, tool_context: ToolContext) -> dict[str, Any]:

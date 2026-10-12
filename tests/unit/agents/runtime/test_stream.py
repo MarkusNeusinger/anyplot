@@ -461,7 +461,12 @@ class TestRoleBody:
             "required": True,
             "variadic": True,
             "description": "one series",
+            "non_negative": False,
         }
+        radius = DataRole(
+            name="r", kinds=("numeric",), required=True, variadic=False, description="", non_negative=True
+        )
+        assert _role_body(radius)["non_negative"] is True
 
     def test_a_long_description_is_capped(self) -> None:
         role = DataRole(name="label", kinds=(), required=False, variadic=False, description="word " * 100)

@@ -39,6 +39,7 @@ from core.canvas import check_canvas
 from ..schemas import MAX_LINE_CHARS
 from .contract import THEMES, RenderResult, Theme
 from .png import PngRejected, harden, pad_to
+from .polar import rlabel_hint
 
 
 CLIP_TOLERANCE_PX = 2
@@ -113,6 +114,9 @@ class GateReport:
     blocking: list[str] = field(default_factory=list)
     canvas_defects: list[str] = field(default_factory=list)
     advisory: list[str] = field(default_factory=list)
+    repair_hints: list[str] = field(default_factory=list)
+    """Measured targets a repair should use if one runs (the free direction for a polar plot's
+    radial labels, `polar.rlabel_hint`); they never start a repair and are no defects."""
     failed_gates: list[str] = field(default_factory=list)
     """The ids of the gates that failed or reported, one entry per theme and finding: `R1`,
     `R1-timeout`, `R1-<reason>` for a renderer limit (`R1-memory`, `R1-disk_budget`, ...), `R2`,
@@ -275,6 +279,11 @@ def evaluate(result: RenderResult, *, themes: Sequence[Theme], library: str, row
         for gate, line in _probe_lines(output.probe, rows):
             report.failed_gates.append(gate)
             advisory.setdefault(line, []).append(theme)
+        # Both themes draw the same geometry, so the hint comes from the first theme that has one.
+        if not report.repair_hints and isinstance(output.probe, dict):
+            hint = rlabel_hint(output.probe.get("polar"))
+            if hint is not None:
+                report.repair_hints.append(_line(hint))
     if len(missed) == 1:
         # `core.canvas` writes the line as `(both)`; name the one theme that missed.
         report.canvas_defects = [line.replace("(both):", f"({missed[0]}):", 1) for line in report.canvas_defects]

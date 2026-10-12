@@ -121,6 +121,8 @@ export interface RoleSpec {
   variadic: boolean;
   /** The spec's own words for the role. */
   description: string;
+  /** The role needs values of 0 or more (the server's `data/signs.py`); absent from an older server. */
+  non_negative?: boolean;
 }
 
 export interface DatasetParsed {
@@ -202,6 +204,8 @@ export interface BindingsApplied {
   complete: boolean;
   /** Required roles without a column; a variadic family by its name (`y`). */
   missing_roles: string[];
+  /** Roles that need values of 0 or more and got negative ones; never a refusal. Absent from an older server. */
+  warnings?: string[];
 }
 
 /**
@@ -904,6 +908,7 @@ function roleList(value: unknown): RoleSpec[] | undefined {
       required: entry.required === true,
       variadic: entry.variadic === true,
       description: typeof entry.description === 'string' ? entry.description : '',
+      non_negative: entry.non_negative === true,
     });
   }
   return roles;

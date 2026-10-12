@@ -70,7 +70,7 @@ import {
   type TranscriptionState,
 } from 'src/hooks/useAgentSession';
 import { type ColumnProfile, MAX_DATASET_BYTES, utf8Bytes } from 'src/lib/agent';
-import { bindingRows, kindsHint } from 'src/sections/agent-chat/bindings';
+import { bindingRows, kindsHint, signHint } from 'src/sections/agent-chat/bindings';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import { CONFIRM_LOST_TEXT, describeDataFailure } from 'src/sections/agent-chat/messages';
 import { inStep2 } from 'src/sections/agent-chat/steps';
@@ -673,6 +673,11 @@ export function DataPanel({
               {rows.map(row => {
                 const missing = row.first && state.missingRoles.includes(row.role.name);
                 const id = `agent-role-${row.name}`;
+                const bound = state.bindings[row.name];
+                const sign = signHint(
+                  row.role,
+                  columns.find(column => column.name === bound)
+                );
                 return (
                   <Box key={row.name} sx={{ display: 'contents' }}>
                     <Box
@@ -703,22 +708,34 @@ export function DataPanel({
                         </Box>
                       )}
                     </Box>
-                    <Box
-                      component="select"
-                      id={id}
-                      value={state.bindings[row.name] ?? ''}
-                      disabled={!ready || busy}
-                      onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
-                        onBind(row.name, event.target.value || null)
-                      }
-                      sx={{ ...nativeControlSx, width: '100%' }}
-                    >
-                      <option value="">{row.next ? '— add a column —' : '— none —'}</option>
-                      {columns.map(column => (
-                        <option key={column.name} value={column.name}>
-                          {column.name} ({column.dtype})
-                        </option>
-                      ))}
+                    <Box sx={{ minWidth: 0 }}>
+                      <Box
+                        component="select"
+                        id={id}
+                        value={bound ?? ''}
+                        disabled={!ready || busy}
+                        aria-describedby={sign ? `${id}-sign` : undefined}
+                        onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
+                          onBind(row.name, event.target.value || null)
+                        }
+                        sx={{ ...nativeControlSx, width: '100%' }}
+                      >
+                        <option value="">{row.next ? '— add a column —' : '— none —'}</option>
+                        {columns.map(column => (
+                          <option key={column.name} value={column.name}>
+                            {column.name} ({column.dtype})
+                          </option>
+                        ))}
+                      </Box>
+                      {sign && (
+                        <Box
+                          id={`${id}-sign`}
+                          data-testid="sign-hint"
+                          sx={{ ...labelSx, fontSize: smallText, color: colors.warning, mt: 0.25 }}
+                        >
+                          {sign}
+                        </Box>
+                      )}
                     </Box>
                   </Box>
                 );
