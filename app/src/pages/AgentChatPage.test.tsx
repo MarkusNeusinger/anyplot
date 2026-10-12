@@ -370,8 +370,9 @@ async function transcribeInStep2() {
  * The composer's quiet `.create_plot()`, which shows in step 1 too: a plain button, not
  * step 2's submitting CTA.
  */
-function quietCreate() {
-  const create = screen.getByRole('button', { name: 'Create plot' });
+/** The quiet create button: `.create_plot()`, or `.start_over()` once the library has a plot. */
+function quietCreate(name: 'Create plot' | 'Start over' = 'Create plot') {
+  const create = screen.getByRole('button', { name });
   expect(create).toHaveAttribute('type', 'button');
   return create;
 }
@@ -802,14 +803,21 @@ describe('AgentChatPage gating', () => {
     expect(within(thread).queryByText('.create_plot()')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Message')).toHaveValue('');
 
-    // This library has a plot: the composer refines, and a fresh plot is one quiet click.
+    // This library has a plot: the composer refines, and starting over is one quiet click
+    // that says what it does, unlike `.send()` beside it.
     expect(screen.getByRole('article', { name: 'Plot version 1' })).toBeInTheDocument();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
       'ask about this plot, or ask for a change'
     );
     expect(screen.getByRole('button', { name: '.send()' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
+    const startOver = screen.getByRole('button', { name: 'Start over' });
+    expect(startOver).toBeEnabled();
+    expect(startOver).toHaveTextContent('.start_over()');
+    expect(startOver).toHaveAccessibleDescription(
+      expect.stringContaining('new from the catalogue plot, without your changes')
+    );
     expect(screen.getByTestId('data-pinned')).toBeInTheDocument();
   });
 
@@ -837,7 +845,7 @@ describe('AgentChatPage gating', () => {
       expect(within(change).getByRole('button', { name: '.undo()' })).toBeEnabled();
       expect(screen.getByRole('cell', { name: '0.52' })).toBeInTheDocument();
       expect(currentStep()).toEqual(['1 data']);
-      expect(quietCreate()).toBeEnabled();
+      expect(quietCreate('Start over')).toBeEnabled();
       expect(lastInThread()).toHaveTextContent('# the data changed · confirm it again');
       // The header stays pinned in view and leads to the card's top, far above.
       expect(screen.getByTestId('data-summary')).toHaveTextContent(
@@ -856,7 +864,7 @@ describe('AgentChatPage gating', () => {
       fireEvent.click(confirm);
       const show = await screen.findByRole('button', { name: 'Show the data' });
       await waitFor(() => expect(show).toHaveFocus());
-      expect(screen.getByRole('button', { name: 'Create plot' })).not.toHaveFocus();
+      expect(screen.getByRole('button', { name: 'Start over' })).not.toHaveFocus();
     } finally {
       delete (Element.prototype as Partial<Element>).scrollIntoView;
     }

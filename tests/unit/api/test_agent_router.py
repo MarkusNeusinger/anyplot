@@ -327,6 +327,7 @@ ALL_ROUTES = [
     ("PUT", "/debug/agent/sessions/s1/language", {"language": "de"}),
     ("POST", "/debug/agent/sessions/s1/dataset/confirm", None),
     ("POST", "/debug/agent/sessions/s1/dataset/undo", None),
+    ("POST", "/debug/agent/sessions/s1/dataset/to_long", None),
     ("POST", "/debug/agent/sessions/s1/messages", {"action": "create_plot"}),
     ("POST", "/debug/agent/sessions/s1/cancel", None),
     ("POST", "/debug/agent/sessions/s1/versions/1/render", {"theme": "dark"}),
@@ -632,6 +633,19 @@ class TestBodies:
         nothing = client.post("/debug/agent/sessions/s1/dataset/undo", headers=CLIENT_HEADERS)
         assert nothing.status_code == 422
         assert nothing.json()["detail"] == "nothing_to_undo"
+
+    def test_to_long_is_forwarded_without_a_body(self, client, upstream) -> None:
+        """`.to_long()` names no operation: the agents service recomputes its own suggestion."""
+        long = {"preview": [], "profile": {}, "bindings": [], "warnings": [], "roles": [], "version": 2}
+        upstream.handler = lambda request: httpx.Response(200, json={**long, "suggestion": None, "changes": ["x"]})
+        response = client.post("/debug/agent/sessions/s1/dataset/to_long", headers=CLIENT_HEADERS)
+        assert response.status_code == 200 and response.json()["changes"] == ["x"]
+        sent = upstream.requests[-1]
+        assert (sent.method, sent.url.path, sent.content) == ("POST", "/v1/sessions/s1/dataset/to_long", b"")
+
+        upstream.handler = lambda request: httpx.Response(422, json={"detail": "no_suggestion"})
+        refused = client.post("/debug/agent/sessions/s1/dataset/to_long", headers=CLIENT_HEADERS)
+        assert (refused.status_code, refused.json()["detail"]) == (422, "no_suggestion")
 
     def test_the_summarize_data_action_is_forwarded(self, client, upstream) -> None:
         upstream.handler = lambda request: httpx.Response(

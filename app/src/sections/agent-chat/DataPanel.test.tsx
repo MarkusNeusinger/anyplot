@@ -872,3 +872,69 @@ describe('DataPanel transcription', () => {
     expect(onParse).toHaveBeenCalledWith('animal,count');
   });
 });
+
+describe('DataPanel wide-table offer', () => {
+  // The owner's sensor paste on box-basic: the service offers the long form.
+  const OFFER = {
+    kind: 'to_long' as const,
+    columns: ['Sensor_A', 'Sensor_B', 'Sensor_C'],
+    names_to: 'category',
+    values_to: 'value',
+    keys: [],
+    rows: 9,
+  };
+  const offered = (overrides: Partial<AgentSessionState> = {}) => {
+    const state = stateWith({}, { bindingsComplete: false, ...overrides });
+    return {
+      ...state,
+      dataset: state.dataset && {
+        ...state.dataset,
+        parsed: { ...state.dataset.parsed, suggestion: OFFER },
+      },
+    };
+  };
+  const panel = (state: AgentSessionState, onToLong = vi.fn()) => (
+    <DataPanel
+      state={state}
+      onParse={vi.fn()}
+      onConfirmTranscription={vi.fn()}
+      onDiscardTranscription={vi.fn()}
+      onSendFormula={vi.fn()}
+      onBind={vi.fn()}
+      onConfirmData={vi.fn()}
+      onUndo={vi.fn()}
+      onToLong={onToLong}
+    />
+  );
+
+  it('names the columns and applies the offer with one click', async () => {
+    const onToLong = vi.fn();
+    render(panel(offered(), onToLong));
+
+    const hint = screen.getByTestId('data-long-hint');
+    expect(hint).toHaveTextContent(
+      '# wide table · this plot wants one category and one value column'
+    );
+    expect(hint).toHaveTextContent('Sensor_A, Sensor_B, Sensor_C → category and value, 9 rows');
+    const button = screen.getByRole('button', { name: 'Make the table long' });
+    expect(button).toHaveTextContent('.to_long()');
+    await userEvent.click(button);
+    expect(onToLong).toHaveBeenCalledTimes(1);
+  });
+
+  it('waits while it runs, says when it failed, and shows nothing without an offer', () => {
+    const { rerender } = render(panel(offered({ toLongBusy: true })));
+    expect(screen.getByRole('button', { name: 'Make the table long' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Make the table long' })).toHaveTextContent(
+      '.to_long() …'
+    );
+
+    rerender(panel(offered({ toLongError: { code: 'no_suggestion', ref: null } })));
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'could not change the table (no_suggestion)'
+    );
+
+    rerender(panel(stateWith({})));
+    expect(screen.queryByTestId('data-long-hint')).not.toBeInTheDocument();
+  });
+});

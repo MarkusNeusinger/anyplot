@@ -34,7 +34,7 @@ LOCALE = PREFIX + "locale"
 """The browser's locale the session opened with: metadata for the feedback case, never the session language."""
 LANGUAGE = PREFIX + "language"
 """The session language: the replies and every text in the plot. A short language name or
-code that matches `language.LANGUAGE_PATTERN` (`de`, `English`, `Klingon`). Absent means `en`."""
+code that matches `language.LANGUAGE_PATTERN` (`de`, `English`, `Swedish`). Absent means `en`."""
 LANGUAGE_SOURCE = PREFIX + "language_source"
 """How it was set: `default` (nobody yet), `detected` (the scope judge's code for the session's
 first in-scope typed message), `chosen` (the language route or the root's `set_language`). Absent

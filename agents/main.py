@@ -12,11 +12,12 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, roles, version}`, stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips only that fallback) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, roles, suggestion, version}` (`suggestion`: the wide-table offer of `data/shape.py`, or null), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips only that fallback) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `503 guard_unavailable` |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides | `409 run_active`, `422` (the pattern) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
-| `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, roles, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
+| `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, roles, suggestion, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
+| `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the default bindings for the new columns; no model call | `409 run_active`, `422 no_suggestion` |
 | `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` (`create_plot`, `summarize_data`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run | `413 too_long`, `409 run_active`, `503 capacity` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
@@ -96,17 +97,19 @@ from google.adk.events.event import Event
 from google.adk.events.event_actions import EventActions
 from google.adk.sessions import InMemorySessionService, Session
 from google.genai import types
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 from starlette.background import BackgroundTask
 
 from agents.anyplot import agent as agent_module
 from agents.anyplot.code.readiness import MAP_SPECS
 from agents.anyplot.data.generate import looks_like_formula
 from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParseError, parse_dataset
+from agents.anyplot.data.prepare import Operation, PrepareError, apply_operations
 from agents.anyplot.data.roles import DataRole
+from agents.anyplot.data.shape import long_suggestion
 from agents.anyplot.data.store import StoreFull
 from agents.anyplot.data.transcribe import looks_like_free_text, table_to_csv, transcribable
-from agents.anyplot.dataset_versions import dataset_payload, undo_version
+from agents.anyplot.dataset_versions import dataset_payload, push_version, undo_version
 from agents.anyplot.dev_fixture import FixtureError, load_case
 from agents.anyplot.language import (
     DEFAULT_LANGUAGE,
@@ -132,12 +135,13 @@ from agents.anyplot.render.serial import RenderBusy
 from agents.anyplot.render.store import RenderStoreFull
 from agents.anyplot.render.watermark import add_footer
 from agents.anyplot.run_queue import HEARTBEAT_S, QueueFull, QueueTimeout, QueueWithdrawn, RunQueue, Ticket
-from agents.anyplot.schemas import MAX_COLUMNS, Binding, Theme
+from agents.anyplot.schemas import MAX_COLUMNS, Binding, DatasetProfile, Theme
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import (
     BINDINGS,
     CONFIRMED,
     CatalogueSnapshot,
+    SessionView,
     apply_bindings,
     confirm_delta,
     confirmation_fingerprint,
@@ -174,6 +178,7 @@ ARTIFACT_TYPES: dict[str, str] = {
 }
 _USER = re.compile(USER_PATTERN)
 _NO_STORE = {"Cache-Control": "private, no-store"}
+OPERATIONS = TypeAdapter(list[Operation])
 
 CONTENT_LOGGERS = ("google_adk", "google.adk", "google_genai", "anthropic", "httpx")
 
@@ -455,7 +460,7 @@ class SwitchLibraryBody(_Body):
 
 
 class LanguageBody(_Body):
-    """The chat header's language chip: a short language name or code (`de`, `English`, `Klingon`)."""
+    """The chat header's language chip: a short language name or code (`de`, `English`, `Swedish`)."""
 
     language: str = Field(min_length=1, max_length=MAX_LANGUAGE_CHARS, pattern=LANGUAGE_PATTERN)
 
@@ -663,6 +668,7 @@ async def upload_dataset(
             "bindings": [binding.model_dump() for binding in ingested.bindings],
             "warnings": parsed.warnings,
             "roles": [_role_body(role) for role in view.snapshot.roles()],
+            "suggestion": _suggestion(view, parsed.profile),
             "version": 1,
         },
         headers=_NO_STORE,
@@ -859,7 +865,7 @@ async def put_language(sid: SessionId, body: LanguageBody, user: User, runtime: 
     same change. The next reply and the next plot version use it; earlier versions keep
     their text. The pattern runs before `normalise` (a leading space is a `422`), and the
     answer carries the stored form, which the page shows: `English` comes back as `en`,
-    `Klingon` as typed. `409 run_active` while a turn or a theme render is in flight, so
+    `Swedish` as typed. `409 run_active` while a turn or a theme render is in flight, so
     a choice never races detection inside a run.
     """
     session = await runtime.session(user, sid)
@@ -917,8 +923,62 @@ async def undo_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JSONR
         raise AgentsError(422, "nothing_to_undo")
     await runtime.write_state(session, restored.delta)
     return JSONResponse(
-        {**restored.payload(), "roles": [_role_body(role) for role in view.snapshot.roles()]}, headers=_NO_STORE
+        {
+            **restored.payload(),
+            "roles": [_role_body(role) for role in view.snapshot.roles()],
+            "suggestion": _suggestion(view, restored.stored.profile),
+        },
+        headers=_NO_STORE,
     )
+
+
+@app.post("/v1/sessions/{sid}/dataset/to_long", dependencies=v1_dependencies)
+async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JSONResponse:
+    """The page's `.to_long()`: apply the wide-table suggestion to the current dataset, without a model call.
+
+    The server recomputes the suggestion (`data/shape.py`) from the session's spec and
+    current profile, so the client never names an operation; `422 no_suggestion` when
+    the table is not wide for this spec (any more). The result is stored as the next
+    dataset version like a `prepare_data` (undo, history), with the default bindings for
+    the new columns, unconfirmed, and the answer is the undo route's shape plus
+    `changes`, the operation's change line.
+    """
+    services = get_services()
+    session = await runtime.session(user, sid)
+    _active(runtime, sid)
+    view = read_session(session.state)
+    if view is None:
+        raise AgentsError(404, "session_expired")
+    stored = services.datasets.get(view.dataset_id, sid) if view.dataset_id else None
+    suggestion = long_suggestion(view.snapshot.roles(), stored.profile) if stored is not None else None
+    if stored is None or suggestion is None:
+        raise AgentsError(422, "no_suggestion")
+    try:
+        operations = OPERATIONS.validate_python([suggestion.operation()])
+        prepared = apply_operations(stored.as_parsed(), operations)
+        parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns)
+    except (PrepareError, ParseError, ValidationError):
+        raise AgentsError(422, "no_suggestion") from None
+    try:
+        version = push_version(services.datasets, sid, view, parsed, view.snapshot, rebind=True)
+    except StoreFull:
+        raise AgentsError(503, "capacity") from None
+    await runtime.write_state(session, version.delta)
+    return JSONResponse(
+        {
+            **version.payload(),
+            "roles": [_role_body(role) for role in view.snapshot.roles()],
+            "suggestion": _suggestion(view, version.stored.profile),
+            "changes": prepared.changes,
+        },
+        headers=_NO_STORE,
+    )
+
+
+def _suggestion(view: SessionView, profile: DatasetProfile) -> dict[str, Any] | None:
+    """The wide-table suggestion for a dataset answer (`data/shape.py`), or None."""
+    suggestion = long_suggestion(view.snapshot.roles(), profile)
+    return suggestion.body() if suggestion is not None else None
 
 
 async def _session_sync(
@@ -957,6 +1017,7 @@ async def _session_sync(
             payload["dataset"] = {
                 **dataset_payload(stored, view.bindings, view.dataset_version),
                 "roles": [_role_body(role) for role in view.snapshot.roles()[:MAX_DONE_ROLES]],
+                "suggestion": _suggestion(view, stored.profile),
                 "changes": changes,
             }
     return payload

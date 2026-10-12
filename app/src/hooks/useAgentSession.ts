@@ -330,6 +330,9 @@ export interface AgentSessionState {
   /** The undo call is in flight. */
   undoBusy: boolean;
   undoError: Failure | null;
+  /** The `.to_long()` call is in flight. */
+  toLongBusy: boolean;
+  toLongError: Failure | null;
   libraryBusy: boolean;
   /** A theme toggle render is in flight. */
   themeBusy: boolean;
@@ -370,6 +373,8 @@ type Action =
   | { type: 'server_sync'; bindings: BindingMap | null; dataConfirmed: boolean | null }
   /** A turn's `done` carried the data version the assistant's `prepare_data` made. */
   | { type: 'data_prepared'; dataset: DatasetChanged }
+  | { type: 'to_long_start' }
+  | { type: 'to_long_failed'; failure: Failure }
   | { type: 'undo_start' }
   | { type: 'undo_done'; parsed: DatasetParsed }
   | { type: 'undo_failed'; failure: Failure }
@@ -421,6 +426,8 @@ export function initialAgentState(library: string): AgentSessionState {
     dataChange: null,
     undoBusy: false,
     undoError: null,
+    toLongBusy: false,
+    toLongError: null,
     libraryBusy: false,
     themeBusy: false,
     // The server's default too, whatever the browser's locale: no answer needed to start.
@@ -575,6 +582,8 @@ function withDataVersion(
     dataChange,
     undoBusy: false,
     undoError: null,
+    toLongBusy: false,
+    toLongError: null,
   };
 }
 
@@ -778,6 +787,10 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         { kind: 'changed', changes, version: versionOf(version) }
       );
     }
+    case 'to_long_start':
+      return { ...state, toLongBusy: true, toLongError: null };
+    case 'to_long_failed':
+      return { ...state, toLongBusy: false, toLongError: action.failure };
     case 'undo_start':
       return { ...state, undoBusy: true, undoError: null };
     case 'undo_done':
@@ -1140,6 +1153,29 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
       trackEvent('agent_data_undo', { version: countBucket(versionOf(parsed.version)) });
     } catch (err) {
       safeDispatch({ type: 'undo_failed', failure: handleFailure(err) });
+    } finally {
+      undoRef.current = false;
+    }
+  }, [token, safeDispatch, handleFailure, trackEvent, busy]);
+
+  /**
+   * `.to_long()`: the service applies its wide-table suggestion as the next data
+   * version, without a model call; the page shows it like the assistant's data
+   * change (`# changed`, `.undo()`), unconfirmed.
+   */
+  const toLongData = useCallback(async () => {
+    const current = stateRef.current;
+    const sid = current.sessionId;
+    if (!sid || !current.dataset?.parsed.suggestion || current.toLongBusy) return;
+    if (current.run || busy()) return;
+    undoRef.current = true;
+    safeDispatch({ type: 'to_long_start' });
+    try {
+      const dataset = await agentApi.datasetToLong(token, sid);
+      safeDispatch({ type: 'data_prepared', dataset });
+      trackEvent('agent_data_prepared', { changes: countBucket(dataset.changes.length) });
+    } catch (err) {
+      safeDispatch({ type: 'to_long_failed', failure: handleFailure(err) });
     } finally {
       undoRef.current = false;
     }
@@ -1703,6 +1739,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
 
   return {
     state,
+    toLongData,
     parseData,
     confirmTranscription,
     discardTranscription,

@@ -57,6 +57,7 @@ from ..briefs import spec_brief, trimmed_profiles
 from ..data.generate import Generate, GenerateError, generate
 from ..data.parse import ParsedDataset, ParseError, parse_dataset
 from ..data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations, validation_lines
+from ..data.shape import long_suggestion
 from ..data.store import StoreFull
 from ..dataset_versions import push_version
 from ..language import is_valid, normalise, same_language
@@ -106,14 +107,19 @@ def _with_profile(base: dict[str, Any], profile: DatasetProfile, tool_name: str)
 
 
 async def get_dataset_profile(tool_context: ToolContext) -> dict[str, Any]:
-    """Return the profile of the user's dataset: row count, typed columns and a few sample cells."""
+    """Return the profile of the user's dataset: row count, typed columns and a few sample cells, and `to_long` when the table is wide for this plot."""
     view = _view(tool_context)
     if view is None:
         return _error("session_not_open")
     profile = _profile(view, tool_context)
     if profile is None:
         return _not_ready("no_dataset")
-    return _with_profile({"status": "ok", "rows": profile.rows}, profile, "get_dataset_profile")
+    base: dict[str, Any] = {"status": "ok", "rows": profile.rows}
+    suggestion = long_suggestion(view.snapshot.roles(), profile)
+    if suggestion is not None:
+        # The page offers it as `.to_long()`; the column names are the user's, so fenced as data.
+        base["to_long"] = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(suggestion.body(), ensure_ascii=False))
+    return _with_profile(base, profile, "get_dataset_profile")
 
 
 async def get_spec_brief(tool_context: ToolContext) -> dict[str, Any]:
@@ -170,7 +176,7 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
 
 
 async def set_language(language: str, tool_context: ToolContext) -> dict[str, Any]:
-    """Set the session language: the language of your replies and of every text in the plot (title, axis titles, legend entries, annotations). `language` is a short language name or code such as "de", "English" or "Klingon". The next plot version uses it; code, comments and column names stay as they are."""
+    """Set the session language: the language of your replies and of every text in the plot (title, axis titles, legend entries, annotations). `language` is a short language name or code such as "de", "English" or "Swedish". The next plot version uses it; code, comments and column names stay as they are."""
     view = _view(tool_context)
     if view is None:
         return _error("session_not_open")
