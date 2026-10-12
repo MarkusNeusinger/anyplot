@@ -77,6 +77,8 @@ The database models use **custom SQLAlchemy types** (`core/database/types.py`) t
 - Integration tests run with SQLite in-memory; PostgreSQL in CI is limited to the E2E tests (the Cloud SQL `test` database) and the migration check's throwaway container (see [Database migrations](#database-migrations))
 - Same code/tests work in both environments
 
+When a query branches on the dialect, the SQLite suite runs only the SQLite arm. Compile the PostgreSQL arm in a unit test and assert its operator and bind values; `tests/unit/core/database/test_repositories.py` does this for the spec tag filter and the agent case tag filter.
+
 **See**: `core/database/types.py` for implementation details.
 
 ---

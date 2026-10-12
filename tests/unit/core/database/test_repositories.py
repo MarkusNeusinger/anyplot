@@ -4,8 +4,13 @@ Tests for database repository classes.
 Uses in-memory SQLite to test repository operations.
 """
 
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from sqlalchemy.dialects import postgresql
+from sqlalchemy.dialects import postgresql, sqlite
+from sqlalchemy.dialects.postgresql import asyncpg
+from sqlalchemy.engine import Dialect
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database.models import Library, Spec
@@ -14,6 +19,7 @@ from core.database.repositories import (
     LANGUAGE_UPDATABLE_FIELDS,
     LIBRARY_UPDATABLE_FIELDS,
     SPEC_UPDATABLE_FIELDS,
+    AgentFeedbackRepository,
     ImplRepository,
     LanguageRepository,
     LibraryRepository,
@@ -429,3 +435,38 @@ class TestSpecCategoryFilter:
     def test_rejects_unknown_category(self) -> None:
         with pytest.raises(ValueError, match="Unknown spec tag category"):
             _spec_category_filter("library", ["matplotlib"], "postgresql")
+
+
+async def _list_cases_sql(dialect: Dialect, **filters: Any) -> tuple[str, dict[str, Any]]:
+    """The SQL and bind parameters of the statement `list_cases` executes on `dialect`.
+
+    The session double reports `dialect` as its bind's and captures the statement, so
+    the PostgreSQL branch compiles without a database; the SQLite engine of the
+    integration tests only ever takes the other branch.
+    """
+    session = MagicMock()
+    session.get_bind.return_value.dialect = dialect
+    session.execute = AsyncMock(return_value=MagicMock())
+    await AgentFeedbackRepository(session).list_cases(**filters)
+    compiled = session.execute.await_args.args[0].compile(dialect=dialect)
+    return str(compiled), compiled.params
+
+
+class TestAgentFeedbackTagFilter:
+    """SQL shape of the `tag` filter of `AgentFeedbackRepository.list_cases`."""
+
+    async def test_postgresql_is_an_array_containment(self) -> None:
+        sql, params = await _list_cases_sql(asyncpg.dialect(), tag="legend")
+        # `tags @> $1::VARCHAR[]` with the bare column is the shape the
+        # ix_agent_feedback_tags GIN index serves. A plain `contains` on the
+        # StringArray column renders a LIKE, which PostgreSQL refuses on VARCHAR[].
+        assert "agent_feedback.tags @> $1::VARCHAR[]" in sql
+        assert "LIKE" not in sql
+        # The bind is a one-element list: `contains("legend")` inside the same
+        # type_coerce renders identical SQL but sends a scalar.
+        assert ["legend"] in params.values()
+
+    async def test_sqlite_matches_the_quoted_tag_in_the_json_text(self) -> None:
+        sql, params = await _list_cases_sql(sqlite.dialect(), tag="legend")
+        assert "CAST(agent_feedback.tags AS VARCHAR) LIKE" in sql
+        assert '"legend"' in params.values()

@@ -165,12 +165,29 @@ def test_a_manifest_that_is_no_object_is_refused(manifest) -> None:
         row_from_manifest(manifest)
 
 
-def test_a_missing_required_field_is_refused() -> None:
-    for field in ("schema", "id", "created_at", "case_uri", "user_hash", "session_hash", "reaction", "status"):
-        manifest = _manifest()
-        del manifest[field]
-        with pytest.raises(ManifestError, match=field):
-            row_from_manifest(manifest)
+@pytest.mark.parametrize(
+    "field",
+    [
+        "schema",
+        "id",
+        "created_at",
+        "case_uri",
+        "user_hash",
+        "session_hash",
+        "reaction",
+        "status",
+        "include_data",
+        "result_version",
+        "files",
+    ],
+)
+def test_a_missing_required_field_is_refused(field) -> None:
+    # Every key the docstring of `row_from_manifest` calls required: a default for an
+    # absent `files` would index a case whose files the detail route then refuses.
+    manifest = _manifest()
+    del manifest[field]
+    with pytest.raises(ManifestError, match=field):
+        row_from_manifest(manifest)
 
 
 @pytest.mark.parametrize(
